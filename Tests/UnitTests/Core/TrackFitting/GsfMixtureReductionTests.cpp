@@ -16,15 +16,18 @@
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
 #include <memory>
 #include <numeric>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 using namespace Acts;
+using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<GsfComponent> cmps = {
@@ -34,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
       {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  detail::SymmetricKLDistanceMatrix mat(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps, proj);
 
   const auto [i, j] = mat.minDistancePair();
   BOOST_CHECK_EQUAL(std::min(i, j), 1);
@@ -51,11 +54,11 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
   const std::size_t cmp_to_mask = 2;
 
-  detail::SymmetricKLDistanceMatrix mat_full(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_full(cmps, proj);
   mat_full.maskAssociatedDistances(cmp_to_mask);
 
   cmps.erase(cmps.begin() + cmp_to_mask);
-  detail::SymmetricKLDistanceMatrix mat_small(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_small(cmps, proj);
 
   const auto [full_i, full_j] = mat_full.minDistancePair();
   const auto [small_i, small_j] = mat_small.minDistancePair();
@@ -74,7 +77,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
       {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  detail::SymmetricKLDistanceMatrix mat(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps, proj);
 
   {
     const auto [i, j] = mat.minDistancePair();
@@ -105,7 +108,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   auto meanAndSumOfWeights = [](const auto &cmps) {
     const auto mean =
         std::accumulate(cmps.begin(), cmps.end(), BoundVector::Zero().eval(),
-                        [](auto sum, const auto &cmp) -> BoundVector {
+                        [](const auto &sum, const auto &cmp) -> BoundVector {
                           return sum + cmp.weight * cmp.boundPars;
                         });
 
@@ -186,3 +189,7 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
   BOOST_CHECK_EQUAL(cmps[0].weight, 3.0);
   BOOST_CHECK_EQUAL(cmps[1].weight, 4.0);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

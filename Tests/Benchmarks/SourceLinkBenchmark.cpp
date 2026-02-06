@@ -8,19 +8,20 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <iostream>
 #include <type_traits>
 
 using namespace Acts;
+using namespace ActsTests;
 
 class BenchmarkSourceLink final {
  public:
   using Index = std::uint32_t;
 
   /// Construct from geometry identifier and index.
-  constexpr BenchmarkSourceLink(Acts::GeometryIdentifier gid, Index idx)
+  constexpr BenchmarkSourceLink(GeometryIdentifier gid, Index idx)
       : m_geometryId(gid), m_index(idx) {}
 
   BenchmarkSourceLink() = default;
@@ -32,10 +33,10 @@ class BenchmarkSourceLink final {
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
-  Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
+  GeometryIdentifier geometryId() const { return m_geometryId; }
 
  private:
-  Acts::GeometryIdentifier m_geometryId;
+  GeometryIdentifier m_geometryId;
   Index m_index = 0;
 
   friend bool operator==(const BenchmarkSourceLink& lhs,
@@ -59,7 +60,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   BenchmarkSourceLink bsl{gid, 1234};
 
   std::cout << "Creating source link" << std::endl;
-  auto sourceLinkConstruction = Acts::Test::microBenchmark(
+  auto sourceLinkConstruction = microBenchmark(
       [&]() {
         SourceLink sl{bsl};
         return sl;
@@ -74,7 +75,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   }
 
   std::cout << "Copy construct source link" << std::endl;
-  auto copyConstructSourceLink = Acts::Test::microBenchmark(
+  auto copyConstructSourceLink = microBenchmark(
       [&](const SourceLink& input) {
         SourceLink copy{input};
         return copy;
@@ -83,7 +84,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::cout << copyConstructSourceLink << std::endl;
 
   std::cout << "Copy then move construct source link" << std::endl;
-  auto copyMoveConstructSourceLink = Acts::Test::microBenchmark(
+  auto copyMoveConstructSourceLink = microBenchmark(
       [&](const SourceLink& input) {
         SourceLink copy{input};
         SourceLink mv{std::move(copy)};
@@ -93,7 +94,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::cout << copyMoveConstructSourceLink << std::endl;
 
   std::cout << "Optional assignment" << std::endl;
-  auto opt_assignment = Acts::Test::microBenchmark(
+  auto opt_assignment = microBenchmark(
       [&]() {
         SourceLink sl{bsl};
         // ts.setUncalibratedSourceLink(std::move(sl));
@@ -106,7 +107,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
   // Measure track state creation
   std::cout << "Create track state" << std::endl;
-  auto create_track_state = Acts::Test::microBenchmark(
+  auto create_track_state = microBenchmark(
       [&]() {
         auto ts = mtj.makeTrackState(TrackStatePropMask::None);
         return ts;
@@ -115,7 +116,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::cout << create_track_state << std::endl;
 
   std::cout << "Assign source link to track state" << std::endl;
-  auto assignSourceLink = Acts::Test::microBenchmark(
+  auto assignSourceLink = microBenchmark(
       [&]() {
         SourceLink sl{bsl};
         auto ts = mtj.makeTrackState(TrackStatePropMask::None);

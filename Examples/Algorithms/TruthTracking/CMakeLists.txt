@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesTruthTracking
-    SHARED
     ActsExamples/TruthTracking/ParticleSelector.cpp
     ActsExamples/TruthTracking/ParticleTrackParamExtractor.cpp
     ActsExamples/TruthTracking/TrackParameterSmearing.cpp
@@ -16,7 +15,4 @@ target_include_directories(
     ActsExamplesTruthTracking
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
-target_link_libraries(
-    ActsExamplesTruthTracking
-    PUBLIC Acts::Core Acts::ExamplesFramework
-)
+target_link_libraries(ActsExamplesTruthTracking PUBLIC Acts::ExamplesFramework)

@@ -20,7 +20,9 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsTests {
 
 ///  helper function to create a cylinder
 TrackingVolumePtr constructCylinderVolume(
@@ -106,4 +108,5 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
   // return the container
   return hVolume;
 }
-}  // namespace Acts
+
+}  // namespace ActsTests

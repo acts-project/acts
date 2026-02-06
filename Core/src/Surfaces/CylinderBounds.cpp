@@ -99,6 +99,12 @@ Vector2 CylinderBounds::closestPoint(const Vector2& lposition,
                                                               vertices, metric);
 }
 
+Vector2 CylinderBounds::center() const {
+  // For cylinder bounds in local coordinates (rphi, z),
+  // centroid is at (averagePhi, 0) since z extends symmetrically
+  return Vector2(get(eAveragePhi), 0.0);
+}
+
 std::ostream& CylinderBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

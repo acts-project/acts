@@ -10,9 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -45,26 +43,19 @@ class BoundarySurfaceT {
   using VolumeArray = BinnedArray<VolumePtr>;
 
  public:
-  BoundarySurfaceT()
-      : m_surface(nullptr),
-        m_oppositeVolume(nullptr),
-        m_alongVolume(nullptr),
-        m_oppositeVolumeArray(nullptr),
-        m_alongVolumeArray(nullptr) {}
-
+  /// @brief Default constructor
+  BoundarySurfaceT() = default;
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
   /// @param surface The unique surface the boundary represents
   /// @param inside The inside volume the boundary surface points to
   /// @param outside The outside volume the boundary surface points to
-  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
+  BoundarySurfaceT(std::shared_ptr<RegularSurface> surface,
                    const volume_t* inside, const volume_t* outside)
       : m_surface(std::move(surface)),
-        m_oppositeVolume(inside),
-        m_alongVolume(outside),
-        m_oppositeVolumeArray(nullptr),
-        m_alongVolumeArray(nullptr) {}
+        m_oppositeVolume{inside},
+        m_alongVolume{outside} {}
 
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
@@ -72,13 +63,11 @@ class BoundarySurfaceT {
   /// @param surface The unique surface the boundary represents
   /// @param inside The inside volume the boundary surface points to
   /// @param outside The outside volume the boundary surface points to
-  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
-                   VolumePtr inside, VolumePtr outside)
+  BoundarySurfaceT(std::shared_ptr<RegularSurface> surface, VolumePtr inside,
+                   VolumePtr outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside.get()),
-        m_alongVolume(outside.get()),
-        m_oppositeVolumeArray(nullptr),
-        m_alongVolumeArray(nullptr) {}
+        m_alongVolume(outside.get()) {}
 
   /// Constructor for a Boundary with exact multiple Volumes attached to it
   /// - usually used in a volume constructor
@@ -87,14 +76,12 @@ class BoundarySurfaceT {
   /// @param insideArray The inside volume array the boundary surface points to
   /// @param outsideArray The outside volume array the boundary surface
   /// points to
-  BoundarySurfaceT(std::shared_ptr<const RegularSurface> surface,
+  BoundarySurfaceT(std::shared_ptr<RegularSurface> surface,
                    std::shared_ptr<const VolumeArray> insideArray,
                    std::shared_ptr<const VolumeArray> outsideArray)
-      : m_surface(std::move(surface)),
-        m_oppositeVolume(nullptr),
-        m_alongVolume(nullptr),
-        m_oppositeVolumeArray(insideArray),
-        m_alongVolumeArray(outsideArray) {}
+      : m_surface{std::move(surface)},
+        m_oppositeVolumeArray{std::move(insideArray)},
+        m_alongVolumeArray{std::move(outsideArray)} {}
 
   virtual ~BoundarySurfaceT() = default;
 
@@ -108,7 +95,19 @@ class BoundarySurfaceT {
   /// @return The attached volume at that position
   virtual const volume_t* attachedVolume(const GeometryContext& gctx,
                                          const Vector3& pos,
-                                         const Vector3& dir) const;
+                                         const Vector3& dir) const {
+    const volume_t* attVolume = nullptr;
+    // dot product with normal vector to distinguish inside/outside
+    if ((surfaceRepresentation().normal(gctx, pos)).dot(dir) > 0.) {
+      attVolume = m_alongVolumeArray ? m_alongVolumeArray->object(pos).get()
+                                     : m_alongVolume;
+    } else {
+      attVolume = m_oppositeVolumeArray
+                      ? m_oppositeVolumeArray->object(pos).get()
+                      : m_oppositeVolume;
+    }
+    return attVolume;
+  }
 
   /// templated onBoundary method
   ///
@@ -116,20 +115,34 @@ class BoundarySurfaceT {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pars The parameters used for this call
+  /// @return True if the parameters are on the boundary surface
   template <class parameters_t>
   bool onBoundary(const GeometryContext& gctx, const parameters_t& pars) const {
     return surfaceRepresentation().isOnSurface(gctx, pars);
   }
 
   /// The Surface Representation of this
-  virtual const RegularSurface& surfaceRepresentation() const;
+  /// @return Reference to the surface representation of this boundary
+  virtual const RegularSurface& surfaceRepresentation() const {
+    return *m_surface;
+  }
+
+  /// The Surface Representation of this
+  /// @return Reference to the surface representation of this boundary
+  RegularSurface& surfaceRepresentation() { return *m_surface; }
 
   /// Helper method: attach a Volume to this BoundarySurfaceT
   /// this is done during the geometry construction.
   ///
   /// @param volume The volume to be attached
   /// @param dir The direction for attaching
-  void attachVolume(const volume_t* volume, Direction dir);
+  void attachVolume(const volume_t* volume, Direction dir) {
+    if (dir == Direction::Backward()) {
+      m_oppositeVolume = volume;
+    } else {
+      m_alongVolume = volume;
+    }
+  }
 
   /// Helper method: attach a Volume to this BoundarySurfaceT
   /// this is done during the geometry construction.
@@ -137,60 +150,29 @@ class BoundarySurfaceT {
   /// @param volumes The volume array to be attached
   /// @param dir The direction for attaching
   void attachVolumeArray(std::shared_ptr<const VolumeArray> volumes,
-                         Direction dir);
+                         Direction dir) {
+    if (dir == Direction::Backward()) {
+      m_oppositeVolumeArray = volumes;
+    } else {
+      m_alongVolumeArray = volumes;
+    }
+  }
 
  protected:
   /// the represented surface by this
-  std::shared_ptr<const RegularSurface> m_surface;
+  std::shared_ptr<RegularSurface> m_surface{};
   /// the inside (w.r.t. normal vector) volume to point to if only one exists
-  const volume_t* m_oppositeVolume;
+  const volume_t* m_oppositeVolume{};
   /// the outside (w.r.t. normal vector) volume to point to if only one exists
-  const volume_t* m_alongVolume;
+  const volume_t* m_alongVolume{};
   /// the inside (w.r.t. normal vector) volume array to point to
-  std::shared_ptr<const VolumeArray> m_oppositeVolumeArray;
+  std::shared_ptr<const VolumeArray> m_oppositeVolumeArray{};
   /// the outside (w.r.t. normal vector) volume array to point to
-  std::shared_ptr<const VolumeArray> m_alongVolumeArray;
+  std::shared_ptr<const VolumeArray> m_alongVolumeArray{};
 };
 
-template <class volume_t>
-inline const RegularSurface& BoundarySurfaceT<volume_t>::surfaceRepresentation()
-    const {
-  return *m_surface;
-}
-
-template <class volume_t>
-void BoundarySurfaceT<volume_t>::attachVolume(const volume_t* volume,
-                                              Direction dir) {
-  if (dir == Direction::Backward()) {
-    m_oppositeVolume = volume;
-  } else {
-    m_alongVolume = volume;
-  }
-}
-
-template <class volume_t>
-void BoundarySurfaceT<volume_t>::attachVolumeArray(
-    const std::shared_ptr<const VolumeArray> volumes, Direction dir) {
-  if (dir == Direction::Backward()) {
-    m_oppositeVolumeArray = volumes;
-  } else {
-    m_alongVolumeArray = volumes;
-  }
-}
-
-template <class volume_t>
-const volume_t* BoundarySurfaceT<volume_t>::attachedVolume(
-    const GeometryContext& gctx, const Vector3& pos, const Vector3& dir) const {
-  const volume_t* attVolume = nullptr;
-  // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(gctx, pos)).dot(dir) > 0.) {
-    attVolume = m_alongVolumeArray ? m_alongVolumeArray->object(pos).get()
-                                   : m_alongVolume;
-  } else {
-    attVolume = m_oppositeVolumeArray ? m_oppositeVolumeArray->object(pos).get()
-                                      : m_oppositeVolume;
-  }
-  return attVolume;
-}
+class TrackingVolume;
+/// Type alias for boundary surface with TrackingVolume
+using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 
 }  // namespace Acts

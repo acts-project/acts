@@ -15,20 +15,22 @@
 #include <iterator>
 #include <map>
 
-static std::size_t sourceLinkHash(const Acts::SourceLink& a) {
+using namespace Acts;
+using namespace ActsPlugins;
+
+static std::size_t sourceLinkHash(const SourceLink& a) {
   return static_cast<std::size_t>(
       a.get<ActsExamples::IndexSourceLink>().index());
 }
 
-static bool sourceLinkEquality(const Acts::SourceLink& a,
-                               const Acts::SourceLink& b) {
+static bool sourceLinkEquality(const SourceLink& a, const SourceLink& b) {
   return a.get<ActsExamples::IndexSourceLink>().index() ==
          b.get<ActsExamples::IndexSourceLink>().index();
 }
 
 ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
     ActsExamples::AmbiguityResolutionMLAlgorithm::Config cfg,
-    Acts::Logging::Level lvl)
+    Logging::Level lvl)
     : ActsExamples::IAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
       m_cfg(std::move(cfg)),
       m_ambiML(m_cfg.toAmbiguityResolutionMLConfig(), logger().clone()) {
@@ -57,18 +59,18 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   std::vector<std::size_t> goodTracks =
       m_ambiML.solveAmbiguity(cluster, tracks);
   // Prepare the output track collection from the IDs
-  TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
-                              std::make_shared<Acts::VectorMultiTrajectory>()};
+  TrackContainer solvedTracks{std::make_shared<VectorTrackContainer>(),
+                              std::make_shared<VectorMultiTrajectory>()};
   solvedTracks.ensureDynamicColumns(tracks);
   for (auto iTrack : goodTracks) {
     auto destProxy = solvedTracks.makeTrack();
     auto srcProxy = tracks.getTrack(iTrack);
-    destProxy.copyFrom(srcProxy, false);
+    destProxy.copyFromWithoutStates(srcProxy);
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 
   ActsExamples::ConstTrackContainer outputTracks{
-      std::make_shared<Acts::ConstVectorTrackContainer>(
+      std::make_shared<ConstVectorTrackContainer>(
           std::move(solvedTracks.container())),
       tracks.trackStateContainerHolder()};
 

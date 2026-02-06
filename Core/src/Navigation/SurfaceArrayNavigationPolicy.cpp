@@ -8,11 +8,10 @@
 
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-
-#include <algorithm>
 
 namespace Acts {
 
@@ -26,12 +25,17 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
   ACTS_VERBOSE("~> bins: " << config.bins.first << " x " << config.bins.second);
 
   SurfaceArrayCreator::Config sacConfig;
+  // This is important! detray does not support separate transforms for the
+  // grids (yet?), so we need to ensure that the volume and surface array
+  // transforms are at most translated relative to one another, so that the
+  // projection is correct.
+  sacConfig.doPhiBinningOptimization = false;
   SurfaceArrayCreator sac{sacConfig, logger.clone("SrfArrCrtr")};
 
   std::vector<std::shared_ptr<const Surface>> surfaces;
   surfaces.reserve(volume.surfaces().size());
   for (const auto& surface : volume.surfaces()) {
-    if (surface.associatedDetectorElement() == nullptr) {
+    if (!surface.isSensitive()) {
       continue;
     }
     surfaces.push_back(surface.getSharedPtr());
@@ -66,23 +70,24 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 }
 
 void SurfaceArrayNavigationPolicy::initializeCandidates(
+    [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
 
-  if (!args.wantsSurfaces) {
-    return;
-  }
-
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
   const std::vector<const Surface*>& sensitiveSurfaces =
-      m_surfaceArray->neighbors(args.position);
+      m_surfaceArray->neighbors(args.position, args.direction);
   ACTS_VERBOSE("~> Surface array reports " << sensitiveSurfaces.size()
                                            << " sensitive surfaces");
 
-  for (const auto* surface : sensitiveSurfaces) {
+  for (const Surface* surface : sensitiveSurfaces) {
     stream.addSurfaceCandidate(*surface, args.tolerance);
   };
+}
+
+const Acts::SurfaceArray& SurfaceArrayNavigationPolicy::surfaceArray() const {
+  return *m_surfaceArray;
 }
 
 void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {

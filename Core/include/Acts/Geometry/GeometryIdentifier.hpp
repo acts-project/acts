@@ -30,92 +30,59 @@ class Surface;
 ///
 class GeometryIdentifier {
  public:
+  /// Type alias for underlying value type (64-bit unsigned integer)
   using Value = std::uint64_t;
 
   /// Construct from an already encoded value.
+  /// @param encoded The encoded geometry identifier value
   explicit constexpr GeometryIdentifier(Value encoded) : m_value(encoded) {}
   /// Construct default GeometryIdentifier with all values set to zero.
   GeometryIdentifier() = default;
+  /// Move constructor
   GeometryIdentifier(GeometryIdentifier&&) = default;
+  /// Copy constructor
   GeometryIdentifier(const GeometryIdentifier&) = default;
   ~GeometryIdentifier() = default;
+  /// Move assignment operator
+  /// @return Reference to this GeometryIdentifier after moving
   GeometryIdentifier& operator=(GeometryIdentifier&&) = default;
+  /// Copy assignment operator
+  /// @return Reference to this GeometryIdentifier after copying
   GeometryIdentifier& operator=(const GeometryIdentifier&) = default;
 
   /// Return the encoded value.
+  /// @return The full encoded 64-bit geometry identifier value
   constexpr Value value() const { return m_value; }
 
   /// Return the volume identifier.
+  /// @return The volume identifier component
   constexpr Value volume() const { return getBits(kVolumeMask); }
 
   /// Return the boundary identifier.
+  /// @return The boundary identifier component
   constexpr Value boundary() const { return getBits(kBoundaryMask); }
 
   /// Return the layer identifier.
+  /// @return The layer identifier component
   constexpr Value layer() const { return getBits(kLayerMask); }
 
   /// Return the approach identifier.
+  /// @return The approach identifier component
   constexpr Value approach() const { return getBits(kApproachMask); }
 
-  /// Return the approach identifier.
+  /// Return the passive identifier.
+  /// @return The passive identifier component (shares bit field with approach)
   constexpr Value passive() const { return getBits(kApproachMask); }
 
   /// Return the sensitive identifier.
+  /// @return The sensitive identifier component
   constexpr Value sensitive() const { return getBits(kSensitiveMask); }
 
   /// Return the extra identifier
   /// Usage can be experiment-specific, like tagging which kind of detector a
   /// surface object corresponds to, or which subsystem it belongs to
+  /// @return The extra identifier component for experiment-specific use
   constexpr Value extra() const { return getBits(kExtraMask); }
-
-  /// Set the volume identifier.
-  [[deprecated("Use withVolume() instead")]]
-  constexpr GeometryIdentifier& setVolume(Value volume) {
-    setBits(kVolumeMask, volume);
-    return *this;
-  }
-
-  /// Set the boundary identifier.
-  [[deprecated("Use withBoundary() instead")]]
-  constexpr GeometryIdentifier& setBoundary(Value boundary) {
-    setBits(kBoundaryMask, boundary);
-    return *this;
-  }
-
-  /// Set the layer identifier.
-  [[deprecated("Use withLayer() instead")]]
-  constexpr GeometryIdentifier& setLayer(Value layer) {
-    setBits(kLayerMask, layer);
-    return *this;
-  }
-
-  /// Set the approach identifier.
-  [[deprecated("Use withApproach() instead")]]
-  constexpr GeometryIdentifier& setApproach(Value approach) {
-    setBits(kApproachMask, approach);
-    return *this;
-  }
-
-  /// Set the approach identifier - shared with Passive
-  [[deprecated("Use withPassive() instead")]]
-  constexpr GeometryIdentifier& setPassive(Value approach) {
-    setBits(kApproachMask, approach);
-    return *this;
-  }
-
-  /// Set the sensitive identifier.
-  [[deprecated("Use withSensitive() instead")]]
-  constexpr GeometryIdentifier& setSensitive(Value sensitive) {
-    setBits(kSensitiveMask, sensitive);
-    return *this;
-  }
-
-  /// Set the extra identifier
-  [[deprecated("Use withExtra() instead")]]
-  constexpr GeometryIdentifier& setExtra(Value extra) {
-    return setBits(kExtraMask, extra);
-    return *this;
-  }
 
   /// Return a new identifier with the volume set to @p volume
   /// @param volume the new volume identifier
@@ -274,12 +241,20 @@ class GeometryIdentifier {
   }
 };
 
+/// Stream operator for GeometryIdentifier
+/// @param os Output stream
+/// @param id GeometryIdentifier to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, GeometryIdentifier id);
 
 /// Base class for hooks that can be used to modify the Geometry Identifier
 /// during construction. Most common use case is setting the extra bit fields.
 struct GeometryIdentifierHook {
   virtual ~GeometryIdentifierHook() = default;
+  /// Decorate a geometry identifier with additional information from a surface
+  /// @param identifier Base geometry identifier to decorate
+  /// @param surface Surface providing additional context for decoration
+  /// @return Decorated geometry identifier with surface-specific information
   virtual Acts::GeometryIdentifier decorateIdentifier(
       Acts::GeometryIdentifier identifier, const Acts::Surface& surface) const;
 };

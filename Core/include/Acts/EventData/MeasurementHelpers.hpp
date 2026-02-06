@@ -32,8 +32,9 @@ struct visit_measurement_callable {
   /// @param cov The covariance matrix
   /// @param lambda The lambda to call with the statically sized subsets
   template <typename L, typename A, typename B>
-  auto static constexpr invoke(A&& param, B&& cov, L&& lambda) {
-    return lambda(param.template head<I>(), cov.template topLeftCorner<I, I>());
+  auto static constexpr invoke(const A& param, const B& cov, L&& lambda) {
+    return std::forward<L>(lambda)(param.template head<I>(),
+                                   cov.template topLeftCorner<I, I>());
   }
 };
 }  // namespace detail
@@ -51,10 +52,12 @@ struct visit_measurement_callable {
 /// @param cov The covariance matrix
 /// @param dim The actual dimension as a runtime value
 /// @param lambda The lambda to call with the statically sized subsets
+/// @return The result of calling the lambda with the statically sized measurement components
 template <typename L, typename A, typename B>
-auto visit_measurement(A&& param, B&& cov, std::size_t dim, L&& lambda) {
+auto visit_measurement(const A& param, const B& cov, std::size_t dim,
+                       L&& lambda) {
   return template_switch<detail::visit_measurement_callable, 1, eBoundSize>(
-      dim, param, cov, lambda);
+      dim, param, cov, std::forward<L>(lambda));
 }
 
 /// Dispatch a generic lambda on a measurement dimension. This overload doesn't
@@ -67,7 +70,7 @@ auto visit_measurement(A&& param, B&& cov, std::size_t dim, L&& lambda) {
 /// @return Returns the lambda return value
 template <typename L, typename... Args>
 auto visit_measurement(std::size_t dim, L&& lambda, Args&&... args) {
-  return template_switch_lambda<1, eBoundSize>(dim, lambda,
+  return template_switch_lambda<1, eBoundSize>(dim, std::forward<L>(lambda),
                                                std::forward<Args>(args)...);
 }
 

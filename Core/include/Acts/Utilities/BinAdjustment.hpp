@@ -47,7 +47,7 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
   for (auto& bd : bData) {
     // The binning value
     AxisDirection bval = bd.binvalue;
-    // Throw exceptions is stuff doesn't make sense:
+    // Throw exceptions if stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
@@ -238,25 +238,25 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
                                           const GeometryContext& gctx) {
   if (auto b = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
       b != nullptr) {
-    return adjustBinUtility(bu, *b, surface.transform(gctx));
+    return adjustBinUtility(bu, *b, surface.localToGlobalTransform(gctx));
   }
   if (auto b = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
       b != nullptr) {
-    return adjustBinUtility(bu, *b, surface.transform(gctx));
+    return adjustBinUtility(bu, *b, surface.localToGlobalTransform(gctx));
   }
   if (surface.type() == Surface::Plane) {
     if (auto b = dynamic_cast<const RectangleBounds*>(&(surface.bounds()));
         b != nullptr) {
-      return adjustBinUtility(bu, *b, surface.transform(gctx));
+      return adjustBinUtility(bu, *b, surface.localToGlobalTransform(gctx));
     }
     if (auto b = dynamic_cast<const TrapezoidBounds*>(&(surface.bounds()));
         b != nullptr) {
-      return adjustBinUtility(bu, *b, surface.transform(gctx));
+      return adjustBinUtility(bu, *b, surface.localToGlobalTransform(gctx));
     }
   }
 
   std::stringstream ss;
-  ss << surface.toStream({});
+  ss << surface.toStream(GeometryContext::dangerouslyDefaultConstruct());
   throw std::invalid_argument(
       "Bin adjustment not implemented for this surface yet:\n" + ss.str());
 }

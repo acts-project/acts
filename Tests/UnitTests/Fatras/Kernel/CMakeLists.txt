@@ -1,6 +1,7 @@
 set(unittest_extra_libraries Acts::Fatras)
 
 add_unittest(FatrasContinuousProcess ContinuousProcessTests.cpp)
+add_unittest(FatrasPointLikeProcess PointLikeProcessTests.cpp)
 add_unittest(FatrasInteractionList InteractionListTests.cpp)
 add_unittest(FatrasSimulationActor SimulationActorTests.cpp)
 add_unittest(FatrasTupleIndexOf TupleIndexOfTests.cpp)

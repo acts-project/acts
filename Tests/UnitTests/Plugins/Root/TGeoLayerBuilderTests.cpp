@@ -14,13 +14,13 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Plugins/Root/TGeoLayerBuilder.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
+#include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <array>
 #include <cstddef>
@@ -31,21 +31,25 @@
 
 #include "TGeoManager.h"
 
+using namespace Acts;
+using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 /// @brief struct to load the global geometry
 struct RootGeometry {
   RootGeometry() {
-    auto path = Acts::Test::getDataPath("panda.root");
+    auto path = ActsTests::getDataPath("panda.root");
     TGeoManager::Import(path.c_str());
   }
 };
 
 RootGeometry rGeometry = RootGeometry();
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test checking the match probability
 BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
@@ -118,4 +122,6 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

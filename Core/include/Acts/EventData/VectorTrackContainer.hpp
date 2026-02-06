@@ -37,20 +37,18 @@ namespace detail_vtc {
 
 class VectorTrackContainerBase {
  public:
-  using IndexType = MultiTrajectoryTraits::IndexType;
-  static constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
-  static constexpr auto MeasurementSizeMax =
-      MultiTrajectoryTraits::MeasurementSizeMax;
+  using IndexType = TrackIndexType;
+  static constexpr auto kInvalid = kTrackIndexInvalid;
 
   using Parameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
+      typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CoefficientsMap;
   using Covariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
+      typename detail_tsp::FixedSizeTypes<eBoundSize, false>::CovarianceMap;
 
   using ConstParameters =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
+      typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CoefficientsMap;
   using ConstCovariance =
-      typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
+      typename detail_tsp::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
  protected:
   VectorTrackContainerBase() = default;
@@ -61,6 +59,7 @@ class VectorTrackContainerBase {
 
   // BEGIN INTERFACE HELPER
 
+  /// @cond
   template <bool EnsureConst, typename T>
   static std::any component_impl(T& instance, HashedString key,
                                  IndexType itrack) {
@@ -135,7 +134,7 @@ class VectorTrackContainerBase {
     result = result && m_nSharedHits.size() == size;
 
     for (const auto& [key, col] : m_dynamic) {
-      (void)key;
+      static_cast<void>(key);
       result = result && col->size() == size;
     }
 
@@ -179,14 +178,17 @@ class VectorTrackContainerBase {
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
+  /// @endcond
+
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
   std::vector<IndexType> m_stemIndex;
   std::vector<ParticleHypothesis> m_particleHypothesis;
-  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Coefficients>
+  std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Coefficients>
       m_params;
-  std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
+  std::vector<typename detail_tsp::FixedSizeTypes<eBoundSize>::Covariance>
+      m_cov;
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
   std::vector<unsigned int> m_nMeasurements;
@@ -209,16 +211,23 @@ class ConstVectorTrackContainer;
 template <>
 struct IsReadOnlyTrackContainer<VectorTrackContainer> : std::false_type {};
 
+/// Track container backend using std::vector for storage
 class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
  public:
   VectorTrackContainer() : VectorTrackContainerBase{} {}
+  /// Copy constructor
+  /// @param other The container to copy
   VectorTrackContainer(const VectorTrackContainer& other) = default;
+  /// Move constructor
   VectorTrackContainer(VectorTrackContainer&&) = default;
 
+  /// Construct from const container
+  /// @param other Const container to copy from
   explicit VectorTrackContainer(const ConstVectorTrackContainer& other);
 
  public:
   // BEGIN INTERFACE
+  /// @cond
 
   std::any component_impl(HashedString key, IndexType itrack) {
     return detail_vtc::VectorTrackContainerBase::component_impl<false>(
@@ -262,21 +271,35 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   void ensureDynamicColumns_impl(
       const detail_vtc::VectorTrackContainerBase& other);
 
-  void reserve(IndexType size);
-  void clear();
-  std::size_t size() const;
-
+  /// Set the reference surface for a track
+  /// @param itrack Track index
+  /// @param surface Reference surface to set
   void setReferenceSurface_impl(IndexType itrack,
                                 std::shared_ptr<const Surface> surface) {
     m_referenceSurfaces[itrack] = std::move(surface);
   }
 
+  /// Set the particle hypothesis for a track
+  /// @param itrack Track index
+  /// @param particleHypothesis Particle hypothesis to set
   void setParticleHypothesis_impl(
       IndexType itrack, const ParticleHypothesis& particleHypothesis) {
     m_particleHypothesis[itrack] = particleHypothesis;
   }
 
+  /// @endcond
   // END INTERFACE
+
+  /// Reserve space for tracks
+  /// @param size Number of tracks to reserve space for
+  void reserve(IndexType size);
+
+  /// Clear all tracks
+  void clear();
+
+  /// Get the number of tracks in the container
+  /// @return Number of tracks
+  std::size_t size() const;
 };
 
 static_assert(TrackContainerBackend<VectorTrackContainer>,
@@ -287,18 +310,26 @@ class ConstVectorTrackContainer;
 template <>
 struct IsReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
 
+/// Read-only vector-backed track container.
 class ConstVectorTrackContainer final
     : public detail_vtc::VectorTrackContainerBase {
  public:
   ConstVectorTrackContainer() : VectorTrackContainerBase{} {}
 
+  /// Copy constructor
+  /// @param other The container to copy from
   ConstVectorTrackContainer(const ConstVectorTrackContainer& other) = default;
+  /// Copy constructor from VectorTrackContainer
+  /// @param other The container to copy from
   explicit ConstVectorTrackContainer(const VectorTrackContainer& other)
       : VectorTrackContainerBase{other} {
     assert(checkConsistency());
   }
 
+  /// Move constructor
   ConstVectorTrackContainer(ConstVectorTrackContainer&&) = default;
+  /// Move constructor from VectorTrackContainer
+  /// @param other The container to move from
   explicit ConstVectorTrackContainer(VectorTrackContainer&& other)
       : VectorTrackContainerBase{std::move(other)} {
     assert(checkConsistency());
@@ -307,15 +338,25 @@ class ConstVectorTrackContainer final
  public:
   // BEGIN INTERFACE
 
+  /// Get a component from a track
+  /// @param key The component key
+  /// @param itrack The track index
+  /// @return Component value as std::any
   std::any component_impl(HashedString key, IndexType itrack) const {
     return detail_vtc::VectorTrackContainerBase::component_impl<true>(
         *this, key, itrack);
   }
 
+  /// Get parameters for a track
+  /// @param itrack The track index
+  /// @return Parameters vector
   ConstParameters parameters(IndexType itrack) const {
     return ConstParameters{m_params[itrack].data()};
   }
 
+  /// Get covariance for a track
+  /// @param itrack The track index
+  /// @return Covariance matrix
   ConstCovariance covariance(IndexType itrack) const {
     return ConstCovariance{m_cov[itrack].data()};
   }

@@ -12,10 +12,20 @@
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <vector>
 
 namespace Acts {
+
+std::shared_ptr<PlaneLayer> PlaneLayer::create(
+    const Transform3& transform, std::shared_ptr<const PlanarBounds> pbounds,
+    std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+    std::unique_ptr<ApproachDescriptor> ad, LayerType laytyp) {
+  return std::shared_ptr<PlaneLayer>(
+      new PlaneLayer(transform, pbounds, std::move(surfaceArray), thickness,
+                     std::move(ad), laytyp));
+}
 
 PlaneLayer::PlaneLayer(const Transform3& transform,
                        std::shared_ptr<const PlanarBounds>& pbounds,
@@ -47,6 +57,7 @@ PlaneSurface& PlaneLayer::surfaceRepresentation() {
 }
 
 void PlaneLayer::buildApproachDescriptor() {
+  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   // delete it
   m_approachDescriptor.reset(nullptr);
   // delete the surfaces
@@ -54,10 +65,10 @@ void PlaneLayer::buildApproachDescriptor() {
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume
-  const Transform3& lTransform = transform(GeometryContext());
+  const Transform3& lTransform = localToGlobalTransform(gctx);
   RotationMatrix3 lRotation = lTransform.rotation();
-  const Vector3& lCenter = center(GeometryContext());
-  const Vector3& lVector = normal(GeometryContext(), lCenter);
+  const Vector3& lCenter = center(gctx);
+  const Vector3& lVector = normal(gctx, lCenter);
   // create new surfaces
   const Transform3 apnTransform = Transform3(
       Translation3(lCenter - 0.5 * Layer::m_layerThickness * lVector) *

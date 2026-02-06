@@ -39,8 +39,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/version.hpp>
-
 namespace {
 
 /// Simple struct to select surfaces where hits should be generated.
@@ -52,7 +50,7 @@ struct HitSurfaceSelector {
   /// Check if the surface should be used.
   bool operator()(const Acts::Surface &surface) const {
     // sensitive/material are not mutually exclusive
-    bool isSensitive = surface.associatedDetectorElement() != nullptr;
+    bool isSensitive = surface.isSensitive();
     bool isMaterial = surface.surfaceMaterial() != nullptr;
     // passive should be an orthogonal category
     bool isPassive = !(isSensitive || isMaterial);
@@ -222,7 +220,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   std::vector<ActsFatras::Particle> particlesInput;
   particlesInput.reserve(inputParticles.size());
   for (const auto &p : inputParticles) {
-    particlesInput.push_back(p.initial());
+    particlesInput.push_back(p.initialState());
   }
 
   // prepare output containers
@@ -266,34 +264,11 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   }
 
   // order output containers
-#if BOOST_VERSION >= 107800
   SimParticleStateContainer particlesInitial(particlesInitialUnordered.begin(),
                                              particlesInitialUnordered.end());
   SimParticleStateContainer particlesFinal(particlesFinalUnordered.begin(),
                                            particlesFinalUnordered.end());
   SimHitContainer simHits(simHitsUnordered.begin(), simHitsUnordered.end());
-#else
-  // working around a nasty boost bug
-  // https://github.com/boostorg/container/issues/244
-
-  SimParticleStateContainer particlesInitial;
-  SimParticleStateContainer particlesFinal;
-  SimHitContainer simHits;
-
-  particlesInitial.reserve(particlesInitialUnordered.size());
-  particlesFinal.reserve(particlesFinalUnordered.size());
-  simHits.reserve(simHitsUnordered.size());
-
-  for (const auto &p : particlesInitialUnordered) {
-    particlesInitial.insert(p);
-  }
-  for (const auto &p : particlesFinalUnordered) {
-    particlesFinal.insert(p);
-  }
-  for (const auto &h : simHitsUnordered) {
-    simHits.insert(h);
-  }
-#endif
 
   SimParticleContainer particlesSimulated;
   particlesSimulated.reserve(particlesInitial.size());
@@ -302,7 +277,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
 
     if (auto it = particlesFinal.find(particleInitial.particleId());
         it != particlesFinal.end()) {
-      particleSimulated.final() = *it;
+      particleSimulated.finalState() = *it;
     } else {
       ACTS_ERROR("particle " << particleInitial.particleId()
                              << " has no final state");

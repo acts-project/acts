@@ -15,6 +15,7 @@ namespace Acts {
 /// @brief Extract the result type of an actor
 template <typename T>
 struct ActorResultTypeExtractor {
+  /// Type alias for the result type of an actor
   using type = typename T::result_type;
 };
 
@@ -51,18 +52,21 @@ struct ActorList {
   /// Default move constructor
   ///
   /// @param actors The source action list
-  ActorList(ActorList<actors_t...>&& actors) = default;
+  ActorList(ActorList<actors_t...>&& actors) noexcept = default;
 
   /// Default move assignment operator
   ///
   /// @param actors The source action list
+  /// @return Reference to this ActorList after copy assignment
   ActorList<actors_t...>& operator=(const ActorList<actors_t...>& actors) =
       default;
 
   /// Default move assignment operator
   ///
   /// @param actors The source action list
-  ActorList<actors_t...>& operator=(ActorList<actors_t...>&& actors) = default;
+  /// @return Reference to this ActorList after move assignment
+  ActorList<actors_t...>& operator=(ActorList<actors_t...>&& actors) noexcept =
+      default;
 
   /// Constructor from tuple
   ///
@@ -79,6 +83,7 @@ struct ActorList {
   /// Const retrieval of an actor of a specific type
   ///
   /// @tparam actor_t Type of the Actor to be retrieved
+  /// @return Const reference to the requested actor
   template <typename actor_t>
   const actor_t& get() const {
     return std::get<actor_t>(m_actors);
@@ -87,6 +92,7 @@ struct ActorList {
   /// Non-const retrieval of an actor of a specific type
   ///
   /// @tparam actor_t Type of the Actor to be retrieved
+  /// @return Reference to the requested actor
   template <typename actor_t>
   actor_t& get() {
     return std::get<actor_t>(m_actors);
@@ -116,12 +122,14 @@ struct ActorList {
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
   /// @param [in] args The arguments to be passed to the actions
+  /// @return A Result<void> indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, Args&&... args) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, Args&&... args) const {
     using impl = detail::actor_list_impl<actors_t...>;
-    impl::act(m_actors, state, stepper, navigator, std::forward<Args>(args)...);
+    return impl::act(m_actors, state, stepper, navigator,
+                     std::forward<Args>(args)...);
   }
 
   /// Check call which broadcasts the call to the tuple() members of the list
@@ -134,6 +142,7 @@ struct ActorList {
   /// @param [in] stepper Stepper used for the propagation
   /// @param [in] navigator Navigator used for the propagation
   /// @param [in] args are the arguments to be passed to the aborters
+  /// @return True if propagation should be aborted, false otherwise
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename... Args>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,

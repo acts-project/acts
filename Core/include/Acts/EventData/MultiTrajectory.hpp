@@ -34,6 +34,11 @@ template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
+namespace detail_anytstate {
+template <typename trajectory_t, bool read_only>
+class TrackStateHandler;
+}  // namespace detail_anytstate
+
 namespace detail_lt {
 
 /// Helper type that wraps two iterators
@@ -124,10 +129,24 @@ concept VisitorConcept = requires(T& t, TS& ts) {
 /// This namespace contains typedefs and constant values that are used by
 /// other parts of the @c MultiTrajectory implementation. It extracts these
 /// from @c TrackStateTraits using the default maximum measurement dimension.
+/// @deprecated Use aliased types and constants directly
 namespace MultiTrajectoryTraits {
-constexpr unsigned int MeasurementSizeMax = eBoundSize;
-using IndexType = TrackIndexType;
+
+/// Maximum number of measurement dimensions supported by trajectory
+/// @deprecated Use @ref Acts::kMeasurementSizeMax instead.
+[[deprecated("Use Acts::kMeasurementSizeMax instead.")]]
+constexpr unsigned int MeasurementSizeMax = kMeasurementSizeMax;
+
+/// Type alias for trajectory index type
+/// @deprecated Use @ref Acts::TrackIndexType instead.
+using IndexType [[deprecated("Use Acts::TrackIndexType instead.")]] =
+    TrackIndexType;
+
+/// Invalid track state index constant
+/// @deprecated Use @ref Acts::kTrackIndexInvalid instead.
+[[deprecated("Use Acts::kTrackIndexInvalid instead.")]]
 constexpr IndexType kInvalid = kTrackIndexInvalid;
+
 }  // namespace MultiTrajectoryTraits
 
 template <typename T>
@@ -144,16 +163,22 @@ struct IsReadOnlyMultiTrajectory;
 template <typename derived_t>
 class MultiTrajectory {
  public:
+  /// Type alias for derived multi-trajectory implementation
   using Derived = derived_t;
 
+  /// Flag indicating whether this multi-trajectory is read-only
   static constexpr bool ReadOnly = IsReadOnlyMultiTrajectory<Derived>::value;
 
   // Pull out type alias and re-expose them for ease of use.
-  static constexpr unsigned int MeasurementSizeMax =
-      MultiTrajectoryTraits::MeasurementSizeMax;
+  /// Maximum number of measurement dimensions supported by this trajectory
+  static constexpr unsigned int MeasurementSizeMax = kMeasurementSizeMax;
 
   friend class TrackStateProxy<Derived, MeasurementSizeMax, true>;
   friend class TrackStateProxy<Derived, MeasurementSizeMax, false>;
+  template <bool R>
+  friend class AnyTrackStateProxy;
+  template <typename T, bool R>
+  friend class detail_anytstate::TrackStateHandler;
   template <typename T>
   friend class MultiTrajectory;
 
@@ -168,10 +193,10 @@ class MultiTrajectory {
       Acts::TrackStateProxy<Derived, MeasurementSizeMax, false>;
 
   /// The index type of the track state container
-  using IndexType = typename TrackStateProxy::IndexType;
+  using IndexType = TrackIndexType;
 
   /// Sentinel value that indicates an invalid index
-  static constexpr IndexType kInvalid = TrackStateProxy::kInvalid;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
  protected:
   MultiTrajectory() = default;  // pseudo abstract base class
@@ -245,6 +270,8 @@ class MultiTrajectory {
   /// Add a track state to the container and return a track state proxy to it
   /// This effectively calls @c addTrackState and @c getTrackState
   /// @note Only available if the track state container is not read-only
+  /// @param mask Mask indicating which track state components to allocate
+  /// @param iprevious Index of the previous track state for linking
   /// @return a track state proxy to the newly added track state
   TrackStateProxy makeTrackState(
       TrackStatePropMask mask = TrackStatePropMask::All,
@@ -280,7 +307,7 @@ class MultiTrajectory {
   void applyBackwards(IndexType iendpoint, F&& callable)
     requires(!ReadOnly) && detail_lt::VisitorConcept<F, TrackStateProxy>
   {
-    if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+    if (iendpoint == kInvalid) {
       throw std::runtime_error(
           "Cannot apply backwards with kInvalid as endpoint");
     }
@@ -433,42 +460,44 @@ class MultiTrajectory {
     return self().has_impl(key, istate);
   }
 
-  /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param parIdx Index into the parameter column
-  /// @return Mutable proxy
+  /// Get parameters for a track state
+  /// @param parIdx The parameter index
+  /// @return Parameters vector
   typename TrackStateProxy::Parameters parameters(IndexType parIdx)
     requires(!ReadOnly)
   {
     return self().parameters_impl(parIdx);
   }
 
-  /// Retrieve a parameter proxy instance for parameters at a given index
-  /// @param parIdx Index into the parameter column
-  /// @return Const proxy
-  typename ConstTrackStateProxy::Parameters parameters(IndexType parIdx) const {
+  /// Get parameters for a track state (const)
+  /// @param parIdx The parameter index
+  /// @return Const parameters vector
+  typename ConstTrackStateProxy::ConstParameters parameters(
+      IndexType parIdx) const {
     return self().parameters_impl(parIdx);
   }
 
-  /// Retrieve a covariance proxy instance for a covariance at a given index
-  /// @param covIdx Index into the covariance column
-  /// @return Mutable proxy
+  /// Get covariance for a track state
+  /// @param covIdx The covariance index
+  /// @return Covariance matrix
   typename TrackStateProxy::Covariance covariance(IndexType covIdx)
     requires(!ReadOnly)
   {
     return self().covariance_impl(covIdx);
   }
 
-  /// Retrieve a covariance proxy instance for a covariance at a given index
-  /// @param covIdx Index into the covariance column
-  /// @return Const proxy
-  typename ConstTrackStateProxy::Covariance covariance(IndexType covIdx) const {
+  /// Get covariance for a track state (const)
+  /// @param covIdx The covariance index
+  /// @return Const covariance matrix
+  typename ConstTrackStateProxy::ConstCovariance covariance(
+      IndexType covIdx) const {
     return self().covariance_impl(covIdx);
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param istate The track state
   /// @return Mutable proxy
-  typename TrackStateProxy::Covariance jacobian(IndexType istate)
+  typename TrackStateProxy::Jacobian jacobian(IndexType istate)
     requires(!ReadOnly)
   {
     return self().jacobian_impl(istate);
@@ -477,7 +506,8 @@ class MultiTrajectory {
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
   /// @param istate The track state
   /// @return Const proxy
-  typename ConstTrackStateProxy::Covariance jacobian(IndexType istate) const {
+  typename ConstTrackStateProxy::ConstJacobian jacobian(
+      IndexType istate) const {
     return self().jacobian_impl(istate);
   }
 
@@ -500,7 +530,7 @@ class MultiTrajectory {
   /// @param istate The track state
   /// @return Const proxy
   template <std::size_t measdim>
-  typename ConstTrackStateProxy::template Calibrated<measdim> calibrated(
+  typename ConstTrackStateProxy::template ConstCalibrated<measdim> calibrated(
       IndexType istate) const {
     return self().template calibrated_impl<measdim>(istate);
   }
@@ -581,7 +611,7 @@ class MultiTrajectory {
   /// @param istate The track state
   /// @return Const proxy
   template <std::size_t measdim>
-  typename ConstTrackStateProxy::template CalibratedCovariance<measdim>
+  typename ConstTrackStateProxy::template ConstCalibratedCovariance<measdim>
   calibratedCovariance(IndexType istate) const {
     return self().template calibratedCovariance_impl<measdim>(istate);
   }
@@ -694,26 +724,45 @@ class MultiTrajectory {
     });
   }
 
+  /// Allocate storage for calibrated measurement
+  /// @tparam measdim Measurement dimension
+  /// @tparam val_t Value type
+  /// @tparam cov_t Covariance type
+  /// @param istate State index
+  /// @param val Measurement values
+  /// @param cov Measurement covariance
   template <std::size_t measdim, typename val_t, typename cov_t>
   void allocateCalibrated(IndexType istate, const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov) {
     self().allocateCalibrated_impl(istate, val, cov);
   }
 
+  /// Set the uncalibrated source link for a track state
+  /// @param istate State index
+  /// @param sourceLink Source link to set
   void setUncalibratedSourceLink(IndexType istate, SourceLink&& sourceLink)
     requires(!ReadOnly)
   {
     self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
   }
 
+  /// Get the uncalibrated source link for a track state
+  /// @param istate State index
+  /// @return Source link for the specified state
   SourceLink getUncalibratedSourceLink(IndexType istate) const {
     return self().getUncalibratedSourceLink_impl(istate);
   }
 
+  /// Get the reference surface for a track state
+  /// @param istate State index
+  /// @return Pointer to the reference surface
   const Surface* referenceSurface(IndexType istate) const {
     return self().referenceSurface_impl(istate);
   }
 
+  /// Set the reference surface for a track state
+  /// @param istate State index
+  /// @param surface Shared pointer to the reference surface
   void setReferenceSurface(IndexType istate,
                            std::shared_ptr<const Surface> surface)
     requires(!ReadOnly)

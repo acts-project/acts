@@ -16,10 +16,13 @@ class Material;
 
 /// Accumulate and average volume-based material properties.
 ///
+/// @ingroup material_mapping
+///
 /// This class is intended to be used during the mapping process.
 class AccumulatedVolumeMaterial {
  public:
   /// Add one entry with the given material properties.
+  /// @param mat The material slab to accumulate
   void accumulate(const MaterialSlab& mat);
 
   /// Compute the average material collected so far.

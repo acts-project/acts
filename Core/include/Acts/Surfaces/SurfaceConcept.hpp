@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
@@ -26,15 +26,12 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
                                   GeometryContext gctx,
                                   BoundaryTolerance tolerance) {
   { cs == s2 } -> std::same_as<bool>;
-
   { cs.type() } -> std::same_as<Surface::SurfaceType>;
-  { cs.transform(gctx) } -> std::same_as<const Transform3&>;
+  { cs.localToGlobalTransform(gctx) } -> std::same_as<const Transform3&>;
   { cs.center(gctx) } -> std::same_as<Vector3>;
   { cs.normal(gctx, Vector3{}, Vector3{}) } -> std::same_as<Vector3>;
   { cs.bounds() } -> std::convertible_to<const SurfaceBounds&>;
-  {
-    cs.associatedDetectorElement()
-  } -> std::same_as<const DetectorElementBase*>;
+  { cs.surfacePlacement() } -> std::same_as<const SurfacePlacementBase*>;
 
   { cs.associatedLayer() } -> std::same_as<const Layer*>;
   { s.associateLayer(std::declval<const Layer&>()) } -> std::same_as<void>;
@@ -78,7 +75,7 @@ concept SurfaceConcept = requires(S s, const S cs, S s2, const S cs2,
 
   {
     cs.intersect(gctx, Vector3{}, Vector3{}, tolerance, std::declval<double>())
-  } -> std::same_as<SurfaceMultiIntersection>;
+  } -> std::same_as<MultiIntersection3D>;
 
   { cs.toStream(gctx) } -> std::same_as<GeometryContextOstreamWrapper<Surface>>;
 

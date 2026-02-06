@@ -1,6 +1,8 @@
 set(unittest_extra_libraries ActsPluginRoot)
 
 add_unittest(RootMaterialMapIo RootMaterialMapIoTests.cpp)
+add_unittest(RootMagneticFieldIo RootMagneticFieldIoTests.cpp)
+add_unittest(RootMeasurementIo RootMeasurementIoTests.cpp)
 add_unittest(TGeoArb8Conversion TGeoArb8ConversionTests.cpp)
 add_unittest(TGeoBBoxConversion TGeoBBoxConversionTests.cpp)
 add_unittest(TGeoTrd1Conversion TGeoTrd1ConversionTests.cpp)
@@ -12,3 +14,4 @@ if(${ROOT_VERSION} VERSION_GREATER "6.25.01")
 endif()
 add_unittest(TGeoParser TGeoParserTests.cpp)
 add_unittest(TGeoPrimitivesHelper TGeoPrimitivesHelperTests.cpp)
+add_unittest(BoostHistogramConversion BoostHistogramConversionTests.cpp)

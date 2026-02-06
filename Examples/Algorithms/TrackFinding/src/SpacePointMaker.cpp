@@ -10,11 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
-#include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/SpacePointFormation2/PixelSpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation2/StripSpacePointBuilder.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/Zip.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -30,8 +34,125 @@
 #include <stdexcept>
 #include <utility>
 
-ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
-                                               Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+namespace {
+
+SimSpacePoint createPixelSpacePoint(
+    const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+    const ConstVariableBoundMeasurementProxy& measurement,
+    const IndexSourceLink& sourceLink) {
+  const Acts::Vector2 local = measurement.fullParameters().head<2>();
+  const Acts::SquareMatrix2 localCov =
+      measurement.fullCovariance().topLeftCorner<2, 2>();
+  std::optional<double> t = std::nullopt;
+  std::optional<double> varT = std::nullopt;
+  if (measurement.contains(Acts::eBoundTime)) {
+    t = measurement.fullParameters()[Acts::eBoundTime];
+    varT = measurement.fullCovariance()(Acts::eBoundTime, Acts::eBoundTime);
+  }
+
+  // we rely on the direction not being used by the surface
+  const Acts::Vector3 global =
+      surface.localToGlobal(gctx, local, Acts::Vector3::Zero());
+  const Acts::Vector2 varZR = Acts::PixelSpacePointBuilder::computeVarianceZR(
+      gctx, surface, global, localCov);
+
+  SimSpacePoint result(global, t, varZR[1], varZR[0], varT,
+                       {Acts::SourceLink(sourceLink)});
+  return result;
+}
+
+Acts::StripSpacePointBuilder::StripEnds getStripEnds(
+    const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+    const ConstVariableBoundMeasurementProxy& measurement) {
+  const auto* bounds =
+      dynamic_cast<const Acts::PlanarBounds*>(&surface.bounds());
+  if (bounds == nullptr) {
+    throw std::invalid_argument(
+        "SpacePointMaker: Encountered non-planar surface");
+  }
+  const Acts::RectangleBounds& boundingBox = bounds->boundingBox();
+
+  const Acts::VariableBoundSubspaceHelper subspace =
+      measurement.subspaceHelper();
+  if (subspace.size() != 1) {
+    throw std::invalid_argument(
+        "SpacePointMaker: Encountered non-strip measurement");
+  }
+
+  const double negEnd = boundingBox.get(Acts::RectangleBounds::eMinY);
+  const double posEnd = boundingBox.get(Acts::RectangleBounds::eMaxY);
+  const double loc0 = measurement.fullParameters()[Acts::eBoundLoc0];
+
+  const Acts::Vector2 localTop = {loc0, posEnd};
+  const Acts::Vector2 localBottom = {loc0, negEnd};
+
+  const Acts::Vector3 globalTop =
+      surface.localToGlobal(gctx, localTop, Acts::Vector3::Zero());
+  const Acts::Vector3 globalBottom =
+      surface.localToGlobal(gctx, localBottom, Acts::Vector3::Zero());
+
+  return Acts::StripSpacePointBuilder::StripEnds{globalTop, globalBottom};
+}
+
+Acts::Result<SimSpacePoint> createStripSpacePoint(
+    const Acts::GeometryContext& gctx, const Acts::Surface& surface1,
+    const Acts::Surface& surface2,
+    const ConstVariableBoundMeasurementProxy& measurement1,
+    const ConstVariableBoundMeasurementProxy& measurement2,
+    const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2) {
+  const Acts::StripSpacePointBuilder::StripEnds stripEnds1 =
+      getStripEnds(gctx, surface1, measurement1);
+  const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
+      getStripEnds(gctx, surface2, measurement2);
+
+  const Acts::StripSpacePointBuilder::ConstrainedOptions options{};
+  const Acts::Result<Acts::Vector3> spacePoint =
+      Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
+          stripEnds1, stripEnds2, options);
+  if (!spacePoint.ok()) {
+    return spacePoint.error();
+  }
+
+  const double var1 =
+      measurement1.fullCovariance()(Acts::eBoundLoc0, Acts::eBoundLoc0);
+  const double var2 =
+      measurement2.fullCovariance()(Acts::eBoundLoc0, Acts::eBoundLoc0);
+
+  const Acts::Vector3 btmToTop1 = stripEnds1.top - stripEnds1.bottom;
+  const Acts::Vector3 btmToTop2 = stripEnds2.top - stripEnds2.bottom;
+  const double theta = std::acos(btmToTop1.dot(btmToTop2) /
+                                 (btmToTop1.norm() * btmToTop2.norm()));
+
+  const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
+      gctx, surface1, *spacePoint, var1, var2, theta);
+
+  const double topHalfStripLength =
+      0.5 * (stripEnds1.top - stripEnds1.bottom).norm();
+  const double bottomHalfStripLength =
+      0.5 * (stripEnds2.top - stripEnds2.bottom).norm();
+  const Acts::Vector3 topStripDirection =
+      (stripEnds1.top - stripEnds1.bottom).normalized();
+  const Acts::Vector3 bottomStripDirection =
+      (stripEnds2.top - stripEnds2.bottom).normalized();
+  const Acts::Vector3 stripCenterDistance =
+      (0.5 * (stripEnds1.top + stripEnds1.bottom) -
+       0.5 * (stripEnds2.top + stripEnds2.bottom));
+  const Acts::Vector3 topStripCenterPosition =
+      0.5 * (stripEnds1.top + stripEnds1.bottom);
+
+  SimSpacePoint result(
+      *spacePoint, std::nullopt, varZR[1], varZR[0], std::nullopt,
+      {Acts::SourceLink(sourceLink1), Acts::SourceLink(sourceLink2)},
+      topHalfStripLength, bottomHalfStripLength, topStripDirection,
+      bottomStripDirection, stripCenterDistance, topStripCenterPosition);
+  return result;
+}
+
+}  // namespace
+
+SpacePointMaker::SpacePointMaker(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement input collection");
@@ -57,8 +178,7 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
           (geoId.sensitive() != 0u)) {
         throw std::invalid_argument(
             "Invalid geometry selection: only volume and layer are allowed to "
-            "be "
-            "set");
+            "be set");
       }
     }
   }
@@ -67,8 +187,8 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   // the geometry selections must be mutually exclusive, i.e. if we have a
   // selection that contains both a volume and a layer within that same volume,
   // we would create the space points for the layer twice.
-  auto isDuplicate = [](Acts::GeometryIdentifier ref,
-                        Acts::GeometryIdentifier cmp) {
+  const auto isDuplicate = [](Acts::GeometryIdentifier ref,
+                              Acts::GeometryIdentifier cmp) {
     // code assumes ref < cmp and that only volume and layer can be non-zero
     // root node always contains everything
     if (ref.volume() == 0) {
@@ -84,41 +204,22 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   // sort geometry selection so the unique filtering works
   std::ranges::sort(m_cfg.geometrySelection,
                     std::less<Acts::GeometryIdentifier>{});
-  auto geoSelBeg = m_cfg.geometrySelection.begin();
-  auto geoSelEnd = m_cfg.geometrySelection.end();
-  auto geoSelLastUnique = std::unique(geoSelBeg, geoSelEnd, isDuplicate);
-  if (geoSelLastUnique != geoSelEnd) {
-    ACTS_WARNING("Removed " << std::distance(geoSelLastUnique, geoSelEnd)
+  const auto geoSelLastUnique =
+      std::ranges::unique(m_cfg.geometrySelection, isDuplicate);
+  if (geoSelLastUnique.begin() != geoSelLastUnique.end()) {
+    ACTS_WARNING("Removed " << std::distance(geoSelLastUnique.begin(),
+                                             geoSelLastUnique.end())
                             << " geometry selection duplicates");
-    m_cfg.geometrySelection.erase(geoSelLastUnique, geoSelEnd);
+    m_cfg.geometrySelection.erase(geoSelLastUnique.begin(),
+                                  geoSelLastUnique.end());
   }
-  auto spBuilderConfig = Acts::SpacePointBuilderConfig();
-  spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
-
-  m_slSurfaceAccessor.emplace(
-      IndexSourceLink::SurfaceAccessor{*m_cfg.trackingGeometry});
-  spBuilderConfig.slSurfaceAccessor
-      .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
-          &m_slSurfaceAccessor.value());
-
-  auto spConstructor =
-      [](const Acts::Vector3& pos, std::optional<double> t,
-         const Acts::Vector2& cov, std::optional<double> varT,
-         boost::container::static_vector<Acts::SourceLink, 2> slinks)
-      -> SimSpacePoint {
-    return SimSpacePoint(pos, t, cov[0], cov[1], varT, std::move(slinks));
-  };
-
-  m_spacePointBuilder = Acts::SpacePointBuilder<SimSpacePoint>(
-      spBuilderConfig, spConstructor,
-      Acts::getDefaultLogger("SpacePointBuilder", lvl));
 
   if (!m_cfg.stripGeometrySelection.empty()) {
     initializeStripPartners();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::SpacePointMaker::initialize() {
+ProcessCode SpacePointMaker::initialize() {
   ACTS_INFO("Space point geometry selection:");
   for (const auto& geoId : m_cfg.geometrySelection) {
     ACTS_INFO("  " << geoId);
@@ -127,7 +228,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::initialize() {
   return ProcessCode::SUCCESS;
 }
 
-void ActsExamples::SpacePointMaker::initializeStripPartners() {
+void SpacePointMaker::initializeStripPartners() {
   ACTS_INFO("Strip space point geometry selection:");
   for (const auto& geoId : m_cfg.stripGeometrySelection) {
     ACTS_INFO("  " << geoId);
@@ -135,7 +236,7 @@ void ActsExamples::SpacePointMaker::initializeStripPartners() {
 
   // We need to use a default geometry context here to access the center
   // coordinates of modules.
-  Acts::GeometryContext gctx;
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
   // Build strip partner map, i.e., which modules are stereo partners
   // As a heuristic we assume that the stereo partners are the modules
@@ -196,70 +297,76 @@ void ActsExamples::SpacePointMaker::initializeStripPartners() {
                                          << partner->geometryId());
       ACTS_VERBOSE("- " << mod1->center(gctx).transpose() << " <-> "
                         << partner->center(gctx).transpose());
-      auto [it1, success1] =
+      const auto [it1, success1] =
           m_stripPartner.insert({mod1->geometryId(), partner->geometryId()});
-      auto [it2, success2] =
+      const auto [it2, success2] =
           m_stripPartner.insert({partner->geometryId(), mod1->geometryId()});
       if (!success1 || !success2) {
         throw std::runtime_error("error inserting in map");
       }
     }
 
-    auto sizeAfter = m_stripPartner.size();
-    if (sizeAfter - sizeBefore < nSurfaces) {
-      ACTS_WARNING("Did not find a stereo partner for all surfaces");
+    const std::size_t sizeAfter = m_stripPartner.size();
+    const std::size_t missing = nSurfaces - (sizeAfter - sizeBefore);
+    if (missing > 0) {
+      ACTS_WARNING("Did not find a stereo partner for " << missing
+                                                        << " surfaces");
     }
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
+  const IndexSourceLink::SurfaceAccessor surfaceAccessor(
+      *m_cfg.trackingGeometry);
+
   const auto& measurements = m_inputMeasurements(ctx);
 
-  Acts::SpacePointBuilderOptions spOpt;
-
-  spOpt.paramCovAccessor = [&measurements](Acts::SourceLink slink) {
-    const auto islink = slink.get<IndexSourceLink>();
-    const ConstVariableBoundMeasurementProxy meas =
-        measurements.getMeasurement(islink.index());
-
-    return std::make_pair(meas.fullParameters(), meas.fullCovariance());
-  };
-
   SimSpacePointContainer spacePoints;
+
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
     auto range =
         selectLowestNonZeroGeometryObject(measurements.orderedIndices(), geoId);
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually
-    auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
+    const auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
 
     for (const auto& [moduleGeoId, moduleSourceLinks] : groupedByModule) {
       for (const auto& sourceLink : moduleSourceLinks) {
-        m_spacePointBuilder.buildSpacePoint(
-            ctx.geoContext, {Acts::SourceLink{sourceLink}}, spOpt,
-            std::back_inserter(spacePoints));
+        const Acts::Surface& surface =
+            *surfaceAccessor(Acts::SourceLink(sourceLink));
+        const ConstVariableBoundMeasurementProxy measurement =
+            measurements.getMeasurement(sourceLink.index());
+
+        if (!measurement.contains(Acts::eBoundLoc0) ||
+            !measurement.contains(Acts::eBoundLoc1)) {
+          ACTS_WARNING("Encountered non-pixel measurement");
+          continue;
+        }
+
+        spacePoints.emplace_back(createPixelSpacePoint(
+            ctx.geoContext, surface, measurement, sourceLink));
       }
     }
   }
 
-  const auto nPixelSpacePoints = spacePoints.size();
+  const std::size_t nPixelSpacePoints = spacePoints.size();
   ACTS_DEBUG("Created " << nPixelSpacePoints << " pixel space points");
 
   // Build strip spacepoints
   ACTS_DEBUG("Build strip spacepoints");
-  Acts::StripPairOptions stripPairOptions;
-  stripPairOptions.paramCovAccessor = spOpt.paramCovAccessor;
+
+  Acts::StripSpacePointBuilder::ClusterPairingOptions pairingOptions;
 
   // Loop over the geometry selections
-  std::vector<std::pair<Acts::SourceLink, Acts::SourceLink>> stripSLPairs;
+  std::vector<std::pair<IndexSourceLink, IndexSourceLink>> stripSourceLinkPairs;
   for (auto sel : m_cfg.stripGeometrySelection) {
-    stripSLPairs.clear();
+    const std::size_t nSpacepointsBefore = spacePoints.size();
+    stripSourceLinkPairs.clear();
     ACTS_VERBOSE("Process strip selection " << sel);
 
     // select volume/layer depending on what is set in the geometry id
-    auto layerRange =
+    const auto layerRange =
         selectLowestNonZeroGeometryObject(measurements.orderedIndices(), sel);
     // Apply filter for extra-id, since this cannot be done with
     // selectLowestNonZeroGeometryObject
@@ -271,10 +378,10 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
 
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually
-    auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
+    const auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
 
     using SourceLinkRange = decltype((*groupedByModule.begin()).second);
-    // Use std::optional because range is not default constructible
+
     std::unordered_map<Acts::GeometryIdentifier, std::optional<SourceLinkRange>>
         mapByModule;
     for (const auto& [moduleGeoId, moduleSourceLinks] : groupedByModule) {
@@ -286,7 +393,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     for (const auto& [mod1, mod1SourceLinks] : mapByModule) {
       ACTS_VERBOSE("Process " << mod1 << " with " << mod1SourceLinks->size()
                               << " source links");
-      auto mod2 = m_stripPartner.at(mod1);
+      const Acts::GeometryIdentifier mod2 = m_stripPartner.at(mod1);
 
       // Avoid producing spacepoints twice
       if (done.contains(mod2)) {
@@ -298,29 +405,70 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
         continue;
       }
 
-      ACTS_VERBOSE("- Partner " << mod2 << " with "
-                                << mapByModule.at(mod2)->size()
+      const auto& mod2SourceLinks = mapByModule.at(mod2);
+
+      ACTS_VERBOSE("- Partner " << mod2 << " with " << mod2SourceLinks->size()
                                 << " source links");
 
-      // Copy source link ranges into vectors
-      // TODO change spacepoint builder API to accept ranges
-      std::vector<Acts::SourceLink> mod1Vec, mod2Vec;
-      std::transform(mod1SourceLinks->begin(), mod1SourceLinks->end(),
-                     std::back_inserter(mod1Vec),
-                     [](const auto& sl) { return Acts::SourceLink{sl}; });
-      std::transform(mapByModule.at(mod2)->begin(), mapByModule.at(mod2)->end(),
-                     std::back_inserter(mod2Vec),
-                     [](const auto& sl) { return Acts::SourceLink{sl}; });
+      for (const IndexSourceLink& sourceLink1 : *mod1SourceLinks) {
+        const Acts::Surface& surface1 =
+            *surfaceAccessor(Acts::SourceLink(sourceLink1));
+        const ConstVariableBoundMeasurementProxy measurement1 =
+            measurements.getMeasurement(sourceLink1.index());
 
-      m_spacePointBuilder.makeSourceLinkPairs(ctx.geoContext, mod1Vec, mod2Vec,
-                                              stripSLPairs, stripPairOptions);
+        if (!measurement1.contains(Acts::eBoundLoc0)) {
+          ACTS_WARNING("Encountered non-strip measurement");
+          continue;
+        }
+
+        Acts::Vector2 local1 = measurement1.fullParameters().head<2>();
+        local1[1] = surface1.center(ctx.geoContext)[1];
+        const Acts::Vector3 global1 = surface1.localToGlobal(
+            ctx.geoContext, local1, Acts::Vector3::Zero());
+
+        std::optional<double> minDistance;
+        std::optional<IndexSourceLink> bestSourceLink2;
+
+        for (const IndexSourceLink& sourceLink2 : *mod2SourceLinks) {
+          const Acts::Surface& surface2 =
+              *surfaceAccessor(Acts::SourceLink(sourceLink2));
+          const ConstVariableBoundMeasurementProxy measurement2 =
+              measurements.getMeasurement(sourceLink2.index());
+
+          if (!measurement2.contains(Acts::eBoundLoc0)) {
+            ACTS_WARNING("Encountered non-strip measurement");
+            continue;
+          }
+
+          Acts::Vector2 local2 = measurement2.fullParameters().head<2>();
+          local2[1] = surface2.center(ctx.geoContext)[1];
+          const Acts::Vector3 global2 = surface1.localToGlobal(
+              ctx.geoContext, local2, Acts::Vector3::Zero());
+
+          const Acts::Result<double> distance =
+              Acts::StripSpacePointBuilder::computeClusterPairDistance(
+                  global1, global2, pairingOptions);
+          if (distance.ok() && (!minDistance.has_value() ||
+                                distance.value() < minDistance.value())) {
+            minDistance = *distance;
+            bestSourceLink2 = sourceLink2;
+          }
+        }
+
+        if (bestSourceLink2) {
+          stripSourceLinkPairs.emplace_back(sourceLink1, *bestSourceLink2);
+          ACTS_VERBOSE("Found source link pair: " << sourceLink1.index()
+                                                  << " <-> "
+                                                  << bestSourceLink2->index());
+        }
+      }
 
       done.insert(mod1);
       done.insert(mod2);
     }
 
     // Loop over the collected source link pairs
-    for (const auto& [sl1, sl2] : stripSLPairs) {
+    for (const auto& [sourceLink1, sourceLink2] : stripSourceLinkPairs) {
       // In the following, we collect the 3D coordinates of the strip endpoints
       // We derive these information directly from the geometry for now, even
       // though it might be more robust to provide them in a config file from
@@ -331,63 +479,27 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
       // position of the strip end. This of course is not well defined for
       // non-rectangle surfaces, but we anyways have no realistic digitization
       // for those cases in ODD or the generic detector.
-      boost::container::static_vector<
-          boost::container::static_vector<Acts::Vector3, 2>, 2>
-          stripEndpoints;
 
-      for (const auto& sl : {sl1, sl2}) {
-        auto isl = sl.get<IndexSourceLink>();
-        auto srf = m_cfg.trackingGeometry->findSurface(isl.geometryId());
-        if (srf == nullptr) {
-          ACTS_FATAL("Cannot get surface for measurement");
-          return ActsExamples::ProcessCode::ABORT;
-        }
+      const Acts::Surface& surface1 =
+          *surfaceAccessor(Acts::SourceLink(sourceLink1));
+      const Acts::Surface& surface2 =
+          *surfaceAccessor(Acts::SourceLink(sourceLink2));
 
-        auto bounds = dynamic_cast<const Acts::PlanarBounds*>(&srf->bounds());
-        if (bounds == nullptr) {
-          ACTS_FATAL("Can only build strip spacepoints with planar bounds");
-          return ActsExamples::ProcessCode::ABORT;
-        }
-        auto boundingBox = bounds->boundingBox();
+      const ConstVariableBoundMeasurementProxy measurement1 =
+          measurements.getMeasurement(sourceLink1.index());
+      const ConstVariableBoundMeasurementProxy measurement2 =
+          measurements.getMeasurement(sourceLink2.index());
 
-        auto subspace =
-            measurements.getMeasurement(isl.index()).subspaceHelper();
-        if (subspace.size() != 1) {
-          ACTS_FATAL("Encountered non-strip measurement");
-          return ActsExamples::ProcessCode::ABORT;
-        }
-
-        auto measDim = subspace[0];
-        decltype(measDim) nonMeasDim{};
-        double negEnd{}, posEnd{};
-        if (measDim == Acts::eBoundLoc0) {
-          nonMeasDim = Acts::eBoundLoc1;
-          negEnd = boundingBox.get(Acts::RectangleBounds::eMinY);
-          posEnd = boundingBox.get(Acts::RectangleBounds::eMaxY);
-        } else {
-          nonMeasDim = Acts::eBoundLoc0;
-          negEnd = boundingBox.get(Acts::RectangleBounds::eMinX);
-          posEnd = boundingBox.get(Acts::RectangleBounds::eMaxX);
-        }
-
-        auto [meas, _] = spOpt.paramCovAccessor(sl);
-        stripEndpoints.emplace_back();
-        for (auto end : {negEnd, posEnd}) {
-          Acts::Vector2 loc = meas.segment<2>(Acts::eBoundLoc0);
-          loc[nonMeasDim] = end;
-          stripEndpoints.back().push_back(
-              srf->localToGlobal(ctx.geoContext, loc, {}));
-        }
+      const Acts::Result<SimSpacePoint> spacePoint = createStripSpacePoint(
+          ctx.geoContext, surface1, surface2, measurement1, measurement2,
+          sourceLink1, sourceLink2);
+      if (spacePoint.ok()) {
+        spacePoints.push_back(*spacePoint);
       }
-
-      const auto& se = stripEndpoints;
-      // TODO a interface of pair<pair, pair> is of the same type is really
-      // impractical...
-      using P = std::pair<Acts::Vector3, Acts::Vector3>;
-      spOpt.stripEndsPair = {P{se[0][0], se[0][1]}, P{se[1][0], se[1][1]}};
-      m_spacePointBuilder.buildSpacePoint(ctx.geoContext, {sl1, sl2}, spOpt,
-                                          std::back_inserter(spacePoints));
     }
+
+    ACTS_DEBUG("Built " << spacePoints.size() - nSpacepointsBefore
+                        << " spacepoints for selector " << sel);
   }
 
   spacePoints.shrink_to_fit();
@@ -397,5 +509,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   ACTS_DEBUG("Created " << spacePoints.size() << " space points");
   m_outputSpacePoints(ctx, std::move(spacePoints));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

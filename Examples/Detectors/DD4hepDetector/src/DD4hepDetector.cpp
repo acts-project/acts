@@ -8,9 +8,9 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
-#include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsPlugins/DD4hep/ConvertDD4hepDetector.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -23,76 +23,75 @@
 #include <Parsers/Printout.h>
 #include <TError.h>
 
+using namespace Acts;
+using namespace ActsPlugins;
+
 namespace ActsExamples {
 
-DD4hepDetector::DD4hepDetector(const Config& cfg)
-    : Detector(Acts::getDefaultLogger("DD4hepDetector", cfg.logLevel)),
-      m_cfg(cfg) {
-  if (m_cfg.xmlFileNames.empty()) {
+DD4hepDetectorBase::DD4hepDetectorBase(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("DD4hepDetector", cfg.logLevel)) {
+  if (cfg.xmlFileNames.empty()) {
     throw std::invalid_argument("Missing DD4hep XML filenames");
   }
 
-  m_nominalGeometryContext = Acts::GeometryContext();
+  m_nominalGeometryContext = GeometryContext::dangerouslyDefaultConstruct();
 
-  m_detector = buildDD4hepGeometry();
+  m_detector = buildDD4hepGeometry(cfg);
 
-  auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
-  m_trackingGeometry = Acts::convertDD4hepDetector(
-      m_detector->world(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
-      m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
-      m_cfg.sortDetectors, m_nominalGeometryContext, m_cfg.materialDecorator,
-      m_cfg.geometryIdentifierHook, m_cfg.detectorElementFactory);
+  auto logger = getDefaultLogger("DD4hepConversion", cfg.logLevel);
 }
 
-dd4hep::Detector& DD4hepDetector::dd4hepDetector() {
+dd4hep::Detector& DD4hepDetectorBase::dd4hepDetector() {
   return *m_detector;
 }
 
-std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
+std::shared_ptr<DD4hepFieldAdapter> DD4hepDetectorBase::field() const {
   throw_assert(m_detector != nullptr, "Detector not initialized");
-  return std::make_shared<Acts::DD4hepFieldAdapter>(m_detector->field());
+  return std::make_shared<DD4hepFieldAdapter>(m_detector->field());
 }
 
-TGeoNode& DD4hepDetector::tgeoGeometry() {
+TGeoNode& DD4hepDetectorBase::tgeoGeometry() {
   return *m_detector->world().placement().ptr();
 }
 
-std::unique_ptr<dd4hep::Detector> DD4hepDetector::buildDD4hepGeometry() const {
+std::unique_ptr<dd4hep::Detector> DD4hepDetectorBase::buildDD4hepGeometry(
+    const Config& cfg) const {
   const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
-  switch (m_cfg.dd4hepLogLevel) {
-    case Acts::Logging::Level::VERBOSE:
+
+  switch (cfg.dd4hepLogLevel) {
+    case Logging::Level::VERBOSE:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::VERBOSE);
       break;
-    case Acts::Logging::Level::DEBUG:
+    case Logging::Level::DEBUG:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::DEBUG);
       break;
-    case Acts::Logging::Level::INFO:
+    case Logging::Level::INFO:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::INFO);
       break;
-    case Acts::Logging::Level::WARNING:
+    case Logging::Level::WARNING:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::WARNING);
       gErrorIgnoreLevel = kWarning;
       break;
-    case Acts::Logging::Level::ERROR:
+    case Logging::Level::ERROR:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::ERROR);
       gErrorIgnoreLevel = kError;
       break;
-    case Acts::Logging::Level::FATAL:
+    case Logging::Level::FATAL:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::FATAL);
       gErrorIgnoreLevel = kFatal;
       break;
-    case Acts::Logging::Level::MAX:
+    case Logging::Level::MAX:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::ALWAYS);
       break;
   }
   // completely silence std::cout as DD4HEP is using it for logging
-  if (m_cfg.dd4hepLogLevel >= Acts::Logging::Level::WARNING) {
+  if (cfg.dd4hepLogLevel >= Logging::Level::WARNING) {
     std::cout.setstate(std::ios_base::failbit);
   }
 
   std::unique_ptr<dd4hep::Detector> detector =
-      dd4hep::Detector::make_unique(m_cfg.name);
-  for (const auto& file : m_cfg.xmlFileNames) {
+      dd4hep::Detector::make_unique(cfg.name);
+  for (const auto& file : cfg.xmlFileNames) {
     detector->fromCompact(file);
   }
   detector->volumeManager();
@@ -103,6 +102,19 @@ std::unique_ptr<dd4hep::Detector> DD4hepDetector::buildDD4hepGeometry() const {
   std::cout.clear();
 
   return detector;
+}
+
+DD4hepDetector::DD4hepDetector(const Config& cfg)
+    : DD4hepDetectorBase{cfg}, m_cfg{cfg} {
+  m_trackingGeometry = convertDD4hepDetector(
+      m_detector->world(), logger(), m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
+      m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
+      m_cfg.sortDetectors, m_nominalGeometryContext, m_cfg.materialDecorator,
+      m_cfg.geometryIdentifierHook, m_cfg.detectorElementFactory);
+}
+
+auto DD4hepDetector::config() const -> const Config& {
+  return m_cfg;
 }
 
 }  // namespace ActsExamples

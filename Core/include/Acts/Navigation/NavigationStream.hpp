@@ -11,19 +11,15 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 
 #include <span>
 #include <vector>
 
 namespace Acts {
-
-// To be removed when the namespace Experimental is omitted
-namespace Experimental {
-class Portal;
-}
 
 class Surface;
 
@@ -46,37 +42,6 @@ class NavigationStream {
     Vector3 direction = Vector3::Zero();
   };
 
-  /// This is a candidate object of the navigation stream, it holds:
-  ///
-  /// - a Surface intersection
-  /// - a Portal : set if the surface represents a portal
-  /// - a BoundaryTolerance : the boundary tolerance used for the intersection
-  struct Candidate {
-    /// The intersection
-    SurfaceIntersection intersection = SurfaceIntersection::invalid();
-    /// The portal
-    const Acts::Experimental::Portal* gen2Portal = nullptr;
-    const Portal* portal = nullptr;
-    /// The boundary tolerance
-    BoundaryTolerance bTolerance = BoundaryTolerance::None();
-    /// Convenience access to surface
-    const Surface& surface() const { return intersection.surface(); }
-    /// Cinvencience access to the path length
-    double pathLength() const { return intersection.pathLength(); }
-
-    /// Order along the path length
-    ///
-    /// @param aCandidate is the first candidate
-    /// @param bCandidate is the second candidate
-    ///
-    /// @return true if aCandidate is closer to the origin
-    constexpr static bool pathLengthOrder(const Candidate& aCandidate,
-                                          const Candidate& bCandidate) {
-      return SurfaceIntersection::pathLengthOrder(aCandidate.intersection,
-                                                  bCandidate.intersection);
-    }
-  };
-
   /// Switch to next next candidate
   ///
   /// @return true if a next candidate is available
@@ -89,26 +54,36 @@ class NavigationStream {
   }
 
   /// Const access the current candidate
-  const Candidate& currentCandidate() const {
+  /// @return Const reference to current candidate
+  const NavigationTarget& currentCandidate() const {
     return m_candidates.at(m_currentIndex);
   }
 
   /// Current Index
+  /// @return Index of the current candidate in the vector
   std::size_t currentIndex() const { return m_currentIndex; }
 
-  /// Non-cost access the candidate vector
-  std::vector<Candidate>& candidates() { return m_candidates; }
+  /// Non-const access the candidate vector
+  /// @return Mutable reference to vector of navigation candidates
+  std::vector<NavigationTarget>& candidates() { return m_candidates; }
 
   /// Const access the candidate vector
-  const std::vector<Candidate>& candidates() const { return m_candidates; }
+  /// @return Const reference to vector of navigation candidates
+  const std::vector<NavigationTarget>& candidates() const {
+    return m_candidates;
+  }
 
-  /// Non-cost access the current candidate
+  /// Non-const access the current candidate
   ///
   /// This will throw and out of bounds exception if the stream is not
   /// valid anymore.
-  Candidate& currentCandidate() { return m_candidates.at(m_currentIndex); }
+  /// @return Mutable reference to current candidate
+  NavigationTarget& currentCandidate() {
+    return m_candidates.at(m_currentIndex);
+  }
 
   /// The number of active candidates
+  /// @return Number of remaining candidates from current position onwards
   std::size_t remainingCandidates() const {
     return (m_candidates.size() - m_currentIndex);
   }
@@ -129,15 +104,8 @@ class NavigationStream {
 
   /// Fill one portal into the candidate vector
   ///
-  void addPortalCandidate(const Experimental::Portal& portal);
   /// @param portal the portals that are filled in
-
   void addPortalCandidate(const Portal& portal);
-
-  /// Fill n portals into the candidate vector
-  ///
-  /// @param portals the portals that are filled in
-  void addPortalCandidates(std::span<const Experimental::Portal*> portals);
 
   /// Initialize the stream from a query point
   ///
@@ -170,20 +138,33 @@ class NavigationStream {
               const NavigationStream::QueryPoint& queryPoint,
               double onSurfaceTolerance = s_onSurfaceTolerance);
 
+  /// Reset the navigation stream by clearing all candidates and resetting the
+  /// index.
+  ///
+  /// This clears the candidates vector and resets the current index to 0.
   void reset();
 
  private:
   /// The candidates of this navigation stream
-  std::vector<Candidate> m_candidates;
+  std::vector<NavigationTarget> m_candidates;
 
   /// The currently active candidate
   std::size_t m_currentIndex = 0u;
 };
 
-struct AppendOnlyNavigationStream {
+/// Append-only helper to add candidates to a navigation stream.
+class AppendOnlyNavigationStream {
+ public:
+  /// Constructor from navigation stream reference
+  /// @param stream Navigation stream to append to
   explicit AppendOnlyNavigationStream(NavigationStream& stream);
+  /// Add a surface candidate to the stream
+  /// @param surface The surface to add
+  /// @param bTolerance Boundary tolerance for the surface
   void addSurfaceCandidate(const Surface& surface,
                            const BoundaryTolerance& bTolerance);
+  /// Add a portal candidate to the stream
+  /// @param portal The portal to add
   void addPortalCandidate(const Portal& portal);
 
  private:

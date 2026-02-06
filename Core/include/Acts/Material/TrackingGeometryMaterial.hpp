@@ -18,10 +18,13 @@
 
 namespace Acts {
 
+/// Type alias for surface material maps indexed by geometry identifier
 using SurfaceMaterialMaps =
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
+/// Type alias for volume material maps indexed by geometry identifier
 using VolumeMaterialMaps =
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
+/// Type alias for tracking geometry material containing surface and volume maps
 using TrackingGeometryMaterial =
     std::pair<SurfaceMaterialMaps, VolumeMaterialMaps>;
 

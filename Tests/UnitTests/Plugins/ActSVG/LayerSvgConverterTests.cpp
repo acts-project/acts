@@ -14,44 +14,45 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsPlugins/ActSVG/LayerSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <fstream>
 #include <memory>
 #include <numbers>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+using namespace Acts;
+using namespace ActsPlugins;
 
-namespace {
+namespace ActsTests {
 
-Acts::GeometryContext tgContext;
+auto tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-std::shared_ptr<const Acts::LayerCreator> lCreator(nullptr);
+std::shared_ptr<const LayerCreator> lCreator(nullptr);
 
 void setupTools() {
   if (lCreator == nullptr) {
-    Acts::LayerCreator::Config lCreatorCfg;
+    LayerCreator::Config lCreatorCfg;
     lCreatorCfg.surfaceArrayCreator =
-        std::make_shared<const Acts::SurfaceArrayCreator>();
-    lCreator = std::make_shared<const Acts::LayerCreator>(lCreatorCfg);
+        std::make_shared<const SurfaceArrayCreator>();
+    lCreator = std::make_shared<const LayerCreator>(lCreatorCfg);
   }
 }
 
-std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
-                                               unsigned int quarterSegments,
-                                               unsigned int nRings,
-                                               bool useTrapezoids = false) {
+std::shared_ptr<Layer> generateDiscLayer(double rInner, double rOuter,
+                                         unsigned int quarterSegments,
+                                         unsigned int nRings,
+                                         bool useTrapezoids = false) {
   // Some preparations
   setupTools();
   unsigned int fullSegments = 4 * quarterSegments;
-  std::vector<std::shared_ptr<const Acts::Surface>> moduleSurfaces;
+  std::vector<std::shared_ptr<const Surface>> moduleSurfaces;
   double phiStep = 2 * std::numbers::pi / fullSegments;
   double rStep = (rOuter - rInner) / nRings;
   // Reserve & fill
@@ -59,20 +60,18 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
   // Radial disc
   if (!useTrapezoids) {
     for (unsigned int ir = 0; ir < nRings; ++ir) {
-      std::shared_ptr<const Acts::RadialBounds> rBounds = nullptr;
-      rBounds = std::make_shared<Acts::RadialBounds>(
+      std::shared_ptr<const RadialBounds> rBounds = nullptr;
+      rBounds = std::make_shared<RadialBounds>(
           rInner + ir * rStep - 0.025 * rInner,
           rInner + (ir + 1u) * rStep + 0.025 * rInner, 0.55 * phiStep, 0.);
       for (unsigned int is = 0; is < fullSegments; ++is) {
         // Place the module
-        auto placement = Acts::Transform3::Identity();
+        auto placement = Transform3::Identity();
         if ((is % 2) != 0u) {
-          placement.pretranslate(Acts::Vector3{0., 0., 2.});
+          placement.pretranslate(Vector3{0., 0., 2.});
         }
-        placement.rotate(
-            Eigen::AngleAxisd(is * phiStep, Acts::Vector3(0, 0, 1)));
-        auto dModule =
-            Acts::Surface::makeShared<Acts::DiscSurface>(placement, rBounds);
+        placement.rotate(Eigen::AngleAxisd(is * phiStep, Vector3(0, 0, 1)));
+        auto dModule = Surface::makeShared<DiscSurface>(placement, rBounds);
         moduleSurfaces.push_back(dModule);
       }
     }
@@ -87,26 +86,24 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
       double xHalfMax =
           1.15 * (rInner + (ir + 1) * rStep) * std::numbers::pi / fullSegments;
 
-      std::shared_ptr<const Acts::TrapezoidBounds> tBounds =
-          std::make_shared<const Acts::TrapezoidBounds>(xHalfMin, xHalfMax,
-                                                        yHalf);
+      std::shared_ptr<const TrapezoidBounds> tBounds =
+          std::make_shared<const TrapezoidBounds>(xHalfMin, xHalfMax, yHalf);
       for (unsigned int is = 0; is < fullSegments; ++is) {
         // Setting the phi
         double cphi = -std::numbers::pi + is * phiStep;
-        Acts::Vector3 center(radius * std::cos(cphi), radius * std::sin(cphi),
-                             (is % 2) * 2 + (ir % 2) * 5);
+        Vector3 center(radius * std::cos(cphi), radius * std::sin(cphi),
+                       (is % 2) * 2 + (ir % 2) * 5);
         // Local axis system
-        Acts::Vector3 localY(std::cos(cphi), std::sin(cphi), 0.);
-        Acts::Vector3 localZ(0., 0., 1.);
-        Acts::Vector3 localX = localY.cross(localZ);
-        Acts::RotationMatrix3 rotation;
+        Vector3 localY(std::cos(cphi), std::sin(cphi), 0.);
+        Vector3 localZ(0., 0., 1.);
+        Vector3 localX = localY.cross(localZ);
+        RotationMatrix3 rotation;
         rotation.col(0) = localX;
         rotation.col(1) = localY;
         rotation.col(2) = localZ;
-        Acts::Transform3 placement(Acts::Translation3(center) * rotation);
+        Transform3 placement(Translation3(center) * rotation);
         // Create the module surface
-        auto dModule =
-            Acts::Surface::makeShared<Acts::PlaneSurface>(placement, tBounds);
+        auto dModule = Surface::makeShared<PlaneSurface>(placement, tBounds);
         moduleSurfaces.push_back(dModule);
       }
     }
@@ -115,11 +112,11 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
   return lCreator->discLayer(tgContext, moduleSurfaces, nRings, fullSegments);
 }
 
-}  // namespace
+BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
 BOOST_AUTO_TEST_CASE(DiscLayerRadialSvg) {
   // Planar style
-  Acts::Svg::Style discLayerStyle;
+  Svg::Style discLayerStyle;
   discLayerStyle.fillColor = {51, 153, 255};
   discLayerStyle.fillOpacity = 0.75;
   discLayerStyle.highlightColor = {255, 153, 51};
@@ -128,28 +125,28 @@ BOOST_AUTO_TEST_CASE(DiscLayerRadialSvg) {
   discLayerStyle.strokeWidth = 0.5;
   discLayerStyle.quarterSegments = 72u;
 
-  Acts::GeometryIdentifier geoID{0};
+  GeometryIdentifier geoID{0};
 
   // Get the layer
   auto discLayer = generateDiscLayer(100, 250, 32u, 4u);
 
-  Acts::Svg::LayerConverter::Options lOptions;
+  Svg::LayerConverter::Options lOptions;
   lOptions.name = "disc_layer_sectors";
   lOptions.surfaceStyles =
-      Acts::GeometryHierarchyMap<Acts::Svg::Style>({{geoID, discLayerStyle}});
+      GeometryHierarchyMap<Svg::Style>({{geoID, discLayerStyle}});
 
   // Get the layer sheets
   auto discLayerSheets =
-      Acts::Svg::LayerConverter::convert(tgContext, *discLayer, lOptions);
+      Svg::LayerConverter::convert(tgContext, *discLayer, lOptions);
 
   for (const auto& s : discLayerSheets) {
-    Acts::Svg::toFile({s}, s._id + ".svg");
+    Svg::toFile({s}, s._id + ".svg");
   }
 }
 
 BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
   // Planar style
-  Acts::Svg::Style discLayerStyle;
+  Svg::Style discLayerStyle;
   discLayerStyle.fillColor = {51, 153, 255};
   discLayerStyle.fillOpacity = 0.75;
   discLayerStyle.highlightColor = {255, 153, 51};
@@ -158,28 +155,28 @@ BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
   discLayerStyle.strokeWidth = 0.5;
   discLayerStyle.quarterSegments = 72u;
 
-  Acts::GeometryIdentifier geoID{0};
+  GeometryIdentifier geoID{0};
 
   // Get the layer
   auto discLayer = generateDiscLayer(100, 250, 32u, 4u, true);
 
-  Acts::Svg::LayerConverter::Options lOptions;
+  Svg::LayerConverter::Options lOptions;
   lOptions.name = "disc_layer_trapezoid";
   lOptions.surfaceStyles =
-      Acts::GeometryHierarchyMap<Acts::Svg::Style>({{geoID, discLayerStyle}});
+      GeometryHierarchyMap<Svg::Style>({{geoID, discLayerStyle}});
 
   // Get the layer sheets
   auto discLayerSheets =
-      Acts::Svg::LayerConverter::convert(tgContext, *discLayer, lOptions);
+      Svg::LayerConverter::convert(tgContext, *discLayer, lOptions);
 
   for (const auto& s : discLayerSheets) {
-    Acts::Svg::toFile({s}, s._id + ".svg");
+    Svg::toFile({s}, s._id + ".svg");
   }
 }
 
 BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
   // Planar style
-  Acts::Svg::Style cylinderLayerStyle;
+  Svg::Style cylinderLayerStyle;
   cylinderLayerStyle.fillColor = {51, 153, 255};
   cylinderLayerStyle.fillOpacity = 0.75;
   cylinderLayerStyle.highlightColor = {255, 153, 51};
@@ -188,12 +185,12 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
   cylinderLayerStyle.strokeWidth = 0.5;
   cylinderLayerStyle.quarterSegments = 72u;
 
-  Acts::GeometryIdentifier geoID{0};
+  GeometryIdentifier geoID{0};
 
-  Acts::Test::CylindricalTrackingGeometry cGeometry(tgContext);
+  CylindricalTrackingGeometry cGeometry(tgContext);
   auto tGeometry = cGeometry();
   auto pixelVolume =
-      tGeometry->lowestTrackingVolume(tgContext, Acts::Vector3(50., 0., 0.));
+      tGeometry->lowestTrackingVolume(tgContext, Vector3(50., 0., 0.));
   if (pixelVolume != nullptr && pixelVolume->confinedLayers() != nullptr) {
     auto layers = pixelVolume->confinedLayers()->arrayObjects();
     std::size_t il = 0;
@@ -202,16 +199,16 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
         continue;
       }
 
-      Acts::Svg::LayerConverter::Options lOptions;
+      Svg::LayerConverter::Options lOptions;
       lOptions.name = "cylinder_layer_" + std::to_string(il++);
-      lOptions.surfaceStyles = Acts::GeometryHierarchyMap<Acts::Svg::Style>(
-          {{geoID, cylinderLayerStyle}});
+      lOptions.surfaceStyles =
+          GeometryHierarchyMap<Svg::Style>({{geoID, cylinderLayerStyle}});
 
       // Get the layer sheets
       auto layerSheets =
-          Acts::Svg::LayerConverter::convert(tgContext, *layer, lOptions);
+          Svg::LayerConverter::convert(tgContext, *layer, lOptions);
       for (const auto& s : layerSheets) {
-        Acts::Svg::toFile({s}, s._id + ".svg");
+        Svg::toFile({s}, s._id + ".svg");
       }
     }
   }
@@ -220,3 +217,5 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
 BOOST_AUTO_TEST_CASE(PlaeyLayerSvg) {}
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

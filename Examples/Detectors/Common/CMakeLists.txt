@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesDetectorsCommon
-    SHARED
     src/Detector.cpp
     src/AlignmentDecorator.cpp
     src/StructureSelector.cpp
@@ -11,5 +10,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesDetectorsCommon
-    PUBLIC Acts::Core Acts::ExamplesFramework
+    PUBLIC Acts::ExamplesFramework
 )

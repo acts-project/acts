@@ -20,7 +20,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -36,6 +35,7 @@
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -54,19 +54,22 @@
 
 #include "VertexingDataHelper.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 const std::string toolString = "AMVF";
+
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 /// @brief AMVF test with Gaussian seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
@@ -675,4 +678,6 @@ BOOST_AUTO_TEST_CASE(
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

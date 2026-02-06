@@ -9,8 +9,10 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -33,32 +35,82 @@ struct MockTrack {
   using Trajectory = VectorMultiTrajectory;
   using IndexType = TrackIndexType;
 
-  double m_theta;
-  double m_phi;
-  double m_pt;
-  double m_loc0;
-  double m_loc1;
-  double m_time;
-  std::size_t m_nMeasurements;
-  std::size_t m_nHoles;
-  std::size_t m_nOutliers;
-  std::size_t m_nSharedHits;
-  float m_chi2;
+  MockTrack()
+      : m_parameterBuffer(BoundVector::Zero()),
+        m_covarianceBuffer(BoundSquareMatrix::Identity()) {}
+
+  TrackIndexType index() const { return m_index; }
+  TrackIndexType tipIndex() const { return m_tipIndex; }
+  TrackIndexType stemIndex() const { return m_stemIndex; }
 
   bool hasReferenceSurface() const { return true; }
+  const Surface& referenceSurface() const {
+    static const std::shared_ptr<PlaneSurface> srf =
+        CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface();
+    return *srf;
+  }
+
+  detail_tpc::ConstParametersMap parameters() const {
+    syncParameterBuffer();
+    return detail_tpc::ConstParametersMap(m_parameterBuffer.data());
+  }
+
+  detail_tpc::ConstCovarianceMap covariance() const {
+    return detail_tpc::ConstCovarianceMap(m_covarianceBuffer.data());
+  }
+
+  ParticleHypothesis particleHypothesis() const {
+    return ParticleHypothesis::pion();
+  }
+
   double theta() const { return m_theta; }
   double phi() const { return m_phi; }
+  double qOverP() const { return m_qOverP; }
+  double absoluteMomentum() const { return m_absMomentum; }
   double transverseMomentum() const { return m_pt; }
+  double charge() const { return std::copysign(1.0, m_qOverP); }
   double loc0() const { return m_loc0; }
   double loc1() const { return m_loc1; }
   double time() const { return m_time; }
-  std::size_t nMeasurements() const { return m_nMeasurements; }
-  std::size_t nHoles() const { return m_nHoles; }
-  std::size_t nOutliers() const { return m_nOutliers; }
-  std::size_t nSharedHits() const { return m_nSharedHits; }
+
+  unsigned int nMeasurements() const { return m_nMeasurements; }
+  unsigned int nHoles() const { return m_nHoles; }
+  unsigned int nOutliers() const { return m_nOutliers; }
+  unsigned int nSharedHits() const { return m_nSharedHits; }
   float chi2() const { return m_chi2; }
+  unsigned int nDoF() const { return m_nDoF; }
+
+  unsigned int nTrackStates() const { return 0u; }
 
   // To comply with concept, not actually used
+  bool hasColumn(HashedString /*key*/) const {
+    throw std::runtime_error("Not implemented");
+  }
+
+  template <typename T, HashedString>
+  const T& component() const {
+    throw std::runtime_error("Not implemented");
+  }
+
+  template <typename T>
+  const T& component(HashedString /*key*/) const {
+    throw std::runtime_error("Not implemented");
+  }
+
+  template <typename T, HashedString>
+  T& component()
+    requires(!ReadOnly)
+  {
+    throw std::runtime_error("Not implemented");
+  }
+
+  template <typename T>
+  T& component(HashedString /*key*/)
+    requires(!ReadOnly)
+  {
+    throw std::runtime_error("Not implemented");
+  }
+
  private:
   struct MockTrackState {
     const Surface& referenceSurface() const {
@@ -67,9 +119,9 @@ struct MockTrack {
       return *srf;
     }
 
-    ConstTrackStateType typeFlags() const {
-      static const ConstTrackStateType::raw_type raw{0};
-      return ConstTrackStateType{raw};
+    ConstTrackStateTypeMap typeFlags() const {
+      static const ConstTrackStateTypeMap::raw_type raw{0};
+      return ConstTrackStateTypeMap{raw};
     }
   };
 
@@ -83,9 +135,44 @@ struct MockTrack {
 
  public:
   TrackStateRange trackStatesReversed() const { return {}; }
+
+  void syncParameterBuffer() const {
+    m_parameterBuffer[eBoundLoc0] = m_loc0;
+    m_parameterBuffer[eBoundLoc1] = m_loc1;
+    m_parameterBuffer[eBoundTime] = m_time;
+    m_parameterBuffer[eBoundPhi] = m_phi;
+    m_parameterBuffer[eBoundTheta] = m_theta;
+    m_parameterBuffer[eBoundQOverP] = m_qOverP;
+  }
+
+  TrackIndexType m_index = 0;
+  TrackIndexType m_tipIndex = 0;
+  TrackIndexType m_stemIndex = 0;
+
+  double m_theta = 0.;
+  double m_phi = 0.;
+  double m_pt = 0.;
+  double m_loc0 = 0.;
+  double m_loc1 = 0.;
+  double m_time = 0.;
+  unsigned int m_nMeasurements = 0;
+  unsigned int m_nHoles = 0;
+  unsigned int m_nOutliers = 0;
+  unsigned int m_nSharedHits = 0;
+  float m_chi2 = 0.F;
+  unsigned int m_nDoF = 0;
+  double m_qOverP = 1.;
+  double m_absMomentum = 1.;
+
+  mutable BoundVector m_parameterBuffer;
+  mutable BoundSquareMatrix m_covarianceBuffer;
 };
 
-BOOST_AUTO_TEST_SUITE(TrackSelectorTests)
+static_assert(TrackProxyConcept<MockTrack>);
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFindingSuite)
 
 std::vector<double> etaValues{-5.0, -4.5, -4.0, -3.5, -3.0, -2.5, -2.0, -1.5,
                               -1.0, -0.5, 0.0,  0.5,  1.0,  1.5,  2.0,  2.5,
@@ -622,16 +709,16 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
                           TrackStateFlag flag) {
     auto ts = track.appendTrackState();
     ts.setReferenceSurface(surface);
-    ts.typeFlags().set(flag);
+    ts.typeFlags().setUnchecked(flag);
     return ts;
   };
 
   auto addMeasurement = [&](auto& track, const auto& surface) {
-    return addTrackState(track, surface, TrackStateFlag::MeasurementFlag);
+    return addTrackState(track, surface, TrackStateFlag::HasMeasurement);
   };
 
   auto addMaterial = [&](auto& track, const auto& surface) {
-    return addTrackState(track, surface, TrackStateFlag::MaterialFlag);
+    return addTrackState(track, surface, TrackStateFlag::HasMaterial);
   };
 
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -750,3 +837,5 @@ BOOST_AUTO_TEST_CASE(SubsetHitCountCut) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

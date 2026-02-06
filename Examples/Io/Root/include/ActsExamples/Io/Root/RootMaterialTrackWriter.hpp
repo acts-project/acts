@@ -10,9 +10,9 @@
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include <Acts/Plugins/Root/RootMaterialTrackIo.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
+#include <ActsPlugins/Root/RootMaterialTrackIo.hpp>
 
 #include <mutex>
 #include <string>
@@ -63,9 +63,9 @@ class RootMaterialTrackWriter
     bool recalculateTotals = false;
     /// Write aut pre and post step (for G4), otherwise central step position
     bool prePostStep = false;
-    /// Write the surface to which the material step correpond
+    /// Write the surface to which the material step correspond
     bool storeSurface = false;
-    /// Write the volume to which the material step correpond
+    /// Write the volume to which the material step correspond
     bool storeVolume = false;
     /// Collapse consecutive interactions of a single surface into a single
     /// interaction
@@ -108,7 +108,7 @@ class RootMaterialTrackWriter
   /// The output tree name
   TTree* m_outputTree = nullptr;
   /// The read - write payload
-  Acts::RootMaterialTrackIo m_accessor;
+  ActsPlugins::RootMaterialTrackIo m_accessor;
 };
 
 }  // namespace ActsExamples

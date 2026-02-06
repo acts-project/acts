@@ -26,26 +26,25 @@ namespace Acts {
 
 LineSurface::LineSurface(const Transform3& transform, double radius,
                          double halez)
-    : GeometryObject(),
-      Surface(transform),
+    : Surface(transform),
       m_bounds(std::make_shared<const LineBounds>(radius, halez)) {}
 
 LineSurface::LineSurface(const Transform3& transform,
                          std::shared_ptr<const LineBounds> lbounds)
-    : GeometryObject(), Surface(transform), m_bounds(std::move(lbounds)) {}
+    : Surface(transform), m_bounds(std::move(lbounds)) {}
 
 LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                         const DetectorElementBase& detelement)
-    : GeometryObject(), Surface(detelement), m_bounds(std::move(lbounds)) {
+                         const SurfacePlacementBase& placement)
+    : Surface{placement}, m_bounds(std::move(lbounds)) {
   throw_assert(m_bounds, "LineBounds must not be nullptr");
 }
 
 LineSurface::LineSurface(const LineSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, Surface(other), m_bounds(other.m_bounds) {}
 
 LineSurface::LineSurface(const GeometryContext& gctx, const LineSurface& other,
                          const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+    : Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 LineSurface& LineSurface::operator=(const LineSurface& other) {
   if (this != &other) {
@@ -62,7 +61,8 @@ Vector3 LineSurface::localToGlobal(const GeometryContext& gctx,
 
   // get the vector perpendicular to the momentum direction and the straw axis
   Vector3 radiusAxisGlobal = unitZ0.cross(direction);
-  Vector3 locZinGlobal = transform(gctx) * Vector3(0., 0., lposition[1]);
+  Vector3 locZinGlobal =
+      localToGlobalTransform(gctx) * Vector3(0., 0., lposition[1]);
   // add loc0 * radiusAxis
   return Vector3(locZinGlobal + lposition[0] * radiusAxisGlobal.normalized());
 }
@@ -75,8 +75,9 @@ Result<Vector2> LineSurface::globalToLocal(const GeometryContext& gctx,
 
   // Bring the global position into the local frame. First remove the
   // translation then the rotation.
-  Vector3 localPosition = referenceFrame(gctx, position, direction).inverse() *
-                          (position - transform(gctx).translation());
+  Vector3 localPosition =
+      referenceFrame(gctx, position, direction).inverse() *
+      (position - localToGlobalTransform(gctx).translation());
 
   // `localPosition.z()` is not the distance to the PCA but the smallest
   // distance between `position` and the imaginary plane surface defined by the
@@ -137,7 +138,7 @@ const SurfaceBounds& LineSurface::bounds() const {
   return s_noBounds;
 }
 
-SurfaceMultiIntersection LineSurface::intersect(
+MultiIntersection3D LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -147,7 +148,7 @@ SurfaceMultiIntersection LineSurface::intersect(
   const Vector3& ea = direction;
 
   // Origin of the line surface
-  Vector3 mb = transform(gctx).translation();
+  Vector3 mb = localToGlobalTransform(gctx).translation();
   // Line surface axis
   Vector3 eb = lineDirection(gctx);
 
@@ -160,9 +161,7 @@ SurfaceMultiIntersection LineSurface::intersect(
   // small number so `u` does not explode
   if (std::abs(denom) < std::abs(tolerance)) {
     // return a false intersection
-    return {{Intersection3D::invalid(), Intersection3D::invalid()},
-            *this,
-            boundaryTolerance};
+    return MultiIntersection3D(Intersection3D::Invalid());
   }
 
   double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
@@ -182,9 +181,7 @@ SurfaceMultiIntersection LineSurface::intersect(
     }
   }
 
-  return {{Intersection3D(result, u, status), Intersection3D::invalid()},
-          *this,
-          boundaryTolerance};
+  return MultiIntersection3D(Intersection3D(result, u, status));
 }
 
 BoundToFreeMatrix LineSurface::boundToFreeJacobian(
@@ -269,7 +266,8 @@ AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   double norm = 1 / (1 - dz * dz);
   // Calculate the derivative of local frame axes w.r.t its rotation
   auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(transform(gctx).rotation());
+      detail::rotationToLocalAxesDerivative(
+          localToGlobalTransform(gctx).rotation());
 
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
@@ -286,7 +284,7 @@ AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
 ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   // calculate the transformation to local coordinates
-  Vector3 localPosition = transform(gctx).inverse() * position;
+  Vector3 localPosition = localToGlobalTransform(gctx).inverse() * position;
   double localPhi = VectorHelpers::phi(localPosition);
 
   ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
@@ -296,7 +294,14 @@ ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
 }
 
 Vector3 LineSurface::lineDirection(const GeometryContext& gctx) const {
-  return transform(gctx).linear().col(2);
+  return localToGlobalTransform(gctx).linear().col(2);
+}
+const std::shared_ptr<const LineBounds>& LineSurface::boundsPtr() const {
+  return m_bounds;
+}
+void LineSurface::assignSurfaceBounds(
+    std::shared_ptr<const LineBounds> newBounds) {
+  m_bounds = std::move(newBounds);
 }
 
 }  // namespace Acts

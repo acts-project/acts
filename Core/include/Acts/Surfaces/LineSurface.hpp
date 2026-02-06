@@ -25,7 +25,6 @@
 namespace Acts {
 
 class LineBounds;
-class DetectorElementBase;
 class SurfaceBounds;
 
 ///  @class LineSurface
@@ -56,13 +55,18 @@ class LineSurface : public Surface {
   explicit LineSurface(const Transform3& transform,
                        std::shared_ptr<const LineBounds> lbounds = nullptr);
 
-  /// Constructor from DetectorElementBase : Element proxy
+  /// Constructor from SurfacePlacementBase : Element proxy
   ///
   /// @param lbounds are the bounds describing the line dimensions, they must
   /// not be nullptr
-  /// @param detelement for which this surface is (at least) one representation
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   explicit LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                       const DetectorElementBase& detelement);
+                       const SurfacePlacementBase& placement);
 
   /// Copy constructor
   ///
@@ -81,6 +85,7 @@ class LineSurface : public Surface {
   /// Assignment operator
   ///
   /// @param other is the source surface dor copying
+  /// @return Reference to this LineSurface after assignment
   LineSurface& operator=(const LineSurface& other);
 
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
@@ -189,7 +194,7 @@ class LineSurface : public Surface {
   ///
   /// <b>Mathematical motivation:</b>
   ///
-  /// Given two lines in parameteric form:<br>
+  /// Given two lines in parametric form:<br>
   ///
   /// @f$ \vec l_{a}(u) = \vec m_a + u \cdot \vec e_{a} @f$
   ///
@@ -238,7 +243,7 @@ class LineSurface : public Surface {
   /// @param boundaryTolerance The boundary check directive for the estimate
   /// @param tolerance the tolerance used for the intersection
   /// @return is the intersection object
-  SurfaceMultiIntersection intersect(
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -248,15 +253,27 @@ class LineSurface : public Surface {
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
   ///
+  /// @param gctx Geometry context (ignored)
+  /// @param position Position parameter (ignored)
+  /// @param direction Direction parameter (ignored)
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
+  /// @return Always returns 1.0 for line surfaces
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
                         const Vector3& direction) const override;
 
   /// This method returns the bounds of the surface by reference
+  /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
+  /// This method returns the shared_ptr to the LineBounds
+  /// @return Shared pointer to the line bounds
+  const std::shared_ptr<const LineBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const LineBounds> newBounds);
 
   /// Return properly formatted class name for screen output
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
@@ -284,6 +301,9 @@ class LineSurface : public Surface {
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
+  /// Get the line direction in global coordinates
+  /// @param gctx The geometry context
+  /// @return The direction vector of the line surface
   Vector3 lineDirection(const GeometryContext& gctx) const;
 
  protected:

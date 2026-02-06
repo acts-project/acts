@@ -63,7 +63,7 @@ coverage_dir = os.path.abspath("coverage")
 if not os.path.exists(coverage_dir):
     os.makedirs(coverage_dir)
 
-excludes = ["-e", "../Tests/", "-e", r".*json\.hpp"]
+excludes = ["-e", "../Tests/", "-e", r".*json\.hpp", "-e", "../Python/"]
 
 # create the html report
 call(
@@ -71,6 +71,7 @@ call(
     + ["-r", source_dir]
     + ["--gcov-executable", args.gcov]
     + ["-j", str(mp.cpu_count())]
+    + ["--merge-mode-functions", "separate"]
     + excludes
     + extra_flags
     + ["--sonarqube", "coverage/cov.xml"]
@@ -81,6 +82,7 @@ call(
     + ["-r", source_dir]
     + ["-j", str(mp.cpu_count())]
     + ["--gcov-executable", args.gcov]
+    + ["--merge-mode-functions", "separate"]
     + excludes
     + extra_flags
 )

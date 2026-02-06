@@ -12,67 +12,63 @@
 
 namespace Acts {
 
-/// Base class for multi navigation policies
-class MultiNavigationPolicyBase : public INavigationPolicy {};
-
 /// Combined navigation policy that calls all contained other navigation
-/// policies. This class only works with policies complying with
-/// `NavigationPolicyConcept`, which means that they have a conventional
-/// `updateState` method.
-///
-/// Internally, this uses a delegate chain factory to produce an unrolled
-/// delegate chain.
-///
-/// @tparam Policies The navigation policies to be combined
-template <NavigationPolicyConcept... Policies>
-  requires(sizeof...(Policies) > 0)
-class MultiNavigationPolicy final : public MultiNavigationPolicyBase {
+/// policies. This class manages multiple navigation policies and executes
+/// them sequentially to populate the navigation stream with candidates.
+class MultiNavigationPolicy final : public INavigationPolicy {
  public:
-  /// Constructor from a set of child policies.
-  /// @param policies The child policies
-  explicit MultiNavigationPolicy(Policies&&... policies)
-      : m_policies{std::move(policies)...} {}
+  /// Constructor from multiple unique_ptr policies
+  /// @tparam Policies The types of the navigation policies
+  /// @param policies Unique pointers to navigation policies
+  template <typename... Policies>
+  explicit MultiNavigationPolicy(std::unique_ptr<Policies>... policies)
+      : MultiNavigationPolicy{[](auto... args) {
+          std::vector<std::unique_ptr<INavigationPolicy>> policyPtrs;
 
-  /// Implementation of the connection to a navigation delegate.
-  /// It uses the delegate chain factory to produce a delegate chain and stores
-  /// that chain in the owning navigation delegate.
+          if constexpr (sizeof...(args) > 0) {
+            auto fill = [&policyPtrs](auto& policy) {
+              policyPtrs.push_back(std::move(policy));
+            };
+
+            (fill(args), ...);
+          }
+
+          return policyPtrs;
+        }(std::move(policies)...)} {}
+
+  /// Constructor from a vector of navigation policies
+  /// @param policies Vector of unique pointers to navigation policies
+  explicit MultiNavigationPolicy(
+      std::vector<std::unique_ptr<INavigationPolicy>>&& policies);
+
+  /// Connect this policy to a navigation delegate
   /// @param delegate The navigation delegate to connect to
-  void connect(NavigationDelegate& delegate) const override {
-    auto factory = add(DelegateChainBuilder{delegate},
-                       std::index_sequence_for<Policies...>{});
+  void connect(NavigationDelegate& delegate) const override;
 
-    factory.store(delegate);
-  }
+  /// Access the contained navigation policies
+  /// @return Span of const unique pointers to the navigation policies
+  std::span<const std::unique_ptr<INavigationPolicy>> policies() const;
 
-  /// Access the contained policies
-  /// @return The contained policies
-  const std::tuple<Policies...>& policies() const { return m_policies; }
+  /// Visit this policy first, and then all child policies one by one.
+  /// @param visitor The function to call for each policy
+  void visit(const std::function<void(const INavigationPolicy&)>& visitor)
+      const override;
 
  private:
-  /// Internal helper to build the delegate chain
-  template <std::size_t... Is>
-  constexpr auto add(
-      auto factory,
-      std::integer_sequence<std::size_t, Is...> /*unused*/) const {
-    return add<Is...>(factory);
-  }
+  /// Initialize navigation candidates by calling all contained policies
+  /// @param gctx The geometry context
+  /// @param args The navigation arguments
+  /// @param stream The navigation stream to populate
+  /// @param logger Logger for debug output
+  void initializeCandidates(const GeometryContext& gctx,
+                            const NavigationArguments& args,
+                            AppendOnlyNavigationStream& stream,
+                            const Logger& logger) const;
 
-  /// Internal helper to build the delegate chain
-  template <std::size_t I, std::size_t... Is>
-  constexpr auto add(auto factory) const {
-    using policy_type = std::tuple_element_t<I, decltype(m_policies)>;
-    auto* policy = &std::get<I>(m_policies);
+  /// Vector of unique pointers to the contained navigation policies
+  std::vector<std::unique_ptr<INavigationPolicy>> m_policyPtrs;
 
-    auto added =
-        factory.template add<&policy_type::initializeCandidates>(policy);
-
-    if constexpr (sizeof...(Is) > 0) {
-      return add<Is...>(added);
-    } else {
-      return added;
-    }
-  }
-
-  std::tuple<Policies...> m_policies;
+  /// Vector of navigation delegates, one for each policy
+  std::vector<NavigationDelegate> m_delegates;
 };
 }  // namespace Acts

@@ -10,11 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -27,11 +27,13 @@
 #include "XML/Utilities.h"
 #include "XMLFragments.hpp"
 
-namespace {
-Acts::GeometryContext tContext;
-Acts::Test::CylindricalTrackingGeometry cGeometry =
-    Acts::Test::CylindricalTrackingGeometry(tContext);
-}  // namespace
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* beampipe_head_xml =
     R""""(
@@ -136,8 +138,8 @@ const std::string indent_12_xml(12, ' ');
 
 namespace {
 
-Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
-  Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
+CylindricalTrackingGeometry::DetectorStore generateXML() {
+  CylindricalTrackingGeometry::DetectorStore dStore;
 
   // Nec surfaces
   double necZ = -800.;
@@ -147,8 +149,8 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto necR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., necZ, 2., 22u);
 
-  std::vector<std::vector<const Acts::Surface*>> necSurfaces = {necR0Surfaces,
-                                                                necR1Surfaces};
+  std::vector<std::vector<Surface*>> necSurfaces = {necR0Surfaces,
+                                                    necR1Surfaces};
 
   // Barrel surfaces
   std::vector<std::array<double, 2u>> innerOuter = {
@@ -162,8 +164,8 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto b2Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                116., 3., 2., {52, 14});
 
-  std::vector<std::vector<const Acts::Surface*>> barrelSurfaces = {
-      b0Surfaces, b1Surfaces, b2Surfaces};
+  std::vector<std::vector<Surface*>> barrelSurfaces = {b0Surfaces, b1Surfaces,
+                                                       b2Surfaces};
 
   // Nec surfaces
   double pecZ = 800.;
@@ -173,8 +175,8 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   auto pecR1Surfaces = cGeometry.surfacesRing(dStore, 12.4, 20.4, 30., 0.125,
                                               0., 80., pecZ, 2., 22u);
 
-  std::vector<std::vector<const Acts::Surface*>> pecSurfaces = {pecR0Surfaces,
-                                                                pecR1Surfaces};
+  std::vector<std::vector<Surface*>> pecSurfaces = {pecR0Surfaces,
+                                                    pecR1Surfaces};
 
   // Create an XML from it
   std::ofstream cxml;
@@ -221,7 +223,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
     for (const auto& s : ring) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
   }
@@ -234,7 +236,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   cxml << barrel_head_xml << '\n';
   cxml << indent_8_xml << "<layers>" << '\n';
   cxml << indent_8_xml << "<acts_container/> " << '\n';
-  for (const auto [ib, bs] : Acts::enumerate(barrelSurfaces)) {
+  for (const auto [ib, bs] : enumerate(barrelSurfaces)) {
     cxml << indent_4_xml << "<layer name=\"PixelBarrel_" << ib << "\" id=\""
          << ib << "\">" << '\n';
     cxml << indent_4_xml << "<acts_volume rmin=\"" << innerOuter[ib][0u]
@@ -243,7 +245,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
     for (const auto& s : bs) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
     cxml << indent_8_xml << "</modules>" << '\n';
@@ -263,7 +265,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
     for (const auto& s : ring) {
       cxml << indent_12_xml
            << DD4hepTestsHelper::surfaceToXML(tContext, *s,
-                                              Acts::Transform3::Identity())
+                                              Transform3::Identity())
            << "\n";
     }
   }
@@ -284,7 +286,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
 
 auto store = generateXML();
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
   auto lcdd = &(dd4hep::Detector::getInstance());
@@ -295,13 +297,13 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
   auto world = lcdd->world();
 
   // Test starts here - with nonimal detector construction
-  Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
-  auto surfaceFactory = Acts::DD4hepDetectorSurfaceFactory(
-      sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                                             Acts::Logging::VERBOSE));
+  DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
+  auto surfaceFactory = DD4hepDetectorSurfaceFactory(
+      sFactoryConfig,
+      getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
 
-  Acts::DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
-  Acts::DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
+  DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
+  DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
 
   surfaceFactory.construct(sFactoryCache, tContext, world, sFactoryOptions);
   // Check the number of surfaces
@@ -319,38 +321,33 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 
   auto world = lcdd->world();
 
-  // A typical extension would be overriding the `tranform(const
+  // A typical extension would be overriding the `transform(const
   // GeometryContext&)` method in order change how the detector element is
   // handled in alignment, for simplicity here we show a simple extension that
   // overrides the  thickness
-  class ExtendedDetectorElement : public Acts::DD4hepDetectorElement {
+  class ExtendedDetectorElement : public ActsPlugins::DD4hepDetectorElement {
    public:
-    using Acts::DD4hepDetectorElement::DD4hepDetectorElement;
-
-    double thickness() const final {
-      // Return a fixed thickness for testing purposes
-      return 42. * Acts::UnitConstants::mm;
-    }
+    using ActsPlugins::DD4hepDetectorElement::DD4hepDetectorElement;
   };
 
   auto extendedFactory =
       [](const dd4hep::DetElement& detElem, const std::string& axes,
          double scalor, bool isDisc,
-         const std::shared_ptr<const Acts::ISurfaceMaterial>& material)
-      -> std::shared_ptr<Acts::DD4hepDetectorElement> {
+         const std::shared_ptr<const ISurfaceMaterial>& material)
+      -> std::shared_ptr<ActsPlugins::DD4hepDetectorElement> {
     return std::make_shared<ExtendedDetectorElement>(detElem, axes, scalor,
                                                      isDisc, material);
   };
 
   // Test starts here - with nonimal detector construction
-  Acts::DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
+  DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
   sFactoryConfig.detectorElementFactory = extendedFactory;
-  auto surfaceFactory = Acts::DD4hepDetectorSurfaceFactory(
-      sFactoryConfig, Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory",
-                                             Acts::Logging::VERBOSE));
+  auto surfaceFactory = DD4hepDetectorSurfaceFactory(
+      sFactoryConfig,
+      getDefaultLogger("DD4hepDetectorSurfaceFactory", Logging::VERBOSE));
 
-  Acts::DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
-  Acts::DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
+  DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
+  DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
 
   surfaceFactory.construct(sFactoryCache, tContext, world, sFactoryOptions);
   // Check the number of surfaces
@@ -359,8 +356,6 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
     // Check that the extended detector element is used
     BOOST_CHECK_NE(dynamic_cast<const ExtendedDetectorElement*>(detElem.get()),
                    nullptr);
-    // Check that the thickness is 42 mm
-    CHECK_CLOSE_ABS(detElem->thickness(), 42. * Acts::UnitConstants::mm, 1e-10);
   }
 
   // Kill that instance before going into the next test
@@ -368,3 +363,5 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

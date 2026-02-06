@@ -17,16 +17,20 @@
 #include <unordered_set>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
 
 BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_vector) {
   std::vector<std::size_t> coll;
-  Acts::detail::pushBackOrInsertAtEnd(coll, 2ul);
+  detail::pushBackOrInsertAtEnd(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::detail::pushBackOrInsertAtEnd(coll, 5ul);
+  detail::pushBackOrInsertAtEnd(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::detail::pushBackOrInsertAtEnd(coll, val);
+  detail::pushBackOrInsertAtEnd(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK_EQUAL(coll[0], 2ul);
@@ -36,12 +40,12 @@ BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_vector) {
 
 BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_list) {
   std::list<std::size_t> coll;
-  Acts::detail::pushBackOrInsertAtEnd(coll, 2ul);
+  detail::pushBackOrInsertAtEnd(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::detail::pushBackOrInsertAtEnd(coll, 5ul);
+  detail::pushBackOrInsertAtEnd(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::detail::pushBackOrInsertAtEnd(coll, val);
+  detail::pushBackOrInsertAtEnd(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK_EQUAL(coll.front(), 2ul);
@@ -54,12 +58,12 @@ BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_list) {
 
 BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_set) {
   std::set<std::size_t> coll;
-  Acts::detail::pushBackOrInsertAtEnd(coll, 2ul);
+  detail::pushBackOrInsertAtEnd(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::detail::pushBackOrInsertAtEnd(coll, 5ul);
+  detail::pushBackOrInsertAtEnd(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::detail::pushBackOrInsertAtEnd(coll, val);
+  detail::pushBackOrInsertAtEnd(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK(coll.contains(2ul));
@@ -69,12 +73,12 @@ BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_set) {
 
 BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_unordered_set) {
   std::unordered_set<std::size_t> coll;
-  Acts::detail::pushBackOrInsertAtEnd(coll, 2ul);
+  detail::pushBackOrInsertAtEnd(coll, 2ul);
   BOOST_CHECK(coll.size() == 1ul);
-  Acts::detail::pushBackOrInsertAtEnd(coll, 5ul);
+  detail::pushBackOrInsertAtEnd(coll, 5ul);
   BOOST_CHECK(coll.size() == 2ul);
   std::size_t val = 1ul;
-  Acts::detail::pushBackOrInsertAtEnd(coll, val);
+  detail::pushBackOrInsertAtEnd(coll, val);
   BOOST_CHECK(coll.size() == 3ul);
 
   BOOST_CHECK(coll.contains(2ul));
@@ -82,4 +86,6 @@ BOOST_AUTO_TEST_CASE(pushBackOrInsertAtEnd_unordered_set) {
   BOOST_CHECK(coll.contains(1ul));
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

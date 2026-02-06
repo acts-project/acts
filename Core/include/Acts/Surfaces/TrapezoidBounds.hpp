@@ -28,6 +28,8 @@ namespace Acts {
 /// @todo can be speed optimized by calculating kappa/delta and caching it
 class TrapezoidBounds : public PlanarBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues {
     eHalfLengthXnegY = 0,
     eHalfLengthXposY = 1,
@@ -103,6 +105,10 @@ class TrapezoidBounds : public PlanarBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For TrapezoidBounds: returns center of symmetry (0,0), accounting for rotation
+  Vector2 center() const final;
+
   /// Return the vertices
   ///
   /// @param ignoredSegments is and ignored parameter used to describe
@@ -119,10 +125,12 @@ class TrapezoidBounds : public PlanarBounds {
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
+  /// @return Modified ostream for chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The bound value at the specified index
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

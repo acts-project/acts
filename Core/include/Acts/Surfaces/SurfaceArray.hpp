@@ -10,21 +10,25 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 #include <iostream>
-#include <type_traits>
+#include <limits>
 #include <vector>
 
 namespace Acts {
 
 using SurfaceVector = std::vector<const Surface*>;
 
-/// @brief Provides Surface binning in N dimensions
+/// @brief Provides Surface binning in 2 dimensions
 ///
 /// Uses @c Grid under the hood to implement the storage and lookup
 /// Contains a lookup struct which talks to the @c Grid
@@ -36,31 +40,17 @@ class SurfaceArray {
   struct ISurfaceGridLookup {
     /// @brief Fill provided surfaces into the contained @c Grid.
     /// @param gctx The current geometry context object, e.g. alignment
-
     /// @param surfaces Input surface pointers
     virtual void fill(const GeometryContext& gctx,
                       const SurfaceVector& surfaces) = 0;
 
-    /// @brief Attempts to fix sub-optimal binning by filling closest
-    ///        Surfaces into empty bin
-    ///
-    /// @param gctx The current geometry context object, e.g. alignment
-
-    /// @param surfaces The surface pointers to fill
-    /// @return number of bins that were filled
-    virtual std::size_t completeBinning(const GeometryContext& gctx,
-                                        const SurfaceVector& surfaces) = 0;
-
-    /// @brief Performs lookup at @c pos and returns bin content as reference
-    /// @param position Lookup position
-    /// @return @c SurfaceVector at given bin
-    virtual SurfaceVector& lookup(const Vector3& position) = 0;
-
     /// @brief Performs lookup at @c pos and returns bin content as const
     /// reference
     /// @param position Lookup position
+    /// @param direction Lookup direction
     /// @return @c SurfaceVector at given bin
-    virtual const SurfaceVector& lookup(const Vector3& position) const = 0;
+    virtual const SurfaceVector& lookup(const Vector3& position,
+                                        const Vector3& direction) const = 0;
 
     /// @brief Performs lookup at global bin and returns bin content as
     /// reference
@@ -77,8 +67,10 @@ class SurfaceArray {
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
     ///
     /// @param position Lookup position
+    /// @param direction Lookup direction
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
-    virtual const SurfaceVector& neighbors(const Vector3& position) const = 0;
+    virtual const SurfaceVector& neighbors(const Vector3& position,
+                                           const Vector3& direction) const = 0;
 
     /// @brief Returns the total size of the grid (including under/overflow
     /// bins)
@@ -95,16 +87,14 @@ class SurfaceArray {
     /// @note This returns copies. Use for introspection and querying.
     virtual std::vector<const IAxis*> getAxes() const = 0;
 
+    /// @brief Get a view of the grid for inspection
+    /// @return Optional grid view containing surface vectors
     virtual std::optional<AnyGridConstView<SurfaceVector>> getGridView()
         const = 0;
 
-    virtual const Transform3& getTransform() const = 0;
-
-    virtual Surface::SurfaceType surfaceType() const = 0;
-
-    /// @brief Get the number of dimensions of the grid.
-    /// @return number of dimensions
-    virtual std::size_t dimensions() const = 0;
+    /// @brief Get the representative surface used for this lookup
+    /// @return Surface pointer
+    virtual const Surface* surfaceRepresentation() const = 0;
 
     /// @brief Checks if global bin is valid
     /// @param bin the global bin index
@@ -115,6 +105,7 @@ class SurfaceArray {
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes (optional) and empty for eingle lookups
+    /// @return Vector of axis directions for binning
     virtual std::vector<AxisDirection> binningValues() const { return {}; };
 
     /// Pure virtual destructor
@@ -123,73 +114,24 @@ class SurfaceArray {
 
   /// @brief Lookup helper which encapsulates a @c Grid
   /// @tparam Axes The axes used for the grid
-  template <class... Axes>
+  template <class Axis1, class Axis2>
   struct SurfaceGridLookup : ISurfaceGridLookup {
-    static constexpr std::size_t DIM = sizeof...(Axes);
+    /// Grid type storing surface vectors with two axes
+    using Grid_t = Grid<SurfaceVector, Axis1, Axis2>;
 
-   public:
-    /// @brief Specifies the local coordinate type.
-    /// This resolves to @c ActsVector<DIM> for DIM > 1, else @c
-    /// std::array<double, 1>
-    using point_t =
-        std::conditional_t<DIM == 1, std::array<double, 1>, ActsVector<DIM>>;
-    using Grid_t = Grid<SurfaceVector, Axes...>;
-
-    /// @brief Default constructor
-    ///
-    /// @param type The surface type, this determines the local to global calculation
-    /// @param transform The transform to apply to the surface`
-    /// @param R the radius (interpretation depends on @p type)
-    /// @param Z the z position (interpretation depends on @p type)
-    /// @param axes The axes to build the grid data structure.
-    /// @param bValues What the axes represent (optional)
-    /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
-    ///       If DIM > 1, local coords are @c ActsVector<DIM> else
-    ///       @c std::array<double, 1>.
-    SurfaceGridLookup(Surface::SurfaceType type, const Transform3& transform,
-                      double R, double Z, std::tuple<Axes...> axes,
+    /// Construct a surface grid lookup
+    /// @param representative The surface which is used as representative
+    /// @param tolerance The tolerance used for intersection checks
+    /// @param axes The axes used for the grid
+    /// @param bValues Optional vector of axis directions for binning
+    SurfaceGridLookup(std::shared_ptr<RegularSurface> representative,
+                      double tolerance, std::tuple<Axis1, Axis2> axes,
                       std::vector<AxisDirection> bValues = {})
-        : m_type(type),
-          m_transform(transform),
-          m_itransform(transform.inverse()),
+        : m_representative(std::move(representative)),
+          m_tolerance(tolerance),
           m_grid(std::move(axes)),
           m_binValues(std::move(bValues)) {
       m_neighborMap.resize(m_grid.size());
-
-      using namespace VectorHelpers;
-
-      switch (type) {
-        using enum Surface::SurfaceType;
-        case Cylinder:
-          m_globalToLocal = [](const Vector3& pos) {
-            return Vector2(phi(pos), pos.z());
-          };
-          m_localToGlobal = [R](const Vector2& loc) {
-            // Technically, this is not correct, the radius is arbitrary
-            return Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
-          };
-          break;
-        case Disc:
-          m_globalToLocal = [](const Vector3& pos) {
-            return Vector2(perp(pos), phi(pos));
-          };
-          m_localToGlobal = [Z](const Vector2& loc) {
-            // Technically, this is not correct, the z position is arbitrary
-            return Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]),
-                           Z);
-          };
-          break;
-        case Plane:
-          m_globalToLocal = [](const Vector3& pos) {
-            return Vector2(perp(pos), phi(pos));
-          };
-          m_localToGlobal = [](const Vector2& loc) {
-            return Vector3(loc.x(), loc.y(), 0.);
-          };
-          break;
-        default:
-          throw std::invalid_argument("Surface type not supported");
-      }
     }
 
     /// @brief Fill provided surfaces into the contained @c Grid.
@@ -203,74 +145,22 @@ class SurfaceArray {
     /// @param surfaces Input surface pointers
     void fill(const GeometryContext& gctx,
               const SurfaceVector& surfaces) override {
-      for (const auto& srf : surfaces) {
-        Vector3 pos = srf->referencePosition(gctx, AxisDirection::AxisR);
-        lookup(pos).push_back(srf);
+      for (const Surface* surface : surfaces) {
+        const std::size_t globalBin = fillSurfaceToBinMapping(gctx, *surface);
+        if (globalBin == 0) {
+          continue;
+        }
+
+        fillBinToSurfaceMapping(gctx, *surface, globalBin);
       }
 
       populateNeighborCache();
     }
 
-    /// @brief Attempts to fix sub-optimal binning by filling closest
-    ///        Surfaces into empty bins
-    /// @note This does not always do what you want.
-    ///
-    /// @param gctx The current geometry context object, e.g. alignment
-    /// @param surfaces The surface pointers to fill
-    /// @return number of bins that were filled
-    std::size_t completeBinning(const GeometryContext& gctx,
-                                const SurfaceVector& surfaces) override {
-      std::size_t binCompleted = 0;
-      std::size_t nBins = size();
-      double minPath = 0;
-      double curPath = 0;
-      const Surface* minSrf = nullptr;
-
-      for (std::size_t b = 0; b < nBins; ++b) {
-        if (!isValidBin(b)) {
-          continue;
-        }
-        std::vector<const Surface*>& binContent = lookup(b);
-        // only complete if we have an empty bin
-        if (!binContent.empty()) {
-          continue;
-        }
-
-        Vector3 binCtr = getBinCenter(b);
-        minPath = std::numeric_limits<double>::max();
-        for (const auto& srf : surfaces) {
-          curPath =
-              (binCtr - srf->referencePosition(gctx, AxisDirection::AxisR))
-                  .norm();
-
-          if (curPath < minPath) {
-            minPath = curPath;
-            minSrf = srf;
-          }
-        }
-
-        binContent.push_back(minSrf);
-        ++binCompleted;
-      }
-
-      // recreate neighborcache
-      populateNeighborCache();
-      return binCompleted;
-    }
-
-    /// @brief Performs lookup at @c pos and returns bin content as reference
-    /// @param position Lookup position
-    /// @return @c SurfaceVector at given bin
-    SurfaceVector& lookup(const Vector3& position) override {
-      return m_grid.atPosition(m_globalToLocal(m_transform * position));
-    }
-
-    /// @brief Performs lookup at @c pos and returns bin content as const
-    /// reference
-    /// @param position Lookup position
-    /// @return @c SurfaceVector at given bin
-    const SurfaceVector& lookup(const Vector3& position) const override {
-      return m_grid.atPosition(m_globalToLocal(m_transform * position));
+    const SurfaceVector& lookup(const Vector3& position,
+                                const Vector3& direction) const override {
+      return m_grid.at(findGlobalBin(position, direction,
+                                     std::numeric_limits<double>::infinity()));
     }
 
     /// @brief Performs lookup at global bin and returns bin content as
@@ -290,10 +180,12 @@ class SurfaceArray {
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
     ///
     /// @param position Lookup position
+    /// @param direction Lookup direction
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
-    const SurfaceVector& neighbors(const Vector3& position) const override {
-      auto lposition = m_globalToLocal(m_transform * position);
-      return m_neighborMap.at(m_grid.globalBinFromPosition(lposition));
+    const SurfaceVector& neighbors(const Vector3& position,
+                                   const Vector3& direction) const override {
+      return m_neighborMap.at(findGlobalBin(
+          position, direction, std::numeric_limits<double>::infinity()));
     }
 
     /// @brief Returns the total size of the grid (including under/overflow
@@ -303,6 +195,7 @@ class SurfaceArray {
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes
+    /// @return Vector of axis directions for binning
     std::vector<AxisDirection> binningValues() const override {
       return m_binValues;
     }
@@ -311,7 +204,8 @@ class SurfaceArray {
     /// @param bin the global bin index
     /// @return The bin center
     Vector3 getBinCenter(std::size_t bin) const override {
-      return getBinCenterImpl(bin);
+      auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+      return getBinCenterImpl(gctx, bin);
     }
 
     /// @brief Returns copies of the axes used in the grid as @c AnyAxis
@@ -327,13 +221,9 @@ class SurfaceArray {
       return AnyGridConstView<SurfaceVector>{m_grid};
     }
 
-    const Transform3& getTransform() const override { return m_transform; }
-
-    Surface::SurfaceType surfaceType() const override { return m_type; }
-
-    /// @brief Get the number of dimensions of the grid.
-    /// @return number of dimensions
-    std::size_t dimensions() const override { return DIM; }
+    const Surface* surfaceRepresentation() const override {
+      return m_representative.get();
+    }
 
     /// @brief Checks if global bin is valid
     /// @param bin the global bin index
@@ -341,70 +231,152 @@ class SurfaceArray {
     /// @note Valid means that the index points to a bin which is not a under
     ///       or overflow bin or out of range in any axis.
     bool isValidBin(std::size_t bin) const override {
-      std::array<std::size_t, DIM> indices = m_grid.localBinsFromGlobalBin(bin);
-      std::array<std::size_t, DIM> nBins = m_grid.numLocalBins();
+      std::array<std::size_t, 2> indices = m_grid.localBinsFromGlobalBin(bin);
+      std::array<std::size_t, 2> nBins = m_grid.numLocalBins();
       for (std::size_t i = 0; i < indices.size(); ++i) {
         std::size_t idx = indices.at(i);
         if (idx <= 0 || idx >= nBins.at(i) + 1) {
           return false;
         }
       }
-
       return true;
     }
 
    private:
+    /// map surface center to grid
+    std::size_t fillSurfaceToBinMapping(const GeometryContext& gctx,
+                                        const Surface& surface) {
+      const Vector3 pos = surface.referencePosition(gctx, AxisDirection::AxisR);
+      const Vector3 normal = m_representative->normal(gctx, pos);
+      const std::size_t globalBin = findGlobalBin(pos, normal, m_tolerance);
+      if (globalBin != 0) {
+        m_grid.at(globalBin).push_back(&surface);
+      }
+      return globalBin;
+    };
+
+    /// flood fill neighboring bins given a starting bin
+    void fillBinToSurfaceMapping(const GeometryContext& gctx,
+                                 const Surface& surface, std::size_t startBin) {
+      const std::array<std::size_t, 2> startIndices =
+          m_grid.localBinsFromGlobalBin(startBin);
+      const auto startNeighborIndices =
+          m_grid.neighborHoodIndices(startIndices, 1u);
+
+      std::set<std::size_t> visited({startBin});
+      std::vector<std::size_t> queue(startNeighborIndices.begin(),
+                                     startNeighborIndices.end());
+
+      while (!queue.empty()) {
+        const std::size_t current = queue.back();
+        queue.pop_back();
+        if (visited.contains(current)) {
+          continue;
+        }
+
+        const std::array<std::size_t, 2> currentIndices =
+            m_grid.localBinsFromGlobalBin(current);
+        visited.insert(current);
+
+        const std::array<double, 2> gridLocal =
+            m_grid.binCenter(currentIndices);
+        const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
+        const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
+        const Vector3 global =
+            m_representative->localToGlobal(gctx, surfaceLocal, normal);
+
+        const Intersection3D intersection =
+            surface.intersect(gctx, global, normal, BoundaryTolerance::None())
+                .closest();
+        if (!intersection.isValid() ||
+            std::abs(intersection.pathLength()) > m_tolerance) {
+          continue;
+        }
+        m_grid.at(current).push_back(&surface);
+
+        const auto neighborIndices =
+            m_grid.neighborHoodIndices(currentIndices, 1u);
+        queue.insert(queue.end(), neighborIndices.begin(),
+                     neighborIndices.end());
+      }
+    };
+
     void populateNeighborCache() {
       // calculate neighbors for every bin and store in map
       for (std::size_t i = 0; i < m_grid.size(); i++) {
         if (!isValidBin(i)) {
           continue;
         }
-        typename Grid_t::index_t loc = m_grid.localBinsFromGlobalBin(i);
-        auto neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
+        const std::array<std::size_t, 2> indices =
+            m_grid.localBinsFromGlobalBin(i);
         std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
         neighbors.clear();
 
-        for (const auto idx : neighborIdxs) {
+        for (std::size_t idx : m_grid.neighborHoodIndices(indices, 1u)) {
           const std::vector<const Surface*>& binContent = m_grid.at(idx);
           std::copy(binContent.begin(), binContent.end(),
                     std::back_inserter(neighbors));
         }
+
+        std::ranges::sort(neighbors);
+        auto last = std::ranges::unique(neighbors);
+        neighbors.erase(last.begin(), last.end());
+        neighbors.shrink_to_fit();
       }
     }
 
-    /// Internal method.
-    /// This is here, because apparently Eigen doesn't like Vector1.
-    /// So SurfaceGridLookup internally uses std::array<double, 1> instead
-    /// of Vector1 (see the point_t typedef). This needs to be switched here,
-    /// so as not to
-    /// attempt an initialization of Vector1 that Eigen will complain about.
-    /// The SFINAE is hidden in this private method so the public
-    /// interface stays the same, since we don't care what happens
-    /// here on the callers end
-    /// This is the version for DIM>1
-    Vector3 getBinCenterImpl(std::size_t bin) const
-      requires(DIM != 1)
-    {
-      return m_itransform *
-             m_localToGlobal(ActsVector<DIM>(
-                 m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin)).data()));
+    Vector3 getBinCenterImpl(const GeometryContext& gctx,
+                             std::size_t bin) const {
+      const std::array<double, 2> gridLocal =
+          m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin));
+      const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
+      return m_representative->localToGlobal(gctx, surfaceLocal);
     }
 
-    /// Internal method, see above.
-    /// This is the version for DIM==1
-    Vector3 getBinCenterImpl(std::size_t bin) const
-      requires(DIM == 1)
-    {
-      point_t pos = m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin));
-      return m_itransform * m_localToGlobal(pos);
+    const CylinderBounds* getCylinderBounds() const {
+      return dynamic_cast<const CylinderBounds*>(&m_representative->bounds());
     }
 
-    Surface::SurfaceType m_type;
-    Transform3 m_transform;
-    Transform3 m_itransform;
-    std::function<point_t(const Vector3&)> m_globalToLocal;
-    std::function<Vector3(const point_t&)> m_localToGlobal;
+    Vector2 gridToSurfaceLocal(std::array<double, 2> gridLocal) const {
+      Vector2 surfaceLocal = Eigen::Map<Vector2>(gridLocal.data());
+      if (const CylinderBounds* bounds = getCylinderBounds();
+          bounds != nullptr) {
+        surfaceLocal[0] *= bounds->get(CylinderBounds::eR);
+      }
+      return surfaceLocal;
+    }
+    std::array<double, 2> surfaceToGridLocal(Vector2 local) const {
+      std::array<double, 2> gridLocal = {local[0], local[1]};
+      if (const CylinderBounds* bounds = getCylinderBounds();
+          bounds != nullptr) {
+        gridLocal[0] /= bounds->get(CylinderBounds::eR);
+      }
+      return gridLocal;
+    }
+
+    std::size_t findGlobalBin(const Vector3& position, const Vector3& direction,
+                              double tolerance) const {
+      auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+      const Intersection3D intersection =
+          m_representative
+              ->intersect(gctx, position, direction,
+                          BoundaryTolerance::Infinite())
+              .closest();
+      if (!intersection.isValid() ||
+          std::abs(intersection.pathLength()) > tolerance) {
+        return 0;  // overflow bin
+      }
+      const Vector2 surfaceLocal =
+          m_representative
+              ->globalToLocal(gctx, intersection.position(), direction)
+              .value();
+      const std::array<double, 2> gridLocal = surfaceToGridLocal(surfaceLocal);
+      return m_grid.globalBinFromPosition(gridLocal);
+    }
+
+    std::shared_ptr<RegularSurface> m_representative;
+    double m_tolerance{};
     Grid_t m_grid;
     std::vector<AxisDirection> m_binValues;
     std::vector<SurfaceVector> m_neighborMap;
@@ -425,13 +397,8 @@ class SurfaceArray {
 
     /// @brief Lookup, always returns @c element
     /// @return reference to vector containing only @c element
-    SurfaceVector& lookup(const Vector3& /*position*/) override {
-      return m_element;
-    }
-
-    /// @brief Lookup, always returns @c element
-    /// @return reference to vector containing only @c element
-    const SurfaceVector& lookup(const Vector3& /*position*/) const override {
+    const SurfaceVector& lookup(const Vector3& /*position*/,
+                                const Vector3& /*direction*/) const override {
       return m_element;
     }
 
@@ -447,7 +414,9 @@ class SurfaceArray {
 
     /// @brief Lookup, always returns @c element
     /// @return reference to vector containing only @c element
-    const SurfaceVector& neighbors(const Vector3& /*position*/) const override {
+    const SurfaceVector& neighbors(
+        const Vector3& /*position*/,
+        const Vector3& /*direction*/) const override {
       return m_element;
     }
 
@@ -470,30 +439,12 @@ class SurfaceArray {
       return std::nullopt;
     }
 
-    const Transform3& getTransform() const override {
-      static const Transform3 identityTransform = Transform3::Identity();
-      return identityTransform;
-    }
-
-    Surface::SurfaceType surfaceType() const override {
-      return Surface::SurfaceType::Other;
-    }
-
-    /// @brief Get the number of dimensions
-    /// @return always 0
-    std::size_t dimensions() const override { return 0; }
+    const Surface* surfaceRepresentation() const override { return nullptr; }
 
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
     void fill(const GeometryContext& /*gctx*/,
               const SurfaceVector& /*surfaces*/) override {}
-
-    /// @brief Comply with concept and provide completeBinning method
-    /// @note Does nothing
-    std::size_t completeBinning(const GeometryContext& /*gctx*/,
-                                const SurfaceVector& /*surfaces*/) override {
-      return 0;
-    }
 
     /// @brief Returns if the bin is valid (it is)
     /// @return always true
@@ -518,19 +469,14 @@ class SurfaceArray {
   /// @param srf The one and only surface
   explicit SurfaceArray(std::shared_ptr<const Surface> srf);
 
-  /// @brief Get all surfaces in bin given by position.
-  /// @param position the lookup position
-  /// @return reference to @c SurfaceVector contained in bin at that position
-  SurfaceVector& at(const Vector3& position) {
-    return p_gridLookup->lookup(position);
-  }
-
   /// @brief Get all surfaces in bin given by position @p pos.
   /// @param position the lookup position
+  /// @param direction the lookup direction
   /// @return const reference to @c SurfaceVector contained in bin at that
   /// position
-  const SurfaceVector& at(const Vector3& position) const {
-    return p_gridLookup->lookup(position);
+  const SurfaceVector& at(const Vector3& position,
+                          const Vector3& direction) const {
+    return p_gridLookup->lookup(position, direction);
   }
 
   /// @brief Get all surfaces in bin given by global bin index @p bin.
@@ -546,13 +492,15 @@ class SurfaceArray {
   }
 
   /// @brief Get all surfaces in bin at @p pos and its neighbors
-  /// @param position The position to lookup as nominal
+  /// @param position The position to lookup
+  /// @param direction The direction to lookup
   /// @return Merged @c SurfaceVector of neighbors and nominal
   /// @note The @c SurfaceVector will be combined. For technical reasons, the
   ///       different bin content vectors have to be copied, so the resulting
   ///       vector contains copies.
-  const SurfaceVector& neighbors(const Vector3& position) const {
-    return p_gridLookup->neighbors(position);
+  const SurfaceVector& neighbors(const Vector3& position,
+                                 const Vector3& direction) const {
+    return p_gridLookup->neighbors(position, direction);
   }
 
   /// @brief Get the size of the underlying grid structure including
@@ -589,10 +537,13 @@ class SurfaceArray {
     return p_gridLookup->isValidBin(bin);
   }
 
+  /// Get the transform of this surface array.
+  /// @return Reference to the transformation matrix
   const Transform3& transform() const { return m_transform; }
 
   /// @brief The binning values described by this surface grid lookup
   /// They are in order of the axes
+  /// @return Vector of axis directions for binning
   std::vector<AxisDirection> binningValues() const {
     return p_gridLookup->binningValues();
   };
@@ -604,6 +555,7 @@ class SurfaceArray {
   std::ostream& toStream(const GeometryContext& gctx, std::ostream& sl) const;
 
   /// Return the lookup object
+  /// @return Reference to the surface grid lookup interface
   const ISurfaceGridLookup& gridLookup() const { return *p_gridLookup; }
 
  private:

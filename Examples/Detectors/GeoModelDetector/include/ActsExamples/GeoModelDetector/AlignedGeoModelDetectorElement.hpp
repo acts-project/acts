@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "ActsExamples/DetectorCommons/Aligned.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 #include <memory>
 
@@ -23,7 +23,7 @@ class Surface;
 namespace ActsExamples {
 /// Define the aligned GeoModel detector element and factory type
 using AlignedGeoModelDetectorElement =
-    ActsExamples::Aligned<Acts::GeoModelDetectorElement>;
+    ActsExamples::Aligned<ActsPlugins::GeoModelDetectorElement>;
 
 std::shared_ptr<AlignedGeoModelDetectorElement>
 alignedGeoModelDetectorElementFactory(const PVConstLink& geoPhysVol,

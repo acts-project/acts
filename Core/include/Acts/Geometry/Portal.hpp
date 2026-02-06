@@ -78,6 +78,8 @@ class Portal {
     struct Link {
       Link() = default;
       /// Constructor from a surface and a volume
+      /// @param surfaceIn Surface to associate with this link
+      /// @param volumeIn Volume to associate with this link
       Link(std::shared_ptr<RegularSurface> surfaceIn, TrackingVolume& volumeIn)
           : surface(std::move(surfaceIn)), volume(&volumeIn) {}
 
@@ -130,6 +132,7 @@ class Portal {
   /// @param aPortal The first portal
   /// @param bPortal The second portal
   /// @param logger The logger to push output to
+  /// @return A new portal that combines both input portals
   static Portal fuse(const GeometryContext& gctx, Portal& aPortal,
                      Portal& bPortal, const Logger& logger = getDummyLogger());
 
@@ -162,6 +165,7 @@ class Portal {
   /// @param bPortal The second portal
   /// @param direction The direction of the merge (e.g. along z)
   /// @param logger The logger to push output to
+  /// @return A new merged portal that encompasses both input portals
   static Portal merge(const GeometryContext& gctx, Portal& aPortal,
                       Portal& bPortal, AxisDirection direction,
                       const Logger& logger = getDummyLogger());

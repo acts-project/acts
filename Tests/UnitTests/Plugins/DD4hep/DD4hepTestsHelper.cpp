@@ -9,10 +9,15 @@
 #include "DD4hepTestsHelper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
 #include <DD4hep/DD4hepUnits.h>
+
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
 
 void DD4hepTestsHelper::decodeBinning(
     dd4hep::rec::VariantParameters& variantParams, const xml_comp_t& xmlBinning,
@@ -21,12 +26,11 @@ void DD4hepTestsHelper::decodeBinning(
   variantParams.set<int>(bname + "_dim", bvals.size());
   for (const auto& bv : bvals) {
     // Gather the number of bins, 0 indicates variable binning
-    int nBins = Acts::getAttrValueOr<int>(xmlBinning, "n" + bv, 0);
+    int nBins = getAttrValueOr<int>(xmlBinning, "n" + bv, 0);
     // Gather the bin expansion parameter, expansion of 0 is default
-    int nExpansion = Acts::getAttrValueOr<int>(xmlBinning, bv + "expansion", 0);
+    int nExpansion = getAttrValueOr<int>(xmlBinning, bv + "expansion", 0);
     // Auto-range detection
-    bool autoRange =
-        Acts::getAttrValueOr<bool>(xmlBinning, bv + "autorange", false);
+    bool autoRange = getAttrValueOr<bool>(xmlBinning, bv + "autorange", false);
     variantParams.set<bool>(bname + "_" + bv + "_autorange", autoRange);
     variantParams.set<int>(bname + "_" + bv + "_exp", nExpansion);
     // Equidistant binning detected
@@ -56,7 +60,7 @@ void DD4hepTestsHelper::decodeBinning(
       // Unit conversion
       double unitScalar = 1.;
       if (bv != "phi") {
-        unitScalar = Acts::UnitConstants::mm / dd4hep::millimeter;
+        unitScalar = UnitConstants::mm / dd4hep::millimeter;
       }
       // Split and convert
       while (end != std::string::npos) {
@@ -78,17 +82,17 @@ void DD4hepTestsHelper::decodeBinning(
 dd4hep::Transform3D DD4hepTestsHelper::createTransform(
     const xml_comp_t& x_det_comp) {
   // Build the transform - center def
-  double cx = Acts::getAttrValueOr<double>(x_det_comp, "cx", 0.);
-  double cy = Acts::getAttrValueOr<double>(x_det_comp, "cy", 0.);
-  double cz = Acts::getAttrValueOr<double>(x_det_comp, "cz", 0.);
+  double cx = getAttrValueOr<double>(x_det_comp, "cx", 0.);
+  double cy = getAttrValueOr<double>(x_det_comp, "cy", 0.);
+  double cz = getAttrValueOr<double>(x_det_comp, "cz", 0.);
 
-  double xx = Acts::getAttrValueOr<double>(x_det_comp, "xx", 1.);
-  double xy = Acts::getAttrValueOr<double>(x_det_comp, "xy", 0.);
-  double xz = Acts::getAttrValueOr<double>(x_det_comp, "xz", 0.);
+  double xx = getAttrValueOr<double>(x_det_comp, "xx", 1.);
+  double xy = getAttrValueOr<double>(x_det_comp, "xy", 0.);
+  double xz = getAttrValueOr<double>(x_det_comp, "xz", 0.);
 
-  double yx = Acts::getAttrValueOr<double>(x_det_comp, "yx", 0.);
-  double yy = Acts::getAttrValueOr<double>(x_det_comp, "yy", 1.);
-  double yz = Acts::getAttrValueOr<double>(x_det_comp, "yz", 0.);
+  double yx = getAttrValueOr<double>(x_det_comp, "yx", 0.);
+  double yy = getAttrValueOr<double>(x_det_comp, "yy", 1.);
+  double yz = getAttrValueOr<double>(x_det_comp, "yz", 0.);
 
   Position xAxis(xx, xy, xz);
   Position yAxis(yx, yy, yz);
@@ -101,7 +105,7 @@ dd4hep::Transform3D DD4hepTestsHelper::createTransform(
   return Transform3D(xx, yx, zx, cx, xy, yy, zy, cy, xz, yz, zz, cz);
 }
 
-std::string DD4hepTestsHelper::transformToXML(const Acts::Transform3& tf,
+std::string DD4hepTestsHelper::transformToXML(const Transform3& tf,
                                               const std::array<int, 2u>& axes) {
   auto tr = tf.translation();
   auto rot = tf.rotation();
@@ -121,9 +125,9 @@ std::string DD4hepTestsHelper::transformToXML(const Acts::Transform3& tf,
   return sxml.str();
 }
 
-std::string DD4hepTestsHelper::surfaceToXML(const Acts::GeometryContext& gctx,
-                                            const Acts::Surface& surface,
-                                            const Acts::Transform3& ref) {
+std::string DD4hepTestsHelper::surfaceToXML(const GeometryContext& gctx,
+                                            const Surface& surface,
+                                            const Transform3& ref) {
   // The xml to be translated
   std::stringstream sxml;
   auto boundValues = surface.bounds().values();
@@ -131,7 +135,7 @@ std::string DD4hepTestsHelper::surfaceToXML(const Acts::GeometryContext& gctx,
   std::array<int, 2u> axes = {0, 1};
   // Change/adapt the behavior
   switch (surface.bounds().type()) {
-    case Acts::SurfaceBounds::eRectangle: {
+    case SurfaceBounds::eRectangle: {
       sxml << "<box ";
       double dx = (boundValues[2u] - boundValues[0u]);
       double dy = (boundValues[3u] - boundValues[1u]);
@@ -140,7 +144,7 @@ std::string DD4hepTestsHelper::surfaceToXML(const Acts::GeometryContext& gctx,
       sxml << "dy=\"" << dy << "*mm\" ";
       sxml << "dz=\"" << dz << "*mm\" ";
     }; break;
-    case Acts::SurfaceBounds::eTrapezoid: {
+    case SurfaceBounds::eTrapezoid: {
       axes = {2, 0};
 
       sxml << "<trap ";
@@ -158,9 +162,11 @@ std::string DD4hepTestsHelper::surfaceToXML(const Acts::GeometryContext& gctx,
   }
 
   // Unwind the placement you have already
-  auto relTransform = ref * surface.transform(gctx);
+  auto relTransform = ref * surface.localToGlobalTransform(gctx);
   sxml << transformToXML(relTransform, axes);
   sxml << " material=\"Air\"";
   sxml << " sensitive=\"true\"/>";
   return sxml.str();
 }
+
+}  // namespace ActsTests

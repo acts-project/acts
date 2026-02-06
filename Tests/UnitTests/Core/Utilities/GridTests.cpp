@@ -9,11 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -25,11 +25,12 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::detail;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(GridTests)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant) {
   using Point = std::array<double, 1>;
@@ -1382,4 +1383,4 @@ BOOST_AUTO_TEST_CASE(Equality) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

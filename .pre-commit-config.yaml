@@ -39,7 +39,7 @@ repos:
         "-I", "./CI/codespell_ignore.txt",
         "-w"
       ]
-      exclude: ^CI/.*$
+      exclude: ^CI/.*|docs/tex-mml-chtml.js$
 
   - repo: local
     hooks:
@@ -49,66 +49,68 @@ repos:
       entry: CI/check_license.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh)$
 
-  - repo: local
-    hooks:
     - id: include_guards
       name: include_guards
       language: system
       entry: CI/check_include_guards.py --fail-global
       files: \.hpp$
 
-  - repo: local
-    hooks:
     - id: pragma_once
       name: pragma_once
       language: system
       entry: CI/check_pragma_once.sh
       files: \.(hpp|ipp)$
 
-  - repo: local
-    hooks:
     - id: type_t
       name: type_t
       language: system
       entry: CI/check_type_t.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh)$
 
-  - repo: local
-    hooks:
     - id: boost_test
       name: boost_test
       language: system
       entry: CI/check_boost_test_macro.sh
       files: ^Tests\/.*\.(cpp|hpp|ipp|cu|cuh)$
 
-  - repo: local
-    hooks:
     - id: cmake_options
       name: cmake_options
       language: system
-      entry: docs/parse_cmake_options.py --write docs/getting_started.md
+      entry: docs/parse_cmake_options.py --write docs/pages/contributing/building_acts.md
       files: ^CMakeLists.txt$
 
-  - repo: local
-    hooks:
     - id: leftover_conflict_markers
       name: Leftover conflict markers
       language: system
       entry: git --no-pager diff --staged --check
+      exclude: \.(diff|patch)$
 
-  - repo: local
-    hooks:
     - id: math_macros
       name: math_macros
       language: system
       entry: CI/check_math_macros.py
       files: \.(cpp|hpp|ipp|cu|cuh)$
 
-  - repo: local
-    hooks:
     - id: codegen_dependencies
       name: codegen_dependencies
       language: python
       entry: CI/check_codegen_dependencies.sh
       additional_dependencies: ["uv"]
       files: pyproject.toml$
+
+    - id: format-json
+      name: Format JSON files (Python)
+      entry: CI/format_json.py
+      language: python
+      types: [json]
+      require_serial: true
+      args: [--indent=4]
+      exclude: ^.zenodo.json$
+
+    - id: sync_citation_metadata
+      name: sync citation metadata
+      entry: CI/sync_citation_metadata.py
+      language: python
+      files: ^(CITATION\.cff|\.zenodo\.json|AUTHORS)$
+      additional_dependencies: ["typer", "rich", "pyyaml"]
+      pass_filenames: false

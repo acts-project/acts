@@ -18,8 +18,6 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -27,14 +25,13 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
-// Create a test context
-GeometryContext tgContext = GeometryContext();
-}  // namespace Acts::Test
+using namespace Acts;
 
-namespace Acts::Test::Layers {
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-BOOST_AUTO_TEST_SUITE(Layers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 /// Unit test for creating compliant/non-compliant PlaneLayer object
 BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
@@ -65,10 +62,9 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   // construct with thickness:
   auto pPlaneLayerWithThickness = PlaneLayer::create(
       pTransform, pRectangle, std::move(pSurfaceArray), thickness);
-  BOOST_CHECK_EQUAL(pPlaneLayerWithThickness->thickness(), thickness);
+  BOOST_CHECK_EQUAL(pPlaneLayerWithThickness->layerThickness(), thickness);
   // with an approach descriptor...
-  std::unique_ptr<ApproachDescriptor> ad(
-      new GenericApproachDescriptor(aSurfaces));
+  auto ad(std::make_unique<GenericApproachDescriptor>(aSurfaces));
   auto adPtr = ad.get();
   auto pPlaneLayerWithApproachDescriptor =
       PlaneLayer::create(pTransform, pRectangle, std::move(pSurfaceArray),
@@ -96,4 +92,4 @@ BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

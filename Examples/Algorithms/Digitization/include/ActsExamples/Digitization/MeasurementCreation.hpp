@@ -68,4 +68,11 @@ measurementConstituents(const DigitizedParameters& dParams) {
   return {indices, par, cov};
 }
 
+/// Function that computes a global position for a measurement.
+/// For 1D measurements, the center of the module is used for the missing
+/// dimension.
+Acts::Vector3 measurementGlobalPosition(
+    const DigitizedParameters& digitizedParameters,
+    const Acts::Surface& surface, const Acts::GeometryContext& gctx);
+
 }  // namespace ActsExamples

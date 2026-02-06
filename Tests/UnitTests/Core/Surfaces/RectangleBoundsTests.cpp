@@ -12,7 +12,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -22,9 +22,11 @@
 
 const double inf = std::numeric_limits<double>::infinity();
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit test for creating compliant/non-compliant RectangleBounds object
 BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
@@ -114,6 +116,23 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {
       assignedVertices.cbegin(), assignedVertices.cend());
 }
 
+BOOST_AUTO_TEST_CASE(RectangleBoundsCenter) {
+  // Test symmetric rectangle
+  const double halfX = 10.;
+  const double halfY = 5.;
+  RectangleBounds rect(halfX, halfY);
+  Vector2 center = rect.center();
+  CHECK_CLOSE_ABS(center, Vector2(0., 0.), 1e-6);
+
+  // Test asymmetric rectangle
+  Vector2 min(-3., -2.);
+  Vector2 max(7., 4.);
+  RectangleBounds rectAsym(min, max);
+  Vector2 centerAsym = rectAsym.center();
+  Vector2 expected = 0.5 * (min + max);
+  CHECK_CLOSE_ABS(centerAsym, expected, 1e-6);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

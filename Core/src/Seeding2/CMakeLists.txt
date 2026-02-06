@@ -2,8 +2,10 @@ target_sources(
     ActsCore
     PRIVATE
         detail/CandidatesForMiddleSp2.cpp
-        CylindricalSpacePointGrid2.cpp
-        DoubletSeedFinder.cpp
         BroadTripletSeedFilter.cpp
-        BroadTripletSeedFinder.cpp
+        CylindricalSpacePointGrid2.cpp
+        CylindricalSpacePointKDTree.cpp
+        DoubletSeedFinder.cpp
+        TripletSeedFinder.cpp
+        TripletSeeder.cpp
 )

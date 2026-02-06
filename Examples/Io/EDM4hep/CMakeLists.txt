@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesIoEDM4hep
-    SHARED
     src/EDM4hepMeasurementInputConverter.cpp
     src/EDM4hepMeasurementOutputConverter.cpp
     src/EDM4hepMultiTrajectoryOutputConverter.cpp
@@ -10,7 +9,6 @@ acts_add_library(
     src/EDM4hepParticleOutputConverter.cpp
     src/EDM4hepSimHitOutputConverter.cpp
     src/EDM4hepUtil.cpp
-    src/EDM4hepInputConverter.cpp
 )
 target_include_directories(
     ActsExamplesIoEDM4hep
@@ -22,7 +20,6 @@ target_link_libraries(
         EDM4HEP::edm4hep
         Acts::PluginEDM4hep
         podio::podioRootIO
-        Acts::Core
         Acts::Fatras
         Acts::ExamplesFramework
         Acts::ExamplesDigitization

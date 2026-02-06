@@ -16,14 +16,14 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <iostream>
 
 #include <boost/program_options.hpp>
 
-namespace Acts::Test {
+namespace ActsTests {
 
 namespace po = boost::program_options;
 using namespace Acts;
@@ -48,7 +48,7 @@ struct BenchmarkStepper {
         ("B",po::value<double>(&BzInT)->default_value(2),"z-component of B-field in T")
         ("path",po::value<double>(&maxPathInM)->default_value(5),"maximum path length in m")
         ("cov",po::value<bool>(&withCov)->default_value(true),"propagation with covariance matrix")
-        ("verbose",po::value<unsigned int>(&lvl)->default_value(Acts::Logging::INFO),"logging level");
+        ("verbose",po::value<unsigned int>(&lvl)->default_value(Logging::INFO),"logging level");
       // clang-format on
       po::variables_map vm;
       po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -78,10 +78,10 @@ struct BenchmarkStepper {
     using Covariance = BoundSquareMatrix;
 
     // Create a test context
-    GeometryContext tgContext = GeometryContext();
+    GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
     MagneticFieldContext mfContext = MagneticFieldContext();
 
-    ACTS_LOCAL_LOGGER(getDefaultLogger(name, Acts::Logging::Level(lvl)));
+    ACTS_LOCAL_LOGGER(getDefaultLogger(name, Logging::Level(lvl)));
 
     // print information about profiling setup
     ACTS_INFO("propagating " << toys << " tracks with pT = " << ptInGeV
@@ -115,7 +115,7 @@ struct BenchmarkStepper {
     std::size_t numSteps = 0;
     std::size_t numStepTrials = 0;
     std::size_t numIters = 0;
-    const auto propagationBenchResult = Acts::Test::microBenchmark(
+    const auto propagationBenchResult = microBenchmark(
         [&] {
           auto state = propagator.makeState(options);
           auto initRes = propagator.initialize(state, pars);
@@ -145,4 +145,4 @@ struct BenchmarkStepper {
   }
 };
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

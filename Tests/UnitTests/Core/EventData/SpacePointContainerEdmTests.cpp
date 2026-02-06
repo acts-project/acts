@@ -19,7 +19,9 @@
 #include <ranges>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 struct SpacePoint {
   SpacePoint() = default;
@@ -35,8 +37,8 @@ using SpacePointCollection = std::vector<SpacePoint>;
 
 class Adapter {
  public:
-  friend Acts::SpacePointContainer<Adapter, Acts::detail::RefHolder>;
-  friend Acts::SpacePointContainer<Adapter, Acts::detail::ValueHolder>;
+  friend SpacePointContainer<Adapter, detail::RefHolder>;
+  friend SpacePointContainer<Adapter, detail::ValueHolder>;
   using value_type = SpacePoint;
   using ValueType = value_type;
 
@@ -55,14 +57,14 @@ class Adapter {
 
   const SpacePoint& get_impl(std::size_t idx) const { return storage()[idx]; }
 
-  std::any component_impl(Acts::HashedString key, std::size_t /*n*/) const {
-    using namespace Acts::HashedStringLiteral;
+  std::any component_impl(HashedString key, std::size_t /*n*/) const {
+    using namespace HashedStringLiteral;
     switch (key) {
       case "TopStripVector"_hash:
       case "BottomStripVector"_hash:
       case "StripCenterDistance"_hash:
       case "TopStripCenterPosition"_hash:
-        return Acts::Vector3(0., 0., 0.);
+        return Vector3(0., 0., 0.);
       default:
         throw std::runtime_error("no such component " + std::to_string(key));
     }
@@ -74,13 +76,14 @@ class Adapter {
   const SpacePointCollection* m_storage{};
 };
 
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
 BOOST_AUTO_TEST_CASE(spacepoint_container_edm_traits) {
-  using adapter_t = Acts::Test::Adapter;
-  using container_t =
-      Acts::SpacePointContainer<adapter_t, Acts::detail::RefHolder>;
-  using proxy_t = Acts::SpacePointProxy<container_t>;
+  using adapter_t = Adapter;
+  using container_t = SpacePointContainer<adapter_t, detail::RefHolder>;
+  using proxy_t = SpacePointProxy<container_t>;
   using iterator_t =
-      Acts::ContainerIterator<container_t, proxy_t&, std::size_t, false>;
+      detail::ContainerIterator<container_t, proxy_t&, std::size_t, false>;
 
   static_assert(std::ranges::range<container_t>);
   static_assert(std::same_as<typename iterator_t::iterator_category,
@@ -94,16 +97,15 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_constructors) {
   std::size_t nExternalPoints = 10;
   SpacePointCollection externalCollection(nExternalPoints);
 
-  Acts::SpacePointContainerConfig spConfig;
-  Acts::SpacePointContainerOptions spOptions;
+  SpacePointContainerConfig spConfig;
+  SpacePointContainerOptions spOptions;
 
-  Acts::Test::Adapter adapterForRef(externalCollection);
-  Acts::SpacePointContainer<Acts::Test::Adapter, Acts::detail::RefHolder>
-      spContainerRef(spConfig, spOptions, adapterForRef);
+  Adapter adapterForRef(externalCollection);
+  SpacePointContainer<Adapter, detail::RefHolder> spContainerRef(
+      spConfig, spOptions, adapterForRef);
 
-  Acts::SpacePointContainer<Acts::Test::Adapter, Acts::detail::ValueHolder>
-      spContainerVal(spConfig, spOptions,
-                     Acts::Test::Adapter(externalCollection));
+  SpacePointContainer<Adapter, detail::ValueHolder> spContainerVal(
+      spConfig, spOptions, Adapter(externalCollection));
 
   BOOST_CHECK_EQUAL(spContainerRef.size(), nExternalPoints);
   BOOST_CHECK_EQUAL(spContainerVal.size(), nExternalPoints);
@@ -118,13 +120,13 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
                                     3.f * i);
   }
 
-  Acts::SpacePointContainerConfig spConfig;
+  SpacePointContainerConfig spConfig;
   spConfig.useDetailedDoubleMeasurementInfo = true;
-  Acts::SpacePointContainerOptions spOptions;
+  SpacePointContainerOptions spOptions;
 
-  Acts::Test::Adapter adapter(externalCollection);
-  Acts::SpacePointContainer<Acts::Test::Adapter, Acts::detail::RefHolder>
-      spContainer(spConfig, spOptions, adapter);
+  Adapter adapter(externalCollection);
+  SpacePointContainer<Adapter, detail::RefHolder> spContainer(
+      spConfig, spOptions, adapter);
 
   BOOST_CHECK_EQUAL(spContainer.size(), nExternalPoints);
   BOOST_CHECK_EQUAL(spContainer.size(), externalCollection.size());
@@ -135,24 +137,23 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
                                   std::ranges::end(spContainer)),
                     nExternalPoints);
 
-  using proxy_t = Acts::SpacePointProxy<
-      Acts::SpacePointContainer<Acts::Test::Adapter, Acts::detail::RefHolder>>;
-  static_assert(std::same_as<typename decltype(spContainer)::ValueType,
-                             Acts::Test::SpacePoint>);
+  using proxy_t =
+      SpacePointProxy<SpacePointContainer<Adapter, detail::RefHolder>>;
+  static_assert(
+      std::same_as<typename decltype(spContainer)::ValueType, SpacePoint>);
   static_assert(
       std::same_as<typename decltype(spContainer)::ProxyType, proxy_t>);
   static_assert(
       std::same_as<typename decltype(spContainer)::value_type, proxy_t>);
   static_assert(
       std::same_as<typename proxy_t::ContainerType, decltype(spContainer)>);
-  static_assert(
-      std::same_as<typename proxy_t::ValueType, Acts::Test::SpacePoint>);
+  static_assert(std::same_as<typename proxy_t::ValueType, SpacePoint>);
 
-  using iterator_t = Acts::ContainerIterator<decltype(spContainer), proxy_t&,
-                                             std::size_t, false>;
+  using iterator_t = detail::ContainerIterator<decltype(spContainer), proxy_t&,
+                                               std::size_t, false>;
   using const_iterator_t =
-      Acts::ContainerIterator<decltype(spContainer), const proxy_t&,
-                              std::size_t, true>;
+      detail::ContainerIterator<decltype(spContainer), const proxy_t&,
+                                std::size_t, true>;
   static_assert(
       std::same_as<iterator_t, typename decltype(spContainer)::iterator>);
   static_assert(std::same_as<const_iterator_t,
@@ -181,11 +182,10 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
     BOOST_CHECK_EQUAL(proxy.varianceR(), refCovR);
     BOOST_CHECK_EQUAL(proxy.varianceZ(), refCovZ);
 
-    const Acts::Vector3& topStripVector = proxy.topStripVector();
-    const Acts::Vector3& bottomStripVector = proxy.bottomStripVector();
-    const Acts::Vector3& stripCenterDistance = proxy.stripCenterDistance();
-    const Acts::Vector3& topStripCenterPosition =
-        proxy.topStripCenterPosition();
+    const Vector3& topStripVector = proxy.topStripVector();
+    const Vector3& bottomStripVector = proxy.bottomStripVector();
+    const Vector3& stripCenterDistance = proxy.stripCenterDistance();
+    const Vector3& topStripCenterPosition = proxy.topStripCenterPosition();
 
     for (std::size_t i = 0; i < 3; ++i) {
       BOOST_CHECK_EQUAL(topStripVector[i], 0.);
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
       BOOST_CHECK_EQUAL(topStripCenterPosition[i], 0.);
     }
 
-    const Acts::Test::SpacePoint& sp = proxy.externalSpacePoint();
+    const SpacePoint& sp = proxy.externalSpacePoint();
     BOOST_CHECK_EQUAL(&sp, &externalCollection[n]);
 
     ++n;
@@ -202,4 +202,6 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
   BOOST_CHECK_EQUAL(n, nExternalPoints);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

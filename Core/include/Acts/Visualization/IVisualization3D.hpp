@@ -22,8 +22,10 @@ namespace Acts {
 /// conform to.
 class IVisualization3D {
  public:
+  /// Type alias for face definition as vertex indices
   using FaceType = std::vector<std::size_t>;
 
+  /// Default color used for visualization when no color is specified
   static constexpr Color s_defaultColor = {120, 120, 120};
 
   /// Draw a vertex at a given location and a color.
@@ -80,9 +82,10 @@ class IVisualization3D {
   virtual void object(const std::string& name) = 0;
 };
 
-/// Overload of the << operator to facilitate writing to streams.
+/// Stream operator for IVisualization3D
 /// @param os The output stream
 /// @param hlp The helper instance
+/// @return Reference to output stream
 inline std::ostream& operator<<(std::ostream& os, const IVisualization3D& hlp) {
   hlp.write(os);
   return os;

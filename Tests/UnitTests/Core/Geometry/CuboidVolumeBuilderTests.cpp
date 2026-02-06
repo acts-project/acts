@@ -23,9 +23,9 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cmath>
 #include <functional>
@@ -34,16 +34,17 @@
 #include <string>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Construct builder
   CuboidVolumeBuilder cvb;
 
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
@@ -54,9 +55,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     // Rotation of the surfaces
     double rotationAngle = std::numbers::pi / 2.;
-    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
-    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;
@@ -90,7 +91,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     BOOST_REQUIRE_NE(pSur, nullptr);
     CHECK_CLOSE_ABS(pSur->center(tgContext), cfg.position, 1e-9);
     BOOST_CHECK_NE(pSur->surfaceMaterial(), nullptr);
-    BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
+    BOOST_CHECK_EQUAL(pSur->isSensitive(), true);
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -179,9 +180,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     // Rotation of the surfaces
     double rotationAngle = std::numbers::pi / 2.;
-    Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3 xPos(std::cos(rotationAngle), 0., std::sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
-    Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3 zPos(-std::sin(rotationAngle), 0., std::cos(rotationAngle));
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;
@@ -239,4 +240,4 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
       nullptr);
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

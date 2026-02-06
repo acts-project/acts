@@ -10,15 +10,21 @@
 
 #include "Acts/EventData/SubspaceHelpers.hpp"
 
-BOOST_AUTO_TEST_SUITE(SubspaceHelpers)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(SerializeDeserialize) {
-  Acts::SubspaceIndices<3> indices = {1, 2, 3};
-  auto serialized = Acts::serializeSubspaceIndices<3>(indices);
-  auto deserialized = Acts::deserializeSubspaceIndices<3>(serialized);
+  SubspaceIndices<3> indices = {1, 2, 3};
+  auto serialized = serializeSubspaceIndices<3>(indices);
+  auto deserialized = deserializeSubspaceIndices<3>(serialized);
 
   BOOST_CHECK_EQUAL_COLLECTIONS(indices.begin(), indices.end(),
                                 deserialized.begin(), deserialized.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

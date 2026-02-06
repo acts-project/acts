@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesIoJson
-    SHARED
     src/JsonGeometryList.cpp
     src/JsonMaterialWriter.cpp
     src/JsonSurfacesWriter.cpp
@@ -13,7 +12,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesIoJson
     PUBLIC
-        Acts::Core
         Acts::PluginJson
         Acts::ExamplesDigitization
         Acts::ExamplesFramework

@@ -78,6 +78,7 @@ class ConstrainedStep {
   }
 
   /// returns the min step size
+  /// @return The minimum constrained step size considering all constraints
   constexpr double value() const {
     double min = *std::min_element(m_values.begin(), m_values.end());
     // accuracy is always positive and therefore handled separately
@@ -88,11 +89,13 @@ class ConstrainedStep {
   /// Access a specific value
   ///
   /// @param type is the requested parameter type
+  /// @return The step size for the specified constraint type
   constexpr double value(Type type) const {
     return m_values[toUnderlying(type)];
   }
 
   /// Access the accuracy value
+  /// @return The step size accuracy constraint
   constexpr double accuracy() const { return m_accuracy; }
 
   /// release a certain constraint value
@@ -121,6 +124,9 @@ class ConstrainedStep {
     }
   }
 
+  /// Stream the constrained step into an output stream
+  /// @param os Output stream to write to
+  /// @return Reference to the output stream for chaining
   std::ostream& toStream(std::ostream& os) const {
     // Helper method to avoid unreadable screen output
     auto streamValue = [&](double v) {
@@ -145,6 +151,8 @@ class ConstrainedStep {
     return os;
   }
 
+  /// Convert the constrained step to a string representation
+  /// @return String representation of the constrained step
   std::string toString() const {
     std::stringstream dstream;
     toStream(dstream);
@@ -164,6 +172,10 @@ class ConstrainedStep {
   }
 };
 
+/// Stream operator for ConstrainedStep
+/// @param os Output stream
+/// @param step ConstrainedStep to output
+/// @return Reference to output stream
 inline std::ostream& operator<<(std::ostream& os, const ConstrainedStep& step) {
   return step.toStream(os);
 }

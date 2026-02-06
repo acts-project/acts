@@ -13,9 +13,9 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cstddef>
 #include <numbers>
@@ -23,17 +23,19 @@
 namespace {
 
 using namespace Acts;
-using namespace Acts::Test;
 
 using ParametersVector = Acts::BoundVector;
 using CovarianceMatrix = Acts::BoundSquareMatrix;
 using Jacobian = Acts::BoundMatrix;
 
-const Acts::GeometryContext tgContext;
+const Acts::GeometryContext tgContext =
+    Acts::GeometryContext::dangerouslyDefaultConstruct();
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(TrackFittingMbfSmoother)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(Smooth) {
   VectorMultiTrajectory traj;
@@ -44,11 +46,10 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   CovarianceMatrix covTrk;
   covTrk.setIdentity();
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 1;
-  BoundVector parValues;
 
   std::size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);
-  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
 
   ts.predicted() << 0.3, 0.5, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
@@ -65,7 +66,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
-  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
 
   ts.predicted() << 0.2, 0.5, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
-  ts.typeFlags().set(TrackStateFlag::MeasurementFlag);
+  ts.typeFlags().setIsMeasurement();
 
   ts.predicted() << 0.35, 0.49, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.predictedCovariance() = covTrk;
@@ -136,3 +137,5 @@ BOOST_AUTO_TEST_CASE(Smooth) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

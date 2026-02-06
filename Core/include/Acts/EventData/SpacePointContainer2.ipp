@@ -12,18 +12,7 @@
 
 #include "Acts/EventData/SpacePointProxy2.hpp"
 
-namespace Acts::Experimental {
-
-inline MutableSpacePointProxy2
-SpacePointContainer2::createSpacePoint() noexcept {
-  for (const auto &[name, column] : m_namedColumns) {
-    column.first->emplace_back();
-  }
-
-  ++m_size;
-
-  return MutableProxy(*this, size() - 1);
-}
+namespace Acts {
 
 inline MutableSpacePointProxy2 SpacePointContainer2::at(Index index) {
   if (index >= size()) {
@@ -53,4 +42,4 @@ inline ConstSpacePointProxy2 SpacePointContainer2::operator[](
   return ConstProxy(*this, index);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

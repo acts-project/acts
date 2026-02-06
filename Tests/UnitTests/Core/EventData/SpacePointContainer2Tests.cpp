@@ -15,9 +15,10 @@
 #include <stdexcept>
 
 using namespace Acts;
-using namespace Acts::Experimental;
 
-BOOST_AUTO_TEST_SUITE(EventDataSpacePointContainer2)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Empty) {
   SpacePointContainer2 container;
@@ -31,7 +32,9 @@ BOOST_AUTO_TEST_CASE(Empty) {
 }
 
 BOOST_AUTO_TEST_CASE(Create) {
-  SpacePointContainer2 container;
+  SpacePointContainer2 container(SpacePointColumns::SourceLinks |
+                                 SpacePointColumns::X | SpacePointColumns::Y |
+                                 SpacePointColumns::Z);
   container.reserve(1);
 
   {
@@ -56,7 +59,9 @@ BOOST_AUTO_TEST_CASE(Create) {
 }
 
 BOOST_AUTO_TEST_CASE(Iterate) {
-  SpacePointContainer2 container;
+  SpacePointContainer2 container(SpacePointColumns::SourceLinks |
+                                 SpacePointColumns::X | SpacePointColumns::Y |
+                                 SpacePointColumns::Z);
   container.reserve(1);
 
   MutableSpacePointProxy2 sp = container.createSpacePoint();
@@ -166,7 +171,8 @@ BOOST_AUTO_TEST_CASE(ThrowOnDropNonExistingColumn) {
 }
 
 BOOST_AUTO_TEST_CASE(ZipIterate) {
-  SpacePointContainer2 container;
+  SpacePointContainer2 container(SpacePointColumns::X | SpacePointColumns::Y |
+                                 SpacePointColumns::Z);
   container.reserve(3);
 
   MutableSpacePointProxy2 sp1 = container.createSpacePoint();
@@ -199,3 +205,5 @@ BOOST_AUTO_TEST_CASE(ZipIterate) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

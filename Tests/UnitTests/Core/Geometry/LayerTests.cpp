@@ -26,12 +26,11 @@
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
 
-namespace Acts::Test {
-// Create a test context
-GeometryContext tgContext = GeometryContext();
-}  // namespace Acts::Test
+using namespace Acts;
 
-namespace Acts::Test::Layers {
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
+
+namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(Layers)
 
@@ -73,7 +72,7 @@ BOOST_AUTO_TEST_CASE(LayerProperties) {
   /// surfaceArray()
   BOOST_CHECK_EQUAL(layerStub.surfaceArray(), nullptr);
   /// thickness()
-  BOOST_CHECK_EQUAL(layerStub.thickness(), thickness);
+  BOOST_CHECK_EQUAL(layerStub.layerThickness(), thickness);
   // onLayer() is templated; can't find implementation!
   /// isOnLayer() (delegates to the Surface 'isOnSurface()')
   const Vector3 pos{0.0, 0.0, 0.0};
@@ -100,4 +99,4 @@ BOOST_AUTO_TEST_CASE(LayerProperties) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

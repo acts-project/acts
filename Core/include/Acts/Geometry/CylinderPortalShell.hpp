@@ -23,20 +23,16 @@ namespace Acts {
 /// volumes
 class CylinderPortalShell : public PortalShellBase {
  public:
+  /// Type alias for cylinder volume bounds face enumeration
   using Face = CylinderVolumeBounds::Face;
 
   using enum CylinderVolumeBounds::Face;
-
-  /// Retrieve the portal associated to the given face. Can be nullptr if unset.
-  /// @param face The face to retrieve the portal for
-  /// @return The portal associated to the face
-  virtual Portal* portal(Face face) = 0;
 
   /// Retrieve a shared_ptr for the portal associated to the given face. Can be
   /// nullptr if unset.
   /// @param face The face to retrieve the portal for
   /// @return The portal associated to the face
-  virtual std::shared_ptr<Portal> portalPtr(Face face) = 0;
+  virtual std::shared_ptr<Portal> portal(Face face) = 0;
 
   /// Set the portal associated to the given face.
   /// @param portal The portal to set
@@ -61,6 +57,7 @@ std::ostream& operator<<(std::ostream& os, CylinderPortalShell::Face face);
 /// cylinder portal slot.
 class SingleCylinderPortalShell : public CylinderPortalShell {
  public:
+  /// Type alias for base cylinder portal shell class
   using Base = CylinderPortalShell;
 
   /// Construct a single cylinder portal shell for the given volume
@@ -71,10 +68,7 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
   std::size_t size() const final;
 
   /// @copydoc CylinderPortalShell::portal
-  Portal* portal(Face face) final;
-
-  /// @copydoc CylinderPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) final;
+  std::shared_ptr<Portal> portal(Face face) final;
 
   /// @copydoc CylinderPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) final;
@@ -130,6 +124,7 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
 /// looked up from the innermost and outermost shell in the r direction.
 class CylinderStackPortalShell : public CylinderPortalShell {
  public:
+  /// Type alias for single cylinder portal shell type used in stacks
   using SingleShell = SingleCylinderPortalShell;
 
   /// Construct the portal shell stack from the given shells
@@ -147,10 +142,7 @@ class CylinderStackPortalShell : public CylinderPortalShell {
   std::size_t size() const final;
 
   /// @copydoc CylinderPortalShell::portal
-  Portal* portal(Face face) final;
-
-  /// @copydoc CylinderPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) final;
+  std::shared_ptr<Portal> portal(Face face) final;
 
   /// @copydoc CylinderPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) final;

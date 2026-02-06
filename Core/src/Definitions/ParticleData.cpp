@@ -9,7 +9,6 @@
 #include "Acts/Definitions/ParticleData.hpp"
 
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
 
 #include <algorithm>
 #include <array>
@@ -38,7 +37,7 @@ enum class Type {
 template <typename T, Acts::PdgParticle pdg, Type type>
 std::optional<T> findCachedImpl(const std::map<std::int32_t, T>& map) {
   const static std::optional<T> value = [&map]() -> std::optional<T> {
-    const auto it = map.find(pdg);
+    const auto it = map.find(static_cast<std::int32_t>(pdg));
     if (it == map.end()) {
       return std::nullopt;
     }
@@ -89,6 +88,10 @@ std::optional<T> findCached(Acts::PdgParticle pdg,
       return findCachedImpl<T, eAntiProton, type>(map);
     case eLead:
       return findCachedImpl<T, eLead, type>(map);
+    case eKaon0Short:
+      return findCachedImpl<T, eKaon0Short, type>(map);
+    case eLambda0:
+      return findCachedImpl<T, eLambda0, type>(map);
     default:
       return std::nullopt;
   }
@@ -270,6 +273,12 @@ std::optional<std::string_view> Acts::pdgToShortAbsString(PdgParticle pdg) {
   }
   if (pdg == eLead) {
     return "lead";
+  }
+  if (pdg == eKaon0Short) {
+    return "Kaon0Short";
+  }
+  if (pdg == eLambda0) {
+    return "Lambda0";
   }
   return std::nullopt;
 }

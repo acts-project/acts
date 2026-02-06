@@ -284,9 +284,12 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             for (auto& [dParameters, simHitsIdxs] : digitizeParametersResult) {
               auto measurement =
                   createMeasurement(measurements, moduleGeoId, dParameters);
+
+              dParameters.cluster.globalPosition = measurementGlobalPosition(
+                  dParameters, *surfacePtr, ctx.geoContext);
               clusters.emplace_back(std::move(dParameters.cluster));
 
-              for (auto [i, simHitIdx] : Acts::enumerate(simHitsIdxs)) {
+              for (auto simHitIdx : simHitsIdxs) {
                 measurementParticlesMap.emplace_hint(
                     measurementParticlesMap.end(), measurement.index(),
                     simHits.nth(simHitIdx)->particleId());
@@ -307,6 +310,10 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   if (m_cfg.doClusterization) {
+    ACTS_DEBUG("Created " << measurements.size() << " measurements, "
+                          << clusters.size() << " clusters" << " from "
+                          << simHits.size() << " sim hits.");
+
     m_outputMeasurements(ctx, std::move(measurements));
     m_outputClusters(ctx, std::move(clusters));
 

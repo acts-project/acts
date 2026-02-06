@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/Root/TGeoCylinderDiscSplitter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsPlugins/Json/ActsJson.hpp"
+#include "ActsPlugins/Root/TGeoCylinderDiscSplitter.hpp"
 
 #include <map>
 #include <string>
@@ -21,11 +21,10 @@
 #include <nlohmann/json.hpp>
 
 // Namespace of the module splitters
-namespace Acts {
+namespace ActsPlugins {
 
 /// Read config for cylinder/disc module splitter
-void from_json(const nlohmann::json& j,
-               Acts::TGeoCylinderDiscSplitter::Config& cdc) {
+void from_json(const nlohmann::json& j, TGeoCylinderDiscSplitter::Config& cdc) {
   /// Number of segments in phi for a disc
   cdc.cylinderPhiSegments = j.at("geo-tgeo-cyl-nphi-segs");
   /// Number of segments in r for a disk
@@ -37,8 +36,7 @@ void from_json(const nlohmann::json& j,
 }
 
 /// Write config for cylinder/disc module splitter
-void to_json(nlohmann::json& j,
-             const Acts::TGeoCylinderDiscSplitter::Config& cdc) {
+void to_json(nlohmann::json& j, const TGeoCylinderDiscSplitter::Config& cdc) {
   j = nlohmann::json{{"geo-tgeo-cyl-nphi-segs", cdc.cylinderPhiSegments},
                      {"geo-tgeo-cyl-nz-segs", cdc.cylinderLongitudinalSegments},
                      {"geo-tgeo-disc-nphi-segs", cdc.discPhiSegments},
@@ -53,7 +51,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::BinningType,
                                  {Acts::BinningType::arbitrary, "arbitrary"},
                              })
 
-}  // namespace Acts
+}  // namespace ActsPlugins
 
 namespace ActsExamples::Options {
 
@@ -130,7 +128,7 @@ void from_json(const nlohmann::json& j, TGeoDetector::Config::Volume& vol) {
 
   vol.cylinderDiscSplit = j.at("geo-tgeo-cyl-disc-split");
   if (vol.cylinderDiscSplit) {
-    Acts::TGeoCylinderDiscSplitter::Config cdConfig =
+    ActsPlugins::TGeoCylinderDiscSplitter::Config cdConfig =
         j.at("Splitters").at("CylinderDisk");
     vol.cylinderNZSegments = cdConfig.cylinderLongitudinalSegments;
     vol.cylinderNPhiSegments = cdConfig.cylinderPhiSegments;
@@ -173,7 +171,7 @@ void to_json(nlohmann::json& j, const TGeoDetector::Config::Volume& vol) {
   j["geo-tgeo-cyl-disc-split"] = vol.cylinderDiscSplit;
   j["geo-tgeo-itk-module-split"] = vol.itkModuleSplit;
 
-  Acts::TGeoCylinderDiscSplitter::Config cdConfig;
+  ActsPlugins::TGeoCylinderDiscSplitter::Config cdConfig;
   cdConfig.cylinderLongitudinalSegments = vol.cylinderNZSegments;
   cdConfig.cylinderPhiSegments = vol.cylinderNPhiSegments;
   cdConfig.discRadialSegments = vol.discNRSegments;

@@ -11,9 +11,10 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 
 using namespace Acts;
-using namespace Acts::Experimental;
 
-BOOST_AUTO_TEST_SUITE(EventDataSeedContainer2)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Empty) {
   SeedContainer2 container;
@@ -85,9 +86,6 @@ BOOST_AUTO_TEST_CASE(CopyAndMove) {
   SeedContainer2 containerMove = std::move(container);
   BOOST_CHECK(!containerMove.empty());
   BOOST_CHECK_EQUAL(containerMove.size(), 1u);
-  // original should be empty after move
-  BOOST_CHECK(container.empty());
-  BOOST_CHECK_EQUAL(container.size(), 0u);
   // copy should be unchanged
   BOOST_CHECK(!containerCopy.empty());
   BOOST_CHECK_EQUAL(containerCopy.size(), 1u);
@@ -114,3 +112,5 @@ BOOST_AUTO_TEST_CASE(Clear) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

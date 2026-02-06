@@ -19,6 +19,8 @@ namespace Acts {
 
 /// @class ProtoVolumeMaterial
 ///
+/// @ingroup material
+///
 /// @brief proxy to VolumeMaterial hand over BinUtility
 ///
 /// The ProtoVolumeMaterial class acts as a proxy to the VolumeMaterial
@@ -52,19 +54,23 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   ~ProtoVolumeMaterial() override = default;
 
   /// Return the BinUtility
+  /// @return Const reference to the bin utility for this material
   const BinUtility& binUtility() const;
 
   /// Assignment operator
   ///
   /// @param vmproxy The source proxy
+  /// @return Reference to this material proxy for assignment chaining
   ProtoVolumeMaterial& operator=(const ProtoVolumeMaterial& vmproxy) = default;
 
   /// Return the material
+  /// @return The vacuum material (always the same as this is a proxy)
   const Material material(const Vector3& /*position*/) const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
+  /// @return Reference to the output stream for method chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:

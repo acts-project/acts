@@ -9,65 +9,30 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithm.hpp"
-#include "Acts/Plugins/Hashing/HashingAlgorithmConfig.hpp"
-#include "Acts/Plugins/Hashing/HashingTraining.hpp"
-#include "Acts/Plugins/Hashing/HashingTrainingConfig.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithm.hpp"
+#include "ActsPlugins/Hashing/HashingAlgorithmConfig.hpp"
+#include "ActsPlugins/Hashing/HashingTraining.hpp"
+#include "ActsPlugins/Hashing/HashingTrainingConfig.hpp"
 
-#include <algorithm>
-#include <iterator>
 #include <memory>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-// Custom seed comparison function
-template <typename external_spacepoint_t>
-struct SeedComparison {
-  bool operator()(const Acts::Seed<external_spacepoint_t>& seed1,
-                  const Acts::Seed<external_spacepoint_t>& seed2) const {
-    const auto& sp1 = seed1.sp();
-    const auto& sp2 = seed2.sp();
-
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->z() != sp2[i]->z()) {
-        return sp1[i]->z() < sp2[i]->z();
-      }
-    }
-
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->x() != sp2[i]->x()) {
-        return sp1[i]->x() < sp2[i]->x();
-      }
-    }
-
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->y() != sp2[i]->y()) {
-        return sp1[i]->y() < sp2[i]->y();
-      }
-    }
-
-    return false;
-  }
-};
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Construct track seeds from space points.
 class SeedingAlgorithmHashing final : public IAlgorithm {
@@ -94,8 +59,8 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
     Acts::CylindricalSpacePointGridConfig gridConfig;
     Acts::CylindricalSpacePointGridOptions gridOptions;
     Acts::SeedFinderOptions seedFinderOptions;
-    Acts::HashingAlgorithmConfig hashingConfig;
-    Acts::HashingTrainingConfig hashingTrainingConfig;
+    ActsPlugins::HashingAlgorithmConfig hashingConfig;
+    ActsPlugins::HashingTrainingConfig hashingTrainingConfig;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
     bool allowSeparateRMax = false;
@@ -106,10 +71,6 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
     int numPhiNeighbors = 1;
-
-    // Connect custom selections on the space points or to the doublet
-    // compatibility
-    bool useExtraCuts = false;
   };
 
   /// Construct the seeding algorithm.
@@ -146,42 +107,11 @@ class SeedingAlgorithmHashing final : public IAlgorithm {
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<std::vector<SimSpacePointContainer>> m_outputBuckets{
       this, "OutputBuckets"};
-  Acts::HashingAlgorithm<const SimSpacePoint*,
-                         std::vector<const SimSpacePoint*>>
+  ActsPlugins::HashingAlgorithm<const SimSpacePoint*,
+                                std::vector<const SimSpacePoint*>>
       m_hashing;
-  Acts::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>
+  ActsPlugins::HashingTrainingAlgorithm<std::vector<const SimSpacePoint*>>
       m_hashingTraining;
-
-  static inline bool itkFastTrackingCuts(const SpacePointProxy_t& /*middle*/,
-                                         const SpacePointProxy_t& other,
-                                         float cotTheta,
-                                         bool isBottomCandidate) {
-    static float rMin = 45.;
-    static float cotThetaMax = 1.5;
-
-    if (isBottomCandidate && other.radius() < rMin &&
-        (cotTheta > cotThetaMax || cotTheta < -cotThetaMax)) {
-      return false;
-    }
-    return true;
-  }
-
-  static inline bool itkFastTrackingSPselect(const SpacePointProxy_t& sp) {
-    // At small r we remove points beyond |z| > 200.
-    float r = sp.radius();
-    float zabs = std::abs(sp.z());
-    if (zabs > 200. && r < 50.) {
-      return false;
-    }
-
-    /// Remove space points beyond eta=4 if their z is
-    /// larger than the max seed z0 (150.)
-    float cotTheta = 27.2899;  // corresponds to eta=4
-    if ((zabs - 150.) > cotTheta * r) {
-      return false;
-    }
-    return true;
-  }
 };
 
 }  // namespace ActsExamples

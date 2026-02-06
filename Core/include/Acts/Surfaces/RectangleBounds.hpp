@@ -27,6 +27,8 @@ namespace Acts {
 /// generic shifted rectangles
 class RectangleBounds : public PlanarBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int {
     eMinX = 0,
     eMinY = 1,
@@ -90,19 +92,27 @@ class RectangleBounds : public PlanarBounds {
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For RectangleBounds: returns the geometric center (min + max) / 2
+  Vector2 center() const final;
+
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream for the dump
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The requested bound value
   double get(BoundValues bValue) const;
 
   /// Access to the half length in X
+  /// @return Half the width of the rectangle in X direction
   double halfLengthX() const { return 0.5 * (m_max.x() - m_min.x()); }
 
   /// Access to the half length in Y
+  /// @return Half the width of the rectangle in Y direction
   double halfLengthY() const { return 0.5 * (m_max.y() - m_min.y()); }
 
   /// Get the min vertex defining the bounds

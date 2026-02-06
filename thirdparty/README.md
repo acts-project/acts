@@ -34,7 +34,7 @@ CMake instructions to build [Pybind11](https://github.com/pybind/pybind11), whic
 
 ## FRNN
 
-CMake instructions to build [FRNN](https://github.com/lxxue/FRNN), which is used by the Exa.TrkX plugin.
+CMake instructions to build [FRNN](https://github.com/lxxue/FRNN), which is used by the GNN plugin.
 
 ## Algebra plugins
 

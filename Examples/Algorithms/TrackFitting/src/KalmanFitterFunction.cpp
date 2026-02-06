@@ -6,11 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
@@ -19,9 +17,9 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -30,19 +28,11 @@
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <memory>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class MagneticFieldProvider;
-class SourceLink;
-class Surface;
-class TrackingGeometry;
-}  // namespace Acts
 
 namespace {
 
@@ -84,8 +74,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   DirectFitter directFitter;
 
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
+  Acts::MbfSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
+  double reverseFilteringCovarianceScaling = 100.0;
   SimpleOutlierFinder outlierFinder;
 
   bool multipleScattering = false;
@@ -107,9 +98,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
-    extensions.smoother.connect<
-        &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-        &kfSmoother);
+    extensions.smoother
+        .connect<&Acts::MbfSmoother::operator()<Acts::VectorMultiTrajectory>>(
+            &kfSmoother);
     extensions.reverseFilteringLogic
         .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
             &reverseFilteringLogic);
@@ -118,15 +109,17 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.propOptions, &(*options.referenceSurface));
+        extensions, options.propOptions, options.referenceSurface);
 
     kfOptions.referenceSurfaceStrategy =
-        Acts::KalmanFitterTargetSurfaceStrategy::first;
+        Acts::TrackExtrapolationStrategy::first;
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
+    kfOptions.reverseFilteringCovarianceScaling =
+        reverseFilteringCovarianceScaling;
 
     if (options.doRefit) {
       kfOptions.extensions.surfaceAccessor
@@ -172,6 +165,7 @@ ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
     double reverseFilteringMomThreshold,
+    double reverseFilteringCovarianceScaling,
     Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
     const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
@@ -204,6 +198,8 @@ ActsExamples::makeKalmanFitterFunction(
   fitterFunction->reverseFilteringLogic.momentumThreshold =
       reverseFilteringMomThreshold;
   fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
+  fitterFunction->reverseFilteringCovarianceScaling =
+      reverseFilteringCovarianceScaling;
   fitterFunction->outlierFinder.chi2Cut = chi2Cut;
 
   return fitterFunction;

@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesGeant4
-    SHARED
     src/AlgebraConverters.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
@@ -28,10 +27,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGeant4
-    PUBLIC
-        Acts::Core
-        Acts::ExamplesFramework
-        Acts::ExamplesDetectorsCommon
-        Boost::headers
-        ${Geant4_LIBRARIES}
+    PUBLIC Acts::ExamplesDetectorsCommon Boost::headers ${Geant4_LIBRARIES}
 )

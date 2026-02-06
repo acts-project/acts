@@ -55,7 +55,7 @@ Volume& ContainerBlueprintNode::build(
   ACTS_VERBOSE(prefix() << "-> Collected " << m_childVolumes.size()
                         << " child volumes");
   ACTS_VERBOSE(prefix() << "-> Building the stack");
-  m_stack = makeStack(m_childVolumes, logger);
+  m_stack = makeStack(gctx, m_childVolumes, logger);
   ACTS_DEBUG(prefix() << "-> Stack bounds are: " << m_stack->volumeBounds());
 
   ACTS_DEBUG(prefix() << " *** build complete ***");
@@ -139,15 +139,6 @@ AxisDirection ContainerBlueprintNode::direction() const {
 
 VolumeAttachmentStrategy ContainerBlueprintNode::attachmentStrategy() const {
   return m_attachmentStrategy;
-}
-
-VolumeResizeStrategy ContainerBlueprintNode::resizeStrategy() const {
-  if (m_resizeStrategies.first != m_resizeStrategies.second) {
-    throw std::runtime_error(
-        "Resize strategy is not the same for inner and outer. Use "
-        "resizeStrategies() instead.");
-  }
-  return m_resizeStrategies.first;
 }
 
 std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
@@ -272,9 +263,11 @@ const std::string& CylinderContainerBlueprintNode::typeName() const {
 }
 
 std::unique_ptr<VolumeStack> CylinderContainerBlueprintNode::makeStack(
-    std::vector<Volume*>& volumes, const Logger& logger) {
-  return std::make_unique<CylinderVolumeStack>(
-      volumes, m_direction, m_attachmentStrategy, m_resizeStrategies, logger);
+    const GeometryContext& gctx, std::vector<Volume*>& volumes,
+    const Logger& logger) {
+  return std::make_unique<CylinderVolumeStack>(gctx, volumes, m_direction,
+                                               m_attachmentStrategy,
+                                               m_resizeStrategies, logger);
 }
 
 PortalShellBase& CuboidContainerBlueprintNode::connect(
@@ -290,8 +283,9 @@ const std::string& CuboidContainerBlueprintNode::typeName() const {
 }
 
 std::unique_ptr<VolumeStack> CuboidContainerBlueprintNode::makeStack(
-    std::vector<Volume*>& volumes, const Logger& logger) {
-  return std::make_unique<CuboidVolumeStack>(volumes, m_direction,
+    const GeometryContext& gctx, std::vector<Volume*>& volumes,
+    const Logger& logger) {
+  return std::make_unique<CuboidVolumeStack>(gctx, volumes, m_direction,
                                              m_attachmentStrategy,
                                              m_resizeStrategies.first, logger);
 }

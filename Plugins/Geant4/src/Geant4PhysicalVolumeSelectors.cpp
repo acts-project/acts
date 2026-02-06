@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
+#include "ActsPlugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 
 #include "G4VPhysicalVolume.hh"
 
-namespace Acts::Geant4PhysicalVolumeSelectors {
+namespace ActsPlugins::Geant4PhysicalVolumeSelectors {
 
 bool NameSelector::select(const G4VPhysicalVolume& g4PhysVol) const {
   std::string volumeName = g4PhysVol.GetName();
@@ -39,4 +39,4 @@ bool PositionSelector::select(const G4VPhysicalVolume& g4PhysVol) const {
   return matched;
 }
 
-}  // namespace Acts::Geant4PhysicalVolumeSelectors
+}  // namespace ActsPlugins::Geant4PhysicalVolumeSelectors

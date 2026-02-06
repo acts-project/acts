@@ -9,6 +9,8 @@ from truth_tracking_kalman import runTruthTrackingKalman
 
 from physmon_common import makeSetup
 
+u = acts.UnitConstants
+
 setup = makeSetup()
 
 with tempfile.TemporaryDirectory() as temp:
@@ -24,6 +26,8 @@ with tempfile.TemporaryDirectory() as temp:
         field=setup.field,
         digiConfigFile=setup.digiConfig,
         outputDir=tp,
+        reverseFilteringMomThreshold=0 * u.GeV,  # use direct smoothing
+        reverseFilteringCovarianceScaling=100.0,
         s=s,
     )
 

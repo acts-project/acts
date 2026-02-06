@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesVertexing
-    SHARED
     src/AdaptiveMultiVertexFinderAlgorithm.cpp
     src/HoughVertexFinderAlgorithm.cpp
     src/IterativeVertexFinderAlgorithm.cpp
@@ -13,6 +12,6 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesVertexing
-    PUBLIC Acts::Core Acts::ExamplesFramework
+    PUBLIC Acts::ExamplesFramework
     PRIVATE Acts::ExamplesTruthTracking
 )

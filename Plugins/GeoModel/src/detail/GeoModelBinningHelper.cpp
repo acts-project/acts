@@ -6,14 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoModelBinningHelper.hpp"
 
 #include <numbers>
 
 #include <boost/algorithm/string.hpp>
 
-std::tuple<Acts::DirectedProtoAxis, std::size_t>
-Acts::detail::GeoModelBinningHelper::toProtoAxis(
+using namespace Acts;
+
+std::tuple<DirectedProtoAxis, std::size_t>
+ActsPlugins::detail::GeoModelBinningHelper::toProtoAxis(
     const std::string& binning, const std::optional<Extent>& extent) {
   std::vector<std::string> binningTokens;
   boost::split(binningTokens, binning, boost::is_any_of(","));
@@ -51,6 +53,7 @@ Acts::detail::GeoModelBinningHelper::toProtoAxis(
       boundaryType == AxisBoundaryType::Closed) {
     rangeMin = -std::numbers::pi;
     rangeMax = std::numbers::pi;
+    autoRange = false;
   } else {
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;

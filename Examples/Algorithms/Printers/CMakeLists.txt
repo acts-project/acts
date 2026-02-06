@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesPrinters
-    SHARED
     ActsExamples/Printers/ParticlesPrinter.cpp
     ActsExamples/Printers/TrackParametersPrinter.cpp
 )
@@ -10,5 +9,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesPrinters
-    PUBLIC Acts::Core Acts::Fatras Acts::ExamplesFramework
+    PUBLIC Acts::Fatras Acts::ExamplesFramework
 )

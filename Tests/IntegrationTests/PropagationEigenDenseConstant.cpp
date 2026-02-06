@@ -24,26 +24,28 @@
 namespace {
 
 namespace ds = ActsTests::PropagationDatasets;
-using namespace Acts::UnitLiterals;
 
-using MagneticField = Acts::ConstantBField;
-using Stepper = Acts::EigenStepper<Acts::EigenStepperDenseExtension>;
-using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
+using namespace Acts;
+using namespace UnitLiterals;
+
+using MagneticField = ConstantBField;
+using Stepper = EigenStepper<EigenStepperDenseExtension>;
+using TestPropagator = Propagator<Stepper, Navigator>;
+using RiddersPropagator = RiddersPropagator<TestPropagator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 10_um;
 constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 
-const Acts::GeometryContext geoCtx;
-const Acts::MagneticFieldContext magCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext magCtx;
 
-inline Propagator makePropagator(double bz) {
-  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
+inline TestPropagator makePropagator(double bz) {
+  auto magField = std::make_shared<MagneticField>(Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return Propagator(std::move(stepper),
-                    Acts::Navigator({createDenseBlock(geoCtx)}));
+  return TestPropagator(std::move(stepper),
+                        Navigator({createDenseBlock(geoCtx)}));
 }
 
 }  // namespace
@@ -56,9 +58,9 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
-  runForwardBackwardTest<Propagator>(
-      makePropagator(bz), geoCtx, magCtx,
-      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom);
+  runForwardBackwardTest(makePropagator(bz), geoCtx, magCtx,
+                         makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
+                         epsDir, epsMom);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

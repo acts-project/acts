@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Utilities/DelegateChainBuilder.hpp"
 
 #include <type_traits>
 
@@ -18,6 +18,7 @@ namespace Acts {
 
 class TrackingVolume;
 class INavigationPolicy;
+class Surface;
 
 /// Concept for a navigation policy
 /// This exists so `updateState` can be a non-virtual method and we still have a
@@ -26,8 +27,9 @@ template <typename T>
 concept NavigationPolicyConcept = requires {
   requires std::is_base_of_v<INavigationPolicy, T>;
   // Has a conforming update method
-  requires requires(T policy, const NavigationArguments& args) {
-    policy.initializeCandidates(args,
+  requires requires(T policy, const GeometryContext& gctx,
+                    const NavigationArguments& args) {
+    policy.initializeCandidates(gctx, args,
                                 std::declval<AppendOnlyNavigationStream&>(),
                                 std::declval<const Logger&>());
   };
@@ -43,7 +45,7 @@ class INavigationPolicy {
   /// Noop update function that is suitable as a default for default navigation
   /// delegates.
   static void noopInitializeCandidates(
-      const NavigationArguments& /*unused*/,
+      const GeometryContext& /*unused*/, const NavigationArguments& /*unused*/,
       const AppendOnlyNavigationStream& /*unused*/, const Logger& /*unused*/) {
     // This is a noop
   }
@@ -57,6 +59,15 @@ class INavigationPolicy {
   /// @param delegate The delegate to connect to
   virtual void connect(NavigationDelegate& delegate) const = 0;
 
+  /// Convenience function to walk over all navigation policies. The default
+  /// implementation just calls this on itself, while the @ref
+  /// MultiNavigationPolicy will call it on all it's children.
+  /// @param visitor The visitor function to call for each policy
+  virtual void visit(
+      const std::function<void(const INavigationPolicy&)>& visitor) const {
+    visitor(*this);
+  }
+
  protected:
   /// Internal helper function for derived classes that conform to the concept
   /// and have a conventional `updateState` method. Mainly used to save some
@@ -67,8 +78,7 @@ class INavigationPolicy {
   void connectDefault(NavigationDelegate& delegate) const {
     // This cannot be a concept because we use it in CRTP below
     const auto* self = static_cast<const T*>(this);
-    DelegateChainBuilder{delegate}.add<&T::initializeCandidates>(self).store(
-        delegate);
+    delegate.template connect<&T::initializeCandidates>(self);
   }
 };
 

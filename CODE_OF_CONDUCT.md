@@ -1,6 +1,6 @@
 # Code Of Conduct
 
-The Acts project observes [CERN's Code of Conduct](https://cern.ch/codeofconduct).
+The ACTS project observes [CERN's Code of Conduct](https://cern.ch/codeofconduct).
 Below is a plain text summary of the [official PDF](https://cds.cern.ch/record/2240689/files/BrochureCodeofConductEN.pdf?)
 as of 1. April 2020. Please consult the [PDF](https://cds.cern.ch/record/2240689/files/BrochureCodeofConductEN.pdf?)
 for up-to-date information.

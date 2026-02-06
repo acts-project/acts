@@ -186,10 +186,10 @@ class DsvWriter {
  public:
   DsvWriter() = delete;
   DsvWriter(const DsvWriter&) = delete;
-  DsvWriter(DsvWriter&&) = default;
+  DsvWriter(DsvWriter&&) noexcept = default;
   ~DsvWriter() = default;
   DsvWriter& operator=(const DsvWriter&) = delete;
-  DsvWriter& operator=(DsvWriter&&) = default;
+  DsvWriter& operator=(DsvWriter&&) noexcept = default;
 
   /// Create a file at the given path. Overwrites existing data.
   ///
@@ -228,10 +228,10 @@ class DsvReader {
  public:
   DsvReader() = delete;
   DsvReader(const DsvReader&) = delete;
-  DsvReader(DsvReader&&) = default;
+  DsvReader(DsvReader&&) noexcept = default;
   ~DsvReader() = default;
   DsvReader& operator=(const DsvReader&) = delete;
-  DsvReader& operator=(DsvReader&&) = default;
+  DsvReader& operator=(DsvReader&&) noexcept = default;
 
   /// Open a file at the given path.
   ///
@@ -259,10 +259,10 @@ class NamedTupleDsvWriter {
  public:
   NamedTupleDsvWriter() = delete;
   NamedTupleDsvWriter(const NamedTupleDsvWriter&) = delete;
-  NamedTupleDsvWriter(NamedTupleDsvWriter&&) = default;
+  NamedTupleDsvWriter(NamedTupleDsvWriter&&) noexcept = default;
   ~NamedTupleDsvWriter() = default;
   NamedTupleDsvWriter& operator=(const NamedTupleDsvWriter&) = delete;
-  NamedTupleDsvWriter& operator=(NamedTupleDsvWriter&&) = default;
+  NamedTupleDsvWriter& operator=(NamedTupleDsvWriter&&) noexcept = default;
 
   /// Create a file at the given path. Overwrites existing data.
   ///
@@ -318,10 +318,10 @@ class NamedTupleDsvReader {
  public:
   NamedTupleDsvReader() = delete;
   NamedTupleDsvReader(const NamedTupleDsvReader&) = delete;
-  NamedTupleDsvReader(NamedTupleDsvReader&&) = default;
+  NamedTupleDsvReader(NamedTupleDsvReader&&) noexcept = default;
   ~NamedTupleDsvReader() = default;
   NamedTupleDsvReader& operator=(const NamedTupleDsvReader&) = delete;
-  NamedTupleDsvReader& operator=(NamedTupleDsvReader&&) = default;
+  NamedTupleDsvReader& operator=(NamedTupleDsvReader&&) noexcept = default;
 
   /// Open a file at the given path.
   ///

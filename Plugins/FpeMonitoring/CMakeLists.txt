@@ -1,8 +1,7 @@
 acts_add_library(
     PluginFpeMonitoring
-    SHARED
     src/FpeMonitor.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 target_include_directories(
     ActsPluginFpeMonitoring
@@ -33,6 +32,7 @@ else()
             boost_stacktrace_include
             NAMES "boost/stacktrace.hpp"
             REQUIRED
+            PATHS ${Boost_INCLUDE_DIRS}
         )
         if(Backtrace_FOUND)
             # check if we need to link against bracktrace or not
@@ -173,10 +173,14 @@ else()
                 endif()
             endif()
         endif()
+    endif()
 
-        if(NOT _backtrace_setup_complete)
-            message(STATUS "Unable to set up stacktrace setup: use noop")
-            list(APPEND _fpe_options -BOOST_STACKTRACE_USE_NOOP)
+    if(NOT _backtrace_setup_complete)
+        if(NOT ${dl_LIBRARY} STREQUAL "dl_LIBRARY-NOTFOUND")
+            message(STATUS "ld lib available: use boost basic fallback")
+        else()
+            message(STATUS "Unable to set up stacktraces: use noop")
+            list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_NOOP)
         endif()
     endif()
 endif()

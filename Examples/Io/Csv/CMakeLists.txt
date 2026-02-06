@@ -2,7 +2,6 @@ include(ActsTargetLinkLibrariesSystem)
 
 acts_add_library(
     ExamplesIoCsv
-    SHARED
     src/CsvMeasurementReader.cpp
     src/CsvMeasurementWriter.cpp
     src/CsvParticleReader.cpp
@@ -19,10 +18,11 @@ acts_add_library(
     src/CsvMuonSegmentReader.cpp
     src/CsvProtoTrackWriter.cpp
     src/CsvSpacePointWriter.cpp
-    src/CsvExaTrkXGraphWriter.cpp
-    src/CsvExaTrkXGraphReader.cpp
+    src/CsvGnnGraphWriter.cpp
+    src/CsvGnnGraphReader.cpp
     src/CsvSpacePointsBucketWriter.cpp
     src/CsvBFieldWriter.cpp
+    src/CsvVertexWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoCsv
@@ -30,9 +30,5 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoCsv
-    PRIVATE
-        Acts::Core
-        Acts::ExamplesFramework
-        Acts::ExamplesDigitization
-        Threads::Threads
+    PRIVATE Acts::ExamplesFramework Acts::ExamplesDigitization Threads::Threads
 )

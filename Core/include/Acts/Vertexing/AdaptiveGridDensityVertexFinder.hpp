@@ -32,6 +32,7 @@ namespace Acts {
 /// version where the density grid grows bigger with added tracks.
 class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
  public:
+  /// Type alias for the density map used in adaptive grid vertex finding
   using DensityMap = AdaptiveGridTrackDensity::DensityMap;
 
   /// @brief The Config struct
@@ -41,6 +42,7 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
         : gridDensity(gDensity) {}
 
     // The grid density object
+    /// Grid density calculator for track density estimation
     AdaptiveGridTrackDensity gridDensity;
 
     // Cache the main grid and the density contributions (trackGrid and z-bin)
@@ -49,18 +51,25 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
     // only once in the first iteration. If tracks are removed from the track
     // collection, the individual track density contributions to the main grid
     // can just be removed without calculating the entire grid from scratch.
+    /// Flag to enable caching of grid state for efficient track removal
     bool cacheGridStateForTrackRemoval = true;
 
     // Maximum d0 impact parameter significance to use a track
+    /// Maximum d0 impact parameter significance threshold
     double maxD0TrackSignificance = 3.5;
     // Maximum z0 impact parameter significance to use a track
+    /// Maximum z0 impact parameter significance threshold
     double maxZ0TrackSignificance = 12.;
     // The actual corresponding cut values in the algorithm
+    /// Squared d0 significance cut value for track selection
     double d0SignificanceCut = maxD0TrackSignificance * maxD0TrackSignificance;
+    /// Squared z0 significance cut value for track selection
     double z0SignificanceCut = maxZ0TrackSignificance * maxZ0TrackSignificance;
+    /// Flag indicating whether to estimate seed width
     bool estimateSeedWidth = false;
 
     // Function to extract parameters from InputTrack
+    /// Function to extract track parameters from InputTrack
     InputTrack::Extractor extractParameters;
   };
 
@@ -69,15 +78,19 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
     // Map from the z bin values to the corresponding track density
+    /// Main density map storing cumulative track density per z-bin
     DensityMap mainDensityMap;
 
     // Map from input track to corresponding track density map
+    /// Map storing individual track density contributions
     std::unordered_map<InputTrack, DensityMap> trackDensities;
 
     // Store tracks that have been removed from track collection. These
     // tracks will be removed from the main grid
+    /// Vector of tracks to be removed from density calculation
     std::vector<InputTrack> tracksToRemove;
 
+    /// Flag indicating whether the state has been initialized
     bool isInitialized = false;
   };
 

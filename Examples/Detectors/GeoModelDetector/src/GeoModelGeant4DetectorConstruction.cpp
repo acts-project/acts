@@ -21,7 +21,7 @@
 namespace ActsExamples {
 
 GeoModelGeant4DetectorConstruction::GeoModelGeant4DetectorConstruction(
-    const Acts::GeoModelTree& geoModelTree,
+    const ActsPlugins::GeoModelTree& geoModelTree,
     const Geant4ConstructionOptions& options)
     : G4VUserDetectorConstruction(),
       m_geoModelTree(geoModelTree),

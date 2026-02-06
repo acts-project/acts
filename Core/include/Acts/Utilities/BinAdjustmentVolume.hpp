@@ -46,7 +46,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   for (auto& bd : bData) {
     // The binning value
     AxisDirection bval = bd.binvalue;
-    // Throw exceptions is stuff doesn't make sense:
+    // Throw exceptions if stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
@@ -102,7 +102,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   for (auto& bd : bData) {
     // The binning value
     AxisDirection bval = bd.binvalue;
-    // Throw exceptions is stuff doesn't make sense:
+    // Throw exceptions if stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
@@ -158,7 +158,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   for (auto& bd : bData) {
     // The binning value
     AxisDirection bval = bd.binvalue;
-    // Throw exceptions is stuff doesn't make sense:
+    // Throw exceptions if stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
@@ -189,11 +189,13 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 
 /// @brief adjust the BinUtility bu to a volume
 ///
+/// @param gctx The current geometry context object, e.g. alignment
 /// @param bu BinUtility at source
 /// @param volume Volume to which the adjustment is being done
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
+BinUtility adjustBinUtility(const GeometryContext& gctx, const BinUtility& bu,
+                            const Volume& volume) {
   auto cyBounds =
       dynamic_cast<const CylinderVolumeBounds*>(&(volume.volumeBounds()));
   auto cutcylBounds =
@@ -203,15 +205,16 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
 
   if (cyBounds != nullptr) {
     // Cylinder bounds
-    return adjustBinUtility(bu, *cyBounds, volume.transform());
+    return adjustBinUtility(bu, *cyBounds, volume.localToGlobalTransform(gctx));
 
   } else if (cutcylBounds != nullptr) {
     // Cutout Cylinder bounds
-    return adjustBinUtility(bu, *cutcylBounds, volume.transform());
+    return adjustBinUtility(bu, *cutcylBounds,
+                            volume.localToGlobalTransform(gctx));
 
   } else if (cuBounds != nullptr) {
     // Cuboid bounds
-    return adjustBinUtility(bu, *cuBounds, volume.transform());
+    return adjustBinUtility(bu, *cuBounds, volume.localToGlobalTransform(gctx));
   }
 
   throw std::invalid_argument(

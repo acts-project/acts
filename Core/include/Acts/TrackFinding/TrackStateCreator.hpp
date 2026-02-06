@@ -34,26 +34,37 @@ namespace Acts {
 ///
 template <typename source_link_iterator_t, typename track_container_t>
 struct TrackStateCreator {
+  /// Type alias for result of track states creation operation
   using TrackStatesResult =
       Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
+  /// Type alias for track state container backend from track container
   using TrackStateContainerBackend =
       typename track_container_t::TrackStateContainerBackend;
+  /// Type alias for track proxy from track container
   using TrackProxy = typename track_container_t::TrackProxy;
+  /// Type alias for track state proxy from track container
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
+  /// Type alias for bound state tuple containing parameters, jacobian and path
+  /// length
   using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+  /// Type alias for container of candidate track state proxies
   using candidate_container_t =
       typename std::vector<typename track_container_t::TrackStateProxy>;
 
   // delegate definition to get source link ranges for a surface
+  /// Type alias for delegate to access source link ranges for a surface
   using SourceLinkAccessor =
       Delegate<std::pair<source_link_iterator_t, source_link_iterator_t>(
           const Surface&)>;
 
   // delegate to get calibrted measurements from a source link iterator
+  /// Type alias for calibrator delegate to process measurements from source
+  /// links
   using Calibrator =
       typename KalmanFitterExtensions<TrackStateContainerBackend>::Calibrator;
 
   // delegate to select measurements from a track state range
+  /// Type alias for delegate to select measurements from track state candidates
   using MeasurementSelector =
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
@@ -69,6 +80,7 @@ struct TrackStateCreator {
   Calibrator calibrator{DelegateFuncTag<
       detail::voidFitterCalibrator<TrackStateContainerBackend>>{}};
 
+  /// Delegate for measurement selection on surfaces
   MeasurementSelector measurementSelector{
       DelegateFuncTag<voidMeasurementSelector>{}};
 
@@ -124,6 +136,7 @@ struct TrackStateCreator {
   ///        to keep track of newly created temporary track states.
   /// @param trajectory the trajectory to which new track states for selected measurements will be added
   /// @param logger the logger for messages.
+  /// @return Result containing vector of track state indices or error
   Result<CkfTypes::BranchVector<TrackIndexType>> createSourceLinkTrackStates(
       const GeometryContext& gctx, const CalibrationContext& calibrationContext,
       [[maybe_unused]] const Surface& surface, const BoundState& boundState,
@@ -195,7 +208,7 @@ struct TrackStateCreator {
         selectorResult =
             measurementSelector(trackStateCandidates, isOutlier, logger);
     if (!selectorResult.ok()) {
-      ACTS_ERROR("Selection of calibrated measurements failed: "
+      ACTS_DEBUG("Selection of calibrated measurements failed: "
                  << selectorResult.error().message());
       resultTrackStateList =
           ResultTrackStateList::failure(selectorResult.error());
@@ -216,6 +229,7 @@ struct TrackStateCreator {
   /// @param trackStates the trajectory to which the new track states are added
   /// @param isOutlier true if the candidate(s) is(are) an outlier(s).
   /// @param logger the logger for messages
+  /// @return Result containing vector of track state indices or error
   Result<CkfTypes::BranchVector<TrackIndexType>> processSelectedTrackStates(
       typename std::vector<TrackStateProxy>::const_iterator begin,
       typename std::vector<TrackStateProxy>::const_iterator end,
@@ -264,16 +278,16 @@ struct TrackStateCreator {
       trackState.copyFrom(candidateTrackState, mask, false);
 
       auto typeFlags = trackState.typeFlags();
-      typeFlags.set(TrackStateFlag::ParameterFlag);
-      typeFlags.set(TrackStateFlag::MeasurementFlag);
+      typeFlags.setHasParameters();
+      typeFlags.setHasMeasurement();
       if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
-        typeFlags.set(TrackStateFlag::MaterialFlag);
+        typeFlags.setHasMaterial();
       }
       if (isOutlier) {
         // propagate information that this is an outlier state
         ACTS_VERBOSE(
             "Creating outlier track state with tip = " << trackState.index());
-        typeFlags.set(TrackStateFlag::OutlierFlag);
+        typeFlags.setIsOutlier();
       }
 
       trackStateList.push_back(trackState.index());
@@ -283,6 +297,7 @@ struct TrackStateCreator {
 
   /// Default measurement selector which will return all measurements
   /// @param candidates Measurement track state candidates
+  /// @return Iterator pair representing the range of all candidates
   static Result<std::pair<typename std::vector<TrackStateProxy>::iterator,
                           typename std::vector<TrackStateProxy>::iterator>>
   voidMeasurementSelector(typename std::vector<TrackStateProxy>& candidates,

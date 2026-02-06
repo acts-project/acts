@@ -20,9 +20,11 @@
 #include <stdexcept>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double rMin = 1.;
 const double rMax = 5.;
@@ -132,6 +134,21 @@ BOOST_AUTO_TEST_CASE(RadialBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedRadialBoundsObject, radialBoundsObject);
 }
 
+BOOST_AUTO_TEST_CASE(RadialBoundsCenter) {
+  // Test radial bounds with default phi
+  RadialBounds radial(rMin, rMax);
+  Vector2 center = radial.center();
+  double expectedR = 0.5 * (rMin + rMax);
+  BOOST_CHECK_EQUAL(center.x(), expectedR);
+  BOOST_CHECK_EQUAL(center.y(), 0.0);  // avgPhi = 0
+
+  // Test radial bounds with non-zero average phi
+  RadialBounds radialOffset(rMin, rMax, halfPhiSector, avgPhi);
+  Vector2 centerOffset = radialOffset.center();
+  BOOST_CHECK_EQUAL(centerOffset.x(), expectedR);
+  BOOST_CHECK_EQUAL(centerOffset.y(), avgPhi);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

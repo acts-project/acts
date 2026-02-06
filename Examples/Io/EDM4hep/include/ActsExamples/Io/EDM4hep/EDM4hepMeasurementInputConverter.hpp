@@ -12,7 +12,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
+#include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 
 #include <string>
 
@@ -32,7 +32,7 @@ namespace ActsExamples {
 /// Known issues:
 /// - cluster channels are read from inappropriate fields
 /// - local 2D coordinates and time are read from position
-class EDM4hepMeasurementInputConverter final : public EDM4hepInputConverter {
+class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
  public:
   struct Config {
     /// Where to read the input frame from.

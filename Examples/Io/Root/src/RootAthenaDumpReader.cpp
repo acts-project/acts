@@ -25,17 +25,6 @@
 using namespace Acts::UnitLiterals;
 
 namespace {
-std::uint64_t concatInts(int a, int b) {
-  auto va = static_cast<std::uint32_t>(a);
-  auto vb = static_cast<std::uint32_t>(b);
-  std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
-  return value;
-}
-
-std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
-  return {static_cast<std::uint32_t>((v & 0xFFFFFFFF00000000LL) >> 32),
-          static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)};
-}
 
 /// In cases when there is built up a particle collection in an iterative way it
 /// can be way faster to build up a vector and afterwards use a special
@@ -44,7 +33,7 @@ inline auto particleVectorToSet(
     std::vector<ActsExamples::SimParticle>& particles) {
   using namespace ActsExamples;
   auto cmp = [](const auto& a, const auto& b) {
-    return a.particleId().value() == b.particleId().value();
+    return a.particleId() == b.particleId();
   };
 
   std::ranges::sort(particles, detail::CompareParticleId{});
@@ -102,7 +91,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   // Cluster features
   m_inputchain->SetBranchAddress("nCL", &nCL);
   m_inputchain->SetBranchAddress("CLindex", CLindex);
-  m_inputchain->SetBranchAddress("CLhardware", &CLhardware);
+  m_inputchain->SetBranchAddress("CLhardware", &CLhardware.get());
   m_inputchain->SetBranchAddress("CLx", CLx);
   m_inputchain->SetBranchAddress("CLy", CLy);
   m_inputchain->SetBranchAddress("CLz", CLz);
@@ -112,9 +101,9 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLphi_module", CLphi_module);
   m_inputchain->SetBranchAddress("CLside", CLside);
   m_inputchain->SetBranchAddress("CLmoduleID", CLmoduleID);
-  m_inputchain->SetBranchAddress("CLphis", &CLphis);
-  m_inputchain->SetBranchAddress("CLetas", &CLetas);
-  m_inputchain->SetBranchAddress("CLtots", &CLtots);
+  m_inputchain->SetBranchAddress("CLphis", &CLphis.get());
+  m_inputchain->SetBranchAddress("CLetas", &CLetas.get());
+  m_inputchain->SetBranchAddress("CLtots", &CLtots.get());
   m_inputchain->SetBranchAddress("CLloc_direction1", CLloc_direction1);
   m_inputchain->SetBranchAddress("CLloc_direction2", CLloc_direction2);
   m_inputchain->SetBranchAddress("CLloc_direction3", CLloc_direction3);
@@ -132,14 +121,15 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLnorm_x", CLnorm_x);
   m_inputchain->SetBranchAddress("CLnorm_y", CLnorm_y);
   m_inputchain->SetBranchAddress("CLnorm_z", CLnorm_z);
-  m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov);
+  m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov.get());
   if (!m_cfg.noTruth) {
     m_inputchain->SetBranchAddress("CLparticleLink_eventIndex",
-                                   &CLparticleLink_eventIndex);
+                                   &CLparticleLink_eventIndex.get());
     m_inputchain->SetBranchAddress("CLparticleLink_barcode",
-                                   &CLparticleLink_barcode);
-    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked);
-    m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
+                                   &CLparticleLink_barcode.get());
+    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked.get());
+    m_inputchain->SetBranchAddress("CLparticle_charge",
+                                   &CLparticle_charge.get());
   }
 
   // Particle features
@@ -164,8 +154,9 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout);
     m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus);
     m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode);
-    m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID);
-    m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
+    m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID.get());
+    m_inputchain->SetBranchAddress("Part_vParentBarcode",
+                                   &Part_vParentBarcode.get());
   }
 
   // Spacepoint features
@@ -183,13 +174,14 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_inputchain->SetBranchAddress("SPcovz", SPcovz);
     m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
     m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
-    m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
+    m_inputchain->SetBranchAddress("SPtopStripDirection",
+                                   &SPtopStripDirection.get());
     m_inputchain->SetBranchAddress("SPbottomStripDirection",
-                                   &SPbottomStripDirection);
+                                   &SPbottomStripDirection.get());
     m_inputchain->SetBranchAddress("SPstripCenterDistance",
-                                   &SPstripCenterDistance);
+                                   &SPstripCenterDistance.get());
     m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
-                                   &SPtopStripCenterPosition);
+                                   &SPtopStripCenterPosition.get());
   }
 
   // These quantities are not used currently and thus commented out
@@ -251,8 +243,14 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
       continue;
     }
 
-    SimBarcode dummyBarcode{
-        concatInts(Part_barcode[ip], Part_event_number[ip])};
+    SimBarcode dummyBarcode =
+        SimBarcode()
+            .withVertexPrimary(
+                static_cast<SimBarcode::PrimaryVertexId>(Part_event_number[ip]))
+            .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                Part_barcode[ip] < s_maxBarcodeForPrimary ? 0 : 1))
+            .withParticle(
+                static_cast<SimBarcode::ParticleId>(Part_barcode[ip]));
     SimParticleState particle(dummyBarcode,
                               static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
@@ -399,7 +397,8 @@ RootAthenaDumpReader::readMeasurements(
 
       if (!inside) {
         const Acts::Vector3 v =
-            surface->transform(gctx).inverse() * cluster.globalPosition;
+            surface->localToGlobalTransform(gctx).inverse() *
+            cluster.globalPosition;
         ACTS_WARNING("Projected position is not in surface bounds for "
                      << surface->geometryId() << ", skip hit");
         ACTS_WARNING("Position in local coordinates: " << v.transpose());
@@ -412,7 +411,8 @@ RootAthenaDumpReader::readMeasurements(
 
       if (!loc.ok()) {
         const Acts::Vector3 v =
-            surface->transform(gctx).inverse() * cluster.globalPosition;
+            surface->localToGlobalTransform(gctx).inverse() *
+            cluster.globalPosition;
         ACTS_WARNING("Global-to-local fit failed on "
                      << geoId << " (z dist: " << v[2]
                      << ", projected on surface: " << std::boolalpha << inside
@@ -456,7 +456,13 @@ RootAthenaDumpReader::readMeasurements(
       for (const auto& [subevt, barcode] :
            Acts::zip(CLparticleLink_eventIndex->at(im),
                      CLparticleLink_barcode->at(im))) {
-        SimBarcode dummyBarcode{concatInts(barcode, subevt)};
+        SimBarcode dummyBarcode =
+            SimBarcode()
+                .withVertexPrimary(
+                    static_cast<SimBarcode::PrimaryVertexId>(subevt))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    barcode < s_maxBarcodeForPrimary ? 0 : 1))
+                .withParticle(static_cast<SimBarcode::ParticleId>(barcode));
         // If we don't find the particle, create one with default values
         if (particles.find(dummyBarcode) == particles.end()) {
           ACTS_VERBOSE("Particle with subevt "
@@ -655,32 +661,30 @@ RootAthenaDumpReader::reprocessParticles(
     const auto [begin, end] = partMeasMap.equal_range(particle.particleId());
 
     if (begin == end) {
-      ACTS_VERBOSE("Particle " << particle.particleId().value()
+      ACTS_VERBOSE("Particle " << particle.particleId()
                                << " has no measurements");
       continue;
     }
 
-    auto [athBarcode, athSubevent] = splitInt(particle.particleId().value());
-    auto primary = (athBarcode < s_maxBarcodeForPrimary);
-
-    ActsFatras::Barcode fatrasBarcode;
+    auto primary = particle.particleId().vertexSecondary() == 0;
 
     // vertex primary shouldn't be zero for a valid particle
-    fatrasBarcode.setVertexPrimary(1);
+    ActsFatras::Barcode fatrasBarcode =
+        ActsFatras::Barcode().withVertexPrimary(1);
     if (primary) {
-      fatrasBarcode.setVertexSecondary(0);
-      fatrasBarcode.setParticle(primaryCount);
+      fatrasBarcode =
+          fatrasBarcode.withVertexSecondary(0).withParticle(primaryCount);
       assert(primaryCount < std::numeric_limits<std::uint16_t>::max());
       primaryCount++;
     } else {
-      fatrasBarcode.setVertexSecondary(1);
-      fatrasBarcode.setParticle(secondaryCount);
+      fatrasBarcode =
+          fatrasBarcode.withVertexSecondary(1).withParticle(secondaryCount);
       assert(primaryCount < std::numeric_limits<std::uint16_t>::max());
       secondaryCount++;
     }
 
     auto newParticle = particle.withParticleId(fatrasBarcode);
-    newParticle.final().setNumberOfHits(std::distance(begin, end));
+    newParticle.finalState().setNumberOfHits(std::distance(begin, end));
     newParticles.push_back(newParticle);
 
     for (auto it = begin; it != end; ++it) {

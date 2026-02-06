@@ -32,6 +32,8 @@ namespace Acts {
 ///
 class ConeBounds : public SurfaceBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int {
     eAlpha = 0,
     eMinZ = 1,
@@ -78,13 +80,13 @@ class ConeBounds : public SurfaceBounds {
 
   /// @copydoc SurfaceBounds::boundToCartesianJacobian
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
   /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
@@ -100,6 +102,10 @@ class ConeBounds : public SurfaceBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For ConeBounds: returns (averagePhi, (minZ + maxZ)/2) in cone coordinates
+  Vector2 center() const final;
+
   /// Output Method for std::ostream
   /// @param sl is the ostrea into which the dump is done
   /// @return is the input object
@@ -112,10 +118,12 @@ class ConeBounds : public SurfaceBounds {
   double r(double z) const { return std::abs(z * m_tanAlpha); }
 
   /// Return tangent of alpha (pre-computed)
+  /// @return Tangent of the cone half-angle
   double tanAlpha() const { return m_tanAlpha; }
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

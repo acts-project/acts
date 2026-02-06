@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
 
 CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     const Config& config, std::unique_ptr<const Logger> _logger)
@@ -44,7 +44,7 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
   } else {
     // calculate circle intersections of helix and max detector radius in mm.
     // bFieldInZ is in (pT/radius) natively, no need for conversion
-    float minHelixRadius = m_cfg.minPt / m_cfg.bFieldInZ;
+    const float minHelixRadius = m_cfg.minPt / m_cfg.bFieldInZ;
 
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < m_cfg.rMax * 0.5) {
@@ -53,25 +53,25 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
           "check the m_cfguration of bFieldInZ and minPt");
     }
 
-    float maxR2 = m_cfg.rMax * m_cfg.rMax;
-    float xOuter = maxR2 / (2 * minHelixRadius);
-    float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
-    float outerAngle = std::atan(xOuter / yOuter);
+    const float maxR2 = m_cfg.rMax * m_cfg.rMax;
+    const float xOuter = maxR2 / (2 * minHelixRadius);
+    const float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
+    const float outerAngle = std::atan(xOuter / yOuter);
     // intersection of helix and max detector radius minus maximum R distance
     // from middle SP to top SP
     float innerAngle = 0;
     float rMin = m_cfg.rMax;
     if (m_cfg.rMax > m_cfg.deltaRMax) {
       rMin = m_cfg.rMax - m_cfg.deltaRMax;
-      float innerCircleR2 =
+      const float innerCircleR2 =
           (m_cfg.rMax - m_cfg.deltaRMax) * (m_cfg.rMax - m_cfg.deltaRMax);
-      float xInner = innerCircleR2 / (2 * minHelixRadius);
-      float yInner = std::sqrt(innerCircleR2 - xInner * xInner);
+      const float xInner = innerCircleR2 / (2 * minHelixRadius);
+      const float yInner = std::sqrt(innerCircleR2 - xInner * xInner);
       innerAngle = std::atan(xInner / yInner);
     }
 
     // evaluating the azimutal deflection including the maximum impact parameter
-    float deltaAngleWithMaxD0 =
+    const float deltaAngleWithMaxD0 =
         std::abs(std::asin(m_cfg.impactMax / rMin) -
                  std::asin(m_cfg.impactMax / m_cfg.rMax));
 
@@ -82,8 +82,8 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     // seed making step. So each individual bin should cover
     // 1/m_cfg.phiBinDeflectionCoverage of the maximum expected azimutal
     // deflection
-    float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
-                     m_cfg.phiBinDeflectionCoverage;
+    const float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
+                           m_cfg.phiBinDeflectionCoverage;
 
     // sanity check: if the delta phi is equal to or less than zero, we'll be
     // creating an infinite or a negative number of bins, which would be bad!
@@ -108,7 +108,7 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
   PhiAxisType phiAxis(AxisClosed, m_cfg.phiMin, m_cfg.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
-  std::vector<double> zValues{};
+  std::vector<double> zValues;
 
   // If zBinEdges is not defined, calculate the edges as zMin + bin * zBinSize
   if (m_cfg.zBinEdges.empty()) {
@@ -116,13 +116,14 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     // and returning (multiple) neighbors only in one z-direction for forward
     // seeds
     // FIXME: zBinSize must include scattering
-    float zBinSize = m_cfg.cotThetaMax * m_cfg.deltaRMax;
-    float zBins =
+    const float zBinSize = m_cfg.cotThetaMax * m_cfg.deltaRMax;
+    const float zBins =
         std::max(1.f, std::floor((m_cfg.zMax - m_cfg.zMin) / zBinSize));
 
     zValues.reserve(static_cast<int>(zBins));
     for (int bin = 0; bin <= static_cast<int>(zBins); bin++) {
-      double edge = m_cfg.zMin + bin * ((m_cfg.zMax - m_cfg.zMin) / zBins);
+      const double edge =
+          m_cfg.zMin + bin * ((m_cfg.zMax - m_cfg.zMin) / zBins);
       zValues.push_back(edge);
     }
   } else {
@@ -133,7 +134,7 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     }
   }
 
-  std::vector<double> rValues{};
+  std::vector<double> rValues;
   rValues.reserve(std::max(2ul, m_cfg.rBinEdges.size()));
   if (m_cfg.rBinEdges.empty()) {
     rValues = {m_cfg.rMin, m_cfg.rMax};
@@ -166,8 +167,8 @@ void CylindricalSpacePointGrid2::clear() {
 }
 
 std::optional<std::size_t> CylindricalSpacePointGrid2::insert(
-    SpacePointIndex index, float phi, float r, float z) {
-  const std::optional<std::size_t> gridIndex = binIndex(phi, r, z);
+    SpacePointIndex index, float phi, float z, float r) {
+  const std::optional<std::size_t> gridIndex = binIndex(phi, z, r);
   if (gridIndex.has_value()) {
     BinType& bin = grid().at(*gridIndex);
     bin.push_back(index);
@@ -193,7 +194,7 @@ void CylindricalSpacePointGrid2::sortBinsByR(
   for (std::size_t i = 0; i < grid().size(); ++i) {
     BinType& bin = grid().at(i);
     std::ranges::sort(bin, {}, [&](SpacePointIndex2 spIndex) {
-      return spacePoints[spIndex].r();
+      return spacePoints[spIndex].zr()[1];
     });
   }
 
@@ -211,10 +212,10 @@ Range1D<float> CylindricalSpacePointGrid2::computeRadiusRange(
     }
     auto first = spacePoints[bin.front()];
     auto last = spacePoints[bin.back()];
-    minRange = std::min(first.r(), minRange);
-    maxRange = std::max(last.r(), maxRange);
+    minRange = std::min(first.zr()[1], minRange);
+    maxRange = std::max(last.zr()[1], maxRange);
   }
   return {minRange, maxRange};
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

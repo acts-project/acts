@@ -23,13 +23,12 @@
 #include <vector>
 
 namespace Acts {
-
+class SurfacePlacementBase;
 class TrackingVolume;
 class VolumeBounds;
 class RectangleBounds;
 class ISurfaceMaterial;
 class IVolumeMaterial;
-class DetectorElementBase;
 class Surface;
 class Layer;
 
@@ -44,18 +43,23 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// PlaneSurface
   struct SurfaceConfig {
     // Center position
-    Vector3 position;
+    /// Center position of the surface
+    Vector3 position{};
     // Rotation
+    /// Rotation matrix defining surface orientation
     RotationMatrix3 rotation = RotationMatrix3::Identity();
     // Bounds
+    /// Rectangle bounds defining surface dimensions
     std::shared_ptr<const RectangleBounds> rBounds = nullptr;
     // Attached material
+    /// Surface material description
     std::shared_ptr<const ISurfaceMaterial> surMat = nullptr;
     // Thickness
+    /// Material thickness of the surface
     double thickness = 0.;
-    // Constructor function for optional detector elements
-    // Arguments are transform, rectangle bounds and thickness.
-    std::function<DetectorElementBase*(
+    /// Constructor function for optional detector elements
+    /// Arguments are transform, rectangle bounds and thickness.
+    std::function<SurfacePlacementBase*(
         const Transform3&, std::shared_ptr<const RectangleBounds>, double)>
         detElementConstructor;
   };
@@ -63,57 +67,67 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// @brief This struct stores the data for the construction of a PlaneLayer
   struct LayerConfig {
     // Configuration of the surface
+    /// Configuration objects for surfaces in this layer
     std::vector<SurfaceConfig> surfaceCfg;
     // Encapsulated surface
+    /// Pre-built surfaces to be included in this layer
     std::vector<std::shared_ptr<const Surface>> surfaces;
     // Boolean flag if layer is active
+    /// Flag indicating whether layer participates in track finding
     bool active = false;
     // Bins in Y direction
+    /// Number of bins for surface arrangement in Y direction
     std::size_t binsY = 1;
     // Bins in Z direction
+    /// Number of bins for surface arrangement in Z direction
     std::size_t binsZ = 1;
     // Envelope in X
+    /// Envelope extensions in X direction [negative, positive]
     std::array<double, 2u> envelopeX{0, 0};
     // Envelope in Y
+    /// Envelope extensions in Y direction [negative, positive]
     std::array<double, 2u> envelopeY{0, 0};
     // Envelope in Z
+    /// Envelope extensions in Z direction [negative, positive]
     std::array<double, 2u> envelopeZ{0, 0};
     // An optional rotation for this
+    /// Optional rotation transformation for this layer
     std::optional<RotationMatrix3> rotation{std::nullopt};
     // Dimension for the binning
+    /// Axis direction for surface binning within the layer
     AxisDirection binningDimension = AxisDirection::AxisX;
   };
 
   /// @brief This struct stores the data for the construction of a cuboid
   /// TrackingVolume with a given number of PlaneLayers
   struct VolumeConfig {
-    // Center position
-    Vector3 position;
-    // Lengths in x,y,z
-    Vector3 length;
-    // Configurations of its layers
+    /// Center position of the tracking volume
+    Vector3 position{};
+    /// Dimensions of the volume in x, y, z directions
+    Vector3 length{};
+    /// Configuration objects for layers within this volume
     std::vector<LayerConfig> layerCfg;
-    // Stored layers
+    /// Pre-built layers to be included in this volume
     std::vector<std::shared_ptr<const Layer>> layers;
-    // Configurations of confined volumes
+    /// Configuration objects for sub-volumes within this volume
     std::vector<VolumeConfig> volumeCfg;
-    // Stored confined volumes
+    /// Pre-built sub-volumes contained within this volume
     std::vector<std::shared_ptr<TrackingVolume>> trackingVolumes;
-    // Name of the volume
+    /// Identifier name for this tracking volume
     std::string name = "Volume";
-    // Material
+    /// Volume material description for this tracking volume
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
-    // Dimension for the binning
+    /// Axis direction for layer binning within the volume
     AxisDirection binningDimension = AxisDirection::AxisX;
   };
 
   /// @brief This struct stores the configuration of the tracking geometry
   struct Config {
-    // Center position
+    /// Center position of the world volume
     Vector3 position = Vector3(0., 0., 0.);
-    // Length in x,y,z
+    /// Dimensions of the world volume in x, y, z directions
     Vector3 length = Vector3(0., 0., 0.);
-    // Configuration of its volumes
+    /// Configuration objects for all volumes in the detector
     std::vector<VolumeConfig> volumeCfg = {};
   };
 
@@ -174,6 +188,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   std::pair<double, double> binningRange(const GeometryContext& gctx,
                                          const VolumeConfig& cfg) const;
 
+  /// Sort volumes along a given axis direction
+  /// @param tapVec Vector of tracking volume and position pairs to sort
+  /// @param bValue Axis direction for sorting
   void sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3>>& tapVec,
                    AxisDirection bValue) const;
 

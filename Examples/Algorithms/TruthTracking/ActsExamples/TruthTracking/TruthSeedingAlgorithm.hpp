@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -32,6 +34,11 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
+    /// The input sim hits collection that is used to order space points in the
+    /// seeds.
+    std::string inputSimHits;
+    /// The input measurement-sim hits map collection.
+    std::string inputMeasurementSimHitsMap;
     /// Input space point collections.
     ///
     /// We allow multiple space point collections to allow different parts of
@@ -41,14 +48,24 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     std::vector<std::string> inputSpacePoints;
     /// Output successfully seeded truth particles.
     std::string outputParticles;
-    /// Output seed collection.
-    std::string outputSeeds;
     /// Output proto track collection.
     std::string outputProtoTracks;
+    /// Output seed collection.
+    std::string outputSeeds;
+    /// Optional. Output particle hypotheses collection.
+    std::string outputParticleHypotheses;
+
+    /// Optional particle hypothesis override.
+    std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
+
     /// Minimum deltaR between space points in a seed
-    float deltaRMin = 1. * Acts::UnitConstants::mm;
+    float deltaRMin = 10 * Acts::UnitConstants::mm;
     /// Maximum deltaR between space points in a seed
-    float deltaRMax = 100. * Acts::UnitConstants::mm;
+    float deltaRMax = 200 * Acts::UnitConstants::mm;
+    /// Minimum absDeltaZMin between space points in a seed
+    float absDeltaZMin = 0 * Acts::UnitConstants::mm;
+    /// Maximum absDeltaZMax between space points in a seed
+    float absDeltaZMax = 500 * Acts::UnitConstants::mm;
   };
 
   /// Construct the truth seeding algorithm.
@@ -72,6 +89,9 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
       this, "InputParticleMeasurementsMap"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputHits"};
+  ReadDataHandle<InverseMultimap<Index>> m_inputMeasurementSimHitsMap{
+      this, "MeasurementSimHitsMap"};
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};
 
@@ -80,6 +100,8 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<std::vector<Acts::ParticleHypothesis>>
+      m_outputParticleHypotheses{this, "OutputParticleHypotheses"};
 };
 
 }  // namespace ActsExamples

@@ -16,18 +16,42 @@ namespace Acts {
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
   LinCircle() = default;
+  /// Constructor with circle parameters
+  /// @param ct Cotangent of polar angle theta
+  /// @param idr Inverse delta radius
+  /// @param er Error on radius
+  /// @param u U coordinate
+  /// @param v V coordinate
+  /// @param X X coordinate
+  /// @param Y Y coordinate
   LinCircle(float ct, float idr, float er, float u, float v, float X, float Y)
       : cotTheta(ct), iDeltaR(idr), Er(er), U(u), V(v), x(X), y(Y) {}
 
+  /// Cotangent of polar angle theta in coordinate transformation
   float cotTheta{0.};
+  /// Inverse delta radius between space points
   float iDeltaR{0.};
+  /// Error term in circle fitting for u-v transformation
   float Er{0.};
+  /// U coordinate in transformed coordinate system
   float U{0.};
+  /// V coordinate in transformed coordinate system
   float V{0.};
+  /// X coordinate in local coordinate system
   float x{0.};
+  /// Y coordinate in local coordinate system
   float y{0.};
 };
 
+/// Transform a single spacepoint to u-v space coordinates
+/// @tparam external_spacepoint_t The external spacepoint type
+/// @tparam callable_t The callable type for coordinate extraction
+/// @param mutableData Container for mutable variables used in seeding
+/// @param sp The spacepoint to transform
+/// @param spM The middle reference spacepoint
+/// @param bottom Whether this is a bottom spacepoint
+/// @param extractFunction Function to extract coordinates from spacepoints
+/// @return LinCircle representing the transformed coordinates
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
                                const external_spacepoint_t& sp,

@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
@@ -130,11 +131,6 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @return The attachment strategy
   VolumeAttachmentStrategy attachmentStrategy() const;
 
-  /// Accessor to the resize strategy
-  /// @return The resize strategy
-  [[deprecated("Use resizeStrategies() instead")]]
-  VolumeResizeStrategy resizeStrategy() const;
-
   /// Accessor to the resize strategies
   /// @return The resize strategies
   std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies()
@@ -146,10 +142,12 @@ class ContainerBlueprintNode : public BlueprintNode {
  protected:
   /// Make the volume stack for the container. This is called by the build
   /// method and is implemented by the derived classes.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes The volumes to stack
   /// @param logger The logger to use
   /// @return The volume stack
-  virtual std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  virtual std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                                 std::vector<Volume*>& volumes,
                                                  const Logger& logger) = 0;
 
   /// Get the type name of the container. This is used for the debug output
@@ -216,26 +214,36 @@ class ContainerBlueprintNode : public BlueprintNode {
                                const GeometryContext& gctx, VolumeStack* stack,
                                const std::string& prefix, const Logger& logger);
 
+  /// Name of the container node for debugging purposes
   std::string m_name;
+  /// Stacking axis direction in local reference frame
   AxisDirection m_direction = AxisDirection::AxisZ;
+  /// Volume attachment strategy for connecting volumes in the stack
   VolumeAttachmentStrategy m_attachmentStrategy{
       VolumeAttachmentStrategy::Midpoint};
 
+  /// Resize strategies for inner and outer sides of the container
   std::pair<VolumeResizeStrategy, VolumeResizeStrategy> m_resizeStrategies{
       VolumeResizeStrategy::Expand, VolumeResizeStrategy::Expand};
 
+  /// Container of child volumes managed by this blueprint node
   std::vector<Volume*> m_childVolumes;
-  // This is going to be an instance of a *stack* of volumes, which is created
-  // by the derived classes
+  /// Volume stack instance created by derived classes during build phase
+  /// @note This is populated during the build process by makeStack implementations
   std::unique_ptr<VolumeStack> m_stack{nullptr};
+  /// Mapping from child volumes to their corresponding blueprint nodes
   std::map<const Volume*, BlueprintNode*> m_volumeToNode;
 
+  /// Portal shell representation of this container for geometry connection
   std::unique_ptr<PortalShellBase> m_shell{nullptr};
+  /// Container of gap volumes and their portal shells created between child
+  /// volumes
   std::vector<std::pair<std::unique_ptr<PortalShellBase>,
                         std::unique_ptr<TrackingVolume>>>
       m_gaps;
 };
 
+/// Container blueprint node stacking cylindrical volumes.
 class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
  public:
   using ContainerBlueprintNode::ContainerBlueprintNode;
@@ -260,14 +268,17 @@ class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
       const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                         std::vector<Volume*>& volumes,
                                          const Logger& logger) override;
 
  protected:
+  /// @brief Type name for cylinder container
   inline static const std::string s_typeName = "Cylinder";
   const std::string& typeName() const override;
 };
 
+/// Container blueprint node stacking cuboid volumes.
 class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
  public:
   using ContainerBlueprintNode::ContainerBlueprintNode;
@@ -292,10 +303,12 @@ class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
       const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
+  std::unique_ptr<VolumeStack> makeStack(const GeometryContext& gctx,
+                                         std::vector<Volume*>& volumes,
                                          const Logger& logger) override;
 
  protected:
+  /// @brief Type name for cuboid container
   inline static const std::string s_typeName = "Cuboid";
   const std::string& typeName() const override;
 };

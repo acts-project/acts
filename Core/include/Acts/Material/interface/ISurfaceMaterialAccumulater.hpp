@@ -36,6 +36,7 @@ class ISurfaceMaterialAccumulater {
   virtual ~ISurfaceMaterialAccumulater() = default;
 
   /// Factory for creating the state
+  /// @return Unique pointer to a new state object for material accumulation
   virtual std::unique_ptr<State> createState() const = 0;
 
   /// @brief Accumulate the material interaction on the surface
@@ -55,6 +56,7 @@ class ISurfaceMaterialAccumulater {
   /// @param state the state of the accumulator
   ///
   /// @note this does the run average over the (binned) material
+  /// @return Map of geometry IDs to finalized surface material objects
   virtual std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
   finalizeMaterial(State& state) const = 0;
 };

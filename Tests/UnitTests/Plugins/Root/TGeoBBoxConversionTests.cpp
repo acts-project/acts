@@ -11,14 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/Root/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <utility>
@@ -31,13 +31,18 @@
 #include "TGeoVolume.h"
 #include "TView.h"
 
-namespace Acts::Test {
+using namespace Acts;
+using namespace ActsPlugins;
 
-GeometryContext tgContext = GeometryContext();
+namespace ActsTests {
+
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test to convert a Bbox into a Plane
 ///
@@ -80,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   CHECK_CLOSE_ABS(maxY - minY, 2 * dY, s_epsilon);
 
   // Check if the surface is the (negative) identity
-  auto transform_XYZ = plane_XYZ->transform(tgContext);
+  auto transform_XYZ = plane_XYZ->localToGlobalTransform(tgContext);
   auto rotation_XYZ = transform_XYZ.rotation();
   BOOST_CHECK(transform_XYZ.isApprox(Transform3::Identity()));
 
@@ -108,7 +113,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ->bounds()));
   BOOST_REQUIRE_NE(bounds_xyz, nullptr);
   BOOST_CHECK_EQUAL(bounds_xyz, bounds_XYZ);
-  auto transform_xyz = plane_xyz->transform(tgContext);
+  auto transform_xyz = plane_xyz->localToGlobalTransform(tgContext);
   auto rotation_xyz = transform_xyz.rotation();
   BOOST_CHECK(rotation_xyz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
   BOOST_CHECK(rotation_xyz.col(1).isApprox(-1 * rotation_XYZ.col(1)));
@@ -138,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
       dynamic_cast<const RectangleBounds *>(&(plane_xYz->bounds()));
   BOOST_CHECK_NE(bounds_xYz, nullptr);
   BOOST_CHECK_EQUAL(bounds_xYz, bounds_xYz);
-  auto transform_xYz = plane_xYz->transform(tgContext);
+  auto transform_xYz = plane_xYz->localToGlobalTransform(tgContext);
   auto rotation_xYz = transform_xYz.rotation();
   BOOST_CHECK(rotation_xYz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
   BOOST_CHECK(rotation_xYz.col(1).isApprox(rotation_XYZ.col(1)));
@@ -174,7 +179,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   CHECK_CLOSE_ABS(maxX - minX, 2 * dY, s_epsilon);
   CHECK_CLOSE_ABS(maxY - minY, 2 * dX, s_epsilon);
 
-  auto transform_YXz = plane_YXz->transform(tgContext);
+  auto transform_YXz = plane_YXz->localToGlobalTransform(tgContext);
   auto rotation_YXz = transform_YXz.rotation();
   BOOST_CHECK(rotation_YXz.col(0).isApprox(rotation_XYZ.col(1)));
   BOOST_CHECK(rotation_YXz.col(1).isApprox(rotation_XYZ.col(0)));
@@ -211,4 +216,6 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   objVis.write("TGeoConversion_TGeoBBox_PlaneSurface");
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

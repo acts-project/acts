@@ -15,6 +15,7 @@ namespace Acts {
 template <typename stepper_t>
 struct SupportsBoundParameters : public std::false_type {};
 
+/// Variable template for checking bound parameters support
 template <typename stepper_t>
 constexpr bool SupportsBoundParameters_v =
     SupportsBoundParameters<stepper_t>::value;

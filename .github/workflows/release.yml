@@ -9,19 +9,19 @@ on:
 jobs:
   release:
     name: Make release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install git-cliff
         run: |
-          curl -L https://github.com/orhun/git-cliff/releases/download/v2.3.0/git-cliff-2.3.0-x86_64-unknown-linux-musl.tar.gz > git-cliff.tar.gz
-          echo "3adde9625195825db9a59dd954fc90604172ba4b  git-cliff.tar.gz" | shasum -c
+          curl -L https://github.com/orhun/git-cliff/releases/download/v2.12.0/git-cliff-2.12.0-x86_64-unknown-linux-musl.tar.gz > git-cliff.tar.gz
+          echo "c89a7bc55f3c51f391938aa3fa560125109695c1930d927879daea68dd786420  git-cliff.tar.gz" | sha256sum -c
           mkdir git-cliff
           tar xzf git-cliff.tar.gz --strip-components 1 --directory git-cliff
           cp git-cliff/git-cliff /usr/local/bin/git-cliff

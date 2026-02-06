@@ -12,7 +12,8 @@
 
 namespace Acts {
 
-/// @verbatim embed:rst:leading-slashes
+/// @namespace Acts::UnitConstants
+/// @brief Constants and helper literals for physical units.
 /// All physical quantities have both a numerical value and a unit. For the
 /// computations we always choose a particular unit for a given physical
 /// quantity so we only need to consider the numerical values as such. The
@@ -36,169 +37,149 @@ namespace Acts {
 ///   connects momentum to length, e.g. in SI units the radius of a charged
 ///   particle trajectory in a constant magnetic field is given by
 ///
-///   .. math::
+///   @f$
+///      \text{radius} = - \frac{\text{momentum} }{ \text{charge} } / \text{field}
+///   @f$
 ///
-///      radius = - (momentum / charge) / field
-///
-///   With the chosen magnetic field unit the expression above stays the
-///   same and no additional conversion factors are necessary.
-/// - Amount of substance is expressed in mol.
+/// With the chosen magnetic field unit the expression above stays the
+/// same and no additional conversion factors are necessary.
 ///
 /// Depending on the context a physical quantity might not be given in the
 /// native units. In this case we need to convert to the native unit first
 /// before the value can be used. The necessary conversion factors are defined
-/// in  ``Acts::UnitConstants``. Multiplying a value with the unit constant
+/// in  @ref Acts::UnitConstants. Multiplying a value with the unit constant
 /// produces the equivalent value in the native unit, e.g.
 ///
-/// .. code-block:: cpp
+/// @snippet{trimleft} examples/units.cpp Using Unit Constants
 ///
-///    double length = 1 * Acts::UnitConstants::m;       // length == 1000.0
-///    double momentum = 100 * Acts::UnitConstants::MeV; // momentum == 0.1
+/// To further simplify the usage, physical quantities can also be expressed
+/// via [C++ user
+/// literals](https://en.cppreference.com/w/cpp/language/user_literal) defined
+/// in @ref Acts::UnitLiterals. This allows us to express quantities in a
+/// concise way:
 ///
-/// The conversion of a value in native units into the equivalent value in a
-/// specific other unit is computed by dividing with the relevant unit, e.g.
+/// @snippet{trimleft} examples/units.cpp Using Unit Literals
 ///
-/// .. code-block:: cpp
-///
-///    double length = 10.0;                               // native units mm
-///    double lengthInM = length / Acts::UnitConstants::m; // == 0.01;
-///
-/// To further simplify the usage, physical quantities can also be expressed via
-/// `C++ user literals
-/// <https://en.cppreference.com/w/cpp/language/user_literal>`_ defined in
-/// ``Acts::UnitLiterals``. This allows us to express quantities in a concise
-/// way:
-///
-/// .. code-block:: cpp
-///
-///    using namespace Acts::UnitLiterals;
-///
-///    double length = 1_m;                     // == 1000.0
-///    double momentum = 1.25_TeV;              // == 1250.0
-///    double lengthInUm = length / 1_um;       // == 1000000.0
-///    double momentumInMeV = momentum / 1_MeV; // == 1250000.0
-///
-/// .. warning::
-///    Since using user-defined literals requires a namespace import of
-///    ``Acts::UnitLiterals`` it should not be used in headers since it would
-///    (accidentally) modify the namespace wherever the header is included.
+/// @warning Since using user-defined literals requires a namespace import of
+///          @ref Acts::UnitLiterals it should not be used in headers since it
+///          would (accidentally) modify the namespace wherever the header is
+///          included.
 ///
 /// To ensure consistent computations and results the following guidelines
 /// **must** be followed when handling physical quantities with units:
 ///
-/// - All unqualified numerical values, i.e. without a unit, are assumed to
-///   be expressed in the relevant native unit, e.g. mm for lengths or GeV
-///   for energy/momentum.
-/// - If a variable stores a physical quantity in a specific unit that is
-///   not the native unit, clearly mark this in the variable, i.e.
+/// @snippet{trimleft} examples/units.cpp Unit Best Practices
 ///
-///   .. code-block:: cpp
+/// Here's a comprehensive example showing various ways to work with units:
 ///
-///      double momentum = 100.0; // momentum is stored as native unit GeV
-///      double momentumInMeV = 10.0; // would be 0.01 in native units
+/// @snippet{trimleft} examples/units.cpp Comprehensive Units Example
 ///
-/// - All input values must be given as ``numerical_value * unit_constant`` or
-///   equivalently using the unit literals as ``value_unit``. The resulting
-///   unqualified numerical value will be automatically converted to the
-///   native unit.
-/// - To output an unqualified numerical value in the native units as a
-///   numerical value in a specific unit divide by the unit constants as
-///   ``numerical_value / unit_constant`` or using the unit literals as
-///   ``value / 1_unit``.
+/// Converting output values from native units:
 ///
-/// Examples:
+/// @snippet{trimleft} examples/units.cpp Converting Output Values
 ///
-/// .. code-block:: cpp
-///
-///    #include <Acts/include/Definitions/Units.hpp>
-///    using namespace Acts::UnitLiterals;
-///
-///    // define input values w/ units (via unit constants)
-///    double width    = 12 * Acts::UnitConstants::mm;
-///    double mmuon    = 105.7 * Acts::UnitConstants::MeV;
-///    // define input values w/ units (via unit user literals)
-///    double length   = 23_cm;
-///    double time     = 1214.2_ns;
-///    double angle    = 123_degree;
-///    double momentum = 2.5_TeV;
-///    double mass     = 511_keV;
-///    double velocity = 345_m / 1_s;
-///    double bfield   = 3.9_T;
-///
-///    // convert output values (via unit constants)
-///    double t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
-///    // convert output values (via unit user literals)
-///    double x_in_mm   = trackPars.position()[ePos0] / 1_mm;
-///    double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
-///
-/// @endverbatim
-
 /// @note A helper script is available in
 ///   `Core/scripts/print_units_physical_constants.py` to validate some of the
 ///   numerical values.
 
 namespace UnitConstants {
 // Length, native unit mm
+/// Millimeter - native unit for length
 constexpr double mm = 1.0;
+/// Femtometer - 1e-15 meter
 constexpr double fm = 1e-12 * mm;
+/// Picometer - 1e-12 meter
 constexpr double pm = 1e-9 * mm;
+/// Nanometer - 1e-9 meter
 constexpr double nm = 1e-6 * mm;
+/// Micrometer - 1e-6 meter
 constexpr double um = 1e-3 * mm;
+/// Centimeter - 1e-2 meter
 constexpr double cm = 1e1 * mm;
+/// Meter
 constexpr double m = 1e3 * mm;
+/// Kilometer - 1e3 meter
 constexpr double km = 1e6 * mm;
 // Shortcuts for commonly used area and volume units. This intentionally
 // contains not all possible combinations to avoid cluttering the namespace.
 // Missing area or volume units can always be defined on the fly using the
 // existing length units e.g. 1fm³ -> 1fm * 1fm * 1fm
 // Area, native unit mm²
+/// Square millimeter - native unit for area
 constexpr double mm2 = mm * mm;
+/// Square centimeter
 constexpr double cm2 = cm * cm;
+/// Square meter
 constexpr double m2 = m * m;
 // Volume, native unit mm³
+/// Cubic millimeter - native unit for volume
 constexpr double mm3 = mm * mm * mm;
+/// Cubic centimeter
 constexpr double cm3 = cm * cm * cm;
+/// Cubic meter
 constexpr double m3 = m * m * m;
 // Time, native unit mm = [speed-of-light * time] = mm/s * s
 /// @note Depends on speed of light in SI units
 constexpr double s = 299792458000.0;  // = 299792458.0 * (m / 1.0) * 1.0;
+/// Femtosecond - 1e-15 second
 constexpr double fs = 1e-15 * s;
+/// Picosecond - 1e-12 second
 constexpr double ps = 1e-12 * s;
+/// Nanosecond - 1e-9 second
 constexpr double ns = 1e-9 * s;
+/// Microsecond - 1e-6 second
 constexpr double us = 1e-6 * s;
+/// Millisecond - 1e-3 second
 constexpr double ms = 1e-3 * s;
+/// Minute - 60 seconds
 constexpr double min = 60.0 * s;
+/// Hour - 3600 seconds
 constexpr double h = 3600.0 * s;
 // Angles, native unit radian
+/// Milliradian - 1e-3 radian
 constexpr double mrad = 1e-3;
+/// Radian - native unit for angle
 constexpr double rad = 1.0;
+/// Degree - pi/180 radians
 constexpr double degree = std::numbers::pi / 180. / rad;
 // Energy/mass/momentum, native unit GeV
+/// Gigaelectronvolt - native unit for energy/mass/momentum
 constexpr double GeV = 1.0;
+/// Electronvolt - 1e-9 GeV
 constexpr double eV = 1e-9 * GeV;
+/// Kiloelectronvolt - 1e-6 GeV
 constexpr double keV = 1e-6 * GeV;
+/// Megaelectronvolt - 1e-3 GeV
 constexpr double MeV = 1e-3 * GeV;
+/// Teraelectronvolt - 1e3 GeV
 constexpr double TeV = 1e3 * GeV;
+/// Joule in GeV
 constexpr double J = 6241509074.460763 * GeV;
 /// atomic mass unit u
 constexpr double u = 0.93149410242;
-//     1eV/c² == 1.782662e-36kg
-//    1GeV/c² == 1.782662e-27kg
-// ->     1kg == (1/1.782662e-27)GeV/c²
-// ->      1g == (1/(1e3*1.782662e-27))GeV/c²
+/// Gram in GeV/c²
+/// @note 1eV/c² == 1.782662e-36kg
+///      1GeV/c² == 1.782662e-27kg
+///   ->     1kg == (1/1.782662e-27)GeV/c²
+///   ->      1g == (1/(1e3*1.782662e-27))GeV/c²
 constexpr double g = 1.0 / 1.782662e-24;
+/// Kilogram in GeV/c²
 constexpr double kg = 1.0 / 1.782662e-27;
 /// Charge, native unit e (elementary charge)
 constexpr double e = 1.0;
 /// Magnetic field, native unit (eV*s)/(e*m²)
 /// @note Depends on speed of light in SI units
 constexpr double T = 0.000299792458;  // = eV * s / (e * m2);
+/// Gauss - 1e-4 Tesla
 constexpr double Gauss = 1e-4 * T;
+/// Kilogauss - 1e-1 Tesla
 constexpr double kGauss = 1e-1 * T;
 /// Amount of substance, native unit mol
 constexpr double mol = 1.0;
 }  // namespace UnitConstants
 
+/// @brief Namespace for user-defined literals for physical units. See @ref
+///        UnitConstants for details.
 namespace UnitLiterals {
 // define user literal functions for the given unit constant
 #define ACTS_DEFINE_UNIT_LITERAL(name)                       \
@@ -256,6 +237,7 @@ ACTS_DEFINE_UNIT_LITERAL(mol)
 /// Unit constants are intentionally not listed.
 namespace PhysicalConstants {
 // Speed of light
+/// Speed of light in vacuum - native unit (dimensionless)
 constexpr double c = 1.0;
 /// Reduced Planck constant h/2*pi.
 ///

@@ -30,7 +30,9 @@ class Result {
   explicit Result(std::variant<T, E>&& var) : m_var(std::move(var)) {}
 
  public:
+  /// Type alias for the value type contained in successful result
   using ValueType = T;
+  /// Type alias for the error type contained in failed result
   using ErrorType = E;
 
   /// Default construction is disallowed.
@@ -43,6 +45,7 @@ class Result {
   Result<T, E>& operator=(const Result<T, E>& other) = delete;
 
   /// Move construction is allowed
+  /// @param other The other result instance to move from
   Result(Result<T, E>&& other) noexcept : m_var(std::move(other.m_var)) {}
 
   /// Move assignment is allowed
@@ -167,14 +170,16 @@ class Result {
     return std::get<T>(m_var);
   }
 
+  /// @cond
   /// Retrieves the valid value from the result object.
   /// @note This is the rvalue version, returns the value
   /// by-value and moves out of the variant.
-  /// @return The valid value by value, moved out of the variant.
+  /// @return The valid value by value (moved)
   T value() && {
     checkValueAccess();
     return std::move(std::get<T>(m_var));
   }
+  /// @endcond
 
   /// Retrieves the valid value from the result object, or returns a default
   /// value if no valid value exists.
@@ -194,13 +199,14 @@ class Result {
     }
   }
 
+  /// @cond
   /// Retrieves the valid value from the result object, or returns a default
   /// value if no valid value exists.
   ///
   /// @param[in] v The default value to use if no valid value exists.
+  /// @return The valid value if present, otherwise the default value
   /// @note This is the rvalue version which moves the value out.
   /// @note This function always returns by value.
-  /// @return Either the valid value, or the given substitute.
   template <typename U>
   T value_or(U&& v) &&
     requires(std::same_as<std::decay_t<U>, T>)
@@ -211,6 +217,7 @@ class Result {
       return std::forward<U>(v);
     }
   }
+  /// @endcond
 
   /// Transforms the value contained in this result.
   ///
@@ -343,17 +350,25 @@ class Result {
 /// *ok*
 /// state, whereas `Result<T, E>` is not.
 /// @tparam E The type of the error
-///
+/// @{
 template <typename E>
 class Result<void, E> {
  public:
+  /// Type alias for the value type (void) in successful result
+  using ValueType = void;
+  /// Type alias for the error type contained in failed result
+  using ErrorType = E;
+
   /// Default constructor which initializes the result in the ok state.
   Result() = default;
 
   /// The copy constructor is deleted.
+  /// @param other The other result instance to copy from
   Result(const Result<void, E>& other) = default;
 
   /// The (self) assignment operator is deleted.
+  /// @param other The other result instance to assign from
+  /// @return Reference to this result instance
   Result<void, E>& operator=(const Result<void, E>& other) = default;
 
   /// Move constructor
@@ -362,6 +377,7 @@ class Result<void, E> {
 
   /// Move assignment operator
   /// @param other The other result object, rvalue ref
+  /// @return Reference to this result for assignment chaining
   Result<void, E>& operator=(Result<void, E>&& other) noexcept {
     m_opt = std::move(other.m_opt);
     return *this;
@@ -413,9 +429,16 @@ class Result<void, E> {
 
   /// Returns the error by-value.
   /// @note If `res.ok()` this method will abort (noexcept)
-  /// @return Reference to the error
+  /// @return The error by value
   E error() && noexcept { return std::move(m_opt.value()); }
 
+  /// Validates this void result and throws if an error is present
+  ///
+  /// This method checks if the result contains an error and throws an exception
+  /// if one is found. For void results, there is no value to return - this
+  /// method only performs validation.
+  ///
+  /// @throws std::runtime_error if the result contains an error
   void value() const { checkValueAccess(); }
 
  private:
@@ -435,5 +458,6 @@ class Result<void, E> {
     }
   }
 };
+/// @}
 
 }  // namespace Acts

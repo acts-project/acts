@@ -8,21 +8,26 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElementITk.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoMaterial.h>
 
-BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 BOOST_AUTO_TEST_CASE(ITkIdentifierTests) {
   auto test = [](int hw, int bec, int lw, int em, int pm, int side) {
-    Acts::ITkIdentifier id(hw, bec, lw, em, pm, side);
+    ITkIdentifier id(hw, bec, lw, em, pm, side);
     BOOST_CHECK_EQUAL(id.hardware(), hw);
     BOOST_CHECK_EQUAL(id.barrelEndcap(), bec);
     BOOST_CHECK_EQUAL(id.layerWheel(), lw);
@@ -47,30 +52,29 @@ BOOST_AUTO_TEST_CASE(ITkIdentifierTests) {
 }
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
-  Acts::GeometryContext gctx{};
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   auto material = make_intrusive<GeoMaterial>("Material", 1.0);
   auto box = make_intrusive<GeoBox>(100, 200, 2);
   auto log = make_intrusive<GeoLogVol>("LogVolumeXY", box, material);
   auto fphys = make_intrusive<GeoFullPhysVol>(log);
-  auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
+  auto rBounds = std::make_shared<RectangleBounds>(100, 200);
 
-  auto element =
-      Acts::GeoModelDetectorElement::createDetectorElement<Acts::PlaneSurface>(
-          fphys, rBounds, Acts::Transform3::Identity(), 2.0);
+  auto element = GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
+      fphys, rBounds, Transform3::Identity(), 2.0);
 
   const int hardware = 0, barrelEndcap = -2, layerWheel = 100, phiModule = 200,
             etaModule = 300, side = 1;
 
-  auto [itkElement, _] = Acts::GeoModelDetectorElementITk::convertFromGeomodel(
+  auto [itkElement, _] = GeoModelDetectorElementITk::convertFromGeomodel(
       element, element->surface().getSharedPtr(), gctx, hardware, barrelEndcap,
       layerWheel, etaModule, phiModule, side);
 
   BOOST_CHECK_EQUAL(element->surface().type(), itkElement->surface().type());
   BOOST_CHECK_EQUAL(element->surface().bounds().type(),
                     itkElement->surface().bounds().type());
-  BOOST_CHECK_NE(element->surface().associatedDetectorElement(),
-                 itkElement->surface().associatedDetectorElement());
+  BOOST_CHECK_NE(element->surface().surfacePlacement(),
+                 itkElement->surface().surfacePlacement());
   BOOST_CHECK_EQUAL(itkElement->identifier().barrelEndcap(), barrelEndcap);
   BOOST_CHECK_EQUAL(itkElement->identifier().hardware(), hardware);
   BOOST_CHECK_EQUAL(itkElement->identifier().layerWheel(), layerWheel);
@@ -80,3 +84,5 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -13,6 +13,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <bitset>
+#include <cassert>
 #include <optional>
 
 #include "Eigen/Dense"
@@ -220,12 +221,16 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
 /// See https://godbolt.org/z/z53Er6Mzf for reasoning for the concrete numbers.
 template <typename T>
 struct ExpSafeLimit {};
+/// Safe exponent limits for double precision.
 template <>
 struct ExpSafeLimit<double> {
+  /// Maximum safe exponent value for double precision
   constexpr static double value = 500.0;
 };
+/// Safe exponent limits for single precision.
 template <>
 struct ExpSafeLimit<float> {
+  /// Maximum safe exponent value for single precision
   constexpr static float value = 50.0;
 };
 
@@ -254,6 +259,7 @@ constexpr T safeExp(T val) noexcept {
 ///        to an unrolled vector index.
 /// @param i The row index of the symmetric matrix
 /// @param k The column index of the symmetric matrix
+/// @return The corresponding vector index in the unrolled storage
 template <std::size_t N>
 constexpr std::size_t vecIdxFromSymMat(const std::size_t i, const std::size_t k)
   requires(N > 0)

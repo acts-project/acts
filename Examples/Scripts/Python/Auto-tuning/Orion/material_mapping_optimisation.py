@@ -15,18 +15,28 @@ from acts import (
     Navigator,
     Propagator,
     StraightLineStepper,
-    MaterialMapJsonConverter,
 )
+
+from acts.json import MaterialMapJsonConverter
+
 from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
-    RootMaterialTrackReader,
     MaterialMapping,
+)
+
+from acts.examples.root import (
+    RootMaterialTrackReader,
+    RootMaterialTrackWriter,
+)
+
+from acts.examples.json import (
     JsonMaterialWriter,
     JsonFormat,
 )
+
 from acts.examples.odd import getOpenDataDetector
 
 
@@ -169,7 +179,7 @@ def runMaterialMappingVariance(
     )
     detectorTemp = getOpenDataDetector(matDeco)
     trackingGeometryTemp = detectorTemp.trackingGeometry()
-    matMapDeco = acts.MappingMaterialDecorator(
+    matMapDeco = acts.examples.MappingMaterialDecorator(
         tGeometry=trackingGeometryTemp, level=acts.logging.ERROR
     )
     # Update the binning using the bin map corresponding to this trial
@@ -300,7 +310,7 @@ def runMaterialMappingVariance(
     os.remove(cborMap)
 
 
-def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPloting):
+def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPlotting):
     """
     This function create an experiment for a given single surface
     Due to how Orion is implemented only one DB can exist per job, this thus need to be call using pythons multiprocessing to circumvent the issue.
@@ -311,7 +321,7 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
     pathResult : Path to write the result of the optimisation
     pipeBin : Pipe use to send the experiment binning to the main python instance
     pipeResult : Pipe to receive the result of the optimisation
-    doPloting : true if we want to plot the result of the optimisation and obtain the optimal material map
+    doPlotting : true if we want to plot the result of the optimisation and obtain the optimal material map
     """
     # Create the database
     storage = {
@@ -389,7 +399,7 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
         )
 
     # Create some performances plots for each surface
-    if doPloting:
+    if doPlotting:
         print(
             datetime.now().strftime("%H:%M:%S")
             + "    All the jobs are over. Now creating the optimisation plots",
@@ -444,12 +454,12 @@ if "__main__" == __name__:
         "--outputPath", nargs="?", default="", type=str
     )  # path to the output
     parser.add_argument(
-        "--doPloting", action="store_true"
+        "--doPlotting", action="store_true"
     )  # Return the optimisation plot and create the optimal material map
     parser.add_argument(
         "--readCachedSurfaceInformation", action="store_true"
     )  # Use surface information from the material track
-    parser.set_defaults(doPloting=False)
+    parser.set_defaults(doPlotting=False)
     parser.set_defaults(readCachedSurfaceInformation=False)
     args = parser.parse_args()
 
@@ -473,7 +483,7 @@ if "__main__" == __name__:
     decorators = detector.contextDecorators()
 
     # Use the MappingMaterialDecorator to create a binning map that can be optimised
-    matMapDeco = acts.MappingMaterialDecorator(
+    matMapDeco = acts.examples.MappingMaterialDecorator(
         tGeometry=trackingGeometry, level=acts.logging.WARNING
     )
     binDict = matMapDeco.binningMap()
@@ -507,7 +517,7 @@ if "__main__" == __name__:
                 pathResult,
                 binPipes_child[key],
                 scorePipes_child[key],
-                args.doPloting,
+                args.doPlotting,
             ),
         )
         expJob[key].start()
@@ -561,7 +571,7 @@ if "__main__" == __name__:
             flush=True,
         )
 
-    if args.doPloting:
+    if args.doPlotting:
         # The optimal binning has been found.
         # Run the material mapping one last to obtain a usable material map
         print(

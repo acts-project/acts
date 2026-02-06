@@ -147,6 +147,14 @@ struct Uniform {
             static_cast<std::size_t>((range_.second - range_.first) / pitch),
             range_.first, range_.second) {}
 
+  // Move constructor
+  // @param other The other Uniform instance to move from
+  Uniform(Uniform&& other) noexcept = default;
+
+  /// Copy constructor
+  /// @param other The other Uniform instance to copy from
+  Uniform(const Uniform&) = default;
+
   /// Constructor with a binning data in order to get the bin borders.
   ///
   /// @param bu the binning data
@@ -184,6 +192,14 @@ struct Digital {
             Acts::open, Acts::AxisDirection::AxisX,
             static_cast<std::size_t>((range_.second - range_.first) / pitch),
             range_.first, range_.second) {}
+
+  /// Move constructor
+  /// @param other The other Digital instance to move from
+  Digital(Digital&& other) noexcept = default;
+
+  /// Copy constructor
+  /// @param other The other Digital instance to copy from
+  Digital(const Digital&) = default;
 
   /// Constructor with a bin utility in order to get the bin borders.
   ///

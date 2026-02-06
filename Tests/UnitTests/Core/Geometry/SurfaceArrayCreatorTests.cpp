@@ -12,23 +12,21 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -47,13 +45,14 @@
 
 #include <boost/format.hpp>
 
+using namespace Acts;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
@@ -63,8 +62,7 @@ struct SurfaceArrayCreatorFixture {
 
   SurfaceArrayCreatorFixture()
       : m_SAC(SurfaceArrayCreator::Config(),
-              Acts::getDefaultLogger("SurfaceArrayCreator",
-                                     Acts::Logging::VERBOSE)) {
+              getDefaultLogger("SurfaceArrayCreator", Logging::VERBOSE)) {
     BOOST_TEST_MESSAGE("setup fixture");
   }
   ~SurfaceArrayCreatorFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
@@ -246,8 +244,8 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
         dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
     for (const auto& vtxloc : bounds->vertices()) {
-      Vector3 vtx =
-          srf->transform(tgContext) * Vector3(vtxloc.x(), vtxloc.y(), 0);
+      Vector3 vtx = srf->localToGlobalTransform(tgContext) *
+                    Vector3(vtxloc.x(), vtxloc.y(), 0);
       os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
     }
 
@@ -264,7 +262,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
   os.close();
 }
 
-BOOST_AUTO_TEST_SUITE(Tools)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
                         SurfaceArrayCreatorFixture) {
@@ -574,10 +572,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   double R = 10.;
 
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
   auto sl = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-      Surface::SurfaceType::Cylinder, Transform3::Identity(), R, 0,
-      std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+      cylinder, 1., std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
 
@@ -589,7 +588,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   // actually filled SA
   for (const auto& srf : brl) {
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr);
+    auto binContent = sa.at(ctr, ctr.normalized());
 
     BOOST_CHECK(binContent.size() <= 2u);
   }
@@ -615,9 +614,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   double R = 10.;
   Transform3 itr = tr.inverse();
 
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
   auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
-                                    AxisBoundaryType::Bound>(
-      Surface::SurfaceType::Cylinder, tr, R, 0, pAxisPhi, pAxisZ);
+                                    AxisBoundaryType::Bound>(cylinder, 1.,
+                                                             pAxisPhi, pAxisZ);
 
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
@@ -630,17 +631,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     auto B = pr.second;
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr);
-    BOOST_CHECK_EQUAL(binContent.size(), 2u);
-    std::set<const Surface*> act;
-    act.insert(binContent[0]);
-    act.insert(binContent[1]);
+    auto binContent = sa.at(ctr, ctr.normalized());
+    BOOST_CHECK_EQUAL(binContent.size(), 4u);
+    std::set<const Surface*> act(binContent.begin(), binContent.end());
 
-    std::set<const Surface*> exp;
-    exp.insert(A);
-    exp.insert(B);
-
-    BOOST_CHECK(act == exp);
+    std::set<const Surface*> exp({A, B});
+    BOOST_CHECK(std::ranges::includes(act, exp));
   }
 
   // VARIABLE
@@ -656,7 +652,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     auto sl2 = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                                        AxisBoundaryType::Bound>(
-        Surface::SurfaceType::Cylinder, tr, R, 0, pAxisPhiVar, pAxisZVar);
+        cylinder, 1., pAxisPhiVar, pAxisZVar);
 
     sl2->fill(tgContext, brlRaw);
     SurfaceArray sa2(std::move(sl2), brl);
@@ -692,20 +688,16 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       auto B = pr.second;
 
       Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-      auto binContent = sa2.at(ctr);
-      BOOST_CHECK_EQUAL(binContent.size(), 2u);
-      std::set<const Surface*> act;
-      act.insert(binContent[0]);
-      act.insert(binContent[1]);
+      auto binContent = sa2.at(ctr, ctr.normalized());
+      BOOST_CHECK_EQUAL(binContent.size(), 4u);
+      std::set<const Surface*> act(binContent.begin(), binContent.end());
 
-      std::set<const Surface*> exp;
-      exp.insert(A);
-      exp.insert(B);
-
-      BOOST_CHECK(act == exp);
+      std::set<const Surface*> exp({A, B});
+      BOOST_CHECK(std::ranges::includes(act, exp));
     }
   }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+
+}  // namespace ActsTests

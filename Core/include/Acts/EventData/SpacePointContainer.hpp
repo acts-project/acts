@@ -13,32 +13,33 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Utils.hpp"
-#include "Acts/Utilities/ContainerIterator.hpp"
 #include "Acts/Utilities/Holders.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <vector>
 
 namespace Acts {
 
+/// Configuration flags for the space point container.
 struct SpacePointContainerConfig {
+  /// Whether to use detailed double measurement information
   bool useDetailedDoubleMeasurementInfo = false;
 
+  /// Whether the space point data is in internal units
   bool isInInternalUnits = true;
-  //[[deprecated("SpacePointContainerConfig uses internal units")]]
-  SpacePointContainerConfig toInternalUnits() const { return *this; };
 };
 
+/// Construction options for the space point container.
 struct SpacePointContainerOptions {
-  // location of beam in x,y plane.
-  // used as offset for Space Points
+  /// Location of beam in x,y plane, used as offset for space points
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
+  /// Whether the space point data is in internal units
   bool isInInternalUnits = true;
-  //[[deprecated("SpacePointContainerOptions uses internal units")]]
-  SpacePointContainerOptions toInternalUnits() const { return *this; }
 };
 
+/// Container wrapper providing space point proxy access.
 template <typename container_t, template <typename> class holder_t>
 class SpacePointContainer {
  public:
@@ -46,19 +47,26 @@ class SpacePointContainer {
       Acts::SpacePointContainer<container_t, holder_t>>;
 
  public:
+  /// Space point proxy type
   using SpacePointProxyType =
       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
 
-  using iterator =
-      ContainerIterator<Acts::SpacePointContainer<container_t, holder_t>,
-                        SpacePointProxyType&, std::size_t, false>;
-  using const_iterator =
-      ContainerIterator<Acts::SpacePointContainer<container_t, holder_t>,
-                        const SpacePointProxyType&, std::size_t, true>;
+  /// Iterator type
+  using iterator = detail::ContainerIterator<
+      Acts::SpacePointContainer<container_t, holder_t>, SpacePointProxyType&,
+      std::size_t, false>;
+  /// Const iterator type
+  using const_iterator = detail::ContainerIterator<
+      Acts::SpacePointContainer<container_t, holder_t>,
+      const SpacePointProxyType&, std::size_t, true>;
 
+  /// Value type of the underlying container
   using ValueType = typename container_t::ValueType;
+  /// Proxy type
   using ProxyType = SpacePointProxyType;
+  /// Value type
   using value_type = ProxyType;
+  /// Size type
   using size_type = std::size_t;
 
  public:
@@ -68,6 +76,10 @@ class SpacePointContainer {
 
   // Do not take ownership
   // Activate only if holder_t is RefHolder
+  /// Construct from config, options, and container reference
+  /// @param config Configuration for the space point container
+  /// @param options Options for the space point container
+  /// @param container Reference to the underlying space point container
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::RefHolder>::value>>
@@ -77,6 +89,10 @@ class SpacePointContainer {
 
   // Take the ownership
   // Activate only if holder_t is ValueHolder
+  /// Construct from config, options, and container by moving ownership
+  /// @param config Configuration for the space point container
+  /// @param options Options for the space point container
+  /// @param container Rvalue reference to the underlying space point container
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::ValueHolder>::value>>
@@ -89,24 +105,52 @@ class SpacePointContainer {
   SpacePointContainer& operator=(SpacePointContainer& other) = delete;
 
   // move operations
+  /// Move constructor
+  /// @param other Space point container to move from
   SpacePointContainer(SpacePointContainer&& other) noexcept = default;
+  /// Move assignment operator
+  /// @param other Space point container to move from
+  /// @return Reference to this container
   SpacePointContainer& operator=(SpacePointContainer&& other) noexcept =
       default;
 
   // Destructor
   ~SpacePointContainer() = default;
 
+  /// Return the number of space points
+  /// @return Number of space points
   std::size_t size() const;
 
+  /// Return an iterator to the beginning
+  /// @return Iterator to the first space point
   iterator begin();
+  /// Return an iterator to the end
+  /// @return Iterator to one past the last space point
   iterator end();
+  /// Return a const iterator to the beginning
+  /// @return Const iterator to the first space point
   const_iterator cbegin() const;
+  /// Return a const iterator to the end
+  /// @return Const iterator to one past the last space point
   const_iterator cend() const;
+  /// Return a const iterator to the beginning
+  /// @return Const iterator to the first space point
   const_iterator begin() const;
+  /// Return a const iterator to the end
+  /// @return Const iterator to one past the last space point
   const_iterator end() const;
 
+  /// Access space point proxy at index n
+  /// @param n Index of the space point
+  /// @return Reference to the space point proxy
   ProxyType& at(const std::size_t n);
+  /// Access const space point proxy at index n
+  /// @param n Index of the space point
+  /// @return Const reference to the space point proxy
   const ProxyType& at(const std::size_t n) const;
+  /// Access underlying space point value at index n
+  /// @param n Index of the space point
+  /// @return Const reference to the underlying space point value
   const ValueType& sp(const std::size_t n) const;
 
  private:

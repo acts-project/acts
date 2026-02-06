@@ -14,29 +14,28 @@
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
 #include <utility>
 #include <vector>
 
-ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
-    Config config, Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("TrackFittingAlgorithm", level),
-      m_cfg(std::move(config)) {
+namespace ActsExamples {
+
+TrackFittingAlgorithm::TrackFittingAlgorithm(Config config,
+                                             Acts::Logging::Level level)
+    : IAlgorithm("TrackFittingAlgorithm", level), m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
   }
@@ -64,8 +63,7 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
@@ -73,6 +71,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   const ClusterContainer* clusters =
       m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
+
+  ACTS_DEBUG("Input measurements: " << measurements.size());
+  ACTS_DEBUG("Input proto tracks: " << protoTracks.size());
+  ACTS_DEBUG("Input initial parameters: " << initialParameters.size());
+  ACTS_DEBUG("Input clusters: " << (clusters ? clusters->size() : 0));
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
@@ -88,16 +91,25 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // Measurement calibrator must be instantiated here, because we need the
   // measurements to construct it. The other extensions are hold by the
   // fit-function-object
-  ActsExamples::MeasurementCalibratorAdapter calibrator(*(m_cfg.calibrator),
-                                                        measurements, clusters);
+  MeasurementCalibratorAdapter calibrator(*(m_cfg.calibrator), measurements,
+                                          clusters);
 
   TrackFitterFunction::GeneralFitterOptions options{
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),
-      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext)};
+      ctx.geoContext,
+      ctx.magFieldContext,
+      ctx.calibContext,
+      pSurface.get(),
+      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+      false};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, trackStateContainer);
+
+  // reserve space for the track containers
+  // simply assume 30 states per track for now
+  trackContainer->reserve(protoTracks.size());
+  trackStateContainer->reserve(protoTracks.size() * 30);
 
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
@@ -159,9 +171,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     }
   }
 
-  std::stringstream ss;
-  trackStateContainer->statistics().toStream(ss);
-  ACTS_DEBUG(ss.str());
+  ACTS_DEBUG("Fitted tracks: " << trackContainer->size());
+
+  if (logger().doPrint(Acts::Logging::DEBUG)) {
+    std::stringstream ss;
+    trackStateContainer->statistics().toStream(ss);
+    ACTS_DEBUG(ss.str());
+  }
 
   ConstTrackContainer constTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(
@@ -170,5 +186,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
           std::move(*trackStateContainer))};
 
   m_outputTracks(ctx, std::move(constTracks));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

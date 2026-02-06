@@ -8,11 +8,6 @@
 
 #pragma once
 
-// clang-format off
-// Workaround for building on clang+libstdc++. Must always be first
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-// clang-format on
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -23,6 +18,7 @@
 
 namespace Acts {
 
+/// Sorter functor for geometry objects by axis direction.
 template <class T>
 class ObjectSorterT {
  public:
@@ -74,6 +70,8 @@ class ObjectSorterT {
     }
   }
 
+  /// Get the sorting direction
+  /// @return The axis direction used for sorting
   AxisDirection sortingDirection() const { return m_sortingDirection; }
 
  private:
@@ -96,9 +94,8 @@ class DistanceSorterT {
         m_refEta(VectorHelpers::eta(reference)) {}
 
   /// Comparison operator
-  ///
-  /// @tparam one first object
-  /// @tparam two second object
+  /// @param one First object to compare
+  /// @param two Second object to compare
   ///
   /// @return boolean indicator
   bool operator()(T one, T two) const {
@@ -161,6 +158,7 @@ class DistanceSorterT {
   double m_refEta;
 };
 
+/// Sorter functor for geometry objects by reference position.
 template <class T>
 class GeometryObjectSorterT {
  public:
@@ -177,8 +175,8 @@ class GeometryObjectSorterT {
 
   /// Comparison operator
   ///
-  /// @tparam one is the first object
-  /// @tparam two is the second object
+  /// @param one is the first object
+  /// @param two is the second object
   ///
   /// @return boolean indicator
   bool operator()(T one, T two) const {
@@ -200,8 +198,11 @@ class GeometryObjectSorterT {
   }
 
  protected:
+  /// Geometry context for the sorting operation
   std::reference_wrapper<const GeometryContext> m_context;
+  /// The sorting function object for vectors
   ObjectSorterT<Vector3> m_objectSorter;
+  /// Optional transformation to apply before sorting
   std::shared_ptr<const Transform3> m_transform;
 };
 }  // namespace Acts

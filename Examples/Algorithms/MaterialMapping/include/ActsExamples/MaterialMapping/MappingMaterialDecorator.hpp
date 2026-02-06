@@ -14,17 +14,16 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include <Acts/Surfaces/AnnulusBounds.hpp>
-#include <Acts/Surfaces/CylinderBounds.hpp>
-#include <Acts/Surfaces/RadialBounds.hpp>
-#include <Acts/Surfaces/SurfaceBounds.hpp>
-#include <Acts/Surfaces/TrapezoidBounds.hpp>
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
-#include <fstream>
 #include <map>
-#include <mutex>
 #include <numbers>
 
 // Convenience shorthand

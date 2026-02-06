@@ -97,8 +97,8 @@ void momentumDistributions(std::string inFile, std::string treeName,
 
   for (int i = 0; i < entries; i++) {
     tree->GetEvent(i);
-    double theta = 2. * atan(exp(-eta));
-    double zDir = r / tan(theta);
+    double theta = 2. * std::atan(std::exp(-eta));
+    double zDir = r / std::tan(theta);
 
     nHits_eta->Fill(eta, nHits);
     nHits_theta->Fill(theta, nHits);

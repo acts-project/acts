@@ -8,8 +8,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -18,6 +18,7 @@
 #include <vector>
 
 using namespace Acts;
+using namespace ActsTests;
 
 int main(int /*argc*/, char** /*argv[]*/) {
   std::mt19937 rng(42);
@@ -106,20 +107,20 @@ int main(int /*argc*/, char** /*argv[]*/) {
     std::cout << check_name << ":" << std::endl;
   };
   auto print_bench_result = [](const std::string& bench_name,
-                               const Acts::Test::MicroBenchmarkResult& res) {
+                               const MicroBenchmarkResult& res) {
     std::cout << "- " << bench_name << ": " << res << std::endl;
   };
 
   // Benchmark runner
   auto run_bench = [&](auto&& iteration, int num_iters,
                        const std::string& bench_name) {
-    auto bench_result = Acts::Test::microBenchmark(iteration, num_iters);
+    auto bench_result = microBenchmark(iteration, num_iters);
     print_bench_result(bench_name, bench_result);
   };
 
   auto run_bench_with_inputs = [&](auto&& iterationWithArg, auto&& inputs,
                                    const std::string& bench_name) {
-    auto bench_result = Acts::Test::microBenchmark(iterationWithArg, inputs);
+    auto bench_result = microBenchmark(iterationWithArg, inputs);
     print_bench_result(bench_name, bench_result);
   };
   auto run_all_benches = [&](const BoundaryTolerance& check,

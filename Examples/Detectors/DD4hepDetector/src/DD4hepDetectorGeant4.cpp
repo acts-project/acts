@@ -14,7 +14,7 @@
 namespace ActsExamples {
 
 std::unique_ptr<G4VUserDetectorConstruction>
-DD4hepDetector::buildGeant4DetectorConstruction(
+DD4hepDetectorBase::buildGeant4DetectorConstruction(
     const Geant4ConstructionOptions& options) const {
   return std::make_unique<DDG4DetectorConstruction>(m_detector, options);
 }

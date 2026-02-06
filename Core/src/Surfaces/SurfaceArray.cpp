@@ -38,7 +38,6 @@ std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
   sl << std::fixed << std::setprecision(4);
   sl << "SurfaceArray:" << std::endl;
   sl << " - no surfaces: " << m_surfaces.size() << std::endl;
-  sl << " - grid dim:    " << p_gridLookup->dimensions() << std::endl;
 
   auto axes = p_gridLookup->getAxes();
 

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -30,6 +31,11 @@ concept CommonStepper = requires {
 
   requires requires(const Stepper& s, State& t) {
     { s.transportCovarianceToCurvilinear(t) } -> std::same_as<void>;
+
+    requires requires(
+        const std::tuple_element_t<0, typename Stepper::BoundState>& par) {
+      { s.initialize(t, par) } -> std::same_as<void>;
+    };
 
     requires requires(const Surface& sf, bool b,
                       const FreeToBoundCorrection& corr) {

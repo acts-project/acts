@@ -11,12 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -30,7 +30,7 @@ auto rectangle = std::make_shared<RectangleBounds>(10., 10.);
 auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
 
 // Test context
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 /// Helper method to visualize all types of surfaces
 ///
@@ -82,7 +82,8 @@ static inline std::string run(IVisualization3D& helper) {
 
   Vector2 lcentered{0., 0.};
   Acts::EventDataView3D::drawCovarianceCartesian(
-      helper, lcentered, cov, plane->transform(gctx), 1.0, errorVis);
+      helper, lcentered, cov, plane->localToGlobalTransform(gctx), 1.0,
+      errorVis);
 
   helper.write("Primitives_CartesianError");
   helper.write(ss);

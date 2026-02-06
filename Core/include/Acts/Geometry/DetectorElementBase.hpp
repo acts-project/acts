@@ -8,48 +8,52 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-
-#include <memory>
-#include <vector>
-
-/// This is the plugin mechanism to exchange the entire DetectorElementBase
-///
-/// By defining ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT pre-compile time the
-/// detector element entire detector element can be exchanged with a file
-/// provided by the client.
-///
-/// The API has to be present though
-#ifdef ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT
-#include ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT
-#else
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 namespace Acts {
 
-class Surface;
+/// This class is the base of all detector elements that are usable by ACTS.
+/// All experiment-specific detector element classes are expected to inherit
+/// from it.
+///
+/// @deprecated: This class is deprecated in favour of SurfacePlacementBase
+/// @remark It is possible toe replace this base class by defining a
+///         `ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT` pre-processor replacement.
+///         If found, @ref SurfacePlacementBase.hpp will instead include that file.
 
-class DetectorElementBase {
+class DetectorElementBase : public SurfacePlacementBase {
  public:
+  [[deprecated("This class is deprecated in favour of SurfacePlacementBase")]]
   DetectorElementBase() = default;
-  virtual ~DetectorElementBase() = default;
+  /// Return the transform for the Element proxy mechanism
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return reference to the transform of this detector element
+  [[deprecated(
+      "Please use localToGlobalTransform(const GeometryContext& gctx) "
+      "instead")]]
+  virtual const Transform3& transform(const GeometryContext& gctx) const {
+    return localToGlobalTransform(gctx);
+  }
 
   /// Return the transform for the Element proxy mechanism
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  virtual const Transform3& transform(const GeometryContext& gctx) const = 0;
-
-  /// Return surface representation - const return pattern
-  virtual const Surface& surface() const = 0;
-
-  /// Non-const return pattern
-  virtual Surface& surface() = 0;
-
+  /// @return reference to the transform to switch from the element's
+  ///         coordinates to the experiment's global coordinate system
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const override {
+    ACTS_PUSH_IGNORE_DEPRECATED()
+    return transform(gctx);
+    ACTS_POP_IGNORE_DEPRECATED()
+  }
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   virtual double thickness() const = 0;
+  /// Returns whether the detector element corresponds to a sensitive
+  /// surface on which measurements are expressed
+  /// @return true, always sensitive
+  bool isSensitive() const override { return true; }
 };
 
 }  // namespace Acts
-
-#endif

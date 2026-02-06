@@ -8,33 +8,36 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/detail/CuboidalDetectorHelper.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CuboidalDetectorHelper.hpp"
+#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdGenerator.hpp"
+#include "Acts/Geometry/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Seeding/PathSeeder.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <numbers>
 
-BOOST_AUTO_TEST_SUITE(PathSeeder)
-
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-using Axis = Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
-using Grid = Acts::Grid<std::vector<SourceLink>, Axis, Axis>;
+namespace ActsTests {
 
-GeometryContext gctx;
+BOOST_AUTO_TEST_SUITE(SeedingSuite)
+
+using Axis = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+using Grid = Grid<std::vector<SourceLink>, Axis, Axis>;
+
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 // Parameters for the geometry
 const double halfY = 10.;
@@ -73,17 +76,17 @@ class NoFieldIntersectionFinder {
                              BoundaryTolerance::AbsoluteEuclidean(m_tol));
 
       // Take the closest
-      auto closestForward = sMultiIntersection.closestForward();
+      Intersection3D closestForward = sMultiIntersection.closestForward();
 
       // Store if the intersection is reachable
       if (closestForward.status() == IntersectionStatus::reachable &&
           closestForward.pathLength() > 0.0) {
-        sIntersections.push_back(
-            {closestForward.surface().geometryId(),
-             surface
-                 ->globalToLocal(geoCtx, closestForward.position(),
-                                 Vector3{0, 1, 0})
-                 .value()});
+        sIntersections.emplace_back(
+            surface->geometryId(),
+            surface
+                ->globalToLocal(geoCtx, closestForward.position(),
+                                Vector3{0, 1, 0})
+                .value());
         continue;
       }
     }
@@ -110,7 +113,7 @@ class PathWidthProvider {
 // and the direction at the first hit
 class TrackEstimator {
  public:
-  Vector3 m_ip;
+  Vector3 m_ip{};
   SourceLinkSurfaceAccessor m_surfaceAccessor;
 
   std::pair<BoundTrackParameters, BoundTrackParameters> operator()(
@@ -123,8 +126,8 @@ class TrackEstimator {
 
     Vector4 ip = {m_ip.x(), m_ip.y(), m_ip.z(), 0};
     double qOverP = 1_e / 1._GeV;
-    double phi = Acts::VectorHelpers::phi(direction);
-    double theta = Acts::VectorHelpers::theta(direction);
+    double phi = VectorHelpers::phi(direction);
+    double theta = VectorHelpers::theta(direction);
     ParticleHypothesis particle = ParticleHypothesis::electron();
 
     BoundTrackParameters ipParams = BoundTrackParameters::createCurvilinear(
@@ -174,9 +177,9 @@ struct ConstructSourceLinkGrid {
 std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
   RotationMatrix3 rotation;
   double angle = 90_degree;
-  Vector3 xPos(cos(angle), 0., sin(angle));
+  Vector3 xPos(std::cos(angle), 0., std::sin(angle));
   Vector3 yPos(0., 1., 0.);
-  Vector3 zPos(-sin(angle), 0., cos(angle));
+  Vector3 zPos(-std::sin(angle), 0., std::cos(angle));
   rotation.col(0) = xPos;
   rotation.col(1) = yPos;
   rotation.col(2) = zPos;
@@ -258,14 +261,14 @@ std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
 
   // Volume ids: 1-3
   for (auto& volume : volumes) {
-    volume->assignGeometryId(Acts::GeometryIdentifier(id));
+    volume->assignGeometryId(GeometryIdentifier(id));
     id++;
   }
   // Intervolume portal ids: 6,7,10,11
   for (auto& volume : volumes) {
     for (auto& port : volume->portalPtrs()) {
-      if (port->surface().geometryId() == Acts::GeometryIdentifier(0)) {
-        port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
+      if (port->surface().geometryId() == GeometryIdentifier(0)) {
+        port->surface().assignGeometryId(GeometryIdentifier(id));
         id++;
       }
     }
@@ -327,7 +330,7 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   auto sourceLinks = createSourceLinks(gctx, *detector);
 
   // Prepare the PathSeeder
-  auto pathSeederCfg = Acts::PathSeeder::Config();
+  auto pathSeederCfg = PathSeeder::Config();
 
   // Grid to bin the source links
   SurfaceAccessor surfaceAccessor{*detector};
@@ -368,12 +371,12 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
   pathSeederCfg.refLayerIds.push_back(geoId);
 
   // Create the PathSeeder
-  Acts::PathSeeder pathSeeder(pathSeederCfg);
+  PathSeeder pathSeeder(pathSeederCfg);
 
   // Get the seeds
   pathWidthProvider.width = {1e-3, 1e-3};
 
-  std::vector<Acts::PathSeeder::PathSeed> seeds;
+  std::vector<PathSeeder::PathSeed> seeds;
 
   // SeedTreeContainer seeds;
   pathSeeder.findSeeds(gctx, sourceLinkGrid, seeds);
@@ -391,3 +394,5 @@ BOOST_AUTO_TEST_CASE(PathSeederZeroField) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

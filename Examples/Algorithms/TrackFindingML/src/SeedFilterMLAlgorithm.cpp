@@ -15,8 +15,11 @@
 #include <iterator>
 #include <map>
 
+using namespace Acts;
+using namespace ActsPlugins;
+
 ActsExamples::SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(
-    ActsExamples::SeedFilterMLAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    ActsExamples::SeedFilterMLAlgorithm::Config cfg, Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedFilterMLAlgorithm", lvl),
       m_cfg(std::move(cfg)),
       m_seedClassifier(m_cfg.inputSeedFilterNN.c_str()) {
@@ -55,11 +58,10 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
   // and the NN
   for (std::size_t i = 0; i < seeds.size(); i++) {
     // Compute the track parameters
-    double pT = std::abs(1.0 / params[i].parameters()[Acts::eBoundQOverP]) *
-                std::sin(params[i].parameters()[Acts::eBoundTheta]);
-    double eta =
-        std::atanh(std::cos(params[i].parameters()[Acts::eBoundTheta]));
-    double phi = params[i].parameters()[Acts::eBoundPhi];
+    double pT = std::abs(1.0 / params[i].parameters()[eBoundQOverP]) *
+                std::sin(params[i].parameters()[eBoundTheta]);
+    double eta = std::atanh(std::cos(params[i].parameters()[eBoundTheta]));
+    double phi = params[i].parameters()[eBoundPhi];
 
     // Fill and weight the clustering inputs
     clusteringParams.push_back(
@@ -75,8 +77,8 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
   }
 
   // Cluster the tracks using DBscan
-  auto cluster = Acts::dbscanSeedClustering(
-      clusteringParams, m_cfg.epsilonDBScan, m_cfg.minPointsDBScan);
+  auto cluster = dbscanSeedClustering(clusteringParams, m_cfg.epsilonDBScan,
+                                      m_cfg.minPointsDBScan);
 
   // Select the ID of the track we want to keep
   std::vector<std::size_t> goodSeed = m_seedClassifier.solveAmbiguity(

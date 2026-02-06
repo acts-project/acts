@@ -12,7 +12,6 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -22,12 +21,14 @@
 #include <optional>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace ActsTests {
 struct LayerCreatorFixture;
 }
+
+namespace Acts {
+
 class Surface;
+class SurfaceArray;
 class SurfaceArrayCreator;
 class Layer;
 
@@ -40,10 +41,10 @@ using MutableLayerPtr = std::shared_ptr<Layer>;
 ///
 class LayerCreator {
  public:
-  friend Acts::Test::LayerCreatorFixture;
+  friend ActsTests::LayerCreatorFixture;
   ///  @struct Config
   ///  Configuration for the LayerCreator
-  ///  This is the nexted configuration struct for the LayerCreator class
+  ///  This is the nested configuration struct for the LayerCreator class
   struct Config {
     /// surface array helper
     std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
@@ -196,7 +197,8 @@ class LayerCreator {
   /// @param lcConfig is the configuration struct
   void setConfiguration(const Config& lcConfig);
 
-  /// Access th configuration object
+  /// Access the configuration object
+  /// @return Copy of the current configuration object
   Config getConfiguration() const;
 
   /// set logging instance
@@ -204,6 +206,7 @@ class LayerCreator {
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// associate surfaces contained by this layer to this layer
+  /// @param layer Layer to associate surfaces with
   void associateSurfacesToLayer(Layer& layer) const;
 
  private:

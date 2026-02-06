@@ -18,6 +18,9 @@ namespace Acts {
 struct LinearizedTrack;
 class Surface;
 
+/// @typedef TrackLinearizer
+/// A delegate for linearizing a track at a given point in time and surface.
+/// @note Used for track fitting and vertexing.
 using TrackLinearizer = Acts::Delegate<Result<LinearizedTrack>(
     const BoundTrackParameters& params, double linPointTime,
     const Surface& perigeeSurface, const Acts::GeometryContext& gctx,

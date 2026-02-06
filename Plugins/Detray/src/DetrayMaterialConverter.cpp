@@ -6,28 +6,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayMaterialConverter.hpp"
+#include "ActsPlugins/Detray/DetrayMaterialConverter.hpp"
 
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
 
-#include <numbers>
 #include <stdexcept>
+
+using namespace Acts;
 
 namespace {
 
 struct MaterialSurfaceSelector {
-  std::vector<const Acts::Surface*> surfaces = {};
+  std::vector<const Surface*> surfaces = {};
 
   /// @param surface is the test surface
-  void operator()(const Acts::Surface* surface) {
+  void operator()(const Surface* surface) {
     if (surface->surfaceMaterial() != nullptr &&
         !rangeContainsValue(surfaces, surface)) {
       surfaces.push_back(surface);
@@ -37,22 +38,8 @@ struct MaterialSurfaceSelector {
 
 }  // namespace
 
-detray::io::material_slab_payload
-Acts::DetrayMaterialConverter::convertMaterialSlab(
-    const MaterialSlab& materialSlab) {
-  detray::io::material_slab_payload slab;
-  // Fill the material parameters and the thickness
-  const auto& material = materialSlab.material();
-  slab.thickness = materialSlab.thickness();
-  slab.mat = detray::io::material_payload{
-      {material.X0(), material.L0(), material.Ar(), material.Z(),
-       material.massDensity(), material.molarDensity(), 0.}};
-  slab.type = detray::io::material_id::slab;
-  return slab;
-}
-
 detray::io::detector_homogeneous_material_payload
-Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
+ActsPlugins::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
     const DetrayConversionUtils::Cache& cCache,
     const Experimental::Detector& detector, const Logger& logger) {
   detray::io::detector_homogeneous_material_payload materialPayload;
@@ -80,7 +67,7 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
           // Convert the material slab
           auto materialSlab = homogeneousMaterial->materialSlab();
           detray::io::material_slab_payload slabPayload =
-              convertMaterialSlab(materialSlab);
+              DetrayConversionUtils::convertMaterialSlab(materialSlab);
           // Find the surfaces to assign
           auto vIndex = cCache.volumeIndex(volume);
           auto localSurfaceLinks = cCache.localSurfaceLinks.find(vIndex);
@@ -113,7 +100,7 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
 
 detray::io::grid_payload<detray::io::material_slab_payload,
                          detray::io::material_id>
-Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+ActsPlugins::DetrayMaterialConverter::convertGridSurfaceMaterial(
     const ISurfaceMaterial& material, const Logger& logger) {
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
@@ -134,49 +121,11 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
   if (binnedMaterial != nullptr) {
     ACTS_VERBOSE("DetrayMaterialConverter: found binned surface material");
 
-    // BinUtility modifications
-    bool swapped = false;
-    // Get the bin utility (make a copy as we may modify it)
+    // Get the bin utility and convert to 2D if needed
     // Detray expects 2-dimensional grid, currently supported are
     // x-y, r-phi, phi-z
-    BinUtility bUtility = binnedMaterial->binUtility();
-    // Turn the bin value into a 2D grid
-    if (bUtility.dimensions() == 1u) {
-      if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisX) {
-        // Turn to X-Y
-        bUtility += BinUtility(1u, std::numeric_limits<float>::lowest(),
-                               std::numeric_limits<float>::max(),
-                               BinningOption::closed, AxisDirection::AxisY);
-      } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisY) {
-        // Turn to X-Y
-        BinUtility nbUtility(1u, std::numeric_limits<float>::lowest(),
-                             std::numeric_limits<float>::max(),
-                             BinningOption::closed, AxisDirection::AxisX);
-        nbUtility += bUtility;
-        bUtility = std::move(nbUtility);
-        swapped = true;
-      } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisR) {
-        // Turn to R-Phi
-        bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                               AxisDirection::AxisPhi);
-      } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ) {
-        // Turn to Phi-Z - swap needed
-        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
-                             AxisDirection::AxisPhi);
-        nbUtility += bUtility;
-        bUtility = std::move(nbUtility);
-        swapped = true;
-      } else {
-        std::invalid_argument("Unsupported binning for Detray");
-      }
-    } else if (bUtility.dimensions() == 2u &&
-               bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ &&
-               bUtility.binningData()[1u].binvalue == AxisDirection::AxisPhi) {
-      BinUtility nbUtility(bUtility.binningData()[1u]);
-      nbUtility += BinUtility{bUtility.binningData()[0u]};
-      bUtility = std::move(nbUtility);
-      swapped = true;
-    }
+    auto [bUtility, swapped] = DetrayConversionUtils::convertBinUtilityTo2D(
+        binnedMaterial->binUtility());
 
     AxisDirection bVal0 = bUtility.binningData()[0u].binvalue;
     AxisDirection bVal1 = bUtility.binningData()[1u].binvalue;
@@ -213,7 +162,8 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
         std::size_t lb0 = swapped ? ib1 : ib0;
         std::size_t lb1 = swapped ? ib0 : ib1;
         detray::io::material_slab_payload slab =
-            convertMaterialSlab(materialMatrix[ib1][ib0]);
+            DetrayConversionUtils::convertMaterialSlab(
+                materialMatrix[ib1][ib0]);
         detray::io::grid_bin_payload<detray::io::material_slab_payload> slabBin{
             {static_cast<unsigned int>(lb0), static_cast<unsigned int>(lb1)},
             {slab}};
@@ -224,9 +174,8 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
     return materialGrid;
   }
 
-  if (dynamic_cast<const Acts::ProtoSurfaceMaterial*>(&material) != nullptr ||
-      dynamic_cast<const Acts::ProtoGridSurfaceMaterial*>(&material) !=
-          nullptr) {
+  if (dynamic_cast<const ProtoSurfaceMaterial*>(&material) != nullptr ||
+      dynamic_cast<const ProtoGridSurfaceMaterial*>(&material) != nullptr) {
     ACTS_WARNING(
         "DetrayMaterialConverter: ProtoSurfaceMaterial and "
         "ProtoGridSurfaceMaterial are not being translated, consider to switch "
@@ -240,7 +189,7 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
 
 detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                    detray::io::material_id>
-Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
+ActsPlugins::DetrayMaterialConverter::convertGridSurfaceMaterial(
     const DetrayConversionUtils::Cache& cCache,
     const Experimental::Detector& detector, const Logger& logger) {
   // The material grid payload

@@ -8,7 +8,7 @@
 
 #pragma once
 
-// Set the Mangetic Field Context PLUGIN
+// Set the Magnetic Field Context PLUGIN
 #ifdef ACTS_CORE_MAGFIELDCONTEXT_PLUGIN
 #include ACTS_CORE_MAGFIELDCONTEXT_PLUGIN
 #else
@@ -17,12 +17,20 @@
 
 namespace Acts {
 
-/// @brief This is the central definition of the Acts
-/// payload object regarding magnetic field status
+/// @ingroup context magnetic_field
+/// @brief Context object for lookup of magnetic field values
 ///
-/// It is propagated through the code to allow for event/thread
-/// dependent magnetic field changes
-
+/// The magnetic field context is an opaque type which contains experiment
+/// specific event context information. This can be used to supply event
+/// dependent data to the magnetic field instance, in case it is needed to
+/// provide correct field values. The library itself does not make any
+/// assumptions on the content of this context type (it is implemented using
+/// `std::any`), but passes a reference through the call-chain to the field
+/// implementation. An experiment specific field implementation is then expected
+/// to performa cast to the concrete type, and use the contents.
+///
+/// An example use case of the context could be to look up conditions data /
+/// records for the value of the magnetic field at the time of the event.
 class MagneticFieldContext : public ContextType {
  public:
   /// Inherit all constructors

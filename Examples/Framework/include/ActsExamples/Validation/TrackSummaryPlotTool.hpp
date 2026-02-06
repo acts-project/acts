@@ -9,52 +9,32 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
 
-class TProfile;
-
 namespace ActsExamples {
 
 /// Tools to make track info plots to show tracking track info.
 class TrackSummaryPlotTool {
  public:
+  using AxisVariant = Acts::Experimental::AxisVariant;
+  using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
+  using ProfileHistogram1 = Acts::Experimental::ProfileHistogram1;
+
   /// @brief The nested configuration struct
   struct Config {
-    std::map<std::string, PlotHelpers::Binning> varBinning = {
-        {"Eta", PlotHelpers::Binning("#eta", 40, -4, 4)},
-        {"Phi", PlotHelpers::Binning("#phi", 100, -3.15, 3.15)},
-        {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
-        {"Num", PlotHelpers::Binning("N", 30, -0.5, 29.5)}};
-  };
-
-  /// @brief Nested Cache struct
-  struct Cache {
-    /// Number of total states vs eta
-    TProfile* nStates_vs_eta;
-    /// Number of non-outlier measurements vs eta
-    TProfile* nMeasurements_vs_eta;
-    /// Number of holes vs eta
-    TProfile* nHoles_vs_eta;
-    /// Number of outliers vs eta
-    TProfile* nOutliers_vs_eta;
-    /// Number of Shared Hits vs eta
-    TProfile* nSharedHits_vs_eta;
-    /// Number of total states vs pt
-    TProfile* nStates_vs_pt;
-    /// Number of non-outlier measurements vs pt
-    TProfile* nMeasurements_vs_pt;
-    /// Number of holes vs pt
-    TProfile* nHoles_vs_pt;
-    /// Number of outliers vs pt
-    TProfile* nOutliers_vs_pt;
-    /// Number of Shared Hits vs pt
-    TProfile* nSharedHits_vs_pt;
+    std::map<std::string, AxisVariant> varBinning = {
+        {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", BoostRegularAxis(100, -3.15, 3.15, "#phi")},
+        {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
+        {"Num", BoostRegularAxis(30, -0.5, 29.5, "N")}};
+    /// Optional prefix for histogram names
+    std::string prefix;
   };
 
   /// Constructor
@@ -63,43 +43,30 @@ class TrackSummaryPlotTool {
   /// @param lvl Message level declaration
   TrackSummaryPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the track info plots
-  ///
-  /// @param cache the cache for track info plots
-  /// @param prefix a prefix prepended to the name, concatenation with '_'
-  void book(Cache& cache, const std::string& prefix = "") const;
-
   /// @brief fill reco track info w.r.t. fitted track parameters
   ///
-  /// @param cache cache object for track info plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param nStates number of track states
   /// @param nMeasurements number of measurements
   /// @param nOutliers number of outliers
   /// @param nHoles number of holes
-  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
+  /// @param nSharedHits number of shared hits
+  void fill(const Acts::BoundTrackParameters& fittedParameters,
             std::size_t nStates, std::size_t nMeasurements,
-            std::size_t Outliers, std::size_t nHoles,
-            std::size_t nSharedHits) const;
+            std::size_t nOutliers, std::size_t nHoles, std::size_t nSharedHits);
 
-  /// @brief write the track info plots to file
-  ///
-  /// @param cache cache object for track info plots
-  void write(const Cache& cache) const;
-
-  /// @brief delete the track info plots
-  ///
-  /// @param cache cache object for track info plots
-  void clear(Cache& cache) const;
+  /// @brief Accessor for profile histograms map (const reference)
+  const std::map<std::string, ProfileHistogram1>& profiles() const {
+    return m_profiles;
+  }
 
  private:
-  /// The Config class
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
-  /// The logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  std::map<std::string, ProfileHistogram1> m_profiles;
 };
 
 }  // namespace ActsExamples

@@ -15,10 +15,9 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -27,6 +26,7 @@
 namespace Acts {
 
 class Surface;
+class SurfaceArray;
 class ISurfaceMaterial;
 class BinUtility;
 class Volume;
@@ -37,11 +37,15 @@ class IMaterialDecorator;
 template <typename object_t>
 struct NavigationOptions;
 
-// master typedef
 class Layer;
 
+/// @brief Type alias for a shared pointer to a layer
 using LayerPtr = std::shared_ptr<const Layer>;
+/// @brief Type alias for a mutable pointer to a layer
+/// @details Used for non-const access to layer objects in the geometry
 using MutableLayerPtr = std::shared_ptr<Layer>;
+/// @brief Type alias for adjacent layer pointers
+/// @details Stores pointers to the next inner and outer layers in the detector
 using NextLayers = std::pair<const Layer*, const Layer*>;
 
 /// @enum LayerType
@@ -86,37 +90,31 @@ class Layer : public virtual GeometryObject {
   friend class Gen1GeometryClosureVisitor;
 
  public:
-  /// Default Constructor - deleted
-  Layer() = delete;
-
-  /// Copy Constructor - deleted
-  Layer(const Layer&) = delete;
-
   /// Destructor
-  virtual ~Layer() = default;
-
-  /// Assignment operator - forbidden, layer assignment must not be ambiguous
-  ///
-  /// @param layer is the source layer for assignment
-  Layer& operator=(const Layer& layer) = delete;
+  ~Layer() noexcept override;
 
   /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
+  /// @return Pointer to the surface array, or nullptr if not set
   const SurfaceArray* surfaceArray() const;
 
   /// Non-const version
+  /// @return Mutable pointer to the surface array
   SurfaceArray* surfaceArray();
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @note the layer can be hosting many surfaces, but this is the global
   /// one to which one can extrapolate
+  /// @return Reference to the layer's surface representation
   virtual const Surface& surfaceRepresentation() const = 0;
 
-  // Non-const version
+  /// Non-const version of surface representation access
+  /// @return Mutable reference to the layer surface
   virtual Surface& surfaceRepresentation() = 0;
 
   /// Return the Thickness of the Layer
   /// this is by definition along the normal vector of the surfaceRepresentation
-  double thickness() const;
+  /// @return The layer thickness value
+  double layerThickness() const;
 
   /// geometrical isOnLayer() method
   ///
@@ -132,14 +130,17 @@ class Layer : public virtual GeometryObject {
                              BoundaryTolerance::None()) const;
 
   /// Return method for the approach descriptor, can be nullptr
+  /// @return Pointer to the approach descriptor, or nullptr if not set
   const ApproachDescriptor* approachDescriptor() const;
 
   /// Non-const version of the approach descriptor
+  /// @return Mutable pointer to the approach descriptor
   ApproachDescriptor* approachDescriptor();
 
   /// Accept layer according to the following collection directives
   ///
   /// @tparam options_t Type of the options for navigation
+  /// @param options Navigation options containing resolution settings
   ///
   /// @return a boolean whether the layer is accepted for processing
   template <typename options_t>
@@ -166,7 +167,7 @@ class Layer : public virtual GeometryObject {
   /// @param options The navigation options
   ///
   /// @return list of intersection of surfaces on the layer
-  boost::container::small_vector<SurfaceIntersection, 10> compatibleSurfaces(
+  boost::container::small_vector<NavigationTarget, 10> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const NavigationOptions<Surface>& options) const;
@@ -181,7 +182,7 @@ class Layer : public virtual GeometryObject {
   /// @param options The  navigation options
   ///
   /// @return the Surface intersection of the approach surface
-  SurfaceIntersection surfaceOnApproach(
+  NavigationTarget surfaceOnApproach(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
@@ -206,6 +207,7 @@ class Layer : public virtual GeometryObject {
   const Volume* representingVolume() const;
 
   /// return the LayerType
+  /// @return The layer type (active, passive, or navigation)
   LayerType layerType() const;
 
  protected:
@@ -243,31 +245,34 @@ class Layer : public virtual GeometryObject {
   /// This array will be modified during signature and constant afterwards, but
   /// the C++ type system unfortunately cannot cleanly express this.
   ///
-  std::unique_ptr<const SurfaceArray> m_surfaceArray = nullptr;
+  std::unique_ptr<const SurfaceArray> m_surfaceArray;
 
   /// Thickness of the Layer
-  double m_layerThickness = 0.;
+  double m_layerThickness = 0;
 
   /// descriptor for surface on approach
   ///
   /// The descriptor may need to be modified during geometry building, and will
   /// remain constant afterwards, but again C++ cannot currently express this.
   ///
-  std::unique_ptr<const ApproachDescriptor> m_approachDescriptor = nullptr;
+  std::unique_ptr<const ApproachDescriptor> m_approachDescriptor;
 
   /// the enclosing TrackingVolume
   const TrackingVolume* m_trackingVolume = nullptr;
 
   /// Representing Volume
   /// can be used as approach surface sources
-  std::unique_ptr<Volume> m_representingVolume = nullptr;
+  std::unique_ptr<Volume> m_representingVolume;
 
   /// make a passive/active either way
   LayerType m_layerType;
 
   /// sub structure indication
+  /// Substructure flag indicating representing surface configuration
   int m_ssRepresentingSurface = 0;
+  /// Substructure flag indicating sensitive surface configuration
   int m_ssSensitiveSurfaces = 0;
+  /// Substructure flag indicating approach surface configuration
   int m_ssApproachSurfaces = 0;
 
  private:

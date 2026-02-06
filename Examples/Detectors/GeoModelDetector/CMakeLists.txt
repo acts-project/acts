@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesDetectorGeoModel
-    SHARED
     src/GeoModelDetector.cpp
     src/AlignedGeoModelDetectorElement.cpp
     src/GeoModelMuonMockupBuilder.cpp
@@ -14,7 +13,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesDetectorGeoModel
     PUBLIC
-        Acts::Core
         Acts::ExamplesFramework
         Acts::PluginGeoModel
         Acts::ExamplesDetectorsCommon

@@ -11,21 +11,28 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsPlugins/ActSVG/LayerSvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SvgUtils.hpp"
+#include "ActsPlugins/ActSVG/TrackingGeometrySvgConverter.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 
+#include <format>
 #include <fstream>
 #include <memory>
 #include <vector>
 
-Acts::GeometryContext tgContext;
+using namespace Acts;
+using namespace ActsPlugins;
 
-BOOST_AUTO_TEST_SUITE(ActSvg)
+namespace ActsTests {
+
+auto tgContext = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_SUITE(ActSvgSuite)
 
 BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometrySvg) {
-  Acts::Svg::Style cylinderLayerStyle;
+  Svg::Style cylinderLayerStyle;
   cylinderLayerStyle.fillColor = {51, 153, 255};
   cylinderLayerStyle.fillOpacity = 0.75;
   cylinderLayerStyle.highlightColor = {255, 153, 51};
@@ -34,28 +41,54 @@ BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometrySvg) {
   cylinderLayerStyle.strokeWidth = 0.5;
   cylinderLayerStyle.quarterSegments = 72u;
 
-  Acts::GeometryIdentifier geoID{0};
+  GeometryIdentifier geoID{0};
 
-  Acts::Test::CylindricalTrackingGeometry cGeometry(tgContext);
+  CylindricalTrackingGeometry cGeometry(tgContext);
   auto tGeometry = cGeometry();
 
-  Acts::Svg::LayerConverter::Options lOptions;
+  Svg::LayerConverter::Options lOptions;
   lOptions.name = "cylinder_layer_";
-  lOptions.surfaceStyles = Acts::GeometryHierarchyMap<Acts::Svg::Style>(
-      {{geoID, cylinderLayerStyle}});
+  lOptions.surfaceStyles =
+      GeometryHierarchyMap<Svg::Style>({{geoID, cylinderLayerStyle}});
 
-  Acts::Svg::TrackingGeometryConverter::Options tgOptions;
+  Svg::TrackingGeometryConverter::Options tgOptions;
   tgOptions.prefix = "utest_geometry_";
   tgOptions.layerOptions =
-      Acts::GeometryHierarchyMap<Acts::Svg::LayerConverter::Options>(
-          {{geoID, lOptions}});
+      GeometryHierarchyMap<Svg::LayerConverter::Options>({{geoID, lOptions}});
 
-  auto geometrySheets = Acts::Svg::TrackingGeometryConverter::convert(
-      tgContext, *tGeometry, tgOptions);
+  auto geometrySheets =
+      Svg::TrackingGeometryConverter::convert(tgContext, *tGeometry, tgOptions);
 
   for (const auto& s : geometrySheets) {
-    Acts::Svg::toFile({s}, s._id + ".svg");
+    Svg::toFile({s}, s._id + ".svg");
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometrySvgGen3) {
+  CylindricalTrackingGeometry cGeometry(tgContext, true);
+  TemporaryDirectory tmp{};
+
+  auto tGeometry = cGeometry();
+
+  auto objects =
+      Svg::drawTrackingGeometry(tgContext, *tGeometry, actsvg::views::x_y{});
+
+  Svg::toFile(objects, tmp.path() / "utest_geometry_gen3_xy.svg");
+
+  objects = Svg::drawTrackingGeometry(tgContext, *tGeometry,
+                                      actsvg::views::z_r{}, true, true);
+  Svg::toFile(objects, tmp.path() / "utest_geometry_gen3_zr.svg");
+
+  objects = Svg::drawSurfaceArrays(tgContext, *tGeometry);
+
+  for (const auto& obj : objects) {
+    Svg::toFile(
+        {obj},
+        tmp.path() /
+            std::format("utest_geometry_gen3_surface_arrays_{}.svg", obj._id));
   }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -29,7 +29,9 @@ using namespace Acts;
   } while (0)
 #endif
 
-BOOST_AUTO_TEST_SUITE(AnyTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
   {
@@ -186,6 +188,41 @@ struct D2 {
 
   ~D2() { *destroyed = true; }
 };
+
+BOOST_AUTO_TEST_CASE(AnyEmplace) {
+  {
+    Any a;
+    auto& value = a.emplace<int>(42);
+    BOOST_CHECK_EQUAL(value, 42);
+    BOOST_CHECK_EQUAL(a.as<int>(), 42);
+    value = 84;
+    BOOST_CHECK_EQUAL(a.as<int>(), 84);
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    bool destroyed = false;
+    Any a{std::in_place_type<D>, &destroyed};
+    BOOST_CHECK(!destroyed);
+    a.emplace<int>(7);
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK_EQUAL(a.as<int>(), 7);
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    bool destroyed = false;
+    Any a{std::in_place_type<D2>, &destroyed};
+    BOOST_CHECK(!destroyed);
+    bool destroyed2 = false;
+    auto& ref = a.emplace<D2>(&destroyed2);
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK(!destroyed2);
+    BOOST_CHECK_EQUAL(ref.destroyed, &destroyed2);
+    BOOST_CHECK_EQUAL(a.as<D2>().destroyed, &destroyed2);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
 
 BOOST_AUTO_TEST_CASE(AnyMoveTypeChange) {
   BOOST_TEST_CONTEXT("Small type") {
@@ -548,3 +585,5 @@ BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

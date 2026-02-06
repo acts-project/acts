@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesMaterialMapping
-    SHARED
     src/CoreMaterialMapping.cpp
     src/MaterialValidation.cpp
     src/MaterialMapping.cpp
@@ -12,7 +11,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesMaterialMapping
-    PUBLIC Acts::Core Acts::ExamplesFramework
+    PUBLIC Acts::ExamplesFramework
 )
 
 acts_compile_headers(ExamplesMaterialMapping GLOB "include/**/*.hpp")

@@ -9,7 +9,6 @@
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -26,6 +25,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4/SteppingActionList.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -43,7 +43,6 @@
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
 #include <Randomize.hh>
-#include <boost/version.hpp>
 
 namespace ActsExamples {
 
@@ -124,9 +123,11 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
   // Register the input particle read handle
   eventStore().inputParticles = &m_inputParticles;
 
+  eventStore().geoContext = ctx.geoContext;
+
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   {
-    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
+    ActsPlugins::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
     // Start simulation. each track is simulated as a separate Geant4 event.
     runManager().BeamOn(1);
   }
@@ -273,10 +274,12 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
     ACTS_INFO(
         "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
     cfg.sensitiveSurfaceMapper->remapSensitiveNames(
-        sState, Acts::GeometryContext{}, g4World, Acts::Transform3::Identity());
+        sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), g4World,
+        Acts::Transform3::Identity());
 
     auto allSurfacesMapped = cfg.sensitiveSurfaceMapper->checkMapping(
-        sState, Acts::GeometryContext{}, false, false);
+        sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), false,
+        false);
     if (!allSurfacesMapped) {
       ACTS_WARNING(
           "Not all sensitive surfaces have been mapped to Geant4 volumes!");
@@ -308,16 +311,8 @@ ProcessCode Geant4Simulation::execute(const AlgorithmContext& ctx) const {
       ctx, SimParticleContainer(eventStore().particlesSimulated.begin(),
                                 eventStore().particlesSimulated.end()));
 
-#if BOOST_VERSION < 107800
-  SimHitContainer container;
-  for (const auto& hit : eventStore().hits) {
-    container.insert(hit);
-  }
-  m_outputSimHits(ctx, std::move(container));
-#else
   m_outputSimHits(
       ctx, SimHitContainer(eventStore().hits.begin(), eventStore().hits.end()));
-#endif
 
   // Output the propagation summaries if requested
   if (m_cfg.recordPropagationSummaries) {

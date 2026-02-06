@@ -14,8 +14,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -32,13 +32,15 @@ namespace {
 constexpr auto eps = std::numeric_limits<double>::epsilon();
 }
 
-BOOST_AUTO_TEST_SUITE(TransformBoundToFree)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_DATA_TEST_CASE(
     Parameters,
     surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     surface, l0, l1, time, phi, theta, p, q) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   Vector2 loc(l0, l1);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
@@ -78,7 +80,7 @@ BOOST_DATA_TEST_CASE(
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const auto qOverP = q / p;
 
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   Vector2 loc(l0, l1);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
   // transform reference position
@@ -162,7 +164,7 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const auto qOverP = q / p;
 
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   // convert w/ direction
@@ -189,3 +191,5 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

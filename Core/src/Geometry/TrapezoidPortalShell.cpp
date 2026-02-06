@@ -17,7 +17,7 @@ namespace Acts {
 void TrapezoidPortalShell::fill(TrackingVolume& volume) {
   for (Face face : {NegativeZFaceXY, PositiveZFaceXY, TrapezoidFaceAlpha,
                     TrapezoidFaceBeta, NegativeYFaceZX, PositiveYFaceZX}) {
-    const auto& portalAtFace = portalPtr(face);
+    const auto& portalAtFace = portal(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
       volume.addPortal(portalAtFace);
@@ -34,8 +34,10 @@ SingleTrapezoidPortalShell::SingleTrapezoidPortalShell(TrackingVolume& volume)
   const auto& bounds =
       dynamic_cast<const TrapezoidVolumeBounds&>(m_volume->volumeBounds());
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   std::vector<OrientedSurface> orientedSurfaces =
       bounds.orientedSurfaces(m_volume->transform());
+  ACTS_POP_IGNORE_DEPRECATED()
 
   for (Face face : {NegativeZFaceXY, PositiveZFaceXY, TrapezoidFaceAlpha,
                     TrapezoidFaceBeta, NegativeYFaceZX, PositiveYFaceZX}) {
@@ -46,11 +48,7 @@ SingleTrapezoidPortalShell::SingleTrapezoidPortalShell(TrackingVolume& volume)
   }
 }
 
-Portal* SingleTrapezoidPortalShell::portal(Face face) {
-  return portalPtr(face).get();
-}
-
-std::shared_ptr<Portal> SingleTrapezoidPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> SingleTrapezoidPortalShell::portal(Face face) {
   return m_portals.at(toUnderlying(face));
 }
 

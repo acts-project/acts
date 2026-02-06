@@ -15,6 +15,8 @@
 
 namespace Acts {
 
+/// @addtogroup track_finding
+/// @{
 namespace CkfTypes {
 
 /// expected max number of track states that are expected to be added by
@@ -41,13 +43,19 @@ enum class CombinatorialKalmanFilterBranchStopperResult {
 /// Extension struct which holds the delegates to customize the CKF behavior
 template <typename track_container_t>
 struct CombinatorialKalmanFilterExtensions {
+  /// Type alias for track state container backend
   using traj_t = typename track_container_t::TrackStateContainerBackend;
+  /// Type alias for track proxy from the container
   using TrackProxy = typename track_container_t::TrackProxy;
+  /// Type alias for track state proxy from the container
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
 
+  /// Type alias for branch stopper result enumeration
   using BranchStopperResult = CombinatorialKalmanFilterBranchStopperResult;
 
+  /// Type alias for Kalman filter updater delegate
   using Updater = typename KalmanFitterExtensions<traj_t>::Updater;
+  /// Type alias for branch stopper delegate function
   using BranchStopper =
       Delegate<BranchStopperResult(const TrackProxy&, const TrackStateProxy&)>;
 
@@ -96,4 +104,7 @@ struct CombinatorialKalmanFilterExtensions {
     return BranchStopperResult::Continue;
   }
 };
+
+/// @}
+
 }  // namespace Acts

@@ -28,6 +28,7 @@ class SeedFilter;
 /// @brief Structure that holds configuration parameters for the seed finder algorithm
 template <typename SpacePoint>
 struct SeedFinderConfig {
+  /// Shared pointer to the seed filter for quality assessment
   std::shared_ptr<SeedFilter<SpacePoint>> seedFilter;
 
   /// Seeding parameters used in the space-point grid creation and bin finding
@@ -36,9 +37,13 @@ struct SeedFinderConfig {
   /// (r, z, phi) range for limiting location of all measurements and grid
   /// creation
   float phiMin = -std::numbers::pi_v<float>;
+  /// Maximum phi angle for space-point selection
   float phiMax = std::numbers::pi_v<float>;
+  /// Minimum z coordinate for space-point selection
   float zMin = -2800 * UnitConstants::mm;
+  /// Maximum z coordinate for space-point selection
   float zMax = 2800 * UnitConstants::mm;
+  /// Maximum radius for space-point selection
   float rMax = 600 * UnitConstants::mm;
   /// WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
   /// which will make seeding very slow!
@@ -61,6 +66,7 @@ struct SeedFinderConfig {
   /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP is
   /// empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
   float rMinMiddle = 60.f * UnitConstants::mm;
+  /// Maximum radius for middle space-point selection
   float rMaxMiddle = 120.f * UnitConstants::mm;
   /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can
   /// be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}
@@ -71,6 +77,7 @@ struct SeedFinderConfig {
   /// based on the maximum and minimum r values of the space-points in the event
   /// and a deltaR (deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange)
   float deltaRMiddleMinSPRange = 10. * UnitConstants::mm;
+  /// Maximum delta R for variable middle SP range calculation
   float deltaRMiddleMaxSPRange = 10. * UnitConstants::mm;
 
   /// Seeding parameters used to define the cuts on space-point doublets
@@ -102,6 +109,7 @@ struct SeedFinderConfig {
   /// Limiting location of collision region in z-axis used to check if doublet
   /// origin is within reasonable bounds
   float collisionRegionMin = -150 * UnitConstants::mm;
+  /// Maximum z extent of collision region for doublet validation
   float collisionRegionMax = +150 * UnitConstants::mm;
 
   /// Enable cut on the compatibility between interaction point and doublet,
@@ -157,6 +165,7 @@ struct SeedFinderConfig {
   /// multiplied by sigmaError)
   /// FIXME: call align1 and align2
   float zAlign = 0 * UnitConstants::mm;
+  /// Radial alignment uncertainty for space-point uncertainties
   float rAlign = 0 * UnitConstants::mm;
   /// used for measurement (+alignment) uncertainties.
   /// find seeds within 5sigma error ellipse
@@ -164,11 +173,14 @@ struct SeedFinderConfig {
 
   /// derived values, set on SeedFinder construction
   float highland = 0;
+  /// Squared maximum scattering angle for track validation
   float maxScatteringAngle2 = 0;
 
   /// only for Cuda plugin
   int maxBlockSize = 1024;
+  /// Maximum number of triplets per space-point bin for CUDA
   int nTrplPerSpBLimit = 100;
+  /// Average triplet limit per space-point bin for CUDA
   int nAvgTrplPerSpBLimit = 2;
 
   /// Delegates for accessors to detailed information on double measurement that
@@ -178,22 +190,30 @@ struct SeedFinderConfig {
   /// Enables setting of the following delegates.
   bool useDetailedDoubleMeasurementInfo = false;
 
+  /// Delegate function for space-point selection filtering
   Delegate<bool(const SpacePoint&)> spacePointSelector{
       DelegateFuncTag<voidSpacePointSelector>{}};
 
-  static bool voidSpacePointSelector(const SpacePoint& /*sp*/) { return true; }
+  /// Default space point selector that accepts all space points
+  /// @param sp The space point to evaluate (unused)
+  /// @return Always returns true (accepts all space points)
+  static bool voidSpacePointSelector(const SpacePoint& sp) {
+    static_cast<void>(sp);
+    return true;
+  }
 
   /// Tolerance parameter used to check the compatibility of space-point
   /// coordinates in xyz. This is only used in a detector specific check for
   /// strip modules
   float toleranceParam = 1.1 * UnitConstants::mm;
 
-  // Delegate to apply experiment specific cuts during doublet finding
+  /// Delegate to apply experiment specific cuts during doublet finding
   Delegate<bool(const SpacePoint& /*middle*/, const SpacePoint& /*other*/,
                 float /*cotTheta*/, bool /*isBottomCandidate*/)>
       experimentCuts{DelegateFuncTag<&noopExperimentCuts>{}};
 
   /// defaults experimental cuts to no operation in both seeding algorithms
+  /// @return Always returns true (no cuts applied)
   static bool noopExperimentCuts(const SpacePoint& /*middle*/,
                                  const SpacePoint& /*other*/,
                                  float /*cotTheta*/,
@@ -201,10 +221,11 @@ struct SeedFinderConfig {
     return true;
   }
 
+  /// Flag indicating whether configuration uses ACTS internal units
   bool isInInternalUnits = true;
-  //[[deprecated("SeedFinderConfig uses internal units")]]
-  SeedFinderConfig toInternalUnits() const { return *this; }
 
+  /// Calculate derived quantities from the current configuration
+  /// @return A new configuration with derived quantities calculated
   SeedFinderConfig calculateDerivedQuantities() const {
     SeedFinderConfig config = *this;
     config.highland = approximateHighlandScattering(config.radLengthPerSeed);
@@ -214,24 +235,30 @@ struct SeedFinderConfig {
   }
 };
 
+/// Frequently changing options for seed finding.
 struct SeedFinderOptions {
-  // location of beam in x,y plane.
-  // used as offset for Space Points
+  /// Location of beam in x,y plane, used as offset for space points
   Vector2 beamPos{0 * UnitConstants::mm, 0 * UnitConstants::mm};
-  // field induction
+  /// Magnetic field strength in z-direction
   float bFieldInZ = 2 * UnitConstants::T;
 
-  // derived quantities
+  /// Derived quantity: pT per helix radius
   float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
+  /// Derived quantity: minimum helix diameter squared
   float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
+  /// Derived quantity: pT squared per radius
   float pT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  /// Derived quantity: sigma pT squared per radius
   float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  /// Derived quantity: multiple scattering squared
   float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
 
+  /// Whether values are in internal units
   bool isInInternalUnits = true;
-  //[[deprecated("SeedFinderOptions uses internal units")]]
-  SeedFinderOptions toInternalUnits() const { return *this; }
 
+  /// Calculate derived quantities from configuration
+  /// @param config The seeding configuration
+  /// @return Options with derived quantities calculated
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
     using namespace UnitLiterals;

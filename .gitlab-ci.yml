@@ -4,12 +4,14 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: v1.0.0
+  SPACK_VERSION: v1.0.2
   SPACK_REPO_VERSION: v2025.07.0
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v13.0.0
+  DEPENDENCY_TAG: v19.0.0
+
+  MODEL_STORAGE: ${CI_PROJECT_DIR}/ci_models
 
 .ccache_base:
   cache:
@@ -43,7 +45,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
   tags:
     - large
   artifacts:
@@ -100,9 +102,9 @@ clang_tidy:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-build_exatrkx_cpu:
+build_gnn_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
   tags:
     - large
 
@@ -112,8 +114,6 @@ build_exatrkx_cpu:
 
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
-    - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -126,20 +126,20 @@ build_exatrkx_cpu:
     # Here we only do a minimal build without examples to save resources
     - >
       cmake -B build -S src
-      --preset=gitlab-ci-exatrkx
-      -DACTS_EXATRKX_ENABLE_CUDA=OFF
-      -DACTS_EXATRKX_ENABLE_MODULEMAP=OFF
+      --preset=gitlab-ci-gnn
+      -DACTS_GNN_ENABLE_CUDA=OFF
+      -DACTS_GNN_ENABLE_MODULEMAP=OFF
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-build_exatrkx:
+build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
   tags:
     - large
 
@@ -159,7 +159,6 @@ build_exatrkx:
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
     - export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
-    - echo $PATH
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -170,20 +169,20 @@ build_exatrkx:
     - mkdir build
     - >
       cmake -B build -S src
-      --preset=gitlab-ci-exatrkx
+      --preset=gitlab-ci-gnn
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-test_exatrkx_unittests:
+test_gnn_unittests:
   stage: test
   needs:
-    - build_exatrkx
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+    - build_gnn
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
   tags:
     - docker-gpu-nvidia
 
@@ -199,16 +198,16 @@ test_exatrkx_unittests:
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
     - cd ..
-    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
+    - ctest --test-dir build -R "(Gnn|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
 
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-test_exatrkx_python:
+test_gnn_python:
   stage: test
   needs:
-    - build_exatrkx
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_exatrkx:80
+    - build_gnn
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
   tags:
     - docker-gpu-nvidia
 
@@ -224,13 +223,14 @@ test_exatrkx_python:
     - |
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
+    - CI/dependencies/download_models.sh
+    - ls ${MODEL_STORAGE}
+    - apt-get install tree
+    - tree ${MODEL_STORAGE}
     - source ../build/this_acts_withdeps.sh
-    - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - echo $PYTHONPATH
-    - which python3
-    - python3 --version
-    - python3 -c "import acts"
-    - python3 -c "from acts.examples import ModuleMapCuda" # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
+    - python3 -m pip install -r Python/Examples/tests/requirements.txt
+    # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
+    - python3 -c "from acts.examples.gnn import ModuleMapCuda"
     - pytest -rfExw -k torch -v --collect-only
     - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
 
@@ -239,14 +239,11 @@ test_exatrkx_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:80
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:83
 
   cache:
     - !reference [.spack_cache, cache]
     - !reference [.ccache_base, cache]
-
-  tags:
-    - docker-gpu-nvidia
 
   script:
     - git clone $CLONE_URL src
@@ -260,7 +257,7 @@ build_gnn_tensorrt:
     - >
       cmake -B build -S src --preset gitlab-ci-tensorrt
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
   after_script:
@@ -268,7 +265,7 @@ build_gnn_tensorrt:
 
 build_linux_ubuntu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
 
   cache:
    - !reference [.ccache_base, cache]
@@ -284,13 +281,10 @@ build_linux_ubuntu:
     expire_in: 1 day
 
   script:
-    - echo $PATH
     - git clone $CLONE_URL src
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
 
     - cd ..
 
@@ -305,7 +299,7 @@ build_linux_ubuntu:
       -DACTS_BUILD_PLUGIN_ONNX=ON
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
@@ -333,7 +327,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
   needs: [build_linux_ubuntu]
 
   cache:
@@ -345,18 +339,14 @@ linux_test_examples:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
-      CI/dependencies/setup.sh -c g++ -e .env
+      CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
     - cd ..
 
-    - geant4-config --install-datasets
     - source build/this_acts_withdeps.sh
     - cd src
-    - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - pytest -rfExw -k "not exatrkx" -v
+    - pytest -rfExw -k "not gnn" -v
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -364,7 +354,7 @@ linux_test_examples:
 linux_physmon:
   stage: test
   needs: [build_linux_ubuntu]
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
 
   artifacts:
     when: always
@@ -381,23 +371,13 @@ linux_physmon:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
-      CI/dependencies/setup.sh -c g++ -e .env
+      CI/dependencies/setup.sh -c g++ -e .env -f
       source .env
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - python3 -m pip install histcmp==0.8.1 matplotlib
-    - python3 -m pip install -r src/Examples/Scripts/requirements.txt
-    - geant4-config --install-datasets
-    - venv_python=$(which python3)
-    - echo $venv_python
     - source build/this_acts_withdeps.sh
-    - export PATH=$(dirname $venv_python):$PATH
-    - echo $PATH
-    - which python3
     - cd src
     - CI/physmon/phys_perf_mon.sh all physmon
 
@@ -423,8 +403,6 @@ linux_physmon:
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - |
       CI/dependencies/setup.sh -c ${CXX} -e .env
       source .env
@@ -438,7 +416,7 @@ linux_physmon:
       -DCMAKE_CXX_COMPILER=${CXX}
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
@@ -471,7 +449,7 @@ linux_ubuntu_2404_clang19:
   variables:
     CXX: clang++-19
     CXXSTD: 20
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:80
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:83
 
 
 ######################
@@ -479,19 +457,24 @@ linux_ubuntu_2404_clang19:
 ######################
 
 .lcg_base_job:
-  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:80
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:83
   stage: build
   tags:
     - cvmfs
 
   variables:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
-    INSTALL_DIR: ${{ github.workspace }}/install
+    # disable fpe monitoring as we can't mask without backtrace support
+    ACTS_SEQUENCER_DISABLE_FPEMON: true
+    INSTALL_DIR: ${CI_PROJECT_DIR}/install
+    # force off even if it is CI mode
+    ROOT_HASH_CHECKS: off
+
 
     SETUP:
 
   cache:
-   - !reference [.ccache_base, cache]
+    - !reference [.ccache_base, cache]
 
   before_script:
     - 'echo "LCG_VERSION: ${LCG_VERSION}"'
@@ -505,18 +488,15 @@ linux_ubuntu_2404_clang19:
         export LCG_PLATFORM="$OS"
       fi
 
-    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
-
+    - dnf install -y git-lfs
     - git clone $CLONE_URL src
 
     - cd src
     - git checkout $HEAD_SHA
-    - git submodule init
-    - git submodule update
     - cd ..
 
-    - ccache --version
+    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
 
   script:
     - >
@@ -525,12 +505,19 @@ linux_ubuntu_2404_clang19:
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
 
     - ccache -z
-    - cmake --build build -- -j6
+    - cmake --build build -- -j8
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
 
+    # Install main project for Python tests
+    - cmake --install build > install.log
 
+    # Install Python dependencies
+    - source build/this_acts_withdeps.sh
+    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
+    - cd src
+    - pytest -rfExw -k "not gnn" -v -n1
 
 lcg_106a:
   extends: .lcg_base_job

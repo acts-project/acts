@@ -24,7 +24,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cstddef>
@@ -32,9 +32,10 @@
 #include <optional>
 #include <utility>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
@@ -42,7 +43,7 @@ using AtlasStepperType = AtlasStepper;
 using Covariance = BoundSquareMatrix;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 static auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 1_T});
@@ -148,6 +149,8 @@ void testJacobianToGlobal(const Parameters& pars) {
   // cross comparison checks
   CHECK_CLOSE_OR_SMALL(asMatrix, estepState.jacToGlobal, 1e-6, 1e-9);
 }
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 /// This tests the jacobian of local curvilinear -> global
 BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest) {
@@ -266,4 +269,6 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   testJacobianToGlobal(atStraw);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

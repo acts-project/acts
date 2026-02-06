@@ -35,6 +35,7 @@ namespace Acts {
 class CuboidVolumeStack : public VolumeStack {
  public:
   /// Constructor from a vector of volumes and direction
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes is the vector of volumes
   /// @param direction is the axis direction
   /// @param strategy is the attachment strategy
@@ -51,7 +52,8 @@ class CuboidVolumeStack : public VolumeStack {
   /// @pre The volumes all need to have @c CuboidVolumeBounds
   /// @note Preconditions are checked on construction
   CuboidVolumeStack(
-      std::vector<Volume*>& volumes, AxisDirection direction,
+      const GeometryContext& gctx, std::vector<Volume*>& volumes,
+      AxisDirection direction,
       VolumeAttachmentStrategy strategy = VolumeAttachmentStrategy::Midpoint,
       VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand,
       const Logger& logger = Acts::getDummyLogger());
@@ -61,32 +63,38 @@ class CuboidVolumeStack : public VolumeStack {
   /// to accommodate the new bounds and optionally create
   /// gap volumes according to the resize strategy set during
   /// construction.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volbounds is the new bounds
   /// @param transform is the new transform
   /// @param logger is the logger
   /// @pre The volume bounds need to be of type
   ///      @c CuboidVolumeBounds.
-  void update(std::shared_ptr<VolumeBounds> volbounds,
+  void update(const GeometryContext& gctx,
+              std::shared_ptr<VolumeBounds> volbounds,
               std::optional<Transform3> transform = std::nullopt,
               const Logger& logger = getDummyLogger()) override;
 
   /// Convert axis direction to an array index according to
   /// stack convention. For example, AxisX --> 0
   /// @param direction is the axis direction to convert
+  /// @return Array index corresponding to the axis direction
   static std::size_t axisToIndex(AxisDirection direction);
 
   /// Get axis directions orthogonal to the given one according
   /// to stack convention. For example AxisX --> <AxisY, AxisZ>
   /// @param direction is the axis direction to find the orthogonal for
+  /// @return Pair of orthogonal axis directions
   static std::pair<AxisDirection, AxisDirection> getOrthogonalAxes(
       AxisDirection direction);
 
  private:
   /// Helper function called during construction that performs the
   /// internal attachment and produces the overall outer volume bounds.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param strategy is the attachment strategy
   /// @param logger is the logger
-  void initializeOuterVolume(VolumeAttachmentStrategy strategy,
+  void initializeOuterVolume(const GeometryContext& gctx,
+                             VolumeAttachmentStrategy strategy,
                              const Logger& logger);
 
   struct VolumeTuple;
@@ -115,13 +123,14 @@ class CuboidVolumeStack : public VolumeStack {
 
   /// Helper function that checks overlaps and attaches along the stacking
   /// direction
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes is the vector of volumes
   /// @param strategy is the attachment strategy
   /// @param logger is the logger
   /// @return vector of gap volumes. Can be empty if none were created.
   std::vector<VolumeTuple> checkOverlapAndAttach(
-      std::vector<VolumeTuple>& volumes, VolumeAttachmentStrategy strategy,
-      const Logger& logger);
+      const GeometryContext& gctx, std::vector<VolumeTuple>& volumes,
+      VolumeAttachmentStrategy strategy, const Logger& logger);
 
   /// Helper function to synchronize the bounds of the volumes
   /// @param volumes is the vector of volumes

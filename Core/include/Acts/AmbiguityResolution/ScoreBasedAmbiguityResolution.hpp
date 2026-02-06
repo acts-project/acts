@@ -46,32 +46,39 @@ class ScoreBasedAmbiguityResolution {
   /// The configuration can be saved in a json file and loaded from there.
   ///
   struct DetectorConfig {
+    /// Weight for hits in track scoring
     int hitsScoreWeight = 0;
+    /// Weight for holes in track scoring
     int holesScoreWeight = 0;
+    /// Weight for outliers in track scoring
     int outliersScoreWeight = 0;
+    /// Weight for other track states in scoring
     int otherScoreWeight = 0;
 
-    // the eta bins for the detector
+    /// Eta bin boundaries for this detector
     std::vector<double> etaBins = {-5, 5};
 
-    // the minimum number of hits for each eta bin
+    /// Minimum required hits per eta bin
     std::vector<std::size_t> minHitsPerEta = {0};
 
-    // the maximum number of holes for each eta bin
+    /// Maximum allowed holes per eta bin
     std::vector<std::size_t> maxHolesPerEta = {0};
 
-    // the maximum number of outliers for each eta bin
+    /// Maximum allowed outliers per eta bin
     std::vector<std::size_t> maxOutliersPerEta = {0};
 
-    // the maximum number of shared hits for each eta bin
+    /// Maximum allowed shared hits per eta bin
     std::vector<std::size_t> maxSharedHitsPerEta = {0};
 
+    /// Maximum allowed hits for tracks in this detector
     std::size_t maxHits = 0;
+    /// Maximum allowed holes for tracks in this detector
     std::size_t maxHoles = 0;
 
     /// if true, the shared hits are considered as bad hits for this detector
     bool sharedHitsFlag = false;
 
+    /// Unique identifier for this detector configuration
     std::size_t detectorId = 0;
 
     /// a list of values from  0 to 1, the higher number of hits, higher value
@@ -89,12 +96,17 @@ class ScoreBasedAmbiguityResolution {
   ///
   /// The trackFeatures is used to compute the score of each track
   struct TrackFeatures {
+    /// Number of hits on this track
     std::size_t nHits = 0;
+    /// Number of holes on this track
     std::size_t nHoles = 0;
+    /// Number of outliers on this track
     std::size_t nOutliers = 0;
+    /// Number of hits shared with other tracks
     std::size_t nSharedHits = 0;
   };
 
+  /// Enumeration of track state types for ambiguity resolution
   enum class TrackStateTypes : std::uint8_t {
     // A measurement not yet used in any other track
     UnsharedHit,
@@ -110,7 +122,9 @@ class ScoreBasedAmbiguityResolution {
 
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
   struct Config {
+    /// Map from volume IDs to detector configuration indices
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
+    /// Detector-specific configuration settings
     std::vector<DetectorConfig> detectorConfigs;
     /// minimum score for any track
     double minScore = 0;
@@ -124,6 +138,7 @@ class ScoreBasedAmbiguityResolution {
     std::size_t minUnshared = 5;
 
     // if true, the ambiguity score is computed based on a different function.
+    /// Flag to enable alternative ambiguity scoring algorithm
     bool useAmbiguityScoring = false;
   };
 
@@ -134,23 +149,32 @@ class ScoreBasedAmbiguityResolution {
   /// scores using this structure.
   template <TrackProxyConcept track_proxy_t>
   struct Optionals {
+    /// Type alias for optional track cuts function
     using OptionalCuts = std::function<bool(const track_proxy_t&)>;
 
+    /// Type alias for optional score modifier function
     using OptionalScoreModifier =
         std::function<void(const track_proxy_t&, double&)>;
 
+    /// Type alias for optional hit selection function
     using OptionalHitSelection = std::function<void(
         const track_proxy_t&,
         const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes&)>;
 
+    /// Custom track selection cuts to apply
     std::vector<OptionalCuts> cuts = {};
+    /// Custom track score modifiers/weights
     std::vector<OptionalScoreModifier> weights = {};
 
     /// applied only if useAmbiguityScoring is true
     std::vector<OptionalScoreModifier> scores = {};
+    /// Custom hit selection functions for track states
     std::vector<OptionalHitSelection> hitSelections = {};
   };
 
+  /// Constructor with configuration and optional logger
+  /// @param cfg Configuration object for the ambiguity resolution
+  /// @param logger Logger instance for output, defaults to INFO level
   explicit ScoreBasedAmbiguityResolution(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =

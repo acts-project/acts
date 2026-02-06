@@ -8,7 +8,6 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesTraccc
     INTERFACE
-        Acts::Core
         Acts::ExamplesFramework
         Acts::ExamplesPropagation
         Acts::PluginDetray

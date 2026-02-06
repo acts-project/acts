@@ -109,6 +109,16 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
   m_inLeftModulePC = stripXYToModulePC(m_inLeftStripXY);
   m_outRightModulePC = stripXYToModulePC(m_outRightStripXY);
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
+
+  // Pre-calculate center as average of corner vertices
+  // Use simple 4-corner approximation for efficiency
+  Vector2 centerXY = 0.25 * (m_outLeftStripXY + m_inLeftStripXY +
+                             m_outRightStripXY + m_inRightStripXY);
+
+  // Convert center from cartesian (strip XY) to polar (strip PC) coordinates
+  // Apply inverse rotation to account for average phi, matching other methods
+  Vector2 centerPC = Vector2(centerXY.norm(), VectorHelpers::phi(centerXY));
+  m_center = m_rotationStripPC.inverse() * centerPC;
 }
 
 std::vector<double> AnnulusBounds::values() const {
@@ -204,7 +214,7 @@ bool AnnulusBounds::inside(const Vector2& lposition) const {
   // calculate R in MODULE SYSTEM to evaluate R-bounds
   // don't need R, can use R^2
   double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
-                  2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
+                  2 * m_shiftPC[0] * rLoc * std::cos(phiLoc - m_shiftPC[1]);
 
   if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
     return false;
@@ -390,6 +400,12 @@ Vector2 AnnulusBounds::modulePCToStripPC(const Vector2& vModulePC) const {
 
 Vector2 AnnulusBounds::moduleOrigin() const {
   return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
+}
+
+Vector2 AnnulusBounds::center() const {
+  // Return pre-calculated center that accounts for the complex coordinate
+  // transformations between radial and angular coordinate systems
+  return m_center;
 }
 
 std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {

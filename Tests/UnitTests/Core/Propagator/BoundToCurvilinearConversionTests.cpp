@@ -26,8 +26,6 @@
 
 #include <cmath>
 #include <cstdlib>
-#include <exception>
-#include <iomanip>
 #include <iostream>
 #include <typeinfo>
 
@@ -70,7 +68,7 @@ double computeDtDs(const T_ParticleHypothesis &hypothesis, double qop) {
  * @param direction the direction of trajectory at the location in question
  * @param qop q/p of the particle at the location in question in Acts units
  * @param bfield the magnetic field at the location in question in Acts units
- * @param particle_hypothesis the particle hypothesis e.g. Acts::ParticleHypothesis::pion()
+ * @param particle_hypothesis the particle hypothesis e.g. ParticleHypothesis::pion()
  * @return path length derivatives ( dr(...)/ds, dt/ds, dr(...)/ds2, d qop/ds [== 0] )
  */
 template <class T_ParticleHypothesis>
@@ -86,7 +84,7 @@ FreeToPathMatrix computeFreeToPathDerivatives(
   path_length_deriv(0, eFreeTime) = computeDtDs(particle_hypothis, qop);
   path_length_deriv.segment<3>(eFreeDir0) =
       (qop * direction.cross(bfield)).transpose();
-  path_length_deriv(0, Acts::eFreeQOverP) = 0.;
+  path_length_deriv(0, eFreeQOverP) = 0.;
   return path_length_deriv;
 }
 template <typename T, std::size_t Rows, std::size_t Cols>
@@ -134,6 +132,8 @@ T_Matrix matrixRatio(const T_Matrix &a, const T_Matrix &b) {
 
 }  // namespace
 
+namespace ActsTests {
+
 struct TestData {
   enum ESurfaceType { kPlane, kPolarDisk, kCylinder };
   TestData(Vector3 &&a_surface_center, SquareMatrix3 &&a_surface_rot,
@@ -157,13 +157,13 @@ struct TestData {
 template <typename T_StepperCreator>
 void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
                                const T_StepperCreator &stepper_creator) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext magFieldContext;
 
   for (const auto &test_data : test_data_list) {
     // create a constant magnetic field provider for the test_data
-    std::shared_ptr<Acts::MagneticFieldProvider> bField =
-        std::dynamic_pointer_cast<Acts::MagneticFieldProvider>(
+    std::shared_ptr<MagneticFieldProvider> bField =
+        std::dynamic_pointer_cast<MagneticFieldProvider>(
             std::make_shared<ConstantBField>(test_data.bfield));
 
     // create bound parameters from test data
@@ -195,8 +195,9 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       }
     }
 
-    Vector3 direction{cos(param_vec[2]) * sin(param_vec[3]),
-                      sin(param_vec[2]) * sin(param_vec[3]), cos(param_vec[3])};
+    Vector3 direction{std::cos(param_vec[2]) * std::sin(param_vec[3]),
+                      std::sin(param_vec[2]) * std::sin(param_vec[3]),
+                      std::cos(param_vec[3])};
     Vector3 position(surface->localToGlobal(
         geoCtx, Vector2{param_vec[0], param_vec[1]}, direction));
     BoundTrackParameters params(surface, param_vec,
@@ -209,7 +210,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
     for (unsigned int i = 0; i < 4; ++i) {
       MagneticFieldProvider::Cache cache = bField->makeCache(magFieldContext);
 
-      Result<Acts::Vector3> local_bfield = bField->getField(position, cache);
+      Result<Vector3> local_bfield = bField->getField(position, cache);
       assert(local_bfield.ok());
 
       auto path_length_derivatives = computeFreeToPathDerivatives(
@@ -218,11 +219,11 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       MSG_DEBUG("derivatives : " << path_length_derivatives);
 
       // compute Jacobian for bound to curvilinear covariance transformation
-      Acts::BoundMatrix b2c;
+      BoundMatrix b2c;
       FreeToBoundMatrix freeToBoundJacobian;
-      Acts::detail::boundToCurvilinearTransportJacobian(
+      detail::boundToCurvilinearTransportJacobian(
           direction, surface->boundToFreeJacobian(geoCtx, position, direction),
-          Acts::FreeMatrix::Identity(), freeToBoundJacobian,
+          FreeMatrix::Identity(), freeToBoundJacobian,
           computeFreeToPathDerivatives(
               direction, params.parameters()[eBoundQOverP],
               local_bfield.value(), ParticleHypothesis::pion()),
@@ -236,7 +237,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       MSG_DEBUG("Stepper type " << typeid(stepper).name());
 
       using Stepper = decltype(stepper);
-      using Propagator = Acts::Propagator<Stepper>;
+      using Propagator = Propagator<Stepper>;
       using PropagatorOptions = typename Propagator::template Options<>;
 
       // configure propagator for tiny step size
@@ -251,13 +252,13 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
             null_propagation_options.pathLimit * .99;
       }
 
-      auto log_level = (isDebugOutputEnabled() ? Acts::Logging::VERBOSE
-                                               : Acts::Logging::INFO);
+      auto log_level =
+          (isDebugOutputEnabled() ? Logging::VERBOSE : Logging::INFO);
 
       // Use propagator with small step size to compute parameters in
       // curvilinear parameterisation
-      Propagator propagator(std::move(stepper), Acts::VoidNavigator(),
-                            Acts::getDefaultLogger("Propagator", log_level));
+      Propagator propagator(std::move(stepper), VoidNavigator(),
+                            getDefaultLogger("Propagator", log_level));
       auto result =
           propagator.propagate(params, null_propagation_options, true);
       {
@@ -270,12 +271,12 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
                       << null_propagation_options.stepping.stepTolerance
                       << std::endl);
 
-          Acts::BoundSquareMatrix curvi_cov =
+          BoundSquareMatrix curvi_cov =
               curvilinear_parameters.value().covariance().value();
           MSG_DEBUG("curvilinear covariance:" << std::endl
                                               << curvi_cov << std::endl);
           if (isDebugOutputEnabled()) {
-            Acts::BoundSquareMatrix b(curvi_cov_alt);
+            BoundSquareMatrix b(curvi_cov_alt);
             auto ratio = matrixRatio(curvi_cov, b);
             MSG_DEBUG("ratio:" << std::endl << ratio << std::endl);
           }
@@ -565,13 +566,14 @@ std::vector<TestData> make_test_data(double mag_field_scale = 1.) {
   return test_data_list;
 }
 
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
 BOOST_AUTO_TEST_CASE(BoundToCurvilinearEigenStepper) {
   // Compare covariance in curvilinear parameterisation:
   // explicit computation vs. dummy propagation using EigenStepper
   std::vector<TestData> test_data_list(make_test_data());
   test_bound_to_curvilinear(
-      test_data_list,
-      [](const std::shared_ptr<Acts::MagneticFieldProvider> &bField) {
+      test_data_list, [](const std::shared_ptr<MagneticFieldProvider> &bField) {
         return EigenStepper<>(bField);
       });
 }
@@ -583,6 +585,10 @@ BOOST_AUTO_TEST_CASE(BoundToCurvilinearStraightLineStepper) {
       make_test_data(0.));  // scale magnetic field in test data to zero.
   test_bound_to_curvilinear(
       test_data_list,
-      []([[maybe_unused]] const std::shared_ptr<Acts::MagneticFieldProvider>
+      []([[maybe_unused]] const std::shared_ptr<MagneticFieldProvider>
              &bField) { return StraightLineStepper(); });
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

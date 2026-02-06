@@ -71,6 +71,12 @@ const RectangleBounds& EllipseBounds::boundingBox() const {
   return m_boundingBox;
 }
 
+Vector2 EllipseBounds::center() const {
+  // For ellipse bounds, the centroid is at the center of the ellipse ring,
+  // positioned at the average phi
+  return Vector2::Zero();
+}
+
 std::ostream& EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

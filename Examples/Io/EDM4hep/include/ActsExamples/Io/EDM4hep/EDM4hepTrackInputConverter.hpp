@@ -10,7 +10,7 @@
 
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
+#include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 
 #include <string>
 
@@ -21,7 +21,7 @@ class Frame;
 namespace ActsExamples {
 
 /// Read in a track collection as EDM4hep from a @c podio::Frame.
-class EDM4hepTrackInputConverter : public EDM4hepInputConverter {
+class EDM4hepTrackInputConverter : public PodioInputConverter {
  public:
   struct Config {
     std::string inputFrame;

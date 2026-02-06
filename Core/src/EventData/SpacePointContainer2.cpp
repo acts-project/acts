@@ -21,7 +21,7 @@ using tuple_indices =
 
 }
 
-namespace Acts::Experimental {
+namespace Acts {
 
 static_assert(std::random_access_iterator<SpacePointContainer2::iterator>);
 static_assert(
@@ -102,6 +102,20 @@ void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
 
   m_knownColumns = other.m_knownColumns;
   knownColumns() = std::move(other).knownColumns();
+
+  const auto updateKnownColumnPointer =
+      [&]<typename T>(std::string_view name,
+                      std::optional<ColumnHolder<T>> &column) {
+        if (column.has_value()) {
+          m_namedColumns.at(std::string(name)).first = &column.value();
+        }
+      };
+
+  [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+    ((updateKnownColumnPointer(std::get<Is>(knownColumnNames()),
+                               std::get<Is>(knownColumns()))),
+     ...);
+  }(tuple_indices<decltype(knownColumns())>{});
 }
 
 void SpacePointContainer2::reserve(std::uint32_t size,
@@ -123,6 +137,16 @@ void SpacePointContainer2::clear() noexcept {
   for (const auto &[name, column] : m_namedColumns) {
     column.first->clear();
   }
+}
+
+MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
+  ++m_size;
+
+  for (const auto &[name, column] : m_namedColumns) {
+    column.first->emplace_back();
+  }
+
+  return MutableProxy(*this, size() - 1);
 }
 
 void SpacePointContainer2::assignSourceLinks(
@@ -163,7 +187,7 @@ void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
     ((createColumn(
-         std::get<Is>(knownColumnMaks()), std::get<Is>(knownColumnNames()),
+         std::get<Is>(knownColumnMasks()), std::get<Is>(knownColumnNames()),
          std::get<Is>(knownColumnDefaults()), std::get<Is>(knownColumns()))),
      ...);
   }(tuple_indices<decltype(knownColumns())>{});
@@ -183,7 +207,7 @@ void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
   };
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-    ((dropColumn(std::get<Is>(knownColumnMaks()),
+    ((dropColumn(std::get<Is>(knownColumnMasks()),
                  std::get<Is>(knownColumnNames()),
                  std::get<Is>(knownColumns()))),
      ...);
@@ -218,4 +242,4 @@ bool SpacePointContainer2::reservedColumn(const std::string &name) noexcept {
   return reservedColumns.contains(name);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

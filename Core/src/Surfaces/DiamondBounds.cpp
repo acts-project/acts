@@ -78,6 +78,12 @@ const RectangleBounds& DiamondBounds::boundingBox() const {
   return m_boundingBox;
 }
 
+Vector2 DiamondBounds::center() const {
+  // The diamond is symmetric about both x and y axes,
+  // so centroid is at origin
+  return Vector2::Zero();
+}
+
 std::ostream& DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

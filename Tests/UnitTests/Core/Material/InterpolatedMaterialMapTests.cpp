@@ -11,10 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cstddef>
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialCell_test) {
   std::array<Acts::Material::ParametersVector, 4> matArray = {mat, mat, mat,
                                                               mat};
 
-  MaterialMapper<grid_t>::MaterialCell materialCell(
+  MaterialMapLookup<grid_t>::MaterialCell materialCell(
       trafoGlobalToLocal, lowerLeft, upperRight, matArray);
 
   // Test InterpolatedMaterialMap::MaterialCell<DIM>::isInside method
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialCell_test) {
   BOOST_CHECK_EQUAL(materialCell.getMaterial({0.5, 0.5, 0.5}), Material(mat));
 }
 
-BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
+BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapLookup_test) {
   // Create the axes for the grid
   Axis axisX(0, 3, 3);
   Axis axisY(0, 3, 3);
@@ -73,13 +73,13 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
   for (std::size_t i = 0; i < grid.size(); i++) {
     grid.at(i) = mat;
   }
-  MaterialMapper<grid_t> matMap(trafoGlobalToLocal, grid);
+  MaterialMapLookup<grid_t> matMap(trafoGlobalToLocal, grid);
 
   // Test Material getter
   BOOST_CHECK_EQUAL(matMap.getMaterial({0.5, 0.5, 0.5}), Material(mat));
 
   // Test the MaterialCell getter
-  MaterialMapper<grid_t>::MaterialCell matCell =
+  MaterialMapLookup<grid_t>::MaterialCell matCell =
       matMap.getMaterialCell({0.5, 0.5, 0.5});
   BOOST_CHECK_EQUAL(matCell.getMaterial({0.5, 0.5, 0.5}), Material(mat));
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   for (std::size_t i = 0; i < grid.size(); i++) {
     grid.at(i) = mat;
   }
-  MaterialMapper<grid_t> matMap(trafoGlobalToLocal, grid);
+  MaterialMapLookup<grid_t> matMap(trafoGlobalToLocal, grid);
   InterpolatedMaterialMap ipolMatMap(std::move(matMap));
 
   // Test the material getter
@@ -145,9 +145,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   std::array<Acts::Material::ParametersVector, 4> matArray = {mat, mat, mat,
                                                               mat};
 
-  MaterialMapper<grid_t>::MaterialCell materialCell(
+  MaterialMapLookup<grid_t>::MaterialCell materialCell(
       trafoGlobalToLocal, lowerLeft, upperRight, matArray);
-  InterpolatedMaterialMap<MaterialMapper<grid_t>>::Cache cache;
+  InterpolatedMaterialMap<MaterialMapLookup<grid_t>>::Cache cache;
   cache.matCell = materialCell;
   cache.initialized = true;
   BOOST_CHECK_EQUAL(ipolMatMap.getMaterial(Vector3(0.5, 0.5, 0.5), cache),

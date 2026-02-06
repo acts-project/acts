@@ -12,7 +12,11 @@
 
 #include <limits>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 // This tests the implementation of the AbortList
 // and the standard aborters
@@ -58,4 +62,6 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
   BOOST_CHECK_EQUAL(stepSize_p.value(), 0.05);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -15,9 +15,7 @@
 #include <cassert>
 #include <span>
 
-#include <Eigen/Core>
-
-namespace Acts::Experimental {
+namespace Acts {
 
 class SpacePointContainer2;
 template <typename T, bool read_only>
@@ -35,8 +33,10 @@ class SpacePointProxy2 {
   /// modified
   static constexpr bool ReadOnly = read_only;
 
+  /// Type alias for space point index type
   using Index = SpacePointIndex2;
 
+  /// Type alias for container type (const if read-only)
   using Container = const_if_t<ReadOnly, SpacePointContainer2>;
 
   /// Constructs a space point proxy for the given container and index.
@@ -155,28 +155,28 @@ class SpacePointProxy2 {
   }
   /// Mutable access to the top strip vector of the space point.
   /// @return A mutable reference to the top strip vector of the space point.
-  Eigen::Vector3f &topStripVector() const noexcept
+  std::array<float, 3> &topStripVector() const noexcept
     requires(!ReadOnly)
   {
     return m_container->topStripVector(m_index);
   }
   /// Mutable access to the bottom strip vector of the space point.
   /// @return A mutable reference to the bottom strip vector of the space point.
-  Eigen::Vector3f &bottomStripVector() const noexcept
+  std::array<float, 3> &bottomStripVector() const noexcept
     requires(!ReadOnly)
   {
     return m_container->bottomStripVector(m_index);
   }
   /// Mutable access to the strip center distance of the space point.
   /// @return A mutable reference to the strip center distance of the space point.
-  Eigen::Vector3f &stripCenterDistance() const noexcept
+  std::array<float, 3> &stripCenterDistance() const noexcept
     requires(!ReadOnly)
   {
     return m_container->stripCenterDistance(m_index);
   }
   /// Mutable access to the top strip center of the space point.
   /// @return A mutable reference to the top strip center of the space point.
-  Eigen::Vector3f &topStripCenter() const noexcept
+  std::array<float, 3> &topStripCenter() const noexcept
     requires(!ReadOnly)
   {
     return m_container->topStripCenter(m_index);
@@ -187,6 +187,34 @@ class SpacePointProxy2 {
     requires(!ReadOnly)
   {
     return m_container->copyFromIndex(m_index);
+  }
+  /// @brief Get mutable reference to XY coordinates of the space point
+  /// @return Mutable reference to array containing [x, y] coordinates
+  std::array<float, 2> &xy() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xy(m_index);
+  }
+  /// @brief Get mutable reference to ZR coordinates of the space point
+  /// @return Mutable reference to array containing [z, r] coordinates
+  std::array<float, 2> &zr() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->zr(m_index);
+  }
+  /// @brief Get mutable reference to XYZR coordinates of the space point
+  /// @return Mutable reference to array containing [x, y, z, r] coordinates
+  std::array<float, 4> &xyzr() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xyzr(m_index);
+  }
+  /// @brief Get mutable reference to ZR coordinate variances
+  /// @return Mutable reference to array containing [var_z, var_r] variances
+  std::array<float, 2> &varianceZR() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->varianceZR(m_index);
   }
 
   /// Mutable access to an extra column of data for the space point.
@@ -228,28 +256,48 @@ class SpacePointProxy2 {
   float varianceR() const noexcept { return m_container->varianceR(m_index); }
   /// Const access to the top strip vector of the space point.
   /// @return A const reference to the top strip vector of the space point.
-  const Eigen::Vector3f &topStripVector() const noexcept {
+  const std::array<float, 3> &topStripVector() const noexcept {
     return m_container->topStripVector(m_index);
   }
   /// Const access to the bottom strip vector of the space point.
   /// @return A const reference to the bottom strip vector of the space point.
-  const Eigen::Vector3f &bottomStripVector() const noexcept {
+  const std::array<float, 3> &bottomStripVector() const noexcept {
     return m_container->bottomStripVector(m_index);
   }
   /// Const access to the strip center distance of the space point.
   /// @return A const reference to the strip center distance of the space point.
-  const Eigen::Vector3f &stripCenterDistance() const noexcept {
+  const std::array<float, 3> &stripCenterDistance() const noexcept {
     return m_container->stripCenterDistance(m_index);
   }
   /// Const access to the top strip center of the space point.
   /// @return A const reference to the top strip center of the space point.
-  const Eigen::Vector3f &topStripCenter() const noexcept {
+  const std::array<float, 3> &topStripCenter() const noexcept {
     return m_container->topStripCenter(m_index);
   }
   /// Const access to the copy from index of the space point.
   /// @return A const reference to the copy from index of the space point.
   SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
+  }
+  /// @brief Get const reference to XY coordinates of the space point
+  /// @return Const reference to array containing [x, y] coordinates
+  const std::array<float, 2> &xy() const noexcept {
+    return m_container->xy(m_index);
+  }
+  /// @brief Get const reference to ZR coordinates of the space point
+  /// @return Const reference to array containing [z, r] coordinates
+  const std::array<float, 2> &zr() const noexcept {
+    return m_container->zr(m_index);
+  }
+  /// @brief Get const reference to XYZR coordinates of the space point
+  /// @return Const reference to array containing [x, y, z, r] coordinates
+  const std::array<float, 4> &xyzr() const noexcept {
+    return m_container->xyzr(m_index);
+  }
+  /// @brief Get const reference to ZR coordinate variances
+  /// @return Const reference to array containing [var_z, var_r] variances
+  const std::array<float, 2> &varianceZR() const noexcept {
+    return m_container->varianceZR(m_index);
   }
 
   /// Const access to an extra column of data for the space point.
@@ -272,4 +320,4 @@ class SpacePointProxy2 {
   Index m_index{};
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -22,13 +22,15 @@
 namespace {
 
 namespace ds = ActsTests::PropagationDatasets;
-using namespace Acts::UnitLiterals;
 
-using MagneticField = Acts::ConstantBField;
-using EigenStepper = Acts::EigenStepper<>;
-using EigenPropagator = Acts::Propagator<EigenStepper>;
-using StraightLineStepper = Acts::StraightLineStepper;
-using StraightLinePropagator = Acts::Propagator<StraightLineStepper>;
+using namespace Acts;
+using namespace UnitLiterals;
+
+using MagneticField = ConstantBField;
+using EigenStepper = EigenStepper<>;
+using EigenPropagator = Propagator<EigenStepper>;
+using StraightLineStepper = StraightLineStepper;
+using StraightLinePropagator = Propagator<StraightLineStepper>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
@@ -37,15 +39,14 @@ constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.00125;
 
-const Acts::GeometryContext geoCtx;
-const Acts::MagneticFieldContext magCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext magCtx;
 
 constexpr auto bz = 2_T;
 
-const auto magFieldZero =
-    std::make_shared<MagneticField>(Acts::Vector3::Zero());
+const auto magFieldZero = std::make_shared<MagneticField>(Vector3::Zero());
 const auto magFieldNonZero =
-    std::make_shared<MagneticField>(Acts::Vector3::UnitZ() * bz);
+    std::make_shared<MagneticField>(Vector3::UnitZ() * bz);
 const EigenPropagator eigenPropagatorZero{EigenStepper(magFieldZero)};
 const EigenPropagator eigenPropagatorNonZero{EigenStepper(magFieldNonZero)};
 const StraightLinePropagator straightPropagator{StraightLineStepper()};

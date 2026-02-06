@@ -70,8 +70,8 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
   const auto& [surfaceMaps, volumeMaps] = detMaterial;
 
   // Write the surface material maps
-  Acts::RootMaterialMapIo accessor(m_cfg.accessorConfig,
-                                   m_logger->clone("RootMaterialMapIo"));
+  ActsPlugins::RootMaterialMapIo accessor(m_cfg.accessorConfig,
+                                          m_logger->clone("RootMaterialMapIo"));
 
   for (const auto& [geoId, sMap] : surfaceMaps) {
     // Get the Surface material
@@ -104,9 +104,9 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
 
     // understand what sort of material you have in mind
     auto bvMaterial3D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapper<Acts::MaterialGrid3D>>*>(vMaterial);
+        Acts::MaterialMapLookup<Acts::MaterialGrid3D>>*>(vMaterial);
     auto bvMaterial2D = dynamic_cast<const Acts::InterpolatedMaterialMap<
-        Acts::MaterialMapper<Acts::MaterialGrid2D>>*>(vMaterial);
+        Acts::MaterialMapLookup<Acts::MaterialGrid2D>>*>(vMaterial);
 
     int points = 1;
     if (bvMaterial3D != nullptr || bvMaterial2D != nullptr) {

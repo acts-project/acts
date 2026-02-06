@@ -43,6 +43,7 @@ namespace Acts {
 /// in the user-defined delegate functions.
 class PathSeeder {
  public:
+  /// Type alias for path seed consisting of track parameters and source links
   using PathSeed = std::pair<BoundTrackParameters, std::vector<SourceLink>>;
 
   /// @brief Delegate to estimate the IP parameters
@@ -95,6 +96,7 @@ class PathSeeder {
   };
 
   /// @brief Constructor
+  /// @param config Configuration for the path seeder
   explicit PathSeeder(const Config& config) : m_cfg(config) {};
 
   /// @brief Destructor

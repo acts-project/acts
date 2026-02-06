@@ -44,7 +44,7 @@ void AveragingScopedTimer::addSample(std::chrono::nanoseconds duration) {
 AveragingScopedTimer::Sample::Sample(AveragingScopedTimer& parent)
     : m_parent(&parent), m_start(clock_type::now()) {}
 
-AveragingScopedTimer::Sample::Sample(Sample&& other)
+AveragingScopedTimer::Sample::Sample(Sample&& other) noexcept
     : m_parent(other.m_parent), m_start(other.m_start) {
   // Disable the moved-from sample
   other.m_parent = nullptr;

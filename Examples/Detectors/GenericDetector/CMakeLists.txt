@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesDetectorGeneric
-    SHARED
     src/AlignedGenericDetector.cpp
     src/GenericDetector.cpp
     src/GenericDetectorElement.cpp
@@ -18,5 +17,5 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesDetectorGeneric
-    PUBLIC Acts::Core Acts::ExamplesFramework Acts::ExamplesDetectorsCommon
+    PUBLIC Acts::ExamplesDetectorsCommon
 )

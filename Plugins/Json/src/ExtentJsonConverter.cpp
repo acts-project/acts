@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/ExtentJsonConverter.hpp"
+#include "ActsPlugins/Json/ExtentJsonConverter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+#include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <array>
 #include <iterator>

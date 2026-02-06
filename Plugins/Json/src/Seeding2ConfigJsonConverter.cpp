@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/Seeding2ConfigJsonConverter.hpp"
+#include "ActsPlugins/Json/Seeding2ConfigJsonConverter.hpp"
 
-#include "Acts/Plugins/Json/DefinitionsJsonConverter.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsPlugins/Json/DefinitionsJsonConverter.hpp"
 
 #include <algorithm>
 
@@ -113,32 +113,27 @@ void Acts::Experimental::to_json(
   j["minHelixDiameter2"] = config.minHelixDiameter2;
 }
 
-void Acts::Experimental::to_json(
-    nlohmann::json& j, const BroadTripletSeedFinder::Options& options) {
-  j["bFieldInZ"] = options.bFieldInZ;
-  j["useStripMeasurementInfo"] = options.useStripMeasurementInfo;
+void Acts::Experimental::to_json(nlohmann::json& j,
+                                 const TripletSeedFinder::Config& config) {
+  j["minPt"] = config.minPt;
+  j["sigmaScattering"] = config.sigmaScattering;
+  j["radLengthPerSeed"] = config.radLengthPerSeed;
+  j["impactMax"] = config.impactMax;
+  j["helixCutTolerance"] = config.helixCutTolerance;
+  j["toleranceParam"] = config.toleranceParam;
+  j["useStripInfo"] = config.useStripInfo;
+  j["sortedByCotTheta"] = config.sortedByCotTheta;
 }
 
 void Acts::Experimental::to_json(
-    nlohmann::json& j, const BroadTripletSeedFinder::TripletCuts& cuts) {
-  j["minPt"] = cuts.minPt;
-  j["sigmaScattering"] = cuts.sigmaScattering;
-  j["radLengthPerSeed"] = cuts.radLengthPerSeed;
-  j["maxPtScattering"] = cuts.maxPtScattering;
-  j["impactMax"] = cuts.impactMax;
-  j["helixCutTolerance"] = cuts.helixCutTolerance;
-  j["toleranceParam"] = cuts.toleranceParam;
-}
-
-void Acts::Experimental::to_json(
-    nlohmann::json& j, const BroadTripletSeedFinder::DerivedTripletCuts& cuts) {
-  to_json(j, static_cast<const BroadTripletSeedFinder::TripletCuts&>(cuts));
-  j["bFieldInZ"] = cuts.bFieldInZ;
-  j["highland"] = cuts.highland;
-  j["pTPerHelixRadius"] = cuts.pTPerHelixRadius;
-  j["minHelixDiameter2"] = cuts.minHelixDiameter2;
-  j["sigmapT2perRadius"] = cuts.sigmapT2perRadius;
-  j["multipleScattering2"] = cuts.multipleScattering2;
+    nlohmann::json& j, const TripletSeedFinder::DerivedConfig& config) {
+  to_json(j, static_cast<const TripletSeedFinder::Config&>(config));
+  j["bFieldInZ"] = config.bFieldInZ;
+  j["highland"] = config.highland;
+  j["pTPerHelixRadius"] = config.pTPerHelixRadius;
+  j["minHelixDiameter2"] = config.minHelixDiameter2;
+  j["sigmapT2perRadius"] = config.sigmapT2perRadius;
+  j["multipleScattering2"] = config.multipleScattering2;
 }
 
 void Acts::Experimental::to_json(nlohmann::json& j,
@@ -212,31 +207,26 @@ void Acts::Experimental::from_json(const nlohmann::json& j,
 }
 
 void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   BroadTripletSeedFinder::Options& options) {
-  j["bFieldInZ"].get_to(options.bFieldInZ);
-  j["useStripMeasurementInfo"].get_to(options.useStripMeasurementInfo);
+                                   TripletSeedFinder::Config& config) {
+  j["minPt"].get_to(config.minPt);
+  j["sigmaScattering"].get_to(config.sigmaScattering);
+  j["radLengthPerSeed"].get_to(config.radLengthPerSeed);
+  j["impactMax"].get_to(config.impactMax);
+  j["helixCutTolerance"].get_to(config.helixCutTolerance);
+  j["toleranceParam"].get_to(config.toleranceParam);
+  j["useStripInfo"].get_to(config.useStripInfo);
+  j["sortedByCotTheta"].get_to(config.sortedByCotTheta);
 }
 
 void Acts::Experimental::from_json(const nlohmann::json& j,
-                                   BroadTripletSeedFinder::TripletCuts& cuts) {
-  j["minPt"].get_to(cuts.minPt);
-  j["sigmaScattering"].get_to(cuts.sigmaScattering);
-  j["radLengthPerSeed"].get_to(cuts.radLengthPerSeed);
-  j["maxPtScattering"].get_to(cuts.maxPtScattering);
-  j["impactMax"].get_to(cuts.impactMax);
-  j["helixCutTolerance"].get_to(cuts.helixCutTolerance);
-  j["toleranceParam"].get_to(cuts.toleranceParam);
-}
-
-void Acts::Experimental::from_json(
-    const nlohmann::json& j, BroadTripletSeedFinder::DerivedTripletCuts& cuts) {
-  from_json(j, static_cast<BroadTripletSeedFinder::TripletCuts&>(cuts));
-  j["bFieldInZ"].get_to(cuts.bFieldInZ);
-  j["highland"].get_to(cuts.highland);
-  j["pTPerHelixRadius"].get_to(cuts.pTPerHelixRadius);
-  j["minHelixDiameter2"].get_to(cuts.minHelixDiameter2);
-  j["sigmapT2perRadius"].get_to(cuts.sigmapT2perRadius);
-  j["multipleScattering2"].get_to(cuts.multipleScattering2);
+                                   TripletSeedFinder::DerivedConfig& config) {
+  from_json(j, static_cast<TripletSeedFinder::Config&>(config));
+  j["bFieldInZ"].get_to(config.bFieldInZ);
+  j["highland"].get_to(config.highland);
+  j["pTPerHelixRadius"].get_to(config.pTPerHelixRadius);
+  j["minHelixDiameter2"].get_to(config.minHelixDiameter2);
+  j["sigmapT2perRadius"].get_to(config.sigmapT2perRadius);
+  j["multipleScattering2"].get_to(config.multipleScattering2);
 }
 
 void Acts::Experimental::from_json(const nlohmann::json& j,

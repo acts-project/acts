@@ -43,16 +43,17 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
@@ -80,6 +81,7 @@ std::uniform_real_distribution<double> resAngDist(0., 0.1);
 std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
 // Number of vertices per test event distribution
 
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 ///
 /// @brief Unit test for KalmanVertexUpdater
 ///
@@ -121,7 +123,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
       std::cout << "Test " << i + 1 << std::endl;
     }
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Construct random track parameters around origin
     BoundTrackParameters::ParametersVector paramVec;
@@ -246,7 +248,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   // vertex after the update process
   for (unsigned int i = 0; i < nTests; ++i) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Construct random track parameters
     BoundTrackParameters::ParametersVector paramVec;
@@ -327,4 +329,6 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
 }  // end test case
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

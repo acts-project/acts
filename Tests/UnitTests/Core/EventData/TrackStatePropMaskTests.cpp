@@ -18,7 +18,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(TrackStatePropMaskTest)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   using PM = TrackStatePropMask;
@@ -92,3 +94,5 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   BOOST_CHECK_EQUAL(base, ~(PM::Filtered | PM::Calibrated));
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

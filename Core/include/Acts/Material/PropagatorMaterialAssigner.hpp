@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <map>
 #include <utility>
 #include <vector>
 
@@ -28,6 +29,8 @@ namespace Acts {
 /// This is to be used with a SurfaceCollector<>
 struct MaterialSurfaceIdentifier {
   /// check if the surface has material
+  /// @param sf Surface to check for material
+  /// @return True if the surface has material assigned to it
   bool operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
   }
@@ -40,9 +43,11 @@ struct InteractionVolumeCollector {
   /// @note the map is to avoid double counting as this is
   /// called in an action list
   struct this_result {
+    /// Map of collected volume assignments by geometry identifier
     std::map<GeometryIdentifier, IAssignmentFinder::VolumeAssignment> collected;
   };
 
+  /// Type alias for volume collection result
   using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator
@@ -58,11 +63,12 @@ struct InteractionVolumeCollector {
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
+  /// @return Result object indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& /*logger*/) const {
     // Retrieve the current volume
     auto currentVolume = navigator.currentVolume(state.navigation);
 
@@ -82,6 +88,7 @@ struct InteractionVolumeCollector {
         (collIt->second).exit = stepper.position(state.stepping);
       }
     }
+    return Result<void>::success();
   }
 };
 

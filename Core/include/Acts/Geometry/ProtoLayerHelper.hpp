@@ -30,6 +30,7 @@ struct ProtoLayer;
 /// @todo write more documentation on how this is done
 class ProtoLayerHelper {
  public:
+  /// Type alias for sorting configuration with axis direction and tolerance
   using SortingConfig = std::pair<AxisDirection, double>;
 
   struct Config {};

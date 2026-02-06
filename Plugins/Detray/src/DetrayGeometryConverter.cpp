@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetrayGeometryConverter.hpp"
+#include "ActsPlugins/Detray/DetrayGeometryConverter.hpp"
 
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/PortalNavigation.hpp"
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -20,27 +19,18 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
 
 #include <algorithm>
 
 #include <detray/io/frontend/detector_writer.hpp>
 
+using namespace Acts;
 using namespace detray;
 
-detray::io::transform_payload Acts::DetrayGeometryConverter::convertTransform(
-    const Transform3& t) {
-  detray::io::transform_payload tfPayload;
-  Vector3 translation = t.translation();
-  tfPayload.tr = {translation.x(), translation.y(), translation.z()};
-  RotationMatrix3 rotation = t.rotation().transpose();
-  tfPayload.rot = {rotation(0, 0), rotation(0, 1), rotation(0, 2),
-                   rotation(1, 0), rotation(1, 1), rotation(1, 2),
-                   rotation(2, 0), rotation(2, 1), rotation(2, 2)};
-  return tfPayload;
-}
-
-detray::io::mask_payload Acts::DetrayGeometryConverter::convertMask(
-    const Acts::SurfaceBounds& bounds, bool portal) {
+detray::io::mask_payload ActsPlugins::DetrayGeometryConverter::convertMask(
+    const SurfaceBounds& bounds, bool portal) {
   detray::io::mask_payload maskPayload;
   auto [shape, boundaries] = DetrayJsonHelper::maskFromBounds(bounds, portal);
   maskPayload.shape = static_cast<io::mask_payload::mask_shape>(shape);
@@ -50,11 +40,13 @@ detray::io::mask_payload Acts::DetrayGeometryConverter::convertMask(
   return maskPayload;
 }
 
-detray::io::surface_payload Acts::DetrayGeometryConverter::convertSurface(
+detray::io::surface_payload
+ActsPlugins::DetrayGeometryConverter::convertSurface(
     const GeometryContext& gctx, const Surface& surface, bool portal) {
   detray::io::surface_payload surfacePayload;
 
-  surfacePayload.transform = convertTransform(surface.transform(gctx));
+  surfacePayload.transform = DetrayConversionUtils::convertTransform(
+      surface.localToGlobalTransform(gctx));
   surfacePayload.source = surface.geometryId().value();
   surfacePayload.barcode = std::nullopt;
   surfacePayload.type = static_cast<detray::surface_id>(
@@ -67,11 +59,11 @@ detray::io::surface_payload Acts::DetrayGeometryConverter::convertSurface(
 }
 
 std::vector<detray::io::surface_payload>
-Acts::DetrayGeometryConverter::convertPortal(
+ActsPlugins::DetrayGeometryConverter::convertPortal(
     DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
     const Experimental::Portal& portal, std::size_t ip,
     const Experimental::DetectorVolume& volume,
-    const std::vector<Acts::OrientedSurface>& orientedSurfaces) {
+    const std::vector<OrientedSurface>& orientedSurfaces) {
   std::vector<detray::io::surface_payload> portals{};
 
   const RegularSurface& surface = portal.surface();
@@ -82,9 +74,9 @@ Acts::DetrayGeometryConverter::convertPortal(
 
   // Find out if you need to take the outside or inside volume
   // for planar surfaces that's easy
-  if (surface.type() != Acts::Surface::SurfaceType::Cylinder) {
+  if (surface.type() != Surface::SurfaceType::Cylinder) {
     // Get the two volume center
-    const auto volumeCenter = volume.transform(gctx).translation();
+    const auto volumeCenter = volume.localToGlobalTransform(gctx).translation();
     const auto surfaceCenter = surface.center(gctx);
     const auto surfaceNormal = surface.normal(gctx, surfaceCenter);
     // Get the direction from the volume to the surface, correct link
@@ -105,7 +97,7 @@ Acts::DetrayGeometryConverter::convertPortal(
   const auto* instance = outsideLink.instance();
   // Single link cast
   auto singleLink =
-      dynamic_cast<const Acts::Experimental::SingleDetectorVolumeNavigation*>(
+      dynamic_cast<const Experimental::SingleDetectorVolumeNavigation*>(
           instance);
 
   auto [surfaceAdjusted, insidePointer] = orientedSurfaces[ip];
@@ -232,7 +224,7 @@ Acts::DetrayGeometryConverter::convertPortal(
             subBoundValues[RadialBounds::BoundValues::eMaxR] = b;
             auto subBounds = std::make_shared<RadialBounds>(subBoundValues);
             auto subSurface = Surface::makeShared<DiscSurface>(
-                portal.surface().transform(gctx), subBounds);
+                portal.surface().localToGlobalTransform(gctx), subBounds);
 
             subSurface->assignGeometryId(surface.geometryId());
             auto portalPayload = convertSurface(gctx, *subSurface, true);
@@ -257,10 +249,9 @@ Acts::DetrayGeometryConverter::convertPortal(
   return portals;
 }
 
-detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
+detray::io::volume_payload ActsPlugins::DetrayGeometryConverter::convertVolume(
     DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
-    const Acts::Experimental::DetectorVolume& volume,
-    const Acts::Logger& logger) {
+    const Experimental::DetectorVolume& volume, const Logger& logger) {
   ACTS_DEBUG("DetrayGeometryConverter: converting volume "
              << volume.name() << " with " << volume.surfaces().size()
              << " surfaces and " << volume.portals().size() << " portals");
@@ -269,7 +260,8 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
   std::size_t volumeIndex = cCache.volumeIndex(&volume);
   volumePayload.name = volume.name();
   volumePayload.index.link = volumeIndex;
-  volumePayload.transform = convertTransform(volume.transform(gctx));
+  volumePayload.transform = DetrayConversionUtils::convertTransform(
+      volume.localToGlobalTransform(gctx));
 
   // Remember the link
   cCache.volumeLinks[volume.geometryId()] = volumePayload.index.link;
@@ -290,8 +282,8 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
     volumePayload.surfaces.push_back(surfacePayload);
   }
 
-  auto orientedSurfaces =
-      volume.volumeBounds().orientedSurfaces(volume.transform(gctx));
+  auto orientedSurfaces = volume.volumeBounds().orientedSurfaces(
+      volume.localToGlobalTransform(gctx));
 
   // Iterate over portals
   int portalCounter = 0;
@@ -320,9 +312,10 @@ detray::io::volume_payload Acts::DetrayGeometryConverter::convertVolume(
   return volumePayload;
 }
 
-detray::io::detector_payload Acts::DetrayGeometryConverter::convertDetector(
+detray::io::detector_payload
+ActsPlugins::DetrayGeometryConverter::convertDetector(
     DetrayConversionUtils::Cache& cCache, const GeometryContext& gctx,
-    const Acts::Experimental::Detector& detector, const Acts::Logger& logger) {
+    const Experimental::Detector& detector, const Logger& logger) {
   ACTS_DEBUG("DetrayGeometryConverter: converting detector"
              << detector.name() << " with " << detector.volumes().size()
              << " volumes.");

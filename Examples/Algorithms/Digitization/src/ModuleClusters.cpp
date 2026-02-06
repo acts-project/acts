@@ -11,16 +11,13 @@
 #include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
-#include "ActsFatras/Digitization/Channelizer.hpp"
 
 #include <array>
 #include <cmath>
-#include <cstdint>
 #include <cstdlib>
 #include <limits>
-#include <memory>
+#include <map>
 #include <stdexcept>
-#include <type_traits>
 
 namespace ActsExamples {
 
@@ -88,11 +85,26 @@ void clusterAddCell(std::vector<ModuleValue>& cl, const ModuleValue& ce) {
 }
 
 std::vector<ModuleValue> ModuleClusters::createCellCollection() {
-  std::vector<ModuleValue> cells;
-  for (ModuleValue& mval : m_moduleValues) {
-    if (std::holds_alternative<Cluster::Cell>(mval.value)) {
-      cells.push_back(mval);
+  std::map<ActsFatras::Segmentizer::Bin2D, ModuleValue> uniqueCells;
+  for (const ModuleValue& mval : m_moduleValues) {
+    if (!std::holds_alternative<Cluster::Cell>(mval.value)) {
+      continue;
     }
+    const auto& cell = std::get<ActsExamples::Cluster::Cell>(mval.value).bin;
+
+    if (const auto it = uniqueCells.find(cell); it != uniqueCells.end()) {
+      // Cell already exists, so merge the hit sources
+      std::get<Cluster::Cell>(it->second.value).activation +=
+          std::get<Cluster::Cell>(mval.value).activation;
+    } else {
+      // New cell
+      uniqueCells[cell] = mval;
+    }
+  }
+  std::vector<ModuleValue> cells;
+  cells.reserve(uniqueCells.size());
+  for (const auto& [_, mval] : uniqueCells) {
+    cells.push_back(mval);
   }
   return cells;
 }
@@ -104,10 +116,12 @@ void ModuleClusters::merge() {
 
   if (!cells.empty()) {
     // Case where we actually have geometric clusters
-    std::vector<std::vector<ModuleValue>> merged =
-        Acts::Ccl::createClusters<std::vector<ModuleValue>,
-                                  std::vector<std::vector<ModuleValue>>>(
-            cells, Acts::Ccl::DefaultConnect<ModuleValue>(m_commonCorner));
+    Acts::Ccl::ClusteringData data;
+    std::vector<std::vector<ModuleValue>> merged;
+    Acts::Ccl::createClusters<std::vector<ModuleValue>,
+                              std::vector<std::vector<ModuleValue>>>(
+        data, cells, merged,
+        Acts::Ccl::DefaultConnect<ModuleValue>(m_commonCorner));
 
     for (std::vector<ModuleValue>& cellv : merged) {
       // At this stage, the cellv vector contains cells that form a

@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <stdexcept>
 #include <vector>
 
@@ -22,9 +23,11 @@ using vec2 = Acts::Vector2;
 template <int N>
 using poly = Acts::ConvexPolygonBounds<N>;
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConvexity) {
   std::vector<vec2> vertices;
@@ -110,6 +113,10 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   vertices = {{0, 0}, {1, 0}, {0.5, 1}};
   poly triangle(vertices);
 
+  // Too few vertices
+  vertices = {{0, 0}, {1, 1}};
+  BOOST_CHECK_THROW(poly{vertices}, std::invalid_argument);
+
   RectangleBounds bb = triangle.boundingBox();
   BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
   BOOST_CHECK_EQUAL(bb.max(), Vector2(1., 1));
@@ -122,6 +129,56 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   BOOST_CHECK(!triangle.inside({0.3, -0.2}, tolerance));
 }
 
+BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsCenterTest) {
+  // Test center calculation for fixed-size polygons
+
+  // Triangle with vertices at (0,0), (3,0), (1.5,3)
+  // Expected center: (1.5, 1.0)
+  std::vector<vec2> triangleVertices = {{0, 0}, {3, 0}, {1.5, 3}};
+  poly<3> triangle(triangleVertices);
+  vec2 triangleCenter = triangle.center();
+  BOOST_CHECK_CLOSE(triangleCenter.x(), 1.5, 1e-10);
+  BOOST_CHECK_CLOSE(triangleCenter.y(), 1.0, 1e-10);
+
+  // Square with vertices at (0,0), (2,0), (2,2), (0,2)
+  // Expected center: (1.0, 1.0)
+  std::vector<vec2> squareVertices = {{0, 0}, {2, 0}, {2, 2}, {0, 2}};
+  poly<4> square(squareVertices);
+  vec2 squareCenter = square.center();
+  BOOST_CHECK_CLOSE(squareCenter.x(), 1.0, 1e-10);
+  BOOST_CHECK_CLOSE(squareCenter.y(), 1.0, 1e-10);
+
+  // Pentagon with vertices at (0,0), (2,0), (3,1.5), (1,3), (-1,1.5)
+  // Expected center: (1.0, 1.2)
+  std::vector<vec2> pentVertices = {
+      {0, 0}, {2, 0}, {3, 1.5}, {1, 3}, {-1, 1.5}};
+  poly<5> pentagon(pentVertices);
+  vec2 pentCenter = pentagon.center();
+  BOOST_CHECK_CLOSE(pentCenter.x(), 1.0, 1e-10);
+  BOOST_CHECK_CLOSE(pentCenter.y(), 1.2, 1e-10);
+
+  // Test center calculation for dynamic polygons
+  using polyDyn = ConvexPolygonBounds<PolygonDynamic>;
+
+  // Triangle (same as above)
+  polyDyn triangleDyn(triangleVertices);
+  vec2 triangleCenterDyn = triangleDyn.center();
+  BOOST_CHECK_CLOSE(triangleCenterDyn.x(), 1.5, 1e-10);
+  BOOST_CHECK_CLOSE(triangleCenterDyn.y(), 1.0, 1e-10);
+
+  // Hexagon with vertices forming a regular hexagon centered at origin with
+  // radius 2
+  std::vector<vec2> hexVertices;
+  for (int i = 0; i < 6; ++i) {
+    double angle = i * std::numbers::pi / 3.0;  // 60 degrees in radians
+    hexVertices.push_back({2.0 * std::cos(angle), 2.0 * std::sin(angle)});
+  }
+  polyDyn hexagon(hexVertices);
+  vec2 hexCenter = hexagon.center();
+  BOOST_CHECK_SMALL(hexCenter.x(), 1e-10);  // Should be approximately 0
+  BOOST_CHECK_SMALL(hexCenter.y(), 1e-10);  // Should be approximately 0
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

@@ -8,10 +8,8 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Table.hpp"
-#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -22,13 +20,13 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <algorithm>
 #include <atomic>
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
-#include <format>
 #include <fstream>
 #include <functional>
 #include <iterator>
@@ -38,9 +36,6 @@
 #include <ratio>
 #include <stdexcept>
 #include <string>
-#include <string_view>
-#include <thread>
-#include <typeinfo>
 
 #include <TROOT.h>
 #include <boost/algorithm/string.hpp>
@@ -90,7 +85,7 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
   }
 
   if (m_cfg.trackFpes && !m_cfg.fpeMasks.empty() &&
-      !Acts::FpeMonitor::canSymbolize()) {
+      !ActsPlugins::FpeMonitor::canSymbolize()) {
     ACTS_ERROR("FPE monitoring is enabled but symbolization is not available");
     throw std::runtime_error(
         "FPE monitoring is enabled but symbolization is not available");
@@ -135,7 +130,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
 
-  m_sequenceElements.push_back({element});
+  m_sequenceElements.emplace_back(element);
 
   ACTS_INFO("Add " << element->typeName() << " '" << element->name() << "'");
 
@@ -154,9 +149,8 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
 
 void Sequencer::addWhiteboardAlias(const std::string& aliasName,
                                    const std::string& objectName) {
-  const auto range = m_whiteboardObjectAliases.equal_range(objectName);
-  for (auto it = range.first; it != range.second; ++it) {
-    const auto& [key, value] = *it;
+  for (const auto& [key, value] : boost::make_iterator_range(
+           m_whiteboardObjectAliases.equal_range(objectName))) {
     if (value == aliasName) {
       ACTS_INFO("Key '" << objectName << "' aliased to '" << aliasName
                         << "' already set");
@@ -209,9 +203,9 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
   std::size_t beg = 0u;
   std::size_t end = std::numeric_limits<std::size_t>::max();
   for (const auto& reader : m_readers) {
-    auto available = reader->availableEvents();
-    beg = std::max(beg, available.first);
-    end = std::min(end, available.second);
+    auto [availableBeg, availableEnd] = reader->availableEvents();
+    beg = std::max(beg, availableBeg);
+    end = std::min(end, availableEnd);
   }
 
   // since we use event ranges (and not just num events) they might not
@@ -263,10 +257,11 @@ using NanoSeconds = std::chrono::duration<double, std::nano>;
 
 // RAII-based stopwatch to time execution within a block
 struct StopWatch {
-  Timepoint start;
+  Timepoint start = Clock::now();
   Duration& store;
 
-  explicit StopWatch(Duration& s) : start(Clock::now()), store(s) {}
+  explicit StopWatch(Duration& s) : store(s) {}
+  StopWatch(const StopWatch&) = delete;
   ~StopWatch() { store += Clock::now() - start; }
 };
 
@@ -305,7 +300,7 @@ void storeTiming(const std::vector<std::string>& identifiers,
     const auto time_total_s =
         std::chrono::duration_cast<Seconds>(durations[i]).count();
     file << identifiers[i] << "," << time_total_s << ","
-         << time_total_s / numEvents << "\n";
+         << time_total_s / static_cast<double>(numEvents) << "\n";
   }
   file << "\n";
 }
@@ -336,10 +331,9 @@ void printTiming(const std::vector<std::string>& identifiers,
   // Create sorted indices based on total duration (descending)
   std::vector<std::size_t> sortedIndices(identifiers.size());
   std::iota(sortedIndices.begin(), sortedIndices.end(), 0);
-  std::sort(sortedIndices.begin(), sortedIndices.end(),
-            [&](std::size_t a, std::size_t b) {
-              return durations[a] > durations[b];
-            });
+  std::ranges::sort(sortedIndices, [&](std::size_t a, std::size_t b) {
+    return durations[a] > durations[b];
+  });
 
   for (std::size_t idx : sortedIndices) {
     double fraction =
@@ -351,8 +345,9 @@ void printTiming(const std::vector<std::string>& identifiers,
             : 0.0;
 
     double totalValue = durationToMs(durations[idx]);
-    double perEventValue =
-        numEvents > 0 ? durationToMs(durations[idx]) / numEvents : 0.0;
+    double perEventValue = numEvents > 0 ? durationToMs(durations[idx]) /
+                                               static_cast<double>(numEvents)
+                                         : 0.0;
 
     table.addRow(identifiers[idx], totalValue, perEventValue, fraction);
   }
@@ -360,7 +355,8 @@ void printTiming(const std::vector<std::string>& identifiers,
   // Add summary row
   double totalSummaryValue = durationToMs(totalTime);
   double totalPerEventValue =
-      numEvents > 0 ? durationToMs(totalTime) / numEvents : 0.0;
+      numEvents > 0 ? durationToMs(totalTime) / static_cast<double>(numEvents)
+                    : 0.0;
   table.addRow("TOTAL", totalSummaryValue, totalPerEventValue, 100.0);
 
   ACTS_INFO("Timing breakdown:\n" << table);
@@ -377,14 +373,13 @@ int Sequencer::run() {
 
   // processing only works w/ a well-known number of events
   // error message is already handled by the helper function
-  std::pair<std::size_t, std::size_t> eventsRange = determineEventsRange();
-  if ((eventsRange.first == std::numeric_limits<std::size_t>::max()) &&
-      (eventsRange.second == std::numeric_limits<std::size_t>::max())) {
+  const auto [firstEvent, lastEvent] = determineEventsRange();
+  if ((firstEvent == std::numeric_limits<std::size_t>::max()) &&
+      (lastEvent == std::numeric_limits<std::size_t>::max())) {
     return EXIT_FAILURE;
   }
 
-  ACTS_INFO("Processing events [" << eventsRange.first << ", "
-                                  << eventsRange.second << ")");
+  ACTS_INFO("Processing events [" << firstEvent << ", " << lastEvent << ")");
   ACTS_INFO("Starting event loop with " << m_cfg.numThreads << " threads");
   ACTS_INFO("  " << m_decorators.size() << " context decorators");
   ACTS_INFO("  " << m_sequenceElements.size() << " sequence elements");
@@ -424,24 +419,24 @@ int Sequencer::run() {
 
   // Inform readers that we're going to start from a specific event number
   for (const auto& reader : m_readers) {
-    if (reader->skip(eventsRange.first) != ProcessCode::SUCCESS) {
+    if (reader->skip(firstEvent) != ProcessCode::SUCCESS) {
       throw std::runtime_error("Failed to process event data");
     }
   }
 
   // execute the parallel event loop
   std::atomic<std::size_t> nProcessedEvents = 0;
-  std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
+  std::size_t nTotalEvents = lastEvent - firstEvent;
 
   std::atomic<std::size_t> nextThreadId = 0;
   tbb::enumerable_thread_specific<std::size_t> threadIds{
       [&nextThreadId]() { return nextThreadId++; }};
 
-  std::atomic<std::size_t> nextEvent = eventsRange.first;
+  std::atomic<std::size_t> nextEvent = firstEvent;
 
   m_taskArena.execute([&] {
     tbbWrap::parallel_for(
-        tbb::blocked_range<std::size_t>(eventsRange.first, eventsRange.second),
+        tbb::blocked_range<std::size_t>(firstEvent, lastEvent),
         [&](const tbb::blocked_range<std::size_t>& r) {
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
@@ -483,7 +478,7 @@ int Sequencer::run() {
             ACTS_VERBOSE("Execute sequence elements");
 
             for (auto& [alg, fpe] : m_sequenceElements) {
-              std::optional<Acts::FpeMonitor> mon;
+              std::optional<ActsPlugins::FpeMonitor> mon;
               if (m_cfg.trackFpes) {
                 mon.emplace();
                 context.fpeMonitor = &mon.value();
@@ -505,7 +500,7 @@ int Sequencer::run() {
                                         << alg->name());
 
               if (mon) {
-                auto& local = fpe.local();
+                auto& local = fpe->local();
 
                 for (const auto& [count, type, st] :
                      mon->result().stackTraces()) {
@@ -516,7 +511,7 @@ int Sequencer::run() {
                        << " exceeded configured per-event threshold of "
                        << nMasked << " (mask: " << maskLoc
                        << ") (seen: " << count << " FPEs)\n"
-                       << Acts::FpeMonitor::stackTraceToString(
+                       << ActsPlugins::FpeMonitor::stackTraceToString(
                               *st, m_cfg.fpeStackTraceLength);
 
                     m_nUnmaskedFpe += (count - nMasked);
@@ -578,7 +573,7 @@ int Sequencer::run() {
   Duration totalWall = Clock::now() - clockWallStart;
   Duration totalReal = std::accumulate(
       clocksAlgorithms.begin(), clocksAlgorithms.end(), Duration::zero());
-  std::size_t numEvents = eventsRange.second - eventsRange.first;
+  std::size_t numEvents = lastEvent - firstEvent;
   ACTS_INFO("Processed " << numEvents << " events in " << asString(totalWall)
                          << " (wall clock)");
   ACTS_INFO("Average time per event: " << perEvent(totalReal, numEvents));
@@ -609,7 +604,7 @@ void Sequencer::fpeReport() const {
 
   for (auto& [alg, fpe] : m_sequenceElements) {
     auto merged = std::accumulate(
-        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        fpe->begin(), fpe->end(), ActsPlugins::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
     if (!merged.hasStackTraces()) {
       // no FPEs to report
@@ -619,15 +614,16 @@ void Sequencer::fpeReport() const {
     ACTS_INFO("FPE summary for " << alg->typeName() << ": " << alg->name());
     ACTS_INFO("-----------------------------------");
 
-    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+    std::vector<
+        std::reference_wrapper<const ActsPlugins::FpeMonitor::Result::FpeInfo>>
         sorted;
-    std::transform(merged.stackTraces().begin(), merged.stackTraces().end(),
-                   std::back_inserter(sorted),
-                   [](const auto& f) -> const auto& { return f; });
+    std::ranges::transform(merged.stackTraces(), std::back_inserter(sorted),
+                           [](const auto& f) -> const auto& { return f; });
     std::ranges::sort(sorted, std::greater{},
                       [](const auto& s) { return s.get().count; });
 
-    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+    std::vector<
+        std::reference_wrapper<const ActsPlugins::FpeMonitor::Result::FpeInfo>>
         remaining;
 
     for (const auto& el : sorted) {
@@ -638,7 +634,7 @@ void Sequencer::fpeReport() const {
                                            " per event by " + maskLoc + "]"
                                      : "")
                      << "\n"
-                     << Acts::FpeMonitor::stackTraceToString(
+                     << ActsPlugins::FpeMonitor::stackTraceToString(
                             *st, m_cfg.fpeStackTraceLength));
     }
   }
@@ -651,9 +647,9 @@ void Sequencer::fpeReport() const {
 }
 
 std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
-    const boost::stacktrace::stacktrace& st, Acts::FpeType type) const {
+    const boost::stacktrace::stacktrace& st, ActsPlugins::FpeType type) const {
   for (const auto& frame : st) {
-    std::string loc = Acts::FpeMonitor::getSourceLocation(frame);
+    std::string loc = ActsPlugins::FpeMonitor::getSourceLocation(frame);
     auto it = loc.find_last_of(':');
     std::string locFile = loc.substr(0, it);
     unsigned int locLine = std::stoi(loc.substr(it + 1));
@@ -671,11 +667,15 @@ std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
   return {"NONE", 0};
 }
 
-Acts::FpeMonitor::Result Sequencer::fpeResult() const {
-  Acts::FpeMonitor::Result merged;
+ActsPlugins::FpeMonitor::Result Sequencer::fpeResult() const {
+  ActsPlugins::FpeMonitor::Result merged;
   for (auto& [alg, fpe] : m_sequenceElements) {
+    if (!fpe) {
+      throw std::runtime_error("FPE result not found for algorithm " +
+                               alg->name());
+    }
     merged.merge(std::accumulate(
-        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        fpe->begin(), fpe->end(), ActsPlugins::FpeMonitor::Result{},
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); }));
   }
   return merged;

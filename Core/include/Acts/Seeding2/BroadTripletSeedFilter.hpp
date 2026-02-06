@@ -12,6 +12,8 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Seeding2/DoubletSeedFinder.hpp"
+#include "Acts/Seeding2/ITripletSeedFilter.hpp"
 #include "Acts/Seeding2/detail/CandidatesForMiddleSp2.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -19,15 +21,47 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
-class ITripletSeedCuts;
+/// @c ITripletSeedCuts can be used to increase or decrease seed weights
+/// based on the space points used in a seed. Seed weights are also
+/// influenced by the SeedFilter default implementation. This tool is also used
+/// to decide if a seed passes a seed weight cut. As the weight is stored in
+/// seeds, there are two distinct methods.
+class ITripletSeedCuts {
+ public:
+  virtual ~ITripletSeedCuts() = default;
+
+  /// Returns seed weight bonus/malus depending on detector considerations.
+  /// @param bottom bottom space point of the current seed
+  /// @param middle middle space point of the current seed
+  /// @param top top space point of the current seed
+  /// @return seed weight to be added to the seed's weight
+  virtual float seedWeight(const ConstSpacePointProxy2& bottom,
+                           const ConstSpacePointProxy2& middle,
+                           const ConstSpacePointProxy2& top) const = 0;
+
+  /// @param weight the current seed weight
+  /// @param bottom bottom space point of the current seed
+  /// @param middle middle space point of the current seed
+  /// @param top top space point of the current seed
+  /// @return true if the seed should be kept, false if the seed should be
+  /// discarded
+  virtual bool singleSeedCut(float weight, const ConstSpacePointProxy2& bottom,
+                             const ConstSpacePointProxy2& middle,
+                             const ConstSpacePointProxy2& top) const = 0;
+
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
+  virtual void cutPerMiddleSp(
+      std::span<TripletCandidate2>& seedCandidates) const = 0;
+};
 
 /// @brief Triplet seed filter used in the triplet seeding algorithm
 ///
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
 /// uses R-Z coordinates for the space points.
-class BroadTripletSeedFilter final {
+class BroadTripletSeedFilter final : public ITripletSeedFilter {
  public:
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
   struct Config {
@@ -63,6 +97,7 @@ class BroadTripletSeedFilter final {
     /// if we want to increase the weight of the seed by seedWeightIncrement
     /// when the number of compatible seeds is higher than a certain value
     float seedWeightIncrement = 0;
+    /// Number of seeds required before `seedWeightIncrement` is applied
     float numSeedIncrement = std::numeric_limits<float>::infinity();
 
     /// Seeding parameters used for quality seed confirmation
@@ -84,12 +119,11 @@ class BroadTripletSeedFilter final {
     /// other "high-quality" seed has been found for that inner-middle doublet
     /// Maximum number of normal seeds (not classified as "high-quality" seeds)
     /// in seed confirmation
-    std::size_t maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
+    std::uint32_t maxSeedsPerSpMConf = 5;
     /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet
     /// in seed confirmation. If the limit is reached we check if there is a
     /// normal quality seed to be replaced
-    std::size_t maxQualitySeedsPerSpMConf =
-        std::numeric_limits<std::size_t>::max();
+    std::uint32_t maxQualitySeedsPerSpMConf = 5;
 
     // Other parameters
 
@@ -97,10 +131,18 @@ class BroadTripletSeedFilter final {
     /// compatible SPs
     bool useDeltaRinsteadOfTopRadius = false;
 
+    /// Custom cuts interface for experiments
     std::shared_ptr<ITripletSeedCuts> experimentCuts;
   };
 
+  /// State of the filter that is communicated between different stages
   struct State {
+    /// Collector for triplet candidates associated with middle space points
+    CandidatesForMiddleSp2 candidatesCollector;
+
+    /// Maximum radius for seed confirmation
+    float rMaxSeedConf{};
+
     /// Map to store the best seed quality for each space point
     /// This is used to avoid creating seeds with lower quality than the best
     /// seed quality already found for that space point
@@ -111,59 +153,57 @@ class BroadTripletSeedFilter final {
     std::unordered_map<SpacePointIndex2, float> bestSeedQualityMap;
   };
 
+  /// Cache for intermediate results to avoid reallocations. No information is
+  /// carried over between different stages.
   struct Cache {
+    /// Cache for top space point indices during compatibility search
     std::vector<std::uint32_t> topSpIndexVec;
+    /// Cache for compatible seed radii during score calculation
     std::vector<float> compatibleSeedR;
+    /// Cache for sorted triplet candidates during selection
+    std::vector<TripletCandidate2> sortedCandidates;
   };
 
-  explicit BroadTripletSeedFilter(const Config& config,
-                                  std::unique_ptr<const Logger> logger =
-                                      getDefaultLogger("BroadTripletSeedFilter",
-                                                       Logging::Level::INFO));
-
-  const Config& config() const { return m_cfg; }
-
-  /// Create seed candidates with fixed bottom and middle space points and
-  /// all compatible top space points.
-  ///
+  /// @param config Configuration parameters for the seed filter
   /// @param state Mutable state that is used to store intermediate results
   /// @param cache Cache object to store intermediate results
-  /// @param spacePoints Container with all space points
-  /// @param bottomSp Fixed bottom space point
-  /// @param middleSp Fixed middle space point
-  /// @param topSpVec Vector containing all space points that may be compatible
-  ///                 with both bottom and middle space point
-  /// @param invHelixDiameterVec Vector containing 1/(2*r) values where r is the
-  ///                            helix radius
-  /// @param impactParametersVec Vector containing the impact parameters
-  /// @param zOrigin Z origin of the detector, used for z0 calculation
-  /// @param candidatesCollector Container for the seed candidates
-  void filter2SpFixed(State& state, Cache& cache,
-                      const SpacePointContainer2& spacePoints,
-                      SpacePointIndex2 bottomSp, SpacePointIndex2 middleSp,
-                      std::span<const SpacePointIndex2> topSpVec,
-                      std::span<const float> invHelixDiameterVec,
-                      std::span<const float> impactParametersVec, float zOrigin,
-                      CandidatesForMiddleSp2& candidatesCollector) const;
+  /// @param logger Logger for debugging and information messages
+  /// @note objects from this class depend on a per-event state and cache
+  ///       and should not be used across events.
+  explicit BroadTripletSeedFilter(const Config& config, State& state,
+                                  Cache& cache, const Logger& logger);
 
-  /// Create final seeds for all candidates with the same middle space point
-  ///
-  /// @param state Mutable state that is used to store intermediate results
-  /// @param spacePoints Container with all space points
-  /// @param candidates Collection of seed candidates
-  /// @param numQualitySeeds Number of high quality seeds in seed confirmation
-  /// @param outputCollection Output container for the seeds
-  void filter1SpFixed(State& state, const SpacePointContainer2& spacePoints,
-                      std::span<TripletCandidate2> candidates,
-                      std::size_t numQualitySeeds,
-                      SeedContainer2& outputCollection) const;
+  /// @param spacePoints Container of space points
+  /// @param spM Middle space point proxy
+  /// @param topDoublets Collection of top doublets for the middle space point
+  /// @return true if sufficient top doublets are found
+  bool sufficientTopDoublets(
+      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const DoubletsForMiddleSp& topDoublets) const override;
+
+  void filterTripletTopCandidates(
+      const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
+      const DoubletsForMiddleSp::Proxy& bottomLink,
+      const TripletTopCandidates& tripletTopCandidates) const override;
+
+  void filterTripletsMiddleFixed(
+      const SpacePointContainer2& spacePoints,
+      SeedContainer2& outputCollection) const override;
 
  private:
+  /// Configuration parameters for the seed filter algorithm
+  const Config* m_cfg{};
+  /// Mutable state for intermediate results between filter stages
+  State* m_state{};
+  /// Cache for temporary data to avoid reallocations
+  Cache* m_cache{};
+  /// Logger for debugging and information messages
+  const Logger* m_logger{};
+
+  const Config& config() const { return *m_cfg; }
+  State& state() const { return *m_state; }
+  Cache& cache() const { return *m_cache; }
   const Logger& logger() const { return *m_logger; }
-
-  Config m_cfg;
-
-  std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

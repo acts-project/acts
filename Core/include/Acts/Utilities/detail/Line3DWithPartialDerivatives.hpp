@@ -28,20 +28,41 @@ class Line3DWithPartialDerivatives {
   using Vector = Eigen::Matrix<T, 3, 1>;
   /// @brief Enum to map the indices of the parameter vector
   enum class ParIndex : std::uint8_t {
-    x0 = 0,
-    y0 = 1,
-    theta = 2,
-    phi = 3,
-    nPars = 4
+    y0 = 0,     /// y-axis intercept at z=0
+    theta = 1,  /// polar angle w.r.t the z-axis
+    x0 = 2,     /// x-axis intercept at z=0
+    phi = 3,    /// Azimuthal angle in the x-y plane
+    nPars = 4,  /// Number of line parameters
   };
-  static constexpr std::uint8_t s_nPars =
-      static_cast<std::uint8_t>(ParIndex::nPars);
+  static constexpr auto s_nPars = static_cast<std::size_t>(ParIndex::nPars);
   /// @brief Abrivation of the parameter vector type
   using ParamVector = std::array<T, s_nPars>;
+  /// @brief default constructor
+  Line3DWithPartialDerivatives() = default;
+  /// @brief Default copy constructor
+  Line3DWithPartialDerivatives(
+      const Line3DWithPartialDerivatives& other) noexcept = default;
+  /// @brief Default move constructor
+  Line3DWithPartialDerivatives(Line3DWithPartialDerivatives&& other) noexcept =
+      default;
+  /// @brief Default assignment operator
+  Line3DWithPartialDerivatives& operator=(
+      const Line3DWithPartialDerivatives& other) noexcept = default;
+  /// @brief Default move assignemt operator
+  Line3DWithPartialDerivatives& operator=(
+      Line3DWithPartialDerivatives&& other) noexcept = default;
+  /// @brief Constructor taking a parameter array which is at least as big as the ParamVector
+  ///        The first 4 indices are interpreted as the corresponding line
+  ///        parameters
+  template <std::size_t N>
+  explicit Line3DWithPartialDerivatives(
+      const std::array<T, N>& initPars) noexcept;
 
   /// @brief Update the line & derivatives with the new parameters
   /// @param newPars The new parameters to update the line with
-  void updateParameters(const ParamVector& newPars);
+  template <std::size_t N>
+  void updateParameters(const std::array<T, N>& newPars) noexcept
+    requires(N >= s_nPars);
   /// @brief Returns a point on the line
   const Vector& position() const;
   /// @brief Returns the direction of the line
@@ -57,10 +78,12 @@ class Line3DWithPartialDerivatives {
   ///        the line reference
   /// @param lambda: Separation from the reference
   Vector point(const double lambda) const;
+  /// @brief Returns the currently set parameters
+  ParamVector parameters() const;
 
  private:
   Vector m_pos{Vector::Zero()};
-  Vector m_dir{Vector::Zero()};
+  Vector m_dir{Vector::UnitZ()};
   std::array<Vector, s_nPars> m_gradient{
       filledArray<Vector, s_nPars>(Vector::Zero())};
 

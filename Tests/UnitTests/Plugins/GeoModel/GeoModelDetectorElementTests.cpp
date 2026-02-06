@@ -8,17 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorElement.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 #include <GeoModelKernel/GeoLogVol.h>
 #include <GeoModelKernel/GeoMaterial.h>
 
-BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   auto material = make_intrusive<GeoMaterial>("Material", 1.0);
@@ -28,15 +33,16 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   auto boxXY = make_intrusive<GeoBox>(100, 200, 2);
   auto logXY = make_intrusive<GeoLogVol>("LogVolumeXY", boxXY, material);
   auto fphysXY = make_intrusive<GeoFullPhysVol>(logXY);
-  auto rBounds = std::make_shared<Acts::RectangleBounds>(100, 200);
+  auto rBounds = std::make_shared<RectangleBounds>(100, 200);
 
   PVConstLink physXY{fphysXY};
-  auto elementXY =
-      Acts::GeoModelDetectorElement::createDetectorElement<Acts::PlaneSurface>(
-          physXY, rBounds, Acts::Transform3::Identity(), 2.0);
+  auto elementXY = GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
+      physXY, rBounds, Transform3::Identity(), 2.0);
 
-  const Acts::Surface& surface = elementXY->surface();
-  BOOST_CHECK(surface.type() == Acts::Surface::SurfaceType::Plane);
+  const Surface& surface = elementXY->surface();
+  BOOST_CHECK(surface.type() == Surface::SurfaceType::Plane);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

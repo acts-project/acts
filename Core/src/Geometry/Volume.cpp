@@ -27,22 +27,22 @@ Volume::Volume(const Transform3& transform,
       m_volumeBounds(std::move(volbounds)) {}
 
 Volume::Volume(const Volume& vol, const Transform3& shift)
-    : GeometryObject(),
-      m_transform(shift * vol.m_transform),
-      m_itransform(m_transform.inverse()),
-      m_center(m_transform.translation()),
-      m_volumeBounds(vol.m_volumeBounds) {}
+    : Volume(vol.shifted(shift)) {}
 
-Vector3 Volume::referencePosition(const GeometryContext& /*gctx*/,
+Volume Volume::shifted(const Transform3& shift) const {
+  return Volume(shift * m_transform, m_volumeBounds);
+}
+
+Vector3 Volume::referencePosition(const GeometryContext& gctx,
                                   AxisDirection aDir) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
   if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisRPhi) {
     // the binning Position for R-type may have an offset
-    return (center() + m_volumeBounds->referenceOffset(aDir));
+    return (center(gctx) + m_volumeBounds->referenceOffset(aDir));
   }
   // return the center
-  return center();
+  return center(gctx);
 }
 
 // assignment operator
@@ -55,9 +55,15 @@ Volume& Volume::operator=(const Volume& vol) {
   return *this;
 }
 
+bool Volume::inside(const GeometryContext& gctx, const Vector3& gpos,
+                    double tol) const {
+  Vector3 posInVolFrame = globalToLocalTransform(gctx) * gpos;
+  return volumeBounds().inside(posInVolFrame, tol);
+}
 bool Volume::inside(const Vector3& gpos, double tol) const {
-  Vector3 posInVolFrame((transform().inverse()) * gpos);
-  return (volumeBounds()).inside(posInVolFrame, tol);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  return volumeBounds().inside(itransform() * gpos, tol);
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::ostream& operator<<(std::ostream& sl, const Volume& vol) {
@@ -75,10 +81,11 @@ Volume::BoundingBox Volume::orientedBoundingBox() const {
 }
 
 void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
-  update(std::move(volbounds));
+  m_volumeBounds = std::move(volbounds);
 }
 
-void Volume::update(std::shared_ptr<VolumeBounds> volbounds,
+void Volume::update(const GeometryContext& /*gctx*/,
+                    std::shared_ptr<VolumeBounds> volbounds,
                     std::optional<Transform3> transform,
                     const Logger& /*logger*/) {
   if (volbounds) {
@@ -89,12 +96,24 @@ void Volume::update(std::shared_ptr<VolumeBounds> volbounds,
   }
 }
 
+const Transform3& Volume::localToGlobalTransform(
+    const GeometryContext& /*gctx*/) const {
+  return m_transform;
+}
+const Transform3& Volume::globalToLocalTransform(
+    const GeometryContext& /*gctx*/) const {
+  return m_itransform;
+}
 const Transform3& Volume::transform() const {
   return m_transform;
 }
 
 const Transform3& Volume::itransform() const {
   return m_itransform;
+}
+
+const Vector3& Volume::center(const GeometryContext& /*gctx*/) const {
+  return m_center;
 }
 
 const Vector3& Volume::center() const {
@@ -130,7 +149,8 @@ bool Volume::operator==(const Volume& other) const {
 
 void Volume::visualize(IVisualization3D& helper, const GeometryContext& gctx,
                        const ViewConfig& viewConfig) const {
-  auto bSurfaces = volumeBounds().orientedSurfaces(transform());
+  auto bSurfaces =
+      volumeBounds().orientedSurfaces(localToGlobalTransform(gctx));
   for (const auto& bs : bSurfaces) {
     bs.surface->visualize(helper, gctx, viewConfig);
   }

@@ -15,7 +15,6 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
@@ -24,11 +23,15 @@
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <algorithm>
 #include <random>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
+using namespace ActsTests;
+using namespace ActsFatras;
 
 namespace {
 
@@ -37,8 +40,7 @@ struct SplitEnergyLoss {
   double splitMomentumMin = 5_GeV;
 
   template <typename generator_t>
-  bool operator()(generator_t& /*generator*/,
-                  const Acts::MaterialSlab& /*slab*/,
+  bool operator()(generator_t& /*generator*/, const MaterialSlab& /*slab*/,
                   ActsFatras::Particle& particle,
                   std::vector<ActsFatras::Particle>& generated) const {
     const auto p = particle.absoluteMomentum();
@@ -55,14 +57,14 @@ struct SplitEnergyLoss {
 
 // setup propagator-related types
 // use the default navigation
-using Navigator = Acts::Navigator;
-using MagneticField = Acts::ConstantBField;
+using Navigator = Navigator;
+using MagneticField = ConstantBField;
 // propagate charged particles numerically in a constant magnetic field
-using ChargedStepper = Acts::EigenStepper<>;
-using ChargedPropagator = Acts::Propagator<ChargedStepper, Navigator>;
+using ChargedStepper = EigenStepper<>;
+using ChargedPropagator = Propagator<ChargedStepper, Navigator>;
 // propagate neutral particles with just straight lines
-using NeutralStepper = Acts::StraightLineStepper;
-using NeutralPropagator = Acts::Propagator<NeutralStepper, Navigator>;
+using NeutralStepper = StraightLineStepper;
+using NeutralPropagator = Propagator<NeutralStepper, Navigator>;
 
 // setup simulator-related types
 // the random number generator type
@@ -84,18 +86,18 @@ using NeutralSimulation =
                                          ActsFatras::NoSurface,
                                          ActsFatras::NoDecay>;
 // full simulator type for charged and neutrals
-using Simulation = ActsFatras::Simulation<ChargedSelector, ChargedSimulation,
-                                          NeutralSelector, NeutralSimulation>;
+using FatrasSimulation =
+    ActsFatras::Simulation<ChargedSelector, ChargedSimulation, NeutralSelector,
+                           NeutralSimulation>;
 
 // parameters for data-driven test cases
 
-const auto rangePdg =
-    boost::unit_test::data::make(std::vector<Acts::PdgParticle>{
-        Acts::PdgParticle::eElectron,
-        Acts::PdgParticle::eMuon,
-        Acts::PdgParticle::ePionPlus,
-        Acts::PdgParticle::ePionZero,
-    });
+const auto rangePdg = boost::unit_test::data::make(std::vector<PdgParticle>{
+    PdgParticle::eElectron,
+    PdgParticle::eMuon,
+    PdgParticle::ePionPlus,
+    PdgParticle::ePionZero,
+});
 const auto rangePhi = boost::unit_test::data::make(std::vector<double>{
     -135_degree,
     -45_degree,
@@ -148,32 +150,32 @@ bool containsParticleId(const Container& sortedByParticleId,
 
 }  // namespace
 
-BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
+BOOST_DATA_TEST_CASE(FatrasSimulationCase, dataset, pdg, phi, eta, p,
                      numParticles) {
-  Acts::GeometryContext geoCtx;
-  Acts::MagneticFieldContext magCtx;
-  Acts::Logging::Level logLevel = Acts::Logging::Level::DEBUG;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+  MagneticFieldContext magCtx;
+  Logging::Level logLevel = Logging::Level::DEBUG;
 
   // construct the example detector
-  Acts::Test::CylindricalTrackingGeometry geoBuilder(geoCtx);
+  CylindricalTrackingGeometry geoBuilder(geoCtx);
   auto trackingGeometry = geoBuilder();
 
   // construct the propagators
   Navigator navigator({trackingGeometry});
   ChargedStepper chargedStepper(
-      std::make_shared<Acts::ConstantBField>(Acts::Vector3{0, 0, 1_T}));
+      std::make_shared<ConstantBField>(Vector3{0, 0, 1_T}));
   ChargedPropagator chargedPropagator(std::move(chargedStepper), navigator);
   NeutralPropagator neutralPropagator(NeutralStepper(), navigator);
 
   // construct the simulator
   ChargedSimulation simulatorCharged(
       std::move(chargedPropagator),
-      Acts::getDefaultLogger("ChargedSimulation", logLevel));
+      getDefaultLogger("ChargedSimulation", logLevel));
   NeutralSimulation simulatorNeutral(
       std::move(neutralPropagator),
-      Acts::getDefaultLogger("NeutralSimulation", logLevel));
-  Simulation simulator(std::move(simulatorCharged),
-                       std::move(simulatorNeutral));
+      getDefaultLogger("NeutralSimulation", logLevel));
+  FatrasSimulation simulator(std::move(simulatorCharged),
+                             std::move(simulatorNeutral));
 
   // prepare simulation call parameters
   // random number generator
@@ -186,11 +188,11 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
 
   // create input particles. particle number should ne non-zero.
   for (auto i = numParticles; 0 < i; --i) {
-    const auto pid = ActsFatras::Barcode().setVertexPrimary(42).setParticle(i);
-    const auto particle =
-        ActsFatras::Particle(pid, pdg)
-            .setDirection(Acts::makeDirectionFromPhiEta(phi, eta))
-            .setAbsoluteMomentum(p);
+    const auto pid =
+        ActsFatras::Barcode().withVertexPrimary(42).withParticle(i);
+    const auto particle = ActsFatras::Particle(pid, pdg)
+                              .setDirection(makeDirectionFromPhiEta(phi, eta))
+                              .setAbsoluteMomentum(p);
     input.push_back(std::move(particle));
   }
   BOOST_TEST_INFO(input.front());
@@ -221,7 +223,7 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
   BOOST_CHECK_LE(input.size(), simulatedInitial.size());
   BOOST_CHECK_LE(input.size(), simulatedFinal.size());
   // there should be some hits if we started with a charged particle
-  if (Acts::findCharge(pdg) != 0) {
+  if (findCharge(pdg) != 0) {
     BOOST_CHECK_LT(0u, hits.size());
   }
 

@@ -38,41 +38,48 @@ concept CollectionStoresSeedsTo =
       detail::pushBackOrInsertAtEnd(coll, seed);
     };
 
+/// Types of space point candidates for seeding
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
+/// Level of detector measurement information for seeding
 enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
 
+/// Seed finder operating on grid-based space points.
 template <typename external_spacepoint_t, typename grid_t,
           typename platform_t = void*>
 class SeedFinder {
  public:
+  /// Scratch buffers used during seeding for a middle space point.
   struct SeedingState {
-    // bottom space point
+    /// Bottom space points compatible with middle
     std::vector<const external_spacepoint_t*> compatBottomSP{};
+    /// Top space points compatible with middle
     std::vector<const external_spacepoint_t*> compatTopSP{};
-    // contains parameters required to calculate circle with linear equation
-    // ...for bottom-middle
+    /// Parameters required to calculate circle with linear equation for
+    /// bottom-middle
     std::vector<LinCircle> linCircleBottom{};
-    // ...for middle-top
+    /// Parameters required to calculate circle with linear equation for
+    /// middle-top
     std::vector<LinCircle> linCircleTop{};
-
-    // create vectors here to avoid reallocation in each loop
+    /// Top space points vector to avoid reallocation in each loop
     std::vector<const external_spacepoint_t*> topSpVec{};
+    /// Curvatures vector to avoid reallocation in each loop
     std::vector<float> curvatures{};
+    /// Impact parameters vector to avoid reallocation in each loop
     std::vector<float> impactParameters{};
 
-    // managing seed candidates for SpM
+    /// Managing seed candidates for SpM
     CandidatesForMiddleSp<const external_spacepoint_t> candidatesCollector{};
-
-    // managing doublet candidates
+    /// Managing bottom doublet candidates
     boost::container::small_vector<Neighbour<grid_t>,
                                    detail::ipow(3, grid_t::DIM)>
         bottomNeighbours{};
+    /// Managing top doublet candidates
     boost::container::small_vector<Neighbour<grid_t>,
                                    detail::ipow(3, grid_t::DIM)>
         topNeighbours{};
 
-    // Mutable variables for Space points used in the seeding
+    /// Mutable variables for Space points used in the seeding
     SpacePointMutableData spacePointMutableData{};
   };
 

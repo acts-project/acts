@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/detail/BoundDeduplicator.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
@@ -153,7 +154,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   std::stringstream ss;
   bounds.toStream(ss);
   ACTS_DEBUG(prefix() << "have top volume: " << ss.str() << "\n"
-                      << topVolume.transform().matrix());
+                      << topVolume.localToGlobalTransform(gctx).matrix());
 
   std::unique_ptr<TrackingVolume> world;
   static const std::string worldName = "World";
@@ -186,8 +187,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     ACTS_DEBUG(prefix() << "Applied envelope to cylinder: Z=" << zEnv[0]
                         << ", Rmin=" << rEnv[0] << ", Rmax=" << rEnv[1]);
 
-    world = std::make_unique<TrackingVolume>(topVolume.transform(),
-                                             std::move(newBounds), worldName);
+    world =
+        std::make_unique<TrackingVolume>(topVolume.localToGlobalTransform(gctx),
+                                         std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
     SingleCylinderPortalShell worldShell{*world};
@@ -241,8 +243,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     ACTS_DEBUG(prefix() << "Applied envelope to cuboid: X=" << xEnv[0]
                         << ", Y=" << yEnv[0] << ", Z=" << zEnv[0]);
 
-    world = std::make_unique<TrackingVolume>(topVolume.transform(),
-                                             std::move(newBounds), worldName);
+    world =
+        std::make_unique<TrackingVolume>(topVolume.localToGlobalTransform(gctx),
+                                         std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
     SingleCuboidPortalShell worldShell{*world};
@@ -265,6 +268,11 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   // want to change
   shell.fill(*world);
 
+  if (m_cfg.boundDeduplication) {
+    ACTS_DEBUG("Deduplicate equivalent bounds");
+    detail::BoundDeduplicator deduplicator{};
+    world->apply(deduplicator);
+  }
   child.finalize(options, gctx, *world, logger);
 
   std::set<std::string, std::less<>> volumeNames;

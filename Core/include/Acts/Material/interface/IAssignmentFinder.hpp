@@ -31,7 +31,7 @@ class IAssignmentFinder {
     const Surface* surface = nullptr;
     /// Position of the assignment
     Vector3 position = Vector3::Zero();
-    // Direction of the assignment
+    /// Direction of the assignment
     Vector3 direction = Vector3::Zero();
   };
 

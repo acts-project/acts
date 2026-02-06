@@ -23,6 +23,9 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 /// @brief Base class for material accessors, this is needed
 /// for the I/O of the different grid material types, in the actual
 /// implementation the material accessor is a template parameter.
@@ -69,6 +72,7 @@ struct IndexedMaterialAccessor : public IGridMaterialAccessor {
   using grid_value_type = std::size_t;
 
   /// @brief The internal storage of the material
+  /// @param mmaterial Vector of material slabs to store and access by index
   explicit IndexedMaterialAccessor(std::vector<MaterialSlab>&& mmaterial)
       : IGridMaterialAccessor(), material(std::move(mmaterial)) {}
 
@@ -101,6 +105,9 @@ struct IndexedMaterialAccessor : public IGridMaterialAccessor {
 /// @brief  This is an accessor for cases where the material is filled in a global
 /// material vector that is accessed from the different material grids.
 struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
+  /// Constructor with global material vector
+  /// @param gMaterial Shared pointer to global material vector
+  /// @param shared Whether material entries are shared across grid points
   explicit GloballyIndexedMaterialAccessor(
       std::shared_ptr<std::vector<MaterialSlab>> gMaterial, bool shared = false)
       : IGridMaterialAccessor(),
@@ -158,27 +165,37 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   }
 };
 
+/// Base class for the concrete templated grid surface material types.
+/// This allows referning to all template instances as the same base class type.
+class IGridSurfaceMaterialBase : public ISurfaceMaterial {};
+
 /// Intermediate interface to the grid surface material given access to the grid
 /// and the material accessor.
 template <typename grid_value_t>
-class IGridSurfaceMaterial : public ISurfaceMaterial {
+class IGridSurfaceMaterial : public IGridSurfaceMaterialBase {
  public:
   /// @brief Accessor to the grid interface
+  /// @return Reference to the grid interface
   virtual const IGrid& grid() const = 0;
 
   /// @brief Accessor to the material accessor
+  /// @return Reference to the material accessor
   virtual const IGridMaterialAccessor& materialAccessor() const = 0;
 
   /// @brief Accessor to the bound to grid local delegate
+  /// @return Reference to the bound to grid local coordinate transformation delegate
   virtual const GridAccess::IBoundToGridLocal& boundToGridLocal() const = 0;
 
   /// @brief Accessor to the global to grid local delegate
+  /// @return Reference to the global to grid local coordinate transformation delegate
   virtual const GridAccess::IGlobalToGridLocal& globalToGridLocal() const = 0;
 
   /// Return the type erased grid view
+  /// @return Type-erased grid view for accessing grid contents
   virtual AnyGridView<grid_value_t> gridView() = 0;
 
   /// Return the type erased (const) grid view
+  /// @return Type-erased const grid view for read-only access to grid contents
   virtual AnyGridConstView<grid_value_t> gridConstView() const = 0;
 };
 
@@ -197,12 +214,14 @@ class GridSurfaceMaterialT
     : public IGridSurfaceMaterial<
           typename material_accessor_t::grid_value_type> {
  public:
-  // Definition of bound (on surface) to grid local representation delegate
+  /// Type alias for bound coordinates to grid local coordinates conversion
+  /// delegate
   using BoundToGridLocalDelegate =
       OwningDelegate<typename grid_t::point_t(const Vector2&),
                      GridAccess::IBoundToGridLocal>;
 
-  // Definition of global to grid local representation delegate
+  /// Type alias for global coordinates to grid local coordinates conversion
+  /// delegate
   using GlobalToGridLocalDelegate =
       OwningDelegate<typename grid_t::point_t(const Vector3&),
                      GridAccess::IGlobalToGridLocal>;
@@ -247,29 +266,37 @@ class GridSurfaceMaterialT
     return m_materialAccessor.slab(m_grid, m_globalToGridLocal(gp));
   }
 
+  using ISurfaceMaterial::materialSlab;
+
   /// Scale operator
   ///
   /// @param factor is the scale factor applied
+  /// @return Reference to this surface material for method chaining
   ISurfaceMaterial& scale(double factor) final {
     m_materialAccessor.scale(m_grid, factor);
     return (*this);
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes
+  /// @param sl Output stream to write to
+  /// @return Reference to the output stream
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "GridSurfaceMaterial - material access via accessor.";
     return sl;
   }
 
   /// @brief Accessor to the grid
+  /// @return Reference to the underlying grid
   const grid_type& grid() const final { return m_grid; }
 
   // Return a type-erased indexed grid view
+  /// @return Type-erased grid view for accessing grid contents
   AnyGridView<typename material_accessor_t::grid_value_type> gridView() final {
     return AnyGridView<typename material_accessor_t::grid_value_type>(m_grid);
   }
 
   // Return a type-erased indexed const grid view
+  /// @return Type-erased const grid view for read-only access to grid contents
   AnyGridConstView<typename material_accessor_t::grid_value_type>
   gridConstView() const final {
     return AnyGridConstView<typename material_accessor_t::grid_value_type>(
@@ -277,26 +304,31 @@ class GridSurfaceMaterialT
   }
 
   /// @brief Accessor to the material accessor
+  /// @return Reference to the material accessor
   const material_accessor_type& materialAccessor() const final {
     return m_materialAccessor;
   }
 
   /// @brief Accessor to the bound to grid local delegate
+  /// @return Reference to the bound to grid local coordinate transformation delegate
   const GridAccess::IBoundToGridLocal& boundToGridLocal() const final {
     return *(m_boundToGridLocal.instance());
   }
 
   /// @brief Accessor to the bound to grid local delegate
+  /// @return Reference to the bound to grid local delegate
   const BoundToGridLocalDelegate& boundToGridLocalDelegate() const {
     return m_boundToGridLocal;
   }
 
   /// @brief Accessor to the global to grid local delegate
+  /// @return Reference to the global to grid local coordinate transformation delegate
   const GridAccess::IGlobalToGridLocal& globalToGridLocal() const final {
     return *(m_globalToGridLocal.instance());
   }
 
   /// @brief Accessor to the global to grid local delegate
+  /// @return Reference to the global to grid local delegate
   const GlobalToGridLocalDelegate& globalToGridLocalDelegate() const {
     return m_globalToGridLocal;
   }
@@ -315,19 +347,25 @@ class GridSurfaceMaterialT
   BoundToGridLocalDelegate m_boundToGridLocal;
 };
 
-// Indexed Surface material
+/// @brief Type alias for surface material indexed by local coordinates
+/// @details Surface material implementation that uses local coordinate indexing
+/// @tparam grid_type The type of grid used for material mapping
 template <typename grid_type>
 using IndexedSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, IndexedMaterialAccessor>;
 
-// Globally Indexed Surface material
+/// @brief Type alias for surface material indexed by global coordinates
+/// @details Surface material implementation that uses global coordinate indexing
 template <typename grid_type>
 using GloballyIndexedSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, GloballyIndexedMaterialAccessor>;
 
-// Grid Surface material
+/// @brief Type alias for grid-based surface material
+/// @details Surface material implementation using a regular grid structure
 template <typename grid_type>
 using GridSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, GridMaterialAccessor>;
+
+/// @}
 
 }  // namespace Acts

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
@@ -72,6 +73,10 @@ std::vector<Vector2> RectangleBounds::vertices(unsigned int /*lseg*/) const {
 
 const RectangleBounds& RectangleBounds::boundingBox() const {
   return (*this);
+}
+
+Vector2 RectangleBounds::center() const {
+  return 0.5 * (m_min + m_max);
 }
 
 std::ostream& RectangleBounds::toStream(std::ostream& sl) const {

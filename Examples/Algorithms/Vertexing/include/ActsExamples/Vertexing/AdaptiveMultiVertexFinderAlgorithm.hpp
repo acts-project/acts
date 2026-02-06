@@ -90,6 +90,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     /// Bin extent in t-direction which is only used with `AdaptiveGridSeeder`
     /// and `useTime`
     double temporalBinExtent = 19. * Acts::UnitConstants::mm;
+    /// Number of simultaneous seeds that should be created by the vertex seeder
+    std::size_t simultaneousSeeds = 1;
   };
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& config,

@@ -12,32 +12,41 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cassert>
 #include <limits>
+#include <numbers>
 
 #include "Eigen/Dense"
 
 namespace Acts::VectorHelpers {
 
-/// Calculate phi (transverse plane angle) from compatible Eigen types
-/// @tparam Derived Eigen derived concrete type
-/// @param v Any vector like Eigen type, static or dynamic
-/// @note Will static assert that the number of rows of @p v is at least 2, or
-/// in case of dynamic size, will abort execution if that is not the case.
+/// Calculate phi (transverse plane angle) from compatible Eigen types with
+/// static size
+/// @tparam Derived Eigen derived concrete type with compile-time known size >= 2
+/// @param v Any vector like Eigen type with static size
 /// @return The value of the angle in the transverse plane.
 template <typename Derived>
-double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
-  constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
-  if constexpr (rows != -1) {
-    // static size, do compile time check
-    static_assert(rows >= 2,
-                  "Phi function not valid for vectors not at least 2D");
-  } else {
-    // dynamic size
-    assert(v.rows() >= 2 &&
-           "Phi function not valid for vectors not at least 2D");
-  }
+double phi(const Eigen::MatrixBase<Derived>& v) noexcept
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime >= 2)
+{
+  return std::atan2(v[1], v[0]);
+}
+
+/// Calculate phi (transverse plane angle) from compatible Eigen types with
+/// dynamic size
+/// @tparam Derived Eigen derived concrete type with dynamic size
+/// @param v Any vector like Eigen type with dynamic size
+/// @note Will abort execution if the number of rows of @p v is less than 2.
+/// @return The value of the angle in the transverse plane.
+template <typename Derived>
+double phi(const Eigen::MatrixBase<Derived>& v) noexcept
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == -1)
+{
+  assert(v.rows() >= 2 && "Phi function not valid for vectors not at least 2D");
   return std::atan2(v[1], v[0]);
 }
 
@@ -76,43 +85,57 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
   return v.template head<2>().norm();
 }
 
-/// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector
-/// @tparam Derived Eigen derived concrete type
-/// @param v Any vector like Eigen type, static or dynamic
-/// @note Will static assert that the number of rows of @p v is at least 3, or
-/// in case of dynamic size, will abort execution if that is not the case.
+/// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector with
+/// static size
+/// @tparam Derived Eigen derived concrete type with compile-time size == 3
+/// @param v Any 3D vector like Eigen type with static size
 /// @return The theta value
 template <typename Derived>
-double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
-  constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
-  if constexpr (rows != -1) {
-    // static size, do compile time check
-    static_assert(rows == 3, "Theta function not valid for non-3D vectors.");
-  } else {
-    // dynamic size
-    assert(v.rows() == 3 && "Theta function not valid for non-3D vectors.");
-  }
-
+double theta(const Eigen::MatrixBase<Derived>& v) noexcept
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3)
+{
   return std::atan2(perp(v), v[2]);
 }
 
-/// Calculate the pseudorapidity for a vector.
-/// @tparam Derived Eigen derived concrete type
-/// @param v Any vector like Eigen type, static or dynamic
-/// @note Will static assert that the number of rows of @p v is at least 3, or
-/// in case of dynamic size, will abort execution if that is not the case.
+/// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector with
+/// dynamic size
+/// @tparam Derived Eigen derived concrete type with dynamic size
+/// @param v Any vector like Eigen type with dynamic size
+/// @note Will abort execution if the number of rows of @p v is not exactly 3.
+/// @return The theta value
+template <typename Derived>
+double theta(const Eigen::MatrixBase<Derived>& v) noexcept
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == -1)
+{
+  assert(v.rows() == 3 && "Theta function not valid for non-3D vectors.");
+  return std::atan2(perp(v), v[2]);
+}
+
+/// Calculate the pseudorapidity for a vector with static size.
+/// @tparam Derived Eigen derived concrete type with compile-time size == 3
+/// @param v Any 3D vector like Eigen type with static size
 /// @return The pseudorapidity value
 template <typename Derived>
-double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
-  constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
-  if constexpr (rows != -1) {
-    // static size, do compile time check
-    static_assert(rows == 3, "Eta function not valid for non-3D vectors.");
+double eta(const Eigen::MatrixBase<Derived>& v) noexcept
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3)
+{
+  if (v[0] == 0. && v[1] == 0.) {
+    return std::copysign(std::numeric_limits<double>::infinity(), v[2]);
   } else {
-    // dynamic size
-    assert(v.rows() == 3 && "Eta function not valid for non-3D vectors.");
+    return std::asinh(v[2] / perp(v));
   }
+}
 
+/// Calculate the pseudorapidity for a vector with dynamic size.
+/// @tparam Derived Eigen derived concrete type with dynamic size
+/// @param v Any vector like Eigen type with dynamic size
+/// @note Will abort execution if the number of rows of @p v is not exactly 3.
+/// @return The pseudorapidity value
+template <typename Derived>
+double eta(const Eigen::MatrixBase<Derived>& v) noexcept
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == -1)
+{
+  assert(v.rows() == 3 && "Eta function not valid for non-3D vectors.");
   if (v[0] == 0. && v[1] == 0.) {
     return std::copysign(std::numeric_limits<double>::infinity(), v[2]);
   } else {
@@ -232,6 +255,23 @@ inline std::pair<double, double> incidentAngles(
   double phi = std::atan2(trfDir[2], trfDir[0]);
   double theta = std::atan2(trfDir[2], trfDir[1]);
   return {phi, theta};
+}
+
+/// Calculate the deltaR between two vectors.
+/// @note DeltaR is defined as sqrt(deltaPhi^2 + deltaEta^2)
+/// @tparam Derived Eigen derived concrete type
+/// @param v1 First vector
+/// @param v2 Second vector
+/// @return The deltaR value
+template <typename Derived>
+double deltaR(const Eigen::MatrixBase<Derived>& v1,
+              const Eigen::MatrixBase<Derived>& v2)
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3)
+{
+  const double dphi =
+      detail::difference_periodic(phi(v1), phi(v2), 2 * std::numbers::pi);
+  const double deta = eta(v1) - eta(v2);
+  return fastHypot(dphi, deta);
 }
 
 }  // namespace Acts::VectorHelpers

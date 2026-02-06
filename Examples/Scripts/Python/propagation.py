@@ -3,7 +3,8 @@
 import os
 import acts
 import acts.examples
-from acts.examples import GenericDetector, StructureSelector, AlignmentDecorator
+from acts.examples import GenericDetector, StructureSelector
+from acts.examples.alignment import AlignmentDecorator
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
@@ -11,6 +12,8 @@ from acts.examples.simulation import (
     ParticleConfig,
     MomentumConfig,
 )
+
+from acts.examples.root import RootPropagationSummaryWriter, RootPropagationStepsWriter
 
 u = acts.UnitConstants
 
@@ -58,7 +61,7 @@ def runPropagation(
     s.addAlgorithm(propagationAlgorithm)
 
     s.addWriter(
-        acts.examples.RootPropagationSummaryWriter(
+        RootPropagationSummaryWriter(
             level=acts.logging.INFO,
             inputSummaryCollection="propagation_summary",
             filePath=outputDir + "/propagation_summary.root",
@@ -67,7 +70,7 @@ def runPropagation(
 
     if sterileLogger is False:
         s.addWriter(
-            acts.examples.RootPropagationStepsWriter(
+            RootPropagationStepsWriter(
                 level=acts.logging.INFO,
                 collection="propagation_summary",
                 filePath=outputDir + "/propagation_steps.root",
@@ -100,7 +103,7 @@ if "__main__" == __name__:
     # structureSelector = StructureSelector(trackingGeometry)
     # pixelBarrelID = acts.GeometryIdentifier(volume=17)
     # pixelBarrelTransforms = structureSelector.selectedTransforms(
-    #     acts.GeometryContext(), pixelBarrelID
+    #     acts.GeometryContext.dangerouslyDefaultConstruct(), pixelBarrelID
     # )
     # alignDecoConfig = AlignmentDecorator.Config()
     # alignDecoConfig.nominalStore = acts.examples.GeoIdAlignmentStore(

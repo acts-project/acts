@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -18,6 +18,8 @@
 using namespace Acts::UnitLiterals;
 
 static constexpr auto eps = std::numeric_limits<double>::epsilon();
+
+namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(DefinitionsUnits)
 
@@ -138,3 +140,5 @@ BOOST_AUTO_TEST_CASE(PhysicalConstants) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

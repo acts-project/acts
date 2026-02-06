@@ -26,9 +26,9 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -39,17 +39,18 @@
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 
 static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// @brief Aborter for the case that a particle leaves the detector or reaches
@@ -124,6 +125,8 @@ struct StepCollector {
     result.momentum.push_back(stepper.momentum(state.stepping));
   }
 };
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
@@ -360,23 +363,24 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::Type::Navigator),
                   navDir * 2., eps);
 
+  const auto getNavigationTarget = [&](const Surface& s,
+                                       const BoundaryTolerance& bt) {
+    auto [intersection, intersectionIndex] =
+        s.intersect(tgContext, es.position(esState),
+                    navDir * es.direction(esState), bt)
+            .closestWithIndex();
+    return NavigationTarget(intersection, intersectionIndex, s, bt);
+  };
+
   // Test the step size modification in the context of a surface
   es.updateStepSize(
-      esState,
-      targetSurface
-          ->intersect(tgContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryTolerance::None())
-          .closest(),
+      esState, getNavigationTarget(*targetSurface, BoundaryTolerance::None()),
       navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setUser(navDir * stepSize);
   es.releaseStepSize(esState, ConstrainedStep::Type::Navigator);
   es.updateStepSize(
-      esState,
-      targetSurface
-          ->intersect(tgContext, es.position(esState),
-                      navDir * es.direction(esState), BoundaryTolerance::None())
-          .closest(),
+      esState, getNavigationTarget(*targetSurface, BoundaryTolerance::None()),
       navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
@@ -420,4 +424,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

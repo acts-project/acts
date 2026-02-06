@@ -8,11 +8,8 @@
 
 // TODO We still use some Kalman Fitter functionalities. Check for replacement
 
-#include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
@@ -31,19 +28,10 @@
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
-#include <algorithm>
-#include <cmath>
 #include <functional>
 #include <memory>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class MagneticFieldProvider;
-class SourceLink;
-class Surface;
-class TrackingGeometry;
-}  // namespace Acts
 
 namespace {
 
@@ -96,7 +84,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
 
     const Acts::Experimental::Gx2FitterOptions gx2fOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.propOptions, &(*options.referenceSurface),
+        extensions, options.propOptions, options.referenceSurface,
         multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,
         relChi2changeCutOff);
 

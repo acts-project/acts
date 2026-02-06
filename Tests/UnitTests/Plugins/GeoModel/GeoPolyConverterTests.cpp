@@ -8,8 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
@@ -19,6 +17,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+#include "ActsPlugins/GeoModel/GeoModelReader.hpp"
 
 #include <typeinfo>
 
@@ -30,7 +30,12 @@
 #include <GeoModelKernel/GeoTrd.h>
 #include <GeoModelKernel/GeoTube.h>
 
-BOOST_AUTO_TEST_SUITE(GeoModelPoyVol)
+using namespace Acts;
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeoModelSuite)
 
 BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto al = make_intrusive<GeoMaterial>("Aluminium", 1.0);
@@ -63,14 +68,14 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto physPoly = make_intrusive<GeoFullPhysVol>(logPoly);
   auto physErr = make_intrusive<GeoFullPhysVol>(logErr);
   // create pars for conversion
-  Acts::GeoModelDetectorObjectFactory::Config gmConfig;
-  Acts::GeometryContext gContext;
-  Acts::GeoModelDetectorObjectFactory::Cache trapCache;
-  Acts::GeoModelDetectorObjectFactory::Cache polyCache;
-  Acts::GeoModelDetectorObjectFactory::Cache errCache;
+  ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
+  ActsPlugins::GeoModelDetectorObjectFactory::Cache trapCache;
+  ActsPlugins::GeoModelDetectorObjectFactory::Cache polyCache;
+  ActsPlugins::GeoModelDetectorObjectFactory::Cache errCache;
 
   // create factory instance
-  Acts::GeoModelDetectorObjectFactory factory(gmConfig);
+  ActsPlugins::GeoModelDetectorObjectFactory factory(gmConfig);
 
   // convert GeoFullPhysVol (to surfaces)
   factory.convertFpv("Trap", physTrap, trapCache, gContext);
@@ -78,27 +83,29 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   BOOST_CHECK_THROW(factory.convertFpv("Error", physErr, errCache, gContext),
                     std::runtime_error);
 
-  Acts::GeoModelSensitiveSurface trapSensSurface =
+  ActsPlugins::GeoModelSensitiveSurface trapSensSurface =
       trapCache.sensitiveSurfaces[0];
-  Acts::GeoModelSensitiveSurface polySensSurface =
+  ActsPlugins::GeoModelSensitiveSurface polySensSurface =
       polyCache.sensitiveSurfaces[0];
-  std::shared_ptr<Acts::Surface> polySurface = std::get<1>(polySensSurface);
-  std::shared_ptr<Acts::Surface> trapSurface = std::get<1>(trapSensSurface);
+  std::shared_ptr<Surface> polySurface = std::get<1>(polySensSurface);
+  std::shared_ptr<Surface> trapSurface = std::get<1>(trapSensSurface);
 
   const auto* polyBounds =
-      dynamic_cast<const Acts::DiamondBounds*>(&polySurface->bounds());
-  std::vector<Acts::Vector2> convPolyVerts = polyBounds->vertices();
+      dynamic_cast<const DiamondBounds*>(&polySurface->bounds());
+  std::vector<Vector2> convPolyVerts = polyBounds->vertices();
   for (std::size_t i = 0; i < polyVerts.size(); i++) {
     BOOST_CHECK(polyVerts[i][0] == convPolyVerts[i][0]);
     BOOST_CHECK(polyVerts[i][1] == convPolyVerts[i][1]);
   }
 
   const auto* trapBounds =
-      dynamic_cast<const Acts::TrapezoidBounds*>(&trapSurface->bounds());
-  std::vector<Acts::Vector2> convTrapVerts = trapBounds->vertices();
+      dynamic_cast<const TrapezoidBounds*>(&trapSurface->bounds());
+  std::vector<Vector2> convTrapVerts = trapBounds->vertices();
   for (std::size_t i = 0; i < trapVerts.size(); i++) {
     BOOST_CHECK(trapVerts[i][0] == convTrapVerts[i][0]);
     BOOST_CHECK(trapVerts[i][1] == convTrapVerts[i][1]);
   }
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

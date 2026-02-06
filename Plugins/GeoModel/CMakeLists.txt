@@ -1,8 +1,6 @@
 acts_add_library(
     PluginGeoModel
-    SHARED
     src/GeoModelTree.cpp
-    src/GeoModelBlueprintCreater.cpp
     src/GeoModelConversionError.cpp
     src/GeoModelToDetectorVolume.cpp
     src/GeoModelReader.cpp
@@ -20,7 +18,7 @@ acts_add_library(
     src/detail/GeoModelExtentHelper.cpp
     src/detail/GeoUnionDoubleTrdConverter.cpp
     src/GeoModelDetectorElementITk.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 target_include_directories(
     ActsPluginGeoModel

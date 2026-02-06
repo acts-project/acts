@@ -20,10 +20,12 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
-GeometryContext gctx;
+namespace ActsTests {
+
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 std::size_t getVolumeIndex() {
   static std::size_t i = 1;
@@ -38,9 +40,9 @@ auto makeVolume(auto&&... pars) {
   return vol;
 };
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-BOOST_AUTO_TEST_SUITE(TrapezoidPortalShellTests)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   // construct a trapezoid tracking volume from which we are gonna build the
@@ -67,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   using enum TrapezoidVolumeBounds::Face;
 
   // check XY face in negative Z
-  const auto* nXY = trapShell.portal(NegativeZFaceXY);
+  const auto nXY = trapShell.portal(NegativeZFaceXY);
 
   BOOST_REQUIRE_NE(nXY, nullptr);
   BOOST_CHECK_EQUAL(
@@ -80,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       nullptr);
 
   // check XY face in positive Z
-  const auto* pXY = trapShell.portal(PositiveZFaceXY);
+  const auto pXY = trapShell.portal(PositiveZFaceXY);
 
   BOOST_REQUIRE_NE(pXY, nullptr);
 
@@ -94,7 +96,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       nullptr);
 
   // check the trapezoidAlpha face placed in negative X
-  const auto* nYZ = trapShell.portal(TrapezoidFaceAlpha);
+  const auto nYZ = trapShell.portal(TrapezoidFaceAlpha);
   BOOST_REQUIRE_NE(nYZ, nullptr);
   BOOST_CHECK_EQUAL(
       nYZ->resolveVolume(gctx, Vector3{-15_cm, 0_cm, 0_cm}, Vector3::UnitX())
@@ -106,7 +108,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       nullptr);
 
   // check the trapezoidBeta face placed in positive x
-  const auto* pYZ = trapShell.portal(TrapezoidFaceBeta);
+  const auto pYZ = trapShell.portal(TrapezoidFaceBeta);
   BOOST_REQUIRE_NE(pYZ, nullptr);
   BOOST_CHECK_EQUAL(
       pYZ->resolveVolume(gctx, Vector3{15_cm, 0_cm, 0_cm}, -Vector3::UnitX())
@@ -118,7 +120,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       nullptr);
 
   // check the ZX face in negative y
-  const auto* nZX = trapShell.portal(NegativeYFaceZX);
+  const auto nZX = trapShell.portal(NegativeYFaceZX);
   BOOST_CHECK_NE(nZX, nullptr);
   BOOST_CHECK_EQUAL(
       nZX->resolveVolume(gctx, Vector3{0_cm, -15_cm, 0_cm}, Vector3::UnitY())
@@ -130,7 +132,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       nullptr);
 
   // check the ZX face in positive y
-  const auto* pZX = trapShell.portal(PositiveYFaceZX);
+  const auto pZX = trapShell.portal(PositiveYFaceZX);
   BOOST_CHECK_NE(pZX, nullptr);
   BOOST_CHECK_EQUAL(
       pZX->resolveVolume(gctx, Vector3{0_cm, 15_cm, 0_cm}, -Vector3::UnitY())
@@ -151,14 +153,14 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   SingleTrapezoidPortalShell trapShell{trapVol};
 
   // get the portal faces
-  const auto* nXY = trapShell.portal(NegativeZFaceXY);
-  const auto* pXY = trapShell.portal(PositiveZFaceXY);
+  const auto nXY = trapShell.portal(NegativeZFaceXY);
+  const auto pXY = trapShell.portal(PositiveZFaceXY);
 
-  const auto* nYZ = trapShell.portal(TrapezoidFaceAlpha);
-  const auto* pYZ = trapShell.portal(TrapezoidFaceBeta);
+  const auto nYZ = trapShell.portal(TrapezoidFaceAlpha);
+  const auto pYZ = trapShell.portal(TrapezoidFaceBeta);
 
-  auto* nZX = trapShell.portal(NegativeYFaceZX);
-  auto* pZX = trapShell.portal(PositiveYFaceZX);
+  auto nZX = trapShell.portal(NegativeYFaceZX);
+  auto pZX = trapShell.portal(PositiveYFaceZX);
 
   // setting new portals for NegativeYFaceZX and PositiveYFaceZX faces
   BOOST_REQUIRE_NE(nZX, nullptr);
@@ -173,7 +175,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   auto newPortalPZX =
       std::make_shared<Portal>(Direction::OppositeNormal(), std::move(grid));
   trapShell.setPortal(newPortalPZX, PositiveYFaceZX);
-  BOOST_CHECK_EQUAL(trapShell.portal(PositiveYFaceZX), newPortalPZX.get());
+  BOOST_CHECK_EQUAL(trapShell.portal(PositiveYFaceZX), newPortalPZX);
 
   auto* nZXLink = dynamic_cast<const TrivialPortalLink*>(
       nZX->getLink(Direction::AlongNormal()));
@@ -184,7 +186,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   auto newPortalNZX =
       std::make_shared<Portal>(Direction::AlongNormal(), std::move(grid));
   trapShell.setPortal(newPortalNZX, NegativeYFaceZX);
-  BOOST_CHECK_EQUAL(trapShell.portal(NegativeYFaceZX), newPortalNZX.get());
+  BOOST_CHECK_EQUAL(trapShell.portal(NegativeYFaceZX), newPortalNZX);
 
   // check the other portals
   BOOST_CHECK_EQUAL(trapShell.portal(NegativeZFaceXY), nXY);
@@ -238,4 +240,4 @@ BOOST_AUTO_TEST_CASE(ApplyToVolume) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

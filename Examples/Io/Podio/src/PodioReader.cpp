@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 
 #include <filesystem>
 
@@ -40,7 +40,7 @@ class PodioReaderImpl {
     m_frameWriteHandle.initialize(m_cfg.outputFrame);
   }
 
-  Acts::PodioUtil::ROOTReader& reader() {
+  ActsPlugins::PodioUtil::ROOTReader& reader() {
     bool exists = false;
     auto& reader = m_reader.local(exists);
     if (!exists) {
@@ -53,7 +53,7 @@ class PodioReaderImpl {
   WriteDataHandle<podio::Frame> m_frameWriteHandle;
   std::pair<std::size_t, std::size_t> m_eventsRange;
 
-  tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
+  tbb::enumerable_thread_specific<ActsPlugins::PodioUtil::ROOTReader> m_reader;
   PodioReader::Config m_cfg;
 };
 

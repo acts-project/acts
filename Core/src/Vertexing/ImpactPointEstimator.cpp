@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
@@ -50,10 +51,10 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)
   RotationMatrix3 surfaceAxes =
-      trkParams->referenceSurface().transform(gctx).rotation();
+      trkParams->referenceSurface().localToGlobalTransform(gctx).rotation();
   // Origin of the surface coordinate system
   Vector3 surfaceOrigin =
-      trkParams->referenceSurface().transform(gctx).translation();
+      trkParams->referenceSurface().localToGlobalTransform(gctx).translation();
 
   // x- and y-axis of the surface coordinate system
   Vector3 xAxis = surfaceAxes.col(0);
@@ -361,7 +362,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(coordinateSystem);
 
-  auto intersection =
+  Intersection3D intersection =
       planeSurface
           ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
                       BoundaryTolerance::Infinite())
@@ -425,7 +426,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
 
   // Create propagator options
   PropagatorPlainOptions pOptions(gctx, mctx);
-  auto intersection =
+  Intersection3D intersection =
       perigeeSurface
           ->intersect(gctx, track.position(gctx), track.direction(),
                       BoundaryTolerance::Infinite())

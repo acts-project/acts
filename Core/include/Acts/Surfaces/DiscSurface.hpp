@@ -27,7 +27,6 @@
 
 namespace Acts {
 
-class DetectorElementBase;
 class DiscBounds;
 class SurfaceBounds;
 
@@ -86,12 +85,17 @@ class DiscSurface : public RegularSurface {
   explicit DiscSurface(const Transform3& transform,
                        std::shared_ptr<const DiscBounds> dbounds = nullptr);
 
-  /// Constructor from DetectorElementBase : Element proxy
+  /// Constructor from SurfacePlacementBase : Element proxy
   ///
   /// @param dbounds The disc bounds describing the surface coverage
-  /// @param detelement The detector element represented by this surface
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   explicit DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                       const DetectorElementBase& detelement);
+                       const SurfacePlacementBase& placement);
 
   /// Copy Constructor
   ///
@@ -110,9 +114,11 @@ class DiscSurface : public RegularSurface {
   /// Assignment operator
   ///
   /// @param other The source sourface for the assignment
+  /// @return Reference to this DiscSurface after assignment
   DiscSurface& operator=(const DiscSurface& other);
 
   /// Return the surface type
+  /// @return Surface type identifier
   SurfaceType type() const override;
 
   // User overloads from `RegularSurface`
@@ -162,7 +168,14 @@ class DiscSurface : public RegularSurface {
                                 AxisDirection aDir) const final;
 
   /// This method returns the bounds by reference
+  /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const final;
+  /// This method returns the shared_ptr to the DiscBounds
+  /// @return Shared pointer to the disc bounds
+  const std::shared_ptr<const DiscBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const DiscBounds> newBounds);
 
   /// Local to global transformation
   /// For planar surfaces the momentum direction is ignored in the local to
@@ -292,8 +305,8 @@ class DiscSurface : public RegularSurface {
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return The @c SurfaceMultiIntersection object
-  SurfaceMultiIntersection intersect(
+  /// @return The @c MultiIntersection3D object
+  MultiIntersection3D intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
@@ -301,6 +314,7 @@ class DiscSurface : public RegularSurface {
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Return properly formatted class name for screen output
+  /// @return String representation of the class name
   std::string name() const override;
 
   /// Return a Polyhedron for the surfaces

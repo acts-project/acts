@@ -65,6 +65,7 @@ class GlueVolumesDescriptor {
   const std::vector<BoundarySurfaceFace>& glueFaces() const;
 
   /// Dump it to the screen
+  /// @return String representation of the glue volumes descriptor
   std::string screenOutput() const;
 
  private:
@@ -78,5 +79,9 @@ GlueVolumesDescriptor::glueFaces() const {
   return m_glueFaces;
 }
 
+/// Stream operator for GlueVolumesDescriptor
+/// @param sl Output stream
+/// @param gvd GlueVolumesDescriptor to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd);
 }  // namespace Acts

@@ -106,6 +106,10 @@ const RectangleBounds& TrapezoidBounds::boundingBox() const {
   return m_boundingBox;
 }
 
+Vector2 TrapezoidBounds::center() const {
+  return Vector2::Zero();
+}
+
 std::ostream& TrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

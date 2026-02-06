@@ -31,48 +31,117 @@ class SpacePointData {
   SpacePointData& operator=(const SpacePointData& other) = delete;
 
   /// @brief Move operations
+  /// @param other SpacePointData object to move from
   SpacePointData(SpacePointData&& other) noexcept = default;
+  /// Move assignment operator
+  /// @param other SpacePointData object to move from
+  /// @return Reference to this object
   SpacePointData& operator=(SpacePointData&& other) noexcept = default;
 
   /// @brief Destructor
   ~SpacePointData() = default;
 
-  /// @brief Getters
+  /// @param idx Index of the space point
+  /// @return X coordinate value
   float x(const std::size_t idx) const;
+  /// Get y coordinate of space point
+  /// @param idx Index of the space point
+  /// @return Y coordinate value
   float y(const std::size_t idx) const;
+  /// Get z coordinate of space point
+  /// @param idx Index of the space point
+  /// @return Z coordinate value
   float z(const std::size_t idx) const;
+  /// Get radial distance of space point
+  /// @param idx Index of the space point
+  /// @return Radial distance value
   float radius(const std::size_t idx) const;
+  /// Get azimuthal angle of space point
+  /// @param idx Index of the space point
+  /// @return Azimuthal angle value
   float phi(const std::size_t idx) const;
+  /// Get z coordinate variance of space point
+  /// @param idx Index of the space point
+  /// @return Z variance value
   float varianceZ(const std::size_t idx) const;
+  /// Get radial variance of space point
+  /// @param idx Index of the space point
+  /// @return Radial variance value
   float varianceR(const std::size_t idx) const;
 
-  /// @brief Setters
+  /// @param idx Index of the space point to modify
+  /// @param value New x coordinate value to set
   void setX(const std::size_t idx, const float value);
+  /// Set y coordinate of space point
+  /// @param idx Index of the space point to modify
+  /// @param value New y coordinate value to set
   void setY(const std::size_t idx, const float value);
+  /// Set z coordinate of space point
+  /// @param idx Index of the space point to modify
+  /// @param value New z coordinate value to set
   void setZ(const std::size_t idx, const float value);
+  /// Set radial distance of space point
+  /// @param idx Index of the space point to modify
+  /// @param value New radial distance value to set
   void setRadius(const std::size_t idx, const float value);
+  /// Set azimuthal angle of space point
+  /// @param idx Index of the space point to modify
+  /// @param value New azimuthal angle value to set
   void setPhi(const std::size_t idx, const float value);
+  /// Set z coordinate variance of space point
+  /// @param idx Index of the space point to modify
+  /// @param value New z variance value to set
   void setVarianceZ(const std::size_t idx, const float value);
+  /// Set radial variance of space point
+  /// @param idx Index of the space point to modify
+  /// @param value New radial variance value to set
   void setVarianceR(const std::size_t idx, const float value);
 
   /// @brief Resize vectors
+  /// @param n New size for the data vectors
+  /// @param resizeDynamic Whether to resize dynamic data containers
   void resize(const std::size_t n, bool resizeDynamic = false);
 
   /// @brief clear vectors
   void clear();
 
-  ///
+  /// Check if space point data has dynamic variables
+  /// @return True if dynamic variables (strip data) are present
   bool hasDynamicVariable() const;
 
+  /// Get top strip vector for strip space points
+  /// @param idx Index of the space point
+  /// @return Reference to top strip vector
   const Acts::Vector3& topStripVector(const std::size_t idx) const;
+  /// Get bottom strip vector for strip space points
+  /// @param idx Index of the space point
+  /// @return Reference to bottom strip vector
   const Acts::Vector3& bottomStripVector(const std::size_t idx) const;
+  /// Get strip center distance vector for strip space points
+  /// @param idx Index of the space point
+  /// @return Reference to strip center distance vector
   const Acts::Vector3& stripCenterDistance(const std::size_t idx) const;
+  /// Get top strip center position for strip space points
+  /// @param idx Index of the space point
+  /// @return Reference to top strip center position vector
   const Acts::Vector3& topStripCenterPosition(const std::size_t idx) const;
 
+  /// Set top strip vector for strip space points
+  /// @param idx Index of the space point to modify
+  /// @param value New top strip vector to set
   void setTopStripVector(const std::size_t idx, const Acts::Vector3& value);
+  /// Set bottom strip vector for strip space points
+  /// @param idx Index of the space point to modify
+  /// @param value New bottom strip vector to set
   void setBottomStripVector(const std::size_t idx, const Acts::Vector3& value);
+  /// Set strip center distance vector for strip space points
+  /// @param idx Index of the space point to modify
+  /// @param value New strip center distance vector to set
   void setStripCenterDistance(const std::size_t idx,
                               const Acts::Vector3& value);
+  /// Set top strip center position for strip space points
+  /// @param idx Index of the space point to modify
+  /// @param value New top strip center position vector to set
   void setTopStripCenterPosition(const std::size_t idx,
                                  const Acts::Vector3& value);
 

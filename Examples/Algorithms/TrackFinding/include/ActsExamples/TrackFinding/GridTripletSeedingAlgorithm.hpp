@@ -10,8 +10,8 @@
 
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
-#include "Acts/Seeding2/BroadTripletSeedFinder.hpp"
 #include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
+#include "Acts/Seeding2/TripletSeeder.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -157,8 +157,6 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// is 5%
     /// TODO: necessary to make amount of material dependent on detector region?
     float radLengthPerSeed = 0.05;
-    /// Maximum transverse momentum for scattering calculation
-    float maxPtScattering = 10 * Acts::UnitConstants::GeV;
 
     /// Tolerance parameter used to check the compatibility of space-point
     /// coordinates in xyz. This is only used in a detector specific check for
@@ -198,12 +196,6 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     float seedWeightIncrement = 0;
     float numSeedIncrement = std::numeric_limits<float>::infinity();
 
-    /// Use deltaR between top and middle SP instead of top radius to search for
-    /// compatible SPs
-    bool useDeltaRinsteadOfTopRadius = false;
-
-    // Seeding parameters used for quality seed confirmation
-
     /// Enable quality seed confirmation, this is different than default seeding
     /// confirmation because it can also be defined for different (r, z) regions
     /// of the detector (e.g. forward or central region) by
@@ -215,6 +207,21 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     Acts::SeedConfirmationRangeConfig centralSeedConfirmationRange;
     /// Contains parameters for forward seed confirmation
     Acts::SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+
+    /// If seedConfirmation is true we classify seeds as "high-quality" seeds.
+    /// Seeds that are not confirmed as "high-quality" are only selected if no
+    /// other "high-quality" seed has been found for that inner-middle doublet
+    /// Maximum number of normal seeds (not classified as "high-quality" seeds)
+    /// in seed confirmation
+    std::uint32_t maxSeedsPerSpMConf = 5;
+    /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet
+    /// in seed confirmation. If the limit is reached we check if there is a
+    /// normal quality seed to be replaced
+    std::uint32_t maxQualitySeedsPerSpMConf = 5;
+
+    /// Use deltaR between top and middle SP instead of top radius to search for
+    /// compatible SPs
+    bool useDeltaRinsteadOfTopRadius = false;
 
     // other
 
@@ -240,23 +247,18 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::Experimental::CylindricalSpacePointGrid2::Config m_gridConfig;
+  Acts::CylindricalSpacePointGrid2::Config m_gridConfig;
 
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
-  std::optional<Acts::Experimental::BroadTripletSeedFinder> m_seedFinder;
-  std::optional<Acts::Experimental::BroadTripletSeedFilter> m_seedFilter;
+  Acts::BroadTripletSeedFilter::Config m_filterConfig;
+  std::unique_ptr<const Acts::Logger> m_filterLogger;
+  std::optional<Acts::TripletSeeder> m_seedFinder;
 
-  Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector{
-      Acts::DelegateFuncTag<voidSpacePointSelector>{}};
-
-  static bool voidSpacePointSelector(const SimSpacePoint& /*sp*/) {
-    return true;
-  }
+  Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
-
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// Get the proper radius validity range given a middle space point candidate.
@@ -266,7 +268,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   /// @param spM space point candidate to be used as middle SP in a seed
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin
   std::pair<float, float> retrieveRadiusRangeForMiddle(
-      const Acts::Experimental::ConstSpacePointProxy2& spM,
+      const Acts::ConstSpacePointProxy2& spM,
       const Acts::Range1D<float>& rMiddleSPRange) const;
 };
 

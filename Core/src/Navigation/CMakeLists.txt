@@ -1,7 +1,11 @@
 target_sources(
     ActsCore
     PRIVATE
+        Navigator.cpp
         NavigationStream.cpp
         TryAllNavigationPolicy.cpp
         SurfaceArrayNavigationPolicy.cpp
+        CylinderNavigationPolicy.cpp
+        MultiLayerNavigationPolicy.cpp
+        MultiNavigationPolicy.cpp
 )

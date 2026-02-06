@@ -10,8 +10,6 @@
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
 
-#include "Acts/EventData/TrackStateType.hpp"
-
 #include <unordered_map>
 
 namespace Acts {
@@ -24,8 +22,9 @@ void GreedyAmbiguityResolution::computeInitialState(
     source_link_equality_t&& sourceLinkEquality) const {
   auto measurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
-                         source_link_equality_t>(0, sourceLinkHash,
-                                                 sourceLinkEquality);
+                         source_link_equality_t>(
+          0, std::forward<source_link_hash_t>(sourceLinkHash),
+          std::forward<source_link_equality_t>(sourceLinkEquality));
 
   // Iterate through all input tracks, collect their properties like measurement
   // count and chi2 and fill the measurement map in order to relate tracks to
@@ -37,9 +36,7 @@ void GreedyAmbiguityResolution::computeInitialState(
     }
     std::vector<std::size_t> measurements;
     for (auto ts : track.trackStatesReversed()) {
-      bool isMeasurement = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
-      bool isOutlier = ts.typeFlags().test(TrackStateFlag::OutlierFlag);
-      if (isMeasurement && !isOutlier) {
+      if (ts.typeFlags().isMeasurement()) {
         SourceLink sourceLink = ts.getUncalibratedSourceLink();
         // assign a new measurement index if the source link was not seen yet
         auto emplace = measurementIndexMap.try_emplace(
@@ -49,7 +46,7 @@ void GreedyAmbiguityResolution::computeInitialState(
     }
 
     state.trackTips.push_back(track.index());
-    state.trackChi2.push_back(track.chi2() / track.nDoF());
+    state.trackChi2.push_back(track.chi2() / static_cast<float>(track.nDoF()));
     state.measurementsPerTrack.push_back(std::move(measurements));
     state.selectedTracks.insert(state.numberOfTracks);
 

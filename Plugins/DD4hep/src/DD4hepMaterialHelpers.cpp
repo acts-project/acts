@@ -6,41 +6,39 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
+#include "ActsPlugins/DD4hep/DD4hepMaterialHelpers.hpp"
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
-#include <algorithm>
-#include <cmath>
 #include <cstddef>
-#include <iterator>
 #include <numbers>
 #include <ostream>
 
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 
-std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
+using namespace Acts;
+
+std::shared_ptr<ProtoSurfaceMaterial> ActsPlugins::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning,
+    const std::vector<std::pair<const std::string, BinningOption> >& binning,
     const Logger& logger) {
   using namespace std::string_literals;
 
   // Create the bin utility
-  Acts::BinUtility bu;
+  BinUtility bu;
   // Loop over the bins
   for (auto& bin : binning) {
     AxisDirection bval = axisDirectionFromName(bin.first);
-    Acts::BinningOption bopt = bin.second;
+    BinningOption bopt = bin.second;
     double min = 0.;
     double max = 0.;
-    if (bopt == Acts::closed) {
+    if (bopt == closed) {
       min = -std::numbers::pi;
       max = std::numbers::pi;
     }
@@ -48,16 +46,15 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     ACTS_VERBOSE("  - material binning for " << bin.first << " on " << valueTag
                                              << ": " << bins);
     if (bins >= 1) {
-      bu += Acts::BinUtility(bins, min, max, bopt, bval);
+      bu += BinUtility(bins, min, max, bopt, bval);
     }
   }
-  return std::make_shared<Acts::ProtoSurfaceMaterial>(bu);
+  return std::make_shared<ProtoSurfaceMaterial>(bu);
 }
 
-void Acts::addLayerProtoMaterial(
+void ActsPlugins::addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning,
+    const std::vector<std::pair<const std::string, BinningOption> >& binning,
     const Logger& logger) {
   ACTS_VERBOSE("addLayerProtoMaterial");
   // Start with the representing surface
@@ -93,9 +90,9 @@ void Acts::addLayerProtoMaterial(
   }
 }
 
-void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
-                                         Layer& cylinderLayer,
-                                         const Logger& logger) {
+void ActsPlugins::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
+                                                Layer& cylinderLayer,
+                                                const Logger& logger) {
   ACTS_VERBOSE(
       "Translating DD4hep material into Acts material for CylinderLayer : "
       << detElement.name());
@@ -106,13 +103,13 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), cylinderLayer,
-                          {{"binPhi", Acts::closed}, {"binZ", Acts::open}},
-                          logger);
+                          {{"binPhi", closed}, {"binZ", open}}, logger);
   }
 }
 
-void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
-                                     Layer& discLayer, const Logger& logger) {
+void ActsPlugins::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
+                                            Layer& discLayer,
+                                            const Logger& logger) {
   ACTS_VERBOSE("Translating DD4hep material into Acts material for DiscLayer : "
                << detElement.name());
 
@@ -123,7 +120,6 @@ void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), discLayer,
-                          {{"binPhi", Acts::closed}, {"binR", Acts::open}},
-                          logger);
+                          {{"binPhi", closed}, {"binR", open}}, logger);
   }
 }

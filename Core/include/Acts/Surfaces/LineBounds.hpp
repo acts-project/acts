@@ -22,6 +22,8 @@ namespace Acts {
 /// Bounds for a LineSurface.
 class LineBounds : public SurfaceBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int { eR = 0, eHalfLengthZ = 1, eSize = 2 };
 
   /// Constructor
@@ -49,13 +51,13 @@ class LineBounds : public SurfaceBounds {
 
   /// @copydoc SurfaceBounds::boundToCartesianJacobian
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
   /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
@@ -72,13 +74,19 @@ class LineBounds : public SurfaceBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  /// @note For LineBounds: returns (0,0) since bounds are symmetric around origin
+  Vector2 center() const final;
+
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
+  /// @return Reference to the output stream for method chaining
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The bound value for the specified parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

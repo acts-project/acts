@@ -45,6 +45,7 @@ class HoughVertexFinder {
     /// Minimum and maximum ranges in |eta|; the |eta| will not be
     /// set outside these bounds even if targetSPs is not reached
     double minAbsEta = 0.3f;
+    /// Maximum absolute pseudorapidity for vertex finding
     double maxAbsEta = 4.0f;
 
     /// Minimum number of hits in Hough plane to consider
@@ -96,6 +97,7 @@ class HoughVertexFinder {
   };
 
   /// Const access to the config
+  /// @return Const reference to the configuration object
   const Config& config() const { return m_cfg; }
 
   /// @brief Constructor
@@ -106,8 +108,11 @@ class HoughVertexFinder {
       std::unique_ptr<const Logger> lgr = getDefaultLogger("HoughVertexFinder",
                                                            Logging::INFO));
 
+  /// Type alias for count values in Hough histogram bins
   using HoughCount_t = std::uint16_t;
+  /// Type alias for equidistant axis used in Hough transform
   using HoughAxis = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+  /// Type alias for 2D histogram used in Hough transform
   using HoughHist = Grid<HoughCount_t, HoughAxis, HoughAxis>;
 
   /// @brief Finds the vertex based on the provided spacepoints
@@ -120,7 +125,7 @@ class HoughVertexFinder {
   /// Configuration instance
   const Config m_cfg;
 
-  /// @brief Returns the positions of the peak along Z axis in the pojection of the Hough plane
+  /// @brief Returns the positions of the peak along Z axis in the projection of the Hough plane
   /// @param spacepoints Set of all spacepoints within the event
   /// @param vtxOld Previous position of the vertex
   /// @param rangeZ Range in along Z around vtxOld_z to consider when looking for the new vertex

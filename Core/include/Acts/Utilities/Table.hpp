@@ -32,12 +32,18 @@ namespace Acts {
 /// ```
 class Table {
  public:
+  /// Text alignment options for table columns.
   enum class Alignment { Left, Right, Center };
 
+  /// Column definition used for layout and formatting.
   struct Column {
+    /// Column header text
     std::string header;
+    /// Format string for column values
     std::string format;
+    /// Column alignment
     Alignment alignment;
+    /// Column width in characters
     std::size_t width = 0;
   };
 
@@ -70,6 +76,7 @@ class Table {
   }
 
   /// Add a row with variable arguments matching the number of columns
+  /// @param args Arguments to add as row values
   /// @throws std::runtime_error if argument count doesn't match column count
   template <typename... Args>
   void addRow(Args&&... args) {
@@ -98,6 +105,7 @@ class Table {
   }
 
   /// Generate the formatted table as a markdown string
+  /// @return Markdown formatted string representation of the table
   std::string toString() const {
     if (m_columns.empty()) {
       return "";

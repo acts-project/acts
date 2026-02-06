@@ -52,8 +52,8 @@ using namespace Acts::UnitLiterals;
 template <int D>
 struct DummyComponent {
   double weight = 0;
-  Acts::ActsVector<D> boundPars;
-  Acts::ActsSquareMatrix<D> boundCov;
+  Acts::ActsVector<D> boundPars{};
+  Acts::ActsSquareMatrix<D> boundCov{};
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -189,7 +189,9 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
 
   for (const auto &cmp : cmps) {
     mean += cmp.weight * transformBoundToFreeParameters(
-                             surface, GeometryContext{}, cmp.boundPars);
+                             surface,
+                             GeometryContext::dangerouslyDefaultConstruct(),
+                             cmp.boundPars);
   }
 
   mean.segment<3>(eFreeDir0).normalize();
@@ -199,13 +201,15 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   // the mean might not fulfill the perigee condition.
   Vector3 position = mean.head<3>();
   Vector3 direction = mean.segment<3>(eFreeDir0);
-  auto intersection = surface
-                          .intersect(GeometryContext{}, position, direction,
-                                     BoundaryTolerance::Infinite())
-                          .closest();
+  Intersection3D intersection =
+      surface
+          .intersect(GeometryContext::dangerouslyDefaultConstruct(), position,
+                     direction, BoundaryTolerance::Infinite())
+          .closest();
   mean.head<3>() = intersection.position();
 
-  return *transformFreeToBoundParameters(mean, surface, GeometryContext{});
+  return *transformFreeToBoundParameters(
+      mean, surface, GeometryContext::dangerouslyDefaultConstruct());
 }
 
 // Typedef to describe local positions of 4 components
@@ -245,7 +249,7 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
       }
 
       const auto [mean_approx, cov_approx] =
-          detail::gaussianMixtureMeanCov(cmps, proj, desc);
+          detail::Gsf::gaussianMixtureMeanCov(cmps, proj, desc);
 
       const auto mean_ref = meanFromFree(cmps, surface);
 
@@ -253,6 +257,10 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
     }
   }
 }
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(test_with_data) {
   std::mt19937 gen(42);
@@ -270,8 +278,8 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto mean_data = mean(samples);
   const auto boundCov_data = boundCov(samples, mean_data);
 
-  const auto [mean_test, boundCov_test] =
-      detail::gaussianMixtureMeanCov(cmps, std::identity{}, std::tuple<>{});
+  const auto [mean_test, boundCov_test] = detail::Gsf::gaussianMixtureMeanCov(
+      cmps, std::identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
@@ -299,10 +307,10 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
     return res;
   });
 
-  using detail::CyclicAngle;
+  using detail::Gsf::CyclicAngle;
   const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
   const auto [mean_test, boundCov_test] =
-      detail::gaussianMixtureMeanCov(cmps, std::identity{}, d);
+      detail::Gsf::gaussianMixtureMeanCov(cmps, std::identity{}, d);
 
   BOOST_CHECK(std::abs(detail::difference_periodic(
                   mean_data[0], mean_test[0], 2 * std::numbers::pi)) < 1.e-1);
@@ -312,7 +320,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
 }
 
 BOOST_AUTO_TEST_CASE(test_plane_surface) {
-  const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
+  const auto desc = detail::Gsf::AngleDescription<Surface::Plane>::Desc{};
 
   const std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
@@ -335,7 +343,7 @@ BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
   const LocPosArray p{
       {{r * phi1, z1}, {r * phi1, -z2}, {r * phi2, z1}, {r * phi2, z2}}};
 
-  auto desc = detail::AngleDescription<Surface::Cylinder>::Desc{};
+  auto desc = detail::Gsf::AngleDescription<Surface::Cylinder>::Desc{};
   std::get<0>(desc).constant = r;
 
   test_surface(*surface, desc, p, 1.e-2);
@@ -352,13 +360,13 @@ BOOST_AUTO_TEST_CASE(test_disc_surface) {
 
   const LocPosArray p{{{r1, phi1}, {r2, phi2}, {r1, phi2}, {r2, phi1}}};
 
-  const auto desc = detail::AngleDescription<Surface::Disc>::Desc{};
+  const auto desc = detail::Gsf::AngleDescription<Surface::Disc>::Desc{};
 
   test_surface(*surface, desc, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_perigee_surface) {
-  const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
+  const auto desc = detail::Gsf::AngleDescription<Surface::Plane>::Desc{};
 
   const auto surface = Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0});
 
@@ -370,3 +378,7 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   // Here we expect a very bad approximation
   test_surface(*surface, desc, p, 1.1);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

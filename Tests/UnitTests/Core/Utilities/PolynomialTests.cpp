@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/detail/Polynomials.hpp"
 
 #include <algorithm>
-#include <numeric>
+#include <format>
+
 namespace {
 constexpr double stepSize = 1.e-4;
 
@@ -80,7 +80,9 @@ bool checkDerivative(const std::array<double, O>& unitArray,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(PolynomialTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(DerivativeCoeffs) {
   constexpr std::size_t order = 20;
@@ -88,63 +90,17 @@ BOOST_AUTO_TEST_CASE(DerivativeCoeffs) {
   const bool result = checkDerivative<order, 1>(unitCoeffs, unitCoeffs);
   BOOST_CHECK_EQUAL(result, true);
 }
-BOOST_AUTO_TEST_CASE(PowerTests) {
-  for (unsigned p = 0; p <= 15; ++p) {
-    BOOST_CHECK_EQUAL(std::pow(2., p), Acts::pow(2., p));
-    BOOST_CHECK_EQUAL(std::pow(0.5, p), Acts::pow(0.5, p));
-    for (std::size_t k = 1; k <= 15; ++k) {
-      BOOST_CHECK_EQUAL(std::pow(k, p), Acts::pow(k, p));
-    }
-  }
-  for (int p = 0; p <= 15; ++p) {
-    BOOST_CHECK_EQUAL(std::pow(2., p), Acts::pow(2., p));
-    BOOST_CHECK_EQUAL(std::pow(2., -p), Acts::pow(2., -p));
-    BOOST_CHECK_EQUAL(std::pow(0.5, p), Acts::pow(0.5, p));
 
-    BOOST_CHECK_EQUAL(std::pow(0.5, -p), Acts::pow(0.5, -p));
-  }
-}
-
-BOOST_AUTO_TEST_CASE(SumOfIntegers) {
-  std::array<unsigned, 100> numberSeq{Acts::filledArray<unsigned, 100>(1)};
-  std::iota(numberSeq.begin(), numberSeq.end(), 1);
-  for (unsigned i = 1; i <= numberSeq.size(); ++i) {
-    const unsigned sum =
-        std::accumulate(numberSeq.begin(), numberSeq.begin() + i, 0);
-    BOOST_CHECK_EQUAL(sum, Acts::sumUpToN(i));
-  }
-}
-
-BOOST_AUTO_TEST_CASE(BinomialTests) {
-  BOOST_CHECK_EQUAL(Acts::binomial(1u, 1u), 1u);
-  for (unsigned n = 2; n <= 10; ++n) {
-    /// Check that the binomial of (n 1 is always n)
-    BOOST_CHECK_EQUAL(Acts::binomial(n, 1u), n);
-    for (unsigned k = 1; k <= n; ++k) {
-      /// Use recursive formula
-      ///  n      n -1       n -1
-      ///     =          +
-      ///  k      k -1        k
-      std::cout << "n: " << n << ", k: " << k
-                << ", binom(n,k): " << Acts::binomial(n, k)
-                << ", binom(n-1, k-1): " << Acts::binomial(n - 1, k - 1)
-                << ", binom(n-1,k): " << Acts::binomial(n - 1, k) << std::endl;
-      BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n - 1, k - 1) +
-                                                  Acts::binomial(n - 1, k));
-      BOOST_CHECK_EQUAL(Acts::binomial(n, k), Acts::binomial(n, n - k));
-    }
-  }
-}
 BOOST_AUTO_TEST_CASE(LegendrePolynomials) {
   using namespace Acts::detail::Legendre;
   using namespace Acts::detail;
-  std::cout << "Legdnre coefficients L=0: " << coefficients<0>() << std::endl;
-  std::cout << "Legdnre coefficients L=1: " << coefficients<1>() << std::endl;
-  std::cout << "Legdnre coefficients L=2: " << coefficients<2>() << std::endl;
-  std::cout << "Legdnre coefficients L=3: " << coefficients<3>() << std::endl;
-  std::cout << "Legdnre coefficients L=4: " << coefficients<4>() << std::endl;
-  std::cout << "Legdnre coefficients L=5: " << coefficients<5>() << std::endl;
-  std::cout << "Legdnre coefficients L=6: " << coefficients<6>() << std::endl;
+  std::cout << "Legendre coefficients L=0: " << coefficients<0>() << std::endl;
+  std::cout << "Legendre coefficients L=1: " << coefficients<1>() << std::endl;
+  std::cout << "Legendre coefficients L=2: " << coefficients<2>() << std::endl;
+  std::cout << "Legendre coefficients L=3: " << coefficients<3>() << std::endl;
+  std::cout << "Legendre coefficients L=4: " << coefficients<4>() << std::endl;
+  std::cout << "Legendre coefficients L=5: " << coefficients<5>() << std::endl;
+  std::cout << "Legendre coefficients L=6: " << coefficients<6>() << std::endl;
   for (unsigned order = 0; order < 10; ++order) {
     const double sign = (order % 2 == 0 ? 1. : -1.);
     BOOST_CHECK_EQUAL(withinTolerance(legendrePoly(1., order), 1.), true);
@@ -159,20 +115,39 @@ BOOST_AUTO_TEST_CASE(LegendrePolynomials) {
       /// 0;
       const double legendreEq = (1. - Acts::square(x)) * evalD2x -
                                 2. * x * evalDx + order * (order + 1) * evalX;
+
       BOOST_CHECK_EQUAL(withinTolerance(legendreEq, 0.), true);
       BOOST_CHECK_EQUAL(withinTolerance(evalX, sign * legendrePoly(-x, order)),
                         true);
+      if (!withinTolerance(legendreEq, 0.)) {
+        std::cout << std::format(
+                         "x: {1:.3f}, P_{0}(x)={2:.3f}, d/dx P_{0}(x)={3:.3f}, "
+                         "d^2/d^2x P_{0}(x)={4:.3f} --> legendreEq: {5:.3f}",
+                         order, x, evalX, evalDx, evalD2x, legendreEq)
+                  << std::endl;
+      }
       if (order == 0) {
         continue;
       }
       const double evalX_P1 = legendrePoly(x, order + 1);
       const double evalX_M1 = legendrePoly(x, order - 1);
-      /// Recursion formular
+      /// Recursion formula
       /// (n+1) P_{n+1}(x) = (2n+1)*x*P_{n}(x) - n * P_{n-1}(x)
       BOOST_CHECK_EQUAL(
           withinTolerance((order + 1) * evalX_P1,
                           (2 * order + 1) * x * evalX - order * evalX_M1),
           true);
+      for (unsigned d = 0; d <= std::min(2u, order); ++d) {
+        const double constExpEval = legendrePoly(x, order, d);
+        const double runTimeEval = Legendre::evaluate(x, order, d);
+        BOOST_CHECK_EQUAL(withinTolerance(constExpEval, runTimeEval), true);
+        if (!withinTolerance(constExpEval, runTimeEval)) {
+          std::cout << "Compile time evaluation (" << constExpEval
+                    << ") vs. run time evaluation (" << runTimeEval
+                    << ") differ - order: " << order << ", derivative: " << d
+                    << std::endl;
+        }
+      }
     }
   }
 }
@@ -253,3 +228,5 @@ BOOST_AUTO_TEST_CASE(ChebychevPolynomials) {
   }
 }
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

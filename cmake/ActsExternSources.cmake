@@ -6,35 +6,35 @@ set(ACTS_ACTSVG_SOURCE
 mark_as_advanced(ACTS_ACTSVG_SOURCE)
 
 set(ACTS_VECMEM_SOURCE
-    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=6032279e8fc8bdb48d39c4ac19ffe561bcc53576e36f71ee2ed3ed75835f1af9"
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=a6e30da7dcb9a792eb0f2c0ceb821f52cf867c9745a65468b2ce6f026b23a49d"
     CACHE STRING
     "Source to take VECMEM from"
 )
 mark_as_advanced(ACTS_VECMEM_SOURCE)
 
 set(ACTS_ALGEBRAPLUGINS_SOURCE
-    "URL;https://github.com/acts-project/algebra-plugins/archive/refs/tags/v${_acts_algebraplugins_version}.tar.gz;URL_HASH;SHA256=c2081b399b7f4e004bebd5bf8250ed9596b113002fe445bca7fdac24d2c5932c"
+    "URL;https://github.com/acts-project/algebra-plugins/archive/refs/tags/v${_acts_algebraplugins_version}.tar.gz;URL_HASH;SHA256=d798ba2129bf922f54627233ef947b8bb2345db9199e3868cc48bc1da86d5f15"
     CACHE STRING
     "Source to take ALGEBRAPLUGINS from"
 )
 mark_as_advanced(ACTS_ALGEBRAPLUGINS_SOURCE)
 
 set(ACTS_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=e9cd0546c7bc9539f440273bbad303c97215ccd87403cedb4aa387a313938d57"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=6eff65e05118d3007c689e3529a62bb1674348ac1b0f0f32afd953c62d1b8890"
     CACHE STRING
     "Source to take COVFIE from"
 )
 mark_as_advanced(ACTS_COVFIE_SOURCE)
 
 set(ACTS_DETRAY_SOURCE
-    "URL;https://github.com/acts-project/detray/archive/refs/tags/v${_acts_detray_version}.tar.gz;URL_HASH;SHA256=f13db54da9b888258ab73a963d5a4bc08b655cc4aef47935e486b7cbe43e0965"
+    "URL;https://github.com/acts-project/detray/archive/refs/tags/v${_acts_detray_version}.tar.gz;URL_HASH;SHA256=7b3d3c94cf42be7450e9fe008b567a2f425e6f1986b61d8a3a66814383599043"
     CACHE STRING
     "Source to take DETRAY from"
 )
 mark_as_advanced(ACTS_DETRAY_SOURCE)
 
 set(ACTS_TRACCC_SOURCE
-    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=e283bffbb8057b24a40b063f91db0efa7438d89fa6d822d22709a06b6b0f9124"
+    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=d2dd856a83503ab452936f79ebb2496ce59e2f63984b0e9403d1c881546b8872"
     CACHE STRING
     "Source to take TRACCC from"
 )
@@ -48,7 +48,7 @@ set(ACTS_FRNN_SOURCE
 mark_as_advanced(ACTS_FRNN_SOURCE)
 
 set(ACTS_NLOHMANNJSON_SOURCE
-    "URL;https://github.com/nlohmann/json/archive/refs/tags/v${_acts_nlohmanjson_version}.tar.gz;URL_HASH;SHA256=5daca6ca216495edf89d167f808d1d03c4a4d929cef7da5e10f135ae1540c7e4"
+    "URL;https://github.com/nlohmann/json/archive/refs/tags/v${_acts_nlohmanjson_version}.tar.gz;URL_HASH;SHA256=0d8ef5af7f9794e3263480193c491549b2ba6cc74bb018906202ada498a79406"
     CACHE STRING
     "Source to take nlohmann_json from"
 )
@@ -74,3 +74,17 @@ set(ACTS_ANNOY_SOURCE
     "Source to take Annoy from"
 )
 mark_as_advanced(ACTS_ANNOY_SOURCE)
+
+set(ACTS_ODD_SOURCE
+    "GIT_REPOSITORY;https://gitlab.cern.ch/acts/OpenDataDetector.git;GIT_TAG;v4.0.4"
+    CACHE STRING
+    "Source to take OpenDataDetector from"
+)
+mark_as_advanced(ACTS_ODD_SOURCE)
+
+set(ACTS_MODULEMAPGRAPH_SOURCE
+    "GIT_REPOSITORY;https://gitlab.cern.ch/gnn4itkteam/ModuleMapGraph;GIT_TAG;1.1.16"
+    CACHE STRING
+    "Source to take ModuleMapGraph from"
+)
+mark_as_advanced(ACTS_MODULEMAPGRAPH_SOURCE)

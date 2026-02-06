@@ -10,7 +10,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(cxx_flags
-    "-Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast"
+    "-Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast -Woverloaded-virtual"
 )
 
 # Add assertions to standard libraries
@@ -75,7 +75,7 @@ set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 message(CHECK_START "Checking C++20 std::format support")
 try_compile(
     HAVE_STDFORMAT
-    SOURCES ${CMAKE_SOURCE_DIR}/cmake/src/format.cpp
+    SOURCES ${PROJECT_SOURCE_DIR}/cmake/src/format.cpp
     CXX_STANDARD 20
 )
 

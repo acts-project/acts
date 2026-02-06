@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -24,7 +24,10 @@
 #include "XML/Utilities.h"
 #include "XMLFragments.hpp"
 
-Acts::GeometryContext tContext;
+using namespace Acts;
+using namespace ActsPlugins;
+
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 const char* cylinder_xml =
     R""""(
@@ -86,7 +89,9 @@ const char* trapezoid_xml =
     </detectors>
 )"""";
 
-BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(DD4hepSuite)
 
 BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementCylinder) {
   std::ofstream cxml;
@@ -103,18 +108,19 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementCylinder) {
 
   auto world = lcdd->world();
 
-  std::shared_ptr<Acts::DD4hepDetectorElement> cylindricalElement = nullptr;
+  std::shared_ptr<ActsPlugins::DD4hepDetectorElement> cylindricalElement =
+      nullptr;
   for (const auto& [chn, child] : world.children()) {
     cylindricalElement =
-        std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10.);
+        std::make_shared<ActsPlugins::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
 
   BOOST_REQUIRE_NE(cylindricalElement, nullptr);
 
   const auto& surface = cylindricalElement->surface();
-  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Cylinder);
-  BOOST_CHECK(
-      surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
+  BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Cylinder);
+  BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
+      Transform3::Identity()));
   auto boundValues = surface.bounds().values();
   CHECK_CLOSE_ABS(boundValues[0u], 105., 1e-10);
   CHECK_CLOSE_ABS(boundValues[1u], 1000., 1e-10);
@@ -136,18 +142,19 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralCylinder) {
 
   auto world = lcdd->world();
 
-  std::shared_ptr<Acts::DD4hepDetectorElement> cylindricalElement = nullptr;
+  std::shared_ptr<ActsPlugins::DD4hepDetectorElement> cylindricalElement =
+      nullptr;
   for (const auto& [chn, child] : world.children()) {
     cylindricalElement =
-        std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10.);
+        std::make_shared<ActsPlugins::DD4hepDetectorElement>(child, "XYZ", 10.);
   }
 
   BOOST_REQUIRE_NE(cylindricalElement, nullptr);
 
   const auto& surface = cylindricalElement->surface();
-  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Cylinder);
-  BOOST_CHECK(
-      surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
+  BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Cylinder);
+  BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
+      Transform3::Identity()));
   auto boundValues = surface.bounds().values();
   CHECK_CLOSE_ABS(boundValues[0u], 105., 1e-10);
   CHECK_CLOSE_ABS(boundValues[1u], 1000., 1e-10);
@@ -171,18 +178,18 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementDisc) {
 
   auto world = lcdd->world();
 
-  std::shared_ptr<Acts::DD4hepDetectorElement> discElement = nullptr;
+  std::shared_ptr<ActsPlugins::DD4hepDetectorElement> discElement = nullptr;
   for (const auto& [chn, child] : world.children()) {
-    discElement =
-        std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
+    discElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
+        child, "XYZ", 10., true);
   }
 
   BOOST_REQUIRE_NE(discElement, nullptr);
 
   const auto& surface = discElement->surface();
-  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Disc);
-  BOOST_CHECK(
-      surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
+  BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Disc);
+  BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
+      Transform3::Identity()));
   auto boundValues = surface.bounds().values();
   CHECK_CLOSE_ABS(boundValues[0u], 100., 1e-10);
   CHECK_CLOSE_ABS(boundValues[1u], 900., 1e-10);
@@ -204,18 +211,18 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralDisc) {
 
   auto world = lcdd->world();
 
-  std::shared_ptr<Acts::DD4hepDetectorElement> discElement = nullptr;
+  std::shared_ptr<ActsPlugins::DD4hepDetectorElement> discElement = nullptr;
   for (const auto& [chn, child] : world.children()) {
-    discElement =
-        std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
+    discElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
+        child, "XYZ", 10., true);
   }
 
   BOOST_REQUIRE_NE(discElement, nullptr);
 
   const auto& surface = discElement->surface();
-  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Disc);
-  BOOST_CHECK(
-      surface.transform(tContext).isApprox(Acts::Transform3::Identity()));
+  BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Disc);
+  BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
+      Transform3::Identity()));
   auto boundValues = surface.bounds().values();
 
   CHECK_CLOSE_ABS(boundValues[0u], 100., 1e-10);
@@ -240,25 +247,24 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
 
   auto world = lcdd->world();
 
-  std::shared_ptr<Acts::DD4hepDetectorElement> rectangleElement = nullptr;
+  std::shared_ptr<ActsPlugins::DD4hepDetectorElement> rectangleElement =
+      nullptr;
   for (const auto& [chn, child] : world.children()) {
-    rectangleElement =
-        std::make_shared<Acts::DD4hepDetectorElement>(child, "XYZ", 10., true);
+    rectangleElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
+        child, "XYZ", 10., true);
   }
 
   BOOST_REQUIRE_NE(rectangleElement, nullptr);
 
-  Acts::Surface& surface = rectangleElement->surface();
-  surface.assignGeometryId(
-      Acts::GeometryIdentifier().withVolume(1).withLayer(2));
-  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Plane);
+  Surface& surface = rectangleElement->surface();
+  surface.assignGeometryId(GeometryIdentifier().withVolume(1).withLayer(2));
+  BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Plane);
 
-  auto sTransform = surface.transform(tContext);
-  BOOST_CHECK(sTransform.translation().isApprox(Acts::Vector3(10., 20., 30.)));
+  auto sTransform = surface.localToGlobalTransform(tContext);
+  BOOST_CHECK(sTransform.translation().isApprox(Vector3(10., 20., 30.)));
 
   const auto& sBounds = surface.bounds();
-  BOOST_CHECK_EQUAL(sBounds.type(),
-                    Acts::SurfaceBounds::BoundsType::eRectangle);
+  BOOST_CHECK_EQUAL(sBounds.type(), SurfaceBounds::BoundsType::eRectangle);
 
   auto boundValues = sBounds.values();
 
@@ -286,23 +292,23 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
 
   auto world = lcdd->world();
 
-  std::shared_ptr<Acts::DD4hepDetectorElement> trapezoidElement = nullptr;
+  std::shared_ptr<ActsPlugins::DD4hepDetectorElement> trapezoidElement =
+      nullptr;
   for (const auto& [chn, child] : world.children()) {
-    trapezoidElement =
-        std::make_shared<Acts::DD4hepDetectorElement>(child, "xZ", 10., true);
+    trapezoidElement = std::make_shared<ActsPlugins::DD4hepDetectorElement>(
+        child, "xZ", 10., true);
   }
 
   BOOST_REQUIRE_NE(trapezoidElement, nullptr);
 
   const auto& surface = trapezoidElement->surface();
-  BOOST_CHECK_EQUAL(surface.type(), Acts::Surface::SurfaceType::Plane);
+  BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Plane);
 
-  auto sTransform = surface.transform(tContext);
-  BOOST_CHECK(sTransform.translation().isApprox(Acts::Vector3(20., 30., 40.)));
+  auto sTransform = surface.localToGlobalTransform(tContext);
+  BOOST_CHECK(sTransform.translation().isApprox(Vector3(20., 30., 40.)));
 
   const auto& sBounds = surface.bounds();
-  BOOST_CHECK_EQUAL(sBounds.type(),
-                    Acts::SurfaceBounds::BoundsType::eTrapezoid);
+  BOOST_CHECK_EQUAL(sBounds.type(), SurfaceBounds::BoundsType::eTrapezoid);
 
   auto boundValues = sBounds.values();
   CHECK_CLOSE_ABS(boundValues[0u], 100., 1e-10);
@@ -313,3 +319,5 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

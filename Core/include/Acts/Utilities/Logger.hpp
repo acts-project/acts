@@ -22,14 +22,25 @@
 #include <thread>
 #include <utility>
 
-/// @defgroup Logging Logging
+/// @addtogroup logging
+/// @{
 
-// clang-format off
-/// @brief macro to use a local Acts::Logger object
-/// @ingroup Logging
+/// @defgroup logging_macros Logging Macros
+/// @ingroup logging
+/// @brief Helper macros for logging with @ref Acts::Logger
+///
+/// When a logger accessible via the `logger()` method, see @ref logging_patterns,
+/// use these macros to perform the actual logging:
+///
+/// @snippet{trimleft} examples/logging.cpp Logging Macros
+///
+/// The macros support stream-style formatting with `<<` operators.
+/// @{
+
+/// @brief Macro to use a local Acts::Logger object
 ///
 /// @param log_object logger instance of type
-//         <tt>std::unique_ptr<const Acts::Logger></tt>
+//         `std::unique_ptr<const Acts::Logger>`
 ///
 /// @pre In the current scope, the symbol @c logger is not yet defined.
 /// @post The ownership of the given @c log_object is transferred and
@@ -38,24 +49,13 @@
 /// This macro allows to use a locally defined logging object with the ACTS_*
 /// logging macros. The envisaged usage is the following:
 ///
-/// @code{.cpp}
-/// void myFunction() {
-///    std::unique_ptr<const Acts::Logger> myLogger
-///        = /* .. your initialization .. */;
-///    ACTS_LOCAL_LOGGER(std::move(myLogger));
-///
-///    ACTS_VERBOSE("hello world!");
-/// }
-/// @endcode
+/// @snippet{trimleft} examples/logging.cpp Local logger macro
 #define ACTS_LOCAL_LOGGER(log_object)                                          \
-  struct __local_acts_logger                                                   \
-  {                                                                            \
-    explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger):         \
-      m_logger(std::move(logger))                                              \
-    {}                                                                         \
+  struct __local_acts_logger {                                                 \
+    explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger) \
+        : m_logger(std::move(logger)) {}                                       \
                                                                                \
-    const ::Acts::Logger& operator()() const                                   \
-    {                                                                          \
+    const ::Acts::Logger& operator()() const {                                 \
       return *m_logger;                                                        \
     }                                                                          \
                                                                                \
@@ -63,19 +63,19 @@
   };                                                                           \
   __local_acts_logger logger(log_object);
 
-// Debug level agnostic implementation of the ACTS_XYZ logging macros
-#define ACTS_LOG(level, x)                                                     \
-  do {                                                                         \
-    if (logger().doPrint(level)) {                                             \
-      std::ostringstream os;                                                   \
-      os << x;                                                                 \
-      logger().log(level, os.str());                                           \
-    }                                                                          \
-  }                                                                            \
-  while(0)
+/// Log a message at the specified level
+/// @param level The logging level
+/// @param x The message to log
+#define ACTS_LOG(level, x)           \
+  do {                               \
+    if (logger().doPrint(level)) {   \
+      std::ostringstream os;         \
+      os << x;                       \
+      logger().log(level, os.str()); \
+    }                                \
+  } while (0)
 
 /// @brief macro for verbose debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -84,10 +84,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::VERBOSE.
-#define ACTS_VERBOSE(x)  ACTS_LOG(Acts::Logging::VERBOSE, x)
+#define ACTS_VERBOSE(x) ACTS_LOG(Acts::Logging::VERBOSE, x)
 
 /// @brief macro for debug debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -96,10 +95,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::DEBUG.
-#define ACTS_DEBUG(x)  ACTS_LOG(Acts::Logging::DEBUG, x)
+#define ACTS_DEBUG(x) ACTS_LOG(Acts::Logging::DEBUG, x)
 
 /// @brief macro for info debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -108,10 +106,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::INFO.
-#define ACTS_INFO(x)  ACTS_LOG(Acts::Logging::INFO, x)
+#define ACTS_INFO(x) ACTS_LOG(Acts::Logging::INFO, x)
 
 /// @brief macro for warning debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -120,10 +117,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::WARNING.
-#define ACTS_WARNING(x)  ACTS_LOG(Acts::Logging::WARNING, x)
+#define ACTS_WARNING(x) ACTS_LOG(Acts::Logging::WARNING, x)
 
 /// @brief macro for error debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -132,10 +128,9 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::ERROR.
-#define ACTS_ERROR(x)  ACTS_LOG(Acts::Logging::ERROR, x)
+#define ACTS_ERROR(x) ACTS_LOG(Acts::Logging::ERROR, x)
 
 /// @brief macro for fatal debug output
-/// @ingroup Logging
 ///
 /// @param x debug message
 ///
@@ -144,28 +139,35 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::FATAL.
-#define ACTS_FATAL(x)  ACTS_LOG(Acts::Logging::FATAL, x)
-// clang-format on
+#define ACTS_FATAL(x) ACTS_LOG(Acts::Logging::FATAL, x)
+
+/// @}
+/// @}
 
 namespace Acts {
 
-/// @brief debug output related helper classes and functions
-/// @ingroup Logging
 namespace Logging {
+
+/// @addtogroup logging
+/// @{
+
 /// @brief constants steering the debug output
 ///
 /// All messages with a debug level equal or higher than the currently set
 /// debug output level will be printed.
 enum Level {
-  VERBOSE = 0,  ///< VERBOSE level
-  DEBUG,        ///< DEBUG level
-  INFO,         ///< INFO level
-  WARNING,      ///< WARNING level
-  ERROR,        ///< ERROR level
-  FATAL,        ///< FATAL level
-  MAX           ///< Must be kept above the maximum supported debug level
+  VERBOSE = 0,  ///< Detailed diagnostic trace information
+  DEBUG,        ///< Debug information during development
+  INFO,         ///< General information messages
+  WARNING,      ///< Non-critical error conditions
+  ERROR,        ///< Error conditions which require follow-up
+  FATAL,        ///< Unrecoverable error conditions
+  MAX           ///< Filler level
 };
 
+/// @brief Get the string name for a logging level
+/// @param level The logging level
+/// @return String representation of the logging level
 inline std::string_view levelName(Level level) {
   switch (level) {
     case Level::VERBOSE:
@@ -187,6 +189,46 @@ inline std::string_view levelName(Level level) {
   }
 }
 
+/// @defgroup logging_thresholds Logging Thresholds
+/// @ingroup logging
+/// @brief Functions and classes to manage logging failure thresholds
+///
+/// Generally, log levels in ACTS are only of informative value: even
+/// @ref Acts::Logging::Level::ERROR and @ref Acts::Logging::Level::FATAL will only print
+/// messages, **and not terminate execution**.
+///
+/// This is desirable in an experiment context, where jobs should not
+/// immediately terminate when ACTS encounters something that is logged as an
+/// error. In a test context, however, this behavior is not optimal: the tests
+/// should ensure in known configurations errors do not occur, or only in
+/// specific circumstances. To solve this, ACTS implements an optional log
+/// *threshold* mechanism.
+///
+/// The threshold mechanism is steered via two CMake options:
+/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` and `ACTS_LOG_FAILURE_THRESHOLD`.
+/// Depending on their configuration, the logging can operate in three modes:
+///
+/// 1. **No log failure threshold** exists, log levels are informative only.
+/// This is
+///    the default behavior.
+/// 2. A **compile-time log failure threshold** is set. If
+///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and
+///    `ACTS_LOG_FAILURE_THRESHOLD=<LEVEL>` are set, the logger code will
+///    compile in a fixed check if the log level of a particular message exceeds
+///    `<LEVEL>`.
+///    If that is the case, an exception of type @ref Acts::Logging::ThresholdFailure is
+///    thrown.
+/// 3. A **runtime log failure threshold** is set. If only
+///    `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON` and no fixed threshold level is
+///    set, the logger code will compile in a check of a global runtime
+///    threshold variable.
+///
+/// @note If only `ACTS_LOG_FAILURE_THRESHOLD` is set,
+/// `ACTS_ENABLE_LOG_FAILURE_THRESHOLD` will be set automatically, i.e. a
+/// compile-time threshold will be set.
+///
+/// @{
+
 #ifdef DOXYGEN
 /// @brief Get debug level above which an exception will be thrown after logging
 ///
@@ -196,6 +238,7 @@ inline std::string_view levelName(Level level) {
 /// @note Depending on preprocessor settings @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
 ///       and @c ACTS_LOG_FAILURE_THRESHOLD, this operations is either constexpr
 ///       or a runtime operation.
+/// @return The log level threshold for failure
 Level getFailureThreshold();
 
 #else
@@ -230,6 +273,7 @@ constexpr Level getFailureThreshold() {
 /// @note This function is only available if @c ACTS_LOG_FAILURE_THRESHOLD is
 ///       unset, i.e. no compile-time threshold is used. Otherwise an
 ///       exception is thrown.
+/// @param level Log level above which exceptions will be thrown
 void setFailureThreshold(Level level);
 
 /// Custom exception class so threshold failures can be caught
@@ -241,6 +285,8 @@ class ThresholdFailure : public std::runtime_error {
 /// lifetime.
 class ScopedFailureThreshold {
  public:
+  /// Constructor that sets the failure threshold for the scope
+  /// @param level The logging level to set as failure threshold
   explicit ScopedFailureThreshold(Level level) { setFailureThreshold(level); }
   ScopedFailureThreshold(const ScopedFailureThreshold&) = delete;
   ScopedFailureThreshold& operator=(const ScopedFailureThreshold&) = delete;
@@ -252,6 +298,8 @@ class ScopedFailureThreshold {
  private:
   Level m_previousLevel{getFailureThreshold()};
 };
+
+/// @}
 
 /// @brief abstract base class for printing debug output
 ///
@@ -631,14 +679,17 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// pointer to destination output stream
   std::ostream* m_out;
 };
+
+/// @}
+
 }  // namespace Logging
 
 /// @brief class for printing debug output
+/// @ingroup logging
 ///
 /// This class provides the user interface for printing debug messages with
 /// different levels of severity.
 ///
-/// @ingroup Logging
 class Logger {
  public:
   /// @brief construct from output print and filter policy
@@ -691,6 +742,7 @@ class Logger {
   /// Make a copy of this logger, optionally changing the name or the level
   /// @param _name the optional new name
   /// @param _level the optional new level
+  /// @return Unique pointer to a cloned logger
   std::unique_ptr<Logger> clone(
       const std::optional<std::string>& _name = std::nullopt,
       const std::optional<Logging::Level>& _level = std::nullopt) const {
@@ -711,6 +763,7 @@ class Logger {
   /// name. You can also optionally supply a new level
   /// @param suffix the suffix to add to the end of the name
   /// @param _level the optional new level
+  /// @return Unique pointer to a cloned logger with modified name
   std::unique_ptr<Logger> cloneWithSuffix(
       const std::string& suffix,
       std::optional<Logging::Level> _level = std::nullopt) const {
@@ -719,6 +772,7 @@ class Logger {
 
   /// Helper function so a logger reference can be used as is with the logging
   /// macros
+  /// @return Reference to this logger
   const Logger& operator()() const { return *this; }
 
  private:
@@ -746,6 +800,8 @@ std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
     std::ostream* log_stream = &std::cout);
 
+/// Get a dummy logger that discards all output
+/// @return Reference to dummy logger instance
 const Logger& getDummyLogger();
 
 }  // namespace Acts

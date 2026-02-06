@@ -66,7 +66,11 @@ histograms:
 
 exclude:
   - event_id
-  - particle_id
+  - particle_id_vertex_primary
+  - particle_id_vertex_secondary
+  - particle_id_particle
+  - particle_id_generation
+  - particle_id_sub_particle
   - particle_type
   - process
   - vertex_primary

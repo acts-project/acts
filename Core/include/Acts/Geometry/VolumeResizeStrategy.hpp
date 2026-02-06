@@ -20,6 +20,10 @@ enum class VolumeResizeStrategy {
   Gap,
 };
 
+/// Stream operator for VolumeResizeStrategy
+/// @param os Output stream
+/// @param strategy VolumeResizeStrategy to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, VolumeResizeStrategy strategy);
 
 }  // namespace Acts

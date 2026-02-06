@@ -1,8 +1,10 @@
 acts_add_library(
     PluginRoot
-    SHARED
+    src/RootMaterialDecorator.cpp
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp
+    src/RootMagneticFieldIo.cpp
+    src/RootMeasurementIo.cpp
     src/RootSpacePointIo.cpp
     src/TGeoCylinderDiscSplitter.cpp
     src/TGeoDetectorElement.cpp
@@ -10,7 +12,8 @@ acts_add_library(
     src/TGeoParser.cpp
     src/TGeoPrimitivesHelper.cpp
     src/TGeoSurfaceConverter.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    src/HistogramConverter.cpp
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 # Internal system of units change, This behavior affected versions up to v6-25-01

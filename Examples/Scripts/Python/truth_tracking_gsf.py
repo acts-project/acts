@@ -5,6 +5,10 @@ from typing import Optional
 
 import acts
 import acts.examples
+from acts.examples.root import (
+    RootParticleReader,
+    RootSimHitReader,
+)
 
 u = acts.UnitConstants
 
@@ -15,6 +19,7 @@ def runTruthTrackingGsf(
     digiConfigFile: Path,
     outputDir: Path,
     inputParticlePath: Optional[Path] = None,
+    inputSimHitsPath: Optional[Path] = None,
     decorators=[],
     s: acts.examples.Sequencer = None,
 ):
@@ -32,7 +37,14 @@ def runTruthTrackingGsf(
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
+        TrackSmearingSigmas,
         addTruthTrackingGsf,
+    )
+    from acts.examples.root import (
+        RootParticleReader,
+        RootTrackStatesWriter,
+        RootTrackSummaryWriter,
+        RootTrackFitterPerformanceWriter,
     )
 
     s = s or acts.examples.Sequencer(
@@ -44,6 +56,7 @@ def runTruthTrackingGsf(
 
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
+    logger = acts.logging.getLogger("GSF Example")
 
     if inputParticlePath is None:
         addParticleGun(
@@ -60,25 +73,35 @@ def runTruthTrackingGsf(
             rnd=rnd,
         )
     else:
-        acts.logging.getLogger("GSF Example").info(
-            "Reading particles from %s", inputParticlePath.resolve()
-        )
+        logger.info("Reading particles from %s", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
-            acts.examples.RootParticleReader(
+            RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
                 outputParticles="particles_generated",
             )
         )
+        s.addWhiteboardAlias("particles", "particles_generated")
 
-    addFatras(
-        s,
-        trackingGeometry,
-        field,
-        rnd=rnd,
-        enableInteractions=True,
-    )
+    if inputSimHitsPath is None:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            rnd=rnd,
+            enableInteractions=True,
+        )
+    else:
+        logger.info("Reading hits from %s", inputSimHitsPath.resolve())
+        s.addReader(
+            RootSimHitReader(
+                level=acts.logging.INFO,
+                filePath=str(inputSimHitsPath.resolve()),
+                outputSimHits="simhits",
+            )
+        )
+        s.addWhiteboardAlias("particles_simulated_selected", "particles_generated")
 
     addDigitization(
         s,
@@ -105,7 +128,31 @@ def runTruthTrackingGsf(
         rnd=rnd,
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        trackSmearingSigmas=TrackSmearingSigmas(
+            # zero everything so the GSF has a chance to find the measurements
+            loc0=0,
+            loc0PtA=0,
+            loc0PtB=0,
+            loc1=0,
+            loc1PtA=0,
+            loc1PtB=0,
+            time=0,
+            phi=0,
+            theta=0,
+            ptRel=0,
+        ),
         particleHypothesis=acts.ParticleHypothesis.electron,
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0 / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaQoverPt=0.1 / u.GeV,
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
     )
 
     addTruthTrackingGsf(
@@ -127,7 +174,7 @@ def runTruthTrackingGsf(
     s.addWhiteboardAlias("tracks", "selected-tracks")
 
     s.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -139,7 +186,7 @@ def runTruthTrackingGsf(
     )
 
     s.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",
@@ -150,7 +197,7 @@ def runTruthTrackingGsf(
     )
 
     s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
+        RootTrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
             inputParticles="particles_selected",

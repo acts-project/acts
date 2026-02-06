@@ -10,17 +10,23 @@
 
 #include "ActsAlignment/Kernel/Alignment.hpp"
 
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
+#include "Acts/Utilities/detail/EigenCompat.hpp"
+#include "ActsAlignment/Kernel/AlignmentError.hpp"
+
+#include <queue>
 
 template <typename fitter_t>
-template <typename source_link_t, typename start_parameters_t,
-          typename fit_options_t>
+template <typename source_link_t, typename fit_options_t>
 Acts::Result<ActsAlignment::detail::TrackAlignmentState>
 ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const Acts::GeometryContext& gctx,
     const std::vector<source_link_t>& sourceLinks,
-    const start_parameters_t& sParameters, const fit_options_t& fitOptions,
+    const Acts::BoundTrackParameters& sParameters,
+    const fit_options_t& fitOptions,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
     const ActsAlignment::AlignmentMask& alignMask) const {
@@ -126,14 +132,13 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
 
   // Get the inverse of chi2 second derivative matrix (we need this to
   // calculate the covariance of the alignment parameters)
-  // @Todo: use more stable method for solving the inverse
+  // @TODO: use more stable method for solving the inverse
   std::size_t alignDof = alignResult.alignmentDof;
   Acts::ActsDynamicMatrix sumChi2SecondDerivativeInverse =
       Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
   sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();
   if (sumChi2SecondDerivativeInverse.hasNaN()) {
     ACTS_DEBUG("Chi2 second derivative inverse has NaN");
-    // return AlignmentError::AlignmentParametersUpdateFailure;
   }
 
   // Initialize the alignment results
@@ -159,15 +164,17 @@ template <typename fitter_t>
 Acts::Result<void>
 ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     const Acts::GeometryContext& gctx,
-    const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
-    const ActsAlignment::AlignedTransformUpdater& alignedTransformUpdater,
+    const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
+    const ActsAlignment::AlignedTransformUpdaterConcept auto&
+        alignedTransformUpdater,
     ActsAlignment::AlignmentResult& alignResult) const {
   // Update the aligned transform
   Acts::AlignmentVector deltaAlignmentParam = Acts::AlignmentVector::Zero();
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
     // 1. The original transform
     const Acts::Vector3& oldCenter = surface->center(gctx);
-    const Acts::Transform3& oldTransform = surface->transform(gctx);
+    const Acts::Transform3& oldTransform =
+        surface->localToGlobalTransform(gctx);
 
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
@@ -309,12 +316,13 @@ ActsAlignment::Alignment<fitter_t>::align(
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
-          det->transform(alignOptions.fitOptions.geoContext);
+          det->localToGlobalTransform(alignOptions.fitOptions.geoContext);
       // write it to the result
       alignResult.alignedParameters.emplace(det, transform);
       const auto& translation = transform.translation();
       const auto& rotation = transform.rotation();
-      const Acts::Vector3 rotAngles = rotation.eulerAngles(2, 1, 0);
+      const Acts::Vector3 rotAngles =
+          Acts::detail::EigenCompat::canonicalEulerAngles(rotation, 2, 1, 0);
       ACTS_VERBOSE("Detector element with surface "
                    << surface->geometryId()
                    << " has aligned geometry position as below:");

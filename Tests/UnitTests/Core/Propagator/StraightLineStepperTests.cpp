@@ -23,27 +23,30 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
 #include <memory>
 #include <optional>
 #include <string>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 
 static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
 
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
+
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   // Set up some variables
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mfContext = MagneticFieldContext();
   double stepSize = 123.;
 
@@ -101,7 +104,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
 /// The numerical correctness of the stepper is tested in the integration tests
 BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Set up some variables for the state
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mfContext = MagneticFieldContext();
   Direction navDir = Direction::Backward();
   double stepSize = 123.;
@@ -264,24 +267,27 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::Type::Navigator),
                   navDir * 2., 1e-6);
 
+  const auto getNavigationTarget = [&](const Surface& s,
+                                       const BoundaryTolerance& bt) {
+    auto [intersection, intersectionIndex] =
+        s.intersect(tgContext, sls.position(slsState),
+                    navDir * sls.direction(slsState), bt)
+            .closestWithIndex();
+    return NavigationTarget(intersection, intersectionIndex, s, bt);
+  };
+
   // Test the step size modification in the context of a surface
-  sls.updateStepSize(slsState,
-                     targetSurface
-                         ->intersect(tgContext, sls.position(slsState),
-                                     navDir * sls.direction(slsState),
-                                     BoundaryTolerance::Infinite())
-                         .closest(),
-                     navDir, ConstrainedStep::Type::Navigator);
+  sls.updateStepSize(
+      slsState,
+      getNavigationTarget(*targetSurface, BoundaryTolerance::Infinite()),
+      navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
   slsState.stepSize.setUser(navDir * stepSize);
   sls.releaseStepSize(slsState, ConstrainedStep::Type::Navigator);
-  sls.updateStepSize(slsState,
-                     targetSurface
-                         ->intersect(tgContext, sls.position(slsState),
-                                     navDir * sls.direction(slsState),
-                                     BoundaryTolerance::Infinite())
-                         .closest(),
-                     navDir, ConstrainedStep::Type::Navigator);
+  sls.updateStepSize(
+      slsState,
+      getNavigationTarget(*targetSurface, BoundaryTolerance::Infinite()),
+      navDir, ConstrainedStep::Type::Navigator);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
 
   // Test the bound state construction
@@ -319,4 +325,6 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -14,19 +14,20 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/MaterialValidater.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <limits>
 #include <numbers>
 
-namespace Acts::Test {
+using namespace Acts;
 
-auto tContext = GeometryContext();
+namespace ActsTests {
+
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 /// @brief Interface for the material mapping that seeks the possible
 /// assignment candidates for the material interactiosn
@@ -54,21 +55,20 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
     // Intersect the surfaces
     for (auto& surface : surfaces) {
       // Get the intersection
-      auto sMultiIntersection = surface->intersect(gctx, position, direction,
-                                                   BoundaryTolerance::None());
+      auto multiIntersection = surface->intersect(gctx, position, direction,
+                                                  BoundaryTolerance::None());
       // One solution, take it
-      if (sMultiIntersection.size() == 1u &&
-          sMultiIntersection[0u].status() >=
-              Acts::IntersectionStatus::reachable &&
-          sMultiIntersection[0u].pathLength() >= 0.0) {
+      if (multiIntersection.size() == 1u &&
+          multiIntersection.at(0).status() >= IntersectionStatus::reachable &&
+          multiIntersection.at(0).pathLength() >= 0.0) {
         surfaceAssignments.push_back(
-            {surface, sMultiIntersection[0u].position(), direction});
+            {surface, multiIntersection.at(0).position(), direction});
         continue;
       }
-      if (sMultiIntersection.size() > 1u) {
+      if (multiIntersection.size() > 1u) {
         // Multiple intersections, take the closest
-        auto closestForward = sMultiIntersection.closestForward();
-        if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
+        Intersection3D closestForward = multiIntersection.closestForward();
+        if (closestForward.status() >= IntersectionStatus::reachable &&
             closestForward.pathLength() > 0.0) {
           surfaceAssignments.push_back(
               {surface, closestForward.position(), direction});
@@ -80,7 +80,7 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
   }
 };
 
-BOOST_AUTO_TEST_SUITE(MAterialValidatorTestSuite)
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
   auto cylinder0 =
@@ -91,11 +91,11 @@ BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 60, 100);
 
   auto material0 = std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab(
-      Acts::Material::fromMolarDensity(21.0, 22.0, 23.0, 24.0, 25.0), 2.0));
+      Material::fromMolarDensity(21.0, 22.0, 23.0, 24.0, 25.0), 2.0));
   auto material1 = std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab(
-      Acts::Material::fromMolarDensity(41.0, 42.0, 43.0, 44.0, 45.0), 4.0));
+      Material::fromMolarDensity(41.0, 42.0, 43.0, 44.0, 45.0), 4.0));
   auto material2 = std::make_shared<HomogeneousSurfaceMaterial>(MaterialSlab(
-      Acts::Material::fromMolarDensity(61.0, 62.0, 63.0, 64.0, 65.0), 6.0));
+      Material::fromMolarDensity(61.0, 62.0, 63.0, 64.0, 65.0), 6.0));
 
   cylinder0->assignSurfaceMaterial(material0);
   cylinder1->assignSurfaceMaterial(material1);
@@ -136,4 +136,4 @@ BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

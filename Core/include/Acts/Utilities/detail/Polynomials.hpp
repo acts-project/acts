@@ -29,7 +29,7 @@ constexpr std::array<double, N - D> derivativeCoefficients(
   }
   std::array<double, N - D> newCoeffs{filledArray<double, N - D>(0.)};
   for (std::size_t i = 0; i < N - D; ++i) {
-    newCoeffs[i] = factorial(i + D, i + 1) * coeffs[i + D];
+    newCoeffs[i] = product(i + 1ul, i + D) * coeffs[i + D];
   }
   return newCoeffs;
 }
@@ -103,9 +103,11 @@ constexpr std::array<double, L + 1> coefficients() {
 /// @param d: Order of the derivative
 constexpr double evaluate(const double x, const unsigned l, unsigned d = 0u) {
   double sum{0.};
-  for (unsigned k = l % 2; k + d <= l; k += 2u) {
-    sum += pow(x, k - d) * coeff(l, k) *
-           (d > 0u ? factorial(k - d, k - d + 1u) : 1u);
+  for (unsigned k = l % 2; k <= l; k += 2u) {
+    if (k >= d) {
+      sum +=
+          pow(x, k - d) * coeff(l, k) * (d > 0u ? product(1u + k - d, k) : 1u);
+    }
   }
   return sum;
 }
@@ -124,7 +126,8 @@ constexpr double coeffTn(const unsigned n, const unsigned k) {
   }
   const double sign = (k % 2 == 1 ? -1. : 1.);
   const double t_k = sign * static_cast<double>(factorial(n - k - 1)) /
-                     static_cast<double>(factorial(k) * factorial(n - 2 * k)) *
+                     (static_cast<double>(factorial(k)) *
+                      static_cast<double>(factorial(n - 2 * k))) *
                      static_cast<double>(n) *
                      pow(2., static_cast<int>(n - 2 * k - 1));
   return t_k;
@@ -149,7 +152,7 @@ constexpr double evalFirstKind(const double x, const unsigned n,
   double result{0.};
   for (unsigned k = 0u; 2u * k + d <= n; ++k) {
     result += coeffTn(n, k) * pow(x, n - 2u * k - d) *
-              (d > 0 ? factorial(n - 2u * k, n - 2u * k - d + 1u) : 1);
+              (d > 0 ? product(n - 2u * k - d + 1u, n - 2u * k) : 1);
   }
   return result;
 }
@@ -186,13 +189,13 @@ constexpr double evalSecondKind(const double x, const unsigned n,
   double result{0.};
   for (unsigned k = 0u; 2u * k + d <= n; ++k) {
     result += coeffUn(n, k) * pow(x, n - 2u * k - d) *
-              (d > 0u ? factorial(n - 2u * k, n - 2u * k - d + 1u) : 1u);
+              (d > 0u ? product(n - 2u * k - d + 1u, n - 2u * k) : 1u);
   }
   return result;
 }
 }  // namespace Chebychev
 
-/// @brief Helper macros to setup the evaluation of the n-th orthogonal
+/// @brief Helper macros to set up the evaluation of the n-th orthogonal
 ///        polynomial and of its derivatives. The  coefficients of the
 ///        n-th polynomial and of the first two derivatives
 ///        are precalculated at compile time. For higher order derivatives

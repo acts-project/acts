@@ -8,18 +8,16 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-///
-#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/GeoModel/GeoModelTree.hpp"
 
 #include <array>
 #include <cmath>
-#include <map>
 
 #include "GeoModelHelpers/GeoDeDuplicator.h"
 #include "GeoModelKernel/GeoPublisher.h"
 #include "GeoModelKernel/Units.h"
+
 namespace ActsExamples {
 /// @brief Simple Muonspectrometer geometry of an HEP experiment. The geometry is inspired by
 ///        the ATLAS' MuonSpectrometer. It consists out of three concentric
@@ -31,9 +29,9 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   enum class MuonLayer { Inner, Middle, Outer, nLayers };
 
   /// @brief Abrivation of the memory-managed FullPhysVols
-  using FpvLink = Acts::GeoModelTree::FpvLink;
+  using FpvLink = ActsPlugins::GeoModelTree::FpvLink;
   /// @brief Abrivation of the memory-managed const FullPhysVols
-  using FpvConstLink = Acts::GeoModelTree::FpvConstLink;
+  using FpvConstLink = ActsPlugins::GeoModelTree::FpvConstLink;
   /// @brief Configuration object to steer the geometry building
   struct Config {
     /// @brief Switch toggling whether the built detector should be persitified to SQLite
@@ -64,6 +62,9 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     unsigned nRpcAlongZ{2};
     /// @brief Segmentation of the Rpc chambers along the tube direction
     unsigned nRpcAlongPhi{2};
+    /// @brief Endcap stations are equipped with fast Tgc chambers. In front,
+    ///        there's one station and two stations behind it.
+    unsigned nTgcGasGaps{3};
 
     /// @brief Placement of the three radial barrel layers
     std::array<double, static_cast<int>(MuonLayer::nLayers)> barrelRadii{
@@ -84,6 +85,10 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
     double bigWheelDistZ{5. * GeoModelKernelUnits::m};
     /// @brief Switch toggling whether the endcaps should be built
     bool buildEndcaps{true};
+    /// @brief Number of the gas gaps in the inner wheel
+    unsigned nInnerMultiplets{4};
+    /// @brief Number of gas gaps per multiplet
+    unsigned nInnerGasGapsPerMl{4};
   };
 
   /// @brief Standard constructor taking a configuration to steer the MS geometry building
@@ -96,7 +101,7 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
           "GeoMuonMockupExperiment", Acts::Logging::DEBUG));
 
   /// @brief Triggers construction of the Muon mockup detector
-  Acts::GeoModelTree constructMS();
+  ActsPlugins::GeoModelTree constructMS();
 
  private:
   Config m_cfg{};
@@ -136,9 +141,37 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
                                m_cfg.multiLayerSeparation +
                                2. * (m_rpcChamberHeight + s_rpcMdtDistance)};
 
+  /// @brief Height of the active Tgc gas
+  constexpr static double s_tgcGasHeight{1.5 * GeoModelKernelUnits::mm};
+  /// @brief Separation between two gas gaps
+  constexpr static double s_tgcGasSingletSeparation{2. *
+                                                    GeoModelKernelUnits::cm};
+  /// @brief Separation between two tgc chambers
+  constexpr static double s_tgcChamberSeparation{10. * GeoModelKernelUnits::cm};
+  /// @brief Separation between the multilayer and the tgc chamber
+  constexpr static double s_tgcMdtSeparation{50. * GeoModelKernelUnits::cm};
+  double m_tgcChamberHeight{m_cfg.nTgcGasGaps *
+                            (s_tgcGasSingletSeparation + s_tgcGasHeight)};
   /// @brief Height of a endcap muon station
-  double m_stationHeightEndcap{2. * m_multiLayerHeight +
-                               m_cfg.multiLayerSeparation};
+  double m_stationHeightEndcap{
+      2. * m_multiLayerHeight + m_cfg.multiLayerSeparation +
+      3. * m_tgcChamberHeight + s_tgcChamberSeparation +
+      2. * s_tgcMdtSeparation};
+  /// @brief Height of the inner endcap muon station
+  static constexpr double s_swlGasGapHeight{1. * GeoModelKernelUnits::mm};
+  /// @brief Distance between two gas gaps in a multiplet
+  static constexpr double s_swGasGapSeparation{1. * GeoModelKernelUnits::cm};
+  /// @brief Distance between two multiplets
+  static constexpr double s_swMultipletSeparation{10. *
+                                                  GeoModelKernelUnits::cm};
+  /// @brief Height of a small wheel wedge
+  double m_innerWheelWedgeH{(s_swlGasGapHeight + s_swGasGapSeparation) *
+                            m_cfg.nInnerGasGapsPerMl};
+  /// @brief Total height of the inner small wheel
+  double m_innerWheelHeight{s_swMultipletSeparation *
+                                (m_cfg.nInnerMultiplets - 1) +
+                            m_innerWheelWedgeH * m_cfg.nInnerMultiplets};
+
   /// @brief Angular coverage of each sector
   double m_sectorSize{360. * GeoModelKernelUnits::deg / m_cfg.nSectors};
   /// @brief Setup the Material database with all materials used during construction
@@ -169,6 +202,19 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   void assembleBigWheel(const PVLink& envelope, const MuonLayer layer,
                         const double wheelZ);
 
+  /// @brief Constructs a small wheel and place it within the world envelope
+  /// @param envelope: Reference to the world envelope in which the wheel is placed
+  /// @param outerR: Outer radius of the big wheel
+  /// @param wheelZ: Z position of the wheel centre point
+  void assembleSmallWheel(const PVLink& envelope, const double outerR,
+                          const double wheelZ);
+  /// @brief Assembles a full small wheel edge with the <n> multilayers
+  ///        and places the active gas gaps into each multilayer wedge
+  /// @param wedgeL: Radial length of the small wheel sector
+  /// @param etaIdx: Eta station index used in the volume publishing
+  /// @param sector: Sector number used in the volume publishing
+  PVLink assembleSmallWheelSector(const double wedgeL, const int etaIdx,
+                                  const int sector);
   ///  @brief Construct some absorber volume to add some material to the
   ///         barrel MS station
   ///  @param thickness: Total thickness of the absorber
@@ -217,6 +263,10 @@ class GeoMuonMockupExperiment : public GeoDeDuplicator {
   FpvLink assembleMultilayerEndcap(const unsigned ml,
                                    const double lowerTubeLength,
                                    const double upperTubeLength);
+  /// @brief Assemble a new Tgc chamber
+  /// @param bottomWidth: Width of the bottom edge of the chamber
+  /// @param topWidth: Width of the top edge of the chamber
+  FpvLink assembleTgcChamber(const double bottomWidth, const double topWidth);
   /// @brief Assemble a new Rpc chamber volume.
   /// @param chamberWidth: Length of the chamber along the direction given
   ///                      by the close-by tubes.

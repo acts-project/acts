@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <string>
@@ -20,7 +20,9 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(DelegateTests)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 int sumImpl(int a, int b) {
   return a + b;
@@ -143,7 +145,7 @@ void modify(int& v, int a) {
 }
 
 void noModify(int v, int a) {
-  (void)v;
+  static_cast<void>(v);
   v = a;
 }
 
@@ -163,7 +165,7 @@ struct SignatureTest {
   void modify(int& v, int a) const { v = a; }
 
   void noModify(int v, int a) const {
-    (void)v;
+    static_cast<void>(v);
     v = a;
   }
 };
@@ -235,7 +237,7 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
   {
     auto s = std::make_unique<const SignatureTest>();
     Delegate<void(int&, int)> d;
-    (void)d;
+    static_cast<void>(d);
     // This should not compile, as it would be a memory leak
     // d.connect<&SignatureTest::modify>(std::move(s));
   }
@@ -449,11 +451,13 @@ BOOST_AUTO_TEST_CASE(NonVoidDelegateTest) {
     SeparateDelegate c;
     // Does not compile: cannot assign unrelated type
     // d.connect<&SeparateDelegate::func>(&c);
-    (void)d;
-    (void)c;
+    static_cast<void>(d);
+    static_cast<void>(c);
   }
 
   { OwningDelegate<std::string(), DelegateInterface> d; }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

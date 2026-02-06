@@ -29,6 +29,8 @@ namespace Acts {
 ///
 class DiscTrapezoidBounds : public DiscBounds {
  public:
+  /// @enum BoundValues
+  /// Enumeration for the bound values
   enum BoundValues : int {
     eHalfLengthXminR = 0,
     eHalfLengthXmaxR = 1,
@@ -46,7 +48,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param minR inner radius
   /// @param maxR outer radius
   /// @param avgPhi average phi value
-  /// @param stereo optional stero angle applied
+  /// @param stereo optional stereo angle applied
   explicit DiscTrapezoidBounds(double halfXminR, double halfXmaxR, double minR,
                                double maxR,
                                double avgPhi = std::numbers::pi / 2.,
@@ -86,20 +88,29 @@ class DiscTrapezoidBounds : public DiscBounds {
 
   using SurfaceBounds::inside;
 
+  /// @copydoc SurfaceBounds::center
+  Vector2 center() const final;
+
   /// Output Method for std::ostream
+  /// @param sl The output stream to write to
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// This method returns inner radius
+  /// @return Minimum radius of the disc trapezoid
   double rMin() const final { return get(eMinR); }
 
   /// This method returns outer radius
+  /// @return Maximum radius of the disc trapezoid
   double rMax() const final { return get(eMaxR); }
 
   /// This method returns the center radius
+  /// @return Center radius calculated from inner and outer bounds
   double rCenter() const {
     double rmin = get(eMinR);
     double rmax = get(eMaxR);
@@ -111,9 +122,11 @@ class DiscTrapezoidBounds : public DiscBounds {
   }
 
   /// This method returns the stereo angle
+  /// @return Stereo angle of the disc trapezoid
   double stereo() const { return get(eStereo); }
 
   /// This method returns the halfPhiSector which is covered by the disc
+  /// @return Half phi sector angle covered by the disc trapezoid
   double halfPhiSector() const {
     auto minHalfPhi = std::asin(get(eHalfLengthXminR) / get(eMinR));
     auto maxHalfPhi = std::asin(get(eHalfLengthXmaxR) / get(eMaxR));
@@ -121,6 +134,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   }
 
   /// This method returns the half length in Y (this is Rmax -Rmin)
+  /// @return Half length in Y direction calculated from radial bounds
   double halfLengthY() const {
     double rmin = get(eMinR);
     double rmax = get(eMaxR);
@@ -132,18 +146,24 @@ class DiscTrapezoidBounds : public DiscBounds {
   }
 
   /// Returns true for full phi coverage - obviously false here
+  /// @return Always false since disc trapezoids have limited phi coverage
   bool coversFullAzimuth() const final { return false; }
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
+  /// @param R The radius value to check
+  /// @param tolerance The tolerance for the check
+  /// @return True if radius is within bounds (plus tolerance), false otherwise
   bool insideRadialBounds(double R, double tolerance = 0.) const final {
     return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
   }
 
   /// Return a reference radius for binning
+  /// @return Average radius for binning purposes
   double binningValueR() const final { return 0.5 * (get(eMinR) + get(eMaxR)); }
 
   /// Return a reference phi for binning
+  /// @return Average phi angle for binning purposes
   double binningValuePhi() const final { return get(eAveragePhi); }
 
   /// This method returns the xy coordinates of the four corners of the

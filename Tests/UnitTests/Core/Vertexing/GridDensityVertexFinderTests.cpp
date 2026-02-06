@@ -12,13 +12,11 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -29,6 +27,7 @@
 #include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <iostream>
 #include <memory>
@@ -37,15 +36,16 @@
 #include <system_error>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 using Covariance = BoundSquareMatrix;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 const double zVertexPos1 = 12.;
@@ -66,6 +66,7 @@ std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
 // Track eta distribution
 std::uniform_real_distribution<double> etaDist(-4., 4.);
 
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 ///
 /// @brief Unit test for GridDensityVertexFinder without caching
 /// of track density values
@@ -134,11 +135,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection =
+    Intersection3D intersection =
         perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
@@ -253,11 +254,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection =
+    Intersection3D intersection =
         perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
@@ -424,11 +425,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection =
+    Intersection3D intersection =
         perigeeSurface->intersect(geoContext, pos, direction).closest();
     pos = intersection.position();
 
@@ -486,4 +487,6 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   CHECK_CLOSE_ABS(covZZ1, covZZ2, 1e-4);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

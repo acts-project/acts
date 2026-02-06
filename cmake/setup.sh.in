@@ -1,5 +1,74 @@
-# set up environment variables
-# the ${VAR:+:} part adds a double colon only if VAR is not empty
-export PATH="@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_BINDIR@${PATH:+:}${PATH}"
-export LD_LIBRARY_PATH="@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
-export DYLD_LIBRARY_PATH="@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
+# This file is part of the ACTS project.
+#
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# This script sets up the ACTS environment without dependencies in a somewhat robust way.
+
+IS_INSTALLED_VERSION="@IS_INSTALLED_VERSION@"
+CMAKE_INSTALL_PREFIX="@CMAKE_INSTALL_PREFIX@"
+CMAKE_INSTALL_BINDIR="@CMAKE_INSTALL_BINDIR@"
+CMAKE_INSTALL_LIBDIR="@CMAKE_INSTALL_LIBDIR@"
+PROJECT_SOURCE_DIR="@PROJECT_SOURCE_DIR@"
+PROJECT_BINARY_DIR="@PROJECT_BINARY_DIR@"
+ACTS_BUILD_PYTHON_BINDINGS="@ACTS_BUILD_PYTHON_BINDINGS@"
+
+# TODO deal with ODD activation in one place
+ODD_PATH="@ODD_SOURCE_DIR@"
+ODD_FACTORY_DIR="@ODD_FACTORY_DIR@"
+
+# Make ACTS binaries available
+# first check if we are installed or in build tree
+if [[ "${IS_INSTALLED_VERSION}" == "ON" ]]; then
+    python_dir="${CMAKE_INSTALL_PREFIX}/python"
+
+    # the ${VAR:+:} part adds a double colon only if VAR is not empty
+    export PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}${PATH:+:}${PATH}"
+    export LD_LIBRARY_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
+
+    # TODO deal with ODD activation in one place
+    ODD_PATH="${CMAKE_INSTALL_PREFIX}/share/OpenDataDetector"
+    source "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/this_odd.sh"
+else
+    python_dir="${PROJECT_BINARY_DIR}/python"
+
+    # the ${VAR:+:} part adds a double colon only if VAR is not empty
+    export PATH="${PROJECT_BINARY_DIR}/bin${PATH:+:}${PATH}"
+    export LD_LIBRARY_PATH="${PROJECT_BINARY_DIR}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="${PROJECT_BINARY_DIR}/lib${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"
+
+    # TODO deal with ODD activation in one place
+    if [ -d "${ODD_FACTORY_DIR}" ]; then
+        export LD_LIBRARY_PATH="${ODD_FACTORY_DIR}:${LD_LIBRARY_PATH}"
+        export DYLD_LIBRARY_PATH="${ODD_FACTORY_DIR}:${DYLD_LIBRARY_PATH}"
+        export DD4HEP_LIBRARY_PATH="${ODD_FACTORY_DIR}:${DD4HEP_LIBRARY_PATH}"
+    fi
+fi
+
+# ACTS project source directory
+export ACTS_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+
+# Make ODD available if possible
+if [ -d "${ODD_PATH}" ]; then
+    echo "INFO:    Found OpenDataDetector and set it up"
+    export ODD_PATH
+else
+    echo "INFO:    OpenDataDetector directory not found, ODD not set up"
+fi
+
+# Make Python bindings available if possible
+# first check if python bindings are enabled then check if the setup.sh file exists
+if [ "${ACTS_BUILD_PYTHON_BINDINGS}" = "ON" ]; then
+    if [[ -f "${python_dir}/setup.sh" ]]; then
+      source "${python_dir}/setup.sh"
+    else
+      echo "ERROR:   setup.sh for python is missing."
+      exit 1
+    fi
+else
+  echo "INFO:    Python bindings are disabled."
+fi

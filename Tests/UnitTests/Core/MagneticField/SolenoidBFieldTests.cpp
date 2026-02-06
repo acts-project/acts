@@ -12,14 +12,17 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cstddef>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(MagneticFieldSuite)
 
 BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   // Create a test context
@@ -106,4 +109,6 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   // outf.close();
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

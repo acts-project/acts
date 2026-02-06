@@ -15,6 +15,7 @@
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
+#include <ActsPlugins/Root/detail/RootBranchPtr.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -47,9 +48,6 @@ class RootVertexReader : public IReader {
   /// @param config The Configuration struct
   RootVertexReader(const Config& config, Acts::Logging::Level level);
 
-  /// Destructor
-  ~RootVertexReader() override;
-
   /// Framework name() method
   std::string name() const override { return "RootVertexReader"; }
 
@@ -67,6 +65,13 @@ class RootVertexReader : public IReader {
  private:
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
+
+  template <typename T>
+  using BranchVector = RootBranchPtr<std::vector<T>>;
+  template <typename T>
+  using BranchJaggedVector = RootBranchPtr<std::vector<std::vector<T>>>;
+  template <typename T>
+  using BranchTensor = RootBranchPtr<std::vector<std::vector<std::vector<T>>>>;
 
   /// The config class
   Config m_cfg;
@@ -91,19 +96,36 @@ class RootVertexReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<std::uint64_t>* m_vertexId = new std::vector<std::uint64_t>;
-  std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
-  std::vector<float>* m_vx = new std::vector<float>;
-  std::vector<float>* m_vy = new std::vector<float>;
-  std::vector<float>* m_vz = new std::vector<float>;
-  std::vector<float>* m_vt = new std::vector<float>;
-  std::vector<std::vector<std::uint64_t>>* m_outgoingParticles =
-      new std::vector<std::vector<std::uint64_t>>;
-  // Decoded vertex identifier; see Barcode definition for details.
-  std::vector<std::uint32_t>* m_vertexPrimary = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_vertexSecondary =
-      new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
+  BranchVector<std::uint32_t> m_process;
+  BranchVector<float> m_vx;
+  BranchVector<float> m_vy;
+  BranchVector<float> m_vz;
+  BranchVector<float> m_vt;
+
+  /// Legacy combined barcode vectors.
+  BranchTensor<std::uint32_t> m_incomingParticles{nullptr};
+  BranchTensor<std::uint32_t> m_outgoingParticles{nullptr};
+  bool m_hasCombinedIncoming = false;
+  bool m_hasCombinedOutgoing = false;
+
+  /// Incoming particles to the vertex broken into barcode components.
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesVertexPrimary{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesVertexSecondary{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesParticle{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesGeneration{nullptr};
+  BranchJaggedVector<std::uint32_t> m_incomingParticlesSubParticle{nullptr};
+
+  /// Outgoing particles from the vertex broken into barcode components.
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesVertexPrimary{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesVertexSecondary{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesParticle{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesGeneration{nullptr};
+  BranchJaggedVector<std::uint32_t> m_outgoingParticlesSubParticle{nullptr};
+
+  /// Decoded vertex identifier; see Barcode definition for details.
+  BranchVector<std::uint16_t> m_vertexPrimary;
+  BranchVector<std::uint16_t> m_vertexSecondary;
+  BranchVector<std::uint8_t> m_generation;
 };
 
 }  // namespace ActsExamples

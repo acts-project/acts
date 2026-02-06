@@ -25,9 +25,11 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 const double minHalfX = 1.;
 const double maxHalfX = 6.;
@@ -179,7 +181,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-3, 3))) ^
         bdata::xrange(1000),
     x, y, index) {
-  (void)index;
+  static_cast<void>(index);
 
   static const TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
   static const auto vertices = trapezoidBoundsObject.vertices();
@@ -202,6 +204,23 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsAssignment) {
   BOOST_CHECK_EQUAL(assignedTrapezoidBoundsObject, trapezoidBoundsObject);
 }
 
+BOOST_AUTO_TEST_CASE(TrapezoidBoundsCenter) {
+  // Test unrotated trapezoid
+  TrapezoidBounds trap(minHalfX, maxHalfX, halfY);
+  Vector2 center = trap.center();
+  BOOST_CHECK_EQUAL(center.x(), 0.0);
+  BOOST_CHECK_EQUAL(center.y(), 0.0);
+
+  // Test rotated trapezoid
+  const double rotAngle = 0.3;
+  TrapezoidBounds trapRotated(minHalfX, maxHalfX, halfY, rotAngle);
+  Vector2 centerRotated = trapRotated.center();
+  // For a rotated trapezoid symmetric about origin, centroid should still be at
+  // origin
+  BOOST_CHECK_EQUAL(centerRotated.x(), 0.0);
+  BOOST_CHECK_EQUAL(centerRotated.y(), 0.0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

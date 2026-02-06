@@ -13,7 +13,7 @@
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/ContainerIterator.hpp"
+#include "Acts/Utilities/detail/ContainerIterator.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -148,11 +148,11 @@ class MeasurementContainer {
 
   const OrderedIndices& orderedIndices() const;
 
-  using iterator = Acts::ContainerIterator<MeasurementContainer, VariableProxy,
-                                           Index, false>;
+  using iterator = Acts::detail::ContainerIterator<MeasurementContainer,
+                                                   VariableProxy, Index, false>;
   using const_iterator =
-      Acts::ContainerIterator<const MeasurementContainer, ConstVariableProxy,
-                              Index, true>;
+      Acts::detail::ContainerIterator<const MeasurementContainer,
+                                      ConstVariableProxy, Index, true>;
 
   iterator begin();
   iterator end();

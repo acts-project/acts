@@ -45,32 +45,34 @@ class SurfaceBoundsStub : public SurfaceBounds {
   bool isCartesian() const final { return true; }
 
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return SquareMatrix2::Identity();
   }
 
   std::vector<double> values() const final { return m_values; }
 
   bool inside(const Vector2& lposition) const final {
-    (void)lposition;
+    static_cast<void>(lposition);
     return true;
   }
 
   Vector2 closestPoint(const Vector2& lposition,
                        const SquareMatrix2& metric) const final {
-    (void)metric;
+    static_cast<void>(metric);
     return lposition;
   }
 
+  Vector2 center() const final { return Vector2(0.0, 0.0); }
+
   bool inside(const Vector2& lposition,
               const BoundaryTolerance& boundaryTolerance) const final {
-    (void)lposition;
-    (void)boundaryTolerance;
+    static_cast<void>(lposition);
+    static_cast<void>(boundaryTolerance);
     return true;
   }
 
@@ -85,9 +87,11 @@ class SurfaceBoundsStub : public SurfaceBounds {
 
 }  // namespace Acts
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
 BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
@@ -126,4 +130,4 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

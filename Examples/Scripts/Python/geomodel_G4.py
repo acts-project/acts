@@ -4,9 +4,6 @@ import argparse
 from acts import (
     logging,
     GeometryContext,
-    CylindricalContainerBuilder,
-    DetectorBuilder,
-    GeometryIdGenerator,
 )
 
 from acts.examples import (
@@ -15,7 +12,9 @@ from acts.examples import (
     ObjTrackingGeometryWriter,
 )
 from acts import geomodel as gm
+from acts.examples import geomodel as gmexample
 from acts import examples
+import acts.examples.geomodel as gm_ex
 
 from pathlib import Path
 from propagation import runPropagation
@@ -30,6 +29,7 @@ def runGeant4(
     volumeMappings=[],
     s: acts.examples.Sequencer = None,
     events=100,
+    seed=1602,
     nMuonPerEvt=1,
 ):
     from acts.examples.simulation import (
@@ -44,7 +44,7 @@ def runGeant4(
 
     s = s or acts.examples.Sequencer(events=events, numThreads=1)
     s.config.logLevel = acts.logging.INFO
-    rnd = acts.examples.RandomNumbers()
+    rnd = acts.examples.RandomNumbers(acts.examples.RandomNumbers.Config(seed=seed))
     u = acts.UnitConstants
     outputDir = Path(outputDir)
     addParticleGun(
@@ -100,14 +100,23 @@ def main():
     )
     parser.add_argument("--outDir", default="./", help="Output")
     parser.add_argument("--nEvents", default=100, type=int, help="Number of events")
+    parser.add_argument(
+        "--randomSeed", default=1602, type=int, help="Random seed for event generation"
+    )
+    parser.add_argument(
+        "--geoSvgDump",
+        default=False,
+        action="store_true",
+        help="Dump the tracking geometry in an obj format",
+    )
 
     args = parser.parse_args()
 
-    gContext = acts.GeometryContext()
+    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     # Create the tracking geometry builder for the muon system
-    gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
+    gmBuilderConfig = gm_ex.GeoModelMuonMockupBuilder.Config()
 
     # Read the geometry model from the database
     gmTree = None
@@ -117,14 +126,26 @@ def main():
         gmBuilderConfig.stationNames = ["BIL", "BML", "BOL"]
 
     elif args.mockupDetector == "Muon":
-        mockUpCfg = gm.GeoMuonMockupExperiment.Config()
+        mockUpCfg = gm_ex.GeoMuonMockupExperiment.Config()
         mockUpCfg.dumpTree = True
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
-        mockUpCfg.buildEndcaps = False
-        mockUpBuilder = gm.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
-        gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
+        mockUpCfg.buildEndcaps = True
+        mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
+            mockUpCfg, "GeoMockUpMS", logLevel
+        )
+        gmBuilderConfig.stationNames = [
+            "BI",
+            "BM",
+            "BO",
+            "EAI",
+            "EAM",
+            "EAO",
+            "ECI",
+            "ECM",
+            "ECO",
+        ]
 
         gmTree = mockUpBuilder.constructMS()
     else:
@@ -134,9 +155,11 @@ def main():
     gmFactoryConfig.nameList = [
         "RpcGasGap",
         "MDTDriftGas",
+        "TgcGasGap",
+        "SmallWheelGasGap",
     ]
     gmFactoryConfig.convertSubVolumes = True
-    gmFactoryConfig.convertBox = ["MDT", "RPC"]
+    gmFactoryConfig.convertBox = ["MDT", "RPC", "SmallWheel", "TGC"]
 
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
@@ -149,38 +172,64 @@ def main():
 
     gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
 
-    gmDetectorCfg = gm.GeoModelDetector.Config()
+    gmDetectorCfg = gm_ex.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
-    detector = gm.GeoModelDetector(gmDetectorCfg)
+    detector = gm_ex.GeoModelDetector(gmDetectorCfg)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
-    trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
-        gmBuilderConfig, "GeoModelMuonMockupBuilder", acts.logging.INFO
+    trackingGeometryBuilder = gm_ex.GeoModelMuonMockupBuilder(
+        gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
 
     trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
 
-    runGeant4(
+    algSequence = runGeant4(
         detector=detector,
         trackingGeometry=trackingGeometry,
         field=field,
         outputDir=args.outDir,
         volumeMappings=gmFactoryConfig.nameList,
         events=args.nEvents,
-    ).run()
+        seed=args.randomSeed,
+    )
 
-    # runPropagation(trackingGeometry, field, args.outDir).run()
+    from acts.examples import MuonSpacePointDigitizer
 
-    wb = WhiteBoard(acts.logging.INFO)
+    digiAlg = MuonSpacePointDigitizer(
+        randomNumbers=acts.examples.RandomNumbers(
+            acts.examples.RandomNumbers.Config(seed=2 * args.randomSeed)
+        ),
+        trackingGeometry=trackingGeometry,
+        dumpVisualization=False,
+        digitizeTime=True,
+        outputSpacePoints="MuonSpacePoints",
+        level=logLevel,
+    )
+    algSequence.addAlgorithm(digiAlg)
 
-    context = AlgorithmContext(0, 0, wb, 10)
-    obj_dir = Path(args.outDir) / "obj"
-    obj_dir.mkdir(exist_ok=True)
+    from acts.examples.root import RootMuonSpacePointWriter
 
-    writer = ObjTrackingGeometryWriter(level=acts.logging.INFO, outputDir=str(obj_dir))
+    algSequence.addWriter(
+        RootMuonSpacePointWriter(
+            level=logLevel,
+            inputSpacePoints="MuonSpacePoints",
+            filePath=f"{args.outDir}/MS_SpacePoints.root",
+        )
+    )
 
-    writer.write(context, trackingGeometry)
+    if args.geoSvgDump:
+        wb = WhiteBoard(acts.logging.INFO)
+        context = AlgorithmContext(0, 0, wb, 10)
+        obj_dir = Path(args.outDir) / "obj"
+        obj_dir.mkdir(exist_ok=True)
+        writer = ObjTrackingGeometryWriter(
+            level=acts.logging.INFO, outputDir=str(obj_dir)
+        )
+
+        writer.write(context, trackingGeometry)
+
+    algSequence.run()
 
 
 if __name__ == "__main__":

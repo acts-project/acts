@@ -9,32 +9,34 @@
 #pragma once
 
 #include "Acts/Definitions/Alignment.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsAlignment/Kernel/AlignmentError.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
 #include <limits>
 #include <map>
-#include <queue>
 #include <vector>
 
 namespace ActsAlignment {
+
 using AlignedTransformUpdater =
-    std::function<bool(Acts::DetectorElementBase*, const Acts::GeometryContext&,
-                       const Acts::Transform3&)>;
+    std::function<bool(Acts::SurfacePlacementBase*,
+                       const Acts::GeometryContext&, const Acts::Transform3&)>;
+
+template <typename Updater>
+concept AlignedTransformUpdaterConcept =
+    requires(Updater updater, Acts::SurfacePlacementBase* detElem,
+             const Acts::GeometryContext& ctx, const Acts::Transform3& trf) {
+      { updater(detElem, ctx, trf) } -> std::same_as<bool>;
+    };
+
 ///
 /// @brief Options for align() call
 ///
 /// @tparam fit_options_t The fit options type
-///
 template <typename fit_options_t>
 struct AlignmentOptions {
   /// Deleted default constructor
@@ -52,7 +54,7 @@ struct AlignmentOptions {
   AlignmentOptions(
       const fit_options_t& fOptions,
       const AlignedTransformUpdater& aTransformUpdater,
-      const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
+      const std::vector<Acts::SurfacePlacementBase*>& aDetElements = {},
       double chi2CutOff = 0.5,
       const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
       std::size_t maxIters = 5,
@@ -72,7 +74,7 @@ struct AlignmentOptions {
   AlignedTransformUpdater alignedTransformUpdater = nullptr;
 
   // The detector elements to be aligned
-  std::vector<Acts::DetectorElementBase*> alignedDetElements;
+  std::vector<Acts::SurfacePlacementBase*> alignedDetElements;
 
   // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;
@@ -95,7 +97,7 @@ struct AlignmentResult {
   Acts::ActsDynamicVector deltaAlignmentParameters;
 
   // The aligned parameters for detector elements
-  std::unordered_map<Acts::DetectorElementBase*, Acts::Transform3>
+  std::unordered_map<Acts::SurfacePlacementBase*, Acts::Transform3>
       alignedParameters;
 
   // The covariance of alignment parameters
@@ -146,7 +148,6 @@ struct Alignment {
   ///
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
-  /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam fit_options_t The fit options type
   ///
   /// @param gctx The current geometry context object
@@ -158,12 +159,12 @@ struct Alignment {
   /// moment)
   ///
   /// @result The alignment state for a single track
-  template <typename source_link_t, typename start_parameters_t,
-            typename fit_options_t>
+  template <typename source_link_t, typename fit_options_t>
   Acts::Result<detail::TrackAlignmentState> evaluateTrackAlignmentState(
       const Acts::GeometryContext& gctx,
       const std::vector<source_link_t>& sourceLinks,
-      const start_parameters_t& sParameters, const fit_options_t& fitOptions,
+      const Acts::BoundTrackParameters& sParameters,
+      const fit_options_t& fitOptions,
       const std::unordered_map<const Acts::Surface*, std::size_t>&
           idxedAlignSurfaces,
       const AlignmentMask& alignMask) const;
@@ -171,7 +172,7 @@ struct Alignment {
   /// @brief calculate the alignment parameters delta
   ///
   /// @tparam trajectory_container_t The trajectories container type
-  /// @tparam start_parameters_t The initial parameters container type
+  /// @tparam start_parameters_container_t The initial parameters container type
   /// @tparam fit_options_t The fit options type
   ///
   /// @param trajectoryCollection The collection of trajectories as input of
@@ -197,14 +198,14 @@ struct Alignment {
   /// @param alignResult [in, out] The aligned result
   Acts::Result<void> updateAlignmentParameters(
       const Acts::GeometryContext& gctx,
-      const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
-      const AlignedTransformUpdater& alignedTransformUpdater,
+      const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
+      const AlignedTransformUpdaterConcept auto& alignedTransformUpdater,
       AlignmentResult& alignResult) const;
 
   /// @brief Alignment implementation
   ///
   /// @tparam trajectory_container_t The trajectories container type
-  /// @tparam start_parameters_t The initial parameters container type
+  /// @tparam start_parameters_container_t The initial parameters container type
   /// @tparam fit_options_t The fit options type
   ///
   /// @param trajectoryCollection The collection of trajectories as input of

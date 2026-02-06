@@ -1,11 +1,10 @@
 acts_add_library(
     PluginGeant4
-    SHARED
     src/Geant4Converters.cpp
     src/Geant4DetectorElement.cpp
     src/Geant4DetectorSurfaceFactory.cpp
     src/Geant4PhysicalVolumeSelectors.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 target_include_directories(
     ActsPluginGeant4

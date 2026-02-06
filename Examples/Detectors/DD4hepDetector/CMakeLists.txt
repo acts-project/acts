@@ -1,8 +1,8 @@
 acts_add_library(
     ExamplesDetectorDD4hep
-    SHARED
     src/DD4hepDetector.cpp
     src/AlignedDD4hepDetectorElement.cpp
+    src/OpenDataDetector.cpp
 )
 
 target_include_directories(
@@ -11,11 +11,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesDetectorDD4hep
-    PUBLIC
-        Acts::Core
-        Acts::PluginDD4hep
-        Acts::ExamplesFramework
-        Acts::ExamplesDetectorsCommon
+    PUBLIC Acts::PluginDD4hep Acts::ExamplesDetectorsCommon
 )
 
 if(ACTS_BUILD_EXAMPLES_GEANT4)
@@ -61,5 +57,3 @@ set_target_properties(
     ActsExamplesDetectorDD4hep
     PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-dd4hep_set_version(ActsExamplesDetectorDD4hep MAJOR 1 MINOR 0 PATCH 0)
-dd4hep_generate_rootmap(ActsExamplesDetectorDD4hep)

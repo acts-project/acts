@@ -8,13 +8,10 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 
 #include <stdexcept>
 
@@ -27,8 +24,8 @@ namespace ActsExamples {
 EDM4hepMeasurementInputConverter::EDM4hepMeasurementInputConverter(
     const EDM4hepMeasurementInputConverter::Config& config,
     Acts::Logging::Level level)
-    : EDM4hepInputConverter("EDM4hepMeasurementInputConverter", level,
-                            config.inputFrame),
+    : PodioInputConverter("EDM4hepMeasurementInputConverter", level,
+                          config.inputFrame),
       m_cfg(config) {
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");

@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
 
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <stdexcept>
 
@@ -21,7 +21,7 @@ namespace ActsExamples {
 
 EDM4hepTrackOutputConverter::EDM4hepTrackOutputConverter(
     const Config& config, Acts::Logging::Level level)
-    : EDM4hepOutputConverter("EDM4hepTrackOutputConverter", level),
+    : PodioOutputConverter("EDM4hepTrackOutputConverter", level),
       m_cfg(config) {
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
@@ -35,7 +35,8 @@ ActsExamples::ProcessCode EDM4hepTrackOutputConverter::execute(
 
   for (const auto& from : tracks) {
     auto to = trackCollection.create();
-    Acts::EDM4hepUtil::writeTrack(context.geoContext, from, to, m_cfg.Bz);
+    ActsPlugins::EDM4hepUtil::writeTrack(context.geoContext, from, to,
+                                         m_cfg.Bz);
   }
 
   m_outputTracks(context, std::move(trackCollection));

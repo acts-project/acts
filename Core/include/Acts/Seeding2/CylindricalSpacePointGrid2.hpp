@@ -18,7 +18,7 @@
 #include <numbers>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// A cylindrical space point grid used for seeding in a cylindrical detector
 /// geometry.
@@ -29,17 +29,23 @@ class CylindricalSpacePointGrid2 {
  public:
   /// Space point index type used in the grid.
   using SpacePointIndex = std::uint32_t;
+  /// Type alias for bin container holding space point indices
   using BinType = std::vector<SpacePointIndex>;
+  /// Type alias for phi axis with equidistant binning and closed boundaries
   using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+  /// Type alias for z axis with variable binning and open boundaries
   using ZAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
+  /// Type alias for r axis with variable binning and open boundaries
   using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
   /// Cylindrical space point grid type, which is a grid over `BinType` with
   /// axes defined by `PhiAxisType`, `ZAxisType`, and `RAxisType`.
   /// The grid is a 3D grid with the axes representing azimuthal angle (phi),
   /// z-coordinate, and radial distance (r).
   using GridType = Grid<BinType, PhiAxisType, ZAxisType, RAxisType>;
+  /// Type alias for binned group over the cylindrical grid
   using BinnedGroupType = BinnedGroup<GridType>;
 
+  /// Configuration parameters for the cylindrical space point grid.
   struct Config {
     /// minimum pT
     float minPt = 0 * UnitConstants::MeV;
@@ -79,18 +85,24 @@ class CylindricalSpacePointGrid2 {
     int maxPhiBins = 10000;
     /// enable non equidistant binning in z
     std::vector<float> zBinEdges{};
+    /// enable non equidistant binning in r
     std::vector<float> rBinEdges{};
 
     /// magnetic field
     float bFieldInZ = 0 * UnitConstants::T;
 
+    /// bin finder for bottom space points
     std::optional<GridBinFinder<3ul>> bottomBinFinder;
+    /// bin finder for top space points
     std::optional<GridBinFinder<3ul>> topBinFinder;
+    /// navigation structure for the grid
     std::array<std::vector<std::size_t>, 3ul> navigation;
   };
 
   /// Construct a cylindrical space point grid with the given configuration and
   /// an optional logger.
+  /// @param config Configuration for the cylindrical grid
+  /// @param logger Optional logger instance for debugging output
   explicit CylindricalSpacePointGrid2(
       const Config& config,
       std::unique_ptr<const Logger> logger =
@@ -129,8 +141,8 @@ class CylindricalSpacePointGrid2 {
   /// @param r The radial distance of the space point from the origin
   /// @return The index of the bin in which the space point was inserted, or
   ///         `std::nullopt` if the space point is outside the grid bounds.
-  std::optional<std::size_t> insert(SpacePointIndex index, float phi, float r,
-                                    float z);
+  std::optional<std::size_t> insert(SpacePointIndex index, float phi, float z,
+                                    float r);
   /// Insert a space point into the grid.
   /// @param sp The space point to insert
   /// @return The index of the bin in which the space point was inserted, or
@@ -197,4 +209,4 @@ class CylindricalSpacePointGrid2 {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

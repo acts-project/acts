@@ -99,7 +99,7 @@ struct Extendable {
   /// @tparam extension_t Type of the Extension to be retrieved
   const std::tuple<extensions_t...>& tuple() const { return m_extensions; }
 
-  /// Non-Const retrieval of the extendsion tuype
+  /// Non-Const retrieval of the extension tuype
   ///
   /// @tparam extension_t Type of the Extension to be retrieved
   std::tuple<extensions_t...>& tuple() { return m_extensions; }
