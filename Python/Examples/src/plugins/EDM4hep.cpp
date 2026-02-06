@@ -53,6 +53,18 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
   py::class_<PodioInputConverter, IAlgorithm,
              std::shared_ptr<PodioInputConverter>>(m, "PodioInputConverter");
 
+  // ConversionHelper bindings
+  py::class_<ActsPlugins::PodioUtil::ConversionHelper,
+             std::shared_ptr<ActsPlugins::PodioUtil::ConversionHelper>>(
+      m, "PodioConversionHelper");
+
+  py::class_<DD4hepPodioConversionHelper,
+             ActsPlugins::PodioUtil::ConversionHelper,
+             std::shared_ptr<DD4hepPodioConversionHelper>>(
+      m, "DD4hepPodioConversionHelper")
+      .def(py::init<std::shared_ptr<const Acts::TrackingGeometry>>(),
+           py::arg("trackingGeometry"));
+
   {
     auto [alg, config] =
         declareAlgorithm<PodioMeasurementInputConverter, PodioInputConverter>(
