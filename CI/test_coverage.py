@@ -28,7 +28,7 @@ DEFAULT_EXCLUDES = [
     r"/boost/",
     r"json\.hpp",
     r"(^|/)Python/",
-    r"(^|/)dependencies/",
+    r"^dependencies/",
 ]
 
 
@@ -171,7 +171,10 @@ def generate(
     subprocess.run(gcovr_sonar_cmd, cwd=build_dir, check=True)
 
     if filter_xml:
-        filter_coverage_xml(raw_xml_path, coverage_xml_path, DEFAULT_EXCLUDES)
+        xml_excludes = DEFAULT_EXCLUDES + ["^" + re.escape(build_dir.name)]
+        filter_coverage_xml(raw_xml_path, coverage_xml_path, xml_excludes)
+        raw_xml_path.unlink()
+        console.print(f"Removed raw coverage file {raw_xml_path}")
 
     validate_coverage_xml(coverage_xml_path, schema_path)
 
@@ -235,15 +238,21 @@ def filter(
         list[str] | None,
         typer.Option("--exclude", "-e", help="Regex pattern to exclude file paths"),
     ] = None,
+    build_dir_name: Annotated[
+        str | None,
+        typer.Option(help="Build directory name to exclude from coverage paths"),
+    ] = None,
 ) -> None:
     """Filter a SonarQube coverage XML file by removing file entries matching exclude patterns."""
     if not input.exists():
         console.print(f"Input file not found: {input}", style="red")
         raise typer.Exit(1)
 
-    filter_coverage_xml(
-        input, output, exclude if exclude is not None else DEFAULT_EXCLUDES
-    )
+    excludes = list(exclude) if exclude is not None else list(DEFAULT_EXCLUDES)
+    if build_dir_name is not None:
+        excludes.append("^" + re.escape(build_dir_name))
+
+    filter_coverage_xml(input, output, excludes)
 
 
 if __name__ == "__main__":
