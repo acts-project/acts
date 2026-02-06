@@ -12,8 +12,6 @@
 
 namespace Acts {
 
-/// @struct PlainGsfBoundComponent
-///
 /// Encapsulates a component of a Gaussian mixture as used by the GSF
 struct GsfComponent {
   /// Weight of this component in the Gaussian mixture
