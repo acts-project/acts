@@ -12,15 +12,15 @@
 
 namespace Acts {
 
-std::tuple<BoundVector, BoundSquareMatrix> detail::mergeGaussianMixture(
+std::tuple<BoundVector, BoundSquareMatrix> detail::Gsf::mergeGaussianMixture(
     std::span<const GsfComponent> mixture, const Surface &surface,
     ComponentMergeMethod method) {
   return mergeGaussianMixture(mixture, std::identity{}, surface, method);
 }
 
-GsfComponent detail::mergeTwoComponents(const GsfComponent &a,
-                                        const GsfComponent &b,
-                                        const Surface &surface) {
+GsfComponent detail::Gsf::mergeTwoComponents(const GsfComponent &a,
+                                             const GsfComponent &b,
+                                             const Surface &surface) {
   assert(a.weight >= 0.0 && b.weight >= 0.0 && "non-positive weight");
 
   std::array components = {std::ref(a), std::ref(b)};

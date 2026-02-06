@@ -26,7 +26,7 @@
 
 #include <map>
 
-namespace Acts::detail {
+namespace Acts::detail::Gsf {
 
 template <typename traj_t>
 struct GsfResult {
@@ -152,8 +152,8 @@ struct GsfActor {
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
-                                                         navigator, logger());
+    const ScopedGsfInfoPrinterAndChecker printer(state, stepper, navigator,
+                                                 logger());
 
     // We only need to do something if we are on a surface
     if (!navigator.currentSurface(state.navigation)) {
@@ -167,8 +167,8 @@ struct GsfActor {
     // stepper misbehaves
     [[maybe_unused]] auto stepperComponents =
         stepper.constComponentIterable(state.stepping);
-    assert(detail::weightsAreNormalized(
-        stepperComponents, [](const auto& cmp) { return cmp.weight(); }));
+    assert(weightsAreNormalized(stepperComponents,
+                                [](const auto& cmp) { return cmp.weight(); }));
 
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
@@ -455,7 +455,7 @@ struct GsfActor {
   void removeLowWeightComponents(std::vector<GsfComponent>& cmps) const {
     auto proj = [](auto& cmp) -> double& { return cmp.weight; };
 
-    detail::normalizeWeights(cmps, proj);
+    normalizeWeights(cmps, proj);
 
     auto new_end = std::remove_if(cmps.begin(), cmps.end(), [&](auto& cmp) {
       return proj(cmp) < m_cfg.weightCutoff;
@@ -469,7 +469,7 @@ struct GsfActor {
       cmps.front().weight = 1.0;
     } else {
       cmps.erase(new_end, cmps.end());
-      detail::normalizeWeights(cmps, proj);
+      normalizeWeights(cmps, proj);
     }
   }
 
@@ -499,8 +499,7 @@ struct GsfActor {
 
     // TODO we have two normalization passes here now, this can probably be
     // optimized
-    detail::normalizeWeights(cmps,
-                             [&](auto cmp) -> double& { return cmp.weight(); });
+    normalizeWeights(cmps, [&](auto cmp) -> double& { return cmp.weight(); });
   }
 
   /// Function that updates the stepper from the ComponentCache
@@ -583,7 +582,7 @@ struct GsfActor {
 
     computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);
 
-    detail::normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
+    normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
       return tmpStates.weights.at(idx);
     });
 
@@ -794,4 +793,4 @@ struct GsfActor {
   }
 };
 
-}  // namespace Acts::detail
+}  // namespace Acts::detail::Gsf

@@ -14,7 +14,7 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
-#include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
       {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
       {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
-  detail::SymmetricKLDistanceMatrix mat(cmps);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps);
 
   const auto [i, j] = mat.minDistancePair();
   BOOST_CHECK_EQUAL(std::min(i, j), 1);
@@ -53,11 +53,11 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
 
   const std::size_t cmp_to_mask = 2;
 
-  detail::SymmetricKLDistanceMatrix mat_full(cmps);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_full(cmps);
   mat_full.maskAssociatedDistances(cmp_to_mask);
 
   cmps.erase(cmps.begin() + cmp_to_mask);
-  detail::SymmetricKLDistanceMatrix mat_small(cmps);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_small(cmps);
 
   const auto [full_i, full_j] = mat_full.minDistancePair();
   const auto [small_i, small_j] = mat_small.minDistancePair();
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
       {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
       {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
-  detail::SymmetricKLDistanceMatrix mat(cmps);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps);
 
   {
     const auto [i, j] = mat.minDistancePair();

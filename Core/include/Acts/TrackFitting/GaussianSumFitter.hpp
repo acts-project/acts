@@ -86,7 +86,7 @@ struct GaussianSumFitter {
   using GsfNavigator = typename propagator_t::Navigator;
 
   /// The actor type
-  using GsfActor = detail::GsfActor<traj_t>;
+  using GsfActor = detail::Gsf::GsfActor<traj_t>;
 
   /// @brief The fit function for the Direct navigator
   /// @param begin Iterator to the start of source links
@@ -506,7 +506,7 @@ struct GaussianSumFitter {
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
 
-      const auto [finalPars, finalCov] = detail::mergeGaussianMixture(
+      const auto [finalPars, finalCov] = detail::Gsf::mergeGaussianMixture(
           params.components(),
           [](const auto& cmp) {
             const auto& [weight_l, pars_l, opt_cov_l] = cmp;

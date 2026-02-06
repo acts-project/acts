@@ -9,11 +9,10 @@
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
-#include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
 #include <algorithm>
 
-namespace Acts::detail {
+namespace Acts::detail::Gsf {
 
 namespace {
 
@@ -52,7 +51,7 @@ void reduceWithKLDistanceImpl(std::vector<GsfComponent> &cmpCache,
 
 }  // namespace
 
-}  // namespace Acts::detail
+}  // namespace Acts::detail::Gsf
 
 void Acts::reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
                                        std::size_t maxCmpsAfterMerge,
@@ -73,5 +72,5 @@ void Acts::reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
-  detail::reduceWithKLDistanceImpl(cmpCache, maxCmpsAfterMerge, surface);
+  detail::Gsf::reduceWithKLDistanceImpl(cmpCache, maxCmpsAfterMerge, surface);
 }

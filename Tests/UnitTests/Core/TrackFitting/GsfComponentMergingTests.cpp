@@ -233,7 +233,7 @@ void test_surface(const Surface &surface, const LocPosArray &loc_pos,
         }
       }
 
-      const auto [mean_approx, cov_approx] = detail::mergeGaussianMixture(
+      const auto [mean_approx, cov_approx] = detail::Gsf::mergeGaussianMixture(
           cmps, surface, ComponentMergeMethod::eMean);
 
       const auto mean_ref = meanFromFree(cmps, surface);
@@ -266,8 +266,8 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto mean_data = mean(samples);
   const auto boundCov_data = boundCov(samples, mean_data);
 
-  const auto [mean_test, boundCov_test] =
-      detail::mergeGaussianMixture(cmps, *surface, ComponentMergeMethod::eMean);
+  const auto [mean_test, boundCov_test] = detail::Gsf::mergeGaussianMixture(
+      cmps, *surface, ComponentMergeMethod::eMean);
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
@@ -300,8 +300,8 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
         return res;
       });
 
-  const auto [mean_test, boundCov_test] =
-      detail::mergeGaussianMixture(cmps, *surface, ComponentMergeMethod::eMean);
+  const auto [mean_test, boundCov_test] = detail::Gsf::mergeGaussianMixture(
+      cmps, *surface, ComponentMergeMethod::eMean);
 
   BOOST_CHECK(std::abs(detail::difference_periodic(
                   mean_data[0], mean_test[0], 2 * std::numbers::pi)) < 1.e-1);
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
   const LocPosArray p{
       {{r * phi1, z1}, {r * phi1, -z2}, {r * phi2, z1}, {r * phi2, z2}}};
 
-  auto desc = detail::AngleDescription<Surface::Cylinder>::Desc{};
+  auto desc = detail::Gsf::AngleDescription<Surface::Cylinder>::Desc{};
   std::get<0>(desc).constant = r;
 
   test_surface(*surface, p, 1.e-2);
