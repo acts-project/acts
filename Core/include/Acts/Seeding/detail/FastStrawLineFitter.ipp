@@ -250,7 +250,6 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     const Acts::CalibrationContext& ctx, const Calibrator_t& calibrator,
     const StrawCont_t& measurements, const std::vector<int>& signs,
     std::optional<double> startT0) const {
-  using namespace Acts::UnitLiterals;
   if (measurements.size() != signs.size()) {
     ACTS_WARNING(
         __func__ << "() - " << __LINE__
@@ -280,6 +279,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   if (logger().doPrint(Logging::VERBOSE)) {
     ACTS_VERBOSE("Fit failed, printing all measurements:");
     for (const auto& meas : measurements) {
+      using namespace Acts::UnitLiterals;
       ACTS_VERBOSE(toString(*meas)
                    << ", t0: " << result.t0 / 1._ns
                    << ", truthR, RecoR: " << meas->driftRadius() << ", "
