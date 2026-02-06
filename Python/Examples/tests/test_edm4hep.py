@@ -756,44 +756,47 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
     )
     from truth_tracking_kalman import runTruthTrackingKalman
 
-    detector = GenericDetector()
-    trackingGeometry = detector.trackingGeometry()
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    with getOpenDataDetector() as detector:
+        trackingGeometry = detector.trackingGeometry()
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    s = Sequencer(numThreads=1, events=10)
-    runTruthTrackingKalman(
-        trackingGeometry,
-        field,
-        digiConfigFile=Path(
-            str(
-                Path(__file__).parent.parent.parent.parent
-                / "Examples/Configs/generic-digi-smearing-config.json"
-            )
-        ),
-        outputDir=tmp_path,
-        s=s,
-    )
-
-    out = tmp_path / "podio_tracks.root"
-
-    # Create converter
-    converter = PodioTrackOutputConverter(
-        level=acts.logging.VERBOSE,
-        inputTracks="kf_tracks",
-        outputTracks="ActsPodioTracks",
-        inputMeasurements="measurements",
-    )
-    s.addAlgorithm(converter)
-    # Write to file
-    s.addWriter(
-        PodioWriter(
-            level=acts.logging.VERBOSE,
-            outputPath=str(out),
-            category="events",
-            collections=converter.collections,
+        s = Sequencer(numThreads=1, events=10)
+        runTruthTrackingKalman(
+            trackingGeometry,
+            field,
+            digiConfigFile=Path(
+                str(
+                    Path(__file__).parent.parent.parent.parent
+                    / "Examples/Configs/odd-digi-smearing-config.json"
+                )
+            ),
+            outputDir=tmp_path,
+            s=s,
         )
-    )
-    s.run()
+
+        out = tmp_path / "podio_tracks.root"
+
+        # Create converter
+        converter = PodioTrackOutputConverter(
+            level=acts.logging.VERBOSE,
+            inputTracks="kf_tracks",
+            outputTracks="ActsPodioTracks",
+            inputMeasurements="measurements",
+            outputMeasurements="ActsPodioMeasurements",
+            detector=detector,
+        )
+        s.addAlgorithm(converter)
+
+        s.addWriter(
+            PodioWriter(
+                level=acts.logging.VERBOSE,
+                outputPath=str(out),
+                category="events",
+                collections=converter.collections,
+            )
+        )
+
+        s.run()
 
     assert os.path.isfile(out), f"File {out} does not exist"
     assert os.stat(out).st_size > 200, f"File {out} is too small"
@@ -812,15 +815,19 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
 
     num_tracks = 0
     num_track_states = 0
+    num_measurements = 0
 
     for frame in reader.get("events"):
         tracks = frame.get("ActsPodioTracks")
         num_tracks += len(tracks)
         track_states = frame.get("ActsPodioTracks_trackStates")
         num_track_states += len(track_states)
+        measurements = frame.get("ActsPodioMeasurements")
+        num_measurements += len(measurements)
 
     assert num_tracks > 0, "No tracks were written"
     assert num_track_states > 0, "No track states were written"
+    assert num_measurements > 0, "No measurements were written"
     print(f"Successfully wrote {num_tracks} tracks")
 
 

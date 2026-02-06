@@ -11,6 +11,7 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "ActsExamples/Io/EDM4hep/DD4hepPodioConversionHelper.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsPlugins/EDM4hep/PodioTrackContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioTrackStateContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioUtil.hpp"
@@ -18,6 +19,7 @@
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
 
 #include <stdexcept>
 
@@ -33,10 +35,19 @@ PodioTrackOutputConverter::PodioTrackOutputConverter(const Config& config,
     throw std::invalid_argument("Missing output tracks collection");
   }
 
+  if (m_cfg.detector == nullptr) {
+    throw std::invalid_argument("Missing detector");
+  }
+
+  if (m_cfg.detector->trackingGeometry() == nullptr) {
+    throw std::invalid_argument("Tracking geometry not found");
+  }
+
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
   m_outputTrackStates.initialize(m_cfg.outputTracks + "_trackStates");
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
 }
 
 ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
@@ -48,6 +59,17 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
                              << " tracks to Podio format");
 
   const auto& inputMeasurements = m_inputMeasurements(context);
+
+  auto outputMeasurements =
+      std::make_unique<ActsPodioEdm::TrackerHitLocalCollection>();
+
+  ACTS_VERBOSE("Writing " << inputMeasurements.size()
+                          << " measurements to PODIO format");
+  for (const auto& meas : inputMeasurements) {
+    ActsPodioEdm::MutableTrackerHitLocal to = outputMeasurements->create();
+    writeMeasurement(context.geoContext, meas, to);
+  }
+
   DD4hepPodioConversionHelper helper(*m_cfg.detector, inputMeasurements);
 
   // Create external Podio collections that we'll own and write to the event
@@ -99,12 +121,58 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
   // Write collections to event store
   m_outputTracks(context, std::move(trackCollection));
   m_outputTrackStates(context, std::move(trackStateCollection));
+  m_outputMeasurements(context, std::move(outputMeasurements));
 
   return ProcessCode::SUCCESS;
 }
 
 std::vector<std::string> PodioTrackOutputConverter::collections() const {
-  return {m_cfg.outputTracks, m_cfg.outputTracks + "_trackStates"};
+  return {m_cfg.outputTracks, m_cfg.outputTracks + "_trackStates",
+          m_cfg.outputMeasurements};
+}
+
+void PodioTrackOutputConverter::writeMeasurement(
+    const Acts::GeometryContext& gctx,
+    const ConstVariableBoundMeasurementProxy& meas,
+    ActsPodioEdm::MutableTrackerHitLocal& to) const {
+  const auto* surface = surfaceByIdentifier(meas.geometryId());
+  if (surface == nullptr) {
+    std::stringstream ss;
+    ss << "Surface not found for geometry ID " << meas.geometryId();
+    throw std::runtime_error(ss.str());
+  }
+  const auto cellId = cellIdFromSurface(*surface);
+
+  ActsPlugins::EDM4hepUtil::writeMeasurement(
+      gctx, meas.parameters(), meas.covariance(),
+      meas.subspaceHelper().indices(), cellId, *surface, to);
+}
+
+const Acts::Surface* PodioTrackOutputConverter::surfaceByIdentifier(
+    Acts::GeometryIdentifier geometryId) const {
+  const auto surface =
+      m_cfg.detector->trackingGeometry()->findSurface(geometryId);
+  if (surface == nullptr) {
+    std::stringstream ss;
+    ss << "Surface not found for geometry ID " << geometryId;
+    throw std::runtime_error(ss.str());
+  }
+  return surface;
+}
+
+dd4hep::CellID PodioTrackOutputConverter::cellIdFromSurface(
+    const Acts::Surface& surface) {
+  const auto* placement = surface.surfacePlacement();
+  if (placement == nullptr) {
+    throw std::runtime_error("Surface placement not found");
+  }
+  const auto* dd4hepDetectorElement =
+      dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(placement);
+  if (dd4hepDetectorElement == nullptr) {
+    throw std::runtime_error(
+        "Surface placement is not a DD4hepDetectorElement");
+  }
+  return dd4hepDetectorElement->sourceElement().volumeID();
 }
 
 }  // namespace ActsExamples

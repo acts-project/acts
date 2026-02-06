@@ -26,6 +26,10 @@ namespace podio {
 class CollectionBase;
 }
 
+namespace ActsPodioEdm {
+class MutableTrackerHitLocal;
+}
+
 namespace ActsExamples {
 
 /// Write out a track container to PODIO track collections
@@ -43,6 +47,8 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
     std::string outputTracks = "tracks";
     /// Input measurement collection
     std::string inputMeasurements;
+    /// Output measurement collection
+    std::string outputMeasurements = "measurements";
 
     /// DD4hep detector
     std::shared_ptr<DD4hepDetector> detector;
@@ -65,6 +71,15 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
   ProcessCode execute(const AlgorithmContext& context) const final;
 
  private:
+  void writeMeasurement(const Acts::GeometryContext& gctx,
+                        const ConstVariableBoundMeasurementProxy& meas,
+                        ActsPodioEdm::MutableTrackerHitLocal& to) const;
+
+  const Acts::Surface* surfaceByIdentifier(
+      Acts::GeometryIdentifier geometryId) const;
+
+  static dd4hep::CellID cellIdFromSurface(const Acts::Surface& surface);
+
   Config m_cfg;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
@@ -73,6 +88,7 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
 
   CollectionBaseWriteHandle m_outputTracks{this, "OutputTracks"};
   CollectionBaseWriteHandle m_outputTrackStates{this, "OutputTrackStates"};
+  CollectionBaseWriteHandle m_outputMeasurements{this, "OutputMeasurements"};
 };
 
 }  // namespace ActsExamples

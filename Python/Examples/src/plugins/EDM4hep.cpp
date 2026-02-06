@@ -145,6 +145,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
     auto [alg, config] =
         declareAlgorithm<PodioTrackOutputConverter, PodioOutputConverter>(
             m, "PodioTrackOutputConverter");
-    ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks, inputMeasurements);
+    ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks, inputMeasurements,
+                       outputMeasurements, detector);
   }
 }
