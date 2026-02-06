@@ -509,6 +509,7 @@ class AnyTrackStateProxy
   using Base::hasPrevious;
   using Base::hasProjector;
   using Base::hasSmoothed;
+  using Base::hasUncalibratedSourceLink;
   using Base::parameters;
   using Base::pathLength;
   using Base::predicted;
