@@ -34,7 +34,9 @@ TruthJetAlgorithm::TruthJetAlgorithm(const Config& cfg,
     throw std::invalid_argument("Input particles collection is not configured");
   }
   m_inputTruthParticles.initialize(m_cfg.inputTruthParticles);
-  m_inputTracks.initialize(m_cfg.inputTracks);
+  if (m_cfg.doTrackJetMatching) {
+    m_inputTracks.initialize(m_cfg.inputTracks);
+  }
   m_outputJets.initialize(m_cfg.outputJets);
 }
 
@@ -67,9 +69,6 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Initialize the output container
   std::vector<ActsPlugins::FastJet::TruthJet> outputJetContainer{};
-
-  const ConstTrackContainer& tracks = m_inputTracks(ctx);
-  ACTS_DEBUG("Number of input tracks: " << tracks.size());
 
   Acts::ScopedTimer globalTimer("TruthJetAlgorithm", logger(),
                                 Acts::Logging::DEBUG);
@@ -301,9 +300,11 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   }
 
   if (m_cfg.doTrackJetMatching) {
-    trackJetMatching(tracks, outputJetContainer);
+    const ConstTrackContainer& tracks = m_inputTracks(ctx);
+    m_outputJets(ctx, trackJetMatching(tracks, outputJetContainer));
+  } else {
+    m_outputJets(ctx, std::move(outputJetContainer));
   }
-  m_outputJets(ctx, std::move(outputJetContainer));
 
   return ProcessCode::SUCCESS;
 }
