@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test bounds
   BOOST_CHECK_EQUAL(planeSurfaceObject->bounds().type(),
-                    SurfaceBounds::eRectangle);
+                    SurfaceBounds::Rectangle);
 
   /// Test localToGlobal
   Vector2 localPosition{1.5, 1.7};

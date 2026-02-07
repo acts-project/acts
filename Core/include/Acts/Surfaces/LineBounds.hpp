@@ -44,7 +44,7 @@ class LineBounds : public SurfaceBounds {
   }
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return eLine; }
+  Type type() const final { return Line; }
 
   /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return true; }

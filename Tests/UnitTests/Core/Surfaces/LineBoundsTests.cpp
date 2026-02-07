@@ -31,11 +31,11 @@ BOOST_AUTO_TEST_CASE(LineBoundsConstruction) {
 
   /// Test LineBounds(double, double)
   LineBounds lineBounds(radius, halfZ);
-  BOOST_CHECK_EQUAL(lineBounds.type(), SurfaceBounds::eLine);
+  BOOST_CHECK_EQUAL(lineBounds.type(), SurfaceBounds::Line);
 
   /// Test copy construction;
   LineBounds copyConstructedLineBounds(lineBounds);  // implicit
-  BOOST_CHECK_EQUAL(copyConstructedLineBounds.type(), SurfaceBounds::eLine);
+  BOOST_CHECK_EQUAL(copyConstructedLineBounds.type(), SurfaceBounds::Line);
 }
 
 /// Unit test for testing LineBounds recreation from streaming
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   LineBounds lineBoundsObject(radius, halfZ);
 
   /// Test for type()
-  BOOST_CHECK_EQUAL(lineBoundsObject.type(), SurfaceBounds::eLine);
+  BOOST_CHECK_EQUAL(lineBoundsObject.type(), SurfaceBounds::Line);
 
   /// Test for inside()
   const Vector2 origin{0., 0.};

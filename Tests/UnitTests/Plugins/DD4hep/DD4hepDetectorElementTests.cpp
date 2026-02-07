@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
   BOOST_CHECK(sTransform.translation().isApprox(Vector3(10., 20., 30.)));
 
   const auto& sBounds = surface.bounds();
-  BOOST_CHECK_EQUAL(sBounds.type(), SurfaceBounds::BoundsType::eRectangle);
+  BOOST_CHECK_EQUAL(sBounds.type(), SurfaceBounds::Type::Rectangle);
 
   auto boundValues = sBounds.values();
 
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
   BOOST_CHECK(sTransform.translation().isApprox(Vector3(20., 30., 40.)));
 
   const auto& sBounds = surface.bounds();
-  BOOST_CHECK_EQUAL(sBounds.type(), SurfaceBounds::BoundsType::eTrapezoid);
+  BOOST_CHECK_EQUAL(sBounds.type(), SurfaceBounds::Type::Trapezoid);
 
   auto boundValues = sBounds.values();
   CHECK_CLOSE_ABS(boundValues[0u], 100., 1e-10);

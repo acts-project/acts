@@ -37,7 +37,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
 
   /// Return the bounds type of this bounds object.
   /// @return The bounds type
-  BoundsType type() const final { return eConvexPolygon; }
+  Type type() const final { return ConvexPolygon; }
 
   /// Return the bound values as dynamically sized vector
   /// @return this returns a copy of the internal values

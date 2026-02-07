@@ -83,7 +83,7 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
 
   // Plane surface section -------------------
   if (surfaceType == Acts::Surface::Plane ||
-      surface.bounds().type() == Acts::SurfaceBounds::eDiscTrapezoid) {
+      surface.bounds().type() == Acts::SurfaceBounds::DiscTrapezoid) {
     Acts::Vector2 localStart =
         (surfaceType == Acts::Surface::Plane)
             ? segment[0]
@@ -112,7 +112,7 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
     if (surfaceType == Acts::Surface::Plane) {
       planarBounds =
           static_cast<const Acts::PlanarBounds*>(&(surface.bounds()));
-      if (planarBounds->type() == Acts::SurfaceBounds::eEllipse) {
+      if (planarBounds->type() == Acts::SurfaceBounds::Ellipse) {
         return DigitizationError::UndefinedSurface;
       }
     } else {
@@ -142,12 +142,12 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
     }
 
     auto boundsType = surface.bounds().type();
-    if (boundsType == Acts::SurfaceBounds::eDisc) {
+    if (boundsType == Acts::SurfaceBounds::Disc) {
       auto rBounds =
           static_cast<const Acts::RadialBounds*>(&(surface.bounds()));
       return radialMask(*rBounds, segment, {sPolar, ePolar}, startInside);
 
-    } else if (boundsType == Acts::SurfaceBounds::eAnnulus) {
+    } else if (boundsType == Acts::SurfaceBounds::Annulus) {
       auto aBounds =
           static_cast<const Acts::AnnulusBounds*>(&(surface.bounds()));
       return annulusMask(*aBounds, segment, startInside);

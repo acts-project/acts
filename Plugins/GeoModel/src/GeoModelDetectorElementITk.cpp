@@ -109,11 +109,11 @@ GeoModelDetectorElementITk::convertFromGeomodel(
   };
 
   if (srf->type() == Surface::Plane &&
-      srf->bounds().type() == SurfaceBounds::eRectangle) {
+      srf->bounds().type() == SurfaceBounds::Rectangle) {
     return helper.operator()<PlaneSurface, RectangleBounds>();
   }
   if (srf->type() == Surface::Disc &&
-      srf->bounds().type() == SurfaceBounds::eAnnulus) {
+      srf->bounds().type() == SurfaceBounds::Annulus) {
     return helper.operator()<DiscSurface, AnnulusBounds>();
   }
 

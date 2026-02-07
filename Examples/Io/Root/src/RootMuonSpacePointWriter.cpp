@@ -172,15 +172,15 @@ ProcessCode RootMuonSpacePointWriter::writeT(
       Acts::Vector3 lowEdge{Vector3::Zero()};
       Acts::Vector3 highEdge{Vector3::Zero()};
       switch (bounds.type()) {
-        using enum Acts::SurfaceBounds::BoundsType;
-        case eLine: {
+        using enum Acts::SurfaceBounds::Type;
+        case Line: {
           const auto& lBounds = static_cast<const LineBounds&>(bounds);
           const double l = lBounds.get(LineBounds::eHalfLengthZ);
           lowEdge = trf * (-l * Vector3::UnitZ());
           highEdge = trf * (l * Vector3::UnitZ());
           break;
         }
-        case eRectangle: {
+        case Rectangle: {
           const auto& rBounds = static_cast<const RectangleBounds&>(bounds);
           const double l =
               rBounds.get(writeMe.measuresLoc1() ? RectangleBounds::eMaxX
@@ -191,7 +191,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
           highEdge = trf * (l * Vector3::Unit(dimIdx));
           break;
         }
-        case eTrapezoid: {
+        case Trapezoid: {
           ACTS_WARNING(__FILE__ << ":" << __LINE__ << " Implement me");
           break;
         }

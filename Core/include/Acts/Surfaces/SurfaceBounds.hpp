@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Utilities/OstreamFormatter.hpp"
 
 #include <cmath>
 #include <ostream>
@@ -27,31 +28,49 @@ namespace Acts {
 ///
 class SurfaceBounds {
  public:
-  /// @enum BoundsType
   /// This is nested to the SurfaceBounds, as also VolumeBounds will have
   /// Bounds Type.
-  enum BoundsType : int {
-    eCone = 0,
-    eCylinder = 1,
-    eDiamond = 2,
-    eDisc = 3,
-    eEllipse = 4,
-    eLine = 5,
-    eRectangle = 6,
-    eTrapezoid = 7,
-    eTriangle = 8,
+  enum class Type : int {
+    eCone [[deprecated("Use the enum ::Cone instead")]] = 0,
+    eCylinder [[deprecated("Use the enum ::Cylinder instead")]] = 1,
+    eDiamond [[deprecated("Use the enum ::Diamond instead")]] = 2,
+    eDisc [[deprecated("Use the enum ::Disc instead")]] = 3,
+    eEllipse [[deprecated("Use the enum ::Ellipse instead")]] = 4,
+    eLine [[deprecated("Use the enum ::Line instead")]] = 5,
+    eRectangle [[deprecated("Use the enum ::Rectangle instead")]] = 6,
+    eTrapezoid [[deprecated("Use the enum ::Trapezoid instead")]] = 7,
+    eTriangle [[deprecated("Use the enum ::Triangle instead")]] = 8,
     eDiscTrapezoid = 9,
-    eConvexPolygon = 10,
-    eAnnulus = 11,
-    eBoundless = 12,
-    eOther = 13
+    eConvexPolygon [[deprecated("Use the enum ::ConvexPolygon instead")]] = 10,
+    eAnnulus [[deprecated("Use the enum ::Annulus instead")]] = 11,
+    eBoundless [[deprecated("Use the enum ::Boundless instead")]] = 12,
+    eOther [[deprecated("Use the enum ::Other instead")]] = 13,
+
+    Cone = 0,
+    Cylinder = 1,
+    Diamond = 2,
+    Disc = 3,
+    Ellipse = 4,
+    Line = 5,
+    Rectangle = 6,
+    Trapezoid = 7,
+    Triangle = 8,
+    DiscTrapezoid = 9,
+    ConvexPolygon = 10,
+    Annulus = 11,
+    Boundless = 12,
+    Other = 13
   };
+
+  using BoundsType [[deprecated("Use the enum class Type instead")]] = Type;
+
+  using enum Type;
 
   virtual ~SurfaceBounds() = default;
 
   /// Return the bounds type - for persistency optimization
   /// @return the bounds type
-  virtual BoundsType type() const = 0;
+  virtual Type type() const = 0;
 
   /// Check if the bound coordinates are cartesian
   /// @return true if the bound coordinates are cartesian
@@ -147,4 +166,12 @@ class SurfaceBounds {
   }
 };
 
+/// Stream operator for SurfaceBounds::Type
+std::ostream& operator<<(std::ostream& os, const SurfaceBounds::Type& bt);
+
 }  // namespace Acts
+
+namespace std {
+template <>
+struct formatter<Acts::SurfaceBounds::Type> : Acts::detail::OstreamFormatter {};
+}  // namespace std

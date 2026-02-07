@@ -59,7 +59,7 @@ class RadialBounds : public DiscBounds {
   }
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return eDisc; }
+  Type type() const final { return Disc; }
 
   /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return false; }

@@ -39,12 +39,12 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
   /// Test construction with dimensions
   BOOST_CHECK_EQUAL(
       DiamondBounds(minHalfX, midHalfX, maxHalfX, halfY1, halfY2).type(),
-      SurfaceBounds::eDiamond);
+      SurfaceBounds::Diamond);
 
   /// Copy constructor
   DiamondBounds original(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
   DiamondBounds copied(original);
-  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::eDiamond);
+  BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Diamond);
 
   /// Test invalid inputs
   BOOST_CHECK_THROW(
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
                                     halfY2);
 
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::eDiamond);
+  BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::Diamond);
 
   /// Test the half length at negative y
   BOOST_CHECK_EQUAL(diamondBoundsObject.get(DiamondBounds::eHalfLengthXnegY),

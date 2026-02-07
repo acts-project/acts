@@ -69,7 +69,7 @@ class DiamondBounds : public PlanarBounds {
                     values[eHalfLengthYpos]}) {}
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return eDiamond; }
+  Type type() const final { return Diamond; }
 
   /// Return the bound values as dynamically sized vector
   ///

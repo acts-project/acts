@@ -135,7 +135,7 @@ std::string DD4hepTestsHelper::surfaceToXML(const GeometryContext& gctx,
   std::array<int, 2u> axes = {0, 1};
   // Change/adapt the behavior
   switch (surface.bounds().type()) {
-    case SurfaceBounds::eRectangle: {
+    case SurfaceBounds::Rectangle: {
       sxml << "<box ";
       double dx = (boundValues[2u] - boundValues[0u]);
       double dy = (boundValues[3u] - boundValues[1u]);
@@ -144,7 +144,7 @@ std::string DD4hepTestsHelper::surfaceToXML(const GeometryContext& gctx,
       sxml << "dy=\"" << dy << "*mm\" ";
       sxml << "dz=\"" << dz << "*mm\" ";
     }; break;
-    case SurfaceBounds::eTrapezoid: {
+    case SurfaceBounds::Trapezoid: {
       axes = {2, 0};
 
       sxml << "<trap ";

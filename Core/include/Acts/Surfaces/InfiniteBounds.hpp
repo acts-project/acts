@@ -22,7 +22,7 @@ namespace Acts {
 class InfiniteBounds : public SurfaceBounds {
  public:
   /// @copydoc SurfaceBounds::type
-  SurfaceBounds::BoundsType type() const final { return eBoundless; }
+  Type type() const final { return Boundless; }
 
   /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return true; }

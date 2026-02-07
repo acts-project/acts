@@ -68,21 +68,21 @@ std::shared_ptr<const bounds_t> fromJson(const nlohmann::json& j) {
 
 // This macro create a conversion for the surface bounds type
 NLOHMANN_JSON_SERIALIZE_ENUM(
-    SurfaceBounds::BoundsType,
-    {{SurfaceBounds::BoundsType::eCone, "ConeBounds"},
-     {SurfaceBounds::BoundsType::eCylinder, "CylinderBounds"},
-     {SurfaceBounds::BoundsType::eDiamond, "DiamondBounds"},
-     {SurfaceBounds::BoundsType::eDisc, "RadialBounds"},
-     {SurfaceBounds::BoundsType::eEllipse, "EllipseBounds"},
-     {SurfaceBounds::BoundsType::eLine, "LineBounds"},
-     {SurfaceBounds::BoundsType::eRectangle, "RectangleBounds"},
-     {SurfaceBounds::BoundsType::eTrapezoid, "TrapezoidBounds"},
-     {SurfaceBounds::BoundsType::eTriangle, "TriangleBounds"},
-     {SurfaceBounds::BoundsType::eDiscTrapezoid, "DiscTrapezoidBounds"},
-     {SurfaceBounds::BoundsType::eConvexPolygon, "ConvexPolygonBounds"},
-     {SurfaceBounds::BoundsType::eAnnulus, "AnnulusBounds"},
-     {SurfaceBounds::BoundsType::eBoundless, "Boundless"},
-     {SurfaceBounds::BoundsType::eOther, "OtherBounds"}})
+    SurfaceBounds::Type,
+    {{SurfaceBounds::Type::Cone, "ConeBounds"},
+     {SurfaceBounds::Type::Cylinder, "CylinderBounds"},
+     {SurfaceBounds::Type::Diamond, "DiamondBounds"},
+     {SurfaceBounds::Type::Disc, "RadialBounds"},
+     {SurfaceBounds::Type::Ellipse, "EllipseBounds"},
+     {SurfaceBounds::Type::Line, "LineBounds"},
+     {SurfaceBounds::Type::Rectangle, "RectangleBounds"},
+     {SurfaceBounds::Type::Trapezoid, "TrapezoidBounds"},
+     {SurfaceBounds::Type::Triangle, "TriangleBounds"},
+     {SurfaceBounds::Type::DiscTrapezoid, "DiscTrapezoidBounds"},
+     {SurfaceBounds::Type::ConvexPolygon, "ConvexPolygonBounds"},
+     {SurfaceBounds::Type::Annulus, "AnnulusBounds"},
+     {SurfaceBounds::Type::Boundless, "Boundless"},
+     {SurfaceBounds::Type::Other, "OtherBounds"}})
 
 /// @}
 }  // namespace Acts

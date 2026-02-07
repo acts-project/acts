@@ -30,7 +30,7 @@ inline std::vector<std::shared_ptr<const detector_element_t>> splitBarrelModule(
   // Retrieve the surface
   const Acts::Surface& surface = detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();
-  if (bounds.type() != Acts::SurfaceBounds::eRectangle || nSegments <= 1u) {
+  if (bounds.type() != Acts::SurfaceBounds::Rectangle || nSegments <= 1u) {
     ACTS_WARNING("Invalid splitting config for barrel node: "
                  << name << "! Node will not be slpit.");
     return {detElement};
@@ -94,7 +94,7 @@ inline std::vector<std::shared_ptr<detector_element_t>> splitDiscModule(
   };
   ACTS_DEBUG(printOrigin(surface));
 
-  if (bounds.type() != Acts::SurfaceBounds::eAnnulus || splitRanges.empty()) {
+  if (bounds.type() != Acts::SurfaceBounds::Annulus || splitRanges.empty()) {
     ACTS_WARNING("Invalid splitting config for disk node: "
                  << name << "! Node will not be slpit.");
     return {detElement};

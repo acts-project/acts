@@ -64,7 +64,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   }
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return eDiscTrapezoid; }
+  Type type() const final { return DiscTrapezoid; }
 
   /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return false; }

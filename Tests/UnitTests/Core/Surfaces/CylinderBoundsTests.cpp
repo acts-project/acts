@@ -40,18 +40,18 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
   const double bevelMaxZ = std::numbers::pi / 6.;
 
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfZ).type(),
-                    SurfaceBounds::eCylinder);
+                    SurfaceBounds::Cylinder);
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfZ, halfPhi).type(),
-                    SurfaceBounds::eCylinder);
+                    SurfaceBounds::Cylinder);
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfZ, halfPhi, averagePhi).type(),
-                    SurfaceBounds::eCylinder);
+                    SurfaceBounds::Cylinder);
   BOOST_CHECK_EQUAL(
       CylinderBounds(radius, halfZ, std::numbers::pi, 0., bevelMinZ).type(),
-      SurfaceBounds::eCylinder);
+      SurfaceBounds::Cylinder);
   BOOST_CHECK_EQUAL(
       CylinderBounds(radius, halfZ, std::numbers::pi, 0., bevelMinZ, bevelMaxZ)
           .type(),
-      SurfaceBounds::eCylinder);
+      SurfaceBounds::Cylinder);
 
   /// Test copy construction;
   CylinderBounds cylinderBounds(radius, halfZ);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
                                              0., bevelMinZ, bevelMaxZ);
 
   /// Test for type()
-  BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::eCylinder);
+  BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::Cylinder);
 
   /// Test for inside(), 2D coords are r or phi ,z? : needs clarification
   const Vector2 origin{0., 0.};
