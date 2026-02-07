@@ -61,6 +61,7 @@ std::ostream& operator<<(std::ostream& os, CuboidPortalShell::Face face);
 class SingleCuboidPortalShell : public CuboidPortalShell {
  public:
   /// Construct a single cuboid portal shell for the given volume
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to create the shell for
   explicit SingleCuboidPortalShell(const GeometryContext& gctx,
                                    TrackingVolume& volume);

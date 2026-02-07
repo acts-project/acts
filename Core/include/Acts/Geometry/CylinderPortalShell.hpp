@@ -61,6 +61,7 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
   using Base = CylinderPortalShell;
 
   /// Construct a single cylinder portal shell for the given volume
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to create the shell for
   explicit SingleCylinderPortalShell(const GeometryContext& gctx,
                                      TrackingVolume& volume);
