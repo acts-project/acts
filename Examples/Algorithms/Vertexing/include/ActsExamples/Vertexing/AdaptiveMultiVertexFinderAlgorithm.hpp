@@ -18,11 +18,11 @@
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/IVertexFinder.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -39,8 +39,6 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   using Linearizer = Acts::HelicalTrackLinearizer;
   using Fitter = Acts::AdaptiveMultiVertexFitter;
   using Options = Acts::VertexingOptions;
-
-  using VertexCollection = std::vector<Acts::Vertex>;
 
   enum class SeedFinder { TruthSeeder, GaussianSeeder, AdaptiveGridSeeder };
 
@@ -128,7 +126,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
                                                           "InputTruthVertices"};
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};
-  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
+  WriteDataHandle<VertexContainer> m_outputVertices{this, "OutputVertices"};
 };
 
 }  // namespace ActsExamples
