@@ -43,10 +43,8 @@ SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
   const auto& bounds =
       dynamic_cast<const CylinderVolumeBounds&>(m_volume->volumeBounds());
 
-  ACTS_PUSH_IGNORE_DEPRECATED()
   std::vector<OrientedSurface> orientedSurfaces =
-      bounds.orientedSurfaces(m_volume->transform());
-  ACTS_POP_IGNORE_DEPRECATED()
+      bounds.boundarySurfaces(*m_volume);
 
   auto handle = [&](Face face, std::size_t from) {
     const auto& source = orientedSurfaces.at(from);
