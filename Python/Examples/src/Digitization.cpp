@@ -66,13 +66,23 @@ void addDigitization(py::module& mex) {
                  std::pair<GeometryIdentifier, DigiComponentsConfig>>>());
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      MuonSpacePointDigitizer, mex, "MuonSpacePointDigitizer", inputSimHits,
-      inputParticles, outputSpacePoints, randomNumbers,
-      /// @todo: Expose <calibrator> to python bindings
-      trackingGeometry, digitizeTime, dumpVisualization, strawDeadTime
+  {
+    using Alg = MuonSpacePointDigitizer;
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "MuonSpacePointDigitizer")
+                   .def(py::init<const Alg::Config&, Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def_property_readonly("config", &Alg::config);
 
-  );
+    auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT(c, inputSimHits, inputParticles, outputSpacePoints,
+                       randomNumbers, trackingGeometry, digitizeTime,
+                       dumpVisualization, visualizationFunction, strawDeadTime,
+                       rpcDeadTime);
+
+    ActsPython::patchKwargsConstructor(c);
+  }
 
   {
     using DC = DigitizationConfigurator;
