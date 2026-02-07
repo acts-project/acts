@@ -229,7 +229,7 @@ interactive testing with one-off configuration specified by command-line options
 
 
 def full_chain(args):
-    import acts
+    import acts, acts.root
 
     # keep these in memory after we return the sequence
     global detector, trackingGeometry, decorators, field, rnd
@@ -283,19 +283,18 @@ def full_chain(args):
         else outputDir if args.output_csv == 2 else None
     )
 
-    acts_dir = pathlib.Path(__file__).parent.parent.parent.parent
+    actsDir = pathlib.Path(__file__).resolve().parent.parent.parent.parent
 
     # fmt: off
     if args.generic_detector:
         etaRange = (-2.0, 2.0)
         ptMin = 0.5 * u.GeV
         rhoMax = 24.0 * u.mm
-        geo_dir = pathlib.Path(acts.__file__).resolve().parent.parent.parent.parent.parent
         if args.loglevel <= 2:
-            logger.info(f"Load Generic Detector from {geo_dir}")
+            logger.info(f"Load Generic Detector from {actsDir}")
         if args.digi_config is None:
-            args.digi_config = geo_dir / "Examples/Configs/generic-digi-smearing-config.json"
-        seedingConfigFile = geo_dir / "Examples/Configs/generic-seeding-config.json"
+            args.digi_config = actsDir / "Examples/Configs/generic-digi-smearing-config.json"
+        seedingConfigFile = actsDir / "Examples/Configs/generic-seeding-config.json"
         args.bf_constant = True
         detector = acts.examples.GenericDetector()
         trackingGeometry = detector.trackingGeometry()
@@ -305,18 +304,17 @@ def full_chain(args):
         etaRange = (-3.0, 3.0)
         ptMin = 1.0 * u.GeV
         rhoMax = 24.0 * u.mm
-        beamTime = 1.0 * u.ns
-        geo_dir = acts.examples.odd.getOpenDataDetectorDirectory()
+        geoDir = acts.examples.odd.getOpenDataDetectorDirectory()
         if args.loglevel <= 2:
-            logger.info(f"Load Open Data Detector from {geo_dir.resolve()}")
+            logger.info(f"Load Open Data Detector from {geoDir.resolve()}")
         if args.digi_config is None:
-            args.digi_config = acts_dir / "Examples/Configs/odd-digi-smearing-config.json"
-        seedingConfigFile = acts_dir / "Examples/Configs/odd-seeding-config.json"
+            args.digi_config = actsDir / "Examples/Configs/odd-digi-smearing-config.json"
+        seedingConfigFile = actsDir / "Examples/Configs/odd-seeding-config.json"
         if args.material_config is None:
-            args.material_config = geo_dir / "data/odd-material-maps.root"
+            args.material_config = geoDir / "data/odd-material-maps.root"
         args.bf_constant = True
-        detector = getOpenDataDetector(
-            odd_dir=geo_dir,
+        detector = acts.examples.odd.getOpenDataDetector(
+            odd_dir=geoDir,
             materialDecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
         trackingGeometry = detector.trackingGeometry()
@@ -326,17 +324,16 @@ def full_chain(args):
         etaRange = (-4.0, 4.0)
         ptMin = 1.0 * u.GeV
         rhoMax = 28.0 * u.mm
-        beamTime = 5.0 * u.ns
-        geo_dir = pathlib.Path("acts-itk")
+        geoDir = pathlib.Path("acts-itk")
         if args.loglevel <= 2:
-            logger.info(f"Load ATLAS ITk from {geo_dir.resolve()}")
+            logger.info(f"Load ATLAS ITk from {geoDir.resolve()}")
         if args.digi_config is None:
-            args.digi_config = geo_dir / "itk-hgtd/itk-smearing-config.json"
-        seedingConfigFile = geo_dir / "itk-hgtd/geoSelection-ITk.json"
-        # args.material_config defaulted in itk.buildITkGeometry: geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
-        bFieldFile = geo_dir / "bfield/ATLAS-BField-xyz.root"
+            args.digi_config = geoDir / "itk-hgtd/itk-smearing-config.json"
+        seedingConfigFile = geoDir / "itk-hgtd/geoSelection-ITk.json"
+        # args.material_config defaulted in itk.buildITkGeometry: geoDir / "itk-hgtd/material-maps-ITk-HGTD.json"
+        bFieldFile = geoDir / "bfield/ATLAS-BField-xyz.root"
         detector = itk.buildITkGeometry(
-            geo_dir,
+            geoDir,
             customMaterialFile=args.material_config,
             material=not args.bf_constant,
             logLevel=acts.logging.Level(args.loglevel),
@@ -349,7 +346,7 @@ def full_chain(args):
         field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
     else:
         logger.info("Create magnetic field map from %s" % str(bFieldFile))
-        field = acts.MagneticFieldMapXyz(str(bFieldFile))
+        field = acts.root.MagneticFieldMapXyz(str(bFieldFile))
     rnd = acts.examples.RandomNumbers(seed=42)
 
     from acts.examples.simulation import (
@@ -359,7 +356,9 @@ def full_chain(args):
         ParticleConfig,
         ParticleSelectorConfig,
         addDigitization,
-        addParticleSelection,
+        addGenParticleSelection,
+        addSimParticleSelection,
+        addDigiParticleSelection,
     )
 
     s = acts.examples.Sequencer(
@@ -374,29 +373,20 @@ def full_chain(args):
     for d in decorators:
         s.addContextDecorator(d)
 
-    preSelectParticles = (
-        ParticleSelectorConfig(
-            rho=(0.0 * u.mm, rhoMax),
-            absZ=(0.0 * u.mm, 1.0 * u.m),
-            eta=etaRange,
-            pt=(150 * u.MeV, None),
-        )
-        if args.edm4hep or args.geant4 or args.ttbar_pu200
-        else ParticleSelectorConfig()
-    )
-
-    postSelectParticles = ParticleSelectorConfig(
-        pt=(ptMin, None),
-        eta=etaRange if not args.generic_detector else (None, None),
-        hits=(9, None),
-        removeNeutral=True,
-    )
-
     if args.edm4hep:
         import acts.examples.edm4hep
 
-        edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
-            inputPath=str(args.edm4hep),
+        s.addReader(
+            acts.examples.edm4hep.PodioReader(
+                level=acts.logging.DEBUG,
+                inputPath=str(args.edm4hep),
+                outputFrame="events",
+                category="events",
+            )
+        )
+
+        edm4hepReader = acts.examples.edm4hep.EDM4hepSimInputConverter(
+            inputFrame="events",
             inputSimHits=[
                 "PixelBarrelReadout",
                 "PixelEndcapReadout",
@@ -408,20 +398,29 @@ def full_chain(args):
             outputParticlesGenerator="particles_generated",
             outputParticlesSimulation="particles_simulated",
             outputSimHits="simhits",
-            graphvizOutput="graphviz",
+            outputSimVertices="vertices_truth",
             dd4hepDetector=detector,
             trackingGeometry=trackingGeometry,
-            sortSimHitsInTime=True,
-            level=acts.logging.INFO,
+            sortSimHitsInTime=False,
+            particleRMax=1080 * u.mm,
+            particleZ=(-3030 * u.mm, 3030 * u.mm),
+            particlePtMin=150 * u.MeV,
+            level=acts.logging.DEBUG,
         )
-        s.addReader(edm4hepReader)
-        s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
+        s.addAlgorithm(edm4hepReader)
 
-        addParticleSelection(
+        s.addWhiteboardAlias(
+            "particles", edm4hepReader.config.outputParticlesSimulation
+        )
+
+        addSimParticleSelection(
             s,
-            config=preSelectParticles,
-            inputParticles="particles",
-            outputParticles="particles_selected",
+            ParticleSelectorConfig(
+                rho=(0.0 * u.mm, rhoMax),
+                absZ=(0.0 * u.mm, 1.0 * u.m),
+                eta=etaRange,
+                removeNeutral=True,
+            ),
         )
 
     else:
@@ -483,6 +482,15 @@ def full_chain(args):
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
             )
+            addGenParticleSelection(
+                s,
+                ParticleSelectorConfig(
+                    rho=(0.0 * u.mm, rhoMax),
+                    absZ=(0.0 * u.mm, 1.0 * u.m),
+                    eta=etaRange,
+                    pt=(150 * u.MeV, None),
+                ),
+            )
 
         if not args.geant4:
             from acts.examples.simulation import addFatras
@@ -492,8 +500,6 @@ def full_chain(args):
                 trackingGeometry,
                 field,
                 rnd=rnd,
-                preSelectParticles=preSelectParticles,
-                postSelectParticles=postSelectParticles,
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
                 outputDirObj=outputDirObj,
@@ -516,8 +522,6 @@ def full_chain(args):
                 trackingGeometry,
                 field,
                 rnd=rnd,
-                preSelectParticles=preSelectParticles,
-                postSelectParticles=postSelectParticles,
                 killVolume=trackingGeometry.highestTrackingVolume,
                 killAfterTime=25 * u.ns,
                 outputDirRoot=outputDirRoot,
@@ -533,6 +537,16 @@ def full_chain(args):
         rnd=rnd,
         outputDirRoot=outputDirRoot,
         outputDirCsv=outputDirCsv,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(ptMin, None),
+            eta=etaRange if not args.generic_detector else (None, None),
+            hits=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     if not args.reco:
@@ -600,7 +614,7 @@ def full_chain(args):
                 epsilonDBScan=0.03, minPointsDBScan=2, minSeedScore=0.1
             ),
             onnxModelFile=str(
-                geo_dir
+                actsDir
                 / "Examples/Scripts/Python/MLAmbiguityResolution/seedDuplicateClassifier.onnx"
             ),
             outputDirRoot=outputDirLessRoot,
@@ -630,7 +644,7 @@ def full_chain(args):
         ckfConfig = ckfConfig._replace(
             chi2CutOffMeasurement=15.0,
             chi2CutOffOutlier=25.0,
-            numMeasurementsCutOff=10,
+            numMeasurementsCutOff=2,
         )
     else:
         # fmt: off
@@ -711,7 +725,7 @@ def full_chain(args):
                 maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
             ),
             onnxModelFile=str(
-                geo_dir
+                actsDir
                 / "Examples/Scripts/Python/MLAmbiguityResolution/duplicateClassifier.onnx"
             ),
             outputDirRoot=outputDirLessRoot,
@@ -724,7 +738,6 @@ def full_chain(args):
             addScoreBasedAmbiguityResolution,
             ScoreBasedAmbiguityResolutionConfig,
         )
-        import math
 
         addScoreBasedAmbiguityResolution(
             s,
@@ -763,6 +776,7 @@ def full_chain(args):
             field,
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=outputDirLessRoot,
+            outputDirCsv=outputDirLessCsv,
         )
 
     return s
