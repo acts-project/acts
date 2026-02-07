@@ -62,7 +62,8 @@ class SingleCuboidPortalShell : public CuboidPortalShell {
  public:
   /// Construct a single cuboid portal shell for the given volume
   /// @param volume The volume to create the shell for
-  explicit SingleCuboidPortalShell(TrackingVolume& volume);
+  explicit SingleCuboidPortalShell(const GeometryContext& gctx,
+                                   TrackingVolume& volume);
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const final;

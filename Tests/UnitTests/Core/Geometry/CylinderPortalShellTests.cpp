@@ -63,10 +63,10 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<CuboidVolumeBounds>(10_mm, 10_mm, 10_mm));
 
-  BOOST_CHECK_THROW(SingleCylinderPortalShell{boxVolume},
+  BOOST_CHECK_THROW(SingleCylinderPortalShell(gctx, boxVolume),
                     std::invalid_argument);
 
-  SingleCylinderPortalShell shell1{cyl1};
+  SingleCylinderPortalShell shell1{gctx, cyl1};
   BOOST_CHECK_EQUAL(shell1.size(), 4);
 
   using enum CylinderVolumeBounds::Face;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  SingleCylinderPortalShell shell2{cyl2};
+  SingleCylinderPortalShell shell2{gctx, cyl2};
   BOOST_CHECK_EQUAL(shell2.size(), 3);
 
   pDisc = shell2.portal(PositiveDisc).get();
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   iCyl = shell2.portal(InnerCylinder).get();
   BOOST_CHECK_EQUAL(iCyl, nullptr);
 
-  SingleCylinderPortalShell shell3{cyl3};
+  SingleCylinderPortalShell shell3{gctx, cyl3};
   BOOST_CHECK_EQUAL(shell3.size(), 6);
 
   pDisc = shell3.portal(PositiveDisc).get();
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, dir).value(), nullptr);
   BOOST_CHECK_EQUAL(pPhi->resolveVolume(gctx, point, idir).value(), &cyl3);
 
-  SingleCylinderPortalShell shell4{cyl4};
+  SingleCylinderPortalShell shell4{gctx, cyl4};
   BOOST_CHECK_EQUAL(shell4.size(), 5);
 
   pDisc = shell4.portal(PositiveDisc).get();
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(30_mm, 100_mm, 100_mm));
 
-  SingleCylinderPortalShell shell{vol};
+  SingleCylinderPortalShell shell{gctx, vol};
 
   const auto iCyl = shell.portal(InnerCylinder);
   const auto pDisc = shell.portal(PositiveDisc);
@@ -361,8 +361,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
         Transform3{Translation3{Vector3::UnitZ() * 100_mm}},
         std::make_shared<CylinderVolumeBounds>(30_mm, 100_mm, 100_mm));
 
-    SingleCylinderPortalShell shell1{vol1};
-    SingleCylinderPortalShell shell2{vol2};
+    SingleCylinderPortalShell shell1{gctx, vol1};
+    SingleCylinderPortalShell shell2{gctx, vol2};
 
     BOOST_CHECK_NE(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
 
@@ -388,8 +388,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
 
     // Disc portals have been fused
     BOOST_CHECK_EQUAL(shell1.portal(PositiveDisc), shell2.portal(NegativeDisc));
-    shell1 = SingleCylinderPortalShell{vol1};
-    shell2 = SingleCylinderPortalShell{vol2};
+    shell1 = SingleCylinderPortalShell{gctx, vol1};
+    shell2 = SingleCylinderPortalShell{gctx, vol2};
 
     BOOST_CHECK_THROW(CylinderStackPortalShell(gctx, {&shell1, &shell2},
                                                AxisDirection::AxisR),
@@ -405,8 +405,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
         Transform3{Translation3{Vector3::UnitZ() * 100_mm}},
         std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm));
 
-    SingleCylinderPortalShell shell1{vol1};
-    SingleCylinderPortalShell shell2{vol2};
+    SingleCylinderPortalShell shell1{gctx, vol1};
+    SingleCylinderPortalShell shell2{gctx, vol2};
 
     BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), nullptr);
     BOOST_CHECK_EQUAL(shell2.portal(InnerCylinder), nullptr);
@@ -436,8 +436,8 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
     BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
 
-    shell1 = SingleCylinderPortalShell{vol1};
-    shell2 = SingleCylinderPortalShell{vol2};
+    shell1 = SingleCylinderPortalShell{gctx, vol1};
+    shell2 = SingleCylinderPortalShell{gctx, vol2};
 
     BOOST_CHECK_THROW(CylinderStackPortalShell(gctx, {&shell1, &shell2},
                                                AxisDirection::AxisR),
@@ -456,8 +456,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
         Transform3::Identity(),
         std::make_shared<CylinderVolumeBounds>(100_mm, 150_mm, 100_mm));
 
-    SingleCylinderPortalShell shell1{vol1};
-    SingleCylinderPortalShell shell2{vol2};
+    SingleCylinderPortalShell shell1{gctx, vol1};
+    SingleCylinderPortalShell shell2{gctx, vol2};
 
     BOOST_CHECK_NE(shell1.portal(OuterCylinder), shell2.portal(InnerCylinder));
 
@@ -486,8 +486,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
     BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
 
-    shell1 = SingleCylinderPortalShell{vol1};
-    shell2 = SingleCylinderPortalShell{vol2};
+    shell1 = SingleCylinderPortalShell{gctx, vol1};
+    shell2 = SingleCylinderPortalShell{gctx, vol2};
 
     BOOST_CHECK_THROW(CylinderStackPortalShell(gctx, {&shell1, &shell2},
                                                AxisDirection::AxisZ),
@@ -503,8 +503,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
         Transform3::Identity(),
         std::make_shared<CylinderVolumeBounds>(100_mm, 150_mm, 100_mm));
 
-    SingleCylinderPortalShell shell1{vol1};
-    SingleCylinderPortalShell shell2{vol2};
+    SingleCylinderPortalShell shell1{gctx, vol1};
+    SingleCylinderPortalShell shell2{gctx, vol2};
 
     BOOST_CHECK_EQUAL(shell1.portal(InnerCylinder), nullptr);
     BOOST_CHECK_NE(shell1.portal(OuterCylinder), shell2.portal(InnerCylinder));
@@ -533,8 +533,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
     BOOST_CHECK_EQUAL(stack.portal(PositivePhiPlane), nullptr);
 
-    shell1 = SingleCylinderPortalShell{vol1};
-    shell2 = SingleCylinderPortalShell{vol2};
+    shell1 = SingleCylinderPortalShell{gctx, vol1};
+    shell2 = SingleCylinderPortalShell{gctx, vol2};
 
     BOOST_CHECK_THROW(CylinderStackPortalShell(gctx, {&shell1, &shell2},
                                                AxisDirection::AxisZ),
@@ -586,11 +586,11 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
       std::make_shared<CylinderVolumeBounds>(23_mm, 400_mm, 100_mm),
       "PixelEcPos");
 
-  SingleCylinderPortalShell shell1{vol1};
+  SingleCylinderPortalShell shell1{gctx, vol1};
   BOOST_CHECK(shell1.isValid());
-  SingleCylinderPortalShell gapShell{gap};
+  SingleCylinderPortalShell gapShell{gctx, gap};
   BOOST_CHECK(gapShell.isValid());
-  SingleCylinderPortalShell shell2{vol2};
+  SingleCylinderPortalShell shell2{gctx, vol2};
   BOOST_CHECK(shell2.isValid());
 
   CylinderStackPortalShell stack{
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
 
   BOOST_CHECK(stack.isValid());
 
-  SingleCylinderPortalShell shell3{vol3};
+  SingleCylinderPortalShell shell3{gctx, vol3};
   BOOST_CHECK(shell3.isValid());
 
   CylinderStackPortalShell stack2{
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(Fill) {
   auto cyl1 = makeVolume(30_mm, 40_mm, 100_mm);
   auto cyl2 = makeVolume(0_mm, 50_mm, 110_mm);
 
-  SingleCylinderPortalShell shell{cyl1};
+  SingleCylinderPortalShell shell{gctx, cyl1};
 
   using enum CylinderVolumeBounds::Face;
   BOOST_CHECK_EQUAL(
@@ -753,7 +753,7 @@ BOOST_AUTO_TEST_CASE(RegisterInto) {
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 100_mm));
 
-  SingleCylinderPortalShell shell{vol1};
+  SingleCylinderPortalShell shell{gctx, vol1};
 
   BOOST_CHECK_EQUAL(vol1.portals().size(), 0);
 
