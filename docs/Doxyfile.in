@@ -788,7 +788,6 @@ INPUT                  = index.md \
                          ../Plugins/FpeMonitoring/include \
                          ../Plugins/Geant4/include \
                          ../Plugins/GeoModel/include \
-                         ../Plugins/Hashing/include \
                          ../Plugins/Json/include \
                          ../Plugins/Onnx/include \
                          ../Plugins/Root/include \

@@ -39,13 +39,13 @@ class Config:
         self,
         mu: int = None,
         bucketSize: int = 100,
-        maxSeedsPerSpM: int = 1000,
+        maxSeedsPerSpM: int = 10,
         detector: DetectorName = DetectorName.generic,
-        seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Hashing,
+        seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.HashingPrototype,
         metric: str = HashingMetric.dphi,
         annoySeed: int = 123456789,
-        zBins: int = 100_000,
-        phiBins: int = 0,
+        zBins: int = 0,
+        phiBins: int = 100,
     ):
         self.mu = mu
         self.bucketSize = bucketSize
@@ -297,8 +297,7 @@ def runHashingSeeding(
 
 
 if __name__ == "__main__":
-    eta = 4
-    # eta = 2.5
+    eta = 3
 
     parser = argparse.ArgumentParser(
         description="Example script to run seed finding with hashing"
@@ -310,12 +309,12 @@ if __name__ == "__main__":
         type=int,
         default=20,
     )
-    parser.add_argument("--maxSeedsPerSpM", type=int, default=1000)
-    parser.add_argument("--seedingAlgorithm", type=str, default="Hashing")
+    parser.add_argument("--maxSeedsPerSpM", type=int, default=10)
+    parser.add_argument("--seedingAlgorithm", type=str, default="HashingPrototype")
     parser.add_argument("--saveFiles", type=bool, default=True)
     parser.add_argument("--annoySeed", type=int, default=123456789)
-    parser.add_argument("--zBins", type=int, default=100000)
-    parser.add_argument("--phiBins", type=int, default=0)
+    parser.add_argument("--zBins", type=int, default=0)
+    parser.add_argument("--phiBins", type=int, default=100)
     parser.add_argument("--metric", type=str, default="dphi")
     args = parser.parse_args()
 
@@ -398,7 +397,6 @@ if __name__ == "__main__":
     )
     s.addWriter(rootSeedsWriter)
 
-    # TrackFinding ERROR no intersection found; TrackExtrapolationError:2
     addCKFTracks(
         s,
         trackingGeometry,
@@ -408,9 +406,8 @@ if __name__ == "__main__":
             absEta=(None, eta),
             nMeasurementsMin=6,
         ),
-        outputDirRoot=outputDir,
-        writeTrajectories=False,
         twoWay=False,
+        outputDirRoot=outputDir,
     )
 
     s.run()
