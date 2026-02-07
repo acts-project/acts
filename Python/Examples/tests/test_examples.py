@@ -596,13 +596,6 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     seq = Sequencer(
         events=10,
         numThreads=1,
-        fpeMasks=[
-            (
-                "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
-                acts.examples.FpeType.FLTUND,
-                1,
-            ),
-        ],
     )
 
     root_files = [

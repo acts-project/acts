@@ -12,6 +12,7 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 #include <cstddef>
