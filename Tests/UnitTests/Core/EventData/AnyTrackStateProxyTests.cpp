@@ -407,9 +407,16 @@ BOOST_FIXTURE_TEST_CASE(SourceLink, TestTrackStateFixture) {
   auto state = container.trackStateContainer().makeTrackState();
   track.tipIndex() = state.index();
 
+  AnyMutableTrackStateProxy anyState(state);
+
+  // Initially should not have source link
+  BOOST_CHECK(!anyState.hasUncalibratedSourceLink());
+
+  // Set source link
   state.setUncalibratedSourceLink(Acts::SourceLink{42});
 
-  AnyMutableTrackStateProxy anyState(state);
+  // Now should have source link
+  BOOST_CHECK(anyState.hasUncalibratedSourceLink());
 
   // Get source link
   auto retrievedLink = anyState.getUncalibratedSourceLink();
@@ -419,11 +426,15 @@ BOOST_FIXTURE_TEST_CASE(SourceLink, TestTrackStateFixture) {
   Acts::SourceLink newLink{99};
   anyState.setUncalibratedSourceLink(std::move(newLink));
 
+  // Should still have source link
+  BOOST_CHECK(anyState.hasUncalibratedSourceLink());
+
   auto retrievedLink2 = anyState.getUncalibratedSourceLink();
   BOOST_CHECK_EQUAL(retrievedLink2.get<int>(), 99);
 
   // Test const proxy
   AnyConstTrackStateProxy constState(state);
+  BOOST_CHECK(constState.hasUncalibratedSourceLink());
   auto constLink = constState.getUncalibratedSourceLink();
   BOOST_CHECK_EQUAL(constLink.get<int>(), 99);
 }

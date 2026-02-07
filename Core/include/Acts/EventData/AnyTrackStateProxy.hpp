@@ -89,6 +89,9 @@ class TrackStateHandlerConstBase {
   virtual bool hasReferenceSurface(const void* container,
                                    TrackIndexType index) const = 0;
 
+  virtual bool hasUncalibratedSourceLink(const void* container,
+                                         TrackIndexType index) const = 0;
+
   virtual SourceLink getUncalibratedSourceLink(const void* container,
                                                TrackIndexType index) const = 0;
 
@@ -207,6 +210,13 @@ class TrackStateHandler<trajectory_t, true> final
   bool hasReferenceSurface(const void* container,
                            TrackIndexType index) const override {
     return referenceSurface(container, index) != nullptr;
+  }
+
+  bool hasUncalibratedSourceLink(const void* container,
+                                 TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->has(hashString("uncalibratedSourceLink"), index);
   }
 
   SourceLink getUncalibratedSourceLink(const void* container,
@@ -332,6 +342,13 @@ class TrackStateHandler<trajectory_t, false> final
   bool hasReferenceSurface(const void* container,
                            TrackIndexType index) const override {
     return referenceSurface(container, index) != nullptr;
+  }
+
+  bool hasUncalibratedSourceLink(const void* container,
+                                 TrackIndexType index) const override {
+    assert(container != nullptr);
+    const auto* traj = static_cast<const MultiTrajectoryType*>(container);
+    return traj->has(hashString("uncalibratedSourceLink"), index);
   }
 
   SourceLink getUncalibratedSourceLink(const void* container,
@@ -492,6 +509,7 @@ class AnyTrackStateProxy
   using Base::hasPrevious;
   using Base::hasProjector;
   using Base::hasSmoothed;
+  using Base::hasUncalibratedSourceLink;
   using Base::parameters;
   using Base::pathLength;
   using Base::predicted;
@@ -653,7 +671,7 @@ class AnyTrackStateProxy
   /// Retrieve the original, uncalibrated source link.
   /// @return Copy of the stored source link.
   SourceLink getUncalibratedSourceLink() const {
-    assert(has(detail_tsp::kUncalibratedKey));
+    assert(hasUncalibratedSourceLink());
     return constHandler()->getUncalibratedSourceLink(containerPtr(), m_index);
   }
 

@@ -137,6 +137,9 @@ concept TrackStateProxyConcept =
         cv.template projectorSubspaceHelper<4>()
       } -> std::same_as<FixedBoundSubspaceHelper<4>>;
 
+      { cv.hasUncalibratedSourceLink() } -> std::same_as<bool>;
+      { v.hasUncalibratedSourceLink() } -> std::same_as<bool>;
+
       { cv.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
       { v.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
 
