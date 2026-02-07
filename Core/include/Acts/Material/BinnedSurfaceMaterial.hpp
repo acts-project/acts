@@ -12,6 +12,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <iosfwd>
 
@@ -57,6 +58,40 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
+                        MaterialSlabMatrix fullProperties,
+                        double splitFactor = 0.,
+                        MappingType mappingType = MappingType::Default);
+
+  /// Explicit constructor with only full MaterialSlab,
+  /// for one-dimensional binning.
+  ///
+  /// The split factors:
+  ///    - 1. : oppositePre
+  ///    - 0. : alongPre
+  ///  ===> 1 Dimensional array
+  ///
+  /// @param axes defines the binning structure on the surface (copied)
+  /// @param fullProperties is the vector of properties as recorded (moved)
+  /// @param splitFactor is the pre/post splitting directive
+  /// @param mappingType is the type of surface mapping associated to the surface
+  BinnedSurfaceMaterial(const std::vector<DirectedProtoAxis>& axes,
+                        MaterialSlabVector fullProperties,
+                        double splitFactor = 0.,
+                        MappingType mappingType = MappingType::Default);
+
+  /// Explicit constructor with only full MaterialSlab,
+  /// for two-dimensional binning.
+  ///
+  /// The split factors:
+  ///    - 1. : oppositePre
+  ///    - 0. : alongPre
+  ///  ===> 1 Dimensional array
+  ///
+  /// @param axes defines the binning structure on the surface (DirectedProtoAxis) (copied)
+  /// @param fullProperties is the vector of properties as recorded (moved)
+  /// @param splitFactor is the pre/post splitting directive
+  /// @param mappingType is the type of surface mapping associated to the surface
+  BinnedSurfaceMaterial(const std::vector<DirectedProtoAxis>& axes,
                         MaterialSlabMatrix fullProperties,
                         double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
@@ -114,6 +149,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
  private:
   /// The helper for the bin finding
   BinUtility m_binUtility;
+
+  /// The proto axes used for binning
+  std::vector<DirectedProtoAxis> m_axes{};
 
   /// The five different MaterialSlab
   MaterialSlabMatrix m_fullMaterial;
