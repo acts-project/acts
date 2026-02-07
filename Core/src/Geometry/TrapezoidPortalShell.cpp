@@ -25,7 +25,8 @@ void TrapezoidPortalShell::fill(TrackingVolume& volume) {
   }
 }
 
-SingleTrapezoidPortalShell::SingleTrapezoidPortalShell(TrackingVolume& volume)
+SingleTrapezoidPortalShell::SingleTrapezoidPortalShell(
+    const GeometryContext& gctx, TrackingVolume& volume)
     : m_volume{&volume} {
   if (m_volume->volumeBounds().type() != VolumeBounds::BoundsType::eTrapezoid) {
     throw std::invalid_argument("Invalid volume bounds - not trapezoid");
@@ -35,7 +36,7 @@ SingleTrapezoidPortalShell::SingleTrapezoidPortalShell(TrackingVolume& volume)
       dynamic_cast<const TrapezoidVolumeBounds&>(m_volume->volumeBounds());
 
   std::vector<OrientedSurface> orientedSurfaces =
-      bounds.boundarySurfaces(*m_volume);
+      bounds.orientedSurfaces(m_volume->localToGlobalTransform(gctx));
 
   for (Face face : {NegativeZFaceXY, PositiveZFaceXY, TrapezoidFaceAlpha,
                     TrapezoidFaceBeta, NegativeYFaceZX, PositiveYFaceZX}) {

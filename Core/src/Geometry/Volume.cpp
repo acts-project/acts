@@ -26,8 +26,8 @@ Volume::Volume(const Transform3& transform,
       m_center{transform.translation()},
       m_volumeBounds(std::move(volbounds)) {}
 
-
-Volume Volume::shifted(const GeometryContext& gctx, const Transform3& shift) const {
+Volume Volume::shifted(const GeometryContext& gctx,
+                       const Transform3& shift) const {
   return Volume(shift * localToGlobalTransform(gctx), m_volumeBounds);
 }
 Volume::Volume(VolumePlacementBase& positioner,
@@ -40,8 +40,9 @@ Volume::Volume(const Volume& vol) noexcept : GeometryObject{} {
   (*this) = vol;
 }
 
-Volume::Volume(const Volume& vol, const Transform3& shift) noexcept
-    : Volume{shift * (m_transform? (*m_transform) : Transform3::Identity()), vol.m_volumeBounds} {}
+Volume::Volume(const Volume& vol, const Transform3& shift)
+    : Volume{shift * (m_transform ? (*m_transform) : Transform3::Identity()),
+             vol.m_volumeBounds} {}
 
 Vector3 Volume::referencePosition(const GeometryContext& gctx,
                                   AxisDirection aDir) const {

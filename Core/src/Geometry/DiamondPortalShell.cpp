@@ -36,7 +36,8 @@ void DiamondPortalShell::fill(TrackingVolume& volume) {
   }
 }
 
-SingleDiamondPortalShell::SingleDiamondPortalShell(TrackingVolume& volume)
+SingleDiamondPortalShell::SingleDiamondPortalShell(const GeometryContext& gctx,
+                                                   TrackingVolume& volume)
     : m_volume{&volume} {
   if (m_volume->volumeBounds().type() != VolumeBounds::BoundsType::eDiamond) {
     throw std::invalid_argument(
@@ -49,7 +50,7 @@ SingleDiamondPortalShell::SingleDiamondPortalShell(TrackingVolume& volume)
 
   // fill the protals from the oriented surfaces of the volume bounds
   std::vector<OrientedSurface> orientedSurfaces =
-      bounds.boundarySurfaces(*m_volume);
+      bounds.orientedSurfaces(m_volume->localToGlobalTransform(gctx));
   for (Face face : {Face::NegativeZFaceXY, Face::PositiveZFaceXY,
                     Face::NegativeXFaceYZ12, Face::PositiveXFaceYZ12,
                     Face::NegativeXFaceYZ23, Face::PositiveXFaceYZ23,
