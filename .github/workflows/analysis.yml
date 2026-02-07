@@ -66,14 +66,15 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          pip3 install gcovr==7.2
-          && cd build
-          && /usr/bin/python3 ../CI/test_coverage.py
+          uv run CI/test_coverage.py generate build --filter
 
       - uses: actions/upload-artifact@v6
+        if: always()
         with:
           name: coverage-build
-          path: build
+          path: |
+            build/coverage
+            build/compile_commands.json
 
       - name: Save PR number to file
         if: github.event_name == 'pull_request'
