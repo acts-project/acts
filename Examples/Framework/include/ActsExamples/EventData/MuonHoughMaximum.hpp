@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
 namespace ActsExamples {
@@ -22,6 +23,7 @@ namespace ActsExamples {
 ///         list of all hits associated with the maximum.
 class MuonHoughMaximum {
  public:
+  using Param_t = Acts::ActsVector<6>;
   using HitVec = std::vector<const MuonSpacePoint*>;
   /// @brief Constructor taking the estimated hough parameters and the associated hits
   /// @param tanBeta: Slope of the estimated line in precision direction
@@ -55,6 +57,14 @@ class MuonHoughMaximum {
   double interceptY() const { return m_interceptY; }
   /// @brief Return the associated hits
   const HitVec& hits() const { return m_hits; }
+  /** @brief Transform the maximum parameters into track parameters */
+  Param_t trackParameters() const {
+    Param_t pars{};
+    pars[Acts::eBoundLoc0] = interceptX();
+    pars[Acts::eBoundLoc1] = interceptY();
+    // pars.block<2,1>(Acts::eBoundPhi, 0) = Acts::dire
+    return pars;
+  }
 
  private:
   double m_tanAlpha{0.};
