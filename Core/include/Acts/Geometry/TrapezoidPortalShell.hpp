@@ -54,8 +54,7 @@ class SingleTrapezoidPortalShell : public TrapezoidPortalShell {
  public:
   /// Construct a single trapezoid shell for the given tracking volume.
   /// @param volume The volume to create the shell for
-  explicit SingleTrapezoidPortalShell(const GeometryContext& gctx,
-                                      TrackingVolume& volume);
+  explicit SingleTrapezoidPortalShell(TrackingVolume& volume);
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const override;

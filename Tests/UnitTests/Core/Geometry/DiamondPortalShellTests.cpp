@@ -32,8 +32,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<TrapezoidVolumeBounds>(20._cm, 10._cm, 10._cm, 5._cm));
 
-  BOOST_CHECK_THROW(SingleDiamondPortalShell(gctx, fVol),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(SingleDiamondPortalShell{fVol}, std::invalid_argument);
 
   // conastruct a convex polygon tracking volume for which we are gonna build
   // the portal shell
@@ -42,7 +41,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
                          std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
 
-  SingleDiamondPortalShell polygShell{gctx, testVol};
+  SingleDiamondPortalShell polygShell{testVol};
 
   BOOST_CHECK(polygShell.isValid());
   BOOST_CHECK_EQUAL(polygShell.size(), 8);
@@ -123,7 +122,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
                           std::make_shared<DiamondVolumeBounds>(
                               20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
 
-  SingleDiamondPortalShell polygShell{gctx, polygVol};
+  SingleDiamondPortalShell polygShell{polygVol};
 
   // get the portal faces
   const auto nXY = polygShell.portalPtr(NegativeZFaceXY);
@@ -178,7 +177,7 @@ BOOST_AUTO_TEST_CASE(Fill) {
   TrackingVolume testVol(Transform3::Identity(),
                          std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
-  SingleDiamondPortalShell polygShell{gctx, testVol};
+  SingleDiamondPortalShell polygShell(testVol);
 
   // without filling the protal shell from a volume the portal link to this
   // direction shouldn't exist - but only the other direction
@@ -205,7 +204,7 @@ BOOST_AUTO_TEST_CASE(ApplyToVolume) {
   TrackingVolume testVol(Transform3::Identity(),
                          std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
-  SingleDiamondPortalShell polygShell{gctx, testVol};
+  SingleDiamondPortalShell polygShell(testVol);
   // before apply to volueme called - the volume should have zero portals
   BOOST_CHECK_EQUAL(testVol.portals().size(), 0);
 

@@ -465,7 +465,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{gctx, *cylVolume};
+  SingleCylinderPortalShell shell{*cylVolume};
   shell.applyToVolume();
 
   {
@@ -716,7 +716,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{gctx, *cylVolume};
+  SingleCylinderPortalShell shell{*cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
@@ -753,7 +753,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{gctx, *cylVolume};
+  SingleCylinderPortalShell shell{*cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
@@ -787,7 +787,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{gctx, *cylVolume};
+  SingleCylinderPortalShell shell{*cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos),

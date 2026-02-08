@@ -32,7 +32,6 @@ class VolumeBounds;
 /// information.
 class Volume : public GeometryObject {
  public:
-  friend class VolumeBounds;
   /// @brief Type alias for the axis-aligned bounding box of the volume
   /// @details Used to define the spatial extent of the volume in 3D space
   using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;

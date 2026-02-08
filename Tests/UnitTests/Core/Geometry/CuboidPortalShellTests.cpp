@@ -60,10 +60,9 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 10_mm));
 
-  BOOST_CHECK_THROW(SingleCuboidPortalShell(gctx, cylVolume),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(SingleCuboidPortalShell{cylVolume}, std::invalid_argument);
 
-  SingleCuboidPortalShell shell1{gctx, cube};
+  SingleCuboidPortalShell shell1{cube};
   BOOST_CHECK_EQUAL(shell1.size(), 6);
 
   using enum CuboidVolumeBounds::Face;
@@ -143,7 +142,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   TrackingVolume vol(Transform3::Identity(),
                      std::make_shared<CuboidVolumeBounds>(30_mm, 40_mm, 50_mm));
 
-  SingleCuboidPortalShell shell{gctx, vol};
+  SingleCuboidPortalShell shell{vol};
 
   const auto pXY = shell.portal(PositiveZFace);
   const auto nXY = shell.portal(NegativeZFace);
@@ -243,8 +242,8 @@ BOOST_DATA_TEST_CASE(XYZDirection,
   TrackingVolume vol2(Transform3{Translation3{Vector3::Unit(dirIdx) * 100_mm}},
                       bounds2);
 
-  SingleCuboidPortalShell shell1{gctx, vol1};
-  SingleCuboidPortalShell shell2{gctx, vol2};
+  SingleCuboidPortalShell shell1{vol1};
+  SingleCuboidPortalShell shell2{vol2};
 
   std::map<CuboidVolumeBounds::Face, Vector3> centers1;
   std::map<CuboidVolumeBounds::Face, Vector3> centers2;
@@ -345,8 +344,8 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         nullptr);
   }
 
-  shell1 = SingleCuboidPortalShell{gctx, vol1};
-  shell2 = SingleCuboidPortalShell{gctx, vol2};
+  shell1 = SingleCuboidPortalShell{vol1};
+  shell2 = SingleCuboidPortalShell{vol2};
 
   BOOST_CHECK_THROW(
       CuboidStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisR),
@@ -396,11 +395,11 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
       base * Translation3{Vector3::UnitX() * 60_mm + Vector3::UnitZ() * 300_mm},
       std::make_shared<CuboidVolumeBounds>(30_mm, 100_mm, 500_mm), "vol4");
 
-  SingleCuboidPortalShell shell1{gctx, vol1};
+  SingleCuboidPortalShell shell1{vol1};
   BOOST_CHECK(shell1.isValid());
-  SingleCuboidPortalShell shell2{gctx, vol2};
+  SingleCuboidPortalShell shell2{vol2};
   BOOST_CHECK(shell2.isValid());
-  SingleCuboidPortalShell shell3{gctx, vol3};
+  SingleCuboidPortalShell shell3{vol3};
   BOOST_CHECK(shell3.isValid());
 
   CuboidStackPortalShell stack{
@@ -408,7 +407,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
 
   BOOST_CHECK(stack.isValid());
 
-  SingleCuboidPortalShell shell4{gctx, vol4};
+  SingleCuboidPortalShell shell4{vol4};
   BOOST_CHECK(shell4.isValid());
 
   CuboidStackPortalShell stack2{
@@ -754,7 +753,7 @@ BOOST_AUTO_TEST_CASE(Fill) {
       base * Translation3(Vector3::UnitZ() * 300_mm),
       std::make_shared<CuboidVolumeBounds>(30_mm, 100_mm, 100_mm), "vol2");
 
-  SingleCuboidPortalShell shell{gctx, vol1};
+  SingleCuboidPortalShell shell{vol1};
 
   using enum CuboidVolumeBounds::Face;
 
@@ -773,7 +772,7 @@ BOOST_AUTO_TEST_CASE(RegisterInto) {
       Transform3::Identity(),
       std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm));
 
-  SingleCuboidPortalShell shell{gctx, vol1};
+  SingleCuboidPortalShell shell{vol1};
 
   BOOST_CHECK_EQUAL(vol1.portals().size(), 0);
 

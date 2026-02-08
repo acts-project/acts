@@ -33,8 +33,7 @@ void CylinderPortalShell::fill(TrackingVolume& volume) {
   }
 }
 
-SingleCylinderPortalShell::SingleCylinderPortalShell(
-    const GeometryContext& gctx, TrackingVolume& volume)
+SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
     : m_volume{&volume} {
   if (m_volume->volumeBounds().type() != VolumeBounds::BoundsType::eCylinder) {
     throw std::invalid_argument(
@@ -44,8 +43,10 @@ SingleCylinderPortalShell::SingleCylinderPortalShell(
   const auto& bounds =
       dynamic_cast<const CylinderVolumeBounds&>(m_volume->volumeBounds());
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   std::vector<OrientedSurface> orientedSurfaces =
-      bounds.orientedSurfaces(m_volume->localToGlobalTransform(gctx));
+      bounds.orientedSurfaces(m_volume->transform());
+  ACTS_POP_IGNORE_DEPRECATED()
 
   auto handle = [&](Face face, std::size_t from) {
     const auto& source = orientedSurfaces.at(from);

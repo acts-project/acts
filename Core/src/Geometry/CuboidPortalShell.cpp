@@ -39,8 +39,7 @@ void CuboidPortalShell::fill(TrackingVolume& volume) {
   }
 }
 
-SingleCuboidPortalShell::SingleCuboidPortalShell(const GeometryContext& gctx,
-                                                 TrackingVolume& volume)
+SingleCuboidPortalShell::SingleCuboidPortalShell(TrackingVolume& volume)
     : m_volume{&volume} {
   using enum CuboidVolumeBounds::Face;
   if (m_volume->volumeBounds().type() != VolumeBounds::BoundsType::eCuboid) {
@@ -51,8 +50,10 @@ SingleCuboidPortalShell::SingleCuboidPortalShell(const GeometryContext& gctx,
   const auto& bounds =
       dynamic_cast<const CuboidVolumeBounds&>(m_volume->volumeBounds());
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   std::vector<OrientedSurface> orientedSurfaces =
-      bounds.orientedSurfaces(m_volume->localToGlobalTransform(gctx));
+      bounds.orientedSurfaces(m_volume->transform());
+  ACTS_POP_IGNORE_DEPRECATED()
 
   auto handle = [&](Face face, std::size_t from) {
     const auto& source = orientedSurfaces.at(from);

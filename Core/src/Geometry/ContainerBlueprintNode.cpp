@@ -177,7 +177,7 @@ std::vector<BaseShell*> ContainerBlueprintNode::collectChildShells(
       nGaps++;
       ACTS_DEBUG(prefix << " ~> Gap volume (" << gap->volumeName()
                         << "): " << gap->volumeBounds());
-      auto shell = std::make_unique<SingleShell>(gctx, *gap);
+      auto shell = std::make_unique<SingleShell>(*gap);
       assert(shell->isValid());
       shells.push_back(shell.get());
 

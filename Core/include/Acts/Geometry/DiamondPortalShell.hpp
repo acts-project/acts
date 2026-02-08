@@ -51,8 +51,7 @@ class SingleDiamondPortalShell : public DiamondPortalShell {
  public:
   /// Constructor of a convex polygon shape portal shell for the given volume
   /// @param volume The tracking volume this portal shell is associated with
-  explicit SingleDiamondPortalShell(const GeometryContext& gctx,
-                                    TrackingVolume& volume);
+  explicit SingleDiamondPortalShell(TrackingVolume& volume);
 
   /// @copydoc DiamondPortalShell::portalPtr
   std::shared_ptr<Portal> portalPtr(Face face) override;
