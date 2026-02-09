@@ -104,6 +104,9 @@ class NavigationPolicyStateManager {
     m_stateStack.pop_back();
   }
 
+  /// Completely reset the state manager by clearing the stack
+  void reset() { m_stateStack.clear(); }
+
  private:
   friend class NavigationPolicyState;
 
