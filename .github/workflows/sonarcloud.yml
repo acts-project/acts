@@ -59,9 +59,9 @@ jobs:
       - name: Unzip coverage build
         run: unzip coverage-build.zip -d build
 
-      - name: Unzip PR_NUMBER
+      - name: Unzip PR metadata
         if: github.event.workflow_run.event == 'pull_request'
-        run: unzip PR_NUMBER.zip
+        run: unzip PR_metadata.zip
 
       - name: Debug
         run: |
@@ -75,6 +75,13 @@ jobs:
         uses: juliangruber/read-file-action@v1
         with:
           path: ./PR_NUMBER.txt
+
+      - name: Read PR_SHA.txt
+        if: github.event.workflow_run.event == 'pull_request'
+        id: pr_sha
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./PR_SHA.txt
 
       - name: Request GitHub API for PR data
         if: github.event.workflow_run.event == 'pull_request'
@@ -108,7 +115,7 @@ jobs:
           git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
           git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
           git fetch origin
-          git checkout origin/${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
+          git checkout ${{ steps.pr_sha.outputs.content }}
           git remote -v
           git status
 
@@ -118,18 +125,6 @@ jobs:
           ls -al build
           ls -al build/coverage
 
-      - name: Verify coverage file integrity
-        run: |
-          echo "--- File info ---"
-          ls -lh build/coverage/cov.xml
-          md5sum build/coverage/cov.xml
-          echo "--- Validate XML ---"
-          xmllint --noout build/coverage/cov.xml && echo "XML is valid" || echo "XML is INVALID"
-          echo "--- Check for truncation ---"
-          tail -5 build/coverage/cov.xml
-          echo "--- Verify closing tag ---"
-          grep '</coverage>' build/coverage/cov.xml && echo "Has closing tag" || echo "MISSING CLOSING TAG"
-
       - name: Run sonar-scanner (PR mode)
         uses: SonarSource/sonarqube-scan-action@v7.0.0
         if: github.event.workflow_run.event == 'pull_request'
@@ -138,6 +133,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
         with:
           args: >
+            --define sonar.verbose=true
             --define sonar.cfamily.compile-commands=build/compile_commands.json
             --define sonar.coverageReportPaths=build/coverage/cov.xml
             --define sonar.projectVersion=${{ steps.next_version.outputs.content }}
@@ -154,6 +150,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Put the name of your token here
         with:
           args: >
+            --define sonar.verbose=true
             --define sonar.cfamily.compile-commands=build/compile_commands.json
             --define sonar.coverageReportPaths=build/coverage/cov.xml
             --define sonar.projectVersion=${{ steps.next_version.outputs.content }}

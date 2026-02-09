@@ -13,6 +13,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
@@ -183,6 +184,9 @@ class Navigator {
 
     /// Navigation options configuration
     Options options;
+
+    /// Management of policy state allocation and deallocation
+    NavigationPolicyStateManager policyStateManager;
 
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
@@ -382,7 +386,7 @@ class Navigator {
   /// @param direction The current direction
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& state, const Vector3& position,
+  bool checkTargetValid(State& state, const Vector3& position,
                         const Vector3& direction) const;
 
   /// @brief Handle the surface reached
