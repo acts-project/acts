@@ -47,18 +47,20 @@ struct OrientedSurface;
 ///           gctx) const;
 ///
 ///
-///        2) At some point during the (tracking) volume construction, the
-///           boundary surfaces, also called the portals, are created from
-///           the associated bounds. ACTS ensures that these surfaces are
-///           connected with the VolumePlacement instance. The client code
-///           needs to ensure that  there is enough memory allocated by the
-///           class to cache the associated transforms:
+///        2) At the end of the tracking geometry construction, the portals
+///           that are associated to the volume aligned by the
+///           VolumePlacementBase are connected to this particular instance.
+///           Via the
 ///
-///              void expandTransformCache(const std::size_t nPortals);
+///              void expandTransformCache(const GeometryContext& gctx,
+///                                        const std::size_t nPortals);
 ///
-///           is called after the boundary surfaces are attached to the
-///           placement. The argument tells the client how many transforms need
-///           to be cached.
+///           method, ACTS requests the client to expand the cache backend
+///           by nPortals where the associated portal transforms are cached
+///           and updated with the change of the alignment constants. At
+///           creation, the cache needs to be filled with the initial transforms
+///           as the framework may check that the portal did not move during the
+///           procedure
 ///
 ///             const Transform3& portalLocalToGlobal(const GeometryContext&
 ///             gctx,
@@ -101,13 +103,15 @@ class VolumePlacementBase {
   VolumePlacementBase& operator=(const VolumePlacementBase& other) = delete;
 
   /// @brief Abrivation of the portal surface vector
-  using PortalVec_t = std::vector<OrientedSurface>;
+  using PortalVec_t = std::vector<std::shared_ptr<RegularSurface>>;
 
   /// @brief Receives the vector of oriented portal surfaces produced by the
   ///        VolumeBounds and makes them to float with the alignment provided
   ///        by the volume. It then the vector of updated oriented surfaces
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param portalsToAlign: List of portals to align
-  PortalVec_t makePortalsAlignable(PortalVec_t portalsToAlign);
+  void makePortalsAlignable(const GeometryContext& gctx,
+                            const PortalVec_t& portalsToAlign);
 
   /// @brief Returns the number of portal placement objects
   std::size_t nPortalPlacements() const;
@@ -131,7 +135,6 @@ class VolumePlacementBase {
   virtual const Transform3& portalLocalToGlobal(
       const GeometryContext& gctx, const std::size_t portalIdx) const = 0;
 
- protected:
   /// @brief Returns the const pointer to the `SurfacePlacementBase` object
   ///        aligning the i-th portal (May be nullptr if index exceeds the
   ///        number of portals)
@@ -139,24 +142,26 @@ class VolumePlacementBase {
   const detail::PortalPlacement* portalPlacement(
       const std::size_t portalIdx) const;
 
-  /// @brief This method is called for the first time when the portal surfaces
-  ///        are registered with the VolumePlacmentBase class. The client
-  ///        receives the information about how many portals exist and it's
-  ///        requested to adapt the size of the transform cache backend
-  ///        accordingly. The method is called after the portal placements have
-  ///        been created.
+ protected:
+  /// @brief This method is called when the portal surfaces are registered with
+  ///        the VolumePlacmentBase class. The client receives the information
+  ///        about how many portals exist and he is requested to adapt the size
+  ///        of the transform cache backend accordingly. The method is called
+  ///        after the portal placements have been created.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param nPortals: The number of portals that are registered with this volume
   ///                  placement instance
-  virtual void expandTransformCache(const std::size_t nPortals) = 0;
+  virtual void expandTransformCache(const GeometryContext& gctx,
+                                    const std::size_t nPortals) = 0;
 
   /// @brief Returns the transform from the portal's frame into the
   ///        experiment's global frame taking the alignment corrections
-  ///        of the associated volumes into account.
+  ///        of the associated volume into account.
   ///        @note: The call of this function is only allowed after the
   ///               volume itself is moved. A swapped call order probably
   ///               leads to unaligned portals
   /// @param gctx: The geometry context carrying the current volume alignment
-  ///  @param portalIdx: Index of the portal to align
+  /// @param portalIdx: Index of the portal to align
   Transform3 alignPortal(const GeometryContext& gctx,
                          const std::size_t portalIdx) const;
 

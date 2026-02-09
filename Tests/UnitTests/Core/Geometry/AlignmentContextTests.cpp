@@ -134,9 +134,6 @@ class AlignableVolumePlacement : public VolumePlacementBase {
   explicit AlignableVolumePlacement(const Transform3& volTrf)
       : m_locToGlob{volTrf} {}
 
-  /// @brief Returns the transformation from the local volume coordinates to
-  ///        the experiment's global coordinate system
-  /// @param gctx The current geometry context object, e.g. alignment
   const Transform3& localToGlobalTransform(
       const GeometryContext& gctx) const override {
     const auto* alignContext = gctx.get<const AlignmentContext*>();
@@ -149,9 +146,6 @@ class AlignableVolumePlacement : public VolumePlacementBase {
     return m_locToGlob;
   }
 
-  /// @brief Returns the transformation from the experiment's global frame to the
-  ///        local volume coordinate system
-  /// @param gctx The current geometry context object, e.g. alignment
   const Transform3& globalToLocalTransform(
       const GeometryContext& gctx) const override {
     const auto* alignContext = gctx.get<const AlignmentContext*>();
@@ -164,10 +158,6 @@ class AlignableVolumePlacement : public VolumePlacementBase {
     return m_globToLoc;
   }
 
-  /// @brief Returns the transform from the portal's frame to the experiment's
-  ///        global frame for the portal surface associated with the volume
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
   const Transform3& portalLocalToGlobal(
       const GeometryContext& gctx, const std::size_t portalIdx) const override {
     const auto* alignContext = gctx.get<const AlignmentContext*>();
@@ -201,10 +191,10 @@ class AlignableVolumePlacement : public VolumePlacementBase {
   }
 
  private:
-  void expandTransformCache(const std::size_t nPortals) override {
-    AlignmentContext gctx{};
+  void expandTransformCache(const GeometryContext& gctx,
+                            const std::size_t nPortals) override {
     for (std::size_t portal = 0ul; portal < nPortals; ++portal) {
-      m_portalTrfs.push_back(alignPortal(gctx.getContext(), portal));
+      m_portalTrfs.push_back(alignPortal(gctx, portal));
     }
   }
 

@@ -41,7 +41,8 @@ Volume::Volume(const Volume& vol) noexcept : GeometryObject{} {
 }
 
 Volume::Volume(const Volume& vol, const Transform3& shift)
-    : Volume{shift * (m_transform ? (*m_transform) : Transform3::Identity()),
+    : Volume{shift * (vol.m_transform ? (*vol.m_transform)
+                                      : Transform3::Identity()),
              vol.m_volumeBounds} {}
 
 Vector3 Volume::referencePosition(const GeometryContext& gctx,

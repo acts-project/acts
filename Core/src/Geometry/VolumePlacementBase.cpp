@@ -35,75 +35,41 @@ VolumePlacementBase& VolumePlacementBase::operator=(
   return (*this);
 }
 
-VolumePlacementBase::PortalVec_t VolumePlacementBase::makePortalsAlignable(
-    PortalVec_t portalsToAlign) {
-  // It's safe to use the default geometry context as all incoming portal
-  // surfaces are explicitly requested to have no surface placement and hence
-  // the cached transform is returned
-  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
-
-  const bool callExpand = portalsToAlign.size() != m_portalPlacements.size();
-
-  m_portalPlacements.resize(
-      std::max(portalsToAlign.size(), m_portalPlacements.size()));
-  if (m_portalPlacements.size() != portalsToAlign.size()) {
-    throw std::logic_error(
-        std::format("VolumePlacementBase::makePortalsAlignable() - Has been "
-                    "called previously for a different type of volume bounds. "
-                    "Already registered portals {:} vs incoming portals {:}",
-                    m_portalPlacements.size(), portalsToAlign.size()));
+void VolumePlacementBase::makePortalsAlignable(
+    const GeometryContext& gctx, const PortalVec_t& portalsToAlign) {
+  if (portalsToAlign.empty()) {
+    throw std::invalid_argument(
+        "VolumePlacementBase::makePortalsAlignable() - The portals must not be "
+        "empty");
   }
+
+  if (m_portalPlacements.size() > 0lu) {
+    throw std::runtime_error(
+        "VolumePlacementBase::makePortalsAlignable() - Portals were already "
+        "registered before");
+  }
+
   for (std::size_t portalIdx = 0lu; portalIdx < nPortalPlacements();
        ++portalIdx) {
-    std::shared_ptr<RegularSurface>& portalSurface =
-        portalsToAlign[portalIdx].surface;
+    const std::shared_ptr<RegularSurface>& portalSurface =
+        portalsToAlign[portalIdx];
     if (portalSurface->surfacePlacement() != nullptr) {
       throw std::invalid_argument(std::format(
           "VolumePlacementBase::makePortalsAlignable() - The {:}-th surface is "
           "already connected to the alignment system",
           portalIdx));
     }
-    // It is expected that the volume bounds are calling the orientedSurfaces
-    // method with an identity transform
+    // Calculate the portal transform w.r.t the current alignment
     const Transform3 portalToVolTrf =
+        globalToLocalTransform(gctx) *
         portalSurface->localToGlobalTransform(gctx);
-    std::unique_ptr<detail::PortalPlacement>& placement =
-        m_portalPlacements[portalIdx];
-    // Just create a new placement which makes the surface alignable
-    if (!placement) {
-      placement.reset(new detail::PortalPlacement(portalIdx, portalToVolTrf,
-                                                  this, portalSurface));
-    } else {
-      // The method has been called previously and it needs to be checked that
-      // the i-th surface is at the same place as the already registered surface
-      if (!portalToVolTrf.isApprox(placement->portalToVolumeCenter())) {
-        throw std::invalid_argument(
-            std::format("VolumePlacementBase::makePortalsAlignable() -  The "
-                        "{:}-th surface does not align with the one from a  "
-                        "previous call:\n -- exist {:}\n -- this call {:}",
-                        portalIdx, toString(placement->portalToVolumeCenter()),
-                        toString(portalToVolTrf)));
-      }
-      if (!(placement->surface().bounds() == portalSurface->bounds())) {
-        std::stringstream sstr{};
-        sstr << "VolumePlacementBase::makePortalsAlignable() -  The bounds for "
-                "the ";
-        sstr << portalIdx
-             << "-th surface differ with the ones from a previous call: \n";
-        sstr << " -- exist: " << placement->surface().bounds() << "\n";
-        sstr << " -- this call: " << portalSurface->bounds();
-        throw std::invalid_argument(sstr.str());
-      }
-      // overwrite the pointer
-      portalSurface = placement->surfacePtr();
-    }
+
+    m_portalPlacements.emplace_back(new detail::PortalPlacement(
+        portalIdx, portalToVolTrf, this, portalSurface));
   }
   // Before leaving ensure that the client knows it needs to reserve
   // space for N portals in the cache backend
-  if (callExpand) {
-    expandTransformCache(portalsToAlign.size());
-  }
-  return portalsToAlign;
+  expandTransformCache(gctx, nPortalPlacements());
 }
 
 const detail::PortalPlacement* VolumePlacementBase::portalPlacement(
