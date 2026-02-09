@@ -17,6 +17,7 @@
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -117,9 +118,10 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
       main = NavigationStream{};
 
       AppendOnlyNavigationStream navStream{main};
+      NavigationPolicyState policyState;
       currentVolume->initializeNavigationCandidates(
-          gctx, {.position = position, .direction = direction}, navStream,
-          logger());
+          gctx, {.position = position, .direction = direction}, policyState,
+          navStream, logger());
 
       ACTS_VERBOSE(main.candidates().size() << " candidates");
 
