@@ -35,15 +35,12 @@ namespace Acts {
 /// defined by the associated surface.
 ///
 /// @note This class holds shared ownership on its reference surface.
-template <class particle_hypothesis_t>
-class GenericBoundTrackParameters {
+class BoundTrackParameters {
  public:
-  /// Type alias for bound track parameters vector
+  /// Type alias for bound parameters vector
   using ParametersVector = BoundVector;
-  /// Type alias for bound track covariance matrix
-  using CovarianceMatrix = BoundSquareMatrix;
-  /// Type alias for particle hypothesis used in reconstruction
-  using ParticleHypothesis = particle_hypothesis_t;
+  /// Type alias for covariance matrix
+  using CovarianceMatrix = BoundMatrix;
 
   /// Factory to construct from four-position, direction, absolute momentum, and
   /// charge.
@@ -60,11 +57,10 @@ class GenericBoundTrackParameters {
   /// @return Result containing the constructed bound track parameters or error
   /// @note The returned result indicates whether the free parameters could
   /// successfully be converted to on-surface parameters.
-  static Result<GenericBoundTrackParameters> create(
+  static Result<BoundTrackParameters> create(
       const GeometryContext& geoCtx, std::shared_ptr<const Surface> surface,
       const Vector4& pos4, const Vector3& dir, double qOverP,
-      std::optional<CovarianceMatrix> cov,
-      ParticleHypothesis particleHypothesis,
+      std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis,
       double tolerance = s_onSurfaceTolerance) {
     Result<BoundVector> bound =
         transformFreeToBoundParameters(pos4.segment<3>(ePos0), pos4[eTime], dir,
@@ -74,9 +70,8 @@ class GenericBoundTrackParameters {
       return bound.error();
     }
 
-    return GenericBoundTrackParameters{std::move(surface), std::move(*bound),
-                                       std::move(cov),
-                                       std::move(particleHypothesis)};
+    return BoundTrackParameters{std::move(surface), *bound, std::move(cov),
+                                particleHypothesis};
   }
 
   /// Construct from four-position, direction, and qOverP.
@@ -87,14 +82,13 @@ class GenericBoundTrackParameters {
   /// @param cov Curvilinear bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
   /// @return Curvilinear bound track parameters
-  static GenericBoundTrackParameters createCurvilinear(
+  static BoundTrackParameters createCurvilinear(
       const Vector4& pos4, const Vector3& dir, double qOverP,
-      std::optional<CovarianceMatrix> cov,
-      ParticleHypothesis particleHypothesis) {
-    return GenericBoundTrackParameters(
+      std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis) {
+    return BoundTrackParameters(
         CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface(),
         transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
-        std::move(cov), std::move(particleHypothesis));
+        std::move(cov), particleHypothesis);
   }
 
   /// Construct from four-position, angles, and qOverP.
@@ -106,16 +100,15 @@ class GenericBoundTrackParameters {
   /// @param cov Curvilinear bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
   /// @return Curvilinear bound track parameters
-  static GenericBoundTrackParameters createCurvilinear(
+  static BoundTrackParameters createCurvilinear(
       const Vector4& pos4, double phi, double theta, double qOverP,
-      std::optional<CovarianceMatrix> cov,
-      ParticleHypothesis particleHypothesis) {
-    return GenericBoundTrackParameters(
+      std::optional<BoundMatrix> cov, ParticleHypothesis particleHypothesis) {
+    return BoundTrackParameters(
         CurvilinearSurface(pos4.segment<3>(ePos0),
                            makeDirectionFromPhiTheta(phi, theta))
             .surface(),
         transformFreeToCurvilinearParameters(pos4[eTime], phi, theta, qOverP),
-        std::move(cov), std::move(particleHypothesis));
+        std::move(cov), particleHypothesis);
   }
 
   /// Construct from a parameters vector on the surface and particle charge.
@@ -130,14 +123,14 @@ class GenericBoundTrackParameters {
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
-  GenericBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                              const ParametersVector& params,
-                              std::optional<CovarianceMatrix> cov,
-                              ParticleHypothesis particleHypothesis)
+  BoundTrackParameters(std::shared_ptr<const Surface> surface,
+                       const BoundVector& params,
+                       std::optional<BoundMatrix> cov,
+                       ParticleHypothesis particleHypothesis)
       : m_params(params),
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
-        m_particleHypothesis(std::move(particleHypothesis)) {
+        m_particleHypothesis(particleHypothesis) {
     // TODO set `validateAngleRange` to `true` after fixing caller code
     assert(isBoundVectorValid(m_params, false) &&
            "Invalid bound parameters vector");
@@ -145,28 +138,16 @@ class GenericBoundTrackParameters {
     normalizePhiTheta();
   }
 
-  /// Converts a bound track parameter with a different hypothesis.
-  /// @param other The other bound track parameters to convert from
-  template <typename other_particle_hypothesis_t>
-  explicit GenericBoundTrackParameters(
-      const GenericBoundTrackParameters<other_particle_hypothesis_t>& other)
-      : GenericBoundTrackParameters(
-            other.referenceSurface().getSharedPtr(), other.parameters(),
-            other.covariance(),
-            ParticleHypothesis{other.particleHypothesis()}) {}
-
   /// Convert this track parameter object to the general type-erased one
   /// @return Type-erased bound track parameters
-  GenericBoundTrackParameters<Acts::ParticleHypothesis> toBound() const {
-    return GenericBoundTrackParameters<Acts::ParticleHypothesis>{*this};
-  }
+  BoundTrackParameters toBound() const { return BoundTrackParameters{*this}; }
 
   /// Parameters vector.
   /// @return Mutable reference to the parameters vector
-  ParametersVector& parameters() { return m_params; }
+  BoundVector& parameters() { return m_params; }
   /// Parameters vector.
   /// @return Const reference to the parameters vector
-  const ParametersVector& parameters() const { return m_params; }
+  const BoundVector& parameters() const { return m_params; }
   /// Vector of spatial impact parameters (i.e., d0 and z0)
   /// @return Two-dimensional vector of spatial impact parameters
   Vector2 spatialImpactParameters() const { return m_params.head<2>(); }
@@ -181,10 +162,10 @@ class GenericBoundTrackParameters {
 
   /// Optional covariance matrix.
   /// @return Mutable reference to the optional covariance matrix
-  std::optional<CovarianceMatrix>& covariance() { return m_cov; }
+  std::optional<BoundMatrix>& covariance() { return m_cov; }
   /// Optional covariance matrix.
   /// @return Const reference to the optional covariance matrix
-  const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
+  const std::optional<BoundMatrix>& covariance() const { return m_cov; }
   /// Covariance matrix of the spatial impact parameters (i.e., of d0 and z0)
   /// @return Optional 2x2 covariance matrix of spatial impact parameters
   std::optional<ActsSquareMatrix<2>> spatialImpactParameterCovariance() const {
@@ -327,15 +308,15 @@ class GenericBoundTrackParameters {
 
   /// Reflect the parameters.
   /// @return Reflected parameters.
-  GenericBoundTrackParameters<ParticleHypothesis> reflect() const {
-    GenericBoundTrackParameters<ParticleHypothesis> reflected = *this;
+  BoundTrackParameters reflect() const {
+    BoundTrackParameters reflected = *this;
     reflected.reflectInPlace();
     return reflected;
   }
 
  private:
   BoundVector m_params;
-  std::optional<BoundSquareMatrix> m_cov;
+  std::optional<BoundMatrix> m_cov;
   /// reference surface
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20
@@ -359,8 +340,8 @@ class GenericBoundTrackParameters {
   ///   of equality in different contexts. None of that can be handled by
   ///   this operator. Users should think really hard if this is what they
   ///   want and we might decided that we will remove this in the future.
-  friend bool operator==(const GenericBoundTrackParameters& lhs,
-                         const GenericBoundTrackParameters& rhs) {
+  friend bool operator==(const BoundTrackParameters& lhs,
+                         const BoundTrackParameters& rhs) {
     return (lhs.m_params == rhs.m_params) && (lhs.m_cov == rhs.m_cov) &&
            (lhs.m_surface == rhs.m_surface) &&
            (lhs.m_particleHypothesis == rhs.m_particleHypothesis);
@@ -368,7 +349,7 @@ class GenericBoundTrackParameters {
 
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
-                                  const GenericBoundTrackParameters& tp) {
+                                  const BoundTrackParameters& tp) {
     detail::printBoundParameters(
         os, tp.referenceSurface(), tp.particleHypothesis(), tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);

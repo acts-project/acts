@@ -68,7 +68,7 @@ ProcessCode CsvTrackParameterReader::read(const AlgorithmContext& ctx) {
     params[Acts::eBoundTheta] = d.theta;
     params[Acts::eBoundQOverP] = d.qop;
 
-    Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
+    Acts::BoundMatrix cov = Acts::BoundMatrix::Zero();
     cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = d.var_d0;
     cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = d.var_z0;
     cov(Acts::eBoundPhi, Acts::eBoundPhi) = d.var_phi;

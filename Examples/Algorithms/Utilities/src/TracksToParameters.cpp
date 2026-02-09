@@ -8,18 +8,11 @@
 
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/HashedString.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 
-#include <optional>
 #include <utility>
-#include <vector>
 
 namespace ActsExamples {
 

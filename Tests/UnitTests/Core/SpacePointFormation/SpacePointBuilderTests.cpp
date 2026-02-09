@@ -13,7 +13,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -61,7 +60,7 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
   stddev[eBoundPhi] = 2_degree;
   stddev[eBoundTheta] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle start from the origin
   Vector4 mPos4(-3_m, 0., 0., 0.);
   return BoundTrackParameters::createCurvilinear(
@@ -212,7 +211,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     param[eBoundLoc0] = testslink.parameters[eBoundLoc0];
     param[eBoundLoc1] = testslink.parameters[eBoundLoc1];
 
-    BoundSquareMatrix cov = BoundSquareMatrix::Zero();
+    BoundMatrix cov = BoundMatrix::Zero();
     cov.topLeftCorner<2, 2>() = testslink.covariance;
 
     return std::make_pair(param, cov);

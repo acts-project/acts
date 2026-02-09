@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
-#include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -30,25 +29,12 @@ namespace Acts {
 ///
 /// Parameters and covariance matrix are stored using the free parametrization
 /// defined in `enum FreeIndices`.
-template <class particle_hypothesis_t>
-class GenericFreeTrackParameters {
+class FreeTrackParameters {
  public:
-  /// Type alias for free track parameters vector
+  /// Type alias for bound parameters vector
   using ParametersVector = FreeVector;
-  /// Type alias for free track covariance matrix
-  using CovarianceMatrix = FreeSquareMatrix;
-  /// Type alias for particle hypothesis used in reconstruction
-  using ParticleHypothesis = particle_hypothesis_t;
-
-  /// Converts an unknown bound track parameter.
-  /// @param other The other track parameters to convert from
-  /// @return Free track parameters converted from the input parameters
-  template <FreeTrackParametersConcept other_track_parameter_t>
-  static GenericFreeTrackParameters create(
-      const other_track_parameter_t& other) {
-    return GenericFreeTrackParameters(
-        other.parameters(), other.particleHypothesis(), other.covariance());
-  }
+  /// Type alias for covariance matrix
+  using CovarianceMatrix = FreeMatrix;
 
   /// Construct from a parameters vector and particle charge.
   ///
@@ -61,12 +47,11 @@ class GenericFreeTrackParameters {
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
-  GenericFreeTrackParameters(const ParametersVector& params,
-                             std::optional<CovarianceMatrix> cov,
-                             ParticleHypothesis particleHypothesis)
+  FreeTrackParameters(const FreeVector& params, std::optional<FreeMatrix> cov,
+                      ParticleHypothesis particleHypothesis)
       : m_params(params),
         m_cov(std::move(cov)),
-        m_particleHypothesis(std::move(particleHypothesis)) {
+        m_particleHypothesis(particleHypothesis) {
     assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
   }
 
@@ -77,12 +62,12 @@ class GenericFreeTrackParameters {
   /// @param qOverP Charge over momentum
   /// @param cov Free parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
-  GenericFreeTrackParameters(const Vector4& pos4, const Vector3& dir,
-                             double qOverP, std::optional<CovarianceMatrix> cov,
-                             ParticleHypothesis particleHypothesis)
+  FreeTrackParameters(const Vector4& pos4, const Vector3& dir, double qOverP,
+                      std::optional<FreeMatrix> cov,
+                      ParticleHypothesis particleHypothesis)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
-        m_particleHypothesis(std::move(particleHypothesis)) {
+        m_particleHypothesis(particleHypothesis) {
     m_params[eFreePos0] = pos4[ePos0];
     m_params[eFreePos1] = pos4[ePos1];
     m_params[eFreePos2] = pos4[ePos2];
@@ -103,12 +88,12 @@ class GenericFreeTrackParameters {
   /// @param qOverP Charge over momentum
   /// @param cov Free parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
-  GenericFreeTrackParameters(const Vector4& pos4, double phi, double theta,
-                             double qOverP, std::optional<CovarianceMatrix> cov,
-                             ParticleHypothesis particleHypothesis)
+  FreeTrackParameters(const Vector4& pos4, double phi, double theta,
+                      double qOverP, std::optional<FreeMatrix> cov,
+                      ParticleHypothesis particleHypothesis)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
-        m_particleHypothesis(std::move(particleHypothesis)) {
+        m_particleHypothesis(particleHypothesis) {
     auto dir = makeDirectionFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];
     m_params[eFreePos1] = pos4[ePos1];
@@ -122,21 +107,12 @@ class GenericFreeTrackParameters {
     assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
   }
 
-  /// Converts a free track parameter with a different hypothesis.
-  /// @param other The other free track parameters to convert from
-  template <typename other_particle_hypothesis_t>
-  explicit GenericFreeTrackParameters(
-      const GenericFreeTrackParameters<other_particle_hypothesis_t>& other)
-      : GenericFreeTrackParameters(other.parameters(),
-                                   other.particleHypothesis(),
-                                   other.covariance()) {}
-
   /// Parameters vector.
   /// @return Const reference to the free parameters vector
-  const ParametersVector& parameters() const { return m_params; }
+  const FreeVector& parameters() const { return m_params; }
   /// Optional covariance matrix.
   /// @return Const reference to the optional covariance matrix
-  const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
+  const std::optional<FreeMatrix>& covariance() const { return m_cov; }
 
   /// Access a single parameter value identified by its index.
   ///
@@ -219,21 +195,21 @@ class GenericFreeTrackParameters {
 
   /// Reflect the parameters.
   /// @return Reflected parameters.
-  GenericFreeTrackParameters<ParticleHypothesis> reflect() const {
-    GenericFreeTrackParameters<ParticleHypothesis> reflected = *this;
+  FreeTrackParameters reflect() const {
+    FreeTrackParameters reflected = *this;
     reflected.reflectInPlace();
     return reflected;
   }
 
  private:
   FreeVector m_params;
-  std::optional<FreeSquareMatrix> m_cov;
+  std::optional<FreeMatrix> m_cov;
   // TODO use [[no_unique_address]] once we switch to C++20
   ParticleHypothesis m_particleHypothesis;
 
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
-                                  const GenericFreeTrackParameters& tp) {
+                                  const FreeTrackParameters& tp) {
     detail::printFreeParameters(
         os, tp.particleHypothesis(), tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);

@@ -9,7 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <boost/container/flat_map.hpp>  // TODO use flat unordered map

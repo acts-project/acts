@@ -10,9 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -58,7 +57,7 @@ struct Parameters {
   // Dummy default
   Acts::ParticleHypothesis particleHypothesis =
       Acts::ParticleHypothesis::pion();
-  std::optional<Acts::BoundSquareMatrix> covariance;
+  std::optional<Acts::BoundMatrix> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 

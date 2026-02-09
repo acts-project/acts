@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 

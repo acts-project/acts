@@ -8,7 +8,6 @@
 
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -58,8 +57,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   BoundVector perigeeParams = endParams.parameters();
 
   // Covariance and weight matrix at the PCA to the reference point
-  BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
-  BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  BoundMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   // Vector containing the track parameters at the PCA
   // Note that we parametrize the track using the following parameters:

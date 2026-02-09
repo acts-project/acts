@@ -12,7 +12,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -149,7 +148,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
         .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
             m_cfg.initialVarInflation.data()}};
 
-    Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
+    Acts::BoundMatrix cov = Acts::estimateTrackParamCovariance(
         config, params, bottomSP->t().has_value());
 
     Acts::ParticleHypothesis hypothesis =

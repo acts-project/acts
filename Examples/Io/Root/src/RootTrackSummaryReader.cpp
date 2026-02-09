@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -176,7 +175,7 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
       double resT = (*m_err_eT_fit)[i];
 
       // Fill vector of track objects with simple covariance matrix
-      Acts::BoundSquareMatrix covMat;
+      Acts::BoundMatrix covMat;
 
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,

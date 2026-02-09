@@ -13,9 +13,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -44,7 +43,7 @@ using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
-const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
+const BoundMatrix cov = BoundMatrix::Identity();
 
 void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                      double time, double phi, double theta, double p, double q,

@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -56,7 +55,7 @@ Navigator navigator({tGeometry});
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 2_T});
 EigenStepperType estepper(bField);

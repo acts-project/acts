@@ -15,33 +15,34 @@
 #include <cstddef>
 #include <iomanip>
 #include <ostream>
-#include <string>
+
+namespace Acts {
 
 namespace {
 
-constexpr std::array<const char*, Acts::eBoundSize> makeBoundNames() {
-  std::array<const char*, Acts::eBoundSize> names = {nullptr};
+constexpr std::array<const char*, eBoundSize> makeBoundNames() {
+  std::array<const char*, eBoundSize> names = {nullptr};
   // must be set by index since the order is user-configurable
-  names[Acts::eBoundLoc0] = "loc0:";
-  names[Acts::eBoundLoc1] = "loc1:";
-  names[Acts::eBoundTime] = "time:";
-  names[Acts::eBoundPhi] = "phi:";
-  names[Acts::eBoundTheta] = "theta:";
-  names[Acts::eBoundQOverP] = "q/p:";
+  names[eBoundLoc0] = "loc0:";
+  names[eBoundLoc1] = "loc1:";
+  names[eBoundTime] = "time:";
+  names[eBoundPhi] = "phi:";
+  names[eBoundTheta] = "theta:";
+  names[eBoundQOverP] = "q/p:";
   return names;
 }
 
-constexpr std::array<const char*, Acts::eFreeSize> makeFreeNames() {
-  std::array<const char*, Acts::eFreeSize> names = {nullptr};
+constexpr std::array<const char*, eFreeSize> makeFreeNames() {
+  std::array<const char*, eFreeSize> names = {nullptr};
   // must be set by index since the order is user-configurable
-  names[Acts::eFreePos0] = "pos0:";
-  names[Acts::eFreePos1] = "pos1:";
-  names[Acts::eFreePos2] = "pos2:";
-  names[Acts::eFreeTime] = "time:";
-  names[Acts::eFreeDir0] = "dir0:";
-  names[Acts::eFreeDir1] = "dir1:";
-  names[Acts::eFreeDir2] = "dir2:";
-  names[Acts::eFreeQOverP] = "q/p:";
+  names[eFreePos0] = "pos0:";
+  names[eFreePos1] = "pos1:";
+  names[eFreePos2] = "pos2:";
+  names[eFreeTime] = "time:";
+  names[eFreeDir0] = "dir0:";
+  names[eFreeDir1] = "dir1:";
+  names[eFreeDir2] = "dir2:";
+  names[eFreeQOverP] = "q/p:";
   return names;
 }
 
@@ -158,15 +159,15 @@ void printParameters(std::ostream& os, const names_container_t& names,
   os.precision(precision);
 }
 
-using ParametersMap = Eigen::Map<const Acts::ActsDynamicVector>;
-using CovarianceMap = Eigen::Map<const Acts::ActsDynamicMatrix>;
+using ParametersMap = Eigen::Map<const ActsDynamicVector>;
+using CovarianceMap = Eigen::Map<const ActsDynamicMatrix>;
 
 }  // namespace
 
-void Acts::detail::printBoundParameters(
-    std::ostream& os, const Acts::Surface& surface,
-    const Acts::ParticleHypothesis& particleHypothesis,
-    const Acts::BoundVector& params, const Acts::BoundSquareMatrix* cov) {
+void detail::printBoundParameters(std::ostream& os, const Surface& surface,
+                                  const ParticleHypothesis& particleHypothesis,
+                                  const BoundVector& params,
+                                  const BoundMatrix* cov) {
   if (cov != nullptr) {
     printParametersCovariance(os, makeBoundNames(), kMonotonic, params, *cov);
   } else {
@@ -177,9 +178,10 @@ void Acts::detail::printBoundParameters(
   os << "\nwith " << particleHypothesis;
 }
 
-void Acts::detail::printFreeParameters(
-    std::ostream& os, const Acts::ParticleHypothesis& particleHypothesis,
-    const Acts::FreeVector& params, const Acts::FreeMatrix* cov) {
+void detail::printFreeParameters(std::ostream& os,
+                                 const ParticleHypothesis& particleHypothesis,
+                                 const FreeVector& params,
+                                 const FreeMatrix* cov) {
   if (cov != nullptr) {
     printParametersCovariance(os, makeFreeNames(), kMonotonic, params, *cov);
   } else {
@@ -188,18 +190,20 @@ void Acts::detail::printFreeParameters(
   os << "\nwith " << particleHypothesis;
 }
 
-void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,
-                                    const std::uint8_t* indices,
-                                    const double* params, const double* cov) {
+void detail::printMeasurement(std::ostream& os, BoundIndices size,
+                              const std::uint8_t* indices, const double* params,
+                              const double* cov) {
   auto s = static_cast<Eigen::Index>(size);
   printParametersCovariance(os, makeBoundNames(), indices,
                             ParametersMap(params, s), CovarianceMap(cov, s, s));
 }
 
-void Acts::detail::printMeasurement(std::ostream& os, FreeIndices size,
-                                    const std::uint8_t* indices,
-                                    const double* params, const double* cov) {
+void detail::printMeasurement(std::ostream& os, FreeIndices size,
+                              const std::uint8_t* indices, const double* params,
+                              const double* cov) {
   auto s = static_cast<Eigen::Index>(size);
   printParametersCovariance(os, makeFreeNames(), indices,
                             ParametersMap(params, s), CovarianceMap(cov, s, s));
 }
+
+}  // namespace Acts

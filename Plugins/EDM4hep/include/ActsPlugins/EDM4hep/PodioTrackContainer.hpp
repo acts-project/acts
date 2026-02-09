@@ -11,8 +11,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackStateProxy.hpp"
-#include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
@@ -27,7 +25,6 @@
 #include "ActsPodioEdm/TrackInfo.h"
 #pragma GCC diagnostic pop
 
-#include <mutex>
 #include <stdexcept>
 #include <type_traits>
 
@@ -171,7 +168,7 @@ class PodioTrackContainerBase {
     auto track = instance.m_collection->at(itrack);
     const auto& src = track.getParticleHypothesis();
     return Acts::ParticleHypothesis{static_cast<Acts::PdgParticle>(src.absPdg),
-                                    src.mass, Acts::AnyCharge{src.absQ}};
+                                    src.mass, Acts::ChargeHypothesis{src.absQ}};
   }
 
   /// Populate surface buffer from track collection

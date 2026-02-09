@@ -13,16 +13,12 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericFreeTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/FreeTrackParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
 #include <optional>
-#include <utility>
-#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 
@@ -32,7 +28,7 @@ using namespace Acts::UnitLiterals;
 namespace {
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
-const FreeSquareMatrix cov = FreeSquareMatrix::Identity();
+const FreeMatrix cov = FreeMatrix::Identity();
 
 void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
                      const Vector3& unitDir, double p, double q) {

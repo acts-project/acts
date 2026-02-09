@@ -11,8 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -51,7 +50,7 @@ using Acts::VectorHelpers::makeVector4;
 // Set up logger
 ACTS_LOCAL_LOGGER(getDefaultLogger("AMVFitterTests", Logging::INFO))
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
@@ -183,7 +182,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     int vtxIdx = static_cast<int>(iTrack / nTracksPerVtx);
 
     // Construct random track parameters
-    BoundTrackParameters::ParametersVector paramVec;
+    BoundVector paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
 
@@ -393,7 +392,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
     // clang-format on
 
     // Random track parameters
-    BoundTrackParameters::ParametersVector paramVec;
+    BoundVector paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), trueVtxTime + relTDist(gen);
 

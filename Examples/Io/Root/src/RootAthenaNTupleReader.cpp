@@ -9,14 +9,11 @@
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Io/Root/RootUtility.hpp"
 
 #include <cstdint>
 #include <iostream>
@@ -25,10 +22,11 @@
 
 #include <TChain.h>
 
-ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
-    const ActsExamples::RootAthenaNTupleReader::Config& config,
-    Acts::Logging::Level level)
-    : ActsExamples::IReader(),
+namespace ActsExamples {
+
+RootAthenaNTupleReader::RootAthenaNTupleReader(
+    const RootAthenaNTupleReader::Config& config, Acts::Logging::Level level)
+    : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
   if (m_cfg.inputFilePath.empty()) {
@@ -116,10 +114,9 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 }
 
-ActsExamples::RootAthenaNTupleReader::~RootAthenaNTupleReader() = default;
+RootAthenaNTupleReader::~RootAthenaNTupleReader() = default;
 
-ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
-    const ActsExamples::AlgorithmContext& context) {
+ProcessCode RootAthenaNTupleReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read track parameters from ntuple.");
 
   Acts::Vector3 pos(0, 0, 0);
@@ -160,7 +157,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     params[Acts::BoundIndices::eBoundTime] = m_branches.track_t[i];
 
     // Construct and fill covariance matrix
-    Acts::BoundSquareMatrix cov;
+    Acts::BoundMatrix cov;
 
     // Variances
     cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundLoc0) =
@@ -256,3 +253,5 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
   // Return success flag
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

@@ -118,8 +118,6 @@ static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continuous");
 using BoundVector = ActsVector<eBoundSize>;
 /// @brief Matrix type for bound track parameter transformations
 using BoundMatrix = ActsMatrix<eBoundSize, eBoundSize>;
-/// @brief Square matrix type for bound track parameter covariance
-using BoundSquareMatrix = ActsSquareMatrix<eBoundSize>;
 /// @brief Matrix type for mapping from bound to free track parameters
 using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 
@@ -128,8 +126,6 @@ using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 using FreeVector = ActsVector<eFreeSize>;
 /// @brief Matrix type for free track parameter transformations
 using FreeMatrix = ActsMatrix<eFreeSize, eFreeSize>;
-/// @brief Square matrix type for free track parameter covariance
-using FreeSquareMatrix = ActsSquareMatrix<eFreeSize>;
 /// @brief Matrix type for mapping from free to bound track parameters
 using FreeToBoundMatrix = ActsMatrix<eBoundSize, eFreeSize>;
 /// @brief Matrix type for mapping from free parameters to path length
