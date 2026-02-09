@@ -40,7 +40,7 @@ class PortalPlacement final : public SurfacePlacementBase {
   RegularSurface& surface() final;
 
   /// @brief Returns the pointer to the hold surface
-  std::shared_ptr<RegularSurface> surfacePtr();
+  const std::shared_ptr<RegularSurface>& surfacePtr();
 
   /// @brief Returns the pointer to the hold surface
   std::shared_ptr<const RegularSurface> surfacePtr() const;

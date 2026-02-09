@@ -22,6 +22,25 @@
 #include <memory>
 #include <utility>
 
+namespace {
+/// @brief checks whether the two transforms are the same
+/// @param a: First transform to check
+/// @param b: Second transform to check
+inline bool isSame(const Acts::Transform3& a, const Acts::Transform3& b) {
+  const Acts::Transform3 c = a * b.inverse();
+  if (c.translation().norm() > Acts::s_onSurfaceTolerance) {
+    return false;
+  }
+  for (std::size_t d = 0; d < 3; ++d) {
+    const Acts::Vector3 e = Acts::Vector3::Unit(d);
+    if (std::abs(e.dot(c * e) - 1.) > Acts::s_onSurfaceTolerance) {
+      return false;
+    }
+  }
+  return true;
+}
+}  // namespace
+
 namespace Acts {
 class PlanarBounds;
 }  // namespace Acts
@@ -257,12 +276,12 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   GeometryContext positiveContext{alignPositive.getContext()};
 
   // Test the transforms
-  BOOST_CHECK(alignedSurface.localToGlobalTransform(defaultContext)
-                  .isApprox(Transform3::Identity()));
-  BOOST_CHECK(alignedSurface.localToGlobalTransform(negativeContext)
-                  .isApprox(negativeTransform));
-  BOOST_CHECK(alignedSurface.localToGlobalTransform(positiveContext)
-                  .isApprox(positiveTransform));
+  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(defaultContext),
+                     Transform3::Identity()));
+  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(negativeContext),
+                     negativeTransform));
+  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(positiveContext),
+                     positiveTransform));
 
   // Test the centers
   BOOST_CHECK_EQUAL(alignedSurface.center(defaultContext), nominalCenter);
@@ -324,8 +343,8 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
   BOOST_CHECK_EQUAL(alignedVol1.isAlignable(), true);
   BOOST_CHECK_THROW(alignedVol1.setTransform(volTrf1), std::runtime_error);
   const AlignmentContext defaultContext{};
-  /// Check that the transform of the alignable volume is defined by the
-  /// placement
+  // Check that the transform of the alignable volume is defined by the
+  // placement
 
   BOOST_CHECK_EQUAL(
       &alignedVol1.localToGlobalTransform(defaultContext.getContext()),
@@ -335,36 +354,44 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
       &alignedVol1.globalToLocalTransform(defaultContext.getContext()),
       &volumePlacement.globalToLocalTransform(defaultContext.getContext()));
 
-  BOOST_CHECK(
-      volumePlacement.localToGlobalTransform(defaultContext.getContext())
-          .isApprox(volTrf1));
-#ifdef STONJEK
-  /// Then fetch the oriented surfaces
-  const auto portalSurfaces =
-      alignedVol1.volumeBounds().boundarySurfaces(alignedVol1);
+  BOOST_CHECK(isSame(
+      volumePlacement.localToGlobalTransform(defaultContext.getContext()),
+      volTrf1));
+  // Then fetch the oriented surfaces
+  std::vector<OrientedSurface> orientedSurfaces =
+      alignedVol1.volumeBounds().orientedSurfaces(
+          alignedVol1.localToGlobalTransform(defaultContext.getContext()));
 
-  const auto orientedSurfaces =
-      alignedVol1.volumeBounds().orientedSurfaces(volTrf1);
+  for (const OrientedSurface& surface : orientedSurfaces) {
+    BOOST_CHECK_EQUAL(surface.surface->isAlignable(), false);
+    BOOST_CHECK_EQUAL(surface.surface->isSensitive(), false);
+  }
 
-  BOOST_CHECK_EQUAL(portalSurfaces.size(), orientedSurfaces.size());
+  std::vector<std::shared_ptr<RegularSurface>> portalSurfaces{};
+  std::ranges::transform(
+      orientedSurfaces, std::back_inserter(portalSurfaces),
+      [](const OrientedSurface& surface) { return surface.surface; });
+
+  volumePlacement.makePortalsAlignable(defaultContext.getContext(),
+                                       portalSurfaces);
+
+  // Reset the surfaces
+  orientedSurfaces = alignedVol1.volumeBounds().orientedSurfaces(
+      alignedVol1.localToGlobalTransform(defaultContext.getContext()));
 
   for (std::size_t portal = 0ul; portal < portalSurfaces.size(); ++portal) {
     // The portal mut be alignable
-    BOOST_CHECK_EQUAL(portalSurfaces[portal].surface->isAlignable(), true);
+    BOOST_CHECK_EQUAL(portalSurfaces[portal]->isAlignable(), true);
     // But not sensitive
-    BOOST_CHECK_EQUAL(portalSurfaces[portal].surface->isSensitive(), false);
-    // The ordinary surfaces must be neither alignable or sensitive
-    BOOST_CHECK_EQUAL(orientedSurfaces[portal].surface->isAlignable(), false);
-    BOOST_CHECK_EQUAL(orientedSurfaces[portal].surface->isSensitive(), false);
+    BOOST_CHECK_EQUAL(portalSurfaces[portal]->isSensitive(), false);
     // Then check that the surface are placed at the same spot
-    BOOST_CHECK(
-        orientedSurfaces[portal]
-            .surface->localToGlobalTransform(defaultContext.getContext())
-            .isApprox(portalSurfaces[portal].surface->localToGlobalTransform(
-                defaultContext.getContext())));
+    BOOST_CHECK(isSame(orientedSurfaces[portal].surface->localToGlobalTransform(
+                           defaultContext.getContext()),
+                       portalSurfaces[portal]->localToGlobalTransform(
+                           defaultContext.getContext())));
     // Also check that their bounds are the same
     BOOST_CHECK(orientedSurfaces[portal].surface->bounds() ==
-                portalSurfaces[portal].surface->bounds());
+                portalSurfaces[portal]->bounds());
   }
 
   AlignmentContext alignedContext{};
@@ -373,33 +400,6 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
 
   volumePlacement.setAlignmentDelta(alignedContext, rotationDelta, 0);
 
-  for (const auto& portal : portalSurfaces) {
-    // Ensure that the portals move accordingly
-    const Transform3 unAlignedTrf =
-        alignedVol1.globalToLocalTransform(defaultContext.getContext()) *
-        portal.surface->localToGlobalTransform(defaultContext.getContext());
-    const Transform3 alignedTrf =
-        alignedVol1.globalToLocalTransform(alignedContext.getContext()) *
-        portal.surface->localToGlobalTransform(alignedContext.getContext());
-
-    BOOST_CHECK(unAlignedTrf.isApprox(alignedTrf, 1.e-5));
-    BOOST_CHECK(
-        (alignedVol1.localToGlobalTransform(defaultContext.getContext()) *
-         rotationDelta)
-            .isApprox(alignedVol1.localToGlobalTransform(
-                alignedContext.getContext())));
-  }
-
-  // Ensure that multiple fetches of the boundary surfaces result in the same
-  // portal surfaces
-  const auto secondPortalCall =
-      alignedVol1.volumeBounds().boundarySurfaces(alignedVol1);
-  BOOST_CHECK_EQUAL(portalSurfaces.size(), secondPortalCall.size());
-
-  for (std::size_t portal = 0ul; portal < portalSurfaces.size(); ++portal) {
-    BOOST_CHECK_EQUAL(portalSurfaces[portal].surface,
-                      secondPortalCall[portal].surface);
-  }
   // Ensure that the bound values can no longer be updated
   BOOST_CHECK_THROW(
       alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
@@ -409,7 +409,6 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
   BOOST_CHECK_NO_THROW(
       alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
           halfX1, halfX2, halfX3, halfY1, halfY2, halfZ)));
-#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END();

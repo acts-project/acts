@@ -69,6 +69,13 @@ TrackingVolume::TrackingVolume(const Transform3& transform,
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
+TrackingVolume::TrackingVolume(VolumePlacementBase& placement,
+                               std::shared_ptr<VolumeBounds> volbounds,
+                               const std::string& volumeName)
+    : Volume{placement, volbounds}, m_name{volumeName} {
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
+}
+
 TrackingVolume::~TrackingVolume() = default;
 TrackingVolume::TrackingVolume(TrackingVolume&&) noexcept = default;
 TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;

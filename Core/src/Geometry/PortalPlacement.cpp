@@ -54,7 +54,7 @@ const Transform3& PortalPlacement::portalToVolumeCenter() const {
   return m_portalToVolumeCenter;
 }
 
-std::shared_ptr<RegularSurface> PortalPlacement::surfacePtr() {
+const std::shared_ptr<RegularSurface>& PortalPlacement::surfacePtr() {
   return m_surface;
 }
 

@@ -22,12 +22,12 @@ namespace {
 /// @param b: Second transform to check
 inline bool isSame(const Acts::Transform3& a, const Acts::Transform3& b) {
   const Acts::Transform3 c = a * b.inverse();
-  if (c.translation().norm() > Acts::s_onSurface) {
+  if (c.translation().norm() > Acts::s_onSurfaceTolerance) {
     return false;
   }
   for (std::size_t d = 0; d < 3; ++d) {
     const Acts::Vector3 e = Acts::Vector3::Unit(d);
-    if (std::abs(e.dot(c * e) - 1.) > Acts::s_onSurface) {
+    if (std::abs(e.dot(c * e) - 1.) > Acts::s_onSurfaceTolerance) {
       return false;
     }
   }
