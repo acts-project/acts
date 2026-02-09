@@ -42,9 +42,10 @@ void FastStrawLineFitter::calcPostFitChi2(const StrawCont_t& measurements,
   for (const auto& strawMeas : measurements) {
     result.chi2 += chi2Term(angles, result.y0, *strawMeas);
   }
-  ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Overall chi2: "
-                      << result.chi2 << ", nDoF: " << result.nDoF
-                      << ", redChi2: " << (result.chi2 / std::max(std::size_t(1), result.nDoF)));
+  ACTS_DEBUG(__func__ << "() - " << __LINE__
+                      << ": Overall chi2: " << result.chi2
+                      << ", nDoF: " << result.nDoF << ", redChi2: "
+                      << (result.chi2 / std::max(std::size_t(1), result.nDoF)));
 }
 
 template <CompositeSpacePoint Point_t>
@@ -159,9 +160,10 @@ void FastStrawLineFitter::calcPostFitChi2(const Acts::CalibrationContext& ctx,
     result.chi2 += chi2Term(angles, result.y0, *strawMeas,
                             calibrator.driftRadius(ctx, *strawMeas, result.t0));
   }
-  ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Overall chi2: "
-                      << result.chi2 << ", nDoF: " << result.nDoF
-                      << ", redChi2: " << (result.chi2 / std::max(std::size_t(1), result.nDoF)));
+  ACTS_DEBUG(__func__ << "() - " << __LINE__
+                      << ": Overall chi2: " << result.chi2
+                      << ", nDoF: " << result.nDoF << ", redChi2: "
+                      << (result.chi2 / std::max(std::size_t(1), result.nDoF)));
 }
 
 template <CompositeSpacePointContainer StrawCont_t>

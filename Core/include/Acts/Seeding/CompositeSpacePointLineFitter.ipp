@@ -566,7 +566,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
 
   auto inverseH = safeInverse(miniHessian);
   // The Hessian can safely be inverted
-  if (inverseH && inverseH->diagonal().minCoeff() > 0 ) {
+  if (inverseH && inverseH->diagonal().minCoeff() > 0) {
     const Vector<N> update{(*inverseH) * miniGradient};
     // We compute also the normalized update, defined as the parameter
     // update expressed in units of the parameter uncertainties. This quantifies
@@ -605,7 +605,8 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Inverted Hessian \n"
                           << toString(*inverseH) << "\n-> Update parameters by "
-                          << toString(update) << ", normUpdate: " << std::sqrt(normUpdate));
+                          << toString(update)
+                          << ", normUpdate: " << std::sqrt(normUpdate));
     miniPars -= update;
 
   } else if (retCode != UpdateStep::converged) {

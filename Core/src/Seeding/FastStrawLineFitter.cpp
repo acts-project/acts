@@ -61,7 +61,8 @@ void FastStrawLineFitter::FitAuxiliariesWithT0 ::print(
 
 void FastStrawLineFitter::FitResult::print(std::ostream& ostr) const {
   ostr << "# iteration: " << nIter << ", nDoF: " << nDoF << ", chi2: " << chi2
-       << ", chi2 / nDoF: " << (chi2 / std::max(1.,static_cast<double>(nDoF))) << ",\n";
+       << ", chi2 / nDoF: " << (chi2 / std::max(1., static_cast<double>(nDoF)))
+       << ",\n";
   ostr << std::format("theta: {:.3f} pm {:.3f}, ", inDeg(theta), inDeg(dTheta))
        << std::format("y0: {:.3f}  pm {:.3f}", y0, dY0);
 }
