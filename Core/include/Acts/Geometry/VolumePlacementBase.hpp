@@ -34,7 +34,7 @@ struct OrientedSurface;
 ///        requesting their position in global space. The Volume's transform and
 ///        the bounds can the no longer be overwritten at a later stage.
 ///
-///        An implementation of the VolumePlacementBase needs to satisfy the
+///        An implementation of the @ref VolumePlacementBase needs to satisfy the
 ///        following interface.
 ///
 ///         1) Transforms switching from the volume's frame into the global
