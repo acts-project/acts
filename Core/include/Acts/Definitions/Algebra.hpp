@@ -66,15 +66,29 @@ using DynamicVector = Eigen::Matrix<double, Eigen::Dynamic, 1>;
 /// @brief Dynamic-sized matrix type
 using DynamicMatrix = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 
+/// @brief Fixed-size vector type for N-dimensional vectors
+/// @tparam kSize The dimension of the vector
+/// @deprecated Use Vector instead
 template <unsigned int kSize>
 using ActsVector [[deprecated("Use Vector instead")]] = Vector<kSize>;
+/// @brief Fixed-size matrix type for NxM matrices
+/// @tparam kRows Number of rows
+/// @tparam kCols Number of columns
+/// @deprecated Use Matrix instead
 template <unsigned int kRows, unsigned int kCols>
 using ActsMatrix [[deprecated("Use Matrix instead")]] = Matrix<kRows, kCols>;
+/// @brief Fixed-size square matrix type for NxN matrices
+/// @tparam kSize The dimension of the square matrix
+/// @deprecated Use SquareMatrix instead
 template <unsigned int kSize>
 using ActsSquareMatrix [[deprecated("Use SquareMatrix instead")]] =
     SquareMatrix<kSize>;
+/// @brief Dynamic-sized vector type
+/// @deprecated Use DynamicVector instead
 using ActsDynamicVector [[deprecated("Use DynamicVector instead")]] =
     DynamicVector;
+/// @brief Dynamic-sized matrix type
+/// @deprecated Use DynamicMatrix instead
 using ActsDynamicMatrix [[deprecated("Use DynamicMatrix instead")]] =
     DynamicMatrix;
 

@@ -254,9 +254,9 @@ class FixedSubspaceHelper
   /// Type alias for expansion matrix (full x subspace)
   using Expander = Matrix<kFullSize, kSubspaceSize>;
   /// Type alias for subspace vector
-  using Vector = Vector<kSubspaceSize>;
+  using VectorD = Vector<kSubspaceSize>;
   /// Type alias for subspace square matrix
-  using SquareMatrix = SquareMatrix<kSubspaceSize>;
+  using SquareMatrixD = SquareMatrix<kSubspaceSize>;
   /// Type alias for left application result matrix
   template <std::size_t K>
   using ApplyLeftResult = Matrix<kSubspaceSize, kSubspaceSize>;
@@ -367,9 +367,9 @@ class FixedSubspaceHelper
   /// @param fullVector Input vector with full space dimensions
   /// @return Vector projected to subspace dimensions
   template <typename Derived>
-  Vector projectVector(const Eigen::DenseBase<Derived>& fullVector) const {
+  VectorD projectVector(const Eigen::DenseBase<Derived>& fullVector) const {
     assert(fullVector.size() == kFullSize && "Invalid full vector size");
-    Vector result = Vector::Zero();
+    VectorD result = VectorD::Zero();
     for (auto [i, index] : enumerate(*this)) {
       result(i) = fullVector(index);
     }
@@ -381,11 +381,11 @@ class FixedSubspaceHelper
   /// @param fullMatrix Input square matrix with full space dimensions
   /// @return Square matrix projected to subspace dimensions
   template <typename Derived>
-  SquareMatrix projectMatrix(
+  SquareMatrixD projectMatrix(
       const Eigen::DenseBase<Derived>& fullMatrix) const {
     assert(fullMatrix.rows() == kFullSize && fullMatrix.cols() == kFullSize &&
            "Invalid full matrix size");
-    SquareMatrix result = SquareMatrix::Zero();
+    SquareMatrixD result = SquareMatrixD::Zero();
     for (auto [i, indexI] : enumerate(*this)) {
       for (auto [j, indexJ] : enumerate(*this)) {
         result(i, j) = fullMatrix(indexI, indexJ);
