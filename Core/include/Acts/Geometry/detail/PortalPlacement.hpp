@@ -29,15 +29,15 @@ class PortalPlacement final : public SurfacePlacementBase {
   ///       correction into account
   /// @param gctx The current geometry context object, e.g. alignment
   const Transform3& localToGlobalTransform(
-      const GeometryContext& gctx) const final;
+      const GeometryContext& gctx) const override;
 
   /// @brief Returns the const reference to portal surface connected with
   ///        this placement instance
-  const RegularSurface& surface() const final;
+  const RegularSurface& surface() const override;
 
   /// @brief Returns the mutable reference to portal surface connected with
   ///        this placement instance
-  RegularSurface& surface() final;
+  RegularSurface& surface() override;
 
   /// @brief Returns the pointer to the hold surface
   const std::shared_ptr<RegularSurface>& surfacePtr();
@@ -46,7 +46,7 @@ class PortalPlacement final : public SurfacePlacementBase {
   std::shared_ptr<const RegularSurface> surfacePtr() const;
 
   /// @brief Declares the surface object to be non-sensitive
-  bool isSensitive() const final;
+  bool isSensitive() const override;
 
   /// @brief Returns the face index of the associated portal surface
   std::size_t index() const;
@@ -61,7 +61,7 @@ class PortalPlacement final : public SurfacePlacementBase {
   /// @brief Delete the copy assignment operator
   PortalPlacement& operator=(const PortalPlacement& other) = delete;
 
- protected:
+ private:
   /// @brief Assembles the transform to switch from the portal's frame
   ///        to the experiment's global frame which is essentially the
   ///        same as a call of `localToGlobalTransform` but this method
@@ -77,7 +77,7 @@ class PortalPlacement final : public SurfacePlacementBase {
   ///                   volume (I.e. the  orientation of the portal w.r.t.
   ///                   volume)
   /// @param parent: Pointer to the parent which is hosting the placement and also
-  ///                providing the final transforms from the portal ->
+  ///                providing the override transforms from the portal ->
   ///                experiment's frame
   /// @param surface: Pointer to the portal surface itself which is becoming alignable
   ///                 with the construction of this PortalPlacement
@@ -85,7 +85,6 @@ class PortalPlacement final : public SurfacePlacementBase {
                   VolumePlacementBase* parent,
                   std::shared_ptr<RegularSurface> surface);
 
- private:
   /// @brief Orientation of the portal surface w.r.t the volume
   Transform3 m_portalToVolumeCenter{Transform3::Identity()};
   /// @brief Pointer to the surface held by the placement

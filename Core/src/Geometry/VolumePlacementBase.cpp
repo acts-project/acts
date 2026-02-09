@@ -43,7 +43,7 @@ void VolumePlacementBase::makePortalsAlignable(
         "empty");
   }
 
-  if (m_portalPlacements.size() > 0lu) {
+  if (!m_portalPlacements.empty()) {
     throw std::runtime_error(
         "VolumePlacementBase::makePortalsAlignable() - Portals were already "
         "registered before");

@@ -65,6 +65,7 @@ class Volume : public GeometryObject {
   /// Shift the volume by a transform
   ///
   /// @param shift is the transform to shift the volume by
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @return The shifted volume
   Volume shifted(const GeometryContext& gctx, const Transform3& shift) const;
 

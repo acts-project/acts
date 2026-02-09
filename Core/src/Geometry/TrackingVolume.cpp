@@ -65,14 +65,14 @@ TrackingVolume::TrackingVolume(const Volume& volume,
 TrackingVolume::TrackingVolume(const Transform3& transform,
                                std::shared_ptr<VolumeBounds> volbounds,
                                const std::string& volumeName)
-    : Volume{transform, volbounds}, m_name{volumeName} {
+    : Volume{transform, std::move(volbounds)}, m_name{volumeName} {
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
 TrackingVolume::TrackingVolume(VolumePlacementBase& placement,
                                std::shared_ptr<VolumeBounds> volbounds,
                                const std::string& volumeName)
-    : Volume{placement, volbounds}, m_name{volumeName} {
+    : Volume{placement, std::move(volbounds)}, m_name{volumeName} {
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 

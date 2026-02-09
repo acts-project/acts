@@ -34,7 +34,7 @@ class AlignablePortalVisitor final : public TrackingGeometryMutableVisitor {
   /// @brief Visit and potentially modify a tracking volume
   /// @param volume The tracking volume being visited
   /// @note Called for each volume in the geometry hierarchy during traversal
-  void visitVolume(TrackingVolume& volume) final;
+  void visitVolume(TrackingVolume& volume) override;
 
  private:
   /// @brief The construction geometry context connected to the experiment's alignment
