@@ -400,6 +400,20 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
 
   volumePlacement.setAlignmentDelta(alignedContext, rotationDelta, 0);
 
+  BOOST_CHECK(isSame(
+      volumePlacement.localToGlobalTransform(alignedContext.getContext()),
+      volTrf1 * rotationDelta));
+
+  orientedSurfaces = alignedVol1.volumeBounds().orientedSurfaces(
+      alignedVol1.localToGlobalTransform(alignedContext.getContext()));
+
+  for (std::size_t portal = 0ul; portal < portalSurfaces.size(); ++portal) {
+    BOOST_CHECK(isSame(orientedSurfaces[portal].surface->localToGlobalTransform(
+                           alignedContext.getContext()),
+                       portalSurfaces[portal]->localToGlobalTransform(
+                           alignedContext.getContext())));
+  }
+
   // Ensure that the bound values can no longer be updated
   BOOST_CHECK_THROW(
       alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
