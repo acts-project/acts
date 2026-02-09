@@ -233,7 +233,9 @@ def addParticleGun(
         )
 
     if outputDirRoot is not None:
-        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -420,7 +422,9 @@ def addPythia8(
         )
 
     if outputDirRoot is not None:
-        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -584,7 +588,9 @@ def addSimWriters(
         )
 
     if outputDirRoot is not None:
-        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
