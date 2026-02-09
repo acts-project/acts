@@ -203,10 +203,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     // they return non-zero quantities
     BoundVector vecBoundZero = BoundVector::Zero();
     BoundSquareMatrix matBoundZero = BoundSquareMatrix::Zero();
-    ActsMatrix<eBoundSize, 4> matBound2SPZero =
-        ActsMatrix<eBoundSize, 4>::Zero();
-    ActsMatrix<eBoundSize, 3> matBound2MomZero =
-        ActsMatrix<eBoundSize, 3>::Zero();
+    Matrix<eBoundSize, 4> matBound2SPZero = Matrix<eBoundSize, 4>::Zero();
+    Matrix<eBoundSize, 3> matBound2MomZero = Matrix<eBoundSize, 3>::Zero();
 
     // We check that the entries of the output quantities either
     // -) have a relative difference of less than "relTol"

@@ -46,14 +46,14 @@ template <unsigned int DIM>
 class Intersection {
  public:
   /// Position type
-  using Position = Eigen::Map<const ActsVector<DIM>>;
+  using Position = Eigen::Map<const Vector<DIM>>;
 
   /// Constructor with arguments
   ///
   /// @param position is the position of the intersection
   /// @param pathLength is the path length to the intersection
   /// @param status is an enum indicating the status of the intersection
-  constexpr Intersection(const ActsVector<DIM>& position, double pathLength,
+  constexpr Intersection(const Vector<DIM>& position, double pathLength,
                          IntersectionStatus status) noexcept
       : Intersection(std::span<const double, DIM>{position.data(), DIM},
                      pathLength, status) {}

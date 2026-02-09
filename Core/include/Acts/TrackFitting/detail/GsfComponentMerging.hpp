@@ -74,18 +74,17 @@ auto angleDescriptionSwitch(const Surface &surface, Callable &&callable) {
 
 template <int D, typename components_t, typename projector_t,
           typename angle_desc_t>
-auto gaussianMixtureCov(const components_t components,
-                        const ActsVector<D> &mean, double sumOfWeights,
-                        projector_t &&projector,
+auto gaussianMixtureCov(const components_t components, const Vector<D> &mean,
+                        double sumOfWeights, projector_t &&projector,
                         const angle_desc_t &angleDesc) {
-  ActsSquareMatrix<D> cov = ActsSquareMatrix<D>::Zero();
+  SquareMatrix<D> cov = SquareMatrix<D>::Zero();
 
   for (const auto &cmp : components) {
     const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
     cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
 
-    ActsVector<D> diff = pars_l - mean;
+    Vector<D> diff = pars_l - mean;
 
     // Apply corrections for cyclic coordinates
     auto handleCyclicCov = [&l = pars_l, &m = mean, &diff = diff](auto desc) {
@@ -151,7 +150,7 @@ auto gaussianMixtureMeanCov(const components_t components,
 #endif
 
   // Define the return type
-  using RetType = std::tuple<ActsVector<D>, ActsSquareMatrix<D>>;
+  using RetType = std::tuple<Vector<D>, SquareMatrix<D>>;
 
   // Early return in case of range with length 1
   if (components.size() == 1) {
@@ -182,7 +181,7 @@ auto gaussianMixtureMeanCov(const components_t components,
 
   cMean /= sumOfWeights;
 
-  ActsVector<D> mean = cMean.real();
+  Vector<D> mean = cMean.real();
 
   auto getArg = [&](auto desc) {
     mean[desc.idx] = desc.constant * std::arg(cMean[desc.idx]);

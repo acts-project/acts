@@ -52,8 +52,8 @@ using namespace Acts::UnitLiterals;
 template <int D>
 struct DummyComponent {
   double weight = 0;
-  Acts::ActsVector<D> boundPars{};
-  Acts::ActsSquareMatrix<D> boundCov{};
+  Acts::Vector<D> boundPars{};
+  Acts::SquareMatrix<D> boundCov{};
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -104,7 +104,7 @@ auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
     return dists[n](gen);
   };
 
-  std::vector<ActsVector<D>> samples(n_samples);
+  std::vector<Vector<D>> samples(n_samples);
   std::generate(samples.begin(), samples.end(), sample);
 
   return samples;
@@ -112,8 +112,8 @@ auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
 
 // Simple arithmetic mean computation
 template <int D>
-auto mean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
-  ActsVector<D> mean = ActsVector<D>::Zero();
+auto mean(const std::vector<Vector<D>> &samples) -> Vector<D> {
+  Vector<D> mean = Vector<D>::Zero();
 
   for (const auto &x : samples) {
     mean += x;
@@ -125,9 +125,9 @@ auto mean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
 // A method to compute the circular mean, since the normal arithmetic mean
 // doesn't work for angles in general
 template <int D>
-auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
-  ActsVector<D> x = ActsVector<D>::Zero();
-  ActsVector<D> y = ActsVector<D>::Zero();
+auto circularMean(const std::vector<Vector<D>> &samples) -> Vector<D> {
+  Vector<D> x = Vector<D>::Zero();
+  Vector<D> y = Vector<D>::Zero();
 
   for (const auto &s : samples) {
     for (int i = 0; i < D; ++i) {
@@ -136,7 +136,7 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
     }
   }
 
-  ActsVector<D> mean = ActsVector<D>::Zero();
+  Vector<D> mean = Vector<D>::Zero();
 
   for (int i = 0; i < D; ++i) {
     mean[i] = std::atan2(y[i], x[i]);
@@ -147,11 +147,10 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
 
 // This general boundCovariance estimator can be equipped with a custom
 // subtraction object to enable circular behaviour
-template <int D, typename subtract_t = std::minus<ActsVector<D>>>
-auto boundCov(const std::vector<ActsVector<D>> &samples,
-              const ActsVector<D> &mu,
-              const subtract_t &sub = subtract_t{}) -> ActsSquareMatrix<D> {
-  ActsSquareMatrix<D> boundCov = ActsSquareMatrix<D>::Zero();
+template <int D, typename subtract_t = std::minus<Vector<D>>>
+auto boundCov(const std::vector<Vector<D>> &samples, const Vector<D> &mu,
+              const subtract_t &sub = subtract_t{}) -> SquareMatrix<D> {
+  SquareMatrix<D> boundCov = SquareMatrix<D>::Zero();
 
   for (const auto &smpl : samples) {
     boundCov += sub(smpl, mu) * sub(smpl, mu).transpose();

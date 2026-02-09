@@ -146,7 +146,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @return magnetic field value at the given position
     ///
     /// @pre The given @c position must lie within the current field cell.
-    Vector3 getField(const ActsVector<DIM_POS>& position) const {
+    Vector3 getField(const Vector<DIM_POS>& position) const {
       // defined in Interpolation.hpp
       return interpolate(position, m_lowerLeft, m_upperRight, m_fieldValues);
     }
@@ -156,7 +156,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     /// @param [in] position global 3D position
     /// @return @c true if position is inside the current field cell,
     ///         otherwise @c false
-    bool isInside(const ActsVector<DIM_POS>& position) const {
+    bool isInside(const Vector<DIM_POS>& position) const {
       for (unsigned int i = 0; i < DIM_POS; ++i) {
         if (position[i] < m_lowerLeft[i] || position[i] >= m_upperRight[i]) {
           return false;
@@ -200,7 +200,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   struct Config {
     /// @brief mapping of global 3D coordinates (cartesian)
     /// onto grid space
-    std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos;
+    std::function<Vector<DIM_POS>(const Vector3&)> transformPos;
 
     /// @brief calculating the global 3D coordinates
     /// (cartesian) of the magnetic field with the local n dimensional field and
@@ -295,7 +295,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @param [in] gridPosition local N-D position
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
-  bool isInsideLocal(const ActsVector<DIM_POS>& gridPosition) const {
+  bool isInsideLocal(const Vector<DIM_POS>& gridPosition) const {
     for (unsigned int i = 0; i < DIM_POS; ++i) {
       if (gridPosition[i] < m_lowerLeft[i] ||
           gridPosition[i] >= m_upperRight[i]) {

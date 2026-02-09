@@ -106,7 +106,7 @@ class SubspaceHelperBase {
  public:
   static constexpr std::size_t kFullSize = FullSize;
 
-  using FullSquareMatrix = ActsSquareMatrix<kFullSize>;
+  using FullSquareMatrix = SquareMatrix<kFullSize>;
 
   using size_type = std::size_t;
 
@@ -127,9 +127,9 @@ class SubspaceHelperBase {
   }
 
   template <typename EigenDerived>
-  ActsVector<kFullSize> expandVector(
+  Vector<kFullSize> expandVector(
       const Eigen::DenseBase<EigenDerived>& vector) const {
-    ActsVector<kFullSize> result = ActsVector<kFullSize>::Zero();
+    Vector<kFullSize> result = Vector<kFullSize>::Zero();
     for (auto [i, index] : enumerate(*this)) {
       result(index) = vector(i);
     }
@@ -250,19 +250,19 @@ class FixedSubspaceHelper
   static_assert(kSubspaceSize <= kFullSize, "Invalid subspace size");
 
   /// Type alias for projection matrix (subspace x full)
-  using Projector = ActsMatrix<kSubspaceSize, kFullSize>;
+  using Projector = Matrix<kSubspaceSize, kFullSize>;
   /// Type alias for expansion matrix (full x subspace)
-  using Expander = ActsMatrix<kFullSize, kSubspaceSize>;
+  using Expander = Matrix<kFullSize, kSubspaceSize>;
   /// Type alias for subspace vector
-  using Vector = ActsVector<kSubspaceSize>;
+  using Vector = Vector<kSubspaceSize>;
   /// Type alias for subspace square matrix
-  using SquareMatrix = ActsSquareMatrix<kSubspaceSize>;
+  using SquareMatrix = SquareMatrix<kSubspaceSize>;
   /// Type alias for left application result matrix
   template <std::size_t K>
-  using ApplyLeftResult = ActsMatrix<kSubspaceSize, kSubspaceSize>;
+  using ApplyLeftResult = Matrix<kSubspaceSize, kSubspaceSize>;
   /// Type alias for right application result matrix
   template <std::size_t N>
-  using ApplyRightResult = ActsMatrix<kSubspaceSize, kSubspaceSize>;
+  using ApplyRightResult = Matrix<kSubspaceSize, kSubspaceSize>;
 
   /// Type alias for index type used to specify subspace indices
   using IndexType = index_t;
