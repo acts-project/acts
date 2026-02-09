@@ -189,7 +189,7 @@ class DsvWriter {
   DsvWriter(DsvWriter&&) noexcept = default;
   ~DsvWriter() = default;
   DsvWriter& operator=(const DsvWriter&) = delete;
-  DsvWriter& operator=(DsvWriter&&) = default;
+  DsvWriter& operator=(DsvWriter&&) noexcept = default;
 
   /// Create a file at the given path. Overwrites existing data.
   ///

@@ -14,10 +14,13 @@
 
 namespace Acts::Experimental {
 
+/// Options controlling blueprint navigation policies.
 struct BlueprintOptions {
+  /// Default navigation policy factory
   std::shared_ptr<NavigationPolicyFactory> defaultNavigationPolicyFactory{
       makeDefaultNavigationPolicyFactory()};
 
+  /// Validates the blueprint options
   void validate() const;
 
  private:

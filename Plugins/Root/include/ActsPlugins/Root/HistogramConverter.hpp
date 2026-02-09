@@ -26,7 +26,7 @@ namespace ActsPlugins {
 ///
 /// @param boostHist The boost 1D histogram to convert
 /// @return Raw pointer to new TH1F (caller owns and must delete)
-TH1F* toRoot(const Acts::Experimental::Histogram1& boostHist);
+std::unique_ptr<TH1F> toRoot(const Acts::Experimental::Histogram1& boostHist);
 
 /// Convert Histogram2 to ROOT TH2F
 ///
@@ -35,7 +35,7 @@ TH1F* toRoot(const Acts::Experimental::Histogram1& boostHist);
 ///
 /// @param boostHist The boost 2D histogram to convert
 /// @return Raw pointer to new TH2F (caller owns and must delete)
-TH2F* toRoot(const Acts::Experimental::Histogram2& boostHist);
+std::unique_ptr<TH2F> toRoot(const Acts::Experimental::Histogram2& boostHist);
 
 /// Convert ProfileHistogram1 to ROOT TProfile
 ///
@@ -44,7 +44,8 @@ TH2F* toRoot(const Acts::Experimental::Histogram2& boostHist);
 ///
 /// @param boostProfile The boost profile histogram to convert
 /// @return Raw pointer to new TProfile (caller owns and must delete)
-TProfile* toRoot(const Acts::Experimental::ProfileHistogram1& boostProfile);
+std::unique_ptr<TProfile> toRoot(
+    const Acts::Experimental::ProfileHistogram1& boostProfile);
 
 /// Convert Efficiency1 to ROOT TEfficiency
 ///
@@ -53,7 +54,8 @@ TProfile* toRoot(const Acts::Experimental::ProfileHistogram1& boostProfile);
 ///
 /// @param boostEff The boost 1D efficiency histogram to convert
 /// @return Raw pointer to new TEfficiency (caller owns and must delete)
-TEfficiency* toRoot(const Acts::Experimental::Efficiency1& boostEff);
+std::unique_ptr<TEfficiency> toRoot(
+    const Acts::Experimental::Efficiency1& boostEff);
 
 /// Convert Efficiency2 to ROOT TEfficiency
 ///
@@ -62,6 +64,7 @@ TEfficiency* toRoot(const Acts::Experimental::Efficiency1& boostEff);
 ///
 /// @param boostEff The boost 2D efficiency histogram to convert
 /// @return Raw pointer to new TEfficiency (caller owns and must delete)
-TEfficiency* toRoot(const Acts::Experimental::Efficiency2& boostEff);
+std::unique_ptr<TEfficiency> toRoot(
+    const Acts::Experimental::Efficiency2& boostEff);
 
 }  // namespace ActsPlugins

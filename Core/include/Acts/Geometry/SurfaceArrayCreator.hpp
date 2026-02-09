@@ -74,14 +74,24 @@ class SurfaceArrayCreator {
   friend struct ActsTests::SurfaceArrayCreatorFixture;
   friend class SurfaceArray;
 
+  /// Prototype axis definition for surface binning.
   struct ProtoAxis {
+    /// Binning type (equidistant or variable)
     BinningType bType = BinningType::equidistant;
+    /// Axis direction for binning
     AxisDirection axisDir = AxisDirection::AxisX;
+    /// Number of bins
     std::size_t nBins = 0;
+    /// Minimum value of the axis
     AxisScalar min = 0;
+    /// Maximum value of the axis
     AxisScalar max = 0;
+    /// Bin edges for variable binning
     std::vector<AxisScalar> binEdges;
 
+    /// Get the bin index for a given value
+    /// @param x The value to find the bin for
+    /// @return The bin index
     std::size_t getBin(AxisScalar x) const {
       if (binEdges.empty()) {
         // equidistant
@@ -96,7 +106,7 @@ class SurfaceArrayCreator {
     }
   };
 
-  // Configuration struct
+  /// Configuration options for the surface array creator.
   struct Config {
     /// Type-erased function which determines whether two surfaces are
     /// supposed to be considered equivalent in terms of the binning
@@ -130,7 +140,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and
+  /// - create an array in a cylinder, binned in phi, z when extrema and
   /// bin numbers are known
   /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -152,7 +162,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and bin
+  /// - create an array in a cylinder, binned in phi, z when extrema and bin
   /// numbers are unknown - this method goes through the surfaces and finds
   /// out the needed information
   /// @warning This function requires the cylinder aligned with the z-axis
@@ -175,7 +185,7 @@ class SurfaceArrayCreator {
       const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
-  /// - create an array on a disc, binned in r, phi when extremas and
+  /// - create an array on a disc, binned in r, phi when extrema and
   /// bin numbers are known
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -199,7 +209,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, r when extremas and bin
+  /// - create an array in a cylinder, binned in phi, r when extrema and bin
   /// numbers are unknown - this method goes through the surfaces and finds
   /// out the needed information
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -344,7 +354,7 @@ class SurfaceArrayCreator {
                                Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
-  /// Creates a equidistant @c ProtoAxis when the extremas and the bin number
+  /// Creates a equidistant @c ProtoAxis when the extrema and the bin number
   /// are
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called

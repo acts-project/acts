@@ -124,6 +124,7 @@ class PlaneSurface : public RegularSurface {
   /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const override;
   /// This method returns the shared_ptr to the DiscBounds
+  /// @return Shared pointer to the planar bounds
   const std::shared_ptr<const PlanarBounds>& boundsPtr() const;
   /// Overwrite the existing surface bounds with new ones
   /// @param newBounds: Pointer to the new bounds
