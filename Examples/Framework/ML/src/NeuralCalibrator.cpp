@@ -103,7 +103,7 @@ void NeuralCalibrator::calibrate(
   // TODO: Matrix size should be configurable perhaps?
   std::size_t matSize0 = 7u;
   std::size_t matSize1 = 7u;
-  std::size_t iInput = ::detail::fillChargeMatrix(
+  std::size_t iInput = fillChargeMatrix(
       input, (*clusters)[idxSourceLink.index()], matSize0, matSize1);
 
   input[iInput++] = idxSourceLink.geometryId().volume();
