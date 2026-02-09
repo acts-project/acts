@@ -1425,7 +1425,7 @@ class Gx2Fitter {
     /// Actual MATERIAL Fitting ////////////////////////////////////////////////
     ACTS_DEBUG("Start to evaluate material");
     if (multipleScattering) {
-      // Setup the propagator
+      // Set up the propagator
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
       // Add the measurement surface as external surface to the navigator.

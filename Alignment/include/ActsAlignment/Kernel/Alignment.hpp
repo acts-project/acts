@@ -25,6 +25,14 @@ namespace ActsAlignment {
 using AlignedTransformUpdater =
     std::function<bool(Acts::SurfacePlacementBase*,
                        const Acts::GeometryContext&, const Acts::Transform3&)>;
+
+template <typename Updater>
+concept AlignedTransformUpdaterConcept =
+    requires(Updater updater, Acts::SurfacePlacementBase* detElem,
+             const Acts::GeometryContext& ctx, const Acts::Transform3& trf) {
+      { updater(detElem, ctx, trf) } -> std::same_as<bool>;
+    };
+
 ///
 /// @brief Options for align() call
 ///
@@ -191,7 +199,7 @@ struct Alignment {
   Acts::Result<void> updateAlignmentParameters(
       const Acts::GeometryContext& gctx,
       const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
-      const AlignedTransformUpdater& alignedTransformUpdater,
+      const AlignedTransformUpdaterConcept auto& alignedTransformUpdater,
       AlignmentResult& alignResult) const;
 
   /// @brief Alignment implementation
