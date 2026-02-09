@@ -32,7 +32,6 @@ if [[ "${IS_INSTALLED_VERSION}" == "ON" ]]; then
 
     # TODO deal with ODD activation in one place
     ODD_PATH="${CMAKE_INSTALL_PREFIX}/share/OpenDataDetector"
-    source "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/this_odd.sh"
 else
     python_dir="${PROJECT_BINARY_DIR}/python"
 
@@ -55,6 +54,7 @@ export ACTS_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
 # Make ODD available if possible
 if [ -d "${ODD_PATH}" ]; then
     echo "INFO:    Found OpenDataDetector and set it up"
+    source "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/this_odd.sh"
     export ODD_PATH
 else
     echo "INFO:    OpenDataDetector directory not found, ODD not set up"
