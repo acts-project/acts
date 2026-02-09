@@ -33,6 +33,10 @@ enum class JetLabel {
   LightJet = 1,
 };
 
+/// Output stream operator for JetLabel
+/// @param os The output stream
+/// @param label The jet label to output
+/// @return The output stream
 inline std::ostream& operator<<(std::ostream& os, const JetLabel& label) {
   switch (label) {
     case JetLabel::Unknown:
@@ -57,6 +61,9 @@ inline std::ostream& operator<<(std::ostream& os, const JetLabel& label) {
 /// Common class for jets
 class Jet {
  public:
+  /// Constructor
+  /// @param fourMom The jet 4-momentum
+  /// @param label The jet label
   Jet(const Acts::Vector4& fourMom, const JetLabel& label)
       : m_fourMomentum{fourMom}, m_jetLabel{label} {}
 
@@ -83,12 +90,17 @@ class Jet {
   }
 };
 
+/// @brief Jet constructed from truth particles
 class TruthJet : public Jet {
  public:
+  /// Constructor
+  /// @param fourMom The jet 4-momentum
+  /// @param label The jet label
   TruthJet(const Acts::Vector4& fourMom, const JetLabel& label)
       : Jet(fourMom, label) {}
 
   /// @brief Set the truth particles as constituents of this truth jet from its barcode
+  /// @param constituents Vector of barcodes for constituent particles
   void setConstituents(const std::vector<ActsFatras::Barcode>& constituents) {
     m_constituents = constituents;
   }
@@ -100,17 +112,20 @@ class TruthJet : public Jet {
   }
 
   /// @brief Get the truth particles that are truth jet constituents
+  /// @return Vector of barcodes for constituent particles
   const std::vector<ActsFatras::Barcode>& constituents() const {
     return m_constituents;
   }
 
   /// @brief Set the tracks associated to this truth jet
+  /// @param associatedTracks Vector of tracks associated to this jet
   void setAssociatedTracks(
       const std::vector<Acts::AnyConstTrackProxy>& associatedTracks) {
     m_associatedTracks = associatedTracks;
   }
 
   /// @brief Get the tracks associated to this truth jet
+  /// @return Vector of tracks associated to this jet
   const std::vector<Acts::AnyConstTrackProxy>& associatedTracks() const {
     return m_associatedTracks;
   }
@@ -124,18 +139,24 @@ class TruthJet : public Jet {
   std::vector<Acts::AnyConstTrackProxy> m_associatedTracks;
 };
 
+/// @brief Jet constructed from reconstructed tracks
 class TrackJet : public Jet {
  public:
+  /// Constructor
+  /// @param fourMom The jet 4-momentum
+  /// @param label The jet label
   explicit TrackJet(const Acts::Vector4& fourMom, const JetLabel& label)
       : Jet(fourMom, label) {}
 
   /// @brief Set the tracks as constituents of this track jet
+  /// @param constituents Vector of tracks that constitute this jet
   void setConstituents(
       const std::vector<Acts::AnyConstTrackProxy>& constituents) {
     m_constituents = constituents;
   }
 
   /// @brief Get the track jet constituents that are tracks
+  /// @return Vector of tracks that constitute this jet
   const std::vector<Acts::AnyConstTrackProxy>& constituents() const {
     return m_constituents;
   }

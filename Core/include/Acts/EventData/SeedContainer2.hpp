@@ -21,7 +21,9 @@ namespace Acts {
 template <bool read_only>
 class SeedProxy2;
 
+/// Mutable proxy to a seed allowing modification
 using MutableSeedProxy2 = SeedProxy2<false>;
+/// Const proxy to a seed for read-only access
 using ConstSeedProxy2 = SeedProxy2<true>;
 
 /// A container of seeds. Individual seeds are modeled as a sequence of N space

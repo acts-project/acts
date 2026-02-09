@@ -108,9 +108,11 @@ class IBoundToGridLocal {
   virtual ~IBoundToGridLocal() = default;
 };
 
+/// Adapter that applies an affine transform before grid-local conversion.
 template <typename global_to_grid_local_t>
 class Affine3Transformed : public IGlobalToGridLocal {
  public:
+  /// Grid-local coordinate type.
   using grid_local_t = typename global_to_grid_local_t::grid_local_t;
 
   /// The global to local transformation
@@ -178,9 +180,11 @@ class GlobalSubspace : public IGlobalToGridLocal {
 
 // The bound to grid local transformation, if only access of a subspace
 // is requested
+/// Access a local coordinate subspace for bound parameter grids.
 template <std::size_t... Args>
 class LocalSubspace : public IBoundToGridLocal {
  public:
+  /// Grid local coordinate type
   using grid_local_t = std::array<double, sizeof...(Args)>;
 
   /// Assert that the accessors are unique
@@ -194,6 +198,7 @@ class LocalSubspace : public IBoundToGridLocal {
   // Constructor
   LocalSubspace() = default;
 
+  /// Accessor indices
   static constexpr std::array<std::size_t, sizeof...(Args)> accessors = {
       Args...};
 
@@ -212,9 +217,12 @@ class LocalSubspace : public IBoundToGridLocal {
   }
 };
 
+/// Convert bound cylinder local coordinates to Z-Phi grid coordinates.
 class BoundCylinderToZPhi : public IBoundToGridLocal {
  public:
+  /// Cylinder radius
   double radius = 1.;
+  /// Z-coordinate shift
   double shift = 0.;
 
   /// Constructor with arguments
@@ -222,10 +230,14 @@ class BoundCylinderToZPhi : public IBoundToGridLocal {
   /// @param z the shift
   BoundCylinderToZPhi(double r, double z) : radius(r), shift(z) {}
 
+  /// Convert local coordinates to grid coordinates
+  /// @param local Local coordinates
+  /// @return Grid coordinates
   std::array<double, 2u> toGridLocal(const Vector2& local) const {
     return {local[1u] + shift, local[0u] / radius};
   }
 
+  /// Type alias for disc-to-RPhi transformation
   using BoundDiscToRPhi = LocalSubspace<0u, 1u>;
 };
 

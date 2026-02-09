@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
 #include <type_traits>
 
 namespace Acts {
@@ -37,6 +38,7 @@ constexpr T abs(const T n) {
 ///        By convention, the zero is assigned to a positive sign.
 /// @param copyTo: Variable to which the sign is copied to.
 /// @param sign: Variable from which the sign is taken.
+/// @return The copyTo variable with the sign of the sign parameter
 template <typename out_t, typename sign_t>
 constexpr out_t copySign(const out_t& copyTo, const sign_t& sign) {
   if constexpr (std::is_enum_v<sign_t>) {
@@ -131,6 +133,7 @@ constexpr T product(const T lowerN, const T upperN) {
 
 /// @brief Calculate the the factorial of an integer
 /// @param N: Number of which the factorial is to be calculated
+/// @return The factorial of N
 template <std::unsigned_integral T>
 constexpr T factorial(const T N) {
   return product<T>(1, N);

@@ -223,6 +223,7 @@ class Surface : public virtual GeometryObject,
   const DetectorElementBase* associatedDetectorElement() const;
 
   /// @brief Return the associated surface placement if there is any
+  /// @return Pointer to the surface placement, can be nullptr
   const SurfacePlacementBase* surfacePlacement() const;
 
   /// Return method for the associated Layer in which the surface is embedded
@@ -230,6 +231,7 @@ class Surface : public virtual GeometryObject,
   const Layer* associatedLayer() const;
 
   /// @brief Return the thickness of the surface in the normal direction
+  /// @return The surface thickness
   double thickness() const;
 
   /// Set Associated Layer
@@ -474,8 +476,10 @@ class Surface : public virtual GeometryObject,
   virtual std::string name() const = 0;
 
   /// @brief Returns whether the Surface is sensitive
+  /// @return True if the surface is sensitive
   bool isSensitive() const;
   /// @brief Returns whether the Surface is alignable
+  /// @return True if the surface is alignable
   bool isAlignable() const;
 
   /// Return a Polyhedron for surface objects

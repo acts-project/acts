@@ -221,12 +221,16 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
 /// See https://godbolt.org/z/z53Er6Mzf for reasoning for the concrete numbers.
 template <typename T>
 struct ExpSafeLimit {};
+/// Safe exponent limits for double precision.
 template <>
 struct ExpSafeLimit<double> {
+  /// Maximum safe exponent value for double precision
   constexpr static double value = 500.0;
 };
+/// Safe exponent limits for single precision.
 template <>
 struct ExpSafeLimit<float> {
+  /// Maximum safe exponent value for single precision
   constexpr static float value = 50.0;
 };
 

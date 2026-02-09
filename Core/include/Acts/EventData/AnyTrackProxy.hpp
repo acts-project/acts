@@ -302,14 +302,21 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
 
   /// Alias for the const version
   using ConstTrackHandle = AnyTrackProxy<true>;
+  /// Alias for the const proxy type
   using ConstProxyType = AnyTrackProxy<true>;
 
+  /// Mutable parameters map type
   using ParametersMap = detail_anytrack::ParametersMap;
+  /// Const parameters map type
   using ConstParametersMap = detail_anytrack::ConstParametersMap;
+  /// Mutable covariance map type
   using CovarianceMap = detail_anytrack::CovarianceMap;
+  /// Const covariance map type
   using ConstCovarianceMap = detail_anytrack::ConstCovarianceMap;
 
+  /// Container pointer type
   using ContainerPointer = std::conditional_t<ReadOnly, const void*, void*>;
+  /// Handler pointer type
   using HandlerPointer =
       std::conditional_t<ReadOnly,
                          const detail_anytrack::TrackHandlerConstBase*,
@@ -394,11 +401,13 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   }
 
   /// Get the bound parameters map
+  /// @return The const parameters map
   ConstParametersMap parameters() const {
     return constHandler()->parameters(containerPtr(), m_index);
   }
 
   /// Get the mutable bound parameters map
+  /// @return The mutable parameters map
   ParametersMap parameters()
     requires(!ReadOnly)
   {
@@ -421,11 +430,13 @@ class AnyTrackProxy : public TrackProxyCommon<AnyTrackProxy<read_only>,
   }
 
   /// Get the covariance map
+  /// @return The const covariance map
   ConstCovarianceMap covariance() const {
     return constHandler()->covariance(containerPtr(), m_index);
   }
 
   /// Get the mutable covariance map
+  /// @return The mutable covariance map
   CovarianceMap covariance()
     requires(!ReadOnly)
   {
