@@ -237,7 +237,6 @@ else()
         include(GNUInstallDirs)
     endif()
     set(ACTS_PYTHON_INSTALL_DIR "python")
-    set(ACTS_PYTHON_INSTALL_DIR "python/acts")
 endif()
 
 include(ActsCompilerOptions) # default compile options

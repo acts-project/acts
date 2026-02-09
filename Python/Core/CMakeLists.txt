@@ -4,7 +4,6 @@ file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 set(py_files __init__.py _adapter.py)
-set(_core_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}")
 
 pybind11_add_module(ActsPythonBindings src/CoreModuleEntry.cpp)
 
@@ -26,7 +25,7 @@ target_sources(
         src/Visualization.cpp
 )
 
-install(TARGETS ActsPythonBindings DESTINATION ${_core_python_install_dir})
+install(TARGETS ActsPythonBindings DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
 
 set_target_properties(
     ActsPythonBindings
@@ -43,10 +42,7 @@ target_link_libraries(
 )
 
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-install(
-    FILES ${_python_dir}/setup.sh
-    DESTINATION ${ACTS_PYTHON_INSTALL_DIR}/../
-)
+install(FILES ${_python_dir}/setup.sh DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
 
 foreach(f ${py_files})
     set(_target ${_python_dir}/acts/${f})
@@ -62,6 +58,6 @@ foreach(f ${py_files})
 
     install(
         FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${_core_python_install_dir}/${_rel}
+        DESTINATION ${ACTS_PYTHON_INSTALL_DIR}/${_rel}
     )
 endforeach()
