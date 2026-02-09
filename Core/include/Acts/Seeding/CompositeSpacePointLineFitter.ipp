@@ -86,7 +86,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
                         << (fitTime ? "with" : "no") << " time>() " << __LINE__
                         << " - Precision fit converged. " << (*result));
 
-    if (result->chi2 / static_cast<double>(result->nDoF) <
+    if (result->chi2 / std::max(1., static_cast<double>(result->nDoF)) <
         m_cfg.badFastChi2SignSwap) {
       return result;
     }
@@ -566,7 +566,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
 
   auto inverseH = safeInverse(miniHessian);
   // The Hessian can safely be inverted
-  if (inverseH) {
+  if (inverseH && inverseH->diagonal().minCoeff() > 0 ) {
     const Vector<N> update{(*inverseH) * miniGradient};
     // We compute also the normalized update, defined as the parameter
     // update expressed in units of the parameter uncertainties. This quantifies
@@ -605,7 +605,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Inverted Hessian \n"
                           << toString(*inverseH) << "\n-> Update parameters by "
-                          << toString(update));
+                          << toString(update) << ", normUpdate: " << std::sqrt(normUpdate));
     miniPars -= update;
 
   } else if (retCode != UpdateStep::converged) {
