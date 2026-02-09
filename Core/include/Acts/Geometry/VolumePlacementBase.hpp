@@ -28,7 +28,7 @@ struct OrientedSurface;
 ///        priori.
 ///
 ///        A client-based implementation of the VolumePlacementBase can be
-///        parsed to the constructor of the Volume instead of the fixed
+///        passed to the constructor of the Volume instead of the fixed
 ///        transform. The Volume is then querying its global position from the
 ///        VolumePlacements. The associated bonudary surfaces are also
 ///        requesting their position in global space. The Volume's transform and
