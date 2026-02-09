@@ -210,13 +210,17 @@ class Volume : public GeometryObject {
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfig& viewConfig) const;
 
-  /// @brief Returns the pointer to the associated volume placement (Might be empty)
+  /// VolumePlacement object that dynamically aligns the volume
+  /// @returns Pointer to the VolumePlacement (Might be nullptr)
   VolumePlacementBase* volumePlacement();
 
-  /// @brief Returns the pointer to the associated volume placement (Might be empty)
+  /// VolumePlacement object that dynamically aligns the volume
+  /// @returns Pointer to the VolumePlacement (Might be nullptr)
   const VolumePlacementBase* volumePlacement() const;
 
-  /// @brief Returns whether the volume is alignable (I.e. it's constructed with a volumePlacement)
+  /// Is the volume connected to the experiment's alignment system
+  /// (I.e. it's constructed with a volumePlacement)
+  /// @returns Whether the volume can be externally aligned
   bool isAlignable() const;
 
  private:
