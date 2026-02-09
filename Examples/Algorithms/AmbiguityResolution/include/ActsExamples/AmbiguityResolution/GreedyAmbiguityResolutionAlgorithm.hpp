@@ -18,10 +18,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Evicts tracks that seem to be duplicated.
 ///

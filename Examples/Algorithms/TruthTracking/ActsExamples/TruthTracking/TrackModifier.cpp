@@ -29,8 +29,7 @@ TrackModifier::TrackModifier(const Config& config, Acts::Logging::Level level)
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ProcessCode TrackModifier::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackModifier::execute(const AlgorithmContext& ctx) const {
   auto modifyTrack = [this](auto& trk) {
     {
       if (m_cfg.killTime) {

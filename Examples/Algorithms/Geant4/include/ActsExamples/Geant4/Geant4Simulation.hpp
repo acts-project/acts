@@ -82,7 +82,7 @@ class Geant4SimulationBase : public IAlgorithm {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
@@ -166,7 +166,7 @@ class Geant4Simulation final : public Geant4SimulationBase {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }
@@ -208,7 +208,7 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }

@@ -22,9 +22,11 @@
 #include <sstream>
 #include <vector>
 
-ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
-    ActsExamples::GbtsSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
+namespace ActsExamples {
+
+GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(GbtsSeedingAlgorithm::Config cfg,
+                                           Acts::Logging::Level lvl)
+    : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
   // initialise the spacepoint, seed and cluster handles
   m_inputSpacePoints.initialize(
       m_cfg.inputSpacePoints);  // TO DO: change bindings so it only gives a
@@ -66,8 +68,7 @@ ActsExamples::GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(
 }
 
 // execute:
-ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
-    const AlgorithmContext &ctx) const {
+ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   // take spacepoints, add variables needed for GBTS and add them to new
   // container due to how spacepoint container works, we need to keep the
   // container and the external columns we added alive this is done by using a
@@ -119,11 +120,11 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
 
   m_outputSeeds(ctx, std::move(seedContainerForStorage));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
 std::map<std::pair<int, int>, std::tuple<int, int, int>>
-ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
+GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   std::map<std::pair<int, int>, std::tuple<int, int, int>> ActsGbts;
 
   // prepare the acts to gbts mapping file
@@ -158,7 +159,7 @@ ActsExamples::GbtsSeedingAlgorithm::makeActsGbtsMap() const {
 }
 
 Acts::Experimental::SPContainerComponentsType
-ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
+GbtsSeedingAlgorithm::MakeSpContainer(
     const AlgorithmContext &ctx,
     std::map<std::pair<int, int>, std::tuple<int, int, int>> map) const {
   // new seeding container test
@@ -259,7 +260,7 @@ ActsExamples::GbtsSeedingAlgorithm::MakeSpContainer(
 }
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>
-ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
+GbtsSeedingAlgorithm::LayerNumbering() const {
   std::vector<Acts::Experimental::TrigInDetSiLayer> input_vector{};
   std::vector<std::size_t> count_vector{};
 
@@ -408,7 +409,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
   return input_vector;
 }
 
-void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
+void GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
     const Acts::Experimental::SeedFinderGbtsConfig &cfg) {
   ACTS_DEBUG("===== SeedFinderGbtsConfig =====");
 
@@ -457,3 +458,5 @@ void ActsExamples::GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
 
   ACTS_DEBUG("================================");
 }
+
+}  // namespace ActsExamples

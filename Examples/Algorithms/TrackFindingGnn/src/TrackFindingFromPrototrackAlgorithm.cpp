@@ -68,8 +68,8 @@ TrackFindingFromPrototrackAlgorithm::TrackFindingFromPrototrackAlgorithm(
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
+    const ArithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
@@ -204,10 +204,10 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
                                   constTrackStateContainer};
 
   m_outputTracks(ctx, std::move(constTracks));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::finalize() {
+ProcessCode TrackFindingFromPrototrackAlgorithm::finalize() {
   assert(std::distance(m_nTracksPerSeeds.begin(), m_nTracksPerSeeds.end()) > 0);
 
   ACTS_INFO("TrackFindingFromPrototracksAlgorithm statistics:");

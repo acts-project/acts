@@ -9,24 +9,20 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <ActsExamples/EventData/Cluster.hpp>
-#include <ActsExamples/EventData/SimParticle.hpp>
-#include <ActsExamples/EventData/Track.hpp>
-#include <ActsPlugins/Root/detail/RootBranchPtr.hpp>
+#include "ActsPlugins/Root/detail/RootBranchPtr.hpp"
 
-#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
-
-#include "TBranch.h"
 
 class TChain;
 
@@ -85,8 +81,7 @@ class RootAthenaDumpReader : public IReader {
 
     /// A map that provides a mapping between ACTS and Athena surface
     /// identifiers
-    std::shared_ptr<ActsExamples::GeometryIdMapActsAthena> geometryIdMap =
-        nullptr;
+    std::shared_ptr<GeometryIdMapActsAthena> geometryIdMap = nullptr;
 
     /// Tracking Geometry that contains the surfaces where we project
     /// the measurements on
@@ -118,7 +113,7 @@ class RootAthenaDumpReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext &ctx) override;
+  ProcessCode read(const AlgorithmContext &ctx) override;
 
   /// Readonly access to the config
   const Config &config() const { return m_cfg; }
@@ -199,7 +194,7 @@ class RootAthenaDumpReader : public IReader {
 
   // Declaration of leaf types
   unsigned int run_number = 0;
-  ULong64_t event_number = 0;
+  std::uint64_t event_number = 0;
   int nSE = 0;
   int SEID[4] = {};  //[nSE]
   int nCL = 0;
@@ -207,15 +202,15 @@ class RootAthenaDumpReader : public IReader {
 
   // Clusters
   BranchVector<std::string> CLhardware;
-  Double_t CLx[maxCL] = {};           //[nCL]
-  Double_t CLy[maxCL] = {};           //[nCL]
-  Double_t CLz[maxCL] = {};           //[nCL]
-  Int_t CLbarrel_endcap[maxCL] = {};  //[nCL]
-  Int_t CLlayer_disk[maxCL] = {};     //[nCL]
-  Int_t CLeta_module[maxCL] = {};     //[nCL]
-  Int_t CLphi_module[maxCL] = {};     //[nCL]
-  Int_t CLside[maxCL] = {};           //[nCL]
-  ULong64_t CLmoduleID[maxCL] = {};   //[nCL]
+  double CLx[maxCL] = {};                //[nCL]
+  double CLy[maxCL] = {};                //[nCL]
+  double CLz[maxCL] = {};                //[nCL]
+  int CLbarrel_endcap[maxCL] = {};       //[nCL]
+  int CLlayer_disk[maxCL] = {};          //[nCL]
+  int CLeta_module[maxCL] = {};          //[nCL]
+  int CLphi_module[maxCL] = {};          //[nCL]
+  int CLside[maxCL] = {};                //[nCL]
+  std::uint64_t CLmoduleID[maxCL] = {};  //[nCL]
   BranchJaggedVector<int> CLparticleLink_eventIndex;
   BranchJaggedVector<int> CLparticleLink_barcode;
   BranchJaggedVector<bool> CLbarcodesLinked;
@@ -223,58 +218,58 @@ class RootAthenaDumpReader : public IReader {
   BranchJaggedVector<int> CLphis;
   BranchJaggedVector<int> CLetas;
   BranchJaggedVector<int> CLtots;
-  Double_t CLloc_direction1[maxCL] = {};      //[nCL]
-  Double_t CLloc_direction2[maxCL] = {};      //[nCL]
-  Double_t CLloc_direction3[maxCL] = {};      //[nCL]
-  Double_t CLJan_loc_direction1[maxCL] = {};  //[nCL]
-  Double_t CLJan_loc_direction2[maxCL] = {};  //[nCL]
-  Double_t CLJan_loc_direction3[maxCL] = {};  //[nCL]
-  Int_t CLpixel_count[maxCL] = {};            //[nCL]
-  Float_t CLcharge_count[maxCL] = {};         //[nCL]
-  Float_t CLloc_eta[maxCL] = {};              //[nCL]
-  Float_t CLloc_phi[maxCL] = {};              //[nCL]
-  Float_t CLglob_eta[maxCL] = {};             //[nCL]
-  Float_t CLglob_phi[maxCL] = {};             //[nCL]
-  Double_t CLeta_angle[maxCL] = {};           //[nCL]
-  Double_t CLphi_angle[maxCL] = {};           //[nCL]
-  Float_t CLnorm_x[maxCL] = {};               //[nCL]
-  Float_t CLnorm_y[maxCL] = {};               //[nCL]
-  Float_t CLnorm_z[maxCL] = {};               //[nCL]
+  double CLloc_direction1[maxCL] = {};      //[nCL]
+  double CLloc_direction2[maxCL] = {};      //[nCL]
+  double CLloc_direction3[maxCL] = {};      //[nCL]
+  double CLJan_loc_direction1[maxCL] = {};  //[nCL]
+  double CLJan_loc_direction2[maxCL] = {};  //[nCL]
+  double CLJan_loc_direction3[maxCL] = {};  //[nCL]
+  int CLpixel_count[maxCL] = {};            //[nCL]
+  float CLcharge_count[maxCL] = {};         //[nCL]
+  float CLloc_eta[maxCL] = {};              //[nCL]
+  float CLloc_phi[maxCL] = {};              //[nCL]
+  float CLglob_eta[maxCL] = {};             //[nCL]
+  float CLglob_phi[maxCL] = {};             //[nCL]
+  double CLeta_angle[maxCL] = {};           //[nCL]
+  double CLphi_angle[maxCL] = {};           //[nCL]
+  float CLnorm_x[maxCL] = {};               //[nCL]
+  float CLnorm_y[maxCL] = {};               //[nCL]
+  float CLnorm_z[maxCL] = {};               //[nCL]
   BranchJaggedVector<double> CLlocal_cov;
 
   // Particles
-  Int_t nPartEVT = 0;
-  Int_t Part_event_number[maxPart] = {};  //[nPartEVT]
-  Int_t Part_barcode[maxPart] = {};       //[nPartEVT]
-  Float_t Part_px[maxPart] = {};          //[nPartEVT]
-  Float_t Part_py[maxPart] = {};          //[nPartEVT]
-  Float_t Part_pz[maxPart] = {};          //[nPartEVT]
-  Float_t Part_pt[maxPart] = {};          //[nPartEVT]
-  Float_t Part_eta[maxPart] = {};         //[nPartEVT]
-  Float_t Part_vx[maxPart] = {};          //[nPartEVT]
-  Float_t Part_vy[maxPart] = {};          //[nPartEVT]
-  Float_t Part_vz[maxPart] = {};          //[nPartEVT]
-  Float_t Part_radius[maxPart] = {};      //[nPartEVT]
-  Float_t Part_status[maxPart] = {};      //[nPartEVT]
-  Float_t Part_charge[maxPart] = {};      //[nPartEVT]
-  Int_t Part_pdg_id[maxPart] = {};        //[nPartEVT]
-  Int_t Part_passed[maxPart] = {};        //[nPartEVT]
-  Int_t Part_vProdNin[maxPart] = {};      //[nPartEVT]
-  Int_t Part_vProdNout[maxPart] = {};     //[nPartEVT]
-  Int_t Part_vProdStatus[maxPart] = {};   //[nPartEVT]
-  Int_t Part_vProdBarcode[maxPart] = {};  //[nPartEVT]
+  int nPartEVT = 0;
+  int Part_event_number[maxPart] = {};  //[nPartEVT]
+  int Part_barcode[maxPart] = {};       //[nPartEVT]
+  float Part_px[maxPart] = {};          //[nPartEVT]
+  float Part_py[maxPart] = {};          //[nPartEVT]
+  float Part_pz[maxPart] = {};          //[nPartEVT]
+  float Part_pt[maxPart] = {};          //[nPartEVT]
+  float Part_eta[maxPart] = {};         //[nPartEVT]
+  float Part_vx[maxPart] = {};          //[nPartEVT]
+  float Part_vy[maxPart] = {};          //[nPartEVT]
+  float Part_vz[maxPart] = {};          //[nPartEVT]
+  float Part_radius[maxPart] = {};      //[nPartEVT]
+  float Part_status[maxPart] = {};      //[nPartEVT]
+  float Part_charge[maxPart] = {};      //[nPartEVT]
+  int Part_pdg_id[maxPart] = {};        //[nPartEVT]
+  int Part_passed[maxPart] = {};        //[nPartEVT]
+  int Part_vProdNin[maxPart] = {};      //[nPartEVT]
+  int Part_vProdNout[maxPart] = {};     //[nPartEVT]
+  int Part_vProdStatus[maxPart] = {};   //[nPartEVT]
+  int Part_vProdBarcode[maxPart] = {};  //[nPartEVT]
   BranchJaggedVector<int> Part_vParentID;
   BranchJaggedVector<int> Part_vParentBarcode;
 
   // Spacepoints
-  Int_t nSP = 0;
-  Int_t SPindex[maxSP] = {};        //[nSP]
-  Double_t SPx[maxSP] = {};         //[nSP]
-  Double_t SPy[maxSP] = {};         //[nSP]
-  Double_t SPz[maxSP] = {};         //[nSP]
-  Int_t SPCL1_index[maxSP] = {};    //[nSP]
-  Int_t SPCL2_index[maxSP] = {};    //[nSP]
-  Int_t SPisOverlap[maxSP] = {};    //[nSP]
+  int nSP = 0;
+  int SPindex[maxSP] = {};          //[nSP]
+  double SPx[maxSP] = {};           //[nSP]
+  double SPy[maxSP] = {};           //[nSP]
+  double SPz[maxSP] = {};           //[nSP]
+  int SPCL1_index[maxSP] = {};      //[nSP]
+  int SPCL2_index[maxSP] = {};      //[nSP]
+  int SPisOverlap[maxSP] = {};      //[nSP]
   double SPradius[maxSP] = {};      //[nSP]
   double SPcovr[maxSP] = {};        //[nSP]
   double SPcovz[maxSP] = {};        //[nSP]
@@ -289,30 +284,30 @@ class RootAthenaDumpReader : public IReader {
   // Keep the code though, since it is annoying to write
   /*
   // Tracks
-  Int_t nTRK = 0;
-  Int_t TRKindex[maxTRK] = {};                //[nTRK]
-  Int_t TRKtrack_fitter[maxTRK] = {};         //[nTRK]
-  Int_t TRKparticle_hypothesis[maxTRK] = {};  //[nTRK]
+  int nTRK = 0;
+  int TRKindex[maxTRK] = {};                //[nTRK]
+  int TRKtrack_fitter[maxTRK] = {};         //[nTRK]
+  int TRKparticle_hypothesis[maxTRK] = {};  //[nTRK]
   BranchJaggedVector<int> TRKproperties;
   BranchJaggedVector<int> TRKpattern;
-  Int_t TRKndof[maxTRK] = {};     //[nTRK]
-  Int_t TRKmot[maxTRK] = {};      //[nTRK]
-  Int_t TRKoot[maxTRK] = {};      //[nTRK]
-  Float_t TRKchiSq[maxTRK] = {};  //[nTRK]
+  int TRKndof[maxTRK] = {};     //[nTRK]
+  int TRKmot[maxTRK] = {};      //[nTRK]
+  int TRKoot[maxTRK] = {};      //[nTRK]
+  float TRKchiSq[maxTRK] = {};  //[nTRK]
   BranchJaggedVector<int> TRKmeasurementsOnTrack_pixcl_sctcl_index;
   BranchJaggedVector<int> TRKoutliersOnTrack_pixcl_sctcl_index;
-  Int_t TRKcharge[maxTRK] = {};  //[nTRK]
+  int TRKcharge[maxTRK] = {};  //[nTRK]
   BranchJaggedVector<double> TRKperigee_position;
   BranchJaggedVector<double> TRKperigee_momentum;
-  Int_t TTCindex[maxTRK] = {};          //[nTRK]
-  Int_t TTCevent_index[maxTRK] = {};    //[nTRK]
-  Int_t TTCparticle_link[maxTRK] = {};  //[nTRK]
-  Float_t TTCprobability[maxTRK] = {};  //[nTRK]
+  int TTCindex[maxTRK] = {};          //[nTRK]
+  int TTCevent_index[maxTRK] = {};    //[nTRK]
+  int TTCparticle_link[maxTRK] = {};  //[nTRK]
+  float TTCprobability[maxTRK] = {};  //[nTRK]
 
   // DDT
-  Int_t nDTT = 0;
-  Int_t DTTindex[maxDTT] = {};  //[nDTT]
-  Int_t DTTsize[maxDTT] = {};   //[nDTT]
+  int nDTT = 0;
+  int DTTindex[maxDTT] = {};  //[nDTT]
+  int DTTsize[maxDTT] = {};   //[nDTT]
   BranchJaggedVector<int> DTTtrajectory_eventindex;
   BranchJaggedVector<int> DTTtrajectory_barcode;
   BranchJaggedVector<int> DTTstTruth_subDetType;

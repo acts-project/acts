@@ -63,7 +63,7 @@ class CsvVertexWriter final : public WriterT<SimVertexContainerV> {
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] vertices are the vertices to be written
-  ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
+  ProcessCode writeT(const AlgorithmContext& ctx,
                      const SimVertexContainerV& vertices) override;
 
  private:

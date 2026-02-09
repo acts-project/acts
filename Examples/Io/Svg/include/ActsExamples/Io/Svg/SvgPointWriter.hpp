@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
@@ -17,7 +16,6 @@
 #include "ActsPlugins/ActSVG/EventDataSvgConverter.hpp"
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
 
-#include <fstream>
 #include <mutex>
 
 namespace ActsExamples {
@@ -110,9 +108,8 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
                           Acts::Logging::Level level = Acts::Logging::INFO);
 
  protected:
-  ActsExamples::ProcessCode writeT(
-      const ActsExamples::AlgorithmContext& context,
-      const GeometryIdMultiset<T>& pointCollection) final;
+  ProcessCode writeT(const AlgorithmContext& context,
+                     const GeometryIdMultiset<T>& pointCollection) final;
 
  private:
   Config m_cfg;
@@ -120,12 +117,9 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
   std::mutex m_writeMutex;
 };
 
-}  // namespace ActsExamples
-
 template <typename T, typename Acc>
-ActsExamples::SvgPointWriter<T, Acc>::SvgPointWriter(
-    const ActsExamples::SvgPointWriter<T, Acc>::Config& cfg,
-    Acts::Logging::Level level)
+SvgPointWriter<T, Acc>::SvgPointWriter(
+    const SvgPointWriter<T, Acc>::Config& cfg, Acts::Logging::Level level)
     : WriterT<GeometryIdMultiset<T>>(cfg.inputCollection, cfg.writerName,
                                      level),
       m_cfg(cfg) {
@@ -135,8 +129,8 @@ ActsExamples::SvgPointWriter<T, Acc>::SvgPointWriter(
 }
 
 template <typename T, typename Acc>
-ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
-    const ActsExamples::AlgorithmContext& context,
+ProcessCode SvgPointWriter<T, Acc>::writeT(
+    const AlgorithmContext& context,
     const GeometryIdMultiset<T>& pointCollection) {
   // Ensure exclusive access to file writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -193,3 +187,5 @@ ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

@@ -24,29 +24,26 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsPlugins/Json/ITrackingGeometryJsonDecorator.hpp"
 #include "ActsPlugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/VolumeJsonConverter.hpp"
-#include <Acts/Surfaces/AnnulusBounds.hpp>
-#include <Acts/Surfaces/CylinderBounds.hpp>
-#include <Acts/Surfaces/RadialBounds.hpp>
-#include <Acts/Surfaces/SurfaceBounds.hpp>
-#include <Acts/Surfaces/TrapezoidBounds.hpp>
 
 #include <algorithm>
-#include <cmath>
 #include <cstddef>
 #include <map>
 #include <numbers>
-#include <stdexcept>
 
 namespace Acts {
 // specialisations of decoration helper function

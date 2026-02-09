@@ -9,15 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -30,7 +27,6 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 class RandomNumbers;
-struct AlgorithmContext;
 
 namespace detail {
 struct FatrasSimulation;
@@ -96,7 +92,7 @@ class FatrasSimulation final : public IAlgorithm {
   /// Run the simulation for a single event.
   ///
   /// @param ctx the algorithm context containing all event information
-  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }

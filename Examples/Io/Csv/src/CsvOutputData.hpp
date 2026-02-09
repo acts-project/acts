@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include <ActsExamples/EventData/Index.hpp>
-#include <ActsExamples/Io/Csv/CsvInputOutput.hpp>
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
 #include <cstdint>
 

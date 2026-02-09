@@ -91,10 +91,6 @@
 #include <utility>
 #include <vector>
 
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
 using ResultDouble = Acts::Result<double>;
 using ResultBool = Acts::Result<bool>;
 using ResultUnsigned = Acts::Result<unsigned>;

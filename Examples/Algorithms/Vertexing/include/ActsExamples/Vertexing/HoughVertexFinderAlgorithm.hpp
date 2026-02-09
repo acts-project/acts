@@ -9,8 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Vertexing/HoughVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -19,7 +17,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class HoughVertexFinderAlgorithm final : public IAlgorithm {
  public:

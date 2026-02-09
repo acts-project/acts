@@ -18,11 +18,6 @@
 #include <memory>
 #include <utility>
 
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
-
 namespace {
 
 using Stepper = Acts::SympyStepper;

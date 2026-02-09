@@ -35,7 +35,6 @@
 #include "TEllipse.h"
 #include "TH2I.h"
 #include "TROOT.h"
-#include "TStyle.h"
 
 using namespace Acts;
 using namespace detail::LineHelper;
@@ -134,7 +133,7 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
 }
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
-  using enum ActsExamples::ProcessCode;
+  using enum ProcessCode;
   if (!m_cfg.trackingGeometry) {
     ACTS_ERROR("No tracking geometry was parsed");
     return ABORT;

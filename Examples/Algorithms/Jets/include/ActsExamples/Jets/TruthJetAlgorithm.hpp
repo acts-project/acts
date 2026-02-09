@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -18,12 +17,7 @@
 
 #include <string>
 
-namespace fastjet {
-class PseudoJet;
-}
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 using TruthJetContainer = std::vector<ActsPlugins::FastJet::TruthJet>;
 

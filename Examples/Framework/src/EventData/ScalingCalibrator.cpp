@@ -36,11 +36,9 @@
 #include <TList.h>
 #include <TString.h>
 
-namespace Acts {
-class VectorMultiTrajectory;
-}  // namespace Acts
+namespace ActsExamples {
 
-namespace detail {
+namespace {
 
 std::pair<Acts::GeometryIdentifier, std::string> parseMapKey(
     const std::string& mapkey) {
@@ -64,10 +62,9 @@ std::pair<Acts::GeometryIdentifier, std::string> parseMapKey(
   return {geoId, var};
 }
 
-std::map<Acts::GeometryIdentifier, ActsExamples::ScalingCalibrator::MapTuple>
-readMaps(const std::filesystem::path& path) {
-  std::map<Acts::GeometryIdentifier, ActsExamples::ScalingCalibrator::MapTuple>
-      maps;
+std::map<Acts::GeometryIdentifier, ScalingCalibrator::MapTuple> readMaps(
+    const std::filesystem::path& path) {
+  std::map<Acts::GeometryIdentifier, ScalingCalibrator::MapTuple> maps;
 
   TFile ifile(path.c_str(), "READ");
   if (ifile.IsZombie()) {
@@ -115,14 +112,12 @@ std::bitset<3> readMask(const std::filesystem::path& path) {
   return std::bitset<3>(std::string{*tstr});
 }
 
-}  // namespace detail
+}  // namespace
 
-ActsExamples::ScalingCalibrator::ScalingCalibrator(
-    const std::filesystem::path& path)
-    : m_calib_maps{::detail::readMaps(path)},
-      m_mask{::detail::readMask(path)} {}
+ScalingCalibrator::ScalingCalibrator(const std::filesystem::path& path)
+    : m_calib_maps{readMaps(path)}, m_mask{readMask(path)} {}
 
-void ActsExamples::ScalingCalibrator::calibrate(
+void ScalingCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
     const Acts::GeometryContext& /*gctx*/,
     const Acts::CalibrationContext& /*cctx*/,
@@ -178,3 +173,5 @@ void ActsExamples::ScalingCalibrator::calibrate(
     trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
+
+}  // namespace ActsExamples

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -65,8 +64,7 @@ class CoreMaterialMapping : public IAlgorithm {
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const override;
+  ProcessCode execute(const AlgorithmContext& context) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

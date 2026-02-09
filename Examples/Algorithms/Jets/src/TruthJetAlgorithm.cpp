@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -62,8 +61,7 @@ ActsPlugins::FastJet::JetLabel jetLabelFromHadronType(
 
 }  // namespace
 
-ProcessCode ActsExamples::TruthJetAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Initialize the output container
   std::vector<ActsPlugins::FastJet::TruthJet> outputJetContainer{};
 
@@ -301,7 +299,7 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode ActsExamples::TruthJetAlgorithm::finalize() {
+ProcessCode TruthJetAlgorithm::finalize() {
   ACTS_INFO("Finalizing truth jet clustering");
   return ProcessCode::SUCCESS;
 }

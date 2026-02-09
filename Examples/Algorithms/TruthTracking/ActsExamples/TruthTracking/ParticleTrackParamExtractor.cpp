@@ -31,7 +31,7 @@ ParticleTrackParamExtractor::ParticleTrackParamExtractor(
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
 
-ActsExamples::ProcessCode ParticleTrackParamExtractor::execute(
+ProcessCode ParticleTrackParamExtractor::execute(
     const AlgorithmContext& ctx) const {
   const SimParticleContainer& particles = m_inputParticles(ctx);
 
