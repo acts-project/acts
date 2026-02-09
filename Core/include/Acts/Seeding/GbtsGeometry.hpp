@@ -22,9 +22,9 @@ namespace Acts::Experimental {
 class TrigInDetSiLayer {
  public:
   /// Combined subdetector ID.
-  int m_subdet;  // combined ID
+  std::int32_t m_subdet;  // combined ID
   /// Layer type (0: barrel, +/-n: endcap).
-  int m_type;  // 0: barrel, +/-n : endcap
+  std::int32_t m_type;  // 0: barrel, +/-n : endcap
   /// Reference coordinate (z for barrel, r for endcap).
   float m_refCoord;
   /// Minimum boundary coordinate.
@@ -38,8 +38,8 @@ class TrigInDetSiLayer {
   /// @param center Reference coordinate
   /// @param min Minimum boundary
   /// @param max Maximum boundary
-  TrigInDetSiLayer(int subdet, short int type, float center, float min,
-                   float max)
+  TrigInDetSiLayer(std::int32_t subdet, std::int16_t type, float center,
+                   float min, float max)
       : m_subdet(subdet),
         m_type(type),
         m_refCoord(center),
@@ -61,17 +61,16 @@ class GbtsLayer {
   /// @param zh Z coordinate
   /// @param rh Radius coordinate
   /// @return Eta bin index
-  int getEtaBin(float zh, float rh) const;
+  std::int32_t getEtaBin(float zh, float rh) const;
 
   /// Get minimum radius for bin index
   /// @param idx Bin index
   /// @return Minimum radius for the bin
-  float getMinBinRadius(int idx) const;
-
+  float getMinBinRadius(std::int32_t idx) const;
   /// Get maximum radius for bin index
   /// @param idx Bin index
   /// @return Maximum radius for the bin
-  float getMaxBinRadius(int idx) const;
+  float getMaxBinRadius(std::int32_t idx) const;
 
   /// Get number of bins
   /// @return Number of bins
@@ -89,11 +88,11 @@ class GbtsLayer {
   /// @param pL Other layer to compare with
   /// @param b1 First bin index
   /// @param b2 Second bin index
-  /// @param min_z0 Minimum z0 coordinate
-  /// @param max_z0 Maximum z0 coordinate
+  /// @param minZ0 Minimum z0 coordinate
+  /// @param maxZ0 Maximum z0 coordinate
   /// @return True if bins are compatible
-  bool verifyBin(const GbtsLayer* pL, int b1, int b2, float min_z0,
-                 float max_z0) const;
+  bool verifyBin(const GbtsLayer* pL, std::uint32_t b1, std::uint32_t b2,
+                 float minZ0, float maxZ0) const;
 
  protected:
   /// Layer
@@ -126,7 +125,7 @@ class GbtsLayer {
   /// Second z coordinate
   float m_z2{};
   /// Number of bins
-  std::int32_t m_nBins{};
+  std::uint32_t m_nBins{};
 };
 
 /// Geometry helper built from silicon layers and connectors.
@@ -150,19 +149,20 @@ class GbtsGeometry {
   /// Get layer key by index
   /// @param idx Layer index
   /// @return Layer key
-  inline unsigned int getGbtsLayerKeyByIndex(int idx) const {
+  inline std::uint32_t getGbtsLayerKeyByIndex(std::uint32_t idx) const {
     return m_layerKeys[idx];
   }
 
   /// Get number of eta bins
   /// @return Number of eta bins
-  int num_bins() const { return m_nEtaBins; }
+  std::uint32_t numBins() const { return m_nEtaBins; }
   /// Get number of layers
   /// @return Number of layers
-  unsigned int num_layers() const { return m_layArray.size(); }
+  std::uint32_t numLayers() const { return m_layArray.size(); }
   /// Get bin groups
   /// @return Bin groups vector
-  const std::vector<std::pair<int, std::vector<int>>>& bin_groups() const {
+  const std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>>&
+  binGroups() const {
     return m_binGroups;
   }
 
@@ -171,22 +171,22 @@ class GbtsGeometry {
   /// @param l Silicon layer to add
   /// @param bin0 Starting bin index
   /// @return Pointer to the newly added layer
-  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, int bin0);
+  const GbtsLayer* addNewLayer(const TrigInDetSiLayer& l, std::uint32_t bin0);
 
   /// Eta bin width
   float m_etaBinWidth{};
 
   /// Layer map
-  std::map<unsigned int, GbtsLayer*> m_layMap;
+  std::map<std::uint32_t, GbtsLayer*> m_layMap;
   /// Layer array
   std::vector<std::unique_ptr<GbtsLayer>> m_layArray;
   /// Layer keys
-  std::vector<unsigned int> m_layerKeys;
+  std::vector<std::uint32_t> m_layerKeys;
   /// Number of eta bins
-  int m_nEtaBins{};
+  std::uint32_t m_nEtaBins{};
 
   /// Bin groups
-  std::vector<std::pair<int, std::vector<int>>> m_binGroups;
+  std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>> m_binGroups;
 };
 
 }  // namespace Acts::Experimental
