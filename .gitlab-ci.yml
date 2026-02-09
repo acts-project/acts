@@ -82,6 +82,7 @@ clang_tidy:
     - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
 
     # Install dependencies for processing scripts
+    - python3 -m pip install --upgrade pip setuptools wheel
     - python3 -m pip install -r CI/clang_tidy/requirements.txt
 
     # Parse the main clang-tidy run
@@ -515,7 +516,7 @@ linux_ubuntu_2404_clang19:
 
     # Install Python dependencies
     - source build/this_acts_withdeps.sh
-    - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
+    - python3 -m pip install -r src/Python/Examples/tests/requirements.txt
     - cd src
     - pytest -rfExw -k "not gnn" -v -n1
 
