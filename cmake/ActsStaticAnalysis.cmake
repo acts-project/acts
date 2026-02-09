@@ -19,7 +19,7 @@ if(ACTS_RUN_CLANG_TIDY)
 endif()
 
 function(acts_enable_static_analysis)
-    set(CMAKE_CXX_CLANG_TIDY ${ACTS_CXX_CLANG_TIDY} CACHE STRING "" FORCE)
+    set(CMAKE_CXX_CLANG_TIDY "${ACTS_CXX_CLANG_TIDY}" CACHE STRING "" FORCE)
 endfunction()
 
 function(acts_disable_static_analysis)
