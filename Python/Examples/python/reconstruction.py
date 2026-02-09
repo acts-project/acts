@@ -18,9 +18,9 @@ try:
         RootVertexNTupleWriter,
     )
 
-    ACTS_ROOT_AVAILABLE = True
+    ACTS_EXAMPLES_ROOT_AVAILABLE = True
 except ImportError:
-    ACTS_ROOT_AVAILABLE = False
+    ACTS_EXAMPLES_ROOT_AVAILABLE = False
 
 u = acts.UnitConstants
 
@@ -1466,7 +1466,7 @@ def addSeedPerformanceWriters(
 ):
     """Writes seeding related performance output"""
     customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
-    assert ACTS_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+    assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
     outputDirRoot = Path(outputDirRoot)
     if not outputDirRoot.exists():
         outputDirRoot.mkdir()
@@ -1959,7 +1959,7 @@ def addTrackWriters(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if outputDirRoot is not None:
-        assert ACTS_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -2160,7 +2160,7 @@ def addGnn(
 
     # Optional performance writer
     if outputDirRoot is not None:
-        assert ACTS_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
         s.addWriter(
             RootTrackFinderNTupleWriter(
                 level=customLogLevel(),
@@ -2543,7 +2543,7 @@ def addVertexFitting(
         )
 
     if outputDirRoot is not None:
-        assert ACTS_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -2592,7 +2592,7 @@ def addHoughVertexFinding(
     inputTruthVertices = "vertices_truth"
 
     if outputDirRoot is not None:
-        assert ACTS_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()

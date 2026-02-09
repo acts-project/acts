@@ -23,9 +23,9 @@ try:
         RootSimHitWriter,
     )
 
-    ACTS_ROOT_AVAILABLE = True
+    ACTS_EXAMPLES_ROOT_AVAILABLE = True
 except ImportError:
-    ACTS_ROOT_AVAILABLE = False
+    ACTS_EXAMPLES_ROOT_AVAILABLE = False
 
 
 # Defaults (given as `None` here) use class defaults defined in
@@ -233,7 +233,7 @@ def addParticleGun(
         )
 
     if outputDirRoot is not None:
-        assert ACTS_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -420,7 +420,7 @@ def addPythia8(
         )
 
     if outputDirRoot is not None:
-        assert ACTS_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -584,7 +584,7 @@ def addSimWriters(
         )
 
     if outputDirRoot is not None:
-        assert ACTS_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
+        assert ACTS_EXAMPLES_ROOT_AVAILABLE, "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
