@@ -49,8 +49,7 @@ void VolumePlacementBase::makePortalsAlignable(
         "registered before");
   }
 
-  for (std::size_t portalIdx = 0lu; portalIdx < nPortalPlacements();
-       ++portalIdx) {
+  for (const auto& [portalIdx, portal] : enumerate(portalsToAlign)) {
     const std::shared_ptr<RegularSurface>& portalSurface =
         portalsToAlign[portalIdx];
     if (portalSurface->surfacePlacement() != nullptr) {
