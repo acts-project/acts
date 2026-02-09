@@ -9,24 +9,21 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <cstddef>
 #include <memory>
 #include <string>
 
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
-
 namespace ActsExamples {
-class RandomNumbers;
 
 namespace detail {
 struct FatrasSimulation;

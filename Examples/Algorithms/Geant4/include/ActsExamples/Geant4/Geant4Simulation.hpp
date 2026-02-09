@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
@@ -38,7 +39,6 @@ class G4VUserPhysicsList;
 class G4FieldManager;
 
 namespace Acts {
-class MagneticFieldProvider;
 class Volume;
 }  // namespace Acts
 
@@ -46,7 +46,6 @@ namespace ActsExamples {
 struct Geant4Handle;
 
 namespace Geant4 {
-class SensitiveSurfaceMapper;
 struct EventStore;
 }  // namespace Geant4
 

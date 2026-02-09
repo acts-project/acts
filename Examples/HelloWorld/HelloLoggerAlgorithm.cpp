@@ -8,6 +8,8 @@
 
 #include "HelloLoggerAlgorithm.hpp"
 
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+
 #include <cstddef>
 
 namespace ActsExamples {
