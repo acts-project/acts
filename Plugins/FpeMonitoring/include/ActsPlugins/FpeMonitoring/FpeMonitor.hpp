@@ -16,6 +16,7 @@
 #include <memory>
 #include <mutex>
 #include <stack>
+#include <vector>
 
 #include <boost/container/static_vector.hpp>
 #include <boost/stacktrace/stacktrace_fwd.hpp>
