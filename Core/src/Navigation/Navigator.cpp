@@ -229,6 +229,17 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     return NavigationTarget::None();
   }
 
+  // If we re-navigated, we need to recreate the navigation policy state for the
+  // new volume if it exists
+  if (const auto* policy = state.currentVolume->navigationPolicy();
+      policy != nullptr) {
+    ACTS_VERBOSE(volInfo(state) << "Creating navigation policy state for new "
+                                   "volume after renavigation.");
+    policy->createState(state.options.geoContext,
+                        {.position = position, .direction = direction},
+                        state.policyStateManager, logger());
+  }
+
   state.currentLayer =
       state.currentVolume->associatedLayer(state.options.geoContext, position);
 
