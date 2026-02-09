@@ -545,6 +545,7 @@ class MeasurementGenerator {
   ///        drift-radius can be smeared assuming a Gaussian with a drift-radius
   ///        dependent uncertainty.
   /// @param line: The track to extrapolate
+  /// @param t0: Truth time offset of the track
   /// @param engine: Random number generator to smear the drift radius
   /// @param smearRadius: If true, the drift radius is smeared with a Gaussian
   /// @param createStrips: If true the strip measurements are created
