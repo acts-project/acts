@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(ConeValidityPolicy_MagneticField) {
       for (const auto* srf : info.surfaces) {
         std::cout << srf->toString(gctx) << std::endl;
         if (srf->type() != Surface::Plane ||
-            srf->bounds().type() != SurfaceBounds::eRectangle) {
+            srf->bounds().type() != SurfaceBounds::Rectangle) {
           continue;
         }
         srf->visualize(srfVis, gctx);
