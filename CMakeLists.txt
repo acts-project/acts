@@ -579,9 +579,9 @@ if(ACTS_BUILD_EXAMPLES)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    set(_hepmc3_components "search")
+    set(_acts_hepmc3_components "search")
     if(ACTS_BUILD_EXAMPLES_ROOT)
-        list(APPEND _hepmc3_components "rootIO")
+        list(APPEND _acts_hepmc3_components "rootIO")
     endif()
 
     find_package(
@@ -589,7 +589,7 @@ if(ACTS_BUILD_EXAMPLES)
         ${_acts_hepmc3_version}
         REQUIRED
         CONFIG
-        COMPONENTS ${_hepmc3_components}
+        COMPONENTS ${_acts_hepmc3_components}
     )
 
     # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
