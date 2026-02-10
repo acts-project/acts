@@ -79,19 +79,39 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           git config --global --add safe.directory $PWD
-          # GitHub Actions creates a merge commit for PRs
-          # HEAD^1 is the base branch commit, HEAD^2 is the PR head commit
-          PR_SHA=$(git rev-parse HEAD^2)
-          BASE_SHA=$(git rev-parse HEAD^1)
-          MERGE_SHA=$(git rev-parse HEAD)
-          jq -n \
-            --arg pr_number "${{ github.event.number }}" \
-            --arg pr_sha "$PR_SHA" \
-            --arg base_sha "$BASE_SHA" \
-            --arg merge_sha "$MERGE_SHA" \
-            '{pr_number: $pr_number, pr_sha: $pr_sha, base_sha: $base_sha, merge_sha: $merge_sha}' \
-            > PR_metadata.json
-          cat PR_metadata.json
+
+          echo "=== Debug: commit structure ==="
+          echo "HEAD: $(git rev-parse HEAD)"
+          echo "github.sha: ${{ github.sha }}"
+          echo "github.event.pull_request.head.sha: ${{ github.event.pull_request.head.sha }}"
+          echo "github.event.pull_request.base.sha: ${{ github.event.pull_request.base.sha }}"
+          echo "github.event.pull_request.base.ref: ${{ github.event.pull_request.base.ref }}"
+          echo ""
+          echo "=== HEAD commit details ==="
+          git cat-file -t HEAD
+          git log -1 --format="%H %P" HEAD
+          echo ""
+          echo "=== Parent count ==="
+          git log -1 --format="parents: %P" HEAD
+          echo ""
+          echo "=== Full log of HEAD ==="
+          git log -1 --format="commit %H%ntree %T%nparents %P%nauthor %an%nsubject %s" HEAD
+          echo ""
+          echo "=== git log graph (last 5) ==="
+          git log --oneline --graph -5
+          echo ""
+          echo "=== Refs ==="
+          git show-ref || true
+          echo ""
+          echo "=== Remotes ==="
+          git remote -v
+
+          echo ""
+          echo "=== Attempting parent resolution ==="
+          git rev-parse HEAD^1 || echo "HEAD^1 failed"
+          git rev-parse HEAD^2 || echo "HEAD^2 failed"
+          git rev-parse 'HEAD^1' || echo "HEAD^1 (quoted) failed"
+          git rev-parse 'HEAD^2' || echo "HEAD^2 (quoted) failed"
 
       - name: Persist PR metadata
         if: github.event_name == 'pull_request'
