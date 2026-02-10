@@ -13,6 +13,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
+#include "ActsPodioEdm/TrackerHitLocal.h"
 
 #include <limits>
 #include <memory>
@@ -86,6 +87,7 @@ class ConversionHelper {
   /// @return Optional identifier for the surface
   virtual std::optional<Identifier> surfaceToIdentifier(
       const Acts::Surface& surface) const = 0;
+
   /// Convert identifier to surface
   /// @param identifier The identifier to convert
   /// @return Pointer to the surface

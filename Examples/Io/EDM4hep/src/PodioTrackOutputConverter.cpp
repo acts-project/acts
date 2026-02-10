@@ -19,6 +19,7 @@
 #include "ActsPodioEdm/JacobianCollection.h"
 #include "ActsPodioEdm/TrackCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
+#include "ActsPodioEdm/TrackStateHitLinkCollection.h"
 #include "ActsPodioEdm/TrackerHitLocalCollection.h"
 
 #include <stdexcept>
@@ -103,20 +104,32 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
 
   // SANITY CHECK!
   // @TODO: Make this configurable or remove it altogether
-  for (const auto& outputTrack : outputTracks) {
-    for (const auto& ts : outputTrack.trackStates()) {
-      if (ts.hasUncalibratedSourceLink()) {
-        auto sourceLink = ts.getUncalibratedSourceLink();
-        auto indexSourceLink = sourceLink.get<IndexSourceLink>();
-        if (indexSourceLink.index() >= inputMeasurements.size()) {
-          throw std::runtime_error("TrackState for track index " +
-                                   std::to_string(outputTrack.index()) +
-                                   " references a measurement that is not "
-                                   "present in the measurement container");
-        }
-      }
-    }
+  // for (const auto& outputTrack : outputTracks) {
+  //   for (const auto& ts : outputTrack.trackStates()) {
+  //     if (ts.hasUncalibratedSourceLink()) {
+  //       auto sourceLink = ts.getUncalibratedSourceLink();
+  //       auto indexSourceLink = sourceLink.get<IndexSourceLink>();
+  //       if (indexSourceLink.index() >= inputMeasurements.size()) {
+  //         throw std::runtime_error("TrackState for track index " +
+  //                                  std::to_string(outputTrack.index()) +
+  //                                  " references a measurement that is not "
+  //                                  "present in the measurement container");
+  //       }
+  //     }
+  //   }
+  // }
+
+  auto testMeas = outputMeasurements->at(0);
+  auto links = std::make_unique<ActsPodioEdm::TrackStateHitLinkCollection>();
+
+  for (auto trackState : *trackStateCollection) {
+    auto link = links->create();
+    link.setFrom(trackState);
+    link.setTo(testMeas);
+    // std::cout << "TrackState: " << trackState.id() << std::endl;
   }
+
+  ACTS_VERBOSE("Created " << links->size() << " links");
 
   // Write collections to event store
   m_outputTracks(context, std::move(trackCollection));
