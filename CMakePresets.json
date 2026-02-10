@@ -146,6 +146,7 @@
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "ON",
+		"ACTS_BUILD_PLUGIN_FASTJET": "ON",
                 "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_BUILD_EXAMPLES_GNN": "ON",
                 "ACTS_GNN_ENABLE_TORCH": "ON",
