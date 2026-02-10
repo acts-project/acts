@@ -42,34 +42,36 @@ namespace ActsPlugins {
 /// @addtogroup edm4hep_plugin
 /// @{
 
-template <template <typename> class holder_t>
+namespace detail {
+
+template <template <typename...> class holder_t>
 concept PodioMutableTrackStateHolder =
     Acts::HolderFor<holder_t, ActsPodioEdm::TrackStateCollection> &&
     Acts::HolderFor<holder_t, ActsPodioEdm::BoundParametersCollection> &&
     Acts::HolderFor<holder_t, ActsPodioEdm::JacobianCollection>;
 
-template <template <typename> class holder_t>
+template <template <typename...> class holder_t>
 concept PodioConstTrackStateHolder =
     Acts::HolderFor<holder_t, const ActsPodioEdm::TrackStateCollection> &&
     Acts::HolderFor<holder_t, const ActsPodioEdm::BoundParametersCollection> &&
     Acts::HolderFor<holder_t, const ActsPodioEdm::JacobianCollection>;
 
-template <template <typename> class holder_t = std::unique_ptr>
-  requires PodioMutableTrackStateHolder<holder_t>
+}  // namespace detail
+
+template <template <typename...> class holder_t = std::unique_ptr>
 class MutablePodioTrackStateContainer;
 
-template <template <typename> class holder_t = Acts::ConstRefHolder>
-  requires PodioConstTrackStateHolder<holder_t>
+template <template <typename...> class holder_t = Acts::ConstRefHolder>
 class ConstPodioTrackStateContainer;
 
 }  // namespace ActsPlugins
 
 namespace Acts {
-template <template <typename> class holder_t>
+template <template <typename...> class holder_t>
 struct IsReadOnlyMultiTrajectory<
     ActsPlugins::ConstPodioTrackStateContainer<holder_t>> : std::true_type {};
 
-template <template <typename> class holder_t>
+template <template <typename...> class holder_t>
 struct IsReadOnlyMultiTrajectory<
     ActsPlugins::MutablePodioTrackStateContainer<holder_t>> : std::false_type {
 };
@@ -265,13 +267,15 @@ class PodioTrackStateContainerBase {
 };
 
 /// Read-only track state container backend using podio for storage
-template <template <typename> class holder_t>
-  requires PodioConstTrackStateHolder<holder_t>
+template <template <typename...> class holder_t>
 class ConstPodioTrackStateContainer final
     : public PodioTrackStateContainerBase,
       public Acts::MultiTrajectory<ConstPodioTrackStateContainer<holder_t>> {
   /// Track index type
   using IndexType = Acts::TrackIndexType;
+  static_assert(detail::PodioConstTrackStateHolder<holder_t>,
+                "holder_t does not satisfy const PODIO track-state holder "
+                "requirements");
 
  public:
   /// Constructor from collections
@@ -294,7 +298,7 @@ class ConstPodioTrackStateContainer final
 
   /// Construct a const track state container from a mutable (copy)
   /// @param other The mutable container to construct from
-  template <template <typename> class other_holder_t>
+  template <template <typename...> class other_holder_t>
   explicit ConstPodioTrackStateContainer(
       const MutablePodioTrackStateContainer<other_holder_t>& other)
     requires std::is_constructible_v<
@@ -303,7 +307,7 @@ class ConstPodioTrackStateContainer final
 
   /// Construct a const track state container from a mutable (move)
   /// @param other The mutable container to move from
-  template <template <typename> class other_holder_t>
+  template <template <typename...> class other_holder_t>
   explicit ConstPodioTrackStateContainer(
       MutablePodioTrackStateContainer<other_holder_t>&& other)
     requires std::is_same_v<holder_t<const ActsPodioEdm::TrackStateCollection>,
@@ -462,13 +466,15 @@ static_assert(
     "ConstPodioTrackStateContainer does not fulfill TrackContainerBackend");
 
 /// Mutable Podio-based track state container implementation
-template <template <typename> class holder_t>
-  requires PodioMutableTrackStateHolder<holder_t>
+template <template <typename...> class holder_t>
 class MutablePodioTrackStateContainer final
     : public PodioTrackStateContainerBase,
       public Acts::MultiTrajectory<MutablePodioTrackStateContainer<holder_t>> {
   /// Track index type
   using IndexType = Acts::TrackIndexType;
+  static_assert(detail::PodioMutableTrackStateHolder<holder_t>,
+                "holder_t does not satisfy mutable PODIO track-state holder "
+                "requirements");
 
   /// Sentinel value that indicates an invalid index
   static constexpr IndexType kInvalid = Acts::kTrackIndexInvalid;
@@ -992,8 +998,7 @@ class MutablePodioTrackStateContainer final
   }
 
  private:
-  template <template <typename> class other_holder_t>
-    requires PodioConstTrackStateHolder<other_holder_t>
+  template <template <typename...> class other_holder_t>
   friend class ConstPodioTrackStateContainer;
   friend class PodioTrackStateContainerBase;
 
@@ -1025,9 +1030,8 @@ MutablePodioTrackStateContainer(PodioUtil::ConversionHelper&,
                                 ActsPodioEdm::JacobianCollection&)
     -> MutablePodioTrackStateContainer<Acts::RefHolder>;
 
-template <template <typename> class holder_t>
-  requires PodioConstTrackStateHolder<holder_t>
-template <template <typename> class other_holder_t>
+template <template <typename...> class holder_t>
+template <template <typename...> class other_holder_t>
 inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
     const MutablePodioTrackStateContainer<other_holder_t>& other)
   requires std::is_constructible_v<
@@ -1043,9 +1047,8 @@ inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
   }
 }
 
-template <template <typename> class holder_t>
-  requires PodioConstTrackStateHolder<holder_t>
-template <template <typename> class other_holder_t>
+template <template <typename...> class holder_t>
+template <template <typename...> class other_holder_t>
 inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
     MutablePodioTrackStateContainer<other_holder_t>&& other)
   requires std::is_same_v<holder_t<const ActsPodioEdm::TrackStateCollection>,

@@ -33,7 +33,7 @@ namespace {
 using namespace Acts;
 using namespace ActsPlugins;
 using namespace UnitLiterals;
-using namespace detail::Test;
+using namespace Acts::detail::Test;
 namespace bd = boost::unit_test::data;
 
 std::default_random_engine rng(31415);
