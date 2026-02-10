@@ -38,7 +38,7 @@ namespace ActsPlugins {
 /// @addtogroup edm4hep_plugin
 /// @{
 
-template <template <typename> class holder_t = std::unique_ptr>
+template <template <typename...> class holder_t = std::unique_ptr>
 class MutablePodioTrackContainer;
 
 template <template <typename> class holder_t = Acts::ConstRefHolder>
@@ -48,7 +48,7 @@ class ConstPodioTrackContainer;
 
 namespace Acts {
 
-template <template <typename> class holder_t>
+template <template <typename...> class holder_t>
 struct IsReadOnlyTrackContainer<
     ActsPlugins::MutablePodioTrackContainer<holder_t>> : std::false_type {};
 
@@ -200,7 +200,7 @@ class PodioTrackContainerBase {
 };
 
 /// Mutable Podio-based track container implementation
-template <template <typename> class holder_t>
+template <template <typename...> class holder_t>
 class MutablePodioTrackContainer : public PodioTrackContainerBase {
  public:
   /// Constructor
