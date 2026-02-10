@@ -11,6 +11,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
 
 #include <DD4hep/Detector.h>
 #include <DD4hep/Volumes.h>
@@ -18,8 +19,10 @@
 namespace ActsExamples {
 
 DD4hepPodioConversionHelper::DD4hepPodioConversionHelper(
-    const DD4hepDetector& detector, const MeasurementContainer& measurements)
-    : m_detector(&detector), m_measurements(&measurements) {}
+    const DD4hepDetector& detector,
+    const ActsPodioEdm::TrackerHitLocalCollection& trackerHitLocalCollection)
+    : m_detector(&detector),
+      m_trackerHitLocalCollection(&trackerHitLocalCollection) {}
 
 std::optional<ActsPlugins::PodioUtil::Identifier>
 DD4hepPodioConversionHelper::surfaceToIdentifier(
@@ -52,20 +55,15 @@ const Acts::Surface* DD4hepPodioConversionHelper::identifierToSurface(
   return &dd4hepDetElementExtension->detectorElement().surface();
 }
 
-Acts::SourceLink DD4hepPodioConversionHelper::identifierToSourceLink(
-    ActsPlugins::PodioUtil::Identifier identifier) const {
-  // auto meas = m_measurements->getMeasurement(identifier);
-  // return Acts::SourceLink{IndexSourceLink(meas.geometryId(), meas.index())};
-
-  return Acts::SourceLink{identifier};
-}
-
-ActsPlugins::PodioUtil::Identifier
-DD4hepPodioConversionHelper::sourceLinkToIdentifier(
+ActsPodioEdm::TrackerHitLocal
+DD4hepPodioConversionHelper::sourceLinkToTrackerHitLocal(
     const Acts::SourceLink& sourceLink) const {
-  // const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-  // return indexSourceLink.index();
-
-  return sourceLink.get<ActsPlugins::PodioUtil::Identifier>();
+  const auto* indexSourceLink = sourceLink.getPtr<IndexSourceLink>();
+  if (indexSourceLink == nullptr) {
+    throw std::invalid_argument("Source link is not an IndexSourceLink");
+  }
+  // This assumes that the conversion was index preserving!
+  return m_trackerHitLocalCollection->at(indexSourceLink->index());
 }
+
 }  // namespace ActsExamples

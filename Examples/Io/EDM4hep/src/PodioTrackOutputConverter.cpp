@@ -71,7 +71,10 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
     writeMeasurement(context.geoContext, meas, to);
   }
 
-  DD4hepPodioConversionHelper helper(*m_cfg.detector, inputMeasurements);
+  auto trackStateHitLinks =
+      std::make_unique<ActsPodioEdm::TrackStateHitLinkCollection>();
+
+  DD4hepPodioConversionHelper helper(*m_cfg.detector, *outputMeasurements);
 
   // Create external Podio collections that we'll own and write to the event
   // store
@@ -84,15 +87,25 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
 
   // Create Podio backends using RefHolder for externally owned collections
   ActsPlugins::MutablePodioTrackStateContainer trackStateContainer(
-      helper, *trackStateCollection, *paramsCollection, *jacsCollection);
+      helper, *trackStateCollection, *paramsCollection, *jacsCollection,
+      outputMeasurements.get(), trackStateHitLinks.get());
   ActsPlugins::MutablePodioTrackContainer trackContainer(helper,
                                                          *trackCollection);
 
   // Wrap in Acts TrackContainer
   Acts::TrackContainer outputTracks{trackContainer, trackStateContainer};
 
+  // Used for sanity checking
+  std::size_t nUncalibratedSourceLinks = 0;
+
   // Copy all tracks using the high-level copyFrom API
   for (const auto& inputTrack : inputTracks) {
+    for (const auto& ts : inputTrack.trackStatesReversed()) {
+      if (ts.hasUncalibratedSourceLink()) {
+        nUncalibratedSourceLinks++;
+      }
+    }
+
     auto outputTrack = outputTracks.makeTrack();
 
     // Use copyFrom to handle all track-level and track state copying
@@ -102,34 +115,22 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
   ACTS_VERBOSE("Copied " << outputTracks.size() << " tracks with "
                          << trackStateContainer.size() << " track states");
 
-  // SANITY CHECK!
-  // @TODO: Make this configurable or remove it altogether
-  // for (const auto& outputTrack : outputTracks) {
-  //   for (const auto& ts : outputTrack.trackStates()) {
-  //     if (ts.hasUncalibratedSourceLink()) {
-  //       auto sourceLink = ts.getUncalibratedSourceLink();
-  //       auto indexSourceLink = sourceLink.get<IndexSourceLink>();
-  //       if (indexSourceLink.index() >= inputMeasurements.size()) {
-  //         throw std::runtime_error("TrackState for track index " +
-  //                                  std::to_string(outputTrack.index()) +
-  //                                  " references a measurement that is not "
-  //                                  "present in the measurement container");
-  //       }
-  //     }
-  //   }
-  // }
-
-  auto testMeas = outputMeasurements->at(0);
-  auto links = std::make_unique<ActsPodioEdm::TrackStateHitLinkCollection>();
-
-  for (auto trackState : *trackStateCollection) {
-    auto link = links->create();
-    link.setFrom(trackState);
-    link.setTo(testMeas);
-    // std::cout << "TrackState: " << trackState.id() << std::endl;
+  std::size_t nUncalibratedSourceLinksInOutput = 0;
+  for (const auto& outputTrack : outputTracks) {
+    for (const auto& ts : outputTrack.trackStates()) {
+      if (ts.hasUncalibratedSourceLink()) {
+        nUncalibratedSourceLinksInOutput++;
+      }
+    }
   }
 
-  ACTS_VERBOSE("Created " << links->size() << " links");
+  if (nUncalibratedSourceLinks != nUncalibratedSourceLinksInOutput) {
+    ACTS_ERROR(
+        "Number of uncalibrated source links in input and output do not match: "
+        << nUncalibratedSourceLinks
+        << " != " << nUncalibratedSourceLinksInOutput);
+    return ProcessCode::ABORT;
+  }
 
   // Write collections to event store
   m_outputTracks(context, std::move(trackCollection));

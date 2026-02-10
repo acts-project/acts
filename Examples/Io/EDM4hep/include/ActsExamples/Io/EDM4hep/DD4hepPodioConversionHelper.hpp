@@ -26,9 +26,10 @@ class DD4hepPodioConversionHelper
  public:
   /// Constructor
   /// @param detector The DD4hep detector reference
-  /// @param measurements The measurement container
+  /// @param trackerHitLocalCollection The tracker hit local collection
   explicit DD4hepPodioConversionHelper(
-      const DD4hepDetector& detector, const MeasurementContainer& measurements);
+      const DD4hepDetector& detector,
+      const ActsPodioEdm::TrackerHitLocalCollection& trackerHitLocalCollection);
 
   std::optional<ActsPlugins::PodioUtil::Identifier> surfaceToIdentifier(
       const Acts::Surface& surface) const override;
@@ -36,15 +37,12 @@ class DD4hepPodioConversionHelper
   const Acts::Surface* identifierToSurface(
       ActsPlugins::PodioUtil::Identifier identifier) const override;
 
-  Acts::SourceLink identifierToSourceLink(
-      ActsPlugins::PodioUtil::Identifier identifier) const override;
-
-  ActsPlugins::PodioUtil::Identifier sourceLinkToIdentifier(
+  ActsPodioEdm::TrackerHitLocal sourceLinkToTrackerHitLocal(
       const Acts::SourceLink& sourceLink) const override;
 
  private:
   const DD4hepDetector* m_detector;
-  const MeasurementContainer* m_measurements;
+  const ActsPodioEdm::TrackerHitLocalCollection* m_trackerHitLocalCollection;
 };
 
 }  // namespace ActsExamples

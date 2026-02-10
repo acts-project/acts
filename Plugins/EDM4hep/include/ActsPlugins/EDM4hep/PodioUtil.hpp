@@ -117,6 +117,11 @@ class ConversionHelper {
       [[maybe_unused]] Identifier identifier) const {
     throw NotImplementedError();
   }
+
+  virtual ActsPodioEdm::TrackerHitLocal sourceLinkToTrackerHitLocal(
+      [[maybe_unused]] const Acts::SourceLink& sourceLink) const {
+    throw NotImplementedError();
+  }
 };
 
 std::shared_ptr<const Acts::Surface> convertSurfaceFromPodio(
