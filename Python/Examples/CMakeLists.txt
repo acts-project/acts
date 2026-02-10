@@ -159,7 +159,7 @@ add_examples_binding_if(GeoModel
 add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn ACTS_BUILD_EXAMPLES_GNN FALSE)
 add_examples_binding_if(Hashing Acts::ExamplesTrackFinding ACTS_BUILD_EXAMPLES_HASHING FALSE)
 add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
-add_examples_binding_if(Onnx "Acts::ExamplesFrameworkML;Acts::ExamplesTrackFindingML" ACTS_BUILD_PLUGIN_ONNX FALSE)
+add_examples_binding_if(Onnx Acts::ExamplesTrackFindingML ACTS_BUILD_PLUGIN_ONNX FALSE)
 add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 ACTS_BUILD_EXAMPLES_PYTHIA8 FALSE)
 add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_PLUGIN_ROOT TRUE)
 add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
