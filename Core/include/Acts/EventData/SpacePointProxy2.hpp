@@ -55,8 +55,12 @@ class SpacePointProxy2 {
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
+  /// Copy assign a space point proxy.
+  /// @param other The space point proxy to copy.
   SpacePointProxy2 &operator=(const SpacePointProxy2 &other) noexcept = default;
 
+  /// Copy assign a mutable space point proxy.
+  /// @param other The mutable space point proxy to copy.
   SpacePointProxy2 &operator=(const SpacePointProxy2<false> &other) noexcept
     requires ReadOnly
   {
@@ -65,8 +69,12 @@ class SpacePointProxy2 {
     return *this;
   }
 
+  /// Move assign a space point proxy.
+  /// @param other The space point proxy to move.
   SpacePointProxy2 &operator=(SpacePointProxy2 &&) noexcept = default;
 
+  /// Move assign a mutable space point proxy.
+  /// @param other The mutable space point proxy to move.
   SpacePointProxy2 &operator=(SpacePointProxy2<false> &&other) noexcept
     requires ReadOnly
   {

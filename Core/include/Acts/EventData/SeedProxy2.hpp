@@ -47,8 +47,12 @@ class SeedProxy2 {
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
+  /// Copy assign a seed proxy.
+  /// @param other The seed proxy to copy.
   SeedProxy2 &operator=(const SeedProxy2 &other) noexcept = default;
 
+  /// Copy assign a mutable seed proxy.
+  /// @param other The mutable seed proxy to copy.
   SeedProxy2 &operator=(const SeedProxy2<false> &other) noexcept
     requires ReadOnly
   {
@@ -57,8 +61,12 @@ class SeedProxy2 {
     return *this;
   }
 
+  /// Move assign a seed proxy.
+  /// @param other The seed proxy to move.
   SeedProxy2 &operator=(SeedProxy2 &&) noexcept = default;
 
+  /// Move assign a mutable seed proxy.
+  /// @param other The mutable seed proxy to move.
   SeedProxy2 &operator=(SeedProxy2<false> &&other) noexcept
     requires ReadOnly
   {
@@ -257,7 +265,9 @@ class SeedProxy2 {
   /// Range facade for the seed space points.
   class SpacePointRange {
    public:
+    /// Size type for the range
     using size_type = std::size_t;
+    /// Value type for the range
     using value_type = ConstSpacePointProxy2;
 
     /// Constructor
