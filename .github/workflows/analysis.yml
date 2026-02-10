@@ -95,6 +95,54 @@ jobs:
           name: coverage-build
           path: build
 
+  clang_tidy:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404:83
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        if: github.event_name == 'pull_request'
+        run: git fetch origin "${{ github.base_ref }}"
+
+      - name: Install clang-tidy
+        run: |
+          apt-get update && apt-get install -y clang-tidy-18
+          ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
+          ln -sf /usr/bin/clang++-18 /usr/bin/clang++
+          ln -sf /usr/bin/clang-18 /usr/bin/clang
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: clang++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          --preset=gitlab-ci-clangtidy
+          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_C_COMPILER=clang
+          -DACTS_RUN_CLANG_TIDY=OFF
+
+      - name: Run clang-tidy (PR - changed files only)
+        if: github.event_name == 'pull_request'
+        run: >
+          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          build "origin/${{ github.base_ref }}"
+          --filter-config CI/clang_tidy/filter.yml
+
+      - name: Run clang-tidy (push - all files)
+        if: github.event_name == 'push'
+        run: >
+          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          build --all
+          --filter-config CI/clang_tidy/filter.yml
+
   build_performance:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:83
