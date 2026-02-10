@@ -216,8 +216,9 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   const auto invCov = safeInverse(cov);
   if (!invCov || (*invCov)(1, 1) < 0 || (*invCov)(0, 0) < 0) {
     ACTS_DEBUG("Invalid covariance\n"
-               << cov.inverse() << cov << ", determinant: " << cov.determinant()
-               << ", " << fitPars);
+               << cov << ", determinant: " << cov.determinant() << ", inverse: "
+               << (invCov ? toString(*invCov) : "not invertible") << ", "
+               << fitPars);
     return UpdateStatus::Exceeded;
   }
   const Vector2 update = (*invCov) * grad;
