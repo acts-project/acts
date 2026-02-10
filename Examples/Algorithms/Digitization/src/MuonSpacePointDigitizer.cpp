@@ -56,12 +56,13 @@ constexpr double quantize(const double x, const double pitch) {
 /// @brief Returns the half-height of a trapezoid / rectangular bounds
 /// @param bounds: Rectangle / Trapezoid bounds to fetch the half height from
 double halfHeight(const SurfaceBounds& bounds) {
-  if (bounds.type() == SurfaceBounds::BoundsType::eRectangle) {
+  using enum SurfaceBounds::Type;
+  if (bounds.type() == Rectangle) {
     return static_cast<const RectangleBounds&>(bounds).get(
         RectangleBounds::eMaxY);
   }
   // Trapezoid -> endcap
-  else if (bounds.type() == SurfaceBounds::BoundsType::eTrapezoid) {
+  else if (bounds.type() == Trapezoid) {
     return static_cast<const TrapezoidBounds&>(bounds).get(
         TrapezoidBounds::eHalfLengthY);
   }
@@ -247,13 +248,14 @@ ProcessCode MuonSpacePointDigitizer::execute(
         /// Strip measurements
         using enum Surface::SurfaceType;
         case Plane: {
+          using enum SurfaceBounds::Type;
           ACTS_VERBOSE("Hit is recorded in a strip detector ");
           auto planeCross =
               intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.);
           const auto hitPos = planeCross.position();
           Vector3 smearedHit{Vector3::Zero()};
           switch (bounds.type()) {
-            case SurfaceBounds::BoundsType::eRectangle: {
+            case Rectangle: {
               smearedHit[ePos0] =
                   quantize(hitPos[ePos0], calibCfg.rpcPhiStripPitch);
               smearedHit[ePos1] =
@@ -325,7 +327,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
               break;
             }
             /// Endcap strips not yet available
-            case SurfaceBounds::BoundsType::eTrapezoid:
+            case Trapezoid:
               break;
             default:
               convertSp = false;

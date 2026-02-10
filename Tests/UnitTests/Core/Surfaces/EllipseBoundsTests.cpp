@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
   BOOST_CHECK_EQUAL(
       EllipseBounds(innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi)
           .type(),
-      SurfaceBounds::eEllipse);
+      SurfaceBounds::Ellipse);
 
   /// Copy constructor
   EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
                                     phiSector, averagePhi);
 
   /// Test type() (redundant; already used in constructor confirmation)
-  BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::eEllipse);
+  BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::Ellipse);
 
   /// Test distanceToBoundary
   Vector2 origin{0., 0.};

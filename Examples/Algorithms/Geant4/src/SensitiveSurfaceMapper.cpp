@@ -249,7 +249,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
       mappedSurface = candidateSurface;
       break;
     } else if (candidateSurface->bounds().type() ==
-               Acts::SurfaceBounds::eAnnulus) {
+               Acts::SurfaceBounds::Annulus) {
       const auto& bounds =
           *static_cast<const Acts::AnnulusBounds*>(&candidateSurface->bounds());
 

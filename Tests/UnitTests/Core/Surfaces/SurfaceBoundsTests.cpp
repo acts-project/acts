@@ -40,7 +40,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
 #pragma GCC diagnostic pop
 #endif
 
-  BoundsType type() const final { return eOther; }
+  Type type() const final { return Other; }
 
   bool isCartesian() const final { return true; }
 

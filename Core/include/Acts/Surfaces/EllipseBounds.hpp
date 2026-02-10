@@ -69,7 +69,7 @@ class EllipseBounds : public PlanarBounds {
   }
 
   /// @copydoc SurfaceBounds::type
-  BoundsType type() const final { return eEllipse; }
+  Type type() const final { return Ellipse; }
 
   /// Return the bound values as dynamically sized vector
   ///

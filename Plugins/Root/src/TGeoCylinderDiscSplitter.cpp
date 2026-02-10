@@ -43,7 +43,7 @@ ActsPlugins::TGeoCylinderDiscSplitter::split(
   if (m_cfg.discPhiSegments > 0 || m_cfg.discRadialSegments > 0) {
     // Splitting for discs detected
     if (sf.type() == Surface::Disc &&
-        sf.bounds().type() == SurfaceBounds::eDisc) {
+        sf.bounds().type() == SurfaceBounds::Disc) {
       ACTS_DEBUG("- splitting detected for a Disc shaped sensor.");
 
       std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
@@ -111,7 +111,7 @@ ActsPlugins::TGeoCylinderDiscSplitter::split(
   // Cylinder segments are detected, attempt a split
   if (m_cfg.cylinderPhiSegments > 0 || m_cfg.cylinderLongitudinalSegments > 0) {
     if (sf.type() == Surface::Cylinder &&
-        sf.bounds().type() == SurfaceBounds::eCylinder) {
+        sf.bounds().type() == SurfaceBounds::Cylinder) {
       ACTS_DEBUG("- splitting detected for a Cylinder shaped sensor.");
 
       std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>

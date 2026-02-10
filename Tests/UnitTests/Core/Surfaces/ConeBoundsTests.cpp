@@ -51,21 +51,20 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
 
   BOOST_TEST_CHECKPOINT("Four parameter constructor (last two at default)");
   ConeBounds defaultConeBounds(alpha, symmetric);
-  BOOST_CHECK_EQUAL(defaultConeBounds.type(), SurfaceBounds::eCone);
+  BOOST_CHECK_EQUAL(defaultConeBounds.type(), SurfaceBounds::Cone);
 
   BOOST_TEST_CHECKPOINT("Four parameter constructor");
   ConeBounds fourParameterConstructed(alpha, symmetric, halfPhi, averagePhi);
-  BOOST_CHECK_EQUAL(fourParameterConstructed.type(), SurfaceBounds::eCone);
+  BOOST_CHECK_EQUAL(fourParameterConstructed.type(), SurfaceBounds::Cone);
 
   BOOST_TEST_CHECKPOINT("Five parameter constructor (last two at default)");
   ConeBounds defaulted5ParamConeBounds(alpha, zMin, zMax);
-  BOOST_CHECK_EQUAL(defaulted5ParamConeBounds.type(), SurfaceBounds::eCone);
+  BOOST_CHECK_EQUAL(defaulted5ParamConeBounds.type(), SurfaceBounds::Cone);
 
   BOOST_TEST_CHECKPOINT("Five parameter constructor)");
   ConeBounds fiveParamConstructedConeBounds(alpha, zMin, zMax, halfPhi,
                                             averagePhi);
-  BOOST_CHECK_EQUAL(fiveParamConstructedConeBounds.type(),
-                    SurfaceBounds::eCone);
+  BOOST_CHECK_EQUAL(fiveParamConstructedConeBounds.type(), SurfaceBounds::Cone);
 
   BOOST_TEST_CHECKPOINT("Copy constructor");
   ConeBounds copyConstructedConeBounds(fiveParamConstructedConeBounds);
@@ -115,7 +114,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   ConeBounds coneBoundsObject(alpha, zMin, zMax, halfPhi, averagePhi);
 
   /// Test for type (redundant)
-  BOOST_CHECK_EQUAL(coneBoundsObject.type(), SurfaceBounds::eCone);
+  BOOST_CHECK_EQUAL(coneBoundsObject.type(), SurfaceBounds::Cone);
 
   /// Test for inside
   BOOST_CHECK(!coneBoundsObject.inside(origin));

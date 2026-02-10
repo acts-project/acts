@@ -22,17 +22,17 @@ BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 /// Unit test for creating compliant/non-compliant InfiniteBounds object
 BOOST_AUTO_TEST_CASE(InfiniteBoundsConstruction) {
   InfiniteBounds u;
-  BOOST_CHECK_EQUAL(u.type(), SurfaceBounds::eBoundless);
+  BOOST_CHECK_EQUAL(u.type(), SurfaceBounds::Boundless);
   // InfiniteBounds s(1);  // would act as std::size_t cast to InfiniteBounds
   // InfiniteBounds t(s);
   InfiniteBounds v(u);  // implicit
-  BOOST_CHECK_EQUAL(v.type(), SurfaceBounds::eBoundless);
+  BOOST_CHECK_EQUAL(v.type(), SurfaceBounds::Boundless);
 }
 /// Unit tests for InfiniteBounds properties
 BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
   InfiniteBounds infiniteBoundsObject;
   /// Test for type()
-  BOOST_CHECK_EQUAL(infiniteBoundsObject.type(), SurfaceBounds::eBoundless);
+  BOOST_CHECK_EQUAL(infiniteBoundsObject.type(), SurfaceBounds::Boundless);
 
   /// Test for inside()
   const Vector2 anyVector{0., 1.};
