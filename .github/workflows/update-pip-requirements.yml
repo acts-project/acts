@@ -41,6 +41,7 @@ jobs:
             Examples/Scripts
           )
           for folder in "${folder_list[@]}"; do
+            rm "${folder}/requirements.txt"
             uv pip compile --python-version ${{ env.PYTHON_VERSION }} "${folder}/requirements.in" -o "${folder}/requirements.txt"
           done
 
