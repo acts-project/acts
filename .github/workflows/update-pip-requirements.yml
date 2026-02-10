@@ -16,13 +16,14 @@ jobs:
       # This branch will receive updates each time the workflow runs
       # It doesn't matter if it's deleted when merged, it'll be re-created
       BRANCH_NAME: auto-dependency-upgrades
+      PYTHON_VERSION: "3.14"
     steps:
       - uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: 3.14
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install uv
         run: |
@@ -40,7 +41,7 @@ jobs:
             Examples/Scripts
           )
           for folder in "${folder_list[@]}"; do
-            uv pip compile --python-version ${python-version} "${folder}/requirements.in" -o "${folder}/requirements.txt"
+            uv pip compile --python-version ${{ env.PYTHON_VERSION }} "${folder}/requirements.in" -o "${folder}/requirements.txt"
           done
 
       - name: Detect changes
