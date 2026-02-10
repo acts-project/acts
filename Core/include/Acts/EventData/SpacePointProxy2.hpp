@@ -57,10 +57,12 @@ class SpacePointProxy2 {
 
   /// Copy assign a space point proxy.
   /// @param other The space point proxy to copy.
+  /// @return Reference to this space point proxy after assignment.
   SpacePointProxy2 &operator=(const SpacePointProxy2 &other) noexcept = default;
 
   /// Copy assign a mutable space point proxy.
   /// @param other The mutable space point proxy to copy.
+  /// @return Reference to this space point proxy after assignment.
   SpacePointProxy2 &operator=(const SpacePointProxy2<false> &other) noexcept
     requires ReadOnly
   {
@@ -71,10 +73,12 @@ class SpacePointProxy2 {
 
   /// Move assign a space point proxy.
   /// @param other The space point proxy to move.
+  /// @return Reference to this space point proxy after assignment.
   SpacePointProxy2 &operator=(SpacePointProxy2 &&) noexcept = default;
 
   /// Move assign a mutable space point proxy.
   /// @param other The mutable space point proxy to move.
+  /// @return Reference to this space point proxy after assignment.
   SpacePointProxy2 &operator=(SpacePointProxy2<false> &&other) noexcept
     requires ReadOnly
   {

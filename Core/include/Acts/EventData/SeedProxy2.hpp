@@ -49,10 +49,12 @@ class SeedProxy2 {
 
   /// Copy assign a seed proxy.
   /// @param other The seed proxy to copy.
+  /// @return Reference to this seed proxy after assignment.
   SeedProxy2 &operator=(const SeedProxy2 &other) noexcept = default;
 
   /// Copy assign a mutable seed proxy.
   /// @param other The mutable seed proxy to copy.
+  /// @return Reference to this seed proxy after assignment.
   SeedProxy2 &operator=(const SeedProxy2<false> &other) noexcept
     requires ReadOnly
   {
@@ -63,10 +65,12 @@ class SeedProxy2 {
 
   /// Move assign a seed proxy.
   /// @param other The seed proxy to move.
+  /// @return Reference to this seed proxy after assignment.
   SeedProxy2 &operator=(SeedProxy2 &&) noexcept = default;
 
   /// Move assign a mutable seed proxy.
   /// @param other The mutable seed proxy to move.
+  /// @return Reference to this seed proxy after assignment.
   SeedProxy2 &operator=(SeedProxy2<false> &&other) noexcept
     requires ReadOnly
   {
