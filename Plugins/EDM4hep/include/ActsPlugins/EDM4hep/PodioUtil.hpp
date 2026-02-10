@@ -44,6 +44,7 @@ namespace PodioUtil {
 // We want to support podio 0.16 and 1.x for now
 
 // See https://github.com/AIDASoft/podio/pull/549
+
 #if podio_VERSION_MAJOR >= 1 || \
     (podio_VERSION_MAJOR == 0 && podio_VERSION_MINOR == 99)
 using ROOTWriter = podio::ROOTWriter;
@@ -80,6 +81,11 @@ constexpr int kNoSurface = -1;
 /// @ingroup edm4hep_plugin
 class ConversionHelper {
  public:
+  class NotImplementedError : public std::runtime_error {
+   public:
+    NotImplementedError() : std::runtime_error("Not implemented") {}
+  };
+
   virtual ~ConversionHelper() = default;
 
   /// Convert surface to identifier
@@ -98,18 +104,18 @@ class ConversionHelper {
   /// @param sl The source link to convert
   /// @return Optional identifier for the source link
   /// @note If this returns `std::nullopt`, the source link is not expressible as an identifier
-  virtual std::optional<Identifier> sourceLinkToIdentifier(
+  virtual Identifier sourceLinkToIdentifier(
       [[maybe_unused]] const Acts::SourceLink& sl) const {
-    return std::nullopt;
-  }
+    throw NotImplementedError();
+  };
 
   /// Convert identifier to source link
   /// @param identifier The identifier to convert
   /// @note If this returns `std::nullopt`, the source link is not expressible as an identifier
   /// @return Optional source link for the identifier
-  virtual std::optional<Acts::SourceLink> identifierToSourceLink(
+  virtual Acts::SourceLink identifierToSourceLink(
       [[maybe_unused]] Identifier identifier) const {
-    return std::nullopt;
+    throw NotImplementedError();
   }
 };
 

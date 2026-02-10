@@ -36,10 +36,10 @@ class DD4hepPodioConversionHelper
   const Acts::Surface* identifierToSurface(
       ActsPlugins::PodioUtil::Identifier identifier) const override;
 
-  std::optional<Acts::SourceLink> identifierToSourceLink(
+  Acts::SourceLink identifierToSourceLink(
       ActsPlugins::PodioUtil::Identifier identifier) const override;
 
-  std::optional<ActsPlugins::PodioUtil::Identifier> sourceLinkToIdentifier(
+  ActsPlugins::PodioUtil::Identifier sourceLinkToIdentifier(
       const Acts::SourceLink& sourceLink) const override;
 
  private:

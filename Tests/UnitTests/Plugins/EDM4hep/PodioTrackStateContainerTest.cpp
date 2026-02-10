@@ -49,12 +49,12 @@ class NullHelper : public PodioUtil::ConversionHelper {
     return nullptr;
   }
 
-  std::optional<SourceLink> identifierToSourceLink(
+  SourceLink identifierToSourceLink(
       PodioUtil::Identifier /*identifier*/) const override {
     return SourceLink{0};
   }
 
-  std::optional<PodioUtil::Identifier> sourceLinkToIdentifier(
+  PodioUtil::Identifier sourceLinkToIdentifier(
       const SourceLink& /*sourceLink*/) const override {
     return 0;
   }
@@ -79,14 +79,13 @@ struct MapHelper : public NullHelper {
     return it->second;
   }
 
-  std::optional<PodioUtil::Identifier> sourceLinkToIdentifier(
+  PodioUtil::Identifier sourceLinkToIdentifier(
       const SourceLink& sl) const override {
     sourceLinks->push_back(sl);
     return sourceLinks->size() - 1;
   }
 
-  std::optional<SourceLink> identifierToSourceLink(
-      PodioUtil::Identifier id) const override {
+  SourceLink identifierToSourceLink(PodioUtil::Identifier id) const override {
     return sourceLinks->at(id);
   }
 

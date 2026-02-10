@@ -52,17 +52,20 @@ const Acts::Surface* DD4hepPodioConversionHelper::identifierToSurface(
   return &dd4hepDetElementExtension->detectorElement().surface();
 }
 
-std::optional<Acts::SourceLink>
-DD4hepPodioConversionHelper::identifierToSourceLink(
+Acts::SourceLink DD4hepPodioConversionHelper::identifierToSourceLink(
     ActsPlugins::PodioUtil::Identifier identifier) const {
-  auto meas = m_measurements->getMeasurement(identifier);
-  return Acts::SourceLink{IndexSourceLink(meas.geometryId(), meas.index())};
+  // auto meas = m_measurements->getMeasurement(identifier);
+  // return Acts::SourceLink{IndexSourceLink(meas.geometryId(), meas.index())};
+
+  return Acts::SourceLink{identifier};
 }
 
-std::optional<ActsPlugins::PodioUtil::Identifier>
+ActsPlugins::PodioUtil::Identifier
 DD4hepPodioConversionHelper::sourceLinkToIdentifier(
     const Acts::SourceLink& sourceLink) const {
-  const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-  return indexSourceLink.index();
+  // const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
+  // return indexSourceLink.index();
+
+  return sourceLink.get<ActsPlugins::PodioUtil::Identifier>();
 }
 }  // namespace ActsExamples

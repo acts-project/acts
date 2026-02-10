@@ -66,12 +66,12 @@ class NullHelper : public PodioUtil::ConversionHelper {
     return nullptr;
   }
 
-  std::optional<SourceLink> identifierToSourceLink(
+  SourceLink identifierToSourceLink(
       PodioUtil::Identifier /*identifier*/) const override {
     return SourceLink{0};
   }
 
-  std::optional<PodioUtil::Identifier> sourceLinkToIdentifier(
+  PodioUtil::Identifier sourceLinkToIdentifier(
       const SourceLink& /*sourceLink*/) const override {
     return 0;
   }
