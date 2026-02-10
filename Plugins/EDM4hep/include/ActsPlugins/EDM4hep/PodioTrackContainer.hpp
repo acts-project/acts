@@ -38,17 +38,19 @@ namespace ActsPlugins {
 /// @addtogroup edm4hep_plugin
 /// @{
 
-template <template <typename...> class holder_t = std::unique_ptr>
+template <template <typename> class holder_t = std::unique_ptr>
+  requires Acts::HolderFor<holder_t, ActsPodioEdm::TrackCollection>
 class MutablePodioTrackContainer;
 
 template <template <typename> class holder_t = Acts::ConstRefHolder>
+  requires Acts::HolderFor<holder_t, const ActsPodioEdm::TrackCollection>
 class ConstPodioTrackContainer;
 
 }  // namespace ActsPlugins
 
 namespace Acts {
 
-template <template <typename...> class holder_t>
+template <template <typename> class holder_t>
 struct IsReadOnlyTrackContainer<
     ActsPlugins::MutablePodioTrackContainer<holder_t>> : std::false_type {};
 
@@ -200,7 +202,8 @@ class PodioTrackContainerBase {
 };
 
 /// Mutable Podio-based track container implementation
-template <template <typename...> class holder_t>
+template <template <typename> class holder_t>
+  requires Acts::HolderFor<holder_t, ActsPodioEdm::TrackCollection>
 class MutablePodioTrackContainer : public PodioTrackContainerBase {
  public:
   /// Constructor
@@ -474,6 +477,7 @@ MutablePodioTrackContainer(const PodioUtil::ConversionHelper&,
 
 /// Read-only track container backend using podio for storage
 template <template <typename> class holder_t>
+  requires Acts::HolderFor<holder_t, const ActsPodioEdm::TrackCollection>
 class ConstPodioTrackContainer : public PodioTrackContainerBase {
  public:
   /// Constructor from collection
