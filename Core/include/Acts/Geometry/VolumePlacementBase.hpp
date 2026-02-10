@@ -97,7 +97,7 @@ class VolumePlacementBase {
   /// @param other: Object to be moved into this instance
   /// @returns Reference to this instance
   VolumePlacementBase& operator=(VolumePlacementBase&& other) noexcept;
-  
+
   /// Abrivation of the portal surface vector
   using PortalVec_t = std::vector<std::shared_ptr<RegularSurface>>;
 
