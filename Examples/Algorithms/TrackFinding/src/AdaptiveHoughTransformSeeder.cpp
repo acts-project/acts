@@ -9,8 +9,8 @@
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <algorithm>
@@ -90,23 +90,22 @@ AccumulatorSection AccumulatorSection::right(float xFraction) const {
 }
 
 AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
-    ActsExamples::AdaptiveHoughTransformSeeder::Config cfg,
-    Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("AdaptiveHoughTransformSeeder", lvl),
+    AdaptiveHoughTransformSeeder::Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("AdaptiveHoughTransformSeeder", lvl),
       m_cfg(std::move(cfg)),
       m_logger(Acts::getDefaultLogger("AdaptiveHoughTransformSeeder", lvl)) {
-  for (const auto &spName : config().inputSpacePoints) {
-    const auto &handle = m_inputSpacePoints.emplace_back(
-        std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
-            this,
-            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
-    handle->initialize(spName);
+  if (m_cfg.inputSpacePoints.empty()) {
+    throw std::invalid_argument(
+        "AdaptiveHoughTransformSeeder: Input space points collection name "
+        "empty");
   }
-  if (config().outputSeeds.empty()) {
+  if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument(
         "AdaptiveHoughTransformSeeder: Output seeds collection name empty");
   }
-  m_outputSeeds.initialize(config().outputSeeds);
+
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
+  m_outputSeeds.initialize(m_cfg.outputSeeds);
 }
 
 // When traversing parameters space in various directions it is useful
@@ -125,9 +124,11 @@ constexpr unsigned int cotThetaSplitWidthIndex = 5;
 
 ProcessCode AdaptiveHoughTransformSeeder::execute(
     const AlgorithmContext &ctx) const {
+  const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
+
   // get inputs
   std::vector<PreprocessedMeasurement> measurements;
-  preparePreprocessedMeasurements(ctx, measurements);
+  preparePreprocessedMeasurements(spacePoints, measurements);
 
   // prepare initial stack
   std::vector<AccumulatorSection> stack1;
@@ -136,15 +137,14 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   // split into regions in z_vertex cot theta, there is a lot of duplication and
   // it can be optimized better in the future
   for (auto &section : stack1) {
-    section.updateDimensions(2.0f * config().zRange,
-                             2.0f * config().cotThetaRange, -config().zRange,
-                             -config().cotThetaRange);
+    section.updateDimensions(2.0f * m_cfg.zRange, 2.0f * m_cfg.cotThetaRange,
+                             -m_cfg.zRange, -m_cfg.cotThetaRange);
   }
   std::vector<AccumulatorSection> stack2;
   {
     Acts::ScopedTimer st("splitInZCotTheta", logger());
     processStackZCotThetaSplit(stack1, stack2, measurements);
-    if (config().doSecondPhase) {
+    if (m_cfg.doSecondPhase) {
       for (AccumulatorSection &section : stack2) {
         section.setHistory(zSplitMinIndex, section.xBegin());
         section.setHistory(zSplitWidthIndex, section.xSize());
@@ -162,8 +162,8 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     // now need to change search space into phi - q/pT, section covers phi range
     // from initial splitting (therefore needed history)
     section.updateDimensions(
-        section.history(phiSplitWidthIndex), 2.0f * config().qOverPtMin,
-        section.history(phiSplitMinIndex), -config().qOverPtMin);
+        section.history(phiSplitWidthIndex), 2.0f * m_cfg.qOverPtMin,
+        section.history(phiSplitMinIndex), -m_cfg.qOverPtMin);
   }
   {
     Acts::ScopedTimer st("processQOverPtPhi", logger());
@@ -179,7 +179,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   }
 
   // do scan in z_vertex - cot theta
-  if (config().doSecondPhase) {
+  if (m_cfg.doSecondPhase) {
     Acts::ScopedTimer st("secondPhase", logger());
 
     for (auto &section : stack1) {
@@ -200,11 +200,12 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   }
 
   std::vector<AccumulatorSection> &solutions =
-      config().doSecondPhase ? stack2 : stack1;
+      m_cfg.doSecondPhase ? stack2 : stack1;
   Acts::ScopedTimer st("seedsMaking", logger());
 
   // post solutions
-  SimSeedContainer seeds;
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(spacePoints);
   seeds.reserve(solutions.size());
 
   ACTS_VERBOSE("Number of solutions " << solutions.size());
@@ -212,37 +213,31 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
 
   m_outputSeeds(ctx, std::move(seeds));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
 void AdaptiveHoughTransformSeeder::preparePreprocessedMeasurements(
-    const AlgorithmContext &ctx,
+    const SpacePointContainer &spacePoints,
     std::vector<PreprocessedMeasurement> &measurements) const {
-  for (const auto &isp : m_inputSpacePoints) {
-    const auto &spContainer = (*isp)(ctx);
-    ACTS_DEBUG("Inserting " << spContainer.size()
-                            << " space points from collection\"" << isp->key()
-                            << "\"");
+  ACTS_DEBUG("Inserting " << spacePoints.size()
+                          << " space points from collection\""
+                          << m_cfg.inputSpacePoints << "\"");
 
-    for (const SimSpacePoint &sp : spContainer) {
-      const double phi = std::atan2(sp.y(), sp.x());
-      const double invr = 1.0 / sp.r();
-      measurements.emplace_back(
-          invr, phi, sp.z(),
-          Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp)));
-      // wrap phi by duplicating some seeds
-      if (phi < -std::numbers::pi + config().phiWrap * std::numbers::pi) {
-        measurements.emplace_back(
-            invr, phi + 2 * std::numbers::pi, sp.z(),
-            Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp)));
-      }
-      if (phi > std::numbers::pi - config().phiWrap * std::numbers::pi) {
-        measurements.emplace_back(
-            invr, phi - 2 * std::numbers::pi, sp.z(),
-            Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp)));
-      }
+  for (const ConstSpacePointProxy sp : spacePoints) {
+    const float phi = std::atan2(sp.y(), sp.x());
+    const float invr = 1.0f / sp.r();
+    measurements.emplace_back(invr, phi, sp.z(), sp.index());
+    // wrap phi by duplicating some seeds
+    if (phi < -std::numbers::pi + m_cfg.phiWrap * std::numbers::pi) {
+      measurements.emplace_back(invr, phi + 2 * std::numbers::pi, sp.z(),
+                                sp.index());
+    }
+    if (phi > std::numbers::pi - m_cfg.phiWrap * std::numbers::pi) {
+      measurements.emplace_back(invr, phi - 2 * std::numbers::pi, sp.z(),
+                                sp.index());
     }
   }
+
   ACTS_DEBUG("Total number of " << measurements.size()
                                 << " used to account for phi wrapping");
 }
@@ -257,8 +252,8 @@ void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
   for (int phiIndex = 0; phiIndex < nSplits; phiIndex++) {
     const auto startPhi = static_cast<float>(
         wedgeWidth * static_cast<float>(phiIndex) - std::numbers::pi);
-    stack.emplace_back(1.2f * wedgeWidth, 2.0f * config().qOverPtMin, startPhi,
-                       -config().qOverPtMin);
+    stack.emplace_back(1.2f * wedgeWidth, 2.0f * m_cfg.qOverPtMin, startPhi,
+                       -m_cfg.qOverPtMin);
     stack.back().indices().resize(measurements.size());
     std::iota(std::begin(stack.back().indices()),
               std::end(stack.back().indices()), 0);
@@ -290,8 +285,8 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
   };
   std::map<int, Stats> sStat;
   ExplorationOptions opt;
-  opt.xMinBinSize = config().phiMinBinSize;
-  opt.yMinBinSize = config().qOverPtMinBinSize;
+  opt.xMinBinSize = m_cfg.phiMinBinSize;
+  opt.yMinBinSize = m_cfg.qOverPtMinBinSize;
   opt.lineParamFunctor = m_qOverPtPhiLineParams;
   opt.decisionFunctor = [&sStat, &cfg = m_cfg, &opt, this](
                             const AccumulatorSection &section,
@@ -348,8 +343,8 @@ void AdaptiveHoughTransformSeeder::processStackZCotTheta(
     std::vector<AccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   ExplorationOptions opt;
-  opt.xMinBinSize = config().zMinBinSize;
-  opt.yMinBinSize = config().cotThetaMinBinSize;
+  opt.xMinBinSize = m_cfg.zMinBinSize;
+  opt.yMinBinSize = m_cfg.cotThetaMinBinSize;
   opt.lineParamFunctor = m_zCotThetaLineParams;
   opt.decisionFunctor = [&cfg = m_cfg](
                             const AccumulatorSection &section,
@@ -411,12 +406,12 @@ void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
 }
 
 void AdaptiveHoughTransformSeeder::makeSeeds(
-    SimSeedContainer &seeds, const std::vector<AccumulatorSection> &solutions,
+    SeedContainer &seeds, const std::vector<AccumulatorSection> &solutions,
     const std::vector<PreprocessedMeasurement> &measurements) const {
+  const SpacePointContainer &spacePoints = seeds.spacePointContainer();
+
   std::size_t seedIndex = 0;
   for (const AccumulatorSection &s : solutions) {
-    unsigned spIndex = 0;
-    std::array<const SimSpacePoint *, 3> sp = {nullptr, nullptr, nullptr};
     std::vector<unsigned> sortedIndices = s.indices();
     std::ranges::sort(sortedIndices, [&measurements](unsigned i1, unsigned i2) {
       const auto &m1 = measurements[i1];
@@ -424,9 +419,17 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
       return m1.invr > m2.invr;
     });
 
+    if (sortedIndices.size() < 3) {
+      ACTS_VERBOSE("this solution has less than 3 SP, ignoring");
+      continue;
+    }
+
+    unsigned spIndex = 0;
+    std::array<std::optional<ConstSpacePointProxy>, 3> sp = {
+        std::nullopt, std::nullopt, std::nullopt};
     for (unsigned sidx : sortedIndices) {
       const PreprocessedMeasurement &m = measurements[sidx];
-      sp[spIndex] = m.link.get<const SimSpacePoint *>();
+      sp[spIndex] = spacePoints.at(m.sp);
       if (spIndex == 0 || std::abs(sp[spIndex]->r() - sp[spIndex - 1]->r()) >
                               5. * Acts::UnitConstants::mm) {
         spIndex++;
@@ -434,10 +437,6 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
       if (spIndex >= sp.size()) {
         break;
       }
-    }
-    if (sp[2] == nullptr) {
-      ACTS_VERBOSE("this solution has less than 3 SP, ignoring");
-      continue;
     }
 
     auto cotThetaEstimate = static_cast<float>((sp[2]->z() - sp[0]->z()) /
@@ -451,9 +450,18 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
                                                    << cotThetaEstimate12);
       continue;
     }
-    seeds.emplace_back(*sp[0], *sp[1], *sp[2]);
-    auto z = static_cast<float>(sp[1]->z() - sp[1]->r() * cotThetaEstimate);
-    seeds.back().setVertexZ(z);
+
+    auto seed = seeds.createSeed();
+    seed.assignSpacePointIndices(std::array<SpacePointIndex, 3>{
+        sp[0]->index(), sp[1]->index(), sp[2]->index()});
+
+    // for the time the quality is fixed
+    // in the future we can use section count for instance
+    seed.quality() = 1.0;
+
+    const auto z =
+        static_cast<float>(sp[1]->z() - sp[1]->r() * cotThetaEstimate);
+    seed.vertexZ() = z;
 
     ACTS_VERBOSE(seedIndex << ": solution x: " << s.xBegin() << " " << s.xSize()
                            << " y: " << s.yBegin() << " " << s.ySize()
@@ -463,9 +471,6 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
                            << cotThetaEstimate << " " << cotThetaEstimate01
                            << " " << cotThetaEstimate12);
 
-    // for the time the quality is fixed
-    // in the future we can use section count for instance
-    seeds.back().setQuality(1.0);
     seedIndex++;
   }
 }
@@ -494,6 +499,7 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
   ACTS_VERBOSE("Number of crossings inside of section " << inside);
   return inside >= threshold;
 }
+
 void AdaptiveHoughTransformSeeder::deduplicate(
     std::vector<AccumulatorSection> &input) const {
   std::vector<const AccumulatorSection *> op;

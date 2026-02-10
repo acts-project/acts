@@ -55,6 +55,26 @@ class SpacePointProxy2 {
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
+  SpacePointProxy2 &operator=(const SpacePointProxy2 &other) noexcept = default;
+
+  SpacePointProxy2 &operator=(const SpacePointProxy2<false> &other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
+  SpacePointProxy2 &operator=(SpacePointProxy2 &&) noexcept = default;
+
+  SpacePointProxy2 &operator=(SpacePointProxy2<false> &&other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
   /// Returns a const proxy of the space point.
   /// @return A const proxy of the space point.
   SpacePointProxy2<true> asConst() const noexcept
@@ -328,8 +348,8 @@ class SpacePointProxy2 {
   }
 
  private:
-  Container *m_container{};
-  Index m_index{};
+  Container *m_container{nullptr};
+  Index m_index{0};
 };
 
 }  // namespace Acts

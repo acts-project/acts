@@ -47,10 +47,30 @@ class SeedProxy2 {
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
+  SeedProxy2 &operator=(const SeedProxy2 &other) noexcept = default;
+
+  SeedProxy2 &operator=(const SeedProxy2<false> &other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
+  SeedProxy2 &operator=(SeedProxy2 &&) noexcept = default;
+
+  SeedProxy2 &operator=(SeedProxy2<false> &&other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
   /// Gets the container holding the seed.
   /// @return A reference to the container holding the seed.
   SeedContainer2 &container() noexcept
-    requires ReadOnly
+    requires(!ReadOnly)
   {
     return *m_container;
   }
@@ -237,6 +257,9 @@ class SeedProxy2 {
   /// Range facade for the seed space points.
   class SpacePointRange {
    public:
+    using size_type = std::size_t;
+    using value_type = ConstSpacePointProxy2;
+
     /// Constructor
     /// @param spacePointContainer The space point container
     /// @param spacePointIndices The space point indices

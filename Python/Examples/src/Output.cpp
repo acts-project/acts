@@ -7,8 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Visualization/IVisualization3D.hpp"
-#include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvGnnGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
@@ -27,7 +25,6 @@
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -117,7 +114,7 @@ void addOutput(py::module& mex) {
                              outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointWriter, mex, "CsvSpacePointWriter",
-                             inputSpacepoints, outputDir, outputPrecision);
+                             inputSpacePoints, outputDir, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointsBucketWriter, mex,
                              "CsvSpacePointsBucketWriter", inputBuckets,
@@ -129,7 +126,7 @@ void addOutput(py::module& mex) {
                              truthMatchProbMin, ptMin);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSeedWriter, mex, "CsvSeedWriter",
-                             inputTrackParameters, inputSimSeeds, inputSimHits,
+                             inputTrackParameters, inputSeeds, inputSimHits,
                              inputMeasurementParticlesMap,
                              inputMeasurementSimHitsMap, fileName, outputDir);
 
@@ -147,7 +144,7 @@ void addOutput(py::module& mex) {
                              outputStem, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvProtoTrackWriter, mex, "CsvProtoTrackWriter",
-                             inputSpacepoints, inputPrototracks, outputDir);
+                             inputSpacePoints, inputPrototracks, outputDir);
 
   {
     using Writer = CsvBFieldWriter;

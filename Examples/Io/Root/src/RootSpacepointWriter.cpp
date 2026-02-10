@@ -9,22 +9,19 @@
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <ios>
-#include <ostream>
 #include <stdexcept>
-#include <vector>
 
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootSpacepointWriter::RootSpacepointWriter(
-    const ActsExamples::RootSpacepointWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootSpacepointWriter::RootSpacepointWriter(
+    const RootSpacepointWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputSpacepoints, "RootSpacepointWriter", level),
       m_cfg(config) {
   // inputParticles is already checked by base constructor
@@ -68,13 +65,13 @@ ActsExamples::RootSpacepointWriter::RootSpacepointWriter(
   }
 }
 
-ActsExamples::RootSpacepointWriter::~RootSpacepointWriter() {
+RootSpacepointWriter::~RootSpacepointWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::finalize() {
+ProcessCode RootSpacepointWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -85,9 +82,8 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
-    const AlgorithmContext& ctx,
-    const ActsExamples::SimSpacePointContainer& spacepoints) {
+ProcessCode RootSpacepointWriter::writeT(
+    const AlgorithmContext& ctx, const SpacePointContainer& spacePoints) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -98,12 +94,12 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
 
   // Get the event number
   m_eventId = ctx.eventNumber;
-  for (const auto& sp : spacepoints) {
-    const auto& sl1 = sp.sourceLinks().at(0).get<IndexSourceLink>();
+  for (const auto& sp : spacePoints) {
+    const auto& sl1 = sp.sourceLinks()[0].get<IndexSourceLink>();
     m_measurementId1 = sl1.index();
     m_geometryId1 = sl1.geometryId().value();
     if (sp.sourceLinks().size() == 2) {
-      const auto& sl2 = sp.sourceLinks().at(1).get<IndexSourceLink>();
+      const auto& sl2 = sp.sourceLinks()[1].get<IndexSourceLink>();
       m_measurementId2 = sl2.index();
       m_geometryId2 = sl2.geometryId().value();
     }
@@ -129,13 +125,16 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
     m_y = sp.y() / Acts::UnitConstants::mm;
     m_z = sp.z() / Acts::UnitConstants::mm;
     m_r = sp.r() / Acts::UnitConstants::mm;
-    m_t = sp.t() ? *sp.t() / Acts::UnitConstants::ns
-                 : std::numeric_limits<double>::quiet_NaN();
+    m_t = sp.time() / Acts::UnitConstants::ns;
     // write sp dimensions
-    m_var_r = sp.varianceR() / Acts::UnitConstants::mm;
-    m_var_z = sp.varianceZ() / Acts::UnitConstants::mm;
+    m_var_r =
+        sp.varianceR() / (Acts::UnitConstants::mm * Acts::UnitConstants::mm);
+    m_var_z =
+        sp.varianceZ() / (Acts::UnitConstants::mm * Acts::UnitConstants::mm);
     // Fill the tree
     m_outputTree->Fill();
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

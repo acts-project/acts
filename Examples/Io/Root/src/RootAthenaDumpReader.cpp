@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include <ActsExamples/Digitization/MeasurementCreation.hpp>
 
 #include <algorithm>
@@ -23,6 +24,8 @@
 #include <boost/container/static_vector.hpp>
 
 using namespace Acts::UnitLiterals;
+
+namespace ActsExamples {
 
 namespace {
 
@@ -47,8 +50,6 @@ inline auto particleVectorToSet(
 }  // namespace
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
-
-namespace ActsExamples {
 
 RootAthenaDumpReader::RootAthenaDumpReader(
     const RootAthenaDumpReader::Config& config, Acts::Logging::Level level)
@@ -495,17 +496,27 @@ RootAthenaDumpReader::readMeasurements(
           std::move(imIdxMap)};
 }
 
-std::tuple<SimSpacePointContainer, SimSpacePointContainer,
-           SimSpacePointContainer>
+std::tuple<SpacePointContainer, SpacePointContainer, SpacePointContainer>
 RootAthenaDumpReader::readSpacepoints(
     const std::optional<std::unordered_map<int, std::size_t>>& imIdxMap) const {
-  SimSpacePointContainer pixelSpacePoints;
+  SpacePointContainer pixelSpacePoints(
+      SpacePointColumns::SourceLinks | SpacePointColumns::X |
+      SpacePointColumns::Y | SpacePointColumns::Z |
+      SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR);
   pixelSpacePoints.reserve(nSP);
 
-  SimSpacePointContainer stripSpacePoints;
+  SpacePointContainer stripSpacePoints(
+      SpacePointColumns::SourceLinks | SpacePointColumns::X |
+      SpacePointColumns::Y | SpacePointColumns::Z |
+      SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR |
+      SpacePointColumns::Strip);
   stripSpacePoints.reserve(nSP);
 
-  SimSpacePointContainer spacePoints;
+  SpacePointContainer spacePoints(
+      SpacePointColumns::SourceLinks | SpacePointColumns::X |
+      SpacePointColumns::Y | SpacePointColumns::Z |
+      SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR |
+      SpacePointColumns::Strip);
   spacePoints.reserve(nSP);
 
   // Loop on space points
@@ -566,11 +577,21 @@ RootAthenaDumpReader::readSpacepoints(
 
     // First create pixel spacepoint here, later maybe overwrite with strip
     // spacepoint
-    SimSpacePoint sp(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
-                     sLinks);
+    auto sp = spacePoints.createSpacePoint();
+    sp.x() = globalPos.x();
+    sp.y() = globalPos.y();
+    sp.z() = globalPos.z();
+    sp.varianceR() = spCovr;
+    sp.varianceZ() = spCovz;
 
     if (type == ePixel) {
-      pixelSpacePoints.push_back(sp);
+      auto pixelSp = pixelSpacePoints.createSpacePoint();
+      pixelSp.assignSourceLinks(sLinks);
+      pixelSp.x() = globalPos.x();
+      pixelSp.y() = globalPos.y();
+      pixelSp.z() = globalPos.z();
+      pixelSp.varianceR() = spCovr;
+      pixelSp.varianceZ() = spCovz;
     } else {
       const auto cl2Index = SPCL2_index[isp];
       assert(cl2Index >= 0 && cl2Index < nCL);
@@ -590,11 +611,10 @@ RootAthenaDumpReader::readSpacepoints(
                              imIdxMap ? imIdxMap->at(cl2Index) : cl2Index);
       sLinks.emplace_back(second);
 
-      using Vector3f = Eigen::Matrix<float, 3, 1>;
-      Vector3f topStripDirection = Vector3f::Zero();
-      Vector3f bottomStripDirection = Vector3f::Zero();
-      Vector3f stripCenterDistance = Vector3f::Zero();
-      Vector3f topStripCenterPosition = Vector3f::Zero();
+      Eigen::Vector3f topStripDirection = Eigen::Vector3f::Zero();
+      Eigen::Vector3f bottomStripDirection = Eigen::Vector3f::Zero();
+      Eigen::Vector3f stripCenterDistance = Eigen::Vector3f::Zero();
+      Eigen::Vector3f topStripCenterPosition = Eigen::Vector3f::Zero();
 
       if (m_haveStripFeatures) {
         topStripDirection = {SPtopStripDirection->at(isp).at(0),
@@ -610,17 +630,30 @@ RootAthenaDumpReader::readSpacepoints(
                                   SPtopStripCenterPosition->at(isp).at(1),
                                   SPtopStripCenterPosition->at(isp).at(2)};
       }
-      sp = SimSpacePoint(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
-                         sLinks, SPhl_topstrip[isp], SPhl_botstrip[isp],
-                         topStripDirection.cast<double>(),
-                         bottomStripDirection.cast<double>(),
-                         stripCenterDistance.cast<double>(),
-                         topStripCenterPosition.cast<double>());
 
-      stripSpacePoints.push_back(sp);
+      auto stripSp = pixelSpacePoints.createSpacePoint();
+      stripSp.assignSourceLinks(sLinks);
+      stripSp.x() = globalPos.x();
+      stripSp.y() = globalPos.y();
+      stripSp.z() = globalPos.z();
+      stripSp.varianceR() = spCovr;
+      stripSp.varianceZ() = spCovz;
+      Eigen::Map<Eigen::Vector3f>(stripSp.topStripVector().data()) =
+          topStripDirection.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.bottomStripVector().data()) =
+          bottomStripDirection.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.stripCenterDistance().data()) =
+          stripCenterDistance.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.topStripCenter().data()) =
+          topStripCenterPosition.cast<float>();
+
+      sp.topStripVector() = stripSp.topStripVector();
+      sp.bottomStripVector() = stripSp.bottomStripVector();
+      sp.stripCenterDistance() = stripSp.stripCenterDistance();
+      sp.topStripCenter() = stripSp.topStripCenter();
     }
 
-    spacePoints.push_back(sp);
+    sp.assignSourceLinks(sLinks);
   }
 
   if (m_cfg.skipOverlapSPsEta || m_cfg.skipOverlapSPsPhi) {

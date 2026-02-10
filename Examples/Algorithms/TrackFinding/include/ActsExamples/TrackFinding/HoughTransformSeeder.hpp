@@ -78,7 +78,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -91,28 +91,12 @@
 #include <utility>
 #include <vector>
 
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
-using ResultDouble = Acts::Result<double>;
-using ResultBool = Acts::Result<bool>;
-using ResultUnsigned = Acts::Result<unsigned>;
-
-using FieldCorrector = Acts::Delegate<ResultDouble(
-    unsigned, double, double)>;  // (unsigned region, double y, double r)
-using LayerIDFinder = Acts::Delegate<ResultUnsigned(
-    double)>;  // (double r) this function will map the r of a measurement to a
-               // layer.
-using SliceTester = Acts::Delegate<ResultBool(
-    double, unsigned, int)>;  // (double z,unsigned layer, int slice) returns
-                              // true if measurement in slice
-
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
+
 /// Used in multiple places. The 2d vector refers to the 2d houghHist. For a
 /// single layer, the int refers to the number of hits in the bin of the
 /// houghHist
@@ -152,15 +136,22 @@ struct HoughMeasurementStruct {
 /// Construct track seeds from space points.
 class HoughTransformSeeder final : public IAlgorithm {
  public:
+  using ResultDouble = Acts::Result<double>;
+  using ResultBool = Acts::Result<bool>;
+  using ResultUnsigned = Acts::Result<unsigned>;
+
+  using FieldCorrector = Acts::Delegate<ResultDouble(
+      unsigned, double, double)>;  // (unsigned region, double y, double r)
+  using LayerIDFinder = Acts::Delegate<ResultUnsigned(
+      double)>;  // (double r) this function will map the r of a measurement to
+                 // a layer.
+  using SliceTester = Acts::Delegate<ResultBool(
+      double, unsigned, int)>;  // (double z,unsigned layer, int slice) returns
+                                // true if measurement in slice
+
   struct Config {
     /// Input space point collections.
-    ///
-    /// We allow multiple space point collections to allow different parts of
-    /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
-    /// space points for strip-like detectors.
-    /// Note that we don't *need* spacepoints (measurements can be used instead)
-    std::vector<std::string> inputSpacePoints;
+    std::string inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
     /// Output hough track collection.
@@ -266,15 +257,17 @@ class HoughTransformSeeder final : public IAlgorithm {
  private:
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
-  const Acts::Logger& logger() const { return *m_logger; }
 
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
-  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
-      m_inputSpacePoints{};
+  const Acts::Logger& logger() const { return *m_logger; }
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
+
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
+
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
 
   ////////////////////////////////////////////////////////////////////////
   /// Convenience

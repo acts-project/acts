@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Csv/CsvSpacePointsBucketWriter.hpp"
 
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -32,7 +32,7 @@ ProcessCode CsvSpacePointsBucketWriter::finalize() {
 
 ProcessCode CsvSpacePointsBucketWriter::writeT(
     const AlgorithmContext& ctx,
-    const std::vector<SimSpacePointContainer>& buckets) {
+    const std::vector<SpacePointContainer>& buckets) {
   // Open per-event file for all components
   std::string pathBucket =
       perEventFilepath(m_cfg.outputDir, "buckets.csv", ctx.eventNumber);

@@ -17,8 +17,7 @@
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <cmath>
 #include <csignal>
@@ -43,7 +42,7 @@ static inline bool itkFastTrackingCuts(
   return true;
 }
 
-static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
+static inline bool itkFastTrackingSPselect(const ConstSpacePointProxy& sp) {
   // At small r we remove points beyond |z| > 200.
   float r = sp.r();
   float zabs = std::abs(sp.z());
@@ -133,7 +132,7 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
 
 ProcessCode GridTripletSeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
+  const SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::CylindricalSpacePointGrid2 grid(m_gridConfig,
                                         logger().cloneWithSuffix("Grid"));
@@ -167,11 +166,11 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   for (std::size_t i = 0; i < grid.numberOfBins(); ++i) {
     std::uint32_t begin = coreSpacePoints.size();
     for (Acts::SpacePointIndex2 spIndex : grid.at(i)) {
-      const SimSpacePoint& sp = spacePoints[spIndex];
+      const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
       auto newSp = coreSpacePoints.createSpacePoint();
       newSp.assignSourceLinks(
-          std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
+          std::array<Acts::SourceLink, 1>{Acts::SourceLink(sp.index())});
       newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                         static_cast<float>(sp.y())};
       newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
@@ -305,26 +304,15 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
 
-  // we have seeds of proxies
-  // convert them to seed of external space points
-  SimSeedContainer seedContainerForStorage;
-  seedContainerForStorage.reserve(seeds.size());
-  for (const auto& seed : seeds) {
-    auto sps = seed.spacePointIndices();
-    seedContainerForStorage.emplace_back(*coreSpacePoints.at(sps[0])
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint*>(),
-                                         *coreSpacePoints.at(sps[1])
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint*>(),
-                                         *coreSpacePoints.at(sps[2])
-                                              .sourceLinks()[0]
-                                              .get<const SimSpacePoint*>());
-    seedContainerForStorage.back().setVertexZ(seed.vertexZ());
-    seedContainerForStorage.back().setQuality(seed.quality());
+  // update seed space point indices to original space point container
+  for (auto seed : seeds) {
+    for (auto& spIndex : seed.spacePointIndices()) {
+      spIndex =
+          coreSpacePoints.at(spIndex).sourceLinks()[0].get<SpacePointIndex>();
+    }
   }
 
-  m_outputSeeds(ctx, std::move(seedContainerForStorage));
+  m_outputSeeds(ctx, std::move(seeds));
   return ProcessCode::SUCCESS;
 }
 

@@ -45,7 +45,7 @@ void SeedContainer2::clear() noexcept {
 }
 
 void SeedContainer2::assignSpacePointContainer(
-    SpacePointContainer2 spacePointContainer) noexcept {
+    SpacePointContainer2 &&spacePointContainer) noexcept {
   auto movedContainer =
       std::make_shared<SpacePointContainer2>(std::move(spacePointContainer));
 

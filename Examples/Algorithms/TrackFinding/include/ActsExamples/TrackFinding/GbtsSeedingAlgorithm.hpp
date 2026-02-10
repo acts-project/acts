@@ -10,15 +10,13 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderGbts.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-
-// in core
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
@@ -87,11 +85,12 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   // make the container that holds spacepoints that have been given
   // all the variables needed for GBTS algorithm to run
   Acts::Experimental::SPContainerComponentsType makeSpContainer(
-      const AlgorithmContext &ctx, std::map<ActsIDs, GbtsIDs> map) const;
+      const SpacePointContainer &spacePoints,
+      std::map<ActsIDs, GbtsIDs> map) const;
 
   // makes the geometry objects used by GBTS that correspond to the objects in
   // the connection table for ease these are sometimes called "logical layers"
-  std::vector<Acts::Experimental::TrigInDetSiLayer> LayerNumbering() const;
+  std::vector<Acts::Experimental::TrigInDetSiLayer> layerNumbering() const;
 
   void printSeedFinderGbtsConfig(
       const Acts::Experimental::SeedFinderGbtsConfig &cfg);
@@ -118,11 +117,11 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   mutable std::map<std::uint32_t, std::uint32_t> m_LayeridMap{};
 
   // handle that points to the container of input spacepoints
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
 
   // handle that points to container of output seeds
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   // handle that points to clusters used by spacepoints
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};

@@ -34,7 +34,8 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -74,7 +75,7 @@ class MeasurementSelector {
   explicit MeasurementSelector(Acts::MeasurementSelector selector)
       : m_selector(std::move(selector)) {}
 
-  void setSeed(const std::optional<SimSeed>& seed) { m_seed = seed; }
+  void setSeed(const std::optional<ConstSeedProxy>& seed) { m_seed = seed; }
 
   Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
                          std::vector<Traj::TrackStateProxy>::iterator>>
@@ -100,15 +101,16 @@ class MeasurementSelector {
 
  private:
   Acts::MeasurementSelector m_selector;
-  std::optional<SimSeed> m_seed;
+  std::optional<ConstSeedProxy> m_seed;
 
   bool isSeedCandidate(const Traj::TrackStateProxy& candidate) const {
     assert(candidate.hasUncalibratedSourceLink());
+    assert(m_seed.has_value());
 
     const Acts::SourceLink& sourceLink = candidate.getUncalibratedSourceLink();
 
-    for (const auto& sp : m_seed->sp()) {
-      for (const auto& sl : sp->sourceLinks()) {
+    for (const ConstSpacePointProxy sp : m_seed->spacePoints()) {
+      for (const Acts::SourceLink& sl : sp.sourceLinks()) {
         if (sourceLink.get<IndexSourceLink>() == sl.get<IndexSourceLink>()) {
           return true;
         }
@@ -127,11 +129,13 @@ using SeedIdentifier = std::array<Index, 3>;
 ///
 /// @param seed The seed to build the identifier from.
 /// @return The seed identifier.
-SeedIdentifier makeSeedIdentifier(const SimSeed& seed) {
+SeedIdentifier makeSeedIdentifier(const ConstSeedProxy& seed) {
   SeedIdentifier result;
 
-  for (const auto& [i, sp] : Acts::enumerate(seed.sp())) {
-    const Acts::SourceLink& firstSourceLink = sp->sourceLinks().front();
+  for (const auto& [i, spIndex] : Acts::enumerate(seed.spacePointIndices())) {
+    const ConstSpacePointProxy sp =
+        seed.container().spacePointContainer().at(spIndex);
+    const Acts::SourceLink& firstSourceLink = sp.sourceLinks().front();
     result.at(i) = firstSourceLink.get<IndexSourceLink>().index();
   }
 
@@ -295,7 +299,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
-  const SimSeedContainer* seeds = nullptr;
+  const SeedContainer* seeds = nullptr;
 
   if (m_inputSeeds.isInitialized()) {
     seeds = &m_inputSeeds(ctx);
@@ -451,7 +455,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     m_nTotalSeeds++;
 
     if (seeds != nullptr) {
-      const SimSeed& seed = seeds->at(iSeed);
+      const ConstSeedProxy seed = seeds->at(iSeed);
 
       if (m_cfg.seedDeduplication) {
         SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);

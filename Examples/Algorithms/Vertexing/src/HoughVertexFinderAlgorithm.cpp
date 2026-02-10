@@ -9,10 +9,9 @@
 #include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/HoughVertexFinder.hpp"
+#include "Acts/Vertexing/HoughVertexFinder2.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <chrono>
 #include <vector>
@@ -36,15 +35,15 @@ HoughVertexFinderAlgorithm::HoughVertexFinderAlgorithm(const Config& cfg,
 ProcessCode HoughVertexFinderAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // retrieve input seeds
-  const std::vector<SimSpacePoint>& inputSpacepoints = m_inputSpacepoints(ctx);
+  const SpacePointContainer& inputSpacepoints = m_inputSpacepoints(ctx);
 
-  Acts::HoughVertexFinder<SimSpacePoint>::Config houghVtxCfg;
+  Acts::HoughVertexFinder2::Config houghVtxCfg;
   houghVtxCfg.targetSPs = m_cfg.targetSPs;
   houghVtxCfg.minAbsEta = m_cfg.minAbsEta;
   houghVtxCfg.maxAbsEta = m_cfg.maxAbsEta;
   houghVtxCfg.minHits = m_cfg.minHits;
   houghVtxCfg.defVtxPosition = m_cfg.defVtxPosition;
-  Acts::HoughVertexFinder<SimSpacePoint> houghVertexFinder(houghVtxCfg);
+  Acts::HoughVertexFinder2 houghVertexFinder(houghVtxCfg);
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();

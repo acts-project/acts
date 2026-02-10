@@ -11,8 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -20,7 +18,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
@@ -66,8 +64,9 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
   TrackParametersContainer trackParameters;
   trackParameters.reserve(seeds.size());
 
-  SimSeedContainer outputSeeds;
+  SeedContainer outputSeeds;
   if (m_outputSeeds.isInitialized()) {
+    outputSeeds.assignSpacePointContainer(seeds.spacePointContainer());
     outputSeeds.reserve(seeds.size());
   }
 
@@ -101,29 +100,44 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
   // Loop over all found seeds to estimate track parameters
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
+    if (seed.spacePoints().size() < 3) {
+      ACTS_WARNING("Seed " << iseed << " has less than 3 space points");
+      continue;
+    } else if (seed.spacePoints().size() > 3) {
+      ACTS_WARNING(
+          "Seed "
+          << iseed
+          << " has more than 3 space points, only the first 3 will be used");
+    }
+
     // Get the bottom space point and its reference surface
-    const auto& bottomSP = seed.sp().front();
-    if (bottomSP->sourceLinks().empty()) {
+    const ConstSpacePointProxy bottomSp = seed.spacePoints()[0];
+    const ConstSpacePointProxy middleSp = seed.spacePoints()[1];
+    const ConstSpacePointProxy topSp = seed.spacePoints()[2];
+    if (bottomSp.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point");
       continue;
     }
-    const auto& sourceLink = bottomSP->sourceLinks()[0];
-    const Acts::Surface* surface = surfaceAccessor(sourceLink);
 
-    if (surface == nullptr) {
+    const Acts::Vector3 bottomSpVec{bottomSp.x(), bottomSp.y(), bottomSp.z()};
+    const Acts::Vector3 middleSpVec{middleSp.x(), middleSp.y(), middleSp.z()};
+    const Acts::Vector3 topSpVec{topSp.x(), topSp.y(), topSp.z()};
+
+    const Acts::SourceLink& bottomSourceLink = bottomSp.sourceLinks()[0];
+    const Acts::Surface* bottomSurface = surfaceAccessor(bottomSourceLink);
+    if (bottomSurface == nullptr) {
       ACTS_WARNING(
           "Surface from source link is not found in the tracking geometry");
       continue;
     }
 
     // Get the magnetic field at the bottom space point
-    auto fieldRes = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
+    auto fieldRes = m_cfg.magneticField->getField(bottomSpVec, bCache);
     if (!fieldRes.ok()) {
       ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
-    Acts::Vector3 field = *fieldRes;
+    const Acts::Vector3 field = *fieldRes;
 
     if (field.norm() < m_cfg.bFieldMin) {
       ACTS_WARNING("Magnetic field at seed " << iseed << " is too small "
@@ -132,14 +146,32 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
 
     // Estimate the track parameters from seed
-    const auto paramsResult = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp(), *surface, field);
-    if (!paramsResult.ok()) {
-      ACTS_WARNING("Skip track because param estimation failed: "
-                   << paramsResult.error().message());
+    Acts::FreeVector freeParams = Acts::estimateTrackParamsFromSeed(
+        bottomSpVec, middleSpVec, topSpVec, field);
+
+    const Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
+
+    Acts::BoundVector boundParams = Acts::BoundVector::Zero();
+    boundParams[Acts::eBoundPhi] = Acts::VectorHelpers::phi(direction);
+    boundParams[Acts::eBoundTheta] = Acts::VectorHelpers::theta(direction);
+    boundParams[Acts::eBoundQOverP] = freeParams[Acts::eFreeQOverP];
+
+    // Transform the bottom space point to local coordinates of the provided
+    // surface
+    auto lpResult =
+        bottomSurface->globalToLocal(ctx.geoContext, bottomSpVec, direction);
+    if (!lpResult.ok()) {
+      ACTS_WARNING(
+          "Skip estimation because global to local transformation failed: "
+          << lpResult.error().message());
       continue;
     }
-    const auto& params = *paramsResult;
+    const Acts::Vector2 bottomLocalPos = lpResult.value();
+    // The estimated loc0 and loc1
+    boundParams[Acts::eBoundLoc0] = bottomLocalPos.x();
+    boundParams[Acts::eBoundLoc1] = bottomLocalPos.y();
+    boundParams[Acts::eBoundTime] =
+        std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time();
 
     Acts::EstimateTrackParamCovarianceConfig config{
         .initialSigmas =
@@ -149,18 +181,22 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
         .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
             m_cfg.initialVarInflation.data()}};
 
-    Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
-        config, params, bottomSP->t().has_value());
+    const Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
+        config, boundParams, !std::isnan(bottomSp.time()));
 
-    Acts::ParticleHypothesis hypothesis =
+    const Acts::ParticleHypothesis hypothesis =
         inputParticleHypotheses != nullptr ? inputParticleHypotheses->at(iseed)
                                            : m_cfg.particleHypothesis;
 
     const TrackParameters& trackParams = trackParameters.emplace_back(
-        surface->getSharedPtr(), params, cov, hypothesis);
+        bottomSurface->getSharedPtr(), boundParams, cov, hypothesis);
     ACTS_VERBOSE("Estimated track parameters: " << trackParams);
     if (m_outputSeeds.isInitialized()) {
-      outputSeeds.push_back(seed);
+      auto newSp = outputSeeds.createSeed();
+      // TODO copy shorthand
+      newSp.assignSpacePointIndices(seed.spacePointIndices());
+      newSp.quality() = seed.quality();
+      newSp.vertexZ() = seed.vertexZ();
     }
     if (m_outputTracks.isInitialized() && inputTracks != nullptr) {
       outputTracks.push_back(inputTracks->at(iseed));
