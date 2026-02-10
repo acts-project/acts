@@ -90,17 +90,14 @@ class VolumePlacementBase {
   virtual ~VolumePlacementBase();
 
   /// Move constructor
+  /// @param other: Object to be moved into this instance
   VolumePlacementBase(VolumePlacementBase&& other) noexcept;
 
   /// Move assignment operator
+  /// @param other: Object to be moved into this instance
+  /// @returns Reference to this instance
   VolumePlacementBase& operator=(VolumePlacementBase&& other) noexcept;
-
-  /// Delete copy constructor
-  VolumePlacementBase(const VolumePlacementBase& other) = delete;
-
-  /// Delete copy assignment operator
-  VolumePlacementBase& operator=(const VolumePlacementBase& other) = delete;
-
+  
   /// Abrivation of the portal surface vector
   using PortalVec_t = std::vector<std::shared_ptr<RegularSurface>>;
 
