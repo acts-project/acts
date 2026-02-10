@@ -26,7 +26,7 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm",
-    "Default TruthSmeared TruthEstimated Orthogonal HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet",
+    "TruthSmeared TruthEstimated HoughTransform AdaptiveHoughTransform Gbts Hashing GridTriplet OrthogonalTriplet",
 )
 
 TrackSmearingSigmas = namedtuple(
@@ -418,28 +418,6 @@ def addSeeding(
                 truthEstimatedSeedingAlgorithmConfigArg,
                 particleHypothesis=particleHypothesis,
                 logLevel=logLevel,
-            )
-        elif seedingAlgorithm == SeedingAlgorithm.Default:
-            logger.info("Using default seeding")
-            seeds = addStandardSeeding(
-                s,
-                spacePoints,
-                seedingAlgorithmConfigArg,
-                seedFinderConfigArg,
-                seedFinderOptionsArg,
-                seedFilterConfigArg,
-                spacePointGridConfigArg,
-                logLevel,
-            )
-        elif seedingAlgorithm == SeedingAlgorithm.Orthogonal:
-            logger.info("Using orthogonal seeding")
-            seeds = addOrthogonalSeeding(
-                s,
-                spacePoints,
-                seedFinderConfigArg,
-                seedFinderOptionsArg,
-                seedFilterConfigArg,
-                logLevel,
             )
         elif seedingAlgorithm == SeedingAlgorithm.HoughTransform:
             logger.info("Using Hough Transform seeding")

@@ -1,7 +1,5 @@
 acts_add_library(
     ExamplesTrackFinding
-    src/SeedingAlgorithm.cpp
-    src/SeedingOrthogonalAlgorithm.cpp
     src/SpacePointMaker.cpp
     src/TrackFindingAlgorithm.cpp
     src/TrackFindingAlgorithmFunction.cpp
