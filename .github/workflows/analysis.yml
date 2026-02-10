@@ -81,14 +81,16 @@ jobs:
           git config --global --add safe.directory $PWD
           # GitHub Actions creates a merge commit for PRs
           # HEAD^1 is the base branch commit, HEAD^2 is the PR head commit
-          cat > PR_metadata.json << EOF
-          {
-            "pr_number": "${{ github.event.number }}",
-            "pr_sha": "$(git rev-parse HEAD^2)",
-            "base_sha": "$(git rev-parse HEAD^1)",
-            "merge_sha": "$(git rev-parse HEAD)"
-          }
-          EOF
+          PR_SHA=$(git rev-parse HEAD^2)
+          BASE_SHA=$(git rev-parse HEAD^1)
+          MERGE_SHA=$(git rev-parse HEAD)
+          jq -n \
+            --arg pr_number "${{ github.event.number }}" \
+            --arg pr_sha "$PR_SHA" \
+            --arg base_sha "$BASE_SHA" \
+            --arg merge_sha "$MERGE_SHA" \
+            '{pr_number: $pr_number, pr_sha: $pr_sha, base_sha: $base_sha, merge_sha: $merge_sha}' \
+            > PR_metadata.json
           cat PR_metadata.json
 
       - name: Persist PR metadata
