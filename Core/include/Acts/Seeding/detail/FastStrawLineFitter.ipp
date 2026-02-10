@@ -45,7 +45,7 @@ void FastStrawLineFitter::calcPostFitChi2(const StrawCont_t& measurements,
   ACTS_DEBUG(__func__ << "() - " << __LINE__
                       << ": Overall chi2: " << result.chi2
                       << ", nDoF: " << result.nDoF << ", redChi2: "
-                      << (result.chi2 / std::max(std::size_t(1), result.nDoF)));
+                      << (result.chi2 / std::max(1ul, result.nDoF)));
 }
 
 template <CompositeSpacePoint Point_t>
@@ -163,7 +163,7 @@ void FastStrawLineFitter::calcPostFitChi2(const Acts::CalibrationContext& ctx,
   ACTS_DEBUG(__func__ << "() - " << __LINE__
                       << ": Overall chi2: " << result.chi2
                       << ", nDoF: " << result.nDoF << ", redChi2: "
-                      << (result.chi2 / std::max(std::size_t(1), result.nDoF)));
+                      << (result.chi2 / std::max(1ul, result.nDoF)));
 }
 
 template <CompositeSpacePointContainer StrawCont_t>
