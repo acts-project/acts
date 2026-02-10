@@ -45,7 +45,6 @@ def runGnnModuleMap(
     moduleMapPath,
     gnnModel,
     outputDir,
-    events=100,
     s=None,
 ):
     """
@@ -75,7 +74,7 @@ def runGnnModuleMap(
     ).exists(), f"Module map not found: {moduleMapPath}.triplets.root"
     assert Path(gnnModel).exists(), f"Model file not found: {gnnModel}"
 
-    s = s or Sequencer(events=events, numThreads=1)
+    s = s or Sequencer(events=100, numThreads=1)
 
     # Random number generator
     rnd = acts.examples.RandomNumbers(seed=42)
@@ -240,7 +239,6 @@ if __name__ == "__main__":
     moduleMapPath = str(ci_models_odd / "module_map_odd_2k_events.1e-03.float")
     gnnModel = str(ci_models_odd / "gnn_odd_module_map.pt")
     outputDir = Path.cwd()
-    events = 100
 
     # Run the workflow
     runGnnModuleMap(
@@ -252,5 +250,4 @@ if __name__ == "__main__":
         moduleMapPath=moduleMapPath,
         gnnModel=gnnModel,
         outputDir=outputDir,
-        events=events,
     )
