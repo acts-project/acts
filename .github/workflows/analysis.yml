@@ -78,6 +78,7 @@ jobs:
       - name: Save PR metadata
         if: github.event_name == 'pull_request'
         run: |
+          git config --global --add safe.directory $PWD
           # GitHub Actions creates a merge commit for PRs
           # HEAD^1 is the base branch commit, HEAD^2 is the PR head commit
           cat > PR_metadata.json << EOF
