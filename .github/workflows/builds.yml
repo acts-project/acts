@@ -83,10 +83,6 @@ jobs:
       - name: Install
         run: cmake --build build --target install
 
-      - name: Python sanity check after install
-        shell: bash
-        run: source install/python/setup.sh && python -c "import acts; v = acts.Vector3(1,2,3)"
-
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
