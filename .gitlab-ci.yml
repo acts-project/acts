@@ -96,9 +96,6 @@ clang_tidy:
     # Check the combined report against the defined limits
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
 
-    # Generate an html report
-    - codereport clang-tidy/clang-tidy.json clang-tidy/html
-
   after_script:
    - !reference [.spack_cleanup, after_script]
 
