@@ -39,7 +39,7 @@ class ContextType {
   /// @param value The value to construct from
   template <typename T>
     requires(!std::is_base_of_v<ContextType, std::decay_t<T>>)
-  explicit ContextType(const T& value) : m_data{value} {}
+  ContextType(const T& value) : m_data{value} {}
 
   /// Move assignment of anything to this object is allowed.
   ///
