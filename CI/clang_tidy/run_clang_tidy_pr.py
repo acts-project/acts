@@ -257,6 +257,7 @@ async def run_clang_tidy_on_targets(
     fixes_dir: Path,
     jobs: int,
     clang_tidy: str,
+    verbose: bool = False,
 ) -> None:
     fixes_dir.mkdir(parents=True, exist_ok=True)
     sem = asyncio.Semaphore(jobs)
@@ -280,12 +281,24 @@ async def run_clang_tidy_on_targets(
             f"--export-fixes={yaml_path}",
         ]
         async with sem:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.DEVNULL,
-            )
-            await proc.wait()
+            if verbose:
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,
+                )
+                stdout, _ = await proc.communicate()
+                output = stdout.decode(errors="replace").strip()
+                if output:
+                    console.print(f"\n[bold]{file}[/]")
+                    console.print(output)
+            else:
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.DEVNULL,
+                    stderr=asyncio.subprocess.DEVNULL,
+                )
+                await proc.wait()
 
         console.log(file)
         progress.advance(task_id)
@@ -532,6 +545,10 @@ def analyze(
         bool,
         typer.Option("--dry-run", help="Collect targets but skip clang-tidy execution"),
     ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Print clang-tidy output for each file"),
+    ] = False,
 ) -> None:
     """Collect targets, run clang-tidy, and optionally persist merged fixes."""
     if not dry_run and not list_targets:
@@ -595,7 +612,9 @@ def analyze(
             fixes_dir = Path(tmp)
 
         asyncio.run(
-            run_clang_tidy_on_targets(targets, build_dir, fixes_dir, jobs, clang_tidy)
+            run_clang_tidy_on_targets(
+                targets, build_dir, fixes_dir, jobs, clang_tidy, verbose=verbose
+            )
         )
 
         # 3) Persist merged fixes
