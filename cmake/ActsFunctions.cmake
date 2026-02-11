@@ -101,7 +101,7 @@ function(acts_compile_headers target)
             message(SEND_ERROR "Path is a directory: ${_header_file}")
         endif()
 
-        get_filename_component(_header_file_name "${_file}" NAME_WLE)
+        get_filename_component(_header_file_name "${_file}" NAME)
         get_filename_component(_header_directory "${_file}" DIRECTORY)
 
         set(_temporary_dir "${CMAKE_CURRENT_BINARY_DIR}/${_header_directory}")
