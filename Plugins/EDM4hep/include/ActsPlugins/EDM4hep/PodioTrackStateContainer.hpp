@@ -153,8 +153,7 @@ class PodioTrackStateContainerBase {
       case "projector"_hash:
         return data.hasProjector;
       case "uncalibratedSourceLink"_hash:
-        // @TODO: Update based on link presence
-        return data.uncalibratedIdentifier != PodioUtil::kNoIdentifier;
+        return hasUncalibratedSourceLink_impl(instance, trackState);
       case "previous"_hash:
       case "next"_hash:
       case "measdim"_hash:
@@ -168,6 +167,23 @@ class PodioTrackStateContainerBase {
     }
 
     return false;
+  }
+
+  /// Check if a track state has an uncalibrated source link
+  /// @param instance Container instance
+  /// @param trackState The track state to check
+  /// @return True if the track state has an uncalibrated source link
+  template <typename T>
+  static bool hasUncalibratedSourceLink_impl(
+      T& instance, ActsPodioEdm::TrackState trackState) {
+    if (instance.storeUncalibrated()) {
+      const auto linkNavigator = podio::LinkNavigator(*instance.m_links);
+      const auto hits = linkNavigator.getLinked(trackState, podio::ReturnTo);
+      return !hits.empty();
+    } else {
+      return trackState.getData().uncalibratedIdentifier !=
+             PodioUtil::kNoIdentifier;
+    }
   }
 
   /// Get a component from a track state
