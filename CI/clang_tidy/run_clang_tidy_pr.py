@@ -79,13 +79,12 @@ def header_to_tu(header_repo_path: str, build_dir: Path) -> Path:
     Map a repo-relative header path to the generated TU path.
 
     acts_compile_headers() generates:
-      ${CMAKE_CURRENT_BINARY_DIR}/<rel_dir>/<stem>.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/<rel_dir>/<name>.cpp
     which, for a header at <module>/include/<rest>/Foo.hpp (or .ipp),
     becomes:
-      <build_dir>/<module>/include/<rest>/Foo.cpp
+      <build_dir>/<module>/include/<rest>/Foo.hpp.cpp
     """
-    p = PurePosixPath(header_repo_path)
-    return (build_dir / p.with_suffix(".cpp")).resolve()
+    return (build_dir / (header_repo_path + ".cpp")).resolve()
 
 
 def resolve_targets(
