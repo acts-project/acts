@@ -36,7 +36,6 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::string inputParticles{"particles_simulated"};
     /// @brief Name of the output space points collection
     std::string outputSpacePoints{"MuonSpacePoints"};
-
     /// @brief Output measurements collection.
     std::string outputMeasurements = "measurements";
     /// @brief Output collection to map measured hits to contributing particles.
@@ -49,7 +48,6 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::string outputSimHitMeasurementsMap = "simhit_measurements_map";
     /// Output smeared track parameters collection.
     std::string outputTrackParameters = "estimatedparameters";
-
     /// @brief Random number generator service
     std::shared_ptr<const RandomNumbers> randomNumbers{};
     /// @brief Pointer to the muon calibrator to fetch the smearing constants

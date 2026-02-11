@@ -252,7 +252,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
         /// Strip measurements
         using enum Surface::SurfaceType;
         case Plane: {
-          //          break;
           // only keep 2 plane surfaces
           if (plane_count >= 2) {
             break;
@@ -325,6 +324,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
               DigitizedParameters dParameters;
 
               auto cov = newSp.covariance();
+
               dParameters.indices.push_back(Acts::eBoundLoc0);
               dParameters.values.push_back(smearedHit[ePos0]);
               dParameters.variances.push_back(cov[0]);
@@ -412,20 +412,19 @@ ProcessCode MuonSpacePointDigitizer::execute(
             }
           }
 
-          const double sigmaZ =
-              (0.5 * maxZ) /
-              20000.;  // to have it similar to the drift radius sigma
+          // scale to have it similar to the drift radius sigma
+          const double sigmaZ = 0.5 * maxZ / 20000.;
 
-          auto smearedZ =
+          const double smearedZ =
               (*Digitization::Gauss{sigmaZ}(nominalPos.z(), rndEngine)).first;
 
           // dump hitpositon in vector
           //          globalPositions.push_back(std::make_tuple(
-          //              simHit.position(), smearedZ, driftR,
+          //              simHit.position(), smearedZ, smearedDriftR,
           //              hitSurf->getSharedPtr()));
 
           //                    globalPositions.push_back(std::make_tuple(
-          //                        simHit.position(), driftR, smearedZ,
+          //                        simHit.position(), smearedDriftR, smearedZ,
           //                        hitSurf->getSharedPtr()));
 
           std::cout << "positionSimhitGlobal " << simHit.position().transpose()
@@ -433,10 +432,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
           std::cout << "directionSimHitGlobal "
                     << simHit.direction().transpose() << std::endl;
           if (nominalPos.x() > 0) {
-            driftR *= -1;
+            smearedDriftR *= -1;
             std::cout << "switched sign" << std::endl;
           }
-          newSp.setRadius(driftR);
+          newSp.setRadius(smearedDriftR);
           newSp.setCovariance(square(uncert), square(sigmaZ), 0.);
 
           newSp.defineCoordinates(
@@ -472,19 +471,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
               gotSimHits.nth(simHitIdx)->particleId());
           measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                              measurement.index(), simHitIdx);
-// from main ?
-//      if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
-//        const TrackingVolume* chambVolume =
-//            trackingGeometry().findVolume(volId);
-//        assert(chambVolume != nullptr);
-//        const std::string outputPath = std::format(
-//            "Event_{}_{}.pdf", ctx.eventNumber, chambVolume->volumeName());
-//        m_cfg.visualizationFunction(outputPath, gctx, bucket,
-//                                    m_inputSimHits(ctx), m_inputParticles(ctx),
-//                                    trackingGeometry(), logger());
-      }
+
           std::cout << moduleGeoId << std::endl;
           straw_count++;
+
           break;
         }
 
@@ -514,6 +504,16 @@ ProcessCode MuonSpacePointDigitizer::execute(
         ACTS_VERBOSE("Safe " << bucket.size() << " space points for chamber "
                              << volId << "\n"
                              << sstr.str());
+      }
+      if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
+        const TrackingVolume* chambVolume =
+            trackingGeometry().findVolume(volId);
+        assert(chambVolume != nullptr);
+        const std::string outputPath = std::format(
+            "Event_{}_{}.pdf", ctx.eventNumber, chambVolume->volumeName());
+        m_cfg.visualizationFunction(outputPath, gctx, bucket,
+                                    m_inputSimHits(ctx), m_inputParticles(ctx),
+                                    trackingGeometry(), logger());
       }
 
       visualizeBucket(ctx, gctx, bucket);
