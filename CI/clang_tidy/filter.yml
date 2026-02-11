@@ -10,6 +10,10 @@ exclude_path_regexes:
 
   # Generated PODIO EDM
   - ActsPodioEdm
+  - EDM4hep/generated
+
+  # Generated ROOT dictionaries
+  - Dict.cxx$
 
   # Build-tree dependencies fetched by CMake
   - (^|/)build/_deps/

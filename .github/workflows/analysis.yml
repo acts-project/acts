@@ -129,19 +129,22 @@ jobs:
           -DCMAKE_C_COMPILER=clang
           -DACTS_RUN_CLANG_TIDY=OFF
 
-      - name: Run clang-tidy (PR - changed files only)
+      - name: Analyze (PR - changed files only)
         if: github.event_name == 'pull_request'
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
-          build "origin/${{ github.base_ref }}"
-          --filter-config CI/clang_tidy/filter.yml
+          analyze build fixes.yml "origin/${{ github.base_ref }}"
 
-      - name: Run clang-tidy (push - all files)
+      - name: Analyze (push - all files)
         if: github.event_name == 'push'
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
-          build --all
-          --filter-config CI/clang_tidy/filter.yml
+          analyze build fixes.yml --all
+
+      - name: Annotate
+        run: >
+          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          annotate fixes.yml
 
   build_performance:
     runs-on: ubuntu-latest
