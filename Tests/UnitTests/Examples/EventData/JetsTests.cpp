@@ -11,10 +11,10 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "ActsPlugins/FastJet/Jets.hpp"
+#include "ActsExamples/EventData/Jets.hpp"
 
 using namespace Acts;
-using namespace ActsPlugins;
+using namespace ActsExamples;
 
 namespace ActsTests {
 
@@ -22,8 +22,8 @@ BOOST_AUTO_TEST_SUITE(FastJetSuite)
 
 BOOST_AUTO_TEST_CASE(TruthParticleOneJet) {
   ActsFatras::Barcode barcode;
-  ActsPlugins::FastJet::TruthJet jet(Acts::Vector4(100, 0, 0, 100),
-                                     ActsPlugins::FastJet::JetLabel::Unknown);
+  ActsExamples::TruthJet jet(Acts::Vector4(100, 0, 0, 100),
+                                     ActsExamples::JetLabel::Unknown);
   jet.setConstituents(std::vector<ActsFatras::Barcode>{barcode});
   BOOST_CHECK_EQUAL(jet.constituents().size(), 1);
   BOOST_CHECK_EQUAL(jet.constituents()[0], barcode);
@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(SingleTrackJet) {
 
   std::vector<Acts::AnyConstTrackProxy> constituents{anyConstTrack};
 
-  ActsPlugins::FastJet::TrackJet jet(Acts::Vector4(100, 0, 0, 100),
-                                     ActsPlugins::FastJet::JetLabel::Unknown);
+  ActsExamples::TrackJet jet(Acts::Vector4(100, 0, 0, 100),
+                                     ActsExamples::JetLabel::Unknown);
   std::vector<Acts::AnyConstTrackProxy> jetConstituents;
   jetConstituents.push_back(anyConstTrack);
   jet.setConstituents(jetConstituents);
