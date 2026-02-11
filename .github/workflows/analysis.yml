@@ -75,16 +75,27 @@ jobs:
           name: coverage-build
           path: build
 
-      - name: Save PR number to file
+      - name: Save PR metadata
         if: github.event_name == 'pull_request'
-        run: echo -n ${{ github.event.number }} > PR_NUMBER.txt
+        run: |
+          # GitHub Actions creates a merge commit for PRs
+          # HEAD^1 is the base branch commit, HEAD^2 is the PR head commit
+          cat > PR_metadata.json << EOF
+          {
+            "pr_number": "${{ github.event.number }}",
+            "pr_sha": "$(git rev-parse HEAD^2)",
+            "base_sha": "$(git rev-parse HEAD^1)",
+            "merge_sha": "$(git rev-parse HEAD)"
+          }
+          EOF
+          cat PR_metadata.json
 
-      - name: Persist PR number
+      - name: Persist PR metadata
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v6
         with:
-          name: PR_NUMBER
-          path: PR_NUMBER.txt
+          name: PR_metadata
+          path: PR_metadata.json
 
   build_performance:
     runs-on: ubuntu-latest

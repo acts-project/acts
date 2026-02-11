@@ -1,14 +1,11 @@
 include(ActsTargetLinkLibrariesSystem)
 
-set(ActsExamplesFramework_SOURCES)
-
 acts_add_library(
     ExamplesFramework
     src/EventData/MuonSpacePoint.cpp
     src/EventData/MuonSpacePointCalibrator.cpp
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
-    src/EventData/ScalingCalibrator.cpp
     src/EventData/SimParticle.cpp
     src/EventData/Jets.cpp
     src/Framework/IAlgorithm.cpp
@@ -38,18 +35,38 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesFramework
-    PUBLIC
-        Acts::Fatras
-        Acts::PluginFpeMonitoring
-        Boost::boost
-        ROOT::Core
-        ROOT::Hist
-        HepMC3::HepMC3
+    PUBLIC Acts::Fatras Acts::PluginFpeMonitoring Boost::boost HepMC3::HepMC3
 )
 target_compile_definitions(
     ActsExamplesFramework
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
 )
+
+# Plugin-dependent framework components
+# Note that due to conditional compilation the headers of ROOT/Onnx components
+# get installed regardless of the configuration which could lead to link errors
+# in case one includes these files without building the components.
+if(ACTS_BUILD_EXAMPLES_ROOT)
+    target_sources(
+        ActsExamplesFramework
+        PRIVATE src/Root/ScalingCalibrator.cpp src/Root/MuonVisualization.cpp
+    )
+    target_link_libraries(
+        ActsExamplesFramework
+        PUBLIC ROOT::Core ROOT::Hist ROOT::Graf ROOT::Gpad
+    )
+    set_source_files_properties(
+        src/Framework/Sequencer.cpp
+        TARGET
+        ActsExamplesFramework
+        PROPERTIES COMPILE_DEFINITIONS ACTS_BUILD_EXAMPLES_ROOT
+    )
+endif()
+
+if(ACTS_BUILD_PLUGIN_ONNX)
+    target_sources(ActsExamplesFramework PRIVATE src/Onnx/NeuralCalibrator.cpp)
+    target_link_libraries(ActsExamplesFramework PUBLIC Acts::PluginOnnx)
+endif()
 
 # newer DD4hep version require TBB and search internally for TBB in
 # config-only mode. to avoid mismatches we explicitly search using
@@ -62,7 +79,3 @@ if(NOT TBB_FOUND)
 endif()
 
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
-
-acts_compile_headers(ExamplesFramework GLOB "include/**/*.hpp")
-
-add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)
