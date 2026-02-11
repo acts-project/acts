@@ -456,7 +456,6 @@ def addSeeding(
                 trackingGeometry,
                 logLevel,
                 layerMappingConfigFile,
-                geoSelectionConfigFile,
                 connectorInputConfigFile,
                 lutInputConfigFile,
             )
@@ -1386,7 +1385,6 @@ def addGbtsSeeding(
     trackingGeometry: acts.TrackingGeometry,
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
-    geoSelectionConfigFile: Union[Path, str] = None,
     connectorInputConfigFile: Union[Path, str] = None,
     lutInputConfigFile: Optional[Union[Path, str]] = None,
 ):
