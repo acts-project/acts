@@ -69,19 +69,19 @@ jobs:
           ls -al build
           ls -al build/coverage
 
-      - name: Read PR_NUMBER.txt
+      - name: Read PR metadata
         if: github.event.workflow_run.event == 'pull_request'
-        id: pr_number
-        uses: juliangruber/read-file-action@v1
+        id: pr_metadata
+        uses: actions/github-script@v8
         with:
-          path: ./PR_NUMBER.txt
-
-      - name: Read PR_SHA.txt
-        if: github.event.workflow_run.event == 'pull_request'
-        id: pr_sha
-        uses: juliangruber/read-file-action@v1
-        with:
-          path: ./PR_SHA.txt
+          script: |
+            const fs = require('fs');
+            const metadata = JSON.parse(fs.readFileSync('PR_metadata.json', 'utf8'));
+            console.log('PR metadata:', JSON.stringify(metadata, null, 2));
+            core.setOutput('pr_number', metadata.pr_number);
+            core.setOutput('pr_sha', metadata.pr_sha);
+            core.setOutput('base_sha', metadata.base_sha);
+            core.setOutput('merge_sha', metadata.merge_sha);
 
       - name: Request GitHub API for PR data
         if: github.event.workflow_run.event == 'pull_request'
@@ -91,7 +91,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           route: GET /repos/{full_name}/pulls/{number}
-          number: ${{ steps.pr_number.outputs.content }}
+          number: ${{ steps.pr_metadata.outputs.pr_number }}
           full_name: ${{ github.event.repository.full_name }}
 
       - name: Get upcoming version from milestones
@@ -107,15 +107,29 @@ jobs:
         with:
           path: ./next_version.txt
 
-      - name: Checkout base branch
+      - name: Recreate merge commit state
         if: github.event.workflow_run.event == 'pull_request'
         run: |
           git config --global --add safe.directory $PWD
+          git config user.email "ci@acts-project.org"
+          git config user.name "CI"
+
+          # upstream: main branch, origin: PR branch
           git remote rename origin upstream
-          git checkout -B ${{ fromJson(steps.get_pr_data.outputs.data).base.ref }} upstream/${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
           git remote add origin ${{ fromJson(steps.get_pr_data.outputs.data).head.repo.clone_url }}
           git fetch origin
-          git checkout ${{ steps.pr_sha.outputs.content }}
+
+          # Check out the exact base commit that was used in the original merge
+          git checkout ${{ steps.pr_metadata.outputs.base_sha }}
+
+          # Merge the PR commit to recreate the same merge state as the analysis run
+          git merge --no-edit ${{ steps.pr_metadata.outputs.pr_sha }}
+
+          echo "Recreated merge state:"
+          echo "  Base SHA: ${{ steps.pr_metadata.outputs.base_sha }}"
+          echo "  PR SHA: ${{ steps.pr_metadata.outputs.pr_sha }}"
+          echo "  Current HEAD: $(git rev-parse HEAD)"
+          echo "  Original merge SHA: ${{ steps.pr_metadata.outputs.merge_sha }}"
           git remote -v
           git status
 
@@ -137,8 +151,8 @@ jobs:
             --define sonar.cfamily.compile-commands=build/compile_commands.json
             --define sonar.coverageReportPaths=build/coverage/cov.xml
             --define sonar.projectVersion=${{ steps.next_version.outputs.content }}
-            --define sonar.scm.revision=${{ github.event.workflow_run.head_sha }}
-            --define sonar.pullrequest.key=${{ steps.pr_number.outputs.content }}
+            --define sonar.scm.revision=${{ steps.pr_metadata.outputs.merge_sha }}
+            --define sonar.pullrequest.key=${{ steps.pr_metadata.outputs.pr_number }}
             --define sonar.pullrequest.branch=${{ fromJson(steps.get_pr_data.outputs.data).head.ref }}
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
 

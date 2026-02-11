@@ -180,12 +180,7 @@ set_option_if(
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
-set_option_if(
-    ACTS_BUILD_PLUGIN_ROOT
-    ACTS_BUILD_PLUGIN_DD4HEP
-    OR
-    ACTS_BUILD_EXAMPLES
-)
+set_option_if(ACTS_BUILD_PLUGIN_ROOT ACTS_BUILD_PLUGIN_DD4HEP)
 set_option_if(
     ACTS_BUILD_PLUGIN_IDENTIFICATION
     ACTS_BUILD_PLUGIN_ROOT
@@ -227,7 +222,7 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
     set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
     set(CMAKE_INSTALL_LIBDIR "acts")
-    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}) # Don't install headers
     set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
     set(CMAKE_INSTALL_DATADIR "acts/share")
     set(ACTS_PYTHON_INSTALL_DIR "acts")
@@ -242,6 +237,8 @@ endif()
 include(ActsCompilerOptions) # default compile options
 include(ActsComponentsHelpers) # handle components via add_..._if commands
 include(ActsStaticAnalysis)
+
+acts_disable_static_analysis() # disable static analysis for thirdparty dependencies, will be enabled later for the main code
 
 if(PROJECT_IS_TOP_LEVEL)
     # place build products in `<build>/bin` and `<build>/lib` for simple use
@@ -584,7 +581,18 @@ if(ACTS_BUILD_EXAMPLES)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
+    set(_acts_hepmc3_components "search")
+    if(ACTS_BUILD_EXAMPLES_ROOT)
+        list(APPEND _acts_hepmc3_components "rootIO")
+    endif()
+
+    find_package(
+        HepMC3
+        ${_acts_hepmc3_version}
+        REQUIRED
+        CONFIG
+        COMPONENTS ${_acts_hepmc3_components}
+    )
 
     # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
     if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)
@@ -633,6 +641,8 @@ endif()
 if(ACTS_BUILD_DOCS)
     find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
 endif()
+
+acts_enable_static_analysis() # enable static analysis for the main code, after dependencies are set up
 
 # core library, core plugins, and other components
 add_component(Core Core)
