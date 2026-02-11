@@ -138,13 +138,13 @@ jobs:
         if: github.event_name == 'pull_request'
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
-          analyze build fixes.yml "origin/${{ github.base_ref }}"
+          analyze build fixes.yml "origin/${{ github.base_ref }}" --verbose
 
       - name: Analyze (push - all files)
         if: github.event_name == 'push'
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
-          analyze build fixes.yml --all
+          analyze build fixes.yml --all --verbose
 
       - name: Annotate
         run: >
