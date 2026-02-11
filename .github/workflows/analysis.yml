@@ -40,6 +40,26 @@ jobs:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Save PR metadata
+        if: github.event_name == 'pull_request'
+        run: |
+          # Shallow clone: parent commits aren't available via git,
+          # but GitHub provides the SHAs through the event context.
+          printf '{"pr_number":"%s","pr_sha":"%s","base_sha":"%s","merge_sha":"%s"}\n' \
+            "${{ github.event.number }}" \
+            "${{ github.event.pull_request.head.sha }}" \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.sha }}" \
+            > PR_metadata.json
+          cat PR_metadata.json
+
+      - name: Persist PR metadata
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v6
+        with:
+          name: PR_metadata
+          path: PR_metadata.json
+
       - name: Cache build
         uses: actions/cache@v5
         with:
@@ -74,21 +94,6 @@ jobs:
         with:
           name: coverage-build
           path: build
-
-      - name: Save PR metadata
-        if: github.event_name == 'pull_request'
-        run: |
-          echo -n ${{ github.event.number }} > PR_NUMBER.txt
-          echo -n ${{ github.event.pull_request.head.sha }} > PR_SHA.txt
-
-      - name: Persist PR metadata
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v6
-        with:
-          name: PR_metadata
-          path: |
-            PR_NUMBER.txt
-            PR_SHA.txt
 
   build_performance:
     runs-on: ubuntu-latest
