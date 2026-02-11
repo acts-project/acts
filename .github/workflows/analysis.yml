@@ -152,7 +152,7 @@ jobs:
       - name: Annotate
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
-          annotate fixes.yml
+          annotate fixes.yml --verbose
 
   # build_performance:
   #   runs-on: ubuntu-latest
