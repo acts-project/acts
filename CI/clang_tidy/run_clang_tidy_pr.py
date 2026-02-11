@@ -302,6 +302,13 @@ async def run_clang_tidy_on_targets(
 # ---------------------------------------------------------------------------
 
 
+def write_empty_fixes(output: Path) -> None:
+    """Write an empty fixes YAML so downstream steps always find the file."""
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(yaml.dump({"Diagnostics": []}, default_flow_style=False))
+    console.print(f"Wrote empty fixes to {output}")
+
+
 def merge_fixes_yaml(fixes_dir: Path, output: Path) -> None:
     """Merge all per-TU export-fixes YAML files into a single file."""
     yaml_files = sorted(fixes_dir.glob("*.yaml"))
@@ -575,6 +582,7 @@ def analyze(
 
     if not targets:
         console.print("[bold green]No targets to analyse.[/]")
+        write_empty_fixes(output_fixes)
         raise typer.Exit(0)
 
     if dry_run:
