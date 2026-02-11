@@ -320,7 +320,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   std::make_tuple(simHit.position(), smearedHit[ePos0],
                                   smearedHit[ePos1], hitSurf->getSharedPtr()));
 
-              // Now set measurement and maps
+              // Set measurement and maps
               DigitizedParameters dParameters;
 
               auto cov = newSp.covariance();

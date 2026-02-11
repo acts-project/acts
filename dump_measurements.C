@@ -31,4 +31,3 @@ void dump_measurements() {
   fclose(out);
   printf("Wrote %d entries to dump.csv\n", n);
 }
-
