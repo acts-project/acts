@@ -191,24 +191,31 @@ add_dependencies(ActsPythonBindings ActsExamplesPythonBindingsHepMC3)
 list(APPEND py_files hepmc3/__init__.py)
 list(APPEND py_files hepmc3/__main__.py)
 
-# Symlink hepmc3_normalize.py to build/bin for development
-add_custom_target(
-    hepmc_normalize_symlink
-    ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
-    COMMAND
-        ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/python/hepmc_normalize.py
-        ${CMAKE_BINARY_DIR}/bin/hepmc_normalize.py
-    COMMENT "Creating symlink for hepmc_normalize.py"
-    VERBATIM
-)
-add_dependencies(hepmc_normalize_symlink ActsExamplesIoHepMC3)
-install(
-    PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/python/hepmc_normalize.py
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    RENAME hepmc_normalize.py
-)
+# Handle python scripts
+file(GLOB _python_scripts ${CMAKE_CURRENT_SOURCE_DIR}/bin/*.py)
+
+# Symlink scripts to build dir. Create a custom command for each script
+# and a custom target that depends on all of them.
+set(_python_scripts_symlinks)
+foreach(_src ${_python_scripts})
+    get_filename_component(_name ${_src} NAME)
+    set(_dst ${CMAKE_BINARY_DIR}/bin/${_name})
+    add_custom_command(
+        OUTPUT ${_dst}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${_src} ${_dst}
+        DEPENDS ${_src}
+        COMMENT "Creating symlink for ${_script}"
+        VERBATIM
+    )
+    list(APPEND _python_scripts_symlinks ${_dst})
+endforeach()
+
+add_custom_target(python_bin_symlink ALL DEPENDS ${_python_scripts_symlinks})
+add_dependencies(python_bin_symlink ActsExamplesPythonBindings)
+
+# Install scripts from bin directory
+install(PROGRAMS ${_python_scripts} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Install the additional python files
 foreach(f ${py_files})
