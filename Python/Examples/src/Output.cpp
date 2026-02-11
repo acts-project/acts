@@ -15,7 +15,6 @@
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvSpacePointsBucketWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
@@ -115,10 +114,6 @@ void addOutput(py::module& mex) {
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointWriter, mex, "CsvSpacePointWriter",
                              inputSpacePoints, outputDir, outputPrecision);
-
-  ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointsBucketWriter, mex,
-                             "CsvSpacePointsBucketWriter", inputBuckets,
-                             outputDir, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvTrackWriter, mex, "CsvTrackWriter", inputTracks,
                              outputDir, fileName, inputMeasurementParticlesMap,

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -30,13 +30,13 @@ class SeedFilterMLAlgorithm : public IAlgorithm {
     /// Input estimated track parameters collection.
     std::string inputTrackParameters;
     /// Input seeds collection.
-    std::string inputSimSeeds;
+    std::string inputSeeds;
     /// Path to the ONNX model for the duplicate neural network
     std::string inputSeedFilterNN;
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
     /// Output seeds collection.
-    std::string outputSimSeeds;
+    std::string outputSeeds;
     /// Maximum distance between 2 tracks to be clustered in the DBScan
     float epsilonDBScan = 0.03;
     /// Minimum number of tracks to create a cluster in the DBScan
@@ -74,10 +74,10 @@ class SeedFilterMLAlgorithm : public IAlgorithm {
   ActsPlugins::SeedClassifier m_seedClassifier;
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
       this, "InputTrackParameters"};
-  ReadDataHandle<SimSeedContainer> m_inputSimSeeds{this, "InputSimSeeds"};
+  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
-  WriteDataHandle<SimSeedContainer> m_outputSimSeeds{this, "OutputSimSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 };
 
 }  // namespace ActsExamples

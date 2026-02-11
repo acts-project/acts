@@ -581,15 +581,6 @@ def addSeeding(
             )
             s.addWriter(csvSeedWriter)
 
-            if seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
-                s.addWriter(
-                    acts.examples.CsvSpacePointsBucketWriter(
-                        level=logLevel,
-                        inputBuckets=buckets,
-                        outputDir=str(outputDirCsv),
-                    )
-                )
-
     return s
 
 
