@@ -4,9 +4,6 @@ import argparse
 from acts import (
     logging,
     GeometryContext,
-    CylindricalContainerBuilder,
-    DetectorBuilder,
-    GeometryIdGenerator,
 )
 
 from acts.examples import (
@@ -15,7 +12,9 @@ from acts.examples import (
     ObjTrackingGeometryWriter,
 )
 from acts import geomodel as gm
+from acts.examples import geomodel as gmexample
 from acts import examples
+import acts.examples.geomodel as gm_ex
 
 from pathlib import Path
 from propagation import runPropagation
@@ -115,11 +114,11 @@ def main():
 
     args = parser.parse_args()
 
-    gContext = acts.GeometryContext()
+    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     # Create the tracking geometry builder for the muon system
-    gmBuilderConfig = gm.GeoModelMuonMockupBuilder.Config()
+    gmBuilderConfig = gm_ex.GeoModelMuonMockupBuilder.Config()
 
     # Read the geometry model from the database
     gmTree = None
@@ -129,13 +128,13 @@ def main():
         gmBuilderConfig.stationNames = ["BIL", "BML", "BOL"]
 
     elif args.mockupDetector == "Muon":
-        mockUpCfg = gm.GeoMuonMockupExperiment.Config()
+        mockUpCfg = gm_ex.GeoMuonMockupExperiment.Config()
         mockUpCfg.dumpTree = True
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
         mockUpCfg.buildEndcaps = False
-        mockUpBuilder = gm.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
+        mockUpBuilder = gm_ex.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
         gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
 
         gmTree = mockUpBuilder.constructMS()
@@ -163,13 +162,13 @@ def main():
 
     gmBuilderConfig.volumeBoxFPVs = gmFactoryCache.boundingBoxes
 
-    gmDetectorCfg = gm.GeoModelDetector.Config()
+    gmDetectorCfg = gm_ex.GeoModelDetector.Config()
     gmDetectorCfg.geoModelTree = gmTree
-    detector = gm.GeoModelDetector(gmDetectorCfg)
+    detector = gm_ex.GeoModelDetector(gmDetectorCfg)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * u.T))
 
-    trackingGeometryBuilder = gm.GeoModelMuonMockupBuilder(
+    trackingGeometryBuilder = gm_ex.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
 
