@@ -37,8 +37,8 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace ActsExamples;
 using namespace Acts;
+using namespace ActsExamples;
 using namespace ActsPlugins;
 using namespace ActsPython;
 
