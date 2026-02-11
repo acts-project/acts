@@ -202,6 +202,13 @@ class SpacePointProxy2 {
   {
     return m_container->zr(m_index);
   }
+  /// @brief Get mutable reference to XYZ coordinates of the space point
+  /// @return Mutable reference to array containing [x, y, z] coordinates
+  std::array<float, 3> &xyz() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xyz(m_index);
+  }
   /// @brief Get mutable reference to XYZR coordinates of the space point
   /// @return Mutable reference to array containing [x, y, z, r] coordinates
   std::array<float, 4> &xyzr() const noexcept
@@ -288,6 +295,11 @@ class SpacePointProxy2 {
   /// @return Const reference to array containing [z, r] coordinates
   const std::array<float, 2> &zr() const noexcept {
     return m_container->zr(m_index);
+  }
+  /// @brief Get const reference to XYZ coordinates of the space point
+  /// @return Const reference to array containing [x, y, z] coordinates
+  const std::array<float, 3> &xyz() const noexcept {
+    return m_container->xyz(m_index);
   }
   /// @brief Get const reference to XYZR coordinates of the space point
   /// @return Const reference to array containing [x, y, z, r] coordinates
