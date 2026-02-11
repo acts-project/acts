@@ -34,6 +34,12 @@ jobs:
 
       - uses: actions/checkout@v6
 
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Save PR metadata
         if: github.event_name == 'pull_request'
         run: |
@@ -54,12 +60,6 @@ jobs:
         with:
           name: PR_metadata
           path: PR_metadata.json
-
-      - name: Install dependencies
-        uses: ./.github/actions/dependencies
-        with:
-          compiler: g++
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache build
         uses: actions/cache@v5
