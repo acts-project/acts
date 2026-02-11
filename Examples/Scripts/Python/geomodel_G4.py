@@ -149,7 +149,7 @@ def main():
         "SmallWheelGasGap",
     ]
     gmFactoryConfig.convertSubVolumes = True
-    gmFactoryConfig.convertBox = ["MDT", "RPC"]
+    gmFactoryConfig.convertBox = ["MDT", "RPC", "SmallWheel", "TGC"]
 
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
@@ -198,7 +198,7 @@ def main():
     )
     algSequence.addAlgorithm(digiAlg)
 
-    rmwConfig = acts.examples.RootMeasurementWriter.Config(
+    rmwConfig = acts.examples.root.RootMeasurementWriter.Config(
         inputMeasurements="measurements",
         # inputClusters=digiAlg.config.outputClusters,
         inputSimHits="simhits",
@@ -206,7 +206,7 @@ def main():
         filePath=str("measurements.root"),
         surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
     )
-    algSequence.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, logLevel))
+    algSequence.addWriter(acts.examples.root.RootMeasurementWriter(rmwConfig, logLevel))
     # from acts.examples import RootMuonSpacePointWriter
     #
     # algSequence.addWriter(
@@ -253,7 +253,7 @@ def main():
     )
 
     algSequence.addWriter(
-        acts.examples.RootTrackStatesWriter(
+        acts.examples.root.RootTrackStatesWriter(
             level=acts.logging.WARNING,
             inputTracks="tracks",
             inputParticles="particles_generated",
@@ -265,7 +265,7 @@ def main():
     )
 
     algSequence.addWriter(
-        acts.examples.RootTrackSummaryWriter(
+        acts.examples.root.RootTrackSummaryWriter(
             level=acts.logging.WARNING,
             inputTracks="tracks",
             inputParticles="particles_generated",
