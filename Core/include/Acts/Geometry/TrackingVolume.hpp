@@ -149,8 +149,8 @@ class TrackingVolume : public Volume {
   /// Constructor from a regular volume
   /// @param volume is the volume to be converted
   /// @param volumeName is a string identifier
-  explicit TrackingVolume(const Volume& volume,
-                          const std::string& volumeName = "undefined");
+  TrackingVolume(const Volume& volume,
+                 const std::string& volumeName = "undefined");
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   /// @param gctx The current geometry context object, e.g. alignment
