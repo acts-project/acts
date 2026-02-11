@@ -104,9 +104,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Mark workspace as safe
+        run: git config --global --add safe.directory /__w/acts/acts
+
       - name: Fetch base branch
         if: github.event_name == 'pull_request'
         run: git fetch origin "${{ github.base_ref }}"
+
+      - uses: astral-sh/setup-uv@v5
 
       - name: Install clang-tidy
         run: |
