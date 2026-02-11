@@ -452,7 +452,6 @@ def addSeeding(
                 s,
                 spacePoints,
                 seedFinderConfigArg,
-                seedFinderOptionsArg,
                 trackingGeometry,
                 logLevel,
                 layerMappingConfigFile,
@@ -1381,7 +1380,6 @@ def addGbtsSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
-    seedFinderOptionsArg: SeedFinderOptionsArg,
     trackingGeometry: acts.TrackingGeometry,
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
@@ -1401,28 +1399,15 @@ def addGbtsSeeding(
             lutInputFile=lutInputConfigFileStr,
         ),
     )
-    seedFinderOptions = acts.SeedFinderOptions(
-        **acts.examples.defaultKWArgs(
-            beamPos=(
-                acts.Vector2(0.0, 0.0)
-                if seedFinderOptionsArg.beamPos == (None, None)
-                else acts.Vector2(
-                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
-                )
-            ),
-            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
-        )
-    )
 
     seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds="seeds",
         seedFinderConfig=seedFinderConfig,
-        seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile,
         trackingGeometry=trackingGeometry,
-        fill_module_csv=False,
+        fillModuleCsv=False,
         inputClusters="clusters",
     )
 
