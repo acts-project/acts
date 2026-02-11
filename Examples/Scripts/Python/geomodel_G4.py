@@ -52,7 +52,7 @@ def runGeant4(
         s,
         outputDirRoot=outputDir / "PG",
         momentumConfig=MomentumConfig(50.0 * u.GeV, 60.0 * u.GeV, transverse=True),
-        etaConfig=EtaConfig(-1, 1, uniform=True),
+        etaConfig=EtaConfig(-1.0, 1.0, uniform=True),
         phiConfig=PhiConfig(0.1, 0.1 * u.degree),
         particleConfig=ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(

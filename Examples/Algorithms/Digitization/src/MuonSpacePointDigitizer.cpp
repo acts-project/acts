@@ -516,7 +516,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
                                     trackingGeometry(), logger());
       }
 
-      visualizeBucket(ctx, gctx, bucket);
       outSpacePoints.push_back(std::move(bucket));
     }
   }
