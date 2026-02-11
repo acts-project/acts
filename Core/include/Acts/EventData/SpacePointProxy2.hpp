@@ -74,7 +74,7 @@ class SpacePointProxy2 {
   /// Move assign a space point proxy.
   /// @param other The space point proxy to move.
   /// @return Reference to this space point proxy after assignment.
-  SpacePointProxy2 &operator=(SpacePointProxy2 &&) noexcept = default;
+  SpacePointProxy2 &operator=(SpacePointProxy2 &&other) noexcept = default;
 
   /// Move assign a mutable space point proxy.
   /// @param other The mutable space point proxy to move.

@@ -66,7 +66,7 @@ class SeedProxy2 {
   /// Move assign a seed proxy.
   /// @param other The seed proxy to move.
   /// @return Reference to this seed proxy after assignment.
-  SeedProxy2 &operator=(SeedProxy2 &&) noexcept = default;
+  SeedProxy2 &operator=(SeedProxy2 &&other) noexcept = default;
 
   /// Move assign a mutable seed proxy.
   /// @param other The mutable seed proxy to move.
