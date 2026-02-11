@@ -393,12 +393,6 @@ class TrackStateProxy
     m_traj->setUncalibratedSourceLink(m_istate, std::move(sourceLink));
   }
 
-  /// Check if the point has an associated uncalibrated measurement.
-  /// @return Whether it is set
-  bool hasUncalibratedSourceLink() const {
-    return has<detail_tsp::kUncalibratedKey>();
-  }
-
   /// Return the (dynamic) number of dimensions stored for this measurement.
   /// @note Depending on the backend, this size is used to determine the
   ///       memory range of the measurement vector and covariance.
