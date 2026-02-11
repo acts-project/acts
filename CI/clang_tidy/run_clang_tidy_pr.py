@@ -398,17 +398,22 @@ def normalize_path(filepath: Path, source_root: Path) -> str:
         return str(filepath).replace(os.sep, "/")
 
 
-def is_excluded(diag: ParsedDiagnostic, config: FilterConfig) -> bool:
+def is_excluded(diag: ParsedDiagnostic, config: FilterConfig) -> str | None:
+    """Check whether a diagnostic should be excluded.
+
+    Returns ``None`` if the diagnostic passes all filters, or a human-readable
+    reason string describing why it was excluded.
+    """
     for pattern in config.exclude_path_regexes:
         if re.search(pattern, diag.abs_path):
-            return True
+            return f"path matches exclude pattern '{pattern}'"
     for pattern in config.exclude_check_regexes:
         if re.search(pattern, diag.check):
-            return True
+            return f"check matches exclude pattern '{pattern}'"
     for pattern in config.exclude_message_regexes:
         if re.search(pattern, diag.message):
-            return True
-    return False
+            return f"message matches exclude pattern '{pattern}'"
+    return None
 
 
 def emit_annotations(
@@ -416,6 +421,7 @@ def emit_annotations(
     source_root: Path,
     config: FilterConfig,
     severity: str,
+    verbose: bool = False,
 ) -> int:
     """Normalize paths, deduplicate, filter, and emit GH Actions annotations.
     Returns 1 if any diagnostics remain, 0 otherwise."""
@@ -433,10 +439,31 @@ def emit_annotations(
         if key not in seen:
             seen.add(key)
             unique.append(diag)
+        elif verbose:
+            console.print(
+                f"  [dim]DEDUP[/] {diag.rel_path}:{diag.line}:{diag.col}"
+                f" [{diag.check}] {diag.message}"
+            )
+
+    if verbose and len(diagnostics) != len(unique):
+        console.print(
+            f"Deduplicated {len(diagnostics) - len(unique)} diagnostic(s)."
+        )
     diagnostics = unique
 
-    remaining = [d for d in diagnostics if not is_excluded(d, config)]
-    excluded_count = len(diagnostics) - len(remaining)
+    remaining: list[ParsedDiagnostic] = []
+    excluded_count = 0
+    for d in diagnostics:
+        reason = is_excluded(d, config)
+        if reason is not None:
+            excluded_count += 1
+            if verbose:
+                console.print(
+                    f"  [dim]EXCLUDE[/] {d.rel_path}:{d.line}:{d.col}"
+                    f" [{d.check}] {d.message} -- {reason}"
+                )
+        else:
+            remaining.append(d)
 
     console.print(
         f"After filtering: {len(remaining)} remaining, {excluded_count} excluded."
@@ -466,6 +493,7 @@ def annotate_from_fixes_dir(
     source_root: Path,
     config: FilterConfig,
     severity: str,
+    verbose: bool = False,
 ) -> int:
     yaml_files = sorted(fixes_dir.glob("*.yaml"))
     if not yaml_files:
@@ -479,7 +507,9 @@ def annotate_from_fixes_dir(
         all_diagnostics.extend(parse_fixes_yaml(yf))
 
     console.print(f"Found {len(all_diagnostics)} total diagnostic(s).")
-    return emit_annotations(all_diagnostics, source_root, config, severity)
+    return emit_annotations(
+        all_diagnostics, source_root, config, severity, verbose=verbose
+    )
 
 
 def annotate_from_fixes_file(
@@ -487,11 +517,14 @@ def annotate_from_fixes_file(
     source_root: Path,
     config: FilterConfig,
     severity: str,
+    verbose: bool = False,
 ) -> int:
     console.print(f"Parsing {fixes_file}...")
     all_diagnostics = parse_fixes_yaml(fixes_file)
     console.print(f"Found {len(all_diagnostics)} total diagnostic(s).")
-    return emit_annotations(all_diagnostics, source_root, config, severity)
+    return emit_annotations(
+        all_diagnostics, source_root, config, severity, verbose=verbose
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -643,6 +676,14 @@ def annotate(
     severity: Annotated[
         str, typer.Option(help="Annotation severity (error/warning)")
     ] = "error",
+    verbose: Annotated[
+        bool,
+        typer.Option(
+            "--verbose",
+            "-v",
+            help="Print each excluded and deduplicated diagnostic with the reason",
+        ),
+    ] = False,
 ) -> None:
     """Emit GitHub Actions annotations from a previously saved fixes YAML."""
     if source_root is None:
@@ -653,7 +694,9 @@ def annotate(
     if exclude_path:
         config.exclude_path_regexes.extend(exclude_path)
 
-    code = annotate_from_fixes_file(fixes, source_root, config, severity)
+    code = annotate_from_fixes_file(
+        fixes, source_root, config, severity, verbose=verbose
+    )
     raise typer.Exit(code)
 
 
