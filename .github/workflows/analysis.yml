@@ -134,6 +134,9 @@ jobs:
           -DCMAKE_C_COMPILER=clang
           -DACTS_RUN_CLANG_TIDY=OFF
 
+      - run: |
+          clang-tidy -p build build/Core/include/Acts/Geometry/TrackingGeometry.hpp.cpp
+
       - name: Analyze (PR - changed files only)
         if: github.event_name == 'pull_request'
         run: >
