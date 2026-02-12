@@ -120,7 +120,8 @@ BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
     BoundVector diff = pars_l - mean;
 
     // Apply corrections for cyclic coordinates
-    auto handleCyclicCov = [&l = pars_l, &m = mean, &diff = diff](auto desc) {
+    const auto handleCyclicCov = [&l = pars_l, &m = mean,
+                                  &diff = diff](const auto &desc) {
       diff[desc.idx] = difference_periodic(l[desc.idx] / desc.constant,
                                            m[desc.idx] / desc.constant,
                                            2 * std::numbers::pi) *
@@ -176,7 +177,7 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
 
     CVec pars_l_c = pars_l;
 
-    auto setPolar = [&](auto desc) {
+    const auto setPolar = [&](const auto &desc) {
       pars_l_c[desc.idx] = std::polar(1.0, pars_l[desc.idx] / desc.constant);
     };
     std::apply([&](auto... dsc) { (setPolar(dsc), ...); }, angleDesc);
@@ -189,13 +190,13 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
 
   BoundVector mean = cMean.real();
 
-  auto getArg = [&](auto desc) {
+  const auto getArg = [&](const auto &desc) {
     mean[desc.idx] = desc.constant * std::arg(cMean[desc.idx]);
   };
   std::apply([&](auto... dsc) { (getArg(dsc), ...); }, angleDesc);
 
   // MARK: fpeMaskBegin(FLTUND, 1, #2347)
-  const auto cov =
+  const BoundMatrix cov =
       mergeGaussianMixtureCov(cmps, projector, mean, sumOfWeights, angleDesc);
   // MARK: fpeMaskEnd(FLTUND)
 
@@ -263,33 +264,33 @@ class SymmetricKLDistanceMatrix {
 
   template <typename array_t, typename setter_t>
   void setAssociated(std::size_t n, array_t &array, const setter_t &setter) {
-    const auto indexConst = (n - 1) * n / 2;
+    const std::size_t indexConst = (n - 1) * n / 2;
     // Rows
-    for (auto i = 0ul; i < n; ++i) {
+    for (std::size_t i = 0ul; i < n; ++i) {
       array[indexConst + i] = setter(n, i);
     }
     // Columns
-    for (auto i = n + 1; i < m_numberComponents; ++i) {
+    for (std::size_t i = n + 1; i < m_numberComponents; ++i) {
       array[(i - 1) * i / 2 + n] = setter(n, i);
     }
   }
 
   /// Computes the Kullback-Leibler distance between two components as shown in
   /// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
-  static auto computeSymmetricKlDivergence(const GsfComponent &a,
-                                           const GsfComponent &b) {
-    const auto parsA = a.boundPars[eBoundQOverP];
-    const auto parsB = b.boundPars[eBoundQOverP];
-    const auto covA = a.boundCov(eBoundQOverP, eBoundQOverP);
-    const auto covB = b.boundCov(eBoundQOverP, eBoundQOverP);
+  static double computeSymmetricKlDivergence(const GsfComponent &a,
+                                             const GsfComponent &b) {
+    const double parsA = a.boundPars[eBoundQOverP];
+    const double parsB = b.boundPars[eBoundQOverP];
+    const double covA = a.boundCov(eBoundQOverP, eBoundQOverP);
+    const double covB = b.boundCov(eBoundQOverP, eBoundQOverP);
 
     assert(covA != 0.0);
     assert(std::isfinite(covA));
     assert(covB != 0.0);
     assert(std::isfinite(covB));
 
-    const auto kl = covA * (1 / covB) + covB * (1 / covA) +
-                    (parsA - parsB) * (1 / covA + 1 / covB) * (parsA - parsB);
+    const double kl = covA * (1 / covB) + covB * (1 / covA) +
+                      (parsA - parsB) * (1 / covA + 1 / covB) * (parsA - parsB);
 
     assert(kl >= 0.0 && "kl-divergence must be non-negative");
 
@@ -353,7 +354,7 @@ class SymmetricKLDistanceMatrix {
 
     os << "\n";
     os << std::string(width, ' ') << " | ";
-    for (auto j = 0ul; j < m.m_numberComponents - 1; ++j) {
+    for (std::size_t j = 0ul; j < m.m_numberComponents - 1; ++j) {
       os << std::setw(width) << j << "  ";
     }
     os << "\n";
@@ -361,10 +362,10 @@ class SymmetricKLDistanceMatrix {
                       '-');
     os << "\n";
 
-    for (auto i = 1ul; i < m.m_numberComponents; ++i) {
-      const auto indexConst = (i - 1) * i / 2;
+    for (std::size_t i = 1ul; i < m.m_numberComponents; ++i) {
+      const std::size_t indexConst = (i - 1) * i / 2;
       os << std::setw(width) << i << " | ";
-      for (auto j = 0ul; j < i; ++j) {
+      for (std::size_t j = 0ul; j < i; ++j) {
         os << std::setw(width) << std::setprecision(prec)
            << m.m_distances[indexConst + j] << "  ";
       }

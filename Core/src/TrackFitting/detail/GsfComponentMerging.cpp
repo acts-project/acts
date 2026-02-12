@@ -21,13 +21,13 @@ GsfComponent detail::Gsf::mergeTwoComponents(const GsfComponent &a,
                                              const Surface &surface) {
   assert(a.weight >= 0.0 && b.weight >= 0.0 && "non-positive weight");
 
-  std::array components = {std::ref(a), std::ref(b)};
-  const auto refProj = [](auto &c) {
-    return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
+  std::array components = {&a, &b};
+  const auto proj = [](const GsfComponent *c) {
+    return std::tie(c->weight, c->boundPars, c->boundCov);
   };
   auto [mergedPars, mergedCov] =
       angleDescriptionSwitch(surface, [&](const auto &desc) {
-        return mergeGaussianMixtureMeanCov(components, refProj, desc);
+        return mergeGaussianMixtureMeanCov(components, proj, desc);
       });
 
   GsfComponent ret = a;
