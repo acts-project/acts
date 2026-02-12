@@ -100,7 +100,6 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   /// @brief Data handle for the output space points
   WriteDataHandle<MuonSpacePointContainer> m_outputSpacePoints{this,
                                                                "SpacePoints"};
-
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
 

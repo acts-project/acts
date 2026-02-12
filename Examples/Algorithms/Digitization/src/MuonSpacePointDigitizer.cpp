@@ -194,18 +194,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
     const auto& moduleSimHits = simHitsGroup.second;
 
-    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
-        surfaceByIdentifier = m_cfg.trackingGeometry->geoIdSurfaceMap();
-    auto surfaceItr = surfaceByIdentifier.find(moduleGeoId);
-
-    if (surfaceItr == surfaceByIdentifier.end()) {
-      // this is either an invalid geometry id or a misconfigured smearer
-      // setup; both cases can not be handled and should be fatal.
-      ACTS_ERROR("Could not find surface " << moduleGeoId
-                                           << " for configured smearer");
-      return ProcessCode::ABORT;
-    }
-
     const Surface* hitSurf = trackingGeometry().findSurface(moduleGeoId);
     assert(hitSurf != nullptr);
 
@@ -235,7 +223,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
                                  << " recorded in a " << hitSurf->type()
                                  << " surface with id: " << moduleGeoId
                                  << ", bounds: " << bounds);
-
       bool convertSp{true};
 
       MuonSpacePoint newSp{};
@@ -271,7 +258,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
                 convertSp = false;
                 break;
               }
-
               auto ranges = stripTimes.equal_range(moduleGeoId);
               for (auto digitHitItr = ranges.first;
                    digitHitItr != ranges.second; ++digitHitItr) {
@@ -468,14 +454,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
           std::cout << moduleGeoId << std::endl;
           straw_count++;
-
           break;
         }
 
         default:
           ACTS_DEBUG(
               "Unsupported detector case in muon space point digitizer.");
-
           convertSp = false;
       }
 
@@ -509,7 +493,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
                                     m_inputSimHits(ctx), m_inputParticles(ctx),
                                     trackingGeometry(), logger());
       }
-
       outSpacePoints.push_back(std::move(bucket));
     }
   }
