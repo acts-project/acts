@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -105,7 +104,10 @@ class PhotonConversion {
 
   /// Electron mass. This is an static constant and not a member variable so the
   /// struct has no internal state. Otherwise, the interaction list breaks.
-  static const double kElectronMass;
+  static double electronMass() {
+    static double mass = Acts::findMass(Acts::PdgParticle::eElectron).value();
+    return mass;
+  }
 };
 
 inline double PhotonConversion::screenFunction1(double delta) const {
@@ -128,7 +130,7 @@ std::pair<double, double> PhotonConversion::generatePathLimits(
 
   // Fast exit if not a photon or the energy is too low
   if (particle.pdg() != Acts::PdgParticle::eGamma ||
-      particle.absoluteMomentum() < (2 * kElectronMass)) {
+      particle.absoluteMomentum() < (2 * electronMass())) {
     return {std::numeric_limits<double>::infinity(),
             std::numeric_limits<double>::infinity()};
   }
@@ -186,7 +188,7 @@ double PhotonConversion::generateFirstChildEnergyFraction(
   const double deltaMax = std::exp((42.038 - FZ) * 0.1206) - 0.958;
 
   const double deltaPreFactor = 136. / std::pow(m_Z, 1. / 3.);
-  const double eps0 = kElectronMass / gammaMom;
+  const double eps0 = electronMass() / gammaMom;
   const double deltaFactor = deltaPreFactor * eps0;
   const double deltaMin = 4. * deltaFactor;
 
@@ -227,7 +229,7 @@ Acts::Vector3 PhotonConversion::generateChildDirection(
 
   // Following the Geant4 approximation from L. Urban
   // the azimutal angle
-  double theta = kElectronMass / particle.energy();
+  double theta = electronMass() / particle.energy();
 
   std::uniform_real_distribution<double> uniformDistribution{0., 1.};
   const double u = -std::log(uniformDistribution(generator) *
@@ -259,7 +261,7 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
   using namespace Acts::UnitLiterals;
 
   // Calculate the child momentum
-  const double massChild = kElectronMass;
+  const double massChild = electronMass();
   const double momentum1 =
       std::sqrt(childEnergy * childEnergy - massChild * massChild);
 
@@ -275,14 +277,14 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
   // tables.
   std::array<Particle, 2> children = {
       Particle(photon.particleId().makeDescendant(0), Acts::eElectron, -1_e,
-               kElectronMass)
+               electronMass())
           .setPosition4(photon.fourPosition())
           .setDirection(childDirection)
           .setAbsoluteMomentum(momentum1)
           .setProcess(ProcessType::ePhotonConversion)
           .setReferenceSurface(photon.referenceSurface()),
       Particle(photon.particleId().makeDescendant(1), Acts::ePositron, 1_e,
-               kElectronMass)
+               electronMass())
           .setPosition4(photon.fourPosition())
           .setDirection(childDirection)
           .setAbsoluteMomentum(momentum2)
@@ -302,7 +304,7 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
 
   // Fast exit if momentum is too low
   const double p = particle.absoluteMomentum();
-  if (p < (2 * kElectronMass)) {
+  if (p < (2 * electronMass())) {
     return false;
   }
 
