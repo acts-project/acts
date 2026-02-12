@@ -19,15 +19,12 @@
 #include "ActsExamples/Geant4Detector/GdmlDetector.hpp"
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <algorithm>
 #include <memory>
-#include <ranges>
 #include <string>
 #include <tuple>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -41,8 +38,8 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace ActsExamples;
 using namespace Acts;
+using namespace ActsExamples;
 using namespace ActsPlugins;
 using namespace ActsPython;
 
