@@ -213,25 +213,29 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
       << ", fitPars.R_ar: " << fitPars.R_ar
       << ", fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta: "
       << (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta));
-  std::optional<Acts::ActsSquareMatrix<2>> inverseH {std::nullopt};
-  if (hes.determinant() > std::numeric_limits<double>::epsilon() && hes.trace() > 0) {
+  std::optional<Acts::ActsSquareMatrix<2>> inverseH{std::nullopt};
+  if (hes.determinant() > std::numeric_limits<double>::epsilon() &&
+      hes.trace() > 0) {
     inverseH = safeInverse(hes);
     if (!inverseH) {
       ACTS_DEBUG(__func__ << "() - " << __LINE__
                           << ": Inversion of the Hessian Failed, Hessian:\n"
-                          << hes << ", determinant: " << hes.determinant() << ", inverse: "
-                          << (inverseH ? toString(*inverseH) : "not invertible") << ", "
-                          << fitPars);
+                          << hes << ", determinant: " << hes.determinant()
+                          << ", inverse: "
+                          << (inverseH ? toString(*inverseH) : "not invertible")
+                          << ", " << fitPars);
       return UpdateStatus::Exceeded;
     }
   } else {
     ACTS_DEBUG(__func__ << "() - " << __LINE__
-                        << ": Hessian is singular or not positive definite. Cannot be inverted.");
+                        << ": Hessian is singular or not positive definite. "
+                           "Cannot be inverted.");
     return UpdateStatus::Exceeded;
   }
-  //if (!inverseH) {   // (*inverseH)(1, 1) < 0 || (*inverseH)(0, 0) < 0
+  // if (!inverseH) {   // (*inverseH)(1, 1) < 0 || (*inverseH)(0, 0) < 0
   //  ACTS_DEBUG("Invalid covariance\n"
-  //             << cov << ", determinant: " << cov.determinant() << ", inverse: "
+  //             << cov << ", determinant: " << cov.determinant() << ", inverse:
+  //             "
   //             << (inverseH ? toString(*inverseH) : "not invertible") << ", "
   //             << fitPars);
   //  return UpdateStatus::Exceeded;
@@ -251,7 +255,8 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                                        inDeg(grad[0]), inNanoS(grad[1]))
                         << ", hessian:" << std::endl
                         << toString(hes) << std::endl
-                        << "det: " << hes.determinant() << ", covariance:" << std::endl 
+                        << "det: " << hes.determinant()
+                        << ", covariance:" << std::endl
                         << toString(*inverseH) << std::endl
                         << std::format(" update: ({:.3f}, {:.3f}),",
                                        inDeg(update[0]), inNanoS(update[1]))

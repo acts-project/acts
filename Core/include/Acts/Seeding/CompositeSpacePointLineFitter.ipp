@@ -558,17 +558,20 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ", hessian: \n"
                         << toString(miniHessian)
                         << ", determinant: " << miniHessian.determinant());
-  std::optional<Acts::ActsSquareMatrix<N>> inverseH {std::nullopt};
-  if (miniHessian.determinant() > std::numeric_limits<double>::epsilon() && miniHessian.trace() > 0) {
+  std::optional<Acts::ActsSquareMatrix<N>> inverseH{std::nullopt};
+  if (miniHessian.determinant() > std::numeric_limits<double>::epsilon() &&
+      miniHessian.trace() > 0) {
     inverseH = safeInverse(miniHessian);
     if (!inverseH) {
-      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                          << ": Inversion of the Hessian Failed, fallback to gradient decent.");
+      ACTS_DEBUG(
+          __func__
+          << "<" << N << ">() - " << __LINE__
+          << ": Inversion of the Hessian Failed, fallback to gradient decent.");
     }
   } else {
     ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                        << ": Hessian is singular or not positive definite. Cannot be inverted, fallback to gradient decent.");
-    
+                        << ": Hessian is singular or not positive definite. "
+                           "Cannot be inverted, fallback to gradient decent.");
   }
   if (inverseH) {
     const Vector<N> update{(*inverseH) * miniGradient};
