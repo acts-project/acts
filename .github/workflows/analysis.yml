@@ -97,7 +97,7 @@ jobs:
 
   clang_tidy:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404_clang19:83
 
     steps:
       - uses: actions/checkout@v6
@@ -115,10 +115,10 @@ jobs:
 
       - name: Install clang-tidy
         run: |
-          apt-get update && apt-get install -y clang-tidy-18
-          ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
-          ln -sf /usr/bin/clang++-18 /usr/bin/clang++
-          ln -sf /usr/bin/clang-18 /usr/bin/clang
+          apt-get update && apt-get install -y clang-tidy-19
+          ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
+          ln -sf /usr/bin/clang++-19 /usr/bin/clang++
+          ln -sf /usr/bin/clang-19 /usr/bin/clang
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -154,6 +154,7 @@ jobs:
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml --verbose
 
+      - run: apt-get install -y tmux
       - name: Setup upterm session
         uses: owenthereal/action-upterm@v1
         with:
