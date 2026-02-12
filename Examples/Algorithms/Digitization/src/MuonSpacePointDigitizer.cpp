@@ -567,7 +567,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
     params[Acts::eBoundLoc0] = std::get<1>(globalPositions[sp1]);
     params[Acts::eBoundLoc1] = std::get<2>(globalPositions[sp1]);
     params[Acts::eBoundTime] = 0.;
-    Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Identity();
+    Acts::BoundMatrix cov = Acts::BoundMatrix::Identity();
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::muon();
     trackParameters.emplace_back(std::get<3>(globalPositions[sp1]), params, cov,

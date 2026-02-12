@@ -134,7 +134,9 @@ def main():
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
         mockUpCfg.buildEndcaps = False
-        mockUpBuilder = gm_ex.GeoMuonMockupExperiment(mockUpCfg, "GeoMockUpMS", logLevel)
+        mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
+            mockUpCfg, "GeoMockUpMS", logLevel
+        )
         gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
 
         gmTree = mockUpBuilder.constructMS()
@@ -198,35 +200,28 @@ def main():
     )
     algSequence.addAlgorithm(digiAlg)
 
-    rmwConfig = acts.examples.root.RootMeasurementWriter.Config(
-        inputMeasurements="measurements",
-        # inputClusters=digiAlg.config.outputClusters,
-        inputSimHits="simhits",
-        inputMeasurementSimHitsMap="measurement_simhits_map",
-        filePath=str("measurements.root"),
-        surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
+    from acts.examples import RootMuonSpacePointWriter
+
+    algSequence.addWriter(
+        RootMuonSpacePointWriter(
+            level=logLevel,
+            inputSpacePoints="MuonSpacePoints",
+            filePath=f"{args.outDir}/MS_SpacePoints.root",
+        )
     )
-    algSequence.addWriter(acts.examples.root.RootMeasurementWriter(rmwConfig, logLevel))
-    # from acts.examples import RootMuonSpacePointWriter
-    #
-    # algSequence.addWriter(
-    #     RootMuonSpacePointWriter(
-    #         level=logLevel,
-    #         inputSpacePoints="MuonSpacePoints",
-    #         filePath=f"{args.outDir}/MS_SpacePoints.root",
-    #     )
-    # )
-    #
-    # if args.geoSvgDump:
-    #     wb = WhiteBoard(acts.logging.INFO)
-    #     context = AlgorithmContext(0, 0, wb, 10)
-    #     obj_dir = Path(args.outDir) / "obj"
-    #     obj_dir.mkdir(exist_ok=True)
-    #     writer = ObjTrackingGeometryWriter(
-    #         level=acts.logging.INFO, outputDir=str(obj_dir)
-    #     )
-    #
-    # writer.write(context, trackingGeometry)
+
+    from acts.examples.root import RootMeasurementWriter
+
+    algSequence.addWriter(
+        RootMeasurementWriter(
+            level=logLevel,
+            inputMeasurements="measurements",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str("measurements.root"),
+            surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
+        )
+    )
 
     algSequence.addAlgorithm(
         acts.examples.TruthTrackFinder(
@@ -274,6 +269,17 @@ def main():
             writeGx2fSpecific=True,
         )
     )
+
+    if args.geoSvgDump:
+        wb = WhiteBoard(acts.logging.INFO)
+        context = AlgorithmContext(0, 0, wb, 10)
+        obj_dir = Path(args.outDir) / "obj"
+        obj_dir.mkdir(exist_ok=True)
+        writer = ObjTrackingGeometryWriter(
+            level=acts.logging.INFO, outputDir=str(obj_dir)
+        )
+
+    writer.write(context, trackingGeometry)
 
     algSequence.run()
 
