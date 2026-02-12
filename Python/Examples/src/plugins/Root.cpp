@@ -128,7 +128,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
           .def(py::init<>())
-          .def_readwrite("varBinning", &EffPlotTool::Config::varBinning);
+          .def_readwrite("varBinning", &EffPlotTool::Config::varBinning)
+          .def_readwrite("minTruthPt", &EffPlotTool::Config::minTruthPt);
 
       py::class_<FakePlotTool::Config>(root, "FakePlotToolConfig")
           .def(py::init<>())
