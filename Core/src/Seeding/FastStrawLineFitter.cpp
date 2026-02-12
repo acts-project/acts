@@ -220,10 +220,8 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
     if (!inverseH) {
       ACTS_DEBUG(__func__ << "() - " << __LINE__
                           << ": Inversion of the Hessian Failed, Hessian:\n"
-                          << hes << ", determinant: " << hes.determinant()
-                          << ", inverse: "
-                          << (inverseH ? toString(*inverseH) : "not invertible")
-                          << ", " << fitPars);
+                          << hes << ", determinant: " << hes.determinant()) << ", "
+                          << fitPars);
       return UpdateStatus::Exceeded;
     }
   } else {
@@ -232,14 +230,6 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                            "Cannot be inverted.");
     return UpdateStatus::Exceeded;
   }
-  // if (!inverseH) {   // (*inverseH)(1, 1) < 0 || (*inverseH)(0, 0) < 0
-  //  ACTS_DEBUG("Invalid covariance\n"
-  //             << cov << ", determinant: " << cov.determinant() << ", inverse:
-  //             "
-  //             << (inverseH ? toString(*inverseH) : "not invertible") << ", "
-  //             << fitPars);
-  //  return UpdateStatus::Exceeded;
-  //}
   const Vector2 update = (*inverseH) * grad;
   // We compute also the normalized update, defined as the parameter
   // update expressed in units of the parameter uncertainties. This quantifies
