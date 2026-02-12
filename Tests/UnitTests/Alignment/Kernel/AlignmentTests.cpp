@@ -211,7 +211,7 @@ BoundTrackParameters makeParameters() {
   stddev[eBoundPhi] = 0.5_degree;
   stddev[eBoundTheta] = 0.5_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   auto loc0 = 0. + stddev[eBoundLoc0] * normalDist(rng);
   auto loc1 = 0. + stddev[eBoundLoc1] * normalDist(rng);

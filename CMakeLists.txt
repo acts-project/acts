@@ -94,7 +94,6 @@ option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
-option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
 # python related options
 option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
@@ -180,12 +179,7 @@ set_option_if(
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
-set_option_if(
-    ACTS_BUILD_PLUGIN_ROOT
-    ACTS_BUILD_PLUGIN_DD4HEP
-    OR
-    ACTS_BUILD_EXAMPLES
-)
+set_option_if(ACTS_BUILD_PLUGIN_ROOT ACTS_BUILD_PLUGIN_DD4HEP)
 set_option_if(
     ACTS_BUILD_PLUGIN_IDENTIFICATION
     ACTS_BUILD_PLUGIN_ROOT
@@ -201,7 +195,6 @@ set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_HASHING ACTS_BUILD_EXAMPLES_HASHING)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 # feature tests
@@ -227,7 +220,7 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
     set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
     set(CMAKE_INSTALL_LIBDIR "acts")
-    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}) # Don't install headers
     set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
     set(CMAKE_INSTALL_DATADIR "acts/share")
     set(ACTS_PYTHON_INSTALL_DIR "acts")
@@ -236,12 +229,14 @@ else()
     if(PROJECT_IS_TOP_LEVEL)
         include(GNUInstallDirs)
     endif()
-    set(ACTS_PYTHON_INSTALL_DIR "python")
+    set(ACTS_PYTHON_INSTALL_DIR "python/acts")
 endif()
 
 include(ActsCompilerOptions) # default compile options
 include(ActsComponentsHelpers) # handle components via add_..._if commands
 include(ActsStaticAnalysis)
+
+acts_disable_static_analysis() # disable static analysis for thirdparty dependencies, will be enabled later for the main code
 
 if(PROJECT_IS_TOP_LEVEL)
     # place build products in `<build>/bin` and `<build>/lib` for simple use
@@ -575,16 +570,24 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
         add_subdirectory(thirdparty/traccc)
     endif()
 endif()
-if(ACTS_SETUP_ANNOY OR ACTS_BUILD_PLUGIN_HASHING)
-    add_subdirectory(thirdparty/Annoy)
-endif()
 
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
+    set(_acts_hepmc3_components "search")
+    if(ACTS_BUILD_EXAMPLES_ROOT)
+        list(APPEND _acts_hepmc3_components "rootIO")
+    endif()
+
+    find_package(
+        HepMC3
+        ${_acts_hepmc3_version}
+        REQUIRED
+        CONFIG
+        COMPONENTS ${_acts_hepmc3_components}
+    )
 
     # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
     if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)
@@ -628,11 +631,16 @@ if(ACTS_BUILD_EXAMPLES)
     if(ACTS_BUILD_EXAMPLES_PYTHIA8)
         find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
     endif()
+    if(ACTS_SETUP_ANNOY OR ACTS_BUILD_EXAMPLES_HASHING)
+        add_subdirectory(thirdparty/Annoy)
+    endif()
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
     find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
 endif()
+
+acts_enable_static_analysis() # enable static analysis for the main code, after dependencies are set up
 
 # core library, core plugins, and other components
 add_component(Core Core)

@@ -154,7 +154,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
       ActsMatrix<eBoundSize, 3> E = linTrack.momentumJacobian;
 
       // cache some matrix multiplications
-      BoundSquareMatrix W = linTrack.weightAtPCA;
+      BoundMatrix W = linTrack.weightAtPCA;
       ActsMatrix<4, eBoundSize> DtW = D.transpose() * W;
       ActsMatrix<3, eBoundSize> EtW = E.transpose() * W;
 
@@ -214,7 +214,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
-    std::vector<std::optional<BoundSquareMatrix>> covDeltaP(nTracks);
+    std::vector<std::optional<BoundMatrix>> covDeltaP(nTracks);
 
     // Update track momenta and calculate the covariance of the track parameters
     // after the fit (TODO: parameters -> momenta).

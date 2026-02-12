@@ -74,7 +74,7 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
   stddev[eBoundPhi] = 2_degree;
   stddev[eBoundTheta] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
   return BoundTrackParameters::createCurvilinear(
