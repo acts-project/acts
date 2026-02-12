@@ -158,7 +158,7 @@ ProcessCode RootAthenaNTupleReader::read(const AlgorithmContext& context) {
     params[Acts::BoundIndices::eBoundTime] = m_branches.track_t[i];
 
     // Construct and fill covariance matrix
-    Acts::BoundSquareMatrix cov;
+    Acts::BoundMatrix cov;
 
     // Variances
     cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundLoc0) =

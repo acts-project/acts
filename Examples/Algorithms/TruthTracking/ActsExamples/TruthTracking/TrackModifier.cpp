@@ -40,7 +40,7 @@ ProcessCode TrackModifier::execute(const AlgorithmContext& ctx) const {
     {
       if (m_cfg.dropCovariance) {
         trk.covariance() =
-            Acts::BoundSquareMatrix(trk.covariance().diagonal().asDiagonal());
+            Acts::BoundMatrix(trk.covariance().diagonal().asDiagonal());
       }
       if (m_cfg.covScale != 1) {
         trk.covariance() *= m_cfg.covScale;

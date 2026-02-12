@@ -37,7 +37,7 @@ struct GsfComponent {
   /// Bound track parameters for this component
   BoundVector boundPars = BoundVector::Zero();
   /// Covariance matrix for the bound track parameters
-  BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
+  BoundMatrix boundCov = BoundMatrix::Identity();
 };
 
 namespace GsfConstants {

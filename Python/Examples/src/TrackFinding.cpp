@@ -107,8 +107,8 @@ void addTrackFinding(py::module& mex) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm", inputSpacePoints,
-      outputSeeds, seedFinderConfig, seedFinderOptions, layerMappingFile,
-      trackingGeometry, actsGbtsMap, fill_module_csv, inputClusters);
+      outputSeeds, seedFinderConfig, layerMappingFile, trackingGeometry,
+      actsGbtsMap, fillModuleCsv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
