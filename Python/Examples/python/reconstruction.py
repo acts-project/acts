@@ -570,7 +570,7 @@ def addSeeding(
             csvSeedWriter = acts.examples.CsvSeedWriter(
                 level=logLevel,
                 inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
-                inputSimSeeds=seeds,
+                inputSeeds=seeds,
                 inputSimHits="simhits",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -1389,10 +1389,10 @@ def addSeedFilterML(
     filterML = SeedFilterMLAlgorithm(
         level=customLogLevel,
         inputTrackParameters="estimatedparameters",
-        inputSimSeeds="seeds",
+        inputSeeds="seeds",
         inputSeedFilterNN=onnxModelFile,
         outputTrackParameters="filtered-parameters",
-        outputSimSeeds="filtered-seeds",
+        outputSeeds="filtered-seeds",
         **acts.examples.defaultKWArgs(
             epsilonDBScan=config.epsilonDBScan,
             minPointsDBScan=config.minPointsDBScan,
@@ -1453,7 +1453,7 @@ def addSeedFilterML(
         csvSeedWriter = acts.examples.CsvSeedWriter(
             level=customLogLevel,
             inputTrackParameters=estParams,
-            inputSimSeeds=seeds,
+            inputSeeds=seeds,
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",
