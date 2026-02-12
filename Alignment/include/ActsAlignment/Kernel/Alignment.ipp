@@ -132,14 +132,13 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
 
   // Get the inverse of chi2 second derivative matrix (we need this to
   // calculate the covariance of the alignment parameters)
-  // @Todo: use more stable method for solving the inverse
+  // @TODO: use more stable method for solving the inverse
   std::size_t alignDof = alignResult.alignmentDof;
   Acts::ActsDynamicMatrix sumChi2SecondDerivativeInverse =
       Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
   sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();
   if (sumChi2SecondDerivativeInverse.hasNaN()) {
     ACTS_DEBUG("Chi2 second derivative inverse has NaN");
-    // return AlignmentError::AlignmentParametersUpdateFailure;
   }
 
   // Initialize the alignment results
@@ -166,7 +165,8 @@ Acts::Result<void>
 ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     const Acts::GeometryContext& gctx,
     const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
-    const ActsAlignment::AlignedTransformUpdater& alignedTransformUpdater,
+    const ActsAlignment::AlignedTransformUpdaterConcept auto&
+        alignedTransformUpdater,
     ActsAlignment::AlignmentResult& alignResult) const {
   // Update the aligned transform
   Acts::AlignmentVector deltaAlignmentParam = Acts::AlignmentVector::Zero();

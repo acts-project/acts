@@ -587,7 +587,7 @@ struct GsfActor {
         // place sentinel values for smoothed parameters for now. they will be
         // filled in the backward pass
         combinedState.smoothed() = BoundVector::Constant(-2);
-        combinedState.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
+        combinedState.smoothedCovariance() = BoundMatrix::Constant(-2);
       } else {
         combinedState.shareFrom(TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);

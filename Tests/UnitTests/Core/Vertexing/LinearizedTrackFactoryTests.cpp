@@ -45,7 +45,7 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 // We will compare analytical and numerical computations in the case of a
 // (non-zero) constant B-field and a zero B-field.
 using HelicalPropagator = Propagator<EigenStepper<>>;
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     // In addition to comparing the output of the linearizers, we check that
     // they return non-zero quantities
     BoundVector vecBoundZero = BoundVector::Zero();
-    BoundSquareMatrix matBoundZero = BoundSquareMatrix::Zero();
+    BoundMatrix matBoundZero = BoundMatrix::Zero();
     ActsMatrix<eBoundSize, 4> matBound2SPZero =
         ActsMatrix<eBoundSize, 4>::Zero();
     ActsMatrix<eBoundSize, 3> matBound2MomZero =

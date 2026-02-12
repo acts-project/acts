@@ -55,7 +55,7 @@ namespace Acts::detail {
 ///
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
     const GeometryContext& geoContext, const Surface& surface,
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
@@ -85,7 +85,7 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& transportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
@@ -112,7 +112,7 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
 ///
 void transportCovarianceToBound(
     const GeometryContext& geoContext, const Surface& surface,
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,
@@ -131,7 +131,7 @@ void transportCovarianceToBound(
 /// @param [in] direction Normalised direction vector
 ///
 void transportCovarianceToCurvilinear(
-    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    BoundMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian,
     const std::optional<FreeMatrix>& additionalFreeCovariance,

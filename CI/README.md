@@ -1,6 +1,6 @@
 # CI instructions
 
-This directory comntains scripts and other files relating to the CI.
+This directory contains scripts and other files relating to the CI.
 
 ## Use poetry to manage requirements
 

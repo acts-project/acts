@@ -22,7 +22,7 @@ namespace ActsPlugins {
 /// @addtogroup root_plugin
 /// @{
 
-/// Method to setup the FieldMap
+/// Method to set up the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of r,z to the
 /// global
 /// bin of the map magnetic field value e.g.: we have small grid with the
@@ -67,7 +67,7 @@ makeMagneticFieldMapRzFromRoot(
     const std::string& fieldMapFile, const std::string& treeName,
     double lengthUnit, double BFieldUnit, bool firstQuadrant = false);
 
-/// Method to setup the FieldMap
+/// Method to set up the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
 /// global bin of the map magnetic field value e.g.: we have small grid with
 /// the
