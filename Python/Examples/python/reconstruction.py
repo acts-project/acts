@@ -672,7 +672,7 @@ def addTruthEstimatedSeeding(
         level=logLevel,
         inputParticles=inputParticles,
         inputParticleMeasurementsMap="particle_measurements_map",
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         inputSimHits="simhits",
         inputMeasurementSimHitsMap="measurement_simhits_map",
         outputParticles="truth_seeded_particles",
@@ -854,7 +854,7 @@ def addStandardSeeding(
 
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
         **acts.examples.defaultKWArgs(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
@@ -1153,7 +1153,7 @@ def addOrthogonalSeeding(
     )
     seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         outputSeeds="seeds",
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
