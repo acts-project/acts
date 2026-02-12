@@ -91,7 +91,7 @@ ProcessCode SeedFilterMLAlgorithm::execute(const AlgorithmContext& ctx) const {
   outputTrackParameters.reserve(goodSeedIndices.size());
 
   for (std::size_t i : goodSeedIndices) {
-    auto newSeed = outputSeeds.create();
+    auto newSeed = outputSeeds.createSeed();
     newSeed.assignSpacePointIndices(seeds[i].spacePointIndices());
     newSeed.vertexZ() = seeds[i].vertexZ();
     newSeed.quality() = seeds[i].quality();
