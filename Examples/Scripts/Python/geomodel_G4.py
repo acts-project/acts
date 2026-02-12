@@ -133,11 +133,26 @@ def main():
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
-        mockUpCfg.buildEndcaps = False
+        # mockUpCfg.buildEndcaps = False
+        # mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
+        #     mockUpCfg, "GeoMockUpMS", logLevel
+        # )
+        # gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
+        mockUpCfg.buildEndcaps = True
         mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
             mockUpCfg, "GeoMockUpMS", logLevel
         )
-        gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
+        gmBuilderConfig.stationNames = [
+            "BI",
+            "BM",
+            "BO",
+            "EAI",
+            "EAM",
+            "EAO",
+            "ECI",
+            "ECM",
+            "ECO",
+        ]
 
         gmTree = mockUpBuilder.constructMS()
     else:
@@ -200,7 +215,7 @@ def main():
     )
     algSequence.addAlgorithm(digiAlg)
 
-    from acts.examples import RootMuonSpacePointWriter
+    from acts.examples.root import RootMuonSpacePointWriter
 
     algSequence.addWriter(
         RootMuonSpacePointWriter(
@@ -279,7 +294,7 @@ def main():
             level=acts.logging.INFO, outputDir=str(obj_dir)
         )
 
-    writer.write(context, trackingGeometry)
+        writer.write(context, trackingGeometry)
 
     algSequence.run()
 
