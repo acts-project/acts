@@ -12,6 +12,7 @@
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -69,7 +70,7 @@ TrackFindingFromPrototrackAlgorithm::TrackFindingFromPrototrackAlgorithm(
 }
 
 ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
-    const ArithmContext& ctx) const {
+    const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);

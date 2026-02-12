@@ -86,10 +86,9 @@ bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
 }  // namespace
 
 ScoreBasedAmbiguityResolutionAlgorithm::ScoreBasedAmbiguityResolutionAlgorithm(
-    ScoreBasedAmbiguityResolutionAlgorithm::Config cfg,
-    Acts::Logging::Level lvl)
+    const Config& cfg, Acts::Logging::Level lvl)
     : IAlgorithm("ScoreBasedAmbiguityResolutionAlgorithm", lvl),
-      m_cfg(std::move(cfg)),
+      m_cfg(cfg),
       m_ambi(transformConfig(cfg, m_cfg.configFile), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");

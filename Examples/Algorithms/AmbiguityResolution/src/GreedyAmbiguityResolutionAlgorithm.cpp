@@ -43,9 +43,9 @@ bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
 }  // namespace
 
 GreedyAmbiguityResolutionAlgorithm::GreedyAmbiguityResolutionAlgorithm(
-    GreedyAmbiguityResolutionAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    const Config& cfg, Acts::Logging::Level lvl)
     : IAlgorithm("GreedyAmbiguityResolutionAlgorithm", lvl),
-      m_cfg(std::move(cfg)),
+      m_cfg(cfg),
       m_core(transformConfig(cfg), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");

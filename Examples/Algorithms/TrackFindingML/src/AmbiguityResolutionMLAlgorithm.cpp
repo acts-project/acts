@@ -33,9 +33,9 @@ static bool sourceLinkEquality(const SourceLink& a, const SourceLink& b) {
 }  // namespace
 
 AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
-    AmbiguityResolutionMLAlgorithm::Config cfg, Logging::Level lvl)
+    const Config& cfg, Logging::Level lvl)
     : IAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
-      m_cfg(std::move(cfg)),
+      m_cfg(cfg),
       m_ambiML(m_cfg.toAmbiguityResolutionMLConfig(), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");

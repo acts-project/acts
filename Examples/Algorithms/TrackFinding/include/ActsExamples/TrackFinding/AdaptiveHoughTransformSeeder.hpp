@@ -361,7 +361,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AdaptiveHoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+  AdaptiveHoughTransformSeeder(const Config &cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///
