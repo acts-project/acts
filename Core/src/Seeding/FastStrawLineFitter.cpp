@@ -185,12 +185,12 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   }
 
   UpdateStatus retCode{UpdateStatus::GoodStep};
-  SquareMatrix<2> cov{SquareMatrix<2>::Zero()};
+  SquareMatrix<2> hes{SquareMatrix<2>::Zero()};
   Vector2 grad{Vector2::Zero()};
 
   const TrigonomHelper angles{fitResult.theta};
 
-  calcAngularDerivatives(angles, fitPars, grad[0], cov(0, 0));
+  calcAngularDerivatives(angles, fitPars, grad[0], hes(0, 0));
   grad[1] = calcTimeGrad(angles, fitPars);
   if (grad.norm() < m_cfg.precCutOff) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Fit converged "
@@ -198,10 +198,10 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
     retCode = UpdateStatus::Converged;
   }
 
-  cov(1, 0) = cov(0, 1) =
+  hes(1, 0) = hes(0, 1) =
       fitPars.T_vz * angles.cosTheta + fitPars.T_vy * angles.sinTheta;
 
-  cov(1, 1) = -fitPars.R_v * fitPars.R_v * fitPars.covNorm -
+  hes(1, 1) = -fitPars.R_v * fitPars.R_v * fitPars.covNorm -
               fitPars.fitY0 * fitPars.R_a + fitPars.R_vv + fitPars.R_ar -
               (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta);
   ACTS_VERBOSE(
@@ -213,30 +213,46 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
       << ", fitPars.R_ar: " << fitPars.R_ar
       << ", fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta: "
       << (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta));
-  const auto invCov = safeInverse(cov);
-  if (!invCov || (*invCov)(1, 1) < 0 || (*invCov)(0, 0) < 0) {
-    ACTS_DEBUG("Invalid covariance\n"
-               << cov << ", determinant: " << cov.determinant() << ", inverse: "
-               << (invCov ? toString(*invCov) : "not invertible") << ", "
-               << fitPars);
+  std::optional<Acts::ActsSquareMatrix<2>> inverseH {std::nullopt};
+  if (hes.determinant() > std::numeric_limits<double>::epsilon() && hes.trace() > 0) {
+    inverseH = safeInverse(hes);
+    if (!inverseH) {
+      ACTS_DEBUG(__func__ << "() - " << __LINE__
+                          << ": Inversion of the Hessian Failed, Hessian:\n"
+                          << hes << ", determinant: " << hes.determinant() << ", inverse: "
+                          << (inverseH ? toString(*inverseH) : "not invertible") << ", "
+                          << fitPars);
+      return UpdateStatus::Exceeded;
+    }
+  } else {
+    ACTS_DEBUG(__func__ << "() - " << __LINE__
+                        << ": Hessian is singular or not positive definite. Cannot be inverted.");
     return UpdateStatus::Exceeded;
   }
-  const Vector2 update = (*invCov) * grad;
+  //if (!inverseH) {   // (*inverseH)(1, 1) < 0 || (*inverseH)(0, 0) < 0
+  //  ACTS_DEBUG("Invalid covariance\n"
+  //             << cov << ", determinant: " << cov.determinant() << ", inverse: "
+  //             << (inverseH ? toString(*inverseH) : "not invertible") << ", "
+  //             << fitPars);
+  //  return UpdateStatus::Exceeded;
+  //}
+  const Vector2 update = (*inverseH) * grad;
   // We compute also the normalized update, defined as the parameter
   // update expressed in units of the parameter uncertainties. This quantifies
   // the significance of the update relative to the estimated errors.
   double normUpdate{0.};
   for (unsigned i = 0; i < 2; ++i) {
-    normUpdate += Acts::square(update[i]) / (*invCov)(i, i);
+    normUpdate += Acts::square(update[i]) / (*inverseH)(i, i);
   }
 
   ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
                         << fitResult << "\n"
                         << std::format("gradient: ({:.3f}, {:.3f})",
                                        inDeg(grad[0]), inNanoS(grad[1]))
-                        << ", covariance:" << std::endl
-                        << toString(cov) << std::endl
-                        << cov.determinant()
+                        << ", hessian:" << std::endl
+                        << toString(hes) << std::endl
+                        << "det: " << hes.determinant() << ", covariance:" << std::endl 
+                        << toString(*inverseH) << std::endl
                         << std::format(" update: ({:.3f}, {:.3f}),",
                                        inDeg(update[0]), inNanoS(update[1]))
                         << " normUpdate: " << std::sqrt(normUpdate));
@@ -249,8 +265,8 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   }
 
   if (retCode == UpdateStatus::Converged) {
-    fitResult.dTheta = std::sqrt((*invCov)(0, 0));
-    fitResult.dT0 = std::sqrt((*invCov)(1, 1));
+    fitResult.dTheta = std::sqrt((*inverseH)(0, 0));
+    fitResult.dT0 = std::sqrt((*inverseH)(1, 1));
     completeResult(fitPars, fitResult);
     return retCode;
   }

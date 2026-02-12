@@ -354,11 +354,6 @@ CompositeSpacePointLineFitter::fit(
                                          resCfg.parsToUse, fitDelegate);
     }
     if (fastResult.converged) {
-      if (fitTime) {
-        fastResult.parameters[toUnderlying(FitParIndex::t0)] -=
-            (fitOpts.localToGlobal * line.position()).norm() /
-            PhysicalConstants::c;
-      }
       static_cast<FitParameters&>(result) = std::move(fastResult);
       ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit converged.");
       // Use the result from the fast fitter as final answer
@@ -563,10 +558,19 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ", hessian: \n"
                         << toString(miniHessian)
                         << ", determinant: " << miniHessian.determinant());
-
-  auto inverseH = safeInverse(miniHessian);
-  // The Hessian can safely be inverted
-  if (inverseH && inverseH->diagonal().minCoeff() > 0) {
+  std::optional<Acts::ActsSquareMatrix<N>> inverseH {std::nullopt};
+  if (miniHessian.determinant() > std::numeric_limits<double>::epsilon() && miniHessian.trace() > 0) {
+    inverseH = safeInverse(miniHessian);
+    if (!inverseH) {
+      ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                          << ": Inversion of the Hessian Failed, fallback to gradient decent.");
+    }
+  } else {
+    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Hessian is singular or not positive definite. Cannot be inverted, fallback to gradient decent.");
+    
+  }
+  if (inverseH) {
     const Vector<N> update{(*inverseH) * miniGradient};
     // We compute also the normalized update, defined as the parameter
     // update expressed in units of the parameter uncertainties. This quantifies
