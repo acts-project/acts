@@ -154,6 +154,11 @@ jobs:
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml --verbose
 
+      - name: Setup upterm session
+        uses: owenthereal/action-upterm@v1
+        with:
+          limit-access-to-actor: true
+
   # build_performance:
   #   runs-on: ubuntu-latest
   #   container: ghcr.io/acts-project/ubuntu2404:83
