@@ -136,7 +136,6 @@ inline bool xyzCoordinateCheck(
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
-  using namespace Acts::HashedStringLiteral;
   const Acts::Vector3& topStripVector = sp.topStripVector();
   const Acts::Vector3& bottomStripVector = sp.bottomStripVector();
   const Acts::Vector3& stripCenterDistance = sp.stripCenterDistance();
