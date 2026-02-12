@@ -25,7 +25,6 @@
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
-#include "ActsFatras/Digitization/Channelizer.hpp"
 
 #include <algorithm>
 #include <format>
@@ -208,9 +207,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
                                            << " for configured smearer");
       return ProcessCode::ABORT;
     }
-
-    /// Geometric digitizer
-    ActsFatras::Channelizer channelizer;
 
     const Surface* hitSurf = trackingGeometry().findSurface(moduleGeoId);
     assert(hitSurf != nullptr);
