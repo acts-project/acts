@@ -76,10 +76,12 @@ void addDigitization(py::module& mex) {
 
     auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, inputSimHits, inputParticles, outputSpacePoints,
-                       randomNumbers, trackingGeometry, digitizeTime,
-                       dumpVisualization, visualizationFunction, strawDeadTime,
-                       rpcDeadTime);
+    ACTS_PYTHON_STRUCT(
+        c, inputSimHits, inputParticles, outputSpacePoints, outputMeasurements,
+        outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
+        outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
+        randomNumbers, trackingGeometry, digitizeTime, dumpVisualization,
+        visualizationFunction, strawDeadTime, rpcDeadTime);
 
     ActsPython::patchKwargsConstructor(c);
   }
