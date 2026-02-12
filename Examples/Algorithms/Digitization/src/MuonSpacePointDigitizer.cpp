@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
@@ -22,7 +21,6 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
-#include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
