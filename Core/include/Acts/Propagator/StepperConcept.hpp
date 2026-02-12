@@ -87,7 +87,7 @@ template <typename Stepper, typename State = typename Stepper::State>
 concept SingleStepper =
     CommonStepper<Stepper, State> && requires(const Stepper& s, State& t) {
       requires requires(const FreeVector& fv, const BoundVector& bv,
-                        const BoundSquareMatrix& bm, const Surface& sf) {
+                        const BoundMatrix& bm, const Surface& sf) {
         { s.update(t, fv, bv, bm, sf) } -> std::same_as<void>;
       };
 

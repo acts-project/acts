@@ -47,7 +47,7 @@ class EigenStepper {
   /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix (bound square matrix)
-  using Covariance = BoundSquareMatrix;
+  using Covariance = BoundMatrix;
   /// Type alias for bound state tuple containing parameters, jacobian, and path
   /// length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
