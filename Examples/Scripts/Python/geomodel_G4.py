@@ -211,7 +211,7 @@ def main():
         dumpVisualization=False,
         digitizeTime=True,
         outputSpacePoints="MuonSpacePoints",
-        level=acts.logging.VERBOSE,
+        level=logLevel,
     )
     algSequence.addAlgorithm(digiAlg)
 
