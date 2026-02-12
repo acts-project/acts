@@ -85,13 +85,12 @@ struct MultiStepperTester {
   auto makeDefaultBoundPars(
       bool cov = true, std::size_t n = 4,
       std::optional<BoundVector> ext_pars = std::nullopt) const {
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps;
-    using Opt = std::optional<BoundSquareMatrix>;
+    using Opt = std::optional<BoundMatrix>;
 
     auto make_random_sym_matrix = []() {
-      auto c = BoundSquareMatrix::Random().eval();
+      auto c = BoundMatrix::Random().eval();
       c *= c.transpose();
       return c;
     };
@@ -229,7 +228,7 @@ struct MultiStepperTester {
       BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
       if constexpr (!Cov) {
         BOOST_CHECK_EQUAL(cmp.jacToGlobal(), BoundToFreeMatrix::Zero());
-        BOOST_CHECK_EQUAL(cmp.cov(), BoundSquareMatrix::Zero());
+        BOOST_CHECK_EQUAL(cmp.cov(), BoundMatrix::Zero());
       }
     }
 
@@ -274,10 +273,9 @@ struct MultiStepperTester {
     SingleStepper single_stepper(defaultBField);
 
     const BoundVector pars = BoundVector::Ones();
-    const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
+    const BoundMatrix cov = BoundMatrix::Identity();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(4, {0.25, pars, cov});
 
     std::shared_ptr<PlaneSurface> surface =
@@ -432,8 +430,7 @@ struct MultiStepperTester {
         CurvilinearSurface(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
     std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
@@ -541,8 +538,7 @@ struct MultiStepperTester {
         CurvilinearSurface(Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0})
             .planeSurface();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
     std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
     std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
@@ -616,13 +612,12 @@ struct MultiStepperTester {
     // Use Ones() here, so that the angles are in correct range
     const auto pars = BoundVector::Ones().eval();
     const auto cov = []() {
-      auto c = BoundSquareMatrix::Random().eval();
+      auto c = BoundMatrix::Random().eval();
       c *= c.transpose();
       return c;
     }();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(4, {0.25, pars, cov});
 
     MultiComponentBoundTrackParameters multi_pars(surface, cmps,
@@ -659,13 +654,12 @@ struct MultiStepperTester {
     // Use Ones() here, so that the angles are in correct range
     const auto pars = BoundVector::Ones().eval();
     const auto cov = []() {
-      auto c = BoundSquareMatrix::Random().eval();
+      auto c = BoundMatrix::Random().eval();
       c *= c.transpose();
       return c;
     }();
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(4, {0.25, pars, cov});
     BoundTrackParameters check_pars(surface, pars, cov, particleHypothesis);
 
@@ -772,10 +766,9 @@ struct MultiStepperTester {
         typename Propagator<multi_stepper_t, Navigator>::template Options<>;
     PropagatorOptions options(geoCtx, magCtx);
 
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
         cmps(4, {0.25, BoundVector::Ones().eval(),
-                 BoundSquareMatrix::Identity().eval()});
+                 BoundMatrix::Identity().eval()});
     MultiComponentBoundTrackParameters pars(surface, cmps, particleHypothesis);
 
     // This only checks that this compiles, not that it runs without errors

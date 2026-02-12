@@ -45,7 +45,7 @@ Acts::MagneticFieldContext mctx;
 
 using namespace Acts::UnitLiterals;
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Jacobian = BoundMatrix;
 
 /// These tests do not test for a correct covariance transport but only for the
