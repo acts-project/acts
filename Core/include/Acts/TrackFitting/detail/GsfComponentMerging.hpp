@@ -24,7 +24,7 @@ namespace Acts::detail::Gsf {
 /// @param surface The surface, on which the bound state is
 /// @param method How to reduce the mixture
 /// @return parameters and covariance as tuple
-std::tuple<BoundVector, BoundSquareMatrix> mergeGaussianMixture(
+std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
     std::span<const GsfComponent> mixture, const Surface &surface,
     ComponentMergeMethod method);
 
@@ -213,7 +213,7 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
 /// @return parameters and covariance
 template <typename component_range_t, typename projector_t,
           typename angle_desc_t>
-std::tuple<BoundVector, BoundSquareMatrix> mergeGaussianMixture(
+std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
     const component_range_t &cmps, const projector_t &projector,
     const angle_desc_t &angleDesc, ComponentMergeMethod method) {
   const auto [mean, cov] =
@@ -244,7 +244,7 @@ std::tuple<BoundVector, BoundSquareMatrix> mergeGaussianMixture(
 /// @param method How to reduce the mixture
 /// @return parameters and covariance
 template <typename component_range_t, typename projector_t>
-std::tuple<BoundVector, BoundSquareMatrix> mergeGaussianMixture(
+std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
     const component_range_t &cmps, const projector_t &projector,
     const Surface &surface, ComponentMergeMethod method) {
   return angleDescriptionSwitch(surface, [&](const auto &desc) {

@@ -534,10 +534,12 @@ class TrackingVolume : public Volume {
   /// the default is a noop.
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param args are the navigation arguments
+  /// @param state is the navigation policy state
   /// @param stream is the navigation stream to be updated
   /// @param logger is the logger
   void initializeNavigationCandidates(const GeometryContext& gctx,
                                       const NavigationArguments& args,
+                                      NavigationPolicyState& state,
                                       AppendOnlyNavigationStream& stream,
                                       const Logger& logger) const;
 

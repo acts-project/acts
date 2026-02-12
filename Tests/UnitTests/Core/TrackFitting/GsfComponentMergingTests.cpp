@@ -139,8 +139,8 @@ auto circularMean(const std::vector<BoundVector> &samples) -> BoundVector {
 // subtraction object to enable circular behaviour
 template <typename subtract_t = std::minus<BoundVector>>
 auto boundCov(const std::vector<BoundVector> &samples, const BoundVector &mu,
-              const subtract_t &sub = subtract_t{}) -> BoundSquareMatrix {
-  BoundSquareMatrix boundCov = BoundSquareMatrix::Zero();
+              const subtract_t &sub = subtract_t{}) -> BoundMatrix {
+  BoundMatrix boundCov = BoundMatrix::Zero();
   for (const auto &smpl : samples) {
     boundCov += sub(smpl, mu) * sub(smpl, mu).transpose();
   }
@@ -226,7 +226,7 @@ void test_surface(const Surface &surface, const LocPosArray &loc_pos,
           a.boundPars[eBoundTheta] = theta + dtheta;
 
           // We don't look at covariance in this test
-          a.boundCov = BoundSquareMatrix::Zero();
+          a.boundCov = BoundMatrix::Zero();
 
           cmps.push_back(a);
           ++p_it;

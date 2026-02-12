@@ -10,7 +10,7 @@
 
 namespace Acts {
 
-std::tuple<BoundVector, BoundSquareMatrix> detail::Gsf::mergeGaussianMixture(
+std::tuple<BoundVector, BoundMatrix> detail::Gsf::mergeGaussianMixture(
     std::span<const GsfComponent> mixture, const Surface &surface,
     ComponentMergeMethod method) {
   return mergeGaussianMixture(mixture, std::identity{}, surface, method);

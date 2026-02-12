@@ -129,17 +129,16 @@ Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
   }
 
   for (const auto& sp : spacepoints) {
+    double sp_invr = 1. / std::hypot((sp.x() - vtxOldX), (sp.y() - vtxOldY));
     if (sp.z() > maxZ) {
-      if ((sp.z() - maxZ) / sp.r() > maxCotTheta) {
+      if ((sp.z() - maxZ + 0.5 * zBinSize) * sp_invr > maxCotTheta) {
         continue;
       }
     } else if (sp.z() < minZ) {
-      if ((sp.z() - minZ) / sp.r() < minCotTheta) {
+      if ((sp.z() - minZ - 0.5 * zBinSize) * sp_invr < minCotTheta) {
         continue;
       }
     }
-
-    double sp_invr = 1. / std::hypot((sp.x() - vtxOldX), (sp.y() - vtxOldY));
 
     std::uint32_t zFrom = static_cast<std::uint32_t>(
         std::max(((sp.z() - maxCotTheta / sp_invr) - minZ) / zBinSize + 1, 0.));
@@ -152,10 +151,11 @@ Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
       std::uint32_t cotThetaBin = static_cast<std::uint32_t>(
           (cotTheta - minCotTheta) * invCotThetaBinSize);
 
-      std::uint32_t cotThetaFrom =
-          std::max<std::uint32_t>(cotThetaBin - m_cfg.fillNeighbours, 0);
+      std::uint32_t cotThetaFrom = static_cast<std::uint32_t>(
+          std::max<int>(cotThetaBin - m_cfg.fillNeighbours, 0));
+
       std::uint32_t cotThetaTo =
-          std::min(cotThetaBin + m_cfg.fillNeighbours + 1, numCotThetaBins);
+          std::min(cotThetaBin + m_cfg.fillNeighbours + 1u, numCotThetaBins);
 
       for (std::uint32_t cotBin = cotThetaFrom; cotBin < cotThetaTo; ++cotBin) {
         ++houghHist.atLocalBins({zBin, cotBin});

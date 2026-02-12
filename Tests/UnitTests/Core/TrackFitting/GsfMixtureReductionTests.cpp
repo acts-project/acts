@@ -32,10 +32,10 @@ BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
   detail::Gsf::SymmetricKLDistanceMatrix mat(cmps);
 
@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
   const std::size_t cmp_to_mask = 2;
 
@@ -70,10 +70,10 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
   detail::Gsf::SymmetricKLDistanceMatrix mat(cmps);
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   for (auto i = 0ul; i < NComps; ++i) {
     GsfComponent a;
     a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
+    a.boundCov = BoundMatrix::Identity();
     a.weight = 1.0 / NComps;
     cmps.push_back(a);
   }
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
   for (auto w : {1.0, 2.0, 3.0, 4.0}) {
     GsfComponent a;
     a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
+    a.boundCov = BoundMatrix::Identity();
     a.weight = w;
     cmps.push_back(a);
   }
