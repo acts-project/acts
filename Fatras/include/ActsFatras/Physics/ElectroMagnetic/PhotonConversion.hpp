@@ -102,11 +102,10 @@ class PhotonConversion {
   double screenFunction1(double delta) const;
   double screenFunction2(double delta) const;
 
-  /// Electron mass. This is an static constant and not a member variable so the
-  /// struct has no internal state. Otherwise, the interaction list breaks.
-  static double electronMass() {
-    static double mass = Acts::findMass(Acts::PdgParticle::eElectron).value();
-    return mass;
+  /// Helper method for the electron mass. This is used to avoid multiple
+  /// lookups in the internal data tables.
+  static float electronMass() {
+    return Acts::findMass(Acts::PdgParticle::eElectron).value();
   }
 };
 
