@@ -261,8 +261,6 @@ struct SeedFinderOptions {
   /// @return Options with derived quantities calculated
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
-    using namespace UnitLiterals;
-
     SeedFinderOptions options = *this;
     // bFieldInZ is in (pT/radius) natively, no need for conversion
     options.pTPerHelixRadius = options.bFieldInZ;
