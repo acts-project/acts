@@ -589,20 +589,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
   m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
   m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
 
-  ACTS_DEBUG("Created " << measurements.size() << " measurements from "
-                        << gotSimHits.size() << " sim hits.");
-
-  m_outputMeasurements(ctx, std::move(measurements));
-
-  // invert them before they are moved
-  m_outputParticleMeasurementsMap(ctx,
-                                  invertIndexMultimap(measurementParticlesMap));
-  m_outputSimHitMeasurementsMap(ctx,
-                                invertIndexMultimap(measurementSimHitsMap));
-
-  m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
-  m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
-
   return ProcessCode::SUCCESS;
 }
 
