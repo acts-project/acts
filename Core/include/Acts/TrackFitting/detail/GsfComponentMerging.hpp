@@ -209,7 +209,7 @@ template <typename mixture_t, typename projector_t = std::identity>
 auto mergeGaussianMixture(const mixture_t &mixture, const Surface &surface,
                           ComponentMergeMethod method,
                           projector_t &&projector = projector_t{}) {
-  using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
+  using R = std::tuple<Acts::BoundVector, Acts::BoundMatrix>;
   const auto [mean, cov] =
       angleDescriptionSwitch(surface, [&](const auto &desc) {
         return gaussianMixtureMeanCov(mixture, projector, desc);

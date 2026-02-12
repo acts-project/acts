@@ -9,7 +9,6 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
@@ -154,7 +153,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
       Matrix<eBoundSize, 3> E = linTrack.momentumJacobian;
 
       // cache some matrix multiplications
-      BoundSquareMatrix W = linTrack.weightAtPCA;
+      BoundMatrix W = linTrack.weightAtPCA;
       Matrix<4, eBoundSize> DtW = D.transpose() * W;
       Matrix<3, eBoundSize> EtW = E.transpose() * W;
 
@@ -214,7 +213,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
-    std::vector<std::optional<BoundSquareMatrix>> covDeltaP(nTracks);
+    std::vector<std::optional<BoundMatrix>> covDeltaP(nTracks);
 
     // Update track momenta and calculate the covariance of the track parameters
     // after the fit (TODO: parameters -> momenta).

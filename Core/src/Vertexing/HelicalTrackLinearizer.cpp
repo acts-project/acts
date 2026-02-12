@@ -64,7 +64,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     pca[ePos2] = pos[ePos2];
     pca[eTime] = endParams.time();
   }
-  BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundMatrix parCovarianceAtPCA = endParams.covariance().value();
 
   // Extracting Perigee parameters and compute functions of them for later
   // usage
@@ -206,7 +206,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  BoundMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   Vector4 linPoint;
   linPoint.head<3>() = perigeeSurface.center(gctx);

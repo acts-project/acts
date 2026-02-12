@@ -66,8 +66,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   filtered = predicted + K * (calibrated - H * predicted);
   // Normalize phi and theta
   filtered = normalizeBoundParameters(filtered);
-  filteredCovariance =
-      (BoundSquareMatrix::Identity() - K * H) * predictedCovariance;
+  filteredCovariance = (BoundMatrix::Identity() - K * H) * predictedCovariance;
   ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
   ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 

@@ -55,7 +55,7 @@ std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
 SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
     const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
-    const BoundSquareMatrix& cov) const {
+    const BoundMatrix& cov) const {
   const Surface* surface = surfaceAccessor(slink);
   Vector2 localPos(par[eBoundLoc0], par[eBoundLoc1]);
   SquareMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);

@@ -28,7 +28,7 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 Covariance makeRandomCovariance(int seed = 31415) {
   std::srand(seed);

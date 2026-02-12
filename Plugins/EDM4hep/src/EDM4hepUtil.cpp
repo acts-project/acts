@@ -126,7 +126,7 @@ Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
   std::shared_ptr<const Surface> refSurface =
       params.referenceSurface().getSharedPtr();
   BoundVector targetPars = params.parameters();
-  std::optional<BoundSquareMatrix> targetCov = params.covariance();
+  std::optional<BoundMatrix> targetCov = params.covariance();
 
   // If the reference surface is a perigee surface, we use that. Otherwise
   // we create a new perigee surface at the global position of the track
