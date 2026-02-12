@@ -5,4 +5,6 @@ add_subdirectory(Json)
 add_subdirectory(Obj)
 add_subdirectory_if(Root ACTS_BUILD_EXAMPLES_ROOT)
 add_subdirectory_if(Svg ACTS_BUILD_PLUGIN_ACTSVG)
-add_subdirectory_if(Podio ACTS_BUILD_EXAMPLES_PODIO)
+add_component_if(Podio ExamplesIoPodio ACTS_BUILD_EXAMPLES_PODIO)
+
+propagate_components_to_parent()
