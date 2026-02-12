@@ -220,14 +220,16 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
     if (!inverseH) {
       ACTS_DEBUG(__func__ << "() - " << __LINE__
                           << ": Inversion of the Hessian Failed, Hessian:\n"
-                          << hes << ", determinant: " << hes.determinant()) << ", "
-                          << fitPars);
+                          << hes << ", determinant: " << hes.determinant()
+                          << ", " << fitPars);
       return UpdateStatus::Exceeded;
     }
   } else {
     ACTS_DEBUG(__func__ << "() - " << __LINE__
                         << ": Hessian is singular or not positive definite. "
-                           "Cannot be inverted.");
+                           "Cannot be inverted. Hessian:\n"
+                        << hes << ", determinant: " << hes.determinant() << ", "
+                        << fitPars);
     return UpdateStatus::Exceeded;
   }
   const Vector2 update = (*inverseH) * grad;
