@@ -85,7 +85,6 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 /// second derivative matrix
 ///
 /// @tparam source_link_t The source link type of the trajectory
-/// @tparam parameters_t The track parameters type
 ///
 /// @param gctx The current geometry context object
 /// @param multiTraj The MultiTrajectory containing the trajectory to be
@@ -99,7 +98,7 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 ///
 /// @return The track alignment state containing fundamental alignment
 /// ingredients
-template <typename traj_t, typename parameters_t = Acts::BoundTrackParameters>
+template <typename traj_t>
 TrackAlignmentState trackAlignmentState(
     const Acts::GeometryContext& gctx, const traj_t& multiTraj,
     Acts::TrackIndexType entryIndex,
@@ -109,8 +108,6 @@ TrackAlignmentState trackAlignmentState(
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
     const AlignmentMask& alignMask) {
-  using CovMatrix = typename parameters_t::CovarianceMatrix;
-
   // Construct an alignment state
   TrackAlignmentState alignState;
 
@@ -258,7 +255,7 @@ TrackAlignmentState trackAlignmentState(
          iColState++) {
       std::size_t colStateIndex = measurementStates.at(iColState).first;
       // Retrieve the block from the source covariance matrix
-      CovMatrix correlation =
+      Acts::BoundMatrix correlation =
           sourceTrackParamsCov.block<Acts::eBoundSize, Acts::eBoundSize>(
               stateRowIndices.at(rowStateIndex),
               stateRowIndices.at(colStateIndex));
