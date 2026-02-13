@@ -468,15 +468,12 @@ def emit_annotations(
     )
 
     # Emit GH Actions annotations on stdout
-    out = Console()  # stdout
     for diag in remaining:
         msg = diag.message.replace("%", "%25")
         msg = msg.replace("\r", "%0D")
         msg = msg.replace("\n", "%0A")
-        out.print(
-            f"::{severity} file={diag.rel_path},line={diag.line},col={diag.col}"
-            f",title={diag.check}::{msg}",
-            highlight=False,
+        print(
+            f"::{severity} file={diag.rel_path},line={diag.line},col={diag.col},title={diag.check}::{msg}",
         )
 
     if remaining:
