@@ -28,6 +28,7 @@
 #include <memory>
 #include <vector>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -105,10 +106,9 @@ void addTrackFinding(py::module& mex) {
       useDeltaRinsteadOfTopRadius, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFinderConfig, seedFinderOptions,
-      layerMappingFile, trackingGeometry, actsGbtsMap, fill_module_csv,
-      inputClusters);
+      GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm", inputSpacePoints,
+      outputSeeds, seedFinderConfig, layerMappingFile, trackingGeometry,
+      actsGbtsMap, fillModuleCsv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
@@ -125,7 +125,8 @@ void addTrackFinding(py::module& mex) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(MuonHoughSeeder, mex, "MuonHoughSeeder",
                                 inTruthSegments, inSpacePoints, outHoughMax,
-                                nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0);
+                                nBinsTanTheta, nBinsY0, nBinsTanPhi, nBinsX0,
+                                dumpVisualization, visualizationFunction);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackParamsEstimationAlgorithm, mex, "TrackParamsEstimationAlgorithm",

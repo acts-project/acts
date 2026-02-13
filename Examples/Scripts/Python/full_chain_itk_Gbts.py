@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import pathlib, acts, acts.examples, acts.examples.itk
+import pathlib, acts, acts.root, acts.examples, acts.examples.itk
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,

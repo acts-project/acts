@@ -192,7 +192,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
                                          std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
-    SingleCylinderPortalShell worldShell{*world};
+    SingleCylinderPortalShell worldShell{gctx, *world};
     worldShell.applyToVolume();
 
   } else if (const auto *box =
@@ -248,7 +248,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
                                          std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
-    SingleCuboidPortalShell worldShell{*world};
+    SingleCuboidPortalShell worldShell{gctx, *world};
     worldShell.applyToVolume();
 
   } else {

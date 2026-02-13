@@ -40,6 +40,26 @@ jobs:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Save PR metadata
+        if: github.event_name == 'pull_request'
+        run: |
+          # Shallow clone: parent commits aren't available via git,
+          # but GitHub provides the SHAs through the event context.
+          printf '{"pr_number":"%s","pr_sha":"%s","base_sha":"%s","merge_sha":"%s"}\n' \
+            "${{ github.event.number }}" \
+            "${{ github.event.pull_request.head.sha }}" \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.sha }}" \
+            > PR_metadata.json
+          cat PR_metadata.json
+
+      - name: Persist PR metadata
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v6
+        with:
+          name: PR_metadata
+          path: PR_metadata.json
+
       - name: Cache build
         uses: actions/cache@v5
         with:
@@ -74,28 +94,6 @@ jobs:
         with:
           name: coverage-build
           path: build
-
-      - name: Save PR metadata
-        if: github.event_name == 'pull_request'
-        run: |
-          # GitHub Actions creates a merge commit for PRs
-          # HEAD^1 is the base branch commit, HEAD^2 is the PR head commit
-          cat > PR_metadata.json << EOF
-          {
-            "pr_number": "${{ github.event.number }}",
-            "pr_sha": "$(git rev-parse HEAD^2)",
-            "base_sha": "$(git rev-parse HEAD^1)",
-            "merge_sha": "$(git rev-parse HEAD)"
-          }
-          EOF
-          cat PR_metadata.json
-
-      - name: Persist PR metadata
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v6
-        with:
-          name: PR_metadata
-          path: PR_metadata.json
 
   build_performance:
     runs-on: ubuntu-latest
