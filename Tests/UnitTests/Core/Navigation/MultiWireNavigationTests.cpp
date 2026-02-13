@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   MultiWireVolumeBuilder mwBuilder(mwCfg);
   std::unique_ptr<Acts::TrackingVolume> volume = mwBuilder.buildVolume();
 
-  SingleTrapezoidPortalShell portalShell(*volume);
+  SingleTrapezoidPortalShell portalShell{tContext, *volume};
   portalShell.applyToVolume();
 
   // Check the volume

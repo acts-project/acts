@@ -80,7 +80,7 @@ class SpacePointUtility {
   std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
   globalCoords(const GeometryContext& gctx, const SourceLink& slink,
                const SourceLinkSurfaceAccessor& surfaceAccessor,
-               const BoundVector& par, const BoundSquareMatrix& cov) const;
+               const BoundVector& par, const BoundMatrix& cov) const;
 
   /// @brief Get rho and z covariance from the local position and covariance
   /// @param gctx The current geometry context object, e.g. alignment

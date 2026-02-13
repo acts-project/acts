@@ -377,8 +377,7 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      std::vector<
-          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+      std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
           inflatedParamVector;
       assert(!fwdGsfResult.lastMeasurementComponents.empty());
       assert(fwdGsfResult.lastMeasurementSurface != nullptr);

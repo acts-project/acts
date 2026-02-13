@@ -75,7 +75,7 @@ struct BenchmarkStepper {
   void run(Stepper stepper, const std::string& name) const {
     using Propagator = Propagator<Stepper>;
     using PropagatorOptions = typename Propagator::template Options<>;
-    using Covariance = BoundSquareMatrix;
+    using Covariance = BoundMatrix;
 
     // Create a test context
     GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();

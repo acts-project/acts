@@ -40,9 +40,7 @@ concept FreeTrackParametersConcept =
     Concepts::BasicTrackParameters<Parameters> &&
     requires(const Parameters &p) {
       { p.parameters() } -> std::convertible_to<FreeVector>;
-      {
-        p.covariance()
-      } -> std::convertible_to<std::optional<FreeSquareMatrix>>;
+      { p.covariance() } -> std::convertible_to<std::optional<FreeMatrix>>;
       { p.fourPosition() } -> std::same_as<Vector4>;
       { p.position() } -> std::same_as<Vector3>;
     };
@@ -54,9 +52,7 @@ concept BoundTrackParametersConcept =
     Concepts::BasicTrackParameters<Parameters> &&
     requires(const Parameters &p) {
       { p.parameters() } -> std::convertible_to<BoundVector>;
-      {
-        p.covariance()
-      } -> std::convertible_to<std::optional<BoundSquareMatrix>>;
+      { p.covariance() } -> std::convertible_to<std::optional<BoundMatrix>>;
       { p.referenceSurface() } -> std::same_as<const Surface &>;
 
       requires requires(GeometryContext &c) {
