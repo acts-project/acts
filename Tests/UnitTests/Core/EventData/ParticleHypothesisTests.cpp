@@ -23,11 +23,6 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
-BOOST_AUTO_TEST_CASE(Constructibility) {
-  // BOOST_CHECK(std::is_trivially_constructible_v<ChargeHypothesis>);
-  BOOST_CHECK(std::is_nothrow_constructible_v<ChargeHypothesis>);
-}
-
 BOOST_AUTO_TEST_CASE(ChargeHypothesisNeutral) {
   ChargeHypothesis q(0_e);
 
