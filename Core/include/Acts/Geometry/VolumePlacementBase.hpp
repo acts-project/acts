@@ -50,24 +50,19 @@ struct OrientedSurface;
 ///  2) At the end of the tracking geometry construction, the portals
 ///     that are associated to the volume aligned by the
 ///     VolumePlacementBase are connected to this particular instance.
-///     Via the
+///     The user may override the @ref makePortalsAlignable method to
+///     instantiate a customized transform cache backend. He needs to ensure
+///     that the base definition of the method is called from his implementation
+///     otherwise the placements aligning the portals are note created.
 ///
-///         void expandTransformCache(const GeometryContext& gctx,
-///                                   const std::size_t nPortals);
-///
-///     method, ACTS requests the client to expand the cache backend
-///     by nPortals where the associated portal transforms are cached
-///     and updated with the change of the alignment constants. At
-///     creation, the cache needs to be filled with the initial transforms
-///     as the framework may check that the portal did not move during the
-///     procedure
+///     Every time when the portal is asked for its position in space,
+///     it's forwarding the request to the VolumePlacementBase by calling the
 ///
 ///         const Transform3& portalLocalToGlobal(const GeometryContext& gctx,
 ///                                               const std::size_t portalIdx)
 ///                                               const;
 ///
-///     is called every time when the portal is asking for its position in
-///     space. The portalIdx is the unique index of the portal and assists
+///     method. The portalIdx is the unique index of the portal and assists
 ///     the client to return the appropriate transform
 ///
 ///  3)  Every time when the alignment of the volume is updated, the client
@@ -76,11 +71,14 @@ struct OrientedSurface;
 ///      below needs to be implemented:
 ///
 ///        for (std::size_t p = 0 ; p < nPortalPlacements(); ++p) {
-///            context.cacheInContext(context.getContext(), p);
+///            context.cachePortal(alignPortal(Acts::Geometrycontext{context},
+///            p), p);
 ///        }
 ///        context.volGlobToLocal = context.volLocToGlobal.inverse();
 ///
-
+///      The @ref alignPortal is a wrapper method attaching the portal -> volume transform
+///      to the aligned local -> global transform of the volume and returning
+///      the result via copy.
 class VolumePlacementBase {
  public:
   /// Default constructor
