@@ -7,6 +7,7 @@ acts_add_library(
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
     src/EventData/SimParticle.cpp
+    src/EventData/Jets.cpp
     src/Framework/IAlgorithm.cpp
     src/Framework/SequenceElement.cpp
     src/Framework/WhiteBoard.cpp
