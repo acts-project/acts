@@ -31,7 +31,7 @@ class SympyStepper {
   /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
   /// Covariance matrix type
-  using Covariance = BoundSquareMatrix;
+  using Covariance = BoundMatrix;
   /// Bound state tuple containing parameters, Jacobian, and path length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
