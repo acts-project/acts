@@ -23,7 +23,7 @@ namespace Acts {
 /// @addtogroup magnetic_field
 /// @{
 
-/// Method to setup the FieldMapper
+/// Method to set up the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of r,z to the
 /// global
 /// bin of the map magnetic field value e.g.: we have small grid with the
@@ -67,7 +67,7 @@ makeMagneticFieldMapRzFromText(
     const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
     bool firstQuadrant = false, const std::string& delimiter = "");
 
-/// Method to setup the FieldMapper
+/// Method to set up the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
 /// global bin of the map magnetic field value e.g.: we have small grid with
 /// the  values: x={2,3}, y={3,4}, z ={4,5}, the corresponding indices are i(x),

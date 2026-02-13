@@ -13,6 +13,7 @@
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   MultiWireVolumeBuilder mwBuilder(mwCfg);
   std::unique_ptr<Acts::TrackingVolume> volume = mwBuilder.buildVolume();
 
-  SingleTrapezoidPortalShell portalShell(*volume);
+  SingleTrapezoidPortalShell portalShell{tContext, *volume};
   portalShell.applyToVolume();
 
   // Check the volume
@@ -124,7 +125,12 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   auto navFactory = mwBuilder.createNavigationPolicyFactory();
   volume->setNavigationPolicy(navFactory->build(tContext, *volume, *logger));
 
-  volume->initializeNavigationCandidates(tContext, args, stream, *logger);
+  NavigationPolicyStateManager stateManager;
+  volume->navigationPolicy()->createState(tContext, args, stateManager,
+                                          *logger);
+  auto policyState = stateManager.currentState();
+  volume->initializeNavigationCandidates(tContext, args, policyState, stream,
+                                         *logger);
 
   // we expect 18 candidates (12 surfaces + 6 portals)
   BOOST_CHECK_EQUAL(main.candidates().size(), 18u);
@@ -142,7 +148,12 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   args.direction = startDir;
   // clear the candidates and re initialize with new arguments
   main.candidates().clear();
-  volume->initializeNavigationCandidates(tContext, args, stream, *logger);
+  NavigationPolicyStateManager stateManager2;
+  volume->navigationPolicy()->createState(tContext, args, stateManager2,
+                                          *logger);
+  auto policyState2 = stateManager2.currentState();
+  volume->initializeNavigationCandidates(tContext, args, policyState2, stream,
+                                         *logger);
   // we expect 18 candidates (12 surfaces + 6 portals)
   BOOST_CHECK_EQUAL(main.candidates().size(), 18u);
 }

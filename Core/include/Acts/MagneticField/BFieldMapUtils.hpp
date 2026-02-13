@@ -33,7 +33,7 @@ namespace Acts {
 class SolenoidBField;
 class ToroidField;
 
-/// Method to setup the FieldMap
+/// Method to set up the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of r,z to the global
 /// bin of the map magnetic field value
 ///
@@ -85,7 +85,7 @@ fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
            double lengthUnit = UnitConstants::mm,
            double BFieldUnit = UnitConstants::T, bool firstQuadrant = false);
 
-/// Method to setup the FieldMap
+/// Method to set up the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
 ///                         global bin of the map magnetic field value
 ///

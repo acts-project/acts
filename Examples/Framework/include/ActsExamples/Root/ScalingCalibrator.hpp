@@ -28,21 +28,21 @@ class ScalingCalibrator : public MeasurementCalibrator {
   };
 
   struct MapTuple {
-    TH2D x_offset;
-    TH2D x_scale;
-    TH2D y_offset;
-    TH2D y_scale;
+    std::unique_ptr<TH2D> x_offset;
+    std::unique_ptr<TH2D> x_scale;
+    std::unique_ptr<TH2D> y_offset;
+    std::unique_ptr<TH2D> y_scale;
 
     ConstantTuple at(std::size_t sizeLoc0, std::size_t sizeLoc1) const {
       ConstantTuple ct;
       ct.x_offset =
-          x_offset.GetBinContent(x_offset.FindFixBin(sizeLoc0, sizeLoc1));
+          x_offset->GetBinContent(x_offset->FindFixBin(sizeLoc0, sizeLoc1));
       ct.x_scale =
-          x_scale.GetBinContent(x_scale.FindFixBin(sizeLoc0, sizeLoc1));
+          x_scale->GetBinContent(x_scale->FindFixBin(sizeLoc0, sizeLoc1));
       ct.y_offset =
-          y_offset.GetBinContent(y_offset.FindFixBin(sizeLoc0, sizeLoc1));
+          y_offset->GetBinContent(y_offset->FindFixBin(sizeLoc0, sizeLoc1));
       ct.y_scale =
-          y_scale.GetBinContent(y_scale.FindFixBin(sizeLoc0, sizeLoc1));
+          y_scale->GetBinContent(y_scale->FindFixBin(sizeLoc0, sizeLoc1));
       return ct;
     }
   };

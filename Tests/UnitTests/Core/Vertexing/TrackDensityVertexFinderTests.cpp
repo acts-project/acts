@@ -40,7 +40,7 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();

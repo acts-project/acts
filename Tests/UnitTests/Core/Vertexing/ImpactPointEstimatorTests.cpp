@@ -100,7 +100,7 @@ Estimator makeEstimator(double bZ) {
 }
 
 // Construct a diagonal track covariance w/ reasonable values.
-BoundSquareMatrix makeBoundParametersCovariance(double stdDevTime = 30_ps) {
+BoundMatrix makeBoundParametersCovariance(double stdDevTime = 30_ps) {
   BoundVector stddev;
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 100_um;

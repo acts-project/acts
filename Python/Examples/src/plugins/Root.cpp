@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Io/Root/RootAthenaDumpReader.hpp"
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
@@ -34,8 +35,11 @@
 #include "ActsExamples/Io/Root/RootVertexNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
+#include "ActsExamples/Root/MuonVisualization.hpp"
+#include "ActsExamples/Root/ScalingCalibrator.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
@@ -124,7 +128,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
       py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
           .def(py::init<>())
-          .def_readwrite("varBinning", &EffPlotTool::Config::varBinning);
+          .def_readwrite("varBinning", &EffPlotTool::Config::varBinning)
+          .def_readwrite("minTruthPt", &EffPlotTool::Config::minTruthPt);
 
       py::class_<FakePlotTool::Config>(root, "FakePlotToolConfig")
           .def(py::init<>())
@@ -134,6 +139,22 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
           .def(py::init<>())
           .def_readwrite("varBinning",
                          &DuplicationPlotTool::Config::varBinning);
+
+      py::class_<ResPlotTool::Config>(root, "ResPlotToolConfig")
+          .def(py::init<>())
+          .def_readwrite("varBinning", &ResPlotTool::Config::varBinning);
+
+      py::class_<TrackQualityPlotTool::Config>(root,
+                                               "TrackQualityPlotToolConfig")
+          .def(py::init<>())
+          .def_readwrite("varBinning",
+                         &TrackQualityPlotTool::Config::varBinning);
+
+      py::class_<TrackSummaryPlotTool::Config>(root,
+                                               "TrackSummaryPlotToolConfig")
+          .def(py::init<>())
+          .def_readwrite("varBinning",
+                         &TrackSummaryPlotTool::Config::varBinning);
     }
 
     // ROOT WRITERS
@@ -264,8 +285,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         inputTrackParticleMatching, inputParticleTrackMatching,
         inputParticleMeasurementsMap, filePath, fileMode, effPlotToolConfig,
         fakePlotToolConfig, duplicationPlotToolConfig,
-        trackSummaryPlotToolConfig, subDetectorTrackSummaryVolumes,
-        writeMatchingDetails);
+        trackSummaryPlotToolConfig, trackQualityPlotToolConfig,
+        subDetectorTrackSummaryVolumes, writeMatchingDetails);
 
     ACTS_PYTHON_DECLARE_WRITER(RootNuclearInteractionParametersWriter, root,
                                "RootNuclearInteractionParametersWriter",
@@ -273,5 +294,41 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                interactionProbabilityBins, momentumBins,
                                invariantMassBins, multiplicityMax,
                                writeOptionalHistograms, nSimulatedEvents);
+  }
+
+  // Calibration
+  {
+    root.def(
+        "makeScalingCalibrator",
+        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
+          return std::make_shared<ScalingCalibrator>(path);
+        },
+        py::arg("path"));
+  }
+
+  // Muon visualization
+  {
+    root.def("makeMuonVisualizationFunction", []() {
+      return std::function<void(
+          const std::string&, const Acts::GeometryContext&,
+          const MuonSpacePointBucket&, const SimHitContainer&,
+          const SimParticleContainer&, const Acts::TrackingGeometry&,
+          const Acts::Logger&)>(visualizeMuonSpacePoints);
+    });
+  }
+
+  // Muon Hough visualization
+  {
+    root.def("makeMuonHoughVisualizationFunction", []() {
+      return std::function<void(
+          const std::string&, const MuonSpacePoint::MuonId&,
+          const std::vector<
+              Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
+                  const MuonSpacePoint*>::Maximum>&,
+          const Acts::HoughTransformUtils::HoughPlane<const MuonSpacePoint*>&,
+          const Acts::HoughTransformUtils::HoughAxisRanges&,
+          const MuonSegmentContainer&, const Acts::Logger&)>(
+          visualizeMuonHoughMaxima);
+    });
   }
 }

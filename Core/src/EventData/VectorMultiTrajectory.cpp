@@ -8,13 +8,11 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <iomanip>
+#include <format>
 #include <ostream>
 #include <type_traits>
 
@@ -30,7 +28,7 @@ auto VectorMultiTrajectory::addTrackState_impl(
 
   m_index.emplace_back();
   IndexData& p = m_index.back();
-  IndexType index = m_index.size() - 1;
+  IndexType index = static_cast<IndexType>(m_index.size() - 1);
   m_previous.emplace_back(iprevious);
   m_next.emplace_back(kInvalid);
 
@@ -44,44 +42,44 @@ auto VectorMultiTrajectory::addTrackState_impl(
   if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
     m_params.emplace_back();
     m_cov.emplace_back();
-    p.ipredicted = m_params.size() - 1;
+    p.ipredicted = static_cast<IndexType>(m_params.size() - 1);
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
     m_params.emplace_back();
     m_cov.emplace_back();
-    p.ifiltered = m_params.size() - 1;
+    p.ifiltered = static_cast<IndexType>(m_params.size() - 1);
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
     m_params.emplace_back();
     m_cov.emplace_back();
-    p.ismoothed = m_params.size() - 1;
+    p.ismoothed = static_cast<IndexType>(m_params.size() - 1);
   }
 
   assert(m_params.size() == m_cov.size());
 
   if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
     m_jac.emplace_back();
-    p.ijacobian = m_jac.size() - 1;
+    p.ijacobian = static_cast<IndexType>(m_jac.size() - 1);
   }
 
   m_sourceLinks.emplace_back(std::nullopt);
-  p.iUncalibrated = m_sourceLinks.size() - 1;
+  p.iUncalibrated = static_cast<IndexType>(m_sourceLinks.size() - 1);
 
   m_measOffset.push_back(kInvalid);
   m_measCovOffset.push_back(kInvalid);
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
     m_sourceLinks.emplace_back(std::nullopt);
-    p.iCalibratedSourceLink = m_sourceLinks.size() - 1;
+    p.iCalibratedSourceLink = static_cast<IndexType>(m_sourceLinks.size() - 1);
 
     m_projectors.push_back(0);
-    p.iprojector = m_projectors.size() - 1;
+    p.iprojector = static_cast<IndexType>(m_projectors.size() - 1);
   }
 
   // dynamic columns
-  for (auto& [key, vec] : m_dynamic) {
+  for (const auto& [key, vec] : m_dynamic) {
     vec->add();
   }
 
@@ -101,21 +99,21 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
       !ACTS_CHECK_BIT(currentMask, PropMask::Predicted)) {
     m_params.emplace_back();
     m_cov.emplace_back();
-    p.ipredicted = m_params.size() - 1;
+    p.ipredicted = static_cast<IndexType>(m_params.size() - 1);
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Filtered) &&
       !ACTS_CHECK_BIT(currentMask, PropMask::Filtered)) {
     m_params.emplace_back();
     m_cov.emplace_back();
-    p.ifiltered = m_params.size() - 1;
+    p.ifiltered = static_cast<IndexType>(m_params.size() - 1);
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Smoothed) &&
       !ACTS_CHECK_BIT(currentMask, PropMask::Smoothed)) {
     m_params.emplace_back();
     m_cov.emplace_back();
-    p.ismoothed = m_params.size() - 1;
+    p.ismoothed = static_cast<IndexType>(m_params.size() - 1);
   }
 
   assert(m_params.size() == m_cov.size());
@@ -123,16 +121,16 @@ void VectorMultiTrajectory::addTrackStateComponents_impl(
   if (ACTS_CHECK_BIT(mask, PropMask::Jacobian) &&
       !ACTS_CHECK_BIT(currentMask, PropMask::Jacobian)) {
     m_jac.emplace_back();
-    p.ijacobian = m_jac.size() - 1;
+    p.ijacobian = static_cast<IndexType>(m_jac.size() - 1);
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated) &&
       !ACTS_CHECK_BIT(currentMask, PropMask::Calibrated)) {
     m_sourceLinks.emplace_back(std::nullopt);
-    p.iCalibratedSourceLink = m_sourceLinks.size() - 1;
+    p.iCalibratedSourceLink = static_cast<IndexType>(m_sourceLinks.size() - 1);
 
     m_projectors.push_back(0);
-    p.iprojector = m_projectors.size() - 1;
+    p.iprojector = static_cast<IndexType>(m_projectors.size() - 1);
   }
 
   p.allocMask |= mask;
@@ -143,7 +141,7 @@ void VectorMultiTrajectory::shareFrom_impl(IndexType iself, IndexType iother,
                                            TrackStatePropMask shareTarget) {
   // auto other = getTrackState(iother);
   IndexData& self = m_index[iself];
-  IndexData& other = m_index[iother];
+  const IndexData& other = m_index[iother];
 
   assert(ACTS_CHECK_BIT(getTrackState(iother).getMask(), shareSource) &&
          "Source has incompatible allocation");
@@ -233,7 +231,7 @@ void VectorMultiTrajectory::clear_impl() {
   m_sourceLinks.clear();
   m_projectors.clear();
   m_referenceSurfaces.clear();
-  for (auto& [key, vec] : m_dynamic) {
+  for (const auto& [key, vec] : m_dynamic) {
     vec->clear();
   }
 }
@@ -245,18 +243,17 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
 
   auto& h = hist;
 
-  auto column_axis = axis::get<cat>(h.axis(0));
-  auto type_axis = axis::get<axis::category<>>(h.axis(1));
+  const auto& column_axis = axis::get<cat>(h.axis(0));
+  const auto& type_axis = axis::get<axis::category<>>(h.axis(1));
 
-  auto p = [&](const auto& key, const auto v, const std::string suffix = "") {
-    os << std::setw(20) << key << ": ";
+  auto p = [&](const auto& key, const auto v, std::string_view suffix = "") {
     if constexpr (std::is_same_v<std::decay_t<decltype(v)>, double>) {
-      os << std::fixed << std::setw(8) << std::setprecision(2) << v / n
-         << suffix;
+      os << std::format("{:>20}: {:8.2f}{}", key, v / n, suffix) << std::endl;
     } else {
-      os << std::fixed << std::setw(8) << static_cast<double>(v) / n << suffix;
+      os << std::format("{:>20}: {:8.2f}{}", key, static_cast<double>(v) / n,
+                        suffix)
+         << std::endl;
     }
-    os << std::endl;
   };
 
   for (int t = 0; t < type_axis.size(); t++) {
@@ -291,7 +288,7 @@ void VectorMultiTrajectory::reserve(std::size_t n) {
   m_projectors.reserve(n);
   m_referenceSurfaces.reserve(n);
 
-  for (auto& [key, vec] : m_dynamic) {
+  for (const auto& [key, vec] : m_dynamic) {
     vec->reserve(n);
   }
 }
