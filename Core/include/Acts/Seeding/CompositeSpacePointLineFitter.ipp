@@ -559,19 +559,13 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << toString(miniHessian)
                         << ", determinant: " << miniHessian.determinant());
   std::optional<Acts::ActsSquareMatrix<N>> inverseH{std::nullopt};
-  if (miniHessian.determinant() > std::numeric_limits<double>::epsilon() &&
+  if (miniHessian.determinant() > std::numeric_limits<double>::epsilon() ||
       miniHessian.trace() > 0) {
     inverseH = safeInverse(miniHessian);
-    if (!inverseH) {
-      ACTS_DEBUG(
-          __func__
-          << "<" << N << ">() - " << __LINE__
-          << ": Inversion of the Hessian Failed, fallback to gradient decent.");
-    }
   } else {
     ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Hessian is singular or not positive definite. "
-                           "Cannot be inverted, fallback to gradient decent.");
+                           "Fallback to gradient decent.");
   }
   if (inverseH) {
     const Vector<N> update{(*inverseH) * miniGradient};
@@ -617,6 +611,10 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     miniPars -= update;
 
   } else if (retCode != UpdateStep::converged) {
+    ACTS_DEBUG(
+        __func__
+        << "<" << N << ">() - " << __LINE__
+        << ": Inversion of the Hessian Failed, fallback to gradient decent.");
     // Fall back to gradient decent with a fixed damping factor
     const Vector<N> update{std::min(m_cfg.gradientStep, miniGradient.norm()) *
                            miniGradient.normalized()};

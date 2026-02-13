@@ -206,50 +206,38 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
               (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta);
   ACTS_VERBOSE(
       __func__
-      << "() - " << __LINE__
+      << "() - " << __LINE__ << ": Computed hessian:\n"
+      << hes << ", determinant: " << hes.determinant()
       << ": -fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv: "
       << (-fitPars.R_v * fitPars.R_v * fitPars.covNorm + fitPars.R_vv)
       << ", fitPars.fitY0 * fitPars.R_a: " << (fitPars.fitY0 * fitPars.R_a)
       << ", fitPars.R_ar: " << fitPars.R_ar
       << ", fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta: "
       << (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta));
-  std::optional<Acts::ActsSquareMatrix<2>> inverseH{std::nullopt};
-  if (hes.determinant() > std::numeric_limits<double>::epsilon() &&
-      hes.trace() > 0) {
-    inverseH = safeInverse(hes);
-    if (!inverseH) {
-      ACTS_DEBUG(__func__ << "() - " << __LINE__
-                          << ": Inversion of the Hessian Failed, Hessian:\n"
-                          << hes << ", determinant: " << hes.determinant()
-                          << ", " << fitPars);
-      return UpdateStatus::Exceeded;
-    }
-  } else {
+
+  if (hes.determinant() < std::numeric_limits<double>::epsilon() ||
+      hes.trace() < 0) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__
-                        << ": Hessian is singular or not positive definite. "
-                           "Cannot be inverted. Hessian:\n"
-                        << hes << ", determinant: " << hes.determinant() << ", "
+                        << ": Hessian is singular or not positive definite."
                         << fitPars);
     return UpdateStatus::Exceeded;
   }
-  const Vector2 update = (*inverseH) * grad;
+  const auto inverseH = hes.inverse();
+  const Vector2 update = inverseH * grad;
   // We compute also the normalized update, defined as the parameter
   // update expressed in units of the parameter uncertainties. This quantifies
   // the significance of the update relative to the estimated errors.
   double normUpdate{0.};
   for (unsigned i = 0; i < 2; ++i) {
-    normUpdate += Acts::square(update[i]) / (*inverseH)(i, i);
+    normUpdate += Acts::square(update[i]) / inverseH(i, i);
   }
 
   ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
                         << fitResult << "\n"
                         << std::format("gradient: ({:.3f}, {:.3f})",
                                        inDeg(grad[0]), inNanoS(grad[1]))
-                        << ", hessian:" << std::endl
-                        << toString(hes) << std::endl
-                        << "det: " << hes.determinant()
                         << ", covariance:" << std::endl
-                        << toString(*inverseH) << std::endl
+                        << toString(inverseH) << std::endl
                         << std::format(" update: ({:.3f}, {:.3f}),",
                                        inDeg(update[0]), inNanoS(update[1]))
                         << " normUpdate: " << std::sqrt(normUpdate));
@@ -262,8 +250,8 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   }
 
   if (retCode == UpdateStatus::Converged) {
-    fitResult.dTheta = std::sqrt((*inverseH)(0, 0));
-    fitResult.dT0 = std::sqrt((*inverseH)(1, 1));
+    fitResult.dTheta = std::sqrt(inverseH(0, 0));
+    fitResult.dT0 = std::sqrt(inverseH(1, 1));
     completeResult(fitPars, fitResult);
     return retCode;
   }
