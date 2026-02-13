@@ -18,3 +18,5 @@ target_link_libraries(
     ActsPluginActSVG
     PUBLIC Acts::Core actsvg::core actsvg::meta
 )
+
+acts_compile_headers(PluginActSVG GLOB include/**/*.hpp)

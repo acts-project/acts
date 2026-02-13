@@ -34,3 +34,5 @@ target_link_libraries(
         GeoModelIO::GeoModelDBManager
         GeoModelIO::GeoModelRead
 )
+
+acts_compile_headers(PluginGeoModel GLOB include/**/*.hpp)

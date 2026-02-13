@@ -29,6 +29,9 @@ acts_add_library(
     ACTS_INCLUDE_FOLDER include/ActsExamples
 )
 
+
+acts_compile_headers(ExamplesFramework GLOB include/ActsExamples/**/*.hpp)
+
 target_include_directories(
     ActsExamplesFramework
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
