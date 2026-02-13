@@ -69,14 +69,23 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements output collection");
   }
+  if (m_cfg.outputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-particles map output collection");
+  }
   if (m_cfg.outputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map output collection");
+  }
+  if (m_cfg.outputParticleMeasurementsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing particle-to-measurements map output collection");
   }
   if (m_cfg.outputSimHitMeasurementsMap.empty()) {
     throw std::invalid_argument(
         "Missing particle-to-simulated-hits map output collection");
   }
+
   ACTS_DEBUG("Retrieve sim hits and particles from "
              << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
   ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
@@ -84,7 +93,11 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementParticlesMap.initialize(
+      m_cfg.outputMeasurementParticlesMap);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+  m_outputParticleMeasurementsMap.initialize(
+      m_cfg.outputParticleMeasurementsMap);
   m_outputSimHitMeasurementsMap.initialize(m_cfg.outputSimHitMeasurementsMap);
 }
 
@@ -146,8 +159,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
   // Prepare output containers
   // need list here for stable addresses
   MeasurementContainer measurements;
+
+  IndexMultimap<SimBarcode> measurementParticlesMap;
   IndexMultimap<Index> measurementSimHitsMap;
   measurements.reserve(gotSimHits.size());
+  measurementParticlesMap.reserve(gotSimHits.size());
   measurementSimHitsMap.reserve(gotSimHits.size());
 
   using MuonId_t = MuonSpacePoint::MuonId;
@@ -273,6 +289,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
               auto measurement =
                   createMeasurement(measurements, moduleGeoId, dParameters);
+              measurementParticlesMap.emplace_hint(
+                  measurementParticlesMap.end(), measurement.index(),
+                  gotSimHits.nth(simHitIdx)->particleId());
               measurementSimHitsMap.emplace_hint(
                   measurementSimHitsMap.end(), measurement.index(), simHitIdx);
 
@@ -376,6 +395,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
           auto measurement =
               createMeasurement(measurements, moduleGeoId, dParameters);
+          measurementParticlesMap.emplace_hint(
+              measurementParticlesMap.end(), measurement.index(),
+              gotSimHits.nth(simHitIdx)->particleId());
           measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                              measurement.index(), simHitIdx);
           break;
@@ -422,8 +444,13 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
   m_outputMeasurements(ctx, std::move(measurements));
+
+  m_outputParticleMeasurementsMap(ctx,
+                                  invertIndexMultimap(measurementParticlesMap));
   m_outputSimHitMeasurementsMap(ctx,
                                 invertIndexMultimap(measurementSimHitsMap));
+
+  m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
   m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
 
   return ProcessCode::SUCCESS;

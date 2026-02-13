@@ -120,7 +120,7 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
     params[Acts::eBoundQOverP] = qOverP + sigmaQOverP * stdNormal(rng);
 
     // build the track covariance matrix using the smearing sigmas
-    Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
+    Acts::BoundMatrix cov = Acts::BoundMatrix::Zero();
     if (m_cfg.initialSigmas) {
       // use the initial sigmas if set
 

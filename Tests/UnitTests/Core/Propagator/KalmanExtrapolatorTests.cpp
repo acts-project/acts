@@ -40,7 +40,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 using Jacobian = BoundMatrix;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();

@@ -35,8 +35,12 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::string outputSpacePoints{"MuonSpacePoints"};
     /// @brief Output measurements collection.
     std::string outputMeasurements = "measurements";
+    /// @brief Output collection to map measured hits to contributing particles.
+    std::string outputMeasurementParticlesMap = "measurement_particles_map";
     /// @brief Output collection to map measured hits to simulated hits.
     std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+    /// @brief Output collection to map particles to measurements.
+    std::string outputParticleMeasurementsMap = "particle_measurements_map";
     /// @brief Output collection to map particles to simulated hits.
     std::string outputSimHitMeasurementsMap = "simhit_measurements_map";
     /// @brief Random number generator service
@@ -95,8 +99,14 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
                                                                "SpacePoints"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
+
+  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+      this, "OutputMeasurementParticlesMap"};
   WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
+
+  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+      this, "OutputParticleMeasurementsMap"};
   WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
       this, "OutputSimHitMeasurementsMap"};
 };

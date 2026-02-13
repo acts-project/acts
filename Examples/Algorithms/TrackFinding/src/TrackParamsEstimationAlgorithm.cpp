@@ -149,7 +149,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
         .initialVarInflation = Eigen::Map<const Acts::BoundVector>{
             m_cfg.initialVarInflation.data()}};
 
-    Acts::BoundSquareMatrix cov = Acts::estimateTrackParamCovariance(
+    Acts::BoundMatrix cov = Acts::estimateTrackParamCovariance(
         config, params, bottomSP->t().has_value());
 
     Acts::ParticleHypothesis hypothesis =
