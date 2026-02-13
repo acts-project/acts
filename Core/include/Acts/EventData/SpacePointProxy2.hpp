@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
@@ -357,6 +358,15 @@ class SpacePointProxy2 {
   /// @return The resolved index of the space point.
   SpacePointIndex2 resolvedIndex() const noexcept {
     return m_container->resolvedIndex(m_index);
+  }
+
+  template <bool other_read_only>
+  void copyFrom(const SpacePointProxy2<other_read_only> &other,
+                SpacePointColumns columnsToCopy) const
+    requires(!ReadOnly)
+  {
+    m_container->copyFrom(m_index, other.container(), other.index(),
+                          columnsToCopy);
   }
 
  private:

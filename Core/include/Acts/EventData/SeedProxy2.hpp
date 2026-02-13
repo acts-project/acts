@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "Acts/EventData/SeedColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
@@ -332,6 +334,15 @@ class SeedProxy2 {
       const SpacePointContainer2 &spacePointContainer) const noexcept {
     return SpacePointRange(spacePointContainer,
                            m_container->spacePointIndices(m_index));
+  }
+
+  template <bool other_read_only>
+  void copyFrom(const SeedProxy2<other_read_only> &other,
+                SeedColumns columnsToCopy) const
+    requires(!ReadOnly)
+  {
+    m_container->copyFrom(m_index, other.container(), other.index(),
+                          columnsToCopy);
   }
 
  private:
