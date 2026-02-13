@@ -19,24 +19,9 @@ VolumePlacementBase::VolumePlacementBase() noexcept = default;
 
 VolumePlacementBase::~VolumePlacementBase() = default;
 
-VolumePlacementBase::VolumePlacementBase(VolumePlacementBase&& other) noexcept
-    : VolumePlacementBase{} {
-  (*this) = std::move(other);
-}
-
-VolumePlacementBase& VolumePlacementBase::operator=(
-    VolumePlacementBase&& other) noexcept {
-  if (&other != this) {
-    m_portalPlacements = std::move(other.m_portalPlacements);
-    for (const auto& portal : m_portalPlacements) {
-      portal->m_parent = this;
-    }
-  }
-  return (*this);
-}
-
 void VolumePlacementBase::makePortalsAlignable(
-    const GeometryContext& gctx, const PortalVec_t& portalsToAlign) {
+    const GeometryContext& gctx,
+    const std::vector<std::shared_ptr<RegularSurface>>& portalsToAlign) {
   if (portalsToAlign.empty()) {
     throw std::invalid_argument(
         "VolumePlacementBase::makePortalsAlignable() - The portals must not be "
@@ -49,9 +34,7 @@ void VolumePlacementBase::makePortalsAlignable(
         "registered before");
   }
 
-  for (const auto& [portalIdx, portal] : enumerate(portalsToAlign)) {
-    const std::shared_ptr<RegularSurface>& portalSurface =
-        portalsToAlign[portalIdx];
+  for (const auto& [portalIdx, portalSurface] : enumerate(portalsToAlign)) {
     if (portalSurface->surfacePlacement() != nullptr) {
       throw std::invalid_argument(std::format(
           "VolumePlacementBase::makePortalsAlignable() - The {:}-th surface is "
@@ -63,19 +46,19 @@ void VolumePlacementBase::makePortalsAlignable(
         globalToLocalTransform(gctx) *
         portalSurface->localToGlobalTransform(gctx);
 
-    m_portalPlacements.emplace_back(new detail::PortalPlacement(
+    m_portalPlacements.emplace_back(std::make_unique<detail::PortalPlacement>(
         portalIdx, portalToVolTrf, this, portalSurface));
   }
-  // Before leaving ensure that the client knows it needs to reserve
-  // space for N portals in the cache backend
-  expandTransformCache(gctx, nPortalPlacements());
 }
 
 const detail::PortalPlacement* VolumePlacementBase::portalPlacement(
     const std::size_t portalIdx) const {
-  return portalIdx < m_portalPlacements.size()
-             ? m_portalPlacements[portalIdx].get()
-             : nullptr;
+  return m_portalPlacements.at(portalIdx).get();
+}
+
+detail::PortalPlacement* VolumePlacementBase::portalPlacement(
+    const std::size_t portalIdx) {
+  return m_portalPlacements.at(portalIdx).get();
 }
 
 std::size_t VolumePlacementBase::nPortalPlacements() const {
@@ -84,8 +67,7 @@ std::size_t VolumePlacementBase::nPortalPlacements() const {
 
 Transform3 VolumePlacementBase::alignPortal(const GeometryContext& gctx,
                                             const std::size_t portalIdx) const {
-  assert(portalIdx < m_portalPlacements.size());
-  return m_portalPlacements[portalIdx]->assembleFullTransform(gctx);
+  return m_portalPlacements.at(portalIdx)->assembleFullTransform(gctx);
 }
 
 }  // namespace Acts

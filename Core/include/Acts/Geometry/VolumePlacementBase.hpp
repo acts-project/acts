@@ -89,25 +89,24 @@ class VolumePlacementBase {
   /// Virtual default destructor
   virtual ~VolumePlacementBase();
 
-  /// Move constructor
-  /// @param other: Object to be moved into this instance
-  VolumePlacementBase(VolumePlacementBase&& other) noexcept;
+  /// Delete the move constructor
+  VolumePlacementBase(VolumePlacementBase&&) = delete;
+  /// Delete the copy constructor
+  VolumePlacementBase(const VolumePlacementBase&) = delete;
 
-  /// Move assignment operator
-  /// @param other: Object to be moved into this instance
-  /// @returns Reference to this instance
-  VolumePlacementBase& operator=(VolumePlacementBase&& other) noexcept;
-
-  /// Abrivation of the portal surface vector
-  using PortalVec_t = std::vector<std::shared_ptr<RegularSurface>>;
+  /// Delete move assignment
+  VolumePlacementBase& operator=(VolumePlacementBase&&) = delete;
+  /// Delete copy assignment
+  VolumePlacementBase& operator=(const VolumePlacementBase&) = delete;
 
   /// Receives the vector of oriented portal surfaces produced by the
   /// VolumeBounds and makes them to float with the alignment provided
   /// by the volume. It then the vector of updated oriented surfaces
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param portalsToAlign: List of portals to align
-  void makePortalsAlignable(const GeometryContext& gctx,
-                            const PortalVec_t& portalsToAlign);
+  virtual void makePortalsAlignable(
+      const GeometryContext& gctx,
+      const std::vector<std::shared_ptr<RegularSurface>>& portalsToAlign);
 
   /// Number of registered SurfacePlacement objects aligning the
   /// associated portals with the volume
@@ -142,19 +141,13 @@ class VolumePlacementBase {
   /// @returns Pointer to the i-th portal placement
   const detail::PortalPlacement* portalPlacement(
       const std::size_t portalIdx) const;
+  /// Pointer to the `SurfacePlacementBase` object aligning the i-th portal
+  /// (May be nullptr if index exceeds the number of portals)
+  /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
+  /// @returns Pointer to the i-th portal placement
+  detail::PortalPlacement* portalPlacement(const std::size_t portalIdx);
 
  protected:
-  /// This method is called when the portal surfaces are registered with
-  /// the VolumePlacmentBase class. The client receives the information
-  /// about how many portals exist and he is requested to adapt the size
-  /// of the transform cache backend accordingly. The method is called
-  /// after the portal placements have been created.
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param nPortals: The number of portals that are registered with this volume
-  ///                  placement instance
-  virtual void expandTransformCache(const GeometryContext& gctx,
-                                    const std::size_t nPortals) = 0;
-
   /// Constructs the transform from the portal's frame into the
   /// experiment's global frame taking the alignment corrections
   /// of the associated volume into account.

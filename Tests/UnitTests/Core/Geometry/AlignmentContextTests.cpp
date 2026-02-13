@@ -209,14 +209,16 @@ class AlignableVolumePlacement : public VolumePlacementBase {
     }
   }
 
- private:
-  void expandTransformCache(const GeometryContext& gctx,
-                            const std::size_t nPortals) override {
-    for (std::size_t portal = 0ul; portal < nPortals; ++portal) {
+  void makePortalsAlignable(const GeometryContext& gctx,
+                            const std::vector<std::shared_ptr<RegularSurface>>&
+                                portalsToAlign) override {
+    VolumePlacementBase::makePortalsAlignable(gctx, portalsToAlign);
+    for (std::size_t portal = 0ul; portal < portalsToAlign.size(); ++portal) {
       m_portalTrfs.push_back(alignPortal(gctx, portal));
     }
   }
 
+ private:
   Transform3 m_locToGlob{Transform3::Identity()};
   Transform3 m_globToLoc{m_locToGlob.inverse()};
   std::vector<Transform3> m_portalTrfs{};
