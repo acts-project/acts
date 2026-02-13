@@ -1,4 +1,4 @@
-add_subdirectory(Digitization)
+add_component(Digitization ExamplesDigitization)
 add_subdirectory(Fatras)
 add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory(Generators)
@@ -19,3 +19,5 @@ add_subdirectory_if(AlignmentMillePede ACTS_BUILD_PLUGIN_MILLE)
 add_subdirectory(Utilities)
 add_subdirectory(AmbiguityResolution)
 add_subdirectory(HelloWorld)
+
+propagate_components_to_parent()
