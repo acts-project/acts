@@ -40,15 +40,15 @@ class Volume : public GeometryObject {
   ///
   /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  explicit Volume(const Transform3& transform,
-                  std::shared_ptr<VolumeBounds> volbounds) noexcept;
+  Volume(const Transform3& transform,
+         std::shared_ptr<VolumeBounds> volbounds) noexcept;
   /// @brief Constructor that connects the volume to an external alignment
   ///        I.e. the volume may move with the alignment of the surfaces
   ///        The placement of the volume is delegated to the positioner
   /// @param positioner: Reference to the object aligning the volume
   /// @param volbounds is the volume boundary definitions
-  explicit Volume(VolumePlacementBase& positioner,
-                  std::shared_ptr<VolumeBounds> volbounds) noexcept;
+  Volume(VolumePlacementBase& positioner,
+         std::shared_ptr<VolumeBounds> volbounds) noexcept;
 
   /// @brief Copy Constructor
   /// @param vol is the source volume for the copy
