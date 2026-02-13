@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
@@ -51,8 +51,8 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacepoints{this,
                                                             "spacepoints"};
-  WriteDataHandle<std::vector<Acts::Vertex>> m_outputVertices{
-      this, "OutputHoughVertices"};
+  WriteDataHandle<VertexContainer> m_outputVertices{this,
+                                                    "OutputHoughVertices"};
 };
 
 }  // namespace ActsExamples

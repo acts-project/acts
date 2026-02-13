@@ -276,8 +276,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootVertexNTupleWriter, root, "RootVertexNTupleWriter", inputVertices,
         inputTracks, inputTruthVertices, inputParticles, inputSelectedParticles,
-        inputTrackParticleMatching, bField, filePath, treeName, fileMode,
-        vertexMatchThreshold, trackMatchThreshold, writeTrackInfo);
+        inputTrackParticleMatching, inputVertexTruthMatching, bField, filePath,
+        treeName, fileMode, writeTrackInfo);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackFinderPerformanceWriter, root,
