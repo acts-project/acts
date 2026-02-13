@@ -73,6 +73,7 @@ class GbtsTrackingFilter final {
 
   /// Follow track starting from edge
   /// @param pS Starting edge
+  /// @return Final edge state after following the track
   GbtsEdgeState followTrack(GbtsEdge& pS);
 
  private:
