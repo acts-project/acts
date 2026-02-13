@@ -254,7 +254,6 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       std::floor(rRange.max() / 2) * 2 - m_cfg.deltaRMiddleMaxSPRange};
 
   // run the seeding
-  Acts::SeedContainer2 seeds;
   Acts::BroadTripletSeedFilter::State filterState;
   Acts::BroadTripletSeedFilter::Cache filterCache;
   Acts::BroadTripletSeedFilter seedFilter(m_filterConfig, filterState,
@@ -264,6 +263,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   std::vector<Acts::SpacePointContainer2::ConstRange> bottomSpRanges;
   std::optional<Acts::SpacePointContainer2::ConstRange> middleSpRange;
   std::vector<Acts::SpacePointContainer2::ConstRange> topSpRanges;
+
+  Acts::SeedContainer2 seeds;
+  seeds.assignSpacePointContainer(spacePoints);
 
   for (const auto [bottom, middle, top] : grid.binnedGroup()) {
     ACTS_VERBOSE("Process middle " << middle);
