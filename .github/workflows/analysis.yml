@@ -146,6 +146,13 @@ jobs:
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           analyze build fixes.yml --all
 
+      - name: Upload fixes
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: clang-tidy-fixes
+          path: fixes.yml
+
       - name: Annotate
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py

@@ -145,7 +145,11 @@ def load_compdb(build_dir: Path) -> set[Path]:
 # ---------------------------------------------------------------------------
 
 
-def get_changed_files(base_ref: str) -> list[str]:
+def _is_git_repo(source_root: Path) -> bool:
+    return (source_root / ".git").exists()
+
+
+def _get_changed_files_git(base_ref: str) -> list[str]:
     result = subprocess.run(
         ["git", "diff", "--name-only", "--diff-filter=ACM", f"{base_ref}...HEAD"],
         capture_output=True,
@@ -153,6 +157,24 @@ def get_changed_files(base_ref: str) -> list[str]:
         check=True,
     )
     return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def _get_changed_files_jj(base_ref: str) -> list[str]:
+    result = subprocess.run(
+        ["jj", "diff", "--from", base_ref, "--name-only"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def get_changed_files(base_ref: str, source_root: Path) -> list[str]:
+    if _is_git_repo(source_root):
+        console.print("Detected git repository")
+        return _get_changed_files_git(base_ref)
+    console.print("No .git found, using jj")
+    return _get_changed_files_jj(base_ref)
 
 
 def header_to_tu(header_repo_path: str, build_dir: Path) -> Path:
@@ -233,7 +255,7 @@ def collect_changed_targets(
     compdb_files = load_compdb(build_dir)
     console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
 
-    changed = get_changed_files(base_ref)
+    changed = get_changed_files(base_ref, source_root)
     console.print(f"Found {len(changed)} changed files")
 
     return resolve_targets(
@@ -243,7 +265,6 @@ def collect_changed_targets(
 
 def collect_all_targets(
     build_dir: Path,
-    source_root: Path,
     exclude_path_regexes: list[str] | None = None,
 ) -> list[Path]:
     if exclude_path_regexes is None:
@@ -338,19 +359,30 @@ def write_empty_fixes(output: Path) -> None:
 
 
 def merge_fixes_yaml(fixes_dir: Path, output: Path) -> None:
-    """Merge all per-TU export-fixes YAML files into a single file."""
+    """Merge and deduplicate all per-TU export-fixes YAML files into a single file."""
     yaml_files = sorted(fixes_dir.glob("*.yaml"))
-    merged_diagnostics: list[dict] = []
+    all_diagnostics: list[Diagnostic] = []
     for yf in yaml_files:
         fixes = FixesFile.model_validate(yaml.safe_load(yf.read_text()) or {})
-        merged_diagnostics.extend(
-            d.model_dump(by_alias=True) for d in fixes.diagnostics
-        )
+        all_diagnostics.extend(fixes.diagnostics)
 
-    merged = {"Diagnostics": merged_diagnostics}
+    # Deduplicate by (file, offset, check)
+    seen: set[tuple] = set()
+    unique: list[Diagnostic] = []
+    for d in all_diagnostics:
+        key = (d.message.file_path, d.message.file_offset, d.name)
+        if key not in seen:
+            seen.add(key)
+            unique.append(d)
+
+    deduped = len(all_diagnostics) - len(unique)
+    if deduped:
+        console.print(f"Deduplicated {deduped} diagnostic(s).")
+
+    merged = {"Diagnostics": [d.model_dump(by_alias=True) for d in unique]}
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(yaml.dump(merged, default_flow_style=False, sort_keys=False))
-    console.print(f"Wrote {len(merged_diagnostics)} diagnostic(s) to {output}")
+    console.print(f"Wrote {len(unique)} diagnostic(s) to {output}")
 
 
 # ---------------------------------------------------------------------------
@@ -658,8 +690,12 @@ def annotate_from_fixes_dir(
 
     console.print(f"Found {len(all_diagnostics)} total diagnostic(s).")
     return emit_annotations(
-        all_diagnostics, source_root, config, severity,
-        verbose=verbose, github_annotate=github_annotate,
+        all_diagnostics,
+        source_root,
+        config,
+        severity,
+        verbose=verbose,
+        github_annotate=github_annotate,
     )
 
 
@@ -675,8 +711,12 @@ def annotate_from_fixes_file(
     all_diagnostics = parse_fixes_yaml(fixes_file)
     console.print(f"Found {len(all_diagnostics)} total diagnostic(s).")
     return emit_annotations(
-        all_diagnostics, source_root, config, severity,
-        verbose=verbose, github_annotate=github_annotate,
+        all_diagnostics,
+        source_root,
+        config,
+        severity,
+        verbose=verbose,
+        github_annotate=github_annotate,
     )
 
 
@@ -754,7 +794,9 @@ def analyze(
 
     # 1) Collect targets
     if files is not None:
-        file_list = [l.strip() for l in files.read_text().splitlines() if l.strip()]
+        file_list = [
+            line.strip() for line in files.read_text().splitlines() if line.strip()
+        ]
         compdb_files = load_compdb(build_dir)
         console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
         console.print(f"Read {len(file_list)} file(s) from {files}")
@@ -766,9 +808,7 @@ def analyze(
             config.exclude_path_regexes,
         )
     elif all:
-        targets = collect_all_targets(
-            build_dir, source_root, config.exclude_path_regexes
-        )
+        targets = collect_all_targets(build_dir, config.exclude_path_regexes)
     else:
         if base_ref is None:
             raise typer.BadParameter(
@@ -843,7 +883,8 @@ def annotate(
             "--github-annotate/--no-github-annotate",
             help="Emit ::error/::warning workflow commands (default: auto-detect from GITHUB_ACTIONS env var)",
         ),
-    ] = os.environ.get("GITHUB_ACTIONS", "").lower() == "true",
+    ] = os.environ.get("GITHUB_ACTIONS", "").lower()
+    == "true",
 ) -> None:
     """Emit GitHub Actions annotations from a previously saved fixes YAML."""
     if source_root is None:
@@ -855,8 +896,12 @@ def annotate(
         config.exclude_path_regexes.extend(exclude_path)
 
     code = annotate_from_fixes_file(
-        fixes, source_root, config, severity,
-        verbose=verbose, github_annotate=github_annotate,
+        fixes,
+        source_root,
+        config,
+        severity,
+        verbose=verbose,
+        github_annotate=github_annotate,
     )
     raise typer.Exit(code)
 
