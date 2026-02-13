@@ -15,9 +15,6 @@
 #include <utility>
 
 namespace Acts {
-
-using namespace UnitLiterals;
-
 Volume::Volume(const Transform3& transform,
                std::shared_ptr<VolumeBounds> volbounds)
     : GeometryObject(),
@@ -76,6 +73,7 @@ Volume::BoundingBox Volume::boundingBox(const Vector3& envelope) const {
 }
 
 Volume::BoundingBox Volume::orientedBoundingBox() const {
+  using namespace UnitLiterals;
   return m_volumeBounds->boundingBox(nullptr, {0.05_mm, 0.05_mm, 0.05_mm},
                                      this);
 }
