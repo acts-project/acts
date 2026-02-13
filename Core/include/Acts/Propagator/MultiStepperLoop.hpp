@@ -161,11 +161,11 @@ class MultiStepperLoop final {
   /// @brief Typedef to the Config of the single component Stepper
   using SingleConfig = typename SingleStepper::Config;
 
-  /// @brief Use the definitions from the Single-stepper
-  using Covariance = typename SingleStepper::Covariance;
-  using Jacobian = typename SingleStepper::Jacobian;
-
-  /// @brief Define an own bound state
+  /// Type alias for jacobian matrix
+  using Jacobian = BoundMatrix;
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
+  /// Bound state tuple containing parameters, Jacobian, and path length
   using BoundState =
       std::tuple<MultiComponentBoundTrackParameters, Jacobian, double>;
 
