@@ -217,7 +217,8 @@ def resolve_targets(
         if tu in compdb_files:
             targets.add(tu)
         else:
-            console.print(f"  SKIP header {hdr} (TU {tu} not in compile_commands.json)")
+            console.print(f"  header {hdr} has no TU, analysing header directly")
+            targets.add(abs_path)
 
     console.print(f"Total targets: {len(targets)}")
     return sorted(targets)
@@ -582,12 +583,13 @@ def emit_annotations(
                         line_range=(start, end),
                         highlight_lines={diag.line},
                     )
-                    title = Text.assemble(
-                        (diag.check, "bold red"),
-                        " ",
-                        (f"{rel_path}:{diag.line}:{diag.col}", "dim"),
-                    )
-                    renderables: list = [syntax]
+                    title = Text(diag.check, style="bold red")
+                    renderables: list = [
+                        Text.assemble(
+                            (f"{rel_path}:{diag.line}:{diag.col}", "dim"),
+                        ),
+                        syntax,
+                    ]
                     renderables.append(
                         Panel(
                             Text(diag.message, style="yellow"),
