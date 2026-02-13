@@ -344,7 +344,9 @@ struct GsfActor {
                             const SourceLink& sourceLink) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
-    bool isOutlier = true;
+    // Keep track of all created components for outlier handling
+    std::vector<TrackIndexType> allTips;
+    allTips.reserve(stepper.numberComponents(state.stepping));
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
@@ -396,21 +398,37 @@ struct GsfActor {
           return updateRes.error();
         }
 
-        isOutlier = false;
-      } else {
+        tmpStates.tips.push_back(trackStateProxy.index());
+        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
+      }
+
+      allTips.push_back(trackStateProxy.index());
+    }
+
+    const bool isOutlier = tmpStates.tips.empty();
+
+    if (!isOutlier) {
+      computePosteriorWeights(tmpStates.traj, tmpStates.tips,
+                              tmpStates.weights);
+      normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
+        return tmpStates.weights.at(idx);
+      });
+    } else {
+      auto cmps = stepper.componentIterable(state.stepping);
+      for (const auto [cmp, idx] : zip(cmps, allTips)) {
+        typename traj_t::TrackStateProxy trackStateProxy =
+            tmpStates.traj.getTrackState(idx);
+
+        // Set the filtered parameter index to be the same with predicted
+        // parameter
         trackStateProxy.shareFrom(trackStateProxy,
                                   TrackStatePropMask::Predicted,
                                   TrackStatePropMask::Filtered);
+
+        tmpStates.tips.push_back(trackStateProxy.index());
+        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
       }
-
-      tmpStates.tips.push_back(trackStateProxy.index());
-      tmpStates.weights[trackStateProxy.index()] = cmp.weight();
     }
-
-    computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);
-    normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
-      return tmpStates.weights.at(idx);
-    });
 
     // Do the statistics
     ++result.processedStates;
@@ -569,7 +587,7 @@ struct GsfActor {
         // place sentinel values for smoothed parameters for now. they will be
         // filled in the backward pass
         combinedState.smoothed() = BoundVector::Constant(-2);
-        combinedState.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
+        combinedState.smoothedCovariance() = BoundMatrix::Constant(-2);
       } else {
         combinedState.shareFrom(TrackStatePropMask::Predicted,
                                 TrackStatePropMask::Filtered);

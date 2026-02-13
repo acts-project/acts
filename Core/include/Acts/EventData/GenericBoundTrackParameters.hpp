@@ -41,7 +41,7 @@ class GenericBoundTrackParameters {
   /// Type alias for bound track parameters vector
   using ParametersVector = BoundVector;
   /// Type alias for bound track covariance matrix
-  using CovarianceMatrix = BoundSquareMatrix;
+  using CovarianceMatrix = BoundMatrix;
   /// Type alias for particle hypothesis used in reconstruction
   using ParticleHypothesis = particle_hypothesis_t;
 
@@ -335,7 +335,7 @@ class GenericBoundTrackParameters {
 
  private:
   BoundVector m_params;
-  std::optional<BoundSquareMatrix> m_cov;
+  std::optional<BoundMatrix> m_cov;
   /// reference surface
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20

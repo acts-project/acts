@@ -119,7 +119,8 @@ using BoundVector = ActsVector<eBoundSize>;
 /// @brief Matrix type for bound track parameter transformations
 using BoundMatrix = ActsMatrix<eBoundSize, eBoundSize>;
 /// @brief Square matrix type for bound track parameter covariance
-using BoundSquareMatrix = ActsSquareMatrix<eBoundSize>;
+using BoundSquareMatrix [[deprecated("Use BoundMatrix instead")]] =
+    ActsSquareMatrix<eBoundSize>;
 /// @brief Matrix type for mapping from bound to free track parameters
 using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 
@@ -129,7 +130,8 @@ using FreeVector = ActsVector<eFreeSize>;
 /// @brief Matrix type for free track parameter transformations
 using FreeMatrix = ActsMatrix<eFreeSize, eFreeSize>;
 /// @brief Square matrix type for free track parameter covariance
-using FreeSquareMatrix = ActsSquareMatrix<eFreeSize>;
+using FreeSquareMatrix [[deprecated("Use FreeMatrix instead")]] =
+    ActsSquareMatrix<eFreeSize>;
 /// @brief Matrix type for mapping from free to bound track parameters
 using FreeToBoundMatrix = ActsMatrix<eBoundSize, eFreeSize>;
 /// @brief Matrix type for mapping from free parameters to path length
