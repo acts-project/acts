@@ -25,6 +25,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from multiprocessing import cpu_count
 from pathlib import Path, PurePosixPath
@@ -222,6 +223,9 @@ def resolve_targets(
 
     for src in sources:
         abs_path = (source_root / src).resolve()
+        if not abs_path.exists():
+            console.print(f"  SKIP source {src} (file no longer exists)")
+            continue
         if is_path_excluded(str(abs_path), exclude_path_regexes):
             console.print(f"  SKIP source {src} (excluded by filter)")
             continue
@@ -232,6 +236,9 @@ def resolve_targets(
 
     for hdr in headers:
         abs_path = (source_root / hdr).resolve()
+        if not abs_path.exists():
+            console.print(f"  SKIP header {hdr} (file no longer exists)")
+            continue
         if is_path_excluded(str(abs_path), exclude_path_regexes):
             console.print(f"  SKIP header {hdr} (excluded by filter)")
             continue
