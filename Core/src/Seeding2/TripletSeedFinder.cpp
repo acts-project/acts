@@ -469,10 +469,9 @@ class Impl final : public TripletSeedFinder {
 TripletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
                                                 float bFieldInZ_)
     : Config(config), bFieldInZ(bFieldInZ_) {
-  using namespace Acts::UnitLiterals;
-
   // similar to `theta0Highland` in `Core/src/Material/Interactions.cpp`
   {
+    using namespace Acts::UnitLiterals;
     const double xOverX0 = radLengthPerSeed;
     const double q2OverBeta2 = 1;  // q^2=1, beta^2~1
     // RPP2018 eq. 33.15 (treats beta and q² consistently)
