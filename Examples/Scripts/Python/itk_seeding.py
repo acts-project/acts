@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+# Example script to run ITk seed finding based on CSV spacepoints
+
 import os
-import argparse
 import tempfile
 
-import pathlib, acts
+import pathlib, acts, acts.root
 
 from acts.examples import (
     CsvSpacePointReader,
@@ -13,7 +14,7 @@ from acts.examples.reconstruction import (
     addStandardSeeding,
 )
 
-from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
+from acts.examples.itk import InputSpacePointsType
 
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
@@ -140,15 +141,11 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
 
 
 if "__main__" == __name__:
-    p = argparse.ArgumentParser(
-        description="Example script to run ITk seed finding based on CSV spacepoints",
-    )
-
     geo_dir = pathlib.Path("acts-itk")
     outputDir = pathlib.Path.cwd() / "itk_output"
 
     detector = acts.examples.itk.buildITkGeometry(geo_dir)
     trackingGeometry = detector.trackingGeometry()
-    field = acts.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
+    field = acts.root.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 
     runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir)

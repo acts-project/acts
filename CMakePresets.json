@@ -188,6 +188,8 @@
                 "ACTS_BUILD_PYTHON_WHEEL": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_EXAMPLES": "ON",
+                "ACTS_BUILD_PLUGIN_ROOT": "OFF",
+                "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
                 "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
             }
         }

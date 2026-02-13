@@ -42,7 +42,7 @@ class MultiComponentBoundTrackParameters {
   using CovarianceMatrix = typename Parameters::CovarianceMatrix;
 
  private:
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
       m_components;
   std::shared_ptr<const Surface> m_surface;
 
@@ -132,10 +132,9 @@ class MultiComponentBoundTrackParameters {
       ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
-    static_assert(
-        std::is_same_v<BoundSquareMatrix, covariance_t> ||
-        std::is_same_v<std::optional<BoundSquareMatrix>, covariance_t>);
-    if constexpr (std::is_same_v<BoundSquareMatrix, covariance_t>) {
+    static_assert(std::is_same_v<BoundMatrix, covariance_t> ||
+                  std::is_same_v<std::optional<BoundMatrix>, covariance_t>);
+    if constexpr (std::is_same_v<BoundMatrix, covariance_t>) {
       for (const auto& [weight, params, cov] : cmps) {
         m_components.push_back({weight, params, cov});
       }
@@ -159,7 +158,7 @@ class MultiComponentBoundTrackParameters {
   /// parameter.
   MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
                                      const ParametersVector& params,
-                                     std::optional<BoundSquareMatrix> cov,
+                                     std::optional<BoundMatrix> cov,
                                      ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {

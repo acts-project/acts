@@ -93,8 +93,8 @@ struct CorrectedFreeToBoundTransformer {
   /// @param geoContext The geometry context
   /// @param navDir The navigation direction
   /// @param logger The logger
-  std::optional<std::tuple<BoundVector, BoundSquareMatrix>> operator()(
-      const FreeVector& freeParams, const FreeSquareMatrix& freeCovariance,
+  std::optional<std::tuple<BoundVector, BoundMatrix>> operator()(
+      const FreeVector& freeParams, const FreeMatrix& freeCovariance,
       const Surface& surface, const GeometryContext& geoContext,
       Direction navDir = Direction::Forward(),
       const Logger& logger = getDummyLogger()) const;
