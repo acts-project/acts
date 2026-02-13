@@ -42,7 +42,7 @@ class IVolumeMaterial;
 /// p the momentum magnitude and B the magnetic field
 ///
 template <typename extension_t = EigenStepperDefaultExtension>
-class EigenStepper {
+class EigenStepper final {
  public:
   /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;

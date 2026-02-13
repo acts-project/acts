@@ -26,7 +26,7 @@ namespace Acts {
 class IVolumeMaterial;
 
 /// Stepper implementation using sympy-generated expressions.
-class SympyStepper {
+class SympyStepper final {
  public:
   /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
