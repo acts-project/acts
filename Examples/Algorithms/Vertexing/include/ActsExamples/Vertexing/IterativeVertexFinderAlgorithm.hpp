@@ -8,46 +8,26 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <algorithm>
-#include <array>
-#include <cmath>
 #include <memory>
-#include <optional>
 #include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
-
-namespace Acts {
-class MagneticFieldProvider;
-}  // namespace Acts
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
@@ -57,8 +37,6 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   using Seeder = Acts::TrackDensityVertexFinder;
   using Finder = Acts::IterativeVertexFinder;
   using Options = Acts::VertexingOptions;
-
-  using VertexCollection = std::vector<Acts::Vertex>;
 
   struct Config {
     /// Optional. Input track parameters collection
@@ -96,7 +74,7 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};
 
-  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
+  WriteDataHandle<VertexContainer> m_outputVertices{this, "OutputVertices"};
 };
 
 }  // namespace ActsExamples

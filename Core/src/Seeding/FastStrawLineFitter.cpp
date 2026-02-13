@@ -14,9 +14,8 @@
 
 #include <format>
 
-using namespace Acts::UnitLiterals;
-
 namespace {
+using namespace Acts::UnitLiterals;
 /// @brief Expresses an angle in degree
 /// @param x: Angle in radians
 constexpr double inDeg(const double x) {

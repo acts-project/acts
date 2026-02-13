@@ -10,11 +10,9 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/HoughVertexFinder2.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <chrono>
-#include <vector>
 
 namespace ActsExamples {
 
@@ -56,7 +54,7 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
                                      << "mm, y = " << vtx.value()[1]
                                      << "mm, z = " << vtx.value()[2] << "mm");
 
-    std::vector<Acts::Vertex> vertexCollection;
+    VertexContainer vertexCollection;
     vertexCollection.emplace_back(vtx.value());
 
     // store found vertices
@@ -66,7 +64,7 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
               << (t2 - t1).count() / 1e6 << " ms");
 
     // store empty container
-    std::vector<Acts::Vertex> vertexCollection;
+    VertexContainer vertexCollection;
     m_outputVertices(ctx, std::move(vertexCollection));
   }
 
