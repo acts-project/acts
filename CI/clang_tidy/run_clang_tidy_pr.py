@@ -33,7 +33,8 @@ from typing import Annotated
 import typer
 import yaml
 from pydantic import BaseModel, Field
-from rich.console import Console
+from rich.console import Console, Group
+from rich.panel import Panel
 from rich.progress import (
     BarColumn,
     MofNCompleteColumn,
@@ -42,6 +43,8 @@ from rich.progress import (
     TimeRemainingColumn,
     TaskID,
 )
+from rich.syntax import Syntax
+from rich.text import Text
 
 app = typer.Typer()
 console = Console(stderr=True)
@@ -62,12 +65,22 @@ class FilterConfig(BaseModel):
     severity: str = "error"
 
 
+class Replacement(BaseModel):
+    model_config = {"populate_by_name": True}
+
+    file_path: str = Field(default="", alias="FilePath")
+    offset: int = Field(default=0, alias="Offset")
+    length: int = Field(default=0, alias="Length")
+    replacement_text: str = Field(default="", alias="ReplacementText")
+
+
 class DiagMessage(BaseModel):
     model_config = {"populate_by_name": True}
 
     message: str = Field(default="", alias="Message")
     file_path: str = Field(default="", alias="FilePath")
     file_offset: int | None = Field(default=None, alias="FileOffset")
+    replacements: list[Replacement] = Field(default_factory=list, alias="Replacements")
 
 
 class Diagnostic(BaseModel):
@@ -91,6 +104,7 @@ class ParsedDiagnostic(BaseModel):
     col: int = 0
     abs_path: str = ""
     rel_path: str = ""
+    suggestion: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -351,6 +365,57 @@ def offset_to_line_col(text: str, offset: int) -> tuple[int, int]:
     return line, col
 
 
+def build_suggestion(
+    source: str,
+    diag_file: str,
+    replacements: list[Replacement],
+) -> str:
+    """Build a clang-tidy-style suggestion from replacements.
+
+    Produces output like::
+
+        42 |   ContextType(const T& value) : m_data{value} {}
+           |   ^
+           |   explicit
+
+    Only considers replacements that target the same file as the diagnostic.
+    Returns an empty string when no applicable replacements exist.
+    """
+    applicable = [r for r in replacements if r.file_path == diag_file]
+    if not applicable or not source:
+        return ""
+
+    lines = source.splitlines()
+    parts: list[str] = []
+
+    for repl in sorted(applicable, key=lambda r: r.offset):
+        line_no, col = offset_to_line_col(source, repl.offset)
+        if line_no < 1 or line_no > len(lines):
+            continue
+
+        source_line = lines[line_no - 1]
+        line_num_width = len(str(line_no))
+        gutter = " " * line_num_width
+
+        parts.append(f"{line_no} | {source_line}")
+
+        # col is 1-based; we need (col - 1) spaces to reach the caret
+        indent = " " * (col - 1)
+        if repl.length > 1:
+            # Show ^~~~ spanning the replaced range
+            span = "^" + "~" * (repl.length - 1)
+        else:
+            span = "^"
+        parts.append(f"{gutter} | {indent}{span}")
+
+        # Show the replacement text (may be multi-line)
+        fix_lines = repl.replacement_text.splitlines() or [""]
+        for fl in fix_lines:
+            parts.append(f"{gutter} | {indent}{fl}")
+
+    return "\n".join(parts)
+
+
 def parse_fixes_yaml(path: Path) -> list[ParsedDiagnostic]:
     fixes = FixesFile.model_validate(yaml.safe_load(path.read_text()) or {})
 
@@ -371,7 +436,12 @@ def parse_fixes_yaml(path: Path) -> list[ParsedDiagnostic]:
                     file_cache[filepath] = filepath.read_text(errors="replace")
                 except OSError:
                     file_cache[filepath] = ""
-            line, col = offset_to_line_col(file_cache[filepath], msg.file_offset)
+            source = file_cache[filepath]
+            line, col = offset_to_line_col(source, msg.file_offset)
+        else:
+            source = ""
+
+        suggestion = build_suggestion(source, msg.file_path, msg.replacements)
 
         results.append(
             ParsedDiagnostic(
@@ -380,6 +450,7 @@ def parse_fixes_yaml(path: Path) -> list[ParsedDiagnostic]:
                 path=filepath,
                 line=line,
                 col=col,
+                suggestion=suggestion,
             )
         )
     return results
@@ -422,6 +493,7 @@ def emit_annotations(
     config: FilterConfig,
     severity: str,
     verbose: bool = False,
+    github_annotate: bool = True,
 ) -> int:
     """Normalize paths, deduplicate, filter, and emit GH Actions annotations.
     Returns 1 if any diagnostics remain, 0 otherwise."""
@@ -467,17 +539,97 @@ def emit_annotations(
         f"After filtering: {len(remaining)} remaining, {excluded_count} excluded."
     )
 
-    # Emit GH Actions annotations on stdout
+    # Group by file for rich output
+    by_file: dict[str, list[ParsedDiagnostic]] = {}
     for diag in remaining:
-        msg = diag.message.replace("%", "%25")
-        msg = msg.replace("\r", "%0D")
-        msg = msg.replace("\n", "%0A")
-        print(
-            f"::{severity} file={diag.rel_path},line={diag.line},col={diag.col},title={diag.check}::{msg}",
-        )
+        by_file.setdefault(diag.rel_path, []).append(diag)
+
+    file_cache: dict[str, str] = {}
+
+    for rel_path, file_diags in sorted(by_file.items()):
+        for diag in sorted(file_diags, key=lambda d: d.line):
+            # GH Actions annotation on stdout
+            if github_annotate:
+                body = diag.message
+                if diag.suggestion:
+                    body += "\n" + diag.suggestion
+                body = body.replace("%", "%25")
+                body = body.replace("\r", "%0D")
+                body = body.replace("\n", "%0A")
+                print(
+                    f"::{severity} file={diag.rel_path},line={diag.line},col={diag.col},title={diag.check}::{body}",
+                )
+
+            # Rich panel on stderr for the CI log
+            if diag.line > 0 and diag.abs_path:
+                if diag.abs_path not in file_cache:
+                    try:
+                        file_cache[diag.abs_path] = Path(diag.abs_path).read_text(
+                            errors="replace"
+                        )
+                    except OSError:
+                        file_cache[diag.abs_path] = ""
+
+                source = file_cache[diag.abs_path]
+                if source:
+                    ctx = 3
+                    start = max(1, diag.line - ctx)
+                    end = diag.line + ctx
+                    syntax = Syntax(
+                        source,
+                        lexer="cpp",
+                        line_numbers=True,
+                        line_range=(start, end),
+                        highlight_lines={diag.line},
+                    )
+                    title = Text.assemble(
+                        (diag.check, "bold red"),
+                        " ",
+                        (f"{rel_path}:{diag.line}:{diag.col}", "dim"),
+                    )
+                    renderables: list = [syntax]
+                    renderables.append(
+                        Panel(
+                            Text(diag.message, style="yellow"),
+                            border_style="dim",
+                            title="message",
+                            title_align="left",
+                        )
+                    )
+                    if diag.suggestion:
+                        renderables.append(
+                            Panel(
+                                Syntax(
+                                    diag.suggestion,
+                                    lexer="text",
+                                    line_numbers=False,
+                                    theme="ansi_dark",
+                                ),
+                                border_style="green",
+                                title="suggestion",
+                                title_align="left",
+                            )
+                        )
+                    panel = Panel(
+                        Group(*renderables),
+                        title=title,
+                        title_align="left",
+                        border_style="red",
+                    )
+                    console.print(panel)
+                    continue
+
+            # Fallback: no source available
+            console.print(
+                f"[bold red]{diag.check}[/] {diag.rel_path}:{diag.line}:{diag.col}"
+            )
+            console.print(f"  [yellow]{diag.message}[/]")
 
     if remaining:
-        console.print(f"[bold red]{len(remaining)} clang-tidy diagnostic(s) found.[/]")
+        console.print(
+            f"\n[bold red]{len(remaining)} clang-tidy diagnostic(s) "
+            f"across {len(by_file)} file(s).[/]"
+        )
         return 1
     console.print("[bold green]No clang-tidy diagnostics (after filtering).[/]")
     return 0
@@ -489,6 +641,7 @@ def annotate_from_fixes_dir(
     config: FilterConfig,
     severity: str,
     verbose: bool = False,
+    github_annotate: bool = True,
 ) -> int:
     yaml_files = sorted(fixes_dir.glob("*.yaml"))
     if not yaml_files:
@@ -503,7 +656,8 @@ def annotate_from_fixes_dir(
 
     console.print(f"Found {len(all_diagnostics)} total diagnostic(s).")
     return emit_annotations(
-        all_diagnostics, source_root, config, severity, verbose=verbose
+        all_diagnostics, source_root, config, severity,
+        verbose=verbose, github_annotate=github_annotate,
     )
 
 
@@ -513,12 +667,14 @@ def annotate_from_fixes_file(
     config: FilterConfig,
     severity: str,
     verbose: bool = False,
+    github_annotate: bool = True,
 ) -> int:
     console.print(f"Parsing {fixes_file}...")
     all_diagnostics = parse_fixes_yaml(fixes_file)
     console.print(f"Found {len(all_diagnostics)} total diagnostic(s).")
     return emit_annotations(
-        all_diagnostics, source_root, config, severity, verbose=verbose
+        all_diagnostics, source_root, config, severity,
+        verbose=verbose, github_annotate=github_annotate,
     )
 
 
@@ -679,6 +835,13 @@ def annotate(
             help="Print each excluded and deduplicated diagnostic with the reason",
         ),
     ] = False,
+    github_annotate: Annotated[
+        bool,
+        typer.Option(
+            "--github-annotate/--no-github-annotate",
+            help="Emit ::error/::warning workflow commands (default: auto-detect from GITHUB_ACTIONS env var)",
+        ),
+    ] = os.environ.get("GITHUB_ACTIONS", "").lower() == "true",
 ) -> None:
     """Emit GitHub Actions annotations from a previously saved fixes YAML."""
     if source_root is None:
@@ -690,7 +853,8 @@ def annotate(
         config.exclude_path_regexes.extend(exclude_path)
 
     code = annotate_from_fixes_file(
-        fixes, source_root, config, severity, verbose=verbose
+        fixes, source_root, config, severity,
+        verbose=verbose, github_annotate=github_annotate,
     )
     raise typer.Exit(code)
 
