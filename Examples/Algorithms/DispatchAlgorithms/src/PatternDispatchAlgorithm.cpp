@@ -65,7 +65,8 @@ ProcessCode PatternDispatchAlgorithm::execute(
   if (!m_cfg.inputParticleMeasurementsMap.empty()) {
     const auto& particleMeasurementsMap = m_inputParticleMeasurementsMap(ctx);
     for (const auto& [barcode, measurementIndex] : particleMeasurementsMap) {
-      dispatchParticleMeasurementsMap.insert({barcode.hash(), measurementIndex});
+      dispatchParticleMeasurementsMap.insert(
+          {barcode.hash(), measurementIndex});
     }
   }
 

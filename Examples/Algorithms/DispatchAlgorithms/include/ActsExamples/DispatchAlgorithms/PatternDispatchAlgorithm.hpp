@@ -40,9 +40,9 @@ class PatternDispatchAlgorithm final : public IAlgorithm {
     /// a vector of tracks if inputParticles and inputParticleMeasurementsMap
     /// are provided, the truth information is also passed to the pattern
     /// function, otherwise an empty structure is passed
-    std::function<std::vector<DispatchTrack>(const DispatchMeasurements&,
-                                             const DispatchParticles&,
-                                             const DispatchParticleMeasurementsMap&)>
+    std::function<std::vector<DispatchTrack>(
+        const DispatchMeasurements&, const DispatchParticles&,
+        const DispatchParticleMeasurementsMap&)>
         patternFunction;
 
     /// The tracking geometry

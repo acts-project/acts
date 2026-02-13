@@ -10,16 +10,16 @@
 
 namespace ActsExamples {
 
-PatternDispatchAlgorithm::PatternDispatchAlgorithm(Config config, Acts::Logging::Level level)
+PatternDispatchAlgorithm::PatternDispatchAlgorithm(Config config,
+                                                   Acts::Logging::Level level)
     : IAlgorithm("PatternDispatchAlgorithm", level), m_cfg(std::move(config)) {}
 
-ProcessCode PatternDispatchAlgorithm::execute(const AlgorithmContext& ctx) const {
+ProcessCode PatternDispatchAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   // Retrieve the input data from the context
   const auto& measurementsIn = m_inputMeasurements(ctx);
-
-
 
   return ProcessCode::SUCCESS;
 }
 
-}
+}  // namespace ActsExamples

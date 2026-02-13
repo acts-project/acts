@@ -17,16 +17,14 @@
 
 namespace ActsExamples {
 
-/// This Algorithm retrieves Acts event data for pattern recognition 
-/// or re-fitting and forwards it to a user defined function for further processing
+/// This Algorithm retrieves Acts event data for pattern recognition
+/// or re-fitting and forwards it to a user defined function for further
+/// processing
 class PatternDispatchAlgorithm final : public IAlgorithm {
  public:
-
- /// Configuration class it allows to connect to python functions
- class Config {
+  /// Configuration class it allows to connect to python functions
+  class Config {
    public:
-   
-
   };
 
   /// Construct the smearing algorithm.
@@ -45,11 +43,8 @@ class PatternDispatchAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-
   /// Configuration of the Algorithm
   Config m_cfg;
-
-
 };
 
 }  // namespace ActsExamples
