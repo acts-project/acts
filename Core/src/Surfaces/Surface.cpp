@@ -94,18 +94,21 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
   // The local frame rotation
   const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The axes of local frame
-  const auto& localXAxis = rotation.col(0);
-  const auto& localYAxis = rotation.col(1);
-  const auto& localZAxis = rotation.col(2);
+  // const auto& localXAxis = rotation.col(0);
+  // const auto& localYAxis = rotation.col(1);
+  // const auto& localZAxis = rotation.col(2);
   // Calculate the derivative of local frame axes w.r.t its rotation
   const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(rotation);
   // Calculate the derivative of local 3D Cartesian coordinates w.r.t.
   // alignment parameters (without path correction)
   AlignmentToPositionMatrix alignToLoc3D = AlignmentToPositionMatrix::Zero();
-  alignToLoc3D.block<1, 3>(eX, eAlignmentCenter0) = -localXAxis.transpose();
-  alignToLoc3D.block<1, 3>(eY, eAlignmentCenter0) = -localYAxis.transpose();
-  alignToLoc3D.block<1, 3>(eZ, eAlignmentCenter0) = -localZAxis.transpose();
+  alignToLoc3D.block<1, 3>(eX, eAlignmentCenter0) =
+      -Vector3::UnitX().transpose();  // [-1, 0, 0]
+  alignToLoc3D.block<1, 3>(eY, eAlignmentCenter0) =
+      -Vector3::UnitY().transpose();  // [0, -1, 0]
+  alignToLoc3D.block<1, 3>(eZ, eAlignmentCenter0) =
+      -Vector3::UnitZ().transpose();  // [0, 0, 1]
   alignToLoc3D.block<1, 3>(eX, eAlignmentRotation0) =
       pcRowVec * rotToLocalXAxis;
   alignToLoc3D.block<1, 3>(eY, eAlignmentRotation0) =
@@ -143,7 +146,7 @@ AlignmentToPathMatrix Surface::alignmentToPathDerivative(
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) = localZAxis.transpose() / dz;
+  alignToPath.segment<3>(eAlignmentCenter0) = Vector3::UnitZ().transpose() / dz;
   alignToPath.segment<3>(eAlignmentRotation0) =
       -pcRowVec * rotToLocalZAxis / dz;
 

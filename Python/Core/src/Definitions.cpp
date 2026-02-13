@@ -148,9 +148,9 @@ void addDefinitions(py::module_& m) {
       }))
       .def(py::init([](const Vector3& translation,
                        const RotationMatrix3& rotation) -> Transform3 {
-        Transform3 t;
-        t.prerotate(rotation);
-        t.pretranslate(translation);
+        Transform3 t = Transform3::Identity();
+        t.rotate(rotation);
+        t.translation() = translation;
         return t;
       }))
       .def_property_readonly(

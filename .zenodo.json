@@ -1,7 +1,7 @@
 {
   "description": "Experiment-independent toolkit for (charged) particle track reconstruction in (high energy) physics experiments implemented in modern C++ ",
   "license": "MPL-2.0",
-  "title": "acts-project/acts: vv44.2.0",
+  "title": "acts-project/acts: v44.2.0",
   "version": "v44.2.0",
   "upload_type": "software",
   "creators": [
@@ -177,17 +177,6 @@
       "scheme": "url",
       "identifier": "https://github.com/acts-project/acts/tree/v10.0.0",
       "relation": "isSupplementTo"
-    },
-    {
-      "scheme": "doi",
-      "identifier": "10.5281/zenodo.4818137",
-      "relation": "obsoletes",
-      "resource_type": "software"
-    },
-    {
-      "scheme": "doi",
-      "identifier": "10.5281/zenodo.5141418",
-      "relation": "isVersionOf"
     }
   ]
 }

@@ -57,6 +57,9 @@ class CsvMeasurementReader final : public IReader {
     /// Output  measurement to particle collection (optional)
     /// @note Only filled if inputSimHits is given
     std::string outputMeasurementParticlesMap;
+    /// Output particle to measurement collection (optional)
+    /// @note Only filled if inputSimHits is given (inverted from measurementParticlesMap)
+    std::string outputParticleMeasurementsMap;
   };
 
   /// Construct the cluster reader.
@@ -93,6 +96,9 @@ class CsvMeasurementReader final : public IReader {
 
   WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
       m_outputMeasurementParticlesMap{this, "OutputMeasurementParticlesMap"};
+
+  WriteDataHandle<InverseMultimap<ActsFatras::Barcode>>
+      m_outputParticleMeasurementsMap{this, "OutputParticleMeasurementsMap"};
 
   ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
 };
