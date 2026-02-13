@@ -213,8 +213,8 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     endif()
 
     # For deployment with pip, we build static libs
-    set(BUILD_SHARED_LIBS FALSE)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    #set(BUILD_SHARED_LIBS FALSE)
+    #set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
     # Set installation paths for proper python package creation
     # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
