@@ -119,10 +119,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
               "bins"_a, "low"_a, "high"_a, "title"_a = "")
           .def_static(
               "variable",
-              [](std::vector<double> edges, const std::string& title) {
+              [](const std::vector<double>& edges, const std::string& title) {
                 return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostVariableAxis(std::move(edges),
-                                                          title));
+                    Acts::Experimental::BoostVariableAxis(edges, title));
               },
               "edges"_a, "title"_a = "");
 

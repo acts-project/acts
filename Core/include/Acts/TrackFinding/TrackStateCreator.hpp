@@ -140,8 +140,8 @@ struct TrackStateCreator {
   Result<CkfTypes::BranchVector<TrackIndexType>> createSourceLinkTrackStates(
       const GeometryContext& gctx, const CalibrationContext& calibrationContext,
       [[maybe_unused]] const Surface& surface, const BoundState& boundState,
-      source_link_iterator_t slBegin, source_link_iterator_t slEnd,
-      TrackIndexType prevTip,
+      const source_link_iterator_t& slBegin,
+      const source_link_iterator_t& slEnd, TrackIndexType prevTip,
       std::vector<TrackStateProxy>& trackStateCandidates,
       TrackStateContainerBackend& trajectory, const Logger& logger) const {
     using PM = TrackStatePropMask;
