@@ -288,6 +288,26 @@ def collect_all_targets(
     return targets
 
 
+def _macos_sysroot() -> str | None:
+    """Return the macOS SDK path, or None if not on macOS / xcrun fails."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        result = subprocess.run(
+            ["xcrun", "--show-sdk-path"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        sdk = result.stdout.strip()
+        if sdk:
+            console.print(f"Using macOS sysroot: {sdk}")
+            return sdk
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return None
+
+
 # ---------------------------------------------------------------------------
 #  clang-tidy execution
 # ---------------------------------------------------------------------------
@@ -303,6 +323,11 @@ async def run_clang_tidy_on_targets(
 ) -> None:
     fixes_dir.mkdir(parents=True, exist_ok=True)
     sem = asyncio.Semaphore(jobs)
+
+    sysroot = _macos_sysroot()
+    extra_args: list[str] = []
+    if sysroot:
+        extra_args += [f"--extra-arg=-isysroot", f"--extra-arg={sysroot}"]
 
     progress = Progress(
         TextColumn("[progress.description]{task.description}"),
@@ -322,6 +347,7 @@ async def run_clang_tidy_on_targets(
             "--quiet",
             f"--export-fixes={yaml_path}",
             "-header-filter=.*",  # export fixes for headers, even when analyzing a TU
+            *extra_args,
         ]
         async with sem:
             if verbose:
