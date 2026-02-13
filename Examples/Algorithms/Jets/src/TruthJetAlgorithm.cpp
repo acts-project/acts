@@ -34,6 +34,9 @@ TruthJetAlgorithm::TruthJetAlgorithm(const Config& cfg,
     throw std::invalid_argument("Input particles collection is not configured");
   }
   m_inputTruthParticles.initialize(m_cfg.inputTruthParticles);
+  if (m_cfg.doTrackJetMatching) {
+    m_inputTracks.initialize(m_cfg.inputTracks);
+  }
   m_outputJets.initialize(m_cfg.outputJets);
 }
 
@@ -296,6 +299,11 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
     ACTS_DEBUG("  - " << label << ": " << count);
   }
 
+  if (m_cfg.doTrackJetMatching) {
+    const ConstTrackContainer& tracks = m_inputTracks(ctx);
+    trackJetMatching(tracks, outputJetContainer);
+  }
+
   m_outputJets(ctx, std::move(outputJetContainer));
 
   return ProcessCode::SUCCESS;
@@ -304,6 +312,55 @@ ProcessCode ActsExamples::TruthJetAlgorithm::execute(
 ProcessCode ActsExamples::TruthJetAlgorithm::finalize() {
   ACTS_INFO("Finalizing truth jet clustering");
   return ProcessCode::SUCCESS;
+}
+
+void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
+                                         TruthJetContainer& jets) const {
+  std::unordered_map<std::size_t, std::vector<std::int32_t>>
+      jetToTrackIndicesMap;
+
+  for (auto track : tracks) {
+    // Find the closest jet to this track and associate if within minDeltaR
+    double minDeltaR = 0.4;
+    std::int32_t closestJetIndex = -1;
+
+    for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+      Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
+      Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
+
+      Acts::Vector4 track_4mom = track.fourMomentum();
+      Acts::Vector3 track_3mom{track_4mom[0], track_4mom[1], track_4mom[2]};
+
+      // Calculate deltaR between track and jet
+      auto drTrackJet = Acts::VectorHelpers::deltaR(jet_3mom, track_3mom);
+
+      if (drTrackJet < minDeltaR) {
+        minDeltaR = drTrackJet;
+        closestJetIndex = ijet;
+      }
+    }
+    if (closestJetIndex != -1) {
+      jetToTrackIndicesMap[closestJetIndex].push_back(track.index());
+    }
+  }
+
+  for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+    std::size_t nTracksAssociated = 0;
+    std::vector<Acts::AnyConstTrackProxy> associatedTracks = {};
+    auto search = jetToTrackIndicesMap.find(ijet);
+    if (search != jetToTrackIndicesMap.end()) {
+      nTracksAssociated = search->second.size();
+      ACTS_VERBOSE("Jet " << ijet << " has " << nTracksAssociated
+                          << " associated tracks with indices:");
+      for (auto trackIdx : search->second) {
+        ACTS_VERBOSE("  Track index: " << trackIdx);
+        auto constTrack = tracks.getTrack(trackIdx);
+        Acts::AnyConstTrackProxy trackProxy(constTrack);
+        associatedTracks.push_back(trackProxy);
+      }
+    }
+    jets[ijet].setAssociatedTracks(associatedTracks);
+  }
 }
 
 }  // namespace ActsExamples

@@ -86,7 +86,7 @@ struct GaussianSumFitter {
   using GsfNavigator = typename propagator_t::Navigator;
 
   /// The actor type
-  using GsfActor = detail::GsfActor<traj_t>;
+  using GsfActor = detail::Gsf::GsfActor<traj_t>;
 
   /// @brief The fit function for the Direct navigator
   /// @param begin Iterator to the start of source links
@@ -377,8 +377,7 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      std::vector<
-          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+      std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
           inflatedParamVector;
       assert(!fwdGsfResult.lastMeasurementComponents.empty());
       assert(fwdGsfResult.lastMeasurementSurface != nullptr);
@@ -506,7 +505,7 @@ struct GaussianSumFitter {
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
 
-      const auto [finalPars, finalCov] = detail::mergeGaussianMixture(
+      const auto [finalPars, finalCov] = detail::Gsf::mergeGaussianMixture(
           params.components(), params.referenceSurface(),
           options.componentMergeMethod, [](auto& t) {
             return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));

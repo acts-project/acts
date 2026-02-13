@@ -25,24 +25,37 @@ namespace Acts {
 
 class IVolumeMaterial;
 
+/// Stepper implementation using sympy-generated expressions.
 class SympyStepper {
  public:
   /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSquareMatrix;
+  /// Covariance matrix type
+  using Covariance = BoundMatrix;
+  /// Bound state tuple containing parameters, Jacobian, and path length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
+  /// Configuration for the sympy stepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Runtime options for sympy propagation.
   struct Options : public StepperPlainOptions {
+    /// Whether to perform dense output
     bool doDense = true;
+    /// Maximum radiation length fraction per step
     double maxXOverX0Step = 1;
 
+    /// Constructor
+    /// @param gctx Geometry context
+    /// @param mctx Magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain stepper options
+    /// @param options Plain stepper options
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -124,10 +137,22 @@ class SympyStepper {
   /// @param config The configuration of the stepper
   explicit SympyStepper(const Config& config);
 
+  /// Create a state object
+  /// @param options Stepper options
+  /// @return State object
   State makeState(const Options& options) const;
 
+  /// Initialize the state from bound track parameters
+  /// @param state The state to initialize
+  /// @param par The bound track parameters
   void initialize(State& state, const BoundTrackParameters& par) const;
 
+  /// Initialize the state from bound parameters
+  /// @param state The state to initialize
+  /// @param boundParams Bound track parameters vector
+  /// @param cov Covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  /// @param surface Reference surface
   void initialize(State& state, const BoundVector& boundParams,
                   const std::optional<BoundMatrix>& cov,
                   ParticleHypothesis particleHypothesis,
@@ -139,6 +164,7 @@ class SympyStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
+  /// @return Magnetic field vector
   Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     return m_bField->getField(pos, state.fieldCache);
@@ -147,6 +173,7 @@ class SympyStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Position vector
   Vector3 position(const State& state) const {
     return state.pars.template segment<3>(eFreePos0);
   }
@@ -154,6 +181,7 @@ class SympyStepper {
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Direction vector
   Vector3 direction(const State& state) const {
     return state.pars.template segment<3>(eFreeDir0);
   }
@@ -161,11 +189,13 @@ class SympyStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Charge over momentum
   double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Absolute momentum
   double absoluteMomentum(const State& state) const {
     return particleHypothesis(state).extractMomentum(qOverP(state));
   }
@@ -173,6 +203,7 @@ class SympyStepper {
   /// Momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Momentum vector
   Vector3 momentum(const State& state) const {
     return absoluteMomentum(state) * direction(state);
   }
@@ -180,6 +211,7 @@ class SympyStepper {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Particle charge
   double charge(const State& state) const {
     return particleHypothesis(state).extractCharge(qOverP(state));
   }
@@ -187,6 +219,7 @@ class SympyStepper {
   /// Particle hypothesis
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Particle hypothesis
   const ParticleHypothesis& particleHypothesis(const State& state) const {
     return state.particleHypothesis;
   }
@@ -194,6 +227,7 @@ class SympyStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Time
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
@@ -209,6 +243,7 @@ class SympyStepper {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger A @c Logger instance
+  /// @return Intersection status
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
@@ -252,6 +287,7 @@ class SympyStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
+  /// @return Step size
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
     return state.stepSize.value(stype);
   }
@@ -267,6 +303,7 @@ class SympyStepper {
   /// Output the Step Size - single component
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
+  /// @return String representation of step size
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
   }

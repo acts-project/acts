@@ -66,6 +66,7 @@ class DiamondVolumeBounds : public VolumeBounds {
     eSize               //!< length of the bounds vector
   };
 
+  /// Enumeration of faces of the diamond volume
   enum class Face : unsigned int {
 
     NegativeZFaceXY = 0,
@@ -104,10 +105,12 @@ class DiamondVolumeBounds : public VolumeBounds {
 
   /// Copy constructor assignment
   /// @param other The other DiamondVolumeBounds to copy from
+  /// @return Reference to this object
   DiamondVolumeBounds& operator=(const DiamondVolumeBounds& other) = default;
 
   /// Move constructor assignment
   /// @param other The other DiamondVolumeBounds to move from
+  /// @return Reference to this object
   DiamondVolumeBounds& operator=(DiamondVolumeBounds&& other) = default;
 
   /// Default destructor

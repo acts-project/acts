@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -19,13 +18,11 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
-#include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Zip.hpp"
 
 #include <map>
 
-namespace Acts::detail {
+namespace Acts::detail::Gsf {
 
 template <typename traj_t>
 struct GsfResult {
@@ -127,11 +124,7 @@ struct GsfActor {
 
   const Logger& logger() const { return *m_cfg.logger; }
 
-  struct TemporaryStates {
-    traj_t traj;
-    std::vector<TrackIndexType> tips;
-    std::map<TrackIndexType, double> weights;
-  };
+  using TemporaryStates = detail::Gsf::TemporaryStates<traj_t>;
 
   using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
@@ -153,8 +146,8 @@ struct GsfActor {
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
-                                                         navigator, logger());
+    const ScopedGsfInfoPrinterAndChecker printer(state, stepper, navigator,
+                                                 logger());
 
     // We only need to do something if we are on a surface
     if (!navigator.currentSurface(state.navigation)) {
@@ -168,8 +161,8 @@ struct GsfActor {
     // stepper misbehaves
     [[maybe_unused]] auto stepperComponents =
         stepper.constComponentIterable(state.stepping);
-    assert(detail::weightsAreNormalized(
-        stepperComponents, [](const auto& cmp) { return cmp.weight(); }));
+    assert(weightsAreNormalized(stepperComponents,
+                                [](const auto& cmp) { return cmp.weight(); }));
 
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
@@ -230,13 +223,19 @@ struct GsfActor {
                                                             surface);
     }
 
-    if (haveMaterial) {
+    if (m_cfg.multipleScattering && haveMaterial) {
       if (haveMeasurement) {
-        applyMultipleScattering(state, stepper, navigator,
-                                MaterialUpdateMode::PreUpdate);
+        applyMultipleScattering(
+            state, stepper, navigator,
+            determineMaterialUpdateMode(state, navigator,
+                                        MaterialUpdateMode::PreUpdate),
+            logger());
       } else {
-        applyMultipleScattering(state, stepper, navigator,
-                                MaterialUpdateMode::FullUpdate);
+        applyMultipleScattering(
+            state, stepper, navigator,
+            determineMaterialUpdateMode(state, navigator,
+                                        MaterialUpdateMode::FullUpdate),
+            logger());
       }
     }
 
@@ -256,7 +255,7 @@ struct GsfActor {
         return res.error();
       }
 
-      updateStepper(state, stepper, tmpStates);
+      updateStepper(state, stepper, tmpStates, m_cfg.weightCutoff);
     }
     // We have material, we thus need a component cache since we will
     // convolute the components and later reduce them again before updating
@@ -284,8 +283,11 @@ struct GsfActor {
       std::vector<ComponentCache>& componentCache = result.componentCache;
       componentCache.clear();
 
-      convoluteComponents(state, stepper, navigator, tmpStates, componentCache,
-                          result);
+      convoluteComponents(state, stepper, navigator, tmpStates,
+                          *m_cfg.bethe_heitler_approx, result.betheHeitlerCache,
+                          m_cfg.weightCutoff, componentCache,
+                          result.nInvalidBetheHeitler, result.maxPathXOverX0,
+                          result.sumPathXOverX0, logger());
 
       if (componentCache.empty()) {
         ACTS_WARNING(
@@ -301,15 +303,18 @@ struct GsfActor {
           static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
       m_cfg.extensions.mixtureReducer(componentCache, finalCmpNumber, surface);
 
-      removeLowWeightComponents(componentCache);
+      removeLowWeightComponents(componentCache, m_cfg.weightCutoff);
 
-      updateStepper(state, stepper, navigator, componentCache);
+      updateStepper(state, stepper, navigator, componentCache, logger());
     }
 
     // If we have only done preUpdate before, now do postUpdate
-    if (haveMaterial && haveMeasurement) {
-      applyMultipleScattering(state, stepper, navigator,
-                              MaterialUpdateMode::PostUpdate);
+    if (m_cfg.multipleScattering && haveMaterial && haveMeasurement) {
+      applyMultipleScattering(
+          state, stepper, navigator,
+          determineMaterialUpdateMode(state, navigator,
+                                      MaterialUpdateMode::PostUpdate),
+          logger());
     }
 
     return Result<void>::success();
@@ -329,217 +334,6 @@ struct GsfActor {
     return false;
   }
 
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void convoluteComponents(propagator_state_t& state, const stepper_t& stepper,
-                           const navigator_t& navigator,
-                           const TemporaryStates& tmpStates,
-                           std::vector<ComponentCache>& componentCache,
-                           result_type& result) const {
-    auto cmps = stepper.componentIterable(state.stepping);
-    double pathXOverX0 = 0.0;
-    for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
-      auto proxy = tmpStates.traj.getTrackState(idx);
-
-      BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
-                                 proxy.filtered(), proxy.filteredCovariance(),
-                                 stepper.particleHypothesis(state.stepping));
-
-      pathXOverX0 +=
-          applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
-                            componentCache, result);
-    }
-
-    // Store average material seen by the components
-    // Should not be too broadly distributed
-    result.sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
-  }
-
-  template <typename propagator_state_t, typename navigator_t>
-  double applyBetheHeitler(const propagator_state_t& state,
-                           const navigator_t& navigator,
-                           const BoundTrackParameters& old_bound,
-                           const double old_weight,
-                           std::vector<ComponentCache>& componentCache,
-                           result_type& result) const {
-    const auto& surface = *navigator.currentSurface(state.navigation);
-    const auto p_prev = old_bound.absoluteMomentum();
-    const auto& particleHypothesis = old_bound.particleHypothesis();
-
-    // Evaluate material slab
-    auto slab = surface.surfaceMaterial()->materialSlab(
-        old_bound.position(state.geoContext), state.options.direction,
-        MaterialUpdateMode::FullUpdate);
-
-    const auto pathCorrection = surface.pathCorrection(
-        state.geoContext, old_bound.position(state.geoContext),
-        old_bound.direction());
-    slab.scaleThickness(pathCorrection);
-
-    const double pathXOverX0 = slab.thicknessInX0();
-    result.maxPathXOverX0.tmp() =
-        std::max(result.maxPathXOverX0.tmp(), pathXOverX0);
-
-    // Emit a warning if the approximation is not valid for this x/x0
-    if (!m_cfg.bethe_heitler_approx->validXOverX0(pathXOverX0)) {
-      ++result.nInvalidBetheHeitler.tmp();
-      ACTS_DEBUG(
-          "Bethe-Heitler approximation encountered invalid value for x/x0="
-          << pathXOverX0 << " at surface " << surface.geometryId());
-    }
-
-    // Get the mixture
-    result.betheHeitlerCache.resize(
-        m_cfg.bethe_heitler_approx->maxComponents());
-    const auto mixture = m_cfg.bethe_heitler_approx->mixture(
-        pathXOverX0, result.betheHeitlerCache);
-
-    // Create all possible new components
-    for (const auto& gaussian : mixture) {
-      // Here we combine the new child weight with the parent weight.
-      // However, this must be later re-adjusted
-      const auto new_weight = gaussian.weight * old_weight;
-
-      if (new_weight < m_cfg.weightCutoff) {
-        ACTS_VERBOSE("Skip component with weight " << new_weight);
-        continue;
-      }
-
-      if (gaussian.mean < 1.e-8) {
-        ACTS_WARNING("Skip component with gaussian " << gaussian.mean << " +- "
-                                                     << gaussian.var);
-        continue;
-      }
-
-      // compute delta p from mixture and update parameters
-      auto new_pars = old_bound.parameters();
-
-      const auto delta_p = [&]() {
-        if (state.options.direction == Direction::Forward()) {
-          return p_prev * (gaussian.mean - 1.);
-        } else {
-          return p_prev * (1. / gaussian.mean - 1.);
-        }
-      }();
-
-      assert(p_prev + delta_p > 0. && "new momentum must be > 0");
-      new_pars[eBoundQOverP] =
-          particleHypothesis.qOverP(p_prev + delta_p, old_bound.charge());
-
-      // compute inverse variance of p from mixture and update covariance
-      auto new_cov = old_bound.covariance().value();
-
-      const auto varInvP = [&]() {
-        if (state.options.direction == Direction::Forward()) {
-          const auto f = 1. / (p_prev * gaussian.mean);
-          return f * f * gaussian.var;
-        } else {
-          return gaussian.var / (p_prev * p_prev);
-        }
-      }();
-
-      new_cov(eBoundQOverP, eBoundQOverP) += varInvP;
-      assert(std::isfinite(new_cov(eBoundQOverP, eBoundQOverP)) &&
-             "new cov not finite");
-
-      // Set the remaining things and push to vector
-      componentCache.push_back({new_weight, new_pars, new_cov});
-    }
-
-    return pathXOverX0;
-  }
-
-  /// Remove components with low weights and renormalize from the component
-  /// cache
-  /// TODO This function does not expect normalized components, but this
-  /// could be redundant work...
-  void removeLowWeightComponents(std::vector<ComponentCache>& cmps) const {
-    auto proj = [](auto& cmp) -> double& { return cmp.weight; };
-
-    detail::normalizeWeights(cmps, proj);
-
-    auto new_end = std::remove_if(cmps.begin(), cmps.end(), [&](auto& cmp) {
-      return proj(cmp) < m_cfg.weightCutoff;
-    });
-
-    // In case we would remove all components, keep only the largest
-    if (std::distance(cmps.begin(), new_end) == 0) {
-      cmps = {*std::max_element(
-          cmps.begin(), cmps.end(),
-          [&](auto& a, auto& b) { return proj(a) < proj(b); })};
-      cmps.front().weight = 1.0;
-    } else {
-      cmps.erase(new_end, cmps.end());
-      detail::normalizeWeights(cmps, proj);
-    }
-  }
-
-  /// Function that updates the stepper from the MultiTrajectory
-  template <typename propagator_state_t, typename stepper_t>
-  void updateStepper(propagator_state_t& state, const stepper_t& stepper,
-                     const TemporaryStates& tmpStates) const {
-    auto cmps = stepper.componentIterable(state.stepping);
-
-    for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
-      // we set ignored components to missed, so we can remove them after
-      // the loop
-      if (tmpStates.weights.at(idx) < m_cfg.weightCutoff) {
-        cmp.status() = IntersectionStatus::unreachable;
-        continue;
-      }
-
-      auto proxy = tmpStates.traj.getTrackState(idx);
-
-      cmp.pars() =
-          MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy);
-      cmp.cov() = proxy.filteredCovariance();
-      cmp.weight() = tmpStates.weights.at(idx);
-    }
-
-    stepper.removeMissedComponents(state.stepping);
-
-    // TODO we have two normalization passes here now, this can probably be
-    // optimized
-    detail::normalizeWeights(cmps,
-                             [&](auto cmp) -> double& { return cmp.weight(); });
-  }
-
-  /// Function that updates the stepper from the ComponentCache
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void updateStepper(propagator_state_t& state, const stepper_t& stepper,
-                     const navigator_t& navigator,
-                     const std::vector<ComponentCache>& componentCache) const {
-    const auto& surface = *navigator.currentSurface(state.navigation);
-
-    // Clear components before adding new ones
-    stepper.clearComponents(state.stepping);
-
-    // Finally loop over components
-    for (const auto& [weight, pars, cov] : componentCache) {
-      // Add the component to the stepper
-      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
-                                 stepper.particleHypothesis(state.stepping));
-
-      auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
-
-      if (!res.ok()) {
-        ACTS_ERROR("Error adding component to MultiStepper");
-        continue;
-      }
-
-      auto& cmp = *res;
-      auto freeParams = cmp.pars();
-      cmp.jacToGlobal() = surface.boundToFreeJacobian(
-          state.geoContext, freeParams.template segment<3>(eFreePos0),
-          freeParams.template segment<3>(eFreeDir0));
-      cmp.pathAccumulated() = state.stepping.pathAccumulated;
-      cmp.jacobian() = BoundMatrix::Identity();
-      cmp.derivative() = FreeVector::Zero();
-      cmp.jacTransport() = FreeMatrix::Identity();
-    }
-  }
-
   /// This function performs the kalman update, computes the new posterior
   /// weights, renormalizes all components, and does some statistics.
   template <typename propagator_state_t, typename stepper_t,
@@ -550,53 +344,105 @@ struct GsfActor {
                             const SourceLink& sourceLink) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
 
-    // Boolean flag, to distinguish measurement and outlier states. This flag
-    // is only modified by the valid-measurement-branch, so only if there
-    // isn't any valid measurement state, the flag stays false and the state
-    // is thus counted as an outlier
-    bool is_valid_measurement = false;
+    // Keep track of all created components for outlier handling
+    std::vector<TrackIndexType> allTips;
+    allTips.reserve(stepper.numberComponents(state.stepping));
 
-    auto cmps = stepper.componentIterable(state.stepping);
-    for (auto cmp : cmps) {
+    for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      auto trackStateProxyRes = detail::kalmanHandleMeasurement(
-          *m_cfg.calibrationContext, singleState, singleStepper,
-          m_cfg.extensions, surface, sourceLink, tmpStates.traj,
-          kTrackIndexInvalid, false, logger());
+      // Add a <mask> TrackState entry multi trajectory. This allocates storage
+      // for all components, which we will set later.
+      TrackStatePropMask mask =
+          TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+          TrackStatePropMask::Jacobian | TrackStatePropMask::Calibrated;
+      typename traj_t::TrackStateProxy trackStateProxy =
+          tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
+      typename traj_t::ConstTrackStateProxy trackStateProxyConst{
+          trackStateProxy};
 
-      if (!trackStateProxyRes.ok()) {
-        return trackStateProxyRes.error();
+      // Set the trackStateProxy components with the state from the ongoing
+      // propagation
+      {
+        trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+        // Bind the transported state to the current surface
+        auto res =
+            singleStepper.boundState(singleState.stepping, surface, false);
+        if (!res.ok()) {
+          ACTS_DEBUG("Propagate to surface " << surface.geometryId()
+                                             << " failed: " << res.error());
+          return res.error();
+        }
+        const auto& [boundParams, jacobian, pathLength] = *res;
+
+        // Fill the track state
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = singleState.stepping.cov;
+
+        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.pathLength() = pathLength;
       }
 
-      const auto& trackStateProxy = *trackStateProxyRes;
+      // We have predicted parameters, so calibrate the uncalibrated input
+      // measurement
+      m_cfg.extensions.calibrator(state.geoContext, *m_cfg.calibrationContext,
+                                  sourceLink, trackStateProxy);
 
-      // If at least one component is no outlier, we consider the whole thing
-      // as a measurementState
-      if (trackStateProxy.typeFlags().isMeasurement()) {
-        is_valid_measurement = true;
+      if (!m_cfg.extensions.outlierFinder(trackStateProxyConst)) {
+        // Run Kalman update
+        auto updateRes = m_cfg.extensions.updater(state.geoContext,
+                                                  trackStateProxy, logger());
+        if (!updateRes.ok()) {
+          ACTS_DEBUG("Update step failed: " << updateRes.error());
+          return updateRes.error();
+        }
+
+        tmpStates.tips.push_back(trackStateProxy.index());
+        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
       }
 
-      tmpStates.tips.push_back(trackStateProxy.index());
-      tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+      allTips.push_back(trackStateProxy.index());
     }
 
-    computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);
+    const bool isOutlier = tmpStates.tips.empty();
 
-    detail::normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
-      return tmpStates.weights.at(idx);
-    });
+    if (!isOutlier) {
+      computePosteriorWeights(tmpStates.traj, tmpStates.tips,
+                              tmpStates.weights);
+      normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
+        return tmpStates.weights.at(idx);
+      });
+    } else {
+      auto cmps = stepper.componentIterable(state.stepping);
+      for (const auto [cmp, idx] : zip(cmps, allTips)) {
+        typename traj_t::TrackStateProxy trackStateProxy =
+            tmpStates.traj.getTrackState(idx);
+
+        // Set the filtered parameter index to be the same with predicted
+        // parameter
+        trackStateProxy.shareFrom(trackStateProxy,
+                                  TrackStatePropMask::Predicted,
+                                  TrackStatePropMask::Filtered);
+
+        tmpStates.tips.push_back(trackStateProxy.index());
+        tmpStates.weights[trackStateProxy.index()] = cmp.weight();
+      }
+    }
 
     // Do the statistics
     ++result.processedStates;
-
-    // TODO should outlier states also be counted here?
-    if (is_valid_measurement) {
+    if (!isOutlier) {
       ++result.measurementStates;
     }
 
-    updateMultiTrajectory(result, tmpStates, surface);
+    updateMultiTrajectory(
+        result, tmpStates, surface,
+        TrackStateType()
+            .setHasParameters()
+            .setHasMaterial(surface.surfaceMaterial() != nullptr)
+            .setHasMeasurement()
+            .setIsOutlier(isOutlier));
 
     result.lastMeasurementTip = result.currentTip;
     result.lastMeasurementSurface = &surface;
@@ -626,134 +472,125 @@ struct GsfActor {
                                    result_type& result,
                                    TemporaryStates& tmpStates,
                                    bool doCovTransport) const {
-    const auto& surface = *navigator.currentSurface(state.navigation);
-
-    const bool precedingMeasurementExists = result.processedStates > 0;
-
-    // Initialize as true, so that any component can flip it. However, all
-    // components should behave the same
-    bool isHole = true;
+    const Surface& surface = *navigator.currentSurface(state.navigation);
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto& singleState = cmp.state();
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      // There is some redundant checking inside this function, but do this for
-      // now until we measure this is significant
-      auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-          singleState, singleStepper, surface, tmpStates.traj,
-          kTrackIndexInvalid, doCovTransport, logger(),
-          precedingMeasurementExists);
+      // Add a <mask> TrackState entry multi trajectory. This allocates storage
+      // for all components, which we will set later.
+      TrackStatePropMask mask =
+          TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
+      typename traj_t::TrackStateProxy trackStateProxy =
+          tmpStates.traj.makeTrackState(mask, kTrackIndexInvalid);
 
-      if (!trackStateProxyRes.ok()) {
-        return trackStateProxyRes.error();
-      }
+      // Set the trackStateProxy components with the state from the ongoing
+      // propagation
+      {
+        trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+        // Bind the transported state to the current surface
+        auto res =
+            singleStepper.boundState(singleState, surface, doCovTransport);
+        if (!res.ok()) {
+          return res.error();
+        }
+        const auto& [boundParams, jacobian, pathLength] = *res;
 
-      const auto& trackStateProxy = *trackStateProxyRes;
+        // Fill the track state
+        trackStateProxy.predicted() = boundParams.parameters();
+        trackStateProxy.predictedCovariance() = singleState.cov;
 
-      if (!trackStateProxy.typeFlags().isHole()) {
-        isHole = false;
+        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.pathLength() = pathLength;
+
+        // Set the filtered parameter index to be the same with predicted
+        // parameter
+        trackStateProxy.shareFrom(trackStateProxy,
+                                  TrackStatePropMask::Predicted,
+                                  TrackStatePropMask::Filtered);
       }
 
       tmpStates.tips.push_back(trackStateProxy.index());
-      tmpStates.weights[tmpStates.tips.back()] = cmp.weight();
+      tmpStates.weights[trackStateProxy.index()] = cmp.weight();
     }
 
-    // These things should only be done once for all components
-    if (isHole) {
+    const bool precedingMeasurementExists = result.processedStates > 0;
+    const bool isHole = surface.isSensitive();
+
+    // Do the statistics
+    ++result.processedStates;
+    if (precedingMeasurementExists && isHole) {
       ++result.measurementHoles;
     }
 
-    ++result.processedStates;
-
-    updateMultiTrajectory(result, tmpStates, surface);
+    updateMultiTrajectory(
+        result, tmpStates, surface,
+        TrackStateType()
+            .setHasParameters()
+            .setHasMaterial(surface.surfaceMaterial() != nullptr)
+            .setIsHole(isHole));
 
     return Result<void>::success();
   }
 
-  /// Apply the multiple scattering to the state
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void applyMultipleScattering(propagator_state_t& state,
-                               const stepper_t& stepper,
-                               const navigator_t& navigator,
-                               const MaterialUpdateMode& updateMode =
-                                   MaterialUpdateMode::FullUpdate) const {
-    const auto& surface = *navigator.currentSurface(state.navigation);
-
-    for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto singleState = cmp.singleState(state);
-      const auto& singleStepper = cmp.singleStepper(stepper);
-
-      detail::PointwiseMaterialInteraction interaction(
-          singleState, singleStepper, navigator);
-      if (interaction.evaluateMaterialSlab(updateMode)) {
-        // In the Gsf we only need to handle the multiple scattering
-        interaction.evaluatePointwiseMaterialInteraction(
-            m_cfg.multipleScattering, false);
-
-        // Screen out material effects info
-        ACTS_VERBOSE("Material effects on surface: " << surface.geometryId()
-                                                     << " at update mode: "
-                                                     << updateMode << " are :");
-        ACTS_VERBOSE("eLoss = "
-                     << interaction.Eloss << ", "
-                     << "variancePhi = " << interaction.variancePhi << ", "
-                     << "varianceTheta = " << interaction.varianceTheta << ", "
-                     << "varianceQoverP = " << interaction.varianceQoverP);
-
-        // Update the state and stepper with material effects
-        interaction.updateState(singleState, singleStepper,
-                                NoiseUpdateMode::addNoise);
-
-        assert(singleState.stepping.cov.array().isFinite().all() &&
-               "covariance not finite after multi scattering");
-      }
-    }
-  }
-
   void updateMultiTrajectory(result_type& result,
                              const TemporaryStates& tmpStates,
-                             const Surface& surface) const {
+                             const Surface& surface,
+                             TrackStateType type) const {
     using PrtProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
     using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
     if (!m_cfg.inReversePass) {
+      assert(!tmpStates.tips.empty() &&
+             "No components to update multi-trajectory");
+
       const auto firstCmpProxy =
           tmpStates.traj.getTrackState(tmpStates.tips.front());
-      const auto isMeasurement = firstCmpProxy.typeFlags().isMeasurement();
 
-      const auto mask =
-          isMeasurement
-              ? TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted |
-                    TrackStatePropMask::Filtered | TrackStatePropMask::Smoothed
-              : TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted;
+      auto combinedStateMask = TrackStatePropMask::Predicted;
+      if (type.isMeasurement()) {
+        combinedStateMask |= TrackStatePropMask::Calibrated |
+                             TrackStatePropMask::Filtered |
+                             TrackStatePropMask::Smoothed;
+      } else if (type.isOutlier()) {
+        combinedStateMask |= TrackStatePropMask::Calibrated;
+      }
+      auto combinedState = result.fittedStates->makeTrackState(
+          combinedStateMask, result.currentTip);
+      result.currentTip = combinedState.index();
 
-      auto proxy = result.fittedStates->makeTrackState(mask, result.currentTip);
-      result.currentTip = proxy.index();
-
-      proxy.setReferenceSurface(surface.getSharedPtr());
-      proxy.copyFrom(firstCmpProxy, mask);
+      // copy chi2, path length, surface
+      auto copyMask = TrackStatePropMask::None;
+      if (ACTS_CHECK_BIT(combinedStateMask, TrackStatePropMask::Calibrated)) {
+        // also copy source link, calibrated measurement, and subspace
+        copyMask |= TrackStatePropMask::Calibrated;
+      }
+      combinedState.copyFrom(firstCmpProxy, copyMask);
+      combinedState.typeFlags() = type;
 
       auto [prtMean, prtCov] =
           mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
                                PrtProjector{tmpStates.traj, tmpStates.weights});
-      proxy.predicted() = prtMean;
-      proxy.predictedCovariance() = prtCov;
+      combinedState.predicted() = prtMean;
+      combinedState.predictedCovariance() = prtCov;
 
-      if (isMeasurement) {
+      if (type.isMeasurement()) {
         auto [fltMean, fltCov] = mergeGaussianMixture(
             tmpStates.tips, surface, m_cfg.mergeMethod,
             FltProjector{tmpStates.traj, tmpStates.weights});
-        proxy.filtered() = fltMean;
-        proxy.filteredCovariance() = fltCov;
-        proxy.smoothed() = BoundVector::Constant(-2);
-        proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
+        combinedState.filtered() = fltMean;
+        combinedState.filteredCovariance() = fltCov;
+
+        // place sentinel values for smoothed parameters for now. they will be
+        // filled in the backward pass
+        combinedState.smoothed() = BoundVector::Constant(-2);
+        combinedState.smoothedCovariance() = BoundMatrix::Constant(-2);
       } else {
-        proxy.shareFrom(TrackStatePropMask::Predicted,
-                        TrackStatePropMask::Filtered);
+        combinedState.shareFrom(TrackStatePropMask::Predicted,
+                                TrackStatePropMask::Filtered);
       }
 
     } else {
@@ -793,4 +630,4 @@ struct GsfActor {
   }
 };
 
-}  // namespace Acts::detail
+}  // namespace Acts::detail::Gsf

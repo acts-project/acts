@@ -19,12 +19,14 @@
 
 namespace Acts::Experimental {
 
+/// Region-of-interest descriptor with eta/phi/zed bounds.
 class RoiDescriptor {
  public:
-  // iterator
+  /// Iterator type for RoI constituents
   using roi_iterator = std::vector<const RoiDescriptor*>::const_iterator;
   /// convenient
   static constexpr bool FULLSCAN = true;
+  /// Flag for region-of-interest mode
   static constexpr bool ROI = false;
 
   /**
@@ -45,10 +47,12 @@ class RoiDescriptor {
                 double zedPlus = s_zedWidthDefault);
   // zedminus - s_zedWidthDefault = 225 //from ROIDescriptor
 
-  /*
-   *  need an explicit class copy constructor
-   */
+  /// Copy constructor
+  /// @param roi The RoI to copy
   RoiDescriptor(const RoiDescriptor& roi);
+  /// Copy assignment operator
+  /// @param r The RoI to copy
+  /// @return Reference to this RoI
   RoiDescriptor& operator=(const RoiDescriptor& r);
 
   // Destructor
@@ -56,107 +60,171 @@ class RoiDescriptor {
 
   // Methods to retrieve data members
 
+  /// Get phi coordinate of RoI center
+  /// @return Phi coordinate
   double phi() const { return m_phi; }
+  /// Get eta coordinate of RoI center
+  /// @return Eta coordinate
   double eta() const { return m_eta; }
+  /// Get z coordinate of RoI center
+  /// @return Z coordinate
   double zed() const { return m_zed; }
 
   /// these quantities probably don't need to be used any more
   /// - they are implemented here only because we had them in
   ///   the original legacy interface
 
+  /// Get z at the most forward end of the RoI
+  /// @return Z at front
   double zedPlus() const {
     return m_zedPlus;
   }  //!< z at the most forward end of the RoI
+  /// Get z at the most backward end of the RoI
+  /// @return Z at rear
   double zedMinus() const {
     return m_zedMinus;
   }  //!< z at the most backward end of the RoI
 
-  double etaPlus() const { return m_etaPlus; }    //!< gets eta at zedPlus
-  double etaMinus() const { return m_etaMinus; }  //!< gets eta at zMinus
+  /// Gets eta at zedPlus
+  /// @return Eta at front
+  double etaPlus() const { return m_etaPlus; }
+  /// Gets eta at zMinus
+  /// @return Eta at rear
+  double etaMinus() const { return m_etaMinus; }
 
-  double phiPlus() const { return m_phiPlus; }    //!< gets phiPlus
-  double phiMinus() const { return m_phiMinus; }  //!< gets phiMinus
+  /// Gets phiPlus
+  /// @return Maximum phi
+  double phiPlus() const { return m_phiPlus; }
+  /// Gets phiMinus
+  /// @return Minimum phi
+  double phiMinus() const { return m_phiMinus; }
 
   /// versioning
+  /// Get version identifier
+  /// @return Version number
   int version() const { return m_version; }
+  /// Set version identifier
+  /// @param v Version number
   void version(int v) { m_version = v; }
 
   /// output
   // virtual operator std::string() const ;
 
   /// is this a full scan RoI?
+  /// @return True if full scan RoI
   bool isFullscan() const { return m_fullscan; }
 
   /// SuperRoI compatibility methods
 
   /// am I a SuperRoi?
+  /// @return True if composite RoI
   bool composite() const { return m_composite; }
+  /// Set composite flag
+  /// @param b True to mark as composite
   void setComposite(bool b = true) { m_composite = b; }
 
-  /// always manage constituents ???
+  /// Always manage constituents
+  /// @return True if managing constituents
   bool manageConstituents() const { return m_manageConstituents; }
+  /// Set whether to manage constituents
+  /// @param b True to manage constituents
   void manageConstituents(bool b) { m_manageConstituents = b; }
 
   /// number of constituents
+  /// @return Number of constituent RoIs
   unsigned size() const { return m_roiDescriptors.size(); }
 
   /// find an RoiDescriptor constituent
+  /// @param i Index of the constituent
+  /// @return The RoI constituent at the given index
   const RoiDescriptor* at(int i) const { return m_roiDescriptors.at(i); }
 
   /// clear the vector
   void clear() { m_roiDescriptors.clear(); }  // setComposite(false); }
 
   /// reserve elements in vector
+  /// @param s Number of elements to reserve
   void reserve(std::size_t s) { m_roiDescriptors.reserve(s); }
 
   /// add a RoiDescriptor
+  /// @param roi RoI constituent to add
   void push_back(const RoiDescriptor* roi) {
     m_roiDescriptors.push_back(roi);
     setComposite(true);
   }
 
   /// iterators
+  /// @return Begin iterator
   roi_iterator begin() const { return m_roiDescriptors.begin(); }
+  /// Get end iterator
+  /// @return End iterator
   roi_iterator end() const { return m_roiDescriptors.end(); }
 
   /// return the gradients
+  /// Get dz/dr at the rear of the RoI
+  /// @return Gradient dzdr at rear
   double dzdrMinus() const {
     return m_dzdrMinus;
   }  //!<  dz/dr at the rear of the RoI
-  double dzdrPlus() const {
-    return m_dzdrPlus;
-  }  //!<  dz/dr at the front of the RoI
+  /// Get dz/dr at the front of the RoI
+  /// @return Gradient dzdr at front
+  double dzdrPlus() const { return m_dzdrPlus; }
 
-  double drdzMinus() const {
-    return m_drdzMinus;
-  }  //!<  dr/dz at the rear of the RoI
-  double drdzPlus() const {
-    return m_drdzPlus;
-  }  //!<  dr/dz at the front of the RoI
+  /// Get dr/dz at the rear of the RoI
+  /// @return Gradient drdz at rear
+  double drdzMinus() const { return m_drdzMinus; }
+  /// Get dr/dz at the front of the RoI
+  /// @return Gradient drdz at front
+  double drdzPlus() const { return m_drdzPlus; }
 
   /// methods to calculate z position at the RoI boundary
   /// at a given radius
+  /// Get minimum z at given radius
+  /// @param r Radius coordinate
+  /// @return Minimum z position
   double zedMin(double r) const;
+  /// Get maximum z at given radius
+  /// @param r Radius coordinate
+  /// @return Maximum z position
   double zedMax(double r) const;
 
+  /// Get z at the most forward end of the RoI at outer radius
+  /// @return Z at front outer radius
   double zedOuterPlus() const {
     return m_zedOuterPlus;
   }  //!< z at the most forward end of the RoI
+  /// Get z at the most backward end of the RoI at outer radius
+  /// @return Z at rear outer radius
   double zedOuterMinus() const {
     return m_zedOuterMinus;
   }  //!< z at the most backward end of the RoI
 
+  /// Get minimum rho at given z
+  /// @param z Z coordinate
+  /// @return Minimum rho
   double rhoMin(double z) const;
+  /// Get maximum rho at given z
+  /// @param z Z coordinate
+  /// @return Maximum rho
   double rhoMax(double z) const;
 
+  /// Get default z-width
+  /// @return Default z width
   static double zedWidthDefault() { return s_zedWidthDefault; }
 
   /// set default z-width (but only before any RoiDescriptor has been created)
+  /// @param d Default z width value
   static void zedWidthDefault(double d);
 
   // fromn trig
+  /// Get RoI identifier
+  /// @return RoI ID
   unsigned int roiId() const { return m_roiId; }
+  /// Get lvl1 event number
+  /// @return Level 1 ID
   unsigned int l1Id() const { return m_l1Id; }
+  /// Get lvl1 RoI word
+  /// @return RoI word
   unsigned int roiWord() const { return m_roiWord; }
 
  private:

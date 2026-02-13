@@ -250,7 +250,6 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
     const Acts::CalibrationContext& ctx, const Calibrator_t& calibrator,
     const StrawCont_t& measurements, const std::vector<int>& signs,
     std::optional<double> startT0) const {
-  using namespace Acts::UnitLiterals;
   if (measurements.size() != signs.size()) {
     ACTS_WARNING(
         __func__ << "() - " << __LINE__
@@ -280,6 +279,7 @@ std::optional<FastStrawLineFitter::FitResultT0> FastStrawLineFitter::fit(
   if (logger().doPrint(Logging::VERBOSE)) {
     ACTS_VERBOSE("Fit failed, printing all measurements:");
     for (const auto& meas : measurements) {
+      using namespace Acts::UnitLiterals;
       ACTS_VERBOSE(toString(*meas)
                    << ", t0: " << result.t0 / 1._ns
                    << ", truthR, RecoR: " << meas->driftRadius() << ", "
@@ -303,7 +303,6 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
     const CalibrationContext& ctx, const Calibrator_t& calibrator,
     const StrawCont_t& measurements, const std::vector<int>& signs,
     const double t0) const {
-  using namespace Acts::UnitLiterals;
   FitAuxiliariesWithT0 auxVars{fillAuxiliaries(measurements, signs)};
   if (auxVars.nDoF <= 1) {
     auxVars.nDoF = 0;
@@ -330,10 +329,13 @@ FastStrawLineFitter::FitAuxiliariesWithT0 FastStrawLineFitter::fillAuxiliaries(
     const double z = strawMeas->localPosition().dot(strawMeas->planeNormal()) -
                      auxVars.centerZ;
 
+    using namespace Acts::UnitLiterals;
     ACTS_VERBOSE(__func__ << "() - " << __LINE__ << ": # " << (spIdx + 1)
-                          << ") " << toString(*strawMeas) << ", t0: "
+                          << ") " << toString(*strawMeas)
+                          << " t: " << strawMeas->time() / 1._ns << " ns, t0: "
                           << t0 / 1._ns << " r: " << r << ", v: " << v * 1._ns
                           << ", a: " << a * Acts::square(1._ns));
+
     auxVars.fitY0 += sInvCov * r;
     auxVars.R_v += sInvCov * v;
     auxVars.R_a += sInvCov * a;

@@ -58,7 +58,7 @@ struct Parameters {
   // Dummy default
   Acts::ParticleHypothesis particleHypothesis =
       Acts::ParticleHypothesis::pion();
-  std::optional<Acts::BoundSquareMatrix> covariance;
+  std::optional<Acts::BoundMatrix> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 
@@ -83,12 +83,25 @@ Acts::BoundTrackParameters convertTrackParametersFromEdm4hep(
 /// @addtogroup edm4hep_plugin
 /// @{
 
-// Compatibility with EDM4hep < 0.99 and >= 0.99
+/// Get the particle from a SimTrackerHit (compatibility with EDM4hep < 0.99 and
+/// >= 0.99)
+/// @param hit The SimTrackerHit
+/// @return The associated MCParticle
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
 
+/// Set the particle for a MutableSimTrackerHit (compatibility with EDM4hep <
+/// 0.99 and >= 0.99)
+/// @param hit The MutableSimTrackerHit
+/// @param particle The MCParticle to set
 void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle);
 
+/// Write an Acts track to EDM4hep format
+/// @param gctx The geometry context
+/// @param track The Acts track to convert
+/// @param to The EDM4hep track to write to
+/// @param Bz The magnetic field z-component
+/// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
                 edm4hep::MutableTrack to, double Bz,
@@ -189,6 +202,11 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   }
 }
 
+/// Read an EDM4hep track into Acts format
+/// @param from The EDM4hep track to read
+/// @param track The Acts track proxy to fill
+/// @param Bz The magnetic field z-component
+/// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
 void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
                const Acts::Logger& logger = Acts::getDummyLogger()) {
@@ -269,17 +287,31 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
   track.nMeasurements() = track.nTrackStates();
 }
 
+/// @brief Helper class for associating simulation hits between EDM4hep and internal indices
 class SimHitAssociation {
  public:
+  /// Reserve space for associations
+  /// @param size Number of associations to reserve
   void reserve(std::size_t size);
 
+  /// Get number of associations
+  /// @return Number of associations
   std::size_t size() const;
 
+  /// Add association between internal index and EDM4hep hit
+  /// @param internalIndex Internal hit index
+  /// @param edm4hepHit EDM4hep hit object
   void add(std::size_t internalIndex, const edm4hep::SimTrackerHit& edm4hepHit);
 
+  /// Look up EDM4hep hit by internal index
+  /// @param internalIndex Internal hit index
+  /// @return EDM4hep hit object
   [[nodiscard]]
   edm4hep::SimTrackerHit lookup(std::size_t internalIndex) const;
 
+  /// Look up internal index by EDM4hep hit
+  /// @param hit EDM4hep hit object
+  /// @return Internal hit index
   std::size_t lookup(const edm4hep::SimTrackerHit& hit) const;
 
  private:

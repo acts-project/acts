@@ -13,6 +13,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
@@ -94,6 +95,7 @@ class Navigator {
   using NavigationCandidates =
       boost::container::small_vector<NavigationTarget, 10>;
 
+  /// Type alias for external surfaces container
   using ExternalSurfaces = std::vector<GeometryIdentifier>;
 
   /// Type alias for geometry version enumeration
@@ -162,6 +164,7 @@ class Navigator {
     using FreeSurfaceSelctor_t = Delegate<bool(
         const GeometryContext& gctx, const TrackingVolume& currentVol,
         const Vector3& pos, const Vector3& dir, const Surface& candidate)>;
+    /// Delegate for selecting free surfaces during navigation
     FreeSurfaceSelctor_t freeSurfaceSelector{};
     /// Set the plain navigation options
     /// @param options The plain navigator options to set
@@ -181,6 +184,9 @@ class Navigator {
 
     /// Navigation options configuration
     Options options;
+
+    /// Management of policy state allocation and deallocation
+    NavigationPolicyStateManager policyStateManager;
 
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
@@ -212,6 +218,8 @@ class Navigator {
     /// reached during propagation
     std::vector<std::pair<const Surface*, bool>> freeCandidates{};
 
+    /// Get reference to current navigation surface
+    /// @return Reference to current navigation target
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
@@ -232,6 +240,7 @@ class Navigator {
       return navCandidates.at(navCandidateIndex.value());
     }
 
+    /// Volume where the navigation started
     const TrackingVolume* startVolume = nullptr;
     /// Layer where the navigation started
     const Layer* startLayer = nullptr;
@@ -377,7 +386,7 @@ class Navigator {
   /// @param direction The current direction
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& state, const Vector3& position,
+  bool checkTargetValid(State& state, const Vector3& position,
                         const Vector3& direction) const;
 
   /// @brief Handle the surface reached

@@ -45,7 +45,7 @@ class StraightLineStepper {
   /// Type alias for transport jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
-  using Covariance = BoundSquareMatrix;
+  using Covariance = BoundMatrix;
   /// Type alias for bound state containing parameters, jacobian, and path
   /// length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
@@ -54,10 +54,16 @@ class StraightLineStepper {
 
   struct Config {};
 
+  /// Configuration options for straight line propagation.
   struct Options : public StepperPlainOptions {
+    /// Constructor from geometry and magnetic field contexts
+    /// @param gctx The geometry context
+    /// @param mctx The magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain stepper options
+    /// @param options The plain options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }

@@ -103,7 +103,7 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 template <typename traj_t, typename parameters_t = Acts::BoundTrackParameters>
 TrackAlignmentState trackAlignmentState(
     const Acts::GeometryContext& gctx, const traj_t& multiTraj,
-    const std::size_t& entryIndex,
+    Acts::TrackIndexType entryIndex,
     const std::pair<Acts::ActsDynamicMatrix,
                     std::unordered_map<std::size_t, std::size_t>>&
         globalTrackParamsCov,
@@ -116,7 +116,7 @@ TrackAlignmentState trackAlignmentState(
   TrackAlignmentState alignState;
 
   // Remember the index within the trajectory and whether it's alignable
-  std::vector<std::pair<std::size_t, bool>> measurementStates;
+  std::vector<std::pair<Acts::TrackIndexType, bool>> measurementStates;
   measurementStates.reserve(15);
   // Number of smoothed states on the track
   // std::size_t nSmoothedStates = 0; // commented because clang-tidy complains

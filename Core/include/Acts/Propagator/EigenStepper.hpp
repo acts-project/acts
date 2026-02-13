@@ -47,19 +47,27 @@ class EigenStepper {
   /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix (bound square matrix)
-  using Covariance = BoundSquareMatrix;
+  using Covariance = BoundMatrix;
   /// Type alias for bound state tuple containing parameters, jacobian, and path
   /// length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
+  /// Configuration for the Eigen stepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Stepper options including geometry and magnetic field contexts.
   struct Options : public StepperPlainOptions {
+    /// Constructor from geometry and magnetic field contexts
+    /// @param gctx The geometry context
+    /// @param mctx The magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain options
+    /// @param options The plain options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }

@@ -8,42 +8,61 @@
 
 #pragma once
 
-// TODO: update to C++17 style
-// Consider to moving to detail subdirectory
+#include <cstdint>
 #include <map>
-#include <string>
+#include <memory>
 #include <vector>
 
 namespace Acts::Experimental {
 
+/// Connection between two GBTs layers with binning information.
 struct GbtsConnection {
-  GbtsConnection(unsigned int s, unsigned int d);
+  /// Constructor
+  /// @param s Source layer index
+  /// @param d Destination layer index
+  GbtsConnection(std::uint32_t s, std::uint32_t d);
 
-  unsigned int m_src, m_dst;
+  /// Source and destination layer indices
+  std::uint32_t m_src;
+  /// Destination layer index
+  std::uint32_t m_dst;
 
-  std::vector<int> m_binTable;
+  /// Binning table for the connection
+  std::vector<std::int32_t> m_binTable;
 };
 
+/// Loader and container for GBTs layer connection data.
 class GbtsConnector {
  public:
+  /// Group of connections targeting a destination layer.
   struct LayerGroup {
-    LayerGroup(unsigned int l1Key, const std::vector<const GbtsConnection*>& v)
+    /// Constructor
+    /// @param l1Key Destination layer key
+    /// @param v Vector of source connections
+    LayerGroup(std::uint32_t l1Key, const std::vector<const GbtsConnection*>& v)
         : m_dst(l1Key), m_sources(v) {};
 
-    unsigned int m_dst;  // the target layer of the group
+    /// The target layer of the group
+    std::uint32_t m_dst{};
 
-    std::vector<const GbtsConnection*>
-        m_sources;  // the source layers of the group
+    /// The source layers of the group
+    std::vector<const GbtsConnection*> m_sources;
   };
 
  public:
-  GbtsConnector(std::string& inFile, bool LRTmode);
-  ~GbtsConnector();
+  /// Constructor
+  /// @param inFile Input configuration file path
+  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
+  GbtsConnector(std::string& inFile, bool lrtMode);
 
+  /// Eta bin size
   float m_etaBin{};
 
-  std::map<int, std::vector<struct LayerGroup> > m_layerGroups;
-  std::map<int, std::vector<GbtsConnection*> > m_connMap;
+  /// Map of layer groups indexed by layer
+  std::map<std::int32_t, std::vector<struct LayerGroup>> m_layerGroups;
+  /// Map of connections indexed by layer
+  std::map<std::int32_t, std::vector<std::unique_ptr<GbtsConnection>>>
+      m_connMap;
 };
 
 }  // namespace Acts::Experimental

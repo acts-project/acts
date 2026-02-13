@@ -75,7 +75,7 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
   assert((params[eBoundTheta] > 0 && params[eBoundTheta] < std::numbers::pi) &&
          "Theta must be in the range (0, pi)");
 
-  BoundSquareMatrix result = BoundSquareMatrix::Zero();
+  BoundMatrix result = BoundMatrix::Zero();
 
   for (std::size_t i = eBoundLoc0; i < eBoundSize; ++i) {
     double sigma = config.initialSigmas[i];
