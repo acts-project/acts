@@ -12,7 +12,6 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/SeedFinderGbts.hpp"
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -46,7 +45,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
     /// contains all the options used to steer the algorithm
     /// includes both user options available to change in the python script and
     /// those seen just be the algorithm
-    Acts::Experimental::SeedFinderGbtsConfig seedFinderConfig;
+    Acts::Experimental::GbtsConfig seedFinderConfig;
 
     /// the connection table (parsed from csv file) used to make geoemetry cuts
     /// be GBTS
@@ -120,8 +119,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   std::vector<Acts::Experimental::TrigInDetSiLayer> layerNumbering(
       const Acts::GeometryContext &gctx) const;
 
-  void printSeedFinderGbtsConfig(
-      const Acts::Experimental::SeedFinderGbtsConfig &cfg);
+  void printSeedFinderGbtsConfig(const Acts::Experimental::GbtsConfig &cfg);
 };
 
 }  // namespace ActsExamples

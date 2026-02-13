@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/Seeding/GbtsConfig.hpp"
 #include "Acts/Seeding/GbtsDataStorage.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -32,18 +32,6 @@ using SPContainerComponentsType =
 /// Seed finder implementing the GBTs seeding workflow.
 class SeedFinderGbts {
  public:
-  /// Constructor.
-  /// @param config Configuration for the seed finder
-  /// @param gbtsGeo GBTs geometry
-  /// @param layerGeometry Layer geometry information
-  /// @param logger Logging instance
-  SeedFinderGbts(const SeedFinderGbtsConfig config,
-                 std::unique_ptr<GbtsGeometry> gbtsGeo,
-                 const std::vector<TrigInDetSiLayer>* layerGeometry,
-                 std::unique_ptr<const Acts::Logger> logger =
-                     Acts::getDefaultLogger("Finder",
-                                            Acts::Logging::Level::INFO));
-
   /// Seed metadata produced by the GBTs algorithm.
   struct SeedProperties {
     /// Constructor.
@@ -52,23 +40,35 @@ class SeedFinderGbts {
     /// @param sps Spacepoint indices
     SeedProperties(float quality, std::int32_t clone,
                    std::vector<std::uint32_t> sps)
-        : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
+        : seedQuality(quality), isClone(clone), spacePoints(std::move(sps)) {}
 
     /// Seed quality score.
     float seedQuality{};
     /// Clone flag.
     std::int32_t isClone{};
     /// Spacepoint indices.
-    std::vector<std::uint32_t> spacepoints{};
+    std::vector<std::uint32_t> spacePoints;
 
     /// Comparison operator.
     /// @param o Other seed properties to compare
     /// @return True if this is less than other
-    bool operator<(SeedProperties const& o) const {
-      return std::tie(seedQuality, isClone, spacepoints) <
-             std::tie(o.seedQuality, o.isClone, o.spacepoints);
+    auto operator<=>(const SeedProperties& o) const {
+      return std::tie(seedQuality, isClone, spacePoints) <=>
+             std::tie(o.seedQuality, o.isClone, o.spacePoints);
     }
   };
+
+  /// Constructor.
+  /// @param config Configuration for the seed finder
+  /// @param gbtsGeo GBTs geometry
+  /// @param layerGeometry Layer geometry information
+  /// @param logger Logging instance
+  SeedFinderGbts(const GbtsConfig& config,
+                 std::unique_ptr<GbtsGeometry> gbtsGeo,
+                 const std::vector<TrigInDetSiLayer>& layerGeometry,
+                 std::unique_ptr<const Acts::Logger> logger =
+                     Acts::getDefaultLogger("Finder",
+                                            Acts::Logging::Level::INFO));
 
   /// Create seeds from spacepoints in a region of interest.
   /// @param roi Region of interest descriptor
@@ -121,13 +121,13 @@ class SeedFinderGbts {
       std::vector<SeedProperties>& vSeedCandidates) const;
 
  private:
-  SeedFinderGbtsConfig m_config;
+  GbtsConfig m_cfg{};
 
   const std::shared_ptr<const GbtsGeometry> m_geo;
 
-  const std::vector<TrigInDetSiLayer>* m_layerGeometry;
+  const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
 
-  GbtsMLLookupTable m_mlLut{};
+  GbtsMLLookupTable m_mlLut;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);

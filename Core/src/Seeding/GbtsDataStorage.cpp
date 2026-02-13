@@ -8,6 +8,8 @@
 
 #include "Acts/Seeding/GbtsDataStorage.hpp"
 
+#include "Acts/Seeding/GbtsGeometry.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -17,121 +19,117 @@
 namespace Acts::Experimental {
 
 GbtsEtaBin::GbtsEtaBin() {
-  m_vn.reserve(1000);
+  // TODO config
+  vn.reserve(1000);
 }
 
 void GbtsEtaBin::sortByPhi() {
-  std::vector<std::pair<float, const GbtsNode*>> phiBuckets[32];
+  // TODO config
+  std::array<std::vector<std::pair<float, const GbtsNode*>>, 32> phiBuckets;
 
-  std::uint32_t nBuckets = 31;
+  // TODO config
+  const std::uint32_t nBuckets = 31;
 
-  for (const auto& n : m_vn) {
-    std::uint32_t bIdx = static_cast<std::uint32_t>(
+  for (const GbtsNode* n : vn) {
+    const std::uint32_t bIdx = static_cast<std::uint32_t>(
         0.5 * nBuckets *
-        (n->phi() / static_cast<float>(std::numbers::pi) + 1.0f));
-    phiBuckets[bIdx].push_back(std::make_pair(n->phi(), n));
+        (n->phi / static_cast<float>(std::numbers::pi) + 1.0f));
+    phiBuckets[bIdx].emplace_back(n->phi, n);
   }
 
   for (auto& b : phiBuckets) {
-    std::sort(b.begin(), b.end());
+    std::ranges::sort(b);
   }
 
   std::uint32_t idx = 0;
   for (const auto& b : phiBuckets) {
     for (const auto& p : b) {
-      m_vn[idx++] = p.second;
+      vn[idx++] = p.second;
     }
   }
 }
 
 void GbtsEtaBin::initializeNodes() {
-  if (m_vn.empty()) {
+  if (vn.empty()) {
     return;
   }
 
-  m_params.resize(m_vn.size());
+  params.resize(vn.size());
 
-  m_in.resize(m_vn.size());
-  for (auto& v : m_in) {
+  in.resize(vn.size());
+  for (auto& v : in) {
+    // TODO config
     v.reserve(50);  // reasonably high number of incoming edges per node
   }
 
-  std::transform(
-      m_vn.begin(), m_vn.end(), m_params.begin(), [](const GbtsNode* pN) {
-        std::array<float, 5> a = {-100.0, 100.0, pN->phi(), pN->r(), pN->z()};
-        return a;
-      });
+  std::transform(vn.begin(), vn.end(), params.begin(), [](const GbtsNode* pN) {
+    return std::array<float, 5>{-100.0, 100.0, pN->phi, pN->r, pN->z};
+  });
 
-  auto [min_iter, max_iter] = std::minmax_element(
-      m_vn.begin(), m_vn.end(),
-      [](const GbtsNode* s, const GbtsNode* s1) { return (s->r() < s1->r()); });
-  m_maxRadius = (*max_iter)->r();
-  m_minRadius = (*min_iter)->r();
+  const auto [min_iter, max_iter] = std::ranges::minmax_element(
+      vn, {}, [](const GbtsNode* s) { return s->r; });
+  minRadius = (*min_iter)->r;
+  maxRadius = (*max_iter)->r;
 }
 
 void GbtsEtaBin::generatePhiIndexing(float dphi) {
-  for (std::uint32_t nIdx = 0; nIdx < m_vn.size(); nIdx++) {
-    float phi = m_params[nIdx][2];
+  for (std::uint32_t nIdx = 0; nIdx < vn.size(); nIdx++) {
+    const float phi = params[nIdx][2];
     if (phi <= std::numbers::pi - dphi) {
       continue;
     }
-    m_vPhiNodes.push_back(
-        std::pair<float, std::uint32_t>(phi - 2 * std::numbers::pi, nIdx));
+    vPhiNodes.emplace_back(phi - 2 * std::numbers::pi, nIdx);
   }
 
-  for (std::uint32_t nIdx = 0; nIdx < m_vn.size(); nIdx++) {
-    float phi = m_params[nIdx][2];
-    m_vPhiNodes.push_back(std::pair<float, std::uint32_t>(phi, nIdx));
+  for (std::uint32_t nIdx = 0; nIdx < vn.size(); nIdx++) {
+    const float phi = params[nIdx][2];
+    vPhiNodes.emplace_back(phi, nIdx);
   }
 
-  for (std::uint32_t nIdx = 0; nIdx < m_vn.size(); nIdx++) {
-    float phi = m_params[nIdx][2];
+  for (std::uint32_t nIdx = 0; nIdx < vn.size(); nIdx++) {
+    const float phi = params[nIdx][2];
     if (phi >= -std::numbers::pi + dphi) {
       break;
     }
-    m_vPhiNodes.push_back(
-        std::pair<float, std::uint32_t>(phi + 2 * std::numbers::pi, nIdx));
+    vPhiNodes.emplace_back(phi + 2 * std::numbers::pi, nIdx);
   }
 }
-GbtsDataStorage::GbtsDataStorage(std::shared_ptr<const GbtsGeometry> geometry,
-                                 const SeedFinderGbtsConfig& config,
-                                 GbtsMLLookupTable mlLUT)
-    : m_geo(std::move(geometry)), m_config(config), m_mlLUT(std::move(mlLUT)) {
-  // parse the look up table if useML is true
+
+GbtsDataStorage::GbtsDataStorage(const GbtsConfig& config,
+                                 std::shared_ptr<const GbtsGeometry> geometry,
+                                 GbtsMLLookupTable mlLut)
+    : m_geo(std::move(geometry)), m_cfg(config), m_mlLut(std::move(mlLut)) {
+  // parse the look up table if useMl is true
 
   m_etaBins.resize(m_geo->numBins());
 }
 
 std::uint32_t GbtsDataStorage::loadPixelGraphNodes(
-    std::uint16_t layerIndex, const std::span<const GbtsNode> coll,
-    bool useML) {
+    const std::uint16_t layerIndex, const std::span<const GbtsNode> coll,
+    const bool useMl) {
   std::uint32_t nLoaded = 0;
 
-  const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
+  const GbtsLayer& pL = m_geo->getGbtsLayerByIndex(layerIndex);
 
-  if (pL == nullptr) {
-    return -1;
-  }
+  const bool isBarrel = pL.getLayer().type == 0;
 
-  bool isBarrel = (pL->getLayer()->m_type == 0);
-
-  for (const auto& node : coll) {
-    std::int32_t binIndex = pL->getEtaBin(node.z(), node.r());
+  for (const GbtsNode& node : coll) {
+    const std::int32_t binIndex = pL.getEtaBin(node.z, node.r);
 
     if (binIndex == -1) {
       continue;
     }
 
     if (isBarrel) {
-      m_etaBins.at(binIndex).m_vn.push_back(&node);
+      m_etaBins.at(binIndex).vn.push_back(&node);
     } else {
-      if (useML) {
-        float cluster_width = node.pixelClusterWidth();
-        if (cluster_width > m_config.max_endcap_clusterwidth) {
+      if (useMl) {
+        const float clusterWidth = node.pcw;
+        if (clusterWidth > m_cfg.maxEndcapClusterWidth) {
           continue;
         }
       }
-      m_etaBins.at(binIndex).m_vn.push_back(&node);
+      m_etaBins.at(binIndex).vn.push_back(&node);
     }
 
     nLoaded++;
@@ -141,23 +139,19 @@ std::uint32_t GbtsDataStorage::loadPixelGraphNodes(
 }
 
 std::uint32_t GbtsDataStorage::loadStripGraphNodes(
-    std::uint16_t layerIndex, const std::span<const GbtsNode> coll) {
+    const std::uint16_t layerIndex, const std::span<const GbtsNode> coll) {
   std::uint32_t nLoaded = 0;
 
-  const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIndex);
+  const GbtsLayer& pL = m_geo->getGbtsLayerByIndex(layerIndex);
 
-  if (pL == nullptr) {
-    return -1;
-  }
-
-  for (const auto& node : coll) {
-    std::int32_t binIndex = pL->getEtaBin(node.z(), node.r());
+  for (const GbtsNode& node : coll) {
+    const std::int32_t binIndex = pL.getEtaBin(node.z, node.r);
 
     if (binIndex == -1) {
       continue;
     }
 
-    m_etaBins.at(binIndex).m_vn.push_back(&node);
+    m_etaBins.at(binIndex).vn.push_back(&node);
     nLoaded++;
   }
 
@@ -168,65 +162,63 @@ std::uint32_t GbtsDataStorage::numberOfNodes() const {
   std::uint32_t n = 0;
 
   for (const auto& b : m_etaBins) {
-    n += b.m_vn.size();
+    n += b.vn.size();
   }
   return n;
 }
 
 void GbtsDataStorage::sortByPhi() {
-  for (auto& b : m_etaBins) {
+  for (GbtsEtaBin& b : m_etaBins) {
     b.sortByPhi();
   }
 }
 
-void GbtsDataStorage::initializeNodes(bool useML) {
-  for (auto& b : m_etaBins) {
+void GbtsDataStorage::initializeNodes(const bool useMl) {
+  for (GbtsEtaBin& b : m_etaBins) {
     b.initializeNodes();
-    if (!b.m_vn.empty()) {
-      b.m_layerKey = m_geo->getGbtsLayerKeyByIndex((*b.m_vn.begin())->layer());
+    if (!b.vn.empty()) {
+      b.layerKey = m_geo->getGbtsLayerKeyByIndex((b.vn.front())->layer);
     }
   }
 
-  if (!useML) {
+  if (!useMl) {
     return;
   }
 
   std::uint32_t nL = m_geo->numLayers();
 
   for (std::uint32_t layerIdx = 0; layerIdx < nL; layerIdx++) {
-    const GbtsLayer* pL = m_geo->getGbtsLayerByIndex(layerIdx);
+    const GbtsLayer& pL = m_geo->getGbtsLayerByIndex(layerIdx);
 
-    if (pL->getLayer()->m_subdet <
-        20000) {  // skip strips volumes: layers in range [1200X-1400X]
+    // skip strips volumes: layers in range [1200X-1400X]
+    if (pL.getLayer().subdet < 20000) {
       continue;
     }
 
-    bool isBarrel = (pL->getLayer()->m_type == 0);
-
+    const bool isBarrel = pL.getLayer().type == 0;
     if (!isBarrel) {
       continue;
     }
 
     // adjusting cuts on |cot(theta)| using pre-trained LUT loaded from file
 
-    std::uint32_t lutSize = m_mlLUT.size();
+    const std::uint32_t lutSize = m_mlLut.size();
 
-    std::uint32_t nBins = pL->numOfBins();
+    const std::uint32_t nBins = pL.numOfBins();
 
     for (std::uint32_t b = 0; b < nBins; ++b) {  // loop over eta-bins in Layer
-
-      GbtsEtaBin& B = m_etaBins.at(pL->getBins().at(b));
+      GbtsEtaBin& B = m_etaBins.at(pL.getBins().at(b));
 
       if (B.empty()) {
         continue;
       }
 
-      for (std::uint32_t nIdx = 0; nIdx < B.m_vn.size(); ++nIdx) {
-        float cluster_width = B.m_vn[nIdx]->pixelClusterWidth();
-        float locPosY = B.m_vn[nIdx]->localPositionY();
+      for (std::uint32_t nIdx = 0; nIdx < B.vn.size(); ++nIdx) {
+        const float clusterWidth = B.vn[nIdx]->pcw;
+        const float locPosY = B.vn[nIdx]->locPosY;
 
-        std::int32_t lutBinIdx =
-            static_cast<std::uint32_t>(std::floor(20 * cluster_width)) -
+        const std::int32_t lutBinIdx =
+            static_cast<std::uint32_t>(std::floor(20 * clusterWidth)) -
             1;  // lut bin width is 0.05 mm, check if this is
                 // actually what we want with float conversion
 
@@ -237,9 +229,9 @@ void GbtsDataStorage::initializeNodes(bool useML) {
           continue;  // protect against negative index
         }
 
-        const std::array<float, 5> lutBin = m_mlLUT[lutBinIdx];
+        const std::array<float, 5> lutBin = m_mlLut[lutBinIdx];
 
-        float dist2border = 10.0 - std::abs(locPosY);
+        const float dist2border = 10.0 - std::abs(locPosY);
 
         float min_tau = -100.0;
         float max_tau = 100.0;
@@ -256,15 +248,15 @@ void GbtsDataStorage::initializeNodes(bool useML) {
           max_tau = 100.0;  // use "no-cut" default
         }
 
-        B.m_params[nIdx][0] = min_tau;
-        B.m_params[nIdx][1] = max_tau;
+        B.params[nIdx][0] = min_tau;
+        B.params[nIdx][1] = max_tau;
       }
     }
   }
 }
 
-void GbtsDataStorage::generatePhiIndexing(float dphi) {
-  for (auto& b : m_etaBins) {
+void GbtsDataStorage::generatePhiIndexing(const float dphi) {
+  for (GbtsEtaBin& b : m_etaBins) {
     b.generatePhiIndexing(dphi);
   }
 }
