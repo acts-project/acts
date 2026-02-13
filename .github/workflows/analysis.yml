@@ -154,12 +154,6 @@ jobs:
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml --verbose
 
-      - run: apt-get install -y tmux
-      - name: Setup upterm session
-        uses: owenthereal/action-upterm@v1
-        with:
-          limit-access-to-actor: true
-
   # build_performance:
   #   runs-on: ubuntu-latest
   #   container: ghcr.io/acts-project/ubuntu2404:83
