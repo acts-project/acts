@@ -13,6 +13,7 @@
 #include <array>
 #include <cstdint>
 #include <limits>
+#include <memory>
 #include <span>
 #include <vector>
 
@@ -35,14 +36,23 @@ struct GbtsNode final {
   /// @param l Layer index
   explicit GbtsNode(std::uint16_t l) : layer(l) {};
 
+  /// Global x coordinate of the node
   float x{};
+  /// Global y coordinate of the node
   float y{};
+  /// Global z coordinate of the node
   float z{};
+  /// Transverse distance from the beamline
   float r{};
+  /// Azimuthal angle in the xy plane
   float phi{};
+  /// Layer index
   std::uint16_t layer{10000};
+  /// Index of the node in the original collection
   std::uint32_t idx{std::numeric_limits<std::uint32_t>::max()};
+  /// Pixel cluster width
   float pcw{};
+  /// Local y cluster position
   float locPosY{};
 };
 
