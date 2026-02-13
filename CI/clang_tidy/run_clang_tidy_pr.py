@@ -40,6 +40,7 @@ from rich.progress import (
     Progress,
     TextColumn,
     TimeRemainingColumn,
+    TaskID,
 )
 
 app = typer.Typer()
@@ -73,9 +74,7 @@ class Diagnostic(BaseModel):
     model_config = {"populate_by_name": True}
 
     name: str = Field(default="unknown", alias="DiagnosticName")
-    message: DiagMessage = Field(
-        default_factory=DiagMessage, alias="DiagnosticMessage"
-    )
+    message: DiagMessage = Field(default_factory=DiagMessage, alias="DiagnosticMessage")
 
 
 class FixesFile(BaseModel):
@@ -270,7 +269,7 @@ async def run_clang_tidy_on_targets(
         console=console,
     )
 
-    async def analyse(file: Path, idx: int, task_id: int) -> None:
+    async def analyse(file: Path, idx: int, task_id: TaskID) -> None:
         yaml_path = fixes_dir / f"{idx}.yaml"
         cmd = [
             clang_tidy,
@@ -279,6 +278,7 @@ async def run_clang_tidy_on_targets(
             str(file),
             "--quiet",
             f"--export-fixes={yaml_path}",
+            "-header-filter=.*",  # export fixes for headers, even when analyzing a TU
         ]
         async with sem:
             if verbose:
@@ -446,9 +446,7 @@ def emit_annotations(
             )
 
     if verbose and len(diagnostics) != len(unique):
-        console.print(
-            f"Deduplicated {len(diagnostics) - len(unique)} diagnostic(s)."
-        )
+        console.print(f"Deduplicated {len(diagnostics) - len(unique)} diagnostic(s).")
     diagnostics = unique
 
     remaining: list[ParsedDiagnostic] = []
