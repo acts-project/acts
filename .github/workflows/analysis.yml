@@ -133,6 +133,8 @@ jobs:
           -DCMAKE_CXX_COMPILER=clang++
           -DCMAKE_C_COMPILER=clang
           -DACTS_RUN_CLANG_TIDY=OFF
+      - name: Run codegen
+        run: cmake --build build --target ActsCodegen
 
       # - name: Analyze (PR - changed files only)
       #   if: github.event_name == 'pull_request'
