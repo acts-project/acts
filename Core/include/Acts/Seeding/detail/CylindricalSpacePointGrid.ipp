@@ -23,7 +23,6 @@ CylindricalSpacePointGridCreator::createGrid(
   config.checkConfig();
 
   using AxisScalar = Vector3::Scalar;
-  using namespace UnitLiterals;
 
   int phiBins = 0;
   // for no magnetic field, create 100 phi-bins

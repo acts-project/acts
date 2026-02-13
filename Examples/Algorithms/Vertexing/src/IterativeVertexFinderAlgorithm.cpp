@@ -16,10 +16,8 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <chrono>
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
@@ -115,7 +113,7 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
   // find vertices
   auto result = finder.find(inputTracks, finderOpts, state);
 
-  VertexCollection vertices;
+  VertexContainer vertices;
   if (result.ok()) {
     vertices = std::move(result.value());
   } else {

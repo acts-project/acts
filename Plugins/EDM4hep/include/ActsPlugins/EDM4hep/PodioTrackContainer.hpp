@@ -94,7 +94,6 @@ class PodioTrackContainerBase {
   template <bool EnsureConst, typename T>
   static std::any component_impl(T& instance, Acts::HashedString key,
                                  IndexType itrack) {
-    using namespace Acts::HashedStringLiteral;
     if constexpr (EnsureConst) {
       static_assert(std::is_const_v<std::remove_reference_t<T>>,
                     "Is not const");

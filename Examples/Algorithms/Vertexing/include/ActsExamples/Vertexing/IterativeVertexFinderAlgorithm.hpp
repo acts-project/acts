@@ -16,24 +16,18 @@
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
 #include <string>
-#include <vector>
-
-namespace Acts {
-class MagneticFieldProvider;
-}  // namespace Acts
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
@@ -43,8 +37,6 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   using Seeder = Acts::TrackDensityVertexFinder;
   using Finder = Acts::IterativeVertexFinder;
   using Options = Acts::VertexingOptions;
-
-  using VertexCollection = std::vector<Acts::Vertex>;
 
   struct Config {
     /// Optional. Input track parameters collection
@@ -82,7 +74,7 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};
 
-  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
+  WriteDataHandle<VertexContainer> m_outputVertices{this, "OutputVertices"};
 };
 
 }  // namespace ActsExamples

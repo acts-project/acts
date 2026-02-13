@@ -22,6 +22,7 @@
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
+#include "ActsExamples/Utilities/VertexTruthUtility.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <algorithm>
@@ -30,88 +31,20 @@
 #include <cstdint>
 #include <ios>
 #include <limits>
-#include <map>
 #include <memory>
 #include <numbers>
 #include <optional>
 #include <ostream>
-#include <set>
 #include <stdexcept>
-#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>
-
-using Acts::VectorHelpers::eta;
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
-using Acts::VectorHelpers::theta;
 
 namespace ActsExamples {
 
 namespace {
 
 constexpr double nan = std::numeric_limits<double>::quiet_NaN();
-
-std::uint32_t getNumberOfReconstructableVertices(
-    const SimParticleContainer& collection) {
-  // map for finding frequency
-  std::map<std::uint32_t, std::uint32_t> fmap;
-
-  std::vector<std::uint32_t> reconstructableTruthVertices;
-
-  // traverse the array for frequency
-  for (const SimParticle& p : collection) {
-    std::uint32_t generation = p.particleId().generation();
-    if (generation > 0) {
-      // truthparticle from secondary vtx
-      continue;
-    }
-    std::uint32_t priVtxId = p.particleId().vertexPrimary();
-    fmap[priVtxId]++;
-  }
-
-  // iterate over the map
-  for (const auto& [priVtxId, occurrence] : fmap) {
-    // Require at least 2 tracks
-    if (occurrence > 1) {
-      reconstructableTruthVertices.push_back(priVtxId);
-    }
-  }
-
-  return reconstructableTruthVertices.size();
-}
-
-std::uint32_t getNumberOfTruePriVertices(
-    const SimParticleContainer& collection) {
-  // Vector to store indices of all primary vertices
-  std::set<std::uint32_t> allPriVtxIds;
-  for (const SimParticle& p : collection) {
-    std::uint32_t priVtxId = p.particleId().vertexPrimary();
-    std::uint32_t generation = p.particleId().generation();
-    if (generation > 0) {
-      // truthparticle from secondary vtx
-      continue;
-    }
-    // Insert to set, removing duplicates
-    allPriVtxIds.insert(priVtxId);
-  }
-  // Size of set corresponds to total number of primary vertices
-  return allPriVtxIds.size();
-}
-
-double calcSumPt2(const RootVertexNTupleWriter::Config& config,
-                  const Acts::Vertex& vtx) {
-  double sumPt2 = 0;
-  for (const auto& trk : vtx.tracks()) {
-    if (trk.trackWeight > config.minTrkWeight) {
-      double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
-                      ->transverseMomentum();
-      sumPt2 += pt * pt;
-    }
-  }
-  return sumPt2;
-}
 
 /// Helper function for computing the pull
 double pull(double diff, double variance, const std::string& variableStr,
@@ -130,71 +63,6 @@ double pull(double diff, double variance, const std::string& variableStr,
   }
   double std = std::sqrt(variance);
   return diff / std;
-}
-
-double calculateTruthPrimaryVertexDensity(
-    const RootVertexNTupleWriter::Config& config,
-    const SimVertexContainer& truthVertices, const Acts::Vertex& vtx) {
-  double z = vtx.fullPosition()[Acts::CoordinateIndices::eZ];
-  int count = 0;
-  for (const SimVertex& truthVertex : truthVertices) {
-    if (truthVertex.vertexId().vertexSecondary() != 0) {
-      continue;
-    }
-    double zTruth = truthVertex.position4[Acts::CoordinateIndices::eZ];
-    if (std::abs(z - zTruth) <= config.vertexDensityWindow) {
-      ++count;
-    }
-  }
-  return count / (2 * config.vertexDensityWindow);
-}
-
-const SimParticle* findParticle(
-    const SimParticleContainer& particles,
-    const TrackParticleMatching& trackParticleMatching, ConstTrackProxy track,
-    const Acts::Logger& logger) {
-  // Get the truth-matched particle
-  auto imatched = trackParticleMatching.find(track.index());
-  if (imatched == trackParticleMatching.end() ||
-      !imatched->second.particle.has_value()) {
-    ACTS_DEBUG("No truth particle associated with this track, index = "
-               << track.index() << " tip index = " << track.tipIndex());
-    return nullptr;
-  }
-
-  const TrackMatchEntry& particleMatch = imatched->second;
-
-  auto iparticle = particles.find(SimBarcode{particleMatch.particle.value()});
-  if (iparticle == particles.end()) {
-    ACTS_DEBUG(
-        "Truth particle found but not monitored with this track, index = "
-        << track.index() << " tip index = " << track.tipIndex()
-        << " and this barcode = " << particleMatch.particle.value());
-    return {};
-  }
-
-  return &(*iparticle);
-}
-
-std::optional<ConstTrackProxy> findTrack(const ConstTrackContainer& tracks,
-                                         const Acts::TrackAtVertex& trkAtVtx) {
-  // Track parameters before the vertex fit
-  const Acts::BoundTrackParameters& origTrack =
-      *trkAtVtx.originalParams.as<Acts::BoundTrackParameters>();
-
-  // Finding the matching parameters in the container of all track
-  // parameters. This allows us to identify the corresponding particle.
-  // TODO this should not be necessary if the tracks at vertex would keep
-  // this information
-  for (ConstTrackProxy inputTrk : tracks) {
-    const auto& params = inputTrk.parameters();
-
-    if (origTrack.parameters() == params) {
-      return inputTrk;
-    }
-  }
-
-  return std::nullopt;
 }
 
 }  // namespace
@@ -225,6 +93,7 @@ RootVertexNTupleWriter::RootVertexNTupleWriter(
   m_inputSelectedParticles.initialize(m_cfg.inputSelectedParticles);
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
+  m_inputVertexTruthMatching.maybeInitialize(m_cfg.inputVertexTruthMatching);
 
   if (m_cfg.writeTrackInfo && !m_inputTracks.isInitialized()) {
     throw std::invalid_argument("Missing input tracks collection");
@@ -362,8 +231,8 @@ ProcessCode RootVertexNTupleWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode RootVertexNTupleWriter::writeT(
-    const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
+ProcessCode RootVertexNTupleWriter::writeT(const AlgorithmContext& ctx,
+                                           const VertexContainer& vertices) {
   // In case we do not have any tracks in the vertex, we create empty
   // collections
   const static TrackParticleMatching emptyTrackParticleMatching;
@@ -380,14 +249,27 @@ ProcessCode RootVertexNTupleWriter::writeT(
   // Read truth particle input collection
   const SimParticleContainer& particles = m_inputParticles(ctx);
   const SimParticleContainer& selectedParticles = m_inputSelectedParticles(ctx);
+  const ConstTrackContainer& tracks =
+      (m_inputTracks.isInitialized() ? m_inputTracks(ctx) : emptyTracks);
   const TrackParticleMatching& trackParticleMatching =
       (m_inputTrackParticleMatching.isInitialized()
            ? m_inputTrackParticleMatching(ctx)
            : emptyTrackParticleMatching);
-  const ConstTrackContainer& tracks =
-      (m_inputTracks.isInitialized() ? m_inputTracks(ctx) : emptyTracks);
-  SimParticleContainer recoParticles;
+  const std::vector<VertexToTruthMatching> recoToTruthMatching =
+      (m_inputVertexTruthMatching.isInitialized()
+           ? m_inputVertexTruthMatching(ctx)
+           : std::vector<VertexToTruthMatching>(vertices.size(),
+                                                VertexToTruthMatching()));
 
+  if (vertices.size() != recoToTruthMatching.size()) {
+    ACTS_ERROR("Size of reco vertices (" << vertices.size()
+                                         << ") does not match size of vertex-"
+                                            "truth matching ("
+                                         << recoToTruthMatching.size() << ").");
+    return ProcessCode::ABORT;
+  }
+
+  SimParticleContainer recoParticles;
   for (ConstTrackProxy track : tracks) {
     if (!track.hasReferenceSurface()) {
       ACTS_DEBUG("No reference surface on this track, index = "
@@ -439,137 +321,6 @@ ProcessCode RootVertexNTupleWriter::writeT(
   ACTS_DEBUG("Maximum number of reconstructible primary vertices : "
              << m_nVtxReconstructable);
 
-  struct ToTruthMatching {
-    std::optional<SimVertexBarcode> vertexId;
-    double totalTrackWeight{};
-    double truthMajorityTrackWeights{};
-    double matchFraction{};
-
-    RecoVertexClassification classification{RecoVertexClassification::Unknown};
-  };
-  struct ToRecoMatching {
-    std::size_t recoIndex{};
-
-    double recoSumPt2{};
-  };
-
-  std::vector<ToTruthMatching> recoToTruthMatching;
-  std::map<SimVertexBarcode, ToRecoMatching> truthToRecoMatching;
-
-  // Do truth matching for each reconstructed vertex
-  for (const auto& [vtxIndex, vtx] : Acts::enumerate(vertices)) {
-    // Reconstructed tracks that contribute to the reconstructed vertex
-    const std::vector<Acts::TrackAtVertex>& tracksAtVtx = vtx.tracks();
-
-    // Containers for storing truth particles and truth vertices that
-    // contribute to the reconstructed vertex
-    std::vector<std::pair<SimVertexBarcode, double>> contributingTruthVertices;
-
-    double totalTrackWeight = 0;
-    if (!tracksAtVtx.empty()) {
-      for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
-        if (trk.trackWeight < m_cfg.minTrkWeight) {
-          continue;
-        }
-
-        totalTrackWeight += trk.trackWeight;
-
-        std::optional<ConstTrackProxy> trackOpt = findTrack(tracks, trk);
-        if (!trackOpt.has_value()) {
-          ACTS_DEBUG("Track has no matching input track.");
-          continue;
-        }
-        const ConstTrackProxy& inputTrk = *trackOpt;
-        const SimParticle* particle =
-            findParticle(particles, trackParticleMatching, inputTrk, logger());
-        if (particle == nullptr) {
-          ACTS_VERBOSE("Track has no matching truth particle.");
-        } else {
-          contributingTruthVertices.emplace_back(
-              SimBarcode{particle->particleId()}.vertexId(), trk.trackWeight);
-        }
-      }
-    } else {
-      // If no tracks at the vertex, then use all truth particles
-      for (auto& particle : recoParticles) {
-        contributingTruthVertices.emplace_back(
-            SimBarcode{particle.particleId()}.vertexId(), 1.);
-      }
-    }
-
-    // Find true vertex that contributes most to the reconstructed vertex
-    std::map<SimVertexBarcode, std::pair<int, double>> fmap;
-    for (const auto& [vtxId, weight] : contributingTruthVertices) {
-      ++fmap[vtxId].first;
-      fmap[vtxId].second += weight;
-    }
-    double truthMajorityVertexTrackWeights = 0;
-    std::optional<SimVertexBarcode> truthMajorityVertexId = std::nullopt;
-    for (const auto& [vtxId, counter] : fmap) {
-      if (counter.second > truthMajorityVertexTrackWeights) {
-        truthMajorityVertexId = vtxId;
-        truthMajorityVertexTrackWeights = counter.second;
-      }
-    }
-
-    double sumPt2 = calcSumPt2(m_cfg, vtx);
-
-    double vertexMatchFraction =
-        (totalTrackWeight > 0
-             ? truthMajorityVertexTrackWeights / totalTrackWeight
-             : 0.);
-    RecoVertexClassification recoVertexClassification =
-        RecoVertexClassification::Unknown;
-
-    if (vertexMatchFraction >= m_cfg.vertexMatchThreshold) {
-      recoVertexClassification = RecoVertexClassification::Clean;
-    } else {
-      recoVertexClassification = RecoVertexClassification::Merged;
-    }
-
-    recoToTruthMatching.push_back({truthMajorityVertexId, totalTrackWeight,
-                                   truthMajorityVertexTrackWeights,
-                                   vertexMatchFraction,
-                                   recoVertexClassification});
-
-    auto& recoToTruth = recoToTruthMatching.back();
-
-    // We have to decide if this reco vertex is a split vertex.
-    if (!truthMajorityVertexId.has_value()) {
-      // No truth vertex matched to this reconstructed vertex
-      ACTS_DEBUG("No truth vertex matched to this reconstructed vertex.");
-      continue;
-    }
-
-    if (auto it = truthToRecoMatching.find(truthMajorityVertexId.value());
-        it != truthToRecoMatching.end()) {
-      // This truth vertex is already matched to a reconstructed vertex so we
-      // are dealing with a split vertex.
-
-      // We have to decide which of the two reconstructed vertices is the
-      // split vertex.
-      if (sumPt2 <= it->second.recoSumPt2) {
-        // Since the sumPt2 is smaller we can simply call this a split vertex
-
-        recoToTruth.classification = RecoVertexClassification::Split;
-
-        // Keep the existing truth to reco matching
-      } else {
-        // The sumPt2 is larger, so we call the other vertex a split vertex.
-
-        auto& otherRecoToTruth = recoToTruthMatching.at(it->second.recoIndex);
-        // Swap the classification
-        recoToTruth.classification = otherRecoToTruth.classification;
-        otherRecoToTruth.classification = RecoVertexClassification::Split;
-
-        // Overwrite the truth to reco matching
-        it->second = {vtxIndex, sumPt2};
-      }
-    } else {
-      truthToRecoMatching[truthMajorityVertexId.value()] = {vtxIndex, sumPt2};
-    }
-  }
-
   // Loop over reconstructed vertices and see if they can be matched to a true
   // vertex.
   for (const auto& [vtxIndex, vtx] : Acts::enumerate(vertices)) {
@@ -611,7 +362,7 @@ ProcessCode RootVertexNTupleWriter::writeT(
     m_covZT.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
                                            Acts::CoordinateIndices::eTime));
 
-    double sumPt2 = calcSumPt2(m_cfg, vtx);
+    double sumPt2 = calcSumPt2(vtx, m_cfg.minTrkWeight);
     m_sumPt2.push_back(sumPt2);
 
     double recoVertexTrackWeights = 0;
@@ -654,8 +405,8 @@ ProcessCode RootVertexNTupleWriter::writeT(
       }
       m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
 
-      double truthPrimaryVertexDensity =
-          calculateTruthPrimaryVertexDensity(m_cfg, truthVertices, vtx);
+      double truthPrimaryVertexDensity = calculateTruthPrimaryVertexDensity(
+          truthVertices, vtx, m_cfg.vertexDensityWindow);
       m_truthPrimaryVertexDensity.push_back(truthPrimaryVertexDensity);
 
       double truthVertexTrackWeights =
