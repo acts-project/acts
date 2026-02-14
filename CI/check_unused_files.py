@@ -30,6 +30,7 @@ def main():
         "Scripts",
         "thirdparty",
         "CI",
+        "Python",
         "git",
         "cmake",
         ".git",
@@ -57,7 +58,6 @@ def main():
         "odd-digi-smearing-config-notime.json",
         # TODO Mention these files somewhere?
         "generate_particle_data_table.py",
-        "Examples/Python/tests/test_toroidal_field.py",
         "lazy_autodoc.py",
         "codegen/src/codegen/sympy_common.py",
         "CompressedIO.h",
@@ -174,16 +174,12 @@ def main():
 
             # Check header files and remove
             elif filepath.suffix in suffix_header + suffix_source:
-                if file_can_be_removed(filepath.stem, dirs_base_code):
+                if file_can_be_removed(filename, dirs_base_code):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
                     os.system(remove_cmd)
 
             elif filepath.suffix in suffix_python:
-                # Skip the python tests folder
-                if str(root).find("Python/Examples") != -1:
-                    continue
-
                 if not file_can_be_removed("import .*" + filepath.stem, dirs_base):
                     continue
 
