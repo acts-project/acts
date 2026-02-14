@@ -15,7 +15,6 @@
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvSpacePointsBucketWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
@@ -103,11 +102,7 @@ void addOutput(py::module& mex) {
                              outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointWriter, mex, "CsvSpacePointWriter",
-                             inputSpacepoints, outputDir, outputPrecision);
-
-  ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointsBucketWriter, mex,
-                             "CsvSpacePointsBucketWriter", inputBuckets,
-                             outputDir, outputPrecision);
+                             inputSpacePoints, outputDir, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvTrackWriter, mex, "CsvTrackWriter", inputTracks,
                              outputDir, fileName, inputMeasurementParticlesMap,
@@ -115,7 +110,7 @@ void addOutput(py::module& mex) {
                              truthMatchProbMin, ptMin);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSeedWriter, mex, "CsvSeedWriter",
-                             inputTrackParameters, inputSimSeeds, inputSimHits,
+                             inputTrackParameters, inputSeeds, inputSimHits,
                              inputMeasurementParticlesMap,
                              inputMeasurementSimHitsMap, fileName, outputDir);
 
@@ -133,7 +128,7 @@ void addOutput(py::module& mex) {
                              outputStem, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvProtoTrackWriter, mex, "CsvProtoTrackWriter",
-                             inputSpacepoints, inputPrototracks, outputDir);
+                             inputSpacePoints, inputPrototracks, outputDir);
 
   {
     using Writer = CsvBFieldWriter;

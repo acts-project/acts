@@ -9,16 +9,18 @@
 #pragma once
 
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 
 namespace ActsExamples {
 
-ProtoTrack seedToPrototrack(const SimSeed &seed);
+ProtoTrack seedToPrototrack(const ConstSeedProxy &seed);
 
-const SimSpacePoint *findSpacePointForIndex(
-    Index index, const SimSpacePointContainer &spacepoints);
+std::optional<ConstSpacePointProxy> findSpacePointForIndex(
+    Index index, const SpacePointContainer &spacePoints);
 
-SimSeed prototrackToSeed(const ProtoTrack &track,
-                         const SimSpacePointContainer &spacepoints);
+SeedProxy prototrackToSeed(const ProtoTrack &track,
+                           const SpacePointContainer &spacePoints,
+                           SeedContainer &seeds);
 
 }  // namespace ActsExamples

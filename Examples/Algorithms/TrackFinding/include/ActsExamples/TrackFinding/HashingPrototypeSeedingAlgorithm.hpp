@@ -11,8 +11,8 @@
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/TripletSeeder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -210,18 +210,18 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
   std::unique_ptr<const Acts::Logger> m_filterLogger;
   std::optional<Acts::TripletSeeder> m_seedFinder;
 
-  Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector{
+  Acts::Delegate<bool(const ConstSpacePointProxy&)> m_spacePointSelector{
       Acts::DelegateFuncTag<voidSpacePointSelector>{}};
 
-  static bool voidSpacePointSelector(const SimSpacePoint& /*sp*/) {
+  static bool voidSpacePointSelector(const ConstSpacePointProxy& /*sp*/) {
     return true;
   }
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
 
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-  WriteDataHandle<std::vector<SimSpacePointContainer>> m_outputBuckets{
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<std::vector<std::vector<SpacePointIndex>>> m_outputBuckets{
       this, "OutputBuckets"};
 };
 

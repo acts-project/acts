@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -22,7 +21,7 @@ CsvProtoTrackWriter::CsvProtoTrackWriter(const Config& config,
                                          Acts::Logging::Level level)
     : WriterT(config.inputPrototracks, "CsvProtoTrackWriter", level),
       m_cfg(config) {
-  m_inputSpacepoints.initialize(m_cfg.inputSpacepoints);
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
 }
 
 CsvProtoTrackWriter::~CsvProtoTrackWriter() = default;
@@ -34,7 +33,7 @@ ProcessCode CsvProtoTrackWriter::finalize() {
 
 ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
                                         const ProtoTrackContainer& tracks) {
-  const auto& spacepoints = m_inputSpacepoints(ctx);
+  const auto& spacePoints = m_inputSpacePoints(ctx);
 
   // Open per-event file for all components
   std::string path =
@@ -44,14 +43,14 @@ ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index measurementId : tracks[trackId]) {
-      const auto spr = findSpacePointForIndex(measurementId, spacepoints);
-      if (spr == nullptr) {
+      const std::optional<ConstSpacePointProxy> sp =
+          findSpacePointForIndex(measurementId, spacePoints);
+      if (!sp.has_value()) {
         ACTS_WARNING("Could not convert index " << measurementId
                                                 << " to spacepoint");
         continue;
       }
-      const auto& sp = *spr;
-      writer.append({trackId, measurementId, sp.x(), sp.y(), sp.z()});
+      writer.append({trackId, measurementId, sp->x(), sp->y(), sp->z()});
     }
   }
   return ProcessCode::SUCCESS;

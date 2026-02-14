@@ -8,12 +8,10 @@
 
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 
-#include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -25,8 +23,9 @@
 
 namespace ActsExamples {
 
-GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
+GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(const Config &cfg,
+                                           Acts::Logging::Level lvl)
+    : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(cfg) {
   // initialise the spacepoint, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
@@ -67,13 +66,15 @@ GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
 
 ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   // initialise input spacepoints from handle and define new container
-  const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
+  const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
   // take spacepoints, add variables needed for GBTS and add them to new
   // container due to how spacepoint container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  auto SpContainerComponents = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
+  auto spContainerComponents = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
+  const auto &coreSpacePoints =
+      std::get<Acts::SpacePointContainer2>(spContainerComponents);
 
   // used to reserve size of nodes 2D vector in core
   std::uint32_t maxLayers = m_layerIdMap.size();
@@ -84,39 +85,18 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
       0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
 
   // create the seeds
+  SeedContainer seeds =
+      m_finder->createSeeds(internalRoi, spContainerComponents, maxLayers);
 
-  Acts::SeedContainer2 seeds =
-      m_finder->createSeeds(internalRoi, SpContainerComponents, maxLayers);
-
-  // move seeds to simseedcontainer to be used down stream taking fist middle
-  // and last sps currently as simseeds need to be hard types so only 3
-  // spacepoint can be added but in future we should be able to have any length
-  // seed
-  SimSeedContainer seedContainerForStorage;
-  seedContainerForStorage.reserve(seeds.size());
-  for (const auto &seed : seeds) {
-    auto sps = seed.spacePointIndices();
-    std::uint32_t indices = sps.size() - 1;
-    std::size_t mid = static_cast<std::size_t>(std::round(indices / 2.0));
-    seedContainerForStorage.emplace_back(
-        *std::get<0>(SpContainerComponents)
-             .at(sps[0])  // first spacepoint
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>(),
-        *std::get<0>(SpContainerComponents)
-             .at(sps[mid])  // middle spacepoint
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>(),
-        *std::get<0>(SpContainerComponents)
-             .at(sps[indices])  // last spacepoint
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>());
-
-    seedContainerForStorage.back().setVertexZ(seed.vertexZ());
-    seedContainerForStorage.back().setQuality(seed.quality());
+  // update seed space point indices to original space point container
+  for (auto seed : seeds) {
+    for (auto &spIndex : seed.spacePointIndices()) {
+      spIndex =
+          coreSpacePoints.at(spIndex).sourceLinks()[0].get<SpacePointIndex>();
+    }
   }
 
-  m_outputSeeds(ctx, std::move(seedContainerForStorage));
+  m_outputSeeds(ctx, std::move(seeds));
 
   return ProcessCode::SUCCESS;
 }
@@ -161,7 +141,7 @@ GbtsSeedingAlgorithm::makeActsGbtsMap() const {
 }
 
 Acts::Experimental::SPContainerComponentsType
-GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
+GbtsSeedingAlgorithm::makeSpContainer(const SpacePointContainer &spacePoints,
                                       std::map<ActsIDs, GbtsIDs> map) const {
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::X |
@@ -239,7 +219,7 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
     auto newSp = coreSpacePoints.createSpacePoint();
 
     newSp.assignSourceLinks(
-        std::array<Acts::SourceLink, 1>{Acts::SourceLink(&spacePoint)});
+        std::array<Acts::SourceLink, 1>{Acts::SourceLink(spacePoint.index())});
     newSp.x() = spacePoint.x();
     newSp.y() = spacePoint.y();
     newSp.z() = spacePoint.z();

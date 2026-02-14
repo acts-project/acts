@@ -13,7 +13,7 @@
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -149,8 +149,7 @@ class RootAthenaDumpReader : public IReader {
   /// @param imIdxMap optional remapping of indices. Since the measurement
   /// index must be continuous, we need to remap the measurements indices
   /// if we skip measurements in the first place
-  std::tuple<SimSpacePointContainer, SimSpacePointContainer,
-             SimSpacePointContainer>
+  std::tuple<SpacePointContainer, SpacePointContainer, SpacePointContainer>
   readSpacepoints(const std::optional<std::unordered_map<int, std::size_t>>
                       &imIdxMap) const;
 
@@ -161,11 +160,11 @@ class RootAthenaDumpReader : public IReader {
       const IndexMultimap<ActsFatras::Barcode> &measPartMap) const;
 
   /// Write handlers
-  WriteDataHandle<SimSpacePointContainer> m_outputPixelSpacePoints{
+  WriteDataHandle<SpacePointContainer> m_outputPixelSpacePoints{
       this, "outputPixelSpacepoints"};
-  WriteDataHandle<SimSpacePointContainer> m_outputStripSpacePoints{
+  WriteDataHandle<SpacePointContainer> m_outputStripSpacePoints{
       this, "outputStripSpacepoints"};
-  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
+  WriteDataHandle<SpacePointContainer> m_outputSpacePoints{
       this, "output_spacepoints"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "output_clusters"};
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,

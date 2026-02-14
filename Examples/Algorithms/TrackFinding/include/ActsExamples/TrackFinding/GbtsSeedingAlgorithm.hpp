@@ -14,8 +14,8 @@
 #include "Acts/Seeding/SeedFinderGbts.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
@@ -63,13 +63,13 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
     bool fillModuleCsv = false;
   };
 
+  /// @param cfg is the algorithm configuration
+  /// @param lvl is the logging level
+  GbtsSeedingAlgorithm(const Config &cfg, Acts::Logging::Level lvl);
+
   /// access to config
   /// allows python bindings to work
   const Config &config() const { return m_cfg; }
-
-  /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
@@ -97,14 +97,14 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   mutable std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
 
   /// handle that points to the container of input spacepoints
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
 
-  /// handle that points to clusters used by spacepoints
+  // handle that points to the container of input clusters
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   /// handle that points to container of output seeds
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
@@ -112,7 +112,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   /// make the container that holds spacepoints that have been given
   /// all the variables needed for GBTS algorithm to run
   Acts::Experimental::SPContainerComponentsType makeSpContainer(
-      const SimSpacePointContainer &spacePoints,
+      const SpacePointContainer &spacePoints,
       std::map<ActsIDs, GbtsIDs> map) const;
 
   /// makes the geometry objects used by GBTS that correspond to the objects in
