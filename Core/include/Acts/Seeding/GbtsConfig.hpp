@@ -8,8 +8,6 @@
 
 #pragma once
 
-// TODO: update to C++17 style
-
 #include "Acts/Definitions/Units.hpp"
 
 #include <cstdint>
@@ -18,10 +16,10 @@
 namespace Acts::Experimental {
 
 /// Configuration options for the GBTs seed finder.
-struct SeedFinderGbtsConfig {
+struct GbtsConfig {
   // GbtsSeedingAlgorithm options
   /// Enable beam spot correction.
-  bool BeamSpotCorrection = false;
+  bool beamSpotCorrection = false;
 
   // Path to the connector configuration file that defines the layer connections
   /// Connector configuration file path.
@@ -34,15 +32,15 @@ struct SeedFinderGbtsConfig {
   /// Enable Large Radius Tracking mode.
   bool lrtMode = false;
   /// Use machine learning features (e.g., cluster width).
-  bool useML = false;
+  bool useMl = false;
   /// Match seeds before creating them.
   bool matchBeforeCreate = false;
   /// Use legacy tuning parameters.
   bool useOldTunings = false;
   /// Tau ratio cut threshold.
-  float tau_ratio_cut = 0.007;
+  float tauRatioCut = 0.007;
   /// Tau ratio precut threshold.
-  float tau_ratio_precut = 0.009f;
+  float tauRatioPrecut = 0.009f;
   /// Eta bin width override (0 uses default from connection file).
   float etaBinOverride =
       0.0f;  // specify non-zero to override eta bin width from connection file
@@ -74,61 +72,37 @@ struct SeedFinderGbtsConfig {
   float radLen = 0.025;
 
   /// Measurement uncertainty in x direction.
-  float sigma_x = 0.08;
+  float sigmaX = 0.08;
   /// Measurement uncertainty in y direction.
-  float sigma_y = 0.25;
+  float sigmaY = 0.25;
 
   /// Measurement weight in x direction.
-  float weight_x = 0.5;
+  float weightX = 0.5;
   /// Measurement weight in y direction.
-  float weight_y = 0.5;
+  float weightY = 0.5;
 
   /// Maximum delta chi2 in x direction.
-  float maxDChi2_x = 5.0;
+  float maxDChi2X = 5.0;
   /// Maximum delta chi2 in y direction.
-  float maxDChi2_y = 6.0;
+  float maxDChi2Y = 6.0;
 
   /// Chi2 penalty for adding a hit.
-  float add_hit = 14.0;
+  float addHit = 14.0;
 
   /// Maximum track curvature.
-  float max_curvature = 1e-3f;
+  float maxCurvature = 1e-3f;
   /// Maximum longitudinal impact parameter.
-  float max_z0 = 170.0;
+  float maxZ0 = 170.0;
 
   // Seed extraction options
   /// Minimum eta for edge masking.
-  float edge_mask_min_eta = 1.5;
+  float edgeMaskMinEta = 1.5;
   /// Threshold for hit sharing between seeds.
-  float hit_share_threshold = 0.49;
+  float hitShareThreshold = 0.49;
 
   // GbtsDataStorage options
   /// Maximum endcap cluster width.
-  float max_endcap_clusterwidth = 0.35;
-
-  // 2 member functions
-  /// Calculate derived configuration quantities.
-  /// @return Configuration with derived quantities calculated
-  SeedFinderGbtsConfig calculateDerivedQuantities() const {
-    // thorw statement if the isInternalUnits member is false, ie if dont call
-    // this function
-    SeedFinderGbtsConfig config = *this;
-    // use a formula to calculate scattering
-
-    return config;
-  }
-
-  /// Convert configuration to internal units.
-  /// @return Configuration with values in internal units
-  SeedFinderGbtsConfig toInternalUnits() const {
-    // throw statement if the isInternalUnits member is false, ie if dont call
-    // this function
-    SeedFinderGbtsConfig config = *this;
-    // divides inputs by 1mm, all ones input
-    // changes member inInInternalUnits to true
-    return config;
-  }
-
-};  // end of config struct
+  float maxEndcapClusterWidth = 0.35;
+};
 
 }  // namespace Acts::Experimental

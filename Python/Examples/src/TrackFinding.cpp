@@ -7,8 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/Seeding/GbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
@@ -65,8 +65,8 @@ void addTrackFinding(py::module& mex) {
   }
 
   {
-    using Config = Acts::Experimental::SeedFinderGbtsConfig;
-    auto c = py::class_<Config>(mex, "SeedFinderGbtsConfig").def(py::init<>());
+    using Config = Acts::Experimental::GbtsConfig;
+    auto c = py::class_<Config>(mex, "GbtsConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, phiSliceWidth,
                        nMaxPhiSlice, lutInputFile);
     patchKwargsConstructor(c);
