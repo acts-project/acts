@@ -284,6 +284,7 @@ def addPythia8(
     printParticles: bool = False,
     printPythiaEventListing: Optional[Union[None, str]] = None,
     writeHepMC3: Optional[Path] = None,
+    hardProcessSelectors: Optional[Iterable] = None,
     printListing: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -360,6 +361,7 @@ def addPythia8(
                         printLongEventListing=printLongEventListing,
                         printShortEventListing=printShortEventListing,
                         writeHepMC3=writeHepMC3,
+                        eventSelectors=hardProcessSelectors,
                     ),
                 ),
             )
