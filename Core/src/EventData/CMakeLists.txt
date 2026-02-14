@@ -2,7 +2,6 @@ target_sources(
     ActsCore
     PRIVATE
         PrintParameters.cpp
-        TrackParameters.cpp
         TransformationHelpers.cpp
         CorrectedTransformationFreeToBound.cpp
         TrackStatePropMask.cpp

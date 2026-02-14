@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
 
 #include <unordered_map>
@@ -34,17 +34,17 @@ template <typename traj_t, typename parameters_t = BoundTrackParameters>
 std::pair<ActsDynamicMatrix, std::unordered_map<std::size_t, std::size_t>>
 globalTrackParametersCovariance(const traj_t& multiTraj,
                                 const std::size_t& entryIndex) {
-  using CovMatrix = typename parameters_t::CovarianceMatrix;
-  using GainMatrix = CovMatrix;
+  using CovMatrix = BoundMatrix;
+  using GainMatrix = BoundMatrix;
 
   // The last smoothed state index
-  std::size_t lastSmoothedIndex = Acts::kTrackIndexInvalid;
+  std::size_t lastSmoothedIndex = kTrackIndexInvalid;
   // The total number of smoothed states
   std::size_t nSmoothedStates = 0;
   // Visit all the states
   multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
     if (ts.hasSmoothed()) {
-      if (lastSmoothedIndex == Acts::kTrackIndexInvalid) {
+      if (lastSmoothedIndex == kTrackIndexInvalid) {
         lastSmoothedIndex = ts.index();
       }
       nSmoothedStates++;

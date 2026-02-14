@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
