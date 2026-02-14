@@ -13,7 +13,6 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <ActsExamples/Utilities/Paths.hpp>
 
 #include <stdexcept>
 #include <string>

@@ -81,8 +81,7 @@ class RootAthenaDumpReader : public IReader {
 
     /// A map that provides a mapping between ACTS and Athena surface
     /// identifiers
-    std::shared_ptr<ActsExamples::GeometryIdMapActsAthena> geometryIdMap =
-        nullptr;
+    std::shared_ptr<GeometryIdMapActsAthena> geometryIdMap = nullptr;
 
     /// Tracking Geometry that contains the surfaces where we project
     /// the measurements on
@@ -114,7 +113,7 @@ class RootAthenaDumpReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext &ctx) override;
+  ProcessCode read(const AlgorithmContext &ctx) override;
 
   /// Readonly access to the config
   const Config &config() const { return m_cfg; }

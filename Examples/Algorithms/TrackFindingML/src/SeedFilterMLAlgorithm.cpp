@@ -15,9 +15,10 @@ using namespace ActsPlugins;
 
 namespace ActsExamples {
 
-SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(Config cfg, Logging::Level lvl)
+SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(const Config& cfg,
+                                             Logging::Level lvl)
     : IAlgorithm("SeedFilterMLAlgorithm", lvl),
-      m_cfg(std::move(cfg)),
+      m_cfg(cfg),
       m_seedClassifier(m_cfg.inputSeedFilterNN.c_str()) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters input collection");

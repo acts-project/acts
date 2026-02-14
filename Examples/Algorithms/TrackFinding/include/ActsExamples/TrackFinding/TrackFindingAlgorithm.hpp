@@ -140,8 +140,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -150,7 +149,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   void computeSharedHits(TrackContainer& tracks,
                          const MeasurementContainer& measurements) const;
 
-  ActsExamples::ProcessCode finalize() override;
+  ProcessCode finalize() override;
 
  private:
   Config m_cfg;

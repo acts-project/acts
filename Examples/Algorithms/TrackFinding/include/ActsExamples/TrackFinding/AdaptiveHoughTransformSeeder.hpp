@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
@@ -26,11 +27,8 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-class TrackingGeometry;
-}
-
 namespace ActsExamples {
+
 // Helper class describing one section of the accumulator space
 class AccumulatorSection {
  public:
@@ -349,7 +347,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AdaptiveHoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+  AdaptiveHoughTransformSeeder(const Config &cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///

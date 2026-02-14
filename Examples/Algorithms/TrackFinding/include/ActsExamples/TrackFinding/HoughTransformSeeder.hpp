@@ -71,6 +71,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -90,10 +91,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class TrackingGeometry;
-}
 
 namespace ActsExamples {
 
@@ -230,7 +227,7 @@ class HoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  HoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+  HoughTransformSeeder(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///

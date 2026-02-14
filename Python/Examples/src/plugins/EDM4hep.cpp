@@ -37,11 +37,11 @@ using namespace ActsPython;
 using namespace ActsExamples;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::PodioReader, m, "PodioReader",
-                             inputPath, outputFrame, category);
+  ACTS_PYTHON_DECLARE_READER(PodioReader, m, "PodioReader", inputPath,
+                             outputFrame, category);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::PodioWriter, m, "PodioWriter",
-                             inputFrame, outputPath, category, collections,
+  ACTS_PYTHON_DECLARE_WRITER(PodioWriter, m, "PodioWriter", inputFrame,
+                             outputPath, category, collections,
                              separateFilesPerThread);
 
   py::class_<PodioOutputConverter, IAlgorithm,

@@ -33,17 +33,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
-namespace Acts {
-class TrackingGeometry;
-namespace detail {
-struct Step;
-}  // namespace detail
-}  // namespace Acts
-namespace ActsExamples {
-class IWriter;
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -125,9 +114,9 @@ void addOutput(py::module& mex) {
                              inputMeasurementParticlesMap,
                              inputMeasurementSimHitsMap, fileName, outputDir);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvVertexWriter, mex,
-                             "CsvVertexWriter", inputVertices, outputDir,
-                             outputStem, outputPrecision);
+  ACTS_PYTHON_DECLARE_WRITER(CsvVertexWriter, mex, "CsvVertexWriter",
+                             inputVertices, outputDir, outputStem,
+                             outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(
       CsvTrackingGeometryWriter, mex, "CsvTrackingGeometryWriter",

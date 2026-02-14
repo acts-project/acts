@@ -9,13 +9,14 @@
 #include "HelloRandomAlgorithm.hpp"
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <random>
 
 #include "HelloData.hpp"
 
-ActsExamples::HelloRandomAlgorithm::HelloRandomAlgorithm(
+namespace ActsExamples {
+
+HelloRandomAlgorithm::HelloRandomAlgorithm(
     const HelloRandomAlgorithm::Config& cfg, Acts::Logging::Level level)
     : IAlgorithm("HelloRandom", level), m_cfg(cfg) {
   if (!m_cfg.randomNumbers) {
@@ -27,12 +28,11 @@ ActsExamples::HelloRandomAlgorithm::HelloRandomAlgorithm(
   m_writeHandle.initialize(m_cfg.output);
 }
 
-ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode HelloRandomAlgorithm::execute(const AlgorithmContext& ctx) const {
   ACTS_INFO("Running random number generation");
 
   // Create the local random number generator
-  ActsExamples::RandomEngine rng = m_cfg.randomNumbers->spawnGenerator(ctx);
+  RandomEngine rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   // Spawn some random number distributions
   std::normal_distribution<double> gaussDist(m_cfg.gaussParameters[0],
@@ -69,5 +69,7 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
   // transfer generated data to the event store.
   m_writeHandle(ctx, std::move(collection));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

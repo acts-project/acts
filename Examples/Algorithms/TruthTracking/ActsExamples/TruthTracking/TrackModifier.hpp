@@ -17,7 +17,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Modify tracks based on configuration.
 class TrackModifier final : public IAlgorithm {

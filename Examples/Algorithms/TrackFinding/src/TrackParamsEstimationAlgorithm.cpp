@@ -30,8 +30,8 @@
 namespace ActsExamples {
 
 TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
-    TrackParamsEstimationAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("TrackParamsEstimationAlgorithm", lvl), m_cfg(std::move(cfg)) {
+    const Config& cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("TrackParamsEstimationAlgorithm", lvl), m_cfg(cfg) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");
   }

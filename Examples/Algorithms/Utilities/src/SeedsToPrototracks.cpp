@@ -9,7 +9,6 @@
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
 #include <utility>
