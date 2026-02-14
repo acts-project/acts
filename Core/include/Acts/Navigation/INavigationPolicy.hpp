@@ -104,6 +104,9 @@ class NavigationPolicyStateManager {
     m_stateStack.pop_back();
   }
 
+  /// Completely reset the state manager by clearing the stack
+  void reset() { m_stateStack.clear(); }
+
  private:
   friend class NavigationPolicyState;
 
@@ -211,7 +214,7 @@ class INavigationPolicy {
   /// @param logger Logger for debug output
   /// @return True if the policy state is valid, false otherwise
   virtual bool isValid([[maybe_unused]] const GeometryContext& gctx,
-                       [[maybe_unused]] const NavigationArguments args,
+                       [[maybe_unused]] const NavigationArguments& args,
                        [[maybe_unused]] NavigationPolicyState& state,
                        const Logger& logger) const {
     ACTS_VERBOSE("Default navigation policy isValid check. (always true)");
@@ -226,7 +229,7 @@ class INavigationPolicy {
   /// @param stateManager The state manager to push the new state onto
   /// @param logger Logger for debug output
   virtual void createState([[maybe_unused]] const GeometryContext& gctx,
-                           [[maybe_unused]] const NavigationArguments args,
+                           [[maybe_unused]] const NavigationArguments& args,
                            NavigationPolicyStateManager& stateManager,
                            const Logger& logger) const {
     ACTS_VERBOSE(

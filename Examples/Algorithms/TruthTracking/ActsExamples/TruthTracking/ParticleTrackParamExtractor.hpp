@@ -18,7 +18,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Extract track parameters from particles.
 class ParticleTrackParamExtractor final : public IAlgorithm {

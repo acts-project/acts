@@ -46,8 +46,7 @@ TrackTruthMatcher::TrackTruthMatcher(const Config& config,
   m_outputParticleTrackMatching.initialize(m_cfg.outputParticleTrackMatching);
 }
 
-ActsExamples::ProcessCode TrackTruthMatcher::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackTruthMatcher::execute(const AlgorithmContext& ctx) const {
   // Read input tracks
   const auto& tracks = m_inputTracks(ctx);
 

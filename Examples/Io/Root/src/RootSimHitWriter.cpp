@@ -15,15 +15,15 @@
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <ios>
-#include <ostream>
 #include <stdexcept>
 
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootSimHitWriter::RootSimHitWriter(
-    const ActsExamples::RootSimHitWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootSimHitWriter::RootSimHitWriter(const RootSimHitWriter::Config& config,
+                                   Acts::Logging::Level level)
     : WriterT(config.inputSimHits, "RootSimHitWriter", level), m_cfg(config) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -72,13 +72,13 @@ ActsExamples::RootSimHitWriter::RootSimHitWriter(
   m_outputTree->Branch("sensitive_id", &m_sensitiveId);
 }
 
-ActsExamples::RootSimHitWriter::~RootSimHitWriter() {
+RootSimHitWriter::~RootSimHitWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::finalize() {
+ProcessCode RootSimHitWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -89,8 +89,8 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
-    const AlgorithmContext& ctx, const ActsExamples::SimHitContainer& hits) {
+ProcessCode RootSimHitWriter::writeT(const AlgorithmContext& ctx,
+                                     const SimHitContainer& hits) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -131,5 +131,7 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
     // Fill the tree
     m_outputTree->Fill();
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
