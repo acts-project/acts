@@ -15,6 +15,7 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
@@ -68,8 +69,6 @@ template <typename traj_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
-
-  using ComponentCache = GsfComponent;
 
   /// Broadcast the result_type
   using result_type = GsfResult<traj_t>;
@@ -280,7 +279,7 @@ struct GsfActor {
       }
 
       // Reuse memory over all calls to the Actor in a single propagation
-      std::vector<ComponentCache>& componentCache = result.componentCache;
+      std::vector<GsfComponent>& componentCache = result.componentCache;
       componentCache.clear();
 
       convoluteComponents(state, stepper, navigator, tmpStates,
@@ -571,16 +570,16 @@ struct GsfActor {
       combinedState.copyFrom(firstCmpProxy, copyMask);
       combinedState.typeFlags() = type;
 
-      auto [prtMean, prtCov] =
-          mergeGaussianMixture(tmpStates.tips, surface, m_cfg.mergeMethod,
-                               PrtProjector{tmpStates.traj, tmpStates.weights});
+      auto [prtMean, prtCov] = mergeGaussianMixture(
+          tmpStates.tips, PrtProjector{tmpStates.traj, tmpStates.weights},
+          surface, m_cfg.mergeMethod);
       combinedState.predicted() = prtMean;
       combinedState.predictedCovariance() = prtCov;
 
       if (type.isMeasurement()) {
         auto [fltMean, fltCov] = mergeGaussianMixture(
-            tmpStates.tips, surface, m_cfg.mergeMethod,
-            FltProjector{tmpStates.traj, tmpStates.weights});
+            tmpStates.tips, FltProjector{tmpStates.traj, tmpStates.weights},
+            surface, m_cfg.mergeMethod);
         combinedState.filtered() = fltMean;
         combinedState.filteredCovariance() = fltCov;
 
@@ -598,21 +597,23 @@ struct GsfActor {
 
       result.fittedStates->applyBackwards(
           result.currentTip, [&](auto trackState) {
-            auto fSurface = &trackState.referenceSurface();
-            if (fSurface == &surface) {
-              result.surfacesVisitedBwdAgain.push_back(&surface);
-
-              if (trackState.hasSmoothed()) {
-                const auto [smtMean, smtCov] = mergeGaussianMixture(
-                    tmpStates.tips, surface, m_cfg.mergeMethod,
-                    FltProjector{tmpStates.traj, tmpStates.weights});
-
-                trackState.smoothed() = smtMean;
-                trackState.smoothedCovariance() = smtCov;
-              }
-              return false;
+            if (&trackState.referenceSurface() != &surface) {
+              return true;
             }
-            return true;
+
+            result.surfacesVisitedBwdAgain.push_back(&surface);
+
+            if (trackState.hasSmoothed()) {
+              const auto [smtMean, smtCov] = mergeGaussianMixture(
+                  tmpStates.tips,
+                  FltProjector{tmpStates.traj, tmpStates.weights}, surface,
+                  m_cfg.mergeMethod);
+
+              trackState.smoothed() = smtMean;
+              trackState.smoothedCovariance() = smtCov;
+            }
+
+            return false;
           });
     }
   }
