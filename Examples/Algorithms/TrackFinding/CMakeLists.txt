@@ -7,6 +7,7 @@ acts_add_library(
     src/AdaptiveHoughTransformSeeder.cpp
     src/TrackParamsEstimationAlgorithm.cpp
     src/MuonHoughSeeder.cpp
+    src/MuonSegmentFinder.cpp
     src/GbtsSeedingAlgorithm.cpp
     src/TrackParamsLookupEstimation.cpp
     src/GridTripletSeedingAlgorithm.cpp
