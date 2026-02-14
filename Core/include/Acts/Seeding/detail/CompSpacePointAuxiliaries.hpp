@@ -145,10 +145,9 @@ class CompSpacePointAuxiliaries {
     /// @brief Chi2 squared term
     double chi2{0.};
     /// @brief First derivative of the chi2 w.r.t. the fit parameters
-    Acts::ActsVector<s_nPars> gradient{Acts::ActsVector<s_nPars>::Zero()};
+    Acts::Vector<s_nPars> gradient{Acts::Vector<s_nPars>::Zero()};
     /// @brief Second derivative of the chi2 w.r.t. the fit parameters
-    Acts::ActsSquareMatrix<s_nPars> hessian{
-        Acts::ActsSquareMatrix<s_nPars>::Zero()};
+    Acts::SquareMatrix<s_nPars> hessian{Acts::SquareMatrix<s_nPars>::Zero()};
     /// @brief Set the chi2, the gradient and hessian back to zero
     void reset();
   };
@@ -390,7 +389,7 @@ class CompSpacePointAuxiliaries {
   std::array<double, s_nLinePars> m_partialApproachDist{
       filledArray<double, s_nLinePars>(0.)};
   /// @brief Transform matrix to treat stereo angles amongst the strips
-  ActsSquareMatrix<2> m_stereoTrf{ActsSquareMatrix<2>::Identity()};
+  SquareMatrix<2> m_stereoTrf{SquareMatrix<2>::Identity()};
 };
 
 }  // namespace Acts::Experimental::detail

@@ -425,7 +425,7 @@ class StraightLineStepper {
     if (state.covTransport) {
       // The step transport matrix in global coordinates
       FreeMatrix D = FreeMatrix::Identity();
-      D.block<3, 3>(0, 4) = ActsSquareMatrix<3>::Identity() * h;
+      D.block<3, 3>(0, 4) = SquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
       D(3, 7) = h * m * m * state.pars[eFreeQOverP] / dtds;

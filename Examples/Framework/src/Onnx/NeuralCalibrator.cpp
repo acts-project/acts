@@ -181,9 +181,9 @@ void NeuralCalibrator::calibrate(
         static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
             measurement);
 
-    ActsVector<kMeasurementSize> calibratedParameters =
+    Vector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
-    ActsSquareMatrix<kMeasurementSize> calibratedCovariance =
+    SquareMatrix<kMeasurementSize> calibratedCovariance =
         fixedMeasurement.covariance();
 
     calibratedParameters[boundLoc0] = output[iLoc0];

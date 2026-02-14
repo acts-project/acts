@@ -56,7 +56,7 @@ BOOST_FIXTURE_TEST_CASE(ConstructFromReadOnlyTrackStateProxy,
   auto track = container.makeTrack();
   auto state = container.trackStateContainer().makeTrackState();
   track.tipIndex() = state.index();
-  state.predicted() = ActsVector<eBoundSize>::Ones();
+  state.predicted() = Vector<eBoundSize>::Ones();
 
   TrackContainer constContainer{ConstVectorTrackContainer{trackContainer},
                                 ConstVectorMultiTrajectory{trajectory}};
@@ -74,8 +74,8 @@ BOOST_FIXTURE_TEST_CASE(AccessFiltered, TestTrackStateFixture) {
   auto state = container.trackStateContainer().makeTrackState();
   track.tipIndex() = state.index();
 
-  state.predicted() = ActsVector<eBoundSize>::Ones();
-  state.filtered() = 2. * ActsVector<eBoundSize>::Ones();
+  state.predicted() = Vector<eBoundSize>::Ones();
+  state.filtered() = 2. * Vector<eBoundSize>::Ones();
 
   AnyMutableTrackStateProxy anyState(state);
 
@@ -273,8 +273,8 @@ BOOST_FIXTURE_TEST_CASE(AccessSmoothed, TestTrackStateFixture) {
   track.tipIndex() = state.index();
 
   // Set smoothed parameters and covariance
-  state.smoothed() = ActsVector<eBoundSize>::Constant(5.);
-  state.smoothedCovariance() = ActsMatrix<eBoundSize, eBoundSize>::Identity();
+  state.smoothed() = Vector<eBoundSize>::Constant(5.);
+  state.smoothedCovariance() = Matrix<eBoundSize, eBoundSize>::Identity();
 
   AnyMutableTrackStateProxy anyState(state);
 
@@ -313,7 +313,7 @@ BOOST_FIXTURE_TEST_CASE(AccessJacobian, TestTrackStateFixture) {
   BOOST_CHECK(anyState.hasJacobian());
 
   // Set jacobian values
-  state.jacobian() = ActsMatrix<eBoundSize, eBoundSize>::Identity();
+  state.jacobian() = Matrix<eBoundSize, eBoundSize>::Identity();
   state.jacobian()(0, 1) = 0.5;
 
   // Access jacobian (mutable)
@@ -340,8 +340,8 @@ BOOST_FIXTURE_TEST_CASE(AccessParametersAndCovariance, TestTrackStateFixture) {
   track.tipIndex() = state.index();
 
   // Set predicted parameters and covariance
-  state.predicted() = ActsVector<eBoundSize>::Constant(3.);
-  state.predictedCovariance() = ActsMatrix<eBoundSize, eBoundSize>::Identity();
+  state.predicted() = Vector<eBoundSize>::Constant(3.);
+  state.predictedCovariance() = Matrix<eBoundSize, eBoundSize>::Identity();
   state.predictedCovariance()(1, 1) = 2.;
 
   AnyMutableTrackStateProxy anyState(state);
@@ -603,10 +603,10 @@ BOOST_FIXTURE_TEST_CASE(UnsetComponents, TestTrackStateFixture) {
   track.tipIndex() = state.index();
 
   // Add various components
-  state.predicted() = ActsVector<eBoundSize>::Ones();
-  state.filtered() = 2. * ActsVector<eBoundSize>::Ones();
-  state.smoothed() = 3. * ActsVector<eBoundSize>::Ones();
-  state.jacobian() = ActsMatrix<eBoundSize, eBoundSize>::Identity();
+  state.predicted() = Vector<eBoundSize>::Ones();
+  state.filtered() = 2. * Vector<eBoundSize>::Ones();
+  state.smoothed() = 3. * Vector<eBoundSize>::Ones();
+  state.jacobian() = Matrix<eBoundSize, eBoundSize>::Identity();
   state.allocateCalibrated(2);
 
   AnyMutableTrackStateProxy anyState(state);
@@ -650,9 +650,9 @@ BOOST_FIXTURE_TEST_CASE(AllocateCalibratedWithEigen, TestTrackStateFixture) {
   AnyMutableTrackStateProxy anyState(state);
 
   // Allocate with Eigen objects
-  ActsVector<2> val;
+  Vector<2> val;
   val << 1.5, 2.5;
-  ActsSquareMatrix<2> cov;
+  SquareMatrix<2> cov;
   cov << 0.1, 0.01, 0.01, 0.2;
 
   anyState.allocateCalibrated(val, cov);

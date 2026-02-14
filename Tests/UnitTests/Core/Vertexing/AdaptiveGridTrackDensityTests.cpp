@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(
   BoundTrackParameters params(perigeeSurface, paramVec, covMat,
                               ParticleHypothesis::pion());
 
-  ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
+  SquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
   AdaptiveGridTrackDensity::Config cfg;
   // force track to have exactly spatialTrkGridSize spatial bins for testing
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(
   // The analytical calculations of the following can be found here:
   // https://acts.readthedocs.io/en/latest/white_papers/gaussian-track-densities.html
   // Analytical maximum of the Gaussian
-  ActsSquareMatrix<3> ipWeights = ipCov.inverse();
+  SquareMatrix<3> ipWeights = ipCov.inverse();
   double denom =
       ipWeights(1, 1) * ipWeights(2, 2) - ipWeights(1, 2) * ipWeights(1, 2);
 
