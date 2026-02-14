@@ -8,11 +8,7 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
 
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
-
-#include <stdexcept>
 
 #include <edm4hep/TrackCollection.h>
 #include <podio/Frame.h>
@@ -27,7 +23,7 @@ EDM4hepTrackOutputConverter::EDM4hepTrackOutputConverter(
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode EDM4hepTrackOutputConverter::execute(
+ProcessCode EDM4hepTrackOutputConverter::execute(
     const AlgorithmContext& context) const {
   edm4hep::TrackCollection trackCollection;
 

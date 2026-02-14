@@ -377,8 +377,7 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      std::vector<
-          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+      std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
           inflatedParamVector;
       assert(!fwdGsfResult.lastMeasurementComponents.empty());
       assert(fwdGsfResult.lastMeasurementSurface != nullptr);
@@ -507,10 +506,12 @@ struct GaussianSumFitter {
       const auto& params = *bwdResult->endParameters;
 
       const auto [finalPars, finalCov] = detail::Gsf::mergeGaussianMixture(
-          params.components(), params.referenceSurface(),
-          options.componentMergeMethod, [](auto& t) {
-            return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
-          });
+          params.components(),
+          [](const auto& cmp) {
+            const auto& [weight_l, pars_l, opt_cov_l] = cmp;
+            return std::tie(weight_l, pars_l, *opt_cov_l);
+          },
+          params.referenceSurface(), options.componentMergeMethod);
 
       track.parameters() = finalPars;
       track.covariance() = finalCov;

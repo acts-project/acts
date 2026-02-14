@@ -48,9 +48,8 @@ auto MultiStepperLoop<S, R>::boundState(
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
-      cmps.emplace_back(
-          state.components[i].weight, btp.parameters(),
-          btp.covariance().value_or(Acts::BoundSquareMatrix::Zero()));
+      cmps.emplace_back(state.components[i].weight, btp.parameters(),
+                        btp.covariance().value_or(Acts::BoundMatrix::Zero()));
       accumulatedPathLength +=
           std::get<double>(*bs) * state.components[i].weight;
     }
@@ -70,8 +69,7 @@ auto MultiStepperLoop<S, R>::curvilinearState(
     State& state, bool transportCov) const -> BoundState {
   assert(!state.components.empty());
 
-  std::vector<std::tuple<double, Vector4, Vector3, double, BoundSquareMatrix>>
-      cmps;
+  std::vector<std::tuple<double, Vector4, Vector3, double, BoundMatrix>> cmps;
   cmps.reserve(numberComponents(state));
   double accumulatedPathLength = 0.0;
 
@@ -82,7 +80,7 @@ auto MultiStepperLoop<S, R>::curvilinearState(
     cmps.emplace_back(state.components[i].weight,
                       cp.fourPosition(state.options.geoContext), cp.direction(),
                       cp.qOverP(),
-                      cp.covariance().value_or(BoundSquareMatrix::Zero()));
+                      cp.covariance().value_or(BoundMatrix::Zero()));
     accumulatedPathLength += state.components[i].weight * pl;
   }
 

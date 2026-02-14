@@ -8,14 +8,9 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
-
-#include <stdexcept>
 
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
@@ -34,7 +29,7 @@ EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
   m_outputTrackerHitsRaw.initialize(m_cfg.outputTrackerHitsRaw);
 }
 
-ActsExamples::ProcessCode EDM4hepMeasurementOutputConverter::execute(
+ProcessCode EDM4hepMeasurementOutputConverter::execute(
     const AlgorithmContext& ctx) const {
   ClusterContainer clusters;
 
@@ -65,7 +60,7 @@ ActsExamples::ProcessCode EDM4hepMeasurementOutputConverter::execute(
   m_outputTrackerHitsPlane(ctx, std::move(hitsPlane));
   m_outputTrackerHitsRaw(ctx, std::move(hits));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
 std::vector<std::string> EDM4hepMeasurementOutputConverter::collections()

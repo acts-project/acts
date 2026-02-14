@@ -12,10 +12,10 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include <ActsExamples/Digitization/MeasurementCreation.hpp>
 
 #include <algorithm>
 
@@ -24,13 +24,14 @@
 
 using namespace Acts::UnitLiterals;
 
+namespace ActsExamples {
+
 namespace {
 
 /// In cases when there is built up a particle collection in an iterative way it
 /// can be way faster to build up a vector and afterwards use a special
 /// constructor to speed up the set creation.
-inline auto particleVectorToSet(
-    std::vector<ActsExamples::SimParticle>& particles) {
+inline auto particleVectorToSet(std::vector<SimParticle>& particles) {
   using namespace ActsExamples;
   auto cmp = [](const auto& a, const auto& b) {
     return a.particleId() == b.particleId();
@@ -47,8 +48,6 @@ inline auto particleVectorToSet(
 }  // namespace
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
-
-namespace ActsExamples {
 
 RootAthenaDumpReader::RootAthenaDumpReader(
     const RootAthenaDumpReader::Config& config, Acts::Logging::Level level)
@@ -647,7 +646,7 @@ std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
 RootAthenaDumpReader::reprocessParticles(
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
-  std::vector<ActsExamples::SimParticle> newParticles;
+  std::vector<SimParticle> newParticles;
   newParticles.reserve(particles.size());
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
   newMeasPartMap.reserve(measPartMap.size());

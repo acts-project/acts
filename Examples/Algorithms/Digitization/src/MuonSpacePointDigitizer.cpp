@@ -12,12 +12,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
-#include "Acts/Utilities/ArrayHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
@@ -28,14 +24,6 @@
 #include <format>
 #include <map>
 #include <ranges>
-
-#include "TArrow.h"
-#include "TBox.h"
-#include "TCanvas.h"
-#include "TEllipse.h"
-#include "TH2I.h"
-#include "TROOT.h"
-#include "TStyle.h"
 
 using namespace Acts;
 using namespace detail::LineHelper;
@@ -52,43 +40,6 @@ constexpr double quantize(const double x, const double pitch) {
     return std::max(std::floor(x - 0.5 * pitch) / pitch, 0.) * pitch;
   }
   return -quantize(-x, pitch);
-}
-/// @brief Returns the half-height of a trapezoid / rectangular bounds
-/// @param bounds: Rectangle / Trapezoid bounds to fetch the half height from
-double halfHeight(const SurfaceBounds& bounds) {
-  if (bounds.type() == SurfaceBounds::BoundsType::eRectangle) {
-    return static_cast<const RectangleBounds&>(bounds).get(
-        RectangleBounds::eMaxY);
-  }
-  // Trapezoid -> endcap
-  else if (bounds.type() == SurfaceBounds::BoundsType::eTrapezoid) {
-    return static_cast<const TrapezoidBounds&>(bounds).get(
-        TrapezoidBounds::eHalfLengthY);
-  }
-  return std::numeric_limits<double>::max();
-}
-/// @brief Draw a circle at position
-std::unique_ptr<TEllipse> drawCircle(const double x, double y, const double r,
-                                     const int color = kBlack,
-                                     const int fillStyle = 0) {
-  auto circle = std::make_unique<TEllipse>(x, y, r);
-  circle->SetLineColor(color);
-  circle->SetFillStyle(fillStyle);
-  circle->SetLineWidth(1);
-  circle->SetFillColorAlpha(color, 0.2);
-  return circle;
-}
-/// @brief Draw a box at position
-std::unique_ptr<TBox> drawBox(const double cX, const double cY, const double wX,
-                              const double wY, const int color = kBlack,
-                              const int fillStyle = 3344) {
-  auto box = std::make_unique<TBox>(cX - 0.5 * wX, cY - 0.5 * wY, cX + 0.5 * wX,
-                                    cY + 0.5 * wY);
-  box->SetLineColor(color);
-  box->SetFillStyle(fillStyle);
-  box->SetLineWidth(1);
-  box->SetFillColorAlpha(color, 0.2);
-  return box;
 }
 
 constexpr GeometryIdentifier toChamberId(const GeometryIdentifier& id) {
@@ -114,14 +65,23 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements output collection");
   }
+  if (m_cfg.outputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-particles map output collection");
+  }
   if (m_cfg.outputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map output collection");
+  }
+  if (m_cfg.outputParticleMeasurementsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing particle-to-measurements map output collection");
   }
   if (m_cfg.outputSimHitMeasurementsMap.empty()) {
     throw std::invalid_argument(
         "Missing particle-to-simulated-hits map output collection");
   }
+
   ACTS_DEBUG("Retrieve sim hits and particles from "
              << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
   ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
@@ -129,12 +89,16 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementParticlesMap.initialize(
+      m_cfg.outputMeasurementParticlesMap);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+  m_outputParticleMeasurementsMap.initialize(
+      m_cfg.outputParticleMeasurementsMap);
   m_outputSimHitMeasurementsMap.initialize(m_cfg.outputSimHitMeasurementsMap);
 }
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
-  using enum ActsExamples::ProcessCode;
+  using enum ProcessCode;
   if (!m_cfg.trackingGeometry) {
     ACTS_ERROR("No tracking geometry was parsed");
     return ABORT;
@@ -147,7 +111,6 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
   m_cfg.calibrator =
       std::make_unique<MuonSpacePointCalibrator>(calibCfg, logger().clone());
 
-  gROOT->SetStyle("ATLAS");
   return SUCCESS;
 }
 
@@ -192,8 +155,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
   // Prepare output containers
   // need list here for stable addresses
   MeasurementContainer measurements;
+
+  IndexMultimap<SimBarcode> measurementParticlesMap;
   IndexMultimap<Index> measurementSimHitsMap;
   measurements.reserve(gotSimHits.size());
+  measurementParticlesMap.reserve(gotSimHits.size());
   measurementSimHitsMap.reserve(gotSimHits.size());
 
   using MuonId_t = MuonSpacePoint::MuonId;
@@ -319,6 +285,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
               auto measurement =
                   createMeasurement(measurements, moduleGeoId, dParameters);
+              measurementParticlesMap.emplace_hint(
+                  measurementParticlesMap.end(), measurement.index(),
+                  gotSimHits.nth(simHitIdx)->particleId());
               measurementSimHitsMap.emplace_hint(
                   measurementSimHitsMap.end(), measurement.index(), simHitIdx);
 
@@ -422,6 +391,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
           auto measurement =
               createMeasurement(measurements, moduleGeoId, dParameters);
+          measurementParticlesMap.emplace_hint(
+              measurementParticlesMap.end(), measurement.index(),
+              gotSimHits.nth(simHitIdx)->particleId());
           measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                              measurement.index(), simHitIdx);
           break;
@@ -452,161 +424,32 @@ ProcessCode MuonSpacePointDigitizer::execute(
                              << volId << "\n"
                              << sstr.str());
       }
-      visualizeBucket(ctx, gctx, bucket);
+      if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
+        const TrackingVolume* chambVolume =
+            trackingGeometry().findVolume(volId);
+        assert(chambVolume != nullptr);
+        const std::string outputPath = std::format(
+            "Event_{}_{}.pdf", ctx.eventNumber, chambVolume->volumeName());
+        m_cfg.visualizationFunction(outputPath, gctx, bucket,
+                                    m_inputSimHits(ctx), m_inputParticles(ctx),
+                                    trackingGeometry(), logger());
+      }
       outSpacePoints.push_back(std::move(bucket));
     }
   }
 
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
   m_outputMeasurements(ctx, std::move(measurements));
+
+  m_outputParticleMeasurementsMap(ctx,
+                                  invertIndexMultimap(measurementParticlesMap));
   m_outputSimHitMeasurementsMap(ctx,
                                 invertIndexMultimap(measurementSimHitsMap));
+
+  m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
   m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
 
   return ProcessCode::SUCCESS;
-}
-
-RangeXD<2, double> MuonSpacePointDigitizer::canvasRanges(
-    const MuonSpacePointBucket& bucket) const {
-  RangeXD<2, double> ranges{
-      filledArray<double, 2>(std::numeric_limits<double>::max()),
-      filledArray<double, 2>(-std::numeric_limits<double>::max())};
-  // Extra margin such that the canvas axes don't overlap with the depicted
-  // measurements
-  constexpr double extra = 3._cm;
-  for (const auto& sp : bucket) {
-    const Vector3& pos = sp.localPosition();
-    ranges.expand(0, pos.z() - extra, pos.z() + extra);
-    ranges.expand(1, pos.y() - extra, pos.y() + extra);
-  }
-  return ranges;
-}
-
-bool MuonSpacePointDigitizer::isSurfaceToDraw(
-    const Acts::GeometryContext& gctx, const Surface& surface,
-    const RangeXD<2, double>& canvasBoundaries) const {
-  // Draw only active surfaces
-  if (!surface.isSensitive()) {
-    return false;
-  }
-  // surface position in the frame
-  const Vector3 pos =
-      toSpacePointFrame(gctx, surface.geometryId()).translation();
-  const auto& bounds = surface.bounds();
-
-  if (surface.type() == Surface::SurfaceType::Plane) {
-    const double hL{halfHeight(bounds)};
-    // check whether the surface is inside the visible range
-    const double minZ = std::max(pos.z() - hL, canvasBoundaries.min(0));
-    const double maxZ = std::min(pos.z() + hL, canvasBoundaries.max(0));
-    // The maximum is below the left side of the strip plane
-    // or the minimum is above the right side of the plane
-    return maxZ > pos.z() - hL && minZ < pos.z() + hL &&
-           pos.y() > canvasBoundaries.min(1) &&
-           pos.y() < canvasBoundaries.max(1);
-  } else if (surface.type() == Surface::SurfaceType::Straw) {
-    const double r = static_cast<const LineBounds&>(bounds).get(LineBounds::eR);
-    // Check that the straw surface is well embedded on the canvas
-    return pos.y() - r > canvasBoundaries.min(1) &&
-           pos.y() + r < canvasBoundaries.max(1) &&
-           pos.z() - r > canvasBoundaries.min(0) &&
-           pos.z() + r < canvasBoundaries.max(0);
-  }
-
-  return false;
-}
-void MuonSpacePointDigitizer::visualizeBucket(
-    const AlgorithmContext& ctx, const GeometryContext& gctx,
-    const MuonSpacePointBucket& bucket) const {
-  if (!m_cfg.dumpVisualization) {
-    return;
-  }
-  auto canvas = std::make_unique<TCanvas>("can", "can", 600, 600);
-  canvas->cd();
-
-  const GeometryIdentifier chambId = toChamberId(bucket.front().geometryId());
-
-  std::vector<std::unique_ptr<TObject>> primitives{};
-
-  const RangeXD<2, double> canvasBound{canvasRanges(bucket)};
-  /// Draw the frame
-  auto frame = std::make_unique<TH2I>("frame", "frame;z [mm];y [mm]", 1,
-                                      canvasBound.min(0), canvasBound.max(0), 1,
-                                      canvasBound.min(1), canvasBound.max(1));
-  frame->Draw("AXIS");
-
-  // Loop over all surfaces inside the chamber volume to draw the ones covered
-  // by the canvas
-  const TrackingVolume* chambVolume = trackingGeometry().findVolume(chambId);
-  assert(chambVolume != nullptr);
-  chambVolume->apply(overloaded{
-      [this, &canvasBound, &gctx, &primitives](const Surface& surface) {
-        if (!isSurfaceToDraw(gctx, surface, canvasBound)) {
-          return;
-        }
-        const Vector3 pos =
-            toSpacePointFrame(gctx, surface.geometryId()).translation();
-        const auto& bounds = surface.bounds();
-        if (surface.type() == Surface::SurfaceType::Plane) {
-          const double hL{halfHeight(bounds)};
-          const double minZ = std::max(pos.z() - hL, canvasBound.min(0));
-          const double maxZ = std::min(pos.z() + hL, canvasBound.max(0));
-          primitives.push_back(drawBox(0.5 * (minZ + maxZ), pos.y(),
-                                       maxZ - minZ, 0.3_cm, kBlack, 0));
-
-        } else if (surface.type() == Surface::SurfaceType::Straw) {
-          const double r =
-              static_cast<const LineBounds&>(bounds).get(LineBounds::eR);
-          primitives.push_back(drawCircle(pos.z(), pos.y(), r, kBlack, 0));
-        }
-      }});
-
-  for (auto& sp : bucket) {
-    const Vector3& pos = sp.localPosition();
-    if (sp.isStraw()) {
-      primitives.push_back(
-          drawCircle(pos.z(), pos.y(), sp.driftRadius(), kRed, 0));
-    } else {
-      primitives.push_back(
-          drawBox(pos.z(), pos.y(), 3._cm, 0.5_cm, kRed, 1001));
-    }
-  }
-  // Finally draw the muon trajectory
-  const SimHitContainer& gotSimHits = m_inputSimHits(ctx);
-  const SimParticleContainer& simParticles = m_inputParticles(ctx);
-  for (const auto& simHit : gotSimHits) {
-    if (chambId != toChamberId(simHit.geometryId())) {
-      continue;
-    }
-    const auto simPartItr = simParticles.find(simHit.particleId());
-    if (simPartItr == simParticles.end() ||
-        (*simPartItr).hypothesis() != ParticleHypothesis::muon()) {
-      continue;
-    }
-    const auto toSpTrf = toSpacePointFrame(gctx, simHit.geometryId()) *
-                         trackingGeometry()
-                             .findSurface(simHit.geometryId())
-                             ->localToGlobalTransform(gctx)
-                             .inverse();
-    const Vector3 pos = toSpTrf * simHit.position();
-    const Vector3 dir = toSpTrf.linear() * simHit.direction();
-    constexpr double arrowL = 1._cm;
-    const Vector3 start = pos - 0.5 * arrowL * dir;
-    const Vector3 end = pos + 0.5 * arrowL * dir;
-    auto arrow =
-        std::make_unique<TArrow>(start.z(), start.y(), end.z(), end.y(), 0.03);
-    arrow->SetLineColor(kBlue + 1);
-    arrow->SetLineWidth(1);
-    arrow->SetLineStyle(kSolid);
-    primitives.push_back(std::move(arrow));
-  }
-
-  for (auto& prim : primitives) {
-    prim->Draw();
-  }
-  canvas->SaveAs(
-      std::format("Event_{}_{}.pdf", ctx.eventNumber, chambVolume->volumeName())
-          .c_str());
 }
 
 }  // namespace ActsExamples

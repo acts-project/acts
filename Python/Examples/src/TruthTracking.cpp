@@ -17,6 +17,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/TruthTracking/VertexTruthMatcher.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -143,6 +144,11 @@ void addTruthTracking(py::module& mex) {
       TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks, inputParticles,
       inputMeasurementParticlesMap, outputTrackParticleMatching,
       outputParticleTrackMatching, matchingRatio, doubleMatching);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      VertexTruthMatcher, mex, "VertexTruthMatcher", inputVertices, inputTracks,
+      inputParticles, inputTrackParticleMatching, outputVertexTruthMatching,
+      outputTruthVertexMatching, vertexMatchThreshold, minTrkWeight);
 }
 
 }  // namespace ActsPython

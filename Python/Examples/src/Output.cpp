@@ -7,8 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Visualization/IVisualization3D.hpp"
-#include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvGnnGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
@@ -27,7 +25,6 @@
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
@@ -36,17 +33,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
-
-namespace Acts {
-class TrackingGeometry;
-namespace detail {
-struct Step;
-}  // namespace detail
-}  // namespace Acts
-namespace ActsExamples {
-class IWriter;
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -133,9 +119,9 @@ void addOutput(py::module& mex) {
                              inputMeasurementParticlesMap,
                              inputMeasurementSimHitsMap, fileName, outputDir);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvVertexWriter, mex,
-                             "CsvVertexWriter", inputVertices, outputDir,
-                             outputStem, outputPrecision);
+  ACTS_PYTHON_DECLARE_WRITER(CsvVertexWriter, mex, "CsvVertexWriter",
+                             inputVertices, outputDir, outputStem,
+                             outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(
       CsvTrackingGeometryWriter, mex, "CsvTrackingGeometryWriter",
