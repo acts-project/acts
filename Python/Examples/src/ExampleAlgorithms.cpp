@@ -6,43 +6,38 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
 
-using namespace ActsExamples;
 using namespace Acts;
+using namespace ActsExamples;
 
 namespace ActsPython {
 
 void addExampleAlgorithms(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
+      FatrasSimulation, mex, "FatrasSimulation", inputParticles,
       outputParticles, outputSimHits, randomNumbers, trackingGeometry,
       magneticField, pMin, emScattering, emEnergyLossIonisation,
       emEnergyLossRadiation, emPhotonConversion, generateHitsOnSensitive,
       generateHitsOnMaterial, generateHitsOnPassive, averageHitsPerParticle);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
-                                "ParticlesPrinter", inputParticles);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ParticlesPrinter, mex, "ParticlesPrinter",
+                                inputParticles);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParametersPrinter, mex,
+  ACTS_PYTHON_DECLARE_ALGORITHM(TrackParametersPrinter, mex,
                                 "TrackParametersPrinter", inputTrackParameters);
 
   {
-    using Alg = ActsExamples::TrackSelectorAlgorithm;
+    using Alg = TrackSelectorAlgorithm;
     using Config = Alg::Config;
 
     auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
@@ -56,4 +51,5 @@ void addExampleAlgorithms(py::module& mex) {
     ACTS_PYTHON_STRUCT(c, inputTracks, outputTracks, selectorConfig);
   }
 }
+
 }  // namespace ActsPython

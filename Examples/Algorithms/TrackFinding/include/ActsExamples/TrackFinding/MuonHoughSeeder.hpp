@@ -83,7 +83,7 @@ class MuonHoughSeeder final : public IAlgorithm {
         visualizationFunction{};
   };
 
-  MuonHoughSeeder(Config cfg, Acts::Logging::Level lvl);
+  MuonHoughSeeder(const Config& cfg, Acts::Logging::Level lvl);
   ~MuonHoughSeeder() override;
 
   /// Run the seeding algorithm.

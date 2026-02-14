@@ -8,25 +8,20 @@
 
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Geometry/Layer.hpp>
-#include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <ActsPlugins/ActSVG/LayerSvgConverter.hpp>
 
-#include <iostream>
-#include <string>
+namespace ActsExamples {
 
-ActsExamples::SvgTrackingGeometryWriter::SvgTrackingGeometryWriter(
-    const ActsExamples::SvgTrackingGeometryWriter::Config& config,
-    Acts::Logging::Level level)
+SvgTrackingGeometryWriter::SvgTrackingGeometryWriter(
+    const SvgTrackingGeometryWriter::Config& config, Acts::Logging::Level level)
     : m_logger{Acts::getDefaultLogger(name(), level)}, m_cfg(config) {}
 
-std::string ActsExamples::SvgTrackingGeometryWriter::name() const {
+std::string SvgTrackingGeometryWriter::name() const {
   return "SvgTrackingGeometryWriter";
 }
 
-ActsExamples::ProcessCode ActsExamples::SvgTrackingGeometryWriter::write(
+ProcessCode SvgTrackingGeometryWriter::write(
     const AlgorithmContext& context, const Acts::TrackingGeometry& tGeometry) {
   ACTS_DEBUG(">>Svg: Writer for TrackingGeometry object called.");
 
@@ -41,5 +36,7 @@ ActsExamples::ProcessCode ActsExamples::SvgTrackingGeometryWriter::write(
                              joinPaths(m_cfg.outputDir, sheet._id + ".svg"));
   }
   // Successfully done
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

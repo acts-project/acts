@@ -18,21 +18,24 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
+namespace ActsExamples {
+
+namespace {
+
 static std::size_t sourceLinkHash(const SourceLink& a) {
-  return static_cast<std::size_t>(
-      a.get<ActsExamples::IndexSourceLink>().index());
+  return static_cast<std::size_t>(a.get<IndexSourceLink>().index());
 }
 
 static bool sourceLinkEquality(const SourceLink& a, const SourceLink& b) {
-  return a.get<ActsExamples::IndexSourceLink>().index() ==
-         b.get<ActsExamples::IndexSourceLink>().index();
+  return a.get<IndexSourceLink>().index() == b.get<IndexSourceLink>().index();
 }
 
-ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
-    ActsExamples::AmbiguityResolutionMLAlgorithm::Config cfg,
-    Logging::Level lvl)
-    : ActsExamples::IAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
-      m_cfg(std::move(cfg)),
+}  // namespace
+
+AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
+    const Config& cfg, Logging::Level lvl)
+    : IAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
+      m_cfg(cfg),
       m_ambiML(m_cfg.toAmbiguityResolutionMLConfig(), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
@@ -44,7 +47,7 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
+ProcessCode AmbiguityResolutionMLAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Read input data
   const auto& tracks = m_inputTracks(ctx);
@@ -69,12 +72,13 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 
-  ActsExamples::ConstTrackContainer outputTracks{
-      std::make_shared<ConstVectorTrackContainer>(
-          std::move(solvedTracks.container())),
-      tracks.trackStateContainerHolder()};
+  ConstTrackContainer outputTracks{std::make_shared<ConstVectorTrackContainer>(
+                                       std::move(solvedTracks.container())),
+                                   tracks.trackStateContainerHolder()};
 
   m_outputTracks(ctx, std::move(outputTracks));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

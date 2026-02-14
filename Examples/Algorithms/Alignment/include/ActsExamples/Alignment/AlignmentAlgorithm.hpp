@@ -16,11 +16,13 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 
-#include <functional>
 #include <memory>
 #include <vector>
+
+namespace Acts {
+class MagneticFieldProvider;
+}
 
 namespace ActsExamples {
 
@@ -122,8 +124,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
  private:
   Config m_cfg;

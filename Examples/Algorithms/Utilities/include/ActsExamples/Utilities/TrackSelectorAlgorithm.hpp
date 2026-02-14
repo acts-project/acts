@@ -16,11 +16,9 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
-#include <limits>
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Select tracks by applying some selection cuts.
 class TrackSelectorAlgorithm final : public IAlgorithm {

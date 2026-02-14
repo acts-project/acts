@@ -24,27 +24,27 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iterator>
 #include <ostream>
 #include <stdexcept>
-#include <variant>
+
+namespace ActsExamples {
 
 static inline int quant(double min, double max, unsigned nSteps, double val);
 static inline double unquant(double min, double max, unsigned nSteps, int step);
 template <typename T>
 static inline std::string to_string(std::vector<T> v);
 
-thread_local std::vector<std::shared_ptr<ActsExamples::HoughMeasurementStruct>>
+thread_local std::vector<std::shared_ptr<HoughMeasurementStruct>>
     houghMeasurementStructs;
 
-ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
-    ActsExamples::HoughTransformSeeder::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("HoughTransformSeeder", lvl),
-      m_cfg(std::move(cfg)),
+HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
+                                           Acts::Logging::Level lvl)
+    : IAlgorithm("HoughTransformSeeder", lvl),
+      m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("HoughTransformSeeder", lvl)) {
   // require spacepoints or input measurements (or both), but at least one kind
   // of input
@@ -148,15 +148,12 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   }
 
   m_cfg.fieldCorrector
-      .connect<&ActsExamples::DefaultHoughFunctions::fieldCorrectionDefault>();
-  m_cfg.layerIDFinder
-      .connect<&ActsExamples::DefaultHoughFunctions::findLayerIDDefault>();
-  m_cfg.sliceTester
-      .connect<&ActsExamples::DefaultHoughFunctions::inSliceDefault>();
+      .connect<&DefaultHoughFunctions::fieldCorrectionDefault>();
+  m_cfg.layerIDFinder.connect<&DefaultHoughFunctions::findLayerIDDefault>();
+  m_cfg.sliceTester.connect<&DefaultHoughFunctions::inSliceDefault>();
 }
 
-ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode HoughTransformSeeder::execute(const AlgorithmContext& ctx) const {
   // clear our Hough measurements out from the previous iteration, if at all
   houghMeasurementStructs.clear();
 
@@ -172,7 +169,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
   // loop over our subregions and run the Hough Transform on each
   for (int subregion : m_cfg.subRegions) {
     ACTS_DEBUG("Processing subregion " << subregion);
-    ActsExamples::HoughHist m_houghHist = createHoughHist(subregion);
+    HoughHist m_houghHist = createHoughHist(subregion);
 
     for (unsigned y = 0; y < m_cfg.houghHistSize_y; y++) {
       for (unsigned x = 0; x < m_cfg.houghHistSize_x; x++) {
@@ -216,15 +213,13 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
   m_outputProtoTracks(ctx, ProtoTrackContainer{protoTracks});
   // clear the vector
   houghMeasurementStructs.clear();
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::HoughHist
-ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
-                                                         int subregion) const {
-  ActsExamples::HoughHist houghHist(
-      Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
-      Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));
+HoughHist HoughTransformSeeder::createLayerHoughHist(unsigned layer,
+                                                     int subregion) const {
+  HoughHist houghHist(Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
+                      Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));
   for (unsigned index = 0; index < houghMeasurementStructs.size(); index++) {
     HoughMeasurementStruct* meas = houghMeasurementStructs[index].get();
     if (meas->layer != layer) {
@@ -255,11 +250,9 @@ ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
   return houghHist;
 }
 
-ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
-    int subregion) const {
-  ActsExamples::HoughHist houghHist(
-      Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
-      Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));
+HoughHist HoughTransformSeeder::createHoughHist(int subregion) const {
+  HoughHist houghHist(Axis(0, m_cfg.houghHistSize_y, m_cfg.houghHistSize_y),
+                      Axis(0, m_cfg.houghHistSize_x, m_cfg.houghHistSize_x));
 
   for (unsigned i = 0; i < m_cfg.nLayers; i++) {
     HoughHist layerHoughHist = createLayerHoughHist(i, subregion);
@@ -278,8 +271,8 @@ ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
   return houghHist;
 }
 
-bool ActsExamples::HoughTransformSeeder::passThreshold(
-    HoughHist const& houghHist, unsigned x, unsigned y) const {
+bool HoughTransformSeeder::passThreshold(HoughHist const& houghHist, unsigned x,
+                                         unsigned y) const {
   // Pass window threshold
   unsigned width = m_cfg.threshold.size() / 2;
   if (x < width || m_cfg.houghHistSize_x - x < width) {
@@ -352,11 +345,9 @@ static inline std::string to_string(std::vector<T> v) {
   return oss.str();
 }
 
-double ActsExamples::HoughTransformSeeder::yToX(double y, double r,
-                                                double phi) const {
+double HoughTransformSeeder::yToX(double y, double r, double phi) const {
   double d0 = 0;  // d0 correction TO DO allow for this
-  double x =
-      asin(r * ActsExamples::HoughTransformSeeder::m_cfg.kA * y - d0 / r) + phi;
+  double x = asin(r * HoughTransformSeeder::m_cfg.kA * y - d0 / r) + phi;
 
   if (m_cfg.fieldCorrector.connected()) {
     x += (m_cfg.fieldCorrector(0, y, r)).value();
@@ -368,7 +359,7 @@ double ActsExamples::HoughTransformSeeder::yToX(double y, double r,
 // Find the min/max x bins of the hit's line, in each y bin. Max is exclusive.
 // Note this assumes yToX is monotonic. Returns {0, 0} if hit lies out of
 // bounds.
-std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
+std::pair<unsigned, unsigned> HoughTransformSeeder::yToXBins(
     std::size_t yBin_min, std::size_t yBin_max, double r, double phi,
     unsigned layer) const {
   double x_min = yToX(m_bins_y[yBin_min], r, phi);
@@ -403,8 +394,7 @@ std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
 
 // We allow variable extension based on the size of m_hitExtend_x. See comments
 // below.
-unsigned ActsExamples::HoughTransformSeeder::getExtension(
-    unsigned y, unsigned layer) const {
+unsigned HoughTransformSeeder::getExtension(unsigned y, unsigned layer) const {
   if (m_cfg.hitExtend_x.size() == m_cfg.nLayers) {
     return m_cfg.hitExtend_x[layer];
   }
@@ -437,8 +427,7 @@ unsigned ActsExamples::HoughTransformSeeder::getExtension(
  * / (10 * 10 * 10). So here, you get the 0th digit with n / (base_1 * base_2 *
  * base_3);
  */
-std::vector<std::vector<int>>
-ActsExamples::HoughTransformSeeder::getComboIndices(
+std::vector<std::vector<int>> HoughTransformSeeder::getComboIndices(
     std::vector<std::size_t>& sizes) const {
   std::size_t nCombs = 1;
   std::vector<std::size_t> nCombs_prior(sizes.size());
@@ -469,8 +458,7 @@ ActsExamples::HoughTransformSeeder::getComboIndices(
   return combos;
 }
 
-void ActsExamples::HoughTransformSeeder::addSpacePoints(
-    const AlgorithmContext& ctx) const {
+void HoughTransformSeeder::addSpacePoints(const AlgorithmContext& ctx) const {
   // construct the combined input container of space point pointers from all
   // configured input sources.
   for (const auto& isp : m_inputSpacePoints) {
@@ -499,8 +487,7 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
   }
 }
 
-void ActsExamples::HoughTransformSeeder::addMeasurements(
-    const AlgorithmContext& ctx) const {
+void HoughTransformSeeder::addMeasurements(const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
 
   ACTS_DEBUG("Inserting " << measurements.size() << " space points from "
@@ -564,3 +551,5 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
     }
   }
 }
+
+}  // namespace ActsExamples

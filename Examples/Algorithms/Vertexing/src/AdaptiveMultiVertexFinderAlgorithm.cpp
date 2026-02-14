@@ -102,7 +102,7 @@ AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
 std::unique_ptr<Acts::IVertexFinder>
 AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
   if (m_cfg.seedFinder == SeedFinder::TruthSeeder) {
-    using Seeder = ActsExamples::TruthVertexSeeder;
+    using Seeder = TruthVertexSeeder;
     Seeder::Config seederConfig;
     seederConfig.useXY = false;
     seederConfig.useTime = m_cfg.useTime;
