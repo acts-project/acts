@@ -159,7 +159,7 @@ def generate_zenodo_json(cff_data: dict, existing_zenodo: dict) -> dict:
         cff_author_to_zenodo_creator(author) for author in cff_data["authors"]
     ]
     zenodo_data["version"] = cff_data["version"]
-    zenodo_data["title"] = f"acts-project/acts: v{cff_data['version']}"
+    zenodo_data["title"] = f"acts-project/acts: {cff_data['version']}"
 
     return zenodo_data
 

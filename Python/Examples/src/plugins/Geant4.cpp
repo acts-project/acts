@@ -8,7 +8,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
@@ -186,8 +185,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
                               const std::vector<std::string>& passiveMatches,
                               bool convertMaterial) {
           // Initiate the detector construction & retrieve world
-          ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName,
-                                                                 {});
+          GdmlDetectorConstruction gdmlContruction(gdmlFileName, {});
           const auto* world = gdmlContruction.Construct();
 
           // Create the selectors

@@ -20,7 +20,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out seeds as a flat TTree.
 ///

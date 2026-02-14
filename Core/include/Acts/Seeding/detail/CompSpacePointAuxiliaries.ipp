@@ -130,7 +130,6 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
                                            const Transform3& localToGlobal,
                                            const double t0,
                                            const SpacePoint_t& hit) {
-  using namespace Acts::UnitLiterals;
   return chi2Term(
       pos, dir,
       t0 + (localToGlobal * extrapolateToPlane(pos, dir, hit)).norm() /

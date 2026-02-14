@@ -21,10 +21,10 @@
 namespace ActsExamples {
 
 /// An example algorithm that uses the random number generator to generate data.
-class HelloRandomAlgorithm : public ActsExamples::IAlgorithm {
+class HelloRandomAlgorithm : public IAlgorithm {
  public:
   struct Config {
-    std::shared_ptr<ActsExamples::RandomNumbers> randomNumbers = nullptr;
+    std::shared_ptr<RandomNumbers> randomNumbers = nullptr;
     /// Random distribution parameters.
     std::array<double, 2> gaussParameters = {{0., 1.}};
     std::array<double, 2> uniformParameters = {{0., 1.}};
@@ -39,7 +39,7 @@ class HelloRandomAlgorithm : public ActsExamples::IAlgorithm {
       const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   // Generate random numbers from various distributions.
-  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
 

@@ -685,8 +685,7 @@ ActsPlugins::FpeMonitor::Result Sequencer::fpeResult() const {
   return merged;
 }
 
-std::ostream& operator<<(std::ostream& os,
-                         const ActsExamples::Sequencer::FpeMask& m) {
+std::ostream& operator<<(std::ostream& os, const Sequencer::FpeMask& m) {
   os << "FpeMask(" << m.file << ":";
 
   if (m.lines.first + 1 == m.lines.second) {

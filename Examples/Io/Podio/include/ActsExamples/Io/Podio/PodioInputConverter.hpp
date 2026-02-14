@@ -35,7 +35,7 @@ class PodioInputConverter : public IAlgorithm {
   ///
   /// @param ctx The algorithm context
   /// @return The process code
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Convert the input @c podio::Frame object to the internal EDM format.
   ///

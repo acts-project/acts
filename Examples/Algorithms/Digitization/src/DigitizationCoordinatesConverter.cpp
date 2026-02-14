@@ -18,8 +18,8 @@
 namespace ActsExamples {
 
 DigitizationCoordinatesConverter::DigitizationCoordinatesConverter(
-    DigitizationAlgorithm::Config config)
-    : m_cfg(std::move(config)) {
+    const DigitizationAlgorithm::Config& config)
+    : m_cfg(config) {
   if (m_cfg.surfaceByIdentifier.empty()) {
     throw std::invalid_argument("Missing Surface-GeometryID association map");
   }

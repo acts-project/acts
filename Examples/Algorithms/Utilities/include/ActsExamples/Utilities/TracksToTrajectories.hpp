@@ -18,7 +18,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class TracksToTrajectories final : public IAlgorithm {
  public:

@@ -138,11 +138,10 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Finalize and print timing
-  ActsExamples::ProcessCode finalize() final;
+  ProcessCode finalize() final;
 
   const Config& config() const { return m_cfg; }
 

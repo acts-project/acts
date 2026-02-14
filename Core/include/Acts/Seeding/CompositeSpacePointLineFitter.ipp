@@ -266,8 +266,6 @@ template <CompositeSpacePointContainer Cont_t,
 CompositeSpacePointLineFitter::FitResult<Cont_t>
 CompositeSpacePointLineFitter::fit(
     FitOptions<Cont_t, Calibrator_t>&& fitOpts) const {
-  using namespace Acts::UnitLiterals;
-
   if (!fitOpts.calibrator) {
     throw std::invalid_argument(
         "CompositeSpacePointLineFitter::fit() - Please provide a valid pointer "
@@ -412,6 +410,7 @@ CompositeSpacePointLineFitter::fit(
 
       // No valid measurement is left
       if (resCfg.parsToUse.empty()) {
+        using namespace Acts::UnitLiterals;
         ACTS_WARNING(__func__ << "() " << __LINE__ << ":  Line parameters "
                               << toString(line.position()) << " + "
                               << toString(line.direction()) << ", t0: "

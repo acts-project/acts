@@ -41,7 +41,7 @@ struct DigitizedParameters {
 /// To be used also by the e I/O system
 ///
 /// @return the measurement proxy
-ActsExamples::VariableBoundMeasurementProxy createMeasurement(
+VariableBoundMeasurementProxy createMeasurement(
     MeasurementContainer& container, Acts::GeometryIdentifier geometryId,
     const DigitizedParameters& dParams) noexcept(false);
 
