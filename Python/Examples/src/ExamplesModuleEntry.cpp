@@ -19,6 +19,7 @@ void addFramework(py::module& mex);
 void addAmbiguityResolution(py::module& mex);
 void addGenerators(py::module& mex);
 void addExampleAlgorithms(py::module& mex);
+void addDispatchAlgorithms(py::module& mex);
 void addDetector(py::module& mex);
 void addDigitization(py::module& mex);
 void addMaterialMapping(py::module& mex);
@@ -42,6 +43,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
   addAmbiguityResolution(mex);
   addGenerators(mex);
   addExampleAlgorithms(mex);
+  addDispatchAlgorithms(mex);
   addDetector(mex);
   addDigitization(mex);
   addMaterialMapping(mex);
