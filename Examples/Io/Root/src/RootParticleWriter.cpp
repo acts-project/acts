@@ -21,15 +21,15 @@
 
 #include <cstdint>
 #include <ios>
-#include <ostream>
 #include <stdexcept>
 
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootParticleWriter::RootParticleWriter(
-    const ActsExamples::RootParticleWriter::Config& cfg,
-    Acts::Logging::Level lvl)
+namespace ActsExamples {
+
+RootParticleWriter::RootParticleWriter(const RootParticleWriter::Config& cfg,
+                                       Acts::Logging::Level lvl)
     : WriterT(cfg.inputParticles, "RootParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -97,13 +97,13 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("outcome", &m_outcome);
 }
 
-ActsExamples::RootParticleWriter::~RootParticleWriter() {
+RootParticleWriter::~RootParticleWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
+ProcessCode RootParticleWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -114,8 +114,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
-    const AlgorithmContext& ctx, const SimParticleContainer& particles) {
+ProcessCode RootParticleWriter::writeT(const AlgorithmContext& ctx,
+                                       const SimParticleContainer& particles) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -360,3 +360,5 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

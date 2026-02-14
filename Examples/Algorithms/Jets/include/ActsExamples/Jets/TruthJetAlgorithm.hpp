@@ -18,12 +18,7 @@
 
 #include <string>
 
-namespace fastjet {
-class PseudoJet;
-}
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 using TruthJetContainer = std::vector<ActsPlugins::FastJet::TruthJet>;
 

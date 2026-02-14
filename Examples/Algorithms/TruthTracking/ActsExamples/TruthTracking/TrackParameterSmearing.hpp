@@ -24,7 +24,6 @@
 
 namespace ActsExamples {
 class RandomNumbers;
-struct AlgorithmContext;
 
 /// @brief Smear track parameters.
 ///

@@ -12,12 +12,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
-#include "Acts/Utilities/ArrayHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
@@ -102,7 +98,7 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
 }
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
-  using enum ActsExamples::ProcessCode;
+  using enum ProcessCode;
   if (!m_cfg.trackingGeometry) {
     ACTS_ERROR("No tracking geometry was parsed");
     return ABORT;

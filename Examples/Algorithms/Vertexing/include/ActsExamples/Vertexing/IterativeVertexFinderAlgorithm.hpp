@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"

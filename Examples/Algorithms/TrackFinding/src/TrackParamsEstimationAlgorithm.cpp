@@ -13,8 +13,6 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -33,8 +31,8 @@
 namespace ActsExamples {
 
 TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
-    TrackParamsEstimationAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("TrackParamsEstimationAlgorithm", lvl), m_cfg(std::move(cfg)) {
+    const Config& cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("TrackParamsEstimationAlgorithm", lvl), m_cfg(cfg) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");
   }
