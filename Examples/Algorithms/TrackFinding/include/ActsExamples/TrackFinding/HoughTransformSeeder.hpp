@@ -215,7 +215,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     /// === Seeds for Hough ==
     std::vector<int> threshold = {
         9};  // Minimum number of measurements per bin to accept as a
-             // prototrack/seed. Right now this is a single number, can be
+             // proto track/seed. Right now this is a single number, can be
              // expanded in the future if we want to be more clever
 
     int localMaxWindowSize = 0;  // Only create candidates from a local maximum

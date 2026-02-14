@@ -97,7 +97,7 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
     std::string inputClusters;
     /// Input truth graph (Optional).
     std::string inputTruthGraph;
-    /// Output prototracks
+    /// Output proto tracks
     std::string outputProtoTracks;
     /// Output graph (optional)
     std::string outputGraph;

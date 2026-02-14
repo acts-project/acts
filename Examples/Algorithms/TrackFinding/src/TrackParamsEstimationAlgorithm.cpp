@@ -73,7 +73,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
   if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
     const auto& inputTracksRef = m_inputTracks(ctx);
     if (seeds.size() != inputTracksRef.size()) {
-      ACTS_FATAL("Inconsistent number of seeds and prototracks");
+      ACTS_FATAL("Inconsistent number of seeds and proto tracks");
       return ProcessCode::ABORT;
     }
     inputTracks = &inputTracksRef;

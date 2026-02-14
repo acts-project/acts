@@ -61,14 +61,14 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
   ProtoTrackContainer tracks;
   tracks.reserve(particles.size());
 
-  ACTS_VERBOSE("Create prototracks for " << particles.size() << " particles");
+  ACTS_VERBOSE("Create proto tracks for " << particles.size() << " particles");
   for (const auto& [i, particle] : Acts::enumerate(particles)) {
     // find the corresponding hits for this particle
     const auto& measurements =
         makeRange(particleMeasurementsMap.equal_range(particle.particleId()));
-    ACTS_VERBOSE(" - Prototrack from " << measurements.size()
-                                       << " measurements for particle "
-                                       << particle);
+    ACTS_VERBOSE(" - Proto track from " << measurements.size()
+                                        << " measurements for particle "
+                                        << particle);
     // fill hit indices to create the proto track
     ProtoTrack track;
     std::vector<const SimHit*> hits;

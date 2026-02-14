@@ -209,7 +209,7 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   ACTS_DEBUG("Done with pipeline, received " << trackCandidates.size()
                                              << " candidates");
 
-  // Make the prototracks
+  // Make the proto tracks
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
 

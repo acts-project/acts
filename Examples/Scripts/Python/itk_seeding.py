@@ -59,12 +59,12 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
             ),
         )
 
-        prototracks = "seed-prototracks"
+        protoTracks = "seed-protoTracks"
         s.addAlgorithm(
-            acts.examples.SeedsToPrototracks(
+            acts.examples.SeedsToProtoTracks(
                 level=acts.logging.INFO,
                 inputSeeds=inputSeeds,
-                outputProtoTracks=prototracks,
+                outputProtoTracks=protoTracks,
             )
         )
 
@@ -118,12 +118,12 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
             ),
         )
 
-        prototracks = "seed-prototracks"
+        protoTracks = "seed-protoTracks"
         s.addAlgorithm(
-            acts.examples.SeedsToPrototracks(
+            acts.examples.SeedsToProtoTracks(
                 level=acts.logging.INFO,
                 inputSeeds=inputSeeds,
-                outputProtoTracks=prototracks,
+                outputProtoTracks=protoTracks,
             )
         )
 

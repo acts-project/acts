@@ -133,7 +133,7 @@ void addOutput(py::module& mex) {
                              outputStem, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvProtoTrackWriter, mex, "CsvProtoTrackWriter",
-                             inputSpacepoints, inputPrototracks, outputDir);
+                             inputSpacepoints, inputProtoTracks, outputDir);
 
   {
     using Writer = CsvBFieldWriter;

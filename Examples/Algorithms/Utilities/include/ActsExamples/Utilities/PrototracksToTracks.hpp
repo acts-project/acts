@@ -16,7 +16,7 @@
 
 namespace ActsExamples {
 
-class PrototracksToTracks final : public IAlgorithm {
+class ProtoTracksToTracks final : public IAlgorithm {
  public:
   struct Config {
     /// Input proto tracks.
@@ -26,14 +26,14 @@ class PrototracksToTracks final : public IAlgorithm {
     /// Input measurements.
     std::string inputMeasurements;
     /// Output tracks.
-    std::string outputTracks = "tracks_from_prototracks";
+    std::string outputTracks = "tracks-from-protoTracks";
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  PrototracksToTracks(Config cfg, Acts::Logging::Level lvl);
+  ProtoTracksToTracks(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///

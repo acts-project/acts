@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Utilities/PrototracksToTracks.hpp"
+#include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -17,31 +17,31 @@
 
 namespace ActsExamples {
 
-PrototracksToTracks::PrototracksToTracks(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("PrototracksToTracks", lvl), m_cfg(std::move(cfg)) {
+ProtoTracksToTracks::ProtoTracksToTracks(Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("ProtoTracksToTracks", lvl), m_cfg(std::move(cfg)) {
   m_outputTracks.initialize(m_cfg.outputTracks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
 }
 
-ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
+ProcessCode ProtoTracksToTracks::execute(const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
   TrackContainer tracks(trackContainer, mtj);
 
-  const auto& prototracks = m_inputProtoTracks(ctx);
-  ACTS_DEBUG("Received " << prototracks.size() << " prototracks");
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  ACTS_DEBUG("Received " << protoTracks.size() << " proto tracks");
 
   const TrackParametersContainer* trackParameters = nullptr;
   if (m_inputTrackParameters.isInitialized()) {
     trackParameters = &m_inputTrackParameters(ctx);
 
-    if (trackParameters->size() != prototracks.size()) {
+    if (trackParameters->size() != protoTracks.size()) {
       throw std::runtime_error(
-          "Number of prototracks and track parameters do not match");
+          "Number of proto tracks and track parameters do not match");
     }
   }
 
@@ -49,8 +49,8 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   std::size_t minSize = std::numeric_limits<std::size_t>::max();
   std::size_t maxSize = 0;
 
-  for (std::size_t i = 0; i < prototracks.size(); ++i) {
-    const auto& protoTrack = prototracks[i];
+  for (std::size_t i = 0; i < protoTracks.size(); ++i) {
+    const auto& protoTrack = protoTracks[i];
 
     if (protoTrack.empty()) {
       continue;

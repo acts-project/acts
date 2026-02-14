@@ -15,20 +15,20 @@
 
 namespace ActsExamples {
 
-class PrototracksToSeeds final : public IAlgorithm {
+class ProtoTracksToSeeds final : public IAlgorithm {
  public:
   struct Config {
     std::string inputProtoTracks;
     std::string inputSpacePoints;
-    std::string outputSeeds = "seeds-from-prototracks";
-    std::string outputProtoTracks = "remaining-prototracks";
+    std::string outputSeeds = "seeds-from-protoTracks";
+    std::string outputProtoTracks = "remaining-protoTracks";
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  PrototracksToSeeds(Config cfg, Acts::Logging::Level lvl);
+  ProtoTracksToSeeds(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///

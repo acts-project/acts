@@ -41,7 +41,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
-    /// Input prototracks (optional).
+    /// Input proto tracks (optional).
     std::optional<std::string> inputProtoTracks;
     /// Input particle hypothesis (optional). If not given, the static particle
     /// hypothesis from the config is used.
@@ -51,7 +51,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Output seed collection - only seeds with successful parameter estimation
     /// are propagated (optional)
     std::optional<std::string> outputSeeds;
-    /// Output prototrack collection - only tracks with successful parameter
+    /// Output proto track collection - only tracks with successful parameter
     /// estimation are propagated (optional)
     std::optional<std::string> outputProtoTracks;
 
