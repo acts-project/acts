@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -103,9 +102,10 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::XY |
-      Acts::SpacePointColumns::ZR | Acts::SpacePointColumns::Phi |
-      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR);
+      Acts::SpacePointColumns::XY | Acts::SpacePointColumns::ZR |
+      Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::VarianceZ |
+      Acts::SpacePointColumns::VarianceR |
+      Acts::SpacePointColumns::CopyFromIndex);
   coreSpacePoints.reserve(spacePoints.size());
 
   Acts::Experimental::CylindricalSpacePointKDTreeBuilder kdTreeBuilder;
@@ -123,8 +123,6 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
 
     Acts::SpacePointIndex2 newSpIndex = coreSpacePoints.size();
     auto newSp = coreSpacePoints.createSpacePoint();
-    newSp.assignSourceLinks(
-        std::array<Acts::SourceLink, 1>{Acts::SourceLink(sp.index())});
     newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                       static_cast<float>(sp.y())};
     newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
@@ -132,6 +130,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
     newSp.phi() = static_cast<float>(std::atan2(sp.y(), sp.x()));
     newSp.varianceZ() = static_cast<float>(sp.varianceZ());
     newSp.varianceR() = static_cast<float>(sp.varianceR());
+    newSp.copyFromIndex() = sp.index();
 
     kdTreeBuilder.insert(newSpIndex, newSp.phi(), newSp.zr()[1], newSp.zr()[0]);
 
@@ -306,8 +305,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
     for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex =
-          coreSpacePoints.at(spIndex).sourceLinks()[0].get<SpacePointIndex>();
+      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
     }
   }
 
