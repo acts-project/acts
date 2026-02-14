@@ -86,7 +86,7 @@ class GbtsTrackingFilter final {
   /// @param pS Edge to update with
   /// @param ts Edge state to update
   /// @return Success flag
-  bool update(GbtsEdge& pS, GbtsEdgeState& ts);
+  bool update(GbtsEdge& pS, GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index
   /// @param l Layer index

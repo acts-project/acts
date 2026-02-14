@@ -31,7 +31,7 @@ void GbtsEtaBin::sortByPhi() {
   const std::uint32_t nBuckets = 31;
 
   for (const GbtsNode* n : vn) {
-    const std::uint32_t bIdx = static_cast<std::uint32_t>(
+    const auto bIdx = static_cast<std::uint32_t>(
         0.5 * nBuckets *
         (n->phi / static_cast<float>(std::numbers::pi) + 1.0f));
     phiBuckets[bIdx].emplace_back(n->phi, n);
@@ -44,7 +44,8 @@ void GbtsEtaBin::sortByPhi() {
   std::uint32_t idx = 0;
   for (const auto& b : phiBuckets) {
     for (const auto& p : b) {
-      vn[idx++] = p.second;
+      vn[idx] = p.second;
+      ++idx;
     }
   }
 }
@@ -59,12 +60,14 @@ void GbtsEtaBin::initializeNodes() {
   in.resize(vn.size());
   for (auto& v : in) {
     // TODO config
-    v.reserve(50);  // reasonably high number of incoming edges per node
+    // reasonably high number of incoming edges per node
+    v.reserve(50);
   }
 
-  std::transform(vn.begin(), vn.end(), params.begin(), [](const GbtsNode* pN) {
-    return std::array<float, 5>{-100.0, 100.0, pN->phi, pN->r, pN->z};
-  });
+  std::ranges::transform(
+      vn.begin(), vn.end(), params.begin(), [](const GbtsNode* pN) {
+        return std::array<float, 5>{-100.0, 100.0, pN->phi, pN->r, pN->z};
+      });
 
   const auto [min_iter, max_iter] = std::ranges::minmax_element(
       vn, {}, [](const GbtsNode* s) { return s->r; });
@@ -202,11 +205,12 @@ void GbtsDataStorage::initializeNodes(const bool useMl) {
 
     // adjusting cuts on |cot(theta)| using pre-trained LUT loaded from file
 
-    const std::uint32_t lutSize = m_mlLut.size();
+    const auto lutSize = static_cast<std::uint32_t>(m_mlLut.size());
 
     const std::uint32_t nBins = pL.numOfBins();
 
-    for (std::uint32_t b = 0; b < nBins; ++b) {  // loop over eta-bins in Layer
+    // loop over eta-bins in Layer
+    for (std::uint32_t b = 0; b < nBins; ++b) {
       GbtsEtaBin& B = m_etaBins.at(pL.getBins().at(b));
 
       if (B.empty()) {
@@ -217,35 +221,40 @@ void GbtsDataStorage::initializeNodes(const bool useMl) {
         const float clusterWidth = B.vn[nIdx]->pcw;
         const float locPosY = B.vn[nIdx]->locPosY;
 
+        // lut bin width is 0.05 mm, check if this is actually what we want with
+        // float conversion
         const std::int32_t lutBinIdx =
-            static_cast<std::uint32_t>(std::floor(20 * clusterWidth)) -
-            1;  // lut bin width is 0.05 mm, check if this is
-                // actually what we want with float conversion
+            static_cast<std::uint32_t>(std::floor(20 * clusterWidth)) - 1;
 
         if (lutBinIdx >= static_cast<std::int32_t>(lutSize)) {
           continue;
         }
         if (lutBinIdx < 0) {
-          continue;  // protect against negative index
+          // protect against negative index
+          continue;
         }
 
         const std::array<float, 5> lutBin = m_mlLut[lutBinIdx];
 
-        const float dist2border = 10.0 - std::abs(locPosY);
+        const float dist2border = 10.0f - std::abs(locPosY);
 
-        float min_tau = -100.0;
-        float max_tau = 100.0;
+        float min_tau = -100.0f;
+        float max_tau = 100.0f;
 
-        if (dist2border > 0.3f) {  // far enough from the edge
+        if (dist2border > 0.3f) {
+          // far enough from the edge
           min_tau = lutBin[1];
           max_tau = lutBin[2];
-        } else {  // possible cluster shortening at a module edge
+        } else {
+          // possible cluster shortening at a module edge
           min_tau = lutBin[3];
           max_tau = lutBin[4];
         }
 
-        if (max_tau < 0) {  // insufficient training data
-          max_tau = 100.0;  // use "no-cut" default
+        if (max_tau < 0) {
+          // insufficient training data
+          // use "no-cut" default
+          max_tau = 100.0f;
         }
 
         B.params[nIdx][0] = min_tau;

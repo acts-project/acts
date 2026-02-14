@@ -43,7 +43,8 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, const float ew,
     m_maxEta = eta1;
   }
 
-  m_maxEta += 1e-6;  // increasing them slightly to avoid range_check exceptions
+  // increasing them slightly to avoid range_check exceptions
+  m_maxEta += 1e-6;
   m_minEta -= 1e-6;
 
   const float deltaEta = m_maxEta - m_minEta;
@@ -55,21 +56,20 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, const float ew,
     m_bins.push_back(binCounter++);
     m_etaBin = deltaEta;
     if (m_layer->type == 0) {  // barrel
-      m_minRadius.push_back(m_layer->refCoord - 2.0);
-      m_maxRadius.push_back(m_layer->refCoord + 2.0);
+      m_minRadius.push_back(m_layer->refCoord - 2.0f);
+      m_maxRadius.push_back(m_layer->refCoord + 2.0f);
       m_minBinCoord.push_back(m_layer->minBound);
       m_maxBinCoord.push_back(m_layer->maxBound);
     } else {  // endcap
-      m_minRadius.push_back(m_layer->minBound - 2.0);
-      m_maxRadius.push_back(m_layer->maxBound + 2.0);
+      m_minRadius.push_back(m_layer->minBound - 2.0f);
+      m_maxRadius.push_back(m_layer->maxBound + 2.0f);
       m_minBinCoord.push_back(m_layer->minBound);
       m_maxBinCoord.push_back(m_layer->maxBound);
     }
   } else {
-    const std::uint32_t nB =
-        static_cast<std::uint32_t>(deltaEta / m_etaBinWidth);
+    const auto nB = static_cast<std::uint32_t>(deltaEta / m_etaBinWidth);
     m_nBins = nB;
-    if (deltaEta - m_etaBinWidth * nB > 0.5 * m_etaBinWidth) {
+    if (deltaEta - m_etaBinWidth * nB > 0.5f * m_etaBinWidth) {
       m_nBins++;
     }
 
@@ -78,28 +78,28 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, const float ew,
     if (m_nBins == 1) {
       m_bins.push_back(binCounter++);
       if (m_layer->type == 0) {  // barrel
-        m_minRadius.push_back(m_layer->refCoord - 2.0);
-        m_maxRadius.push_back(m_layer->refCoord + 2.0);
+        m_minRadius.push_back(m_layer->refCoord - 2.0f);
+        m_maxRadius.push_back(m_layer->refCoord + 2.0f);
         m_minBinCoord.push_back(m_layer->minBound);
         m_maxBinCoord.push_back(m_layer->maxBound);
       } else {  // endcap
-        m_minRadius.push_back(m_layer->minBound - 2.0);
-        m_maxRadius.push_back(m_layer->maxBound + 2.0);
+        m_minRadius.push_back(m_layer->minBound - 2.0f);
+        m_maxRadius.push_back(m_layer->maxBound + 2.0f);
         m_minBinCoord.push_back(m_layer->minBound);
         m_maxBinCoord.push_back(m_layer->maxBound);
       }
     } else {
-      float eta = m_minEta + 0.5 * m_etaBin;
+      float eta = m_minEta + 0.5f * m_etaBin;
 
       for (std::uint32_t i = 1; i <= m_nBins; ++i) {
         m_bins.push_back(binCounter++);
 
-        float e1 = eta - 0.5 * m_etaBin;
-        float e2 = eta + 0.5 * m_etaBin;
+        float e1 = eta - 0.5f * m_etaBin;
+        float e2 = eta + 0.5f * m_etaBin;
 
         if (m_layer->type == 0) {  // barrel
-          m_minRadius.push_back(m_layer->refCoord - 2.0);
-          m_maxRadius.push_back(m_layer->refCoord + 2.0);
+          m_minRadius.push_back(m_layer->refCoord - 2.0f);
+          m_maxRadius.push_back(m_layer->refCoord + 2.0f);
           const float z1 = m_layer->refCoord * std::sinh(e1);
           m_minBinCoord.push_back(z1);
           const float z2 = m_layer->refCoord * std::sinh(e2);
@@ -111,10 +111,10 @@ GbtsLayer::GbtsLayer(const TrigInDetSiLayer& ls, const float ew,
           }
           float r = m_layer->refCoord / std::sinh(e1);
           m_minBinCoord.push_back(r);
-          m_minRadius.push_back(r - 2.0);
+          m_minRadius.push_back(r - 2.0f);
           r = m_layer->refCoord / std::sinh(e2);
           m_maxBinCoord.push_back(r);
-          m_maxRadius.push_back(r + 2.0);
+          m_maxRadius.push_back(r + 2.0f);
         }
 
         eta += m_etaBin;
@@ -131,7 +131,7 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
   const float r1 = m_layer->refCoord;
 
   if (m_layer->type == 0 && pL.m_layer->type == 0) {  // barrel <- barrel
-    const float tol = 5.0;
+    const float tol = 5.0f;
 
     const float min_b2 = pL.m_minBinCoord.at(b2);
     const float max_b2 = pL.m_maxBinCoord.at(b2);
@@ -161,11 +161,11 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
     }
 
     if (r2min <= r1) {
-      r2min = r1 + 1e-3;
+      r2min = r1 + 1e-3f;
     }
 
-    float z0_max = 0.0;
-    float z0_min = 0.0;
+    float z0_max = 0;
+    float z0_min = 0;
 
     if (z2 > 0) {
       z0_max = (z1max * r2max - z2 * r1) / (r2max - r1);
@@ -199,14 +199,15 @@ std::int32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
     idx = static_cast<std::int32_t>(m_bins.size()) - 1;
   }
 
-  return m_bins.at(idx);  // index in the global storage
+  // index in the global storage
+  return m_bins.at(idx);
 }
 
 GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
                            const std::unique_ptr<GbtsConnector>& conn) {
   // TODO configurable z0 range
-  const float minZ0 = -168.0;
-  const float maxZ0 = 168.0;
+  const float minZ0 = -168.0f;
+  const float maxZ0 = 168.0f;
 
   m_etaBinWidth = conn->m_etaBin;
 
@@ -253,11 +254,13 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
           const std::int32_t bin1Idx = pL1->getBins().at(b1);
           const std::int32_t bin2Idx = pL2->getBins().at(b2);
 
-          if (bin1Idx != lastBin1) {  // adding a new group
+          if (bin1Idx != lastBin1) {
+            // adding a new group
             m_binGroups.emplace_back(bin1Idx,
                                      std::vector<std::int32_t>(1, bin2Idx));
             lastBin1 = bin1Idx;
-          } else {  // extend the last group
+          } else {
+            // extend the last group
             m_binGroups.back().second.push_back(bin2Idx);
           }
         }

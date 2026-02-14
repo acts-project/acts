@@ -52,10 +52,7 @@ class SeedFinderGbts {
     /// Comparison operator.
     /// @param o Other seed properties to compare
     /// @return True if this is less than other
-    auto operator<=>(const SeedProperties& o) const {
-      return std::tie(seedQuality, isClone, spacePoints) <=>
-             std::tie(o.seedQuality, o.isClone, o.spacePoints);
-    }
+    auto operator<=>(const SeedProperties& o) const = default;
   };
 
   /// Constructor.
