@@ -14,11 +14,9 @@
 
 #include <cassert>
 
-namespace Acts {
-class VectorMultiTrajectory;
-}  // namespace Acts
+namespace ActsExamples {
 
-void ActsExamples::PassThroughCalibrator::calibrate(
+void PassThroughCalibrator::calibrate(
     const MeasurementContainer& measurements,
     const ClusterContainer* /*clusters*/, const Acts::GeometryContext& /*gctx*/,
     const Acts::CalibrationContext& /*cctx*/,
@@ -45,17 +43,19 @@ void ActsExamples::PassThroughCalibrator::calibrate(
   });
 }
 
-ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(
+MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(
     const MeasurementCalibrator& calibrator,
     const MeasurementContainer& measurements, const ClusterContainer* clusters)
     : m_calibrator{calibrator},
       m_measurements{measurements},
       m_clusters{clusters} {}
 
-void ActsExamples::MeasurementCalibratorAdapter::calibrate(
+void MeasurementCalibratorAdapter::calibrate(
     const Acts::GeometryContext& gctx, const Acts::CalibrationContext& cctx,
     const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy trackState) const {
   return m_calibrator.calibrate(m_measurements, m_clusters, gctx, cctx,
                                 sourceLink, trackState);
 }
+
+}  // namespace ActsExamples

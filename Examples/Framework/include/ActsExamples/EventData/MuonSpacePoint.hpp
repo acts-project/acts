@@ -207,10 +207,8 @@ using MuonSpacePointBucket = std::vector<MuonSpacePoint>;
 using MuonSpacePointContainer = std::vector<MuonSpacePointBucket>;
 
 /// @brief ostream operator of the Muon space point Identifier
-std::ostream& operator<<(std::ostream& ostr,
-                         const ActsExamples::MuonSpacePoint::MuonId& id);
+std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint::MuonId& id);
 /// @brief osteram operator of the Space point
-std::ostream& operator<<(std::ostream& ostr,
-                         const ActsExamples::MuonSpacePoint& sp);
+std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint& sp);
 
 }  // namespace ActsExamples

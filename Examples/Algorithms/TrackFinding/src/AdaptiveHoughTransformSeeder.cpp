@@ -90,10 +90,9 @@ AccumulatorSection AccumulatorSection::right(float xFraction) const {
 }
 
 AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
-    ActsExamples::AdaptiveHoughTransformSeeder::Config cfg,
-    Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("AdaptiveHoughTransformSeeder", lvl),
-      m_cfg(std::move(cfg)),
+    const Config &cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("AdaptiveHoughTransformSeeder", lvl),
+      m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("AdaptiveHoughTransformSeeder", lvl)) {
   for (const auto &spName : config().inputSpacePoints) {
     const auto &handle = m_inputSpacePoints.emplace_back(
@@ -212,7 +211,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
 
   m_outputSeeds(ctx, std::move(seeds));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
 void AdaptiveHoughTransformSeeder::preparePreprocessedMeasurements(

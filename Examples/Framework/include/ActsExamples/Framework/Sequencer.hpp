@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
@@ -17,7 +18,6 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/tbbWrap.hpp"
 #include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
-#include <Acts/Utilities/Logger.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -30,11 +30,6 @@
 #include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
-class IAlgorithm;
-class IContextDecorator;
-class IReader;
-class IWriter;
-class SequenceElement;
 
 using IterationCallback = void (*)();
 
@@ -190,7 +185,6 @@ class Sequencer {
   const Acts::Logger &logger() const { return *m_logger; }
 };
 
-std::ostream &operator<<(std::ostream &os,
-                         const ActsExamples::Sequencer::FpeMask &m);
+std::ostream &operator<<(std::ostream &os, const Sequencer::FpeMask &m);
 
 }  // namespace ActsExamples

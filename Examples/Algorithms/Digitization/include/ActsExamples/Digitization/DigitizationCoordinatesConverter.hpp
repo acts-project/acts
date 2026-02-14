@@ -9,7 +9,6 @@
 #pragma once
 
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
 
 namespace ActsExamples {
 
@@ -20,7 +19,7 @@ class DigitizationCoordinatesConverter final {
   ///
   /// @param config is the configuration
   explicit DigitizationCoordinatesConverter(
-      DigitizationAlgorithm::Config config);
+      const DigitizationAlgorithm::Config& config);
 
   /// Get const access to the config
   const DigitizationAlgorithm::Config& config() const { return m_cfg; }
