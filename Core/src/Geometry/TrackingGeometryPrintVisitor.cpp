@@ -33,8 +33,9 @@ const std::stringstream& TrackingGeometryPrintVisitor::stream() const {
 void TrackingGeometryPrintVisitor::visitVolume(
     const Acts::TrackingVolume& volume) {
   updateDepth(volume);
-  m_printStream << whiteSpaces(m_currentDepth) << volNumber(volume)
-                << ") Volume " << volume.volumeName() << " @ "
+  m_printStream << whiteSpaces(m_currentDepth) << volNumber(volume) << ")"
+                << (volume.isAlignable() ? "Alignable volume" : " Volume ")
+                << volume.volumeName() << " @ "
                 << toString(volume.center(m_gctx))
                 << " --- id: " << volume.geometryId()
                 << " #surfaces: " << volume.surfaces().size()
@@ -54,10 +55,16 @@ std::size_t TrackingGeometryPrintVisitor::volNumber(
                                         return &child == &trkVol;
                                       }));
 }
-void TrackingGeometryPrintVisitor::visitPortal(const Portal& /*portal*/) {
-  /// @todo Add meaning ful portal print
-  /// m_printStream << whiteSpaces(m_currentDepth + m_indentation)
-  ///               << " ++++ portal  --- id: " << std::endl;
+void TrackingGeometryPrintVisitor::visitPortal(const Portal& portal) {
+  const auto& surf = portal.surface();
+  m_printStream << whiteSpaces(m_currentDepth + m_indentation) << " ++++ "
+                << Surface::s_surfaceTypeNames[toUnderlying(surf.type())] <<
+
+      " portal  --- id: " << surf.geometryId() << ", bounds: " << surf.bounds()
+                << ", alignable: " << (surf.isAlignable() ? "yay" : "nay")
+                << ", material: "
+                << (surf.surfaceMaterial() != nullptr ? "yay" : "nay")
+                << std::endl;
 }
 
 void TrackingGeometryPrintVisitor::visitSurface(const Surface& surface) {
@@ -67,6 +74,7 @@ void TrackingGeometryPrintVisitor::visitSurface(const Surface& surface) {
                 << " @ " << toString(surface.center(m_gctx))
                 << " --- id: " << surface.geometryId()
                 << ", sensitive: " << (surface.isSensitive() ? "yay" : "nay")
+                << ", alignable: " << (surface.isAlignable() ? "yay" : "nay")
                 << ", material: "
                 << (surface.surfaceMaterial() != nullptr ? "yay" : "nay")
                 << std::endl;

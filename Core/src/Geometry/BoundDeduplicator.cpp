@@ -44,11 +44,11 @@ void BoundDeduplicator::visitPortal(Portal& portal) {
 void BoundDeduplicator::visitSurface(Surface& surface) {
   switch (surface.type()) {
     using enum Surface::SurfaceType;
-    IMPL_SURF_DEDUPLICATION(Cone, ConeSurface);
-    IMPL_SURF_DEDUPLICATION(Cylinder, CylinderSurface);
-    IMPL_SURF_DEDUPLICATION(Disc, DiscSurface);
-    IMPL_SURF_DEDUPLICATION(Plane, PlaneSurface);
-    IMPL_SURF_DEDUPLICATION(Straw, LineSurface);
+    IMPL_SURF_DEDUPLICATION(Cone, ConeSurface)
+    IMPL_SURF_DEDUPLICATION(Cylinder, CylinderSurface)
+    IMPL_SURF_DEDUPLICATION(Disc, DiscSurface)
+    IMPL_SURF_DEDUPLICATION(Plane, PlaneSurface)
+    IMPL_SURF_DEDUPLICATION(Straw, LineSurface)
     default:
       throw std::invalid_argument(std::format(
           "BoundDeduplicator::visitSurface() - The surface {:} is not yet "

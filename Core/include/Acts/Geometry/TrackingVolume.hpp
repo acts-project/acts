@@ -116,6 +116,17 @@ class TrackingVolume : public Volume {
   /// @return Reference to this TrackingVolume after move assignment
   TrackingVolume& operator=(TrackingVolume&&) noexcept;
 
+  /// Constructor for an aligned container volume container Volume
+  /// - vacuum filled volume either as a for other tracking volumes
+  ///
+  /// @param placement is the volume placement object dynamically positioning
+  ///                  the volume in space
+  /// @param volbounds is the description of the volume boundaries
+  /// @param volumeName is a string identifier
+  TrackingVolume(VolumePlacementBase& placement,
+                 std::shared_ptr<VolumeBounds> volbounds,
+                 const std::string& volumeName = "undefined");
+
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
   ///
