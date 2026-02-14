@@ -80,8 +80,8 @@ void addDigitization(py::module& mex) {
         c, inputSimHits, inputParticles, outputSpacePoints, outputMeasurements,
         outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
         outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
-        randomNumbers, trackingGeometry, digitizeTime, dumpVisualization,
-        visualizationFunction, strawDeadTime, rpcDeadTime);
+        outputTrackParameters, randomNumbers, trackingGeometry, digitizeTime,
+        dumpVisualization, visualizationFunction, strawDeadTime, rpcDeadTime);
 
     ActsPython::patchKwargsConstructor(c);
   }
