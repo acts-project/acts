@@ -18,32 +18,32 @@
 
 namespace ActsExamples {
 
-/// This algorithm computes track parameters for proto tracks.
-/// Unfortunately, it is not possible to create first seeds from proto tracks,
+/// This algorithm computes track parameters for prototracks.
+/// Unfortunately, it is not possible to create first seeds from prototracks,
 /// and then use the more generic TrackParamEstimationAlgorithm.
 ///
 /// The reason is, that in the end we need a consistent collection of parameters
-/// and proto tracks. But if the parameter estimation fails for individual
-/// seeds, it is not possible to recover a matching set of proto tracks
+/// and prototracks. But if the parameter estimation fails for individual
+/// seeds, it is not possible to recover a matching set of prototracks
 /// afterwards. Therefore, these two steps must be unified into one algorithm.
 ///
 class ProtoTracksToParameters final : public IAlgorithm {
  public:
   struct Config {
-    /// The proto track for that parameters should be computed
+    /// The prototrack for that parameters should be computed
     std::string inputProtoTracks;
     /// The space point collection
     std::string inputSpacePoints;
     /// The seeds created on-the-fly from which the parameters actually are
     /// computed
     std::string outputSeeds = "seeds-from-protoTracks";
-    /// The proto tracks for which parameters where computed successfully
+    /// The prototracks for which parameters where computed successfully
     std::string outputProtoTracks = "remaining-protoTracks";
     /// The output parameters
     std::string outputParameters = "parameters";
 
     /// Whether to make tight seeds (closest 3 hits to beampipe) or large
-    /// seeds (evenly spread across the proto track)
+    /// seeds (evenly spread across the prototrack)
     bool buildTightSeeds = false;
 
     /// The tracking geometry

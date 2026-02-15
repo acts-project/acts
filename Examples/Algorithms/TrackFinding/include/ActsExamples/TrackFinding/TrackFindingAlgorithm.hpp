@@ -78,7 +78,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
-    /// Input initial track parameter estimates for for each proto track.
+    /// Input initial track parameter estimates for for each prototrack.
     std::string inputInitialTrackParameters;
     /// Input seeds. These are optional and allow for seed deduplication.
     /// The seeds must match the initial track parameters.

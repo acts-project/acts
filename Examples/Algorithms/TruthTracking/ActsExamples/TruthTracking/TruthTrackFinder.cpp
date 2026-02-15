@@ -69,7 +69,7 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
     ACTS_VERBOSE(" - Proto track from " << measurements.size()
                                         << " measurements for particle "
                                         << particle);
-    // fill hit indices to create the proto track
+    // fill hit indices to create the prototrack
     ProtoTrack track;
     std::vector<const SimHit*> hits;
     track.reserve(measurements.size());
@@ -115,7 +115,7 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
       sortedTrack.emplace_back(track[idx]);
     }
 
-    // add proto track to the output collection
+    // add prototrack to the output collection
     tracks.emplace_back(std::move(sortedTrack));
   }
 

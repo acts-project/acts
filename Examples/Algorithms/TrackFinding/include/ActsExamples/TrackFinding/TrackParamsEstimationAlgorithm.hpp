@@ -34,14 +34,14 @@ namespace ActsExamples {
 /// the space point container. The source links container is necessary to
 /// retrieve the geometry identifier of the module at which a space point is
 /// located. It creates two additional container to the event store, i.e. the
-/// estimated track parameters container and the proto tracks container storing
-/// only those proto tracks with track parameters estimated.
+/// estimated track parameters container and the prototracks container storing
+/// only those prototracks with track parameters estimated.
 class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
-    /// Input proto tracks (optional).
+    /// Input prototracks (optional).
     std::optional<std::string> inputProtoTracks;
     /// Input particle hypothesis (optional). If not given, the static particle
     /// hypothesis from the config is used.
@@ -51,7 +51,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Output seed collection - only seeds with successful parameter estimation
     /// are propagated (optional)
     std::optional<std::string> outputSeeds;
-    /// Output proto track collection - only tracks with successful parameter
+    /// Output prototrack collection - only tracks with successful parameter
     /// estimation are propagated (optional)
     std::optional<std::string> outputProtoTracks;
 

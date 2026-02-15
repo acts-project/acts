@@ -39,7 +39,7 @@ class RootTrackParameterWriter final
   struct Config {
     /// Input estimated track parameters collection.
     std::string inputTrackParameters;
-    /// Input reconstructed proto tracks collection.
+    /// Input reconstructed prototracks collection.
     std::string inputProtoTracks;
     /// Input particles collection.
     std::string inputParticles;

@@ -19,7 +19,7 @@ namespace ActsExamples {
 class ProtoTracksToTracks final : public IAlgorithm {
  public:
   struct Config {
-    /// Input proto tracks.
+    /// Input prototracks.
     std::string inputProtoTracks;
     /// Optional. Input track parameters passed to the output tracks.
     std::string inputTrackParameters;

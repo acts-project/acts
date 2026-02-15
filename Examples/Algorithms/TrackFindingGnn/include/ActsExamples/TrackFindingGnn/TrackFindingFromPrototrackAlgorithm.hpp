@@ -28,16 +28,16 @@
 
 namespace ActsExamples {
 
-/// This algorithm starts a CKF of from a given proto track.
+/// This algorithm starts a CKF of from a given prototrack.
 /// This means: If for any given surface there exists a measurements
-/// in the proto track, this measurement is returned.
-/// Otherwise (typically after the end of the proto track), the algorithm
+/// in the prototrack, this measurement is returned.
+/// Otherwise (typically after the end of the prototrack), the algorithm
 /// falls back to providing all possible measurements on the surface.
 ///
 class TrackFindingFromProtoTrackAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input proto tracks collection.
+    /// Input prototracks collection.
     std::string inputProtoTracks;
 
     /// Input measurements
