@@ -32,9 +32,9 @@ class MuonSegment {
   const Acts::Vector3& globalPosition() const { return m_globPos; }
   /// @brief Returns the reconstructed segment direction in global coordinates
   const Acts::Vector3& globalDirection() const { return m_globDir; }
-  /// @brief Returns the reconstructed segment position expressed in the local space point frame
+  /// @brief Returns the reconstructed segment position expressed in the local spacepoint frame
   const Acts::Vector3& localPosition() const { return m_localPos; }
-  /// @brief Returns the reconstructed segment direction expressed in the local space point frame
+  /// @brief Returns the reconstructed segment direction expressed in the local spacepoint frame
   const Acts::Vector3& localDirection() const { return m_localDir; }
   /// @brief Returns the associated MS sector identifier
   const MuonId& id() const { return m_id; }

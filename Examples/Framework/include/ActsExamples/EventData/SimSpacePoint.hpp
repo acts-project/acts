@@ -20,10 +20,10 @@
 
 namespace ActsExamples {
 
-/// Space point representation of a measurement suitable for track seeding.
+/// spacepoint representation of a measurement suitable for track seeding.
 class SimSpacePoint {
  public:
-  /// Construct the space point from global position and selected variances.
+  /// Construct the spacepoint from global position and selected variances.
   ///
   /// @tparam position_t Input position type
   /// @param pos Global position
@@ -68,7 +68,7 @@ class SimSpacePoint {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
 
-  /// Construct the space point from global position and selected variances.
+  /// Construct the spacepoint from global position and selected variances.
   ///
   /// @tparam position_t Input position type
   /// @param pos Global position
@@ -154,7 +154,7 @@ class SimSpacePoint {
 
 inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
   // TODO would it be sufficient to check just the index under the assumption
-  //   that the same measurement index always produces the same space point?
+  //   that the same measurement index always produces the same spacepoint?
   // no need to check r since it is fully defined by x/y
 
   return (std::equal(lhs.sourceLinks().begin(), lhs.sourceLinks().end(),
@@ -170,7 +170,7 @@ inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
           (lhs.varianceT() == rhs.varianceT()));
 }
 
-/// Container of space points.
+/// Container of spacepoints.
 using SimSpacePointContainer = std::vector<SimSpacePoint>;
 
 }  // namespace ActsExamples

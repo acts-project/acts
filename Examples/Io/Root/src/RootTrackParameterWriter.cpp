@@ -193,7 +193,7 @@ ProcessCode RootTrackParameterWriter::writeT(
   for (std::size_t iparams = 0; iparams < trackParams.size(); ++iparams) {
     const auto& params = trackParams[iparams];
     // The reference surface of the parameters, i.e. also the reference surface
-    // of the first space point
+    // of the first spacepoint
     const auto& surface = params.referenceSurface();
 
     m_volumeId = surface.geometryId().volume();
@@ -244,14 +244,14 @@ ProcessCode RootTrackParameterWriter::writeT(
       m_t_particleSubParticle = matchedBarcode.subParticle();
       m_nMajorityHits = particleHitCounts.front().hitCount;
 
-      // Get the index of the first space point
+      // Get the index of the first spacepoint
       const auto& hitIdx = ptrack.front();
       // Get the sim hits via the measurement to sim hits map
       auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
       auto [truthLocal, truthPos4, truthUnitDir] =
           averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
 
-      // Get the truth track parameter at the first space point
+      // Get the truth track parameter at the first spacepoint
       m_t_loc0 = truthLocal[Acts::ePos0];
       m_t_loc1 = truthLocal[Acts::ePos1];
       m_t_phi = phi(truthUnitDir);

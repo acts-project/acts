@@ -22,7 +22,7 @@ namespace Acts {
 
 namespace {
 
-/// Check the compatibility of strip space point coordinates in xyz assuming
+/// Check the compatibility of strip spacepoint coordinates in xyz assuming
 /// the Bottom-Middle direction with the strip measurement details
 bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
                           const std::array<float, 3>& spacePointPosition,

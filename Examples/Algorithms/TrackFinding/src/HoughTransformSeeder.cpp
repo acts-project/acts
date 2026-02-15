@@ -104,7 +104,7 @@ HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
   //
   // the geometry selections must be mutually exclusive, i.e. if we have a
   // selection that contains both a volume and a layer within that same volume,
-  // we would create the space points for the layer twice.
+  // we would create the spacepoints for the layer twice.
   auto isDuplicate = [](Acts::GeometryIdentifier ref,
                         Acts::GeometryIdentifier cmp) {
     // code assumes ref < cmp and that only volume and layer can be non-zero
@@ -459,11 +459,11 @@ std::vector<std::vector<int>> HoughTransformSeeder::getComboIndices(
 }
 
 void HoughTransformSeeder::addSpacePoints(const AlgorithmContext& ctx) const {
-  // construct the combined input container of space point pointers from all
+  // construct the combined input container of spacepoint pointers from all
   // configured input sources.
   for (const auto& isp : m_inputSpacePoints) {
     const auto& spContainer = (*isp)(ctx);
-    ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
+    ACTS_DEBUG("Inserting " << spContainer.size() << " spacepoints from "
                             << isp->key());
     for (auto& sp : spContainer) {
       double r = Acts::fastHypot(sp.x(), sp.y());
@@ -490,7 +490,7 @@ void HoughTransformSeeder::addSpacePoints(const AlgorithmContext& ctx) const {
 void HoughTransformSeeder::addMeasurements(const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
 
-  ACTS_DEBUG("Inserting " << measurements.size() << " space points from "
+  ACTS_DEBUG("Inserting " << measurements.size() << " spacepoints from "
                           << m_cfg.inputMeasurements);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {

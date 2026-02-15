@@ -13,11 +13,11 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 namespace Acts {
-/// Configuration for space point builder setup.
+/// Configuration for spacepoint builder setup.
 struct SpacePointBuilderConfig {
   /// Tracking geometry
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-  /// Perform the perpendicular projection for space point finding
+  /// Perform the perpendicular projection for spacepoint finding
   bool usePerpProj = false;
 
   /// The accessor to retrieve surfaces from source links

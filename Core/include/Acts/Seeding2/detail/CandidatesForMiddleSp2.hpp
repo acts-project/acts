@@ -21,9 +21,9 @@ struct TripletCandidate2 {
   TripletCandidate2() = default;
 
   /// @brief constructor
-  /// @param b The bottom space point
-  /// @param m The middle space point
-  /// @param t The top space point
+  /// @param b The bottom spacepoint
+  /// @param m The middle spacepoint
+  /// @param t The top spacepoint
   /// @param w The quality of the candidate
   /// @param z The z coordinate of the origin
   /// @param q Whether the candidate is high or low quality
@@ -72,9 +72,9 @@ class CandidatesForMiddleSp2 {
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
-  /// @param spB Bottom space point
-  /// @param spM Medium space point
-  /// @param spT Top space point
+  /// @param spB Bottom spacepoint
+  /// @param spM Medium spacepoint
+  /// @param spT Top spacepoint
   /// @param weight The quality of the triplet candidate
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality

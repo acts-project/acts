@@ -30,12 +30,12 @@ concept CompositeSpacePointFastCalibrator =
       /// @brief Returns the drift velocity of the straw measurement's radius - time relation
       ///        which is defined as the first derivative of the relation.
       /// @param ctx: Calibration context to access the calibration constants (Experiment specific)
-      /// @param spacePoint: Reference to the calibrated space point
+      /// @param spacePoint: Reference to the calibrated spacepoint
       { calibrator.driftVelocity(ctx, spacePoint, t0) } -> std::same_as<double>;
       /// @brief Returns the drift acceleration of the straw measurement's radius - time relation
       ///        which is defined as the second derivative of the relation
       /// @param ctx: Calibration context to access the calibration constants (Experiment specific)
-      /// @param spacePoint: Reference to the calibrated space point
+      /// @param spacePoint: Reference to the calibrated spacepoint
       {
         calibrator.driftAcceleration(ctx, spacePoint, t0)
       } -> std::same_as<double>;
@@ -43,7 +43,7 @@ concept CompositeSpacePointFastCalibrator =
       { calibrator.driftRadius(ctx, spacePoint, t0) } -> std::same_as<double>;
     };
 
-/// @brief Interface concept for a CompositeSpacePointCalibrator. The space point
+/// @brief Interface concept for a CompositeSpacePointCalibrator. The spacepoint
 ///        container is parsed to the interface together with a reference track
 ///        position, direction and the time offset, all expressed at the
 ///        reference plane z=0.
@@ -57,7 +57,7 @@ concept CompositeSpacePointCalibrator =
              const CalibrationContext& ctx,
              const Acts::RemovePointer_t<typename CalibCont_t::value_type>&
                  measurement) {
-      ///  @brief Calibrate the entire input space point container using the external track parameters
+      ///  @brief Calibrate the entire input spacepoint container using the external track parameters
       ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
       ///  @param trackPos: Position of the track / segment
       ///  @param trackDir: Direction of the track / segment
@@ -70,19 +70,19 @@ concept CompositeSpacePointCalibrator =
       ///        left or on the right-hand side of the given line
       ///  @param trackPos: Position of the track / segment
       ///  @param trackDir: Direction of the track / segment
-      ///  @param calibCont: Mutable reference to the calibrate composite space point container
+      ///  @param calibCont: Mutable reference to the calibrate composite spacepoint container
       {
         calibrator.updateSigns(trackPos, trackDir, calibCont)
       } -> std::same_as<void>;
       /// @brief Returns the drift velocity of the straw measurement's radius - time relation
       ///        which is defined as the first derivative of the relation.
       ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
-      ///  @param measurement: Reference to the calibrated space point
+      ///  @param measurement: Reference to the calibrated spacepoint
       { calibrator.driftVelocity(ctx, measurement) } -> std::same_as<double>;
       /// @brief Returns the drift acceleration of the straw measurement's radius - time relation
       ///        which is defined as the second derivative of the relation
       ///  @param ctx: Calibration context to access the calibration constants (Experiment specific)
-      ///  @param measurement: Reference to the calibrated space point
+      ///  @param measurement: Reference to the calibrated spacepoint
       {
         calibrator.driftAcceleration(ctx, measurement)
       } -> std::same_as<double>;

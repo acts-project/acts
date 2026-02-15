@@ -31,10 +31,10 @@ class Impl final : public DoubletSeedFinder {
   /// Iterates over dublets and tests the compatibility by applying a series of
   /// cuts that can be tested with only two SPs.
   ///
-  /// @param config Doublet cuts that define the compatibility of space points
-  /// @param middleSp Space point candidate to be used as middle SP in a seed
-  /// @param middleSpInfo Information about the middle space point
-  /// @param candidateSps Range or subet of space points to be used as candidates
+  /// @param config Doublet cuts that define the compatibility of spacepoints
+  /// @param middleSp spacepoint candidate to be used as middle SP in a seed
+  /// @param middleSpInfo Information about the middle spacepoint
+  /// @param candidateSps Range or subet of spacepoints to be used as candidates
   ///   for middle SP in a seed. In case of `sortedByR` - an offset will be
   ///   applied based on the middle SP radius.
   /// @param compatibleDoublets Output container for compatible doublets

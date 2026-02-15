@@ -60,7 +60,7 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
     throw std::invalid_argument("No simulated particles were parsed");
   }
   if (m_cfg.outputSpacePoints.empty()) {
-    throw std::invalid_argument("No output space points were defined");
+    throw std::invalid_argument("No output spacepoints were defined");
   }
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements output collection");
@@ -84,7 +84,7 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
 
   ACTS_DEBUG("Retrieve sim hits and particles from "
              << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
-  ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
+  ACTS_DEBUG("Write produced spacepoints to " << m_cfg.outputSpacePoints);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
@@ -132,11 +132,11 @@ Transform3 MuonSpacePointDigitizer::toSpacePointFrame(
   const TrackingVolume* volume =
       trackingGeometry().findVolume(toChamberId(hitId));
   assert(volume != nullptr);
-  /// Transformation to the common coordinate system of all space points
+  /// Transformation to the common coordinate system of all spacepoints
   const Transform3 parentTrf{AngleAxis3{90._degree, Vector3::UnitZ()} *
                              volume->globalToLocalTransform(gctx) *
                              hitSurf->localToGlobalTransform(gctx)};
-  ACTS_VERBOSE("Transform into space point frame for surface "
+  ACTS_VERBOSE("Transform into spacepoint frame for surface "
                << hitId << " is \n"
                << toString(parentTrf));
   return parentTrf;
@@ -183,7 +183,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     const Transform3& surfLocToGlob{hitSurf->localToGlobalTransform(gctx)};
 
-    /// Transformation to the common coordinate system of all space points
+    /// Transformation to the common coordinate system of all spacepoints
     const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
     /// Retrieve the bounds
     const auto& bounds = hitSurf->bounds();
@@ -299,7 +299,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
             default:
               convertSp = false;
           }
-          /// Define the space point coordinates
+          /// Define the spacepoint coordinates
           if (convertSp) {
             newSp.defineCoordinates(
                 Vector3{parentTrf * smearedHit},
@@ -399,8 +399,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
           break;
         }
         default:
-          ACTS_DEBUG(
-              "Unsupported detector case in muon space point digitizer.");
+          ACTS_DEBUG("Unsupported detector case in muon spacepoint digitizer.");
           convertSp = false;
       }
 
@@ -420,7 +419,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
         for (const auto& spacePoint : bucket) {
           sstr << " *** " << spacePoint << std::endl;
         }
-        ACTS_VERBOSE("Safe " << bucket.size() << " space points for chamber "
+        ACTS_VERBOSE("Safe " << bucket.size() << " spacepoints for chamber "
                              << volId << "\n"
                              << sstr.str());
       }

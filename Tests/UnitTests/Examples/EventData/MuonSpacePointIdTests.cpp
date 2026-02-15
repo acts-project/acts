@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(MainTest) {
            st < toUnderlying(StationName::MaxVal); ++st) {
         const auto stName = static_cast<StationName>(st);
         for (std::uint16_t sector = 1; sector <= sectorMax; ++sector) {
-          /// Create a reference space point object
+          /// Create a reference spacepoint object
           Identifier refId{};
           refId.setChamber(stName, side, sector, tech);
           BOOST_CHECK_EQUAL(refId.msStation(), stName);

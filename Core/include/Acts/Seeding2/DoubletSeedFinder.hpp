@@ -51,7 +51,7 @@ class DoubletsForMiddleSp {
   }
 
   /// Add a new doublet with associated parameters
-  /// @param sp Space point index for the doublet
+  /// @param sp spacepoint index for the doublet
   /// @param cotTheta Cotangent of polar angle
   /// @param iDeltaR Inverse delta R parameter
   /// @param er Error in R coordinate
@@ -68,8 +68,8 @@ class DoubletsForMiddleSp {
     m_xy.push_back({x, y});
   }
 
-  /// Get reference to space point indices container
-  /// @return Const reference to space point indices vector
+  /// Get reference to spacepoint indices container
+  /// @return Const reference to spacepoint indices vector
   const std::vector<SpacePointIndex2>& spacePoints() const {
     return m_spacePoints;
   }
@@ -119,8 +119,8 @@ class DoubletsForMiddleSp {
     /// @return The index
     Index index() const { return m_index; }
 
-    /// Get space point index pair
-    /// @return The space point index
+    /// Get spacepoint index pair
+    /// @return The spacepoint index
     SpacePointIndex2 spacePointIndex() const {
       return m_container->m_spacePoints[m_index];
     }
@@ -260,7 +260,7 @@ class DoubletsForMiddleSp {
   std::vector<std::array<float, 2>> m_xy;
 };
 
-/// Derived quantities for the middle space point in a doublet.
+/// Derived quantities for the middle spacepoint in a doublet.
 struct MiddleSpInfo {
   /// minus one over radius of middle SP
   float uIP{};
@@ -273,7 +273,7 @@ struct MiddleSpInfo {
 };
 
 /// Interface and a collection of standard implementations for a doublet seed
-/// finder. Given a starting space point and a collection of candidates, it
+/// finder. Given a starting spacepoint and a collection of candidates, it
 /// finds all doublets that satisfy the selection criteria. For the standard
 /// implementations the criteria are given by interaction point cuts.
 ///
@@ -285,10 +285,10 @@ class DoubletSeedFinder {
   /// includes doublet cuts, steering switches, and assumptions about the space
   /// points.
   struct Config {
-    /// Whether the input space points are sorted by radius
+    /// Whether the input spacepoints are sorted by radius
     bool spacePointsSortedByRadius = false;
 
-    /// Direction of the doublet candidate space points. Either forward, also
+    /// Direction of the doublet candidate spacepoints. Either forward, also
     /// called top doublet, or backward, also called bottom doublet.
     Direction candidateDirection = Direction::Forward();
 
@@ -354,9 +354,9 @@ class DoubletSeedFinder {
     float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   };
 
-  /// Computes additional quantities from the middle space point which can be
+  /// Computes additional quantities from the middle spacepoint which can be
   /// reused during doublet finding.
-  /// @param spM Middle space point for doublet computation
+  /// @param spM Middle spacepoint for doublet computation
   /// @return MiddleSpInfo structure with computed quantities
   static MiddleSpInfo computeMiddleSpInfo(const ConstSpacePointProxy2& spM);
 
@@ -374,9 +374,9 @@ class DoubletSeedFinder {
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs.
   ///
-  /// @param middleSp Space point candidate to be used as middle SP in a seed
-  /// @param middleSpInfo Information about the middle space point
-  /// @param candidateSps Subset of space points to be used as candidates for
+  /// @param middleSp spacepoint candidate to be used as middle SP in a seed
+  /// @param middleSpInfo Information about the middle spacepoint
+  /// @param candidateSps Subset of spacepoints to be used as candidates for
   ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
   virtual void createDoublets(
@@ -387,9 +387,9 @@ class DoubletSeedFinder {
   /// Creates compatible dublets by applying a series of cuts that can be
   /// tested with only two SPs.
   ///
-  /// @param middleSp Space point candidate to be used as middle SP in a seed
-  /// @param middleSpInfo Information about the middle space point
-  /// @param candidateSps Range of space points to be used as candidates for
+  /// @param middleSp spacepoint candidate to be used as middle SP in a seed
+  /// @param middleSpInfo Information about the middle spacepoint
+  /// @param candidateSps Range of spacepoints to be used as candidates for
   ///   middle SP in a seed
   /// @param compatibleDoublets Output container for compatible doublets
   virtual void createDoublets(

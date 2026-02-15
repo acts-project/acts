@@ -24,9 +24,9 @@ class TTree;
 
 namespace ActsExamples {
 
-/// Write out space points as a flat TTree.
+/// Write out spacepoints as a flat TTree.
 ///
-/// Each entry in the TTree corresponds to one space point for optimum writing
+/// Each entry in the TTree corresponds to one spacepoint for optimum writing
 /// speed. The event number is part of the written data.
 ///
 /// Safe to use from multiple writer threads. To avoid thread-saftey issues,
@@ -83,16 +83,16 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   /// Hit surface identifier.
   std::uint64_t m_measurementId1 = 0;
   std::uint64_t m_measurementId2 = 0;
-  /// Space point surface identifier.
+  /// Spacepoint surface identifier.
   std::uint64_t m_geometryId1 = 0;
   std::uint64_t m_geometryId2 = 0;
-  /// Global space point position components in mm.
+  /// Global spacepoint position components in mm.
   float m_x = std::numeric_limits<float>::infinity();
   float m_y = std::numeric_limits<float>::infinity();
   float m_z = std::numeric_limits<float>::infinity();
   float m_r = std::numeric_limits<float>::infinity();
   float m_t = std::numeric_limits<float>::infinity();
-  // Global space point position uncertainties
+  // Global spacepoint position uncertainties
   float m_var_r = std::numeric_limits<float>::infinity();
   float m_var_z = std::numeric_limits<float>::infinity();
   // Fake spacepoint (only relevant for strip)

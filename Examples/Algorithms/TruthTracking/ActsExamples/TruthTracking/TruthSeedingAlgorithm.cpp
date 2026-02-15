@@ -36,12 +36,12 @@ TruthSeedingAlgorithm::TruthSeedingAlgorithm(Config cfg,
         "Missing input particle-measurements map collection");
   }
   if (m_cfg.inputSpacePoints.empty()) {
-    throw std::invalid_argument("Missing seeds or space point collection");
+    throw std::invalid_argument("Missing seeds or spacepoint collection");
   }
 
   for (const auto& spName : m_cfg.inputSpacePoints) {
     if (spName.empty()) {
-      throw std::invalid_argument("Invalid space point input collection");
+      throw std::invalid_argument("Invalid spacepoint input collection");
     }
 
     auto& handle = m_inputSpacePoints.emplace_back(
@@ -87,7 +87,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   const auto& simHits = m_inputSimHits(ctx);
   const auto& measurementSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
-  // construct the combined input container of space point pointers from all
+  // construct the combined input container of spacepoint pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
   std::size_t nSpacePoints = 0;
@@ -99,7 +99,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_inputSpacePoints) {
     for (const auto& spacePoint : (*isp)(ctx)) {
-      // since the event store owns the space points, their pointers should be
+      // since the event store owns the spacepoints, their pointers should be
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
     }
@@ -119,7 +119,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   for (const auto& spp : spacePointPtrs) {
     if (spp->sourceLinks().empty()) {
-      ACTS_WARNING("Missing source link in space point");
+      ACTS_WARNING("Missing source link in spacepoint");
       continue;
     }
     for (const auto& slink : spp->sourceLinks()) {
@@ -170,7 +170,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       ACTS_WARNING("Particle " << particle << " has less than 3 measurements");
       continue;
     }
-    // Space points on the proto track
+    // spacepoints on the proto track
     std::vector<const SimSpacePoint*> spacePointsOnTrack;
     spacePointsOnTrack.reserve(track.size());
     // Loop over the measurement index on the proto track to find the space
@@ -181,14 +181,14 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
         spacePointsOnTrack.push_back(it->second);
       }
     }
-    // At least three space points are required
+    // At least three spacepoints are required
     if (spacePointsOnTrack.size() < 3) {
       continue;
     }
 
-    // Loop over the found space points to find the seed with the maximum score.
+    // Loop over the found spacepoints to find the seed with the maximum score.
     // The score is defined as the product of the deltaR of the bottom-middle
-    // and middle-top space point pairs to favor separation between both pairs.
+    // and middle-top spacepoint pairs to favor separation between both pairs.
     bool seedFound = false;
     std::array<std::size_t, 3> bestSPIndices{};
     double maxScore = std::numeric_limits<double>::min();
@@ -200,7 +200,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
             std::abs(spacePointsOnTrack[im]->z() - spacePointsOnTrack[ib]->z());
         if (bmDeltaR < 0) {
           ACTS_WARNING(
-              "Space points are not sorted in r. Difference middle-bottom: "
+              "spacepoints are not sorted in r. Difference middle-bottom: "
               << bmDeltaR);
           continue;
         }
@@ -219,7 +219,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                               spacePointsOnTrack[im]->z());
           if (mtDeltaR < 0) {
             ACTS_WARNING(
-                "Space points are not sorted in r. Difference top-middle: "
+                "spacepoints are not sorted in r. Difference top-middle: "
                 << mtDeltaR);
             continue;
           }

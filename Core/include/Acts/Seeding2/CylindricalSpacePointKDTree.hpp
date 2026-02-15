@@ -17,14 +17,14 @@
 
 namespace Acts::Experimental {
 
-/// A cylindrical space point KD-tree used for seeding in a cylindrical detector
+/// A cylindrical spacepoint KD-tree used for seeding in a cylindrical detector
 /// geometry.
 /// The tree is defined in cylindrical coordinates (phi, r, z) and allows for
-/// efficient access to space points based on their azimuthal angle,
+/// efficient access to spacepoints based on their azimuthal angle,
 /// radial distance, and z-coordinate.
 class CylindricalSpacePointKDTree {
  public:
-  /// Space point index type used in the grid.
+  /// spacepoint index type used in the grid.
   using SpacePointIndex = std::uint32_t;
 
   /// @brief Set the number of dimensions in which to embed points. This is just
@@ -41,7 +41,7 @@ class CylindricalSpacePointKDTree {
   /// has leaf size 4.
   using Tree = KDTree<NDims, SpacePointIndex, float, std::array, 4>;
 
-  /// Configuration options for cylindrical space point selection.
+  /// Configuration options for cylindrical spacepoint selection.
   struct Options {
     /// maximum extension of sensitive detector layer relevant for seeding as
     /// distance from x=y=0 (i.e. in r)
@@ -82,7 +82,7 @@ class CylindricalSpacePointKDTree {
     float deltaPhiMax = 0.085;
   };
 
-  /// Candidate space point indices grouped by z ordering.
+  /// Candidate spacepoint indices grouped by z ordering.
   struct Candidates {
     /// denotes the candidates bottom seed points, assuming that the track has
     /// monotonically _increasing_ z position
@@ -113,7 +113,7 @@ class CylindricalSpacePointKDTree {
     }
   };
 
-  /// Construct a cylindrical space point grid with the given configuration and
+  /// Construct a cylindrical spacepoint grid with the given configuration and
   /// an optional logger.
   /// @param tree KD tree
   /// @param logger Optional logger
@@ -121,8 +121,8 @@ class CylindricalSpacePointKDTree {
       Tree tree, std::unique_ptr<const Logger> logger = getDefaultLogger(
                      "CylindricalSpacePointKDTree", Logging::Level::INFO));
 
-  /// @brief Return the number of space points in the tree
-  /// @return Number of space points
+  /// @brief Return the number of spacepoints in the tree
+  /// @return Number of spacepoints
   std::size_t size() const { return m_tree.size(); }
 
   /// @brief Return iterator to the beginning of the tree
@@ -134,13 +134,13 @@ class CylindricalSpacePointKDTree {
 
   /// @brief Get valid orthogonal range for low-high pairs
   /// @param options Search options
-  /// @param low Low space point
+  /// @param low Low spacepoint
   /// @return Valid range
   Tree::range_t validTupleOrthoRangeLH(const Options& options,
                                        const ConstSpacePointProxy2& low) const;
   /// @brief Get valid orthogonal range for high-low pairs
   /// @param options Search options
-  /// @param high High space point
+  /// @param high High spacepoint
   /// @return Valid range
   Tree::range_t validTupleOrthoRangeHL(const Options& options,
                                        const ConstSpacePointProxy2& high) const;
@@ -148,7 +148,7 @@ class CylindricalSpacePointKDTree {
   /// @brief Find valid seed tuples
   /// @param lhOptions Low-high search options
   /// @param hlOptions High-low search options
-  /// @param spM Middle space point
+  /// @param spM Middle spacepoint
   /// @param nTopSeedConf Number of top seed configurations
   /// @param candidates Output candidates container
   void validTuples(const Options& lhOptions, const Options& hlOptions,
@@ -163,10 +163,10 @@ class CylindricalSpacePointKDTree {
   const Logger& logger() const { return *m_logger; }
 };
 
-/// Builder for cylindrical space point KD-trees.
+/// Builder for cylindrical spacepoint KD-trees.
 class CylindricalSpacePointKDTreeBuilder {
  public:
-  /// Space point index type used in the grid.
+  /// spacepoint index type used in the grid.
   using SpacePointIndex = CylindricalSpacePointKDTree::SpacePointIndex;
 
   /// @brief Set the number of dimensions in which to embed points. This is just
@@ -183,44 +183,44 @@ class CylindricalSpacePointKDTreeBuilder {
   /// has leaf size 4.
   using Tree = CylindricalSpacePointKDTree::Tree;
 
-  /// Construct a cylindrical space point grid with the given configuration
+  /// Construct a cylindrical spacepoint grid with the given configuration
   /// and an optional logger.
   /// @param logger Optional logger instance
   explicit CylindricalSpacePointKDTreeBuilder(
       std::unique_ptr<const Logger> logger = getDefaultLogger(
           "CylindricalSpacePointKDTree", Logging::Level::INFO));
 
-  /// Get the number of space points in the grid.
-  /// @return The number of space points in the grid
+  /// Get the number of spacepoints in the grid.
+  /// @return The number of spacepoints in the grid
   std::size_t size() const { return m_points.size(); }
 
-  /// Reserve space for space points
-  /// @param n Number of space points to reserve space for
+  /// Reserve space for spacepoints
+  /// @param n Number of spacepoints to reserve space for
   void reserve(std::size_t n) { m_points.reserve(n); }
 
   /// Clear the grid and drop all state. The object will behave like a newly
   /// constructed one.
   void clear() { m_points.clear(); }
 
-  /// Insert a space point into the grid.
-  /// @param index The index of the space point to insert
-  /// @param phi The azimuthal angle of the space point in radians
-  /// @param r The radial distance of the space point from the origin
-  /// @param z The z-coordinate of the space point
+  /// Insert a spacepoint into the grid.
+  /// @param index The index of the spacepoint to insert
+  /// @param phi The azimuthal angle of the spacepoint in radians
+  /// @param r The radial distance of the spacepoint from the origin
+  /// @param z The z-coordinate of the spacepoint
   void insert(SpacePointIndex index, float phi, float r, float z);
 
-  /// Insert a space point into the grid.
-  /// @param sp The space point to insert
+  /// Insert a spacepoint into the grid.
+  /// @param sp The spacepoint to insert
   void insert(const ConstSpacePointProxy2& sp) {
     return insert(sp.index(), sp.phi(), sp.r(), sp.z());
   }
 
-  /// Fill the grid with space points from the container.
-  /// @param spacePoints The space point container to fill the grid with
+  /// Fill the grid with spacepoints from the container.
+  /// @param spacePoints The spacepoint container to fill the grid with
   void extend(const SpacePointContainer2::ConstRange& spacePoints);
 
-  /// Build the KD-tree from accumulated space points
-  /// @return The constructed cylindrical space point KD-tree
+  /// Build the KD-tree from accumulated spacepoints
+  /// @return The constructed cylindrical spacepoint KD-tree
   CylindricalSpacePointKDTree build();
 
  private:

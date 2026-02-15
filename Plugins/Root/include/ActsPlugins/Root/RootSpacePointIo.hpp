@@ -19,47 +19,47 @@ namespace ActsPlugins {
 /// @addtogroup root_plugin
 /// @{
 
-/// Root space point reading and writing utility
+/// Root spacepoint reading and writing utility
 class RootSpacePointIo {
  public:
   /// @brief sets the branch connection for writing to a file
   ///
   /// @param ttree the TTree to write to
-  /// @param spacePoints the space points to write
+  /// @param spacePoints the spacepoints to write
   void connectForWrite(TTree& ttree,
                        const Acts::SpacePointContainer2& spacePoints);
 
   /// @brief sets the branch connection for reading from a file
   ///
   /// @param tchain the TChain to read from
-  /// @param spacePoints the space points to read into
+  /// @param spacePoints the spacepoints to read into
   void connectForRead(TChain& tchain,
                       const Acts::SpacePointContainer2& spacePoints);
 
-  /// @brief Write a space point to the tree
+  /// @brief Write a spacepoint to the tree
   /// @note the caller has to do the TTree::Fill() after this call
   ///
-  /// @param spacePoint the space point to write
+  /// @param spacePoint the spacepoint to write
   void write(const Acts::ConstSpacePointProxy2& spacePoint);
 
-  /// @brief Write the space points to the tree
+  /// @brief Write the spacepoints to the tree
   ///
-  /// @param spacePoints the space points to write
+  /// @param spacePoints the spacepoints to write
   /// @param ttree the TTree to write to
   void write(const Acts::SpacePointContainer2& spacePoints, TTree& ttree);
 
-  /// @brief Read a space point from the tree
+  /// @brief Read a spacepoint from the tree
   /// @note the caller has to do the TChain::GetEntry() before this call
   ///
-  /// @param spacePoint the space point to read into
-  /// @param index the original index of the space point in the ROOT file
+  /// @param spacePoint the spacepoint to read into
+  /// @param index the original index of the spacepoint in the ROOT file
   void read(Acts::MutableSpacePointProxy2& spacePoint,
             Acts::SpacePointIndex2 index);
 
-  /// @brief Read the space points from the tree
+  /// @brief Read the spacepoints from the tree
   ///
   /// @param tchain the TChain to read from
-  /// @param spacePoints the space points to read into
+  /// @param spacePoints the spacepoints to read into
   void read(TChain& tchain, Acts::SpacePointContainer2& spacePoints);
 
  private:

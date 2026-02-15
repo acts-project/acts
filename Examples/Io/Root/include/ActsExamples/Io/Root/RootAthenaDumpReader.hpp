@@ -45,11 +45,11 @@ class RootAthenaDumpReader : public IReader {
     std::vector<std::string> inputfiles;
     // name of the output measurements
     std::string outputMeasurements = "athena_measurements";
-    // name of the output pixel space points
+    // name of the output pixel spacepoints
     std::string outputPixelSpacePoints = "athena_pixel_spacepoints";
-    // name of the output strip space points
+    // name of the output strip spacepoints
     std::string outputStripSpacePoints = "athena_strip_spacepoints";
-    // name of the output space points
+    // name of the output spacepoints
     std::string outputSpacePoints = "athena_spacepoints";
     // name of the output clusters
     std::string outputClusters = "athena_clusters";

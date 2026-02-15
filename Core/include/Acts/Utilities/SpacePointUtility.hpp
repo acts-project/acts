@@ -60,11 +60,11 @@ struct SpacePointParameters {
 };
 
 /// @class SpacePointUtility
-/// Utility helper for space point calculations.
+/// Utility helper for spacepoint calculations.
 class SpacePointUtility {
  public:
   /// Constructor
-  /// @param cfg Configuration for the space point builder
+  /// @param cfg Configuration for the spacepoint builder
   explicit SpacePointUtility(SpacePointBuilderConfig cfg)
       : m_config(std::move(cfg)) {}
 
@@ -118,18 +118,18 @@ class SpacePointUtility {
   /// @param [in] stripLengthTolerance Tolerance scaling factor on the strip
   /// detector element length
   ///
-  /// @return Result whether the space point calculation was successful
+  /// @return Result whether the spacepoint calculation was successful
   Result<void> calculateStripSPPosition(
       const std::pair<Vector3, Vector3>& stripEnds1,
       const std::pair<Vector3, Vector3>& stripEnds2, const Vector3& posVertex,
       SpacePointParameters& spParams, const double stripLengthTolerance) const;
 
-  /// @brief This function tests if a space point can be estimated by a more
+  /// @brief This function tests if a spacepoint can be estimated by a more
   /// tolerant treatment of construction. In fact, this function indirectly
   /// allows shifts of the vertex.
   ///
   /// @param [in] spParams container that stores geometric parameters and rules of
-  /// the space point formation
+  /// the spacepoint formation
   /// @param [in] stripLengthGapTolerance Tolerance scaling factor of the gap
   /// between strip detector elements
   ///
@@ -153,12 +153,12 @@ class SpacePointUtility {
       const double maxDistance, const double maxAngleTheta2,
       const double maxAnglePhi2) const;
 
-  /// @brief Calculates a space point without using the vertex
-  /// @note This is mostly to resolve space points from cosmic data
+  /// @brief Calculates a spacepoint without using the vertex
+  /// @note This is mostly to resolve spacepoints from cosmic data
   /// @param stripEnds1 The ends of one strip
   /// @param stripEnds2 The ends of another strip
   /// @param spParams SpacePointParamaters for the SP
-  /// @return parameter that indicates the location of the space point; returns
+  /// @return parameter that indicates the location of the spacepoint; returns
   /// 1. if it failed
   /// @note The meaning of the parameter is explained in more detail in the
   /// function body

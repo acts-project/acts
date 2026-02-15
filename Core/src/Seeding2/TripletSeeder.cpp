@@ -126,7 +126,7 @@ void TripletSeeder::createSeedsFromGroup(
     SeedContainer2& outputSeeds) const {
   assert((bottomFinder.config().spacePointsSortedByRadius ==
           topFinder.config().spacePointsSortedByRadius) &&
-         "Inconsistent space point sorting");
+         "Inconsistent spacepoint sorting");
 
   std::array<SpacePointContainer2::ConstSubset, 1> bottomSpGroups{bottomSps};
   std::array<SpacePointContainer2::ConstSubset, 1> topSpGroups{topSps};
@@ -147,7 +147,7 @@ void TripletSeeder::createSeedsFromGroups(
     SeedContainer2& outputSeeds) const {
   assert((bottomFinder.config().spacePointsSortedByRadius ==
           topFinder.config().spacePointsSortedByRadius) &&
-         "Inconsistent space point sorting");
+         "Inconsistent spacepoint sorting");
   const bool spacePointsSortedByRadius =
       bottomFinder.config().spacePointsSortedByRadius;
 
@@ -156,15 +156,15 @@ void TripletSeeder::createSeedsFromGroups(
   }
 
   if (spacePointsSortedByRadius) {
-    // Initialize initial offsets for bottom and top space points with binary
-    // search. This requires at least one middle space point to be present which
+    // Initialize initial offsets for bottom and top spacepoints with binary
+    // search. This requires at least one middle spacepoint to be present which
     // is already checked above.
     const ConstSpacePointProxy2 firstMiddleSp = middleSpGroup.front();
     const float firstMiddleSpR = firstMiddleSp.zr()[1];
 
     for (auto& bottomSpGroup : bottomSpGroups) {
-      // Find the first bottom space point that is within the deltaRMax of the
-      // first middle space point.
+      // Find the first bottom spacepoint that is within the deltaRMax of the
+      // first middle spacepoint.
       const auto low = std::ranges::lower_bound(
           bottomSpGroup, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
           [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
@@ -172,8 +172,8 @@ void TripletSeeder::createSeedsFromGroups(
     }
 
     for (auto& topSpGroup : topSpGroups) {
-      // Find the first top space point that is within the deltaRMin of the
-      // first middle space point.
+      // Find the first top spacepoint that is within the deltaRMin of the
+      // first middle spacepoint.
       const auto low = std::ranges::lower_bound(
           topSpGroup, firstMiddleSpR + topFinder.config().deltaRMin, {},
           [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });

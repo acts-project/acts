@@ -12,7 +12,7 @@
 
 namespace Acts {
 
-/// Proxy giving read access to space point data in a container.
+/// Proxy giving read access to spacepoint data in a container.
 template <typename container_t>
 class SpacePointProxy {
  public:
@@ -24,15 +24,15 @@ class SpacePointProxy {
   // Never take the ownership of the container
   SpacePointProxy(container_t&& container, std::size_t index) = delete;
   /// Construct from container reference and index
-  /// @param container Reference to the space point container
-  /// @param index Index of the space point in the container
+  /// @param container Reference to the spacepoint container
+  /// @param index Index of the spacepoint in the container
   SpacePointProxy(const container_t& container, std::size_t index);
 
-  /// Access the external space point
-  /// @return Const reference to the external space point
+  /// Access the external spacepoint
+  /// @return Const reference to the external spacepoint
   const ValueType& externalSpacePoint() const;
-  /// Get the index of this space point
-  /// @return Index of this space point
+  /// Get the index of this spacepoint
+  /// @return Index of this spacepoint
   std::size_t index() const;
 
   /// Get the x coordinate

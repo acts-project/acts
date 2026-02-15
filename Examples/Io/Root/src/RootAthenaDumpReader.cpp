@@ -507,7 +507,7 @@ RootAthenaDumpReader::readSpacepoints(
   SimSpacePointContainer spacePoints;
   spacePoints.reserve(nSP);
 
-  // Loop on space points
+  // Loop on spacepoints
   std::size_t skippedSpacePoints = 0;
   for (int isp = 0; isp < nSP; isp++) {
     auto isPhiOverlap = (SPisOverlap[isp] == 2) || (SPisOverlap[isp] == 3);

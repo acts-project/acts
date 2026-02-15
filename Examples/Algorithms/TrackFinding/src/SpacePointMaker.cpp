@@ -158,13 +158,13 @@ SpacePointMaker::SpacePointMaker(Config cfg, Acts::Logging::Level lvl)
     throw std::invalid_argument("Missing measurement input collection");
   }
   if (m_cfg.outputSpacePoints.empty()) {
-    throw std::invalid_argument("Missing space point output collection");
+    throw std::invalid_argument("Missing spacepoint output collection");
   }
   if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
   if (m_cfg.geometrySelection.empty() && m_cfg.stripGeometrySelection.empty()) {
-    throw std::invalid_argument("Missing space point maker geometry selection");
+    throw std::invalid_argument("Missing spacepoint maker geometry selection");
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
@@ -186,7 +186,7 @@ SpacePointMaker::SpacePointMaker(Config cfg, Acts::Logging::Level lvl)
   //
   // the geometry selections must be mutually exclusive, i.e. if we have a
   // selection that contains both a volume and a layer within that same volume,
-  // we would create the space points for the layer twice.
+  // we would create the spacepoints for the layer twice.
   const auto isDuplicate = [](Acts::GeometryIdentifier ref,
                               Acts::GeometryIdentifier cmp) {
     // code assumes ref < cmp and that only volume and layer can be non-zero
@@ -220,7 +220,7 @@ SpacePointMaker::SpacePointMaker(Config cfg, Acts::Logging::Level lvl)
 }
 
 ProcessCode SpacePointMaker::initialize() {
-  ACTS_INFO("Space point geometry selection:");
+  ACTS_INFO("spacepoint geometry selection:");
   for (const auto& geoId : m_cfg.geometrySelection) {
     ACTS_INFO("  " << geoId);
   }
@@ -229,7 +229,7 @@ ProcessCode SpacePointMaker::initialize() {
 }
 
 void SpacePointMaker::initializeStripPartners() {
-  ACTS_INFO("Strip space point geometry selection:");
+  ACTS_INFO("Strip spacepoint geometry selection:");
   for (const auto& geoId : m_cfg.stripGeometrySelection) {
     ACTS_INFO("  " << geoId);
   }
@@ -351,7 +351,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
   }
 
   const std::size_t nPixelSpacePoints = spacePoints.size();
-  ACTS_DEBUG("Created " << nPixelSpacePoints << " pixel space points");
+  ACTS_DEBUG("Created " << nPixelSpacePoints << " pixel spacepoints");
 
   // Build strip spacepoints
   ACTS_DEBUG("Build strip spacepoints");
@@ -505,8 +505,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
   spacePoints.shrink_to_fit();
 
   ACTS_DEBUG("Created " << spacePoints.size() - nPixelSpacePoints
-                        << " strip space points");
-  ACTS_DEBUG("Created " << spacePoints.size() << " space points");
+                        << " strip spacepoints");
+  ACTS_DEBUG("Created " << spacePoints.size() << " spacepoints");
   m_outputSpacePoints(ctx, std::move(spacePoints));
 
   return ProcessCode::SUCCESS;

@@ -26,10 +26,10 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-/// Create space point representations from measurements.
+/// Create spacepoint representations from measurements.
 ///
-/// This implements simple space point construction, where each surface-based
-/// measurement translates into one space point using the surface
+/// This implements simple spacepoint construction, where each surface-based
+/// measurement translates into one spacepoint using the surface
 /// local-to-global transform.
 ///
 /// The algorithm takes both the source links and measurements container as
@@ -45,11 +45,11 @@ class SpacePointMaker final : public IAlgorithm {
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
-    /// Output space points collection.
+    /// Output spacepoints collection.
     std::string outputSpacePoints;
     /// Tracking geometry for transformation lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// For which part of the detector geometry should space points be created.
+    /// For which part of the detector geometry should spacepoints be created.
     ///
     /// Only volumes and layers can be set. Zero values can be used as wildcards
     /// to select larger parts of the hierarchy, i.e. setting only the volume
@@ -61,13 +61,13 @@ class SpacePointMaker final : public IAlgorithm {
     std::vector<Acts::GeometryIdentifier> stripGeometrySelection;
   };
 
-  /// Construct the space point maker.
+  /// Construct the spacepoint maker.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
   SpacePointMaker(Config cfg, Acts::Logging::Level lvl);
 
-  /// Run the space point construction.
+  /// Run the spacepoint construction.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure

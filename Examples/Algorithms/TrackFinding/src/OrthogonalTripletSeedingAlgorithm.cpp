@@ -51,7 +51,7 @@ static inline bool itkFastTrackingSPselect(const SimSpacePoint &sp) {
     return false;
   }
 
-  // Remove space points beyond eta=4 if their z is larger than the max seed
+  // Remove spacepoints beyond eta=4 if their z is larger than the max seed
   // z0 (150.)
   float cotTheta = 27.2899;  // corresponds to eta=4
   if ((zabs - 150.) > cotTheta * r) {
@@ -69,7 +69,7 @@ OrthogonalTripletSeedingAlgorithm::OrthogonalTripletSeedingAlgorithm(
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 
   if (m_cfg.useExtraCuts) {
-    // This function will be applied to select space points during grid filling
+    // This function will be applied to select spacepoints during grid filling
     m_spacePointSelector.connect<itkFastTrackingSPselect>();
   }
 
@@ -115,7 +115,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto &sp = spacePoints[i];
 
-    // check if the space point passes the selection
+    // check if the spacepoint passes the selection
     if (m_spacePointSelector.connected() && !m_spacePointSelector(sp)) {
       continue;
     }
@@ -138,7 +138,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   }
 
   ACTS_VERBOSE("Created k-d tree populated with " << kdTreeBuilder.size()
-                                                  << " space points");
+                                                  << " spacepoints");
 
   Acts::Experimental::CylindricalSpacePointKDTree kdTree =
       kdTreeBuilder.build();
@@ -298,10 +298,10 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
-                        << spacePoints.size() << " space points");
+                        << spacePoints.size() << " spacepoints");
 
   // we have seeds of proxies
-  // convert them to seed of external space points
+  // convert them to seed of external spacepoints
   SimSeedContainer seedContainerForStorage;
   seedContainerForStorage.reserve(seeds.size());
   for (const auto &seed : seeds) {

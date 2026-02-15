@@ -57,7 +57,7 @@ Result<Vector3> StripSpacePointBuilder::computeCosmicSpacePoint(
     const StripEnds& stripEnds1, const StripEnds& stripEnds2,
     const CosmicOptions& options) {
   // This approach assumes that no vertex is available. This option aims to
-  // approximate the space points from cosmic data.
+  // approximate the spacepoints from cosmic data.
   // The underlying assumption is that the best point is given by the closest
   // distance between both lines describing the SDEs. The point x on the first
   // SDE is parametrized as a + lambda0 * q with the top end a of the strip and
@@ -88,7 +88,7 @@ Result<Vector3> StripSpacePointBuilder::computeCosmicSpacePoint(
 
 namespace {
 
-/// @brief Struct for variables related to the calculation of space points
+/// @brief Struct for variables related to the calculation of spacepoints
 struct FormationState {
   /// Vector pointing from bottom to top end of first SDE
   Vector3 firstBtmToTop = Vector3::Zero();
@@ -119,7 +119,7 @@ struct FormationState {
 /// @param spParams Data container of the calculations
 /// @param stripLengthTolerance Tolerance scaling factor on the strip detector element length
 ///
-/// @return whether the space point calculation was successful
+/// @return whether the spacepoint calculation was successful
 Result<void> computeConstrainedFormationState(
     const StripSpacePointBuilder::StripEnds& stripEnds1,
     const StripSpacePointBuilder::StripEnds& stripEnds2, const Vector3& vertex,
@@ -168,14 +168,14 @@ Result<void> computeConstrainedFormationState(
   return Result<void>::success();
 }
 
-/// @brief This function tests if a space point can be estimated by a more
+/// @brief This function tests if a spacepoint can be estimated by a more
 /// tolerant treatment of construction. In fact, this function indirectly
 /// allows shifts of the vertex.
 ///
-/// @param state container that stores geometric parameters and rules of the space point formation
+/// @param state container that stores geometric parameters and rules of the spacepoint formation
 /// @param stripLengthGapTolerance Tolerance scaling factor of the gap between strip detector elements
 ///
-/// @return whether the space point calculation was successful
+/// @return whether the spacepoint calculation was successful
 Result<void> recoverConstrainedFormationState(
     FormationState& state, const double stripLengthGapTolerance) {
   const double magFirstBtmToTop = state.firstBtmToTop.norm();
@@ -211,7 +211,7 @@ Result<void> recoverConstrainedFormationState(
   /// worse overshoot.
   /// In order to treat both SDEs equally, the rescaling eventually needs to be
   /// performed several times. If these shifts allows m and n to be in the
-  /// limits, the space point can be stored.
+  /// limits, the spacepoint can be stored.
   /// @note This shift can be understood as a shift of the particle's
   /// trajectory. This is leads to a shift of the vertex. Since these two points
   /// are treated independently from other measurement, it is also possible to
@@ -234,7 +234,7 @@ Result<void> recoverConstrainedFormationState(
     // Move m and n towards 0
     state.m -= biggerOvershoot;
     state.n -= (biggerOvershoot / secOnFirstScale);
-    // Check if this recovered the space point
+    // Check if this recovered the spacepoint
     if (std::abs(state.m) > state.limit || std::abs(state.n) > state.limit) {
       return Result<void>::failure(SpacePointFormationError::OutsideLimits);
     }
@@ -252,7 +252,7 @@ Result<void> recoverConstrainedFormationState(
     // Move m and n towards 0
     state.m += biggerOvershoot;
     state.n += (biggerOvershoot / secOnFirstScale);
-    // Check if this recovered the space point
+    // Check if this recovered the spacepoint
     if (std::abs(state.m) > state.limit || std::abs(state.n) > state.limit) {
       return Result<void>::failure(SpacePointFormationError::OutsideLimits);
     }

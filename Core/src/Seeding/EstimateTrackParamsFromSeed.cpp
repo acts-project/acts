@@ -15,10 +15,10 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
                                                    const Vector3& sp1,
                                                    const Vector3& sp2,
                                                    const Vector3& bField) {
-  // Define a new coordinate frame with its origin at the bottom space point, z
+  // Define a new coordinate frame with its origin at the bottom spacepoint, z
   // axis long the magnetic field direction and y axis perpendicular to vector
-  // from the bottom to middle space point. Hence, the projection of the middle
-  // space point on the transverse plane will be located at the x axis of the
+  // from the bottom to middle spacepoint. Hence, the projection of the middle
+  // spacepoint on the transverse plane will be located at the x axis of the
   // new frame.
   const Vector3 relVec = sp1 - sp0;
   const Vector3 newZAxis = bField.normalized();
@@ -28,12 +28,12 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   rotation.col(0) = newXAxis;
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
-  // The center of the new frame is at the bottom space point
+  // The center of the new frame is at the bottom spacepoint
   const Translation3 trans(sp0);
   // The transform which constructs the new frame
   const Transform3 transform(trans * rotation);
 
-  // The coordinate of the middle and top space point in the new frame
+  // The coordinate of the middle and top spacepoint in the new frame
   const Vector3 local1 = transform.inverse() * sp1;
   const Vector3 local2 = transform.inverse() * sp2;
 
@@ -54,7 +54,7 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   // Initialize the free parameters vector
   FreeVector params = FreeVector::Zero();
 
-  // The bottom space point position
+  // The bottom spacepoint position
   params.segment<3>(eFreePos0) = sp0;
 
   // The estimated direction

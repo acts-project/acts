@@ -13,7 +13,7 @@
 
 namespace Acts {
 
-/// Error codes for space point formation operations
+/// Error codes for spacepoint formation operations
 /// @ingroup errors
 enum class SpacePointFormationError {
   // ensure all values are non-zero

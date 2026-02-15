@@ -20,7 +20,7 @@
 namespace ActsExamples {
 
 /// @brief Example implementation of a CompositeSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM.
-///         The space points are expressed in a local frame such that the x-axis
+///         The spacepoints are expressed in a local frame such that the x-axis
 ///         is parallel to the ATLAS Monitored Drift Tubes (Mdt), the y-axis
 ///         points within the tube layer & the z-axis outside of the plane.
 class MuonSpacePoint {
@@ -114,10 +114,10 @@ class MuonSpacePoint {
                     TechField tech);
     /// @brief Set the measurement layer & channel */
     void setLayAndCh(std::uint8_t layer, std::uint16_t ch);
-    /// @brief Define the measurement type of the space point
-    /// @param measEta: Flag stating whether the space point measures the precision (eta) coordinate
-    /// @param measPhi: Flag stating whether the space point measures the non-precsion (phi) coordinate
-    /// @param measTime: Flag stating whether the space point carries time information
+    /// @brief Define the measurement type of the spacepoint
+    /// @param measEta: Flag stating whether the spacepoint measures the precision (eta) coordinate
+    /// @param measPhi: Flag stating whether the spacepoint measures the non-precsion (phi) coordinate
+    /// @param measTime: Flag stating whether the spacepoint carries time information
     void setCoordFlags(bool measEta, bool measPhi, bool measTime = false);
     /// @brief prints the Muon identifier to string
     std::string toString() const;
@@ -143,9 +143,9 @@ class MuonSpacePoint {
   MuonSpacePoint& operator=(const MuonSpacePoint& other) = default;
   /// @brief Move assignment
   MuonSpacePoint& operator=(MuonSpacePoint&& other) = default;
-  /// @brief Returns the Identifier of the space point
+  /// @brief Returns the Identifier of the spacepoint
   const MuonId& id() const { return m_id; }
-  /// @brief Returnt the geometry Identifier of the space point
+  /// @brief Returnt the geometry Identifier of the spacepoint
   const Acts::GeometryIdentifier& geometryId() const { return m_geoId; }
   /// @brief Returns the local measurement position
   const Acts::Vector3& localPosition() const { return m_pos; }
@@ -155,7 +155,7 @@ class MuonSpacePoint {
   const Acts::Vector3& planeNormal() const { return m_norm; }
   /// @brief Returns the vector pointing to the next wire / strip
   const Acts::Vector3& toNextSensor() const { return m_toNext; }
-  /// @brief Returns the space point covariance values
+  /// @brief Returns the spacepoint covariance values
   const std::array<double, 3>& covariance() const { return m_cov; }
   /// @brief Returns the drift radius
   double driftRadius() const { return m_radius; }
@@ -169,17 +169,17 @@ class MuonSpacePoint {
   bool measuresLoc1() const { return id().measuresEta(); }
   /// @brief Returns whether the measurement constrains the non-bending plane
   bool measuresLoc0() const { return id().measuresPhi(); }
-  /// @brief Define the space point's identifier
+  /// @brief Define the spacepoint's identifier
   void setId(const MuonId& id);
-  /// @brief Define the space point coordinates.
-  /// @param pos: Space point position
+  /// @brief Define the spacepoint coordinates.
+  /// @param pos: spacepoint position
   /// @param sensorDir: Direction of the sensor
   /// @param toNextSensor: Vector pointing to the next sensor
   void defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir,
                          Acts::Vector3&& toNextSensor);
-  /// @brief Define the space point radius
+  /// @brief Define the spacepoint radius
   void setRadius(const double r);
-  /// @brief Define the time of the space point measurement
+  /// @brief Define the time of the spacepoint measurement
   void setTime(const double t);
   /// @brief Define the spatial components of the covariance
   void setCovariance(const double covX, const double covY, const double covT);
@@ -200,15 +200,15 @@ class MuonSpacePoint {
 };
 
 static_assert(Acts::Experimental::CompositeSpacePoint<MuonSpacePoint>);
-/// @brief Abbrivation of the MuonSpace point container as a jagged vector of
-///        space point objects. The inner vector represents a collection of
+/// @brief Abbrivation of the Muonspacepoint container as a jagged vector of
+///        spacepoint objects. The inner vector represents a collection of
 ///        spacepoints that are close-by together in space, a so-called bucket
 using MuonSpacePointBucket = std::vector<MuonSpacePoint>;
 using MuonSpacePointContainer = std::vector<MuonSpacePointBucket>;
 
-/// @brief ostream operator of the Muon space point Identifier
+/// @brief ostream operator of the Muon spacepoint Identifier
 std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint::MuonId& id);
-/// @brief osteram operator of the Space point
+/// @brief osteram operator of the spacepoint
 std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint& sp);
 
 }  // namespace ActsExamples

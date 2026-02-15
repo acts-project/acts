@@ -13,19 +13,19 @@
 
 namespace Acts {
 
-/// Seed built from N external space points.
+/// Seed built from N external spacepoints.
 template <typename external_spacepoint_t, std::size_t N = 3ul>
 class Seed {
   static_assert(N >= 3ul);
 
  public:
-  /// Type of the external space point
+  /// Type of the external spacepoint
   using value_type = external_spacepoint_t;
-  /// Number of space points in the seed
+  /// Number of spacepoints in the seed
   static constexpr std::size_t DIM = N;
 
-  /// Constructor from N space points
-  /// @param points The space points to build the seed from
+  /// Constructor from N spacepoints
+  /// @param points The spacepoints to build the seed from
   template <typename... args_t>
     requires(sizeof...(args_t) == N) &&
             (std::same_as<external_spacepoint_t, args_t> && ...)
@@ -38,8 +38,8 @@ class Seed {
   /// @param seedQuality The seed quality value
   void setQuality(float seedQuality);
 
-  /// Get the space points in the seed
-  /// @return Array of pointers to the space points
+  /// Get the spacepoints in the seed
+  /// @return Array of pointers to the spacepoints
   const std::array<const external_spacepoint_t*, N>& sp() const;
   /// Get the z-coordinate of the vertex
   /// @return The vertex z-coordinate

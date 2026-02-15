@@ -145,16 +145,16 @@ struct HoughMeasurementStruct {
       : layer(l), phi(p), radius(r), z(thez), indices(i), type(t) {}
 };
 
-/// Construct track seeds from space points.
+/// Construct track seeds from spacepoints.
 class HoughTransformSeeder final : public IAlgorithm {
  public:
   struct Config {
-    /// Input space point collections.
+    /// Input spacepoint collections.
     ///
-    /// We allow multiple space point collections to allow different parts of
-    /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
-    /// space points for strip-like detectors.
+    /// We allow multiple spacepoint collections to allow different parts of
+    /// the detector to use different algorithms for spacepoint construction,
+    /// e.g. single-hit spacepoints for pixel-like detectors or double-hit
+    /// spacepoints for strip-like detectors.
     /// Note that we don't *need* spacepoints (measurements can be used instead)
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
@@ -163,7 +163,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     std::string outputProtoTracks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// For which part of the detector geometry should space points be created.
+    /// For which part of the detector geometry should spacepoints be created.
     ///
     /// Only volumes and layers can be set. Zero values can be used as wildcards
     /// to select larger parts of the hierarchy, i.e. setting only the volume

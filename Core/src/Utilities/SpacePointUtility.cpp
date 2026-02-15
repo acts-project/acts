@@ -63,7 +63,7 @@ SpacePointUtility::globalCoords(
   RotationMatrix3 rotLocalToGlobal =
       surface->referenceFrame(gctx, globalPos, Vector3());
 
-  // the space point requires only the variance of the transverse and
+  // the spacepoint requires only the variance of the transverse and
   // longitudinal position. reduce computations by transforming the
   // covariance directly from local to rho/z.
   //
@@ -249,7 +249,7 @@ Result<void> SpacePointUtility::recoverSpacePoint(
   /// worse overshoot.
   /// In order to treat both SDEs equally, the rescaling eventually needs to be
   /// performed several times. If these shifts allows m and n to be in the
-  /// limits, the space point can be stored.
+  /// limits, the spacepoint can be stored.
   /// @note This shift can be understood as a shift of the particle's
   /// trajectory. This is leads to a shift of the vertex. Since these two points
   /// are treated independently from other measurement, it is also possible to
@@ -272,7 +272,7 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     // Move m and n towards 0
     spParams.m -= biggerOvershoot;
     spParams.n -= (biggerOvershoot / secOnFirstScale);
-    // Check if this recovered the space point
+    // Check if this recovered the spacepoint
 
     if (std::abs(spParams.m) < spParams.limit &&
         std::abs(spParams.n) < spParams.limit) {
@@ -292,7 +292,7 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     // Move m and n towards 0
     spParams.m += biggerOvershoot;
     spParams.n += (biggerOvershoot / secOnFirstScale);
-    // Check if this recovered the space point
+    // Check if this recovered the spacepoint
     if (std::abs(spParams.m) < spParams.limit &&
         std::abs(spParams.n) < spParams.limit) {
       return Result<void>::success();
@@ -307,7 +307,7 @@ Result<double> SpacePointUtility::calcPerpendicularProjection(
     const std::pair<Vector3, Vector3>& stripEnds2,
     SpacePointParameters& spParams) const {
   /// This approach assumes that no vertex is available. This option aims to
-  /// approximate the space points from cosmic data.
+  /// approximate the spacepoints from cosmic data.
   /// The underlying assumption is that the best point is given by the  closest
   /// distance between both lines describing the SDEs.
   /// The point x on the first SDE is parametrized as a + lambda0 * q with  the

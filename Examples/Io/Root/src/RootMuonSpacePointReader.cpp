@@ -64,7 +64,7 @@ ProcessCode RootMuonSpacePointReader::read(const AlgorithmContext& context) {
   m_reader.SetEntry(entry);
   for (std::size_t spIdx = 0; spIdx < m_bucketId->size(); ++spIdx) {
     auto bucketIdx = static_cast<std::size_t>(m_bucketId->at(spIdx));
-    // The space point buckets are ordered sequentially
+    // The spacepoint buckets are ordered sequentially
     if (bucketIdx + 1 != outSpacePoints.size()) {
       outSpacePoints.emplace_back();
     }

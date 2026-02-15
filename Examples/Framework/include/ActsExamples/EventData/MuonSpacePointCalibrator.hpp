@@ -65,7 +65,7 @@ class MuonSpacePointCalibrator {
   /// @brief default constructor */
   MuonSpacePointCalibrator(const Config& cfg,
                            std::unique_ptr<const Acts::Logger> logger);
-  /// @brief Abbrivation of the uncalibrated space point container type
+  /// @brief Abbrivation of the uncalibrated spacepoint container type
   using UnCalibSpVec_t = std::vector<const MuonSpacePoint*>;
   /// @brief Abbrivation to access a single element in the uncalibrated spacepoint container
   using UnCalibSp_t = UnCalibSpVec_t::value_type;
@@ -74,12 +74,12 @@ class MuonSpacePointCalibrator {
   /// @brief Use a simple vector of unique_ptrs as container type
   using CalibSpCont_t = std::vector<CalibSp_t>;
 
-  /// @brief Calibrate a list of input space points
+  /// @brief Calibrate a list of input spacepoints
   /// @param ctx: Calibration context
   /// @param trackPos: Position of the track expressed in the MuonSpacePoint's frame
   /// @param trackDir: Direction of the track expressed in the MonSpacePoint's frame
   /// @param trackT0: Offset in the time of arrival of the track
-  /// @param uncalibCont: List of uncalibrated space points.
+  /// @param uncalibCont: List of uncalibrated spacepoints.
   CalibSpCont_t calibrate(const Acts::CalibrationContext& ctx,
                           const Acts::Vector3& trackPos,
                           const Acts::Vector3& trackDir, const double trackT0,
@@ -89,23 +89,23 @@ class MuonSpacePointCalibrator {
   /// @param trackPos: Position of the track expressed in the MuonSpacePoint's frame
   /// @param trackDir: Direction of the track expressed in the MonSpacePoint's frame
   /// @param trackT0: Offset in the time of arrival of the track
-  /// @param spacePoint: Reference to the space point to calibrate
+  /// @param spacePoint: Reference to the spacepoint to calibrate
   /// @param outContainer: Reference to the mutable output container into which the
-  ///                      calibrated space point is appended.
+  ///                      calibrated spacepoint is appended.
   void calibrate(const Acts::CalibrationContext& ctx,
                  const Acts::Vector3& trackPos, const Acts::Vector3& trackDir,
                  const double trackT0, const MuonSpacePoint& spacePoint,
                  CalibSpCont_t& outContainer) const;
-  /// @brief Returns the associated drift velocity for a Mdt space point with
+  /// @brief Returns the associated drift velocity for a Mdt spacepoint with
   ///        drift radius R
   /// @param ctx: Calibration context
-  /// @param sp: Reference to the space point of interest
+  /// @param sp: Reference to the spacepoint of interest
   double driftVelocity(const Acts::CalibrationContext& ctx,
                        const MuonSpacePoint& sp) const;
-  /// @brief Returns the associated drift acceleration for a Mdt space point with
+  /// @brief Returns the associated drift acceleration for a Mdt spacepoint with
   ///        drift radius R
   /// @param ctx: Calibration context
-  /// @param sp: Reference to the space point of interest
+  /// @param sp: Reference to the spacepoint of interest
   double driftAcceleration(const Acts::CalibrationContext& ctx,
                            const MuonSpacePoint& sp) const;
 

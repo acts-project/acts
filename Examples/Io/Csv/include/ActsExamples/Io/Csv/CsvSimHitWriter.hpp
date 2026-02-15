@@ -23,7 +23,7 @@ namespace ActsExamples {
 /// separated-value format.
 ///
 /// This writes one file per event containing information about the
-/// global space points, momenta (before and after interaction) and hit index
+/// global spacepoints, momenta (before and after interaction) and hit index
 /// into the configured output directory. By default it writes to the
 /// current working directory. Files are named using the following schema
 ///

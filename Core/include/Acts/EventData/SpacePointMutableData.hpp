@@ -14,7 +14,7 @@ namespace Acts {
 
 /// @class SpacePointMutableData
 /// This class contains mutable data associated to the
-/// external space points provided by the customers
+/// external spacepoints provided by the customers
 /// These variables are used mainly internally by the seeding algorithm, that
 /// reads and updates them for seed selection purposes.
 /// The quality is also accessed after the seeding for an additional selection
@@ -41,20 +41,20 @@ class SpacePointMutableData {
   ~SpacePointMutableData() = default;
 
   /// @brief Getters
-  /// @param idx Index of the space point
+  /// @param idx Index of the spacepoint
   /// @return Quality value at the given index
   float quality(const std::size_t idx) const;
-  /// Get deltaR value for space point
-  /// @param idx Index of the space point
+  /// Get deltaR value for spacepoint
+  /// @param idx Index of the spacepoint
   /// @return DeltaR value at the given index
   float deltaR(const std::size_t idx) const;
 
   /// @brief Setters
-  /// @param idx Index of the space point
+  /// @param idx Index of the spacepoint
   /// @param value Quality value to set
   void setQuality(const std::size_t idx, const float value);
-  /// Set the delta R value for a specific space point.
-  /// @param idx Index of the space point
+  /// Set the delta R value for a specific spacepoint.
+  /// @param idx Index of the spacepoint
   /// @param value Delta R value to set
   void setDeltaR(const std::size_t idx, const float value);
 

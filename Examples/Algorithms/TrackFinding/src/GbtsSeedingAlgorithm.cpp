@@ -176,12 +176,12 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
       coreSpacePoints.createColumn<float>("LocalPositionY");
   coreSpacePoints.reserve(spacePoints.size());
 
-  // for loop filling space point container and assigning layer ID's using the
+  // for loop filling spacepoint container and assigning layer ID's using the
   // map, also assigning cluster width and local position (currently false input
   // as not in examples but will be added in future)
   for (const auto &spacePoint : spacePoints) {
-    // Gbts space point vector
-    // loop over space points, call on map
+    // Gbts spacepoint vector
+    // loop over spacepoints, call on map
     const auto &sourceLink = spacePoint.sourceLinks();
 
     // warning if source link empty
@@ -251,7 +251,7 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
     newSp.extra(localPositionColomn) = 0;
   }
 
-  ACTS_VERBOSE("Space point collection successfully assigned layerId's");
+  ACTS_VERBOSE("spacepoint collection successfully assigned layerId's");
 
   return std::make_tuple(std::move(coreSpacePoints), layerColomn.asConst(),
                          clusterWidthColomn.asConst(),

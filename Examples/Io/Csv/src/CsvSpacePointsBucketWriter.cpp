@@ -47,7 +47,7 @@ ProcessCode CsvSpacePointsBucketWriter::writeT(
     if (bucket.empty()) {
       continue;
     }
-    // Split the bucket into lines of 20 space points to manage variable sizes
+    // Split the bucket into lines of 20 spacepoints to manage variable sizes
     auto numLines =
         static_cast<int>((bucket.size() / 20) +
                          static_cast<std::size_t>(bucket.size() % 20 != 0));

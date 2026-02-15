@@ -24,7 +24,7 @@
 namespace Acts {
 
 /// @c ITripletSeedCuts can be used to increase or decrease seed weights
-/// based on the space points used in a seed. Seed weights are also
+/// based on the spacepoints used in a seed. Seed weights are also
 /// influenced by the SeedFilter default implementation. This tool is also used
 /// to decide if a seed passes a seed weight cut. As the weight is stored in
 /// seeds, there are two distinct methods.
@@ -33,18 +33,18 @@ class ITripletSeedCuts {
   virtual ~ITripletSeedCuts() = default;
 
   /// Returns seed weight bonus/malus depending on detector considerations.
-  /// @param bottom bottom space point of the current seed
-  /// @param middle middle space point of the current seed
-  /// @param top top space point of the current seed
+  /// @param bottom bottom spacepoint of the current seed
+  /// @param middle middle spacepoint of the current seed
+  /// @param top top spacepoint of the current seed
   /// @return seed weight to be added to the seed's weight
   virtual float seedWeight(const ConstSpacePointProxy2& bottom,
                            const ConstSpacePointProxy2& middle,
                            const ConstSpacePointProxy2& top) const = 0;
 
   /// @param weight the current seed weight
-  /// @param bottom bottom space point of the current seed
-  /// @param middle middle space point of the current seed
-  /// @param top top space point of the current seed
+  /// @param bottom bottom spacepoint of the current seed
+  /// @param middle middle spacepoint of the current seed
+  /// @param top top spacepoint of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
   virtual bool singleSeedCut(float weight, const ConstSpacePointProxy2& bottom,
@@ -52,7 +52,7 @@ class ITripletSeedCuts {
                              const ConstSpacePointProxy2& top) const = 0;
 
   /// @param seedCandidates contains collection of seed candidates created for one middle
-  /// space point in a std::tuple format
+  /// spacepoint in a std::tuple format
   virtual void cutPerMiddleSp(
       std::span<TripletCandidate2>& seedCandidates) const = 0;
 };
@@ -60,7 +60,7 @@ class ITripletSeedCuts {
 /// @brief Triplet seed filter used in the triplet seeding algorithm
 ///
 /// Note that this algorithm is designed and tuned for cylindrical detectors and
-/// uses R-Z coordinates for the space points.
+/// uses R-Z coordinates for the spacepoints.
 class BroadTripletSeedFilter final : public ITripletSeedFilter {
  public:
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
@@ -137,18 +137,18 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
 
   /// State of the filter that is communicated between different stages
   struct State {
-    /// Collector for triplet candidates associated with middle space points
+    /// Collector for triplet candidates associated with middle spacepoints
     CandidatesForMiddleSp2 candidatesCollector;
 
     /// Maximum radius for seed confirmation
     float rMaxSeedConf{};
 
-    /// Map to store the best seed quality for each space point
+    /// Map to store the best seed quality for each spacepoint
     /// This is used to avoid creating seeds with lower quality than the best
-    /// seed quality already found for that space point
-    /// The key is the space point index, and the value is the best seed quality
-    /// found for that space point
-    /// @note The index is the space point index, not the seed index.
+    /// seed quality already found for that spacepoint
+    /// The key is the spacepoint index, and the value is the best seed quality
+    /// found for that spacepoint
+    /// @note The index is the spacepoint index, not the seed index.
     ///       `copyFromIndex` will be used if available.
     std::unordered_map<SpacePointIndex2, float> bestSeedQualityMap;
   };
@@ -156,7 +156,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   /// Cache for intermediate results to avoid reallocations. No information is
   /// carried over between different stages.
   struct Cache {
-    /// Cache for top space point indices during compatibility search
+    /// Cache for top spacepoint indices during compatibility search
     std::vector<std::uint32_t> topSpIndexVec;
     /// Cache for compatible seed radii during score calculation
     std::vector<float> compatibleSeedR;
@@ -173,9 +173,9 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   explicit BroadTripletSeedFilter(const Config& config, State& state,
                                   Cache& cache, const Logger& logger);
 
-  /// @param spacePoints Container of space points
-  /// @param spM Middle space point proxy
-  /// @param topDoublets Collection of top doublets for the middle space point
+  /// @param spacePoints Container of spacepoints
+  /// @param spM Middle spacepoint proxy
+  /// @param topDoublets Collection of top doublets for the middle spacepoint
   /// @return true if sufficient top doublets are found
   bool sufficientTopDoublets(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,

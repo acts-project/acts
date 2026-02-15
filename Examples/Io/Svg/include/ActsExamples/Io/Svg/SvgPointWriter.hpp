@@ -81,9 +81,9 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
     std::string outputDir;                   ///< where to place output files
     std::size_t outputPrecision = 6;         ///< floating point precision
 
-    double spSize = 10.;  //!< size of the space point to be drawn
+    double spSize = 10.;  //!< size of the spacepoint to be drawn
     ActsPlugins::Svg::Style spStyle =
-        s_pointStyle;  //!< The style of the space point to be drawn
+        s_pointStyle;  //!< The style of the spacepoint to be drawn
 
     std::string infoBoxTitle = "";  //!< If an info box title is set, draw it
     ActsPlugins::Svg::Style infoTitleStyle = s_infoStyle;
@@ -152,7 +152,7 @@ ProcessCode SvgPointWriter<T, Acc>::writeT(
       ActsPlugins::Svg::TrackingGeometryProjections::convert(
           context.geoContext, *m_cfg.trackingGeometry, tgpOptions);
 
-  // Fill the space points
+  // Fill the spacepoints
   unsigned int id = 0;
   for (const auto& data : pointCollection) {
     // Use the accessor to build an x/y view

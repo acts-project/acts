@@ -38,9 +38,9 @@ class CsvSpacePointReader final : public IReader {
     std::string inputDir;
     /// Input filename stem.
     std::string inputStem;
-    /// Input space point collection.
+    /// Input spacepoint collection.
     std::string inputCollection;
-    /// Output space point collections.
+    /// Output spacepoint collections.
     std::string outputSpacePoints;
     /// Read extended collections
     bool extendCollection = false;

@@ -42,7 +42,7 @@ ProcessCode ObjPropagationStepsWriter::writeT(
       // We start from one
       ++vCounter;
       for (auto& step : steps) {
-        // Write the space point
+        // Write the spacepoint
         os << "v " << m_cfg.outputScalor * step.position.x() << " "
            << m_cfg.outputScalor * step.position.y() << " "
            << m_cfg.outputScalor * step.position.z() << '\n';

@@ -24,29 +24,29 @@ class ITripletSeedFilter {
   virtual ~ITripletSeedFilter() = default;
 
   /// @brief Check if there are sufficient top doublets for triplet formation
-  /// @param spacePoints Container of space points
-  /// @param spM Middle space point proxy
-  /// @param topDoublets Collection of top doublets for the middle space point
+  /// @param spacePoints Container of spacepoints
+  /// @param spM Middle spacepoint proxy
+  /// @param topDoublets Collection of top doublets for the middle spacepoint
   /// @return True if sufficient doublets are available for triplet seeds
   virtual bool sufficientTopDoublets(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp& topDoublets) const = 0;
 
-  /// Create seed candidates with fixed bottom and middle space points and
-  /// all compatible top space points.
+  /// Create seed candidates with fixed bottom and middle spacepoints and
+  /// all compatible top spacepoints.
   ///
-  /// @param spacePoints Container with all space points
-  /// @param spM Fixed middle space point
-  /// @param bottomLink Link to the bottom doublet space point
+  /// @param spacePoints Container with all spacepoints
+  /// @param spM Fixed middle spacepoint
+  /// @param bottomLink Link to the bottom doublet spacepoint
   /// @param tripletTopCandidates Collection of triplet top candidates
   virtual void filterTripletTopCandidates(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomLink,
       const TripletTopCandidates& tripletTopCandidates) const = 0;
 
-  /// Create final seeds for all candidates with the same middle space point
+  /// Create final seeds for all candidates with the same middle spacepoint
   ///
-  /// @param spacePoints Container with all space points
+  /// @param spacePoints Container with all spacepoints
   /// @param outputCollection Output container for the seeds
   virtual void filterTripletsMiddleFixed(
       const SpacePointContainer2& spacePoints,

@@ -66,8 +66,8 @@ class GridBinFinder {
 
   /// @brief Retrieve the neighbouring bins given a local position in the grid
   ///
-  /// Return all bins that could contain space points that can be used with the
-  /// space points in the bin with the provided indices to create seeds.
+  /// Return all bins that could contain spacepoints that can be used with the
+  /// spacepoints in the bin with the provided indices to create seeds.
   ///
   /// @tparam stored_t The type of elements stored in the Grid
   /// @tparam Axes ... The type of the axes of the grid

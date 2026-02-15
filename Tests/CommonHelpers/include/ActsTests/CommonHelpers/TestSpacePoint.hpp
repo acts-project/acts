@@ -20,12 +20,12 @@
 
 namespace ActsTests {
 
-/// Space point representation of a measurement suitable for track seeding.
+/// Spacepoint representation of a measurement suitable for track seeding.
 class TestSpacePoint {
  public:
   TestSpacePoint() = default;
 
-  /// Construct the space point from global position and selected variances.
+  /// Construct the spacepoint from global position and selected variances.
   ///
   /// @tparam position_t Input position type
   /// @param pos Global position
@@ -93,7 +93,7 @@ inline bool operator==(const TestSpacePoint& lhs, const TestSpacePoint& rhs) {
          (lhs.varianceT() == rhs.varianceT());
 }
 
-/// Container of space points.
+/// Container of spacepoints.
 using TestSpacePointContainer = std::vector<TestSpacePoint>;
 
 }  // namespace ActsTests
