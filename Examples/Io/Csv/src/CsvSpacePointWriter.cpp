@@ -39,7 +39,7 @@ ProcessCode CsvSpacePointWriter::finalize() {
 }
 
 ProcessCode CsvSpacePointWriter::writeT(
-    const AlgorithmContext& ctx, const SimSpacePointContainer& spacepoints) {
+    const AlgorithmContext& ctx, const SimSpacePointContainer& spacePoints) {
   // Open per-event file for all components
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
@@ -47,7 +47,7 @@ ProcessCode CsvSpacePointWriter::writeT(
   NamedTupleCsvWriter<SpacepointData> writerSP(pathSP, m_cfg.outputPrecision);
 
   SpacepointData spData{};
-  for (const auto& sp : spacepoints) {
+  for (const auto& sp : spacePoints) {
     const auto slink1 = sp.sourceLinks()[0].get<IndexSourceLink>();
     spData.measurement_id_1 = slink1.index();
     spData.geometry_id_1 = slink1.geometryId().value();

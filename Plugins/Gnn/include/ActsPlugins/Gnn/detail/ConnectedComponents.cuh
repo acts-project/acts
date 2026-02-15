@@ -292,18 +292,18 @@ __global__ void setBounds(const TLabel *labels, TLabel *bounds,
 
 /// Function to find the bounds for each label in the labels array.
 /// @param labels The array of labels (size: numSpacepoints)
-/// @param spacepointIds The array of spacepoint IDs (size: numSpacepoints)
+/// @param spacePointIds The array of spacepoint IDs (size: numSpacepoints)
 /// @param bounds The array to store the bounds for each label (size: numLabels)
 /// @param numSpacepoints The number of spacepoints
 /// @param numLabels The number of unique labels
 /// @param stream The CUDA stream to use for the operation
 template <typename TLabel, typename TSpacepointId>
-void findTrackCandidateBounds(TLabel *labels, TSpacepointId *spacepointIds,
+void findTrackCandidateBounds(TLabel *labels, TSpacepointId *spacePointIds,
                               TLabel *bounds, std::size_t numSpacepoints,
                               std::size_t numLabels, cudaStream_t stream) {
   // Sort the labels and spacepoint IDs by labels
   thrust::sort_by_key(thrust::device.on(stream), labels,
-                      labels + numSpacepoints, spacepointIds);
+                      labels + numSpacepoints, spacePointIds);
 
   // Set the bounds for each label
   dim3 blockSize = 1024;

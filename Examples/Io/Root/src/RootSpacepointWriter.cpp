@@ -85,7 +85,7 @@ ProcessCode RootSpacepointWriter::finalize() {
 }
 
 ProcessCode RootSpacepointWriter::writeT(
-    const AlgorithmContext& ctx, const SimSpacePointContainer& spacepoints) {
+    const AlgorithmContext& ctx, const SimSpacePointContainer& spacePoints) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -96,7 +96,7 @@ ProcessCode RootSpacepointWriter::writeT(
 
   // Get the event number
   m_eventId = ctx.eventNumber;
-  for (const auto& sp : spacepoints) {
+  for (const auto& sp : spacePoints) {
     const auto& sl1 = sp.sourceLinks().at(0).get<IndexSourceLink>();
     m_measurementId1 = sl1.index();
     m_geometryId1 = sl1.geometryId().value();

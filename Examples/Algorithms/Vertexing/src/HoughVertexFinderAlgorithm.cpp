@@ -20,21 +20,21 @@ namespace ActsExamples {
 HoughVertexFinderAlgorithm::HoughVertexFinderAlgorithm(const Config& cfg,
                                                        Acts::Logging::Level lvl)
     : IAlgorithm("HoughVertexFinder", lvl), m_cfg(cfg) {
-  if (m_cfg.inputSpacepoints.empty()) {
+  if (m_cfg.inputSpacePoints.empty()) {
     ACTS_ERROR("You have to provide seeds");
   }
   if (m_cfg.outputVertices.empty()) {
     ACTS_ERROR("Missing output vertices collection");
   }
 
-  m_inputSpacepoints.initialize(m_cfg.inputSpacepoints);
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
 ProcessCode HoughVertexFinderAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // retrieve input seeds
-  const std::vector<SimSpacePoint>& inputSpacepoints = m_inputSpacepoints(ctx);
+  const std::vector<SimSpacePoint>& inputSpacePoints = m_inputSpacePoints(ctx);
 
   Acts::HoughVertexFinder<SimSpacePoint>::Config houghVtxCfg;
   houghVtxCfg.targetSPs = m_cfg.targetSPs;
@@ -46,7 +46,7 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();
-  auto vtx = houghVertexFinder.find(inputSpacepoints);
+  auto vtx = houghVertexFinder.find(inputSpacePoints);
   auto t2 = std::chrono::high_resolution_clock::now();
   if (vtx.ok()) {
     ACTS_INFO("Found a vertex in the event in " << (t2 - t1).count() / 1e6

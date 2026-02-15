@@ -16,16 +16,16 @@ using namespace Acts;
 namespace ActsExamples {
 
 std::vector<float> createFeatures(
-    const SimSpacePointContainer& spacepoints, const ClusterContainer* clusters,
+    const SimSpacePointContainer& spacePoints, const ClusterContainer* clusters,
     const std::vector<TrackFindingAlgorithmGnn::NodeFeature>& nodeFeatures,
     const std::vector<float>& featureScales) {
   using namespace ActsExamples;
 
   assert(nodeFeatures.size() == featureScales.size());
-  std::vector<float> features(spacepoints.size() * nodeFeatures.size());
+  std::vector<float> features(spacePoints.size() * nodeFeatures.size());
 
-  for (auto isp = 0ul; isp < spacepoints.size(); ++isp) {
-    const auto& sp = spacepoints[isp];
+  for (auto isp = 0ul; isp < spacePoints.size(); ++isp) {
+    const auto& sp = spacePoints[isp];
 
     // For now just take the first index since does require one single index
     // per spacepoint

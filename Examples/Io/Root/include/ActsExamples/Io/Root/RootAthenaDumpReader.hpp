@@ -63,7 +63,7 @@ class RootAthenaDumpReader : public IReader {
     std::string outputTrackParameters = "athena_track_parameters";
 
     /// Only extract spacepoints
-    bool onlySpacepoints = false;
+    bool onlySpacePoints = false;
 
     /// Skip truth data
     bool noTruth = false;

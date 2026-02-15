@@ -103,7 +103,7 @@ void addOutput(py::module& mex) {
                              outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointWriter, mex, "CsvSpacePointWriter",
-                             inputSpacepoints, outputDir, outputPrecision);
+                             inputSpacePoints, outputDir, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvSpacePointsBucketWriter, mex,
                              "CsvSpacePointsBucketWriter", inputBuckets,
@@ -133,7 +133,7 @@ void addOutput(py::module& mex) {
                              outputStem, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(CsvProtoTrackWriter, mex, "CsvProtoTrackWriter",
-                             inputSpacepoints, inputPrototracks, outputDir);
+                             inputSpacePoints, inputPrototracks, outputDir);
 
   {
     using Writer = CsvBFieldWriter;

@@ -54,7 +54,7 @@ void addVertexing(py::module& mex) {
                                 doConstrainedFit, constraintPos, constraintCov);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(HoughVertexFinderAlgorithm, mex,
-                                "HoughVertexFinderAlgorithm", inputSpacepoints,
+                                "HoughVertexFinderAlgorithm", inputSpacePoints,
                                 outputVertices, targetSPs, minAbsEta, maxAbsEta,
                                 minHits, defVtxPosition);
 }

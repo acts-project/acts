@@ -59,12 +59,12 @@ class TruthGraphBuilder final : public IAlgorithm {
   Config m_cfg;
 
   std::vector<std::int64_t> buildFromMeasurements(
-      const SimSpacePointContainer& spacepoints,
+      const SimSpacePointContainer& spacePoints,
       const SimParticleContainer& particles,
       const IndexMultimap<ActsFatras::Barcode>& measPartMap) const;
 
   std::vector<std::int64_t> buildFromSimhits(
-      const SimSpacePointContainer& spacepoints,
+      const SimSpacePointContainer& spacePoints,
       const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
       const SimParticleContainer& particles) const;
 

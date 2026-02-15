@@ -34,7 +34,7 @@ ProcessCode CsvProtoTrackWriter::finalize() {
 
 ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
                                         const ProtoTrackContainer& tracks) {
-  const auto& spacepoints = m_inputSpacepoints(ctx);
+  const auto& spacePoints = m_inputSpacepoints(ctx);
 
   // Open per-event file for all components
   std::string path =
@@ -44,7 +44,7 @@ ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index measurementId : tracks[trackId]) {
-      const auto spr = findSpacePointForIndex(measurementId, spacepoints);
+      const auto spr = findSpacePointForIndex(measurementId, spacePoints);
       if (spr == nullptr) {
         ACTS_WARNING("Could not convert index " << measurementId
                                                 << " to spacepoint");

@@ -380,12 +380,12 @@ struct SurfaceGridData {
                  nbins_loc1, min_loc1, max_loc1);
 };
 
-struct SpacepointData {
+struct SpacePointData {
   std::uint64_t measurement_id_1, measurement_id_2;
   std::uint64_t geometry_id_1, geometry_id_2;
   float x, y, z, t;
   float var_r, var_z;
-  DFE_NAMEDTUPLE(SpacepointData, measurement_id_1, measurement_id_2,
+  DFE_NAMEDTUPLE(SpacePointData, measurement_id_1, measurement_id_2,
                  geometry_id_1, geometry_id_2, x, y, z, t, var_r, var_z);
 };
 

@@ -128,7 +128,7 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   }
 
   // Read input data
-  const auto& spacepoints = m_inputSpacePoints(ctx);
+  const auto& spacePoints = m_inputSpacePoints(ctx);
 
   const ClusterContainer* clusters = nullptr;
   if (m_inputClusters.isInitialized()) {
@@ -137,18 +137,18 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
 
   // Convert Input data to a list of size [num_measurements x
   // measurement_features]
-  const std::size_t numSpacepoints = spacepoints.size();
+  const std::size_t numSpacePoints = spacePoints.size();
   const std::size_t numFeatures = m_cfg.nodeFeatures.size();
-  ACTS_DEBUG("Received " << numSpacepoints << " spacepoints");
+  ACTS_DEBUG("Received " << numSpacePoints << " spacepoints");
   ACTS_DEBUG("Construct " << numFeatures << " node features");
 
   auto t01 = Clock::now();
 
   std::vector<std::uint64_t> moduleIds;
-  moduleIds.reserve(spacepoints.size());
+  moduleIds.reserve(spacePoints.size());
 
-  for (auto isp = 0ul; isp < numSpacepoints; ++isp) {
-    const auto& sp = spacepoints[isp];
+  for (auto isp = 0ul; isp < numSpacePoints; ++isp) {
+    const auto& sp = spacePoints[isp];
 
     // For now just take the first index since does require one single index
     // per spacepoint
@@ -166,20 +166,20 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   auto t02 = Clock::now();
 
   // Sort the spacepoints by module ide. Required by module map
-  std::vector<int> idxs(numSpacepoints);
+  std::vector<int> idxs(numSpacePoints);
   std::iota(idxs.begin(), idxs.end(), 0);
   std::ranges::sort(idxs, {}, [&](auto i) { return moduleIds[i]; });
 
   std::ranges::sort(moduleIds);
 
-  SimSpacePointContainer sortedSpacepoints;
-  sortedSpacepoints.reserve(spacepoints.size());
-  std::ranges::transform(idxs, std::back_inserter(sortedSpacepoints),
-                         [&](auto i) { return spacepoints[i]; });
+  SimSpacePointContainer sortedSpacePoints;
+  sortedSpacePoints.reserve(spacePoints.size());
+  std::ranges::transform(idxs, std::back_inserter(sortedSpacePoints),
+                         [&](auto i) { return spacePoints[i]; });
 
   auto t03 = Clock::now();
 
-  auto features = createFeatures(sortedSpacepoints, clusters,
+  auto features = createFeatures(sortedSpacePoints, clusters,
                                  m_cfg.nodeFeatures, m_cfg.featureScales);
 
   auto t1 = Clock::now();
@@ -222,7 +222,7 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
     onetrack.reserve(candidate.size());
 
     for (auto i : candidate) {
-      for (const auto& sl : spacepoints.at(i).sourceLinks()) {
+      for (const auto& sl : spacePoints.at(i).sourceLinks()) {
         onetrack.push_back(sl.template get<IndexSourceLink>().index());
       }
     }

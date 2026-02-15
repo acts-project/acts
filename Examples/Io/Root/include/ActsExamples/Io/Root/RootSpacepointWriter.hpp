@@ -66,9 +66,9 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   /// Type-specific write implementation.
   ///
   /// @param[in] ctx is the algorithm context
-  /// @param[in] spacepoints are the spacepoints to be written
+  /// @param[in] spacePoints are the spacepoints to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimSpacePointContainer& spacepoints) final;
+                     const SimSpacePointContainer& spacePoints) final;
 
  private:
   ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{

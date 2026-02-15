@@ -45,7 +45,7 @@ bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
                     bottomStripVector[1] * d1[1] + bottomStripVector[2] * d1[2];
 
   // compatibility check using distance between strips to evaluate if
-  // spacepointPosition is inside the bottom detector element
+  // spacePointPosition is inside the bottom detector element
   const float s1 = stripCenterDistance[0] * d1[0] +
                    stripCenterDistance[1] * d1[1] +
                    stripCenterDistance[2] * d1[2];
