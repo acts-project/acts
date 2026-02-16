@@ -19,16 +19,16 @@
 namespace ActsExamples {
 struct Trajectories;
 
-/// Associate a particle to its hit count within a prototrack.
+/// Associate a particle to its hit count within a proto track.
 struct ParticleHitCount {
   ActsFatras::Barcode particleId;
   std::size_t hitCount;
 };
 
-/// Identify all particles that contribute to the prototrack.
+/// Identify all particles that contribute to the proto track.
 ///
 /// @param[in] hitParticlesMap Map hit indices to contributing particles
-/// @param[in] protoTrack The prototrack to classify
+/// @param[in] protoTrack The proto track to classify
 /// @param[out] particleHitCounts List of contributing particles
 ///
 /// The list of contributing particles is ordered according to their hit count,
@@ -49,7 +49,7 @@ void identifyContributingParticles(
 /// @param[in] trajectoryTip Which trajectory in the trajectories to use
 /// @param[out] particleHitCounts List of contributing particles
 ///
-/// See `identifyContributingParticles` for prototracks for further
+/// See `identifyContributingParticles` for proto tracks for further
 /// information.
 void identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,

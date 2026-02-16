@@ -89,9 +89,9 @@ class AlignmentAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
-    /// Input prototracks collection, i.e. groups of hit indices.
+    /// Input proto tracks collection, i.e. groups of hit indices.
     std::string inputProtoTracks;
-    /// Input initial track parameter estimates for for each prototrack.
+    /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
     /// Output aligned parameters collection.
     std::string outputAlignmentParameters;

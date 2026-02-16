@@ -86,7 +86,7 @@ ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
     float seedPhi = params[Acts::eBoundPhi];
     float seedEta = std::atanh(std::cos(params[Acts::eBoundTheta]));
 
-    // Get the prototrack from which the track parameters are estimated
+    // Get the proto track from which the track parameters are estimated
     const auto& seed = seeds[iparams];
     const auto& ptrack = seedToProtoTrack(seed);
 

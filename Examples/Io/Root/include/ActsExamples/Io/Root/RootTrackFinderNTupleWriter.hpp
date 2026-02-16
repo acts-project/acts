@@ -32,7 +32,7 @@ class RootTrackFinderNTupleWriter final : public WriterT<ConstTrackContainer> {
     std::string inputParticles;
     /// Input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
-    /// Input prototrack-particle matching.
+    /// Input proto track-particle matching.
     std::string inputTrackParticleMatching;
     /// Output filename.
     std::string filePath = "performance_track_finder.root";

@@ -21,9 +21,9 @@
 
 namespace ActsExamples {
 
-/// Convert true particle tracks into "reconstructed" prototracks.
+/// Convert true particle tracks into "reconstructed" proto tracks.
 ///
-/// For numbering consistency, this creates a prototrack for each input
+/// For numbering consistency, this creates a proto track for each input
 /// particle. Depending on the input particle selection it can contain zero
 /// hits. This algorithm should be able to replace any other real track finder
 /// in the reconstruction chain e.g. to validate algorithms further down
@@ -31,17 +31,17 @@ namespace ActsExamples {
 class TruthTrackFinder final : public IAlgorithm {
  public:
   struct Config {
-    /// The input truth particles that should be used to create prototracks.
+    /// The input truth particles that should be used to create proto tracks.
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
-    /// The input measurements collection that is used to sort the prototracks.
+    /// The input measurements collection that is used to sort the proto tracks.
     std::string inputMeasurements;
-    /// The input sim hits collection that is used to create the prototracks.
+    /// The input sim hits collection that is used to create the proto tracks.
     std::string inputSimHits;
     /// The input measurement-sim hits map collection.
     std::string inputMeasurementSimHitsMap;
-    /// The output prototracks collection.
+    /// The output proto tracks collection.
     std::string outputProtoTracks;
   };
 

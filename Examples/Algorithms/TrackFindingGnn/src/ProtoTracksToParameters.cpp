@@ -86,19 +86,19 @@ ProcessCode ProtoTracksToParameters::execute(
   TrackParametersContainer parameters;
   parameters.reserve(protoTracks.size());
 
-  // Loop over the prototracks to make seeds
+  // Loop over the proto tracks to make seeds
   ProtoTrack tmpTrack;
   std::vector<const SimSpacePoint *> tmpSps;
   std::size_t skippedTracks = 0;
   for (auto &track : protoTracks) {
     ACTS_VERBOSE("Try to get seed from proto track with " << track.size()
                                                           << " hits");
-    // Make prototrack unique with respect to volume and layer
+    // Make proto track unique with respect to volume and layer
     // so we don't get a seed where we have two spacepoints on the same layer
 
-    // Here, we want to create a seed only if the prototrack with removed
+    // Here, we want to create a seed only if the proto track with removed
     // unique layer-volume spacepoints has 3 or more hits. However, if this is
-    // the case, we want to keep the whole prototrack. Therefore, we operate on
+    // the case, we want to keep the whole proto track. Therefore, we operate on
     // a tmpTrack.
     std::ranges::sort(track, {}, [&](const auto &t) {
       return std::make_tuple(indexToGeoId[t].volume(), indexToGeoId[t].layer());

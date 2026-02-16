@@ -230,7 +230,7 @@ ProcessCode RootTrackParameterWriter::writeT(
     m_pt = params.transverseMomentum();
     m_eta = eta(params.momentum());
 
-    // Get the prototrack from which the track parameters are estimated
+    // Get the proto track from which the track parameters are estimated
     const auto& ptrack = protoTracks[iparams];
     identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
 
