@@ -781,10 +781,8 @@ def analyze(
         typer.Option(help="Directory for export-fixes YAML (default: temp dir)"),
     ] = None,
     files: Annotated[
-        Path | None,
-        typer.Option(
-            help="File listing targets (one per line), bypasses git diff / --all"
-        ),
+        list[Path] | None,
+        typer.Option(help="Explicit file paths to analyse, bypasses git diff / --all"),
     ] = None,
     filter_config: Annotated[
         Path | None, typer.Option(help="Path to filter.yml")
@@ -827,12 +825,10 @@ def analyze(
 
     # 1) Collect targets
     if files is not None:
-        file_list = [
-            line.strip() for line in files.read_text().splitlines() if line.strip()
-        ]
+        file_list = [str(f) for f in files]
         compdb_files = load_compdb(build_dir)
         console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
-        console.print(f"Read {len(file_list)} file(s) from {files}")
+        console.print(f"{len(file_list)} file(s) specified via --files")
         targets = resolve_targets(
             file_list,
             build_dir,
