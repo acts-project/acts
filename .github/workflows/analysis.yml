@@ -136,14 +136,14 @@ jobs:
       - name: Run codegen
         run: cmake --build build --target ActsCodegen
 
-      # - name: Analyze (PR - changed files only)
-      #   if: github.event_name == 'pull_request'
-      #   run: >
-      #     uv run CI/clang_tidy/run_clang_tidy_pr.py
-      #     analyze build fixes.yml "origin/${{ github.base_ref }}"
+      - name: Analyze (PR - changed files only)
+        if: github.event_name == 'pull_request'
+        run: >
+          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          analyze build fixes.yml "origin/${{ github.base_ref }}"
 
       - name: Analyze (push - all files)
-        # if: github.event_name == 'push'
+        if: github.event_name == 'push'
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           analyze build fixes.yml --all
