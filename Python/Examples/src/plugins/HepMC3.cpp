@@ -43,7 +43,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsHepMC3, hepmc3) {
   py::class_<HepMC3Reader::Input>(reader, "Input")
       .def(py::init<>())
       .def(py::init([](const std::filesystem::path& path,
-                       std::shared_ptr<const MultiplicityGenerator>
+                       const std::shared_ptr<const MultiplicityGenerator>&
                            multiplicityGenerator) {
              HepMC3Reader::Input inp;
              inp.path = path;
