@@ -214,18 +214,6 @@ class BoostDescribeCsvReader {
   /// \returns false  if no more records are available
   bool read(T& record);
 
-  /// Read the next record and any extra columns from the file.
-  ///
-  /// \returns true   if a record was successfully read
-  /// \returns false  if no more records are available
-  template <typename U>
-  bool read(T& record, std::vector<U>& extra);
-
-  /// Return the number of additional columns that are not part of the struct.
-  std::size_t num_extra_columns() const { return m_extra_columns.size(); }
-  /// Return the number of records read so far.
-  std::size_t num_records() const { return m_reader.num_lines() - 1u; }
-
  private:
   static constexpr std::size_t NumMembers = detail::member_count_v<T>;
 
@@ -235,8 +223,6 @@ class BoostDescribeCsvReader {
   std::size_t m_num_columns = SIZE_MAX;
   // map member index to column index in the file, SIZE_MAX for missing
   std::array<std::size_t, NumMembers> m_member_column_map;
-  // column indices that do not map to a struct member
-  std::vector<std::size_t> m_extra_columns;
 
   void use_default_columns();
   void parse_header(const std::vector<std::string>& optional_columns);
@@ -396,29 +382,12 @@ inline bool BoostDescribeCsvReader<T>::read(T& record) {
 }
 
 template <typename T>
-template <typename U>
-inline bool BoostDescribeCsvReader<T>::read(T& record, std::vector<U>& extra) {
-  // parse columns belonging to the regular record
-  if (!read(record)) {
-    return false;
-  }
-  // parse extra columns
-  extra.resize(m_extra_columns.size());
-  for (std::size_t i = 0; i < m_extra_columns.size(); ++i) {
-    detail::parse(m_columns[m_extra_columns[i]], extra[i]);
-  }
-  return true;
-}
-
-template <typename T>
 inline void BoostDescribeCsvReader<T>::use_default_columns() {
   // assume row content is identical in content and order to the struct
   m_num_columns = NumMembers;
   for (std::size_t i = 0; i < m_member_column_map.size(); ++i) {
     m_member_column_map[i] = i;
   }
-  // no extra columns by construction
-  m_extra_columns.clear();
 }
 
 template <typename T>
@@ -444,18 +413,15 @@ inline void BoostDescribeCsvReader<T>::parse_header(
   // ensure missing columns are correctly marked as such
   m_member_column_map.fill(SIZE_MAX);
 
-  // determine column-member mapping and extra column indices
-  m_extra_columns.clear();
+  // determine column-member mapping
   for (std::size_t i = 0; i < m_columns.size(); ++i) {
     // find the position of the column in the member names.
     auto it = std::ranges::find(names, m_columns[i]);
     if (it != names.end()) {
       // establish mapping between column and member position
       m_member_column_map[std::distance(names.begin(), it)] = i;
-    } else {
-      // record non-member columns
-      m_extra_columns.push_back(i);
     }
+    // Extra columns are ignored
   }
 }
 
