@@ -118,7 +118,7 @@ def createStripSpacepoints(
     s.addWriter(
         RootSpacePointWriter(
             level=acts.logging.INFO,
-            inputSpacepoints="spacepoints",
+            inputSpacePoints="spacepoints",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "strip_spacepoints.root"),
         )

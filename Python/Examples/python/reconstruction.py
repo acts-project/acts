@@ -2478,7 +2478,7 @@ def addHoughVertexFinding(
 
     findHoughVertex = HoughVertexFinderAlgorithm(
         level=customLogLevel(),
-        inputSpacepoints=inputSpacePoints,
+        inputSpacePoints=inputSpacePoints,
         outputVertices=outputVertices,
     )
     s.addAlgorithm(findHoughVertex)
