@@ -272,7 +272,7 @@ class SeedContainer2 {
 
  private:
   std::uint32_t m_size{0};
-  std::vector<std::size_t> m_spacePointOffsets;
+  std::vector<std::uint32_t> m_spacePointOffsets;
   std::vector<std::uint8_t> m_spacePointCounts;
   std::vector<float> m_qualities;
   std::vector<float> m_vertexZs;
