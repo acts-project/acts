@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SeedColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
@@ -86,7 +87,7 @@ class SeedContainer2 {
   /// this seed container.
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
-      SpacePointContainer2 spacePointContainer) noexcept;
+      SpacePointContainer2 &&spacePointContainer) noexcept;
 
   /// Assigns the mutable space point container to be used by this seed
   /// container by reference. Note that the ownership of the space point
@@ -142,6 +143,14 @@ class SeedContainer2 {
   /// Creates a new seed.
   /// @return A mutable proxy to the newly created seed.
   MutableProxy createSeed() noexcept;
+
+  /// Copies the specified columns from another seed to this seed
+  /// @param index The index of the seed to copy to in this container.
+  /// @param otherContainer The seed container to copy from.
+  /// @param otherIndex The index of the seed to copy from in the other container.
+  /// @param columnsToCopy The columns to copy from the other seed.
+  void copyFrom(Index index, const SeedContainer2 &otherContainer,
+                Index otherIndex, SeedColumns columnsToCopy);
 
   /// Returns a mutable proxy to the seed at the given index.
   /// If the index is out of range, an exception is thrown.

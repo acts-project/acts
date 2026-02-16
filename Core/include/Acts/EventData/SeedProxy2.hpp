@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "Acts/EventData/SeedColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
@@ -47,10 +49,42 @@ class SeedProxy2 {
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
+  /// Copy assign a seed proxy.
+  /// @param other The seed proxy to copy.
+  /// @return Reference to this seed proxy after assignment.
+  SeedProxy2 &operator=(const SeedProxy2 &other) noexcept = default;
+
+  /// Copy assign a mutable seed proxy.
+  /// @param other The mutable seed proxy to copy.
+  /// @return Reference to this seed proxy after assignment.
+  SeedProxy2 &operator=(const SeedProxy2<false> &other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
+  /// Move assign a seed proxy.
+  /// @param other The seed proxy to move.
+  /// @return Reference to this seed proxy after assignment.
+  SeedProxy2 &operator=(SeedProxy2 &&other) noexcept = default;
+
+  /// Move assign a mutable seed proxy.
+  /// @param other The mutable seed proxy to move.
+  /// @return Reference to this seed proxy after assignment.
+  SeedProxy2 &operator=(SeedProxy2<false> &&other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
   /// Gets the container holding the seed.
   /// @return A reference to the container holding the seed.
   SeedContainer2 &container() noexcept
-    requires ReadOnly
+    requires(!ReadOnly)
   {
     return *m_container;
   }
@@ -237,6 +271,11 @@ class SeedProxy2 {
   /// Range facade for the seed space points.
   class SpacePointRange {
    public:
+    /// Size type for the range
+    using size_type = std::size_t;
+    /// Value type for the range
+    using value_type = ConstSpacePointProxy2;
+
     /// Constructor
     /// @param spacePointContainer The space point container
     /// @param spacePointIndices The space point indices
@@ -295,6 +334,18 @@ class SeedProxy2 {
       const SpacePointContainer2 &spacePointContainer) const noexcept {
     return SpacePointRange(spacePointContainer,
                            m_container->spacePointIndices(m_index));
+  }
+
+  /// Copies the specified columns from another seed to this seed.
+  /// @param other The seed proxy to copy from.
+  /// @param columnsToCopy The columns to copy from the other seed.
+  template <bool other_read_only>
+  void copyFrom(const SeedProxy2<other_read_only> &other,
+                SeedColumns columnsToCopy) const
+    requires(!ReadOnly)
+  {
+    m_container->copyFrom(m_index, other.container(), other.index(),
+                          columnsToCopy);
   }
 
  private:
