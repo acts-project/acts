@@ -56,6 +56,9 @@ clang_tidy:
 
   cache:
    - !reference [.spack_cache, cache]
+   - key: ctcache-${CCACHE_KEY_SUFFIX}
+     paths:
+       - ${CI_PROJECT_DIR}/ctcache_dir
 
   script:
     - git clone $CLONE_URL src
@@ -67,6 +70,15 @@ clang_tidy:
         && ln -sf /usr/bin/clang++-18 /usr/bin/clang++
         && ln -sf /usr/bin/clang-18 /usr/bin/clang
         && ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
+
+    # Install and configure ctcache for caching clang-tidy results
+    - git clone https://github.com/matus-chochlik/ctcache.git ${CI_PROJECT_DIR}/ctcache
+    - export CTCACHE_DIR=${CI_PROJECT_DIR}/ctcache_dir
+    - export CTCACHE_SAVE_OUTPUT=1
+    - export CTCACHE_KEEP_COMMENTS=1
+    - export CTCACHE_STRIP="${CI_PROJECT_DIR}/src:${CI_PROJECT_DIR}/src/build"
+    - export CTCACHE_LOG_LEVEL=info
+    - export PATH=${CI_PROJECT_DIR}/ctcache:$PATH
 
     - |
       CI/dependencies/setup.sh -c clang++ -e .env
@@ -80,6 +92,9 @@ clang_tidy:
 
     # Main clang-tidy run during cmake compilation
     - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
+
+    # Print ctcache statistics
+    - ${CI_PROJECT_DIR}/ctcache/clang-tidy --show-stats || true
 
     # Install dependencies for processing scripts
     - python3 -m pip install -r CI/clang_tidy/requirements.txt
