@@ -81,6 +81,14 @@ class SeedProxy2 {
     return *this;
   }
 
+  /// Returns a const proxy of the seed.
+  /// @return A const proxy of the seed.
+  SeedProxy2<true> asConst() const noexcept
+    requires(!ReadOnly)
+  {
+    return {*m_container, m_index};
+  }
+
   /// Gets the container holding the seed.
   /// @return A reference to the container holding the seed.
   SeedContainer2 &container() noexcept
