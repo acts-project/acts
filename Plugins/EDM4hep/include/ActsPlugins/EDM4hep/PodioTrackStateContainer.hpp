@@ -186,6 +186,30 @@ class PodioTrackStateContainerBase {
     }
   }
 
+  /// Get the uncalibrated source link for a track state
+  /// @param instance Container instance
+  /// @param istate Track state index
+  /// @return Uncalibrated source link
+  template <typename T>
+  static Acts::SourceLink getUncalibratedSourceLink_impl(
+      T& instance, Acts::TrackIndexType istate) {
+    auto trackState = instance.m_collection->at(istate);
+    if (instance.storeUncalibrated()) {
+      const auto linkNavigator = podio::LinkNavigator(*instance.m_links);
+      const std::vector<
+          podio::detail::links::WeightedObject<ActsPodioEdm::TrackerHitLocal>>
+          hits = linkNavigator.getLinked(trackState, podio::ReturnTo);
+      if (hits.size() != 1) {
+        throw std::invalid_argument(
+            "Track state has no or multiple links to hits");
+      }
+      return Acts::SourceLink(hits.front().o);
+    } else {
+      return instance.m_helper.get().identifierToSourceLink(
+          trackState.getData().uncalibratedIdentifier);
+    }
+  }
+
   /// Get a component from a track state
   /// @param instance Container instance
   /// @param key Component key
@@ -304,16 +328,25 @@ class ConstPodioTrackStateContainer final
   /// @param trackStates Track state collection
   /// @param params Parameters collection
   /// @param jacs Jacobian collection
+  /// @param hits Optional tracker hits collection (for link-based uncalibrated source links)
+  /// @param links Optional track state–hit links collection
   ConstPodioTrackStateContainer(
       const PodioUtil::ConversionHelper& helper,
       holder_t<const ActsPodioEdm::TrackStateCollection> trackStates,
       holder_t<const ActsPodioEdm::BoundParametersCollection> params,
-      holder_t<const ActsPodioEdm::JacobianCollection> jacs)
+      holder_t<const ActsPodioEdm::JacobianCollection> jacs,
+      const ActsPodioEdm::TrackerHitLocalCollection* hits = nullptr,
+      const ActsPodioEdm::TrackStateHitLinkCollection* links = nullptr)
       : m_helper{helper},
         m_collection{std::move(trackStates)},
         m_params{std::move(params)},
-        m_jacs{std::move(jacs)} {
-    // Not much we can do to recover dynamic columns here
+        m_jacs{std::move(jacs)},
+        m_hits{hits},
+        m_links{links} {
+    if ((m_hits == nullptr) != (m_links == nullptr)) {
+      throw std::invalid_argument(
+          "Hits and links must be either both nullptr or both not nullptr");
+    }
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
@@ -353,7 +386,22 @@ class ConstPodioTrackStateContainer final
             "trackStateJacobians" + (suffix.empty() ? suffix : "_" + suffix))} {
     std::string s = suffix.empty() ? suffix : "_" + suffix;
     std::string trackStatesKey = "trackStates" + s;
-
+    const std::string hitsKey = "trackerHits" + s;
+    const std::string linksKey = "trackStateHitLinks" + s;
+    const auto* hitsColl = frame.get(hitsKey);
+    const auto* linksColl = frame.get(linksKey);
+    if (hitsColl != nullptr && linksColl != nullptr) {
+      const auto* hits =
+          dynamic_cast<const ActsPodioEdm::TrackerHitLocalCollection*>(
+              hitsColl);
+      const auto* links =
+          dynamic_cast<const ActsPodioEdm::TrackStateHitLinkCollection*>(
+              linksColl);
+      if (hits != nullptr && links != nullptr) {
+        m_hits = hits;
+        m_links = links;
+      }
+    }
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
     podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic);
   }
@@ -451,9 +499,8 @@ class ConstPodioTrackStateContainer final
   /// @param istate Track state index
   /// @return Uncalibrated source link
   Acts::SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
-    // @TODO: Update based on changes in the mutable container
-    return m_helper.get().identifierToSourceLink(
-        m_collection->at(istate).getData().uncalibratedIdentifier);
+    return PodioTrackStateContainerBase::getUncalibratedSourceLink_impl(*this,
+                                                                        istate);
   }
 
   /// Get reference surface for a track state
@@ -466,6 +513,10 @@ class ConstPodioTrackStateContainer final
  private:
   friend class PodioTrackStateContainerBase;
 
+  bool storeUncalibrated() const {
+    return m_hits != nullptr && m_links != nullptr;
+  }
+
   std::reference_wrapper<const PodioUtil::ConversionHelper> m_helper;
   holder_t<const ActsPodioEdm::TrackStateCollection> m_collection;
   holder_t<const ActsPodioEdm::BoundParametersCollection> m_params;
@@ -476,6 +527,9 @@ class ConstPodioTrackStateContainer final
                      std::unique_ptr<podio_detail::ConstDynamicColumnBase>>
       m_dynamic;
   std::vector<Acts::HashedString> m_dynamicKeys;
+
+  const ActsPodioEdm::TrackerHitLocalCollection* m_hits = nullptr;
+  const ActsPodioEdm::TrackStateHitLinkCollection* m_links = nullptr;
 };
 
 static_assert(Acts::IsReadOnlyMultiTrajectory<
@@ -992,22 +1046,8 @@ class MutablePodioTrackStateContainer final
   /// @param istate Track state index
   /// @return Uncalibrated source link
   Acts::SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
-    auto trackState = m_collection->at(istate);
-    if (storeUncalibrated()) {
-      // @TODO: This can probably be optimized, maybe we cache the index in the track state data?
-      const auto linkNavigator = podio::LinkNavigator(*m_links);
-      const std::vector<
-          podio::detail::links::WeightedObject<ActsPodioEdm::TrackerHitLocal>>
-          hits = linkNavigator.getLinked(trackState, podio::ReturnTo);
-      if (hits.size() != 1) {
-        throw std::invalid_argument(
-            "Track state has no or multiple links to hits");
-      }
-      return Acts::SourceLink(hits.front().o);
-    } else {
-      return m_helper.get().identifierToSourceLink(
-          trackState.getData().uncalibratedIdentifier);
-    }
+    return PodioTrackStateContainerBase::getUncalibratedSourceLink_impl(*this,
+                                                                        istate);
   }
 
   /// Get the reference surface for a track state
@@ -1159,7 +1199,9 @@ inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
       m_collection{*other.m_collection},
       m_params{*other.m_params},
       m_jacs{*other.m_jacs},
-      m_surfaces{other.m_surfaces} {
+      m_surfaces{other.m_surfaces},
+      m_hits{other.m_hits},
+      m_links{other.m_links} {
   for (const auto& [key, col] : other.m_dynamic) {
     m_dynamic.insert({key, col->asConst()});
   }
@@ -1175,7 +1217,9 @@ inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
       m_collection{std::move(other.m_collection)},
       m_params{std::move(other.m_params)},
       m_jacs{std::move(other.m_jacs)},
-      m_surfaces{std::move(other.m_surfaces)} {
+      m_surfaces{std::move(other.m_surfaces)},
+      m_hits{other.m_hits},
+      m_links{other.m_links} {
   for (auto& [key, col] : other.m_dynamic) {
     m_dynamic.insert({key, std::move(col)});
   }
