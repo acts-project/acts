@@ -15,7 +15,7 @@
 
 namespace Acts::Experimental {
 
-void GbtsEdgeState::initialize(GbtsEdge& pS) {
+void GbtsEdgeState::initialize(const GbtsEdge& pS) {
   initialized = true;
 
   j = 0;
@@ -112,7 +112,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
   bool accepted = update(pS, newTs);
 
   if (!accepted) {
-    // stop further propagationƒ
+    // stop further propagation
     return;
   }
 
@@ -166,7 +166,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
   }
 }
 
-bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) const {
+bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     std::cout << "Negative cov_x" << std::endl;
   }

@@ -28,7 +28,7 @@ struct GbtsEdgeState final {
 
   /// Initialize from edge
   /// @param pS Edge to initialize from
-  void initialize(GbtsEdge& pS);
+  void initialize(const GbtsEdge& pS);
 
   /// Initialization flag
   bool initialized{false};
@@ -86,7 +86,7 @@ class GbtsTrackingFilter final {
   /// @param pS Edge to update with
   /// @param ts Edge state to update
   /// @return Success flag
-  bool update(GbtsEdge& pS, GbtsEdgeState& ts) const;
+  bool update(const GbtsEdge& pS, GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index
   /// @param l Layer index
