@@ -320,13 +320,6 @@ class SpacePointProxy2 {
     return column[m_index];
   }
 
-  /// Returns the resolved index of the space point.
-  /// This resolves the index if the space point was copied from another index.
-  /// @return The resolved index of the space point.
-  SpacePointIndex2 resolvedIndex() const noexcept {
-    return m_container->resolvedIndex(m_index);
-  }
-
  private:
   Container *m_container{};
   Index m_index{};
