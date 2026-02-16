@@ -115,7 +115,7 @@ function(acts_compile_headers target)
         list(APPEND _sources "${_temporary_path}")
     endforeach()
 
-    if(NOT TARGET Acts::${target}_HEADERS)
+    if(NOT TARGET Acts${target}_HEADERS)
         add_library(Acts${target}_HEADERS SHARED EXCLUDE_FROM_ALL ${_sources})
         target_link_libraries(Acts${target}_HEADERS PRIVATE Acts::${target})
     else()
