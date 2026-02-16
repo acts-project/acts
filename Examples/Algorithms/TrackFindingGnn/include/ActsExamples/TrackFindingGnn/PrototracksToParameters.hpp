@@ -84,7 +84,7 @@ class PrototracksToParameters final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::BoundSquareMatrix m_covariance = Acts::BoundSquareMatrix::Zero();
+  Acts::BoundMatrix m_covariance = Acts::BoundMatrix::Zero();
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,

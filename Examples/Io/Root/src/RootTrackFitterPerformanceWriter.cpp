@@ -35,10 +35,10 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
 using ActsPlugins::toRoot;
 
-ActsExamples::RootTrackFitterPerformanceWriter::
-    RootTrackFitterPerformanceWriter(
-        ActsExamples::RootTrackFitterPerformanceWriter::Config config,
-        Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootTrackFitterPerformanceWriter::RootTrackFitterPerformanceWriter(
+    RootTrackFitterPerformanceWriter::Config config, Acts::Logging::Level level)
     : WriterT(config.inputTracks, "RootTrackFitterPerformanceWriter", level),
       m_cfg(std::move(config)),
       m_resPlotTool(m_cfg.resPlotToolConfig, level),
@@ -68,13 +68,11 @@ ActsExamples::RootTrackFitterPerformanceWriter::
   }
 }
 
-ActsExamples::RootTrackFitterPerformanceWriter::
-    ~RootTrackFitterPerformanceWriter() {
+RootTrackFitterPerformanceWriter::~RootTrackFitterPerformanceWriter() {
   delete m_outputFile;
 }
 
-ActsExamples::ProcessCode
-ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
+ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
   }
@@ -82,34 +80,34 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
   m_outputFile->cd();
 
   // Helper lambda to write 2D histogram and extract mean/width histograms
-  auto writeWithRefinement = [](TH2F* hist2d, const std::string& meanPrefix,
+  auto writeWithRefinement = [](TH2F& hist2d, const std::string& meanPrefix,
                                 const std::string& widthPrefix) {
-    hist2d->Write();
+    hist2d.Write();
 
     // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
-    std::string baseName = hist2d->GetName();
+    std::string baseName = hist2d.GetName();
     std::string suffix = baseName.substr(baseName.find('_'));
 
     // Create mean and width histograms with same X binning as the 2D histogram
-    int nBinsX = hist2d->GetNbinsX();
+    int nBinsX = hist2d.GetNbinsX();
     auto meanHist = std::make_unique<TH1F>(
         (meanPrefix + suffix).c_str(),
-        (std::string(hist2d->GetTitle()) + " mean").c_str(), nBinsX,
-        hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
+        (std::string(hist2d.GetTitle()) + " mean").c_str(), nBinsX,
+        hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
     auto widthHist = std::make_unique<TH1F>(
         (widthPrefix + suffix).c_str(),
-        (std::string(hist2d->GetTitle()) + " width").c_str(), nBinsX,
-        hist2d->GetXaxis()->GetXmin(), hist2d->GetXaxis()->GetXmax());
+        (std::string(hist2d.GetTitle()) + " width").c_str(), nBinsX,
+        hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
 
     // Copy X axis bin edges for variable binning
-    if (hist2d->GetXaxis()->GetXbins()->GetSize() > 0) {
-      meanHist->SetBins(nBinsX, hist2d->GetXaxis()->GetXbins()->GetArray());
-      widthHist->SetBins(nBinsX, hist2d->GetXaxis()->GetXbins()->GetArray());
+    if (hist2d.GetXaxis()->GetXbins()->GetSize() > 0) {
+      meanHist->SetBins(nBinsX, hist2d.GetXaxis()->GetXbins()->GetArray());
+      widthHist->SetBins(nBinsX, hist2d.GetXaxis()->GetXbins()->GetArray());
     }
 
     // Project each X bin and extract mean/width via Gaussian fit
     for (int j = 1; j <= nBinsX; j++) {
-      auto proj = std::unique_ptr<TH1D>(hist2d->ProjectionY(
+      auto proj = std::unique_ptr<TH1D>(hist2d.ProjectionY(
           Form("%s_projy_bin%d", baseName.c_str(), j), j, j));
       if (proj->GetEntries() <= 0) {
         continue;
@@ -137,10 +135,10 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsEta()) {
-    writeWithRefinement(toRoot(hist), "resmean", "reswidth");
+    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsPt()) {
-    writeWithRefinement(toRoot(hist), "resmean", "reswidth");
+    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
 
   // Write pull histograms
@@ -148,10 +146,10 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsEta()) {
-    writeWithRefinement(toRoot(hist), "pullmean", "pullwidth");
+    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsPt()) {
-    writeWithRefinement(toRoot(hist), "pullmean", "pullwidth");
+    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
 
   // Write efficiency histograms
@@ -182,8 +180,7 @@ ActsExamples::RootTrackFitterPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode
-ActsExamples::RootTrackFitterPerformanceWriter::writeT(
+ProcessCode RootTrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const ConstTrackContainer& tracks) {
   // Read truth input collections
   const auto& particles = m_inputParticles(ctx);
@@ -273,3 +270,5 @@ ActsExamples::RootTrackFitterPerformanceWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

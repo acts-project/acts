@@ -35,8 +35,12 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::string outputSpacePoints{"MuonSpacePoints"};
     /// @brief Output measurements collection.
     std::string outputMeasurements = "measurements";
+    /// @brief Output collection to map measured hits to contributing particles.
+    std::string outputMeasurementParticlesMap = "measurement_particles_map";
     /// @brief Output collection to map measured hits to simulated hits.
     std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+    /// @brief Output collection to map particles to measurements.
+    std::string outputParticleMeasurementsMap = "particle_measurements_map";
     /// @brief Output collection to map particles to simulated hits.
     std::string outputSimHitMeasurementsMap = "simhit_measurements_map";
     /// @brief Random number generator service
@@ -49,6 +53,14 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     bool digitizeTime{false};
     /// @brief Visualize the digitization
     bool dumpVisualization{true};
+    /// @brief Visualization function (optional, e.g., for ROOT-based visualization)
+    /// Takes: outputPath, gctx, bucket, simHits, simParticles,
+    /// trackingGeometry, logger
+    std::function<void(const std::string&, const Acts::GeometryContext&,
+                       const MuonSpacePointBucket&, const SimHitContainer&,
+                       const SimParticleContainer&,
+                       const Acts::TrackingGeometry&, const Acts::Logger&)>
+        visualizationFunction{};
     /// @brief Applied dead time between two consecutive straw hits
     double strawDeadTime{1. * Acts::UnitConstants::ms};
     /// @brief Applied dead time between two consecutive rpc hits
@@ -76,27 +88,6 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   Acts::Transform3 toSpacePointFrame(
       const Acts::GeometryContext& gctx,
       const Acts::GeometryIdentifier& hitId) const;
-  /// @brief Visualizes the digitized space point bucket and plots the
-  ///        measurements on a y-z planes. Truth trajectories of muons
-  ///        are also depicted on the canvas
-  /// @param ctx: Context to fetch the sim particle container
-  /// @param gctx: Geometry context to construct the toSpacePoint transforms
-  /// @param bucket: All space points in the chamber to draw.
-  void visualizeBucket(const AlgorithmContext& ctx,
-                       const Acts::GeometryContext& gctx,
-                       const MuonSpacePointBucket& bucket) const;
-  /// @brief Determines the axis ranges in the z-y plane to draw
-  ///        the measurements on the canvas
-  /// @param bucket: List of all measurements in the chamber
-  Acts::RangeXD<2, double> canvasRanges(
-      const MuonSpacePointBucket& bucket) const;
-  /// @brief Returns whether a surface should be drawn on the canvas
-  /// @param gctx: Geometry context to construct the toSpacePoint transforms
-  /// @param surface: Reference to the surface of question to depict
-  /// @param canvasBoundaries: Visible section on the canvas
-  bool isSurfaceToDraw(const Acts::GeometryContext& gctx,
-                       const Acts::Surface& surface,
-                       const Acts::RangeXD<2, double>& canvasBoundaries) const;
   /// @brief Configuration of the digitizer
   Config m_cfg;
   /// @brief Data handle for the input simulated hits
@@ -108,8 +99,14 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
                                                                "SpacePoints"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
+
+  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+      this, "OutputMeasurementParticlesMap"};
   WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
+
+  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+      this, "OutputParticleMeasurementsMap"};
   WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
       this, "OutputSimHitMeasurementsMap"};
 };

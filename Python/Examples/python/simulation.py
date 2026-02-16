@@ -13,14 +13,20 @@ from acts.examples import (
     ParticlesPrinter,
     CsvVertexWriter,
 )
-
-from acts.examples.root import (
-    RootParticleWriter,
-    RootVertexWriter,
-    RootSimHitWriter,
-)
-
 import acts.examples.hepmc3
+
+# ROOT might not be available
+try:
+    from acts.examples.root import (
+        RootParticleWriter,
+        RootVertexWriter,
+        RootSimHitWriter,
+    )
+
+    ACTS_EXAMPLES_ROOT_AVAILABLE = True
+except ImportError:
+    ACTS_EXAMPLES_ROOT_AVAILABLE = False
+
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
@@ -61,8 +67,14 @@ ParticleSelectorConfig = namedtuple(
 
 TruthJetConfig = namedtuple(
     "TruthJetConfig",
-    ["inputTruthParticles", "outputJets", "jetPtMin"],
-    defaults=[None, None],
+    [
+        "inputTruthParticles",
+        "inputTracks",
+        "outputJets",
+        "doTrackJetMatching",
+        "jetPtMin",
+    ],
+    defaults=[None, None, None, False, None],
 )
 
 
@@ -98,7 +110,9 @@ def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
 def _getTruthJetKWargs(config: TruthJetConfig) -> dict:
     return {
         "inputTruthParticles": config.inputTruthParticles,
+        "inputTracks": config.inputTracks,
         "outputJets": config.outputJets,
+        "doTrackJetMatching": config.doTrackJetMatching,
         "jetPtMin": config.jetPtMin,
     }
 
@@ -227,6 +241,9 @@ def addParticleGun(
         )
 
     if outputDirRoot is not None:
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -413,6 +430,9 @@ def addPythia8(
         )
 
     if outputDirRoot is not None:
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
@@ -576,6 +596,9 @@ def addSimWriters(
         )
 
     if outputDirRoot is not None:
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()

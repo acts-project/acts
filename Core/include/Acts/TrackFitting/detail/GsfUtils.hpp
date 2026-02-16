@@ -11,12 +11,13 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -32,9 +33,13 @@
 
 namespace Acts::detail::Gsf {
 
+/// The tolerated difference to 1 to accept weights as normalized
+constexpr static double s_normalizationTolerance = 1.e-4;
+
 template <typename component_range_t, typename projector_t>
 bool weightsAreNormalized(const component_range_t &cmps,
-                          const projector_t &proj, double tol = 1.e-4) {
+                          const projector_t &proj,
+                          double tol = s_normalizationTolerance) {
   double sumOfWeights = 0.0;
 
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
@@ -97,9 +102,8 @@ class ScopedGsfInfoPrinterAndChecker {
     [[maybe_unused]] const bool allFinite =
         std::all_of(cmps.begin(), cmps.end(),
                     [](auto cmp) { return std::isfinite(cmp.weight()); });
-    [[maybe_unused]] const bool allNormalized =
-        detail::Gsf::weightsAreNormalized(
-            cmps, [](const auto &cmp) { return cmp.weight(); });
+    [[maybe_unused]] const bool allNormalized = weightsAreNormalized(
+        cmps, [](const auto &cmp) { return cmp.weight(); });
     [[maybe_unused]] const bool zeroComponents =
         m_stepper.numberComponents(m_state.stepping) == 0;
 

@@ -109,7 +109,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.propOptions, &(*options.referenceSurface));
+        extensions, options.propOptions, options.referenceSurface);
 
     kfOptions.referenceSurfaceStrategy =
         Acts::TrackExtrapolationStrategy::first;
@@ -159,8 +159,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
 
 }  // namespace
 
-std::shared_ptr<ActsExamples::TrackFitterFunction>
-ActsExamples::makeKalmanFitterFunction(
+std::shared_ptr<TrackFitterFunction> ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,

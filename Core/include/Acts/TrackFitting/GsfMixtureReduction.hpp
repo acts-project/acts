@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 
 namespace Acts {
 

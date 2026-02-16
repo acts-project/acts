@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST be unique
     BOOST_CHECK(!oIntersection[1].isValid());
 
-    // On surface intersecion - on the surface with normal vector
+    // On surface intersection - on the surface with normal vector
     oIntersection =
         aLine->intersect(tgContext, onitP, normalP, BoundaryTolerance::None());
     // The intersection MUST be valid

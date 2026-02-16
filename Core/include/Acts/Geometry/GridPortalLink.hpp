@@ -61,7 +61,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @return A unique pointer to the grid portal link
   template <AxisConcept axis_t>
   static std::unique_ptr<GridPortalLinkT<axis_t>> make(
-      std::shared_ptr<RegularSurface> surface, AxisDirection direction,
+      const std::shared_ptr<RegularSurface>& surface, AxisDirection direction,
       axis_t&& axis) {
     using enum AxisDirection;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
@@ -91,7 +91,8 @@ class GridPortalLink : public PortalLinkBase {
   /// @return A unique pointer to the grid portal link
   template <AxisConcept axis_1_t, AxisConcept axis_2_t>
   static std::unique_ptr<GridPortalLinkT<axis_1_t, axis_2_t>> make(
-      std::shared_ptr<RegularSurface> surface, axis_1_t axis1, axis_2_t axis2) {
+      const std::shared_ptr<RegularSurface>& surface, axis_1_t axis1,
+      axis_2_t axis2) {
     std::optional<AxisDirection> direction;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
       direction = AxisDirection::AxisRPhi;
@@ -304,7 +305,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @note The returned pointer can be nullptr, if the grids
   ///       given are not mergeable, because their binnings are
   ///       not compatible. This is not an error case, and needs
-  ///       to be handled by th caller! Invalid input is handled
+  ///       to be handled by the caller! Invalid input is handled
   ///       via exceptions.
   static std::unique_ptr<PortalLinkBase> merge(
       const GridPortalLink& a, const GridPortalLink& b, AxisDirection direction,
