@@ -30,7 +30,7 @@ ProcessCode CsvVertexWriter::writeT(const AlgorithmContext& ctx,
                                     const VertexContainer& vertices) {
   auto pathVertices = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
-  NamedTupleCsvWriter<VertexData> writer(pathVertices, m_cfg.outputPrecision);
+  BoostDescribeCsvWriter<VertexData> writer(pathVertices, m_cfg.outputPrecision);
 
   // Iterate over the vertices, and write out the 4 positions
   VertexData data;

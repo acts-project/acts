@@ -103,7 +103,7 @@ inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
     const std::vector<std::string>& optionalColumns, std::size_t event) {
   std::string path = perEventFilepath(inputDir, filename, event);
-  NamedTupleCsvReader<Data> reader(path, optionalColumns);
+  BoostDescribeCsvReader<Data> reader(path, optionalColumns);
 
   std::vector<Data> everything;
   Data one;

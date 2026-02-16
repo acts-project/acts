@@ -8,11 +8,12 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 
+#include <array>
 #include <cstdint>
+
+#include <boost/describe.hpp>
 
 namespace ActsExamples {
 
@@ -37,18 +38,19 @@ struct ParticleData {
   float m = 0.0f;
   /// Charge in e.
   float q = 0;
-
-  DFE_NAMEDTUPLE(ParticleData, particle_id_pv, particle_id_sv, particle_id_part,
-                 particle_id_gen, particle_id_subpart, particle_type, process,
-                 vx, vy, vz, vt, px, py, pz, m, q);
 };
+
+BOOST_DESCRIBE_STRUCT(ParticleData, (),
+                      (particle_id_pv, particle_id_sv, particle_id_part,
+                       particle_id_gen, particle_id_subpart, particle_type,
+                       process, vx, vy, vz, vt, px, py, pz, m, q))
 
 struct VertexData {
   /// Position
   float x = 0, y = 0, z = 0, T = 0;
-
-  DFE_NAMEDTUPLE(VertexData, x, y, z, T);
 };
+
+BOOST_DESCRIBE_STRUCT(VertexData, (), (x, y, z, T))
 
 // Write out simhits before digitization (no hi_id associated)
 struct SimHitData {
@@ -77,12 +79,13 @@ struct SimHitData {
   float deltae = 0.0f;
   // Hit index along the trajectory. Not available in the TrackML datasets.
   std::int32_t index = -1;
-
-  DFE_NAMEDTUPLE(SimHitData, particle_id_pv, particle_id_sv, particle_id_part,
-                 particle_id_gen, particle_id_subpart, geometry_id, tx, ty, tz,
-                 tt, tpx, tpy, tpz, te, deltapx, deltapy, deltapz, deltae,
-                 index);
 };
+
+BOOST_DESCRIBE_STRUCT(SimHitData, (),
+                      (particle_id_pv, particle_id_sv, particle_id_part,
+                       particle_id_gen, particle_id_subpart, geometry_id, tx,
+                       ty, tz, tt, tpx, tpy, tpz, te, deltapx, deltapy,
+                       deltapz, deltae, index))
 
 // Write out muon simhits before digitization
 struct MuonSegmentData {
@@ -117,13 +120,15 @@ struct MuonSegmentData {
   unsigned phiLayers{0u};
   /// @brief  Complementary hits in the bending direction (Rpc / Tgc)
   unsigned trigEtaLayers{0u};
-  DFE_NAMEDTUPLE(MuonSegmentData, sectorId, globalPositionX, globalPositionY,
-                 globalPositionZ, globalDirectionX, globalDirectionY,
-                 globalDirectionZ, localPositionX, localPositionY,
-                 localPositionZ, localDirectionX, localDirectionY,
-                 localDirectionZ, time, timeError, chiSquared, nDoF,
-                 precisionHits, phiLayers, trigEtaLayers);
 };
+
+BOOST_DESCRIBE_STRUCT(MuonSegmentData, (),
+                      (sectorId, globalPositionX, globalPositionY,
+                       globalPositionZ, globalDirectionX, globalDirectionY,
+                       globalDirectionZ, localPositionX, localPositionY,
+                       localPositionZ, localDirectionX, localDirectionY,
+                       localDirectionZ, time, timeError, chiSquared, nDoF,
+                       precisionHits, phiLayers, trigEtaLayers))
 
 struct MuonSpacePointData {
   /// @brief Identifier hash encoding the spectrometer sector, layer & detector side
@@ -159,12 +164,14 @@ struct MuonSpacePointData {
   bool measuresPhi{false};
   /// @brief Flag toggling whether the measurement provides a time coordinate
   bool measuresTime{false};
-  DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, locPositionX,
-                 locPositionY, locPositionZ, locSensorDirX, locSensorDirY,
-                 locSensorDirZ, locToNextSensorX, locToNextSensorY,
-                 locToNextSensorZ, covX, covY, covT, driftR, gasGap, primaryCh,
-                 measuresEta, measuresPhi, measuresTime);
 };
+
+BOOST_DESCRIBE_STRUCT(MuonSpacePointData, (),
+                      (sectorId, bucketId, locPositionX, locPositionY,
+                       locPositionZ, locSensorDirX, locSensorDirY,
+                       locSensorDirZ, locToNextSensorX, locToNextSensorY,
+                       locToNextSensorZ, covX, covY, covT, driftR, gasGap,
+                       primaryCh, measuresEta, measuresPhi, measuresTime))
 
 struct TruthHitData {
   /// Event-unique hit identifier. As defined for the simulated hit below and
@@ -196,12 +203,13 @@ struct TruthHitData {
   float deltae = 0.0f;
   // Hit index along the trajectory. Not available in the TrackML datasets.
   std::int32_t index = -1;
-
-  DFE_NAMEDTUPLE(TruthHitData, hit_id, particle_id_pv, particle_id_sv,
-                 particle_id_part, particle_id_gen, particle_id_subpart,
-                 geometry_id, tx, ty, tz, tt, tpx, tpy, tpz, te, deltapx,
-                 deltapy, deltapz, deltae, index);
 };
+
+BOOST_DESCRIBE_STRUCT(TruthHitData, (),
+                      (hit_id, particle_id_pv, particle_id_sv,
+                       particle_id_part, particle_id_gen, particle_id_subpart,
+                       geometry_id, tx, ty, tz, tt, tpx, tpy, tpz, te,
+                       deltapx, deltapy, deltapz, deltae, index))
 
 struct HitData {
   /// Event-unique hit identifier. Each value can appear at most once.
@@ -212,18 +220,18 @@ struct HitData {
   float x = 0, y = 0, z = 0;
   /// Global hit time in ns. Not available in the TrackML datasets.
   float t = 0.0f;
-
-  DFE_NAMEDTUPLE(HitData, hit_id, geometry_id, x, y, z, t);
 };
+
+BOOST_DESCRIBE_STRUCT(HitData, (), (hit_id, geometry_id, x, y, z, t))
 
 struct MeasurementSimHitLink {
   /// Event-unique measurement identifier. Each value can appear at most once.
   std::uint64_t measurement_id = 0;
   /// Event-unique measurement sim hit identifier.
   std::uint64_t hit_id = 0;
-
-  DFE_NAMEDTUPLE(MeasurementSimHitLink, measurement_id, hit_id);
 };
+
+BOOST_DESCRIBE_STRUCT(MeasurementSimHitLink, (), (measurement_id, hit_id))
 
 struct MeasurementData {
   /// Event-unique measurement identifier. Each value can appear at most once.
@@ -236,11 +244,12 @@ struct MeasurementData {
   float var_local0 = 0, var_local1 = 0, var_phi = 0, var_theta = 0,
         var_time = 0;
   float global_x = 0, global_y = 0, global_z = 0;
-
-  DFE_NAMEDTUPLE(MeasurementData, measurement_id, geometry_id, local_key,
-                 local0, local1, phi, theta, time, var_local0, var_local1,
-                 var_phi, var_theta, var_time, global_x, global_y, global_z);
 };
+
+BOOST_DESCRIBE_STRUCT(MeasurementData, (),
+                      (measurement_id, geometry_id, local_key, local0, local1,
+                       phi, theta, time, var_local0, var_local1, var_phi,
+                       var_theta, var_time, global_x, global_y, global_z))
 
 struct CellData {
   /// Hit surface identifier.
@@ -255,10 +264,11 @@ struct CellData {
   float timestamp = 0;
   /// (Digital) measured cell value, e.g. amplitude or time-over-threshold.
   float value = 0;
-
-  DFE_NAMEDTUPLE(CellData, geometry_id, measurement_id, channel0, channel1,
-                 timestamp, value);
 };
+
+BOOST_DESCRIBE_STRUCT(CellData, (),
+                      (geometry_id, measurement_id, channel0, channel1,
+                       timestamp, value))
 
 // uses hit id
 struct CellDataLegacy {
@@ -274,10 +284,11 @@ struct CellDataLegacy {
   float timestamp = 0;
   /// (Digital) measured cell value, e.g. amplitude or time-over-threshold.
   float value = 0;
-
-  DFE_NAMEDTUPLE(CellDataLegacy, geometry_id, hit_id, channel0, channel1,
-                 timestamp, value);
 };
+
+BOOST_DESCRIBE_STRUCT(CellDataLegacy, (),
+                      (geometry_id, hit_id, channel0, channel1, timestamp,
+                       value))
 
 struct SurfaceData {
   /// Surface identifier. Not available in the TrackML datasets.
@@ -304,14 +315,15 @@ struct SurfaceData {
   float module_t = -1.f;
   float pitch_u = -1.f;
   float pitch_v = -1.f;
-
-  DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, boundary_id, layer_id,
-                 module_id, extra_id, cx, cy, cz, rot_xu, rot_xv, rot_xw,
-                 rot_yu, rot_yv, rot_yw, rot_zu, rot_zv, rot_zw, bounds_type,
-                 bound_param0, bound_param1, bound_param2, bound_param3,
-                 bound_param4, bound_param5, bound_param6, module_t, pitch_u,
-                 pitch_v);
 };
+
+BOOST_DESCRIBE_STRUCT(SurfaceData, (),
+                      (geometry_id, volume_id, boundary_id, layer_id,
+                       module_id, extra_id, cx, cy, cz, rot_xu, rot_xv,
+                       rot_xw, rot_yu, rot_yv, rot_yw, rot_zu, rot_zv,
+                       rot_zw, bounds_type, bound_param0, bound_param1,
+                       bound_param2, bound_param3, bound_param4, bound_param5,
+                       bound_param6, module_t, pitch_u, pitch_v))
 
 struct LayerVolumeData {
   /// Surface identifier. Not available in the TrackML datasets.
@@ -326,10 +338,11 @@ struct LayerVolumeData {
   float max_v1 = -1.f;
   float min_v2 = -1.f;
   float max_v2 = -1.f;
-
-  DFE_NAMEDTUPLE(LayerVolumeData, geometry_id, volume_id, layer_id, min_v0,
-                 max_v0, min_v1, max_v1, min_v2, max_v2);
 };
+
+BOOST_DESCRIBE_STRUCT(LayerVolumeData, (),
+                      (geometry_id, volume_id, layer_id, min_v0, max_v0,
+                       min_v1, max_v1, min_v2, max_v2))
 
 struct SpacePointData {
   /// Event-unique measurement identifier. Each value can appear at most once.
@@ -342,25 +355,34 @@ struct SpacePointData {
   float sp_topHalfStripLength = 0;
   // half of the length of the bottom strip
   float sp_bottomHalfStripLength = 0;
-  // direction of the top strip
-  Acts::Vector3 sp_topStripDirection{};
-  // direction of the bottom strip
-  Acts::Vector3 sp_bottomStripDirection{};
-  // distance between the center of the two strips
-  Acts::Vector3 sp_stripCenterDistance{};
-  // position of the center of the bottom strip
-  Acts::Vector3 sp_topStripCenterPosition{};
-
-  DFE_NAMEDTUPLE(SpacePointData, measurement_id, sp_x, sp_y, sp_z, sp_radius,
-                 sp_covr, sp_covz, sp_topHalfStripLength,
-                 sp_bottomHalfStripLength, sp_topStripDirection[0],
-                 sp_topStripDirection[1], sp_topStripDirection[2],
-                 sp_bottomStripDirection[0], sp_bottomStripDirection[1],
-                 sp_bottomStripDirection[2], sp_stripCenterDistance[0],
-                 sp_stripCenterDistance[1], sp_stripCenterDistance[2],
-                 sp_topStripCenterPosition[0], sp_topStripCenterPosition[1],
-                 sp_topStripCenterPosition[2]);
+  // direction of the top strip (flattened from Vector3)
+  float sp_topStripDirection_0 = 0;
+  float sp_topStripDirection_1 = 0;
+  float sp_topStripDirection_2 = 0;
+  // direction of the bottom strip (flattened from Vector3)
+  float sp_bottomStripDirection_0 = 0;
+  float sp_bottomStripDirection_1 = 0;
+  float sp_bottomStripDirection_2 = 0;
+  // distance between the center of the two strips (flattened from Vector3)
+  float sp_stripCenterDistance_0 = 0;
+  float sp_stripCenterDistance_1 = 0;
+  float sp_stripCenterDistance_2 = 0;
+  // position of the center of the bottom strip (flattened from Vector3)
+  float sp_topStripCenterPosition_0 = 0;
+  float sp_topStripCenterPosition_1 = 0;
+  float sp_topStripCenterPosition_2 = 0;
 };
+
+BOOST_DESCRIBE_STRUCT(
+    SpacePointData, (),
+    (measurement_id, sp_x, sp_y, sp_z, sp_radius, sp_covr, sp_covz,
+     sp_topHalfStripLength, sp_bottomHalfStripLength,
+     sp_topStripDirection_0, sp_topStripDirection_1, sp_topStripDirection_2,
+     sp_bottomStripDirection_0, sp_bottomStripDirection_1,
+     sp_bottomStripDirection_2, sp_stripCenterDistance_0,
+     sp_stripCenterDistance_1, sp_stripCenterDistance_2,
+     sp_topStripCenterPosition_0, sp_topStripCenterPosition_1,
+     sp_topStripCenterPosition_2))
 
 struct SurfaceGridData {
   /// Surface identifier. Not available in the TrackML datasets.
@@ -374,20 +396,23 @@ struct SurfaceGridData {
   int type_loc1 = -1;
   int nbins_loc1 = -1;
   float min_loc1 = 0, max_loc1 = 0;
-
-  DFE_NAMEDTUPLE(SurfaceGridData, geometry_id, volume_id, layer_id, surface_id,
-                 type_loc0, nbins_loc0, min_loc0, max_loc0, type_loc1,
-                 nbins_loc1, min_loc1, max_loc1);
 };
+
+BOOST_DESCRIBE_STRUCT(SurfaceGridData, (),
+                      (geometry_id, volume_id, layer_id, surface_id, type_loc0,
+                       nbins_loc0, min_loc0, max_loc0, type_loc1, nbins_loc1,
+                       min_loc1, max_loc1))
 
 struct SpacepointData {
   std::uint64_t measurement_id_1, measurement_id_2;
   std::uint64_t geometry_id_1, geometry_id_2;
   float x, y, z, t;
   float var_r, var_z;
-  DFE_NAMEDTUPLE(SpacepointData, measurement_id_1, measurement_id_2,
-                 geometry_id_1, geometry_id_2, x, y, z, t, var_r, var_z);
 };
+
+BOOST_DESCRIBE_STRUCT(SpacepointData, (),
+                      (measurement_id_1, measurement_id_2, geometry_id_1,
+                       geometry_id_2, x, y, z, t, var_r, var_z))
 
 struct TrackParameterData {
   std::size_t trackId;
@@ -404,29 +429,32 @@ struct TrackParameterData {
   double cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop;
   double cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop;
   double cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta;
-
-  DFE_NAMEDTUPLE(TrackParameterData, trackId, d0, z0, phi, theta, qop, var_d0,
-                 var_z0, var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi,
-                 cov_d0theta, cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta,
-                 cov_z0qop, cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop,
-                 cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop,
-                 cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta);
 };
+
+BOOST_DESCRIBE_STRUCT(TrackParameterData, (),
+                      (trackId, d0, z0, phi, theta, qop, var_d0, var_z0,
+                       var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi,
+                       cov_d0theta, cov_d0qop, cov_z0d0, cov_z0phi,
+                       cov_z0theta, cov_z0qop, cov_phid0, cov_phiz0,
+                       cov_phitheta, cov_phiqop, cov_thetad0, cov_thetaz0,
+                       cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
+                       cov_qopphi, cov_qoptheta))
 
 struct ProtoTrackData {
   std::size_t trackId;
   Index measurementId;
   double x, y, z;
-
-  DFE_NAMEDTUPLE(ProtoTrackData, trackId, measurementId, x, y, z);
 };
+
+BOOST_DESCRIBE_STRUCT(ProtoTrackData, (), (trackId, measurementId, x, y, z))
 
 struct GraphData {
   std::int64_t edge0 = 0;
   std::int64_t edge1 = 0;
   float weight = 0.0;
-  DFE_NAMEDTUPLE(GraphData, edge0, edge1, weight);
 };
+
+BOOST_DESCRIBE_STRUCT(GraphData, (), (edge0, edge1, weight))
 
 struct SpacePointBucketData {
   /// @brief Data structure for space point buckets
@@ -443,15 +471,10 @@ struct SpacePointBucketData {
   /// To allow for variable size, the bucket data is split into several lines
   /// A line can contain up to 20 space points (arbitrary number)
   std::array<std::uint64_t, 20> measurement_id;
-
-  DFE_NAMEDTUPLE(SpacePointBucketData, bucketIdx, bucketSize, measurement_id[0],
-                 measurement_id[1], measurement_id[2], measurement_id[3],
-                 measurement_id[4], measurement_id[5], measurement_id[6],
-                 measurement_id[7], measurement_id[8], measurement_id[9],
-                 measurement_id[10], measurement_id[11], measurement_id[12],
-                 measurement_id[13], measurement_id[14], measurement_id[15],
-                 measurement_id[16], measurement_id[17], measurement_id[18],
-                 measurement_id[19]);
 };
+
+// SpacePointBucketData is not described with BOOST_DESCRIBE_STRUCT because it
+// uses array subscript access in its CSV columns. It is written using CsvWriter
+// directly.
 
 }  // namespace ActsExamples

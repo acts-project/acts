@@ -57,9 +57,9 @@ std::string CsvTrackingGeometryWriter::name() const {
 
 namespace {
 
-using SurfaceWriter = NamedTupleCsvWriter<SurfaceData>;
-using SurfaceGridWriter = NamedTupleCsvWriter<SurfaceGridData>;
-using LayerVolumeWriter = NamedTupleCsvWriter<LayerVolumeData>;
+using SurfaceWriter = BoostDescribeCsvWriter<SurfaceData>;
+using SurfaceGridWriter = BoostDescribeCsvWriter<SurfaceGridData>;
+using LayerVolumeWriter = BoostDescribeCsvWriter<LayerVolumeData>;
 using BoundarySurface = Acts::BoundarySurfaceT<Acts::TrackingVolume>;
 
 /// Write a single surface.

@@ -48,7 +48,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
-  NamedTupleCsvReader<MuonSpacePointData> reader(path);
+  BoostDescribeCsvReader<MuonSpacePointData> reader(path);
 
   MuonSpacePointData data{};
 

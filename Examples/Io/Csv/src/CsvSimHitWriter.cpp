@@ -41,7 +41,7 @@ ProcessCode CsvSimHitWriter::writeT(const AlgorithmContext& ctx,
   std::string pathSimHit = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<SimHitData> writerSimHit(pathSimHit,
+  BoostDescribeCsvWriter<SimHitData> writerSimHit(pathSimHit,
                                                m_cfg.outputPrecision);
 
   // CsvOutputData struct

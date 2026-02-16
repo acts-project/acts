@@ -8,33 +8,6 @@
 
 #pragma once
 
-// The contents of this file are originally sourced from
-// https://github.com/acts-project/dfelibs/blob/master/dfe/dfe_io_dsv.hpp
-// and
-// https://github.com/acts-project/dfelibs/blob/master/dfe/dfe_namedtuple.hpp
-// and were published with the following license statement:
-
-// SPDX-License-Identifier: MIT
-// Copyright 2015,2018-2020 Moritz Kiehn
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -42,161 +15,35 @@
 #include <array>
 #include <cassert>
 #include <fstream>
+#include <limits>
 #include <ostream>
 #include <sstream>
 #include <string>
-#include <tuple>
-#include <utility>
 #include <vector>
 
-/// Enable tuple-like access and conversion for selected class/struct members.
-///
-/// This allows access to the selected members via `.get<I>()` or `get<I>(...)`,
-/// conversion to equivalent `std::tuple<...>` via implicit conversion or
-/// explicitly via `.tuple()`,  and assignment from equivalent tuples.
-/// The names can be accessed via `::names()`.
-#define DFE_NAMEDTUPLE(name, ...)                                       \
-  using Tuple = decltype(::std::make_tuple(__VA_ARGS__));               \
-  static ::std::array<::std::string, ::std::tuple_size<Tuple>::value>   \
-  names() {                                                             \
-    return ::ActsExamples::detail_dfe::unstringify<                     \
-        ::std::tuple_size<Tuple>::value>((#__VA_ARGS__));               \
-  }                                                                     \
-  template <typename... U>                                              \
-  name& operator=(const ::std::tuple<U...>& other) {                    \
-    ::std::tie(__VA_ARGS__) = other;                                    \
-    return *this;                                                       \
-  }                                                                     \
-  template <typename... U>                                              \
-  name& operator=(::std::tuple<U...>&& other) {                         \
-    ::std::tie(__VA_ARGS__) = ::std::forward<std::tuple<U...>>(other);  \
-    return *this;                                                       \
-  }                                                                     \
-  operator Tuple() const {                                              \
-    return ::std::make_tuple(__VA_ARGS__);                              \
-  }                                                                     \
-  Tuple tuple() const {                                                 \
-    return ::std::make_tuple(__VA_ARGS__);                              \
-  }                                                                     \
-  template <std::size_t I>                                              \
-  constexpr ::std::tuple_element_t<I, Tuple>& get() {                   \
-    return ::std::get<I>(std::tie(__VA_ARGS__));                        \
-  }                                                                     \
-  template <::std::size_t I>                                            \
-  constexpr const ::std::tuple_element_t<I, Tuple>& get() const {       \
-    return ::std::get<I>(std::tie(__VA_ARGS__));                        \
-  }                                                                     \
-  template <::std::size_t I>                                            \
-  friend constexpr ::std::tuple_element_t<I, Tuple>& get(name& nt) {    \
-    return nt.template get<I>();                                        \
-  }                                                                     \
-  template <::std::size_t I>                                            \
-  friend constexpr const ::std::tuple_element_t<I, Tuple>& get(         \
-      const name& nt) {                                                 \
-    return nt.template get<I>();                                        \
-  }                                                                     \
-  friend inline ::std::ostream& operator<<(::std::ostream& os,          \
-                                           const name& nt) {            \
-    return ::ActsExamples::detail_dfe::print_tuple(                     \
-        os, nt.names(), nt.tuple(),                                     \
-        ::std::make_index_sequence<::std::tuple_size<Tuple>::value>{}); \
-  }
+#include <boost/describe.hpp>
+#include <boost/mp11.hpp>
 
 namespace ActsExamples {
-// implementation helpers
-namespace detail_dfe {
 
-// Reverse macro stringification.
-//
-// Splits a string of the form `a, b, c` into components a, b, and c.
-template <std::size_t N>
-constexpr std::array<std::string, N> unstringify(const char* str) {
-  assert(str && "Input string must be non-null");
-
-  std::array<std::string, N> out;
-
-  for (std::size_t idx = 0; idx < N; ++idx) {
-    // skip leading whitespace
-    while ((*str != '\0') && (*str == ' ')) {
-      ++str;
-    }
-    // find the next separator or end-of-string
-    const char* sep = str;
-    while ((*sep != '\0') && (*sep != ',')) {
-      ++sep;
-    }
-    // store component w/o the separator
-    out[idx].assign(str, sep - str);
-    // we can quit as soon as we reached the end of the input
-    if (*sep == '\0') {
-      break;
-    }
-    // start search for next component after the separator
-    str = ++sep;
-  }
-  // TODO handle inconsistent number of entries? can it occur in expected use?
-  return out;
-}
-
-// modified from http://stackoverflow.com/a/6245777
-template <typename Names, typename Values, std::size_t... I>
-inline std::ostream& print_tuple(std::ostream& os, const Names& n,
-                                 const Values& v,
-                                 std::index_sequence<I...> /*seq*/) {
-  // we want to execute some expression for every entry in the index pack. this
-  // requires a construction that can take a variable number of arguments into
-  // which we can unpack the indices. inside a function, constructing an
-  // array with an initializer list will do the job, i.e. we will effectively
-  // create the following statement
-  //
-  //     int x[] = {...};
-  //
-  // since we do not care about the actual values within the array, the
-  // initializer list is cast twice: once to the array type and then to void.
-  // this ignores the actual values and silences warnings about unused
-  // variables. to get the correct initializer list syntax, the array type
-  // must be typedef'd as a single type. what we get is
-  //
-  //     using Vacuum = int[];
-  //     (void)Vacuum{...};
-  //
-  // in order for this to work, the expression that we want to instantiate
-  // needs to evaluate to the element type of the array (here: `int`). this can
-  // be done with the comma operator (yep, `,` is a weird but helpful operator)
-  // for arbitrary expressions. `(<expr1>, <expr2>)` executes both expressions
-  // but evaluates only to the return value of the second expression. thus,
-  // `(<expr>, 0)` executes `<expr>` but always evaluates to an integer of value
-  // zero. if <expr> uses the index pack variable `I` in the following setup
-  //
-  //     (void)Vacuum{(<expr>, 0)...};
-  //
-  // it is instantiatied for each element within the pack (with appropriate ,
-  // placements). thus, effectively looping over every entry in the pack and
-  // calling <expr> for each (here: printing to os);
-  using std::get;
-  using Vacuum = int[];
-  (void)Vacuum{
-      (os << ((0 < I) ? " " : "") << get<I>(n) << "=" << get<I>(v), 0)...};
-  return os;
-}
-
-/// Write arbitrary data as delimiter-separated values into a text file.
-template <char Delimiter>
-class DsvWriter {
+/// Write arbitrary data as comma-separated values into a text file.
+class CsvWriter {
  public:
-  DsvWriter() = delete;
-  DsvWriter(const DsvWriter&) = delete;
-  DsvWriter(DsvWriter&&) noexcept = default;
-  ~DsvWriter() = default;
-  DsvWriter& operator=(const DsvWriter&) = delete;
-  DsvWriter& operator=(DsvWriter&&) noexcept = default;
+  static constexpr char Delimiter = ',';
+
+  CsvWriter() = delete;
+  CsvWriter(const CsvWriter&) = delete;
+  CsvWriter(CsvWriter&&) noexcept = default;
+  ~CsvWriter() = default;
+  CsvWriter& operator=(const CsvWriter&) = delete;
+  CsvWriter& operator=(CsvWriter&&) noexcept = default;
 
   /// Create a file at the given path. Overwrites existing data.
   ///
   /// \param columns    Column names, fixes the number of columns for the file
   /// \param path       Path to the output file
   /// \param precision  Output floating point precision
-  DsvWriter(const std::vector<std::string>& columns, const std::string& path,
+  CsvWriter(const std::vector<std::string>& columns, const std::string& path,
             int precision = std::numeric_limits<double>::max_digits10);
 
   /// Append arguments as a new row to the file.
@@ -222,21 +69,22 @@ class DsvWriter {
   static unsigned write(const std::vector<T, Allocator>& xs, std::ostream& os);
 };
 
-/// Read arbitrary data as delimiter-separated values from a text file.
-template <char Delimiter>
-class DsvReader {
+/// Read arbitrary data as comma-separated values from a text file.
+class CsvReader {
  public:
-  DsvReader() = delete;
-  DsvReader(const DsvReader&) = delete;
-  DsvReader(DsvReader&&) noexcept = default;
-  ~DsvReader() = default;
-  DsvReader& operator=(const DsvReader&) = delete;
-  DsvReader& operator=(DsvReader&&) noexcept = default;
+  static constexpr char Delimiter = ',';
+
+  CsvReader() = delete;
+  CsvReader(const CsvReader&) = delete;
+  CsvReader(CsvReader&&) noexcept = default;
+  ~CsvReader() = default;
+  CsvReader& operator=(const CsvReader&) = delete;
+  CsvReader& operator=(CsvReader&&) noexcept = default;
 
   /// Open a file at the given path.
   ///
   /// \param path Path to the input file
-  explicit DsvReader(const std::string& path);
+  explicit CsvReader(const std::string& path);
 
   /// Read the next line from the file.
   ///
@@ -253,75 +101,95 @@ class DsvReader {
   std::size_t m_num_lines = 0;
 };
 
-/// Write records as delimiter-separated values into a text file.
-template <char Delimiter, typename NamedTuple>
-class NamedTupleDsvWriter {
+namespace detail {
+
+template <typename T>
+void parse(const std::string& str, T& value) {
+  // TODO use something w/ lower overhead than stringstream e.g.
+  // std::from_chars
+  std::istringstream is(str);
+  is >> value;
+}
+
+/// Return member names as a vector of strings for a Boost.Describe-annotated
+/// struct.
+template <typename T>
+std::vector<std::string> member_names() {
+  using members =
+      boost::describe::describe_members<T, boost::describe::mod_public>;
+  std::vector<std::string> names;
+  boost::mp11::mp_for_each<members>(
+      [&](auto D) { names.emplace_back(D.name); });
+  return names;
+}
+
+/// Number of public members in a Boost.Describe-annotated struct.
+template <typename T>
+inline constexpr std::size_t member_count_v = boost::mp11::mp_size<
+    boost::describe::describe_members<T, boost::describe::mod_public>>::value;
+
+}  // namespace detail
+
+/// Write Boost.Describe-annotated records as comma-separated values into a
+/// text file.
+template <typename T>
+class BoostDescribeCsvWriter {
  public:
-  NamedTupleDsvWriter() = delete;
-  NamedTupleDsvWriter(const NamedTupleDsvWriter&) = delete;
-  NamedTupleDsvWriter(NamedTupleDsvWriter&&) noexcept = default;
-  ~NamedTupleDsvWriter() = default;
-  NamedTupleDsvWriter& operator=(const NamedTupleDsvWriter&) = delete;
-  NamedTupleDsvWriter& operator=(NamedTupleDsvWriter&&) noexcept = default;
+  BoostDescribeCsvWriter() = delete;
+  BoostDescribeCsvWriter(const BoostDescribeCsvWriter&) = delete;
+  BoostDescribeCsvWriter(BoostDescribeCsvWriter&&) noexcept = default;
+  ~BoostDescribeCsvWriter() = default;
+  BoostDescribeCsvWriter& operator=(const BoostDescribeCsvWriter&) = delete;
+  BoostDescribeCsvWriter& operator=(BoostDescribeCsvWriter&&) noexcept =
+      default;
 
   /// Create a file at the given path. Overwrites existing data.
   ///
   /// \param path       Path to the output file
   /// \param precision  Output floating point precision
-  explicit NamedTupleDsvWriter(
+  explicit BoostDescribeCsvWriter(
       const std::string& path,
       int precision = std::numeric_limits<double>::max_digits10)
-      : m_writer(colum_names(), path, precision) {}
+      : m_writer(detail::member_names<T>(), path, precision) {}
 
   /// Append a record to the file.
-  void append(const NamedTuple& record) {
-    append_impl(record, std::make_index_sequence<
-                            std::tuple_size_v<typename NamedTuple::Tuple>>{});
+  void append(const T& record) {
+    using members =
+        boost::describe::describe_members<T, boost::describe::mod_public>;
+    using member_list = boost::mp11::mp_apply<boost::mp11::mp_list, members>;
+    append_impl(record, member_list{});
   }
 
  private:
-  DsvWriter<Delimiter> m_writer;
+  CsvWriter m_writer;
 
-  static std::vector<std::string> colum_names() {
-    const auto& from_record = NamedTuple::names();
-    return {from_record.begin(), from_record.end()};
-  }
-  template <std::size_t... I>
-  void append_impl(const NamedTuple& values,
-                   std::index_sequence<I...> /*seq*/) {
-    using std::get;
-    m_writer.append(get<I>(values)...);
+  template <typename... Ds>
+  void append_impl(const T& record, boost::mp11::mp_list<Ds...> /*unused*/) {
+    m_writer.append(record.*Ds::pointer...);
   }
 };
 
-// string conversion helper functions
-
-template <typename T>
-static void parse(const std::string& str, T& value) {
-  // TODO use somtehing w/ lower overhead then stringstream e.g. std::from_chars
-  std::istringstream is(str);
-  is >> value;
-}
-
-/// Read records as delimiter-separated values from a text file.
+/// Read Boost.Describe-annotated records as comma-separated values from a
+/// text file.
 ///
 /// The reader is strict about its input format to avoid ambiguities. If
 /// header verification is disabled, the first line will be skipped and each
-/// line must contain exactly as many columns as there are tuple members in
+/// line must contain exactly as many columns as there are struct members in
 /// exactly the same order. If header verification is enabled, the first line
 /// is interpreted as the header. Names in the header must match exactly to
-/// the tuple members but can be in arbitrary order. The file can contain
-/// extra columns that are not tuple members. Each following row must have
+/// the struct members but can be in arbitrary order. The file can contain
+/// extra columns that are not struct members. Each following row must have
 /// exactly the same number of columns as the header.
-template <char Delimiter, typename NamedTuple>
-class NamedTupleDsvReader {
+template <typename T>
+class BoostDescribeCsvReader {
  public:
-  NamedTupleDsvReader() = delete;
-  NamedTupleDsvReader(const NamedTupleDsvReader&) = delete;
-  NamedTupleDsvReader(NamedTupleDsvReader&&) noexcept = default;
-  ~NamedTupleDsvReader() = default;
-  NamedTupleDsvReader& operator=(const NamedTupleDsvReader&) = delete;
-  NamedTupleDsvReader& operator=(NamedTupleDsvReader&&) noexcept = default;
+  BoostDescribeCsvReader() = delete;
+  BoostDescribeCsvReader(const BoostDescribeCsvReader&) = delete;
+  BoostDescribeCsvReader(BoostDescribeCsvReader&&) noexcept = default;
+  ~BoostDescribeCsvReader() = default;
+  BoostDescribeCsvReader& operator=(const BoostDescribeCsvReader&) = delete;
+  BoostDescribeCsvReader& operator=(BoostDescribeCsvReader&&) noexcept =
+      default;
 
   /// Open a file at the given path.
   ///
@@ -331,7 +199,7 @@ class NamedTupleDsvReader {
   ///
   /// The set of optional columns must match names in the record. When allowing
   /// optional columns, header verification must be set to true.
-  explicit NamedTupleDsvReader(
+  explicit BoostDescribeCsvReader(
       const std::string& path,
       const std::vector<std::string>& optional_columns = {},
       bool verify_header = true);
@@ -344,57 +212,41 @@ class NamedTupleDsvReader {
   ///
   /// \returns true   if a record was successfully read
   /// \returns false  if no more records are available
-  bool read(NamedTuple& record);
+  bool read(T& record);
 
   /// Read the next record and any extra columns from the file.
   ///
   /// \returns true   if a record was successfully read
   /// \returns false  if no more records are available
-  template <typename T>
-  bool read(NamedTuple& record, std::vector<T>& extra);
+  template <typename U>
+  bool read(T& record, std::vector<U>& extra);
 
-  /// Return the number of additional columns that are not part of the tuple.
+  /// Return the number of additional columns that are not part of the struct.
   std::size_t num_extra_columns() const { return m_extra_columns.size(); }
   /// Return the number of records read so far.
   std::size_t num_records() const { return m_reader.num_lines() - 1u; }
 
  private:
-  // the equivalent std::tuple-like type
-  using Tuple = typename NamedTuple::Tuple;
+  static constexpr std::size_t NumMembers = detail::member_count_v<T>;
 
-  DsvReader<Delimiter> m_reader;
+  CsvReader m_reader;
   std::vector<std::string> m_columns;
   // #columns is fixed to a reasonable value after reading the header
   std::size_t m_num_columns = SIZE_MAX;
-  // map tuple index to column index in the file, SIZE_MAX for missing elements
-  std::array<std::size_t, std::tuple_size<Tuple>::value> m_tuple_column_map;
-  // column indices that do not map to a tuple items
+  // map member index to column index in the file, SIZE_MAX for missing
+  std::array<std::size_t, NumMembers> m_member_column_map;
+  // column indices that do not map to a struct member
   std::vector<std::size_t> m_extra_columns;
 
   void use_default_columns();
   void parse_header(const std::vector<std::string>& optional_columns);
-  template <std::size_t... I>
-  void parse_record(NamedTuple& record,
-                    std::index_sequence<I...> /*seq*/) const {
-    // see namedtuple_impl::print_tuple for explanation
-    // allow different column ordering on file and optional columns
-    using Vacuum = int[];
-    (void)Vacuum{(parse_element<I>(record), 0)...};
-  }
-  template <std::size_t I>
-  void parse_element(NamedTuple& record) const {
-    using std::get;
-    if (m_tuple_column_map[I] != SIZE_MAX) {
-      parse(m_columns[m_tuple_column_map[I]], get<I>(record));
-    }
-  }
+  void parse_record(T& record) const;
 };
 
-// implementation writer
+// implementation CsvWriter
 
-template <char Delimiter>
-inline DsvWriter<Delimiter>::DsvWriter(const std::vector<std::string>& columns,
-                                       const std::string& path, int precision)
+inline CsvWriter::CsvWriter(const std::vector<std::string>& columns,
+                             const std::string& path, int precision)
     : m_file(path,
              std::ios_base::binary | std::ios_base::out | std::ios_base::trunc),
       m_num_columns(columns.size()) {
@@ -409,9 +261,8 @@ inline DsvWriter<Delimiter>::DsvWriter(const std::vector<std::string>& columns,
   append(columns);
 }
 
-template <char Delimiter>
 template <typename Arg0, typename... Args>
-inline void DsvWriter<Delimiter>::append(Arg0&& arg0, Args&&... args) {
+inline void CsvWriter::append(Arg0&& arg0, Args&&... args) {
   // we can only check how many columns were written after they have been
   // written. write to temporary first to prevent bad data on file.
   std::stringstream line;
@@ -421,10 +272,6 @@ inline void DsvWriter<Delimiter>::append(Arg0&& arg0, Args&&... args) {
       // write the first item without a delimiter and store columns written
       write(std::forward<Arg0>(arg0), line),
       // for all other items, write the delimiter followed by the item itself
-      // (<expr1>, <expr2>) use the comma operator (yep, ',' in c++ is a weird
-      // but helpful operator) to execute both expression and return the return
-      // value of the last one, i.e. here that's the number of columns written.
-      // the ... pack expansion creates this expression for all arguments
       (line << Delimiter, write(std::forward<Args>(args), line))...,
   };
   line << '\n';
@@ -446,9 +293,8 @@ inline void DsvWriter<Delimiter>::append(Arg0&& arg0, Args&&... args) {
   }
 }
 
-template <char Delimiter>
 template <typename T>
-inline unsigned DsvWriter<Delimiter>::write(T&& x, std::ostream& os)
+inline unsigned CsvWriter::write(T&& x, std::ostream& os)
   requires(Acts::Concepts::arithmetic<std::decay_t<T>> ||
            std::convertible_to<T, std::string>)
 {
@@ -456,10 +302,9 @@ inline unsigned DsvWriter<Delimiter>::write(T&& x, std::ostream& os)
   return 1u;
 }
 
-template <char Delimiter>
 template <typename T, typename Allocator>
-inline unsigned DsvWriter<Delimiter>::write(const std::vector<T, Allocator>& xs,
-                                            std::ostream& os) {
+inline unsigned CsvWriter::write(const std::vector<T, Allocator>& xs,
+                                 std::ostream& os) {
   unsigned n = 0;
   for (const auto& x : xs) {
     if (0 < n) {
@@ -471,18 +316,16 @@ inline unsigned DsvWriter<Delimiter>::write(const std::vector<T, Allocator>& xs,
   return n;
 }
 
-// implementation reader
+// implementation CsvReader
 
-template <char Delimiter>
-inline DsvReader<Delimiter>::DsvReader(const std::string& path)
+inline CsvReader::CsvReader(const std::string& path)
     : m_file(path, std::ios_base::binary | std::ios_base::in) {
   if (!m_file.is_open() || m_file.fail()) {
     throw std::runtime_error("Could not open file '" + path + "'");
   }
 }
 
-template <char Delimiter>
-inline bool DsvReader<Delimiter>::read(std::vector<std::string>& columns) {
+inline bool CsvReader::read(std::vector<std::string>& columns) {
   // read the next line and check for both end-of-file and errors
   std::getline(m_file, m_line);
   if (m_file.eof()) {
@@ -511,10 +354,10 @@ inline bool DsvReader<Delimiter>::read(std::vector<std::string>& columns) {
   return true;
 }
 
-// implementation named tuple reader
+// implementation BoostDescribeCsvReader
 
-template <char Delimiter, typename NamedTuple>
-inline NamedTupleDsvReader<Delimiter, NamedTuple>::NamedTupleDsvReader(
+template <typename T>
+inline BoostDescribeCsvReader<T>::BoostDescribeCsvReader(
     const std::string& path, const std::vector<std::string>& optional_columns,
     bool verify_header)
     : m_reader(path) {
@@ -534,9 +377,8 @@ inline NamedTupleDsvReader<Delimiter, NamedTuple>::NamedTupleDsvReader(
   }
 }
 
-template <char Delimiter, typename NamedTuple>
-inline bool NamedTupleDsvReader<Delimiter, NamedTuple>::read(
-    NamedTuple& record) {
+template <typename T>
+inline bool BoostDescribeCsvReader<T>::read(T& record) {
   if (!m_reader.read(m_columns)) {
     return false;
   }
@@ -549,15 +391,13 @@ inline bool NamedTupleDsvReader<Delimiter, NamedTuple>::read(
     throw std::runtime_error("Too many columns in line " +
                              std::to_string(m_reader.num_lines()));
   }
-  // convert to tuple
-  parse_record(record, std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+  parse_record(record);
   return true;
 }
 
-template <char Delimiter, typename NamedTuple>
 template <typename T>
-inline bool NamedTupleDsvReader<Delimiter, NamedTuple>::read(
-    NamedTuple& record, std::vector<T>& extra) {
+template <typename U>
+inline bool BoostDescribeCsvReader<T>::read(T& record, std::vector<U>& extra) {
   // parse columns belonging to the regular record
   if (!read(record)) {
     return false;
@@ -565,84 +405,71 @@ inline bool NamedTupleDsvReader<Delimiter, NamedTuple>::read(
   // parse extra columns
   extra.resize(m_extra_columns.size());
   for (std::size_t i = 0; i < m_extra_columns.size(); ++i) {
-    parse(m_columns[m_extra_columns[i]], extra[i]);
+    detail::parse(m_columns[m_extra_columns[i]], extra[i]);
   }
   return true;
 }
 
-template <char Delimiter, typename NamedTuple>
-inline void NamedTupleDsvReader<Delimiter, NamedTuple>::use_default_columns() {
-  // assume row content is identical in content and order to the tuple
-  m_num_columns = std::tuple_size_v<Tuple>;
-  for (std::size_t i = 0; i < m_tuple_column_map.size(); ++i) {
-    m_tuple_column_map[i] = i;
+template <typename T>
+inline void BoostDescribeCsvReader<T>::use_default_columns() {
+  // assume row content is identical in content and order to the struct
+  m_num_columns = NumMembers;
+  for (std::size_t i = 0; i < m_member_column_map.size(); ++i) {
+    m_member_column_map[i] = i;
   }
   // no extra columns by construction
   m_extra_columns.clear();
 }
 
-template <char Delimiter, typename NamedTuple>
-inline void NamedTupleDsvReader<Delimiter, NamedTuple>::parse_header(
+template <typename T>
+inline void BoostDescribeCsvReader<T>::parse_header(
     const std::vector<std::string>& optional_columns) {
-  const auto& names = NamedTuple::names();
+  const auto names = detail::member_names<T>();
 
   // the number of header columns fixes the expected number of data columns
   m_num_columns = m_columns.size();
 
   // check that all non-optional columns are available
   for (const auto& name : names) {
-    // no need to for availability if the column is optional
+    // no need to check availability if the column is optional
     if (Acts::rangeContainsValue(optional_columns, name)) {
       continue;
     }
-    // missing, non-optional column mean we can not continue
+    // missing, non-optional column means we can not continue
     if (!Acts::rangeContainsValue(m_columns, name)) {
       throw std::runtime_error("Missing header column '" + name + "'");
     }
   }
 
   // ensure missing columns are correctly marked as such
-  m_tuple_column_map.fill(SIZE_MAX);
+  m_member_column_map.fill(SIZE_MAX);
 
-  // determine column-tuple mapping and extra column indices
+  // determine column-member mapping and extra column indices
   m_extra_columns.clear();
   for (std::size_t i = 0; i < m_columns.size(); ++i) {
-    // find the position of the column in the tuple.
+    // find the position of the column in the member names.
     auto it = std::ranges::find(names, m_columns[i]);
     if (it != names.end()) {
-      // establish mapping between column and tuple item position
-      m_tuple_column_map[std::distance(names.begin(), it)] = i;
+      // establish mapping between column and member position
+      m_member_column_map[std::distance(names.begin(), it)] = i;
     } else {
-      // record non-tuple columns
+      // record non-member columns
       m_extra_columns.push_back(i);
     }
   }
 }
 
-#undef _UNUSED
-
-}  // namespace detail_dfe
-
-/// Write arbitrary data as comma-separated values into as text file.
-using CsvWriter = detail_dfe::DsvWriter<','>;
-
-/// Write arbitrary data as tab-separated values into as text file.
-using TsvWriter = detail_dfe::DsvWriter<'\t'>;
-
-/// Write tuple-like records as comma-separated values into a text file.
 template <typename T>
-using NamedTupleCsvWriter = detail_dfe::NamedTupleDsvWriter<',', T>;
-
-/// Read tuple-like records from a comma-separated file.
-template <typename T>
-using NamedTupleCsvReader = detail_dfe::NamedTupleDsvReader<',', T>;
-
-/// Write tuple-like records as tab-separated values into a text file.
-template <typename T>
-using NamedTupleTsvWriter = detail_dfe::NamedTupleDsvWriter<'\t', T>;
-
-/// Read tuple-like records from a tab-separated file.
-template <typename T>
-using NamedTupleTsvReader = detail_dfe::NamedTupleDsvReader<'\t', T>;
+inline void BoostDescribeCsvReader<T>::parse_record(T& record) const {
+  using members =
+      boost::describe::describe_members<T, boost::describe::mod_public>;
+  std::size_t i = 0;
+  boost::mp11::mp_for_each<members>([&](auto D) {
+    if (m_member_column_map[i] != SIZE_MAX) {
+      detail::parse(m_columns[m_member_column_map[i]], record.*D.pointer);
+    }
+    ++i;
+  });
+}
 
 }  // namespace ActsExamples

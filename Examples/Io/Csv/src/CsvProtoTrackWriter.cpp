@@ -40,7 +40,7 @@ ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
   std::string path =
       perEventFilepath(m_cfg.outputDir, "prototracks.csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<ProtoTrackData> writer(path, m_cfg.outputPrecision);
+  BoostDescribeCsvWriter<ProtoTrackData> writer(path, m_cfg.outputPrecision);
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index measurementId : tracks[trackId]) {

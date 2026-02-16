@@ -57,7 +57,7 @@ ProcessCode CsvTrackParameterReader::read(const AlgorithmContext& ctx) {
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
-  NamedTupleCsvReader<TrackParameterData> reader(path);
+  BoostDescribeCsvReader<TrackParameterData> reader(path);
   TrackParameterData d{};
 
   while (reader.read(d)) {

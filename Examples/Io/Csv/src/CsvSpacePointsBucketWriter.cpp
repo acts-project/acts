@@ -13,6 +13,7 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <cstddef>
+#include <vector>
 
 #include "CsvOutputData.hpp"
 
@@ -37,8 +38,12 @@ ProcessCode CsvSpacePointsBucketWriter::writeT(
   std::string pathBucket =
       perEventFilepath(m_cfg.outputDir, "buckets.csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<SpacePointBucketData> writerBucket(pathBucket,
-                                                         m_cfg.outputPrecision);
+  // Build column names: bucketIdx, bucketSize, measurement_id[0..19]
+  std::vector<std::string> columnNames = {"bucketIdx", "bucketSize"};
+  for (int i = 0; i < 20; ++i) {
+    columnNames.push_back("measurement_id[" + std::to_string(i) + "]");
+  }
+  CsvWriter writerBucket(columnNames, pathBucket, m_cfg.outputPrecision);
 
   SpacePointBucketData bucketData{};
 
@@ -62,7 +67,9 @@ ProcessCode CsvSpacePointsBucketWriter::writeT(
                                                .get<IndexSourceLink>()
                                                .index();
       }
-      writerBucket.append(bucketData);
+      std::vector<std::uint64_t> ids(bucketData.measurement_id.begin(),
+                                     bucketData.measurement_id.end());
+      writerBucket.append(bucketData.bucketIdx, bucketData.bucketSize, ids);
     }
     bucketIdx++;
   }
