@@ -128,7 +128,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsSvg, svg) {
            const std::vector<actsvg::scalar>& etaMain,
            actsvg::scalar strokeWidthMain, unsigned int sizeMain,
            bool labelMain, const std::vector<actsvg::scalar>& etaSub,
-           actsvg::scalar strokeWidthSub, const std::vector<int> strokeDashSub,
+           actsvg::scalar strokeWidthSub, const std::vector<int>& strokeDashSub,
            unsigned int sizeSub, bool labelSub) {
           // The main eta lines
           actsvg::style::stroke strokeMain;

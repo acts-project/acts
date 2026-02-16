@@ -54,8 +54,8 @@ class Sequencer {
   struct FpeMask {
     std::string file;
     std::pair<std::size_t, std::size_t> lines;
-    ActsPlugins::FpeType type;
-    std::size_t count;
+    ActsPlugins::FpeType type{};
+    std::size_t count = 0;
   };
 
   struct Config {
