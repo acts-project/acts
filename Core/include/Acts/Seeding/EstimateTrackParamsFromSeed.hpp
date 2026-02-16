@@ -23,10 +23,9 @@ namespace Acts {
 
 /// @defgroup est_track_params Estimate track parameters from seed
 ///
-/// This method is based on the conformal map transformation. It estimates the
-/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the bottom
-/// space point. The bottom space is assumed to be the first element in the
-/// range defined by the iterators. The magnetic field (which might be along any
+/// The implemented method is based on the conformal map transformation. It
+/// estimates the full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p)
+/// at the bottom space point. The magnetic field (which can be along any
 /// direction) is also necessary for the momentum estimation.
 ///
 /// It resembles the method used in ATLAS for the track parameters estimated
@@ -35,7 +34,7 @@ namespace Acts {
 ///
 /// @{
 
-/// Estimate the full track parameters from three space points
+/// Estimate free track parameters from three space points
 ///
 /// This is a purely spatial estimation, i.e. the time parameter will be set to
 /// 0.
@@ -53,7 +52,7 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
                                        const Vector3& sp2,
                                        const Vector3& bField);
 
-/// Estimate the full track parameters from three space points
+/// Estimate free track parameters from three space points
 ///
 /// @param sp0 is the bottom space point
 /// @param t0 is the time of the bottom space point
@@ -66,9 +65,9 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, double t0,
                                        const Vector3& sp1, const Vector3& sp2,
                                        const Vector3& bField);
 
-/// Estimate the full track parameters from three space points
+/// Estimate free track parameters from three space points
 ///
-/// @tparam spacepoint_iterator_t  The type of space point iterator
+/// @tparam spacepoint_iterator_t The type of space point iterator
 ///
 /// @param spRange is the range of space points
 /// @param bField is the magnetic field vector
@@ -103,7 +102,7 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
                                      spPositions[1], spPositions[2], bField);
 }
 
-/// Estimate the full track parameters from three space points
+/// Estimate bound track parameters from three space points
 ///
 /// @param gctx is the geometry context
 /// @param surface is the surface of the bottom space point. The estimated bound
@@ -119,7 +118,7 @@ Result<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, const Surface& surface, const Vector3& sp0,
     double t0, const Vector3& sp1, const Vector3& sp2, const Vector3& bField);
 
-/// Estimate the full track parameters from three space points
+/// Estimate bound track parameters from three space points
 ///
 /// @tparam spacepoint_iterator_t The type of space point iterator
 ///
