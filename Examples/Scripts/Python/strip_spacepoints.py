@@ -33,7 +33,7 @@ def createStripSpacepoints(
     from acts.examples.root import (
         RootParticleReader,
         RootSimHitReader,
-        RootSpacepointWriter,
+        RootSpacePointWriter,
     )
 
     s = s or acts.examples.Sequencer(
@@ -116,7 +116,7 @@ def createStripSpacepoints(
     )
 
     s.addWriter(
-        RootSpacepointWriter(
+        RootSpacePointWriter(
             level=acts.logging.INFO,
             inputSpacepoints="spacepoints",
             inputMeasurementParticlesMap="measurement_particles_map",

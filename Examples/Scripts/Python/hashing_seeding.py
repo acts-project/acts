@@ -22,7 +22,7 @@ from acts.examples.reconstruction import (
 )
 
 from acts.examples.root import (
-    RootSpacepointWriter,
+    RootSpacePointWriter,
 )
 from pathlib import Path
 
@@ -383,7 +383,7 @@ if __name__ == "__main__":
     )
 
     logLevel = acts.logging.VERBOSE
-    rootSpacepointsWriter = RootSpacepointWriter(
+    rootSpacepointsWriter = RootSpacePointWriter(
         level=logLevel,
         inputSpacepoints="spacepoints",
         filePath=str(outputDir / "spacepoints.root"),
