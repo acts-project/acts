@@ -46,6 +46,9 @@ namespace Acts {
 /// @param bField is the magnetic field vector
 ///
 /// @return the free parameters
+[[deprecated(
+    "Use the version of estimateTrackParamsFromSeed with time information "
+    "instead.")]]
 FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
                                        const Vector3& sp2,
                                        const Vector3& bField);
@@ -101,9 +104,6 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
 }
 
 /// Estimate the full track parameters from three space points
-///
-/// This is a purely spatial estimation, i.e. the time parameter will be set to
-/// 0.
 ///
 /// @param gctx is the geometry context
 /// @param surface is the surface of the bottom space point. The estimated bound
