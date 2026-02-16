@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingGnn/TrackFindingFromProtoTrackAlgorithm.hpp"
-
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/TrackFindingGnn/TrackFindingFromProtoTracksAlgorithm.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -60,7 +59,7 @@ struct ProtoTrackSourceLinkAccessor
 
 namespace ActsExamples {
 
-TrackFindingFromProtoTrackAlgorithm::TrackFindingFromProtoTrackAlgorithm(
+TrackFindingFromProtoTracksAlgorithm::TrackFindingFromProtoTracksAlgorithm(
     Config cfg, Logging::Level lvl)
     : IAlgorithm(cfg.tag + "CkfFromProtoTracks", lvl), m_cfg(cfg) {
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
@@ -69,7 +68,7 @@ TrackFindingFromProtoTrackAlgorithm::TrackFindingFromProtoTrackAlgorithm(
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ProcessCode TrackFindingFromProtoTrackAlgorithm::execute(
+ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
@@ -208,10 +207,10 @@ ProcessCode TrackFindingFromProtoTrackAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode TrackFindingFromProtoTrackAlgorithm::finalize() {
+ProcessCode TrackFindingFromProtoTracksAlgorithm::finalize() {
   assert(std::distance(m_nTracksPerSeeds.begin(), m_nTracksPerSeeds.end()) > 0);
 
-  ACTS_INFO("TrackFindingFromProtoTrackAlgorithm statistics:");
+  ACTS_INFO("TrackFindingFromProtoTracksAlgorithm statistics:");
   namespace ba = boost::accumulators;
   using Accumulator = ba::accumulator_set<
       float, ba::features<ba::tag::sum, ba::tag::mean, ba::tag::variance>>;

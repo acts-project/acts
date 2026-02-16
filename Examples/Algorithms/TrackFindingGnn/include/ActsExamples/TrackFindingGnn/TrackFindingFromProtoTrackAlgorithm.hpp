@@ -34,7 +34,7 @@ namespace ActsExamples {
 /// Otherwise (typically after the end of the prototrack), the algorithm
 /// falls back to providing all possible measurements on the surface.
 ///
-class TrackFindingFromProtoTrackAlgorithm final : public IAlgorithm {
+class TrackFindingFromProtoTracksAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input prototracks collection.
@@ -69,7 +69,7 @@ class TrackFindingFromProtoTrackAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingFromProtoTrackAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFindingFromProtoTracksAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Filter the measurements
   ///
