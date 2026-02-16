@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
@@ -38,7 +39,6 @@ class G4VUserPhysicsList;
 class G4FieldManager;
 
 namespace Acts {
-class MagneticFieldProvider;
 class Volume;
 }  // namespace Acts
 
@@ -46,7 +46,6 @@ namespace ActsExamples {
 struct Geant4Handle;
 
 namespace Geant4 {
-class SensitiveSurfaceMapper;
 struct EventStore;
 }  // namespace Geant4
 
@@ -82,7 +81,7 @@ class Geant4SimulationBase : public IAlgorithm {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
@@ -166,7 +165,7 @@ class Geant4Simulation final : public Geant4SimulationBase {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }
@@ -208,7 +207,7 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }

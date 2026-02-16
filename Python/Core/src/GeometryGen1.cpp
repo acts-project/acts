@@ -121,8 +121,8 @@ void addGeometryGen1(py::module_ &m) {
                   cfg, getDefaultLogger("CylinderVolumeHelper", level));
             }))
             .def("createTrackingVolume",
-                 [](const CylinderVolumeHelper &self, GeometryContext gctx,
-                    const LayerVector &layers,
+                 [](const CylinderVolumeHelper &self,
+                    const GeometryContext &gctx, const LayerVector &layers,
                     std::shared_ptr<VolumeBounds> volumeBounds,
                     const Transform3 &trafo, const std::string &name) {
                    return self.createTrackingVolume(gctx, layers, {},

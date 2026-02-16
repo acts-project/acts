@@ -26,7 +26,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out the residual and pull of track parameters and efficiency.
 ///

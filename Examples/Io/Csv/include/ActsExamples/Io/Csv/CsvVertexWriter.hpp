@@ -9,18 +9,15 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <cstddef>
 #include <limits>
 #include <string>
-#include <vector>
 
 namespace ActsExamples {
-
-using SimVertexContainerV = std::vector<Acts::Vertex>;
 
 /// Write out Vertices in a comma-separated-value format.
 ///
@@ -34,10 +31,8 @@ using SimVertexContainerV = std::vector<Acts::Vertex>;
 ///
 /// and each line in the file corresponds to one vertex.
 
-class CsvVertexWriter final : public WriterT<SimVertexContainerV> {
+class CsvVertexWriter final : public WriterT<VertexContainer> {
  public:
-  using VertexCollection = std::vector<Acts::Vertex>;
-
   struct Config {
     /// Input particles collection to write.
     std::string inputVertices;
@@ -64,7 +59,7 @@ class CsvVertexWriter final : public WriterT<SimVertexContainerV> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] vertices are the vertices to be written
   ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
-                     const SimVertexContainerV& vertices) override;
+                     const VertexContainer& vertices) override;
 
  private:
   Config m_cfg;  //!< Nested configuration struct

@@ -12,6 +12,7 @@
 #include <random>
 
 namespace ActsExamples {
+
 struct AlgorithmContext;
 
 /// The random number generator used in the framework.

@@ -31,7 +31,7 @@ class EDM4hepTrackInputConverter : public PodioInputConverter {
     std::string outputTracks;
     /// Magnetic field along the z axis (needed for the conversion of
     /// parameters)
-    double Bz;
+    double Bz{};
   };
 
   /// constructor

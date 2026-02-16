@@ -8,24 +8,14 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
-#include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Material/IMaterialDecorator.hpp>
-#include <Acts/Material/ISurfaceMaterial.hpp>
-#include <Acts/Material/IVolumeMaterial.hpp>
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Logger.hpp>
-#include <ActsPlugins/Root/RootMaterialMapIo.hpp>
+#include "ActsPlugins/Root/RootMaterialMapIo.hpp"
 
-#include <map>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <utility>
 
 class TFile;
 

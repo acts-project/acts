@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -17,7 +16,6 @@
 #include "ActsPlugins/Root/RootMeasurementIo.hpp"
 
 #include <ios>
-#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -25,11 +23,12 @@
 #include <TFile.h>
 #include <TTree.h>
 
+namespace ActsExamples {
+
 namespace {
 
 std::tuple<std::vector<double>, std::vector<double>, std::vector<unsigned int>>
-prepareBoundMeasurement(
-    const ActsExamples::ConstVariableBoundMeasurementProxy& m) {
+prepareBoundMeasurement(const ConstVariableBoundMeasurementProxy& m) {
   std::vector<double> measurements = {};
   std::vector<double> variances = {};
   std::vector<unsigned int> subspaceIndex = {};
@@ -45,8 +44,7 @@ prepareBoundMeasurement(
   return {measurements, variances, subspaceIndex};
 }
 
-std::vector<std::tuple<int, int, float>> prepareChannels(
-    const ActsExamples::Cluster& c) {
+std::vector<std::tuple<int, int, float>> prepareChannels(const Cluster& c) {
   std::vector<std::tuple<int, int, float>> channels = {};
   for (auto ch : c.channels) {
     channels.emplace_back(static_cast<int>(ch.bin[0]),
@@ -57,8 +55,6 @@ std::vector<std::tuple<int, int, float>> prepareChannels(
 }
 
 }  // namespace
-
-namespace ActsExamples {
 
 RootMeasurementWriter::RootMeasurementWriter(
     const RootMeasurementWriter::Config& config, Acts::Logging::Level level)

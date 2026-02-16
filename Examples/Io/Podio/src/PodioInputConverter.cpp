@@ -22,8 +22,7 @@ PodioInputConverter::PodioInputConverter(const std::string& name,
   m_inputFrame.initialize(inputFrame);
 }
 
-ProcessCode PodioInputConverter::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode PodioInputConverter::execute(const AlgorithmContext& ctx) const {
   const podio::Frame& frame = m_inputFrame(ctx);
   return convert(ctx, frame);
 }

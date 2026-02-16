@@ -66,7 +66,7 @@ class PodioReader : public IReader {
   ///
   /// @param context The algorithm context.
   /// @return The process code. Returns SUCCESS when the frame is successfully read and written.
-  ProcessCode read(const ActsExamples::AlgorithmContext& context) final;
+  ProcessCode read(const AlgorithmContext& context) final;
 
   /// Get the configuration of the reader.
   ///

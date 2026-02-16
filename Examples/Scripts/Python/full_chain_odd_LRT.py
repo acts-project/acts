@@ -186,9 +186,19 @@ s = acts.examples.Sequencer(
 
 if args.edm4hep:
     import acts.examples.edm4hep
+    from acts.examples.edm4hep import PodioReader
 
-    edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
-        inputPath=str(args.edm4hep),
+    s.addReader(
+        PodioReader(
+            level=acts.logging.DEBUG,
+            inputPath=str(args.edm4hep),
+            outputFrame="events",
+            category="events",
+        )
+    )
+
+    edm4hepReader = acts.examples.edm4hep.EDM4hepSimInputConverter(
+        inputFrame="events",
         inputSimHits=[
             "PixelBarrelReadout",
             "PixelEndcapReadout",
@@ -200,15 +210,18 @@ if args.edm4hep:
         outputParticlesGenerator="particles_generated",
         outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
-        graphvizOutput="graphviz",
+        outputSimVertices="vertices_truth",
         dd4hepDetector=detector,
         trackingGeometry=trackingGeometry,
-        sortSimHitsInTime=True,
-        level=acts.logging.INFO,
+        sortSimHitsInTime=False,
+        particleRMax=1080 * u.mm,
+        particleZ=(-3030 * u.mm, 3030 * u.mm),
+        particlePtMin=150 * u.MeV,
+        level=acts.logging.DEBUG,
     )
-    s.addReader(edm4hepReader)
+    s.addAlgorithm(edm4hepReader)
 
-    s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
+    s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesSimulation)
 
     addSimParticleSelection(
         s,
@@ -216,7 +229,6 @@ if args.edm4hep:
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
     )
@@ -251,10 +263,12 @@ else:
             hardProcess=["Top:qqbar2ttbar=on"],
             npileup=args.ttbar_pu,
             vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
-                mean=acts.Vector4(0, 0, 0, 0),
-                stddev=acts.Vector4(
-                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-                ),
+                rMean=50.0,
+                rStdDev=50.0 * u.mm,
+                zMean=2,
+                zStdDev=55.5 * u.mm,
+                tMean=0,
+                tStdDev=5.0 * u.ns,
             ),
             rnd=rnd,
             outputDirRoot=outputDir if args.output_root else None,
@@ -338,9 +352,11 @@ if args.reco:
         initialSigmaQoverPt=0.1 * u.e / u.GeV,
         initialSigmaPtRel=0.1,
         initialVarInflation=[1.0] * 6,
+        particleHypothesis=acts.ParticleHypothesis.muon,
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
+        logLevel=acts.logging.DEBUG,
     )
 
     if seedFilter_ML:
@@ -370,7 +386,7 @@ if args.reco:
         CkfConfig(
             chi2CutOffMeasurement=15.0,
             chi2CutOffOutlier=25.0,
-            numMeasurementsCutOff=10,
+            numMeasurementsCutOff=2,
             seedDeduplication=True,
             stayOnSeed=True,
             pixelVolumes=[16, 17, 18],
@@ -398,6 +414,7 @@ if args.reco:
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
         writeCovMat=True,
+        logLevel=acts.logging.DEBUG,
     )
 
     if ambi_ML:
@@ -444,6 +461,7 @@ if args.reco:
         field,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=outputDir if args.output_root else None,
+        outputDirCsv=outputDir if args.output_csv else None,
     )
 
 s.run()

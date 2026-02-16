@@ -9,25 +9,22 @@
 #include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <cstddef>
-#include <iterator>
-#include <numeric>
 #include <stdexcept>
 
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 
+namespace ActsExamples {
+
 namespace {
 
 Acts::GreedyAmbiguityResolution::Config transformConfig(
-    const ActsExamples::GreedyAmbiguityResolutionAlgorithm::Config& cfg) {
+    const GreedyAmbiguityResolutionAlgorithm::Config& cfg) {
   Acts::GreedyAmbiguityResolution::Config result;
   result.maximumSharedHits = cfg.maximumSharedHits;
   result.maximumIterations = cfg.maximumIterations;
@@ -36,23 +33,19 @@ Acts::GreedyAmbiguityResolution::Config transformConfig(
 }
 
 std::size_t sourceLinkHash(const Acts::SourceLink& a) {
-  return static_cast<std::size_t>(
-      a.get<ActsExamples::IndexSourceLink>().index());
+  return static_cast<std::size_t>(a.get<IndexSourceLink>().index());
 }
 
 bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
-  return a.get<ActsExamples::IndexSourceLink>().index() ==
-         b.get<ActsExamples::IndexSourceLink>().index();
+  return a.get<IndexSourceLink>().index() == b.get<IndexSourceLink>().index();
 }
 
 }  // namespace
 
-ActsExamples::GreedyAmbiguityResolutionAlgorithm::
-    GreedyAmbiguityResolutionAlgorithm(
-        ActsExamples::GreedyAmbiguityResolutionAlgorithm::Config cfg,
-        Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("GreedyAmbiguityResolutionAlgorithm", lvl),
-      m_cfg(std::move(cfg)),
+GreedyAmbiguityResolutionAlgorithm::GreedyAmbiguityResolutionAlgorithm(
+    const Config& cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("GreedyAmbiguityResolutionAlgorithm", lvl),
+      m_cfg(cfg),
       m_core(transformConfig(cfg), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
@@ -64,8 +57,7 @@ ActsExamples::GreedyAmbiguityResolutionAlgorithm::
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode
-ActsExamples::GreedyAmbiguityResolutionAlgorithm::execute(
+ProcessCode GreedyAmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const auto& tracks = m_inputTracks(ctx);
 
@@ -93,11 +85,13 @@ ActsExamples::GreedyAmbiguityResolutionAlgorithm::execute(
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 
-  ActsExamples::ConstTrackContainer outputTracks{
+  ConstTrackContainer outputTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(
           std::move(solvedTracks.container())),
       tracks.trackStateContainerHolder()};
 
   m_outputTracks(ctx, std::move(outputTracks));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
