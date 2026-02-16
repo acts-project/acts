@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/detail/FastStrawLineFitter.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -215,21 +216,20 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
       << ", fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta: "
       << (fitPars.T_az * angles.sinTheta - fitPars.T_ay * angles.cosTheta));
 
-  if (hes.determinant() < std::numeric_limits<double>::epsilon() ||
-      hes.trace() < 0) {
+  if (hes.trace() < Acts::s_epsilon || hes.determinant() < Acts::s_epsilon) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__
                         << ": Hessian is singular or not positive definite."
                         << fitPars);
     return UpdateStatus::Exceeded;
   }
-  const auto inverseH = hes.inverse();
-  const Vector2 update = inverseH * grad;
+  const auto cov = hes.inverse();
+  const Vector2 update = cov * grad;
   // We compute also the normalized update, defined as the parameter
   // update expressed in units of the parameter uncertainties. This quantifies
   // the significance of the update relative to the estimated errors.
   double normUpdate{0.};
   for (unsigned i = 0; i < 2; ++i) {
-    normUpdate += Acts::square(update[i]) / inverseH(i, i);
+    normUpdate += Acts::square(update[i]) / cov(i, i);
   }
 
   ACTS_VERBOSE(__func__ << "() - " << __LINE__ << " intermediate result "
@@ -237,7 +237,7 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
                         << std::format("gradient: ({:.3f}, {:.3f})",
                                        inDeg(grad[0]), inNanoS(grad[1]))
                         << ", covariance:" << std::endl
-                        << toString(inverseH) << std::endl
+                        << toString(cov) << std::endl
                         << std::format(" update: ({:.3f}, {:.3f}),",
                                        inDeg(update[0]), inNanoS(update[1]))
                         << " normUpdate: " << std::sqrt(normUpdate));
@@ -250,8 +250,8 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   }
 
   if (retCode == UpdateStatus::Converged) {
-    fitResult.dTheta = std::sqrt(inverseH(0, 0));
-    fitResult.dT0 = std::sqrt(inverseH(1, 1));
+    fitResult.dTheta = std::sqrt(cov(0, 0));
+    fitResult.dT0 = std::sqrt(cov(1, 1));
     completeResult(fitPars, fitResult);
     return retCode;
   }

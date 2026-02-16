@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -559,8 +560,8 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << toString(miniHessian)
                         << ", determinant: " << miniHessian.determinant());
   std::optional<Acts::ActsSquareMatrix<N>> inverseH{std::nullopt};
-  if (miniHessian.determinant() > std::numeric_limits<double>::epsilon() &&
-      miniHessian.trace() > 0) {
+  if (miniHessian.trace() > Acts::s_epsilon &&
+      miniHessian.determinant() > Acts::s_epsilon) {
     inverseH = safeInverse(miniHessian);
   } else {
     ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
