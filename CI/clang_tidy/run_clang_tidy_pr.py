@@ -178,17 +178,25 @@ def get_changed_files(base_ref: str, source_root: Path) -> list[str]:
     return _get_changed_files_jj(base_ref)
 
 
-def header_to_tu(header_repo_path: str, build_dir: Path) -> Path:
-    """
-    Map a repo-relative header path to the generated TU path.
+def find_header_tu(
+    header_abs_path: Path, source_root: Path, compdb_files: set[Path]
+) -> Path | None:
+    """Find the generated TU for a header by suffix-matching against the compdb.
 
-    acts_compile_headers() generates:
-      ${CMAKE_CURRENT_BINARY_DIR}/<rel_dir>/<name>.cpp
-    which, for a header at <module>/include/<rest>/Foo.hpp (or .ipp),
-    becomes:
-      <build_dir>/<module>/include/<rest>/Foo.hpp.cpp
+    acts_compile_headers() generates TUs like:
+      <build_dir>/<rel_path>/Foo.hpp.cpp
+    We compute the header's path relative to the repo root and look for a
+    compdb entry ending with that relative path + ``.cpp``.
     """
-    return (build_dir / (header_repo_path + ".cpp")).resolve()
+    try:
+        rel = header_abs_path.relative_to(source_root)
+    except ValueError:
+        rel = Path(os.path.relpath(header_abs_path, source_root))
+    suffix = "/" + str(rel).replace(os.sep, "/") + ".cpp"
+    for f in compdb_files:
+        if str(f).replace(os.sep, "/").endswith(suffix):
+            return f
+    return None
 
 
 def is_path_excluded(path: str, exclude_path_regexes: list[str]) -> bool:
@@ -242,8 +250,8 @@ def resolve_targets(
         if is_path_excluded(str(abs_path), exclude_path_regexes):
             console.print(f"  SKIP header {hdr} (excluded by filter)")
             continue
-        tu = header_to_tu(hdr, build_dir)
-        if tu in compdb_files:
+        tu = find_header_tu(abs_path, source_root, compdb_files)
+        if tu is not None:
             targets.add(tu)
         else:
             console.print(f"  header {hdr} has no TU, analysing header directly")
@@ -267,6 +275,37 @@ def collect_changed_targets(
 
     return resolve_targets(
         changed, build_dir, source_root, compdb_files, exclude_path_regexes
+    )
+
+
+def collect_targets_from_fixes(
+    fixes_file: Path,
+    build_dir: Path,
+    source_root: Path,
+    compdb_files: set[Path],
+    exclude_path_regexes: list[str] | None = None,
+) -> list[Path]:
+    """Extract file paths from a previous fixes YAML and resolve them as targets."""
+    fixes = FixesFile.model_validate(yaml.safe_load(fixes_file.read_text()) or {})
+    paths: set[str] = set()
+    for diag in fixes.diagnostics:
+        fp = diag.message.file_path
+        if fp:
+            paths.add(fp)
+
+    console.print(f"Found {len(paths)} unique file(s) in {fixes_file}")
+
+    # Normalize to repo-relative paths for resolve_targets
+    repo_paths: list[str] = []
+    for p in paths:
+        try:
+            rel = os.path.relpath(p, source_root)
+        except ValueError:
+            rel = p
+        repo_paths.append(rel)
+
+    return resolve_targets(
+        repo_paths, build_dir, source_root, compdb_files, exclude_path_regexes
     )
 
 
@@ -320,6 +359,7 @@ async def run_clang_tidy_on_targets(
     jobs: int,
     clang_tidy: str,
     verbose: bool = False,
+    trace_includes: bool = False,
 ) -> None:
     fixes_dir.mkdir(parents=True, exist_ok=True)
     sem = asyncio.Semaphore(jobs)
@@ -328,6 +368,8 @@ async def run_clang_tidy_on_targets(
     extra_args: list[str] = []
     if sysroot:
         extra_args += [f"--extra-arg=-isysroot", f"--extra-arg={sysroot}"]
+    if trace_includes:
+        extra_args.append("--extra-arg=-H")
 
     progress = Progress(
         TextColumn("[progress.description]{task.description}"),
@@ -350,7 +392,7 @@ async def run_clang_tidy_on_targets(
             *extra_args,
         ]
         async with sem:
-            if verbose:
+            if verbose or trace_includes:
                 proc = await asyncio.create_subprocess_exec(
                     *cmd,
                     stdout=asyncio.subprocess.PIPE,
@@ -784,6 +826,10 @@ def analyze(
         list[Path] | None,
         typer.Option(help="Explicit file paths to analyse, bypasses git diff / --all"),
     ] = None,
+    from_fixes: Annotated[
+        Path | None,
+        typer.Option(help="Re-analyse files from a previous fixes YAML"),
+    ] = None,
     filter_config: Annotated[
         Path | None, typer.Option(help="Path to filter.yml")
     ] = Path(__file__)
@@ -806,6 +852,12 @@ def analyze(
         bool,
         typer.Option("--verbose", "-v", help="Print clang-tidy output for each file"),
     ] = False,
+    trace_includes: Annotated[
+        bool,
+        typer.Option(
+            "--trace-includes", help="Pass -H to the compiler to dump the include tree"
+        ),
+    ] = False,
 ) -> None:
     """Collect targets, run clang-tidy, and optionally persist merged fixes."""
     if not dry_run and not list_targets:
@@ -824,7 +876,17 @@ def analyze(
     config = load_filter_config(filter_config)
 
     # 1) Collect targets
-    if files is not None:
+    if from_fixes is not None:
+        compdb_files = load_compdb(build_dir)
+        console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
+        targets = collect_targets_from_fixes(
+            from_fixes,
+            build_dir,
+            source_root,
+            compdb_files,
+            config.exclude_path_regexes,
+        )
+    elif files is not None:
         file_list = [str(f) for f in files]
         compdb_files = load_compdb(build_dir)
         console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
@@ -841,7 +903,7 @@ def analyze(
     else:
         if base_ref is None:
             raise typer.BadParameter(
-                "base_ref is required unless --all or --files is given"
+                "base_ref is required unless --all, --files, or --from-fixes is given"
             )
         targets = collect_changed_targets(
             base_ref, build_dir, source_root, config.exclude_path_regexes
@@ -868,7 +930,13 @@ def analyze(
 
         asyncio.run(
             run_clang_tidy_on_targets(
-                targets, build_dir, fixes_dir, jobs, clang_tidy, verbose=verbose
+                targets,
+                build_dir,
+                fixes_dir,
+                jobs,
+                clang_tidy,
+                verbose=verbose,
+                trace_includes=trace_includes,
             )
         )
 
