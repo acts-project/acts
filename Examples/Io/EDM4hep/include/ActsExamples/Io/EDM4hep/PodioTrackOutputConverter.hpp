@@ -47,9 +47,6 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
     std::string outputTracks = "tracks";
     /// Input measurement collection
     std::string inputMeasurements;
-    /// Output measurement collection
-    std::string outputMeasurements = "measurements";
-
     /// DD4hep detector
     std::shared_ptr<DD4hepDetector> detector;
   };
@@ -89,6 +86,8 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
   CollectionBaseWriteHandle m_outputTracks{this, "OutputTracks"};
   CollectionBaseWriteHandle m_outputTrackStates{this, "OutputTrackStates"};
   CollectionBaseWriteHandle m_outputMeasurements{this, "OutputMeasurements"};
+  CollectionBaseWriteHandle m_outputTrackStateHitLinks{
+      this, "OutputTrackStateHitLinks"};
 };
 
 }  // namespace ActsExamples

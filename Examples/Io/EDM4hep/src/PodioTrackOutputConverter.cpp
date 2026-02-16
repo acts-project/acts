@@ -44,11 +44,17 @@ PodioTrackOutputConverter::PodioTrackOutputConverter(const Config& config,
     throw std::invalid_argument("Tracking geometry not found");
   }
 
+  const auto prefix = m_cfg.outputTracks;
+
   m_inputTracks.initialize(m_cfg.inputTracks);
-  m_outputTracks.initialize(m_cfg.outputTracks);
-  m_outputTrackStates.initialize(m_cfg.outputTracks + "_trackStates");
+  m_outputTracks.initialize(prefix);
+  m_outputTrackStates.initialize(
+      ActsPlugins::PodioTrackStateContainerBase::trackStatesKey(prefix));
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurements.initialize(
+      ActsPlugins::PodioTrackStateContainerBase::trackerHitsKey(prefix));
+  m_outputTrackStateHitLinks.initialize(
+      ActsPlugins::PodioTrackStateContainerBase::trackStateHitLinksKey(prefix));
 }
 
 ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
@@ -136,13 +142,19 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
   m_outputTracks(context, std::move(trackCollection));
   m_outputTrackStates(context, std::move(trackStateCollection));
   m_outputMeasurements(context, std::move(outputMeasurements));
+  m_outputTrackStateHitLinks(context, std::move(trackStateHitLinks));
 
   return ProcessCode::SUCCESS;
 }
 
 std::vector<std::string> PodioTrackOutputConverter::collections() const {
-  return {m_cfg.outputTracks, m_cfg.outputTracks + "_trackStates",
-          m_cfg.outputMeasurements};
+  const auto prefix = m_cfg.outputTracks;
+  return {
+      prefix,
+      ActsPlugins::PodioTrackStateContainerBase::trackStatesKey(prefix),
+      ActsPlugins::PodioTrackStateContainerBase::trackerHitsKey(prefix),
+      ActsPlugins::PodioTrackStateContainerBase::trackStateHitLinksKey(prefix),
+  };
 }
 
 void PodioTrackOutputConverter::writeMeasurement(

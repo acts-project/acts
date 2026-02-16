@@ -293,11 +293,11 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
   c->releaseInto(frame, "test");
 
-  BOOST_CHECK_EQUAL(frame.get("trackStates_test")->size(), 3);
-  BOOST_CHECK_EQUAL(frame.get("trackStateParameters_test")->size(), 7);
-  BOOST_CHECK_EQUAL(frame.get("trackStateJacobians_test")->size(), 2);
-  BOOST_CHECK_NE(frame.get("trackStates_test_extra__int_column"), nullptr);
-  BOOST_CHECK_NE(frame.get("trackStates_test_extra__float_column"), nullptr);
+  BOOST_CHECK_EQUAL(frame.get("test_trackStates")->size(), 3);
+  BOOST_CHECK_EQUAL(frame.get("test_trackStateParameters")->size(), 7);
+  BOOST_CHECK_EQUAL(frame.get("test_trackStateJacobians")->size(), 2);
+  BOOST_CHECK_NE(frame.get("test_trackStates_extra__int_column"), nullptr);
+  BOOST_CHECK_NE(frame.get("test_trackStates_extra__float_column"), nullptr);
 
   auto cc =
       std::make_shared<ConstPodioTrackStateContainer<>>(helper, frame, "test");

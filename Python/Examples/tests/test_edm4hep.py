@@ -782,7 +782,6 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
             inputTracks="kf_tracks",
             outputTracks="ActsPodioTracks",
             inputMeasurements="measurements",
-            outputMeasurements="ActsPodioMeasurements",
             detector=detector,
         )
         s.addAlgorithm(converter)
@@ -816,18 +815,22 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
     num_tracks = 0
     num_track_states = 0
     num_measurements = 0
+    num_links = 0
 
     for frame in reader.get("events"):
         tracks = frame.get("ActsPodioTracks")
         num_tracks += len(tracks)
         track_states = frame.get("ActsPodioTracks_trackStates")
         num_track_states += len(track_states)
-        measurements = frame.get("ActsPodioMeasurements")
+        measurements = frame.get("ActsPodioTracks_trackerHits")
         num_measurements += len(measurements)
+        links = frame.get("ActsPodioTracks_trackStateHitLinks")
+        num_links += len(links)
 
     assert num_tracks > 0, "No tracks were written"
     assert num_track_states > 0, "No track states were written"
     assert num_measurements > 0, "No measurements were written"
+    assert num_links > 0, "No track state hit links were written"
     print(f"Successfully wrote {num_tracks} tracks")
 
 

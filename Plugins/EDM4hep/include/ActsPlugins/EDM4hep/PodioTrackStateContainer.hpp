@@ -124,6 +124,44 @@ class PodioTrackStateContainerBase {
   using ConstCalibratedCovariance =
       typename Acts::detail_tsp::FixedSizeTypes<M, true>::CovarianceMap;
 
+  /// Collection name key for track states in a frame
+  /// @param prefix Base name (e.g. output collection name)
+  /// @return Frame key for the track states collection
+  static std::string trackStatesKey(const std::string& prefix) {
+    return prefix.empty() ? "trackStates" : prefix + "_trackStates";
+  }
+
+  /// Collection name key for track state parameters in a frame
+  /// @param prefix Base name
+  /// @return Frame key for the track state parameters collection
+  static std::string trackStateParametersKey(const std::string& prefix) {
+    return prefix.empty() ? "trackStateParameters"
+                         : prefix + "_trackStateParameters";
+  }
+
+  /// Collection name key for track state Jacobians in a frame
+  /// @param prefix Base name
+  /// @return Frame key for the track state Jacobians collection
+  static std::string trackStateJacobiansKey(const std::string& prefix) {
+    return prefix.empty() ? "trackStateJacobians"
+                         : prefix + "_trackStateJacobians";
+  }
+
+  /// Collection name key for tracker hits in a frame
+  /// @param prefix Base name
+  /// @return Frame key for the tracker hits collection
+  static std::string trackerHitsKey(const std::string& prefix) {
+    return prefix.empty() ? "trackerHits" : prefix + "_trackerHits";
+  }
+
+  /// Collection name key for track state–hit links in a frame
+  /// @param prefix Base name
+  /// @return Frame key for the track state hit links collection
+  static std::string trackStateHitLinksKey(const std::string& prefix) {
+    return prefix.empty() ? "trackStateHitLinks"
+                         : prefix + "_trackStateHitLinks";
+  }
+
  protected:
   /// Check if a component exists for a track state
   /// @param instance Container instance
@@ -379,15 +417,17 @@ class ConstPodioTrackStateContainer final
                  Acts::ConstRefHolder<const ActsPodioEdm::TrackStateCollection>>
       : m_helper{helper},
         m_collection{frame.get<ActsPodioEdm::TrackStateCollection>(
-            "trackStates" + (suffix.empty() ? suffix : "_" + suffix))},
+            PodioTrackStateContainerBase::trackStatesKey(suffix))},
         m_params{frame.get<ActsPodioEdm::BoundParametersCollection>(
-            "trackStateParameters" + (suffix.empty() ? suffix : "_" + suffix))},
+            PodioTrackStateContainerBase::trackStateParametersKey(suffix))},
         m_jacs{frame.get<ActsPodioEdm::JacobianCollection>(
-            "trackStateJacobians" + (suffix.empty() ? suffix : "_" + suffix))} {
-    std::string s = suffix.empty() ? suffix : "_" + suffix;
-    std::string trackStatesKey = "trackStates" + s;
-    const std::string hitsKey = "trackerHits" + s;
-    const std::string linksKey = "trackStateHitLinks" + s;
+            PodioTrackStateContainerBase::trackStateJacobiansKey(suffix))} {
+    const std::string trackStatesKey =
+        PodioTrackStateContainerBase::trackStatesKey(suffix);
+    const std::string hitsKey =
+        PodioTrackStateContainerBase::trackerHitsKey(suffix);
+    const std::string linksKey =
+        PodioTrackStateContainerBase::trackStateHitLinksKey(suffix);
     const auto* hitsColl = frame.get(hitsKey);
     const auto* linksColl = frame.get(linksKey);
     if (hitsColl != nullptr && linksColl != nullptr) {
@@ -1069,47 +1109,49 @@ class MutablePodioTrackStateContainer final
         std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
                        std::shared_ptr<ActsPodioEdm::TrackStateCollection>>)
   {
-    std::string s = suffix;
-    if (!s.empty()) {
-      s = "_" + s;
-    }
+    const std::string trackStatesKey =
+        PodioTrackStateContainerBase::trackStatesKey(suffix);
+    const std::string trackStateParametersKey =
+        PodioTrackStateContainerBase::trackStateParametersKey(suffix);
+    const std::string trackStateJacobiansKey =
+        PodioTrackStateContainerBase::trackStateJacobiansKey(suffix);
 
     if constexpr (std::is_same_v<
                       holder_t<ActsPodioEdm::TrackStateCollection>,
                       std::unique_ptr<ActsPodioEdm::TrackStateCollection>>) {
-      frame.put(std::move(m_collection), "trackStates" + s);
-      frame.put(std::move(m_params), "trackStateParameters" + s);
-      frame.put(std::move(m_jacs), "trackStateJacobians" + s);
+      frame.put(std::move(m_collection), trackStatesKey);
+      frame.put(std::move(m_params), trackStateParametersKey);
+      frame.put(std::move(m_jacs), trackStateJacobiansKey);
     } else if constexpr (std::is_same_v<
                              holder_t<ActsPodioEdm::TrackStateCollection>,
                              std::shared_ptr<
                                  ActsPodioEdm::TrackStateCollection>>) {
       frame.put(std::unique_ptr<ActsPodioEdm::TrackStateCollection>(
                     m_collection.get()),
-                "trackStates" + s);
+                trackStatesKey);
       frame.put(std::unique_ptr<ActsPodioEdm::BoundParametersCollection>(
                     m_params.get()),
-                "trackStateParameters" + s);
+                trackStateParametersKey);
       frame.put(std::unique_ptr<ActsPodioEdm::JacobianCollection>(m_jacs.get()),
-                "trackStateJacobians" + s);
+                trackStateJacobiansKey);
       m_collection.reset();
       m_params.reset();
       m_jacs.reset();
     } else {
       frame.put(std::make_unique<ActsPodioEdm::TrackStateCollection>(
                     std::move(*m_collection)),
-                "trackStates" + s);
+                trackStatesKey);
       frame.put(std::make_unique<ActsPodioEdm::BoundParametersCollection>(
                     std::move(*m_params)),
-                "trackStateParameters" + s);
+                trackStateParametersKey);
       frame.put(std::make_unique<ActsPodioEdm::JacobianCollection>(
                     std::move(*m_jacs)),
-                "trackStateJacobians" + s);
+                trackStateJacobiansKey);
     }
     m_surfaces.clear();
 
     for (const auto& [key, col] : m_dynamic) {
-      col->releaseInto(frame, "trackStates" + s + "_extra__");
+      col->releaseInto(frame, trackStatesKey + "_extra__");
     }
 
     m_dynamic.clear();
