@@ -232,7 +232,7 @@ class BoostDescribeCsvReader {
 // implementation CsvWriter
 
 inline CsvWriter::CsvWriter(const std::vector<std::string>& columns,
-                             const std::string& path, int precision)
+                            const std::string& path, int precision)
     : m_file(path,
              std::ios_base::binary | std::ios_base::out | std::ios_base::trunc),
       m_numColumns(columns.size()) {

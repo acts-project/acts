@@ -42,7 +42,7 @@ ProcessCode CsvSimHitWriter::writeT(const AlgorithmContext& ctx,
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
   BoostDescribeCsvWriter<SimHitData> writerSimHit(pathSimHit,
-                                               m_cfg.outputPrecision);
+                                                  m_cfg.outputPrecision);
 
   // CsvOutputData struct
   SimHitData simhit;

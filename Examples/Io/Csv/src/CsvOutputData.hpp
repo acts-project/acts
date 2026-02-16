@@ -84,8 +84,8 @@ struct SimHitData {
 BOOST_DESCRIBE_STRUCT(SimHitData, (),
                       (particle_id_pv, particle_id_sv, particle_id_part,
                        particle_id_gen, particle_id_subpart, geometry_id, tx,
-                       ty, tz, tt, tpx, tpy, tpz, te, deltapx, deltapy,
-                       deltapz, deltae, index))
+                       ty, tz, tt, tpx, tpy, tpz, te, deltapx, deltapy, deltapz,
+                       deltae, index))
 
 // Write out muon simhits before digitization
 struct MuonSegmentData {
@@ -206,10 +206,10 @@ struct TruthHitData {
 };
 
 BOOST_DESCRIBE_STRUCT(TruthHitData, (),
-                      (hit_id, particle_id_pv, particle_id_sv,
-                       particle_id_part, particle_id_gen, particle_id_subpart,
-                       geometry_id, tx, ty, tz, tt, tpx, tpy, tpz, te,
-                       deltapx, deltapy, deltapz, deltae, index))
+                      (hit_id, particle_id_pv, particle_id_sv, particle_id_part,
+                       particle_id_gen, particle_id_subpart, geometry_id, tx,
+                       ty, tz, tt, tpx, tpy, tpz, te, deltapx, deltapy, deltapz,
+                       deltae, index))
 
 struct HitData {
   /// Event-unique hit identifier. Each value can appear at most once.
@@ -318,12 +318,12 @@ struct SurfaceData {
 };
 
 BOOST_DESCRIBE_STRUCT(SurfaceData, (),
-                      (geometry_id, volume_id, boundary_id, layer_id,
-                       module_id, extra_id, cx, cy, cz, rot_xu, rot_xv,
-                       rot_xw, rot_yu, rot_yv, rot_yw, rot_zu, rot_zv,
-                       rot_zw, bounds_type, bound_param0, bound_param1,
-                       bound_param2, bound_param3, bound_param4, bound_param5,
-                       bound_param6, module_t, pitch_u, pitch_v))
+                      (geometry_id, volume_id, boundary_id, layer_id, module_id,
+                       extra_id, cx, cy, cz, rot_xu, rot_xv, rot_xw, rot_yu,
+                       rot_yv, rot_yw, rot_zu, rot_zv, rot_zw, bounds_type,
+                       bound_param0, bound_param1, bound_param2, bound_param3,
+                       bound_param4, bound_param5, bound_param6, module_t,
+                       pitch_u, pitch_v))
 
 struct LayerVolumeData {
   /// Surface identifier. Not available in the TrackML datasets.
@@ -341,8 +341,8 @@ struct LayerVolumeData {
 };
 
 BOOST_DESCRIBE_STRUCT(LayerVolumeData, (),
-                      (geometry_id, volume_id, layer_id, min_v0, max_v0,
-                       min_v1, max_v1, min_v2, max_v2))
+                      (geometry_id, volume_id, layer_id, min_v0, max_v0, min_v1,
+                       max_v1, min_v2, max_v2))
 
 struct SpacePointData {
   /// Event-unique measurement identifier. Each value can appear at most once.
@@ -373,16 +373,16 @@ struct SpacePointData {
   float sp_topStripCenterPosition_2 = 0;
 };
 
-BOOST_DESCRIBE_STRUCT(
-    SpacePointData, (),
-    (measurement_id, sp_x, sp_y, sp_z, sp_radius, sp_covr, sp_covz,
-     sp_topHalfStripLength, sp_bottomHalfStripLength,
-     sp_topStripDirection_0, sp_topStripDirection_1, sp_topStripDirection_2,
-     sp_bottomStripDirection_0, sp_bottomStripDirection_1,
-     sp_bottomStripDirection_2, sp_stripCenterDistance_0,
-     sp_stripCenterDistance_1, sp_stripCenterDistance_2,
-     sp_topStripCenterPosition_0, sp_topStripCenterPosition_1,
-     sp_topStripCenterPosition_2))
+BOOST_DESCRIBE_STRUCT(SpacePointData, (),
+                      (measurement_id, sp_x, sp_y, sp_z, sp_radius, sp_covr,
+                       sp_covz, sp_topHalfStripLength, sp_bottomHalfStripLength,
+                       sp_topStripDirection_0, sp_topStripDirection_1,
+                       sp_topStripDirection_2, sp_bottomStripDirection_0,
+                       sp_bottomStripDirection_1, sp_bottomStripDirection_2,
+                       sp_stripCenterDistance_0, sp_stripCenterDistance_1,
+                       sp_stripCenterDistance_2, sp_topStripCenterPosition_0,
+                       sp_topStripCenterPosition_1,
+                       sp_topStripCenterPosition_2))
 
 struct SurfaceGridData {
   /// Surface identifier. Not available in the TrackML datasets.
@@ -434,11 +434,11 @@ struct TrackParameterData {
 BOOST_DESCRIBE_STRUCT(TrackParameterData, (),
                       (trackId, d0, z0, phi, theta, qop, var_d0, var_z0,
                        var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi,
-                       cov_d0theta, cov_d0qop, cov_z0d0, cov_z0phi,
-                       cov_z0theta, cov_z0qop, cov_phid0, cov_phiz0,
-                       cov_phitheta, cov_phiqop, cov_thetad0, cov_thetaz0,
-                       cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
-                       cov_qopphi, cov_qoptheta))
+                       cov_d0theta, cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta,
+                       cov_z0qop, cov_phid0, cov_phiz0, cov_phitheta,
+                       cov_phiqop, cov_thetad0, cov_thetaz0, cov_thetaphi,
+                       cov_thetaqop, cov_qopd0, cov_qopz0, cov_qopphi,
+                       cov_qoptheta))
 
 struct ProtoTrackData {
   std::size_t trackId;
