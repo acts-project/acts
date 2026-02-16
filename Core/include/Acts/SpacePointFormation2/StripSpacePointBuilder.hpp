@@ -31,13 +31,13 @@ struct ClusterPairingOptions final {
   double maxAnglePhi = 1 * UnitConstants::rad;
 };
 
-/// @brief Collection of cosmic spacepoint options
+/// @brief Collection of cosmic space point options
 struct CosmicOptions final {
   /// Numerical tolerance for the calculation
   double tolerance = 1e-6;
 };
 
-/// @brief Collection of constrained spacepoint options
+/// @brief Collection of constrained space point options
 struct ConstrainedOptions final {
   /// Position of the vertex
   Vector3 vertex = Vector3::Zero();
@@ -70,7 +70,7 @@ Result<double> computeClusterPairDistance(const Vector3& globalCluster1,
 /// @param stripEnds2 The ends of second strip
 /// @param options The cosmic options
 ///
-/// @return If available, the calculated spacepoint
+/// @return If available, the calculated space point
 Result<Vector3> computeCosmicSpacePoint(const StripEnds& stripEnds1,
                                         const StripEnds& stripEnds2,
                                         const CosmicOptions& options);
@@ -79,7 +79,7 @@ Result<Vector3> computeCosmicSpacePoint(const StripEnds& stripEnds1,
 /// @param stripEnds2 The ends of second strip
 /// @param options The constrained options
 ///
-/// @return If available, the calculated spacepoint
+/// @return If available, the calculated space point
 Result<Vector3> computeConstrainedSpacePoint(const StripEnds& stripEnds1,
                                              const StripEnds& stripEnds2,
                                              const ConstrainedOptions& options);
@@ -88,7 +88,7 @@ Result<Vector3> computeConstrainedSpacePoint(const StripEnds& stripEnds1,
 ///
 /// @param gctx The current geometry context object, e.g. alignment
 /// @param surface1 The surface of the first strip
-/// @param spacePoint The spacepoint
+/// @param spacePoint The space point
 /// @param localCov1 Local covariance of the first strip
 /// @param localCov2 Local covariance of the second strip
 /// @param theta The angle between the two strips

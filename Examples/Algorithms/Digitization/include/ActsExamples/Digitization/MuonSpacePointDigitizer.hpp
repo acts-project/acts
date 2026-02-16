@@ -31,7 +31,7 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     std::string inputSimHits{"simhits"};
     /// @brief Name of the input simulated particles collection
     std::string inputParticles{"particles_simulated"};
-    /// @brief Name of the output spacepoints collection
+    /// @brief Name of the output space points collection
     std::string outputSpacePoints{"MuonSpacePoints"};
     /// @brief Output measurements collection.
     std::string outputMeasurements = "measurements";
@@ -94,7 +94,7 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   /// @brief Data handle for the input simulated particles
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "G4Particles"};
-  /// @brief Data handle for the output spacepoints
+  /// @brief Data handle for the output space points
   WriteDataHandle<MuonSpacePointContainer> m_outputSpacePoints{this,
                                                                "SpacePoints"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{

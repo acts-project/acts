@@ -50,14 +50,14 @@ class MuonHoughSeeder final : public IAlgorithm {
   using MaximumVec_t = std::vector<Maximum_t>;
   /// @brief Abbrivation of the HoughTransform axis utils
   using AxisRange_t = Acts::HoughTransformUtils::HoughAxisRanges;
-  /// @brief Abbrivation of the spacepoint id
+  /// @brief Abbrivation of the space point id
   using MuonId = MuonSpacePoint::MuonId;
 
   /// @brief Configuration object of the Hough seeder
   struct Config {
     /// @brief Container name of the truth segments (used for validation)
     std::string inTruthSegments{};
-    /// @brief Container name of the spacepoint collection
+    /// @brief Container name of the space point collection
     std::string inSpacePoints{};
     /// @brief Container name of the output hough seed collection
     std::string outHoughMax{};
@@ -96,10 +96,10 @@ class MuonHoughSeeder final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  /// @brief Find eta maxima from the spacepoint bucket and fills them into a new
+  /// @brief Find eta maxima from the space point bucket and fills them into a new
   ///        maximum container
   /// @param ctx: Algorithm context needed for the display of the truth-parameters
-  /// @param bucket: Spacepoint bucket of interest
+  /// @param bucket: Space point bucket of interest
   /// @param plane: Allocated hough plane to be recycled for all hough searches in the event
   MuonHoughMaxContainer constructEtaMaxima(const AlgorithmContext& ctx,
                                            const MuonSpacePointBucket& bucket,

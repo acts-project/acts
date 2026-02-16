@@ -17,7 +17,7 @@ namespace Acts {
 Vector2 PixelSpacePointBuilder::computeVarianceZR(
     const GeometryContext& gctx, const Surface& surface,
     const Vector3& spacePoint, const SquareMatrix2& localCov) {
-  // the spacepoint requires only the variance of the transverse and
+  // the space point requires only the variance of the transverse and
   // longitudinal position. reduce computations by transforming the
   // covariance directly from local to z/r.
   //

@@ -26,9 +26,9 @@ class TripletSeeder {
   /// Cache for storing intermediate results during triplet seeding to avoid
   /// reallocation.
   struct Cache {
-    /// Cache for bottom doublets associated with middle spacepoints
+    /// Cache for bottom doublets associated with middle space points
     DoubletsForMiddleSp bottomDoublets;
-    /// Cache for top doublets associated with middle spacepoints
+    /// Cache for top doublets associated with middle space points
     DoubletsForMiddleSp topDoublets;
 
     /// Sorted container of bottom doublet indices with cotangent theta values
@@ -46,17 +46,17 @@ class TripletSeeder {
                              getDefaultLogger("TripletSeeder",
                                               Logging::Level::INFO));
 
-  /// Create all possible seeds from bottom, middle, and top spacepoints.
+  /// Create all possible seeds from bottom, middle, and top space points.
   ///
   /// @param cache Cache object to store intermediate results
   /// @param bottomFinder Finder for bottom doublets
   /// @param topFinder Finder for top doublets
-  /// @param tripletFinder Finder for triplet spacepoints
+  /// @param tripletFinder Finder for triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param spacePoints spacepoint container
-  /// @param bottomSps Subset of spacepoints to be used as innermost SP in a seed
-  /// @param middleSp spacepoint candidate to be used as middle SP in a seed
-  /// @param topSps Subset of spacepoints to be used as outermost SP in a seed
+  /// @param spacePoints space point container
+  /// @param bottomSps Subset of space points to be used as innermost SP in a seed
+  /// @param middleSp space point candidate to be used as middle SP in a seed
+  /// @param topSps Subset of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroup(Cache& cache, const DoubletSeedFinder& bottomFinder,
                             const DoubletSeedFinder& topFinder,
@@ -68,18 +68,18 @@ class TripletSeeder {
                             SpacePointContainer2::ConstSubset& topSps,
                             SeedContainer2& outputSeeds) const;
 
-  /// Create all possible seeds from bottom, middle, and top spacepoints.
+  /// Create all possible seeds from bottom, middle, and top space points.
   ///
   /// @param cache Cache object to store intermediate results
   /// @param bottomFinder Finder for bottom doublets
   /// @param topFinder Finder for top doublets
-  /// @param tripletFinder Finder for triplet spacepoints
+  /// @param tripletFinder Finder for triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param spacePoints spacepoint container
-  /// @param bottomSpGroups Groups of spacepoints to be used as innermost SP in a seed
-  /// @param middleSpGroup Group of spacepoints to be used as middle SP in a seed
-  /// @param topSpGroups Groups of spacepoints to be used as outermost SP in a seed
-  /// @param radiusRangeForMiddle Range of radii for the middle spacepoints
+  /// @param spacePoints space point container
+  /// @param bottomSpGroups Groups of space points to be used as innermost SP in a seed
+  /// @param middleSpGroup Group of space points to be used as middle SP in a seed
+  /// @param topSpGroups Groups of space points to be used as outermost SP in a seed
+  /// @param radiusRangeForMiddle Range of radii for the middle space points
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroups(
       Cache& cache, const DoubletSeedFinder& bottomFinder,

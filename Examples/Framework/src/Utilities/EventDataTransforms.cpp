@@ -50,7 +50,7 @@ ActsExamples::SimSeed ActsExamples::prototrackToSeed(
   auto findSpacePoint = [&](Index index) {
     auto found = findSpacePointForIndex(index, spacePoints);
     if (found == nullptr) {
-      throw std::runtime_error("No spacepoint found for source-link index " +
+      throw std::runtime_error("No space point found for source-link index " +
                                std::to_string(index));
     }
     return found;
@@ -59,7 +59,7 @@ ActsExamples::SimSeed ActsExamples::prototrackToSeed(
   const auto s = track.size();
   if (s < 3) {
     throw std::runtime_error(
-        "Cannot convert track with less then 3 spacepoints to seed");
+        "Cannot convert track with less then 3 space points to seed");
   }
 
   std::vector<const SimSpacePoint*> ps;

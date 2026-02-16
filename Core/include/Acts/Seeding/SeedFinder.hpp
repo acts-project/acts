@@ -128,7 +128,7 @@ class SeedFinder {
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
   /// @param options frequently changing configuration (like beam position)
-  /// @param grid spacepoint grid
+  /// @param grid space point grid
   /// @param mutableData Container for mutable variables used in the seeding
   /// @param otherSPsNeighbours inner or outer space points to be used in the dublet
   /// @param mediumSP space point candidate to be used as middle SP in a seed

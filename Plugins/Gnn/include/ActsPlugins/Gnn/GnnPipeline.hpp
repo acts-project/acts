@@ -59,12 +59,12 @@ class GnnPipeline {
 
   /// @brief Run the GNN pipeline
   /// @param features Input feature vector
-  /// @param moduleIds Module identifiers for each spacepoint
-  /// @param spacePointIDs Spacepoint identifiers
+  /// @param moduleIds Module identifiers for each space point
+  /// @param spacePointIDs Space point identifiers
   /// @param device Device to run on (CPU/GPU)
   /// @param hook Optional callback hook for pipeline execution
   /// @param timing Optional timing output
-  /// @return Vector of track candidates (each track is a vector of spacepoint IDs)
+  /// @return Vector of track candidates (each track is a vector of space point IDs)
   std::vector<std::vector<int>> run(std::vector<float> &features,
                                     const std::vector<std::uint64_t> &moduleIds,
                                     std::vector<int> &spacePointIDs,

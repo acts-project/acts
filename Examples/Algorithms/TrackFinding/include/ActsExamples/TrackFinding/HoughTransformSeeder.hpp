@@ -115,8 +115,8 @@ namespace ActsExamples {
 //// For the total houghHist, the int counts the number of layers with one or
 /// more
 /// hit in that bin
-// The unsigned is a counter that will point to a spacepoint or to a measurement
-// object
+// The unsigned is a counter that will point to a space point or to a
+// measurement object
 
 /// An houghHist is a 2d array of points, where each point has a value.
 /// The value starts as the number of hit layers, but can change with effects
@@ -145,17 +145,18 @@ struct HoughMeasurementStruct {
       : layer(l), phi(p), radius(r), z(thez), indices(i), type(t) {}
 };
 
-/// Construct track seeds from spacepoints.
+/// Construct track seeds from space points.
 class HoughTransformSeeder final : public IAlgorithm {
  public:
   struct Config {
-    /// Input spacepoint collections.
+    /// Input space point collections.
     ///
-    /// We allow multiple spacepoint collections to allow different parts of
-    /// the detector to use different algorithms for spacepoint construction,
-    /// e.g. single-hit spacepoints for pixel-like detectors or double-hit
-    /// spacepoints for strip-like detectors.
-    /// Note that we don't *need* spacepoints (measurements can be used instead)
+    /// We allow multiple space point collections to allow different parts of
+    /// the detector to use different algorithms for space point construction,
+    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// space points for strip-like detectors.
+    /// Note that we don't *need* space points (measurements can be used
+    /// instead)
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
@@ -163,7 +164,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     std::string outputProtoTracks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// For which part of the detector geometry should spacepoints be created.
+    /// For which part of the detector geometry should space points be created.
     ///
     /// Only volumes and layers can be set. Zero values can be used as wildcards
     /// to select larger parts of the hierarchy, i.e. setting only the volume

@@ -91,7 +91,7 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
   };
 
   struct Config {
-    /// Input spacepoints collection.
+    /// Input space points collection.
     std::string inputSpacePoints;
     /// Input cluster information (Optional).
     std::string inputClusters;

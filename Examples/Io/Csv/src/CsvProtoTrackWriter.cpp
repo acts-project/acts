@@ -47,7 +47,7 @@ ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
       const auto spr = findSpacePointForIndex(measurementId, spacePoints);
       if (spr == nullptr) {
         ACTS_WARNING("Could not convert index " << measurementId
-                                                << " to spacepoint");
+                                                << " to space point");
         continue;
       }
       const auto& sp = *spr;

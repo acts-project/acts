@@ -20,16 +20,16 @@
 
 namespace Acts {
 
-/// A cylindrical spacepoint grid used for seeding in a cylindrical detector
+/// A cylindrical space point grid used for seeding in a cylindrical detector
 /// geometry.
 /// The grid is defined in cylindrical coordinates (phi, z, r) and allows for
-/// efficient access to spacepoints based on their azimuthal angle,
+/// efficient access to space points based on their azimuthal angle,
 /// z-coordinate, and radial distance.
 class CylindricalSpacePointGrid2 {
  public:
-  /// spacepoint index type used in the grid.
+  /// Space point index type used in the grid.
   using SpacePointIndex = std::uint32_t;
-  /// Type alias for bin container holding spacepoint indices
+  /// Type alias for bin container holding space point indices
   using BinType = std::vector<SpacePointIndex>;
   /// Type alias for phi axis with equidistant binning and closed boundaries
   using PhiAxisType = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
@@ -37,7 +37,7 @@ class CylindricalSpacePointGrid2 {
   using ZAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
   /// Type alias for r axis with variable binning and open boundaries
   using RAxisType = Axis<AxisType::Variable, AxisBoundaryType::Open>;
-  /// Cylindrical spacepoint grid type, which is a grid over `BinType` with
+  /// Cylindrical space point grid type, which is a grid over `BinType` with
   /// axes defined by `PhiAxisType`, `ZAxisType`, and `RAxisType`.
   /// The grid is a 3D grid with the axes representing azimuthal angle (phi),
   /// z-coordinate, and radial distance (r).
@@ -45,7 +45,7 @@ class CylindricalSpacePointGrid2 {
   /// Type alias for binned group over the cylindrical grid
   using BinnedGroupType = BinnedGroup<GridType>;
 
-  /// Configuration parameters for the cylindrical spacepoint grid.
+  /// Configuration parameters for the cylindrical space point grid.
   struct Config {
     /// minimum pT
     float minPt = 0 * UnitConstants::MeV;
@@ -63,8 +63,8 @@ class CylindricalSpacePointGrid2 {
     /// maximum extension of sensitive detector layer relevant for seeding in
     /// positive direction in z
     float zMax = 2800 * UnitConstants::mm;
-    /// maximum distance in r from middle spacepoint to bottom or top
-    /// spacepoint
+    /// maximum distance in r from middle space point to bottom or top
+    /// space point
     float deltaRMax = 270 * UnitConstants::mm;
     /// maximum forward direction expressed as cot(theta)
     float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
@@ -91,15 +91,15 @@ class CylindricalSpacePointGrid2 {
     /// magnetic field
     float bFieldInZ = 0 * UnitConstants::T;
 
-    /// bin finder for bottom spacepoints
+    /// bin finder for bottom space points
     std::optional<GridBinFinder<3ul>> bottomBinFinder;
-    /// bin finder for top spacepoints
+    /// bin finder for top space points
     std::optional<GridBinFinder<3ul>> topBinFinder;
     /// navigation structure for the grid
     std::array<std::vector<std::size_t>, 3ul> navigation;
   };
 
-  /// Construct a cylindrical spacepoint grid with the given configuration and
+  /// Construct a cylindrical space point grid with the given configuration and
   /// an optional logger.
   /// @param config Configuration for the cylindrical grid
   /// @param logger Optional logger instance for debugging output
@@ -112,58 +112,58 @@ class CylindricalSpacePointGrid2 {
   /// constructed one.
   void clear();
 
-  /// Get the bin index for a spacepoint given its azimuthal angle, radial
+  /// Get the bin index for a space point given its azimuthal angle, radial
   /// distance, and z-coordinate.
-  /// @param position The position of the spacepoint in (phi, z, r) coordinates
-  /// @return The index of the bin in which the spacepoint is located, or
-  ///         `std::nullopt` if the spacepoint is outside the grid bounds.
+  /// @param position The position of the space point in (phi, z, r) coordinates
+  /// @return The index of the bin in which the space point is located, or
+  ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> binIndex(const Vector3& position) const {
     if (!grid().isInside(position)) {
       return std::nullopt;
     }
     return grid().globalBinFromPosition(position);
   }
-  /// Get the bin index for a spacepoint given its azimuthal angle, radial
+  /// Get the bin index for a space point given its azimuthal angle, radial
   /// distance, and z-coordinate.
-  /// @param phi The azimuthal angle of the spacepoint in radians
-  /// @param z The z-coordinate of the spacepoint
-  /// @param r The radial distance of the spacepoint from the origin
-  /// @return The index of the bin in which the spacepoint is located, or
-  ///         `std::nullopt` if the spacepoint is outside the grid bounds.
+  /// @param phi The azimuthal angle of the space point in radians
+  /// @param z The z-coordinate of the space point
+  /// @param r The radial distance of the space point from the origin
+  /// @return The index of the bin in which the space point is located, or
+  ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> binIndex(float phi, float z, float r) const {
     return binIndex(Vector3(phi, z, r));
   }
 
-  /// Insert a spacepoint into the grid.
-  /// @param index The index of the spacepoint to insert
-  /// @param phi The azimuthal angle of the spacepoint in radians
-  /// @param z The z-coordinate of the spacepoint
-  /// @param r The radial distance of the spacepoint from the origin
-  /// @return The index of the bin in which the spacepoint was inserted, or
-  ///         `std::nullopt` if the spacepoint is outside the grid bounds.
+  /// Insert a space point into the grid.
+  /// @param index The index of the space point to insert
+  /// @param phi The azimuthal angle of the space point in radians
+  /// @param z The z-coordinate of the space point
+  /// @param r The radial distance of the space point from the origin
+  /// @return The index of the bin in which the space point was inserted, or
+  ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> insert(SpacePointIndex index, float phi, float z,
                                     float r);
-  /// Insert a spacepoint into the grid.
-  /// @param sp The spacepoint to insert
-  /// @return The index of the bin in which the spacepoint was inserted, or
-  ///         `std::nullopt` if the spacepoint is outside the grid bounds.
+  /// Insert a space point into the grid.
+  /// @param sp The space point to insert
+  /// @return The index of the bin in which the space point was inserted, or
+  ///         `std::nullopt` if the space point is outside the grid bounds.
   std::optional<std::size_t> insert(const ConstSpacePointProxy2& sp) {
     return insert(sp.index(), sp.phi(), sp.z(), sp.r());
   }
 
-  /// Fill the grid with spacepoints from the container.
-  /// @param spacePoints The spacepoint container to fill the grid with
+  /// Fill the grid with space points from the container.
+  /// @param spacePoints The space point container to fill the grid with
   void extend(const SpacePointContainer2::ConstRange& spacePoints);
 
-  /// Sort the bins in the grid by the spacepoint radius, which is required by
+  /// Sort the bins in the grid by the space point radius, which is required by
   /// some algorithms that operate on the grid.
-  /// @param spacePoints The spacepoint container to sort the bins by radius
+  /// @param spacePoints The space point container to sort the bins by radius
   void sortBinsByR(const SpacePointContainer2& spacePoints);
 
   /// Compute the range of radii in the grid. This requires the grid to be
-  /// filled with spacepoints and sorted by radius. The sorting can be done
+  /// filled with space points and sorted by radius. The sorting can be done
   /// with the `sortBinsByR` method.
-  /// @param spacePoints The spacepoint container to compute the radius range
+  /// @param spacePoints The space point container to compute the radius range
   /// @return The range of radii in the grid
   Range1D<float> computeRadiusRange(
       const SpacePointContainer2& spacePoints) const;
@@ -188,8 +188,8 @@ class CylindricalSpacePointGrid2 {
   /// @return Reference to the binned group
   const BinnedGroupType& binnedGroup() const { return *m_binnedGroup; }
 
-  /// Get the number of spacepoints in the grid.
-  /// @return The number of spacepoints in the grid
+  /// Get the number of space points in the grid.
+  /// @return The number of space points in the grid
   std::size_t numberOfSpacePoints() const { return m_counter; }
 
   /// Get the number of bins in the grid.

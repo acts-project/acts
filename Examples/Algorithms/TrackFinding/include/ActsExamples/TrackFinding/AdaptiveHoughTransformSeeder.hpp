@@ -176,17 +176,18 @@ class AccumulatorSection {
                                  // information can be stored
 };
 
-// Construct track seeds from spacepoints.
+// Construct track seeds from space points.
 class AdaptiveHoughTransformSeeder final : public IAlgorithm {
  public:
   struct Config {
-    /// Input spacepoint collections.
+    /// Input space point collections.
     ///
-    /// We allow multiple spacepoint collections to allow different parts of
-    /// the detector to use different algorithms for spacepoint construction,
-    /// e.g. single-hit spacepoints for pixel-like detectors or double-hit
-    /// spacepoints for strip-like detectors.
-    /// Note that we don't *need* spacepoints (measurements can be used instead)
+    /// We allow multiple space point collections to allow different parts of
+    /// the detector to use different algorithms for space point construction,
+    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// space points for strip-like detectors.
+    /// Note that we don't *need* space points (measurements can be used
+    /// instead)
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
@@ -232,7 +233,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     /// @param inverseR inverse of radius of the SP
     /// @param phiAngle azimuthal angle of the SP
     /// @param zpos z position of the SP
-    /// @param l link to spacepoint
+    /// @param l link to space point
     PreprocessedMeasurement(double inverseR, double phiAngle, double zpos,
                             Acts::SourceLink l)
         : invr(inverseR), phi(phiAngle), z(zpos), link(std::move(l)) {}
@@ -388,7 +389,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
 
-  /// @brief fill vector pf measurements from input spacepoints
+  /// @brief fill vector pf measurements from input space points
   /// @param measurements - vector to fill
   void preparePreprocessedMeasurements(
       const AlgorithmContext &ctx,

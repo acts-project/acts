@@ -24,16 +24,16 @@
 
 namespace ActsExamples {
 
-/// @brief Visualizes muon spacepoints on a 2D canvas (y-z plane)
+/// @brief Visualizes muon space points on a 2D canvas (y-z plane)
 ///
 /// Creates a PDF showing:
 /// - Chamber detector surfaces (straws and strips)
-/// - Digitized spacepoints (red)
+/// - Digitized space points (red)
 /// - Truth muon trajectories (blue arrows)
 ///
 /// @param outputPath Full path for the output PDF file
 /// @param gctx Geometry context
-/// @param bucket spacepoints to visualize
+/// @param bucket Space points to visualize
 /// @param simHits Container of simulated hits for drawing truth trajectories
 /// @param simParticles Container of simulated particles
 /// @param trackingGeometry The tracking geometry to access surfaces and volumes

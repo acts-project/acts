@@ -383,12 +383,12 @@ if __name__ == "__main__":
     )
 
     logLevel = acts.logging.VERBOSE
-    rootSpacepointsWriter = RootSpacePointWriter(
+    rootSpacePointsWriter = RootSpacePointWriter(
         level=logLevel,
         inputSpacePoints="spacepoints",
         filePath=str(outputDir / "spacepoints.root"),
     )
-    s.addWriter(rootSpacepointsWriter)
+    s.addWriter(rootSpacePointsWriter)
 
     rootSeedsWriter = acts.examples.root.RootSeedWriter(
         level=logLevel,

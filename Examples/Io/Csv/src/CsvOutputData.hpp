@@ -129,9 +129,9 @@ struct MuonSpacePointData {
   /// @brief Identifier hash encoding the spectrometer sector, layer & detector side
   int sectorId{0};
   /// @brief Number of the associated bucket inside the container. A change of bucket Id
-  ///         pushes the spacepoint into a new bucket container
+  ///         pushes the space point into a new bucket container
   int bucketId{0};
-  /// @brief Local position of the spacepoint measurement
+  /// @brief Local position of the space point measurement
   float locPositionX{0.f};
   float locPositionY{0.f};
   float locPositionZ{0.f};
@@ -334,7 +334,7 @@ struct LayerVolumeData {
 struct SpacePointData {
   /// Event-unique measurement identifier. Each value can appear at most once.
   std::uint64_t measurement_id = 0;
-  /// spacepoint information
+  /// space point information
   float sp_x = 0, sp_y = 0, sp_z = 0, sp_radius = 0;
   float sp_covr = 0, sp_covz = 0;
 
@@ -430,19 +430,19 @@ struct GraphData {
 };
 
 struct SpacePointBucketData {
-  /// @brief Data structure for spacepoint buckets
-  /// @details A bucket is a collection of spacepoints
-  ///        Different buckets can contain the same spacepoint
-  ///        Measurement IDs are used to uniquely identify spacepoints
+  /// @brief Data structure for space point buckets
+  /// @details A bucket is a collection of space points
+  ///        Different buckets can contain the same space point
+  ///        Measurement IDs are used to uniquely identify space points
 
   /// Bucket index
   std::uint64_t bucketIdx;
-  /// Bucket size (number of spacepoints)
+  /// Bucket size (number of space points)
   std::uint64_t bucketSize;
 
-  /// Measurement IDs of the spacepoints in the bucket
+  /// Measurement IDs of the space points in the bucket
   /// To allow for variable size, the bucket data is split into several lines
-  /// A line can contain up to 20 spacepoints (arbitrary number)
+  /// A line can contain up to 20 space points (arbitrary number)
   std::array<std::uint64_t, 20> measurement_id;
 
   DFE_NAMEDTUPLE(SpacePointBucketData, bucketIdx, bucketSize, measurement_id[0],

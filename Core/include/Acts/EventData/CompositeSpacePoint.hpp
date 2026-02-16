@@ -14,7 +14,7 @@
 #include <type_traits>
 
 namespace Acts::Experimental {
-/// @brief Concept definition of the station spacepoints. They're primarily used in composite detectors,
+/// @brief Concept definition of the station space points. They're primarily used in composite detectors,
 ///        like the Muon stations in side the ATLAS experiment. The stations
 ///        usually consist of few layers of straw tubes which maybe sandwiched
 ///        by strip detector layers. The straws are used to measure the passage
@@ -26,7 +26,7 @@ namespace Acts::Experimental {
 ///           z-axis: Points outwards from the experiment
 template <typename SpacePointType>
 concept CompositeSpacePoint = requires(const SpacePointType sp) {
-  ///  @brief Local position of the spacepoint measurement. It's either the position of the wire
+  ///  @brief Local position of the space point measurement. It's either the position of the wire
   ///         or the position of the fired strip in the station
   { sp.localPosition() } -> std::same_as<const Vector3&>;
   /// @brief Orientation of the sensor, which is either the wire orientation or the strip orientation.
@@ -44,30 +44,30 @@ concept CompositeSpacePoint = requires(const SpacePointType sp) {
   /// @brief Recorded time of the measurement, if provided by the technology
   { sp.time() } -> std::same_as<double>;
   /// @brief Measurement covariance array. It's composed of the individual strip covariances, making up
-  ///        the composite spacepoint and the covariance on time, if provided
+  ///        the composite space point and the covariance on time, if provided
   { sp.covariance() } -> std::same_as<const std::array<double, 3>&>;
 
-  /// @brief Return whether the spacepoint represents a straw measurement
+  /// @brief Return whether the space point represents a straw measurement
   { sp.isStraw() } -> std::same_as<bool>;
-  /// @brief Return whether the spacepoint provides a direct time constraint
+  /// @brief Return whether the space point provides a direct time constraint
   { sp.hasTime() } -> std::same_as<bool>;
-  /// @brief Returns whether the station spacepoint measures the 0-th coordinate
+  /// @brief Returns whether the station space point measures the 0-th coordinate
   ///        and hence constrains the track parameters in the non-bending
   ///        direction
   { sp.measuresLoc0() } -> std::same_as<bool>;
-  /// @brief Returns whether the station spacepoint measures the 1-st coordinate
+  /// @brief Returns whether the station space point measures the 1-st coordinate
   ///        and hence constrains the track parameters in the bending direction
   { sp.measuresLoc1() } -> std::same_as<bool>;
 };
 
-/// @brief Define the spacepoint pointer concept as an ordinary / smart pointer
-///        over spacepoints
+/// @brief Define the space point pointer concept as an ordinary / smart pointer
+///        over space points
 template <typename SpacePoint_t>
 concept CompositeSpacePointPtr =
     PointerConcept<SpacePoint_t> &&
     CompositeSpacePoint<typename RemovePointer<SpacePoint_t>::type>;
 
-/// @brief A station spacepoint container is any std::container over spacepoints
+/// @brief A station space point container is any std::container over space points
 template <typename ContType_t>
 concept CompositeSpacePointContainer =
     std::move_constructible<ContType_t> &&

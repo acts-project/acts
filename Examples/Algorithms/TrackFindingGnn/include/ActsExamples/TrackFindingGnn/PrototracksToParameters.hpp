@@ -32,7 +32,7 @@ class PrototracksToParameters final : public IAlgorithm {
   struct Config {
     /// The prototrack for that parameters should be computed
     std::string inputProtoTracks;
-    /// The spacepoint collection
+    /// The space point collection
     std::string inputSpacePoints;
     /// The seeds created on-the-fly from which the parameters actually are
     /// computed

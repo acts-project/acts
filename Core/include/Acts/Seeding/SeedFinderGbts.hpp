@@ -23,7 +23,7 @@
 
 namespace Acts::Experimental {
 
-/// Tuple template used to carry the spacepoint components
+/// Tuple template used to carry the space point components
 using SPContainerComponentsType =
     std::tuple<SpacePointContainer2, SpacePointColumnProxy<std::uint32_t, true>,
                SpacePointColumnProxy<float, true>,
@@ -49,30 +49,30 @@ class SeedFinderGbts {
     /// Constructor.
     /// @param quality Seed quality score
     /// @param clone Clone flag
-    /// @param sps Spacepoint indices
+    /// @param sps Space point indices
     SeedProperties(float quality, std::int32_t clone,
                    std::vector<std::uint32_t> sps)
-        : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
+        : seedQuality(quality), isClone(clone), spacePoints(std::move(sps)) {}
 
     /// Seed quality score.
     float seedQuality{};
     /// Clone flag.
     std::int32_t isClone{};
-    /// Spacepoint indices.
-    std::vector<std::uint32_t> spacepoints{};
+    /// Space point indices.
+    std::vector<std::uint32_t> spacePoints{};
 
     /// Comparison operator.
     /// @param o Other seed properties to compare
     /// @return True if this is less than other
     bool operator<(SeedProperties const& o) const {
-      return std::tie(seedQuality, isClone, spacepoints) <
-             std::tie(o.seedQuality, o.isClone, o.spacepoints);
+      return std::tie(seedQuality, isClone, spacePoints) <
+             std::tie(o.seedQuality, o.isClone, o.spacePoints);
     }
   };
 
-  /// Create seeds from spacepoints in a region of interest.
+  /// Create seeds from space points in a region of interest.
   /// @param roi Region of interest descriptor
-  /// @param SpContainerComponents Spacepoint container components
+  /// @param SpContainerComponents Space point container components
   /// @param maxLayers Maximum number of layers
   /// @return Container with generated seeds
   SeedContainer2 createSeeds(
@@ -80,8 +80,8 @@ class SeedFinderGbts {
       const SPContainerComponentsType& SpContainerComponents,
       std::uint32_t maxLayers) const;
 
-  /// Create graph nodes from spacepoints.
-  /// @param container Spacepoint container components
+  /// Create graph nodes from space points.
+  /// @param container Space point container components
   /// @param maxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(

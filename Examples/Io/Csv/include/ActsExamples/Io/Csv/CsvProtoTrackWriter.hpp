@@ -23,7 +23,7 @@ class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
   struct Config {
     /// Which prototracks to write
     std::string inputPrototracks;
-    /// Spacepoint collection
+    /// Space point collection
     std::string inputSpacePoints;
     /// Output directory
     std::string outputDir;

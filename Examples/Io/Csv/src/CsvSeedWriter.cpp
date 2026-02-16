@@ -33,7 +33,7 @@ CsvSeedWriter::CsvSeedWriter(const Config& config, Acts::Logging::Level level)
                                         "CsvSeedWriter", level),
       m_cfg(config) {
   if (m_cfg.inputSimSeeds.empty()) {
-    throw std::invalid_argument("Missing spacepoints input collection");
+    throw std::invalid_argument("Missing space points input collection");
   }
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -99,7 +99,7 @@ ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
     // particle
     if (particleHitCounts.size() == 1) {
       truthMatched = true;
-      // Get the index of the first spacepoint
+      // Get the index of the first space point
       const auto& hitIdx = ptrack.front();
       // Get the sim hits via the measurement to sim hits map
       auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
@@ -130,7 +130,7 @@ ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
         goodSeed[majorityParticleId] = std::make_pair(iparams, truthDistance);
       }
     }
-    // Store the global position of the spacepoints
+    // Store the global position of the space points
     boost::container::small_vector<Acts::Vector3, 3> globalPosition;
     for (auto spacePointPtr : seed.sp()) {
       Acts::Vector3 pos(spacePointPtr->x(), spacePointPtr->y(),

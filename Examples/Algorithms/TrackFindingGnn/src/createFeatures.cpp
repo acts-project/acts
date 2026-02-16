@@ -28,7 +28,7 @@ std::vector<float> createFeatures(
     const auto& sp = spacePoints[isp];
 
     // For now just take the first index since does require one single index
-    // per spacepoint
+    // per space point
     // TODO does it work for the module map construction to use only the first
     // sp?
     const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
@@ -80,7 +80,7 @@ std::vector<float> createFeatures(
     for (auto ift = 0ul; ift < nodeFeatures.size(); ++ift) {
       // clang-format off
       switch(nodeFeatures[ift]) {
-        // Spacepoint features
+        // Space point features
         break; case NF::eR:           f[ift] = perp(spPos);
         break; case NF::ePhi:         f[ift] = phi(spPos);
         break; case NF::eZ:           f[ift] = sp.z();

@@ -64,8 +64,8 @@ SeedContainer2 SeedFinderGbts::createSeeds(
       nStripLoaded += storage->loadStripGraphNodes(l, nodes);
     }
   }
-  ACTS_DEBUG("Loaded " << nPixelLoaded << " pixel spacepoints and "
-                       << nStripLoaded << " strip spacepoints");
+  ACTS_DEBUG("Loaded " << nPixelLoaded << " pixel space points and "
+                       << nStripLoaded << " strip space points");
 
   storage->sortByPhi();
 
@@ -105,9 +105,9 @@ SeedContainer2 SeedFinderGbts::createSeeds(
 
     // add to seed container:
     std::vector<SpacePointIndex2> Sp_Indexes{};
-    Sp_Indexes.reserve(seed.spacepoints.size());
+    Sp_Indexes.reserve(seed.spacePoints.size());
 
-    for (const auto& sp_idx : seed.spacepoints) {
+    for (const auto& sp_idx : seed.spacePoints) {
       Sp_Indexes.emplace_back(sp_idx);
     }
 
@@ -170,7 +170,7 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     // add node to storage
     GbtsNode& node = node_storage[layer].emplace_back(layer);
 
-    // fill the node with spacepoint variables
+    // fill the node with space point variables
 
     node.x() = sp.x();
     node.y() = sp.y();
@@ -646,7 +646,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   std::uint32_t seedIdx = 0;
 
   for (const auto& seed : vSeedCandidates) {
-    for (const auto& h : seed.spacepoints) {  // loop over spacepoints indices
+    for (const auto& h : seed.spacePoints) {  // loop over space point indices
 
       std::uint32_t hitId = h + 1;
 
@@ -664,12 +664,12 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
 
   for (std::uint32_t trackIdx = 0; trackIdx < vSeedCandidates.size();
        ++trackIdx) {
-    std::uint32_t nTotal = vSeedCandidates[trackIdx].spacepoints.size();
+    std::uint32_t nTotal = vSeedCandidates[trackIdx].spacePoints.size();
     std::uint32_t nOther = 0;
 
     std::uint32_t trackId = vTrackIds[trackIdx];
 
-    for (const auto& h : vSeedCandidates[trackIdx].spacepoints) {
+    for (const auto& h : vSeedCandidates[trackIdx].spacePoints) {
       std::uint32_t hitId = h + 1;
 
       std::uint32_t tid = h2t[hitId];

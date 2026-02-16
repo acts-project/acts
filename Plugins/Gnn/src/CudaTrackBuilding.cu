@@ -27,7 +27,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
         "CudaTrackBuilding expects tensors to be on CUDA!");
   }
 
-  const auto numSpacepoints = spacePointIds.size();
+  const auto numSpacePoints = spacePointIds.size();
   auto numEdges = static_cast<std::size_t>(tensors.edgeIndex.shape().at(1));
 
   if (numEdges == 0) {
@@ -53,7 +53,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
     ACTS_DEBUG("Do junction removal...");
     auto t0 = std::chrono::high_resolution_clock::now();
     auto [cudaSrcPtrJr, numEdgesOut] = detail::junctionRemovalCuda(
-        numEdges, numSpacepoints, cudaScorePtr, cudaSrcPtr, cudaTgtPtr, stream);
+        numEdges, numSpacePoints, cudaScorePtr, cudaSrcPtr, cudaTgtPtr, stream);
     auto t1 = std::chrono::high_resolution_clock::now();
     cudaSrcPtr = cudaSrcPtrJr;
     cudaTgtPtr = cudaSrcPtrJr + numEdgesOut;
@@ -74,11 +74,11 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
 
   int* cudaLabels{};
   ACTS_CUDA_CHECK(
-      cudaMallocAsync(&cudaLabels, numSpacepoints * sizeof(int), stream));
+      cudaMallocAsync(&cudaLabels, numSpacePoints * sizeof(int), stream));
 
   auto t0 = std::chrono::high_resolution_clock::now();
   std::size_t numberLabels = detail::connectedComponentsCuda(
-      numEdges, cudaSrcPtr, cudaTgtPtr, numSpacepoints, cudaLabels, stream,
+      numEdges, cudaSrcPtr, cudaTgtPtr, numSpacePoints, cudaLabels, stream,
       m_cfg.useOneBlockImplementation);
   auto t1 = std::chrono::high_resolution_clock::now();
   ACTS_DEBUG("Connected components took " << ms(t0, t1) << " ms");
@@ -99,7 +99,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
 
   // Compute the bounds of the track candidates
   detail::findTrackCandidateBounds(cudaLabels, cudaSpacePointIds, cudaBounds,
-                                   numSpacepoints, numberLabels, stream);
+                                   numSpacePoints, numberLabels, stream);
 
   // Copy the bounds to the host
   std::vector<int> bounds(numberLabels + 1);
@@ -107,7 +107,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
                                   (numberLabels + 1) * sizeof(int),
                                   cudaMemcpyDeviceToHost, stream));
 
-  // Copy the sorted spacepoint IDs to the host
+  // Copy the sorted space point IDs to the host
   ACTS_CUDA_CHECK(cudaMemcpyAsync(spacePointIds.data(), cudaSpacePointIds,
                                   spacePointIds.size() * sizeof(int),
                                   cudaMemcpyDeviceToHost, stream));
@@ -137,7 +137,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
     int end = bounds.at(label + 1);
 
     assert(start >= 0);
-    assert(end <= static_cast<int>(numSpacepoints));
+    assert(end <= static_cast<int>(numSpacePoints));
     assert(start <= end);
 
     if (end - start < m_cfg.minCandidateSize) {

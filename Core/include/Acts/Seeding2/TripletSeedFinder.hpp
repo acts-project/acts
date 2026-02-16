@@ -47,7 +47,7 @@ class TripletTopCandidates {
   }
 
   /// @brief Adds a new triplet candidate to the container
-  /// @param spT spacepoint index for the top spacepoint of the triplet
+  /// @param spT Space point index for the top space point of the triplet
   /// @param curvature Track curvature estimation for the triplet
   /// @param impactParameter Impact parameter estimation for the triplet
   void emplace_back(SpacePointIndex2 spT, float curvature,
@@ -57,8 +57,8 @@ class TripletTopCandidates {
     m_impactParameters.emplace_back(impactParameter);
   }
 
-  /// @brief Returns the vector of top spacepoint indices
-  /// @return Const reference to vector containing all top spacepoint indices
+  /// @brief Returns the vector of top space point indices
+  /// @return Const reference to vector containing all top space point indices
   const std::vector<SpacePointIndex2>& topSpacePoints() const {
     return m_topSpacePoints;
   }
@@ -80,8 +80,8 @@ class TripletTopCandidates {
     Proxy(const TripletTopCandidates* container, Index index)
         : m_container(container), m_index(index) {}
 
-    /// Get the spacepoint index
-    /// @return The spacepoint index
+    /// Get the space point index
+    /// @return The space point index
     SpacePointIndex2 spacePoint() const {
       return m_container->m_topSpacePoints[m_index];
     }
@@ -135,8 +135,8 @@ class TripletSeedFinder {
   /// points.
   struct Config {
     /// Delegates for accessors to detailed information on double strip
-    /// measurement that produced the spacepoint. This is mainly referring to
-    /// spacepoints produced when combining measurement from strips on
+    /// measurement that produced the space point. This is mainly referring to
+    /// space points produced when combining measurement from strips on
     /// back-to-back modules. Enables setting of the following delegates.
     bool useStripInfo = false;
 
@@ -200,10 +200,10 @@ class TripletSeedFinder {
   /// @return Reference to the configuration object
   virtual const DerivedConfig& config() const = 0;
 
-  /// Create triplets from the bottom, middle, and top spacepoints.
+  /// Create triplets from the bottom, middle, and top space points.
   ///
-  /// @param spacePoints spacepoint container
-  /// @param spM spacepoint candidate to be used as middle SP in a seed
+  /// @param spacePoints Space point container
+  /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
@@ -213,10 +213,10 @@ class TripletSeedFinder {
       DoubletsForMiddleSp::Range& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
 
-  /// Create triplets from the bottom, middle, and top spacepoints.
+  /// Create triplets from the bottom, middle, and top space points.
   ///
-  /// @param spacePoints spacepoint container
-  /// @param spM spacepoint candidate to be used as middle SP in a seed
+  /// @param spacePoints Space point container
+  /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates
@@ -226,10 +226,10 @@ class TripletSeedFinder {
       DoubletsForMiddleSp::Subset& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const = 0;
 
-  /// Create triplets from the bottom, middle, and top spacepoints.
+  /// Create triplets from the bottom, middle, and top space points.
   ///
-  /// @param spacePoints spacepoint container
-  /// @param spM spacepoint candidate to be used as middle SP in a seed
+  /// @param spacePoints Space point container
+  /// @param spM Space point candidate to be used as middle SP in a seed
   /// @param bottomDoublet Bottom doublet to be used for triplet creation
   /// @param topDoublets Top doublets to be used for triplet creation
   /// @param tripletTopCandidates Cache for triplet top candidates

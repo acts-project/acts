@@ -22,7 +22,7 @@ namespace Acts {
 
 namespace {
 
-/// Check the compatibility of strip spacepoint coordinates in xyz assuming
+/// Check the compatibility of strip space point coordinates in xyz assuming
 /// the Bottom-Middle direction with the strip measurement details
 bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
                           const std::array<float, 3>& spacePointPosition,
@@ -260,7 +260,7 @@ class Impl final : public TripletSeedFinder {
     const float sinTheta = 1 / std::sqrt(iSinTheta2);
     const float cosTheta = cotThetaB * sinTheta;
 
-    // coordinate transformation and checks for middle spacepoint
+    // coordinate transformation and checks for middle space point
     // x and y terms for the rotation from UV to XY plane
     const std::array<float, 2> rotationTermsUVtoXY = {cosPhiM * sinTheta,
                                                       sinPhiM * sinTheta};
@@ -290,7 +290,7 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
-      // coordinate transformation and checks for bottom spacepoint
+      // coordinate transformation and checks for bottom space point
       const float B0 = 2 * (Vb - A0 * Ub);
       const float Cb = 1 - B0 * bottomDoublet.y();
       const float Sb = A0 + B0 * bottomDoublet.x();
@@ -307,7 +307,7 @@ class Impl final : public TripletSeedFinder {
         continue;
       }
 
-      // coordinate transformation and checks for top spacepoint
+      // coordinate transformation and checks for top space point
       const float Ct = 1 - B0 * topDoublet.y();
       const float St = A0 + B0 * topDoublet.x();
       const std::array<float, 3> positionTop = {

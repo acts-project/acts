@@ -20,18 +20,18 @@ namespace Acts {
 
 class SpacePointContainer2;
 
-/// Additional column of data that can be added to the spacepoint container.
-/// The column is indexed by the spacepoint index.
+/// Additional column of data that can be added to the space point container.
+/// The column is indexed by the space point index.
 template <typename T, bool read_only>
 class SpacePointColumnProxy {
  public:
-  /// Flag indicating whether this spacepoint column proxy is read-only
+  /// Flag indicating whether this space point column proxy is read-only
   constexpr static bool ReadOnly = read_only;
-  /// Type alias for spacepoint index type
+  /// Type alias for space point index type
   using Index = SpacePointIndex2;
-  /// Type alias for spacepoint index range type
+  /// Type alias for space point index range type
   using IndexRange = SpacePointIndexRange2;
-  /// Type alias for spacepoint index subset type
+  /// Type alias for space point index subset type
   using IndexSubset = SpacePointIndexSubset2;
   /// Type alias for column value type
   using Value = T;
@@ -40,40 +40,40 @@ class SpacePointColumnProxy {
   /// Type alias for column container type (const if read-only)
   using Column = const_if_t<ReadOnly, std::vector<Value>>;
 
-  /// Constructs a spacepoint column proxy for the given container and column.
-  /// @param container The container holding the spacepoint.
+  /// Constructs a space point column proxy for the given container and column.
+  /// @param container The container holding the space point.
   /// @param column The column of data to access.
   SpacePointColumnProxy(Container &container, Column &column)
       : m_container{&container}, m_column(&column) {}
 
-  /// Copy construct a spacepoint column proxy.
-  /// @param other The spacepoint column proxy to copy.
+  /// Copy construct a space point column proxy.
+  /// @param other The space point column proxy to copy.
   SpacePointColumnProxy(const SpacePointColumnProxy &other) noexcept = default;
 
-  /// Copy construct a mutable spacepoint column proxy.
-  /// @param other The mutable spacepoint column proxy to copy.
+  /// Copy construct a mutable space point column proxy.
+  /// @param other The mutable space point column proxy to copy.
   explicit SpacePointColumnProxy(
       const SpacePointColumnProxy<T, false> &other) noexcept
     requires ReadOnly
       : m_container(&other.container()), m_column(&other.column()) {}
 
-  /// Returns a const proxy of the spacepoint column.
-  /// @return A const proxy of the spacepoint column.
+  /// Returns a const proxy of the space point column.
+  /// @return A const proxy of the space point column.
   SpacePointColumnProxy<T, true> asConst() const noexcept
     requires(!ReadOnly)
   {
     return {*m_container, *m_column};
   }
 
-  /// Gets the container holding the spacepoint.
-  /// @return A reference to the container holding the spacepoint.
+  /// Gets the container holding the space point.
+  /// @return A reference to the container holding the space point.
   SpacePointContainer2 &container() noexcept
     requires(!ReadOnly)
   {
     return *m_container;
   }
-  /// Gets the container holding the spacepoint.
-  /// @return A const reference to the container holding the spacepoint.
+  /// Gets the container holding the space point.
+  /// @return A const reference to the container holding the space point.
   const SpacePointContainer2 &container() const noexcept {
     return *m_container;
   }
@@ -97,7 +97,7 @@ class SpacePointColumnProxy {
 
   /// Returns a mutable reference to the column entry at the given index.
   /// If the index is out of range, an exception is thrown.
-  /// @param index The index of the spacepoint to access.
+  /// @param index The index of the space point to access.
   /// @return A mutable reference to the column entry at the given index.
   /// @throws std::out_of_range if the index is out of range.
   Value &at(Index index)
@@ -112,7 +112,7 @@ class SpacePointColumnProxy {
   }
   /// Returns a const reference to the column entry at the given index.
   /// If the index is out of range, an exception is thrown.
-  /// @param index The index of the spacepoint to access.
+  /// @param index The index of the space point to access.
   /// @return A const reference to the column entry at the given index.
   /// @throws std::out_of_range if the index is out of range.
   const Value &at(Index index) const {
@@ -125,7 +125,7 @@ class SpacePointColumnProxy {
   }
 
   /// Returns a mutable reference to the column entry at the given index.
-  /// @param index The index of the spacepoint to access.
+  /// @param index The index of the space point to access.
   /// @return A mutable reference to the column entry at the given index.
   Value &operator[](Index index) noexcept
     requires(!ReadOnly)
@@ -134,7 +134,7 @@ class SpacePointColumnProxy {
     return data()[index];
   }
   /// Returns a const reference to the column entry at the given index.
-  /// @param index The index of the spacepoint to access.
+  /// @param index The index of the space point to access.
   /// @return A const reference to the column entry at the given index.
   const Value &operator[](Index index) const noexcept {
     assert(index < column().size() && "Index out of bounds");
@@ -152,17 +152,17 @@ class SpacePointColumnProxy {
     using Base::Base;
   };
 
-  /// Creates a subset view of this spacepoint column based on provided
+  /// Creates a subset view of this space point column based on provided
   /// indices.
   ///
   /// This method creates a subset proxy that provides access to only the space
   /// points at the indices specified in the IndexSubset. The subset maintains a
   /// reference to the original column data without copying, enabling efficient
-  /// access to selected spacepoints for filtering, clustering, or other
+  /// access to selected space points for filtering, clustering, or other
   /// operations.
   ///
-  /// @param subset The index subset specifying which spacepoints to include
-  /// @return A subset proxy providing access to the selected spacepoints
+  /// @param subset The index subset specifying which space points to include
+  /// @return A subset proxy providing access to the selected space points
   ///
   /// @note The returned subset shares data with the original column
   /// @note The subset remains valid only as long as the original column exists
@@ -186,10 +186,10 @@ class SpacePointColumnProxy {
   friend class SpacePointContainer2;
 };
 
-/// Const proxy to a spacepoint column for read-only access
+/// Const proxy to a space point column for read-only access
 template <typename T>
 using ConstSpacePointColumnProxy = SpacePointColumnProxy<T, true>;
-/// Mutable proxy to a spacepoint column allowing modification
+/// Mutable proxy to a space point column allowing modification
 template <typename T>
 using MutableSpacePointColumnProxy = SpacePointColumnProxy<T, false>;
 

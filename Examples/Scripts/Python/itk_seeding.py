@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Example script to run ITk seed finding based on CSV spacepoints
+# Example script to run ITk seed finding based on CSV space points
 
 import os
 import tempfile

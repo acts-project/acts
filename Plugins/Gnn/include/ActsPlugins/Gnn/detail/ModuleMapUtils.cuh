@@ -269,7 +269,7 @@ __device__ void doublet_cut_kernel(
     T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
     T *dphi_max, const int *indices, T epsilon, F &&function) {
   // Since doublet_offsets should be the prefix sum of the
-  // number of spacepoints per doublet, we can construct the doublet index
+  // number of space points per doublet, we can construct the doublet index
   int doublet_idx = 0;
   locateInPrefixSumBisect(0, nb_doublets, i, doublet_idx, doublet_offsets);
 

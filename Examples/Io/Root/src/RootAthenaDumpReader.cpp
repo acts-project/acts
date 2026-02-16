@@ -158,7 +158,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
                                    &Part_vParentBarcode.get());
   }
 
-  // Spacepoint features
+  // Space point features
   m_inputchain->SetBranchAddress("nSP", &nSP);
   m_inputchain->SetBranchAddress("SPindex", SPindex);
   m_inputchain->SetBranchAddress("SPx", SPx);
@@ -496,7 +496,7 @@ RootAthenaDumpReader::readMeasurements(
 
 std::tuple<SimSpacePointContainer, SimSpacePointContainer,
            SimSpacePointContainer>
-RootAthenaDumpReader::readSpacepoints(
+RootAthenaDumpReader::readSpacePoints(
     const std::optional<std::unordered_map<int, std::size_t>>& imIdxMap) const {
   SimSpacePointContainer pixelSpacePoints;
   pixelSpacePoints.reserve(nSP);
@@ -507,7 +507,7 @@ RootAthenaDumpReader::readSpacepoints(
   SimSpacePointContainer spacePoints;
   spacePoints.reserve(nSP);
 
-  // Loop on spacepoints
+  // Loop on space points
   std::size_t skippedSpacePoints = 0;
   for (int isp = 0; isp < nSP; isp++) {
     auto isPhiOverlap = (SPisOverlap[isp] == 2) || (SPisOverlap[isp] == 3);
@@ -550,12 +550,12 @@ RootAthenaDumpReader::readSpacepoints(
 
     auto cl1GeoId = getGeoId(CLmoduleID[cl1Index]);
     if (!cl1GeoId) {
-      ACTS_WARNING("Could not find geoId for spacepoint cluster 1");
+      ACTS_WARNING("Could not find geoId for space point cluster 1");
       continue;
     }
 
     if (imIdxMap && !imIdxMap->contains(cl1Index)) {
-      ACTS_WARNING("Measurement 1 for spacepoint " << isp << " not created");
+      ACTS_WARNING("Measurement 1 for space point " << isp << " not created");
       continue;
     }
 
@@ -563,8 +563,8 @@ RootAthenaDumpReader::readSpacepoints(
                           imIdxMap ? imIdxMap->at(cl1Index) : cl1Index);
     sLinks.emplace_back(first);
 
-    // First create pixel spacepoint here, later maybe overwrite with strip
-    // spacepoint
+    // First create pixel space point here, later maybe overwrite with strip
+    // space point
     SimSpacePoint sp(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
                      sLinks);
 
@@ -574,14 +574,14 @@ RootAthenaDumpReader::readSpacepoints(
       const auto cl2Index = SPCL2_index[isp];
       assert(cl2Index >= 0 && cl2Index < nCL);
 
-      auto cl2GeoId = getGeoId(CLmoduleID[cl1Index]);
+      auto cl2GeoId = getGeoId(CLmoduleID[cl2Index]);
       if (!cl2GeoId) {
-        ACTS_WARNING("Could not find geoId for spacepoint cluster 2");
+        ACTS_WARNING("Could not find geoId for space point cluster 2");
         continue;
       }
 
       if (imIdxMap && !imIdxMap->contains(cl2Index)) {
-        ACTS_WARNING("Measurement 2 for spacepoint " << isp << " not created");
+        ACTS_WARNING("Measurement 2 for space point " << isp << " not created");
         continue;
       }
 
@@ -629,7 +629,7 @@ RootAthenaDumpReader::readSpacepoints(
   if (spacePoints.size() <
       (static_cast<std::size_t>(nSP) - skippedSpacePoints)) {
     ACTS_WARNING("Could not convert " << nSP - spacePoints.size() << " of "
-                                      << nSP << " spacepoints");
+                                      << nSP << " space points");
   }
 
   ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
@@ -736,7 +736,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
   }
 
   auto [spacePoints, pixelSpacePoints, stripSpacePoints] =
-      readSpacepoints(optImIdxMap);
+      readSpacePoints(optImIdxMap);
 
   m_outputPixelSpacePoints(ctx, std::move(pixelSpacePoints));
   m_outputStripSpacePoints(ctx, std::move(stripSpacePoints));

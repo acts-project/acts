@@ -27,11 +27,11 @@
 
 namespace ActsExamples {
 
-/// Construct track seeds from spacepoints.
+/// Construct track seeds from space points.
 class GridTripletSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input spacepoint collections.
+    /// Input space point collections.
     std::string inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
@@ -48,11 +48,11 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     float impactMax = 20 * Acts::UnitConstants::mm;
     /// Minimum radial distance between two doublet components (prefer
     /// deltaRMinTop and deltaRMinBottom to set separate values for top and
-    /// bottom spacepoints)
+    /// bottom space points)
     float deltaRMin = 5 * Acts::UnitConstants::mm;
     /// Maximum radial distance between two doublet components (prefer
     /// deltaRMaxTop and deltaRMacBottom to set separate values for top and
-    /// bottom spacepoints)
+    /// bottom space points)
     float deltaRMax = 270 * Acts::UnitConstants::mm;
     /// Minimum radial distance between middle-top doublet components
     float deltaRMinTop = std::numeric_limits<float>::quiet_NaN();
@@ -225,7 +225,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
 
     // other
 
-    /// Connect custom selections on the spacepoints or to the doublet
+    /// Connect custom selections on the space points or to the doublet
     /// compatibility
     bool useExtraCuts = false;
   };
@@ -261,11 +261,11 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
                                                             "InputSpacePoints"};
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
-  /// Get the proper radius validity range given a middle spacepoint candidate.
+  /// Get the proper radius validity range given a middle space point candidate.
   /// In case the radius range changes according to the z-bin we need to
   /// retrieve the proper range. We can do this computation only once, since all
-  /// the middle spacepoint candidates belong to the same z-bin
-  /// @param spM spacepoint candidate to be used as middle SP in a seed
+  /// the middle space point candidates belong to the same z-bin
+  /// @param spM space point candidate to be used as middle SP in a seed
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin
   std::pair<float, float> retrieveRadiusRangeForMiddle(
       const Acts::ConstSpacePointProxy2& spM,

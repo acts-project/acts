@@ -563,7 +563,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
     state.curvatures.clear();
     state.impactParameters.clear();
 
-    // coordinate transformation and checks for middle spacepoint
+    // coordinate transformation and checks for middle space point
     // x and y terms for the rotation from UV to XY plane
     float rotationTermsUVtoXY[2] = {0, 0};
     if constexpr (detailedMeasurement == DetectorMeasurementInfo::eDetailed) {
@@ -626,7 +626,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
           continue;
         }
 
-        // coordinate transformation and checks for bottom spacepoint
+        // coordinate transformation and checks for bottom space point
         float B0 = 2 * (Vb - A0 * Ub);
         float Cb = 1 - B0 * lb.y;
         float Sb = A0 + B0 * lb.x;
@@ -641,7 +641,7 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
           continue;
         }
 
-        // coordinate transformation and checks for top spacepoint
+        // coordinate transformation and checks for top space point
         float Ct = 1 - B0 * lt.y;
         float St = A0 + B0 * lt.x;
         double positionTop[3] = {

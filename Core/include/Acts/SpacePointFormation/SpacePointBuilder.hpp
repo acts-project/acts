@@ -23,18 +23,18 @@ namespace Acts {
 ///
 /// After the particle interaction with surfaces are recorded and digitized
 /// measurements on the pixel or strip detectors need further treatment. This
-/// class takes the SouceLinks and provides the corresponding spacepoints.
+/// class takes the SouceLinks and provides the corresponding space points.
 ///
 template <typename spacepoint_t>
 class SpacePointBuilder {
  public:
-  /// Type alias for spacepoint builder function
+  /// Type alias for space point builder function
   using BuilderFunction = std::function<spacepoint_t(
       Acts::Vector3, std::optional<double>, Acts::Vector2,
       std::optional<double>, boost::container::static_vector<SourceLink, 2>)>;
 
   // Constructor
-  /// @param cfg The configuration for the spacepoint builder
+  /// @param cfg The configuration for the space point builder
   /// @param func The function that provides user's SP constructor with global pos, global cov, and sourceLinks.
   /// @param logger The logging instance
   SpacePointBuilder(const SpacePointBuilderConfig& cfg, BuilderFunction func,
@@ -44,13 +44,13 @@ class SpacePointBuilder {
   // Default constructor
   SpacePointBuilder() = default;
 
-  /// @brief Calculates the spacepoints out of a given collection of SourceLinks
+  /// @brief Calculates the space points out of a given collection of SourceLinks
   /// and stores the results
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param sourceLinks vector of Sourcelink
-  /// @param opt option for the spacepoint building. It contains the ends of the strips for strip SP building
-  /// @param spacePointIt Output iterator for the spacepoint
+  /// @param opt option for the space point building. It contains the ends of the strips for strip SP building
+  /// @param spacePointIt Output iterator for the space point
   template <template <typename...> typename container_t>
   void buildSpacePoint(
       const GeometryContext& gctx, const std::vector<SourceLink>& sourceLinks,
@@ -72,10 +72,10 @@ class SpacePointBuilder {
       const StripPairOptions& pairOpt) const;
 
  protected:
-  /// Configuration of the single hit spacepoint builder
+  /// Configuration of the single hit space point builder
   SpacePointBuilderConfig m_config;
 
-  /// @brief Function to create external spacepoint
+  /// @brief Function to create external space point
   /// The constructor of spacepoint_t with Vector3 global pos, Vector2 global
   /// cov, and vector of source link pointers.
   BuilderFunction m_spConstructor;
@@ -83,7 +83,7 @@ class SpacePointBuilder {
   /// the logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  /// Utility for spacepoint calculations
+  /// Utility for space point calculations
   std::shared_ptr<const SpacePointUtility> m_spUtility;
 
   /// Get the logger instance

@@ -105,7 +105,7 @@ ProcessCode RootSpacePointWriter::writeT(
       m_measurementId2 = sl2.index();
       m_geometryId2 = sl2.geometryId().value();
     }
-    // A spacepoint is fake if the measurements have no common particle
+    // A space point is fake if the measurements have no common particle
     if (m_inputMeasurementParticlesMap.isInitialized()) {
       if (sp.sourceLinks().size() == 1) {
         m_fake = false;

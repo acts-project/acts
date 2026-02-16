@@ -55,7 +55,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
 
   /*
    * Cut: Ensure that we search only in Δr_min ≤ r - r_L ≤ Δr_max, as defined
-   * by the seeding configuration and the given lower spacepoint.
+   * by the seeding configuration and the given lower space point.
    */
   res[DimR].shrinkMin(rL + m_config.deltaRMinTopSP);
   res[DimR].shrinkMax(rL + m_config.deltaRMaxTopSP);
@@ -126,7 +126,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
 
   /*
    * Cut: Ensure that we search only in Δr_min ≤ r_H - r ≤ Δr_max, as defined
-   * by the seeding configuration and the given higher spacepoint.
+   * by the seeding configuration and the given higher space point.
    */
   res[DimR].shrinkMin(rM - m_config.deltaRMaxBottomSP);
   res[DimR].shrinkMax(rM - m_config.deltaRMinBottomSP);
@@ -531,10 +531,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   float deltaRMaxBottom = middle.radius() - bottom_r[DimR].min();
 
   /*
-   * Create the search range for the bottom spacepoint assuming a
+   * Create the search range for the bottom space point assuming a
    * monotonically increasing z track, by calculating the minimum z value from
    * the cot(θ), and by setting the maximum to the z position of the middle
-   * spacepoint - if the z position is higher than the middle point, then it
+   * space point - if the z position is higher than the middle point, then it
    * would be a decreasing z track!
    */
   range_t bottom_lh_r = bottom_r;
@@ -585,7 +585,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   }
 
   /*
-   * Perform the same search for candidate bottom spacepoints, but for
+   * Perform the same search for candidate bottom space points, but for
    * monotonically decreasing z tracks.
    */
   if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
@@ -642,7 +642,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   }
 
   /*
-   * And repeat for the top spacepoints for decreasing z tracks!
+   * And repeat for the top space points for decreasing z tracks!
    */
   if (!top_hl_v.empty() && search_bot_hl) {
     tree.rangeSearchMapDiscard(
@@ -727,7 +727,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   /*
    * Sadly, for the time being, we will need to construct our internal space
    * points on the heap. This adds some additional overhead and work. Here we
-   * take each external spacepoint, allocate a corresponding internal space
+   * take each external space point, allocate a corresponding internal space
    * point, and save it in a vector.
    */
   ACTS_VERBOSE("Running on " << spacePoints.size() << " input space points");
@@ -759,14 +759,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   tree_t tree = createTree(internal_sps);
   /*
    * Run the seeding algorithm by iterating over all the points in the tree
-   * and seeing what happens if we take them to be our middle spacepoint.
+   * and seeing what happens if we take them to be our middle space point.
    */
   for (const typename tree_t::pair_t &middle_p : tree) {
     const external_spacepoint_t &middle = *middle_p.second;
     auto rM = middle.radius();
 
     /*
-     * Cut: Ensure that the middle spacepoint lies within a valid r-region for
+     * Cut: Ensure that the middle space point lies within a valid r-region for
      * middle points.
      */
     if (m_config.useVariableMiddleSPRange) {

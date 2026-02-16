@@ -55,7 +55,7 @@ static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
     return false;
   }
 
-  // Remove spacepoints beyond eta=4 if their z is larger than the max seed
+  // Remove space points beyond eta=4 if their z is larger than the max seed
   // z0 (150.)
   float cotTheta = 27.2899;  // corresponds to eta=4
   if ((zabs - 150.) > cotTheta * r) {
@@ -177,9 +177,9 @@ std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
   const std::size_t nBuckets = result.size();
   const std::size_t nSpacePoints = spacePoints.size();
 
-  // Check if the number of buckets is greater than the number of spacepoints
+  // Check if the number of buckets is greater than the number of space points
   if (nBuckets > nSpacePoints) {
-    throw std::runtime_error("More buckets than the number of spacepoints");
+    throw std::runtime_error("More buckets than the number of space points");
   }
 
   return result;
@@ -224,7 +224,7 @@ HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
   m_outputBuckets.initialize(m_cfg.outputBuckets);
 
   if (m_cfg.useExtraCuts) {
-    // This function will be applied to select spacepoints during grid filling
+    // This function will be applied to select space points during grid filling
     m_spacePointSelector.connect<itkFastTrackingSPselect>();
   }
 
@@ -320,7 +320,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
   // create and train the hashing model
   AnnoyModel hashingModel = createModel(m_cfg.f, m_cfg.annoySeed);
   for (const auto& sp : spacePoints) {
-    // check if the spacepoint passes the selection
+    // check if the space point passes the selection
     if (!m_spacePointSelector(sp)) {
       continue;
     }
@@ -352,7 +352,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
                                 m_cfg.layerZMax);
 
   ACTS_DEBUG("Created " << buckets.size() << " buckets  from "
-                        << coreSpacePoints.size() << " spacepoints");
+                        << coreSpacePoints.size() << " space points");
 
   // sort buckets by radius
   for (auto& bucket : buckets) {
@@ -376,7 +376,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
     }
 
     ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
-                          << bucketSpacePoints.size() << " spacepoints");
+                          << bucketSpacePoints.size() << " space points");
 
     for (const auto& seed : seeds) {
       auto sps = seed.spacePointIndices();

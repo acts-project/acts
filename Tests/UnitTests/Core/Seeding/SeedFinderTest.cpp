@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
         if (help) {
           std::cout << "      -h : this help" << std::endl;
           std::cout
-              << "      -f FILE : read spacepoints from FILE. Default is \""
+              << "      -f FILE : read space points from FILE. Default is \""
               << file << "\"" << std::endl;
           std::cout << "      -q : don't print out all found seeds"
                     << std::endl;
@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
       a;  // test creation of unconfigured finder
   a = SeedFinder<value_type, CylindricalSpacePointGrid<value_type>>(config);
 
-  // setup spacepoint grid config
+  // setup space point grid config
   CylindricalSpacePointGridConfig gridConf;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
   gridConf.zMin = config.zMin;
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
-  // setup spacepoint grid options
+  // setup space point grid options
   CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry

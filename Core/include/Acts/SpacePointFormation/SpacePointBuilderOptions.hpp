@@ -21,7 +21,7 @@ using ParamCovAccessor =
     std::function<std::pair<const BoundVector, const BoundMatrix>(
         const SourceLink&)>;
 
-/// Options controlling spacepoint construction.
+/// Options controlling space point construction.
 struct SpacePointBuilderOptions {
   /// Ends of strip pairs
   std::pair<std::pair<Vector3, Vector3>, std::pair<Vector3, Vector3>>

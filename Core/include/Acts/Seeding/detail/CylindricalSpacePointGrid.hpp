@@ -60,7 +60,7 @@ struct CylindricalSpacePointGridConfig {
   // maximum extension of sensitive detector layer relevant for seeding in
   // negative direction in z
   float zMin = 0 * UnitConstants::mm;
-  // maximum distance in r from middle space point to bottom or top spacepoint
+  // maximum distance in r from middle space point to bottom or top space point
   float deltaRMax = 0 * UnitConstants::mm;
   // maximum forward direction expressed as cot(theta)
   float cotThetaMax = 0;

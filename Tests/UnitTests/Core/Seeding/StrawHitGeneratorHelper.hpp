@@ -108,7 +108,7 @@ class FitTestSpacePoint {
     m_measLoc1 = m_covariance[toUnderlying(ResidualIdx::bending)] > 0.;
   }
 
-  /// @brief Position of the spacepoint
+  /// @brief Position of the space point
   const Vector3& localPosition() const { return m_position; }
   /// @brief Wire direction
   const Vector3& sensorDirection() const { return m_sensorDir; }
@@ -124,25 +124,25 @@ class FitTestSpacePoint {
   double time() const { return m_time.value_or(0.); }
   /// @brief All measurements are straws
   bool isStraw() const { return m_driftR.has_value(); }
-  /// @brief Check whether the spacepoint has a time value
+  /// @brief Check whether the space point has a time value
   bool hasTime() const { return m_time.has_value(); }
-  /// @brief Check whether the spacepoint measures the non-bending direction
+  /// @brief Check whether the space point measures the non-bending direction
   bool measuresLoc0() const { return m_measLoc0; }
-  /// @brief Check whether the spacepoint measures the bending direction
+  /// @brief Check whether the space point measures the bending direction
   bool measuresLoc1() const { return m_measLoc1 || isStraw(); }
   /// @brief Sets the straw tube's drift radius
   void updateDriftR(const double updatedR) { m_driftR = updatedR; }
-  /// @brief Updates the position of the spacepoint
+  /// @brief Updates the position of the space point
   void updatePosition(const Vector3& newPos) { m_position = newPos; }
-  /// @brief Updates the time of the spacepoint
+  /// @brief Updates the time of the space point
   void updateTime(const double newTime) { m_time = newTime; }
-  /// @brief Updates the time of the spacepoint
+  /// @brief Updates the status of the space point
   void updateStatus(const bool newStatus) { m_isGood = newStatus; }
   /// @brief Check if the measurement is valid after calibration
   bool isGood() const { return m_isGood; }
-  /// @brief Returns the layer index of the spacepoint
+  /// @brief Returns the layer index of the space point
   std::size_t layer() const { return m_layer.value_or(0ul); }
-  /// @brief Sets the layer number of the spacepoint
+  /// @brief Sets the layer number of the space point
   void setLayer(const std::size_t lay) {
     if (!m_layer) {
       m_layer = lay;
@@ -342,7 +342,7 @@ class SpCalibrator {
   /// @param trackPos: Position of the track at z=0.
   /// @param trackDir: Direction of the track in the local frame
   /// @param timeOffSet: Offset in the time of arrival (To be implemented)
-  /// @param uncalibCont: Uncalibrated composite spacepoint container
+  /// @param uncalibCont: Uncalibrated composite space point container
   Container_t calibrate(const Acts::CalibrationContext& ctx,
                         const Vector3& trackPos, const Vector3& trackDir,
                         const double timeOffSet,
@@ -393,18 +393,18 @@ class SpCalibrator {
  private:
   const Acts::Transform3 m_localToGlobal{Acts::Transform3::Identity()};
 };
-/// Ensure that the Test spacepoint calibrator satisfies the calibrator concept
+/// Ensure that the Test space point calibrator satisfies the calibrator concept
 static_assert(
     CompositeSpacePointCalibrator<SpCalibrator, Container_t, Container_t>);
 static_assert(
     CompositeSpacePointFastCalibrator<SpCalibrator, FitTestSpacePoint>);
 
-/// @brief Split the composite spacepoint container into straw and strip measurements
+/// @brief Split the composite space point container into straw and strip measurements
 class SpSorter {
  protected:
   /// @brief Protected constructor to instantiate the SpSorter.
-  /// @param hits: List of spacepoints to sort per layer
-  /// @param calibrator: spacepoint calibrator to recalibrate the hits
+  /// @param hits: List of space points to sort per layer
+  /// @param calibrator: space point calibrator to recalibrate the hits
   SpSorter(const Container_t& hits, const SpCalibrator* calibrator)
       : m_calibrator{calibrator} {
     for (const auto& spPtr : hits) {
@@ -421,12 +421,12 @@ class SpSorter {
   const std::vector<Container_t>& strawHits() const { return m_straws; }
   /// @brief Returns the sorted strip hits
   const std::vector<Container_t>& stripHits() const { return m_strips; }
-  /// @brief Returns whether the candidate spacepoint is a good hit or not
+  /// @brief Returns whether the candidate space point is a good hit or not
   /// @param testPoint: Hit to test
   bool goodCandidate(const FitTestSpacePoint& testPoint) const {
     return testPoint.isGood();
   }
-  /// @brief Calculates the pull of the spacepoint w.r.t. to the
+  /// @brief Calculates the pull of the space point w.r.t. to the
   ///        candidate seed line. To improve the pull's precision
   ///        the function may call the calibrator in the backend
   /// @param cctx: Reference to the calibration context to pipe
@@ -434,7 +434,7 @@ class SpSorter {
   /// @param pos: Position of the cancidate seed line
   /// @param dir: Direction of the candidate seed line
   /// @param t0: Offse in the time of arrival of the particle
-  /// @param testSp: Reference to the straw spacepoint to test
+  /// @param testSp: Reference to the straw space point to test
   double candidateChi2(const CalibrationContext& /* cctx*/, const Vector3& pos,
                        const Vector3& dir, const double /*t0*/,
                        const FitTestSpacePoint& testSp) const {
@@ -444,7 +444,7 @@ class SpSorter {
   Container_t newContainer(const CalibrationContext& /*cctx*/) const {
     return Container_t{};
   }
-  /// @brief Appends the spacepoint to the container and calibrates it according to
+  /// @brief Appends the space point to the container and calibrates it according to
   ///        the seed parameters
   ///
   void append(const CalibrationContext& cctx, const Vector3& pos,
@@ -520,7 +520,7 @@ class MeasurementGenerator {
     bool smearStrips{true};
     /// @brief Alternatively, discretize the strips onto a strip plane
     bool discretizeStrips{false};
-    /// @brief Combine the two strip measurements to a single spacepoint
+    /// @brief Combine the two strip measurements to a single space point
     bool combineSpacePoints{false};
     /// @brief Pitch between two loc0 strips
     double stripPitchLoc0{4._cm};

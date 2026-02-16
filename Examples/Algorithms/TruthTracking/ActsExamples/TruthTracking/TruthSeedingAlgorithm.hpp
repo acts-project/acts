@@ -34,17 +34,17 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
-    /// The input sim hits collection that is used to order spacepoints in the
+    /// The input sim hits collection that is used to order space points in the
     /// seeds.
     std::string inputSimHits;
     /// The input measurement-sim hits map collection.
     std::string inputMeasurementSimHitsMap;
-    /// Input spacepoint collections.
+    /// Input space point collections.
     ///
-    /// We allow multiple spacepoint collections to allow different parts of
-    /// the detector to use different algorithms for spacepoint construction,
-    /// e.g. single-hit spacepoints for pixel-like detectors or double-hit
-    /// spacepoints for strip-like detectors.
+    /// We allow multiple space point collections to allow different parts of
+    /// the detector to use different algorithms for space point construction,
+    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// space points for strip-like detectors.
     std::vector<std::string> inputSpacePoints;
     /// Output successfully seeded truth particles.
     std::string outputParticles;
@@ -58,13 +58,13 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     /// Optional particle hypothesis override.
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
 
-    /// Minimum deltaR between spacepoints in a seed
+    /// Minimum deltaR between space points in a seed
     float deltaRMin = 10 * Acts::UnitConstants::mm;
-    /// Maximum deltaR between spacepoints in a seed
+    /// Maximum deltaR between space points in a seed
     float deltaRMax = 200 * Acts::UnitConstants::mm;
-    /// Minimum absDeltaZMin between spacepoints in a seed
+    /// Minimum absDeltaZMin between space points in a seed
     float absDeltaZMin = 0 * Acts::UnitConstants::mm;
-    /// Maximum absDeltaZMax between spacepoints in a seed
+    /// Maximum absDeltaZMax between space points in a seed
     float absDeltaZMax = 500 * Acts::UnitConstants::mm;
   };
 

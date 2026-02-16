@@ -18,7 +18,7 @@ namespace ActsExamples {
 /// @class CsvSpacePointWriter
 ///
 /// This writes one file per event containing information about the
-/// spacepoints
+/// space points
 ///
 ///     event000000001-spacepoint.csv
 ///     event000000002-spacepoint.csv

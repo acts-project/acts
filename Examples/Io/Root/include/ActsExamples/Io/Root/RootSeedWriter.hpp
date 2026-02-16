@@ -78,11 +78,11 @@ class RootSeedWriter final : public WriterT<SimSeedContainer> {
   std::uint64_t m_measurementId_1 = 0;
   std::uint64_t m_measurementId_2 = 0;
   std::uint64_t m_measurementId_3 = 0;
-  /// Spacepoint surface identifier.
+  /// Space point surface identifier.
   std::uint64_t m_geometryId_1 = 0;
   std::uint64_t m_geometryId_2 = 0;
   std::uint64_t m_geometryId_3 = 0;
-  /// Global spacepoint position components in mm. init to NaN
+  /// Global space point position components in mm. init to NaN
   float m_x_1 = std::numeric_limits<float>::signaling_NaN();
   float m_x_2 = std::numeric_limits<float>::signaling_NaN();
   float m_x_3 = std::numeric_limits<float>::signaling_NaN();
@@ -92,7 +92,7 @@ class RootSeedWriter final : public WriterT<SimSeedContainer> {
   float m_z_1 = std::numeric_limits<float>::signaling_NaN();
   float m_z_2 = std::numeric_limits<float>::signaling_NaN();
   float m_z_3 = std::numeric_limits<float>::signaling_NaN();
-  // Global spacepoint position uncertainties
+  // Global space point position uncertainties
   float m_var_r_1 = std::numeric_limits<float>::signaling_NaN();
   float m_var_r_2 = std::numeric_limits<float>::signaling_NaN();
   float m_var_r_3 = std::numeric_limits<float>::signaling_NaN();

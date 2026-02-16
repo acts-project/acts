@@ -51,7 +51,7 @@ static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
     return false;
   }
 
-  // Remove spacepoints beyond eta=4 if their z is larger than the max seed
+  // Remove space points beyond eta=4 if their z is larger than the max seed
   // z0 (150.)
   float cotTheta = 27.2899;  // corresponds to eta=4
   if ((zabs - 150.) > cotTheta * r) {
@@ -79,7 +79,7 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   }
 
   if (m_cfg.useExtraCuts) {
-    // This function will be applied to select spacepoints during grid filling
+    // This function will be applied to select space points during grid filling
     m_spacePointSelector.connect<itkFastTrackingSPselect>();
   }
 
@@ -141,7 +141,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   for (std::size_t i = 0; i < spacePoints.size(); ++i) {
     const auto& sp = spacePoints[i];
 
-    // check if the spacepoint passes the selection
+    // check if the space point passes the selection
     if (m_spacePointSelector.connected() && !m_spacePointSelector(sp)) {
       continue;
     }
@@ -283,16 +283,16 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
     }
 
     if (middleSpRange->empty()) {
-      ACTS_DEBUG("No middle spacepoints in this group, skipping");
+      ACTS_DEBUG("No middle space points in this group, skipping");
       continue;
     }
 
-    // we compute this here since all middle spacepoint candidates belong to
+    // we compute this here since all middle space point candidates belong to
     // the same z-bin
     Acts::ConstSpacePointProxy2 firstMiddleSp = middleSpRange->front();
     std::pair<float, float> radiusRangeForMiddle =
         retrieveRadiusRangeForMiddle(firstMiddleSp, rMiddleSpRange);
-    ACTS_VERBOSE("Validity range (radius) for the middle spacepoint is ["
+    ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
                  << radiusRangeForMiddle.first << ", "
                  << radiusRangeForMiddle.second << "]");
 
@@ -303,10 +303,10 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
-                        << spacePoints.size() << " spacepoints");
+                        << spacePoints.size() << " space points");
 
   // we have seeds of proxies
-  // convert them to seed of external spacepoints
+  // convert them to seed of external space points
   SimSeedContainer seedContainerForStorage;
   seedContainerForStorage.reserve(seeds.size());
   for (const auto& seed : seeds) {

@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(find_bounds) {
   cudaStream_t stream{};
   BOOST_REQUIRE_EQUAL(cudaStreamCreate(&stream), cudaSuccess);
 
-  // Copy spacepoint IDs to device
+  // Copy space point IDs to device
   int *cudaSpacePointIDs{};
   BOOST_REQUIRE_EQUAL(
       cudaMallocAsync(&cudaSpacePointIDs, spids.size() * sizeof(int), stream),
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(find_bounds) {
                       cudaMemcpyDeviceToHost, stream),
       cudaSuccess);
 
-  // Copy back sorted spacepoint IDs
+  // Copy back sorted space point IDs
   BOOST_REQUIRE_EQUAL(cudaMemcpyAsync(spids.data(), cudaSpacePointIDs,
                                       spids.size() * sizeof(int),
                                       cudaMemcpyDeviceToHost, stream),

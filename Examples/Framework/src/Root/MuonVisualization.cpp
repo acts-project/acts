@@ -151,7 +151,7 @@ void visualizeMuonSpacePoints(const std::string& outputPath,
                               const SimParticleContainer& simParticles,
                               const TrackingGeometry& trackingGeometry,
                               const Acts::Logger& logger) {
-  // Helper function to transform from hit frame to spacepoint frame
+  // Helper function to transform from hit frame to space point frame
   auto toSpacePointFrame = [&](const GeometryIdentifier& hitId) -> Transform3 {
     const Surface* hitSurf = trackingGeometry.findSurface(hitId);
     assert(hitSurf != nullptr);
@@ -162,11 +162,11 @@ void visualizeMuonSpacePoints(const std::string& outputPath,
         trackingGeometry.findVolume(toChamberId(hitId));
     assert(volume != nullptr);
 
-    // Transformation to the common coordinate system of all spacepoints
+    // Transformation to the common coordinate system of all space points
     const Transform3 parentTrf{AngleAxis3{90._degree, Vector3::UnitZ()} *
                                volume->globalToLocalTransform(gctx) *
                                hitSurf->localToGlobalTransform(gctx)};
-    ACTS_VERBOSE("Transform into spacepoint frame for surface "
+    ACTS_VERBOSE("Transform into space point frame for surface "
                  << hitId << " is \n"
                  << Acts::toString(parentTrf));
     return parentTrf;

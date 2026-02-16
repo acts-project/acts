@@ -118,14 +118,14 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           auto measurements = createMeasurements(propagator, geoCtx, magCtx,
                                                  start, resolutions, rng);
 
-          // Create spacepoints from different detector layers
+          // Create space points from different detector layers
           std::map<GeometryIdentifier::Value, SpacePoint> spacePoints;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
             const auto geoId = sl.m_geometryId;
             const auto& layer = geoId.layer();
             auto it = spacePoints.find(layer);
-            // Avoid to use spacepoint from the same layers
+            // Avoid to use space point from the same layers
             if (it != spacePoints.end()) {
               continue;
             }
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
             Vector3 globalFakeMom(1, 1, 1);
             Vector3 globalPos =
                 surface->localToGlobal(geoCtx, localPos, globalFakeMom);
-            // Create a spacepoint (varianceR and varianceZ are lazily set to
+            // Create a space point (varianceR and varianceZ are lazily set to
             // zero since they are not important for the test)
             float r = std::hypot(globalPos.x(), globalPos.y());
             spacePoints.emplace(
@@ -148,19 +148,19 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
             }
           }
 
-          // Check if there are at least 3 spacepoints
+          // Check if there are at least 3 space points
           if (spacePoints.size() < 3) {
-            BOOST_TEST_WARN("Number of spacepoints less than 3.");
+            BOOST_TEST_WARN("Number of space points less than 3.");
             continue;
           }
 
-          // The truth track parameters at the bottom spacepoint
+          // The truth track parameters at the bottom space point
           const auto& expParams = measurements.truthParameters[0];
           BOOST_TEST_INFO(
-              "The truth track parameters at the bottom spacepoint: \n"
+              "The truth track parameters at the bottom space point: \n"
               << expParams.transpose());
 
-          // The spacepoint pointers
+          // The space point pointers
           std::array<const SpacePoint*, 3> spacePointPtrs{};
           std::transform(spacePoints.begin(), std::next(spacePoints.begin(), 3),
                          spacePointPtrs.begin(),
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           BOOST_CHECK(estFullParamsResult.ok());
           const auto& estFullParams = estFullParamsResult.value();
           BOOST_TEST_INFO(
-              "The estimated full track parameters at the bottom spacepoint: "
+              "The estimated full track parameters at the bottom space point: "
               "\n"
               << estFullParams.transpose());
 

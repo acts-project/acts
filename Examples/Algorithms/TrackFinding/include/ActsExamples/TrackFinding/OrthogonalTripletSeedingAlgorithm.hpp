@@ -24,11 +24,11 @@
 
 namespace ActsExamples {
 
-/// Construct track seeds from spacepoints.
+/// Construct track seeds from space points.
 class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input spacepoint collections.
+    /// Input space point collections.
     std::string inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
@@ -45,11 +45,11 @@ class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
     float impactMax = 20 * Acts::UnitConstants::mm;
     /// Minimum radial distance between two doublet components (prefer
     /// deltaRMinTop and deltaRMinBottom to set separate values for top and
-    /// bottom spacepoints)
+    /// bottom space points)
     float deltaRMin = 5 * Acts::UnitConstants::mm;
     /// Maximum radial distance between two doublet components (prefer
     /// deltaRMaxTop and deltaRMacBottom to set separate values for top and
-    /// bottom spacepoints)
+    /// bottom space points)
     float deltaRMax = 270 * Acts::UnitConstants::mm;
     /// Minimum radial distance between middle-top doublet components
     float deltaRMinTop = std::numeric_limits<float>::quiet_NaN();
@@ -209,7 +209,7 @@ class OrthogonalTripletSeedingAlgorithm final : public IAlgorithm {
 
     // other
 
-    /// Connect custom selections on the spacepoints or to the doublet
+    /// Connect custom selections on the space points or to the doublet
     /// compatibility
     bool useExtraCuts = false;
   };

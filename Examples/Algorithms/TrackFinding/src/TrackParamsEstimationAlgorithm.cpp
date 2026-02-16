@@ -98,10 +98,10 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
   // Loop over all found seeds to estimate track parameters
   for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
-    // Get the bottom spacepoint and its reference surface
+    // Get the bottom space point and its reference surface
     const auto& bottomSP = seed.sp().front();
     if (bottomSP->sourceLinks().empty()) {
-      ACTS_WARNING("Missing source link in the spacepoint");
+      ACTS_WARNING("Missing source link in the space point");
       continue;
     }
     const auto& sourceLink = bottomSP->sourceLinks()[0];
@@ -113,7 +113,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
       continue;
     }
 
-    // Get the magnetic field at the bottom spacepoint
+    // Get the magnetic field at the bottom space point
     auto fieldRes = m_cfg.magneticField->getField(
         {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
     if (!fieldRes.ok()) {

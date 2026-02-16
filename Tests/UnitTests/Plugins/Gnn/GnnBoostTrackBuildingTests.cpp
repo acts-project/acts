@@ -22,10 +22,10 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(GnnSuite)
 
 BOOST_AUTO_TEST_CASE(test_track_building) {
-  // Make some spacepoint IDs
-  // The spacepoint ids are [100, 101, 102, ...]
+  // Make some space point IDs
+  // The space point ids are [100, 101, 102, ...]
   // They should not be zero based to check if the thing also works if the
-  // spacepoint IDs do not match the node IDs used for the edges
+  // space point IDs do not match the node IDs used for the edges
   std::vector<int> spacePointIds(16);
   std::iota(spacePointIds.begin(), spacePointIds.end(), 100);
 

@@ -9,7 +9,7 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def createStripSpacepoints(
+def createStripSpacePoints(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
@@ -156,7 +156,7 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    createStripSpacepoints(
+    createStripSpacePoints(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
