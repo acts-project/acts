@@ -32,11 +32,11 @@ namespace ActsExamples {
 /// Safe to use from multiple writer threads. To avoid thread-saftey issues,
 /// the writer must be the sole owner of the underlying file. Thus, the
 /// output file pointer can not be given from the outside.
-class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
+class RootSpacePointWriter final : public WriterT<SimSpacePointContainer> {
  public:
   struct Config {
     /// Input particle collection to write.
-    std::string inputSpacepoints;
+    std::string inputSpacePoints;
     /// Input measurement particles map (optional)
     std::string inputMeasurementParticlesMap;
     /// Path to the output file.
@@ -51,10 +51,10 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  RootSpacepointWriter(const Config& config, Acts::Logging::Level level);
+  RootSpacePointWriter(const Config& config, Acts::Logging::Level level);
 
   /// Ensure underlying file is closed.
-  ~RootSpacepointWriter() final;
+  ~RootSpacePointWriter() final;
 
   /// End-of-run hook
   ProcessCode finalize() final;

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
+#include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -22,9 +22,9 @@
 
 namespace ActsExamples {
 
-RootSpacepointWriter::RootSpacepointWriter(
-    const RootSpacepointWriter::Config& config, Acts::Logging::Level level)
-    : WriterT(config.inputSpacepoints, "RootSpacepointWriter", level),
+RootSpacePointWriter::RootSpacePointWriter(
+    const RootSpacePointWriter::Config& config, Acts::Logging::Level level)
+    : WriterT(config.inputSpacePoints, "RootSpacePointWriter", level),
       m_cfg(config) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -67,13 +67,13 @@ RootSpacepointWriter::RootSpacepointWriter(
   }
 }
 
-RootSpacepointWriter::~RootSpacepointWriter() {
+RootSpacePointWriter::~RootSpacePointWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ProcessCode RootSpacepointWriter::finalize() {
+ProcessCode RootSpacePointWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -84,7 +84,7 @@ ProcessCode RootSpacepointWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode RootSpacepointWriter::writeT(
+ProcessCode RootSpacePointWriter::writeT(
     const AlgorithmContext& ctx, const SimSpacePointContainer& spacePoints) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);

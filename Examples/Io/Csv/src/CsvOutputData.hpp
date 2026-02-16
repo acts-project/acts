@@ -362,6 +362,16 @@ struct SpacePointData {
                  sp_topStripCenterPosition[2]);
 };
 
+struct SpacePointData2 {
+  std::uint64_t measurement_id_1, measurement_id_2;
+  std::uint64_t geometry_id_1, geometry_id_2;
+  float x, y, z, t;
+  float var_r, var_z;
+
+  DFE_NAMEDTUPLE(SpacePointData2, measurement_id_1, measurement_id_2,
+                 geometry_id_1, geometry_id_2, x, y, z, t, var_r, var_z);
+};
+
 struct SurfaceGridData {
   /// Surface identifier. Not available in the TrackML datasets.
   std::uint64_t geometry_id = 0;
@@ -378,15 +388,6 @@ struct SurfaceGridData {
   DFE_NAMEDTUPLE(SurfaceGridData, geometry_id, volume_id, layer_id, surface_id,
                  type_loc0, nbins_loc0, min_loc0, max_loc0, type_loc1,
                  nbins_loc1, min_loc1, max_loc1);
-};
-
-struct SpacePointData {
-  std::uint64_t measurement_id_1, measurement_id_2;
-  std::uint64_t geometry_id_1, geometry_id_2;
-  float x, y, z, t;
-  float var_r, var_z;
-  DFE_NAMEDTUPLE(SpacePointData, measurement_id_1, measurement_id_2,
-                 geometry_id_1, geometry_id_2, x, y, z, t, var_r, var_z);
 };
 
 struct TrackParameterData {

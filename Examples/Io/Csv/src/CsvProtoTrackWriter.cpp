@@ -22,7 +22,7 @@ CsvProtoTrackWriter::CsvProtoTrackWriter(const Config& config,
                                          Acts::Logging::Level level)
     : WriterT(config.inputPrototracks, "CsvProtoTrackWriter", level),
       m_cfg(config) {
-  m_inputSpacepoints.initialize(m_cfg.inputSpacepoints);
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
 }
 
 CsvProtoTrackWriter::~CsvProtoTrackWriter() = default;
@@ -34,7 +34,7 @@ ProcessCode CsvProtoTrackWriter::finalize() {
 
 ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
                                         const ProtoTrackContainer& tracks) {
-  const auto& spacePoints = m_inputSpacepoints(ctx);
+  const auto& spacePoints = m_inputSpacePoints(ctx);
 
   // Open per-event file for all components
   std::string path =

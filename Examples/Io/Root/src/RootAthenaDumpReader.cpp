@@ -66,7 +66,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputPixelSpacePoints.initialize(m_cfg.outputPixelSpacePoints);
   m_outputStripSpacePoints.initialize(m_cfg.outputStripSpacePoints);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
-  if (!m_cfg.onlySpacepoints) {
+  if (!m_cfg.onlySpacePoints) {
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
     m_outputClusters.initialize(m_cfg.outputClusters);
     if (!m_cfg.noTruth) {
@@ -711,7 +711,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
 
   std::optional<std::unordered_map<int, std::size_t>> optImIdxMap;
 
-  if (!m_cfg.onlySpacepoints) {
+  if (!m_cfg.onlySpacePoints) {
     SimParticleContainer candidateParticles;
 
     if (!m_cfg.noTruth) {
