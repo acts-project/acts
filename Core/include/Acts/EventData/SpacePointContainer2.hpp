@@ -111,8 +111,8 @@ class SpacePointContainer2 {
   /// @param otherContainer The space point container to copy from.
   /// @param otherIndex The index of the spacepoint to copy from in the other container.
   /// @param columnsToCopy The columns to copy from the other spacepoint.
-  void copyFrom(Index index, const SpacePointContainer2 &sourceContainer,
-                Index sourceIndex, SpacePointColumns columnsToCopy);
+  void copyFrom(Index index, const SpacePointContainer2 &otherContainer,
+                Index otherIndex, SpacePointColumns columnsToCopy);
 
   /// Creates additional columns. This will create the columns if they do not
   /// already exist.

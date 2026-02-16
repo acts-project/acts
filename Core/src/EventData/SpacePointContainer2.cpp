@@ -170,14 +170,14 @@ MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
 }
 
 void SpacePointContainer2::copyFrom(Index index,
-                                    const SpacePointContainer2 &sourceContainer,
-                                    Index sourceIndex,
+                                    const SpacePointContainer2 &otherContainer,
+                                    Index otherIndex,
                                     SpacePointColumns columnsToCopy) {
-  if (index >= size() || sourceIndex >= sourceContainer.size()) {
+  if (index >= size() || otherIndex >= otherContainer.size()) {
     throw std::out_of_range(
         "Index out of range in SpacePointContainer2::copyFrom");
   }
-  if ((columnsToCopy & sourceContainer.m_knownColumns) != columnsToCopy) {
+  if ((columnsToCopy & otherContainer.m_knownColumns) != columnsToCopy) {
     throw std::logic_error(
         "Source container does not have all columns to copy");
   }
@@ -196,18 +196,18 @@ void SpacePointContainer2::copyFrom(Index index,
           assert(sourceColumn.has_value() &&
                  "Column is not available in source container");
           destinationColumn->proxy(*this)[index] =
-              sourceColumn->proxy(sourceContainer)[sourceIndex];
+              sourceColumn->proxy(otherContainer)[otherIndex];
         }
       };
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
     ((copyColumn(std::get<Is>(knownColumnMasks()), std::get<Is>(knownColumns()),
-                 std::get<Is>(sourceContainer.knownColumns()))),
+                 std::get<Is>(otherContainer.knownColumns()))),
      ...);
   }(tuple_indices<decltype(knownColumns())>{});
 
   if (ACTS_CHECK_BIT(columnsToCopy, SpacePointColumns::SourceLinks)) {
-    assignSourceLinks(index, sourceContainer.sourceLinks(sourceIndex));
+    assignSourceLinks(index, otherContainer.sourceLinks(otherIndex));
   }
 }
 
