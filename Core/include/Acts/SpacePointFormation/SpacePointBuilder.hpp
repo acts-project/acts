@@ -37,7 +37,8 @@ class SpacePointBuilder {
   /// @param cfg The configuration for the space point builder
   /// @param func The function that provides user's SP constructor with global pos, global cov, and sourceLinks.
   /// @param logger The logging instance
-  SpacePointBuilder(const SpacePointBuilderConfig& cfg, BuilderFunction func,
+  SpacePointBuilder(const SpacePointBuilderConfig& cfg,
+                    const BuilderFunction& func,
                     std::unique_ptr<const Logger> logger =
                         getDefaultLogger("SpacePointBuilder", Logging::INFO));
 
