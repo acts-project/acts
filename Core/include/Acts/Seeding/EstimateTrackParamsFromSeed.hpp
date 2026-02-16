@@ -21,7 +21,7 @@
 
 namespace Acts {
 
-/// Estimate the full track parameters from three space points
+/// @defgroup est_track_params Estimate track parameters from seed
 ///
 /// This method is based on the conformal map transformation. It estimates the
 /// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the bottom
@@ -29,14 +29,16 @@ namespace Acts {
 /// range defined by the iterators. The magnetic field (which might be along any
 /// direction) is also necessary for the momentum estimation.
 ///
-/// This is a purely spatial estimation, i.e. the time parameter will be set to
-/// 0.
-///
 /// It resembles the method used in ATLAS for the track parameters estimated
 /// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
 /// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
-/// @tparam spacepoint_iterator_t  The type of space point iterator
+/// @{
+
+/// Estimate the full track parameters from three space points
+///
+/// This is a purely spatial estimation, i.e. the time parameter will be set to
+/// 0.
 ///
 /// @param sp0 is the bottom space point
 /// @param sp1 is the middle space point
@@ -50,15 +52,18 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
 
 /// Estimate the full track parameters from three space points
 ///
-/// This method is based on the conformal map transformation. It estimates the
-/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the bottom
-/// space point. The bottom space is assumed to be the first element in the
-/// range defined by the iterators. The magnetic field (which might be along any
-/// direction) is also necessary for the momentum estimation.
+/// @param sp0 is the bottom space point
+/// @param t0 is the time of the bottom space point
+/// @param sp1 is the middle space point
+/// @param sp2 is the top space point
+/// @param bField is the magnetic field vector
 ///
-/// It resembles the method used in ATLAS for the track parameters estimated
-/// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// @return the free parameters
+FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, double t0,
+                                       const Vector3& sp1, const Vector3& sp2,
+                                       const Vector3& bField);
+
+/// Estimate the full track parameters from three space points
 ///
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
@@ -91,32 +96,37 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
     spTime = sp->t();
   }
 
-  FreeVector params = estimateTrackParamsFromSeed(
-      spPositions[0], spPositions[1], spPositions[2], bField);
-  params[eFreeTime] = spTimes[0].value_or(0);
-  return params;
+  return estimateTrackParamsFromSeed(spPositions[0], spTimes[0].value_or(0),
+                                     spPositions[1], spPositions[2], bField);
 }
 
 /// Estimate the full track parameters from three space points
 ///
-/// This method is based on the conformal map transformation. It estimates the
-/// full bound track parameters, i.e. (loc0, loc1, phi, theta, q/p, t) at the
-/// bottom space point. The bottom space is assumed to be the first element
-/// in the range defined by the iterators. It must lie on the surface provided
-/// for the representation of the bound track parameters. The magnetic field
-/// (which might be along any direction) is also necessary for the momentum
-/// estimation.
+/// This is a purely spatial estimation, i.e. the time parameter will be set to
+/// 0.
 ///
-/// It resembles the method used in ATLAS for the track parameters estimated
-/// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// @param gctx is the geometry context
+/// @param surface is the surface of the bottom space point. The estimated bound
+///                track parameters will be represented at this surface.
+/// @param sp0 is the bottom space point
+/// @param t0 is the time of the bottom space point
+/// @param sp1 is the middle space point
+/// @param sp2 is the top space point
+/// @param bField is the magnetic field vector
 ///
-/// @tparam spacepoint_iterator_t  The type of space point iterator
+/// @return bound parameters
+Result<BoundVector> estimateTrackParamsFromSeed(
+    const GeometryContext& gctx, const Surface& surface, const Vector3& sp0,
+    double t0, const Vector3& sp1, const Vector3& sp2, const Vector3& bField);
+
+/// Estimate the full track parameters from three space points
+///
+/// @tparam spacepoint_iterator_t The type of space point iterator
 ///
 /// @param gctx is the geometry context
 /// @param spRange is the range of space points
 /// @param surface is the surface of the bottom space point. The estimated bound
-/// track parameters will be represented also at this surface
+///                track parameters will be represented at this surface.
 /// @param bField is the magnetic field vector
 ///
 /// @return bound parameters
@@ -125,30 +135,31 @@ Result<BoundVector> estimateTrackParamsFromSeed(const GeometryContext& gctx,
                                                 spacepoint_range_t spRange,
                                                 const Surface& surface,
                                                 const Vector3& bField) {
-  FreeVector freeParams = estimateTrackParamsFromSeed(spRange, bField);
-
-  const auto* sp0 = *spRange.begin();
-  Vector3 origin = Vector3(sp0->x(), sp0->y(), sp0->z());
-  Vector3 direction = freeParams.segment<3>(eFreeDir0);
-
-  BoundVector params = BoundVector::Zero();
-  params[eBoundPhi] = VectorHelpers::phi(direction);
-  params[eBoundTheta] = VectorHelpers::theta(direction);
-  params[eBoundQOverP] = freeParams[eFreeQOverP];
-
-  // Transform the bottom space point to local coordinates of the provided
-  // surface
-  auto lpResult = surface.globalToLocal(gctx, origin, direction);
-  if (!lpResult.ok()) {
-    return Result<BoundVector>::failure(lpResult.error());
+  // Check the number of provided space points
+  if (spRange.size() != 3) {
+    throw std::invalid_argument(
+        "There should be exactly three space points provided.");
   }
-  Vector2 bottomLocalPos = lpResult.value();
-  // The estimated loc0 and loc1
-  params[eBoundLoc0] = bottomLocalPos.x();
-  params[eBoundLoc1] = bottomLocalPos.y();
-  params[eBoundTime] = sp0->t().value_or(0);
 
-  return Result<BoundVector>::success(params);
+  // The global positions of the bottom, middle and space points
+  std::array<Vector3, 3> spPositions = {Vector3::Zero(), Vector3::Zero(),
+                                        Vector3::Zero()};
+  std::array<std::optional<double>, 3> spTimes = {std::nullopt, std::nullopt,
+                                                  std::nullopt};
+  // The first, second and third space point are assumed to be bottom, middle
+  // and top space point, respectively
+  for (auto [sp, spPosition, spTime] :
+       Acts::zip(spRange, spPositions, spTimes)) {
+    if (sp == nullptr) {
+      throw std::invalid_argument("Empty space point found.");
+    }
+    spPosition = Vector3(sp->x(), sp->y(), sp->z());
+    spTime = sp->t();
+  }
+
+  return estimateTrackParamsFromSeed(gctx, surface, spPositions[0],
+                                     spTimes[0].value_or(0), spPositions[1],
+                                     spPositions[2], bField);
 }
 
 /// Configuration for the estimation of the covariance matrix of the track
@@ -192,5 +203,7 @@ struct EstimateTrackParamCovarianceConfig {
 BoundMatrix estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime);
+
+/// @}
 
 }  // namespace Acts
