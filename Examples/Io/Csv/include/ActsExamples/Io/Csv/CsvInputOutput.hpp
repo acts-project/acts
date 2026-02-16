@@ -59,7 +59,7 @@ class CsvWriter {
 
  private:
   std::ofstream m_file;
-  std::size_t m_num_columns;
+  std::size_t m_numColumns;
 
   template <typename T>
   unsigned write(T&& x, std::ostream& os)
@@ -93,12 +93,12 @@ class CsvReader {
   bool read(std::vector<std::string>& columns);
 
   /// Return the number of lines read so far.
-  std::size_t num_lines() const { return m_num_lines; }
+  std::size_t numLines() const { return m_numLines; }
 
  private:
   std::ifstream m_file;
   std::string m_line;
-  std::size_t m_num_lines = 0;
+  std::size_t m_numLines = 0;
 };
 
 namespace detail {
@@ -114,7 +114,7 @@ void parse(const std::string& str, T& value) {
 /// Return member names as a vector of strings for a Boost.Describe-annotated
 /// struct.
 template <typename T>
-std::vector<std::string> member_names() {
+std::vector<std::string> memberNames() {
   using members =
       boost::describe::describe_members<T, boost::describe::mod_public>;
   std::vector<std::string> names;
@@ -125,7 +125,7 @@ std::vector<std::string> member_names() {
 
 /// Number of public members in a Boost.Describe-annotated struct.
 template <typename T>
-inline constexpr std::size_t member_count_v = boost::mp11::mp_size<
+inline constexpr std::size_t memberCountV = boost::mp11::mp_size<
     boost::describe::describe_members<T, boost::describe::mod_public>>::value;
 
 }  // namespace detail
@@ -150,7 +150,7 @@ class BoostDescribeCsvWriter {
   explicit BoostDescribeCsvWriter(
       const std::string& path,
       int precision = std::numeric_limits<double>::max_digits10)
-      : m_writer(detail::member_names<T>(), path, precision) {}
+      : m_writer(detail::memberNames<T>(), path, precision) {}
 
   /// Append a record to the file.
   void append(const T& record) {
@@ -215,18 +215,18 @@ class BoostDescribeCsvReader {
   bool read(T& record);
 
  private:
-  static constexpr std::size_t NumMembers = detail::member_count_v<T>;
+  static constexpr std::size_t NumMembers = detail::memberCountV<T>;
 
   CsvReader m_reader;
   std::vector<std::string> m_columns;
   // #columns is fixed to a reasonable value after reading the header
-  std::size_t m_num_columns = SIZE_MAX;
+  std::size_t m_numColumns = SIZE_MAX;
   // map member index to column index in the file, SIZE_MAX for missing
-  std::array<std::size_t, NumMembers> m_member_column_map;
+  std::array<std::size_t, NumMembers> m_memberColumnMap;
 
-  void use_default_columns();
-  void parse_header(const std::vector<std::string>& optional_columns);
-  void parse_record(T& record) const;
+  void useDefaultColumns();
+  void parseHeader(const std::vector<std::string>& optional_columns);
+  void parseRecord(T& record) const;
 };
 
 // implementation CsvWriter
@@ -235,12 +235,12 @@ inline CsvWriter::CsvWriter(const std::vector<std::string>& columns,
                              const std::string& path, int precision)
     : m_file(path,
              std::ios_base::binary | std::ios_base::out | std::ios_base::trunc),
-      m_num_columns(columns.size()) {
+      m_numColumns(columns.size()) {
   if (!m_file.is_open() || m_file.fail()) {
     throw std::runtime_error("Could not open file '" + path + "'");
   }
   m_file.precision(precision);
-  if (m_num_columns == 0) {
+  if (m_numColumns == 0) {
     throw std::invalid_argument("No columns were specified");
   }
   // write column names as header row
@@ -266,10 +266,10 @@ inline void CsvWriter::append(Arg0&& arg0, Args&&... args) {
   for (auto nc : written_columns) {
     total_columns += nc;
   }
-  if (total_columns < m_num_columns) {
+  if (total_columns < m_numColumns) {
     throw std::invalid_argument("Not enough columns");
   }
-  if (m_num_columns < total_columns) {
+  if (m_numColumns < total_columns) {
     throw std::invalid_argument("Too many columns");
   }
   // write the line to disk and check that it actually happened
@@ -319,9 +319,9 @@ inline bool CsvReader::read(std::vector<std::string>& columns) {
   }
   if (m_file.fail()) {
     throw std::runtime_error(std::string("Could not read line ") +
-                             std::to_string(m_num_lines));
+                             std::to_string(m_numLines));
   }
-  m_num_lines += 1;
+  m_numLines += 1;
 
   // split the line into columns
   columns.clear();
@@ -357,9 +357,9 @@ inline BoostDescribeCsvReader<T>::BoostDescribeCsvReader(
     throw std::runtime_error("Could not read header from '" + path + "'");
   }
   if (verify_header) {
-    parse_header(optional_columns);
+    parseHeader(optional_columns);
   } else {
-    use_default_columns();
+    useDefaultColumns();
   }
 }
 
@@ -369,34 +369,34 @@ inline bool BoostDescribeCsvReader<T>::read(T& record) {
     return false;
   }
   // check for consistent entries per-line
-  if (m_columns.size() < m_num_columns) {
+  if (m_columns.size() < m_numColumns) {
     throw std::runtime_error("Too few columns in line " +
-                             std::to_string(m_reader.num_lines()));
+                             std::to_string(m_reader.numLines()));
   }
-  if (m_num_columns < m_columns.size()) {
+  if (m_numColumns < m_columns.size()) {
     throw std::runtime_error("Too many columns in line " +
-                             std::to_string(m_reader.num_lines()));
+                             std::to_string(m_reader.numLines()));
   }
-  parse_record(record);
+  parseRecord(record);
   return true;
 }
 
 template <typename T>
-inline void BoostDescribeCsvReader<T>::use_default_columns() {
+inline void BoostDescribeCsvReader<T>::useDefaultColumns() {
   // assume row content is identical in content and order to the struct
-  m_num_columns = NumMembers;
-  for (std::size_t i = 0; i < m_member_column_map.size(); ++i) {
-    m_member_column_map[i] = i;
+  m_numColumns = NumMembers;
+  for (std::size_t i = 0; i < m_memberColumnMap.size(); ++i) {
+    m_memberColumnMap[i] = i;
   }
 }
 
 template <typename T>
-inline void BoostDescribeCsvReader<T>::parse_header(
+inline void BoostDescribeCsvReader<T>::parseHeader(
     const std::vector<std::string>& optional_columns) {
-  const auto names = detail::member_names<T>();
+  const auto names = detail::memberNames<T>();
 
   // the number of header columns fixes the expected number of data columns
-  m_num_columns = m_columns.size();
+  m_numColumns = m_columns.size();
 
   // check that all non-optional columns are available
   for (const auto& name : names) {
@@ -411,7 +411,7 @@ inline void BoostDescribeCsvReader<T>::parse_header(
   }
 
   // ensure missing columns are correctly marked as such
-  m_member_column_map.fill(SIZE_MAX);
+  m_memberColumnMap.fill(SIZE_MAX);
 
   // determine column-member mapping
   for (std::size_t i = 0; i < m_columns.size(); ++i) {
@@ -419,20 +419,20 @@ inline void BoostDescribeCsvReader<T>::parse_header(
     auto it = std::ranges::find(names, m_columns[i]);
     if (it != names.end()) {
       // establish mapping between column and member position
-      m_member_column_map[std::distance(names.begin(), it)] = i;
+      m_memberColumnMap[std::distance(names.begin(), it)] = i;
     }
     // Extra columns are ignored
   }
 }
 
 template <typename T>
-inline void BoostDescribeCsvReader<T>::parse_record(T& record) const {
+inline void BoostDescribeCsvReader<T>::parseRecord(T& record) const {
   using members =
       boost::describe::describe_members<T, boost::describe::mod_public>;
   std::size_t i = 0;
   boost::mp11::mp_for_each<members>([&](auto D) {
-    if (m_member_column_map[i] != SIZE_MAX) {
-      detail::parse(m_columns[m_member_column_map[i]], record.*D.pointer);
+    if (m_memberColumnMap[i] != SIZE_MAX) {
+      detail::parse(m_columns[m_memberColumnMap[i]], record.*D.pointer);
     }
     ++i;
   });
