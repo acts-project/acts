@@ -12,18 +12,15 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstdint>
 #include <mutex>
 #include <string>
-#include <vector>
 
 class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out simulated hits as a flat TTree.
 ///

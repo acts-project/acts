@@ -43,7 +43,7 @@ class EDM4hepParticleOutputConverter final : public PodioOutputConverter {
   std::vector<std::string> collections() const override;
 
  private:
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   Config m_cfg;
 

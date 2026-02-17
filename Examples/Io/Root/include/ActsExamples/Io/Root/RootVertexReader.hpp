@@ -8,14 +8,12 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Propagator/MaterialInteractor.hpp>
-#include <Acts/Utilities/Logger.hpp>
-#include <ActsPlugins/Root/detail/RootBranchPtr.hpp>
+#include "ActsPlugins/Root/detail/RootBranchPtr.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -57,7 +55,7 @@ class RootVertexReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
+  ProcessCode read(const AlgorithmContext& context) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

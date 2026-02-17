@@ -41,7 +41,7 @@ class GenericBoundTrackParameters {
   /// Type alias for bound track parameters vector
   using ParametersVector = BoundVector;
   /// Type alias for bound track covariance matrix
-  using CovarianceMatrix = BoundSquareMatrix;
+  using CovarianceMatrix = BoundMatrix;
   /// Type alias for particle hypothesis used in reconstruction
   using ParticleHypothesis = particle_hypothesis_t;
 
@@ -187,7 +187,7 @@ class GenericBoundTrackParameters {
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
   /// Covariance matrix of the spatial impact parameters (i.e., of d0 and z0)
   /// @return Optional 2x2 covariance matrix of spatial impact parameters
-  std::optional<ActsSquareMatrix<2>> spatialImpactParameterCovariance() const {
+  std::optional<SquareMatrix<2>> spatialImpactParameterCovariance() const {
     if (!m_cov.has_value()) {
       return std::nullopt;
     }
@@ -198,12 +198,12 @@ class GenericBoundTrackParameters {
   /// Covariance matrix of the spatial and temporal impact parameters (i.e., of
   /// d0, z0, and t)
   /// @return Optional 3x3 covariance matrix of impact parameters
-  std::optional<ActsSquareMatrix<3>> impactParameterCovariance() const {
+  std::optional<SquareMatrix<3>> impactParameterCovariance() const {
     if (!m_cov.has_value()) {
       return std::nullopt;
     }
 
-    ActsSquareMatrix<3> ipCov;
+    SquareMatrix<3> ipCov;
     ipCov.template topLeftCorner<2, 2>() =
         m_cov.value().template topLeftCorner<2, 2>();
     ipCov.template block<2, 1>(0, 2) =
@@ -335,7 +335,7 @@ class GenericBoundTrackParameters {
 
  private:
   BoundVector m_params;
-  std::optional<BoundSquareMatrix> m_cov;
+  std::optional<BoundMatrix> m_cov;
   /// reference surface
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20

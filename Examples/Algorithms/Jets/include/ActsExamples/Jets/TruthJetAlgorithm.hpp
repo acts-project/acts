@@ -18,12 +18,7 @@
 
 #include <string>
 
-namespace fastjet {
-class PseudoJet;
-}
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 using TruthJetContainer = std::vector<ActsPlugins::FastJet::TruthJet>;
 
@@ -55,7 +50,7 @@ class TruthJetAlgorithm final : public IAlgorithm {
     /// Only label HS hadrons
     bool jetLabelingHSHadronsOnly = true;
     /// Enable track-jet matching
-    bool doTrackJetMatching;
+    bool doTrackJetMatching = false;
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);

@@ -12,8 +12,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
-#include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -31,13 +32,12 @@ BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps);
 
   const auto [i, j] = mat.minDistancePair();
   BOOST_CHECK_EQUAL(std::min(i, j), 1);
@@ -46,19 +46,18 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
   const std::size_t cmp_to_mask = 2;
 
-  detail::Gsf::SymmetricKLDistanceMatrix mat_full(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_full(cmps);
   mat_full.maskAssociatedDistances(cmp_to_mask);
 
   cmps.erase(cmps.begin() + cmp_to_mask);
-  detail::Gsf::SymmetricKLDistanceMatrix mat_small(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat_small(cmps);
 
   const auto [full_i, full_j] = mat_full.minDistancePair();
   const auto [small_i, small_j] = mat_small.minDistancePair();
@@ -71,13 +70,12 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
   std::vector<GsfComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundMatrix::Identity()}};
 
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
-  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps, proj);
+  detail::Gsf::SymmetricKLDistanceMatrix mat(cmps);
 
   {
     const auto [i, j] = mat.minDistancePair();
@@ -86,7 +84,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
   }
 
   cmps[3].boundPars = BoundVector::Constant(0.1);
-  mat.recomputeAssociatedDistances(3, cmps, proj);
+  mat.recomputeAssociatedDistances(3, cmps);
 
   {
     const auto [i, j] = mat.minDistancePair();
@@ -95,7 +93,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
   }
 
   cmps[0].boundPars = BoundVector::Constant(1.01);
-  mat.recomputeAssociatedDistances(0, cmps, proj);
+  mat.recomputeAssociatedDistances(0, cmps);
 
   {
     const auto [i, j] = mat.minDistancePair();
@@ -128,7 +126,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   for (auto i = 0ul; i < NComps; ++i) {
     GsfComponent a;
     a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
+    a.boundCov = BoundMatrix::Identity();
     a.weight = 1.0 / NComps;
     cmps.push_back(a);
   }
@@ -176,7 +174,7 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
   for (auto w : {1.0, 2.0, 3.0, 4.0}) {
     GsfComponent a;
     a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSquareMatrix::Identity();
+    a.boundCov = BoundMatrix::Identity();
     a.weight = w;
     cmps.push_back(a);
   }

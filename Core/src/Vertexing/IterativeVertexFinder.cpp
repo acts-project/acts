@@ -336,9 +336,10 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
     } else {
       // Track not compatible with vertex
       // Remove track from current vertex
-      auto foundIter = std::ranges::find_if(
-          tracksAtVertex,
-          [&trk](auto trkAtVtx) { return trk == trkAtVtx.originalParams; });
+      auto foundIter =
+          std::ranges::find_if(tracksAtVertex, [&trk](const auto& trkAtVtx) {
+            return trk == trkAtVtx.originalParams;
+          });
       if (foundIter != tracksAtVertex.end()) {
         // Remove track from seed tracks
         tracksAtVertex.erase(foundIter);

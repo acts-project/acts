@@ -18,7 +18,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Select tracks by applying some selection cuts.
 class TrackParameterSelector final : public IAlgorithm {

@@ -9,7 +9,6 @@ acts_add_library(
     src/EventData/ProcessType.cpp
     src/Kernel/SimulationError.cpp
     src/Physics/BetheHeitler.cpp
-    src/Physics/PhotonConversion.cpp
     src/Physics/StandardInteractions.cpp
     src/Utilities/LandauDistribution.cpp
     ACTS_INCLUDE_FOLDER include/ActsFatras

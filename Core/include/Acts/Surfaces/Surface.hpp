@@ -542,7 +542,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  virtual ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  virtual Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
   /// Visualize the surface for debugging and inspection

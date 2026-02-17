@@ -100,7 +100,7 @@ Estimator makeEstimator(double bZ) {
 }
 
 // Construct a diagonal track covariance w/ reasonable values.
-BoundSquareMatrix makeBoundParametersCovariance(double stdDevTime = 30_ps) {
+BoundMatrix makeBoundParametersCovariance(double stdDevTime = 30_ps) {
   BoundVector stddev;
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 100_um;
@@ -345,7 +345,7 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   // Dummy coordinate system with origin at vertex
   Transform3 coordinateSystem;
   // First three columns correspond to coordinate system axes
-  coordinateSystem.matrix().block<3, 3>(0, 0) = ActsSquareMatrix<3>::Identity();
+  coordinateSystem.matrix().block<3, 3>(0, 0) = SquareMatrix<3>::Identity();
   // Fourth column corresponds to origin of the coordinate system
   coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos.head<3>();
 
