@@ -185,8 +185,8 @@ class HoughPlane {
   /// @param weight: An optional weight to assign to this hit
   template <class PointType>
   void fill(const PointType& measurement, const HoughAxisRanges& axisRanges,
-            LineParametrisation<PointType> linePar,
-            LineParametrisation<PointType> widthPar,
+            const LineParametrisation<PointType>& linePar,
+            const LineParametrisation<PointType>& widthPar,
             const identifier_t& identifier, unsigned layer = 0,
             YieldType weight = 1.0f);
   /// @brief resets the contents of the grid. Can be used to avoid reallocating the histogram

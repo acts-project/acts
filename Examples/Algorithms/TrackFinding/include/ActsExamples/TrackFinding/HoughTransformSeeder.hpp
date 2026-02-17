@@ -91,10 +91,6 @@
 #include <utility>
 #include <vector>
 
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
 using ResultDouble = Acts::Result<double>;
 using ResultBool = Acts::Result<bool>;
 using ResultUnsigned = Acts::Result<unsigned>;
@@ -239,7 +235,7 @@ class HoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  HoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+  HoughTransformSeeder(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///

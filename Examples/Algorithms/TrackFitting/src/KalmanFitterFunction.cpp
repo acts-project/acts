@@ -159,8 +159,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
 
 }  // namespace
 
-std::shared_ptr<ActsExamples::TrackFitterFunction>
-ActsExamples::makeKalmanFitterFunction(
+std::shared_ptr<TrackFitterFunction> ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,

@@ -23,8 +23,8 @@ template <std::size_t N>
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
     AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   constexpr std::size_t kMeasurementSize = N;
-  using ProjectedVector = ActsVector<kMeasurementSize>;
-  using ProjectedMatrix = ActsSquareMatrix<kMeasurementSize>;
+  using ProjectedVector = Vector<kMeasurementSize>;
+  using ProjectedMatrix = SquareMatrix<kMeasurementSize>;
 
   const auto calibrated = trackState.calibrated<kMeasurementSize>();
   const auto calibratedCovariance =
@@ -66,8 +66,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   filtered = predicted + K * (calibrated - H * predicted);
   // Normalize phi and theta
   filtered = normalizeBoundParameters(filtered);
-  filteredCovariance =
-      (BoundSquareMatrix::Identity() - K * H) * predictedCovariance;
+  filteredCovariance = (BoundMatrix::Identity() - K * H) * predictedCovariance;
   ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
   ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 

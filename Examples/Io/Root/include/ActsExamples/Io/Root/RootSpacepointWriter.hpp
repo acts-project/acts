@@ -23,7 +23,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out space points as a flat TTree.
 ///

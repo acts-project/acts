@@ -57,7 +57,7 @@ class SeedFilterMLAlgorithm : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedFilterMLAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  SeedFilterMLAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the seed filter algorithm.
   ///

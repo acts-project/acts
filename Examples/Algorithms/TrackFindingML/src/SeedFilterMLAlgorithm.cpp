@@ -18,10 +18,12 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-ActsExamples::SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(
-    ActsExamples::SeedFilterMLAlgorithm::Config cfg, Logging::Level lvl)
-    : ActsExamples::IAlgorithm("SeedFilterMLAlgorithm", lvl),
-      m_cfg(std::move(cfg)),
+namespace ActsExamples {
+
+SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(const Config& cfg,
+                                             Logging::Level lvl)
+    : IAlgorithm("SeedFilterMLAlgorithm", lvl),
+      m_cfg(cfg),
       m_seedClassifier(m_cfg.inputSeedFilterNN.c_str()) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters input collection");
@@ -41,8 +43,7 @@ ActsExamples::SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(
   m_outputSimSeeds.initialize(m_cfg.outputSimSeeds);
 }
 
-ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode SeedFilterMLAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& seeds = m_inputSimSeeds(ctx);
   const auto& params = m_inputTrackParameters(ctx);
@@ -100,5 +101,7 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
   m_outputSimSeeds(ctx, SimSeedContainer{outputSeeds});
   m_outputTrackParameters(ctx, TrackParametersContainer{outputTrackParameters});
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

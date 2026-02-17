@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -20,9 +19,10 @@
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootSeedWriter::RootSeedWriter(
-    const ActsExamples::RootSeedWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootSeedWriter::RootSeedWriter(const RootSeedWriter::Config& config,
+                               Acts::Logging::Level level)
     : WriterT(config.inputSeeds, "RootSeedWriter", level), m_cfg(config) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -75,13 +75,13 @@ ActsExamples::RootSeedWriter::RootSeedWriter(
   }
 }
 
-ActsExamples::RootSeedWriter::~RootSeedWriter() {
+RootSeedWriter::~RootSeedWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSeedWriter::finalize() {
+ProcessCode RootSeedWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -91,8 +91,8 @@ ActsExamples::ProcessCode ActsExamples::RootSeedWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSeedWriter::writeT(
-    const AlgorithmContext& ctx, const ActsExamples::SimSeedContainer& seeds) {
+ProcessCode RootSeedWriter::writeT(const AlgorithmContext& ctx,
+                                   const SimSeedContainer& seeds) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -145,5 +145,7 @@ ActsExamples::ProcessCode ActsExamples::RootSeedWriter::writeT(
     // Fill the tree
     m_outputTree->Fill();
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

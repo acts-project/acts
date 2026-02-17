@@ -48,7 +48,7 @@ class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AmbiguityResolutionMLAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  AmbiguityResolutionMLAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the ambiguity resolution algorithm.
   ///

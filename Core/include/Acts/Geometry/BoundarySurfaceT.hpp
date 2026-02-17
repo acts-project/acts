@@ -149,7 +149,7 @@ class BoundarySurfaceT {
   ///
   /// @param volumes The volume array to be attached
   /// @param dir The direction for attaching
-  void attachVolumeArray(std::shared_ptr<const VolumeArray> volumes,
+  void attachVolumeArray(const std::shared_ptr<const VolumeArray>& volumes,
                          Direction dir) {
     if (dir == Direction::Backward()) {
       m_oppositeVolumeArray = volumes;

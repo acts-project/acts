@@ -8,7 +8,7 @@
 
 #include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
 
-#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <stdexcept>
 
@@ -31,8 +31,7 @@ MaterialValidation::MaterialValidation(const MaterialValidation::Config& cfg,
 
 ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
   // Create a random number generator
-  ActsExamples::RandomEngine rng =
-      m_cfg.randomNumberSvc->spawnGenerator(context);
+  RandomEngine rng = m_cfg.randomNumberSvc->spawnGenerator(context);
 
   // Setup random number distributions for some quantities
   std::uniform_real_distribution<double> phiDist(m_cfg.phiRange.first,

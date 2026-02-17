@@ -19,44 +19,36 @@ using namespace Acts;
 
 namespace ActsTests {
 
-template <typename T>
-bool testPointer(const T /*ptr*/) {
-  BOOST_TEST_MESSAGE("Object of " << typeid(T).name()
-                                  << " does not pass the pointer concept ");
-  return false;
-}
-
-template <PointerConcept T>
-bool testPointer(const T /*ptr*/) {
-  BOOST_TEST_MESSAGE("Object of " << typeid(T).name()
-                                  << " passes the pointer concept ");
-  return true;
-}
-
 BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(testConceptPass) {
-  int* raw_ptr{nullptr};
-  BOOST_CHECK(testPointer(raw_ptr));
-  int raw_val{0};
-  BOOST_CHECK(!testPointer(raw_val));
+  static_assert(PointerConcept<int*>, "int* is a pointer concept");
+  static_assert(!PointerConcept<int>, "int is not a pointer concept");
 
-  BOOST_CHECK(testPointer(std::unique_ptr<int>{nullptr}));
-  BOOST_CHECK(testPointer(std::unique_ptr<const int>{nullptr}));
+  static_assert(PointerConcept<std::unique_ptr<int>>,
+                "std::unique_ptr<int> is a pointer concept");
+  static_assert(PointerConcept<std::unique_ptr<const int>>,
+                "std::unique_ptr<const int> is a pointer concept");
 
-  BOOST_CHECK(testPointer(std::shared_ptr<int>{nullptr}));
-  BOOST_CHECK(testPointer(std::shared_ptr<const int>{nullptr}));
+  static_assert(PointerConcept<std::shared_ptr<int>>,
+                "std::shared_ptr<int> is a pointer concept");
+  static_assert(PointerConcept<std::shared_ptr<const int>>,
+                "std::shared_ptr<const int> is a pointer concept");
 
-  BOOST_CHECK(testPointer(detail_lt::TransitiveConstPointer<int>{nullptr}));
-  BOOST_CHECK(
-      testPointer(detail_lt::TransitiveConstPointer<const int>{nullptr}));
+  static_assert(PointerConcept<detail_lt::TransitiveConstPointer<int>>,
+                "detail_lt::TransitiveConstPointer<int> is a pointer concept");
+  static_assert(
+      PointerConcept<detail_lt::TransitiveConstPointer<const int>>,
+      "detail_lt::TransitiveConstPointer<const int> is a pointer concept");
+
   // Class with partial pointer-like behavior
   struct PartialPointerLike {
     int* ptr = nullptr;
     int* operator->() const { return ptr; }
     // Missing operator*() and operator bool()
   };
-  BOOST_CHECK(!testPointer(PartialPointerLike{}));
+  static_assert(!PointerConcept<PartialPointerLike>,
+                "PartialPointerLike is not a pointer concept");
 
   /** Ensure that the remove_pointer_t trait is doing what's supposed to do */
   static_assert(std::is_same_v<RemovePointer_t<std::unique_ptr<int>>, int>);

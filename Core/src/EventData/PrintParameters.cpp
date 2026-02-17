@@ -158,15 +158,15 @@ void printParameters(std::ostream& os, const names_container_t& names,
   os.precision(precision);
 }
 
-using ParametersMap = Eigen::Map<const Acts::ActsDynamicVector>;
-using CovarianceMap = Eigen::Map<const Acts::ActsDynamicMatrix>;
+using ParametersMap = Eigen::Map<const Acts::DynamicVector>;
+using CovarianceMap = Eigen::Map<const Acts::DynamicMatrix>;
 
 }  // namespace
 
 void Acts::detail::printBoundParameters(
     std::ostream& os, const Acts::Surface& surface,
     const Acts::ParticleHypothesis& particleHypothesis,
-    const Acts::BoundVector& params, const Acts::BoundSquareMatrix* cov) {
+    const Acts::BoundVector& params, const Acts::BoundMatrix* cov) {
   if (cov != nullptr) {
     printParametersCovariance(os, makeBoundNames(), kMonotonic, params, *cov);
   } else {
