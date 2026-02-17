@@ -89,7 +89,7 @@ GbtsEdgeState GbtsTrackingFilter::followTrack(GbtsEdge& pS) {
     return GbtsEdgeState(false);
   }
 
-  std::ranges::sort(m_stateVec, {},
+  std::ranges::sort(m_stateVec, std::ranges::greater{},
                     [](const GbtsEdgeState* s) { return s->j; });
 
   m_globalStateCounter = 0;

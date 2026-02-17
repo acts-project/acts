@@ -434,10 +434,10 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
               float dPhi = phi2u - pS->p[2];
 
-              if (dPhi < -std::numbers::pi) {
-                dPhi += 2 * std::numbers::pi;
-              } else if (dPhi > std::numbers::pi) {
-                dPhi -= 2 * std::numbers::pi;
+              if (dPhi < -std::numbers::pi_v<float>) {
+                dPhi += 2 * std::numbers::pi_v<float>;
+              } else if (dPhi > std::numbers::pi_v<float>) {
+                dPhi -= 2 * std::numbers::pi_v<float>;
               }
 
               if (std::abs(dPhi) > cutDPhiMax) {
@@ -450,7 +450,8 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
                 continue;
               }
 
-              pS->vNei[pS->nNei++] = outEdgeIdx;
+              pS->vNei[pS->nNei] = outEdgeIdx;
+              ++pS->nNei;
 
               nConnections++;
             }
@@ -577,7 +578,8 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
     return;
   }
 
-  std::ranges::sort(vSeeds, {}, [](const GbtsEdge* e) { return e->level; });
+  std::ranges::sort(vSeeds, std::ranges::greater{},
+                    [](const GbtsEdge* e) { return e->level; });
 
   // backtracking
 
