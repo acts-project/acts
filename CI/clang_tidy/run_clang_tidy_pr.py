@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.12"
 # dependencies = [
 #     "typer",
 #     "rich",
@@ -191,13 +191,10 @@ def find_header_tu(
     We compute the header's path relative to the repo root and look for a
     compdb entry ending with that relative path + ``.cpp``.
     """
-    try:
-        rel = header_abs_path.relative_to(source_root)
-    except ValueError:
-        rel = Path(os.path.relpath(header_abs_path, source_root))
-    suffix = "/" + str(rel).replace(os.sep, "/") + ".cpp"
+    rel = header_abs_path.relative_to(source_root, walk_up=True)
+    suffix = "/" + str(rel) + ".cpp"
     for f in compdb_files:
-        if str(f).replace(os.sep, "/").endswith(suffix):
+        if str(f).endswith(suffix):
             return f
     return None
 
@@ -295,10 +292,7 @@ def collect_targets_from_fixes(
     # Normalize to repo-relative paths for resolve_targets
     repo_paths: list[str] = []
     for p in paths:
-        try:
-            rel = os.path.relpath(p, source_root)
-        except ValueError:
-            rel = p
+        rel = str(Path(p).relative_to(source_root, walk_up=True))
         repo_paths.append(rel)
 
     return resolve_targets(
@@ -585,15 +579,8 @@ def parse_fixes_yaml(path: Path) -> list[ParsedDiagnostic]:
 
 def normalize_path(filepath: Path, source_root: Path) -> str:
     """Make an absolute path repo-relative.  Falls back to the original for
-    paths outside source_root (e.g. system headers).
-
-    Uses os.path.relpath because pathlib's relative_to does not support
-    paths outside the root."""
-    try:
-        return os.path.relpath(filepath, source_root).replace(os.sep, "/")
-    except ValueError:
-        # On Windows, relpath raises ValueError for paths on different drives.
-        return str(filepath).replace(os.sep, "/")
+    paths outside source_root (e.g. system headers)."""
+    return str(filepath.relative_to(source_root, walk_up=True))
 
 
 def is_excluded(diag: ParsedDiagnostic, config: FilterConfig) -> str | None:
