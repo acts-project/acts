@@ -29,7 +29,7 @@ install(TARGETS ActsPythonBindings DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
 
 set_target_properties(
     ActsPythonBindings
-    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+    PROPERTIES INSTALL_RPATH "${ACTS_PYTHON_MODULES_RPATH}"
 )
 set_target_properties(
     ActsPythonBindings

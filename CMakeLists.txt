@@ -224,12 +224,14 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
     set(CMAKE_INSTALL_DATADIR "acts/share")
     set(ACTS_PYTHON_INSTALL_DIR "acts")
+    set(ACTS_PYTHON_MODULES_RPATH "\$ORIGIN")
 else()
     # GNU-like installation paths, e.g. lib/, include/, ...
     if(PROJECT_IS_TOP_LEVEL)
         include(GNUInstallDirs)
     endif()
     set(ACTS_PYTHON_INSTALL_DIR "python/acts")
+    set(ACTS_PYTHON_MODULES_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}")
 endif()
 
 include(ActsCompilerOptions) # default compile options
