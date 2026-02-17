@@ -9,12 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/AnyTrackProxy.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
-#include <optional>
 #include <vector>
 
 #include <fastjet/JetDefinition.hh>

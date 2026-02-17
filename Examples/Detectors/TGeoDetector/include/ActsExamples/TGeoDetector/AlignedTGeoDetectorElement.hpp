@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/DetectorCommons/Aligned.hpp"
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
@@ -24,8 +23,7 @@ class ISurfaceMaterial;
 
 namespace ActsExamples {
 /// Define the aligned TGeo detector element and factory type
-using AlignedTGeoDetectorElement =
-    ActsExamples::Aligned<ActsPlugins::TGeoDetectorElement>;
+using AlignedTGeoDetectorElement = Aligned<ActsPlugins::TGeoDetectorElement>;
 
 /// @brief The factory for creating an aligned TGeo detector element
 std::shared_ptr<AlignedTGeoDetectorElement> alignedTGeoDetectorElementFactory(

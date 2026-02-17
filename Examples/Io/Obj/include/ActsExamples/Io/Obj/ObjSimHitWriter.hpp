@@ -14,12 +14,10 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
-#include <cstdint>
 #include <mutex>
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out a simhit collection before detector digitization as wavefront obj
 /// file(s per event).

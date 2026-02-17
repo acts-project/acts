@@ -54,10 +54,9 @@ auto phiHoughWidth_strip = [](double, const MuonSpacePoint& strip) {
   return std::sqrt(strip.covariance()[Acts::eX]) * 3.;
 };
 
-MuonHoughSeeder::MuonHoughSeeder(MuonHoughSeeder::Config cfg,
-                                 Acts::Logging::Level lvl)
+MuonHoughSeeder::MuonHoughSeeder(const Config& cfg, Acts::Logging::Level lvl)
     : IAlgorithm("MuonHoughSeeder", lvl),
-      m_cfg(std::move(cfg)),
+      m_cfg(cfg),
       m_logger(Acts::getDefaultLogger(name(), lvl)) {
   if (m_cfg.inSpacePoints.empty()) {
     throw std::invalid_argument(

@@ -8,10 +8,7 @@
 
 #include "ActsExamples/AmbiguityResolution/GreedyAmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/AmbiguityResolution/ScoreBasedAmbiguityResolutionAlgorithm.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -24,13 +21,13 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addAmbiguityResolution(py::module& mex) {
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::GreedyAmbiguityResolutionAlgorithm, mex,
-      "GreedyAmbiguityResolutionAlgorithm", inputTracks, outputTracks,
-      maximumSharedHits, maximumIterations, nMeasurementsMin);
+  ACTS_PYTHON_DECLARE_ALGORITHM(GreedyAmbiguityResolutionAlgorithm, mex,
+                                "GreedyAmbiguityResolutionAlgorithm",
+                                inputTracks, outputTracks, maximumSharedHits,
+                                maximumIterations, nMeasurementsMin);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm, mex,
+      ScoreBasedAmbiguityResolutionAlgorithm, mex,
       "ScoreBasedAmbiguityResolutionAlgorithm", inputTracks, configFile,
       outputTracks, minScore, minScoreSharedTracks, maxShared, minUnshared,
       maxSharedTracksPerMeasurement, useAmbiguityScoring);

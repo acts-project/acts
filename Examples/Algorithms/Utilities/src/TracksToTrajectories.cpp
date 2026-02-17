@@ -23,7 +23,6 @@
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 TracksToTrajectories::TracksToTrajectories(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("TracksToTrajectories", lvl), m_cfg(std::move(cfg)) {

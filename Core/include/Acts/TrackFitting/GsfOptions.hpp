@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -27,18 +28,6 @@ namespace Acts {
 ///
 /// Available reduction methods for the reduction of a Gaussian mixture
 enum class ComponentMergeMethod { eMean, eMaxWeight };
-
-/// @struct GsfComponent
-///
-/// Encapsulates a component of a Gaussian mixture as used by the GSF
-struct GsfComponent {
-  /// Weight of this component in the Gaussian mixture
-  double weight = 0;
-  /// Bound track parameters for this component
-  BoundVector boundPars = BoundVector::Zero();
-  /// Covariance matrix for the bound track parameters
-  BoundMatrix boundCov = BoundMatrix::Identity();
-};
 
 namespace GsfConstants {
 constexpr std::string_view kFinalMultiComponentStateColumn =

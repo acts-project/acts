@@ -15,8 +15,7 @@
 #include <algorithm>
 #include <vector>
 
-ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
-    const ActsExamples::SimSeed& seed) {
+ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(const SimSeed& seed) {
   ProtoTrack track;
   track.reserve(seed.sp().size());
   for (const auto& spacePoints : seed.sp()) {
@@ -29,7 +28,7 @@ ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
 }
 
 const ActsExamples::SimSpacePoint* ActsExamples::findSpacePointForIndex(
-    ActsExamples::Index index, const SimSpacePointContainer& spacepoints) {
+    Index index, const SimSpacePointContainer& spacepoints) {
   auto match = [&](const SimSpacePoint& sp) {
     const auto& sls = sp.sourceLinks();
     return std::ranges::any_of(sls, [&](const auto& sl) {
@@ -47,9 +46,8 @@ const ActsExamples::SimSpacePoint* ActsExamples::findSpacePointForIndex(
 }
 
 ActsExamples::SimSeed ActsExamples::prototrackToSeed(
-    const ActsExamples::ProtoTrack& track,
-    const ActsExamples::SimSpacePointContainer& spacepoints) {
-  auto findSpacePoint = [&](ActsExamples::Index index) {
+    const ProtoTrack& track, const SimSpacePointContainer& spacepoints) {
+  auto findSpacePoint = [&](Index index) {
     auto found = findSpacePointForIndex(index, spacepoints);
     if (found == nullptr) {
       throw std::runtime_error("No spacepoint found for source-link index " +

@@ -65,7 +65,7 @@ class RootMaterialTrackReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
+  ProcessCode read(const AlgorithmContext& context) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
