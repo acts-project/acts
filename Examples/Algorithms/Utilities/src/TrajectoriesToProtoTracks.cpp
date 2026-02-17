@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
+#include "ActsExamples/Utilities/TrajectoriesToProtoTracks.hpp"
 
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -17,14 +17,14 @@
 
 namespace ActsExamples {
 
-TrajectoriesToPrototracks::TrajectoriesToPrototracks(Config cfg,
+TrajectoriesToProtoTracks::TrajectoriesToProtoTracks(Config cfg,
                                                      Acts::Logging::Level lvl)
-    : IAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("TrajectoriesToProtoTracks", lvl), m_cfg(std::move(cfg)) {
   m_inputTrajectories.initialize(m_cfg.inputTrajectories);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
-ProcessCode TrajectoriesToPrototracks::execute(
+ProcessCode TrajectoriesToProtoTracks::execute(
     const AlgorithmContext& ctx) const {
   const auto trajectories = m_inputTrajectories(ctx);
 

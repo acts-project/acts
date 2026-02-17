@@ -19,7 +19,7 @@
 
 namespace ActsExamples {
 
-class TrajectoriesToPrototracks final : public IAlgorithm {
+class TrajectoriesToProtoTracks final : public IAlgorithm {
  public:
   struct Config {
     std::string inputTrajectories = "trajectories";
@@ -30,7 +30,7 @@ class TrajectoriesToPrototracks final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl);
+  TrajectoriesToProtoTracks(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///

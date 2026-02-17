@@ -28,16 +28,16 @@
 
 namespace ActsExamples {
 
-/// This algorithm starts a CKF of from a given prototrack.
+/// This algorithm starts a CKF of from a given proto track.
 /// This means: If for any given surface there exists a measurements
-/// in the prototrack, this measurement is returned.
-/// Otherwise (typically after the end of the prototrack), the algorithm
+/// in the proto track, this measurement is returned.
+/// Otherwise (typically after the end of the proto track), the algorithm
 /// falls back to providing all possible measurements on the surface.
 ///
-class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm {
+class TrackFindingFromProtoTracksAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input prototracks collection.
+    /// Input proto tracks collection.
     std::string inputProtoTracks;
 
     /// Input measurements
@@ -46,7 +46,7 @@ class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm {
     /// Input track parameters
     std::string inputInitialTrackParameters;
 
-    /// Output protoTracks collection.
+    /// Output tracks collection.
     std::string outputTracks;
 
     /// CKF measurement selector config
@@ -69,9 +69,7 @@ class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingFromPrototrackAlgorithm(Config cfg, Acts::Logging::Level lvl);
-
-  virtual ~TrackFindingFromPrototrackAlgorithm() {}
+  TrackFindingFromProtoTracksAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Filter the measurements
   ///
