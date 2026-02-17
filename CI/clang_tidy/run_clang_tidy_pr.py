@@ -851,9 +851,13 @@ def analyze(
     output_fixes: Annotated[
         Path, typer.Argument(help="Output path for merged fixes YAML")
     ],
+    files: Annotated[
+        list[Path] | None,
+        typer.Argument(help="Explicit file paths to analyse (bypasses --base-ref / --all)"),
+    ] = None,
     base_ref: Annotated[
         str | None,
-        typer.Argument(help="Git ref to diff against (required unless --all)"),
+        typer.Option("--base-ref", "-b", help="Git ref to diff against (required unless --all or files are given)"),
     ] = None,
     all: Annotated[
         bool,
@@ -866,10 +870,6 @@ def analyze(
     fixes_dir: Annotated[
         Path | None,
         typer.Option(help="Directory for export-fixes YAML (default: temp dir)"),
-    ] = None,
-    files: Annotated[
-        list[Path] | None,
-        typer.Option(help="Explicit file paths to analyse, bypasses git diff / --all"),
     ] = None,
     from_fixes: Annotated[
         Path | None,
@@ -931,11 +931,11 @@ def analyze(
             compdb_files,
             config.exclude_path_regexes,
         )
-    elif files is not None:
+    elif files:
         file_list = [str(f) for f in files]
         compdb_files = load_compdb(build_dir)
         console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
-        console.print(f"{len(file_list)} file(s) specified via --files")
+        console.print(f"{len(file_list)} file(s) specified as arguments")
         targets = resolve_targets(
             file_list,
             build_dir,
@@ -948,7 +948,7 @@ def analyze(
     else:
         if base_ref is None:
             raise typer.BadParameter(
-                "base_ref is required unless --all, --files, or --from-fixes is given"
+                "--base-ref is required unless --all, --from-fixes, or files are given"
             )
         targets = collect_changed_targets(
             base_ref, build_dir, source_root, config.exclude_path_regexes
