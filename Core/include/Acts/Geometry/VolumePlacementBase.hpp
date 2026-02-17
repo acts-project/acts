@@ -159,7 +159,7 @@ class VolumePlacementBase {
                          const std::size_t portalIdx) const;
 
  private:
-  /// @brief Resource allocation of the SurfacePlacements to align the portals
+  /// Resource allocation of the SurfacePlacements to align the portals
   std::vector<std::unique_ptr<detail::PortalPlacement>> m_portalPlacements{};
 };
 }  // namespace Acts

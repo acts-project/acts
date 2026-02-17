@@ -23,7 +23,7 @@
 #include <utility>
 
 namespace {
-/// @brief checks whether the two transforms are the same
+/// Checks whether the two transforms are the same
 /// @param a: First transform to check
 /// @param b: Second transform to check
 inline bool isSame(const Acts::Transform3& a, const Acts::Transform3& b) {
