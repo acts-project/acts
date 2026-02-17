@@ -31,7 +31,7 @@ class CompositeSpacePointLineFitter {
   ///        with the corresponding derivatives
   using ChiSqCache = detail::CompSpacePointAuxiliaries::ChiSqWithDerivatives;
   /// @brief Vector abrivation
-  using Vector = Line_t::Vector;
+  using Vector_t = Line_t::Vector;
   /// @brief Assignment of the parameter vector components
   using FitParIndex = detail::CompSpacePointAuxiliaries::FitParIndex;
   /// @brief Abrivation of the fast fitter
@@ -51,7 +51,7 @@ class CompositeSpacePointLineFitter {
   /// @brief Vector containing the 5 straight segment line parameters
   using ParamVec_t = std::array<double, s_nPars>;
   /// @brief Covariance estimation matrix on the segment line parameters
-  using CovMat_t = Acts::ActsSquareMatrix<s_nPars>;
+  using CovMat_t = SquareMatrix<s_nPars>;
   /// @brief Fitter configuration object
   struct Config {
     /// @brief If the parameter change or the gradient's magnitude is below the cutOff the fit is converged
@@ -167,9 +167,9 @@ class CompositeSpacePointLineFitter {
     /// @brief Calibrator
     const Calibrator_t* calibrator{nullptr};
     /// @brief Experiment specific calibration context
-    Acts::CalibrationContext calibContext{};
+    CalibrationContext calibContext{};
     /// @brief Local to global transform
-    Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
+    Transform3 localToGlobal{Transform3::Identity()};
     /// @brief Initial parameter guess
     ParamVec_t startParameters{filledArray<double, s_nPars>(0)};
     /// @brief Standard constructor

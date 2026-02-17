@@ -9,7 +9,6 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
@@ -30,14 +29,14 @@ struct BilloirTrack {
   double chi2 = 0;
 
   // We drop the summation index i from Ref. (1) for better readability
-  Acts::ActsMatrix<Acts::eBoundSize, Acts::eBoundSize> W{};  // Wi weight matrix
-  Acts::ActsMatrix<Acts::eBoundSize, 4> D{};  // Di (position Jacobian)
-  Acts::ActsMatrix<Acts::eBoundSize, 3> E{};  // Ei (momentum Jacobian)
-  Acts::ActsSquareMatrix<3> C{};              //  = sum{Ei^T Wi * Ei}
-  Acts::ActsMatrix<4, 3> B{};                 //  = Di^T * Wi * Ei
-  Acts::ActsSquareMatrix<3> Cinv{};           //  = (Ei^T * Wi * Ei)^-1
-  Acts::Vector3 U{};                          //  = Ei^T * Wi * dqi
-  Acts::ActsMatrix<4, 3> BCinv{};             //  = Bi * Ci^-1
+  Acts::Matrix<Acts::eBoundSize, Acts::eBoundSize> W{};  // Wi weight matrix
+  Acts::Matrix<Acts::eBoundSize, 4> D{};  // Di (position Jacobian)
+  Acts::Matrix<Acts::eBoundSize, 3> E{};  // Ei (momentum Jacobian)
+  Acts::SquareMatrix<3> C{};              //  = sum{Ei^T Wi * Ei}
+  Acts::Matrix<4, 3> B{};                 //  = Di^T * Wi * Ei
+  Acts::SquareMatrix<3> Cinv{};           //  = (Ei^T * Wi * Ei)^-1
+  Acts::Vector3 U{};                      //  = Ei^T * Wi * dqi
+  Acts::Matrix<4, 3> BCinv{};             //  = Bi * Ci^-1
   Acts::BoundVector deltaQ{};
 };
 
@@ -148,15 +147,15 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
           t0 - fTime;
 
       // position jacobian (D matrix)
-      ActsMatrix<eBoundSize, 4> D = linTrack.positionJacobian;
+      Matrix<eBoundSize, 4> D = linTrack.positionJacobian;
 
       // momentum jacobian (E matrix)
-      ActsMatrix<eBoundSize, 3> E = linTrack.momentumJacobian;
+      Matrix<eBoundSize, 3> E = linTrack.momentumJacobian;
 
       // cache some matrix multiplications
       BoundMatrix W = linTrack.weightAtPCA;
-      ActsMatrix<4, eBoundSize> DtW = D.transpose() * W;
-      ActsMatrix<3, eBoundSize> EtW = E.transpose() * W;
+      Matrix<4, eBoundSize> DtW = D.transpose() * W;
+      Matrix<3, eBoundSize> EtW = E.transpose() * W;
 
       // compute track quantities for Billoir fit
       billoirTrack.D = D;
@@ -250,7 +249,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
       // TODO: This is not correct since the (x, y, z, t) in the derivatives in
       // the D matrix correspond to the global track position at the PCA rather
       // than the 4D vertex position.
-      ActsMatrix<eBoundSize, 7> transMat;
+      Matrix<eBoundSize, 7> transMat;
       transMat.setZero();
       transMat.block<2, 2>(0, 0) = billoirTrack.D.template block<2, 2>(0, 0);
       transMat(1, 2) = 1.;
@@ -260,14 +259,14 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
       transMat(5, 3) = 1.;
 
       // cov(V,P)
-      ActsMatrix<4, 3> covVP = -covV * billoirTrack.BCinv;
+      Matrix<4, 3> covVP = -covV * billoirTrack.BCinv;
 
       // cov(P,P), 3x3 matrix, see Ref. (3)
-      ActsSquareMatrix<3> covP =
+      SquareMatrix<3> covP =
           billoirTrack.Cinv +
           billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
 
-      ActsSquareMatrix<7> cov;
+      SquareMatrix<7> cov;
       cov.setZero();
       cov.block<4, 4>(0, 0) = covV;
       cov.block<4, 3>(0, 4) = covVP;
