@@ -194,8 +194,8 @@ class MeasurementProxyBase {
   using SubspaceIndex = std::uint8_t;
   using Scalar = double;
 
-  using FullVector = Acts::ActsVector<FullSize>;
-  using FullSquareMatrix = Acts::ActsSquareMatrix<FullSize>;
+  using FullVector = Acts::Vector<FullSize>;
+  using FullSquareMatrix = Acts::SquareMatrix<FullSize>;
 
   using Container = std::conditional_t<ReadOnly, const MeasurementContainer,
                                        MeasurementContainer>;
