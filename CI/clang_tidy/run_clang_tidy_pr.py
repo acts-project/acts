@@ -268,9 +268,7 @@ def collect_changed_targets(
     changed = get_changed_files(base_ref, source_root)
     console.print(f"Found {len(changed)} changed files")
 
-    return resolve_targets(
-        changed, source_root, compdb_files, exclude_path_regexes
-    )
+    return resolve_targets(changed, source_root, compdb_files, exclude_path_regexes)
 
 
 def collect_targets_from_fixes(
@@ -295,9 +293,7 @@ def collect_targets_from_fixes(
         rel = str(Path(p).relative_to(source_root, walk_up=True))
         repo_paths.append(rel)
 
-    return resolve_targets(
-        repo_paths, source_root, compdb_files, exclude_path_regexes
-    )
+    return resolve_targets(repo_paths, source_root, compdb_files, exclude_path_regexes)
 
 
 def collect_all_targets(
@@ -564,7 +560,9 @@ def parse_fixes_yaml(path: Path) -> list[ParsedDiagnostic]:
             source = ""
             source_bytes = b""
 
-        suggestion = build_suggestion(source, source_bytes, msg.file_path, msg.replacements)
+        suggestion = build_suggestion(
+            source, source_bytes, msg.file_path, msg.replacements
+        )
 
         results.append(
             ParsedDiagnostic(
