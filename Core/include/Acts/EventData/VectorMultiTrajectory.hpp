@@ -533,11 +533,11 @@ class VectorMultiTrajectory final
     m_index[istate].measdim = measdim;
 
     double* measPtr = &m_meas[m_measOffset[istate]];
-    Eigen::Map<ActsVector<measdim>> valMap(measPtr);
+    Eigen::Map<Vector<measdim>> valMap(measPtr);
     valMap = val;
 
     double* covPtr = &m_measCov[m_measCovOffset[istate]];
-    Eigen::Map<ActsSquareMatrix<measdim>> covMap(covPtr);
+    Eigen::Map<SquareMatrix<measdim>> covMap(covPtr);
     covMap = cov;
   }
 

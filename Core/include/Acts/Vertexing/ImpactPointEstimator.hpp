@@ -146,9 +146,9 @@ class ImpactPointEstimator {
   ///
   /// @return The compatibility value
   template <int nDim>
-  Result<double> getVertexCompatibility(
-      const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-      const ActsVector<nDim>& vertexPos) const {
+  Result<double> getVertexCompatibility(const GeometryContext& gctx,
+                                        const BoundTrackParameters* trkParams,
+                                        const Vector<nDim>& vertexPos) const {
     static_assert(nDim == 3 || nDim == 4,
                   "Only 3D and 4D vertex positions allowed");
     return getVertexCompatibility(gctx, trkParams, {vertexPos.data(), nDim});
@@ -170,10 +170,9 @@ class ImpactPointEstimator {
   /// @param state The state object
   /// @return Pair containing the distance vector and momentum direction at PCA
   template <int nDim>
-  Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
-  getDistanceAndMomentum(const GeometryContext& gctx,
-                         const BoundTrackParameters& trkParams,
-                         const ActsVector<nDim>& vtxPos, State& state) const {
+  Result<std::pair<Acts::Vector<nDim>, Acts::Vector3>> getDistanceAndMomentum(
+      const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+      const Vector<nDim>& vtxPos, State& state) const {
     static_assert(nDim == 3 || nDim == 4,
                   "Only 3D and 4D vertex positions allowed");
     auto res =
@@ -235,11 +234,11 @@ class ImpactPointEstimator {
  private:
   Result<std::pair<Acts::Vector4, Acts::Vector3>> getDistanceAndMomentum(
       const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-      Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const;
+      Eigen::Map<const DynamicVector> vtxPos, State& state) const;
 
   Result<double> getVertexCompatibility(
       const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-      Eigen::Map<const ActsDynamicVector> vertexPos) const;
+      Eigen::Map<const DynamicVector> vertexPos) const;
 
   /// Configuration object
   const Config m_cfg;
