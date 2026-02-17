@@ -8,32 +8,27 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
 
-class PrototracksToTracks final : public IAlgorithm {
+class ProtoTracksToSeeds final : public IAlgorithm {
  public:
   struct Config {
-    /// Input proto tracks.
     std::string inputProtoTracks;
-    /// Optional. Input track parameters passed to the output tracks.
-    std::string inputTrackParameters;
-    /// Input measurements.
-    std::string inputMeasurements;
-    /// Output tracks.
-    std::string outputTracks = "tracks_from_prototracks";
+    std::string inputSpacePoints;
+    std::string outputSeeds = "seeds-from-protoTracks";
+    std::string outputProtoTracks = "remaining-protoTracks";
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  PrototracksToTracks(Config cfg, Acts::Logging::Level lvl);
+  ProtoTracksToSeeds(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///
@@ -47,11 +42,11 @@ class PrototracksToTracks final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
-  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
-      this, "InputTrackParameters"};
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
+                                                            "InputSpacePoints"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
                                                          "InputProtoTracks"};
 };

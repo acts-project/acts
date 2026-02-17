@@ -35,8 +35,7 @@ class TruthTrackFinder final : public IAlgorithm {
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
-    /// The input measurements collection that is used to sort the proto
-    /// tracks.
+    /// The input measurements collection that is used to sort the proto tracks.
     std::string inputMeasurements;
     /// The input sim hits collection that is used to create the proto tracks.
     std::string inputSimHits;
