@@ -16,7 +16,7 @@ namespace Acts {
 
 template <typename space_point_t>
 SpacePointBuilder<space_point_t>::SpacePointBuilder(
-    const SpacePointBuilderConfig& cfg, BuilderFunction func,
+    const SpacePointBuilderConfig& cfg, const BuilderFunction& func,
     std::unique_ptr<const Logger> logger)
     : m_config(cfg), m_spConstructor(func), m_logger(std::move(logger)) {
   m_spUtility = std::make_shared<SpacePointUtility>(cfg);
