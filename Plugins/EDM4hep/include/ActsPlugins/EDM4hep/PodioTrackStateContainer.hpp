@@ -865,10 +865,10 @@ class MutablePodioTrackStateContainer final
 
     data.measdim = measdim;
 
-    Eigen::Map<Acts::ActsVector<measdim>> valMap(data.measurement.data());
+    Eigen::Map<Acts::Vector<measdim>> valMap(data.measurement.data());
     valMap = val;
 
-    Eigen::Map<Acts::ActsSquareMatrix<measdim>> covMap(
+    Eigen::Map<Acts::SquareMatrix<measdim>> covMap(
         data.measurementCovariance.data());
     covMap = cov;
   }
