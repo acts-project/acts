@@ -7,13 +7,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
+#include "ActsExamples/Utilities/PrototracksToParameters.hpp"
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
 #include "ActsExamples/Utilities/PrototracksToTracks.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -52,6 +52,11 @@ void addUtilities(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(PrototracksToTracks, mex, "PrototracksToTracks",
                                 inputMeasurements, inputProtoTracks,
                                 inputTrackParameters, outputTracks);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      PrototracksToParameters, mex, "PrototracksToParameters", inputProtoTracks,
+      inputSpacePoints, outputSeeds, outputParameters, outputProtoTracks,
+      geometry, magneticField, buildTightSeeds);
 }
 
 }  // namespace ActsPython
