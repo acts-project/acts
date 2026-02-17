@@ -852,11 +852,17 @@ def analyze(
     ],
     files: Annotated[
         list[Path] | None,
-        typer.Argument(help="Explicit file paths to analyse (bypasses --base-ref / --all)"),
+        typer.Argument(
+            help="Explicit file paths to analyse (bypasses --base-ref / --all)"
+        ),
     ] = None,
     base_ref: Annotated[
         str | None,
-        typer.Option("--base-ref", "-b", help="Git ref to diff against (required unless --all or files are given)"),
+        typer.Option(
+            "--base-ref",
+            "-b",
+            help="Git ref to diff against (required unless --all or files are given)",
+        ),
     ] = None,
     all: Annotated[
         bool,

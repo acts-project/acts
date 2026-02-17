@@ -96,4 +96,3 @@ install(
     DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     COMPONENT dev
 )
-
