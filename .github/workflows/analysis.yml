@@ -130,9 +130,7 @@ jobs:
         run: >
           cmake -B build -S .
           --preset=gitlab-ci-clangtidy
-          -DCMAKE_CXX_COMPILER=clang++
-          -DCMAKE_C_COMPILER=clang
-          -DACTS_RUN_CLANG_TIDY=OFF
+
       - name: Run codegen
         run: cmake --build build --target ActsCodegen
 
