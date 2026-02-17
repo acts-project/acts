@@ -48,7 +48,7 @@ from rich.syntax import Syntax
 from rich.text import Text
 
 app = typer.Typer()
-console = Console(stderr=True)
+console = Console(stderr=True, width=None if sys.stderr.isatty() else 120)
 
 SOURCE_SUFFIXES = {".cpp", ".cxx", ".cc", ".c"}
 HEADER_SUFFIXES = {".hpp", ".hxx", ".hh", ".h", ".ipp"}
@@ -257,8 +257,7 @@ def resolve_targets(
         if tu is not None:
             targets.add(tu)
         else:
-            console.print(f"  header {hdr} has no TU, analysing header directly")
-            targets.add(abs_path)
+            console.print(f"  SKIP header {hdr} (no TU in compile_commands.json)")
 
     console.print(f"Total targets: {len(targets)}")
     return sorted(targets)
