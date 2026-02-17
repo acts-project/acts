@@ -302,13 +302,6 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
 
-  // update seed space point indices to original space point container
-  for (auto seed : seeds) {
-    for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
-    }
-  }
-
   m_outputSeeds(ctx, std::move(seeds));
   return ProcessCode::SUCCESS;
 }
