@@ -29,7 +29,8 @@ struct DummySequenceElement : public ActsExamples::SequenceElement {
 };
 
 template <typename T>
-void addToWhiteBoard(std::string name, T data, ActsExamples::WhiteBoard &wb) {
+void addToWhiteBoard(const std::string &name, T data,
+                     ActsExamples::WhiteBoard &wb) {
   DummySequenceElement dummyElement;
 
   ActsExamples::WriteDataHandle<T> handle(&dummyElement, name + "handle");
@@ -38,7 +39,7 @@ void addToWhiteBoard(std::string name, T data, ActsExamples::WhiteBoard &wb) {
 }
 
 template <typename T>
-T getFromWhiteBoard(std::string name, ActsExamples::WhiteBoard &wb) {
+T getFromWhiteBoard(const std::string &name, ActsExamples::WhiteBoard &wb) {
   DummySequenceElement dummyElement;
 
   ActsExamples::ReadDataHandle<T> handle(&dummyElement, name + "handle");

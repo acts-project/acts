@@ -31,7 +31,7 @@ class EDM4hepTrackOutputConverter : public PodioOutputConverter {
     std::string outputTracks = "ActsTracks";
     /// Magnetic field along the z axis (needed for the conversion of
     /// parameters)
-    double Bz;
+    double Bz{};
   };
 
   /// constructor
