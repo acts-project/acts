@@ -155,7 +155,7 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
     eoptions.navigation = navigation;
 
     // Action / Abort list
-    eoptions.actorList = extendedActorList;
+    eoptions.actorList = std::move(extendedActorList);
 
     // And return the options
     return eoptions;

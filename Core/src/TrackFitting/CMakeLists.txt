@@ -11,6 +11,7 @@ target_sources(
         GsfMixtureReduction.cpp
         GlobalChiSquareFitter.cpp
         MbfSmoother.cpp
+        detail/GsfComponentMerging.cpp
 )
 
 foreach(DIM RANGE 1 6)

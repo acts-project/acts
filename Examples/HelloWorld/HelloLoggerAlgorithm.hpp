@@ -10,17 +10,15 @@
 
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
-#include <memory>
-
 namespace ActsExamples {
 
 /// A simple algorithm that just prints hello world.
-class HelloLoggerAlgorithm : public ActsExamples::IAlgorithm {
+class HelloLoggerAlgorithm : public IAlgorithm {
  public:
   explicit HelloLoggerAlgorithm(Acts::Logging::Level level);
 
   // Log a few messages.
-  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 };
 
 }  // namespace ActsExamples

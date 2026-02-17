@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -22,11 +23,6 @@
 #include <array>
 #include <memory>
 #include <string>
-
-namespace Acts {
-class TrackingGeometry;
-class MagneticFieldProvider;
-}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -96,7 +92,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrackParamsEstimationAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackParamsEstimationAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the track parameters making algorithm.
   ///

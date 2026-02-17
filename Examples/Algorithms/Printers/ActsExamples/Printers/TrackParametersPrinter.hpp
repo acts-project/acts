@@ -18,7 +18,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Print track parameters.
 class TrackParametersPrinter : public IAlgorithm {

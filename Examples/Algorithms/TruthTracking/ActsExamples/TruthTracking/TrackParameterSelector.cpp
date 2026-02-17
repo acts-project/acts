@@ -20,8 +20,10 @@
 #include <utility>
 #include <vector>
 
-ActsExamples::TrackParameterSelector::TrackParameterSelector(
-    const Config& config, Acts::Logging::Level level)
+namespace ActsExamples {
+
+TrackParameterSelector::TrackParameterSelector(const Config& config,
+                                               Acts::Logging::Level level)
     : IAlgorithm("TrackParameterSelector", level), m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameters");
@@ -34,8 +36,7 @@ ActsExamples::TrackParameterSelector::TrackParameterSelector(
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackParameterSelector::execute(const AlgorithmContext& ctx) const {
   // helper functions to select tracks
   auto within = [](double x, double min, double max) {
     return (min <= x) && (x < max);
@@ -79,3 +80,5 @@ ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

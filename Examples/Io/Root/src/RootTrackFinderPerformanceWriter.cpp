@@ -31,17 +31,17 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
 using ActsPlugins::toRoot;
 
+namespace ActsExamples {
+
 namespace {
 
-void writeTrackSummaryPlots(const ActsExamples::TrackSummaryPlotTool& tool) {
+void writeTrackSummaryPlots(const TrackSummaryPlotTool& tool) {
   for (const auto& [name, prof] : tool.profiles()) {
     toRoot(prof)->Write();
   }
 }
 
 }  // namespace
-
-namespace ActsExamples {
 
 RootTrackFinderPerformanceWriter::RootTrackFinderPerformanceWriter(
     RootTrackFinderPerformanceWriter::Config cfg, Acts::Logging::Level lvl)

@@ -51,8 +51,7 @@ class TruthGraphBuilder final : public IAlgorithm {
 
   ~TruthGraphBuilder() override = default;
 
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   const Config& config() const { return m_cfg; }
 

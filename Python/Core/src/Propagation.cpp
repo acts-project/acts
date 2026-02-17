@@ -49,7 +49,7 @@ void addPropagation(py::module_& m) {
     using Config = Navigator::Config;
     auto nav =
         py::class_<Navigator, std::shared_ptr<Navigator>>(m, "Navigator")
-            .def(py::init<>([](Config cfg,
+            .def(py::init<>([](const Config& cfg,
                                Logging::Level level = Logging::INFO) {
                    return Navigator{cfg, getDefaultLogger("Navigator", level)};
                  }),

@@ -8,18 +8,20 @@
 
 #include "HelloLoggerAlgorithm.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <cstddef>
 
-ActsExamples::HelloLoggerAlgorithm::HelloLoggerAlgorithm(
-    Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("HelloLogger", level) {}
+namespace ActsExamples {
 
-ActsExamples::ProcessCode ActsExamples::HelloLoggerAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+HelloLoggerAlgorithm::HelloLoggerAlgorithm(Acts::Logging::Level level)
+    : IAlgorithm("HelloLogger", level) {}
+
+ProcessCode HelloLoggerAlgorithm::execute(const AlgorithmContext& ctx) const {
   ACTS_INFO(" Hello World! (from event=" << ctx.eventNumber);
   ACTS_DEBUG("  - that's an ACTS_DEBUG message");
   ACTS_VERBOSE("  - that's an ACTS_VERBOSE message");
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

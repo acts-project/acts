@@ -8,13 +8,11 @@
 
 #include "ActsExamples/Utilities/Options.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
 

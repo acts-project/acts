@@ -17,7 +17,6 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/detail/CylindricalSpacePointGrid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/GridIterator.hpp"
 
 #include <chrono>
 #include <cmath>
