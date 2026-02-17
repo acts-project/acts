@@ -27,73 +27,73 @@ env:
 #      found a way to have Github actions not fail regularly with this job
 #      all unit tests should be reactivated.
 jobs:
-  # build_debug:
-  #   runs-on: ubuntu-latest
-  #   container: ghcr.io/acts-project/ubuntu2404:83
-  #   steps:
-  #
-  #     - uses: actions/checkout@v6
-  #
-  #     - name: Install dependencies
-  #       uses: ./.github/actions/dependencies
-  #       with:
-  #         compiler: g++
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #
-  #     - name: Save PR metadata
-  #       if: github.event_name == 'pull_request'
-  #       run: |
-  #         # Shallow clone: parent commits aren't available via git,
-  #         # but GitHub provides the SHAs through the event context.
-  #         printf '{"pr_number":"%s","pr_sha":"%s","base_sha":"%s","merge_sha":"%s"}\n' \
-  #           "${{ github.event.number }}" \
-  #           "${{ github.event.pull_request.head.sha }}" \
-  #           "${{ github.event.pull_request.base.sha }}" \
-  #           "${{ github.sha }}" \
-  #           > PR_metadata.json
-  #         cat PR_metadata.json
-  #
-  #     - name: Persist PR metadata
-  #       if: github.event_name == 'pull_request'
-  #       uses: actions/upload-artifact@v6
-  #       with:
-  #         name: PR_metadata
-  #         path: PR_metadata.json
-  #
-  #     - name: Cache build
-  #       uses: actions/cache@v5
-  #       with:
-  #         path: ${{ env.CCACHE_DIR }}
-  #         key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-  #         restore-keys: |
-  #           ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-  #
-  #     - name: Configure
-  #       run: >
-  #         ccache -z &&
-  #         cmake -B build -S . --preset=github-ci-coverage
-  #     - name: Build
-  #       run: cmake --build build
-  #     - name: ccache stats
-  #       run: ccache -s
-  #     - name: Unit tests
-  #       run: ctest --test-dir build -j$(nproc)
-  #
-  #     - name: Remove .o files
-  #       run: >
-  #         du -sh build
-  #         && find build -name *.o -delete
-  #         && du -sh build
-  #     - name: Coverage
-  #       run: >
-  #         pip3 install gcovr==7.2
-  #         && cd build
-  #         && /usr/bin/python3 ../CI/test_coverage.py
-  #
-  #     - uses: actions/upload-artifact@v6
-  #       with:
-  #         name: coverage-build
-  #         path: build
+  build_debug:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404:83
+    steps:
+
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save PR metadata
+        if: github.event_name == 'pull_request'
+        run: |
+          # Shallow clone: parent commits aren't available via git,
+          # but GitHub provides the SHAs through the event context.
+          printf '{"pr_number":"%s","pr_sha":"%s","base_sha":"%s","merge_sha":"%s"}\n' \
+            "${{ github.event.number }}" \
+            "${{ github.event.pull_request.head.sha }}" \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.sha }}" \
+            > PR_metadata.json
+          cat PR_metadata.json
+
+      - name: Persist PR metadata
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v6
+        with:
+          name: PR_metadata
+          path: PR_metadata.json
+
+      - name: Cache build
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          cmake -B build -S . --preset=github-ci-coverage
+      - name: Build
+        run: cmake --build build
+      - name: ccache stats
+        run: ccache -s
+      - name: Unit tests
+        run: ctest --test-dir build -j$(nproc)
+
+      - name: Remove .o files
+        run: >
+          du -sh build
+          && find build -name *.o -delete
+          && du -sh build
+      - name: Coverage
+        run: >
+          pip3 install gcovr==7.2
+          && cd build
+          && /usr/bin/python3 ../CI/test_coverage.py
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: coverage-build
+          path: build
 
   clang_tidy:
     runs-on: ubuntu-latest
@@ -160,37 +160,37 @@ jobs:
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml
 
-  # build_performance:
-  #   runs-on: ubuntu-latest
-  #   container: ghcr.io/acts-project/ubuntu2404:83
-  #   if: github.ref == 'refs/heads/main'
-  #   steps:
-  #     - uses: actions/checkout@v6
-  #
-  #     - name: Install dependencies
-  #       uses: ./.github/actions/dependencies
-  #       with:
-  #         compiler: g++
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #
-  #     - name: Install dependencies
-  #       run: pip3 install cmakeperf==0.6.1
-  #     - name: Configure
-  #       run: >
-  #         cmake -B build -S .
-  #         --preset=github-ci
-  #         -DCMAKE_BUILD_TYPE=RelWithDebInfo
-  #         -DCMAKE_CXX_FLAGS="-Werror"
-  #         -DPython_EXECUTABLE=$(which python3)
-  #         -DACTS_BUILD_ODD=OFF
-  #     - name: Measure
-  #       run: cmakeperf collect build/compile_commands.json -o perf.csv
-  #     - name: Results
-  #       run: cmakeperf print perf.csv
-  #     - uses: actions/upload-artifact@v6
-  #       with:
-  #         name: cmakeperf
-  #         path: perf.csv
+  build_performance:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404:83
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: pip3 install cmakeperf==0.6.1
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          --preset=github-ci
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_CXX_FLAGS="-Werror"
+          -DPython_EXECUTABLE=$(which python3)
+          -DACTS_BUILD_ODD=OFF
+      - name: Measure
+        run: cmakeperf collect build/compile_commands.json -o perf.csv
+      - name: Results
+        run: cmakeperf print perf.csv
+      - uses: actions/upload-artifact@v6
+        with:
+          name: cmakeperf
+          path: perf.csv
 
   # metric_tracking:
   #   runs-on: ubuntu-latest
