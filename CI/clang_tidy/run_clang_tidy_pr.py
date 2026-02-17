@@ -208,7 +208,6 @@ def is_path_excluded(path: str, exclude_path_regexes: list[str]) -> bool:
 
 def resolve_targets(
     repo_paths: list[str],
-    build_dir: Path,
     source_root: Path,
     compdb_files: set[Path],
     exclude_path_regexes: list[str] | None = None,
@@ -265,24 +264,20 @@ def resolve_targets(
 
 def collect_changed_targets(
     base_ref: str,
-    build_dir: Path,
     source_root: Path,
+    compdb_files: set[Path],
     exclude_path_regexes: list[str] | None = None,
 ) -> list[Path]:
-    compdb_files = load_compdb(build_dir)
-    console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
-
     changed = get_changed_files(base_ref, source_root)
     console.print(f"Found {len(changed)} changed files")
 
     return resolve_targets(
-        changed, build_dir, source_root, compdb_files, exclude_path_regexes
+        changed, source_root, compdb_files, exclude_path_regexes
     )
 
 
 def collect_targets_from_fixes(
     fixes_file: Path,
-    build_dir: Path,
     source_root: Path,
     compdb_files: set[Path],
     exclude_path_regexes: list[str] | None = None,
@@ -307,18 +302,16 @@ def collect_targets_from_fixes(
         repo_paths.append(rel)
 
     return resolve_targets(
-        repo_paths, build_dir, source_root, compdb_files, exclude_path_regexes
+        repo_paths, source_root, compdb_files, exclude_path_regexes
     )
 
 
 def collect_all_targets(
-    build_dir: Path,
+    compdb_files: set[Path],
     exclude_path_regexes: list[str] | None = None,
 ) -> list[Path]:
     if exclude_path_regexes is None:
         exclude_path_regexes = []
-    compdb_files = load_compdb(build_dir)
-    console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
     targets = sorted(
         f
         for f in compdb_files
@@ -925,38 +918,35 @@ def analyze(
     # Load filter config early so path excludes apply during target selection
     config = load_filter_config(filter_config)
 
+    compdb_files = load_compdb(build_dir)
+    console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
+
     # 1) Collect targets
     if from_fixes is not None:
-        compdb_files = load_compdb(build_dir)
-        console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
         targets = collect_targets_from_fixes(
             from_fixes,
-            build_dir,
             source_root,
             compdb_files,
             config.exclude_path_regexes,
         )
     elif files:
         file_list = [str(f) for f in files]
-        compdb_files = load_compdb(build_dir)
-        console.print(f"Loaded {len(compdb_files)} entries from compile_commands.json")
         console.print(f"{len(file_list)} file(s) specified as arguments")
         targets = resolve_targets(
             file_list,
-            build_dir,
             source_root,
             compdb_files,
             config.exclude_path_regexes,
         )
     elif all:
-        targets = collect_all_targets(build_dir, config.exclude_path_regexes)
+        targets = collect_all_targets(compdb_files, config.exclude_path_regexes)
     else:
         if base_ref is None:
             raise typer.BadParameter(
                 "--base-ref is required unless --all, --from-fixes, or files are given"
             )
         targets = collect_changed_targets(
-            base_ref, build_dir, source_root, config.exclude_path_regexes
+            base_ref, source_root, compdb_files, config.exclude_path_regexes
         )
 
     if list_targets:
