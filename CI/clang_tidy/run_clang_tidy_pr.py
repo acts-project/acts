@@ -477,16 +477,17 @@ def merge_fixes_yaml(fixes_dir: Path, output: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def offset_to_line_col(text: str, offset: int) -> tuple[int, int]:
+def offset_to_line_col(raw: bytes, offset: int) -> tuple[int, int]:
     """Convert a byte offset into (1-based line, 1-based column)."""
-    line = text[:offset].count("\n") + 1
-    last_nl = text.rfind("\n", 0, offset)
+    line = raw[:offset].count(b"\n") + 1
+    last_nl = raw.rfind(b"\n", 0, offset)
     col = offset - last_nl  # works even when last_nl == -1
     return line, col
 
 
 def build_suggestion(
     source: str,
+    source_bytes: bytes,
     diag_file: str,
     replacements: list[Replacement],
 ) -> str:
@@ -502,14 +503,14 @@ def build_suggestion(
     Returns an empty string when no applicable replacements exist.
     """
     applicable = [r for r in replacements if r.file_path == diag_file]
-    if not applicable or not source:
+    if not applicable or not source_bytes:
         return ""
 
     lines = source.splitlines()
     parts: list[str] = []
 
     for repl in sorted(applicable, key=lambda r: r.offset):
-        line_no, col = offset_to_line_col(source, repl.offset)
+        line_no, col = offset_to_line_col(source_bytes, repl.offset)
         if line_no < 1 or line_no > len(lines):
             continue
 
@@ -540,7 +541,7 @@ def parse_fixes_yaml(path: Path) -> list[ParsedDiagnostic]:
     fixes = FixesFile.model_validate(yaml.safe_load(path.read_text()) or {})
 
     results: list[ParsedDiagnostic] = []
-    file_cache: dict[Path, str] = {}
+    file_cache: dict[Path, tuple[str, bytes]] = {}
 
     for diag in fixes.diagnostics:
         msg = diag.message
@@ -553,15 +554,17 @@ def parse_fixes_yaml(path: Path) -> list[ParsedDiagnostic]:
         if msg.file_offset is not None and msg.file_offset >= 0:
             if filepath not in file_cache:
                 try:
-                    file_cache[filepath] = filepath.read_text(errors="replace")
+                    raw = filepath.read_bytes()
+                    file_cache[filepath] = (raw.decode(errors="replace"), raw)
                 except OSError:
-                    file_cache[filepath] = ""
-            source = file_cache[filepath]
-            line, col = offset_to_line_col(source, msg.file_offset)
+                    file_cache[filepath] = ("", b"")
+            source, source_bytes = file_cache[filepath]
+            line, col = offset_to_line_col(source_bytes, msg.file_offset)
         else:
             source = ""
+            source_bytes = b""
 
-        suggestion = build_suggestion(source, msg.file_path, msg.replacements)
+        suggestion = build_suggestion(source, source_bytes, msg.file_path, msg.replacements)
 
         results.append(
             ParsedDiagnostic(
