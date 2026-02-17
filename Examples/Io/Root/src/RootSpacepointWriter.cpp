@@ -15,16 +15,15 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <ios>
-#include <ostream>
 #include <stdexcept>
-#include <vector>
 
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootSpacepointWriter::RootSpacepointWriter(
-    const ActsExamples::RootSpacepointWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootSpacepointWriter::RootSpacepointWriter(
+    const RootSpacepointWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputSpacepoints, "RootSpacepointWriter", level),
       m_cfg(config) {
   // inputParticles is already checked by base constructor
@@ -68,13 +67,13 @@ ActsExamples::RootSpacepointWriter::RootSpacepointWriter(
   }
 }
 
-ActsExamples::RootSpacepointWriter::~RootSpacepointWriter() {
+RootSpacepointWriter::~RootSpacepointWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::finalize() {
+ProcessCode RootSpacepointWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -85,9 +84,8 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
-    const AlgorithmContext& ctx,
-    const ActsExamples::SimSpacePointContainer& spacepoints) {
+ProcessCode RootSpacepointWriter::writeT(
+    const AlgorithmContext& ctx, const SimSpacePointContainer& spacepoints) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -137,5 +135,7 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
     // Fill the tree
     m_outputTree->Fill();
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

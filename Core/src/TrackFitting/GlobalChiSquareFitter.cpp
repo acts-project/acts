@@ -83,7 +83,7 @@ void Acts::Experimental::addMeasurementToGx2fSumsBackend(
        matSurface++) {
     const BoundMatrix jac = jacobianFromStart[matSurface];
 
-    const ActsMatrix<eBoundSize, 2> jacPhiTheta =
+    const Matrix<eBoundSize, 2> jacPhiTheta =
         jac * Gx2fConstants::phiThetaProjector;
 
     // The position, where we need to insert the values in the extended Jacobian

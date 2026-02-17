@@ -86,7 +86,7 @@ struct Options {
   TrackingGeometryConverter::Options trackingGeometryOptions;
 
   /// RZ axes ranges
-  std::array<std::array<double, 2>, 2> rzAxes;
+  std::array<std::array<double, 2>, 2> rzAxes{};
   /// RZ eta line positions
   std::vector<double> rzEtaLines;
 };

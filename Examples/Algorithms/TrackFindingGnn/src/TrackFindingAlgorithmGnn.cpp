@@ -34,6 +34,8 @@ using namespace Acts;
 using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
+namespace ActsExamples {
+
 namespace {
 
 struct LoopHook : public GnnHook {
@@ -49,9 +51,9 @@ struct LoopHook : public GnnHook {
 
 }  // namespace
 
-ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
-    Config config, Logging::Level level)
-    : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
+TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(Config config,
+                                                   Logging::Level level)
+    : IAlgorithm("TrackFindingMLBasedAlgorithm", level),
       m_cfg(std::move(config)),
       m_pipeline(m_cfg.graphConstructor, m_cfg.edgeClassifiers,
                  m_cfg.trackBuilder, logger().clone()) {
@@ -101,8 +103,8 @@ ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
 
 /// Allow access to features with nice names
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackFindingAlgorithmGnn::execute(
+    const AlgorithmContext& ctx) const {
   ACTS_NVTX_START(data_preparation);
 
   using Clock = std::chrono::high_resolution_clock;
@@ -266,10 +268,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
   }
 
   ACTS_NVTX_STOP(post_processing);
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::finalize() {
+ProcessCode TrackFindingAlgorithmGnn::finalize() {
   namespace ba = boost::accumulators;
 
   auto print = [](const auto& t) {
@@ -293,3 +295,5 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::finalize() {
 
   return {};
 }
+
+}  // namespace ActsExamples

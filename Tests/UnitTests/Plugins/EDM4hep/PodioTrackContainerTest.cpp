@@ -41,7 +41,7 @@
 #include "ActsPlugins/EDM4hep/PodioTrackStateContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "ActsPodioEdm/Surface.h"
-#include <ActsPodioEdm/TrackCollection.h>
+#include "ActsPodioEdm/TrackCollection.h"
 
 #include <algorithm>
 #include <iterator>

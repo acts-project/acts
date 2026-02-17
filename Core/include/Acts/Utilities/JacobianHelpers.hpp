@@ -23,13 +23,12 @@ namespace Acts {
 ///
 /// @return The Jacobian d(dir_x, dir_y, dir_z) / d(phi, theta)
 ///
-inline ActsMatrix<3, 2> sphericalToFreeDirectionJacobian(
-    const Vector3& direction) {
+inline Matrix<3, 2> sphericalToFreeDirectionJacobian(const Vector3& direction) {
   auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
 
   // clang-format off
-  ActsMatrix<3, 2> jacobian;
+  Matrix<3, 2> jacobian;
   jacobian <<
     -direction.y(),  cosTheta * cosPhi,
      direction.x(),  cosTheta * sinPhi,
@@ -49,14 +48,13 @@ inline ActsMatrix<3, 2> sphericalToFreeDirectionJacobian(
 ///
 /// @return The Jacobian d(phi, theta) / d(dir_x, dir_y, dir_z)
 ///
-inline ActsMatrix<2, 3> freeToSphericalDirectionJacobian(
-    const Vector3& direction) {
+inline Matrix<2, 3> freeToSphericalDirectionJacobian(const Vector3& direction) {
   auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
   double invSinTheta = 1. / sinTheta;
 
   // clang-format off
-  ActsMatrix<2, 3> jacobian;
+  Matrix<2, 3> jacobian;
   jacobian <<
     -sinPhi * invSinTheta, cosPhi * invSinTheta, 0,
      cosPhi * cosTheta,    sinPhi * cosTheta,    -sinTheta;

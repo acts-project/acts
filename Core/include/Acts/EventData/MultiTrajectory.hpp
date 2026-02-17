@@ -719,8 +719,8 @@ class MultiTrajectory {
     visit_measurement(measdim, [this, istate]<std::size_t DIM>(
                                    std::integral_constant<std::size_t, DIM>) {
       self().allocateCalibrated_impl(
-          istate, ActsVector<DIM>{ActsVector<DIM>::Zero()},
-          ActsSquareMatrix<DIM>{ActsSquareMatrix<DIM>::Zero()});
+          istate, Vector<DIM>{Vector<DIM>::Zero()},
+          SquareMatrix<DIM>{SquareMatrix<DIM>::Zero()});
     });
   }
 
