@@ -252,7 +252,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   // Get the event number
   m_eventNr = ctx.eventNumber;
 
-  std::vector<ActsPlugins::FastJet::TruthJet> jets;
+  std::vector<ActsExamples::TruthJet> jets;
   std::unordered_map<std::size_t, std::vector<std::int32_t>>
       jetToTrackIndicesMap;
 
@@ -273,13 +273,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
       m_jet_eta.push_back(std::atanh(std::cos(jet_theta)));
       m_jet_phi.push_back(phi(jet_4mom));
       m_jet_label.push_back(static_cast<int>(jets[ijet].jetLabel()));
-      if (jets[ijet].associatedTracks().empty()) {
-        ACTS_WARNING("Jet " << ijet
-                            << " has no associated tracks! Make sure you "
-                               "have run the track-jet association.");
-      } else {
-        m_ntracks_per_jets.push_back(jets[ijet].associatedTracks().size());
-      }
+      m_ntracks_per_jets.push_back(jets[ijet].associatedTracks().size());
     }
   }
 

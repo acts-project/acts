@@ -13,10 +13,10 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
+#include "ActsExamples/EventData/Jets.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsExamples/Jets/TruthJetAlgorithm.hpp"
 
 #include <cstdint>
 #include <mutex>
@@ -84,6 +84,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
+
+  using TruthJetContainer = std::vector<ActsExamples::TruthJet>;
 
  protected:
   /// @brief Write method called by the base class

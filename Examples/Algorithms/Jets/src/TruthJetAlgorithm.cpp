@@ -331,6 +331,9 @@ void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
       // Calculate deltaR between track and jet
       auto drTrackJet = Acts::VectorHelpers::deltaR(jet_3mom, track_3mom);
 
+      ACTS_VERBOSE("DeltaR between track " << track.index() << " and jet " << ijet
+                                        << " is " << drTrackJet);
+
       if (drTrackJet < minDeltaR) {
         minDeltaR = drTrackJet;
         closestJetIndex = ijet;
@@ -357,6 +360,9 @@ void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
       }
     }
     jets[ijet].setAssociatedTracks(associatedTracks);
+    if (jets[ijet].associatedTracks().size() == 0) {
+      ACTS_VERBOSE("Jet " << ijet << " is labeled as " << jets[ijet].jetLabel() << " and has no associated tracks!");
+    }
   }
 }
 
