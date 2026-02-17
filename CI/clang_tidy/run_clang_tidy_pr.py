@@ -89,12 +89,14 @@ class Diagnostic(BaseModel):
 
     name: str = Field(default="unknown", alias="DiagnosticName")
     message: DiagMessage = Field(default_factory=DiagMessage, alias="DiagnosticMessage")
+    analyzed_files: list[str] = Field(default_factory=list, alias="AnalyzedFiles")
 
 
 class FixesFile(BaseModel):
     model_config = {"populate_by_name": True}
 
     diagnostics: list[Diagnostic] = Field(default_factory=list, alias="Diagnostics")
+    analyzed_file: str = Field(default="", alias="AnalyzedFile")
 
 
 class ParsedDiagnostic(BaseModel):
@@ -106,6 +108,7 @@ class ParsedDiagnostic(BaseModel):
     abs_path: str = ""
     rel_path: str = ""
     suggestion: str = ""
+    analyzed_files: list[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -411,6 +414,15 @@ async def run_clang_tidy_on_targets(
                 )
                 await proc.wait()
 
+        # Inject the analyzed file into the YAML so we can trace diagnostics
+        # back to the TU that produced them.
+        if yaml_path.exists():
+            data = yaml.safe_load(yaml_path.read_text()) or {}
+            data["AnalyzedFile"] = str(file)
+            yaml_path.write_text(
+                yaml.dump(data, default_flow_style=False, sort_keys=False)
+            )
+
         console.log(file)
         progress.advance(task_id)
 
@@ -434,22 +446,36 @@ def write_empty_fixes(output: Path) -> None:
 
 
 def merge_fixes_yaml(fixes_dir: Path, output: Path) -> None:
-    """Merge and deduplicate all per-TU export-fixes YAML files into a single file."""
+    """Merge and deduplicate all per-TU export-fixes YAML files into a single file.
+
+    When the same diagnostic appears from multiple TUs, the ``AnalyzedFiles``
+    list on the merged diagnostic collects all originating files.
+    """
     yaml_files = sorted(fixes_dir.glob("*.yaml"))
+
+    # Collect diagnostics, tagging each with its originating analyzed file.
     all_diagnostics: list[Diagnostic] = []
     for yf in yaml_files:
         fixes = FixesFile.model_validate(yaml.safe_load(yf.read_text()) or {})
-        all_diagnostics.extend(fixes.diagnostics)
+        analyzed_file = fixes.analyzed_file
+        for d in fixes.diagnostics:
+            if analyzed_file:
+                d.analyzed_files = [analyzed_file]
+            all_diagnostics.append(d)
 
-    # Deduplicate by (file, offset, check)
-    seen: set[tuple] = set()
-    unique: list[Diagnostic] = []
+    # Deduplicate by (file, offset, check), merging analyzed_files lists.
+    seen: dict[tuple, Diagnostic] = {}
     for d in all_diagnostics:
         key = (d.message.file_path, d.message.file_offset, d.name)
-        if key not in seen:
-            seen.add(key)
-            unique.append(d)
+        if key in seen:
+            existing = seen[key]
+            for af in d.analyzed_files:
+                if af not in existing.analyzed_files:
+                    existing.analyzed_files.append(af)
+        else:
+            seen[key] = d
 
+    unique = list(seen.values())
     deduped = len(all_diagnostics) - len(unique)
     if deduped:
         console.print(f"Deduplicated {deduped} diagnostic(s).")
@@ -559,6 +585,7 @@ def parse_fixes_yaml(path: Path) -> list[ParsedDiagnostic]:
                 line=line,
                 col=col,
                 suggestion=suggestion,
+                analyzed_files=list(diag.analyzed_files),
             )
         )
     return results
@@ -611,19 +638,23 @@ def emit_annotations(
         diag.abs_path = str(diag.path)
         diag.rel_path = normalize_path(diag.path, source_root)
 
-    # Deduplicate
-    seen: set[tuple] = set()
-    unique: list[ParsedDiagnostic] = []
+    # Deduplicate, merging analyzed_files lists
+    seen_map: dict[tuple, ParsedDiagnostic] = {}
     for diag in diagnostics:
         key = (diag.rel_path, diag.line, diag.col, diag.check)
-        if key not in seen:
-            seen.add(key)
-            unique.append(diag)
-        elif verbose:
-            console.print(
-                f"  [dim]DEDUP[/] {diag.rel_path}:{diag.line}:{diag.col}"
-                f" [{diag.check}] {diag.message}"
-            )
+        if key in seen_map:
+            existing = seen_map[key]
+            for af in diag.analyzed_files:
+                if af not in existing.analyzed_files:
+                    existing.analyzed_files.append(af)
+            if verbose:
+                console.print(
+                    f"  [dim]DEDUP[/] {diag.rel_path}:{diag.line}:{diag.col}"
+                    f" [{diag.check}] {diag.message}"
+                )
+        else:
+            seen_map[key] = diag
+    unique = list(seen_map.values())
 
     if verbose and len(diagnostics) != len(unique):
         console.print(f"Deduplicated {len(diagnostics) - len(unique)} diagnostic(s).")
@@ -719,6 +750,16 @@ def emit_annotations(
                                 title_align="left",
                             )
                         )
+                    if diag.analyzed_files:
+                        af_lines = "\n".join(diag.analyzed_files)
+                        renderables.append(
+                            Panel(
+                                Text(af_lines, style="cyan"),
+                                border_style="dim",
+                                title=f"analyzed from ({len(diag.analyzed_files)})",
+                                title_align="left",
+                            )
+                        )
                     panel = Panel(
                         Group(*renderables),
                         title=title,
@@ -733,6 +774,10 @@ def emit_annotations(
                 f"[bold red]{diag.check}[/] {diag.rel_path}:{diag.line}:{diag.col}"
             )
             console.print(f"  [yellow]{diag.message}[/]")
+            if diag.analyzed_files:
+                console.print(
+                    f"  [dim]analyzed from:[/] [cyan]{', '.join(diag.analyzed_files)}[/]"
+                )
 
     if remaining:
         console.print(
