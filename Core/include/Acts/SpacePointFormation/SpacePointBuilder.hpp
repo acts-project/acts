@@ -25,11 +25,11 @@ namespace Acts {
 /// measurements on the pixel or strip detectors need further treatment. This
 /// class takes the SouceLinks and provides the corresponding space points.
 ///
-template <typename spacepoint_t>
+template <typename space_point_t>
 class SpacePointBuilder {
  public:
   /// Type alias for space point builder function
-  using BuilderFunction = std::function<spacepoint_t(
+  using BuilderFunction = std::function<space_point_t(
       Acts::Vector3, std::optional<double>, Acts::Vector2,
       std::optional<double>, boost::container::static_vector<SourceLink, 2>)>;
 
@@ -55,7 +55,7 @@ class SpacePointBuilder {
   void buildSpacePoint(
       const GeometryContext& gctx, const std::vector<SourceLink>& sourceLinks,
       const SpacePointBuilderOptions& opt,
-      std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const;
+      std::back_insert_iterator<container_t<space_point_t>> spacePointIt) const;
 
   /// @brief Searches possible combinations of two SourceLinks on different
   /// surfaces that may come from the same particles
@@ -76,7 +76,7 @@ class SpacePointBuilder {
   SpacePointBuilderConfig m_config;
 
   /// @brief Function to create external space point
-  /// The constructor of spacepoint_t with Vector3 global pos, Vector2 global
+  /// The constructor of space_point_t with Vector3 global pos, Vector2 global
   /// cov, and vector of source link pointers.
   BuilderFunction m_spConstructor;
 

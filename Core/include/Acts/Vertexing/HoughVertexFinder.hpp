@@ -33,7 +33,7 @@ namespace Acts {
 /// position
 /// 5. Repeats 2-4 if necessary
 ///
-template <typename spacepoint_t>
+template <typename space_point_t>
 class HoughVertexFinder {
  public:
   /// Configuration struct
@@ -119,7 +119,7 @@ class HoughVertexFinder {
   /// @param spacePoints Vector of the input space points; they do not need to be sorted anyhow
   /// @return Position of the vertex
   Acts::Result<Acts::Vector3> find(
-      const std::vector<spacepoint_t>& spacePoints) const;
+      const std::vector<space_point_t>& spacePoints) const;
 
  private:
   /// Configuration instance
@@ -135,9 +135,10 @@ class HoughVertexFinder {
   /// @param numCotThetaBins Number of bins along cot(theta) axis
   /// @return Position of the vertex in (X,Y,Z)
   Acts::Result<Acts::Vector3> findHoughVertex(
-      const std::vector<spacepoint_t>& spacePoints, const Acts::Vector3& vtxOld,
-      double rangeZ, std::uint32_t numZBins, double minCotTheta,
-      double maxCotTheta, std::uint32_t numCotThetaBins) const;
+      const std::vector<space_point_t>& spacePoints,
+      const Acts::Vector3& vtxOld, double rangeZ, std::uint32_t numZBins,
+      double minCotTheta, double maxCotTheta,
+      std::uint32_t numCotThetaBins) const;
 
   /// @brief Finds the peak in the Z axis projection of the Hough space
   /// @param houghZProjection Hough space projection after the cleaning procedure

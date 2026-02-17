@@ -14,10 +14,10 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t, typename callable_t>
+template <typename external_space_point_t, typename callable_t>
 inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
-                                      const external_spacepoint_t& sp,
-                                      const external_spacepoint_t& spM,
+                                      const external_space_point_t& sp,
+                                      const external_space_point_t& spM,
                                       bool bottom,
                                       callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
@@ -57,11 +57,11 @@ inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
   return LinCircle(cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame);
 }
 
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 inline void transformCoordinates(
     Acts::SpacePointMutableData& mutableData,
-    const std::vector<const external_spacepoint_t*>& vec,
-    const external_spacepoint_t& spM, bool bottom,
+    const std::vector<const external_space_point_t*>& vec,
+    const external_space_point_t& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
   const float xM = spM.x();
   const float yM = spM.y();
@@ -79,7 +79,7 @@ inline void transformCoordinates(
   int bottomFactor = bottom ? -1 : 1;
 
   for (std::size_t idx(0); idx < vec.size(); ++idx) {
-    const external_spacepoint_t* sp = vec[idx];
+    const external_space_point_t* sp = vec[idx];
 
     const float xSP = sp->x();
     const float ySP = sp->y();
@@ -128,10 +128,10 @@ inline void transformCoordinates(
   }
 }
 
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 inline bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
-    const external_spacepoint_t& sp, const double* spacePointPosition,
+    const Acts::SeedFinderConfig<external_space_point_t>& m_config,
+    const external_space_point_t& sp, const double* spacePointPosition,
     double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details

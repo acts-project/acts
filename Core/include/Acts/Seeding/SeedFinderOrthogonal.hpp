@@ -23,7 +23,7 @@
 namespace Acts {
 
 /// Orthogonal range-search based seed finder.
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 class SeedFinderOrthogonal {
  public:
   /**
@@ -36,7 +36,7 @@ class SeedFinderOrthogonal {
   /**
    * @brief The seed type used by this seeder internally.
    */
-  using seed_t = Seed<external_spacepoint_t>;
+  using seed_t = Seed<external_space_point_t>;
 
   /**
    * @brief The k-d tree type used by this seeder internally, which is
@@ -45,7 +45,7 @@ class SeedFinderOrthogonal {
    * has leaf size 4.
    */
   using tree_t =
-      KDTree<NDims, const external_spacepoint_t *, double, std::array, 4>;
+      KDTree<NDims, const external_space_point_t *, double, std::array, 4>;
 
   /**
    * @brief Construct a new orthogonal seed finder.
@@ -54,7 +54,7 @@ class SeedFinderOrthogonal {
    * @param logger The ACTS logger.
    */
   explicit SeedFinderOrthogonal(
-      const Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
+      const Acts::SeedFinderOrthogonalConfig<external_space_point_t> &config,
       std::unique_ptr<const Acts::Logger> logger =
           Acts::getDefaultLogger("Finder", Logging::Level::INFO));
   /**
@@ -63,17 +63,17 @@ class SeedFinderOrthogonal {
   ~SeedFinderOrthogonal() = default;
 
   SeedFinderOrthogonal() = default;
-  SeedFinderOrthogonal(const SeedFinderOrthogonal<external_spacepoint_t> &) =
+  SeedFinderOrthogonal(const SeedFinderOrthogonal<external_space_point_t> &) =
       delete;
-  SeedFinderOrthogonal<external_spacepoint_t> &operator=(
-      const SeedFinderOrthogonal<external_spacepoint_t> &) = delete;
+  SeedFinderOrthogonal<external_space_point_t> &operator=(
+      const SeedFinderOrthogonal<external_space_point_t> &) = delete;
   /// Move constructor
   SeedFinderOrthogonal(
-      SeedFinderOrthogonal<external_spacepoint_t> &&) noexcept = default;
+      SeedFinderOrthogonal<external_space_point_t> &&) noexcept = default;
   /// Move assignment operator
   /// @return Reference to this object
-  SeedFinderOrthogonal<external_spacepoint_t> &operator=(
-      SeedFinderOrthogonal<external_spacepoint_t> &&) noexcept = default;
+  SeedFinderOrthogonal<external_space_point_t> &operator=(
+      SeedFinderOrthogonal<external_space_point_t> &&) noexcept = default;
 
   /**
    * @brief Perform seed finding, appending seeds to a container.
@@ -148,7 +148,7 @@ class SeedFinderOrthogonal {
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeLH(
-      const external_spacepoint_t &low) const;
+      const external_space_point_t &low) const;
 
   /**
    * @brief Return the AABB rearch range for a given space point, searching
@@ -165,7 +165,7 @@ class SeedFinderOrthogonal {
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeHL(
-      const external_spacepoint_t &high) const;
+      const external_space_point_t &high) const;
 
   /**
    * @brief Check whether two space points form a valid tuple.
@@ -186,8 +186,8 @@ class SeedFinderOrthogonal {
    * @return True if the two points form a valid pair, false otherwise.
    */
   bool validTuple(const SeedFinderOptions &options,
-                  const external_spacepoint_t &low,
-                  const external_spacepoint_t &high,
+                  const external_space_point_t &low,
+                  const external_space_point_t &high,
                   bool isMiddleInverted) const;
 
   /**
@@ -198,7 +198,7 @@ class SeedFinderOrthogonal {
    * @return A k-d tree containing the given space points.
    */
   tree_t createTree(
-      const std::vector<const external_spacepoint_t *> &spacePoints) const;
+      const std::vector<const external_space_point_t *> &spacePoints) const;
 
   /**
    * @brief Filter potential candidate pairs, and output seeds into an
@@ -216,11 +216,11 @@ class SeedFinderOrthogonal {
   void filterCandidates(
       const SeedFinderOptions &options,
       Acts::SpacePointMutableData &mutableData,
-      const external_spacepoint_t &middle,
-      const std::vector<const external_spacepoint_t *> &bottom,
-      const std::vector<const external_spacepoint_t *> &top,
+      const external_space_point_t &middle,
+      const std::vector<const external_space_point_t *> &bottom,
+      const std::vector<const external_space_point_t *> &top,
       SeedFilterState seedFilterState,
-      CandidatesForMiddleSp<const external_spacepoint_t> &candidates_collector)
+      CandidatesForMiddleSp<const external_space_point_t> &candidates_collector)
       const;
 
   /**
@@ -244,7 +244,7 @@ class SeedFinderOrthogonal {
   /**
    * @brief The configuration for the seeding algorithm.
    */
-  Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOrthogonalConfig<external_space_point_t> m_config;
 
   /**
    * @brief Get the logger.

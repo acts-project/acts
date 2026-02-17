@@ -14,8 +14,8 @@
 
 #include <numeric>
 
-template <typename spacepoint_t>
-Acts::HoughVertexFinder<spacepoint_t>::HoughVertexFinder(
+template <typename space_point_t>
+Acts::HoughVertexFinder<space_point_t>::HoughVertexFinder(
     Config cfg, std::unique_ptr<const Logger> lgr)
     : m_cfg(std::move(cfg)), m_logger(std::move(lgr)) {
   if (m_cfg.absEtaFractions.size() != m_cfg.absEtaRanges.size()) {
@@ -43,9 +43,9 @@ Acts::HoughVertexFinder<spacepoint_t>::HoughVertexFinder(
   }
 }
 
-template <typename spacepoint_t>
-Acts::Result<Acts::Vector3> Acts::HoughVertexFinder<spacepoint_t>::find(
-    const std::vector<spacepoint_t>& spacePoints) const {
+template <typename space_point_t>
+Acts::Result<Acts::Vector3> Acts::HoughVertexFinder<space_point_t>::find(
+    const std::vector<space_point_t>& spacePoints) const {
   if (spacePoints.empty()) {
     return Acts::Result<Acts::Vector3>::failure(std::error_code());
   }
@@ -103,10 +103,10 @@ Acts::Result<Acts::Vector3> Acts::HoughVertexFinder<spacepoint_t>::find(
   return Acts::Result<Acts::Vector3>::success(vtx);
 }
 
-template <typename spacepoint_t>
+template <typename space_point_t>
 Acts::Result<Acts::Vector3>
-Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
-    const std::vector<spacepoint_t>& spacePoints, const Acts::Vector3& vtxOld,
+Acts::HoughVertexFinder<space_point_t>::findHoughVertex(
+    const std::vector<space_point_t>& spacePoints, const Acts::Vector3& vtxOld,
     double rangeZ, std::uint32_t numZBins, double minCotTheta,
     double maxCotTheta, std::uint32_t numCotThetaBins) const {
   const double zBinSize = 2. * rangeZ / numZBins;
@@ -180,8 +180,8 @@ Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
   return Acts::Result<Acts::Vector3>::failure(std::error_code());
 }
 
-template <typename spacepoint_t>
-Acts::Result<double> Acts::HoughVertexFinder<spacepoint_t>::findHoughPeak(
+template <typename space_point_t>
+Acts::Result<double> Acts::HoughVertexFinder<space_point_t>::findHoughPeak(
     const std::vector<std::uint32_t>& houghZProjection,
     const std::vector<double>& vtxZPositions) const {
   std::uint32_t numZBins = houghZProjection.size();
