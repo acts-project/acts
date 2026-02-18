@@ -34,7 +34,7 @@ class CloneablePtr {
   /// @brief Construct from a unique_ptr with a custom cloner
   /// @param ptr The unique_ptr to take ownership of
   /// @param cloner The cloner function
-  explicit CloneablePtr(std::unique_ptr<T> ptr, Cloner cloner)
+  CloneablePtr(std::unique_ptr<T> ptr, Cloner cloner)
       : m_ptr(std::move(ptr)), m_cloner(std::move(cloner)) {}
 
   /// @brief Construct from a unique_ptr using copy construction as the cloner
@@ -48,7 +48,7 @@ class CloneablePtr {
   /// @brief Construct by taking ownership of a raw pointer with a custom cloner
   /// @param raw The raw pointer to take ownership of
   /// @param cloner The cloner function
-  explicit CloneablePtr(T* raw, Cloner cloner)
+  CloneablePtr(T* raw, Cloner cloner)
       : m_ptr(raw), m_cloner(std::move(cloner)) {}
 
   /// @brief Construct by taking ownership of a raw pointer using copy
@@ -101,11 +101,19 @@ class CloneablePtr {
   T* get() const { return m_ptr.get(); }
 
   /// @brief Release ownership of the managed object
-  T* release() { return m_ptr.release(); }
+  T* release() {
+    m_cloner = nullptr;
+    return m_ptr.release();
+  }
 
   /// @brief Reset the managed object
   /// @param ptr The new raw pointer to manage (default nullptr)
-  void reset(T* ptr = nullptr) { m_ptr.reset(ptr); }
+  void reset(T* ptr = nullptr) {
+    m_ptr.reset(ptr);
+    if (m_ptr == nullptr) {
+      m_cloner = nullptr;
+    }
+  }
 
  private:
   std::unique_ptr<T> m_ptr;
