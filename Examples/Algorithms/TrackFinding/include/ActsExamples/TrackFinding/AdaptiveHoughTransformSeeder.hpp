@@ -14,12 +14,7 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -29,24 +24,17 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
-#include <list>
 #include <memory>
-#include <numbers>
 #include <string>
-#include <type_traits>
-#include <unordered_set>
 #include <utility>
 #include <vector>
-
-namespace ActsExamples {
-struct AlgorithmContext;
-}
 
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
+
 // Helper class describing one section of the accumulator space
 class AccumulatorSection {
  public:
@@ -373,7 +361,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AdaptiveHoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+  AdaptiveHoughTransformSeeder(const Config &cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///

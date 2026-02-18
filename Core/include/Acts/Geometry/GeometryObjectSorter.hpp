@@ -179,7 +179,7 @@ class GeometryObjectSorterT {
   /// @param two is the second object
   ///
   /// @return boolean indicator
-  bool operator()(T one, T two) const {
+  bool operator()(const T& one, const T& two) const {
     // get the pos one / pos two
     Vector3 posOne = m_transform
                          ? m_transform->inverse() *

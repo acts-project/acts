@@ -184,7 +184,7 @@ FastStrawLineFitter::UpdateStatus FastStrawLineFitter::updateIteration(
   }
 
   UpdateStatus retCode{UpdateStatus::GoodStep};
-  ActsSquareMatrix<2> cov{ActsSquareMatrix<2>::Zero()};
+  SquareMatrix<2> cov{SquareMatrix<2>::Zero()};
   Vector2 grad{Vector2::Zero()};
 
   const TrigonomHelper angles{fitResult.theta};

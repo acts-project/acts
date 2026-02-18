@@ -18,8 +18,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsExamples {
 
 TruthGraphBuilder::TruthGraphBuilder(Config config, Logging::Level level)
-    : ActsExamples::IAlgorithm("TruthGraphBuilder", level),
-      m_cfg(std::move(config)) {
+    : IAlgorithm("TruthGraphBuilder", level), m_cfg(std::move(config)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputGraph.initialize(m_cfg.outputGraph);
@@ -171,8 +170,7 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
   return truthGraph;
 }
 
-ProcessCode TruthGraphBuilder::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TruthGraphBuilder::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& spacepoints = m_inputSpacePoints(ctx);
   const auto& particles = m_inputParticles(ctx);

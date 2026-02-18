@@ -12,7 +12,6 @@
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <tuple>
@@ -34,17 +33,17 @@ struct EventFraction {
   ///
   /// @param [in] event Tuple containing the initial particle, the particle
   /// before the interaction and all final state particles after the interaction
-  explicit EventFraction(const ActsExamples::ExtractedSimulationProcess& event)
+  explicit EventFraction(const ExtractedSimulationProcess& event)
       : initialParticle(event.initial),
         interactingParticle(event.before),
         finalParticles(event.after) {}
 
   /// The initial particle
-  ActsExamples::SimParticle initialParticle;
+  SimParticle initialParticle;
   /// The particle before the interaction
-  ActsExamples::SimParticle interactingParticle;
+  SimParticle interactingParticle;
   /// All particles after the interaction occurred
-  std::vector<ActsExamples::SimParticle> finalParticles;
+  std::vector<SimParticle> finalParticles;
 
   /// Label whether it was a soft interaction or a hard one
   bool soft = false;
@@ -60,8 +59,8 @@ using EventCollection = std::vector<EventFraction>;
 using EventProperties = std::vector<std::vector<float>>;
 using ProbabilityDistributions = std::vector<TH1F*>;
 using CumulativeDistribution = TH1F*;
-using Vector = Acts::ActsDynamicVector;
-using Matrix = Acts::ActsDynamicMatrix;
+using Vector = Acts::DynamicVector;
+using Matrix = Acts::DynamicMatrix;
 using EigenspaceComponents = std::tuple<Vector, Matrix, Vector>;
 using Parametrisation =
     std::pair<EigenspaceComponents, std::vector<CumulativeDistribution>>;

@@ -8,11 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HoughVertexFinder.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 
 #include <cmath>
 #include <random>

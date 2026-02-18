@@ -22,13 +22,11 @@ constexpr std::uint32_t sixBit = 0x3F;
 
 namespace ActsExamples {
 
-std::ostream& operator<<(std::ostream& ostr,
-                         const ActsExamples::MuonSpacePoint::MuonId& id) {
+std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint::MuonId& id) {
   ostr << id.toString();
   return ostr;
 }
-std::ostream& operator<<(std::ostream& ostr,
-                         const ActsExamples::MuonSpacePoint& sp) {
+std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint& sp) {
   ostr << std::format(
       "Muon-ID: {}, position: {}, orientation (d/n/o): {}/{}/{}, covariance: "
       "({:.2f}, {:.2f}, {:.2f})",

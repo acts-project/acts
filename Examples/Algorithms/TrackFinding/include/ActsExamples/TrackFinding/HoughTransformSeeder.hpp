@@ -91,10 +91,6 @@
 #include <utility>
 #include <vector>
 
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
 using ResultDouble = Acts::Result<double>;
 using ResultBool = Acts::Result<bool>;
 using ResultUnsigned = Acts::Result<unsigned>;
@@ -219,7 +215,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     /// === Seeds for Hough ==
     std::vector<int> threshold = {
         9};  // Minimum number of measurements per bin to accept as a
-             // prototrack/seed. Right now this is a single number, can be
+             // proto track/seed. Right now this is a single number, can be
              // expanded in the future if we want to be more clever
 
     int localMaxWindowSize = 0;  // Only create candidates from a local maximum
@@ -239,7 +235,7 @@ class HoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  HoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+  HoughTransformSeeder(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///

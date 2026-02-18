@@ -25,8 +25,8 @@ ObjPropagationStepsWriter::ObjPropagationStepsWriter(const Config& cfg,
 ProcessCode ObjPropagationStepsWriter::writeT(
     const AlgorithmContext& context, const PropagationSummaries& summaries) {
   // open per-event file
-  std::string path = ActsExamples::perEventFilepath(
-      m_cfg.outputDir, "propagation-steps.obj", context.eventNumber);
+  std::string path = perEventFilepath(m_cfg.outputDir, "propagation-steps.obj",
+                                      context.eventNumber);
   std::ofstream os(path, std::ofstream::out | std::ofstream::trunc);
   if (!os) {
     throw std::ios_base::failure("Could not open '" + path + "' to write");
@@ -54,7 +54,7 @@ ProcessCode ObjPropagationStepsWriter::writeT(
       }
     }
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
 }  // namespace ActsExamples
