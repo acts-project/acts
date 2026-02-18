@@ -26,6 +26,7 @@ namespace Acts {
 template <typename T>
 class CloneablePtr {
  public:
+  /// @brief The type of the cloner function
   using Cloner = std::function<std::unique_ptr<T>(const T&)>;
 
   /// @brief Default constructor, creates a null pointer
@@ -61,11 +62,14 @@ class CloneablePtr {
         m_cloner([](const T& src) { return std::make_unique<T>(src); }) {}
 
   /// @brief Copy constructor. Invokes the cloner if the source is non-null.
+  /// @param other The CloneablePtr to copy from
   CloneablePtr(const CloneablePtr& other)
       : m_ptr(other.m_ptr ? other.m_cloner(*other.m_ptr) : nullptr),
         m_cloner(other.m_cloner) {}
 
   /// @brief Copy assignment. Invokes the cloner if the source is non-null.
+  /// @param other The CloneablePtr to copy from
+  /// @return Reference to this
   CloneablePtr& operator=(const CloneablePtr& other) {
     if (this != &other) {
       m_ptr = other.m_ptr ? other.m_cloner(*other.m_ptr) : nullptr;
@@ -78,15 +82,18 @@ class CloneablePtr {
   CloneablePtr(CloneablePtr&&) = default;
 
   /// @brief Move assignment
+  /// @return Reference to this
   CloneablePtr& operator=(CloneablePtr&&) = default;
 
   /// @brief Destructor
   ~CloneablePtr() = default;
 
   /// @brief Dereference operator
+  /// @return Reference to the managed object
   T& operator*() const { return *m_ptr; }
 
   /// @brief Arrow operator
+  /// @return Pointer to the managed object
   T* operator->() const { return m_ptr.get(); }
 
   /// @brief Boolean conversion, true if non-null
@@ -98,9 +105,11 @@ class CloneablePtr {
   }
 
   /// @brief Get the raw pointer
+  /// @return Pointer to the managed object, or nullptr
   T* get() const { return m_ptr.get(); }
 
   /// @brief Release ownership of the managed object
+  /// @return Pointer to the formerly managed object
   T* release() {
     m_cloner = nullptr;
     return m_ptr.release();

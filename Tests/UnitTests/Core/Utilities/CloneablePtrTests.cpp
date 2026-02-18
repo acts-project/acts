@@ -126,8 +126,7 @@ BOOST_AUTO_TEST_CASE(ArrowOperator) {
 BOOST_AUTO_TEST_CASE(CustomCloner) {
   auto cloner = [](const Base& b) { return b.clone(); };
 
-  CloneablePtr<Base> a(std::make_unique<Derived>(99),
-                       std::move(cloner));
+  CloneablePtr<Base> a(std::make_unique<Derived>(99), std::move(cloner));
   BOOST_CHECK(a);
   BOOST_CHECK_EQUAL(a->value(), 99);
 
