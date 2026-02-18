@@ -26,7 +26,7 @@ namespace ActsExamples {
 template <typename Iterator>
 class Range {
  public:
-  Range(Iterator b, Iterator e) : m_begin(std::move(b)), m_end(std::move(e)) {}
+  Range(const Iterator& b, const Iterator& e) : m_begin(b), m_end(e) {}
   Range(Range&&) noexcept = default;
   Range(const Range&) = default;
   ~Range() = default;
