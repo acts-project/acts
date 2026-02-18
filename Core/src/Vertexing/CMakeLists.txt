@@ -21,4 +21,5 @@ target_sources(
         ImpactPointEstimator.cpp
         GaussianGridTrackDensity.cpp
         GridDensityVertexFinder.cpp
+        HoughVertexFinder2.cpp
 )
