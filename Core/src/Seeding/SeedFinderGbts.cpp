@@ -9,7 +9,6 @@
 #include "Acts/Seeding/SeedFinderGbts.hpp"
 
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -23,32 +22,31 @@
 namespace Acts::Experimental {
 
 SeedFinderGbts::SeedFinderGbts(
-    SeedFinderGbtsConfig config, std::unique_ptr<GbtsGeometry> gbtsGeo,
-    const std::vector<TrigInDetSiLayer>* layerGeometry,
+    const GbtsConfig& config, std::unique_ptr<GbtsGeometry> gbtsGeo,
+    const std::vector<TrigInDetSiLayer>& layerGeometry,
     std::unique_ptr<const Acts::Logger> logger)
-    : m_config(std::move(config)),
+    : m_cfg(config),
       m_geo(std::move(gbtsGeo)),
-      m_layerGeometry(layerGeometry),
+      m_layerGeometry(&layerGeometry),
       m_logger(std::move(logger)) {
-  m_config.phiSliceWidth = 2 * std::numbers::pi / m_config.nMaxPhiSlice;
+  m_cfg.phiSliceWidth = 2 * std::numbers::pi_v<float> / m_cfg.nMaxPhiSlice;
 
-  m_mlLut = parseGbtsMLLookupTable(m_config.lutInputFile);
+  m_mlLut = parseGbtsMlLookupTable(m_cfg.lutInputFile);
 }
 
 SeedContainer2 SeedFinderGbts::createSeeds(
     const RoiDescriptor& roi,
-    const SPContainerComponentsType& SpContainerComponents,
-    std::uint32_t maxLayers) const {
-  std::unique_ptr<GbtsDataStorage> storage =
-      std::make_unique<GbtsDataStorage>(m_geo, m_config, m_mlLut);
+    const SpContainerComponentsType& spContainerComponents,
+    const std::uint32_t maxLayers) const {
+  auto storage = std::make_unique<GbtsDataStorage>(m_cfg, m_geo, m_mlLut);
 
   SeedContainer2 SeedContainer;
   std::vector<std::vector<GbtsNode>> node_storage =
-      createNodes(SpContainerComponents, maxLayers);
+      createNodes(spContainerComponents, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
-  for (std::size_t l = 0; l < node_storage.size(); l++) {
+  for (std::uint16_t l = 0; l < node_storage.size(); l++) {
     const std::vector<GbtsNode>& nodes = node_storage[l];
 
     if (nodes.empty()) {
@@ -56,10 +54,9 @@ SeedContainer2 SeedFinderGbts::createSeeds(
     }
 
     bool is_pixel = true;
-    if (is_pixel) {  // placeholder for now until strip hits are added in
-
-      nPixelLoaded += storage->loadPixelGraphNodes(l, nodes, m_config.useML);
-
+    // placeholder for now until strip hits are added in
+    if (is_pixel) {
+      nPixelLoaded += storage->loadPixelGraphNodes(l, nodes, m_cfg.useMl);
     } else {
       nStripLoaded += storage->loadStripGraphNodes(l, nodes);
     }
@@ -69,9 +66,9 @@ SeedContainer2 SeedFinderGbts::createSeeds(
 
   storage->sortByPhi();
 
-  storage->initializeNodes(m_config.useML);
+  storage->initializeNodes(m_cfg.useMl);
 
-  storage->generatePhiIndexing(1.5f * m_config.phiSliceWidth);
+  storage->generatePhiIndexing(1.5f * m_cfg.phiSliceWidth);
 
   std::vector<GbtsEdge> edgeStorage;
 
@@ -91,7 +88,7 @@ SeedContainer2 SeedFinderGbts::createSeeds(
 
   std::vector<SeedProperties> vSeedCandidates;
   extractSeedsFromTheGraph(maxLevel, graphStats.first,
-                           std::get<0>(SpContainerComponents).size(),
+                           std::get<0>(spContainerComponents).size(),
                            edgeStorage, vSeedCandidates);
 
   if (vSeedCandidates.empty()) {
@@ -105,9 +102,9 @@ SeedContainer2 SeedFinderGbts::createSeeds(
 
     // add to seed container:
     std::vector<SpacePointIndex2> Sp_Indexes{};
-    Sp_Indexes.reserve(seed.spacepoints.size());
+    Sp_Indexes.reserve(seed.spacePoints.size());
 
-    for (const auto& sp_idx : seed.spacepoints) {
+    for (const auto& sp_idx : seed.spacePoints) {
       Sp_Indexes.emplace_back(sp_idx);
     }
 
@@ -121,40 +118,43 @@ SeedContainer2 SeedFinderGbts::createSeeds(
   return SeedContainer;
 }
 
-GbtsMLLookupTable SeedFinderGbts::parseGbtsMLLookupTable(
+GbtsMlLookupTable SeedFinderGbts::parseGbtsMlLookupTable(
     const std::string& lutInputFile) {
-  GbtsMLLookupTable mlLUT{};
-  if (m_config.useML) {
-    if (lutInputFile.empty()) {
-      throw std::runtime_error("Cannot find ML predictor LUT file");
-    } else {
-      mlLUT.reserve(100);
-      std::ifstream ifs(std::string(lutInputFile).c_str());
-
-      if (!ifs.is_open()) {
-        throw std::runtime_error("Failed to open LUT file");
-      }
-
-      float cl_width{}, min1{}, max1{}, min2{}, max2{};
-
-      while (ifs >> cl_width >> min1 >> max1 >> min2 >> max2) {
-        std::array<float, 5> lut_line = {cl_width, min1, max1, min2, max2};
-        mlLUT.emplace_back(lut_line);
-      }
-      if (!ifs.eof()) {
-        // ended if parse error present, not clean EOF
-
-        throw std::runtime_error("Stopped reading LUT file due to parse error");
-      }
-
-      ifs.close();
-    }
+  if (!m_cfg.useMl) {
+    return {};
   }
-  return mlLUT;
+  if (lutInputFile.empty()) {
+    throw std::runtime_error("Cannot find ML predictor LUT file");
+  }
+
+  std::ifstream ifs(std::string(lutInputFile).c_str());
+  if (!ifs.is_open()) {
+    throw std::runtime_error("Failed to open LUT file");
+  }
+
+  GbtsMlLookupTable mlLut;
+  mlLut.reserve(100);
+
+  float clWidth{};
+  float min1{};
+  float max1{};
+  float min2{};
+  float max2{};
+  while (ifs >> clWidth >> min1 >> max1 >> min2 >> max2) {
+    mlLut.emplace_back(std::array<float, 5>{clWidth, min1, max1, min2, max2});
+  }
+
+  if (!ifs.eof()) {
+    // ended if parse error present, not clean EOF
+    throw std::runtime_error("Stopped reading LUT file due to parse error");
+  }
+
+  return mlLut;
 }
 
 std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
-    const SPContainerComponentsType& container, std::uint32_t maxLayers) const {
+    const SpContainerComponentsType& container,
+    const std::uint32_t maxLayers) const {
   std::vector<std::vector<GbtsNode>> node_storage(maxLayers);
   // reserve for better efficiency
 
@@ -172,14 +172,14 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
 
     // fill the node with spacepoint variables
 
-    node.x() = sp.x();
-    node.y() = sp.y();
-    node.z() = sp.z();
-    node.r() = sp.r();
-    node.phi() = sp.phi();
-    node.sp_idx() = sp.index();
-    node.pixelClusterWidth() = sp.extra(std::get<2>(container));
-    node.localPositionY() = sp.extra(std::get<3>(container));
+    node.x = sp.x();
+    node.y = sp.y();
+    node.z = sp.z();
+    node.r = sp.r();
+    node.phi = sp.phi();
+    node.idx = sp.index();
+    node.pcw = sp.extra(std::get<2>(container));
+    node.locPosY = sp.extra(std::get<3>(container));
   }
 
   return node_storage;
@@ -189,143 +189,146 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
     const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
     std::vector<GbtsEdge>& edgeStorage) const {
   // phi cut for triplets
-  const float cut_dphi_max = m_config.lrtMode ? 0.07f : 0.012f;
+  const float cutDPhiMax = m_cfg.lrtMode ? 0.07f : 0.012f;
   // curv cut for triplets
-  const float cut_dcurv_max = m_config.lrtMode ? 0.015f : 0.001f;
+  const float cutDCurvMax = m_cfg.lrtMode ? 0.015f : 0.001f;
   // tau cut for doublets and triplets
-  const float cut_tau_ratio_max =
-      m_config.lrtMode ? 0.015f : static_cast<float>(m_config.tau_ratio_cut);
-  const float min_z0 = m_config.lrtMode ? -600.0 : roi.zedMinus();
-  const float max_z0 = m_config.lrtMode ? 600.0 : roi.zedPlus();
-  const float min_deltaPhi = m_config.lrtMode ? 0.01f : 0.001f;
+  const float cutTauRatioMax = m_cfg.lrtMode ? 0.015f : m_cfg.tauRatioCut;
+  const float minZ0 =
+      m_cfg.lrtMode ? -600.0f : static_cast<float>(roi.zedMinus());
+  const float maxZ0 =
+      m_cfg.lrtMode ? 600.0f : static_cast<float>(roi.zedPlus());
+  const float minDeltaPhi = m_cfg.lrtMode ? 0.01f : 0.001f;
 
   // used to calculate Z cut on doublets
-  const float maxOuterRadius = m_config.lrtMode ? 1050.0 : 550.0;
+  const float maxOuterRadius = m_cfg.lrtMode ? 1050.0f : 550.0f;
 
-  const float cut_zMinU = min_z0 + maxOuterRadius * roi.dzdrMinus();
-  const float cut_zMaxU = max_z0 + maxOuterRadius * roi.dzdrPlus();
+  const float cutZMinU =
+      minZ0 + maxOuterRadius * static_cast<float>(roi.dzdrMinus());
+  const float cutZMaxU =
+      maxZ0 + maxOuterRadius * static_cast<float>(roi.dzdrPlus());
 
   // correction due to limited pT resolution
-  float tripletPtMin = 0.8f * m_config.minPt;
+  float tripletPtMin = 0.8f * m_cfg.minPt;
 
   // to re-scale original tunings done for the 900 MeV pT cut
-  const float ptScale = (0.9f * UnitConstants::GeV) / m_config.minPt;
+  const float ptScale = (0.9f * UnitConstants::GeV) / m_cfg.minPt;
 
-  float maxCurv = m_config.ptCoeff / tripletPtMin;
+  const float maxCurv = m_cfg.ptCoeff / tripletPtMin;
 
-  float maxKappa_high_eta =
-      m_config.lrtMode ? 1.0f * maxCurv : std::sqrt(0.8f) * maxCurv;
-  float maxKappa_low_eta =
-      m_config.lrtMode ? 1.0f * maxCurv : std::sqrt(0.6f) * maxCurv;
+  float maxKappaHighEta =
+      m_cfg.lrtMode ? 1.0f * maxCurv : std::sqrt(0.8f) * maxCurv;
+  float maxKappaLowEta =
+      m_cfg.lrtMode ? 1.0f * maxCurv : std::sqrt(0.6f) * maxCurv;
 
   // new settings for curvature cuts
-  if (!m_config.useOldTunings && !m_config.lrtMode) {
-    maxKappa_high_eta = 4.75e-4f * ptScale;
-    maxKappa_low_eta = 3.75e-4f * ptScale;
+  if (!m_cfg.useOldTunings && !m_cfg.lrtMode) {
+    maxKappaHighEta = 4.75e-4f * ptScale;
+    maxKappaLowEta = 3.75e-4f * ptScale;
   }
 
-  const float dphi_coeff = m_config.lrtMode ? 1.0f * maxCurv : 0.68f * maxCurv;
+  const float dPhiCoeff = m_cfg.lrtMode ? 1.0f * maxCurv : 0.68f * maxCurv;
 
   // the default sliding window along phi
-  float deltaPhi = 0.5f * m_config.phiSliceWidth;
+  float deltaPhi = 0.5f * m_cfg.phiSliceWidth;
 
   std::uint32_t nConnections = 0;
 
-  edgeStorage.reserve(m_config.nMaxEdges);
+  edgeStorage.reserve(m_cfg.nMaxEdges);
 
   std::uint32_t nEdges = 0;
 
-  for (const auto& bg : m_geo->binGroups()) {  // loop over bin groups
-
+  // loop over bin groups
+  for (const auto& bg : m_geo->binGroups()) {
     GbtsEtaBin& B1 = storage->getEtaBin(bg.first);
 
     if (B1.empty()) {
       continue;
     }
 
-    float rb1 = B1.getMinBinRadius();
+    const float rb1 = B1.minRadius;
 
-    const std::uint32_t lk1 = B1.m_layerKey;
+    const std::uint32_t lk1 = B1.layerKey;
 
-    for (const auto& b2_idx : bg.second) {
-      const GbtsEtaBin& B2 = storage->getEtaBin(b2_idx);
+    for (const int b2Idx : bg.second) {
+      const GbtsEtaBin& B2 = storage->getEtaBin(b2Idx);
 
       if (B2.empty()) {
         continue;
       }
 
-      float rb2 = B2.getMaxBinRadius();
+      const float rb2 = B2.maxRadius;
 
-      if (m_config.useEtaBinning) {
-        float abs_dr = std::fabs(rb2 - rb1);
-        if (m_config.useOldTunings) {
-          deltaPhi = min_deltaPhi + dphi_coeff * abs_dr;
+      if (m_cfg.useEtaBinning) {
+        const float absDr = std::fabs(rb2 - rb1);
+        if (m_cfg.useOldTunings) {
+          deltaPhi = minDeltaPhi + dPhiCoeff * absDr;
         } else {
-          if (abs_dr < 60.0) {
-            deltaPhi = 0.002f + 4.33e-4f * ptScale * abs_dr;
+          if (absDr < 60.0) {
+            deltaPhi = 0.002f + 4.33e-4f * ptScale * absDr;
           } else {
-            deltaPhi = 0.015f + 2.2e-4f * ptScale * abs_dr;
+            deltaPhi = 0.015f + 2.2e-4f * ptScale * absDr;
           }
         }
       }
 
-      std::uint32_t first_it = 0;
+      std::uint32_t firstIt = 0;
       // loop over nodes in Layer 1
-      for (std::uint32_t n1Idx = 0; n1Idx < B1.m_vn.size(); ++n1Idx) {
-        std::vector<std::uint32_t>& v1In = B1.m_in[n1Idx];
+      for (std::uint32_t n1Idx = 0; n1Idx < B1.vn.size(); ++n1Idx) {
+        std::vector<std::uint32_t>& v1In = B1.in[n1Idx];
 
         if (v1In.size() >= gbtsMaxSegPerNode) {
           continue;
         }
 
-        const std::array<float, 5>& n1pars = B1.m_params[n1Idx];
+        const std::array<float, 5>& n1pars = B1.params[n1Idx];
 
-        float phi1 = n1pars[2];
-        float r1 = n1pars[3];
-        float z1 = n1pars[4];
+        const float phi1 = n1pars[2];
+        const float r1 = n1pars[3];
+        const float z1 = n1pars[4];
 
         // sliding window phi1 +/- deltaPhi
 
-        float minPhi = phi1 - deltaPhi;
-        float maxPhi = phi1 + deltaPhi;
+        const float minPhi = phi1 - deltaPhi;
+        const float maxPhi = phi1 + deltaPhi;
 
         // sliding window over nodes in Layer 2
-        for (std::uint32_t n2PhiIdx = first_it;
-             n2PhiIdx < B2.m_vPhiNodes.size(); n2PhiIdx++) {
-          float phi2 = B2.m_vPhiNodes[n2PhiIdx].first;
+        for (std::uint32_t n2PhiIdx = firstIt; n2PhiIdx < B2.vPhiNodes.size();
+             n2PhiIdx++) {
+          const float phi2 = B2.vPhiNodes[n2PhiIdx].first;
 
           if (phi2 < minPhi) {
-            first_it = n2PhiIdx;
+            firstIt = n2PhiIdx;
             continue;
           }
           if (phi2 > maxPhi) {
             break;
           }
 
-          std::uint32_t n2Idx = B2.m_vPhiNodes[n2PhiIdx].second;
+          const std::uint32_t n2Idx = B2.vPhiNodes[n2PhiIdx].second;
 
-          const std::vector<std::uint32_t>& v2In = B2.m_in[n2Idx];
+          const std::vector<std::uint32_t>& v2In = B2.in[n2Idx];
 
           if (v2In.size() >= gbtsMaxSegPerNode) {
             continue;
           }
 
-          const std::array<float, 5>& n2pars = B2.m_params[n2Idx];
+          const std::array<float, 5>& n2pars = B2.params[n2Idx];
 
-          float r2 = n2pars[3];
+          const float r2 = n2pars[3];
 
-          float dr = r2 - r1;
+          const float dr = r2 - r1;
 
-          if (dr < m_config.minDeltaRadius) {
+          if (dr < m_cfg.minDeltaRadius) {
             continue;
           }
 
-          float z2 = n2pars[4];
+          const float z2 = n2pars[4];
 
-          float dz = z2 - z1;
-          float tau = dz / dr;
-          float ftau = std::fabs(tau);
-          if (ftau > 36.0) {
+          const float dz = z2 - z1;
+          const float tau = dz / dr;
+          const float ftau = std::fabs(tau);
+          if (ftau > 36.0f) {
             continue;
           }
 
@@ -343,51 +346,48 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
             continue;
           }
 
-          if (m_config.doubletFilterRZ) {
-            float z0 = z1 - r1 * tau;
+          if (m_cfg.doubletFilterRZ) {
+            const float z0 = z1 - r1 * tau;
 
-            if (z0 < min_z0 || z0 > max_z0) {
+            if (z0 < minZ0 || z0 > maxZ0) {
               continue;
             }
 
-            float zouter = z0 + maxOuterRadius * tau;
+            const float zouter = z0 + maxOuterRadius * tau;
 
-            if (zouter < cut_zMinU || zouter > cut_zMaxU) {
+            if (zouter < cutZMinU || zouter > cutZMaxU) {
               continue;
             }
           }
 
-          float curv = (phi2 - phi1) / dr;
-          float abs_curv = std::abs(curv);
+          const float curv = (phi2 - phi1) / dr;
+          const float absCurv = std::abs(curv);
 
-          if (ftau < 4.0) {  // eta = 2.1
-            if (abs_curv > maxKappa_low_eta) {
+          if (ftau < 4.0f) {  // eta = 2.1
+            if (absCurv > maxKappaLowEta) {
               continue;
             }
           } else {
-            if (abs_curv > maxKappa_high_eta) {
+            if (absCurv > maxKappaHighEta) {
               continue;
             }
           }
 
-          float exp_eta = std::sqrt(1.f + tau * tau) - tau;
+          const float expEta = std::sqrt(1.f + tau * tau) - tau;
 
-          if (m_config.matchBeforeCreate &&
-              (lk1 == 80000 || lk1 == 81000)) {  // match edge candidate against
-                                                 // edges incoming to n2
-
-            bool isGood = v2In.size() <=
-                          2;  // we must have enough incoming edges to decide
+          // match edge candidate against edges incoming to n2
+          if (m_cfg.matchBeforeCreate && (lk1 == 80000 || lk1 == 81000)) {
+            // we must have enough incoming edges to decide
+            bool isGood = v2In.size() <= 2;
 
             if (!isGood) {
-              float uat_1 = 1.0f / exp_eta;
+              const float uat1 = 1.0f / expEta;
 
-              for (const auto& n2_in_idx : v2In) {
-                float tau2 = edgeStorage.at(n2_in_idx).m_p[0];
-                float tau_ratio = tau2 * uat_1 - 1.0f;
+              for (const auto& n2InIdx : v2In) {
+                const float tau2 = edgeStorage.at(n2InIdx).p[0];
+                const float tauRatio = tau2 * uat1 - 1.0f;
 
-                if (std::abs(tau_ratio) >
-                    m_config.tau_ratio_precut) {  // bad match
+                if (std::abs(tauRatio) > m_cfg.tauRatioPrecut) {  // bad match
                   continue;
                 }
                 isGood = true;  // good match found
@@ -400,57 +400,57 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
             }
           }
 
-          float dPhi2 = curv * r2;
-          float dPhi1 = curv * r1;
+          const float dPhi2 = curv * r2;
+          const float dPhi1 = curv * r1;
 
-          if (nEdges < m_config.nMaxEdges) {
-            edgeStorage.emplace_back(B1.m_vn[n1Idx], B2.m_vn[n2Idx], exp_eta,
-                                     curv, phi1 + dPhi1);
+          if (nEdges < m_cfg.nMaxEdges) {
+            edgeStorage.emplace_back(B1.vn[n1Idx], B2.vn[n2Idx], expEta, curv,
+                                     phi1 + dPhi1);
 
             if (v1In.size() < gbtsMaxSegPerNode) {
               v1In.push_back(nEdges);
             }
 
-            std::uint32_t outEdgeIdx = nEdges;
+            const std::uint32_t outEdgeIdx = nEdges;
 
-            float uat_2 = 1.f / exp_eta;
-            float Phi2 = phi2 + dPhi2;
-            float curv2 = curv;
+            const float uat2 = 1.f / expEta;
+            const float phi2u = phi2 + dPhi2;
+            const float curv2 = curv;
 
-            for (const auto& inEdgeIdx :
-                 v2In) {  // looking for neighbours of the new edge
-
+            // looking for neighbours of the new edge
+            for (const auto& inEdgeIdx : v2In) {
               GbtsEdge* pS = &(edgeStorage.at(inEdgeIdx));
 
-              if (pS->m_nNei >= gbtsNumSegConns) {
+              if (pS->nNei >= gbtsNumSegConns) {
                 continue;
               }
 
-              float tau_ratio = pS->m_p[0] * uat_2 - 1.0f;
+              const float tauRatio = pS->p[0] * uat2 - 1.0f;
 
-              if (std::abs(tau_ratio) > cut_tau_ratio_max) {  // bad match
+              if (std::abs(tauRatio) > cutTauRatioMax) {  // bad match
                 continue;
               }
 
-              float dPhi = Phi2 - pS->m_p[2];
+              float dPhi = phi2u - pS->p[2];
 
-              if (dPhi < -std::numbers::pi) {
-                dPhi += 2 * std::numbers::pi;
-              } else if (dPhi > std::numbers::pi) {
-                dPhi -= 2 * std::numbers::pi;
+              if (dPhi < -std::numbers::pi_v<float>) {
+                dPhi += 2 * std::numbers::pi_v<float>;
+              } else if (dPhi > std::numbers::pi_v<float>) {
+                dPhi -= 2 * std::numbers::pi_v<float>;
               }
 
-              if (std::abs(dPhi) > cut_dphi_max) {
+              if (std::abs(dPhi) > cutDPhiMax) {
                 continue;
               }
 
-              float dcurv = curv2 - pS->m_p[1];
+              const float dcurv = curv2 - pS->p[1];
 
-              if (dcurv < -cut_dcurv_max || dcurv > cut_dcurv_max) {
+              if (dcurv < -cutDCurvMax || dcurv > cutDCurvMax) {
                 continue;
               }
 
-              pS->m_vNei[pS->m_nNei++] = outEdgeIdx;
+              pS->vNei[pS->nNei] = outEdgeIdx;
+              ++pS->nNei;
 
               nConnections++;
             }
@@ -461,7 +461,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
     }  // loop over bins in Layer 2
   }  // loop over bin groups
 
-  if (nEdges >= m_config.nMaxEdges) {
+  if (nEdges >= m_cfg.nMaxEdges) {
     ACTS_WARNING(
         "Maximum number of graph edges exceeded - possible efficiency loss "
         << nEdges);
@@ -469,7 +469,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
   return std::make_pair(nEdges, nConnections);
 }
 
-std::int32_t SeedFinderGbts::runCCA(std::uint32_t nEdges,
+std::int32_t SeedFinderGbts::runCCA(const std::uint32_t nEdges,
                                     std::vector<GbtsEdge>& edgeStorage) const {
   constexpr std::uint32_t maxIter = 15;
 
@@ -481,38 +481,39 @@ std::int32_t SeedFinderGbts::runCCA(std::uint32_t nEdges,
 
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
     GbtsEdge* pS = &(edgeStorage[edgeIndex]);
-    if (pS->m_nNei == 0) {
+    if (pS->nNei == 0) {
       continue;
     }
 
-    v_old.push_back(pS);  // TO-DO: increment level for segments as they already
-                          // have at least one neighbour
+    // TODO: increment level for segments as they already have at least one
+    // neighbour
+    v_old.push_back(pS);
   }
 
   std::vector<GbtsEdge*> v_new;
   v_new.reserve(v_old.size());
 
+  // generate proposals
   for (; iter < maxIter; iter++) {
-    // generate proposals
-
     v_new.clear();
 
-    for (auto pS : v_old) {
-      std::int32_t nextLevel = pS->m_level;
+    for (GbtsEdge* pS : v_old) {
+      std::int32_t nextLevel = pS->level;
 
-      for (std::uint32_t nIdx = 0; nIdx < pS->m_nNei; ++nIdx) {
-        std::uint32_t nextEdgeIdx = pS->m_vNei[nIdx];
+      for (std::uint32_t nIdx = 0; nIdx < pS->nNei; ++nIdx) {
+        std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
 
         GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
 
-        if (pS->m_level == pN->m_level) {
-          nextLevel = pS->m_level + 1;
+        if (pS->level == pN->level) {
+          nextLevel = pS->level + 1;
           v_new.push_back(pS);
           break;
         }
       }
 
-      pS->m_next = nextLevel;  // proposal
+      // proposal
+      pS->next = static_cast<std::int8_t>(nextLevel);
     }
 
     // update
@@ -520,11 +521,11 @@ std::int32_t SeedFinderGbts::runCCA(std::uint32_t nEdges,
     std::uint32_t nChanges = 0;
 
     for (auto pS : v_new) {
-      if (pS->m_next != pS->m_level) {
+      if (pS->next != pS->level) {
         nChanges++;
-        pS->m_level = pS->m_next;
-        if (maxLevel < pS->m_level) {
-          maxLevel = pS->m_level;
+        pS->level = pS->next;
+        if (maxLevel < pS->level) {
+          maxLevel = pS->level;
         }
       }
     }
@@ -546,10 +547,12 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
     std::vector<SeedProperties>& vSeedCandidates) const {
   vSeedCandidates.clear();
 
-  std::uint32_t minLevel = 3;  // a triplet + 2 confirmation
+  // a triplet + 2 confirmation
+  std::uint32_t minLevel = 3;
 
-  if (m_config.lrtMode) {
-    minLevel = 2;  // a triplet + 1 confirmation
+  if (m_cfg.lrtMode) {
+    // a triplet + 1 confirmation
+    minLevel = 2;
   }
 
   if (maxLevel < minLevel) {
@@ -563,7 +566,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   for (std::uint32_t edgeIndex = 0; edgeIndex < nEdges; ++edgeIndex) {
     GbtsEdge* pS = &(edgeStorage.at(edgeIndex));
 
-    if (pS->m_level < static_cast<std::int32_t>(minLevel)) {
+    if (pS->level < static_cast<std::int32_t>(minLevel)) {
       continue;
     }
 
@@ -574,46 +577,45 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
     return;
   }
 
-  std::sort(vSeeds.begin(), vSeeds.end(), GbtsEdge::CompareLevel());
+  std::ranges::sort(vSeeds, std::ranges::greater{},
+                    [](const GbtsEdge* e) { return e->level; });
 
   // backtracking
 
   vSeedCandidates.reserve(vSeeds.size());
 
-  GbtsTrackingFilter tFilter(*m_layerGeometry, edgeStorage, m_config);
+  GbtsTrackingFilter tFilter(m_cfg, *m_layerGeometry, edgeStorage);
 
-  for (auto pS : vSeeds) {
-    if (pS->m_level == -1) {
+  for (GbtsEdge* pS : vSeeds) {
+    if (pS->level == -1) {
       continue;
     }
 
-    GbtsEdgeState rs(false);
+    GbtsEdgeState rs = tFilter.followTrack(*pS);
 
-    tFilter.followTrack(*pS, rs);
-
-    if (!rs.m_initialized) {
+    if (!rs.initialized) {
       continue;
     }
 
-    if (minLevel > static_cast<std::uint32_t>(rs.m_vs.size())) {
+    if (minLevel > static_cast<std::uint32_t>(rs.vs.size())) {
       continue;
     }
 
-    float seed_eta = std::abs(-std::log(pS->m_p[0]));
+    const float seedEta = std::abs(-std::log(pS->p[0]));
 
     std::vector<const GbtsNode*> vN;
 
-    for (std::vector<GbtsEdge*>::reverse_iterator sIt = rs.m_vs.rbegin();
-         sIt != rs.m_vs.rend(); ++sIt) {
-      if (seed_eta > m_config.edge_mask_min_eta) {
-        (*sIt)->m_level = -1;  // mark as collected
+    for (auto sIt = rs.vs.rbegin(); sIt != rs.vs.rend(); ++sIt) {
+      if (seedEta > m_cfg.edgeMaskMinEta) {
+        // mark as collected
+        (*sIt)->level = -1;
       }
 
-      if (sIt == rs.m_vs.rbegin()) {
-        vN.push_back((*sIt)->m_n1);
+      if (sIt == rs.vs.rbegin()) {
+        vN.push_back((*sIt)->n1);
       }
 
-      vN.push_back((*sIt)->m_n2);
+      vN.push_back((*sIt)->n2);
     }
 
     if (vN.size() < 3) {
@@ -621,19 +623,21 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
     }
 
     std::vector<std::uint32_t> vSpIdx;
-
     vSpIdx.resize(vN.size());
 
     for (std::uint32_t k = 0; k < vN.size(); ++k) {
-      vSpIdx[k] = vN[k]->sp_idx();
+      vSpIdx[k] = vN[k]->idx;
     }
 
-    vSeedCandidates.emplace_back(-rs.m_J / vN.size(), 0, std::move(vSpIdx));
+    vSeedCandidates.emplace_back(-rs.j / vN.size(), 0, std::move(vSpIdx));
   }
 
   // clone removal code goes below ...
 
-  std::sort(vSeedCandidates.begin(), vSeedCandidates.end());
+  std::ranges::sort(vSeedCandidates,
+                    [](const SeedProperties& s1, const SeedProperties& s2) {
+                      return s1 < s2;
+                    });
 
   std::vector<std::int32_t> vTrackIds(vSeedCandidates.size());
 
@@ -646,16 +650,17 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   std::uint32_t seedIdx = 0;
 
   for (const auto& seed : vSeedCandidates) {
-    for (const auto& h : seed.spacepoints) {  // loop over spacepoints indices
+    // loop over spacepoints indices
+    for (const auto& h : seed.spacePoints) {
+      const std::uint32_t hitId = h + 1;
 
-      std::uint32_t hitId = h + 1;
+      const std::uint32_t tid = h2t[hitId];
+      const std::uint32_t trackId = vTrackIds[seedIdx];
 
-      std::uint32_t tid = h2t[hitId];
-      std::uint32_t trackId = vTrackIds[seedIdx];
-
-      if (tid == 0 || tid > trackId) {  // un-used hit or used by a lesser track
-
-        h2t[hitId] = trackId;  // overwrite
+      // un-used hit or used by a lesser track
+      if (tid == 0 || tid > trackId) {
+        // overwrite
+        h2t[hitId] = trackId;
       }
     }
 
@@ -664,23 +669,25 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
 
   for (std::uint32_t trackIdx = 0; trackIdx < vSeedCandidates.size();
        ++trackIdx) {
-    std::uint32_t nTotal = vSeedCandidates[trackIdx].spacepoints.size();
+    const std::uint32_t nTotal = vSeedCandidates[trackIdx].spacePoints.size();
     std::uint32_t nOther = 0;
 
-    std::uint32_t trackId = vTrackIds[trackIdx];
+    const std::uint32_t trackId = vTrackIds[trackIdx];
 
-    for (const auto& h : vSeedCandidates[trackIdx].spacepoints) {
-      std::uint32_t hitId = h + 1;
+    for (const auto& h : vSeedCandidates[trackIdx].spacePoints) {
+      const std::uint32_t hitId = h + 1;
 
-      std::uint32_t tid = h2t[hitId];
+      const std::uint32_t tid = h2t[hitId];
 
-      if (tid != trackId) {  // taken by a better candidate
+      // taken by a better candidate
+      if (tid != trackId) {
         nOther++;
       }
     }
 
-    if (nOther > m_config.hit_share_threshold * nTotal) {
-      vSeedCandidates[trackIdx].isClone = -1;  // reject
+    if (nOther > m_cfg.hitShareThreshold * nTotal) {
+      // reject
+      vSeedCandidates[trackIdx].isClone = -1;
     }
   }
 }
