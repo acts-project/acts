@@ -14,12 +14,7 @@
 
 #include <vector>
 
-#include <fastjet/JetDefinition.hh>
-#include <fastjet/PseudoJet.hh>
-
-namespace ActsPlugins::FastJet {
-/// @addtogroup fastjet_plugin
-/// @{
+namespace ActsExamples {
 
 /// Jet labeling enum
 
@@ -164,4 +159,4 @@ class TrackJet : public Jet {
 };
 
 /// @}
-}  // namespace ActsPlugins::FastJet
+}  // namespace ActsExamples
