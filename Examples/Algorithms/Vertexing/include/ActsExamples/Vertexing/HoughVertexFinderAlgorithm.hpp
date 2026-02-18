@@ -22,7 +22,7 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Optional. Input spacepoints container.
-    std::string inputSpacepoints;
+    std::string inputSpacePoints;
     /// Output vertex collection
     std::string outputVertices;
 
@@ -49,8 +49,8 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacepoints{this,
-                                                            "spacepoints"};
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
+                                                            "InputSpacePoints"};
   WriteDataHandle<VertexContainer> m_outputVertices{this,
                                                     "OutputHoughVertices"};
 };

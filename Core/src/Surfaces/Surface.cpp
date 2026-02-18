@@ -113,7 +113,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
   alignToLoc3D.block<1, 3>(eZ, eAlignmentRotation0) =
       pcRowVec * rotToLocalZAxis;
   // The derivative of bound local w.r.t. local 3D Cartesian coordinates
-  ActsMatrix<2, 3> loc3DToBoundLoc =
+  Matrix<2, 3> loc3DToBoundLoc =
       localCartesianToBoundLocalDerivative(gctx, position);
   // Initialize the derivative of bound parameters w.r.t. alignment
   // parameters without path correction

@@ -40,13 +40,13 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   if (!trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
-  ActsSquareMatrix<nDim - 1> subCovMat;
+  SquareMatrix<nDim - 1> subCovMat;
   if constexpr (nDim == 3) {
     subCovMat = trkParams->spatialImpactParameterCovariance().value();
   } else {
     subCovMat = trkParams->impactParameterCovariance().value();
   }
-  ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
+  SquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)
@@ -69,11 +69,11 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
 
   // x-, y-, and possibly time-coordinate of the vertex and the track in the
   // surface coordinate system
-  ActsVector<nDim - 1> localVertexCoords;
+  Vector<nDim - 1> localVertexCoords;
   localVertexCoords.template head<2>() =
       Vector2(originToVertex.dot(xAxis), originToVertex.dot(yAxis));
 
-  ActsVector<nDim - 1> localTrackCoords;
+  Vector<nDim - 1> localTrackCoords;
   localTrackCoords.template head<2>() =
       Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]);
 
@@ -84,7 +84,7 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
   }
 
   // residual
-  ActsVector<nDim - 1> residual = localTrackCoords - localVertexCoords;
+  Vector<nDim - 1> residual = localTrackCoords - localVertexCoords;
 
   // return chi2
   return residual.dot(weight * residual);
@@ -198,7 +198,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
         (vtxPos.template head<3>() - positionOnTrack).dot(momDirStraightTrack);
 
     // 3D PCA
-    ActsVector<nDim> pcaStraightTrack;
+    Vector<nDim> pcaStraightTrack;
     pcaStraightTrack.template head<3>() =
         positionOnTrack + distanceToPca * momDirStraightTrack;
     if constexpr (nDim == 4) {
@@ -272,7 +272,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   // 3D PCA (point P' in the reference). Note that the prefix "3D" does not
   // refer to the dimension of the pca variable. Rather, it indicates that we
   // minimized the 3D distance between the track and the reference point.
-  ActsVector<nDim> pca;
+  Vector<nDim> pca;
   pca.template head<3>() =
       helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
@@ -390,7 +390,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
 
 Result<double> ImpactPointEstimator::getVertexCompatibility(
     const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-    Eigen::Map<const ActsDynamicVector> vertexPos) const {
+    Eigen::Map<const DynamicVector> vertexPos) const {
   if (vertexPos.size() == 3) {
     return getVertexCompatibilityImpl(gctx, trkParams,
                                       vertexPos.template head<3>());
@@ -405,7 +405,7 @@ Result<double> ImpactPointEstimator::getVertexCompatibility(
 Result<std::pair<Acts::Vector4, Acts::Vector3>>
 ImpactPointEstimator::getDistanceAndMomentum(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-    Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const {
+    Eigen::Map<const DynamicVector> vtxPos, State& state) const {
   if (vtxPos.size() == 3) {
     return getDistanceAndMomentumImpl(
         gctx, trkParams, vtxPos.template head<3>(), m_cfg, state, *m_logger);

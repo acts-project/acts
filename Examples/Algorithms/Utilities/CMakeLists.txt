@@ -1,11 +1,11 @@
 acts_add_library(
     ExamplesUtilities
-    src/PrototracksToSeeds.cpp
-    src/SeedsToPrototracks.cpp
-    src/TrajectoriesToPrototracks.cpp
+    src/ProtoTracksToSeeds.cpp
+    src/SeedsToProtoTracks.cpp
+    src/TrajectoriesToProtoTracks.cpp
     src/TrackSelectorAlgorithm.cpp
     src/TracksToTrajectories.cpp
-    src/PrototracksToTracks.cpp
+    src/ProtoTracksToTracks.cpp
     src/TracksToParameters.cpp
 )
 

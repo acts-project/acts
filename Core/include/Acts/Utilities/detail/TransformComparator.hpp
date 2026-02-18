@@ -39,8 +39,8 @@ class TransformComparator {
   /// @param a: Reference to the first vector to compare
   /// @param b: Reference to the second vector to compare
   template <unsigned int kSize>
-  int compare(const Acts::ActsVector<kSize>& a,
-              const Acts::ActsVector<kSize>& b) const {
+  int compare(const Acts::Vector<kSize>& a,
+              const Acts::Vector<kSize>& b) const {
     for (unsigned int i = 0; i < kSize; ++i) {
       const double diff = a[i] - b[i];
       if (std::abs(diff) > m_tolTrans) {

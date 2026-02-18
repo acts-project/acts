@@ -423,15 +423,15 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
                               const std::vector<BoundMatrix>& jacobianFromStart,
                               const track_state_t& trackState,
                               const Logger& logger) {
-  const ActsSquareMatrix<kMeasDim> covarianceMeasurement =
+  const SquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
 
   const BoundVector predicted = trackState.smoothed();
 
-  const ActsVector<kMeasDim> measurement =
+  const Vector<kMeasDim> measurement =
       trackState.template calibrated<kMeasDim>();
 
-  const ActsMatrix<kMeasDim, eBoundSize> projector =
+  const Matrix<kMeasDim, eBoundSize> projector =
       trackState.template projectorSubspaceHelper<kMeasDim>().projector();
 
   addMeasurementToGx2fSumsBackend(extendedSystem, jacobianFromStart,
