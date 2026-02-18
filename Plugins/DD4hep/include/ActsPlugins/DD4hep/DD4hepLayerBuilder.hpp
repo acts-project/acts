@@ -49,17 +49,16 @@ class DD4hepLayerBuilder : public Acts::ILayerBuilder {
  public:
   /// DD4hepDetectorElement construction factory
   using ElementFactory = std::function<std::shared_ptr<DD4hepDetectorElement>(
-      const dd4hep::DetElement&, const std::string&, double,
+      const dd4hep::DetElement&, TGeoAxes, double,
       std::shared_ptr<const Acts::ISurfaceMaterial>)>;
   /// Default factory for DD4hepDetectorElement
   /// @param detElement The DD4hep detector element
-  /// @param detAxis The detector axis string
+  /// @param detAxis The detector axis
   /// @param surfaceMaterial The surface material
   /// @param scale Scale factor for length conversion
   /// @return Shared pointer to the created DD4hepDetectorElement
   static std::shared_ptr<DD4hepDetectorElement> defaultDetectorElementFactory(
-      const dd4hep::DetElement& detElement, const std::string& detAxis,
-      double scale,
+      const dd4hep::DetElement& detElement, TGeoAxes detAxis, double scale,
       std::shared_ptr<const Acts::ISurfaceMaterial> surfaceMaterial);
 
   /// @struct Config

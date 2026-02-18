@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
@@ -297,6 +298,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
   auto world = lcdd->world();
 
   // Test starts here - with nonimal detector construction
+  ACTS_PUSH_IGNORE_DEPRECATED()
   DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
   auto surfaceFactory = DD4hepDetectorSurfaceFactory(
       sFactoryConfig,
@@ -304,6 +306,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
 
   DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
   DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
+  ACTS_PUSH_IGNORE_DEPRECATED()
 
   surfaceFactory.construct(sFactoryCache, tContext, world, sFactoryOptions);
   // Check the number of surfaces
@@ -331,14 +334,15 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
   };
 
   auto extendedFactory =
-      [](const dd4hep::DetElement& detElem, const std::string& axes,
-         double scalor, const std::shared_ptr<const ISurfaceMaterial>& material)
+      [](const dd4hep::DetElement& detElem, TGeoAxes axes, double scalor,
+         const std::shared_ptr<const ISurfaceMaterial>& material)
       -> std::shared_ptr<ActsPlugins::DD4hepDetectorElement> {
     return std::make_shared<ExtendedDetectorElement>(detElem, axes, scalor,
                                                      material);
   };
 
   // Test starts here - with nonimal detector construction
+  ACTS_PUSH_IGNORE_DEPRECATED()
   DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
   sFactoryConfig.detectorElementFactory = extendedFactory;
   auto surfaceFactory = DD4hepDetectorSurfaceFactory(
@@ -347,6 +351,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 
   DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
   DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
+  ACTS_POP_IGNORE_DEPRECATED()
 
   surfaceFactory.construct(sFactoryCache, tContext, world, sFactoryOptions);
   // Check the number of surfaces

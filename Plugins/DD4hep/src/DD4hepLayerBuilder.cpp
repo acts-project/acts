@@ -395,8 +395,8 @@ void DD4hepLayerBuilder::resolveSensitive(
 
 std::shared_ptr<const Surface> DD4hepLayerBuilder::createSensitiveSurface(
     const dd4hep::DetElement& detElement) const {
-  std::string detAxis =
-      getParamOr<std::string>("axis_definitions", detElement, "XYZ");
+  auto detAxis = TGeoAxes::parse(
+      getParamOr<std::string>("axis_definitions", detElement, "XYZ"));
   // Create the corresponding detector element !- memory leak --!
   auto dd4hepDetElement = m_cfg.detectorElementFactory(
       detElement, detAxis, UnitConstants::cm, nullptr);
@@ -425,8 +425,8 @@ Transform3 DD4hepLayerBuilder::convertTransform(
 
 std::shared_ptr<DD4hepDetectorElement>
 DD4hepLayerBuilder::defaultDetectorElementFactory(
-    const dd4hep::DetElement& detElement, const std::string& detAxis,
-    double scale, std::shared_ptr<const ISurfaceMaterial> surfaceMaterial) {
+    const dd4hep::DetElement& detElement, TGeoAxes detAxis, double scale,
+    std::shared_ptr<const ISurfaceMaterial> surfaceMaterial) {
   return std::make_shared<DD4hepDetectorElement>(detElement, detAxis, scale,
                                                  std::move(surfaceMaterial));
 }
