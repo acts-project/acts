@@ -43,7 +43,7 @@ ProtoTracksToParameters::ProtoTracksToParameters(Config cfg, Logging::Level lvl)
   }
 }
 
-ProtoTracksToParameters::~ProtoTracksToParameters() {}
+ProtoTracksToParameters::~ProtoTracksToParameters() = default;
 
 ProcessCode ProtoTracksToParameters::execute(
     const AlgorithmContext &ctx) const {
