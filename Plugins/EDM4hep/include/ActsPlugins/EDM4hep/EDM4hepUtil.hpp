@@ -371,11 +371,11 @@ boost::container::static_vector<std::uint8_t, Acts::eBoundSize> decodeIndices(
 /// @param cellId The cell ID of the measurement
 /// @param surface The surface of the measurement
 /// @param to The EDM4hep tracker hit to write to
-void writeMeasurement(
-    const Acts::GeometryContext& gctx,
-    const Eigen::Map<const Acts::ActsDynamicVector>& parameters,
-    const Eigen::Map<const Acts::ActsDynamicMatrix>& covariance,
-    std::span<const std::uint8_t> indices, std::uint64_t cellId,
-    const Acts::Surface& surface, ActsPodioEdm::MutableTrackerHitLocal to);
+void writeMeasurement(const Acts::GeometryContext& gctx,
+                      const Eigen::Map<const Acts::DynamicVector>& parameters,
+                      const Eigen::Map<const Acts::DynamicMatrix>& covariance,
+                      std::span<const std::uint8_t> indices,
+                      std::uint64_t cellId, const Acts::Surface& surface,
+                      ActsPodioEdm::MutableTrackerHitLocal to);
 
 }  // namespace ActsPlugins::EDM4hepUtil

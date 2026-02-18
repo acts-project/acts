@@ -361,8 +361,8 @@ boost::container::static_vector<std::uint8_t, eBoundSize> decodeIndices(
 }  // namespace detail
 
 void writeMeasurement(const GeometryContext& gctx,
-                      const Eigen::Map<const ActsDynamicVector>& parameters,
-                      const Eigen::Map<const ActsDynamicMatrix>& covariance,
+                      const Eigen::Map<const DynamicVector>& parameters,
+                      const Eigen::Map<const DynamicMatrix>& covariance,
                       std::span<const std::uint8_t> indices,
                       std::uint64_t cellId, const Acts::Surface& surface,
                       ActsPodioEdm::MutableTrackerHitLocal to) {
