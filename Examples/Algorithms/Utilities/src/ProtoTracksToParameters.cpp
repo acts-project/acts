@@ -6,19 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingGnn/ProtoTracksToParameters.hpp"
+#include "ActsExamples/Utilities/ProtoTracksToParameters.hpp"
 
-#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
 #include <algorithm>
 #include <tuple>
@@ -182,7 +175,7 @@ ProcessCode ProtoTracksToParameters::execute(
     const auto &pars = *parsResult;
 
     seededTracks.push_back(track);
-    seeds.emplace_back(std::move(seed));
+    seeds.emplace_back(seed);
     parameters.push_back(BoundTrackParameters(
         surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
   }
