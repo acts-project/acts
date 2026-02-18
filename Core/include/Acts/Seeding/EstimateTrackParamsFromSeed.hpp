@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -134,31 +135,8 @@ Result<BoundVector> estimateTrackParamsFromSeed(const GeometryContext& gctx,
                                                 spacepoint_range_t spRange,
                                                 const Surface& surface,
                                                 const Vector3& bField) {
-  // Check the number of provided space points
-  if (spRange.size() != 3) {
-    throw std::invalid_argument(
-        "There should be exactly three space points provided.");
-  }
-
-  // The global positions of the bottom, middle and space points
-  std::array<Vector3, 3> spPositions = {Vector3::Zero(), Vector3::Zero(),
-                                        Vector3::Zero()};
-  std::array<std::optional<double>, 3> spTimes = {std::nullopt, std::nullopt,
-                                                  std::nullopt};
-  // The first, second and third space point are assumed to be bottom, middle
-  // and top space point, respectively
-  for (auto [sp, spPosition, spTime] :
-       Acts::zip(spRange, spPositions, spTimes)) {
-    if (sp == nullptr) {
-      throw std::invalid_argument("Empty space point found.");
-    }
-    spPosition = Vector3(sp->x(), sp->y(), sp->z());
-    spTime = sp->t();
-  }
-
-  return estimateTrackParamsFromSeed(gctx, surface, spPositions[0],
-                                     spTimes[0].value_or(0), spPositions[1],
-                                     spPositions[2], bField);
+  const FreeVector freeParams = estimateTrackParamsFromSeed(spRange, bField);
+  return transformFreeToBoundParameters(freeParams, surface, gctx);
 }
 
 /// Configuration for the estimation of the covariance matrix of the track

@@ -84,29 +84,9 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeed(
     const GeometryContext& gctx, const Surface& surface, const Vector3& sp0,
     const double t0, const Vector3& sp1, const Vector3& sp2,
     const Vector3& bField) {
-  FreeVector freeParams =
+  const FreeVector freeParams =
       estimateTrackParamsFromSeed(sp0, t0, sp1, sp2, bField);
-
-  const Vector3 origin = freeParams.segment<3>(eFreePos0);
-  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
-
-  // Transform the bottom space point to local coordinates of the provided
-  // surface
-  const Result<Vector2> lpResult =
-      surface.globalToLocal(gctx, origin, direction);
-  if (!lpResult.ok()) {
-    return Result<BoundVector>::failure(lpResult.error());
-  }
-  const Vector2& bottomLocalPos = lpResult.value();
-
-  BoundVector params = BoundVector::Zero();
-  params[eBoundLoc0] = bottomLocalPos.x();
-  params[eBoundLoc1] = bottomLocalPos.y();
-  params[eBoundPhi] = VectorHelpers::phi(direction);
-  params[eBoundTheta] = VectorHelpers::theta(direction);
-  params[eBoundQOverP] = freeParams[eFreeQOverP];
-  params[eBoundTime] = freeParams[eFreeTime];
-  return Result<BoundVector>::success(params);
+  return transformFreeToBoundParameters(freeParams, surface, gctx);
 }
 
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(
