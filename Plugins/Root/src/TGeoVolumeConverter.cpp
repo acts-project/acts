@@ -26,7 +26,7 @@ std::unique_ptr<Acts::Volume> TGeoVolumeConverter::cylinderVolume(
   auto [bounds, transform, thickness] =
       ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
           tgShape, tgTransform.GetRotationMatrix(),
-          tgTransform.GetTranslation(), "XY", lengthScale);
+          tgTransform.GetTranslation(), "XYZ", lengthScale);
 
   if (bounds == nullptr) {
     throw std::invalid_argument(
