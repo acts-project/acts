@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingGnn/ProtoTracksToParameters.hpp"
 #include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 #include "ActsExamples/TrackFindingGnn/TrackFindingFromProtoTracksAlgorithm.hpp"
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
@@ -19,10 +18,7 @@
 #include "ActsPlugins/Gnn/TorchEdgeClassifier.hpp"
 #include "ActsPlugins/Gnn/TorchMetricLearning.hpp"
 #include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <memory>
 
 #include <boost/preprocessor/if.hpp>
 #include <boost/vmd/tuple/size.hpp>
@@ -207,11 +203,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGnn, gnn) {
                  py::arg("device") = Device::Cuda(0),
                  py::arg("hook") = GnnHook{}, py::arg("timing") = nullptr);
   }
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ProtoTracksToParameters, gnn, "ProtoTracksToParameters", inputProtoTracks,
-      inputSpacePoints, outputSeeds, outputParameters, outputProtoTracks,
-      geometry, magneticField, buildTightSeeds);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackFindingFromProtoTracksAlgorithm, gnn,
