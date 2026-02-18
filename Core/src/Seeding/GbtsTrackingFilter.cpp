@@ -12,86 +12,70 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <list>
 
 namespace Acts::Experimental {
 
-void GbtsEdgeState::initialize(GbtsEdge& pS) {
-  m_initialized = true;
+void GbtsEdgeState::initialize(const GbtsEdge& pS) {
+  initialized = true;
 
-  m_J = 0.0;
-  m_vs.clear();
+  j = 0;
+  vs.clear();
 
   // n2->n1
 
-  float dx = pS.m_n1->x() - pS.m_n2->x();
-  float dy = pS.m_n1->y() - pS.m_n2->y();
-  float L = std::sqrt(dx * dx + dy * dy);
+  const float dx = pS.n1->x - pS.n2->x;
+  const float dy = pS.n1->y - pS.n2->y;
+  const float L = std::sqrt(dx * dx + dy * dy);
 
-  m_s = dy / L;
-  m_c = dx / L;
+  s = dy / L;
+  c = dx / L;
 
   // transform for extrapolation and update
-  //  x' =  x*m_c + y*m_s
-  //  y' = -x*m_s + y*m_c
+  //  x' =  x*c + y*s
+  //  y' = -x*s + y*c
 
-  m_refY = pS.m_n2->r();
-  m_refX = pS.m_n2->x() * m_c + pS.m_n2->y() * m_s;
+  refY = pS.n2->r;
+  refX = pS.n2->x * c + pS.n2->y * s;
 
   // X-state: y, dy/dx, d2y/dx2
 
-  m_X[0] = -pS.m_n2->x() * m_s + pS.m_n2->y() * m_c;
-  m_X[1] = 0.0;
-  m_X[2] = 0.0;
+  x[0] = -pS.n2->x * s + pS.n2->y * c;
+  x[1] = 0;
+  x[2] = 0;
 
   // Y-state: z, dz/dr
 
-  m_Y[0] = pS.m_n2->z();
-  m_Y[1] = (pS.m_n1->z() - pS.m_n2->z()) / (pS.m_n1->r() - pS.m_n2->r());
+  y[0] = pS.n2->z;
+  y[1] = (pS.n1->z - pS.n2->z) / (pS.n1->r - pS.n2->r);
 
-  memset(&m_Cx[0][0], 0, sizeof(m_Cx));
-  memset(&m_Cy[0][0], 0, sizeof(m_Cy));
+  cx = {};
+  cx[0][0] = 0.25f;
+  cx[1][1] = 0.001f;
+  cx[2][2] = 0.001f;
 
-  m_Cx[0][0] = 0.25;
-  m_Cx[1][1] = 0.001;
-  m_Cx[2][2] = 0.001;
-
-  m_Cy[0][0] = 1.5;
-  m_Cy[1][1] = 0.001;
+  cy = {};
+  cy[0][0] = 1.5f;
+  cy[1][1] = 0.001f;
 }
 
-void GbtsEdgeState::clone(const GbtsEdgeState& st) {
-  memcpy(&m_X[0], &st.m_X[0], sizeof(m_X));
-  memcpy(&m_Y[0], &st.m_Y[0], sizeof(m_Y));
-  memcpy(&m_Cx[0][0], &st.m_Cx[0][0], sizeof(m_Cx));
-  memcpy(&m_Cy[0][0], &st.m_Cy[0][0], sizeof(m_Cy));
-  m_refX = st.m_refX;
-  m_refY = st.m_refY;
-  m_c = st.m_c;
-  m_s = st.m_s;
-  m_J = st.m_J;
-  m_vs.clear();
-  m_vs.reserve(st.m_vs.size());
-  std::copy(st.m_vs.begin(), st.m_vs.end(), std::back_inserter(m_vs));
+GbtsTrackingFilter::GbtsTrackingFilter(
+    const GbtsConfig& config,
+    const std::vector<TrigInDetSiLayer>& layerGeometry,
+    std::vector<GbtsEdge>& sb)
+    : m_cfg(&config), m_layerGeometry(&layerGeometry), m_segStore(&sb) {}
 
-  m_initialized = true;
-}
-
-GbtsTrackingFilter::GbtsTrackingFilter(const std::vector<TrigInDetSiLayer>& g,
-                                       std::vector<GbtsEdge>& sb,
-                                       const SeedFinderGbtsConfig& config)
-    : m_geo(g), m_segStore(sb), m_config(config) {}
-
-void GbtsTrackingFilter::followTrack(GbtsEdge& pS, GbtsEdgeState& output) {
-  if (pS.m_level == -1) {
-    return;  // already collected
+GbtsEdgeState GbtsTrackingFilter::followTrack(GbtsEdge& pS) {
+  if (pS.level == -1) {
+    // already collected
+    return GbtsEdgeState(false);
   }
 
   m_globalStateCounter = 0;
 
   // create track state
 
-  GbtsEdgeState& pInitState = m_stateStore[m_globalStateCounter++];
+  GbtsEdgeState& pInitState = m_stateStore[m_globalStateCounter];
+  ++m_globalStateCounter;
 
   pInitState.initialize(pS);
 
@@ -102,17 +86,15 @@ void GbtsTrackingFilter::followTrack(GbtsEdge& pS, GbtsEdgeState& output) {
   propagate(pS, pInitState);
 
   if (m_stateVec.empty()) {
-    return;
+    return GbtsEdgeState(false);
   }
 
-  std::sort(m_stateVec.begin(), m_stateVec.end(),
-            typename GbtsEdgeState::Compare());
-
-  GbtsEdgeState* best = (*m_stateVec.begin());
-
-  output.clone(*best);
+  std::ranges::sort(m_stateVec, std::ranges::greater{},
+                    [](const GbtsEdgeState* s) { return s->j; });
 
   m_globalStateCounter = 0;
+
+  return *m_stateVec.front();
 }
 
 void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
@@ -120,212 +102,217 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
     return;
   }
 
-  GbtsEdgeState* p_new_ts = &m_stateStore[m_globalStateCounter++];
+  GbtsEdgeState& newTs = m_stateStore[m_globalStateCounter];
+  ++m_globalStateCounter;
+  newTs = ts;
 
-  GbtsEdgeState& new_ts = *p_new_ts;
-  new_ts.clone(ts);
+  newTs.vs.push_back(&pS);
 
-  new_ts.m_vs.push_back(&pS);
-
-  bool accepted = update(pS, new_ts);  // update using n1 of the segment
+  // update using n1 of the segment
+  bool accepted = update(pS, newTs);
 
   if (!accepted) {
-    return;  // stop further propagation
+    // stop further propagation
+    return;
   }
 
-  std::int32_t level = pS.m_level;
+  const std::int32_t level = pS.level;
 
-  std::list<GbtsEdge*> lCont;
+  std::vector<GbtsEdge*> lCont;
 
   // loop over the neighbours of this segment
-  for (std::uint32_t nIdx = 0; nIdx < pS.m_nNei; ++nIdx) {
-    std::uint32_t nextSegmentIdx = pS.m_vNei[nIdx];
+  for (std::uint32_t nIdx = 0; nIdx < pS.nNei; ++nIdx) {
+    const std::uint32_t nextSegmentIdx = pS.vNei[nIdx];
 
-    GbtsEdge* pN = &(m_segStore[nextSegmentIdx]);
+    GbtsEdge& pN = (*m_segStore)[nextSegmentIdx];
 
-    if (pN->m_level == -1) {
-      continue;  // already collected
+    if (pN.level == -1) {
+      // already collected
+      continue;
     }
 
-    if (pN->m_level == level - 1) {
-      lCont.push_back(pN);
+    if (pN.level == level - 1) {
+      lCont.push_back(&pN);
     }
   }
 
-  if (lCont.empty()) {  // the end of chain
-
+  // the end of chain
+  if (lCont.empty()) {
     // store in the vector
     if (m_globalStateCounter < GbtsMaxEdgeState) {
-      if (m_stateVec.empty()) {  // add the first segment state
-        GbtsEdgeState* p = &m_stateStore[m_globalStateCounter++];
-        p->clone(new_ts);
+      if (m_stateVec.empty()) {
+        // add the first segment state
+        GbtsEdgeState* p = &m_stateStore[m_globalStateCounter];
+        ++m_globalStateCounter;
+        *p = newTs;
         m_stateVec.push_back(p);
-      } else {  // compare with the best and add
-        float best_so_far = (*m_stateVec.begin())->m_J;
-        if (new_ts.m_J > best_so_far) {
-          GbtsEdgeState* p = &m_stateStore[m_globalStateCounter++];
-          p->clone(new_ts);
+      } else {
+        // compare with the best and add
+        const float bestSoFar = m_stateVec.front()->j;
+        if (newTs.j > bestSoFar) {
+          GbtsEdgeState* p = &m_stateStore[m_globalStateCounter];
+          ++m_globalStateCounter;
+          *p = newTs;
           m_stateVec.push_back(p);
         }
       }
     }
-  } else {  // branching
-
-    for (const auto sIt : lCont) {
-      propagate(*sIt, new_ts);  // recursive call
+  } else {
+    // branching
+    for (GbtsEdge* sIt : lCont) {
+      // recursive call
+      propagate(*sIt, newTs);
     }
   }
 }
 
-bool GbtsTrackingFilter::update(GbtsEdge& pS, GbtsEdgeState& ts) {
-  if (ts.m_Cx[2][2] < 0.0 || ts.m_Cx[1][1] < 0.0 || ts.m_Cx[0][0] < 0.0) {
+bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
+  if (ts.cx[2][2] < 0 || ts.cx[1][1] < 0 || ts.cx[0][0] < 0) {
     std::cout << "Negative cov_x" << std::endl;
   }
 
-  if (ts.m_Cy[1][1] < 0.0 || ts.m_Cy[0][0] < 0.0) {
+  if (ts.cy[1][1] < 0 || ts.cy[0][0] < 0) {
     std::cout << "Negative cov_y" << std::endl;
   }
 
   // add ms.
 
-  float tau2 = ts.m_Y[1] * ts.m_Y[1];
-  float invSin2 = 1 + tau2;
+  const float tau2 = ts.y[1] * ts.y[1];
+  const float invSin2 = 1 + tau2;
 
-  std::int32_t type1 = getLayerType(pS.m_n2->layer());  // 0 - barrel
+  const std::int32_t type1 = getLayerType(pS.n2->layer);  // 0 - barrel
 
-  float lenCorr = type1 == 0 ? invSin2 : invSin2 / tau2;
+  const float lenCorr = type1 == 0 ? invSin2 : invSin2 / tau2;
 
-  float minPtFrac = std::abs(ts.m_X[2]) / m_config.max_curvature;
+  const float minPtFrac = std::abs(ts.x[2]) / m_cfg->maxCurvature;
 
-  float corrMS = m_config.sigmaMS * minPtFrac;
+  const float corrMS = m_cfg->sigmaMS * minPtFrac;
 
-  float sigma2 = m_config.radLen * lenCorr * corrMS * corrMS;  // /invSin2;
+  const float sigma2 = m_cfg->radLen * lenCorr * corrMS * corrMS;  // /invSin2
 
-  ts.m_Cx[1][1] += sigma2;
+  ts.cx[1][1] += sigma2;
 
-  ts.m_Cy[1][1] += sigma2;
+  ts.cy[1][1] += sigma2;
 
   // extrapolation
 
-  float X[3], Y[2];
-  float Cx[3][3], Cy[2][2];
+  std::array<float, 3> X{};
+  std::array<float, 2> Y{};
+  std::array<std::array<float, 3>, 3> Cx{};
+  std::array<std::array<float, 2>, 2> Cy{};
 
-  float refX{}, refY{}, mx{}, my{};
+  const float x = pS.n1->x;
+  const float y = pS.n1->y;
+  const float z = pS.n1->z;
+  const float r = pS.n1->r;
 
-  float x{}, y{}, z{}, r{};
+  const float refX = x * ts.c + y * ts.s;
+  const float mx = -x * ts.s + y * ts.c;  // measured X[0]
+  const float refY = r;
+  const float my = z;  // measured Y[0]
 
-  x = pS.m_n1->x();
-  y = pS.m_n1->y();
-  z = pS.m_n1->z();
-  r = pS.m_n1->r();
+  const float A = refX - ts.refX;
+  const float B = 0.5 * A * A;
+  const float dr = refY - ts.refY;
 
-  refX = x * ts.m_c + y * ts.m_s;
-  mx = -x * ts.m_s + y * ts.m_c;  // measured X[0]
-  refY = r;
-  my = z;  // measured Y[0]
+  X[0] = ts.x[0] + ts.x[1] * A + ts.x[2] * B;
+  X[1] = ts.x[1] + ts.x[2] * A;
+  X[2] = ts.x[2];
 
-  float A = refX - ts.m_refX;
-  float B = 0.5 * A * A;
-  float dr = refY - ts.m_refY;
+  Cx[0][0] = ts.cx[0][0] + 2 * ts.cx[0][1] * A + 2 * ts.cx[0][2] * B +
+             A * A * ts.cx[1][1] + 2 * A * B * ts.cx[1][2] +
+             B * B * ts.cx[2][2];
+  Cx[0][1] = Cx[1][0] = ts.cx[0][1] + ts.cx[1][1] * A + ts.cx[1][2] * B +
+                        ts.cx[0][2] * A + A * A * ts.cx[1][2] +
+                        A * B * ts.cx[2][2];
+  Cx[0][2] = Cx[2][0] = ts.cx[0][2] + ts.cx[1][2] * A + ts.cx[2][2] * B;
 
-  X[0] = ts.m_X[0] + ts.m_X[1] * A + ts.m_X[2] * B;
-  X[1] = ts.m_X[1] + ts.m_X[2] * A;
-  X[2] = ts.m_X[2];
+  Cx[1][1] = ts.cx[1][1] + 2 * A * ts.cx[1][2] + A * A * ts.cx[2][2];
+  Cx[1][2] = Cx[2][1] = ts.cx[1][2] + ts.cx[2][2] * A;
 
-  Cx[0][0] = ts.m_Cx[0][0] + 2 * ts.m_Cx[0][1] * A + 2 * ts.m_Cx[0][2] * B +
-             A * A * ts.m_Cx[1][1] + 2 * A * B * ts.m_Cx[1][2] +
-             B * B * ts.m_Cx[2][2];
-  Cx[0][1] = Cx[1][0] = ts.m_Cx[0][1] + ts.m_Cx[1][1] * A + ts.m_Cx[1][2] * B +
-                        ts.m_Cx[0][2] * A + A * A * ts.m_Cx[1][2] +
-                        A * B * ts.m_Cx[2][2];
-  Cx[0][2] = Cx[2][0] = ts.m_Cx[0][2] + ts.m_Cx[1][2] * A + ts.m_Cx[2][2] * B;
+  Cx[2][2] = ts.cx[2][2];
 
-  Cx[1][1] = ts.m_Cx[1][1] + 2 * A * ts.m_Cx[1][2] + A * A * ts.m_Cx[2][2];
-  Cx[1][2] = Cx[2][1] = ts.m_Cx[1][2] + ts.m_Cx[2][2] * A;
+  Y[0] = ts.y[0] + ts.y[1] * dr;
+  Y[1] = ts.y[1];
 
-  Cx[2][2] = ts.m_Cx[2][2];
-
-  Y[0] = ts.m_Y[0] + ts.m_Y[1] * dr;
-  Y[1] = ts.m_Y[1];
-
-  Cy[0][0] = ts.m_Cy[0][0] + 2 * ts.m_Cy[0][1] * dr + dr * dr * ts.m_Cy[1][1];
-  Cy[0][1] = Cy[1][0] = ts.m_Cy[0][1] + dr * ts.m_Cy[1][1];
-  Cy[1][1] = ts.m_Cy[1][1];
+  Cy[0][0] = ts.cy[0][0] + 2 * ts.cy[0][1] * dr + dr * dr * ts.cy[1][1];
+  Cy[0][1] = Cy[1][0] = ts.cy[0][1] + dr * ts.cy[1][1];
+  Cy[1][1] = ts.cy[1][1];
 
   // chi2 test
 
-  float resid_x = mx - X[0];
-  float resid_y = my - Y[0];
+  const float resid_x = mx - X[0];
+  const float resid_y = my - Y[0];
 
-  float CHx[3] = {Cx[0][0], Cx[0][1], Cx[0][2]};
-  float CHy[2] = {Cy[0][0], Cy[0][1]};
+  const std::array<float, 3> CHx = {Cx[0][0], Cx[0][1], Cx[0][2]};
+  const std::array<float, 2> CHy = {Cy[0][0], Cy[0][1]};
 
-  float sigma_rz = 0.0;
+  float sigma_rz = 0;
 
-  std::int32_t type = getLayerType(pS.m_n1->layer());
+  const std::int32_t type = getLayerType(pS.n1->layer);
 
-  if (type == 0) {  // barrel TO-DO: split into barrel Pixel and barrel SCT
-    sigma_rz = m_config.sigma_y * m_config.sigma_y;
+  if (type == 0) {
+    // barrel TODO: split into barrel Pixel and barrel SCT
+    sigma_rz = m_cfg->sigmaY * m_cfg->sigmaY;
   } else {
-    sigma_rz = m_config.sigma_y * ts.m_Y[1];
+    sigma_rz = m_cfg->sigmaY * ts.y[1];
     sigma_rz = sigma_rz * sigma_rz;
   }
 
-  float Dx = 1.0 / (Cx[0][0] + m_config.sigma_x * m_config.sigma_x);
+  const float Dx = 1.0 / (Cx[0][0] + m_cfg->sigmaX * m_cfg->sigmaX);
 
-  float Dy = 1.0 / (Cy[0][0] + sigma_rz);
+  const float Dy = 1.0 / (Cy[0][0] + sigma_rz);
 
-  float dchi2_x = resid_x * resid_x * Dx;
-  float dchi2_y = resid_y * resid_y * Dy;
+  const float dchi2_x = resid_x * resid_x * Dx;
+  const float dchi2_y = resid_y * resid_y * Dy;
 
-  if (dchi2_x > m_config.maxDChi2_x || dchi2_y > m_config.maxDChi2_y) {
+  if (dchi2_x > m_cfg->maxDChi2X || dchi2_y > m_cfg->maxDChi2Y) {
     return false;
   }
 
-  ts.m_J += m_config.add_hit - dchi2_x * m_config.weight_x -
-            dchi2_y * m_config.weight_y;
+  ts.j += m_cfg->addHit - dchi2_x * m_cfg->weightX - dchi2_y * m_cfg->weightY;
 
   // state update
 
-  float Kx[3] = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
-  float Ky[2] = {Dy * Cy[0][0], Dy * Cy[0][1]};
+  const std::array<float, 3> Kx = {Dx * Cx[0][0], Dx * Cx[0][1], Dx * Cx[0][2]};
+  const std::array<float, 2> Ky = {Dy * Cy[0][0], Dy * Cy[0][1]};
 
   for (std::uint32_t i = 0; i < 3; ++i) {
-    ts.m_X[i] = X[i] + Kx[i] * resid_x;
+    ts.x[i] = X[i] + Kx[i] * resid_x;
   }
 
-  if (std::abs(ts.m_X[2]) > m_config.max_curvature) {
+  if (std::abs(ts.x[2]) > m_cfg->maxCurvature) {
     return false;
   }
 
   for (std::uint32_t i = 0; i < 2; ++i) {
-    ts.m_Y[i] = Y[i] + Ky[i] * resid_y;
+    ts.y[i] = Y[i] + Ky[i] * resid_y;
   }
 
-  float z0 = ts.m_Y[0] - refY * ts.m_Y[1];
+  const float z0 = ts.y[0] - refY * ts.y[1];
 
-  if (std::abs(z0) > m_config.max_z0) {
+  if (std::abs(z0) > m_cfg->maxZ0) {
     return false;
   }
 
   for (std::uint32_t i = 0; i < 3; ++i) {
     for (std::uint32_t j = 0; j < 3; ++j) {
-      ts.m_Cx[i][j] = Cx[i][j] - Kx[i] * CHx[j];
+      ts.cx[i][j] = Cx[i][j] - Kx[i] * CHx[j];
     }
   }
 
   for (std::uint32_t i = 0; i < 2; ++i) {
     for (std::uint32_t j = 0; j < 2; ++j) {
-      ts.m_Cy[i][j] = Cy[i][j] - Ky[i] * CHy[j];
+      ts.cy[i][j] = Cy[i][j] - Ky[i] * CHy[j];
     }
   }
-  ts.m_refX = refX;
-  ts.m_refY = refY;
+  ts.refX = refX;
+  ts.refY = refY;
   return true;
 }
 
-std::uint32_t GbtsTrackingFilter::getLayerType(std::uint32_t l) {
-  return m_geo.at(l).m_type;
+std::uint32_t GbtsTrackingFilter::getLayerType(const std::uint32_t l) const {
+  return m_layerGeometry->at(l).type;
 }
 
 }  // namespace Acts::Experimental
