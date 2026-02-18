@@ -33,6 +33,7 @@
 #include <ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp>
 
 #include <algorithm>
+#include <format>
 #include <iterator>
 #include <utility>
 
@@ -112,8 +113,10 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
   using ResizeStrategy = Acts::VolumeResizeStrategy;
   using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
 
-  auto constant = [this](const std::string& name) -> int {
-    return dd4hepDetector().constant<int>(name);
+  auto constant = [this]<typename... Args>(std::format_string<Args...> fmt,
+                                           Args&&... values) -> int {
+    return dd4hepDetector().constant<int>(
+        std::format(fmt, std::forward<Args>(values)...));
   };
 
   auto makeCustomizer = [&](const std::string& det,
@@ -129,12 +132,12 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
       bool isEndcap = name.find("Endcap") != std::string::npos;
 
       if (isEndcap) {
-        cfg.bins = {constant(std::format("{}_e_sf_b_r", det)),
-                    constant(std::format("{}_e_sf_b_phi", det))};
+        cfg.bins = {constant("{}_e_sf_b_r", det),
+                    constant("{}_e_sf_b_phi", det)};
         cfg.layerType = Disc;
       } else {
-        cfg.bins = {constant(std::format("{}_b{}_sf_b_phi", det, n)),
-                    constant(std::format("{}_b_sf_b_z", det))};
+        cfg.bins = {constant("{}_b{}_sf_b_phi", det, n),
+                    constant("{}_b_sf_b_z", det)};
         cfg.layerType = Cylinder;
       }
 
