@@ -468,4 +468,180 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
       99);
 }
 
+// Tests for the link-based uncalibrated source link storage mode, which is
+// activated by passing non-null TrackerHitLocalCollection* and
+// TrackStateHitLinkCollection* to the container constructor.
+
+BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
+  using namespace HashedStringLiteral;
+
+  NullHelper helper;
+
+  ActsPodioEdm::TrackStateCollection trackStates;
+  ActsPodioEdm::BoundParametersCollection params;
+  ActsPodioEdm::JacobianCollection jacs;
+  ActsPodioEdm::TrackerHitLocalCollection hitsCollection;
+  ActsPodioEdm::TrackStateHitLinkCollection linksCollection;
+
+  // Populate the hits collection with two distinct hits
+  auto hit1 = hitsCollection.create();
+  hit1.setCellID(12345);
+  auto hit2 = hitsCollection.create();
+  hit2.setCellID(67890);
+
+  MutablePodioTrackStateContainer<Acts::RefHolder> tsc{
+      helper, trackStates, params, jacs, &hitsCollection, &linksCollection};
+
+  auto i0 = tsc.addTrackState_impl();
+  auto i1 = tsc.addTrackState_impl();
+  auto i2 = tsc.addTrackState_impl();  // this one gets no source link
+
+  // Use std::as_const to get the immutable TrackerHitLocal view, since the
+  // mutable collection's at() returns MutableTrackerHitLocal which would not
+  // match the getPtr<TrackerHitLocal>() check in setUncalibratedSourceLink_impl.
+  const auto& constHits = std::as_const(hitsCollection);
+
+  // Assign source links to the first two track states
+  tsc.setUncalibratedSourceLink_impl(i0, Acts::SourceLink{constHits.at(0)});
+  tsc.setUncalibratedSourceLink_impl(i1, Acts::SourceLink{constHits.at(1)});
+
+  // has_impl must reflect link presence
+  BOOST_CHECK(tsc.has_impl("uncalibratedSourceLink"_hash, i0));
+  BOOST_CHECK(tsc.has_impl("uncalibratedSourceLink"_hash, i1));
+  BOOST_CHECK(!tsc.has_impl("uncalibratedSourceLink"_hash, i2));
+
+  // getUncalibratedSourceLink_impl must return the correct TrackerHitLocal
+  {
+    auto sl = tsc.getUncalibratedSourceLink_impl(i0);
+    const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
+    BOOST_REQUIRE_NE(hit, nullptr);
+    BOOST_CHECK_EQUAL(hit->getCellID(), 12345u);
+  }
+  {
+    auto sl = tsc.getUncalibratedSourceLink_impl(i1);
+    const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
+    BOOST_REQUIRE_NE(hit, nullptr);
+    BOOST_CHECK_EQUAL(hit->getCellID(), 67890u);
+  }
+
+  // Requesting a source link for a state with no link must throw
+  BOOST_CHECK_THROW(tsc.getUncalibratedSourceLink_impl(i2),
+                    std::invalid_argument);
+
+  // Updating an existing link: point i0 to hit2 instead of hit1
+  tsc.setUncalibratedSourceLink_impl(i0, Acts::SourceLink{constHits.at(1)});
+  {
+    auto sl = tsc.getUncalibratedSourceLink_impl(i0);
+    const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
+    BOOST_REQUIRE_NE(hit, nullptr);
+    BOOST_CHECK_EQUAL(hit->getCellID(), 67890u);
+  }
+
+  // The link count must not grow when updating — i0 was updated, not duplicated
+  BOOST_CHECK_EQUAL(linksCollection.size(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(InvalidHitsLinksCombination) {
+  NullHelper helper;
+
+  ActsPodioEdm::TrackerHitLocalCollection hitsCollection;
+  ActsPodioEdm::TrackStateHitLinkCollection linksCollection;
+
+  // Providing only hits (null links) must throw
+  BOOST_CHECK_THROW(
+      (MutablePodioTrackStateContainer<>{
+          helper,
+          std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+          std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+          std::make_unique<ActsPodioEdm::JacobianCollection>(),
+          &hitsCollection, nullptr}),
+      std::invalid_argument);
+
+  // Providing only links (null hits) must throw
+  BOOST_CHECK_THROW(
+      (MutablePodioTrackStateContainer<>{
+          helper,
+          std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+          std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+          std::make_unique<ActsPodioEdm::JacobianCollection>(),
+          nullptr, &linksCollection}),
+      std::invalid_argument);
+
+  // Providing both null is valid (identifier-based mode)
+  BOOST_CHECK_NO_THROW((MutablePodioTrackStateContainer<>{
+      helper,
+      std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr, nullptr}));
+
+  // Providing both non-null is valid (link-based mode)
+  BOOST_CHECK_NO_THROW((MutablePodioTrackStateContainer<>{
+      helper,
+      std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), &hitsCollection,
+      &linksCollection}));
+}
+
+BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
+  // Verify that ConstPodioTrackStateContainer constructed from the same
+  // in-memory collections as its mutable counterpart can correctly navigate the
+  // links that were set by the mutable container.  The copy-from-mutable
+  // constructor is used so that both containers share the same underlying
+  // collections; this avoids PODIO object-ID complications that arise when
+  // moving collections into a podio::Frame one-by-one.
+  using namespace HashedStringLiteral;
+
+  NullHelper helper;
+
+  ActsPodioEdm::TrackStateCollection trackStates;
+  ActsPodioEdm::BoundParametersCollection params;
+  ActsPodioEdm::JacobianCollection jacs;
+  ActsPodioEdm::TrackerHitLocalCollection hitsCollection;
+  ActsPodioEdm::TrackStateHitLinkCollection linksCollection;
+
+  auto hit1 = hitsCollection.create();
+  hit1.setCellID(11111);
+  auto hit2 = hitsCollection.create();
+  hit2.setCellID(22222);
+
+  MutablePodioTrackStateContainer<Acts::RefHolder> tsc{
+      helper, trackStates, params, jacs, &hitsCollection, &linksCollection};
+
+  auto i0 = tsc.addTrackState_impl();
+  auto i1 = tsc.addTrackState_impl();
+  tsc.addTrackState_impl();  // third state intentionally has no source link
+
+  const auto& constHits = std::as_const(hitsCollection);
+  tsc.setUncalibratedSourceLink_impl(i0, Acts::SourceLink{constHits.at(0)});
+  tsc.setUncalibratedSourceLink_impl(i1, Acts::SourceLink{constHits.at(1)});
+
+  // Construct a const container from the mutable one.  The copy constructor
+  // passes through m_hits and m_links so the const container is in link-based
+  // mode and shares the same underlying collections.
+  ConstPodioTrackStateContainer<Acts::ConstRefHolder> cc{tsc};
+
+  BOOST_CHECK_EQUAL(cc.size_impl(), 3u);
+
+  BOOST_CHECK(cc.has_impl("uncalibratedSourceLink"_hash, 0));
+  BOOST_CHECK(cc.has_impl("uncalibratedSourceLink"_hash, 1));
+  BOOST_CHECK(!cc.has_impl("uncalibratedSourceLink"_hash, 2));
+
+  {
+    auto sl = cc.getUncalibratedSourceLink_impl(0);
+    const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
+    BOOST_REQUIRE_NE(hit, nullptr);
+    BOOST_CHECK_EQUAL(hit->getCellID(), 11111u);
+  }
+  {
+    auto sl = cc.getUncalibratedSourceLink_impl(1);
+    const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
+    BOOST_REQUIRE_NE(hit, nullptr);
+    BOOST_CHECK_EQUAL(hit->getCellID(), 22222u);
+  }
+
+  // Requesting a source link for the unlinked state must throw
+  BOOST_CHECK_THROW(cc.getUncalibratedSourceLink_impl(2), std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
