@@ -7,7 +7,7 @@ acts_add_library(
     src/TracksToTrajectories.cpp
     src/ProtoTracksToTracks.cpp
     src/TracksToParameters.cpp
-    src/PrototracksToParameters.cpp
+    src/ProtoTracksToParameters.cpp
 )
 target_include_directories(
     ActsExamplesUtilities

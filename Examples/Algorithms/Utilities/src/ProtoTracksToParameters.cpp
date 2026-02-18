@@ -6,32 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-< < < < < < < < HEAD : Examples / Algorithms / Utilities / src /
-                       PrototracksToParameters.cpp
-#include "ActsExamples/Utilities/PrototracksToParameters.hpp"
-    == == == ==
-#include "ActsExamples/TrackFindingGnn/ProtoTracksToParameters.hpp"
-    >>>>>>>> 3928f254dfcec1cf7a5a685ac81b15d20a0c05d7
-    : Examples /
-      Algorithms / TrackFindingGnn / src /
-      ProtoTracksToParameters.cpp
+#include "ActsExamples/Utilities/ProtoTracksToParameters.hpp"
 
-#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
 #include <algorithm>
 #include <tuple>
 
-      using namespace Acts;
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
@@ -190,7 +175,7 @@ ProcessCode ProtoTracksToParameters::execute(
     const auto &pars = *parsResult;
 
     seededTracks.push_back(track);
-    seeds.emplace_back(std::move(seed));
+    seeds.emplace_back(seed);
     parameters.push_back(BoundTrackParameters(
         surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
   }
