@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <ostream>
 #include <stdexcept>
 #include <string_view>
 
@@ -57,6 +58,10 @@ class TGeoAxes {
 
   /// Return the axes string as a 3-character string view.
   std::string_view value() const { return {m_axes, 3}; }
+
+  friend std::ostream& operator<<(std::ostream& os, const TGeoAxes& axes) {
+    return os << axes.value();
+  }
 
  private:
   struct Checked {

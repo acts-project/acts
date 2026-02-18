@@ -11,10 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 
-#include <iostream>
 #include <memory>
-#include <string>
 
 #include "TGeoManager.h"
 
@@ -84,7 +83,7 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
   TGeoDetectorElement(
       const Identifier& identifier, const TGeoNode& tGeoNode,
       const TGeoMatrix& tGeoMatrix = TGeoIdentity(),
-      const std::string& axes = "XYZ", double scalor = 10.,
+      TGeoAxes axes = "XYZ", double scalor = 10.,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   /// Constructor with pre-computed surface

@@ -94,9 +94,9 @@ DD4hepDetectorSurfaceFactory::DD4hepSensitiveSurface
 DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
     Cache& cache, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
-  // Extract the axis definition
-  std::string detAxis =
-      getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ");
+  // Extract the axis definition (config boundary — parse string to TGeoAxes)
+  auto detAxis = TGeoAxes::parse(
+      getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ"));
   std::shared_ptr<const ISurfaceMaterial> surfaceMaterial = nullptr;
 
   // Create the corresponding detector element
@@ -126,9 +126,9 @@ DD4hepDetectorSurfaceFactory::constructPassiveComponents(
   const auto& tgeoNode = *(dd4hepElement.placement().ptr());
   auto tgeoShape = tgeoNode.GetVolume()->GetShape();
   const auto tgeoTransform = dd4hepElement.nominal().worldTransformation();
-  // Extract the axis definition
-  auto detAxis =
-      getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ");
+  // Extract the axis definition (config boundary — parse string to TGeoAxes)
+  auto detAxis = TGeoAxes::parse(
+      getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ"));
   bool assignToAll = getParamOr<bool>("assign_to_all", dd4hepElement, true);
   auto [pSurface, thickness] =
       TGeoSurfaceConverter::toSurface(*tgeoShape, tgeoTransform, detAxis);

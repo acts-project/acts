@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
 #include <map>
@@ -82,7 +83,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   ///       will be translated into a cylindrical surface.
   /// @param material Optional material of detector element
   explicit DD4hepDetectorElement(
-      const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
+      const dd4hep::DetElement detElement, TGeoAxes axes = "XYZ",
       double scalor = 1.,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 

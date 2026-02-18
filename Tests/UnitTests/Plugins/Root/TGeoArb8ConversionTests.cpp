@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> allowedAxes = {"XY*", "xy*", "Xy*", "xY*",
-                                          "YX*", "yx*", "Yx*", "yX*"};
+  std::vector<TGeoAxes> allowedAxes = {"XYZ", "xyZ", "XyZ", "xYZ",
+                                       "YXZ", "yxZ", "YxZ", "yXZ"};
 
   std::size_t iarb8 = 0;
   for (const auto &axes : allowedAxes) {
@@ -107,9 +107,9 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   }
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {
-      "XZ*", "xz*", "xZ*", "Xz*", "ZX*", "zx*", "zX*", "Zx*",
-      "YZ*", "yz*", "yZ*", "Yz*", "ZY*", "zy*", "Zy*", "zY*"};
+  std::vector<TGeoAxes> notAllowed = {
+      "XZY", "xzY", "xZY", "XzY", "ZXY", "zxY", "zXY", "ZxY",
+      "YZX", "yzX", "yZX", "YzX", "ZYX", "zyX", "ZyX", "zYX"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),

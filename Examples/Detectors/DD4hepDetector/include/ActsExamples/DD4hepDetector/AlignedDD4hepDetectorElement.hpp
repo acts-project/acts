@@ -13,7 +13,6 @@
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 
 #include <memory>
-#include <string>
 
 /// @cond
 namespace dd4hep {
@@ -30,7 +29,8 @@ using AlignedDD4hepDetectorElement =
 /// It forwards the arguments to the DD4hepDetectorElement constructor
 std::shared_ptr<AlignedDD4hepDetectorElement>
 alignedDD4hepDetectorElementFactory(
-    const dd4hep::DetElement detElement, const std::string& axes, double scalor,
+    const dd4hep::DetElement detElement, ActsPlugins::TGeoAxes axes,
+    double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
 }  // namespace ActsExamples
