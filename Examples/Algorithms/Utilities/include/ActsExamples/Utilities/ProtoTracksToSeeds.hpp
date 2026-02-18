@@ -8,30 +8,27 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
-
-#include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
-class SeedsToPrototracks final : public IAlgorithm {
+class ProtoTracksToSeeds final : public IAlgorithm {
  public:
   struct Config {
-    std::string inputSeeds = "seeds";
-    std::string outputProtoTracks = "tracks-from-seeds";
+    std::string inputProtoTracks;
+    std::string inputSpacePoints;
+    std::string outputSeeds = "seeds-from-protoTracks";
+    std::string outputProtoTracks = "remaining-protoTracks";
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl);
+  ProtoTracksToSeeds(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///
@@ -45,9 +42,13 @@ class SeedsToPrototracks final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
+                                                            "InputSpacePoints"};
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
 };
 
 }  // namespace ActsExamples

@@ -19,6 +19,7 @@ acts_add_library(
     src/Utilities/Paths.cpp
     src/Utilities/Options.cpp
     src/Utilities/ParametricParticleGenerator.cpp
+    src/Utilities/VertexTruthUtility.cpp
     src/Validation/DuplicationPlotTool.cpp
     src/Validation/EffPlotTool.cpp
     src/Validation/FakePlotTool.cpp
@@ -40,6 +41,16 @@ target_link_libraries(
 target_compile_definitions(
     ActsExamplesFramework
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
+)
+
+acts_compile_headers(
+    ExamplesFramework
+    GLOB
+        include/ActsExamples/Framework/*.hpp
+        include/ActsExamples/EventData/*.hpp
+        include/ActsExamples/Root/*.hpp
+        include/ActsExamples/Utilities/*.hpp
+        include/ActsExamples/Validation/*.hpp
 )
 
 # Plugin-dependent framework components
@@ -66,6 +77,7 @@ endif()
 if(ACTS_BUILD_PLUGIN_ONNX)
     target_sources(ActsExamplesFramework PRIVATE src/Onnx/NeuralCalibrator.cpp)
     target_link_libraries(ActsExamplesFramework PUBLIC Acts::PluginOnnx)
+    acts_compile_headers(ExamplesFramework GLOB include/ActsExamples/Onnx/*.hpp)
 endif()
 
 # newer DD4hep version require TBB and search internally for TBB in

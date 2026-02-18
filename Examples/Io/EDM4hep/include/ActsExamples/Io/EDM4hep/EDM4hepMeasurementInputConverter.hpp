@@ -16,10 +16,6 @@
 
 #include <string>
 
-namespace podio {
-class Frame;
-}
-
 namespace ActsExamples {
 
 /// Read in a measurement cluster collection as EDM4hep from a @c podio::Frame.
@@ -61,8 +57,6 @@ class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
 
  private:
   Config m_cfg;
-
-  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};

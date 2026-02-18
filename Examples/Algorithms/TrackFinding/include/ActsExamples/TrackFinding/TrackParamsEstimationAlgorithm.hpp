@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -22,11 +23,6 @@
 #include <array>
 #include <memory>
 #include <string>
-
-namespace Acts {
-class TrackingGeometry;
-class MagneticFieldProvider;
-}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -45,7 +41,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
-    /// Input prototracks (optional).
+    /// Input proto tracks (optional).
     std::optional<std::string> inputProtoTracks;
     /// Input particle hypothesis (optional). If not given, the static particle
     /// hypothesis from the config is used.
@@ -55,7 +51,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Output seed collection - only seeds with successful parameter estimation
     /// are propagated (optional)
     std::optional<std::string> outputSeeds;
-    /// Output prototrack collection - only tracks with successful parameter
+    /// Output proto track collection - only tracks with successful parameter
     /// estimation are propagated (optional)
     std::optional<std::string> outputProtoTracks;
 
@@ -96,7 +92,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrackParamsEstimationAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackParamsEstimationAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the track parameters making algorithm.
   ///

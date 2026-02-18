@@ -13,7 +13,6 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>
@@ -59,8 +58,7 @@ class MeasurementMapSelector final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final {
+  ProcessCode execute(const AlgorithmContext& ctx) const final {
     const auto& inputMeasurements = m_inputMeasurements(ctx);
     const auto& inputMap = m_inputMap(ctx);
 

@@ -423,14 +423,14 @@ def addSeeding(
             logger.info("Using Hough Transform seeding")
             houghTransformConfig.inputSpacePoints = [spacePoints]
             houghTransformConfig.inputMeasurements = "measurements"
-            houghTransformConfig.outputProtoTracks = "prototracks"
+            houghTransformConfig.outputProtoTracks = "protoTracks"
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
         elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
             logger.info("Using Adaptive Hough Transform seeding")
             adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
-            adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
+            adaptiveHoughTransformConfig.outputProtoTracks = "protoTracks"
             adaptiveHoughTransformConfig.outputSeeds = "seeds"
             adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
             adaptiveHoughTransformConfig.threshold = 4
@@ -516,20 +516,20 @@ def addSeeding(
         )
         s.addAlgorithm(parEstimateAlg)
 
-        prototracks = "seed-prototracks"
+        protoTracks = "seed-protoTracks"
         s.addAlgorithm(
-            acts.examples.SeedsToPrototracks(
+            acts.examples.SeedsToProtoTracks(
                 level=logLevel,
                 inputSeeds="estimatedseeds",
-                outputProtoTracks=prototracks,
+                outputProtoTracks=protoTracks,
             )
         )
 
         tracks = "seed-tracks"
         s.addAlgorithm(
-            acts.examples.PrototracksToTracks(
+            acts.examples.ProtoTracksToTracks(
                 level=logLevel,
-                inputProtoTracks=prototracks,
+                inputProtoTracks=protoTracks,
                 inputTrackParameters="estimatedparameters",
                 inputMeasurements="measurements",
                 outputTracks=tracks,
@@ -554,7 +554,7 @@ def addSeeding(
                 s,
                 outputDirRoot,
                 tracks,
-                prototracks,
+                protoTracks,
                 selectedParticles,
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
@@ -1330,7 +1330,7 @@ def addSeedPerformanceWriters(
     sequence: acts.examples.Sequencer,
     outputDirRoot: Union[Path, str],
     tracks: str,
-    prototracks: str,
+    protoTracks: str,
     selectedParticles: str,
     inputParticles: str,
     outputTrackParameters: str,
@@ -1361,7 +1361,7 @@ def addSeedPerformanceWriters(
         RootTrackParameterWriter(
             level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
-            inputProtoTracks=prototracks,
+            inputProtoTracks=protoTracks,
             inputParticles=inputParticles,
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -1392,7 +1392,7 @@ def addSeedFilterML(
     selectedParticles = "particles_selected"
     seeds = "seeds"
     estParams = "estimatedparameters"
-    prototracks = "seed-prototracks-ML"
+    protoTracks = "seed-protoTracks-ML"
     tracks = "seed-tracks-ML"
 
     filterML = SeedFilterMLAlgorithm(
@@ -1413,17 +1413,17 @@ def addSeedFilterML(
     s.addWhiteboardAlias("estimatedparameters", "filtered-parameters")
 
     s.addAlgorithm(
-        acts.examples.SeedsToPrototracks(
+        acts.examples.SeedsToProtoTracks(
             level=customLogLevel,
             inputSeeds=seeds,
-            outputProtoTracks=prototracks,
+            outputProtoTracks=protoTracks,
         )
     )
 
     s.addAlgorithm(
-        acts.examples.PrototracksToTracks(
+        acts.examples.ProtoTracksToTracks(
             level=customLogLevel,
-            inputProtoTracks=prototracks,
+            inputProtoTracks=protoTracks,
             inputTrackParameters="estimatedparameters",
             outputTracks=tracks,
         )
@@ -1996,7 +1996,7 @@ def addGnn(
         level=customLogLevel(),
         inputSpacePoints=inputSpacePoints,
         inputClusters=inputClusters,
-        outputProtoTracks="gnn_prototracks",
+        outputProtoTracks="gnn-protoTracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
@@ -2004,13 +2004,13 @@ def addGnn(
         featureScales=featureScales,
     )
     s.addAlgorithm(findingAlg)
-    s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
+    s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)
 
-    # Convert prototracks to tracks
+    # Convert proto tracks to tracks
     s.addAlgorithm(
-        acts.examples.PrototracksToTracks(
+        acts.examples.ProtoTracksToTracks(
             level=customLogLevel(),
-            inputProtoTracks="prototracks",
+            inputProtoTracks="protoTracks",
             inputMeasurements="measurements",
             outputTracks="tracks",
         )
@@ -2279,7 +2279,9 @@ def addVertexFitting(
     tracks: Optional[str] = "tracks",
     trackParameters: Optional[str] = None,
     outputProtoVertices: str = "protovertices",
-    outputVertices: str = "fittedVertices",
+    outputVertices: str = "vertices",
+    outputVertexTruthMatching="vertex_truth_matching",
+    outputTruthVertexMatching="truth_vertex_matching",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     maxIterations: Optional[int] = None,
     initialVariances: Optional[List[float]] = None,
@@ -2330,6 +2332,7 @@ def addVertexFitting(
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
         CsvVertexWriter,
+        VertexTruthMatcher,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -2407,6 +2410,18 @@ def addVertexFitting(
     else:
         raise RuntimeError("Invalid finder argument")
 
+    s.addAlgorithm(
+        VertexTruthMatcher(
+            level=customLogLevel(),
+            inputVertices=outputVertices,
+            inputTracks=tracks,
+            inputParticles=inputParticles,
+            inputTrackParticleMatching="track_particle_matching",
+            outputVertexTruthMatching=outputVertexTruthMatching,
+            outputTruthVertexMatching=outputTruthVertexMatching,
+        )
+    )
+
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():
@@ -2436,6 +2451,7 @@ def addVertexFitting(
                 inputParticles=inputParticles,
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
+                inputVertexTruthMatching=outputVertexTruthMatching,
                 bField=field,
                 writeTrackInfo=writeTrackInfo,
                 treeName="vertexing",

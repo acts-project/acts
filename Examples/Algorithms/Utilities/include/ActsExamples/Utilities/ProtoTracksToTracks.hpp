@@ -8,30 +8,32 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
-
-#include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
-class TrajectoriesToPrototracks final : public IAlgorithm {
+class ProtoTracksToTracks final : public IAlgorithm {
  public:
   struct Config {
-    std::string inputTrajectories = "trajectories";
-    std::string outputProtoTracks = "tracks-from-trajectories";
+    /// Input proto tracks.
+    std::string inputProtoTracks;
+    /// Optional. Input track parameters passed to the output tracks.
+    std::string inputTrackParameters;
+    /// Input measurements.
+    std::string inputMeasurements;
+    /// Output tracks.
+    std::string outputTracks = "tracks-from-protoTracks";
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl);
+  ProtoTracksToTracks(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///
@@ -45,11 +47,13 @@ class TrajectoriesToPrototracks final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
-
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
 };
 
 }  // namespace ActsExamples

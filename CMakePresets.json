@@ -120,7 +120,8 @@
             "cacheVariables": {
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
-                "ACTS_RUN_CLANG_TIDY": "ON"
+                "ACTS_RUN_CLANG_TIDY": "ON",
+                "ACTS_BUILD_PLUGIN_ONNX": "ON"
             }
         },
         {

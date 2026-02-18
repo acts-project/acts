@@ -9,23 +9,20 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Vertexing/HoughVertexFinder.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class HoughVertexFinderAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Optional. Input spacepoints container.
-    std::string inputSpacepoints;
+    std::string inputSpacePoints;
     /// Output vertex collection
     std::string outputVertices;
 
@@ -52,10 +49,10 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacepoints{this,
-                                                            "spacepoints"};
-  WriteDataHandle<std::vector<Acts::Vertex>> m_outputVertices{
-      this, "OutputHoughVertices"};
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
+                                                            "InputSpacePoints"};
+  WriteDataHandle<VertexContainer> m_outputVertices{this,
+                                                    "OutputHoughVertices"};
 };
 
 }  // namespace ActsExamples

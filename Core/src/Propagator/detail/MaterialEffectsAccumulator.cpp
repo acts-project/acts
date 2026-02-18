@@ -84,7 +84,7 @@ MaterialEffectsAccumulator::computeAdditionalFreeCovariance(
     // https://github.com/andiwand/cern-scripts/blob/5f0ebf1bef35db65322f28c2e840c1db1aaaf9a7/notebooks/2023-12-07_qp-dense-nav.ipynb
     //
     SquareMatrix3 directionProjection =
-        (ActsSquareMatrix<3>::Identity() - direction * direction.transpose());
+        (SquareMatrix<3>::Identity() - direction * direction.transpose());
 
     additionalFreeCovariance.template block<3, 3>(eFreeDir0, eFreeDir0) =
         m_varAngle * directionProjection;

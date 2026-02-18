@@ -15,6 +15,8 @@
 #include <Eigen/Core>
 #include <boost/core/demangle.hpp>
 
+namespace ActsExamples {
+
 namespace {
 
 /// Compute similarity between two words (see wikipedia)
@@ -58,7 +60,7 @@ inline int levenshteinDistance(const std::string_view &a,
 
 }  // namespace
 
-std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
+std::vector<std::string_view> WhiteBoard::similarNames(
     const std::string_view &name, int distThreshold,
     std::size_t maxNumber) const {
   std::vector<std::pair<int, std::string_view>> names;
@@ -83,22 +85,22 @@ std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
   return selected_names;
 }
 
-std::string ActsExamples::WhiteBoard::typeMismatchMessage(
-    const std::string &name, const char *req, const char *act) {
+std::string WhiteBoard::typeMismatchMessage(const std::string &name,
+                                            const char *req, const char *act) {
   return std::string{"Type mismatch for '" + name + "'. Requested " +
                      boost::core::demangle(req) + " but actually " +
                      boost::core::demangle(act)};
 }
 
-void ActsExamples::WhiteBoard::copyFrom(const WhiteBoard &other) {
+void WhiteBoard::copyFrom(const WhiteBoard &other) {
   for (auto &[key, val] : other.m_store) {
     addHolder(key, val);
     ACTS_VERBOSE("Copied key '" << key << "' to whiteboard");
   }
 }
 
-void ActsExamples::WhiteBoard::addHolder(
-    const std::string &name, const std::shared_ptr<IHolder> &holder) {
+void WhiteBoard::addHolder(const std::string &name,
+                           const std::shared_ptr<IHolder> &holder) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
   }
@@ -126,10 +128,12 @@ void ActsExamples::WhiteBoard::addHolder(
   }
 }
 
-std::vector<std::string> ActsExamples::WhiteBoard::getKeys() const {
+std::vector<std::string> WhiteBoard::getKeys() const {
   std::vector<std::string> keys;
   for (const auto &[key, val] : m_store) {
     keys.push_back(key);
   }
   return keys;
 }
+
+}  // namespace ActsExamples

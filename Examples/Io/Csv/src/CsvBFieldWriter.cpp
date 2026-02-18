@@ -32,7 +32,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
   // Some helper typedefs, which will make our life easier down the line.
   using ConfigType = std::decay_t<decltype(config)>;
   using FieldType = typename decltype(ConfigType::bField)::element_type;
-  using Vector = Acts::ActsVector<ConfigType::NDims>;
+  using Vector = Acts::Vector<ConfigType::NDims>;
 
   FieldType& field = *config.bField;
 

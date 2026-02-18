@@ -284,6 +284,8 @@ class Navigator {
       navCandidateIndex.reset();
 
       currentLayer = nullptr;
+
+      policyStateManager.reset();
     }
 
     /// Completely reset navigation state to initial conditions

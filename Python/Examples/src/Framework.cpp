@@ -180,7 +180,7 @@ void addFramework(py::module& mex) {
           .def_property_readonly("fpeResult", &Sequencer::fpeResult)
           .def_property_readonly_static(
               "_sourceLocation",
-              [](py::object /*self*/) { return std::string{__FILE__}; });
+              [](const py::object& /*self*/) { return std::string{__FILE__}; });
 
   auto c = py::class_<Config>(sequencer, "Config").def(py::init<>());
 
@@ -234,9 +234,9 @@ void addFramework(py::module& mex) {
             return fm.mon.value();
           },
           py::return_value_policy::reference_internal)
-      .def("__exit__", [](FpeMonitorContext& fm, py::object /*exc_type*/,
-                          py::object /*exc_value*/,
-                          py::object /*traceback*/) { fm.mon.reset(); });
+      .def("__exit__", [](FpeMonitorContext& fm, const py::object& /*exc_type*/,
+                          const py::object& /*exc_value*/,
+                          const py::object& /*traceback*/) { fm.mon.reset(); });
 
   py::enum_<FpeType>(mex, "FpeType")
       .value("INTDIV", FpeType::INTDIV)
@@ -249,7 +249,7 @@ void addFramework(py::module& mex) {
       .value("FLTSUB", FpeType::FLTSUB)
 
       .def_property_readonly_static(
-          "values", [](py::object /*self*/) -> const auto& {
+          "values", [](const py::object& /*self*/) -> const auto& {
             static const std::vector<FpeType> values = {
                 FpeType::INTDIV, FpeType::INTOVF, FpeType::FLTDIV,
                 FpeType::FLTOVF, FpeType::FLTUND, FpeType::FLTRES,

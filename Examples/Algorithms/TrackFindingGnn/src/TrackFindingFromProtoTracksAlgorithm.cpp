@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingGnn/TrackFindingFromPrototrackAlgorithm.hpp"
+#include "ActsExamples/TrackFindingGnn/TrackFindingFromProtoTracksAlgorithm.hpp"
 
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -41,7 +42,7 @@ struct ProtoTrackSourceLinkAccessor
       auto [begin, end] =
           protoTrackSourceLinks.equal_range(surface.geometryId());
       ACTS_VERBOSE("Select " << std::distance(begin, end)
-                             << " source-links from prototrack on "
+                             << " source-links from proto track on "
                              << surface.geometryId());
       return {Iterator{begin}, Iterator{end}};
     }
@@ -59,7 +60,7 @@ struct ProtoTrackSourceLinkAccessor
 
 namespace ActsExamples {
 
-TrackFindingFromPrototrackAlgorithm::TrackFindingFromPrototrackAlgorithm(
+TrackFindingFromProtoTracksAlgorithm::TrackFindingFromProtoTracksAlgorithm(
     Config cfg, Logging::Level lvl)
     : IAlgorithm(cfg.tag + "CkfFromProtoTracks", lvl), m_cfg(cfg) {
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
@@ -68,14 +69,14 @@ TrackFindingFromPrototrackAlgorithm::TrackFindingFromPrototrackAlgorithm(
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackFindingFromProtoTracksAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
   if (initialParameters.size() != protoTracks.size()) {
-    ACTS_FATAL("Inconsistent number of parameters and prototracks");
+    ACTS_FATAL("Inconsistent number of parameters and proto tracks");
     return ProcessCode::ABORT;
   }
 
@@ -204,13 +205,13 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
                                   constTrackStateContainer};
 
   m_outputTracks(ctx, std::move(constTracks));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::finalize() {
+ProcessCode TrackFindingFromProtoTracksAlgorithm::finalize() {
   assert(std::distance(m_nTracksPerSeeds.begin(), m_nTracksPerSeeds.end()) > 0);
 
-  ACTS_INFO("TrackFindingFromPrototracksAlgorithm statistics:");
+  ACTS_INFO("TrackFindingFromProtoTracksAlgorithm statistics:");
   namespace ba = boost::accumulators;
   using Accumulator = ba::accumulator_set<
       float, ba::features<ba::tag::sum, ba::tag::mean, ba::tag::variance>>;
