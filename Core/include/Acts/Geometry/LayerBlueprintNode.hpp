@@ -32,7 +32,7 @@ struct LayerBlueprintNodeImpl;
 /// matrix. If another orientation is desired, this can be set with the
 /// @ref setTransform method. See @ref Acts::ProtoLayer for details on the auto-sizing from surfaces.
 ///
-class LayerBlueprintNode : public StaticBlueprintNode {
+class LayerBlueprintNode final : public StaticBlueprintNode {
  public:
   /// Enum that lists out the supported layer types.
   enum class LayerType {
