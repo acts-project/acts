@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/VolumePlacementBase.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iosfwd>
@@ -52,7 +53,7 @@ class Volume : public GeometryObject {
 
   /// Copy Constructor
   /// @param vol is the source volume for the copy
-  Volume(const Volume& vol) noexcept;
+  Volume(const Volume& vol) noexcept = default;
 
   /// Copy Constructor with optional shift
   ///
@@ -75,7 +76,7 @@ class Volume : public GeometryObject {
   ///
   /// @param vol is the source volume to be copied
   /// @return Reference to this volume for assignment chaining
-  Volume& operator=(const Volume& vol) noexcept;
+  Volume& operator=(const Volume& vol) noexcept = default;
 
   /// Move assignment operator
   ///
@@ -225,10 +226,10 @@ class Volume : public GeometryObject {
 
  private:
   /// Transform matrix that positions the volume in 3D space
-  std::unique_ptr<const Transform3> m_transform{};
+  CloneablePtr<const Transform3> m_transform{};
 
   /// Inverse of the transform matrix for efficient calculations
-  std::unique_ptr<const Transform3> m_itransform{};
+  CloneablePtr<const Transform3> m_itransform{};
 
   /// Center position of the volume in global coordinates
   Vector3 m_center{Vector3::Zero()};

@@ -15,7 +15,7 @@
 
 namespace Acts {
 
-/// @brief A copyable smart pointer that uses a cloner function to copy the
+/// A copyable smart pointer that uses a cloner function to copy the
 /// managed object.
 ///
 /// This enables polymorphic value semantics: you can copy a pointer to a base
@@ -26,19 +26,19 @@ namespace Acts {
 template <typename T>
 class CloneablePtr {
  public:
-  /// @brief The type of the cloner function
+  /// The type of the cloner function
   using Cloner = std::function<std::unique_ptr<T>(const T&)>;
 
-  /// @brief Default constructor, creates a null pointer
+  /// Default constructor, creates a null pointer
   CloneablePtr() = default;
 
-  /// @brief Construct from a unique_ptr with a custom cloner
+  /// Construct from a unique_ptr with a custom cloner
   /// @param ptr The unique_ptr to take ownership of
   /// @param cloner The cloner function
   CloneablePtr(std::unique_ptr<T> ptr, Cloner cloner)
       : m_ptr(std::move(ptr)), m_cloner(std::move(cloner)) {}
 
-  /// @brief Construct from a unique_ptr using copy construction as the cloner
+  /// Construct from a unique_ptr using copy construction as the cloner
   /// @param ptr The unique_ptr to take ownership of
   /// @note Only available when T is copy-constructible
   explicit CloneablePtr(std::unique_ptr<T> ptr)
@@ -46,13 +46,13 @@ class CloneablePtr {
       : m_ptr(std::move(ptr)),
         m_cloner([](const T& src) { return std::make_unique<T>(src); }) {}
 
-  /// @brief Construct by taking ownership of a raw pointer with a custom cloner
+  /// Construct by taking ownership of a raw pointer with a custom cloner
   /// @param raw The raw pointer to take ownership of
   /// @param cloner The cloner function
   CloneablePtr(T* raw, Cloner cloner)
       : m_ptr(raw), m_cloner(std::move(cloner)) {}
 
-  /// @brief Construct by taking ownership of a raw pointer using copy
+  /// Construct by taking ownership of a raw pointer using copy
   /// construction as the cloner
   /// @param raw The raw pointer to take ownership of
   /// @note Only available when T is copy-constructible
@@ -61,13 +61,13 @@ class CloneablePtr {
       : m_ptr(raw),
         m_cloner([](const T& src) { return std::make_unique<T>(src); }) {}
 
-  /// @brief Copy constructor. Invokes the cloner if the source is non-null.
+  /// Copy constructor. Invokes the cloner if the source is non-null.
   /// @param other The CloneablePtr to copy from
   CloneablePtr(const CloneablePtr& other)
       : m_ptr(other.m_ptr ? other.m_cloner(*other.m_ptr) : nullptr),
         m_cloner(other.m_cloner) {}
 
-  /// @brief Copy assignment. Invokes the cloner if the source is non-null.
+  /// Copy assignment. Invokes the cloner if the source is non-null.
   /// @param other The CloneablePtr to copy from
   /// @return Reference to this
   CloneablePtr& operator=(const CloneablePtr& other) {
@@ -77,45 +77,60 @@ class CloneablePtr {
     }
     return *this;
   }
+  /// Move assignment from a unique_ptr
+  /// @param ptr: The unique_ptr that's assigned to this object
+  template <typename T1>
+  CloneablePtr& operator=(std::unique_ptr<T1>&& ptr)
+    requires(std::is_copy_constructible_v<T1> && std::is_base_of_v<T, T1>)
+  {
+    m_ptr = std::move(ptr);
+    if constexpr (!std::is_same_v<const T, const T1>) {
+      m_cloner = [](const T& obj) {
+        return std::make_unique<T1>(static_cast<const T1&>(obj));
+      };
+    }
+    return *this;
+  }
+  // requires std::is_copy_constructible_v<T>
 
-  /// @brief Move constructor
+  /// Move constructor
   CloneablePtr(CloneablePtr&&) = default;
 
-  /// @brief Move assignment
+  /// Move assignment
   /// @return Reference to this
   CloneablePtr& operator=(CloneablePtr&&) = default;
 
-  /// @brief Destructor
+  /// Destructor
   ~CloneablePtr() = default;
 
-  /// @brief Dereference operator
+  /// Dereference operator
   /// @return Reference to the managed object
   T& operator*() const { return *m_ptr; }
 
-  /// @brief Arrow operator
+  /// Arrow operator
   /// @return Pointer to the managed object
   T* operator->() const { return m_ptr.get(); }
 
-  /// @brief Boolean conversion, true if non-null
+  /// Boolean conversion, true if non-null
   explicit operator bool() const { return m_ptr != nullptr; }
 
-  /// @brief Comparison with nullptr
+  /// Comparison with nullptr
   friend bool operator==(const CloneablePtr& lhs, std::nullptr_t) {
     return lhs.m_ptr == nullptr;
   }
 
-  /// @brief Get the raw pointer
+  /// Get the raw pointer
   /// @return Pointer to the managed object, or nullptr
   T* get() const { return m_ptr.get(); }
 
-  /// @brief Release ownership of the managed object
+  /// Release ownership of the managed object
   /// @return Pointer to the formerly managed object
-  T* release() {
+  std::unique_ptr<T> release() {
     m_cloner = nullptr;
-    return m_ptr.release();
+    return std::move(m_ptr);
   }
 
-  /// @brief Reset the managed object
+  /// Reset the managed object
   /// @param ptr The new raw pointer to manage (default nullptr)
   void reset(T* ptr = nullptr) {
     m_ptr.reset(ptr);

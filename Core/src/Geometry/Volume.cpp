@@ -33,10 +33,6 @@ Volume::Volume(VolumePlacementBase& positioner,
       m_volumeBounds{std::move(volbounds)},
       m_placement{&positioner} {}
 
-Volume::Volume(const Volume& vol) noexcept : GeometryObject{} {
-  (*this) = vol;
-}
-
 Volume::Volume(const Volume& vol, const Transform3& shift)
     : Volume{shift * (vol.m_transform ? (*vol.m_transform)
                                       : Transform3::Identity()),
@@ -52,23 +48,6 @@ Vector3 Volume::referencePosition(const GeometryContext& gctx,
   }
   // return the center
   return center(gctx);
-}
-
-// assignment operator
-Volume& Volume::operator=(const Volume& vol) noexcept {
-  if (this != &vol) {
-    if (vol.m_transform) {
-      m_transform = std::make_unique<Transform3>(*vol.m_transform);
-      m_itransform = std::make_unique<Transform3>(*vol.m_itransform);
-    } else {
-      m_transform.reset();
-      m_itransform.reset();
-    }
-    m_placement = vol.m_placement;
-    m_center = vol.m_center;
-    m_volumeBounds = vol.m_volumeBounds;
-  }
-  return *this;
 }
 
 bool Volume::isAlignable() const {
