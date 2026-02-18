@@ -18,8 +18,7 @@
 namespace Acts::Experimental {
 
 /// Lightweight silicon layer description for GBTs geometry.
-class TrigInDetSiLayer final {
- public:
+struct TrigInDetSiLayer final {
   /// Constructor.
   /// @param subdet_ Subdetector identifier
   /// @param type_ Layer type (0: barrel, +/-n: endcap)

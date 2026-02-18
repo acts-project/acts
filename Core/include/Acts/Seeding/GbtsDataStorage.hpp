@@ -47,7 +47,7 @@ struct GbtsNode final {
   /// Azimuthal angle in the xy plane
   float phi{};
   /// Layer index
-  std::uint16_t layer{10000};
+  std::uint16_t layer{};
   /// Index of the node in the original collection
   std::uint32_t idx{std::numeric_limits<std::uint32_t>::max()};
   /// Pixel cluster width
@@ -58,7 +58,6 @@ struct GbtsNode final {
 
 /// Eta-bin container for GBTs nodes and edge data.
 struct GbtsEtaBin final {
- public:
   GbtsEtaBin();
 
   /// Sort nodes by phi
@@ -154,7 +153,6 @@ class GbtsDataStorage final {
 
 /// Edge between two GBTs nodes with fit parameters.
 struct GbtsEdge final {
- public:
   GbtsEdge() = default;
 
   /// Constructor
