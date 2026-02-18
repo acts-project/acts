@@ -5,6 +5,8 @@ acts_add_library(
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
+acts_compile_headers(PluginEDM4hep GLOB include/**/*.hpp)
+
 target_include_directories(
     ActsPluginEDM4hep
     PUBLIC
