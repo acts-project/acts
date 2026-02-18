@@ -195,6 +195,7 @@ class BlueprintBuilder {
     ElementFactory elementFactory = defaultElementFactory;
     const dd4hep::Detector* dd4hepDetector;
     double lengthScale = 1.0;
+    std::reference_wrapper<const Acts::GeometryContext> gctx;
   };
 
   explicit BlueprintBuilder(const Config& cfg,
