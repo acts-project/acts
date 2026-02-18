@@ -58,7 +58,7 @@ struct GenericReadWriteTool {
 
   template <typename T>
   auto add(const std::string &name, T value) {
-    auto newTuple = std::tuple_cat(tuple, std::tuple<T>{value});
+    auto newTuple = std::tuple_cat(tuple, std::tuple<T>{std::move(value)});
     auto newStrings = std::tuple_cat(strings, std::tuple<std::string>{name});
 
     GenericReadWriteTool<decltype(newTuple), decltype(newStrings)> newInstance;
