@@ -54,7 +54,8 @@ auto OpenDataDetector::config() const -> const Config& {
 
 std::shared_ptr<ActsPlugins::DD4hepDetectorElement>
 OpenDataDetector::defaultDetectorElementFactory(
-    const dd4hep::DetElement& element, const std::string& axes, double scale) {
+    const dd4hep::DetElement& element, ActsPlugins::TGeoAxes axes,
+    double scale) {
   return std::make_shared<ActsPlugins::DD4hepDetectorElement>(element, axes,
                                                               scale);
 }
