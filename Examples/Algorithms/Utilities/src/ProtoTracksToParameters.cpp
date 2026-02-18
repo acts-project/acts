@@ -6,7 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+< < < < < < < < HEAD : Examples / Algorithms / Utilities / src /
+                       PrototracksToParameters.cpp
 #include "ActsExamples/Utilities/PrototracksToParameters.hpp"
+    == == == ==
+#include "ActsExamples/TrackFindingGnn/ProtoTracksToParameters.hpp"
+    >>>>>>>> 3928f254dfcec1cf7a5a685ac81b15d20a0c05d7
+    : Examples /
+      Algorithms / TrackFindingGnn / src /
+      ProtoTracksToParameters.cpp
 
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
@@ -23,13 +31,13 @@
 #include <algorithm>
 #include <tuple>
 
-using namespace Acts;
+      using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-PrototracksToParameters::PrototracksToParameters(Config cfg, Logging::Level lvl)
-    : IAlgorithm("PrototracksToParsAndSeeds", lvl), m_cfg(std::move(cfg)) {
+ProtoTracksToParameters::ProtoTracksToParameters(Config cfg, Logging::Level lvl)
+    : IAlgorithm("ProtoTracksToParameters", lvl), m_cfg(std::move(cfg)) {
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
@@ -50,13 +58,13 @@ PrototracksToParameters::PrototracksToParameters(Config cfg, Logging::Level lvl)
   }
 }
 
-PrototracksToParameters::~PrototracksToParameters() {}
+ProtoTracksToParameters::~ProtoTracksToParameters() {}
 
-ProcessCode PrototracksToParameters::execute(
+ProcessCode ProtoTracksToParameters::execute(
     const AlgorithmContext &ctx) const {
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
   const auto &sps = m_inputSpacePoints(ctx);
-  auto prototracks = m_inputProtoTracks(ctx);
+  auto protoTracks = m_inputProtoTracks(ctx);
 
   // Make some lookup tables and pre-allocate some space
   // Note this is a heuristic, since it is not garantueed that each measurement
@@ -78,28 +86,28 @@ ProcessCode PrototracksToParameters::execute(
   }
 
   ProtoTrackContainer seededTracks;
-  seededTracks.reserve(prototracks.size());
+  seededTracks.reserve(protoTracks.size());
 
   SimSeedContainer seeds;
-  seeds.reserve(prototracks.size());
+  seeds.reserve(protoTracks.size());
 
   TrackParametersContainer parameters;
-  parameters.reserve(prototracks.size());
+  parameters.reserve(protoTracks.size());
 
-  // Loop over the prototracks to make seeds
+  // Loop over the proto tracks to make seeds
   ProtoTrack tmpTrack;
   std::vector<const SimSpacePoint *> tmpSps;
   std::size_t skippedTracks = 0;
-  for (auto &track : prototracks) {
-    ACTS_VERBOSE("Try to get seed from prototrack with " << track.size()
-                                                         << " hits");
-    // Make prototrack unique with respect to volume and layer
+  for (auto &track : protoTracks) {
+    ACTS_VERBOSE("Try to get seed from proto track with " << track.size()
+                                                          << " hits");
+    // Make proto track unique with respect to volume and layer
     // so we don't get a seed where we have two spacepoints on the same layer
 
-    // Here, we want to create a seed only if the prototrack with removed unique
-    // layer-volume spacepoints has 3 or more hits. However, if this is the
-    // case, we want to keep the whole prototrack. Therefore, we operate on a
-    // tmpTrack.
+    // Here, we want to create a seed only if the proto track with removed
+    // unique layer-volume spacepoints has 3 or more hits. However, if this is
+    // the case, we want to keep the whole proto track. Therefore, we operate on
+    // a tmpTrack.
     std::ranges::sort(track, {}, [&](const auto &t) {
       return std::make_tuple(indexToGeoId[t].volume(), indexToGeoId[t].layer());
     });
@@ -191,8 +199,8 @@ ProcessCode PrototracksToParameters::execute(
     ACTS_WARNING("Skipped seeding of " << skippedTracks);
   }
 
-  ACTS_DEBUG("Seeded " << seeds.size() << " out of " << prototracks.size()
-                       << " prototracks");
+  ACTS_DEBUG("Seeded " << seeds.size() << " out of " << protoTracks.size()
+                       << " proto tracks");
 
   m_outputSeeds(ctx, std::move(seeds));
   m_outputProtoTracks(ctx, std::move(seededTracks));
