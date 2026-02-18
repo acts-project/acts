@@ -8,22 +8,33 @@
 
 #include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 
+#include "ActsExamples/Framework/DataHandle.hpp"
+
 #include <podio/Frame.h>
 
 namespace ActsExamples {
 
+class PodioInputConverter::Impl {
+ public:
+  Impl(PodioInputConverter& parent, const std::string& inputFrame)
+      : m_inputFrame(&parent, "InputFrame") {
+    m_inputFrame.initialize(inputFrame);
+  }
+
+  ReadDataHandle<podio::Frame> m_inputFrame;
+};
+
 PodioInputConverter::PodioInputConverter(const std::string& name,
                                          Acts::Logging::Level level,
                                          const std::string& inputFrame)
-    : IAlgorithm(name, level), m_inputFrame(this, "InputFrame") {
-  if (inputFrame.empty()) {
-    throw std::invalid_argument("Missing input frame");
-  }
-  m_inputFrame.initialize(inputFrame);
-}
+    : IAlgorithm(name, level),
+      m_impl(std::make_unique<Impl>(*this, inputFrame)) {}
 
 ProcessCode PodioInputConverter::execute(const AlgorithmContext& ctx) const {
-  const podio::Frame& frame = m_inputFrame(ctx);
+  const podio::Frame& frame = m_impl->m_inputFrame(ctx);
   return convert(ctx, frame);
 }
+
+PodioInputConverter::~PodioInputConverter() = default;
+
 }  // namespace ActsExamples
