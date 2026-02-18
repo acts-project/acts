@@ -79,6 +79,7 @@ class CloneablePtr {
   }
   /// Move assignment from a unique_ptr
   /// @param ptr: The unique_ptr that's assigned to this object
+  /// @return Reference to this
   template <typename T1>
   CloneablePtr& operator=(std::unique_ptr<T1>&& ptr)
     requires(std::is_copy_constructible_v<T1> && std::is_base_of_v<T, T1>)
