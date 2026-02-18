@@ -15,6 +15,7 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 
 #include <functional>
 #include <memory>
@@ -58,12 +59,12 @@ class LayerHelper {
   LayerHelper& endcap() { return setLayerType(LayerType::Disc); }
   LayerHelper& barrel() { return setLayerType(LayerType::Cylinder); }
 
-  LayerHelper& setAxes(const std::string& axes) {
+  LayerHelper& setAxes(TGeoAxes axes) {
     m_axes = axes;
     return *this;
   }
 
-  LayerHelper& setLayerAxes(const std::string& layerAxes) {
+  LayerHelper& setLayerAxes(TGeoAxes layerAxes) {
     m_layerAxes = layerAxes;
     return *this;
   }
@@ -113,8 +114,8 @@ class LayerHelper {
  private:
   const ActsPlugins::DD4hep::BlueprintBuilder* m_builder;
   std::optional<LayerType> m_layerType;
-  std::optional<std::string> m_axes;
-  std::optional<std::string> m_layerAxes;
+  std::optional<TGeoAxes> m_axes;
+  std::optional<TGeoAxes> m_layerAxes;
   std::optional<std::regex> m_pattern;
   std::optional<dd4hep::DetElement> m_container;
   std::optional<Acts::ExtentEnvelope> m_envelope;
@@ -154,13 +155,13 @@ class BarrelEndcapAssemblyHelper {
     return *this;
   }
 
-  auto& setAxes(const std::string& barrel, const std::string& endcap) {
+  auto& setAxes(TGeoAxes barrel, TGeoAxes endcap) {
     m_barrelAxes = barrel;
     m_endcapAxes = endcap;
     return *this;
   }
 
-  auto& setEndcapAxes(const std::string& axes) {
+  auto& setEndcapAxes(TGeoAxes axes) {
     m_endcapAxes = axes;
     return *this;
   }
@@ -175,8 +176,8 @@ class BarrelEndcapAssemblyHelper {
   Customizer m_customizer;
 
   std::optional<dd4hep::DetElement> m_assembly;
-  std::optional<std::string> m_barrelAxes;
-  std::optional<std::string> m_endcapAxes;
+  std::optional<TGeoAxes> m_barrelAxes;
+  std::optional<TGeoAxes> m_endcapAxes;
   std::optional<std::regex> m_layerPattern;
   const BlueprintBuilder* m_builder;
 };
@@ -184,12 +185,10 @@ class BarrelEndcapAssemblyHelper {
 class BlueprintBuilder {
  public:
   using ElementFactory = std::function<std::shared_ptr<DD4hepDetectorElement>(
-      const dd4hep::DetElement& detElement, const std::string& axes,
-      double lengthScale)>;
+      const dd4hep::DetElement& detElement, TGeoAxes axes, double lengthScale)>;
 
   static std::shared_ptr<DD4hepDetectorElement> defaultElementFactory(
-      const dd4hep::DetElement& detElement, const std::string& axes,
-      double lengthScale);
+      const dd4hep::DetElement& detElement, TGeoAxes axes, double lengthScale);
 
   struct Config {
     ElementFactory elementFactory = defaultElementFactory;
@@ -210,23 +209,23 @@ class BlueprintBuilder {
   }
 
   std::shared_ptr<DD4hepDetectorElement> createDetectorElement(
-      const dd4hep::DetElement& detElement, const std::string& axes) const;
+      const dd4hep::DetElement& detElement, TGeoAxes axes) const;
 
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
-      const dd4hep::DetElement& detElement, const std::string& axes,
-      std::optional<std::string> layerAxes = std::nullopt) const;
+      const dd4hep::DetElement& detElement, TGeoAxes axes,
+      std::optional<TGeoAxes> layerAxes = std::nullopt) const;
 
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
       const dd4hep::DetElement& parent,
-      std::span<const dd4hep::DetElement> sensitives, const std::string& axes,
+      std::span<const dd4hep::DetElement> sensitives, TGeoAxes axes,
       std::optional<std::string> layerName = std::nullopt,
-      std::optional<std::string> layerAxes = std::nullopt) const;
+      std::optional<TGeoAxes> layerAxes = std::nullopt) const;
 
   std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeBeampipe() const;
 
   [[deprecated("Consider using .layerHelper() to produce the layers")]]
   std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> addLayers(
-      const dd4hep::DetElement& container, const std::string& axes,
+      const dd4hep::DetElement& container, TGeoAxes axes,
       Acts::AxisDirection direction, const std::regex& layerPattern,
       const Acts::ExtentEnvelope& envelope = Acts::ExtentEnvelope::Zero());
 
@@ -236,7 +235,7 @@ class BlueprintBuilder {
   std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
   makeBarrelEndcapAssembly(
       const dd4hep::DetElement& assembly, const std::regex& layerPattern,
-      const std::string& barrelAxes, const std::string& endcapAxes,
+      TGeoAxes barrelAxes, TGeoAxes endcapAxes,
       const LayerHelper::Customizer& customizer = {}) const;
 
   static std::optional<dd4hep::DetElement> findDetElementByName(

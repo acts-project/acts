@@ -25,7 +25,7 @@ class OpenDataDetector final : public DD4hepDetectorBase {
   struct Config : public DD4hepDetectorBase::Config {
     using ElementFactory =
         std::function<std::shared_ptr<ActsPlugins::DD4hepDetectorElement>(
-            const dd4hep::DetElement& element, const std::string& axes,
+            const dd4hep::DetElement& element, ActsPlugins::TGeoAxes axes,
             double scale)>;
 
     ElementFactory detectorElementFactory = defaultDetectorElementFactory;
@@ -33,7 +33,7 @@ class OpenDataDetector final : public DD4hepDetectorBase {
 
   static std::shared_ptr<ActsPlugins::DD4hepDetectorElement>
   defaultDetectorElementFactory(const dd4hep::DetElement& element,
-                                const std::string& axes, double scale);
+                                ActsPlugins::TGeoAxes axes, double scale);
 
   explicit OpenDataDetector(const Config& cfg,
                             const Acts::GeometryContext& gctx);
