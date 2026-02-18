@@ -91,6 +91,7 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
       {
           .dd4hepDetector = &dd4hepDetector(),
           .lengthScale = Acts::UnitConstants::cm,
+          .gctx = gctx,
       },
       logger().cloneWithSuffix("BlpBld")};
 

@@ -274,9 +274,9 @@ BlueprintBuilder::makeBeampipe() const {
   std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
       transform, volBounds, beampipeElement->name());
 
-  ACTS_INFO("-> Created beampipe volume: " << volume->volumeBounds()
-                                           << " transform:\n"
-                                           << volume->transform().matrix());
+  ACTS_INFO("-> Created beampipe volume: "
+            << volume->volumeBounds() << " transform:\n"
+            << volume->localToGlobalTransform(m_cfg.gctx.get()).matrix());
 
   return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
       std::move(volume));
