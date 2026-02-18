@@ -38,8 +38,8 @@ struct GbtsConnector {
   /// Group of connections targeting a destination layer.
   struct LayerGroup {
     /// Constructor
-    /// @param l1Key Destination layer key
-    /// @param v Vector of source connections
+    /// @param dst_ Destination layer key
+    /// @param sources_ Vector of source connections
     LayerGroup(std::uint32_t dst_,
                const std::vector<const GbtsConnection*>& sources_)
         : dst(dst_), sources(sources_) {};
