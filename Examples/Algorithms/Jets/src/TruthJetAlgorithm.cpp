@@ -40,25 +40,24 @@ TruthJetAlgorithm::TruthJetAlgorithm(const Config& cfg,
 }
 
 namespace {
-ActsPlugins::FastJet::JetLabel jetLabelFromHadronType(
-    Acts::HadronType hadronType) {
+ActsExamples::JetLabel jetLabelFromHadronType(Acts::HadronType hadronType) {
   using enum Acts::HadronType;
   switch (hadronType) {
     case BBbarMeson:
     case BottomMeson:
     case BottomBaryon:
-      return ActsPlugins::FastJet::JetLabel::BJet;
+      return ActsExamples::JetLabel::BJet;
     case CCbarMeson:
     case CharmedMeson:
     case CharmedBaryon:
-      return ActsPlugins::FastJet::JetLabel::CJet;
+      return ActsExamples::JetLabel::CJet;
     case StrangeMeson:
     case StrangeBaryon:
     case LightMeson:
     case LightBaryon:
-      return ActsPlugins::FastJet::JetLabel::LightJet;
+      return ActsExamples::JetLabel::LightJet;
     default:
-      return ActsPlugins::FastJet::JetLabel::Unknown;
+      return ActsExamples::JetLabel::Unknown;
   }
 }
 
@@ -66,7 +65,7 @@ ActsPlugins::FastJet::JetLabel jetLabelFromHadronType(
 
 ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Initialize the output container
-  std::vector<ActsPlugins::FastJet::TruthJet> outputJetContainer{};
+  std::vector<ActsExamples::TruthJet> outputJetContainer{};
 
   Acts::ScopedTimer globalTimer("TruthJetAlgorithm", logger(),
                                 Acts::Logging::DEBUG);
@@ -135,8 +134,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   // Find hadrons for jet labeling with sim particles
-  std::vector<std::pair<ActsPlugins::FastJet::JetLabel, const SimParticle*>>
-      hadrons;
+  std::vector<std::pair<ActsExamples::JetLabel, const SimParticle*>> hadrons;
 
   if (m_cfg.doJetLabeling) {
     Acts::ScopedTimer timer("hadron finding", logger(), Acts::Logging::DEBUG);
@@ -160,7 +158,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
           // Apply a pt cut on B or C hadrons
           auto label =
               jetLabelFromHadronType(Acts::ParticleIdHelper::hadronType(pdgId));
-          using enum ActsPlugins::FastJet::JetLabel;
+          using enum ActsExamples::JetLabel;
 
           if (label == BJet || label == CJet) {
             if (particle->transverseMomentum() < m_cfg.jetLabelingHadronPtMin) {
@@ -176,7 +174,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
           return std::make_pair(label, particle);
         }) |
         std::views::filter([](const auto& hadron) {
-          return hadron.first > ActsPlugins::FastJet::JetLabel::Unknown;
+          return hadron.first > ActsExamples::JetLabel::Unknown;
         });
 
     std::ranges::copy(hadronView, std::back_inserter(hadrons));
@@ -208,7 +206,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
                   Acts::PdgParticle{hadron.second->pdg()}))};
         });
 
-    std::vector<std::pair<const SimParticle*, ActsPlugins::FastJet::JetLabel>>
+    std::vector<std::pair<const SimParticle*, ActsExamples::JetLabel>>
         hadronsInJet;
     std::ranges::copy(hadronsInJetView, std::back_inserter(hadronsInJet));
 
@@ -230,7 +228,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     if (maxHadronIt == hadronsInJet.end()) {
       // Now hadronic "jet"
-      return ActsPlugins::FastJet::JetLabel::Unknown;
+      return ActsExamples::JetLabel::Unknown;
     }
 
     const auto& [maxHadron, maxHadronLabel] = *maxHadronIt;
@@ -243,7 +241,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
     return maxHadronLabel;
   };  // jet classification
 
-  boost::container::flat_map<ActsPlugins::FastJet::JetLabel, std::size_t>
+  boost::container::flat_map<ActsExamples::JetLabel, std::size_t>
       jetLabelCounts;
 
   {
@@ -255,8 +253,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       // If jet labeling is enabled, classify the jet based on its hadronic
       // content
-      ActsPlugins::FastJet::JetLabel jetLabel =
-          ActsPlugins::FastJet::JetLabel::Unknown;
+      ActsExamples::JetLabel jetLabel = ActsExamples::JetLabel::Unknown;
       if (m_cfg.doJetLabeling) {
         ACTS_DEBUG("Classifying jet " << i);
         auto sample = timer.sample();
@@ -265,7 +262,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       // Initialize truth jet for storing in the output container
       Acts::Vector4 jetFourMom{jet.px(), jet.py(), jet.pz(), jet.e()};
-      ActsPlugins::FastJet::TruthJet truthJet(jetFourMom, jetLabel);
+      ActsExamples::TruthJet truthJet(jetFourMom, jetLabel);
 
       std::vector<fastjet::PseudoJet> jetConstituents = jet.constituents();
       std::vector<int> constituentIndices;
