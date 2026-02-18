@@ -49,7 +49,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     throw std::runtime_error("Cannot create surface array with zero surfaces");
   }
 
-  Transform3 layerTransform{volume.transform().linear()};
+  Transform3 layerTransform{volume.localToGlobalTransform(gctx).linear()};
 
   ProtoLayer protoLayer(gctx, surfaces, layerTransform);
 
