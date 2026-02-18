@@ -27,14 +27,14 @@ constexpr std::uint32_t gbtsNumSegConns = 6;
 class GbtsGeometry;
 
 /// Machine learning lookup table for Gbts seeding
-using GbtsMLLookupTable = std::vector<std::array<float, 5>>;
+using GbtsMlLookupTable = std::vector<std::array<float, 5>>;
 
 /// GBTs graph node storing space point properties.
 struct GbtsNode final {
  public:
   /// Constructor with layer index
-  /// @param l Layer index
-  explicit GbtsNode(std::uint16_t l) : layer(l) {};
+  /// @param layer_ Layer index
+  explicit GbtsNode(std::uint16_t layer_) : layer(layer_) {};
 
   /// Global x coordinate of the node
   float x{};
@@ -99,7 +99,7 @@ class GbtsDataStorage final {
   /// @param mlLut Machine learning lookup table
   explicit GbtsDataStorage(const GbtsConfig& config,
                            std::shared_ptr<const GbtsGeometry> geometry,
-                           GbtsMLLookupTable mlLut);
+                           GbtsMlLookupTable mlLut);
 
   /// Load pixel graph nodes
   /// @param layerIndex Layer index for the nodes
@@ -146,7 +146,7 @@ class GbtsDataStorage final {
   GbtsConfig m_cfg{};
 
   /// Machine learning lookup table
-  GbtsMLLookupTable m_mlLut;
+  GbtsMlLookupTable m_mlLut;
 
   /// Eta bins for node storage
   std::vector<GbtsEtaBin> m_etaBins;

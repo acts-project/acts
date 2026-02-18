@@ -68,10 +68,10 @@ void GbtsEtaBin::initializeNodes() {
         return std::array<float, 5>{-100.0, 100.0, pN->phi, pN->r, pN->z};
       });
 
-  const auto [min_iter, max_iter] = std::ranges::minmax_element(
+  const auto [minIter, maxIter] = std::ranges::minmax_element(
       vn, {}, [](const GbtsNode* s) { return s->r; });
-  minRadius = (*min_iter)->r;
-  maxRadius = (*max_iter)->r;
+  minRadius = (*minIter)->r;
+  maxRadius = (*maxIter)->r;
 }
 
 void GbtsEtaBin::generatePhiIndexing(float dphi) {
@@ -99,10 +99,8 @@ void GbtsEtaBin::generatePhiIndexing(float dphi) {
 
 GbtsDataStorage::GbtsDataStorage(const GbtsConfig& config,
                                  std::shared_ptr<const GbtsGeometry> geometry,
-                                 GbtsMLLookupTable mlLut)
+                                 GbtsMlLookupTable mlLut)
     : m_geo(std::move(geometry)), m_cfg(config), m_mlLut(std::move(mlLut)) {
-  // parse the look up table if useMl is true
-
   m_etaBins.resize(m_geo->numBins());
 }
 
@@ -189,7 +187,7 @@ void GbtsDataStorage::initializeNodes(const bool useMl) {
 
   std::uint32_t nL = m_geo->numLayers();
 
-  for (std::uint32_t layerIdx = 0; layerIdx < nL; layerIdx++) {
+  for (std::uint32_t layerIdx = 0; layerIdx < nL; ++layerIdx) {
     const GbtsLayer& pL = m_geo->getGbtsLayerByIndex(layerIdx);
 
     // skip strips volumes: layers in range [1200X-1400X]
@@ -237,27 +235,27 @@ void GbtsDataStorage::initializeNodes(const bool useMl) {
 
         const float dist2border = 10.0f - std::abs(locPosY);
 
-        float min_tau = -100.0f;
-        float max_tau = 100.0f;
+        float minTau = -100.0f;
+        float maxTau = 100.0f;
 
         if (dist2border > 0.3f) {
           // far enough from the edge
-          min_tau = lutBin[1];
-          max_tau = lutBin[2];
+          minTau = lutBin[1];
+          maxTau = lutBin[2];
         } else {
           // possible cluster shortening at a module edge
-          min_tau = lutBin[3];
-          max_tau = lutBin[4];
+          minTau = lutBin[3];
+          maxTau = lutBin[4];
         }
 
-        if (max_tau < 0) {
+        if (maxTau < 0) {
           // insufficient training data
           // use "no-cut" default
-          max_tau = 100.0f;
+          maxTau = 100.0f;
         }
 
-        B.params[nIdx][0] = min_tau;
-        B.params[nIdx][1] = max_tau;
+        B.params[nIdx][0] = minTau;
+        B.params[nIdx][1] = maxTau;
       }
     }
   }

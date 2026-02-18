@@ -31,12 +31,12 @@ SeedFinderGbts::SeedFinderGbts(
       m_logger(std::move(logger)) {
   m_cfg.phiSliceWidth = 2 * std::numbers::pi_v<float> / m_cfg.nMaxPhiSlice;
 
-  m_mlLut = parseGbtsMLLookupTable(m_cfg.lutInputFile);
+  m_mlLut = parseGbtsMlLookupTable(m_cfg.lutInputFile);
 }
 
 SeedContainer2 SeedFinderGbts::createSeeds(
     const RoiDescriptor& roi,
-    const SPContainerComponentsType& spContainerComponents,
+    const SpContainerComponentsType& spContainerComponents,
     const std::uint32_t maxLayers) const {
   auto storage = std::make_unique<GbtsDataStorage>(m_cfg, m_geo, m_mlLut);
 
@@ -118,43 +118,42 @@ SeedContainer2 SeedFinderGbts::createSeeds(
   return SeedContainer;
 }
 
-GbtsMLLookupTable SeedFinderGbts::parseGbtsMLLookupTable(
+GbtsMlLookupTable SeedFinderGbts::parseGbtsMlLookupTable(
     const std::string& lutInputFile) {
-  GbtsMLLookupTable mlLUT;
-  if (m_cfg.useMl) {
-    if (lutInputFile.empty()) {
-      throw std::runtime_error("Cannot find ML predictor LUT file");
-    } else {
-      mlLUT.reserve(100);
-      std::ifstream ifs(std::string(lutInputFile).c_str());
-
-      if (!ifs.is_open()) {
-        throw std::runtime_error("Failed to open LUT file");
-      }
-
-      float cl_width{};
-      float min1{};
-      float max1{};
-      float min2{};
-      float max2{};
-
-      while (ifs >> cl_width >> min1 >> max1 >> min2 >> max2) {
-        std::array<float, 5> lut_line = {cl_width, min1, max1, min2, max2};
-        mlLUT.emplace_back(lut_line);
-      }
-      if (!ifs.eof()) {
-        // ended if parse error present, not clean EOF
-        throw std::runtime_error("Stopped reading LUT file due to parse error");
-      }
-
-      ifs.close();
-    }
+  if (!m_cfg.useMl) {
+    return {};
   }
-  return mlLUT;
+  if (lutInputFile.empty()) {
+    throw std::runtime_error("Cannot find ML predictor LUT file");
+  }
+
+  std::ifstream ifs(std::string(lutInputFile).c_str());
+  if (!ifs.is_open()) {
+    throw std::runtime_error("Failed to open LUT file");
+  }
+
+  GbtsMlLookupTable mlLut;
+  mlLut.reserve(100);
+
+  float clWidth{};
+  float min1{};
+  float max1{};
+  float min2{};
+  float max2{};
+  while (ifs >> clWidth >> min1 >> max1 >> min2 >> max2) {
+    mlLut.emplace_back(std::array<float, 5>{clWidth, min1, max1, min2, max2});
+  }
+
+  if (!ifs.eof()) {
+    // ended if parse error present, not clean EOF
+    throw std::runtime_error("Stopped reading LUT file due to parse error");
+  }
+
+  return mlLut;
 }
 
 std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
-    const SPContainerComponentsType& container,
+    const SpContainerComponentsType& container,
     const std::uint32_t maxLayers) const {
   std::vector<std::vector<GbtsNode>> node_storage(maxLayers);
   // reserve for better efficiency

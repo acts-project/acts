@@ -47,7 +47,7 @@ GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
 
   // option that allows for adding custom eta binning (default is at 0.2)
   if (m_cfg.seedFinderConfig.etaBinOverride != 0.0f) {
-    m_connector->m_etaBin = m_cfg.seedFinderConfig.etaBinOverride;
+    m_connector->etaBin = m_cfg.seedFinderConfig.etaBinOverride;
   }
 
   // initialise the object that holds all the geometry information needed for
@@ -160,7 +160,7 @@ GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::Experimental::SPContainerComponentsType
+Acts::Experimental::SpContainerComponentsType
 GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
                                       std::map<ActsIDs, GbtsIDs> map) const {
   Acts::SpacePointContainer2 coreSpacePoints(
@@ -408,46 +408,38 @@ void GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
     const Acts::Experimental::GbtsConfig &cfg) {
   ACTS_DEBUG("===== SeedFinderGbtsConfig =====");
 
-  ACTS_DEBUG("BeamSpotCorrection: " << cfg.beamSpotCorrection
-                                    << " (default: false)");
-  ACTS_DEBUG("connectorInputFile: " << cfg.connectorInputFile
-                                    << " (default: empty string)");
-  ACTS_DEBUG("lutInputFile: " << cfg.lutInputFile
-                              << " (default: empty string)");
-  ACTS_DEBUG("lrtMode: " << cfg.lrtMode << " (default: false)");
-  ACTS_DEBUG("useMl: " << cfg.useMl << " (default: false)");
-  ACTS_DEBUG("matchBeforeCreate: " << cfg.matchBeforeCreate
-                                   << " (default: false)");
-  ACTS_DEBUG("useOldTunings: " << cfg.useOldTunings << " (default: false)");
-  ACTS_DEBUG("tauRatioCut: " << cfg.tauRatioCut << " (default: 0.007)");
-  ACTS_DEBUG("tauRatioPrecut: " << cfg.tauRatioPrecut << " (default: 0.009f)");
-  ACTS_DEBUG("etaBinOverride: " << cfg.etaBinOverride << " (default: 0.0)");
-  ACTS_DEBUG("nMaxPhiSlice: " << cfg.nMaxPhiSlice << " (default: 53)");
-  ACTS_DEBUG("minPt: " << cfg.minPt
-                       << " (default: 1.0 * Acts::UnitConstants::GeV)");
-  ACTS_DEBUG("phiSliceWidth: " << cfg.phiSliceWidth << " (default: derived)");
-  ACTS_DEBUG("ptCoeff: " << cfg.ptCoeff
-                         << " (default: 0.29997 * 1.9972 / 2.0)");
-  ACTS_DEBUG("useEtaBinning: " << cfg.useEtaBinning << " (default: true)");
-  ACTS_DEBUG("doubletFilterRZ: " << cfg.doubletFilterRZ << " (default: true)");
-  ACTS_DEBUG("nMaxEdges: " << cfg.nMaxEdges << " (default: 2000000)");
-  ACTS_DEBUG("minDeltaRadius: " << cfg.minDeltaRadius << " (default: 2.0)");
-  ACTS_DEBUG("sigmaMS: " << cfg.sigmaMS << " (default: 0.016)");
-  ACTS_DEBUG("radLen: " << cfg.radLen << " (default: 0.025)");
-  ACTS_DEBUG("sigmaX: " << cfg.sigmaX << " (default: 0.08)");
-  ACTS_DEBUG("sigmaY: " << cfg.sigmaY << " (default: 0.25)");
-  ACTS_DEBUG("weightX: " << cfg.weightX << " (default: 0.5)");
-  ACTS_DEBUG("weightY: " << cfg.weightY << " (default: 0.5)");
-  ACTS_DEBUG("maxDChi2X: " << cfg.maxDChi2X << " (default: 5.0)");
-  ACTS_DEBUG("maxDChi2Y: " << cfg.maxDChi2Y << " (default: 6.0)");
-  ACTS_DEBUG("addHit: " << cfg.addHit << " (default: 14.0)");
-  ACTS_DEBUG("maxCurvature: " << cfg.maxCurvature << " (default: 1e-3f)");
-  ACTS_DEBUG("maxZ0: " << cfg.maxZ0 << " (default: 170.0)");
-  ACTS_DEBUG("edgeMaskMinEta: " << cfg.edgeMaskMinEta << " (default: 1.5)");
-  ACTS_DEBUG("hitShareThreshold: " << cfg.hitShareThreshold
-                                   << " (default: 0.49)");
-  ACTS_DEBUG("maxEndcapClusterWidth: " << cfg.maxEndcapClusterWidth
-                                       << " (default: 0.35)");
+  ACTS_DEBUG("BeamSpotCorrection: " << cfg.beamSpotCorrection);
+  ACTS_DEBUG("connectorInputFile: " << cfg.connectorInputFile);
+  ACTS_DEBUG("lutInputFile: " << cfg.lutInputFile);
+  ACTS_DEBUG("lrtMode: " << cfg.lrtMode);
+  ACTS_DEBUG("useMl: " << cfg.useMl);
+  ACTS_DEBUG("matchBeforeCreate: " << cfg.matchBeforeCreate);
+  ACTS_DEBUG("useOldTunings: " << cfg.useOldTunings);
+  ACTS_DEBUG("tauRatioCut: " << cfg.tauRatioCut);
+  ACTS_DEBUG("tauRatioPrecut: " << cfg.tauRatioPrecut);
+  ACTS_DEBUG("etaBinOverride: " << cfg.etaBinOverride);
+  ACTS_DEBUG("nMaxPhiSlice: " << cfg.nMaxPhiSlice);
+  ACTS_DEBUG("minPt: " << cfg.minPt);
+  ACTS_DEBUG("phiSliceWidth: " << cfg.phiSliceWidth);
+  ACTS_DEBUG("ptCoeff: " << cfg.ptCoeff);
+  ACTS_DEBUG("useEtaBinning: " << cfg.useEtaBinning);
+  ACTS_DEBUG("doubletFilterRZ: " << cfg.doubletFilterRZ);
+  ACTS_DEBUG("nMaxEdges: " << cfg.nMaxEdges);
+  ACTS_DEBUG("minDeltaRadius: " << cfg.minDeltaRadius);
+  ACTS_DEBUG("sigmaMS: " << cfg.sigmaMS);
+  ACTS_DEBUG("radLen: " << cfg.radLen);
+  ACTS_DEBUG("sigmaX: " << cfg.sigmaX);
+  ACTS_DEBUG("sigmaY: " << cfg.sigmaY);
+  ACTS_DEBUG("weightX: " << cfg.weightX);
+  ACTS_DEBUG("weightY: " << cfg.weightY);
+  ACTS_DEBUG("maxDChi2X: " << cfg.maxDChi2X);
+  ACTS_DEBUG("maxDChi2Y: " << cfg.maxDChi2Y);
+  ACTS_DEBUG("addHit: " << cfg.addHit);
+  ACTS_DEBUG("maxCurvature: " << cfg.maxCurvature);
+  ACTS_DEBUG("maxZ0: " << cfg.maxZ0);
+  ACTS_DEBUG("edgeMaskMinEta: " << cfg.edgeMaskMinEta);
+  ACTS_DEBUG("hitShareThreshold: " << cfg.hitShareThreshold);
+  ACTS_DEBUG("maxEndcapClusterWidth: " << cfg.maxEndcapClusterWidth);
 
   ACTS_DEBUG("================================");
 }

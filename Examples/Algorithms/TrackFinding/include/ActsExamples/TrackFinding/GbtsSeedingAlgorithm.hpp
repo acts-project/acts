@@ -110,7 +110,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
   /// make the container that holds spacepoints that have been given
   /// all the variables needed for GBTS algorithm to run
-  Acts::Experimental::SPContainerComponentsType makeSpContainer(
+  Acts::Experimental::SpContainerComponentsType makeSpContainer(
       const SimSpacePointContainer &spacePoints,
       std::map<ActsIDs, GbtsIDs> map) const;
 

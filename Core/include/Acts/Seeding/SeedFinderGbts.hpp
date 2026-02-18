@@ -24,7 +24,7 @@
 namespace Acts::Experimental {
 
 /// Tuple template used to carry the spacepoint components
-using SPContainerComponentsType =
+using SpContainerComponentsType =
     std::tuple<SpacePointContainer2, SpacePointColumnProxy<std::uint32_t, true>,
                SpacePointColumnProxy<float, true>,
                SpacePointColumnProxy<float, true>>;
@@ -74,7 +74,7 @@ class SeedFinderGbts {
   /// @return Container with generated seeds
   SeedContainer2 createSeeds(
       const RoiDescriptor& roi,
-      const SPContainerComponentsType& SpContainerComponents,
+      const SpContainerComponentsType& SpContainerComponents,
       std::uint32_t maxLayers) const;
 
   /// Create graph nodes from spacepoints.
@@ -82,13 +82,13 @@ class SeedFinderGbts {
   /// @param maxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(
-      const SPContainerComponentsType& container,
+      const SpContainerComponentsType& container,
       std::uint32_t maxLayers) const;
 
   /// Parse machine learning lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
   /// @return Parsed machine learning lookup table
-  GbtsMLLookupTable parseGbtsMLLookupTable(const std::string& lutInputFile);
+  GbtsMlLookupTable parseGbtsMlLookupTable(const std::string& lutInputFile);
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor
@@ -124,7 +124,7 @@ class SeedFinderGbts {
 
   const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
 
-  GbtsMLLookupTable m_mlLut;
+  GbtsMlLookupTable m_mlLut;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);

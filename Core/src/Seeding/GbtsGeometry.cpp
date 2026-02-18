@@ -133,18 +133,18 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
   if (m_layer->type == 0 && pL.m_layer->type == 0) {  // barrel <- barrel
     const float tol = 5.0f;
 
-    const float min_b2 = pL.m_minBinCoord.at(b2);
-    const float max_b2 = pL.m_maxBinCoord.at(b2);
+    const float minB2 = pL.m_minBinCoord.at(b2);
+    const float maxB2 = pL.m_maxBinCoord.at(b2);
 
     const float r2 = pL.m_layer->refCoord;
 
     const float A = r2 / (r2 - r1);
     const float B = r1 / (r2 - r1);
 
-    const float z0_min = z1min * A - max_b2 * B;
-    const float z0_max = z1max * A - min_b2 * B;
+    const float z0Min = z1min * A - maxB2 * B;
+    const float z0Max = z1max * A - minB2 * B;
 
-    if (z0_max < minZ0 - tol || z0_min > maxZ0 + tol) {
+    if (z0Max < minZ0 - tol || z0Min > maxZ0 + tol) {
       return false;
     }
 
@@ -164,18 +164,18 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
       r2min = r1 + 1e-3f;
     }
 
-    float z0_max = 0;
-    float z0_min = 0;
+    float z0Max = 0;
+    float z0Min = 0;
 
     if (z2 > 0) {
-      z0_max = (z1max * r2max - z2 * r1) / (r2max - r1);
-      z0_min = (z1min * r2min - z2 * r1) / (r2min - r1);
+      z0Max = (z1max * r2max - z2 * r1) / (r2max - r1);
+      z0Min = (z1min * r2min - z2 * r1) / (r2min - r1);
     } else {
-      z0_max = (z1max * r2min - z2 * r1) / (r2min - r1);
-      z0_min = (z1min * r2max - z2 * r1) / (r2max - r1);
+      z0Max = (z1max * r2min - z2 * r1) / (r2min - r1);
+      z0Min = (z1min * r2max - z2 * r1) / (r2max - r1);
     }
 
-    if (z0_max < minZ0 || z0_min > maxZ0) {
+    if (z0Max < minZ0 || z0Min > maxZ0) {
       return false;
     }
     return true;
@@ -209,7 +209,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   const float minZ0 = -168.0f;
   const float maxZ0 = 168.0f;
 
-  m_etaBinWidth = conn->m_etaBin;
+  m_etaBinWidth = conn->etaBin;
 
   for (const TrigInDetSiLayer& layer : layerGeometry) {
     const GbtsLayer& pL = addNewLayer(layer, m_nEtaBins);
@@ -221,10 +221,10 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
   std::int32_t lastBin1 = -1;
 
-  for (const auto& [layer, vConn] : conn->m_connMap) {
+  for (const auto& [layer, vConn] : conn->connMap) {
     for (const auto& connection : vConn) {
-      const std::uint32_t src = connection->m_src;  // n2 : the new connectors
-      const std::uint32_t dst = connection->m_dst;  // n1
+      const std::uint32_t src = connection->src;  // n2 : the new connectors
+      const std::uint32_t dst = connection->dst;  // n1
 
       const GbtsLayer* pL1 = getGbtsLayerByKey(dst);
       const GbtsLayer* pL2 = getGbtsLayerByKey(src);
@@ -240,7 +240,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
       const std::uint32_t nSrcBins = pL2->numOfBins();
       const std::uint32_t nDstBins = pL1->numOfBins();
 
-      connection->m_binTable.resize(nSrcBins * nDstBins, 0);
+      connection->binTable.resize(nSrcBins * nDstBins, 0);
       // loop over bins in Layer 1
       for (std::uint32_t b1 = 0; b1 < nDstBins; ++b1) {
         // loop over bins in Layer 2
@@ -249,7 +249,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
             continue;
           }
           const std::uint32_t address = b1 + b2 * nDstBins;
-          connection->m_binTable.at(address) = 1;
+          connection->binTable.at(address) = 1;
 
           const std::int32_t bin1Idx = pL1->getBins().at(b1);
           const std::int32_t bin2Idx = pL2->getBins().at(b2);
