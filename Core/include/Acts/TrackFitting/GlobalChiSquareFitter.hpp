@@ -720,10 +720,10 @@ class Gx2Fitter {
   ///
   /// @param pPropagator The propagator instance for track propagation
   /// @param _logger Logger instance for debugging output (optional)
-  explicit Gx2Fitter(propagator_t pPropagator,
+  explicit Gx2Fitter(const propagator_t& pPropagator,
                      std::unique_ptr<const Logger> _logger =
                          getDefaultLogger("Gx2Fitter", Logging::INFO))
-      : m_propagator(std::move(pPropagator)),
+      : m_propagator(pPropagator),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")},
         m_addToSumLogger{m_logger->cloneWithSuffix("AddToSum")} {}

@@ -45,9 +45,9 @@ class NeuralCalibrator : public MeasurementCalibrator {
   /// @param [in] modelPath The path to the .onnx model file
   /// @param [in] nComponent The number of components in the gaussian mixture
   /// @param [in] volumes The volume ids for which to apply the calibration
-  NeuralCalibrator(const std::filesystem::path& modelPath,
-                   std::size_t nComponents = 1,
-                   std::vector<std::size_t> volumeIds = {7, 8, 9});
+  explicit NeuralCalibrator(const std::filesystem::path& modelPath,
+                            std::size_t nComponents = 1,
+                            std::vector<std::size_t> volumeIds = {7, 8, 9});
 
   /// The MeasurementCalibrator interface methods
   void calibrate(
