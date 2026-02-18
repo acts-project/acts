@@ -404,7 +404,7 @@ class SpSorter {
  protected:
   /// @brief Protected constructor to instantiate the SpSorter.
   /// @param hits: List of space points to sort per layer
-  /// @param calibrator: space point calibrator to recalibrate the hits
+  /// @param calibrator: Space point calibrator to recalibrate the hits
   SpSorter(const Container_t& hits, const SpCalibrator* calibrator)
       : m_calibrator{calibrator} {
     for (const auto& spPtr : hits) {

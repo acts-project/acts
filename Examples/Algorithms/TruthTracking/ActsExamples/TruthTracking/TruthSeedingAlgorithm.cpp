@@ -170,7 +170,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
       ACTS_WARNING("Particle " << particle << " has less than 3 measurements");
       continue;
     }
-    // space points on the proto track
+    // Space points on the proto track
     std::vector<const SimSpacePoint*> spacePointsOnTrack;
     spacePointsOnTrack.reserve(track.size());
     // Loop over the measurement index on the proto track to find the space
@@ -200,7 +200,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
             std::abs(spacePointsOnTrack[im]->z() - spacePointsOnTrack[ib]->z());
         if (bmDeltaR < 0) {
           ACTS_WARNING(
-              "space points are not sorted in r. Difference middle-bottom: "
+              "Space points are not sorted in r. Difference middle-bottom: "
               << bmDeltaR);
           continue;
         }
@@ -219,7 +219,7 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                               spacePointsOnTrack[im]->z());
           if (mtDeltaR < 0) {
             ACTS_WARNING(
-                "space points are not sorted in r. Difference top-middle: "
+                "Space points are not sorted in r. Difference top-middle: "
                 << mtDeltaR);
             continue;
           }

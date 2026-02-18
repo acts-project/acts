@@ -334,7 +334,7 @@ struct LayerVolumeData {
 struct SpacePointData {
   /// Event-unique measurement identifier. Each value can appear at most once.
   std::uint64_t measurement_id = 0;
-  /// space point information
+  /// Space point information
   float sp_x = 0, sp_y = 0, sp_z = 0, sp_radius = 0;
   float sp_covr = 0, sp_covz = 0;
 

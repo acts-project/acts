@@ -172,7 +172,7 @@ class MuonSpacePoint {
   /// @brief Define the space point's identifier
   void setId(const MuonId& id);
   /// @brief Define the space point coordinates.
-  /// @param pos: space point position
+  /// @param pos: Space point position
   /// @param sensorDir: Direction of the sensor
   /// @param toNextSensor: Vector pointing to the next sensor
   void defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir,

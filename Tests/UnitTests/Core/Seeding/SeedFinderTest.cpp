@@ -189,7 +189,7 @@ int main(int argc, char** argv) {
       a;  // test creation of unconfigured finder
   a = SeedFinder<value_type, CylindricalSpacePointGrid<value_type>>(config);
 
-  // setup space point grid config
+  // set up space point grid config
   CylindricalSpacePointGridConfig gridConf;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
   gridConf.zMin = config.zMin;
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
-  // setup space point grid options
+  // set up space point grid options
   CylindricalSpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
