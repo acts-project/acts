@@ -92,7 +92,6 @@ class CloneablePtr {
     }
     return *this;
   }
-  // requires std::is_copy_constructible_v<T>
 
   /// Move constructor
   CloneablePtr(CloneablePtr&&) = default;
