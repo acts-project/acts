@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <vector>
 
-ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(const SimSeed& seed) {
+ActsExamples::ProtoTrack ActsExamples::seedToProtoTrack(const SimSeed& seed) {
   ProtoTrack track;
   track.reserve(seed.sp().size());
   for (const auto& spacePoints : seed.sp()) {
@@ -45,7 +45,7 @@ const ActsExamples::SimSpacePoint* ActsExamples::findSpacePointForIndex(
   return &(*found);
 }
 
-ActsExamples::SimSeed ActsExamples::prototrackToSeed(
+ActsExamples::SimSeed ActsExamples::protoTrackToSeed(
     const ProtoTrack& track, const SimSpacePointContainer& spacePoints) {
   auto findSpacePoint = [&](Index index) {
     auto found = findSpacePointForIndex(index, spacePoints);

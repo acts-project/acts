@@ -8,12 +8,11 @@
 
 #include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
-#include "Acts/Vertexing/HoughVertexFinder.hpp"
+#include "Acts/Vertexing/HoughVertexFinder2.hpp"
 
 #include <chrono>
-#include <vector>
 
 namespace ActsExamples {
 
@@ -34,19 +33,30 @@ HoughVertexFinderAlgorithm::HoughVertexFinderAlgorithm(const Config& cfg,
 ProcessCode HoughVertexFinderAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // retrieve input seeds
-  const std::vector<SimSpacePoint>& inputSpacePoints = m_inputSpacePoints(ctx);
+  const auto& inputSpacePoints = m_inputSpacePoints(ctx);
 
-  Acts::HoughVertexFinder<SimSpacePoint>::Config houghVtxCfg;
+  Acts::SpacePointContainer2 coreSpacePoints(Acts::SpacePointColumns::X |
+                                             Acts::SpacePointColumns::Y |
+                                             Acts::SpacePointColumns::Z);
+  coreSpacePoints.reserve(inputSpacePoints.size());
+  for (const auto& sp : inputSpacePoints) {
+    auto newSp = coreSpacePoints.createSpacePoint();
+    newSp.x() = sp.x();
+    newSp.y() = sp.y();
+    newSp.z() = sp.z();
+  }
+
+  Acts::HoughVertexFinder2::Config houghVtxCfg;
   houghVtxCfg.targetSPs = m_cfg.targetSPs;
   houghVtxCfg.minAbsEta = m_cfg.minAbsEta;
   houghVtxCfg.maxAbsEta = m_cfg.maxAbsEta;
   houghVtxCfg.minHits = m_cfg.minHits;
   houghVtxCfg.defVtxPosition = m_cfg.defVtxPosition;
-  Acts::HoughVertexFinder<SimSpacePoint> houghVertexFinder(houghVtxCfg);
+  Acts::HoughVertexFinder2 houghVertexFinder(houghVtxCfg);
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();
-  auto vtx = houghVertexFinder.find(inputSpacePoints);
+  auto vtx = houghVertexFinder.find(coreSpacePoints);
   auto t2 = std::chrono::high_resolution_clock::now();
   if (vtx.ok()) {
     ACTS_INFO("Found a vertex in the event in " << (t2 - t1).count() / 1e6
