@@ -20,8 +20,7 @@ namespace ActsPlugins {
 
 DD4hepDetectorElement::DD4hepDetectorElement(
     const dd4hep::DetElement detElement, ActsPlugins::TGeoAxes axes,
-    double scalor,
-    std::shared_ptr<const ISurfaceMaterial> material)
+    double scalor, std::shared_ptr<const ISurfaceMaterial> material)
     : TGeoDetectorElement(
           static_cast<TGeoDetectorElement::Identifier>(detElement.volumeID()),
           *(detElement.placement().ptr()),

@@ -52,7 +52,8 @@ using namespace Acts;
 std::tuple<std::shared_ptr<const CylinderBounds>, const Transform3, double>
 ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
     const TGeoShape& tgShape, const Double_t* rotation,
-    const Double_t* translation, ActsPlugins::TGeoAxes axes, double scalor) noexcept(false) {
+    const Double_t* translation, ActsPlugins::TGeoAxes axes,
+    double scalor) noexcept(false) {
   auto a = axes.value();
   std::shared_ptr<const CylinderBounds> bounds = nullptr;
   Transform3 transform = Transform3::Identity();
@@ -117,7 +118,8 @@ ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
 std::tuple<std::shared_ptr<const DiscBounds>, const Transform3, double>
 ActsPlugins::TGeoSurfaceConverter::discComponents(
     const TGeoShape& tgShape, const Double_t* rotation,
-    const Double_t* translation, ActsPlugins::TGeoAxes axes, double scalor) noexcept(false) {
+    const Double_t* translation, ActsPlugins::TGeoAxes axes,
+    double scalor) noexcept(false) {
   auto a = axes.value();
   using Line2D = Eigen::Hyperplane<double, 2>;
   std::shared_ptr<const DiscBounds> bounds = nullptr;
@@ -273,8 +275,7 @@ ActsPlugins::TGeoSurfaceConverter::discComponents(
 std::tuple<std::shared_ptr<const PlanarBounds>, const Transform3, double>
 ActsPlugins::TGeoSurfaceConverter::planeComponents(
     const TGeoShape& tgShape, const Double_t* rotation,
-    const Double_t* translation, TGeoAxes axes,
-    double scalor) noexcept(false) {
+    const Double_t* translation, TGeoAxes axes, double scalor) noexcept(false) {
   auto a = axes.value();
   // Create translation and rotation
   Vector3 t(scalor * translation[0], scalor * translation[1],

@@ -69,8 +69,7 @@ class TGeoAxes {
   };
 
   static constexpr bool isAxisChar(char c) {
-    return c == 'X' || c == 'x' || c == 'Y' || c == 'y' || c == 'Z' ||
-           c == 'z';
+    return c == 'X' || c == 'x' || c == 'Y' || c == 'y' || c == 'Z' || c == 'z';
   }
 
   static constexpr char baseAxis(char c) {
