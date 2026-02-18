@@ -9,6 +9,7 @@
 #include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
 #include "ActsExamples/Utilities/ProtoTracksToSeeds.hpp"
 #include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
+#include "ActsExamples/Utilities/PrototracksToParameters.hpp"
 #include "ActsExamples/Utilities/SeedsToProtoTracks.hpp"
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
