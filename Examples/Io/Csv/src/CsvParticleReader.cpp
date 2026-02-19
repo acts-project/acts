@@ -56,7 +56,7 @@ ProcessCode CsvParticleReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
+  BoostDescribeCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;
 
   while (reader.read(data)) {

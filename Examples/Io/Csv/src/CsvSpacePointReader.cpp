@@ -58,7 +58,7 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
   const auto& path =
       perEventFilepath(m_cfg.inputDir, filename + ".csv", ctx.eventNumber);
 
-  NamedTupleCsvReader<SpacePointData> reader(path);
+  BoostDescribeCsvReader<SpacePointData> reader(path);
   SpacePointData data;
 
   while (reader.read(data)) {
@@ -70,18 +70,18 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
       // auto sp = SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, sLinks);
 
       if (m_cfg.extendCollection) {
-        Acts::Vector3 topStripDirection(data.sp_topStripDirection[0],
-                                        data.sp_topStripDirection[1],
-                                        data.sp_topStripDirection[2]);
-        Acts::Vector3 bottomStripDirection(data.sp_bottomStripDirection[0],
-                                           data.sp_bottomStripDirection[1],
-                                           data.sp_bottomStripDirection[2]);
-        Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance[0],
-                                          data.sp_stripCenterDistance[1],
-                                          data.sp_stripCenterDistance[2]);
-        Acts::Vector3 topStripCenterPosition(data.sp_topStripCenterPosition[0],
-                                             data.sp_topStripCenterPosition[1],
-                                             data.sp_topStripCenterPosition[2]);
+        Acts::Vector3 topStripDirection(data.sp_topStripDirection_0,
+                                        data.sp_topStripDirection_1,
+                                        data.sp_topStripDirection_2);
+        Acts::Vector3 bottomStripDirection(data.sp_bottomStripDirection_0,
+                                           data.sp_bottomStripDirection_1,
+                                           data.sp_bottomStripDirection_2);
+        Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance_0,
+                                          data.sp_stripCenterDistance_1,
+                                          data.sp_stripCenterDistance_2);
+        Acts::Vector3 topStripCenterPosition(data.sp_topStripCenterPosition_0,
+                                             data.sp_topStripCenterPosition_1,
+                                             data.sp_topStripCenterPosition_2);
 
         // TODO time
         spacePoints.emplace_back(

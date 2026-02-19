@@ -44,7 +44,8 @@ ProcessCode CsvSpacePointWriter::writeT(
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<SpacepointData> writerSP(pathSP, m_cfg.outputPrecision);
+  BoostDescribeCsvWriter<SpacepointData> writerSP(pathSP,
+                                                  m_cfg.outputPrecision);
 
   SpacepointData spData{};
   for (const auto& sp : spacepoints) {
