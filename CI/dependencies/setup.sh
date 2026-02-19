@@ -100,12 +100,8 @@ if [ -z "${destination:-}" ]; then
 fi
 
 if [ -z "${env_file:-}" ]; then
-  if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    env_file="${GITHUB_ENV}"
-  else
-    echo "No environment file specified via -e and not running in GitHub Actions"
-    exit 1
-  fi
+  echo "No environment file specified via -e and not running in GitHub Actions"
+  exit 1
 fi
 
 export env_file
@@ -116,11 +112,7 @@ function set_env {
 
   echo "=> ${key}=${value}"
 
-  if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    echo "${key}=${value}" >> "$env_file"
-  else
-    echo "export ${key}=${value}" >> "$env_file"
-  fi
+  echo "export ${key}=${value}" >> "$env_file"
 }
 
 
@@ -259,10 +251,6 @@ checkpoint "Python environment prepared"
 end_section
 
 start_section "Set environment variables"
-if [ -n "${GITHUB_ACTIONS:-}" ]; then
-  echo "${view_dir}/bin" >> "$GITHUB_PATH"
-  echo "${venv_dir}/bin" >> "$GITHUB_PATH"
-fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
 set_env LD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"
 set_env DYLD_LIBRARY_PATH "${venv_dir}/lib:${view_dir}/lib:${view_dir}/lib/root"

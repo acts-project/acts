@@ -39,6 +39,7 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Save PR metadata
         if: github.event_name == 'pull_request'
@@ -70,6 +71,7 @@ jobs:
 
       - name: Configure
         run: >
+          source .env &&
           ccache -z &&
           cmake -B build -S . --preset=github-ci-coverage
       - name: Build
@@ -125,9 +127,12 @@ jobs:
         with:
           compiler: clang++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Configure
         run: >
+          source .env &&
+          ccache -z &&
           cmake -B build -S .
           --preset=gitlab-ci-clangtidy
 
@@ -170,11 +175,14 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Install dependencies
         run: pip3 install cmakeperf==0.6.1
       - name: Configure
         run: >
+          source .env &&
+          ccache -z &&
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=RelWithDebInfo

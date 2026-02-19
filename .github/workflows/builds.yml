@@ -39,6 +39,7 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         id: ccache-restore
@@ -51,6 +52,7 @@ jobs:
 
       - name: Configure
         run: >
+          source .env &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
@@ -126,6 +128,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
+          env_file: .env
 
       - uses: actions/download-artifact@v7
         with:
@@ -141,6 +144,7 @@ jobs:
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
         run: |
+          source .env
           source build/this_acts_withdeps.sh
           pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
@@ -164,6 +168,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
+          env_file: .env
 
       - uses: actions/download-artifact@v7
         with:
@@ -176,6 +181,7 @@ jobs:
         shell: bash
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
+          source .env
           source build/this_acts_withdeps.sh
           CI/physmon/phys_perf_mon.sh all physmon
 
@@ -242,6 +248,7 @@ jobs:
         with:
           compiler: ${{ matrix.cxx }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         uses: actions/cache/restore@v5
@@ -254,6 +261,7 @@ jobs:
 
       - name: Configure
         run: >
+          source .env &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
@@ -320,6 +328,7 @@ jobs:
         with:
           compiler: clang++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         uses: actions/cache/restore@v5
@@ -334,6 +343,7 @@ jobs:
 
       - name: Configure
         run: >
+          source .env &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
@@ -570,6 +580,7 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         id: ccache-restore
@@ -584,13 +595,13 @@ jobs:
         run: ccache -z
 
       - name: Build wheel with pip
-        run: pip wheel . -v
+        run: CI/dependencies/run.sh .env pip wheel . -v
 
       - name: ccache stats
         run: ccache -s
 
       - name: Install wheel
-        run: pip install $(ls ./*.whl)
+        run: CI/dependencies/run.sh .env pip install $(ls ./*.whl)
 
       - name: Save ccache
         uses: actions/cache/save@v5
@@ -605,4 +616,4 @@ jobs:
           path: "*.whl"
 
       - name: Test
-        run: python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
+        run: CI/dependencies/run.sh .env python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
