@@ -9,10 +9,14 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
+#include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/TrackFinding/detail/AmbiguityTrackClustering.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsPlugins/Onnx/OnnxRuntimeBase.hpp"
 
+#include <map>
 #include <unordered_map>
 #include <vector>
 
