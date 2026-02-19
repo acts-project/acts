@@ -14,7 +14,7 @@ namespace Acts::detail {
 
 PortalPlacement::PortalPlacement(const std::size_t portalIdx,
                                  const Transform3& portalTrf,
-                                 VolumePlacementBase* parent,
+                                 const VolumePlacementBase* parent,
                                  std::shared_ptr<RegularSurface> surface)
     : m_portalToVolumeCenter{portalTrf},
       m_surface{std::move(surface)},

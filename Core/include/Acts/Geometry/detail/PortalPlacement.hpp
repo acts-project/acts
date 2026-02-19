@@ -73,7 +73,7 @@ class PortalPlacement final : public SurfacePlacementBase {
   /// @param surface: Pointer to the portal surface itself which is becoming alignable
   ///                 with the construction of this PortalPlacement
   PortalPlacement(const std::size_t portalIdx, const Transform3& portalTrf,
-                  VolumePlacementBase* parent,
+                  const VolumePlacementBase* parent,
                   std::shared_ptr<RegularSurface> surface);
 
  private:

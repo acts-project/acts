@@ -72,7 +72,7 @@ class CloneablePtr {
   /// Copy assignment. Invokes the cloner if the source is non-null.
   /// @param other The CloneablePtr to copy from
   /// @return Reference to this
-  CloneablePtr& operator=(const CloneablePtr& other) {
+  CloneablePtr& operator=(const CloneablePtr& other) noexcept {
     if (this != &other) {
       m_ptr = other.m_ptr ? other.m_cloner(*other.m_ptr) : nullptr;
       m_cloner = other.m_cloner;
@@ -83,7 +83,7 @@ class CloneablePtr {
   /// @param ptr: The unique_ptr that's assigned to this object
   /// @return Reference to this
   template <typename T1>
-  CloneablePtr& operator=(std::unique_ptr<T1>&& ptr)
+  CloneablePtr& operator=(std::unique_ptr<T1>&& ptr) noexcept
     requires(std::is_copy_constructible_v<T1> && std::is_base_of_v<T, T1>)
   {
     m_ptr = std::move(ptr);
@@ -96,11 +96,11 @@ class CloneablePtr {
   }
 
   /// Move constructor
-  CloneablePtr(CloneablePtr&&) = default;
+  CloneablePtr(CloneablePtr&&) noexcept = default;
 
   /// Move assignment
   /// @return Reference to this
-  CloneablePtr& operator=(CloneablePtr&&) = default;
+  CloneablePtr& operator=(CloneablePtr&&) noexcept = default;
 
   /// Destructor
   ~CloneablePtr() = default;
