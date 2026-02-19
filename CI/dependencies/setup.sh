@@ -100,13 +100,12 @@ if [ -z "${destination:-}" ]; then
 fi
 
 if [ -z "${env_file:-}" ]; then
-  echo "No environment file specified via -e and not running in GitHub Actions"
-  exit 1
+  env_file=".env"
 fi
 
-export env_file
+checkpoint "Create environment file $(realpath "$env_file")"
 echo "" > "$env_file"
-echo "create environment file $(realpath "$env_file")"
+export env_file
 
 function set_env {
   key="$1"
