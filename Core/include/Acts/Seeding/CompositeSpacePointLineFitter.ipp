@@ -559,7 +559,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ", hessian: \n"
                         << toString(miniHessian)
                         << ", determinant: " << miniHessian.determinant());
-  std::optional<ActsSquareMatrix<N>> inverseH{std::nullopt};
+  std::optional<SquareMatrix<N>> inverseH{std::nullopt};
   if (miniHessian.trace() > Acts::s_epsilon &&
       miniHessian.determinant() > Acts::s_epsilon) {
     inverseH = safeInverse(miniHessian);
