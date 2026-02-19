@@ -27,7 +27,7 @@ namespace ActsExamples {
 
 GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
-  // initialise the spacepoint, seed and cluster handles
+  // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_inputClusters.initialize(m_cfg.inputClusters);
@@ -66,11 +66,11 @@ GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
 }
 
 ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
-  // initialise input spacepoints from handle and define new container
+  // initialise input space points from handle and define new container
   const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  // take spacepoints, add variables needed for GBTS and add them to new
-  // container due to how spacepoint container works, we need to keep the
+  // take space points, add variables needed for GBTS and add them to new
+  // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
   auto SpContainerComponents = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
@@ -90,7 +90,7 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
 
   // move seeds to simseedcontainer to be used down stream taking fist middle
   // and last sps currently as simseeds need to be hard types so only 3
-  // spacepoint can be added but in future we should be able to have any length
+  // space point can be added but in future we should be able to have any length
   // seed
   SimSeedContainer seedContainerForStorage;
   seedContainerForStorage.reserve(seeds.size());
@@ -100,15 +100,15 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
     std::size_t mid = static_cast<std::size_t>(std::round(indices / 2.0));
     seedContainerForStorage.emplace_back(
         *std::get<0>(SpContainerComponents)
-             .at(sps[0])  // first spacepoint
+             .at(sps[0])  // first space point
              .sourceLinks()[0]
              .get<const SimSpacePoint *>(),
         *std::get<0>(SpContainerComponents)
-             .at(sps[mid])  // middle spacepoint
+             .at(sps[mid])  // middle space point
              .sourceLinks()[0]
              .get<const SimSpacePoint *>(),
         *std::get<0>(SpContainerComponents)
-             .at(sps[indices])  // last spacepoint
+             .at(sps[indices])  // last space point
              .sourceLinks()[0]
              .get<const SimSpacePoint *>());
 
@@ -251,7 +251,7 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
     newSp.extra(localPositionColomn) = 0;
   }
 
-  ACTS_VERBOSE("Space point collection successfully assigned layerId's");
+  ACTS_VERBOSE("space point collection successfully assigned layerId's");
 
   return std::make_tuple(std::move(coreSpacePoints), layerColomn.asConst(),
                          clusterWidthColomn.asConst(),

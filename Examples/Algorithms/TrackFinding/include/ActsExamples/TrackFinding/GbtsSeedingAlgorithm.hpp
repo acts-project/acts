@@ -31,7 +31,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
   struct Config {
     /// this is used to initialise the handle that points to the container of
-    /// spacepoints
+    /// space points
     std::string inputSpacePoints;
 
     /// this is used to initialise the handle that points to the container of
@@ -95,11 +95,11 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   /// used to assign LayerIds to the GbtsActsMap
   mutable std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
 
-  /// handle that points to the container of input spacepoints
+  /// handle that points to the container of input space points
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
 
-  /// handle that points to clusters used by spacepoints
+  /// handle that points to clusters used by space points
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   /// handle that points to container of output seeds
@@ -108,7 +108,7 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
 
-  /// make the container that holds spacepoints that have been given
+  /// make the container that holds space points that have been given
   /// all the variables needed for GBTS algorithm to run
   Acts::Experimental::SpContainerComponentsType makeSpContainer(
       const SimSpacePointContainer &spacePoints,

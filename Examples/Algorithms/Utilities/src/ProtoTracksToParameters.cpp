@@ -43,7 +43,7 @@ ProtoTracksToParameters::ProtoTracksToParameters(Config cfg, Logging::Level lvl)
   }
 }
 
-ProtoTracksToParameters::~ProtoTracksToParameters() {}
+ProtoTracksToParameters::~ProtoTracksToParameters() = default;
 
 ProcessCode ProtoTracksToParameters::execute(
     const AlgorithmContext &ctx) const {
@@ -53,19 +53,19 @@ ProcessCode ProtoTracksToParameters::execute(
 
   // Make some lookup tables and pre-allocate some space
   // Note this is a heuristic, since it is not garantueed that each measurement
-  // is part of a spacepoint
-  std::vector<const SimSpacePoint *> indexToSpacepoint(2 * sps.size(), nullptr);
+  // is part of a space point
+  std::vector<const SimSpacePoint *> indexToSpacePoint(2 * sps.size(), nullptr);
   std::vector<GeometryIdentifier> indexToGeoId(2 * sps.size(),
                                                GeometryIdentifier{0});
 
   for (const auto &sp : sps) {
     for (const auto &sl : sp.sourceLinks()) {
       const auto &isl = sl.template get<IndexSourceLink>();
-      if (isl.index() >= indexToSpacepoint.size()) {
-        indexToSpacepoint.resize(isl.index() + 1, nullptr);
+      if (isl.index() >= indexToSpacePoint.size()) {
+        indexToSpacePoint.resize(isl.index() + 1, nullptr);
         indexToGeoId.resize(isl.index() + 1, GeometryIdentifier{0});
       }
-      indexToSpacepoint.at(isl.index()) = &sp;
+      indexToSpacePoint.at(isl.index()) = &sp;
       indexToGeoId.at(isl.index()) = isl.geometryId();
     }
   }
@@ -86,8 +86,8 @@ ProcessCode ProtoTracksToParameters::execute(
   for (auto &track : protoTracks) {
     ACTS_VERBOSE("Try to get seed from proto track with " << track.size()
                                                           << " hits");
-    // Make proto track unique with respect to volume and layer
-    // so we don't get a seed where we have two spacepoints on the same layer
+    // Make proto track unique with respect to volume and layer so we don't get
+    // a seed where we have two spacepoints on the same layer
 
     // Here, we want to create a seed only if the proto track with removed
     // unique layer-volume spacepoints has 3 or more hits. However, if this is
@@ -117,15 +117,15 @@ ProcessCode ProtoTracksToParameters::execute(
     // Make the seed
     auto result =
         track | std::views::filter([&](auto i) {
-          return i < indexToSpacepoint.size() &&
-                 indexToSpacepoint.at(i) != nullptr;
+          return i < indexToSpacePoint.size() &&
+                 indexToSpacePoint.at(i) != nullptr;
         }) |
-        std::views::transform([&](auto i) { return indexToSpacepoint.at(i); });
+        std::views::transform([&](auto i) { return indexToSpacePoint.at(i); });
     tmpSps.clear();
     std::ranges::copy(result, std::back_inserter(tmpSps));
 
     if (tmpSps.size() < 3) {
-      ACTS_WARNING("Could not find all spacepoints, skip");
+      ACTS_WARNING("Could not find all space points, skip");
       skippedTracks++;
       continue;
     }

@@ -61,8 +61,8 @@ SeedContainer2 SeedFinderGbts::createSeeds(
       nStripLoaded += storage->loadStripGraphNodes(l, nodes);
     }
   }
-  ACTS_DEBUG("Loaded " << nPixelLoaded << " pixel spacepoints and "
-                       << nStripLoaded << " strip spacepoints");
+  ACTS_DEBUG("Loaded " << nPixelLoaded << " pixel space points and "
+                       << nStripLoaded << " strip space points");
 
   storage->sortByPhi();
 
@@ -170,7 +170,7 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     // add node to storage
     GbtsNode& node = node_storage[layer].emplace_back(layer);
 
-    // fill the node with spacepoint variables
+    // fill the node with space point variables
 
     node.x = sp.x();
     node.y = sp.y();
@@ -650,7 +650,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   std::uint32_t seedIdx = 0;
 
   for (const auto& seed : vSeedCandidates) {
-    // loop over spacepoints indices
+    // loop over space points indices
     for (const auto& h : seed.spacePoints) {
       const std::uint32_t hitId = h + 1;
 

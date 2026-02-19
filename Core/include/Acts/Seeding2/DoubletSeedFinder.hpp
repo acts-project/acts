@@ -51,7 +51,7 @@ class DoubletsForMiddleSp {
   }
 
   /// Add a new doublet with associated parameters
-  /// @param sp Space point index for the doublet
+  /// @param sp space point index for the doublet
   /// @param cotTheta Cotangent of polar angle
   /// @param iDeltaR Inverse delta R parameter
   /// @param er Error in R coordinate

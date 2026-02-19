@@ -99,43 +99,43 @@ ProcessCode RootSeedWriter::writeT(const AlgorithmContext& ctx,
   // Get the event number
   m_eventId = ctx.eventNumber;
   for (const auto& seed : seeds) {
-    const auto& spacepoints = seed.sp();
+    const auto& spacePoints = seed.sp();
 
     const auto slink_1 =
-        spacepoints[0]->sourceLinks()[0].get<IndexSourceLink>();
+        spacePoints[0]->sourceLinks()[0].get<IndexSourceLink>();
     const auto slink_2 =
-        spacepoints[1]->sourceLinks()[0].get<IndexSourceLink>();
+        spacePoints[1]->sourceLinks()[0].get<IndexSourceLink>();
     const auto slink_3 =
-        spacepoints[2]->sourceLinks()[0].get<IndexSourceLink>();
+        spacePoints[2]->sourceLinks()[0].get<IndexSourceLink>();
 
     m_measurementId_1 = slink_1.index();
     if (m_cfg.writingMode != "small") {
       m_geometryId_1 = slink_1.geometryId().value();
-      m_x_1 = spacepoints[0]->x();
-      m_y_1 = spacepoints[0]->y();
-      m_z_1 = spacepoints[0]->z();
-      m_var_r_1 = spacepoints[0]->varianceR();
-      m_var_z_1 = spacepoints[0]->varianceZ();
+      m_x_1 = spacePoints[0]->x();
+      m_y_1 = spacePoints[0]->y();
+      m_z_1 = spacePoints[0]->z();
+      m_var_r_1 = spacePoints[0]->varianceR();
+      m_var_z_1 = spacePoints[0]->varianceZ();
     }
 
     m_measurementId_2 = slink_2.index();
     if (m_cfg.writingMode != "small") {
       m_geometryId_2 = slink_2.geometryId().value();
-      m_x_2 = spacepoints[1]->x();
-      m_y_2 = spacepoints[1]->y();
-      m_z_2 = spacepoints[1]->z();
-      m_var_r_2 = spacepoints[1]->varianceR();
-      m_var_z_2 = spacepoints[1]->varianceZ();
+      m_x_2 = spacePoints[1]->x();
+      m_y_2 = spacePoints[1]->y();
+      m_z_2 = spacePoints[1]->z();
+      m_var_r_2 = spacePoints[1]->varianceR();
+      m_var_z_2 = spacePoints[1]->varianceZ();
     }
 
     m_measurementId_3 = slink_3.index();
     if (m_cfg.writingMode != "small") {
       m_geometryId_3 = slink_3.geometryId().value();
-      m_x_3 = spacepoints[2]->x();
-      m_y_3 = spacepoints[2]->y();
-      m_z_3 = spacepoints[2]->z();
-      m_var_r_3 = spacepoints[2]->varianceR();
-      m_var_z_3 = spacepoints[2]->varianceZ();
+      m_x_3 = spacePoints[2]->x();
+      m_y_3 = spacePoints[2]->y();
+      m_z_3 = spacePoints[2]->z();
+      m_var_r_3 = spacePoints[2]->varianceR();
+      m_var_z_3 = spacePoints[2]->varianceZ();
     }
 
     if (m_cfg.writingMode != "small") {

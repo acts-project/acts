@@ -23,7 +23,7 @@
 
 namespace Acts::Experimental {
 
-/// Tuple template used to carry the spacepoint components
+/// Tuple template used to carry the space point components
 using SpContainerComponentsType =
     std::tuple<SpacePointContainer2, SpacePointColumnProxy<std::uint32_t, true>,
                SpacePointColumnProxy<float, true>,
@@ -37,7 +37,7 @@ class SeedFinderGbts {
     /// Constructor.
     /// @param quality Seed quality score
     /// @param clone Clone flag
-    /// @param sps Spacepoint indices
+    /// @param sps Space point indices
     SeedProperties(float quality, std::int32_t clone,
                    std::vector<std::uint32_t> sps)
         : seedQuality(quality), isClone(clone), spacePoints(std::move(sps)) {}
@@ -46,7 +46,7 @@ class SeedFinderGbts {
     float seedQuality{};
     /// Clone flag.
     std::int32_t isClone{};
-    /// Spacepoint indices.
+    /// Space point indices.
     std::vector<std::uint32_t> spacePoints;
 
     /// Comparison operator.
@@ -69,7 +69,7 @@ class SeedFinderGbts {
 
   /// Create seeds from spacepoints in a region of interest.
   /// @param roi Region of interest descriptor
-  /// @param SpContainerComponents Spacepoint container components
+  /// @param SpContainerComponents Space point container components
   /// @param maxLayers Maximum number of layers
   /// @return Container with generated seeds
   SeedContainer2 createSeeds(
@@ -77,8 +77,8 @@ class SeedFinderGbts {
       const SpContainerComponentsType& SpContainerComponents,
       std::uint32_t maxLayers) const;
 
-  /// Create graph nodes from spacepoints.
-  /// @param container Spacepoint container components
+  /// Create graph nodes from space points.
+  /// @param container Space point container components
   /// @param maxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(

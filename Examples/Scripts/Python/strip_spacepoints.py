@@ -9,7 +9,7 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def createStripSpacepoints(
+def createStripSpacePoints(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
@@ -33,7 +33,7 @@ def createStripSpacepoints(
     from acts.examples.root import (
         RootParticleReader,
         RootSimHitReader,
-        RootSpacepointWriter,
+        RootSpacePointWriter,
     )
 
     s = s or acts.examples.Sequencer(
@@ -116,9 +116,9 @@ def createStripSpacepoints(
     )
 
     s.addWriter(
-        RootSpacepointWriter(
+        RootSpacePointWriter(
             level=acts.logging.INFO,
-            inputSpacepoints="spacepoints",
+            inputSpacePoints="spacepoints",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "strip_spacepoints.root"),
         )
@@ -156,7 +156,7 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    createStripSpacepoints(
+    createStripSpacePoints(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
