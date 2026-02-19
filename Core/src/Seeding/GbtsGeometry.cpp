@@ -391,10 +391,10 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
       }
 
       std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>&
-          bin2_links = (*binMap.find(bin2)).second;
+          bin2Links = (*binMap.find(bin2)).second;
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
-      bin2_links.first.push_back(bin1);  // outgoing link bin2 -> bin1
+      bin2Links.first.push_back(bin1);  // outgoing link bin2 -> bin1
     }
   }
 
