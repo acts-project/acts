@@ -364,9 +364,9 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
           helper, externalTrackStates, externalParams, externalJacs);
 
   // Add a track state to the external container
-  auto ts = externalContainer->addTrackState_impl();
+  auto ts = externalContainer->addTrackState();
   BOOST_CHECK_EQUAL(ts, 0);
-  BOOST_CHECK_EQUAL(externalContainer->size_impl(), 1);
+  BOOST_CHECK_EQUAL(externalContainer->size(), 1);
   BOOST_CHECK_EQUAL(externalTrackStates.size(), 1);
 
   // Test owned collection constructor (default using std::unique_ptr)
@@ -374,9 +374,9 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
       std::make_unique<ActsPodioEdm::JacobianCollection>());
-  ts = ownedContainer->addTrackState_impl();
+  ts = ownedContainer->addTrackState();
   BOOST_CHECK_EQUAL(ts, 0);
-  BOOST_CHECK_EQUAL(ownedContainer->size_impl(), 1);
+  BOOST_CHECK_EQUAL(ownedContainer->size(), 1);
 
   // Test that releaseInto works for owned collections
   podio::Frame frame;
@@ -396,8 +396,8 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
 
   // Add some track states
   mutableContainer->addColumn<std::int32_t>("test_column");
-  auto ts1 = mutableContainer->addTrackState_impl();
-  auto ts2 = mutableContainer->addTrackState_impl();
+  auto ts1 = mutableContainer->addTrackState();
+  auto ts2 = mutableContainer->addTrackState();
 
   BoundVector tv1;
   tv1 << 1, 2, 3, 4, 5, 6;
@@ -411,13 +411,13 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
   mutableContainer->getTrackState(ts2)
       .template component<std::int32_t, "test_column"_hash>() = 99;
 
-  BOOST_CHECK_EQUAL(mutableContainer->size_impl(), 2);
+  BOOST_CHECK_EQUAL(mutableContainer->size(), 2);
 
   // Test copy constructor from mutable to const
   auto constContainerCopy =
       std::make_shared<ConstPodioTrackStateContainer<>>(*mutableContainer);
 
-  BOOST_CHECK_EQUAL(constContainerCopy->size_impl(), 2);
+  BOOST_CHECK_EQUAL(constContainerCopy->size(), 2);
   BOOST_CHECK(constContainerCopy->hasColumn("test_column"_hash));
   BOOST_CHECK_EQUAL(constContainerCopy->getTrackState(ts1).predicted(), tv1);
   BOOST_CHECK_EQUAL(constContainerCopy->getTrackState(ts2).predicted(), tv2);
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
       99);
 
   // Original mutable container should still be valid
-  BOOST_CHECK_EQUAL(mutableContainer->size_impl(), 2);
+  BOOST_CHECK_EQUAL(mutableContainer->size(), 2);
 
   // Test move constructor from mutable to const
   // Create a new mutable container for moving
@@ -441,8 +441,8 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
       std::make_unique<ActsPodioEdm::JacobianCollection>());
 
   mutableContainer2->addColumn<std::int32_t>("test_column");
-  ts1 = mutableContainer2->addTrackState_impl();
-  ts2 = mutableContainer2->addTrackState_impl();
+  ts1 = mutableContainer2->addTrackState();
+  ts2 = mutableContainer2->addTrackState();
   mutableContainer2->getTrackState(ts1).predicted() = tv1;
   mutableContainer2->getTrackState(ts1)
       .template component<std::int32_t, "test_column"_hash>() = 42;
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
   auto constContainerMove = std::make_shared<ConstPodioTrackStateContainer<>>(
       std::move(*mutableContainer2));
 
-  BOOST_CHECK_EQUAL(constContainerMove->size_impl(), 2);
+  BOOST_CHECK_EQUAL(constContainerMove->size(), 2);
   BOOST_CHECK(constContainerMove->hasColumn("test_column"_hash));
   BOOST_CHECK_EQUAL(constContainerMove->getTrackState(ts1).predicted(), tv1);
   BOOST_CHECK_EQUAL(constContainerMove->getTrackState(ts2).predicted(), tv2);
@@ -473,8 +473,6 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
 // TrackStateHitLinkCollection* to the container constructor.
 
 BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
-  using namespace HashedStringLiteral;
-
   NullHelper helper;
 
   ActsPodioEdm::TrackStateCollection trackStates;
@@ -492,44 +490,44 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
   MutablePodioTrackStateContainer<Acts::RefHolder> tsc{
       helper, trackStates, params, jacs, &hitsCollection, &linksCollection};
 
-  auto i0 = tsc.addTrackState_impl();
-  auto i1 = tsc.addTrackState_impl();
-  auto i2 = tsc.addTrackState_impl();  // this one gets no source link
+  auto i0 = tsc.addTrackState();
+  auto i1 = tsc.addTrackState();
+  auto i2 = tsc.addTrackState();  // this one gets no source link
 
   // Assign source links to the first two track states.
-  tsc.setUncalibratedSourceLink_impl(i0,
-                                     Acts::SourceLink{hitsCollection.at(0)});
-  tsc.setUncalibratedSourceLink_impl(i1,
-                                     Acts::SourceLink{hitsCollection.at(1)});
+  tsc.getTrackState(i0).setUncalibratedSourceLink(
+      Acts::SourceLink{hitsCollection.at(0)});
+  tsc.getTrackState(i1).setUncalibratedSourceLink(
+      Acts::SourceLink{hitsCollection.at(1)});
 
-  // has_impl must reflect link presence
-  BOOST_CHECK(tsc.has_impl("uncalibratedSourceLink"_hash, i0));
-  BOOST_CHECK(tsc.has_impl("uncalibratedSourceLink"_hash, i1));
-  BOOST_CHECK(!tsc.has_impl("uncalibratedSourceLink"_hash, i2));
+  // hasUncalibratedSourceLink must reflect link presence
+  BOOST_CHECK(tsc.getTrackState(i0).hasUncalibratedSourceLink());
+  BOOST_CHECK(tsc.getTrackState(i1).hasUncalibratedSourceLink());
+  BOOST_CHECK(!tsc.getTrackState(i2).hasUncalibratedSourceLink());
 
-  // getUncalibratedSourceLink_impl must return the correct TrackerHitLocal
+  // getUncalibratedSourceLink must return the correct TrackerHitLocal
   {
-    auto sl = tsc.getUncalibratedSourceLink_impl(i0);
+    auto sl = tsc.getTrackState(i0).getUncalibratedSourceLink();
     const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
     BOOST_REQUIRE_NE(hit, nullptr);
     BOOST_CHECK_EQUAL(hit->getCellID(), 12345u);
   }
   {
-    auto sl = tsc.getUncalibratedSourceLink_impl(i1);
+    auto sl = tsc.getTrackState(i1).getUncalibratedSourceLink();
     const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
     BOOST_REQUIRE_NE(hit, nullptr);
     BOOST_CHECK_EQUAL(hit->getCellID(), 67890u);
   }
 
   // Requesting a source link for a state with no link must throw
-  BOOST_CHECK_THROW(tsc.getUncalibratedSourceLink_impl(i2),
+  BOOST_CHECK_THROW(tsc.getTrackState(i2).getUncalibratedSourceLink(),
                     std::invalid_argument);
 
   // Updating an existing link: point i0 to hit2 instead of hit1
-  tsc.setUncalibratedSourceLink_impl(i0,
-                                     Acts::SourceLink{hitsCollection.at(1)});
+  tsc.getTrackState(i0).setUncalibratedSourceLink(
+      Acts::SourceLink{hitsCollection.at(1)});
   {
-    auto sl = tsc.getUncalibratedSourceLink_impl(i0);
+    auto sl = tsc.getTrackState(i0).getUncalibratedSourceLink();
     const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
     BOOST_REQUIRE_NE(hit, nullptr);
     BOOST_CHECK_EQUAL(hit->getCellID(), 67890u);
@@ -583,8 +581,6 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
   // links that were set by the mutable container.  The copy-from-mutable
   // constructor is used so that both containers share the same underlying
   // collections.
-  using namespace HashedStringLiteral;
-
   NullHelper helper;
 
   ActsPodioEdm::TrackStateCollection trackStates;
@@ -601,41 +597,41 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
   MutablePodioTrackStateContainer tsc{
       helper, trackStates, params, jacs, &hitsCollection, &linksCollection};
 
-  auto i0 = tsc.addTrackState_impl();
-  auto i1 = tsc.addTrackState_impl();
-  tsc.addTrackState_impl();  // third state intentionally has no source link
+  auto i0 = tsc.addTrackState();
+  auto i1 = tsc.addTrackState();
+  tsc.addTrackState();  // third state intentionally has no source link
 
-  tsc.setUncalibratedSourceLink_impl(i0,
-                                     Acts::SourceLink{hitsCollection.at(0)});
-  tsc.setUncalibratedSourceLink_impl(i1,
-                                     Acts::SourceLink{hitsCollection.at(1)});
+  tsc.getTrackState(i0).setUncalibratedSourceLink(
+      Acts::SourceLink{hitsCollection.at(0)});
+  tsc.getTrackState(i1).setUncalibratedSourceLink(
+      Acts::SourceLink{hitsCollection.at(1)});
 
   // Construct a const container from the mutable one.  The copy constructor
   // passes through m_hits and m_links so the const container is in link-based
   // mode and shares the same underlying collections.
   ConstPodioTrackStateContainer cc{tsc};
 
-  BOOST_CHECK_EQUAL(cc.size_impl(), 3u);
+  BOOST_CHECK_EQUAL(cc.size(), 3u);
 
-  BOOST_CHECK(cc.has_impl("uncalibratedSourceLink"_hash, 0));
-  BOOST_CHECK(cc.has_impl("uncalibratedSourceLink"_hash, 1));
-  BOOST_CHECK(!cc.has_impl("uncalibratedSourceLink"_hash, 2));
+  BOOST_CHECK(cc.getTrackState(0).hasUncalibratedSourceLink());
+  BOOST_CHECK(cc.getTrackState(1).hasUncalibratedSourceLink());
+  BOOST_CHECK(!cc.getTrackState(2).hasUncalibratedSourceLink());
 
   {
-    auto sl = cc.getUncalibratedSourceLink_impl(0);
+    auto sl = cc.getTrackState(0).getUncalibratedSourceLink();
     const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
     BOOST_REQUIRE_NE(hit, nullptr);
     BOOST_CHECK_EQUAL(hit->getCellID(), 11111u);
   }
   {
-    auto sl = cc.getUncalibratedSourceLink_impl(1);
+    auto sl = cc.getTrackState(1).getUncalibratedSourceLink();
     const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
     BOOST_REQUIRE_NE(hit, nullptr);
     BOOST_CHECK_EQUAL(hit->getCellID(), 22222u);
   }
 
   // Requesting a source link for the unlinked state must throw
-  BOOST_CHECK_THROW(cc.getUncalibratedSourceLink_impl(2),
+  BOOST_CHECK_THROW(cc.getTrackState(2).getUncalibratedSourceLink(),
                     std::invalid_argument);
 }
 
