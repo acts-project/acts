@@ -132,7 +132,7 @@ struct ValueHolder {
 ///
 /// This concept is satisfied by RefHolder, ConstRefHolder, ValueHolder, and
 /// smart pointers such as std::shared_ptr and std::unique_ptr.
-template <template <typename> class Holder, typename T>
+template <template <typename...> class Holder, typename T>
 concept HolderFor =
     std::move_constructible<Holder<T>> && PointerConcept<Holder<T>>;
 

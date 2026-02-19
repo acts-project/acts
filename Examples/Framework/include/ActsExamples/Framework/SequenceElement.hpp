@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>

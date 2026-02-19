@@ -24,7 +24,7 @@
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
-#include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
+#include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
@@ -81,9 +81,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         inputfiles, outputMeasurements, outputPixelSpacePoints,
         outputStripSpacePoints, outputSpacePoints, outputClusters,
         outputMeasurementParticlesMap, outputParticleMeasurementsMap,
-        outputParticles, onlySpacepoints, onlyPassedParticles,
+        outputParticles, onlySpacePoints, onlyPassedParticles,
         skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-        absBoundaryTolerance, onlySpacepoints, noTruth, readCellData);
+        absBoundaryTolerance, noTruth, readCellData);
 
 #ifdef WITH_GEOMODEL_PLUGIN
     ACTS_PYTHON_DECLARE_READER(RootAthenaDumpGeoIdCollector, root,
@@ -119,10 +119,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
               "bins"_a, "low"_a, "high"_a, "title"_a = "")
           .def_static(
               "variable",
-              [](std::vector<double> edges, const std::string& title) {
+              [](const std::vector<double>& edges, const std::string& title) {
                 return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostVariableAxis(std::move(edges),
-                                                          title));
+                    Acts::Experimental::BoostVariableAxis(edges, title));
               },
               "edges"_a, "title"_a = "");
 
@@ -260,7 +259,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputSimHits, filePath, fileMode, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
-        RootSpacepointWriter, root, "RootSpacepointWriter", inputSpacepoints,
+        RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
         inputMeasurementParticlesMap, filePath, fileMode, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
@@ -276,8 +275,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     ACTS_PYTHON_DECLARE_WRITER(
         RootVertexNTupleWriter, root, "RootVertexNTupleWriter", inputVertices,
         inputTracks, inputTruthVertices, inputParticles, inputSelectedParticles,
-        inputTrackParticleMatching, bField, filePath, treeName, fileMode,
-        vertexMatchThreshold, trackMatchThreshold, writeTrackInfo);
+        inputTrackParticleMatching, inputVertexTruthMatching, bField, filePath,
+        treeName, fileMode, writeTrackInfo);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackFinderPerformanceWriter, root,

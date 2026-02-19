@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 

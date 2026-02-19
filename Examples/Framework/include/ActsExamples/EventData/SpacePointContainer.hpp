@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
 
 #include <any>
 
@@ -22,8 +21,8 @@ class SpacePointContainer {
   using CollectionType = collection_t;
   using ValueType = typename CollectionType::value_type;
 
-  friend Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<collection_t>, Acts::detail::RefHolder>;
+  friend Acts::SpacePointContainer<SpacePointContainer<collection_t>,
+                                   Acts::detail::RefHolder>;
 
   // default constructor is of no use. It cannot be used, so why bother?
   SpacePointContainer() = delete;

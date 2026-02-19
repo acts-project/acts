@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <ActsExamples/EventData/MeasurementCalibration.hpp>
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
 #include <filesystem>
 

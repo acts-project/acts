@@ -17,7 +17,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Print all particles.
 class ParticlesPrinter : public IAlgorithm {

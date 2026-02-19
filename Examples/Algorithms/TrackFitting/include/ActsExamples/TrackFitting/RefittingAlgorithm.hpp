@@ -20,7 +20,6 @@
 
 namespace ActsExamples {
 class TrackFitterFunction;
-struct AlgorithmContext;
 
 class RefittingAlgorithm final : public IAlgorithm {
  public:
@@ -47,7 +46,7 @@ class RefittingAlgorithm final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
-  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

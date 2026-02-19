@@ -596,13 +596,6 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     seq = Sequencer(
         events=10,
         numThreads=1,
-        fpeMasks=[
-            (
-                "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
-                acts.examples.FpeType.FLTUND,
-                1,
-            ),
-        ],
     )
 
     root_files = [
@@ -1341,9 +1334,9 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 @pytest.mark.odd
 def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
     if detector_config.name == "generic":
-        pytest.skip("No strip spacepoint formation for the generic detector currently")
+        pytest.skip("No strip space point formation for the generic detector currently")
 
-    from strip_spacepoints import createStripSpacepoints
+    from strip_spacepoints import createStripSpacePoints
 
     s = Sequencer(events=20, numThreads=-1)
 
@@ -1353,7 +1346,7 @@ def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
     digi_config_file = config_path / "odd-digi-smearing-config.json"
 
     with detector_config.detector:
-        createStripSpacepoints(
+        createStripSpacePoints(
             trackingGeometry=detector_config.trackingGeometry,
             field=field,
             digiConfigFile=digi_config_file,

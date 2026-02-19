@@ -232,7 +232,7 @@ ProcessCode HepMC3Reader::read(const AlgorithmContext& ctx) {
 }
 
 ProcessCode HepMC3Reader::readSingleFile(
-    const ActsExamples::AlgorithmContext& ctx,
+    const AlgorithmContext& ctx,
     std::shared_ptr<HepMC3::GenEvent>& outputEvent) {
   using enum ProcessCode;
   ACTS_VERBOSE("Reading from single file");
@@ -295,7 +295,7 @@ ProcessCode HepMC3Reader::readSingleFile(
 }
 
 ProcessCode HepMC3Reader::readCached(
-    const ActsExamples::AlgorithmContext& ctx,
+    const AlgorithmContext& ctx,
     std::vector<std::shared_ptr<HepMC3::GenEvent>>& events) {
   ACTS_VERBOSE("Already read event " << ctx.eventNumber);
   auto it = std::ranges::find_if(
@@ -326,7 +326,7 @@ ProcessCode HepMC3Reader::readCached(
 }
 
 ProcessCode HepMC3Reader::readBuffer(
-    const ActsExamples::AlgorithmContext& ctx,
+    const AlgorithmContext& ctx,
     std::vector<std::shared_ptr<HepMC3::GenEvent>>& outputEvents) {
   using enum ProcessCode;
 
@@ -390,7 +390,7 @@ ProcessCode HepMC3Reader::readBuffer(
 }
 
 ProcessCode HepMC3Reader::readLogicalEvent(
-    const ActsExamples::AlgorithmContext& ctx,
+    const AlgorithmContext& ctx,
     std::vector<std::shared_ptr<HepMC3::GenEvent>>& events) {
   using enum ProcessCode;
   ACTS_VERBOSE("Reading logical event " << ctx.eventNumber);

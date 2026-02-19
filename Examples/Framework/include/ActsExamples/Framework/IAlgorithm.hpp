@@ -8,15 +8,14 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
-#include <Acts/Utilities/Logger.hpp>
 
 #include <memory>
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Event processing algorithm interface.
 ///
@@ -58,4 +57,5 @@ class IAlgorithm : public SequenceElement {
   std::string m_name;
   std::unique_ptr<const Acts::Logger> m_logger;
 };
+
 }  // namespace ActsExamples

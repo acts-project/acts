@@ -81,7 +81,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
     }
     result.boundValuesSize = values.size();
 
-    Eigen::Map<ActsSquareMatrix<4>> trf{result.transform.data()};
+    Eigen::Map<SquareMatrix<4>> trf{result.transform.data()};
 
     // This is safe ONLY(!) if there is no associated detector element, since
     // the surface will not inspect the geometry context at all by itself.
@@ -98,7 +98,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
     return nullptr;
   }
 
-  Eigen::Map<const ActsSquareMatrix<4>> mat{surface.transform.data()};
+  Eigen::Map<const SquareMatrix<4>> mat{surface.transform.data()};
   Transform3 transform{mat};
 
   using T = Surface::SurfaceType;
