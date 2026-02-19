@@ -8,12 +8,14 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
+#include <memory>
 #include <string>
 
 namespace ActsExamples {
@@ -36,9 +38,8 @@ class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
     /// Name of the output tracker hit raw collection.
     std::string outputTrackerHitsLocal = "ActsTrackerHitsLocal";
 
-    /// Map of surface by identifier to allow local - to global
-    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
-        surfaceByIdentifier;
+    /// Tracking geometry for surface lookup (local-to-global transform).
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor with

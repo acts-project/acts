@@ -28,14 +28,17 @@ EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
     : PodioOutputConverter("EDM4hepMeasurementOutputConverter",
                            std::move(logger)),
       m_cfg(config) {
+  if (m_cfg.trackingGeometry == nullptr) {
+    throw std::runtime_error(
+        "EDM4hepMeasurementOutputConverter: trackingGeometry is null");
+  }
+
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputTrackerHitsLocal.initialize(m_cfg.outputTrackerHitsLocal);
 }
 
 ProcessCode EDM4hepMeasurementOutputConverter::execute(
     const AlgorithmContext& ctx) const {
-  ClusterContainer clusters;
-
   ActsPodioEdm::TrackerHitLocalCollection hits;
 
   const auto measurements = m_inputMeasurements(ctx);
@@ -47,10 +50,17 @@ ProcessCode EDM4hepMeasurementOutputConverter::execute(
     ConstVariableBoundMeasurementProxy from =
         measurements.getMeasurement(hitIdx);
 
+    const Acts::Surface* surface =
+        m_cfg.trackingGeometry->findSurface(from.geometryId());
+    if (surface == nullptr) {
+      throw std::runtime_error(
+          "EDM4hepMeasurementOutputConverter: surface not found for geometry "
+          "id " +
+          std::to_string(from.geometryId().value()));
+    }
+
     auto to = hits.create();
-    EDM4hepUtil::writeMeasurement(
-        ctx.geoContext, from, to,
-        *m_cfg.surfaceByIdentifier.at(from.geometryId()));
+    EDM4hepUtil::writeMeasurement(ctx.geoContext, from, to, *surface);
   }
 
   m_outputTrackerHitsLocal(ctx, std::move(hits));

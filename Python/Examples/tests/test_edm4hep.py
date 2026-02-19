@@ -8,6 +8,7 @@ import pytest
 import filelock
 
 from helpers import (
+    dd4hepEnabled,
     edm4hepEnabled,
     podioEnabled,
     AssertCollectionExistsAlg,
@@ -20,6 +21,7 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
 )
+import acts.examples.json
 
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
@@ -53,34 +55,69 @@ def assert_podio(
 
 
 @pytest.mark.edm4hep
+@pytest.mark.odd
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_measurement_writer(tmp_path, fatras):
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_edm4hep_measurement_writer(tmp_path, ptcl_gun, rng):
     from acts.examples.edm4hep import EDM4hepMeasurementOutputConverter, PodioWriter
 
     s = Sequencer(numThreads=1, events=10)
-    _, simAlg, digiAlg = fatras(s)
+    evGen, h3conv = ptcl_gun(s)
 
-    out = tmp_path / "measurements_edm4hep.root"
+    with getOpenDataDetector() as detector:
+        trackingGeometry = detector.trackingGeometry()
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    converter = EDM4hepMeasurementOutputConverter(
-        level=acts.logging.VERBOSE,
-        inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=digiAlg.config.outputClusters,
-        outputTrackerHitsPlane="tracker_hits_plane",
-        outputTrackerHitsRaw="tracker_hits_raw",
-    )
-    s.addAlgorithm(converter)
-
-    s.addWriter(
-        PodioWriter(
-            level=acts.logging.VERBOSE,
-            outputPath=str(out),
-            category="events",
-            collections=converter.collections,
+        simAlg = acts.examples.FatrasSimulation(
+            level=acts.logging.INFO,
+            inputParticles=h3conv.config.outputParticles,
+            outputParticles="particles_simulated",
+            outputSimHits="simhits",
+            randomNumbers=rng,
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
+            generateHitsOnSensitive=True,
+            emScattering=False,
+            emEnergyLossIonisation=False,
+            emEnergyLossRadiation=False,
+            emPhotonConversion=False,
         )
-    )
+        s.addAlgorithm(simAlg)
 
-    s.run()
+        digiCfg = acts.examples.DigitizationAlgorithm.Config(
+            digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
+                str(
+                    Path(__file__).parent.parent.parent.parent
+                    / "Examples/Configs/odd-digi-smearing-config.json"
+                )
+            ),
+            surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
+            randomNumbers=rng,
+            inputSimHits=simAlg.config.outputSimHits,
+        )
+        digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, acts.logging.INFO)
+        s.addAlgorithm(digiAlg)
+
+        out = tmp_path / "measurements_edm4hep.root"
+
+        converter = EDM4hepMeasurementOutputConverter(
+            level=acts.logging.VERBOSE,
+            inputMeasurements=digiAlg.config.outputMeasurements,
+            outputTrackerHitsLocal="tracker_hits_local",
+            trackingGeometry=trackingGeometry,
+        )
+        s.addAlgorithm(converter)
+
+        s.addWriter(
+            PodioWriter(
+                level=acts.logging.VERBOSE,
+                outputPath=str(out),
+                category="events",
+                collections=converter.collections,
+            )
+        )
+
+        s.run()
 
     assert os.path.isfile(out)
     assert os.stat(out).st_size > 10
@@ -88,7 +125,7 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
     assert_podio(
         out,
         "events",
-        collections=set(["tracker_hits_plane", "tracker_hits_raw"]),
+        collections=set(["tracker_hits_local"]),
         nevents=10,
     )
 
@@ -489,8 +526,10 @@ def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
 
 
 @pytest.mark.edm4hep
+@pytest.mark.odd
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_measurement_reader(tmp_path, fatras):
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
     from acts.examples.edm4hep import (
         EDM4hepMeasurementOutputConverter,
         EDM4hepMeasurementInputConverter,
@@ -498,25 +537,59 @@ def test_edm4hep_measurement_reader(tmp_path, fatras):
     from acts.examples.edm4hep import PodioWriter, PodioReader
 
     s = Sequencer(numThreads=1, events=10)
-    _, simAlg, digiAlg = fatras(s)
+    evGen, h3conv = ptcl_gun(s)
 
-    out = tmp_path / "measurements_edm4hep.root"
+    with getOpenDataDetector() as detector:
+        trackingGeometry = detector.trackingGeometry()
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    converter = EDM4hepMeasurementOutputConverter(
-        level=acts.logging.INFO,
-        inputMeasurements=digiAlg.config.outputMeasurements,
-        inputClusters=digiAlg.config.outputClusters,
-    )
-    s.addAlgorithm(converter)
-    s.addWriter(
-        PodioWriter(
+        simAlg = acts.examples.FatrasSimulation(
             level=acts.logging.INFO,
-            outputPath=str(out),
-            category="events",
-            collections=converter.collections,
+            inputParticles=h3conv.config.outputParticles,
+            outputParticles="particles_simulated",
+            outputSimHits="simhits",
+            randomNumbers=rng,
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
+            generateHitsOnSensitive=True,
+            emScattering=False,
+            emEnergyLossIonisation=False,
+            emEnergyLossRadiation=False,
+            emPhotonConversion=False,
         )
-    )
-    s.run()
+        s.addAlgorithm(simAlg)
+
+        digiCfg = acts.examples.DigitizationAlgorithm.Config(
+            digitizationConfigs=acts.examples.json.readDigiConfigFromJson(
+                str(
+                    Path(__file__).parent.parent.parent.parent
+                    / "Examples/Configs/odd-digi-smearing-config.json"
+                )
+            ),
+            surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
+            randomNumbers=rng,
+            inputSimHits=simAlg.config.outputSimHits,
+        )
+        digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, acts.logging.INFO)
+        s.addAlgorithm(digiAlg)
+
+        out = tmp_path / "measurements_edm4hep.root"
+
+        converter = EDM4hepMeasurementOutputConverter(
+            level=acts.logging.INFO,
+            inputMeasurements=digiAlg.config.outputMeasurements,
+            trackingGeometry=trackingGeometry,
+        )
+        s.addAlgorithm(converter)
+        s.addWriter(
+            PodioWriter(
+                level=acts.logging.INFO,
+                outputPath=str(out),
+                category="events",
+                collections=converter.collections,
+            )
+        )
+        s.run()
 
     # read back in
     s = Sequencer(numThreads=1)
