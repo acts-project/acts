@@ -16,19 +16,19 @@ using namespace Acts;
 namespace ActsExamples {
 
 std::vector<float> createFeatures(
-    const SimSpacePointContainer& spacepoints, const ClusterContainer* clusters,
+    const SimSpacePointContainer& spacePoints, const ClusterContainer* clusters,
     const std::vector<TrackFindingAlgorithmGnn::NodeFeature>& nodeFeatures,
     const std::vector<float>& featureScales) {
   using namespace ActsExamples;
 
   assert(nodeFeatures.size() == featureScales.size());
-  std::vector<float> features(spacepoints.size() * nodeFeatures.size());
+  std::vector<float> features(spacePoints.size() * nodeFeatures.size());
 
-  for (auto isp = 0ul; isp < spacepoints.size(); ++isp) {
-    const auto& sp = spacepoints[isp];
+  for (auto isp = 0ul; isp < spacePoints.size(); ++isp) {
+    const auto& sp = spacePoints[isp];
 
     // For now just take the first index since does require one single index
-    // per spacepoint
+    // per space point
     // TODO does it work for the module map construction to use only the first
     // sp?
     const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
@@ -80,7 +80,7 @@ std::vector<float> createFeatures(
     for (auto ift = 0ul; ift < nodeFeatures.size(); ++ift) {
       // clang-format off
       switch(nodeFeatures[ift]) {
-        // Spacepoint features
+        // Space point features
         break; case NF::eR:           f[ift] = perp(spPos);
         break; case NF::ePhi:         f[ift] = phi(spPos);
         break; case NF::eZ:           f[ift] = sp.z();

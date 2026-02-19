@@ -46,7 +46,7 @@ HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
     : IAlgorithm("HoughTransformSeeder", lvl),
       m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("HoughTransformSeeder", lvl)) {
-  // require spacepoints or input measurements (or both), but at least one kind
+  // require space points or input measurements (or both), but at least one kind
   // of input
   bool foundInput = false;
   for (const auto& spName : m_cfg.inputSpacePoints) {
@@ -67,7 +67,7 @@ HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
   if (!foundInput) {
     throw std::invalid_argument(
         "HoughTransformSeeder: Missing some kind of input (measurements of "
-        "spacepoints)");
+        "space points)");
   }
 
   if (m_cfg.outputProtoTracks.empty()) {

@@ -200,15 +200,15 @@ class MuonSpacePoint {
 };
 
 static_assert(Acts::Experimental::CompositeSpacePoint<MuonSpacePoint>);
-/// @brief Abbrivation of the MuonSpace point container as a jagged vector of
+/// @brief Abbrivation of the MuonSpacePoint container as a jagged vector of
 ///        space point objects. The inner vector represents a collection of
-///        spacepoints that are close-by together in space, a so-called bucket
+///        space points that are close-by together in space, a so-called bucket
 using MuonSpacePointBucket = std::vector<MuonSpacePoint>;
 using MuonSpacePointContainer = std::vector<MuonSpacePointBucket>;
 
 /// @brief ostream operator of the Muon space point Identifier
 std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint::MuonId& id);
-/// @brief osteram operator of the Space point
+/// @brief osteram operator of the space point
 std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint& sp);
 
 }  // namespace ActsExamples

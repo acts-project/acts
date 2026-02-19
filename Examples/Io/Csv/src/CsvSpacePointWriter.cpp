@@ -28,7 +28,7 @@ namespace ActsExamples {
 
 CsvSpacePointWriter::CsvSpacePointWriter(const Config& config,
                                          Acts::Logging::Level level)
-    : WriterT(config.inputSpacepoints, "CsvSpacePointWriter", level),
+    : WriterT(config.inputSpacePoints, "CsvSpacePointWriter", level),
       m_cfg(config) {}
 
 CsvSpacePointWriter::~CsvSpacePointWriter() = default;
@@ -39,15 +39,15 @@ ProcessCode CsvSpacePointWriter::finalize() {
 }
 
 ProcessCode CsvSpacePointWriter::writeT(
-    const AlgorithmContext& ctx, const SimSpacePointContainer& spacepoints) {
+    const AlgorithmContext& ctx, const SimSpacePointContainer& spacePoints) {
   // Open per-event file for all components
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<SpacepointData> writerSP(pathSP, m_cfg.outputPrecision);
+  NamedTupleCsvWriter<SpacePointData2> writerSP(pathSP, m_cfg.outputPrecision);
 
-  SpacepointData spData{};
-  for (const auto& sp : spacepoints) {
+  SpacePointData2 spData{};
+  for (const auto& sp : spacePoints) {
     const auto slink1 = sp.sourceLinks()[0].get<IndexSourceLink>();
     spData.measurement_id_1 = slink1.index();
     spData.geometry_id_1 = slink1.geometryId().value();
