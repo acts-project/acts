@@ -390,11 +390,11 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
         binMap.insert(std::make_pair(bin2, emptyLinks));
       }
 
-      std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>&
-          bin2Links = (*binMap.find(bin2)).second;
+      std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>& bin2Links =
+          (*binMap.find(bin2)).second;
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
-      bin2Links.first.push_back(bin1);  // outgoing link bin2 -> bin1
+      bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
     }
   }
 
