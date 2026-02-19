@@ -140,4 +140,3 @@ datatypes:
     VectorMembers:
       - float measurement // Entries in the measurement value vector
       - float covariance // Entries in the measurement covariance vector. Order is column major
-
