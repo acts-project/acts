@@ -37,3 +37,5 @@ target_link_libraries(
     ActsPluginRoot
     PUBLIC Acts::Core ROOT::Core ROOT::Tree ROOT::Geom
 )
+
+acts_compile_headers(PluginRoot GLOB include/**/*.hpp)
