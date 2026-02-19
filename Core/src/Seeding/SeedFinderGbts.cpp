@@ -769,7 +769,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   }
 }
 
-bool SeedFinderGbts::checkZ0Bitmask(const unsigned short& z0BitMask,
+bool SeedFinderGbts::checkZ0Bitmask(const std::uint16_t& z0BitMask,
                                     const float& z0, const float& minZ0,
                                     const float& z0HistoCoeff) const {
   if (z0BitMask == 0) {
@@ -777,7 +777,7 @@ bool SeedFinderGbts::checkZ0Bitmask(const unsigned short& z0BitMask,
   }
 
   float dz = z0 - minZ0;
-  std::uint32_t z0BinIndex = static_cast<std::uint32_t>(z0HistoCoeff * dz);
+  std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
 
   if (((z0BitMask >> z0BinIndex) & 1) != 0) {
     return true;
@@ -789,7 +789,7 @@ bool SeedFinderGbts::checkZ0Bitmask(const unsigned short& z0BitMask,
 
   float dzm = dz - z0Resolution;
 
-  std::uint32_t nextBin = static_cast<std::uint32_t>(z0HistoCoeff * dzm);
+  std::int32_t nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzm);
 
   if (nextBin >= 0 && nextBin != z0BinIndex) {
     if (((z0BitMask >> nextBin) & 1) != 0) {
