@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
+#include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -89,7 +90,7 @@ class Surface : public virtual GeometryObject,
   /// to detector element and layer
   ///
   /// @param other Source surface for copy.
-  Surface(const Surface& other) noexcept;
+  Surface(const Surface& other) noexcept = default;
 
   /// Constructor from SurfacePlacement: Element proxy
   ///
@@ -153,7 +154,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param other Source surface for the assignment
   /// @return Reference to this surface after assignment
-  Surface& operator=(const Surface& other);
+  Surface& operator=(const Surface& other) noexcept = default;
 
   /// Comparison (equality) operator
   /// The strategy for comparison is
@@ -563,7 +564,7 @@ class Surface : public virtual GeometryObject,
 
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  std::unique_ptr<const Transform3> m_transform{};
+  CloneablePtr<const Transform3> m_transform{};
 
  private:
   /// Pointer to the a SurfacePlacement

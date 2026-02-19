@@ -186,7 +186,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     /// the detector to use different algorithms for space point construction,
     /// e.g. single-hit space points for pixel-like detectors or double-hit
     /// space points for strip-like detectors.
-    /// Note that we don't *need* spacepoints (measurements can be used instead)
+    /// Note that we don't *need* space points (measurements can be used
+    /// instead)
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
