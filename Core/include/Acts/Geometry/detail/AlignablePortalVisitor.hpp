@@ -39,7 +39,7 @@ class AlignablePortalVisitor final : public TrackingGeometryMutableVisitor {
 
  private:
   ///  The construction geometry context connected to the experiment's alignment
-  const GeometryContext m_gctx{GeometryContext::dangerouslyDefaultConstruct()};
+  const GeometryContext m_gctx;
   ///  Pointer to the held logger object
   const Logger& m_logger;
   ///  Inspect the portal transforms

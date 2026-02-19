@@ -10,13 +10,20 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Volume.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/detail/TrackingGeometryPrintVisitor.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <array>
 #include <memory>
@@ -39,7 +46,14 @@ inline bool isSame(const Acts::Transform3& a, const Acts::Transform3& b) {
   }
   return true;
 }
+
 }  // namespace
+
+const Acts::Logger& logger() {
+  static const auto logObj =
+      Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+  return *logObj;
+}
 
 namespace Acts {
 class PlanarBounds;
@@ -402,9 +416,13 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
 
   volumePlacement.setAlignmentDelta(alignedContext, rotationDelta, 0);
 
-  BOOST_CHECK(isSame(
-      volumePlacement.localToGlobalTransform(alignedContext.getContext()),
-      volTrf1 * rotationDelta));
+  const Transform3 alignedTrf =
+      volumePlacement.localToGlobalTransform(alignedContext.getContext());
+  const Transform3 assembledTrf = volTrf1 * rotationDelta;
+  ACTS_INFO("Test whether the aligned volume transform is what's expected \n"
+            << " ---- " << toString(alignedTrf) << "\n ---- "
+            << toString(assembledTrf));
+  BOOST_CHECK(isSame(alignedTrf, assembledTrf));
 
   orientedSurfaces = alignedVol1.volumeBounds().orientedSurfaces(
       alignedVol1.localToGlobalTransform(alignedContext.getContext()));
@@ -425,6 +443,77 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
   BOOST_CHECK_NO_THROW(
       alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
           halfX1, halfX2, halfX3, halfY1, halfY2, halfZ)));
+}
+
+BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
+  AlignableVolumePlacement outsidePlacement{Transform3::Identity()};
+  std::vector<std::unique_ptr<AlignableVolumePlacement>> innerPlacements{};
+
+  const AlignmentContext gctx{};
+  using namespace Acts::Experimental;
+
+  constexpr double hX = 10._cm;
+  constexpr double hY = 20._cm;
+  constexpr double hZ = 30._cm;
+
+  auto innerBounds = std::make_shared<CuboidVolumeBounds>(hX, hY, hZ);
+  auto outerBounds =
+      std::make_shared<CuboidVolumeBounds>(10. * hX, 2. * hY, 2. * hZ);
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_m, 20_m};
+  cfg.envelope[AxisDirection::AxisR] = {0, 20_m};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  // auto& cubcontainer = root->addCuboidContainer("CuboidContainer",
+  // AxisDirection::AxisX);
+  auto parentVol =
+      std::make_unique<TrackingVolume>(outsidePlacement, outerBounds, "parent");
+  auto parentNode = std::make_shared<StaticBlueprintNode>(std::move(parentVol));
+  // start from the edge of the parent volume
+  const double xShift =
+      5._mm + innerBounds->get(CuboidVolumeBounds::eHalfLengthX);
+  double startX = -outerBounds->get(CuboidVolumeBounds::eHalfLengthX) + xShift;
+
+  unsigned i = 0;
+  while (startX < outerBounds->get(CuboidVolumeBounds::eHalfLengthX)) {
+    const Transform3 trf{Translation3{startX, 0., 0.}};
+    startX += 2. * xShift;
+    std::unique_ptr<TrackingVolume> childVol{};
+    auto& placement = innerPlacements.emplace_back(
+        std::make_unique<AlignableVolumePlacement>(trf));
+    childVol = std::make_unique<TrackingVolume>(
+        *placement, innerBounds, std::format("alignable_child_{:}", i));
+
+    ++i;
+    childVol->assignGeometryId(
+        GeometryIdentifier{}.withVolume(1).withLayer(i + 1));
+    auto childNode = std::make_shared<StaticBlueprintNode>(std::move(childVol));
+    parentNode->addChild(std::move(childNode));
+  }
+
+  root->addChild(std::move(parentNode));
+  auto trackingGeometry = root->construct({}, gctx.getContext(), logger());
+  const auto& rootVol =
+      trackingGeometry->highestTrackingVolume()->volumes().front();
+
+  // Inspection time
+  {
+    Acts::detail::TrackingGeometryPrintVisitor printVisitor{gctx.getContext()};
+    rootVol.apply(printVisitor);
+    ACTS_INFO("Constructed tracking geometry: \n"
+              << printVisitor.stream().str());
+  }
+  // Ensure that the volume is alignable
+  BOOST_CHECK_EQUAL(rootVol.isAlignable(), true);
+  BOOST_CHECK_EQUAL(rootVol.volumePlacement(), &outsidePlacement);
+  BOOST_CHECK_EQUAL(outsidePlacement.nPortalPlacements(), 6);
+  for (const auto& [child, placement] :
+       zip(rootVol.volumes(), innerPlacements)) {
+    BOOST_CHECK_EQUAL(child.isAlignable(), true);
+    BOOST_CHECK_EQUAL(child.volumePlacement(), placement.get());
+    BOOST_CHECK_EQUAL(placement->nPortalPlacements(), 6);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END();

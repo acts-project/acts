@@ -39,7 +39,7 @@ namespace Acts::detail {
 
 AlignablePortalVisitor::AlignablePortalVisitor(const GeometryContext& gctx,
                                                const Logger& logger)
-    : m_gctx{gctx}, m_logger{logger} {}
+    : TrackingGeometryMutableVisitor{true}, m_gctx{gctx}, m_logger{logger} {}
 
 void AlignablePortalVisitor::visitVolume(TrackingVolume& volume) {
   if (!volume.isAlignable()) {
@@ -51,10 +51,11 @@ void AlignablePortalVisitor::visitVolume(TrackingVolume& volume) {
   ACTS_DEBUG("AlignablePortalVisitor() - Found alignable volume "
              << volume.geometryId() << ", " << volume.volumeBounds());
   std::vector<std::shared_ptr<RegularSurface>> alignable{};
+  // We start with the most inside volume
   for (Portal& portal : volume.portals()) {
     ACTS_DEBUG("AlignablePortalVisitor() - Check wheher portal "
                << portal.surface().geometryId() << " is a boundary surface");
-    if (portal.surface().geometryId().withBoundary(0) != volume.geometryId()) {
+    if (portal.surface().isAlignable()) {
       continue;
     }
     alignable.push_back(
@@ -74,6 +75,20 @@ void AlignablePortalVisitor::visitVolume(TrackingVolume& volume) {
   }
   volume.volumePlacement()->makePortalsAlignable(m_gctx, alignable);
 
+  // Check whether the children volumes are also alignable. Don't throw an
+  // exception as it's the user's choice to declare the volumes alignable
+  if (std::ranges::any_of(volume.volumes(), [](const Volume& childVol) {
+        return !childVol.isAlignable();
+      })) {
+    TrackingGeometryPrintVisitor printVisitor{m_gctx};
+    volume.apply(printVisitor);
+    ACTS_ERROR("AlignablePortalVisitor() - The volume "
+               << volume.volumeName() << " has non alignable children: \n"
+               << printVisitor.stream().str());
+    throw std::logic_error(
+        "AlignablePortalVisitor() - Subvolumes of aliganble volumes must be "
+        "also alignable");
+  }
   if (!m_doInspect) {
     return;
   }
@@ -89,18 +104,6 @@ void AlignablePortalVisitor::visitVolume(TrackingVolume& volume) {
       throw std::runtime_error(
           "AlignablePortalVisitor() - The portal alignment failed");
     }
-  }
-  // Next check whether the children volumes are also alignable. Don't throw an
-  // exception as it's the user's choice to declare the volumes alignable
-  if (std::ranges::any_of(volume.volumes(), [](const Volume& childVol) {
-        return !childVol.isAlignable();
-      })) {
-    std::stringstream sstr{};
-    TrackingGeometryPrintVisitor printVisitor{m_gctx};
-    volume.apply(printVisitor);
-    ACTS_WARNING(
-        "AlignablePortalVisitor() - The volume has non alignable children: \n"
-        << printVisitor.stream().str());
   }
 }
 

@@ -33,8 +33,8 @@ const std::stringstream& TrackingGeometryPrintVisitor::stream() const {
 void TrackingGeometryPrintVisitor::visitVolume(
     const Acts::TrackingVolume& volume) {
   updateDepth(volume);
-  m_printStream << whiteSpaces(m_currentDepth) << volNumber(volume) << ")"
-                << (volume.isAlignable() ? "Alignable volume" : " Volume ")
+  m_printStream << whiteSpaces(m_currentDepth) << volNumber(volume) << ") "
+                << (volume.isAlignable() ? "Alignable volume " : "Volume ")
                 << volume.volumeName() << " @ "
                 << toString(volume.center(m_gctx))
                 << " --- id: " << volume.geometryId()

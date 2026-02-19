@@ -28,6 +28,8 @@ class CloneablePtr {
  public:
   /// The type of the cloner function
   using Cloner = std::function<std::unique_ptr<T>(const T&)>;
+  /// Define the type of the managed object
+  using element_type = T;
 
   /// Default constructor, creates a null pointer
   CloneablePtr() = default;
