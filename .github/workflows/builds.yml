@@ -324,6 +324,8 @@ jobs:
       - name: Restore ccache
         uses: actions/cache/restore@v5
         id: ccache-restore
+        env:
+          DYLD_LIBRARY_PATH: ""
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -336,9 +338,6 @@ jobs:
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-
-      - run: ls -al /Users/runner/work/acts/acts/dependencies/view/lib
-      - run: find /Users/runner/work/acts/acts/dependencies/view/lib -type l -name "libRIO.*"
 
       - name: Build
         run: cmake --build build
@@ -379,9 +378,7 @@ jobs:
         run: cmake --build build-downstream
 
       - name: Downstream run
-        run: >
-          PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && ./build-downstream/bin/ShowActsVersion
+        run: ./build-downstream/bin/ShowActsVersion
 
   external_eic-shell:
     runs-on: ubuntu-latest
