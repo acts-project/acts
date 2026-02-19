@@ -345,8 +345,8 @@ jobs:
       - name: Configure
         run: >
           cat .env &&
-          printenv &&
           CI/dependencies/activate.sh .env &&
+          printenv &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
