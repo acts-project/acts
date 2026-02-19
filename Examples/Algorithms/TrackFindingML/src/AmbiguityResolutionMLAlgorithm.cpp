@@ -8,12 +8,8 @@
 
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
 
+#include "Acts/TrackFinding/detail/AmbiguityTrackClustering.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
-
-#include <iterator>
-#include <map>
 
 using namespace Acts;
 using namespace ActsPlugins;
