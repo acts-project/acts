@@ -411,9 +411,9 @@ BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
   }
 
   AlignmentContext alignedContext{};
-  Transform3 rotationDelta{};
-  rotationDelta.linear() = AngleAxis3{25._degree, Vector3{0., 1., 0.}}.matrix();
-
+  const Transform3 rotationDelta{Translation3{0., -200._mm, -300._mm} *
+                                 AngleAxis3{25._degree, Vector3{1., 0., 0.}}};
+  ACTS_INFO("Rotation correction: " << toString(rotationDelta));
   volumePlacement.setAlignmentDelta(alignedContext, rotationDelta, 0);
 
   const Transform3 alignedTrf =
