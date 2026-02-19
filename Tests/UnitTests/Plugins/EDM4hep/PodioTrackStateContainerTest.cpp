@@ -103,7 +103,7 @@ struct Factory {
   MapHelper m_helper;
 
   MutablePodioTrackStateContainer<> create() {
-    return MutablePodioTrackStateContainer<>{
+    return MutablePodioTrackStateContainer{
         m_helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
         std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
         std::make_unique<ActsPodioEdm::JacobianCollection>()};
@@ -249,25 +249,25 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
   podio::Frame frame;
 
-  auto c = std::make_shared<MutablePodioTrackStateContainer<>>(
+  MutablePodioTrackStateContainer c{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>());
-  BOOST_CHECK(!c->hasColumn("int_column"_hash));
-  BOOST_CHECK(!c->hasColumn("float_column"_hash));
-  c->addColumn<std::int32_t>("int_column");
-  c->addColumn<float>("float_column");
-  BOOST_CHECK(c->hasColumn("int_column"_hash));
-  BOOST_CHECK(c->hasColumn("float_column"_hash));
+      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+  BOOST_CHECK(!c.hasColumn("int_column"_hash));
+  BOOST_CHECK(!c.hasColumn("float_column"_hash));
+  c.addColumn<std::int32_t>("int_column");
+  c.addColumn<float>("float_column");
+  BOOST_CHECK(c.hasColumn("int_column"_hash));
+  BOOST_CHECK(c.hasColumn("float_column"_hash));
 
   {
-    auto t1 = c->makeTrackState(TrackStatePropMask::Predicted);
+    auto t1 = c.makeTrackState(TrackStatePropMask::Predicted);
     t1.predicted() = tv1;
     t1.predictedCovariance() = cov1;
 
     t1.setReferenceSurface(free);
 
-    auto t2 = c->makeTrackState(TrackStatePropMask::All, t1.index());
+    auto t2 = c.makeTrackState(TrackStatePropMask::All, t1.index());
     t2.predicted() = tv2;
     t2.predictedCovariance() = cov2;
 
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
 
     t2.jacobian() = cov2;
 
-    auto t3 = c->makeTrackState();
+    auto t3 = c.makeTrackState();
     t3.setReferenceSurface(reg);
 
     t1.component<std::int32_t, "int_column"_hash>() = -11;
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
     t3.component<float, "float_column"_hash>() = -98.9f;
   }
 
-  c->releaseInto(frame, "test");
+  c.releaseInto(frame, "test");
 
   BOOST_CHECK_EQUAL(frame.get("test_trackStates")->size(), 3);
   BOOST_CHECK_EQUAL(frame.get("test_trackStateParameters")->size(), 7);
@@ -299,16 +299,15 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   BOOST_CHECK_NE(frame.get("test_trackStates_extra__int_column"), nullptr);
   BOOST_CHECK_NE(frame.get("test_trackStates_extra__float_column"), nullptr);
 
-  auto cc =
-      std::make_shared<ConstPodioTrackStateContainer<>>(helper, frame, "test");
+  ConstPodioTrackStateContainer cc{helper, frame, "test"};
 
-  BOOST_CHECK_EQUAL(cc->size(), 3);
-  BOOST_CHECK(cc->hasColumn("int_column"_hash));
-  BOOST_CHECK(cc->hasColumn("float_column"_hash));
+  BOOST_CHECK_EQUAL(cc.size(), 3);
+  BOOST_CHECK(cc.hasColumn("int_column"_hash));
+  BOOST_CHECK(cc.hasColumn("float_column"_hash));
 
-  auto t1 = cc->getTrackState(0);
-  auto t2 = cc->getTrackState(1);
-  auto t3 = cc->getTrackState(2);
+  auto t1 = cc.getTrackState(0);
+  auto t2 = cc.getTrackState(1);
+  auto t3 = cc.getTrackState(2);
 
   BOOST_CHECK_EQUAL(t2.previous(), 0);
 
@@ -359,28 +358,27 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
   ActsPodioEdm::BoundParametersCollection externalParams;
   ActsPodioEdm::JacobianCollection externalJacs;
 
-  auto externalContainer =
-      std::make_shared<MutablePodioTrackStateContainer<Acts::RefHolder>>(
-          helper, externalTrackStates, externalParams, externalJacs);
+  MutablePodioTrackStateContainer<Acts::RefHolder> externalContainer{
+      helper, externalTrackStates, externalParams, externalJacs};
 
   // Add a track state to the external container
-  auto ts = externalContainer->addTrackState();
+  auto ts = externalContainer.addTrackState();
   BOOST_CHECK_EQUAL(ts, 0);
-  BOOST_CHECK_EQUAL(externalContainer->size(), 1);
+  BOOST_CHECK_EQUAL(externalContainer.size(), 1);
   BOOST_CHECK_EQUAL(externalTrackStates.size(), 1);
 
   // Test owned collection constructor (default using std::unique_ptr)
-  auto ownedContainer = std::make_shared<MutablePodioTrackStateContainer<>>(
+  MutablePodioTrackStateContainer ownedContainer{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>());
-  ts = ownedContainer->addTrackState();
+      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+  ts = ownedContainer.addTrackState();
   BOOST_CHECK_EQUAL(ts, 0);
-  BOOST_CHECK_EQUAL(ownedContainer->size(), 1);
+  BOOST_CHECK_EQUAL(ownedContainer.size(), 1);
 
   // Test that releaseInto works for owned collections
   podio::Frame frame;
-  BOOST_CHECK_NO_THROW(ownedContainer->releaseInto(frame, ""));
+  BOOST_CHECK_NO_THROW(ownedContainer.releaseInto(frame, ""));
 }
 
 BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
@@ -389,81 +387,79 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
   MapHelper helper;
 
   // Create a mutable container with some data
-  auto mutableContainer = std::make_shared<MutablePodioTrackStateContainer<>>(
+  MutablePodioTrackStateContainer mutableContainer{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>());
+      std::make_unique<ActsPodioEdm::JacobianCollection>()};
 
   // Add some track states
-  mutableContainer->addColumn<std::int32_t>("test_column");
-  auto ts1 = mutableContainer->addTrackState();
-  auto ts2 = mutableContainer->addTrackState();
+  mutableContainer.addColumn<std::int32_t>("test_column");
+  auto ts1 = mutableContainer.addTrackState();
+  auto ts2 = mutableContainer.addTrackState();
 
   BoundVector tv1;
   tv1 << 1, 2, 3, 4, 5, 6;
-  mutableContainer->getTrackState(ts1).predicted() = tv1;
-  mutableContainer->getTrackState(ts1)
+  mutableContainer.getTrackState(ts1).predicted() = tv1;
+  mutableContainer.getTrackState(ts1)
       .template component<std::int32_t, "test_column"_hash>() = 42;
 
   BoundVector tv2;
   tv2 << 7, 8, 9, 10, 11, 12;
-  mutableContainer->getTrackState(ts2).predicted() = tv2;
-  mutableContainer->getTrackState(ts2)
+  mutableContainer.getTrackState(ts2).predicted() = tv2;
+  mutableContainer.getTrackState(ts2)
       .template component<std::int32_t, "test_column"_hash>() = 99;
 
-  BOOST_CHECK_EQUAL(mutableContainer->size(), 2);
+  BOOST_CHECK_EQUAL(mutableContainer.size(), 2);
 
   // Test copy constructor from mutable to const
-  auto constContainerCopy =
-      std::make_shared<ConstPodioTrackStateContainer<>>(*mutableContainer);
+  ConstPodioTrackStateContainer constContainerCopy{mutableContainer};
 
-  BOOST_CHECK_EQUAL(constContainerCopy->size(), 2);
-  BOOST_CHECK(constContainerCopy->hasColumn("test_column"_hash));
-  BOOST_CHECK_EQUAL(constContainerCopy->getTrackState(ts1).predicted(), tv1);
-  BOOST_CHECK_EQUAL(constContainerCopy->getTrackState(ts2).predicted(), tv2);
+  BOOST_CHECK_EQUAL(constContainerCopy.size(), 2);
+  BOOST_CHECK(constContainerCopy.hasColumn("test_column"_hash));
+  BOOST_CHECK_EQUAL(constContainerCopy.getTrackState(ts1).predicted(), tv1);
+  BOOST_CHECK_EQUAL(constContainerCopy.getTrackState(ts2).predicted(), tv2);
   BOOST_CHECK_EQUAL(
-      (constContainerCopy->getTrackState(ts1)
+      (constContainerCopy.getTrackState(ts1)
            .template component<std::int32_t, "test_column"_hash>()),
       42);
   BOOST_CHECK_EQUAL(
-      (constContainerCopy->getTrackState(ts2)
+      (constContainerCopy.getTrackState(ts2)
            .template component<std::int32_t, "test_column"_hash>()),
       99);
 
   // Original mutable container should still be valid
-  BOOST_CHECK_EQUAL(mutableContainer->size(), 2);
+  BOOST_CHECK_EQUAL(mutableContainer.size(), 2);
 
   // Test move constructor from mutable to const
   // Create a new mutable container for moving
-  auto mutableContainer2 = std::make_shared<MutablePodioTrackStateContainer<>>(
+  MutablePodioTrackStateContainer mutableContainer2{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>());
+      std::make_unique<ActsPodioEdm::JacobianCollection>()};
 
-  mutableContainer2->addColumn<std::int32_t>("test_column");
-  ts1 = mutableContainer2->addTrackState();
-  ts2 = mutableContainer2->addTrackState();
-  mutableContainer2->getTrackState(ts1).predicted() = tv1;
-  mutableContainer2->getTrackState(ts1)
+  mutableContainer2.addColumn<std::int32_t>("test_column");
+  ts1 = mutableContainer2.addTrackState();
+  ts2 = mutableContainer2.addTrackState();
+  mutableContainer2.getTrackState(ts1).predicted() = tv1;
+  mutableContainer2.getTrackState(ts1)
       .template component<std::int32_t, "test_column"_hash>() = 42;
-  mutableContainer2->getTrackState(ts2).predicted() = tv2;
-  mutableContainer2->getTrackState(ts2)
+  mutableContainer2.getTrackState(ts2).predicted() = tv2;
+  mutableContainer2.getTrackState(ts2)
       .template component<std::int32_t, "test_column"_hash>() = 99;
 
   // Move construct
-  auto constContainerMove = std::make_shared<ConstPodioTrackStateContainer<>>(
-      std::move(*mutableContainer2));
+  ConstPodioTrackStateContainer constContainerMove{mutableContainer2};
 
-  BOOST_CHECK_EQUAL(constContainerMove->size(), 2);
-  BOOST_CHECK(constContainerMove->hasColumn("test_column"_hash));
-  BOOST_CHECK_EQUAL(constContainerMove->getTrackState(ts1).predicted(), tv1);
-  BOOST_CHECK_EQUAL(constContainerMove->getTrackState(ts2).predicted(), tv2);
+  BOOST_CHECK_EQUAL(constContainerMove.size(), 2);
+  BOOST_CHECK(constContainerMove.hasColumn("test_column"_hash));
+  BOOST_CHECK_EQUAL(constContainerMove.getTrackState(ts1).predicted(), tv1);
+  BOOST_CHECK_EQUAL(constContainerMove.getTrackState(ts2).predicted(), tv2);
   BOOST_CHECK_EQUAL(
-      (constContainerMove->getTrackState(ts1)
+      (constContainerMove.getTrackState(ts1)
            .template component<std::int32_t, "test_column"_hash>()),
       42);
   BOOST_CHECK_EQUAL(
-      (constContainerMove->getTrackState(ts2)
+      (constContainerMove.getTrackState(ts2)
            .template component<std::int32_t, "test_column"_hash>()),
       99);
 }
