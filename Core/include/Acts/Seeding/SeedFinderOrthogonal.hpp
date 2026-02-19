@@ -23,7 +23,7 @@
 namespace Acts {
 
 /// Orthogonal range-search based seed finder.
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 class SeedFinderOrthogonal {
  public:
   /**
@@ -36,16 +36,16 @@ class SeedFinderOrthogonal {
   /**
    * @brief The seed type used by this seeder internally.
    */
-  using seed_t = Seed<external_spacepoint_t>;
+  using seed_t = Seed<external_space_point_t>;
 
   /**
    * @brief The k-d tree type used by this seeder internally, which is
-   * three-dimensional, contains internal spacepoint pointers, uses the Acts
+   * three-dimensional, contains internal space point pointers, uses the Acts
    * scalar type for coordinates, stores its coordinates in std::arrays, and
    * has leaf size 4.
    */
   using tree_t =
-      KDTree<NDims, const external_spacepoint_t *, double, std::array, 4>;
+      KDTree<NDims, const external_space_point_t *, double, std::array, 4>;
 
   /**
    * @brief Construct a new orthogonal seed finder.
@@ -54,7 +54,7 @@ class SeedFinderOrthogonal {
    * @param logger The ACTS logger.
    */
   explicit SeedFinderOrthogonal(
-      const Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
+      const Acts::SeedFinderOrthogonalConfig<external_space_point_t> &config,
       std::unique_ptr<const Acts::Logger> logger =
           Acts::getDefaultLogger("Finder", Logging::Level::INFO));
   /**
@@ -63,17 +63,17 @@ class SeedFinderOrthogonal {
   ~SeedFinderOrthogonal() = default;
 
   SeedFinderOrthogonal() = default;
-  SeedFinderOrthogonal(const SeedFinderOrthogonal<external_spacepoint_t> &) =
+  SeedFinderOrthogonal(const SeedFinderOrthogonal<external_space_point_t> &) =
       delete;
-  SeedFinderOrthogonal<external_spacepoint_t> &operator=(
-      const SeedFinderOrthogonal<external_spacepoint_t> &) = delete;
+  SeedFinderOrthogonal<external_space_point_t> &operator=(
+      const SeedFinderOrthogonal<external_space_point_t> &) = delete;
   /// Move constructor
   SeedFinderOrthogonal(
-      SeedFinderOrthogonal<external_spacepoint_t> &&) noexcept = default;
+      SeedFinderOrthogonal<external_space_point_t> &&) noexcept = default;
   /// Move assignment operator
   /// @return Reference to this object
-  SeedFinderOrthogonal<external_spacepoint_t> &operator=(
-      SeedFinderOrthogonal<external_spacepoint_t> &&) noexcept = default;
+  SeedFinderOrthogonal<external_space_point_t> &operator=(
+      SeedFinderOrthogonal<external_space_point_t> &&) noexcept = default;
 
   /**
    * @brief Perform seed finding, appending seeds to a container.
@@ -91,15 +91,15 @@ class SeedFinderOrthogonal {
    *
    * The core idea behind this algorithm is to create axis-aligned bounding
    * boxes around the region of validity for a seed candidate (be it a bottom
-   * spacepoint for a given middle, a top for a given middle, a middle for a
+   * space point for a given middle, a top for a given middle, a middle for a
    * given bottom, or any other combination), and then searching the detector
    * volume for points that lie inside that AABB.
    *
-   * @tparam input_container_t The type of the input spacepoint container.
+   * @tparam input_container_t The type of the input space point container.
    * @tparam output_container_t The type of the output seed container.
    *
    * @param options frequently changing configuration (like beam position)
-   * @param spacePoints The input spacepoints from which to create seeds.
+   * @param spacePoints The input space points from which to create seeds.
    * @param out_cont The output container to write seeds to.
    * covariance of the external space point
    */
@@ -116,9 +116,9 @@ class SeedFinderOrthogonal {
    * as it is more flexible and usually more performant. For more information
    * about the seeding algorithm, please see that function.
    *
-   * @tparam input_container_t The type of the input spacepoint container.
+   * @tparam input_container_t The type of the input space point container.
    * @param options frequently changing configuration (like beam position)
-   * @param spacePoints The input spacepoints from which to create seeds.
+   * @param spacePoints The input space points from which to create seeds.
    * covariance of the external space point
    *
    * @return A vector of seeds.
@@ -134,41 +134,41 @@ class SeedFinderOrthogonal {
   enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
 
   /**
-   * @brief Return the AABB rearch range for a given spacepoint, searching
+   * @brief Return the AABB rearch range for a given space point, searching
    * upwards.
    *
    * This function calculates an axis-aligned bounding box around the volume of
-   * validity for the next spacepoint in a pair, given that the lower
-   * spacepoint is given. Thus, this method either takes a bottom spacepoint
-   * and returns a range for the middle spacepoint, or it takes a middle
-   * spacepoint and returns the range for the top spacepoint.
+   * validity for the next space point in a pair, given that the lower
+   * space point is given. Thus, this method either takes a bottom space point
+   * and returns a range for the middle space point, or it takes a middle
+   * space point and returns the range for the top space point.
    *
-   * @param low The lower spacepoint to find a partner for.
+   * @param low The lower space point to find a partner for.
    *
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeLH(
-      const external_spacepoint_t &low) const;
+      const external_space_point_t &low) const;
 
   /**
-   * @brief Return the AABB rearch range for a given spacepoint, searching
+   * @brief Return the AABB rearch range for a given space point, searching
    * downward.
    *
    * This function calculates an axis-aligned bounding box around the volume of
-   * validity for the next spacepoint in a pair, given that the upper
-   * spacepoint is given. Thus, this method either takes a middle spacepoint
-   * and returns a range for the bottom spacepoint, or it takes a top
-   * spacepoint and returns the range for the middle spacepoint.
+   * validity for the next space point in a pair, given that the upper
+   * space point is given. Thus, this method either takes a middle space point
+   * and returns a range for the bottom space point, or it takes a top
+   * space point and returns the range for the middle space point.
    *
-   * @param high The upper spacepoint to find a partner for.
+   * @param high The upper space point to find a partner for.
    *
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeHL(
-      const external_spacepoint_t &high) const;
+      const external_space_point_t &high) const;
 
   /**
-   * @brief Check whether two spacepoints form a valid tuple.
+   * @brief Check whether two space points form a valid tuple.
    *
    * This method checks whether the cuts that we have for pairs of space points
    * hold.
@@ -179,26 +179,26 @@ class SeedFinderOrthogonal {
    * strategy.
    *
    * @param options frequently changing configuration (like beam position)
-   * @param low The lower spacepoint.
-   * @param high The upper spacepoint.
-   * @param isMiddleInverted If middle spacepoint is in the negative z region
+   * @param low The lower space point.
+   * @param high The upper space point.
+   * @param isMiddleInverted If middle space point is in the negative z region
    *
    * @return True if the two points form a valid pair, false otherwise.
    */
   bool validTuple(const SeedFinderOptions &options,
-                  const external_spacepoint_t &low,
-                  const external_spacepoint_t &high,
+                  const external_space_point_t &low,
+                  const external_space_point_t &high,
                   bool isMiddleInverted) const;
 
   /**
-   * @brief Create a k-d tree from a set of spacepoints.
+   * @brief Create a k-d tree from a set of space points.
    *
-   * @param spacePoints The spacepoints to create a tree from.
+   * @param spacePoints The space points to create a tree from.
    *
-   * @return A k-d tree containing the given spacepoints.
+   * @return A k-d tree containing the given space points.
    */
   tree_t createTree(
-      const std::vector<const external_spacepoint_t *> &spacePoints) const;
+      const std::vector<const external_space_point_t *> &spacePoints) const;
 
   /**
    * @brief Filter potential candidate pairs, and output seeds into an
@@ -206,9 +206,9 @@ class SeedFinderOrthogonal {
    *
    * @param options frequently changing configuration (like beam position)
    * @param mutableData Container for mutable variables used in the seeding
-   * @param middle The (singular) middle spacepoint.
-   * @param bottom The (vector of) candidate bottom spacepoints.
-   * @param top The (vector of) candidate top spacepoints.
+   * @param middle The (singular) middle space point.
+   * @param bottom The (vector of) candidate bottom space points.
+   * @param top The (vector of) candidate top space points.
    * @param seedFilterState  holds quantities used in seed filter
    * @param candidates_collector The container to write the resulting
    * seed candidates to.
@@ -216,11 +216,11 @@ class SeedFinderOrthogonal {
   void filterCandidates(
       const SeedFinderOptions &options,
       Acts::SpacePointMutableData &mutableData,
-      const external_spacepoint_t &middle,
-      const std::vector<const external_spacepoint_t *> &bottom,
-      const std::vector<const external_spacepoint_t *> &top,
+      const external_space_point_t &middle,
+      const std::vector<const external_space_point_t *> &bottom,
+      const std::vector<const external_space_point_t *> &top,
       SeedFilterState seedFilterState,
-      CandidatesForMiddleSp<const external_spacepoint_t> &candidates_collector)
+      CandidatesForMiddleSp<const external_space_point_t> &candidates_collector)
       const;
 
   /**
@@ -233,7 +233,7 @@ class SeedFinderOrthogonal {
    *
    * @param tree The k-d tree to use for searching.
    * @param out_cont The container write output seeds to.
-   * @param middle_p The middle spacepoint to find seeds for.
+   * @param middle_p The middle space point to find seeds for.
    */
   template <typename output_container_t>
   void processFromMiddleSP(const SeedFinderOptions &options,
@@ -244,7 +244,7 @@ class SeedFinderOrthogonal {
   /**
    * @brief The configuration for the seeding algorithm.
    */
-  Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOrthogonalConfig<external_space_point_t> m_config;
 
   /**
    * @brief Get the logger.

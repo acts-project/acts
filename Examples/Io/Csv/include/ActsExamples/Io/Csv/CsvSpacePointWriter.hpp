@@ -18,7 +18,7 @@ namespace ActsExamples {
 /// @class CsvSpacePointWriter
 ///
 /// This writes one file per event containing information about the
-/// spacepoints
+/// space points
 ///
 ///     event000000001-spacepoint.csv
 ///     event000000002-spacepoint.csv
@@ -29,7 +29,7 @@ class CsvSpacePointWriter final : public WriterT<SimSpacePointContainer> {
  public:
   struct Config {
     /// Which measurement collection to write.
-    std::string inputSpacepoints;
+    std::string inputSpacePoints;
     /// Where to place output files
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
@@ -55,9 +55,9 @@ class CsvSpacePointWriter final : public WriterT<SimSpacePointContainer> {
   /// and is called by the WriterT<>::write interface
   ///
   /// @param ctx The Algorithm context with per event information
-  /// @param spacepoints is the data to be written out
+  /// @param spacePoints is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimSpacePointContainer& spacepoints) override;
+                     const SimSpacePointContainer& spacePoints) override;
 
  private:
   Config m_cfg;

@@ -47,7 +47,7 @@ class SpacePointContainer {
       Acts::SpacePointContainer<container_t, holder_t>>;
 
  public:
-  /// Space point proxy type
+  /// space point proxy type
   using SpacePointProxyType =
       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
 
@@ -106,10 +106,10 @@ class SpacePointContainer {
 
   // move operations
   /// Move constructor
-  /// @param other Space point container to move from
+  /// @param other space point container to move from
   SpacePointContainer(SpacePointContainer&& other) noexcept = default;
   /// Move assignment operator
-  /// @param other Space point container to move from
+  /// @param other space point container to move from
   /// @return Reference to this container
   SpacePointContainer& operator=(SpacePointContainer&& other) noexcept =
       default;

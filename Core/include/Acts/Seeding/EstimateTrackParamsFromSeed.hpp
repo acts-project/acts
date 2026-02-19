@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -21,22 +22,23 @@
 
 namespace Acts {
 
-/// Estimate the full track parameters from three space points
+/// @defgroup est_track_params Estimate track parameters from seed
 ///
-/// This method is based on the conformal map transformation. It estimates the
-/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the bottom
-/// space point. The bottom space is assumed to be the first element in the
-/// range defined by the iterators. The magnetic field (which might be along any
+/// The implemented method is based on the conformal map transformation. It
+/// estimates the full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p)
+/// at the bottom space point. The magnetic field (which can be along any
 /// direction) is also necessary for the momentum estimation.
-///
-/// This is a purely spatial estimation, i.e. the time parameter will be set to
-/// 0.
 ///
 /// It resembles the method used in ATLAS for the track parameters estimated
 /// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
 /// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
 ///
-/// @tparam spacepoint_iterator_t  The type of space point iterator
+/// @{
+
+/// Estimate free track parameters from three space points
+///
+/// This is a purely spatial estimation, i.e. the time parameter will be set to
+/// 0.
 ///
 /// @param sp0 is the bottom space point
 /// @param sp1 is the middle space point
@@ -44,23 +46,29 @@ namespace Acts {
 /// @param bField is the magnetic field vector
 ///
 /// @return the free parameters
+[[deprecated(
+    "Use the version of estimateTrackParamsFromSeed with time information "
+    "instead.")]]
 FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
                                        const Vector3& sp2,
                                        const Vector3& bField);
 
-/// Estimate the full track parameters from three space points
+/// Estimate free track parameters from three space points
 ///
-/// This method is based on the conformal map transformation. It estimates the
-/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the bottom
-/// space point. The bottom space is assumed to be the first element in the
-/// range defined by the iterators. The magnetic field (which might be along any
-/// direction) is also necessary for the momentum estimation.
+/// @param sp0 is the bottom space point
+/// @param t0 is the time of the bottom space point
+/// @param sp1 is the middle space point
+/// @param sp2 is the top space point
+/// @param bField is the magnetic field vector
 ///
-/// It resembles the method used in ATLAS for the track parameters estimated
-/// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// @return the free parameters
+FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, double t0,
+                                       const Vector3& sp1, const Vector3& sp2,
+                                       const Vector3& bField);
+
+/// Estimate free track parameters from three space points
 ///
-/// @tparam spacepoint_iterator_t  The type of space point iterator
+/// @tparam spacepoint_iterator_t The type of space point iterator
 ///
 /// @param spRange is the range of space points
 /// @param bField is the magnetic field vector
@@ -91,32 +99,34 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
     spTime = sp->t();
   }
 
-  FreeVector params = estimateTrackParamsFromSeed(
-      spPositions[0], spPositions[1], spPositions[2], bField);
-  params[eFreeTime] = spTimes[0].value_or(0);
-  return params;
+  return estimateTrackParamsFromSeed(spPositions[0], spTimes[0].value_or(0),
+                                     spPositions[1], spPositions[2], bField);
 }
 
-/// Estimate the full track parameters from three space points
+/// Estimate bound track parameters from three space points
 ///
-/// This method is based on the conformal map transformation. It estimates the
-/// full bound track parameters, i.e. (loc0, loc1, phi, theta, q/p, t) at the
-/// bottom space point. The bottom space is assumed to be the first element
-/// in the range defined by the iterators. It must lie on the surface provided
-/// for the representation of the bound track parameters. The magnetic field
-/// (which might be along any direction) is also necessary for the momentum
-/// estimation.
+/// @param gctx is the geometry context
+/// @param surface is the surface of the bottom space point. The estimated bound
+///                track parameters will be represented at this surface.
+/// @param sp0 is the bottom space point
+/// @param t0 is the time of the bottom space point
+/// @param sp1 is the middle space point
+/// @param sp2 is the top space point
+/// @param bField is the magnetic field vector
 ///
-/// It resembles the method used in ATLAS for the track parameters estimated
-/// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerGeometry/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// @return bound parameters
+Result<BoundVector> estimateTrackParamsFromSeed(
+    const GeometryContext& gctx, const Surface& surface, const Vector3& sp0,
+    double t0, const Vector3& sp1, const Vector3& sp2, const Vector3& bField);
+
+/// Estimate bound track parameters from three space points
 ///
-/// @tparam spacepoint_iterator_t  The type of space point iterator
+/// @tparam spacepoint_iterator_t The type of space point iterator
 ///
 /// @param gctx is the geometry context
 /// @param spRange is the range of space points
 /// @param surface is the surface of the bottom space point. The estimated bound
-/// track parameters will be represented also at this surface
+///                track parameters will be represented at this surface.
 /// @param bField is the magnetic field vector
 ///
 /// @return bound parameters
@@ -125,30 +135,8 @@ Result<BoundVector> estimateTrackParamsFromSeed(const GeometryContext& gctx,
                                                 spacepoint_range_t spRange,
                                                 const Surface& surface,
                                                 const Vector3& bField) {
-  FreeVector freeParams = estimateTrackParamsFromSeed(spRange, bField);
-
-  const auto* sp0 = *spRange.begin();
-  Vector3 origin = Vector3(sp0->x(), sp0->y(), sp0->z());
-  Vector3 direction = freeParams.segment<3>(eFreeDir0);
-
-  BoundVector params = BoundVector::Zero();
-  params[eBoundPhi] = VectorHelpers::phi(direction);
-  params[eBoundTheta] = VectorHelpers::theta(direction);
-  params[eBoundQOverP] = freeParams[eFreeQOverP];
-
-  // Transform the bottom space point to local coordinates of the provided
-  // surface
-  auto lpResult = surface.globalToLocal(gctx, origin, direction);
-  if (!lpResult.ok()) {
-    return Result<BoundVector>::failure(lpResult.error());
-  }
-  Vector2 bottomLocalPos = lpResult.value();
-  // The estimated loc0 and loc1
-  params[eBoundLoc0] = bottomLocalPos.x();
-  params[eBoundLoc1] = bottomLocalPos.y();
-  params[eBoundTime] = sp0->t().value_or(0);
-
-  return Result<BoundVector>::success(params);
+  const FreeVector freeParams = estimateTrackParamsFromSeed(spRange, bField);
+  return transformFreeToBoundParameters(freeParams, surface, gctx);
 }
 
 /// Configuration for the estimation of the covariance matrix of the track
@@ -192,5 +180,7 @@ struct EstimateTrackParamCovarianceConfig {
 BoundMatrix estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime);
+
+/// @}
 
 }  // namespace Acts
