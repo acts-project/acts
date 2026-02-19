@@ -469,6 +469,7 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
   // AxisDirection::AxisX);
   auto parentVol =
       std::make_unique<TrackingVolume>(outsidePlacement, outerBounds, "parent");
+  parentVol->assignGeometryId(GeometryIdentifier{}.withVolume(5));
   auto parentNode = std::make_shared<StaticBlueprintNode>(std::move(parentVol));
   // start from the edge of the parent volume
   const double xShift =
@@ -487,29 +488,29 @@ BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
 
     ++i;
     childVol->assignGeometryId(
-        GeometryIdentifier{}.withVolume(1).withLayer(i + 1));
+        GeometryIdentifier{}.withVolume(10).withLayer(i + 1));
     auto childNode = std::make_shared<StaticBlueprintNode>(std::move(childVol));
     parentNode->addChild(std::move(childNode));
   }
 
   root->addChild(std::move(parentNode));
   auto trackingGeometry = root->construct({}, gctx.getContext(), logger());
-  const auto& rootVol =
-      trackingGeometry->highestTrackingVolume()->volumes().front();
-
+  const auto* rootVol =
+      trackingGeometry->findVolume(GeometryIdentifier{}.withVolume(5));
+  BOOST_CHECK_NE(rootVol, nullptr);
   // Inspection time
   {
     Acts::detail::TrackingGeometryPrintVisitor printVisitor{gctx.getContext()};
-    rootVol.apply(printVisitor);
+    rootVol->apply(printVisitor);
     ACTS_INFO("Constructed tracking geometry: \n"
               << printVisitor.stream().str());
   }
   // Ensure that the volume is alignable
-  BOOST_CHECK_EQUAL(rootVol.isAlignable(), true);
-  BOOST_CHECK_EQUAL(rootVol.volumePlacement(), &outsidePlacement);
+  BOOST_CHECK_EQUAL(rootVol->isAlignable(), true);
+  BOOST_CHECK_EQUAL(rootVol->volumePlacement(), &outsidePlacement);
   BOOST_CHECK_EQUAL(outsidePlacement.nPortalPlacements(), 6);
   for (const auto& [child, placement] :
-       zip(rootVol.volumes(), innerPlacements)) {
+       zip(rootVol->volumes(), innerPlacements)) {
     BOOST_CHECK_EQUAL(child.isAlignable(), true);
     BOOST_CHECK_EQUAL(child.volumePlacement(), placement.get());
     BOOST_CHECK_EQUAL(placement->nPortalPlacements(), 6);
