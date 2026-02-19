@@ -29,7 +29,7 @@ std::default_random_engine rng(123);
 auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EDM4hepMeasurementWriterTest)
+BOOST_AUTO_TEST_SUITE(EDM4hepMeasurementTest)
 
 BOOST_AUTO_TEST_CASE(WriteMeasurement) {
   auto [parameters, covariance] =
@@ -79,6 +79,22 @@ BOOST_AUTO_TEST_CASE(WriteMeasurement) {
   BOOST_CHECK_EQUAL(unpackedIndices.size(), 2);
   BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundLoc0);
   BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundLoc1);
+
+  // Round-trip: read back and verify
+  auto read = EDM4hepUtil::readMeasurement(to);
+  BOOST_CHECK_EQUAL(read.cellId, cellId);
+  BOOST_CHECK_EQUAL(read.indices.size(), 2);
+  BOOST_CHECK_EQUAL(read.indices[0], eBoundLoc0);
+  BOOST_CHECK_EQUAL(read.indices[1], eBoundLoc1);
+  BOOST_CHECK_EQUAL(read.parameters.size(), 2);
+  CHECK_CLOSE_REL(read.parameters(0), measPos.x(), 1e-6);
+  CHECK_CLOSE_REL(read.parameters(1), measPos.y(), 1e-6);
+  BOOST_CHECK_EQUAL(read.covariance.rows(), 2);
+  BOOST_CHECK_EQUAL(read.covariance.cols(), 2);
+  CHECK_CLOSE_REL(read.covariance(0, 0), measCov(0, 0), 1e-6);
+  CHECK_CLOSE_REL(read.covariance(0, 1), measCov(0, 1), 1e-6);
+  CHECK_CLOSE_REL(read.covariance(1, 0), measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(read.covariance(1, 1), measCov(1, 1), 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(WriteMeasurementNoPosition) {

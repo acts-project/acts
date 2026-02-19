@@ -408,4 +408,37 @@ void writeMeasurement(const GeometryContext& gctx,
   }
 }
 
+MeasurementData readMeasurement(
+    const ActsPodioEdm::TrackerHitLocal& from) {
+  auto indices = detail::decodeIndices(from.getType());
+  auto meas = from.getMeasurement();
+  auto cov = from.getCovariance();
+
+  const auto dim = static_cast<std::size_t>(indices.size());
+  if (meas.size() != dim || cov.size() != dim * dim) {
+    throw std::runtime_error(
+        "Size mismatch in EDM4hep tracker hit: measurement size " +
+        std::to_string(meas.size()) + ", covariance size " +
+        std::to_string(cov.size()) + ", indices size " + std::to_string(dim));
+  }
+
+  MeasurementData result;
+  result.cellId = from.getCellID();
+  result.indices = std::move(indices);
+
+  result.parameters.resize(dim);
+  for (std::size_t i = 0; i < dim; ++i) {
+    result.parameters(i) = meas[i];
+  }
+
+  result.covariance.resize(dim, dim);
+  for (std::size_t i = 0; i < dim; ++i) {
+    for (std::size_t j = 0; j < dim; ++j) {
+      result.covariance(i, j) = cov[i * dim + j];  // row-major
+    }
+  }
+
+  return result;
+}
+
 }  // namespace ActsPlugins::EDM4hepUtil

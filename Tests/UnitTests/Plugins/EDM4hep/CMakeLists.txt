@@ -15,8 +15,8 @@ target_link_libraries(
     PUBLIC ActsPluginEDM4hep
 )
 
-add_unittest(EDM4HepMeasurementWriteTest EDM4HepMeasurementWriteTests.cpp)
+add_unittest(EDM4HepMeasurementTest EDM4HepMeasurementTests.cpp)
 target_link_libraries(
-    ActsUnitTestEDM4HepMeasurementWriteTest
+    ActsUnitTestEDM4HepMeasurementTest
     PUBLIC Acts::PluginEDM4hep
 )

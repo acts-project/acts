@@ -19,15 +19,10 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-<<<<<<< conflict 1 of 2 % % % % % % % diff from : zvmxkwyn e48722ef "WIP"(parents of rebased revision)
-\\\\\\\ to
-    : zvmxkwyn 063a5a37 "WIP"(rebase destination) +
-#include <Acts / Vertexing / Vertex.hpp> ++ ++ ++ +xqlwmkrn
-      2f9d577c "(wip) refactoring of edm4hep writer to wip TrackerHitLocal"(
-          rebased revision)
 #include <ActsPodioEdm/MutableTrackerHitLocal.h>
-    >>>>>>> conflict 1 of 2 ends
+#include <ActsPodioEdm/TrackerHitLocal.h>
 
+#include <span>
 #include <stdexcept>
 
 #include <edm4hep/MCParticle.h>
@@ -43,8 +38,8 @@
 #if podio_VERSION_MAJOR == 0 || \
     (podio_VERSION_MAJOR == 1 && podio_VERSION_MINOR <= 2)
 
-    template <>
-    struct std::hash<podio::ObjectID> {
+template <>
+struct std::hash<podio::ObjectID> {
   std::size_t operator()(const podio::ObjectID& id) const noexcept {
     auto hash_collectionID = std::hash<std::uint32_t>{}(id.collectionID);
     auto hash_index = std::hash<int>{}(id.index);
@@ -377,5 +372,23 @@ void writeMeasurement(const Acts::GeometryContext& gctx,
                       std::span<const std::uint8_t> indices,
                       std::uint64_t cellId, const Acts::Surface& surface,
                       ActsPodioEdm::MutableTrackerHitLocal& to);
+
+/// Data extracted when reading a measurement from EDM4hep
+struct MeasurementData {
+  Acts::DynamicVector parameters;
+  Acts::DynamicMatrix covariance;
+  boost::container::static_vector<std::uint8_t, Acts::eBoundSize> indices;
+  std::uint64_t cellId{0};
+};
+
+/// Read a measurement from an EDM4hep tracker hit
+///
+/// This function extracts measurement parameters, covariance, and indices from
+/// an EDM4hep TrackerHitLocal. It is the inverse of writeMeasurement.
+///
+/// @param from The EDM4hep tracker hit to read from
+/// @return The extracted measurement data (parameters, covariance, indices,
+///         cellId)
+MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from);
 
 }  // namespace ActsPlugins::EDM4hepUtil
