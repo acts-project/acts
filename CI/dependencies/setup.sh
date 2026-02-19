@@ -104,6 +104,8 @@ if [ -z "${env_file:-}" ]; then
   exit 1
 fi
 
+echo "create environment file $(realpath "$env_file")"
+echo "" > "$env_file"
 export env_file
 
 function set_env {
