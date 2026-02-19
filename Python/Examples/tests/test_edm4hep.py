@@ -591,34 +591,35 @@ def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
         )
         s.run()
 
-    # read back in
-    s = Sequencer(numThreads=1)
+        # read back in
+        s = Sequencer(numThreads=1)
 
-    s.addReader(
-        PodioReader(
-            level=acts.logging.WARNING,
-            inputPath=str(out),
-            outputFrame="events",
-            category="events",
+        s.addReader(
+            PodioReader(
+                level=acts.logging.WARNING,
+                inputPath=str(out),
+                outputFrame="events",
+                category="events",
+            )
         )
-    )
-    s.addAlgorithm(
-        EDM4hepMeasurementInputConverter(
-            level=acts.logging.WARNING,
-            inputFrame="events",
-            outputMeasurements="measurements",
-            outputMeasurementSimHitsMap="simhitsmap",
+        s.addAlgorithm(
+            EDM4hepMeasurementInputConverter(
+                level=acts.logging.WARNING,
+                inputFrame="events",
+                outputMeasurements="measurements",
+                outputMeasurementSimHitsMap="simhitsmap",
+                dd4hepDetector=detector,
+            )
         )
-    )
 
-    alg = AssertCollectionExistsAlg(
-        ["measurements", "simhitsmap"], "check_alg", acts.logging.WARNING
-    )
-    s.addAlgorithm(alg)
+        alg = AssertCollectionExistsAlg(
+            ["measurements", "simhitsmap"], "check_alg", acts.logging.WARNING
+        )
+        s.addAlgorithm(alg)
 
-    s.run()
+        s.run()
 
-    assert alg.events_seen == 10
+        assert alg.events_seen == 10
 
 
 @pytest.mark.edm4hep
