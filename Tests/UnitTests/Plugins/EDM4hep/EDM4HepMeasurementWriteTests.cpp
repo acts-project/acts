@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(WriteMeasurement) {
   FixedSubspaceHelper<eBoundSize, 2> helper(indices);
 
   Vector2 measPos = helper.projectVector(parameters);
-  ActsSquareMatrix<2> measCov = helper.projectMatrix(covariance);
+  SquareMatrix<2> measCov = helper.projectMatrix(covariance);
 
   auto surface = Surface::makeShared<DiscSurface>(
       Transform3::Identity() * Translation3(Vector3{1, 2, 3}), 1_mm, 1_mm);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementNoPosition) {
   FixedSubspaceHelper<eBoundSize, 2> helper(indices);
 
   Vector2 measPos = helper.projectVector(parameters);
-  ActsSquareMatrix<2> measCov = helper.projectMatrix(covariance);
+  SquareMatrix<2> measCov = helper.projectMatrix(covariance);
 
   auto surface = Surface::makeShared<DiscSurface>(
       Transform3::Identity() * Translation3(Vector3{1, 2, 3}), 1_mm, 1_mm);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementWithTime) {
   FixedSubspaceHelper<eBoundSize, 3> helper(indices);
 
   Vector3 measPos = helper.projectVector(parameters);
-  ActsSquareMatrix<3> measCov = helper.projectMatrix(covariance);
+  SquareMatrix<3> measCov = helper.projectMatrix(covariance);
 
   auto surface = Surface::makeShared<DiscSurface>(
       Transform3::Identity() * Translation3(Vector3{1, 2, 3}), 1_mm, 1_mm);
