@@ -132,12 +132,13 @@ class SeedFinderGbts {
       std::vector<GbtsEdge>& edgeStorage,
       std::vector<SeedProperties>& vSeedCandidates) const;
 
-  /// Check to see if candidate node z0 is within the expected z range of the
-  /// beam spot
+  /// Check to see if z0 of segment is within the expected z range of the
+  /// beamspot
   /// @param z0BitMask Sets allowed bins of allowed z value
   /// @param z0 Estimated z0 of segments z value at beamspot
   /// @param minZ0 Minimum value of beam spot z coordinate
-  /// @param z0HistoCoeff scalfactor that converts z coodindate into bin index
+  /// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
+  /// @return Whether segment is within beamspot range
   bool checkZ0Bitmask(const unsigned short& z0BitMask, const float& z0,
                       const float& minZ0, const float& z0HistoCoeff) const;
 
