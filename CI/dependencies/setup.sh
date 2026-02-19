@@ -41,7 +41,7 @@ while getopts "c:t:d:e:fh" opt; do
       full_install=true
       ;;
     h )
-      echo "Usage: $0 [-c compiler] [-t tag] [-d destination] [-e env_file] [-h]"
+      echo "Usage: $0 [-c compiler] [-t tag] [-d destination] -e env_file [-h]"
       echo "Options:"
       echo "  -c <compiler>    Specify compiler (defaults to CXX env var)"
       echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
@@ -100,7 +100,8 @@ if [ -z "${destination:-}" ]; then
 fi
 
 if [ -z "${env_file:-}" ]; then
-  env_file=".env"
+  echo "No environment file specified via -e"
+  exit 1
 fi
 
 checkpoint "Create environment file $(realpath "$env_file")"
