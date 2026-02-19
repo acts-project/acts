@@ -159,7 +159,7 @@ class GbtsGeometry final {
   std::uint32_t numLayers() const { return m_layArray.size(); }
   /// Get bin groups
   /// @return Bin groups vector
-  const std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>>&
+  const std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>>&
   binGroups() const {
     return m_binGroups;
   }
@@ -184,7 +184,7 @@ class GbtsGeometry final {
   std::uint32_t m_nEtaBins{};
 
   /// Bin groups
-  std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>> m_binGroups;
+  std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>> m_binGroups;
 };
 
 }  // namespace Acts::Experimental

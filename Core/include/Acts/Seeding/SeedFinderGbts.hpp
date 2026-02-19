@@ -55,6 +55,21 @@ class SeedFinderGbts {
     auto operator<=>(const SeedProperties& o) const = default;
   };
 
+  /// Sliding window in phi used to define range used for edge creation
+  struct GbtsSlidingWindow {
+    /// Constructor.
+    GbtsSlidingWindow() = default;
+
+    /// sliding window position
+    std::uint32_t firstIt{};
+    /// window half-width;
+    float deltaPhi{};
+    /// active or not
+    bool hasNodes{};
+    /// associated eta bin
+    const GbtsEtaBin* bin{};
+  };
+
   /// Constructor.
   /// @param config Configuration for the seed finder
   /// @param gbtsGeo GBTs geometry
@@ -116,6 +131,15 @@ class SeedFinderGbts {
       std::uint32_t maxLevel, std::uint32_t nEdges, std::int32_t nHits,
       std::vector<GbtsEdge>& edgeStorage,
       std::vector<SeedProperties>& vSeedCandidates) const;
+
+  /// Check to see if candidate node z0 is within the expected z range of the
+  /// beam spot
+  /// @param z0BitMask Sets allowed bins of allowed z value
+  /// @param z0 Estimated z0 of segments z value at beamspot
+  /// @param minZ0 Minimum value of beam spot z coordinate
+  /// @param z0HistoCoeff scalfactor that converts z coodindate into bin index
+  bool checkZ0Bitmask(const unsigned short& z0BitMask, const float& z0,
+                      const float& minZ0, const float& z0HistoCoeff) const;
 
  private:
   GbtsConfig m_cfg{};
