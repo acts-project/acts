@@ -14,7 +14,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include <ActsPodioEdm/MutableTrackerHitLocal.h>
 
 #include <numbers>
 
