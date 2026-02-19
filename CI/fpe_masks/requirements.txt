@@ -6,13 +6,15 @@ aiohttp==3.13.3
     # via -r CI/fpe_masks/requirements.in
 aiosignal==1.4.0
     # via aiohttp
+annotated-doc==0.0.4
+    # via typer
 attrs==25.4.0
     # via aiohttp
 cffi==2.0.0
     # via cryptography
 click==8.3.1
     # via typer
-cryptography==46.0.3
+cryptography==46.0.5
     # via pyjwt
 frozenlist==1.8.0
     # via
@@ -26,7 +28,7 @@ markdown-it-py==4.0.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.7.0
+multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
@@ -38,18 +40,16 @@ pycparser==3.0
     # via cffi
 pygments==2.19.2
     # via rich
-pyjwt==2.10.1
+pyjwt==2.11.0
     # via gidgethub
-rich==14.3.1
+rich==14.3.2
     # via
     #   -r CI/fpe_masks/requirements.in
     #   typer
 shellingham==1.5.4
     # via typer
-typer==0.21.1
+typer==0.24.0
     # via -r CI/fpe_masks/requirements.in
-typing-extensions==4.15.0
-    # via typer
 uritemplate==4.2.0
     # via gidgethub
 yarl==1.22.0
