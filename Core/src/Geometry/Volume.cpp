@@ -134,9 +134,7 @@ const Transform3& Volume::itransform() const {
 }
 
 Vector3 Volume::center(const GeometryContext& gctx) const {
-  // fast access via transform matrix (and not translation())
-  const auto tMatrix = localToGlobalTransform(gctx).matrix();
-  return Vector3{tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3)};
+  return localToGlobalTransform(gctx).translation();
 }
 
 const Vector3& Volume::center() const {
