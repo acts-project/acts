@@ -141,7 +141,7 @@ jobs:
           analyze build fixes.yml --base-ref "origin/${{ github.base_ref }}"
 
       - name: Analyze (push - all files)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'push'
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           analyze build fixes.yml --all
