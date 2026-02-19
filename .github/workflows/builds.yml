@@ -52,8 +52,8 @@ jobs:
 
       - name: Configure
         run: >
-          CI/dependencies/activate.sh .env &&
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -99,7 +99,7 @@ jobs:
 
       - name: Downstream configure
         run: >
-          CI/dependencies/activate.sh .env &&
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -145,7 +145,7 @@ jobs:
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
         run: |
-          CI/dependencies/activate.sh .env
+          source .env
           source build/this_acts_withdeps.sh
           pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
@@ -182,7 +182,7 @@ jobs:
         shell: bash
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
-          CI/dependencies/activate.sh .env
+          source .env
           source build/this_acts_withdeps.sh
           CI/physmon/phys_perf_mon.sh all physmon
 
@@ -262,8 +262,8 @@ jobs:
 
       - name: Configure
         run: >
-          CI/dependencies/activate.sh .env &&
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
@@ -344,9 +344,7 @@ jobs:
 
       - name: Configure
         run: >
-          cat .env &&
-          CI/dependencies/activate.sh .env &&
-          printenv &&
+          . .env &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
