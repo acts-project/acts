@@ -33,13 +33,13 @@ class MeasurementMapSelector final : public IAlgorithm {
     /// Input measurements
     std::string inputMeasurements;
 
-    /// Input spacepoints collection.
+    /// Input space points collection.
     std::string inputMeasurementParticleMap;
 
-    /// Output protoTracks collection.
+    /// Output proto tracks collection.
     std::string outputMeasurementParticleMap;
 
-    /// What spacepoints to keep
+    /// What space points to keep
     std::vector<Acts::GeometryIdentifier> geometrySelection;
   };
 

@@ -15,6 +15,14 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
                                                    const Vector3& sp1,
                                                    const Vector3& sp2,
                                                    const Vector3& bField) {
+  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
+}
+
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
+                                                   const double t0,
+                                                   const Vector3& sp1,
+                                                   const Vector3& sp2,
+                                                   const Vector3& bField) {
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
@@ -66,7 +74,19 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   // The estimated q/p in [GeV/c]^-1
   params[eFreeQOverP] = qOverPt / fastHypot(1, invTanTheta);
 
+  // The time parameter is set to the time of the bottom space point
+  params[eFreeTime] = t0;
+
   return params;
+}
+
+Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeed(
+    const GeometryContext& gctx, const Surface& surface, const Vector3& sp0,
+    const double t0, const Vector3& sp1, const Vector3& sp2,
+    const Vector3& bField) {
+  const FreeVector freeParams =
+      estimateTrackParamsFromSeed(sp0, t0, sp1, sp2, bField);
+  return transformFreeToBoundParameters(freeParams, surface, gctx);
 }
 
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(
