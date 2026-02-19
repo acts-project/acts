@@ -344,6 +344,7 @@ jobs:
 
       - name: Configure
         run: >
+          cat .env &&
           CI/dependencies/activate.sh .env &&
           ccache -z &&
           cmake -B build -S .
