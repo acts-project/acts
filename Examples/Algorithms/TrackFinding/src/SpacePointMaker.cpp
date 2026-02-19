@@ -239,7 +239,7 @@ SpacePointMaker::SpacePointMaker(Config cfg, Acts::Logging::Level lvl)
 }
 
 ProcessCode SpacePointMaker::initialize() {
-  ACTS_INFO("Space point geometry selection:");
+  ACTS_INFO("space point geometry selection:");
   for (const auto& geoId : m_cfg.geometrySelection) {
     ACTS_INFO("  " << geoId);
   }
@@ -376,15 +376,15 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
   const std::size_t nPixelSpacePoints = spacePoints.size();
   ACTS_DEBUG("Created " << nPixelSpacePoints << " pixel space points");
 
-  // Build strip spacepoints
-  ACTS_DEBUG("Build strip spacepoints");
+  // Build strip space points
+  ACTS_DEBUG("Build strip space points");
 
   Acts::StripSpacePointBuilder::ClusterPairingOptions pairingOptions;
 
   // Loop over the geometry selections
   std::vector<std::pair<IndexSourceLink, IndexSourceLink>> stripSourceLinkPairs;
   for (auto sel : m_cfg.stripGeometrySelection) {
-    const std::size_t nSpacepointsBefore = spacePoints.size();
+    const std::size_t nSpacePointsBefore = spacePoints.size();
     stripSourceLinkPairs.clear();
     ACTS_VERBOSE("Process strip selection " << sel);
 
@@ -418,7 +418,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
                               << " source links");
       const Acts::GeometryIdentifier mod2 = m_stripPartner.at(mod1);
 
-      // Avoid producing spacepoints twice
+      // Avoid producing space points twice
       if (done.contains(mod2)) {
         ACTS_VERBOSE("- Already processed " << mod2 << ", continue");
         continue;
@@ -518,8 +518,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
                             spacePoints);
     }
 
-    ACTS_DEBUG("Built " << spacePoints.size() - nSpacepointsBefore
-                        << " spacepoints for selector " << sel);
+    ACTS_DEBUG("Built " << spacePoints.size() - nSpacePointsBefore
+                        << " space points for selector " << sel);
   }
 
   ACTS_DEBUG("Created " << spacePoints.size() - nPixelSpacePoints

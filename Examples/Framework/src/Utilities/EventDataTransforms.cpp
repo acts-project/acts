@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <vector>
 
-ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
+ActsExamples::ProtoTrack ActsExamples::seedToProtoTrack(
     const ConstSeedProxy& seed) {
   ProtoTrack track;
   track.reserve(seed.size());
@@ -44,13 +44,13 @@ ActsExamples::findSpacePointForIndex(Index index,
   return *found;
 }
 
-ActsExamples::SeedProxy ActsExamples::prototrackToSeed(
+ActsExamples::SeedProxy ActsExamples::protoTrackToSeed(
     const ProtoTrack& track, const SpacePointContainer& spacePoints,
     SeedContainer& seeds) {
   auto findSpacePoint = [&](Index index) -> SpacePointIndex {
     auto found = findSpacePointForIndex(index, spacePoints);
     if (!found.has_value()) {
-      throw std::runtime_error("No spacepoint found for source-link index " +
+      throw std::runtime_error("No space point found for source-link index " +
                                std::to_string(index));
     }
     return found->index();
@@ -59,7 +59,7 @@ ActsExamples::SeedProxy ActsExamples::prototrackToSeed(
   const auto s = track.size();
   if (s < 3) {
     throw std::runtime_error(
-        "Cannot convert track with less then 3 spacepoints to seed");
+        "Cannot convert track with less then 3 space points to seed");
   }
 
   std::vector<SpacePointIndex> spacePointIndices;

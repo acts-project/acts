@@ -32,11 +32,11 @@ namespace ActsExamples {
 /// Safe to use from multiple writer threads. To avoid thread-saftey issues,
 /// the writer must be the sole owner of the underlying file. Thus, the
 /// output file pointer can not be given from the outside.
-class RootSpacepointWriter final : public WriterT<SpacePointContainer> {
+class RootSpacePointWriter final : public WriterT<SpacePointContainer> {
  public:
   struct Config {
     /// Input particle collection to write.
-    std::string inputSpacepoints;
+    std::string inputSpacePoints;
     /// Input measurement particles map (optional)
     std::string inputMeasurementParticlesMap;
     /// Path to the output file.
@@ -51,10 +51,10 @@ class RootSpacepointWriter final : public WriterT<SpacePointContainer> {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  RootSpacepointWriter(const Config& config, Acts::Logging::Level level);
+  RootSpacePointWriter(const Config& config, Acts::Logging::Level level);
 
   /// Ensure underlying file is closed.
-  ~RootSpacepointWriter() final;
+  ~RootSpacePointWriter() final;
 
   /// End-of-run hook
   ProcessCode finalize() final;
@@ -66,9 +66,9 @@ class RootSpacepointWriter final : public WriterT<SpacePointContainer> {
   /// Type-specific write implementation.
   ///
   /// @param[in] ctx is the algorithm context
-  /// @param[in] spacepoints are the spacepoints to be written
+  /// @param[in] spacePoints are the space points to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SpacePointContainer& spacepoints) final;
+                     const SpacePointContainer& spacePoints) final;
 
  private:
   ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
@@ -95,7 +95,7 @@ class RootSpacepointWriter final : public WriterT<SpacePointContainer> {
   // Global space point position uncertainties
   float m_var_r = std::numeric_limits<float>::infinity();
   float m_var_z = std::numeric_limits<float>::infinity();
-  // Fake spacepoint (only relevant for strip)
+  // Fake space point (only relevant for strip)
   bool m_fake{};
 };
 

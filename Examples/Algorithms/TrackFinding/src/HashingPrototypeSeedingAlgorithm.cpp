@@ -177,7 +177,7 @@ std::vector<std::vector<SpacePointIndex>> computeSpacePointsBuckets(
 
   // Check if the number of buckets is greater than the number of space points
   if (nBuckets > nSpacePoints) {
-    throw std::runtime_error("More buckets than the number of Space Points");
+    throw std::runtime_error("More buckets than the number of space points");
   }
 
   return result;

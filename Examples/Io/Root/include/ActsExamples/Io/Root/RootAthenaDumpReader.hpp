@@ -30,7 +30,7 @@ namespace ActsExamples {
 
 /// @class RootAthenaDumpReader
 ///
-/// @brief Reader for measurements and spacepoints from an Athena
+/// @brief Reader for measurements and space points from an Athena
 ///        object dumper.
 ///        Specifically written for the input ntuple for GNN
 ///        See:
@@ -62,8 +62,8 @@ class RootAthenaDumpReader : public IReader {
     // name of the track parameters (fitted by athena?)
     std::string outputTrackParameters = "athena_track_parameters";
 
-    /// Only extract spacepoints
-    bool onlySpacepoints = false;
+    /// Only extract space points
+    bool onlySpacePoints = false;
 
     /// Skip truth data
     bool noTruth = false;
@@ -73,10 +73,10 @@ class RootAthenaDumpReader : public IReader {
     /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerGeometry/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
     bool onlyPassedParticles = false;
 
-    /// Skip spacepoints with phi overlap
+    /// Skip space points with phi overlap
     bool skipOverlapSPsPhi = false;
 
-    /// Skip spacepoints with eta overlap
+    /// Skip space points with eta overlap
     bool skipOverlapSPsEta = false;
 
     /// A map that provides a mapping between ACTS and Athena surface
@@ -145,12 +145,12 @@ class RootAthenaDumpReader : public IReader {
   readMeasurements(SimParticleContainer &particles,
                    const Acts::GeometryContext &gctx) const;
 
-  /// Helper method to read spacepoints
+  /// Helper method to read space points
   /// @param imIdxMap optional remapping of indices. Since the measurement
   /// index must be continuous, we need to remap the measurements indices
   /// if we skip measurements in the first place
   std::tuple<SpacePointContainer, SpacePointContainer, SpacePointContainer>
-  readSpacepoints(const std::optional<std::unordered_map<int, std::size_t>>
+  readSpacePoints(const std::optional<std::unordered_map<int, std::size_t>>
                       &imIdxMap) const;
 
   /// Helper method to reprocess particle ids
@@ -161,20 +161,20 @@ class RootAthenaDumpReader : public IReader {
 
   /// Write handlers
   WriteDataHandle<SpacePointContainer> m_outputPixelSpacePoints{
-      this, "outputPixelSpacepoints"};
+      this, "OutputPixelSpacePoints"};
   WriteDataHandle<SpacePointContainer> m_outputStripSpacePoints{
-      this, "outputStripSpacepoints"};
-  WriteDataHandle<SpacePointContainer> m_outputSpacePoints{
-      this, "output_spacepoints"};
-  WriteDataHandle<ClusterContainer> m_outputClusters{this, "output_clusters"};
+      this, "OutputStripSpacePoints"};
+  WriteDataHandle<SpacePointContainer> m_outputSpacePoints{this,
+                                                           "OutputSpacePoints"};
+  WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
-                                                          "output_particles"};
+                                                          "OutputParticles"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
-      this, "output_measurements"};
+      this, "OutputMeasurements"};
   WriteDataHandle<IndexMultimap<ActsFatras::Barcode>> m_outputMeasParticleMap{
-      this, "output_meas_part_map"};
+      this, "OutputMeasurementParticlesMap"};
   WriteDataHandle<InverseMultimap<ActsFatras::Barcode>> m_outputParticleMeasMap{
-      this, "output_part_meas_map"};
+      this, "OutputParticleMeasurementsMap"};
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::mutex m_read_mutex;
@@ -260,7 +260,7 @@ class RootAthenaDumpReader : public IReader {
   BranchJaggedVector<int> Part_vParentID;
   BranchJaggedVector<int> Part_vParentBarcode;
 
-  // Spacepoints
+  // Space points
   int nSP = 0;
   int SPindex[maxSP] = {};          //[nSP]
   double SPx[maxSP] = {};           //[nSP]

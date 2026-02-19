@@ -14,12 +14,12 @@
 
 namespace ActsExamples {
 
-ProtoTrack seedToPrototrack(const ConstSeedProxy &seed);
+ProtoTrack seedToProtoTrack(const ConstSeedProxy &seed);
 
 std::optional<ConstSpacePointProxy> findSpacePointForIndex(
     Index index, const SpacePointContainer &spacePoints);
 
-SeedProxy prototrackToSeed(const ProtoTrack &track,
+SeedProxy protoTrackToSeed(const ProtoTrack &track,
                            const SpacePointContainer &spacePoints,
                            SeedContainer &seeds);
 

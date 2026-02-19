@@ -21,8 +21,8 @@ namespace ActsExamples {
 class HoughVertexFinderAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Optional. Input spacepoints container.
-    std::string inputSpacepoints;
+    /// Optional. Input space points container.
+    std::string inputSpacePoints;
     /// Output vertex collection
     std::string outputVertices;
 
@@ -37,7 +37,7 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
 
   HoughVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief Find a vertex using spacepoints
+  /// @brief Find a vertex using space points
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
@@ -49,7 +49,8 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SpacePointContainer> m_inputSpacepoints{this, "spacepoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
   WriteDataHandle<VertexContainer> m_outputVertices{this,
                                                     "OutputHoughVertices"};
 };

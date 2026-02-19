@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Utilities/PrototracksToParameters.hpp"
+#include "ActsExamples/Utilities/ProtoTracksToParameters.hpp"
 
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -21,8 +21,8 @@ using namespace Acts;
 
 namespace ActsExamples {
 
-PrototracksToParameters::PrototracksToParameters(Config cfg, Logging::Level lvl)
-    : IAlgorithm("PrototracksToParsAndSeeds", lvl), m_cfg(std::move(cfg)) {
+ProtoTracksToParameters::ProtoTracksToParameters(Config cfg, Logging::Level lvl)
+    : IAlgorithm("ProtoTracksToParameters", lvl), m_cfg(std::move(cfg)) {
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
@@ -43,9 +43,9 @@ PrototracksToParameters::PrototracksToParameters(Config cfg, Logging::Level lvl)
   }
 }
 
-PrototracksToParameters::~PrototracksToParameters() = default;
+ProtoTracksToParameters::~ProtoTracksToParameters() = default;
 
-ProcessCode PrototracksToParameters::execute(
+ProcessCode ProtoTracksToParameters::execute(
     const AlgorithmContext &ctx) const {
   static constexpr SpacePointIndex nullIndex =
       std::numeric_limits<SpacePointIndex>::max();
@@ -188,35 +188,19 @@ ProcessCode PrototracksToParameters::execute(
     }
 
     // Estimate the track parameters from seed
-    Acts::FreeVector freeParams = Acts::estimateTrackParamsFromSeed(
-        bottomSpVec, middleSpVec, topSpVec, field);
-
-    const Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
-
-    Acts::BoundVector boundParams = Acts::BoundVector::Zero();
-    boundParams[Acts::eBoundPhi] = Acts::VectorHelpers::phi(direction);
-    boundParams[Acts::eBoundTheta] = Acts::VectorHelpers::theta(direction);
-    boundParams[Acts::eBoundQOverP] = freeParams[Acts::eFreeQOverP];
-
-    // Transform the bottom space point to local coordinates of the provided
-    // surface
-    auto lpResult =
-        bottomSurface->globalToLocal(ctx.geoContext, bottomSpVec, direction);
-    if (!lpResult.ok()) {
-      ACTS_WARNING(
-          "Skip estimation because global to local transformation failed: "
-          << lpResult.error().message());
+    Acts::Result<Acts::BoundVector> boundParams =
+        Acts::estimateTrackParamsFromSeed(
+            ctx.geoContext, *bottomSurface, bottomSpVec,
+            std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time(), middleSpVec,
+            topSpVec, field);
+    if (!boundParams.ok()) {
+      ACTS_WARNING("Failed to estimate track parameters from seed: "
+                   << boundParams.error().message());
       continue;
     }
-    const Acts::Vector2 bottomLocalPos = lpResult.value();
-    // The estimated loc0 and loc1
-    boundParams[Acts::eBoundLoc0] = bottomLocalPos.x();
-    boundParams[Acts::eBoundLoc1] = bottomLocalPos.y();
-    boundParams[Acts::eBoundTime] =
-        std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time();
 
     seededTracks.push_back(track);
-    parameters.emplace_back(bottomSurface->getSharedPtr(), boundParams,
+    parameters.emplace_back(bottomSurface->getSharedPtr(), *boundParams,
                             m_covariance, m_cfg.particleHypothesis);
   }
 

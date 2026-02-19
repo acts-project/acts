@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
+#include "Acts/Seeding/GbtsConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
@@ -41,8 +41,8 @@ void addTrackFinding(py::module& mex) {
                                 stripGeometrySelection);
 
   {
-    using Config = Acts::Experimental::SeedFinderGbtsConfig;
-    auto c = py::class_<Config>(mex, "SeedFinderGbtsConfig").def(py::init<>());
+    using Config = Acts::Experimental::GbtsConfig;
+    auto c = py::class_<Config>(mex, "GbtsConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, phiSliceWidth,
                        nMaxPhiSlice, lutInputFile);
     patchKwargsConstructor(c);

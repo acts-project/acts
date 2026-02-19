@@ -10,6 +10,9 @@ acts_add_library(
     src/EDM4hepSimHitOutputConverter.cpp
     src/EDM4hepUtil.cpp
 )
+
+acts_compile_headers(ExamplesIoEDM4hep GLOB include/**/*.hpp)
+
 target_include_directories(
     ActsExamplesIoEDM4hep
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

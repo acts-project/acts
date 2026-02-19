@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -21,32 +19,32 @@
 
 namespace ActsExamples {
 
-/// This algorithm computes track parameters for prototracks.
-/// Unfortunately, it is not possible to create first seeds from prototracks,
+/// This algorithm computes track parameters for proto tracks.
+/// Unfortunately, it is not possible to create first seeds from proto tracks,
 /// and then use the more generic TrackParamEstimationAlgorithm.
 ///
 /// The reason is, that in the end we need a consistent collection of parameters
-/// and prototracks. But if the parameter estimation fails for individual seeds,
-/// it is not possible to recover a matching set of prototracks afterwards.
-/// Therefore, these two steps must be unified into one algorithm.
+/// and proto tracks. But if the parameter estimation fails for individual
+/// seeds, it is not possible to recover a matching set of proto tracks
+/// afterwards. Therefore, these two steps must be unified into one algorithm.
 ///
-class PrototracksToParameters final : public IAlgorithm {
+class ProtoTracksToParameters final : public IAlgorithm {
  public:
   struct Config {
-    /// The prototrack for that parameters should be computed
+    /// The proto track for that parameters should be computed
     std::string inputProtoTracks;
-    /// The spacepoint collection
+    /// The space point collection
     std::string inputSpacePoints;
     /// The seeds created on-the-fly from which the parameters actually are
     /// computed
-    std::string outputSeeds = "seeds-from-prototracks";
-    /// The prototracks for which parameters where computed successfully
-    std::string outputProtoTracks = "remaining-prototracks";
+    std::string outputSeeds = "seeds-from-protoTracks";
+    /// The proto tracks for which parameters where computed successfully
+    std::string outputProtoTracks = "remaining-protoTracks";
     /// The output parameters
     std::string outputParameters = "parameters";
 
     /// Whether to make tight seeds (closest 3 hits to beampipe) or large
-    /// seeds (evenly spread across the prototrack)
+    /// seeds (evenly spread across the proto track)
     bool buildTightSeeds = false;
 
     /// The tracking geometry
@@ -72,9 +70,9 @@ class PrototracksToParameters final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  PrototracksToParameters(Config cfg, Acts::Logging::Level lvl);
+  ProtoTracksToParameters(Config cfg, Acts::Logging::Level lvl);
 
-  ~PrototracksToParameters() override;
+  ~ProtoTracksToParameters() override;
 
   /// Run the algorithm.
   ///

@@ -174,7 +174,7 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
 
     // hashing inference
 
-    /// Size of the buckets = number of spacepoints in the bucket
+    /// Size of the buckets = number of space points in the bucket
     std::uint32_t bucketSize = 10;
     /// Number of zBins
     std::uint32_t zBins = 0;

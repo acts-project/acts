@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -19,18 +19,18 @@
 
 namespace ActsExamples {
 
-class SeedsToPrototracks final : public IAlgorithm {
+class TrajectoriesToProtoTracks final : public IAlgorithm {
  public:
   struct Config {
-    std::string inputSeeds = "seeds";
-    std::string outputProtoTracks = "tracks-from-seeds";
+    std::string inputTrajectories = "trajectories";
+    std::string outputProtoTracks = "tracks-from-trajectories";
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl);
+  TrajectoriesToProtoTracks(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///
@@ -44,7 +44,9 @@ class SeedsToPrototracks final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
 };

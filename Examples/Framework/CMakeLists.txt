@@ -7,6 +7,7 @@ acts_add_library(
     src/EventData/Measurement.cpp
     src/EventData/MeasurementCalibration.cpp
     src/EventData/SimParticle.cpp
+    src/EventData/Jets.cpp
     src/Framework/IAlgorithm.cpp
     src/Framework/SequenceElement.cpp
     src/Framework/WhiteBoard.cpp
@@ -42,6 +43,16 @@ target_compile_definitions(
     PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED
 )
 
+acts_compile_headers(
+    ExamplesFramework
+    GLOB
+        include/ActsExamples/Framework/*.hpp
+        include/ActsExamples/EventData/*.hpp
+        include/ActsExamples/Root/*.hpp
+        include/ActsExamples/Utilities/*.hpp
+        include/ActsExamples/Validation/*.hpp
+)
+
 # Plugin-dependent framework components
 # Note that due to conditional compilation the headers of ROOT/Onnx components
 # get installed regardless of the configuration which could lead to link errors
@@ -66,6 +77,7 @@ endif()
 if(ACTS_BUILD_PLUGIN_ONNX)
     target_sources(ActsExamplesFramework PRIVATE src/Onnx/NeuralCalibrator.cpp)
     target_link_libraries(ActsExamplesFramework PUBLIC Acts::PluginOnnx)
+    acts_compile_headers(ExamplesFramework GLOB include/ActsExamples/Onnx/*.hpp)
 endif()
 
 # newer DD4hep version require TBB and search internally for TBB in

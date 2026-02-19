@@ -100,8 +100,8 @@ namespace ActsExamples {
 //// For the total houghHist, the int counts the number of layers with one or
 /// more
 /// hit in that bin
-// The unsigned is a counter that will point to a spacepoint or to a measurement
-// object
+// The unsigned is a counter that will point to a space point or to a
+// measurement object
 
 /// An houghHist is a 2d array of points, where each point has a value.
 /// The value starts as the number of hit layers, but can change with effects
@@ -207,7 +207,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     /// === Seeds for Hough ==
     std::vector<int> threshold = {
         9};  // Minimum number of measurements per bin to accept as a
-             // prototrack/seed. Right now this is a single number, can be
+             // proto track/seed. Right now this is a single number, can be
              // expanded in the future if we want to be more clever
 
     int localMaxWindowSize = 0;  // Only create candidates from a local maximum

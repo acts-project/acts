@@ -43,9 +43,9 @@ ProcessCode CsvSpacePointWriter::writeT(
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<SpacepointData> writerSP(pathSP, m_cfg.outputPrecision);
+  NamedTupleCsvWriter<SpacePointData2> writerSP(pathSP, m_cfg.outputPrecision);
 
-  SpacepointData spData{};
+  SpacePointData2 spData{};
   for (const auto& sp : spacePoints) {
     const auto slink1 = sp.sourceLinks()[0].get<IndexSourceLink>();
     spData.measurement_id_1 = slink1.index();

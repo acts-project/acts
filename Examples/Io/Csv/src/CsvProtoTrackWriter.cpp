@@ -19,7 +19,7 @@ namespace ActsExamples {
 
 CsvProtoTrackWriter::CsvProtoTrackWriter(const Config& config,
                                          Acts::Logging::Level level)
-    : WriterT(config.inputPrototracks, "CsvProtoTrackWriter", level),
+    : WriterT(config.inputProtoTracks, "CsvProtoTrackWriter", level),
       m_cfg(config) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
 }
@@ -47,7 +47,7 @@ ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
           findSpacePointForIndex(measurementId, spacePoints);
       if (!sp.has_value()) {
         ACTS_WARNING("Could not convert index " << measurementId
-                                                << " to spacepoint");
+                                                << " to space point");
         continue;
       }
       writer.append({trackId, measurementId, sp->x(), sp->y(), sp->z()});

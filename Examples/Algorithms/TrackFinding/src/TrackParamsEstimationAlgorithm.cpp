@@ -73,7 +73,7 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
   if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
     const auto& inputTracksRef = m_inputTracks(ctx);
     if (seeds.size() != inputTracksRef.size()) {
-      ACTS_FATAL("Inconsistent number of seeds and prototracks");
+      ACTS_FATAL("Inconsistent number of seeds and proto tracks");
       return ProcessCode::ABORT;
     }
     inputTracks = &inputTracksRef;
@@ -144,32 +144,16 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
 
     // Estimate the track parameters from seed
-    Acts::FreeVector freeParams = Acts::estimateTrackParamsFromSeed(
-        bottomSpVec, middleSpVec, topSpVec, field);
-
-    const Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
-
-    Acts::BoundVector boundParams = Acts::BoundVector::Zero();
-    boundParams[Acts::eBoundPhi] = Acts::VectorHelpers::phi(direction);
-    boundParams[Acts::eBoundTheta] = Acts::VectorHelpers::theta(direction);
-    boundParams[Acts::eBoundQOverP] = freeParams[Acts::eFreeQOverP];
-
-    // Transform the bottom space point to local coordinates of the provided
-    // surface
-    auto lpResult =
-        bottomSurface->globalToLocal(ctx.geoContext, bottomSpVec, direction);
-    if (!lpResult.ok()) {
-      ACTS_WARNING(
-          "Skip estimation because global to local transformation failed: "
-          << lpResult.error().message());
+    Acts::Result<Acts::BoundVector> boundParams =
+        Acts::estimateTrackParamsFromSeed(
+            ctx.geoContext, *bottomSurface, bottomSpVec,
+            std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time(), middleSpVec,
+            topSpVec, field);
+    if (!boundParams.ok()) {
+      ACTS_WARNING("Failed to estimate track parameters from seed: "
+                   << boundParams.error().message());
       continue;
     }
-    const Acts::Vector2 bottomLocalPos = lpResult.value();
-    // The estimated loc0 and loc1
-    boundParams[Acts::eBoundLoc0] = bottomLocalPos.x();
-    boundParams[Acts::eBoundLoc1] = bottomLocalPos.y();
-    boundParams[Acts::eBoundTime] =
-        std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time();
 
     Acts::EstimateTrackParamCovarianceConfig config{
         .initialSigmas =
@@ -180,14 +164,14 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
             m_cfg.initialVarInflation.data()}};
 
     const Acts::BoundMatrix cov = Acts::estimateTrackParamCovariance(
-        config, boundParams, !std::isnan(bottomSp.time()));
+        config, *boundParams, !std::isnan(bottomSp.time()));
 
     const Acts::ParticleHypothesis hypothesis =
         inputParticleHypotheses != nullptr ? inputParticleHypotheses->at(iseed)
                                            : m_cfg.particleHypothesis;
 
     const TrackParameters& trackParams = trackParameters.emplace_back(
-        bottomSurface->getSharedPtr(), boundParams, cov, hypothesis);
+        bottomSurface->getSharedPtr(), *boundParams, cov, hypothesis);
     ACTS_VERBOSE("Estimated track parameters: " << trackParams);
     if (m_outputSeeds.isInitialized()) {
       auto newSp = outputSeeds.createSeed();

@@ -21,8 +21,8 @@ namespace ActsExamples {
 class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
  public:
   struct Config {
-    /// Which prototracks to write
-    std::string inputPrototracks;
+    /// Which proto tracks to write
+    std::string inputProtoTracks;
     /// Space point collection
     std::string inputSpacePoints;
     /// Output directory

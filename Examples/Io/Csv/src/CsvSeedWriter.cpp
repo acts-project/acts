@@ -106,7 +106,7 @@ ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
 
     // Get the proto track from which the track parameters are estimated
     const auto& seed = seeds[iparams];
-    const auto& ptrack = seedToPrototrack(seed);
+    const auto& ptrack = seedToProtoTrack(seed);
 
     std::vector<ParticleHitCount> particleHitCounts;
     identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
