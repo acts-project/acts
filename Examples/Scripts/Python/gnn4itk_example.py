@@ -130,7 +130,7 @@ def runGNN4ITk(
     }
     trackBuilder = CudaTrackBuilding(**trackBuilderConfig)
 
-    # Node features: ITk 12-feature configuration (spacepoint + 2 clusters)
+    # Node features: ITk 12-feature configuration (space point + 2 clusters)
     e = NodeFeature
     nodeFeatures = [
         e.R,
@@ -148,7 +148,7 @@ def runGNN4ITk(
     ]
     featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
 
-    # Add GNN tracking (spacepoints already created by reader, so no trackingGeometry)
+    # Add GNN tracking (space points already created by reader, so no trackingGeometry)
     addGnn(
         s,
         graphConstructor=graphConstructor,

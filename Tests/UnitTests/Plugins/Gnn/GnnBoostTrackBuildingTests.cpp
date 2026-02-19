@@ -22,18 +22,18 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(GnnSuite)
 
 BOOST_AUTO_TEST_CASE(test_track_building) {
-  // Make some spacepoint IDs
-  // The spacepoint ids are [100, 101, 102, ...]
+  // Make some space point IDs
+  // The space point ids are [100, 101, 102, ...]
   // They should not be zero based to check if the thing also works if the
-  // spacepoint IDs do not match the node IDs used for the edges
-  std::vector<int> spacepointIds(16);
-  std::iota(spacepointIds.begin(), spacepointIds.end(), 100);
+  // space point IDs do not match the node IDs used for the edges
+  std::vector<int> spacePointIds(16);
+  std::iota(spacePointIds.begin(), spacePointIds.end(), 100);
 
   // Build 4 tracks with 4 hits
   std::vector<std::vector<int>> refTracks;
   for (auto t = 0ul; t < 4; ++t) {
-    refTracks.emplace_back(spacepointIds.begin() + 4 * t,
-                           spacepointIds.begin() + 4 * (t + 1));
+    refTracks.emplace_back(spacePointIds.begin() + 4 * t,
+                           spacePointIds.begin() + 4 * (t + 1));
   }
 
   // Make edges
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
   std::copy(e0.begin(), e0.end(), edgeTensor.data());
   std::copy(e1.begin(), e1.end(), edgeTensor.data() + e0.size());
 
-  auto dummyNodes = Tensor<float>::Create({spacepointIds.size(), 16}, execCtx);
+  auto dummyNodes = Tensor<float>::Create({spacePointIds.size(), 16}, execCtx);
   auto dummyWeights = Tensor<float>::Create({e0.size(), 1}, execCtx);
   std::fill(dummyWeights.data(), dummyWeights.data() + dummyWeights.size(),
             1.f);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(test_track_building) {
 
   auto testTracks = trackBuilder({std::move(dummyNodes), std::move(edgeTensor),
                                   std::nullopt, std::move(dummyWeights)},
-                                 spacepointIds);
+                                 spacePointIds);
 
   BOOST_CHECK_EQUAL(testTracks.size(), refTracks.size());
 
