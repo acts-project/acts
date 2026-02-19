@@ -90,7 +90,7 @@ jobs:
         run: >
           CI/dependencies/run.sh .env pip3 install gcovr==7.2
           && cd build
-          && ../CI/dependencies/run.sh .env /usr/bin/python3 ../CI/test_coverage.py
+          && ../CI/dependencies/run.sh ../.env /usr/bin/python3 ../CI/test_coverage.py
 
       - uses: actions/upload-artifact@v6
         with:
