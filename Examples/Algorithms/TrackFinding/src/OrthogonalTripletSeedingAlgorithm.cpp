@@ -234,13 +234,13 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
       Candidates candidates;
 
   // Run the seeding algorithm by iterating over all the points in the tree
-  // and seeing what happens if we take them to be our middle spacepoint.
+  // and seeing what happens if we take them to be our middle space point.
   for (const auto &middle : kdTree) {
     ACTS_VERBOSE("Process middle " << middle.second);
 
     const auto spM = coreSpacePoints.at(middle.second).asConst();
 
-    // Cut: Ensure that the middle spacepoint lies within a valid r-region for
+    // Cut: Ensure that the middle space point lies within a valid r-region for
     // middle points.
     const float rM = spM.zr()[1];
     if (m_cfg.useVariableMiddleSPRange) {
