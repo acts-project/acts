@@ -18,6 +18,7 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
+#include <ActsPodioEdm/TrackerHitLocal.h>
 
 #include <cstdint>
 
@@ -201,6 +202,17 @@ void EDM4hepUtil::writeMeasurement(
       gctx, {from.parameters().data(), dim},
       {from.covariance().data(), dim, dim}, from.subspaceHelper().indices(),
       cellId, surface, to);
+}
+
+VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
+    MeasurementContainer& container, const ActsPodioEdm::TrackerHitLocal& from,
+    const MapGeometryIdFrom& geometryMapper) {
+  auto data = ActsPlugins::EDM4hepUtil::readMeasurement(from);
+  Acts::GeometryIdentifier geometryId = geometryMapper(data.cellId);
+
+  return container.emplaceMeasurement(
+      static_cast<std::uint8_t>(data.indices.size()), geometryId, data.indices,
+      data.parameters, data.covariance);
 }
 
 void EDM4hepUtil::writeTrajectory(

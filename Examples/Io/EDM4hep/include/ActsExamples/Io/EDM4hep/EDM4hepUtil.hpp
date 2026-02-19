@@ -15,6 +15,7 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include <ActsPodioEdm/MutableTrackerHitLocal.h>
+#include <ActsPodioEdm/TrackerHitLocal.h>
 
 #include <functional>
 
@@ -111,6 +112,21 @@ void writeMeasurement(const Acts::GeometryContext& gctx,
                       const ConstVariableBoundMeasurementProxy& from,
                       ActsPodioEdm::MutableTrackerHitLocal& to,
                       const Acts::Surface& surface);
+
+/// Reads a measurement from an EDM4hep TrackerHitLocal.
+///
+/// Converts bound parameters, covariance, and indices from an EDM4hep
+/// TrackerHitLocal into an ACTS measurement. The geometry mapper is used to
+/// convert the cell ID to a geometry identifier.
+///
+/// @param container The measurement container to insert into.
+/// @param from The EDM4hep tracker hit to read from.
+/// @param geometryMapper Function to map cell ID to geometry identifier.
+/// @return Proxy to the created measurement.
+VariableBoundMeasurementProxy readMeasurement(
+    MeasurementContainer& container,
+    const ActsPodioEdm::TrackerHitLocal& from,
+    const MapGeometryIdFrom& geometryMapper);
 
 /// Writes a trajectory to EDM4hep.
 ///
