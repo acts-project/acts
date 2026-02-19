@@ -358,10 +358,6 @@ void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
       }
     }
     jets[ijet].setAssociatedTracks(associatedTracks);
-    if (jets[ijet].associatedTracks().size() == 0) {
-      ACTS_VERBOSE("Jet " << ijet << " is labeled as " << jets[ijet].jetLabel()
-                          << " and has no associated tracks!");
-    }
   }
 }
 
