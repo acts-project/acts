@@ -95,7 +95,8 @@ struct SourceLinkAdapterIterator {
 
   /// Constructor from base iterator
   /// @param iterator Base iterator to wrap
-  explicit SourceLinkAdapterIterator(T iterator) : m_iterator{iterator} {}
+  explicit SourceLinkAdapterIterator(const T& iterator)
+      : m_iterator{iterator} {}
 
   /// Pre-increment operator
   /// @return Reference to this iterator

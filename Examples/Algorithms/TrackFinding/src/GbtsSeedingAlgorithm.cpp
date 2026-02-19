@@ -27,7 +27,7 @@ namespace ActsExamples {
 
 GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
-  // initialise the spacepoint, seed and cluster handles
+  // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_inputClusters.initialize(m_cfg.inputClusters);
@@ -47,7 +47,7 @@ GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
 
   // option that allows for adding custom eta binning (default is at 0.2)
   if (m_cfg.seedFinderConfig.etaBinOverride != 0.0f) {
-    m_connector->m_etaBin = m_cfg.seedFinderConfig.etaBinOverride;
+    m_connector->etaBin = m_cfg.seedFinderConfig.etaBinOverride;
   }
 
   // initialise the object that holds all the geometry information needed for
@@ -59,18 +59,18 @@ GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
   // (currently inputs as 0.9 GeV but need 900 MeV)
 
   m_finder = std::make_unique<Acts::Experimental::SeedFinderGbts>(
-      m_cfg.seedFinderConfig, std::move(m_gbtsGeo), &m_layerGeometry,
+      m_cfg.seedFinderConfig, std::move(m_gbtsGeo), m_layerGeometry,
       logger().cloneWithSuffix("GbtsFinder"));
 
   printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
 }
 
 ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
-  // initialise input spacepoints from handle and define new container
+  // initialise input space points from handle and define new container
   const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
-  // take spacepoints, add variables needed for GBTS and add them to new
-  // container due to how spacepoint container works, we need to keep the
+  // take space points, add variables needed for GBTS and add them to new
+  // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
   auto SpContainerComponents = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
@@ -90,7 +90,7 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
 
   // move seeds to simseedcontainer to be used down stream taking fist middle
   // and last sps currently as simseeds need to be hard types so only 3
-  // spacepoint can be added but in future we should be able to have any length
+  // space point can be added but in future we should be able to have any length
   // seed
   SimSeedContainer seedContainerForStorage;
   seedContainerForStorage.reserve(seeds.size());
@@ -100,15 +100,15 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
     std::size_t mid = static_cast<std::size_t>(std::round(indices / 2.0));
     seedContainerForStorage.emplace_back(
         *std::get<0>(SpContainerComponents)
-             .at(sps[0])  // first spacepoint
+             .at(sps[0])  // first space point
              .sourceLinks()[0]
              .get<const SimSpacePoint *>(),
         *std::get<0>(SpContainerComponents)
-             .at(sps[mid])  // middle spacepoint
+             .at(sps[mid])  // middle space point
              .sourceLinks()[0]
              .get<const SimSpacePoint *>(),
         *std::get<0>(SpContainerComponents)
-             .at(sps[indices])  // last spacepoint
+             .at(sps[indices])  // last space point
              .sourceLinks()[0]
              .get<const SimSpacePoint *>());
 
@@ -160,7 +160,7 @@ GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::Experimental::SPContainerComponentsType
+Acts::Experimental::SpContainerComponentsType
 GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
                                       std::map<ActsIDs, GbtsIDs> map) const {
   Acts::SpacePointContainer2 coreSpacePoints(
@@ -251,7 +251,7 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
     newSp.extra(localPositionColomn) = 0;
   }
 
-  ACTS_VERBOSE("Space point collection successfully assigned layerId's");
+  ACTS_VERBOSE("space point collection successfully assigned layerId's");
 
   return std::make_tuple(std::move(coreSpacePoints), layerColomn.asConst(),
                          clusterWidthColomn.asConst(),
@@ -347,14 +347,14 @@ GbtsSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) const {
 
     std::int32_t combinedId = gbtsId * 1000 + etaMod;
 
-    auto currentIndex =
+    const auto currentIndex =
         find_if(inputVector.begin(), inputVector.end(),
-                [combinedId](auto n) { return n.m_subdet == combinedId; });
+                [combinedId](auto n) { return n.subdet == combinedId; });
     if (currentIndex != inputVector.end()) {  // not end so does exist
       std::size_t index = std::distance(inputVector.begin(), currentIndex);
-      inputVector[index].m_refCoord += rc;
-      inputVector[index].m_minBound += minBound;
-      inputVector[index].m_maxBound += maxBound;
+      inputVector[index].refCoord += rc;
+      inputVector[index].minBound += minBound;
+      inputVector[index].maxBound += maxBound;
       countVector[index] += 1;  // increase count at the index
 
     } else {  // end so doesn't exists
@@ -398,58 +398,48 @@ GbtsSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) const {
   });
 
   for (std::size_t i = 0; i < inputVector.size(); i++) {
-    inputVector[i].m_refCoord = inputVector[i].m_refCoord / countVector[i];
+    inputVector[i].refCoord = inputVector[i].refCoord / countVector[i];
   }
 
   return inputVector;
 }
 
 void GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
-    const Acts::Experimental::SeedFinderGbtsConfig &cfg) {
+    const Acts::Experimental::GbtsConfig &cfg) {
   ACTS_DEBUG("===== SeedFinderGbtsConfig =====");
 
-  ACTS_DEBUG("BeamSpotCorrection: " << cfg.BeamSpotCorrection
-                                    << " (default: false)");
-  ACTS_DEBUG("connectorInputFile: " << cfg.connectorInputFile
-                                    << " (default: empty string)");
-  ACTS_DEBUG("lutInputFile: " << cfg.lutInputFile
-                              << " (default: empty string)");
-  ACTS_DEBUG("lrtMode: " << cfg.lrtMode << " (default: false)");
-  ACTS_DEBUG("useML: " << cfg.useML << " (default: false)");
-  ACTS_DEBUG("matchBeforeCreate: " << cfg.matchBeforeCreate
-                                   << " (default: false)");
-  ACTS_DEBUG("useOldTunings: " << cfg.useOldTunings << " (default: false)");
-  ACTS_DEBUG("tau_ratio_cut: " << cfg.tau_ratio_cut << " (default: 0.007)");
-  ACTS_DEBUG("tau_ratio_precut: " << cfg.tau_ratio_precut
-                                  << " (default: 0.009f)");
-  ACTS_DEBUG("etaBinOverride: " << cfg.etaBinOverride << " (default: 0.0)");
-  ACTS_DEBUG("nMaxPhiSlice: " << cfg.nMaxPhiSlice << " (default: 53)");
-  ACTS_DEBUG("minPt: " << cfg.minPt
-                       << " (default: 1.0 * Acts::UnitConstants::GeV)");
-  ACTS_DEBUG("phiSliceWidth: " << cfg.phiSliceWidth << " (default: derived)");
-  ACTS_DEBUG("ptCoeff: " << cfg.ptCoeff
-                         << " (default: 0.29997 * 1.9972 / 2.0)");
-  ACTS_DEBUG("useEtaBinning: " << cfg.useEtaBinning << " (default: true)");
-  ACTS_DEBUG("doubletFilterRZ: " << cfg.doubletFilterRZ << " (default: true)");
-  ACTS_DEBUG("nMaxEdges: " << cfg.nMaxEdges << " (default: 2000000)");
-  ACTS_DEBUG("minDeltaRadius: " << cfg.minDeltaRadius << " (default: 2.0)");
-  ACTS_DEBUG("sigmaMS: " << cfg.sigmaMS << " (default: 0.016)");
-  ACTS_DEBUG("radLen: " << cfg.radLen << " (default: 0.025)");
-  ACTS_DEBUG("sigma_x: " << cfg.sigma_x << " (default: 0.08)");
-  ACTS_DEBUG("sigma_y: " << cfg.sigma_y << " (default: 0.25)");
-  ACTS_DEBUG("weight_x: " << cfg.weight_x << " (default: 0.5)");
-  ACTS_DEBUG("weight_y: " << cfg.weight_y << " (default: 0.5)");
-  ACTS_DEBUG("maxDChi2_x: " << cfg.maxDChi2_x << " (default: 5.0)");
-  ACTS_DEBUG("maxDChi2_y: " << cfg.maxDChi2_y << " (default: 6.0)");
-  ACTS_DEBUG("add_hit: " << cfg.add_hit << " (default: 14.0)");
-  ACTS_DEBUG("max_curvature: " << cfg.max_curvature << " (default: 1e-3f)");
-  ACTS_DEBUG("max_z0: " << cfg.max_z0 << " (default: 170.0)");
-  ACTS_DEBUG("edge_mask_min_eta: " << cfg.edge_mask_min_eta
-                                   << " (default: 1.5)");
-  ACTS_DEBUG("hit_share_threshold: " << cfg.hit_share_threshold
-                                     << " (default: 0.49)");
-  ACTS_DEBUG("max_endcap_clusterwidth: " << cfg.max_endcap_clusterwidth
-                                         << " (default: 0.35)");
+  ACTS_DEBUG("BeamSpotCorrection: " << cfg.beamSpotCorrection);
+  ACTS_DEBUG("connectorInputFile: " << cfg.connectorInputFile);
+  ACTS_DEBUG("lutInputFile: " << cfg.lutInputFile);
+  ACTS_DEBUG("lrtMode: " << cfg.lrtMode);
+  ACTS_DEBUG("useMl: " << cfg.useMl);
+  ACTS_DEBUG("matchBeforeCreate: " << cfg.matchBeforeCreate);
+  ACTS_DEBUG("useOldTunings: " << cfg.useOldTunings);
+  ACTS_DEBUG("tauRatioCut: " << cfg.tauRatioCut);
+  ACTS_DEBUG("tauRatioPrecut: " << cfg.tauRatioPrecut);
+  ACTS_DEBUG("etaBinOverride: " << cfg.etaBinOverride);
+  ACTS_DEBUG("nMaxPhiSlice: " << cfg.nMaxPhiSlice);
+  ACTS_DEBUG("minPt: " << cfg.minPt);
+  ACTS_DEBUG("phiSliceWidth: " << cfg.phiSliceWidth);
+  ACTS_DEBUG("ptCoeff: " << cfg.ptCoeff);
+  ACTS_DEBUG("useEtaBinning: " << cfg.useEtaBinning);
+  ACTS_DEBUG("doubletFilterRZ: " << cfg.doubletFilterRZ);
+  ACTS_DEBUG("nMaxEdges: " << cfg.nMaxEdges);
+  ACTS_DEBUG("minDeltaRadius: " << cfg.minDeltaRadius);
+  ACTS_DEBUG("sigmaMS: " << cfg.sigmaMS);
+  ACTS_DEBUG("radLen: " << cfg.radLen);
+  ACTS_DEBUG("sigmaX: " << cfg.sigmaX);
+  ACTS_DEBUG("sigmaY: " << cfg.sigmaY);
+  ACTS_DEBUG("weightX: " << cfg.weightX);
+  ACTS_DEBUG("weightY: " << cfg.weightY);
+  ACTS_DEBUG("maxDChi2X: " << cfg.maxDChi2X);
+  ACTS_DEBUG("maxDChi2Y: " << cfg.maxDChi2Y);
+  ACTS_DEBUG("addHit: " << cfg.addHit);
+  ACTS_DEBUG("maxCurvature: " << cfg.maxCurvature);
+  ACTS_DEBUG("maxZ0: " << cfg.maxZ0);
+  ACTS_DEBUG("edgeMaskMinEta: " << cfg.edgeMaskMinEta);
+  ACTS_DEBUG("hitShareThreshold: " << cfg.hitShareThreshold);
+  ACTS_DEBUG("maxEndcapClusterWidth: " << cfg.maxEndcapClusterWidth);
 
   ACTS_DEBUG("================================");
 }

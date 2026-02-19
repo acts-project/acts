@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingGnn/PrototracksToParameters.hpp"
 #include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
-#include "ActsExamples/TrackFindingGnn/TrackFindingFromPrototrackAlgorithm.hpp"
+#include "ActsExamples/TrackFindingGnn/TrackFindingFromProtoTracksAlgorithm.hpp"
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
 #include "ActsPlugins/Gnn/BoostTrackBuilding.hpp"
 #include "ActsPlugins/Gnn/CudaTrackBuilding.hpp"
@@ -19,10 +18,7 @@
 #include "ActsPlugins/Gnn/TorchEdgeClassifier.hpp"
 #include "ActsPlugins/Gnn/TorchMetricLearning.hpp"
 #include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <memory>
 
 #include <boost/preprocessor/if.hpp>
 #include <boost/vmd/tuple/size.hpp>
@@ -209,13 +205,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGnn, gnn) {
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      PrototracksToParameters, gnn, "PrototracksToParameters", inputProtoTracks,
-      inputSpacePoints, outputSeeds, outputParameters, outputProtoTracks,
-      geometry, magneticField, buildTightSeeds);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      TrackFindingFromPrototrackAlgorithm, gnn,
-      "TrackFindingFromPrototrackAlgorithm", inputProtoTracks,
+      TrackFindingFromProtoTracksAlgorithm, gnn,
+      "TrackFindingFromProtoTracksAlgorithm", inputProtoTracks,
       inputMeasurements, inputInitialTrackParameters, outputTracks,
       measurementSelectorCfg, trackingGeometry, magneticField, findTracks, tag);
 }

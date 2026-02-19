@@ -532,10 +532,10 @@ void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculatePredictedResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasPredicted()) {
     throw std::invalid_argument("track state has no predicted parameters");
@@ -569,10 +569,10 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculateFilteredResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasFiltered()) {
     throw std::invalid_argument("track state has no filtered parameters");
@@ -606,10 +606,10 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculateSmoothedResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasSmoothed()) {
     throw std::invalid_argument("track state has no smoothed parameters");

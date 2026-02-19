@@ -136,7 +136,7 @@ class FitTestSpacePoint {
   void updatePosition(const Vector3& newPos) { m_position = newPos; }
   /// @brief Updates the time of the space point
   void updateTime(const double newTime) { m_time = newTime; }
-  /// @brief Updates the time of the space point
+  /// @brief Updates the status of the space point
   void updateStatus(const bool newStatus) { m_isGood = newStatus; }
   /// @brief Check if the measurement is valid after calibration
   bool isGood() const { return m_isGood; }

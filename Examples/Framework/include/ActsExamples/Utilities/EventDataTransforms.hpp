@@ -13,12 +13,12 @@
 
 namespace ActsExamples {
 
-ProtoTrack seedToPrototrack(const SimSeed &seed);
+ProtoTrack seedToProtoTrack(const SimSeed &seed);
 
 const SimSpacePoint *findSpacePointForIndex(
-    Index index, const SimSpacePointContainer &spacepoints);
+    Index index, const SimSpacePointContainer &spacePoints);
 
-SimSeed prototrackToSeed(const ProtoTrack &track,
-                         const SimSpacePointContainer &spacepoints);
+SimSeed protoTrackToSeed(const ProtoTrack &track,
+                         const SimSpacePointContainer &spacePoints);
 
 }  // namespace ActsExamples

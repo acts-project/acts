@@ -200,9 +200,9 @@ class MultiTrajectoryTestsCommon {
     alwaysPresent(ts);
     ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasCalibrated());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts = t.getTrackState(t.addTrackState(PM::None));
     BOOST_CHECK(!ts.hasPredicted());
@@ -249,9 +249,9 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(!ts.hasJacobian());
     ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasCalibrated());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts = t.getTrackState(t.addTrackState(PM::Jacobian));
     BOOST_CHECK(!ts.hasPredicted());
@@ -310,9 +310,9 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(ts.hasSmoothed());
     BOOST_CHECK(ts.hasCalibrated());
     BOOST_CHECK(!ts.hasJacobian());
-    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), Vector<5>::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
-                      ActsSquareMatrix<5>::Zero());
+                      SquareMatrix<5>::Zero());
 
     ts.addComponents(PM::Jacobian);
     BOOST_CHECK(ts.hasPredicted());
@@ -1229,7 +1229,7 @@ class MultiTrajectoryTestsCommon {
     ts.allocateCalibrated(3);
     BOOST_CHECK_EQUAL(ts.template calibrated<3>(), Vector3::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<3>(),
-                      ActsSquareMatrix<3>::Zero());
+                      SquareMatrix<3>::Zero());
 
     ts.allocateCalibrated(par2.head<3>(), cov2.topLeftCorner<3, 3>());
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 3);

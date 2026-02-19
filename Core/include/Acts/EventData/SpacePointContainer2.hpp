@@ -725,8 +725,8 @@ class SpacePointContainer2 {
     assert(index < m_varianceZColumn->size() && "Index out of bounds");
     return m_varianceZColumn->proxy(*this)[index];
   }
-  /// Const access to the variance in R direction of the space
-  /// point at the given index.
+  /// Const access to the variance in R direction of the space point at the
+  /// given index.
   /// @param index The index of the space point.
   /// @return A const reference to the variance in R direction of the space point.
   float varianceR(Index index) const noexcept {

@@ -159,8 +159,8 @@ void printParameters(std::ostream& os, const names_container_t& names,
   os.precision(precision);
 }
 
-using ParametersMap = Eigen::Map<const ActsDynamicVector>;
-using CovarianceMap = Eigen::Map<const ActsDynamicMatrix>;
+using ParametersMap = Eigen::Map<const DynamicVector>;
+using CovarianceMap = Eigen::Map<const DynamicMatrix>;
 
 }  // namespace
 

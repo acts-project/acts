@@ -137,7 +137,7 @@ ActsExamples::makeGlobalChiSquareFitterFunction(
   Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
   Propagator propagator(stepper, std::move(navigator),
                         logger.cloneWithSuffix("Propagator"));
-  Fitter trackFitter(std::move(propagator), logger.cloneWithSuffix("Fitter"));
+  Fitter trackFitter(propagator, logger.cloneWithSuffix("Fitter"));
 
   // Direct fitter
   Acts::DirectNavigator directNavigator{

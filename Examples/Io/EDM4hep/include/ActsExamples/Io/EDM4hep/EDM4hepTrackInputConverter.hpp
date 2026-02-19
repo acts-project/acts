@@ -14,10 +14,6 @@
 
 #include <string>
 
-namespace podio {
-class Frame;
-}
-
 namespace ActsExamples {
 
 /// Read in a track collection as EDM4hep from a @c podio::Frame.
@@ -31,7 +27,7 @@ class EDM4hepTrackInputConverter : public PodioInputConverter {
     std::string outputTracks;
     /// Magnetic field along the z axis (needed for the conversion of
     /// parameters)
-    double Bz;
+    double Bz{};
   };
 
   /// constructor

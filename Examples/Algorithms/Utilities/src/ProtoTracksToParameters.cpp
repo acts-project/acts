@@ -6,19 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingGnn/PrototracksToParameters.hpp"
+#include "ActsExamples/Utilities/ProtoTracksToParameters.hpp"
 
-#include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
 #include <algorithm>
 #include <tuple>
@@ -28,8 +21,8 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-PrototracksToParameters::PrototracksToParameters(Config cfg, Logging::Level lvl)
-    : IAlgorithm("PrototracksToParsAndSeeds", lvl), m_cfg(std::move(cfg)) {
+ProtoTracksToParameters::ProtoTracksToParameters(Config cfg, Logging::Level lvl)
+    : IAlgorithm("ProtoTracksToParameters", lvl), m_cfg(std::move(cfg)) {
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
@@ -50,56 +43,56 @@ PrototracksToParameters::PrototracksToParameters(Config cfg, Logging::Level lvl)
   }
 }
 
-PrototracksToParameters::~PrototracksToParameters() {}
+ProtoTracksToParameters::~ProtoTracksToParameters() = default;
 
-ProcessCode PrototracksToParameters::execute(
+ProcessCode ProtoTracksToParameters::execute(
     const AlgorithmContext &ctx) const {
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
   const auto &sps = m_inputSpacePoints(ctx);
-  auto prototracks = m_inputProtoTracks(ctx);
+  auto protoTracks = m_inputProtoTracks(ctx);
 
   // Make some lookup tables and pre-allocate some space
   // Note this is a heuristic, since it is not garantueed that each measurement
-  // is part of a spacepoint
-  std::vector<const SimSpacePoint *> indexToSpacepoint(2 * sps.size(), nullptr);
+  // is part of a space point
+  std::vector<const SimSpacePoint *> indexToSpacePoint(2 * sps.size(), nullptr);
   std::vector<GeometryIdentifier> indexToGeoId(2 * sps.size(),
                                                GeometryIdentifier{0});
 
   for (const auto &sp : sps) {
     for (const auto &sl : sp.sourceLinks()) {
       const auto &isl = sl.template get<IndexSourceLink>();
-      if (isl.index() >= indexToSpacepoint.size()) {
-        indexToSpacepoint.resize(isl.index() + 1, nullptr);
+      if (isl.index() >= indexToSpacePoint.size()) {
+        indexToSpacePoint.resize(isl.index() + 1, nullptr);
         indexToGeoId.resize(isl.index() + 1, GeometryIdentifier{0});
       }
-      indexToSpacepoint.at(isl.index()) = &sp;
+      indexToSpacePoint.at(isl.index()) = &sp;
       indexToGeoId.at(isl.index()) = isl.geometryId();
     }
   }
 
   ProtoTrackContainer seededTracks;
-  seededTracks.reserve(prototracks.size());
+  seededTracks.reserve(protoTracks.size());
 
   SimSeedContainer seeds;
-  seeds.reserve(prototracks.size());
+  seeds.reserve(protoTracks.size());
 
   TrackParametersContainer parameters;
-  parameters.reserve(prototracks.size());
+  parameters.reserve(protoTracks.size());
 
-  // Loop over the prototracks to make seeds
+  // Loop over the proto tracks to make seeds
   ProtoTrack tmpTrack;
   std::vector<const SimSpacePoint *> tmpSps;
   std::size_t skippedTracks = 0;
-  for (auto &track : prototracks) {
-    ACTS_VERBOSE("Try to get seed from prototrack with " << track.size()
-                                                         << " hits");
-    // Make prototrack unique with respect to volume and layer
-    // so we don't get a seed where we have two spacepoints on the same layer
+  for (auto &track : protoTracks) {
+    ACTS_VERBOSE("Try to get seed from proto track with " << track.size()
+                                                          << " hits");
+    // Make proto track unique with respect to volume and layer so we don't get
+    // a seed where we have two spacepoints on the same layer
 
-    // Here, we want to create a seed only if the prototrack with removed unique
-    // layer-volume spacepoints has 3 or more hits. However, if this is the
-    // case, we want to keep the whole prototrack. Therefore, we operate on a
-    // tmpTrack.
+    // Here, we want to create a seed only if the proto track with removed
+    // unique layer-volume spacepoints has 3 or more hits. However, if this is
+    // the case, we want to keep the whole proto track. Therefore, we operate on
+    // a tmpTrack.
     std::ranges::sort(track, {}, [&](const auto &t) {
       return std::make_tuple(indexToGeoId[t].volume(), indexToGeoId[t].layer());
     });
@@ -124,15 +117,15 @@ ProcessCode PrototracksToParameters::execute(
     // Make the seed
     auto result =
         track | std::views::filter([&](auto i) {
-          return i < indexToSpacepoint.size() &&
-                 indexToSpacepoint.at(i) != nullptr;
+          return i < indexToSpacePoint.size() &&
+                 indexToSpacePoint.at(i) != nullptr;
         }) |
-        std::views::transform([&](auto i) { return indexToSpacepoint.at(i); });
+        std::views::transform([&](auto i) { return indexToSpacePoint.at(i); });
     tmpSps.clear();
     std::ranges::copy(result, std::back_inserter(tmpSps));
 
     if (tmpSps.size() < 3) {
-      ACTS_WARNING("Could not find all spacepoints, skip");
+      ACTS_WARNING("Could not find all space points, skip");
       skippedTracks++;
       continue;
     }
@@ -182,7 +175,7 @@ ProcessCode PrototracksToParameters::execute(
     const auto &pars = *parsResult;
 
     seededTracks.push_back(track);
-    seeds.emplace_back(std::move(seed));
+    seeds.emplace_back(seed);
     parameters.push_back(BoundTrackParameters(
         surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
   }
@@ -191,8 +184,8 @@ ProcessCode PrototracksToParameters::execute(
     ACTS_WARNING("Skipped seeding of " << skippedTracks);
   }
 
-  ACTS_DEBUG("Seeded " << seeds.size() << " out of " << prototracks.size()
-                       << " prototracks");
+  ACTS_DEBUG("Seeded " << seeds.size() << " out of " << protoTracks.size()
+                       << " proto tracks");
 
   m_outputSeeds(ctx, std::move(seeds));
   m_outputProtoTracks(ctx, std::move(seededTracks));

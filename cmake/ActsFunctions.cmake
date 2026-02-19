@@ -51,8 +51,8 @@ endfunction()
 # to help tools like clangd discover compiler flags.
 function(acts_compile_headers target)
     set(options "")
-    set(oneValueArgs GLOB)
-    set(multiValueArgs "")
+    set(oneValueArgs "")
+    set(multiValueArgs GLOB)
     cmake_parse_arguments(
         PARSE_ARGV
         0
@@ -101,7 +101,7 @@ function(acts_compile_headers target)
             message(SEND_ERROR "Path is a directory: ${_header_file}")
         endif()
 
-        get_filename_component(_header_file_name "${_file}" NAME_WLE)
+        get_filename_component(_header_file_name "${_file}" NAME)
         get_filename_component(_header_directory "${_file}" DIRECTORY)
 
         set(_temporary_dir "${CMAKE_CURRENT_BINARY_DIR}/${_header_directory}")
@@ -115,6 +115,10 @@ function(acts_compile_headers target)
         list(APPEND _sources "${_temporary_path}")
     endforeach()
 
-    add_library(Acts${target}_HEADERS SHARED EXCLUDE_FROM_ALL ${_sources})
-    target_link_libraries(Acts${target}_HEADERS PRIVATE Acts::${target})
+    if(NOT TARGET Acts${target}_HEADERS)
+        add_library(Acts${target}_HEADERS SHARED EXCLUDE_FROM_ALL ${_sources})
+        target_link_libraries(Acts${target}_HEADERS PRIVATE Acts::${target})
+    else()
+        target_sources(Acts${target}_HEADERS PRIVATE ${_sources})
+    endif()
 endfunction()
