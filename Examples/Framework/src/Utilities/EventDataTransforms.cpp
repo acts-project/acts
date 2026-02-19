@@ -28,7 +28,7 @@ ActsExamples::ProtoTrack ActsExamples::seedToProtoTrack(const SimSeed& seed) {
 }
 
 const ActsExamples::SimSpacePoint* ActsExamples::findSpacePointForIndex(
-    Index index, const SimSpacePointContainer& spacepoints) {
+    Index index, const SimSpacePointContainer& spacePoints) {
   auto match = [&](const SimSpacePoint& sp) {
     const auto& sls = sp.sourceLinks();
     return std::ranges::any_of(sls, [&](const auto& sl) {
@@ -36,9 +36,9 @@ const ActsExamples::SimSpacePoint* ActsExamples::findSpacePointForIndex(
     });
   };
 
-  auto found = std::ranges::find_if(spacepoints, match);
+  auto found = std::ranges::find_if(spacePoints, match);
 
-  if (found == spacepoints.end()) {
+  if (found == spacePoints.end()) {
     return nullptr;
   }
 
@@ -46,11 +46,11 @@ const ActsExamples::SimSpacePoint* ActsExamples::findSpacePointForIndex(
 }
 
 ActsExamples::SimSeed ActsExamples::protoTrackToSeed(
-    const ProtoTrack& track, const SimSpacePointContainer& spacepoints) {
+    const ProtoTrack& track, const SimSpacePointContainer& spacePoints) {
   auto findSpacePoint = [&](Index index) {
-    auto found = findSpacePointForIndex(index, spacepoints);
+    auto found = findSpacePointForIndex(index, spacePoints);
     if (found == nullptr) {
-      throw std::runtime_error("No spacepoint found for source-link index " +
+      throw std::runtime_error("No space point found for source-link index " +
                                std::to_string(index));
     }
     return found;
@@ -59,7 +59,7 @@ ActsExamples::SimSeed ActsExamples::protoTrackToSeed(
   const auto s = track.size();
   if (s < 3) {
     throw std::runtime_error(
-        "Cannot convert track with less then 3 spacepoints to seed");
+        "Cannot convert track with less then 3 space points to seed");
   }
 
   std::vector<const SimSpacePoint*> ps;
