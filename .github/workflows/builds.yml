@@ -294,6 +294,7 @@ jobs:
 
       - name: Downstream configure
         run: >
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -379,6 +380,7 @@ jobs:
 
       - name: Downstream configure
         run: >
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
