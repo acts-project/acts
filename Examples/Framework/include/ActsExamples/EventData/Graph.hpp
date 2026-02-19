@@ -17,7 +17,7 @@ namespace ActsExamples {
 ///
 struct Graph {
   /// The edges-vector contains flattened edge-pairs. Usually, the indices
-  /// refer to a spacepoint collection.
+  /// refer to a space point collection.
   ///
   /// Structure: [ source0, dest0, source1, dest1, ..., sourceN, destN ]
   std::vector<std::int64_t> edges;

@@ -6,11 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// TODO: update to C++17 style
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 
 #include <cmath>
-#include <sstream>
 
 namespace Acts::Experimental {
 
@@ -36,8 +34,8 @@ RoiDescriptor::RoiDescriptor(double eta, double etaMinus, double etaPlus,
 
   m_dzdrMinus = 1 / m_drdzMinus;  //-45
   m_dzdrPlus = 1 / m_drdzPlus;    // 45
-}
 
-RoiDescriptor::~RoiDescriptor() = default;
+  // zedminus - s_zedWidthDefault = 225 //from ROIDescriptor
+}
 
 }  // namespace Acts::Experimental

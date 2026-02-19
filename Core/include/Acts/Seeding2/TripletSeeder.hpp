@@ -53,9 +53,9 @@ class TripletSeeder {
   /// @param topFinder Finder for top doublets
   /// @param tripletFinder Finder for triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param spacePoints Space point container
+  /// @param spacePoints space point container
   /// @param bottomSps Subset of space points to be used as innermost SP in a seed
-  /// @param middleSp Space point candidate to be used as middle SP in a seed
+  /// @param middleSp space point candidate to be used as middle SP in a seed
   /// @param topSps Subset of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroup(Cache& cache, const DoubletSeedFinder& bottomFinder,
@@ -75,7 +75,7 @@ class TripletSeeder {
   /// @param topFinder Finder for top doublets
   /// @param tripletFinder Finder for triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param spacePoints Space point container
+  /// @param spacePoints space point container
   /// @param bottomSpGroups Groups of space points to be used as innermost SP in a seed
   /// @param middleSpGroup Group of space points to be used as middle SP in a seed
   /// @param topSpGroups Groups of space points to be used as outermost SP in a seed
