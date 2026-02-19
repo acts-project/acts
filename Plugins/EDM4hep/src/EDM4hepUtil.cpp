@@ -254,41 +254,41 @@ void writeVertex(const Vertex& vertex, edm4hep::MutableVertex to) {
   // Wrap this in a templated lambda so we can use `if constexpr` to select the
   // correct write function based on the type of the properties of the `to`
   // object.
-  auto writeVertex = [&]<typename T>(const Vertex& vertex, T& to)
+  auto writeVertex = []<typename T>(const Vertex& vertex_, T& to_)
     requires(std::is_same_v<T, edm4hep::MutableVertex>)
   {
     if constexpr (detail::kEdm4hepVertexHasTime) {
-      Vector4 pos = vertex.fullPosition();
-      to.setPosition({static_cast<float>(pos[eFreePos0]),
-                      static_cast<float>(pos[eFreePos1]),
-                      static_cast<float>(pos[eFreePos2]),
-                      static_cast<float>(pos[eFreeTime])});
+      Vector4 pos = vertex_.fullPosition();
+      to_.setPosition({static_cast<float>(pos[eFreePos0]),
+                       static_cast<float>(pos[eFreePos1]),
+                       static_cast<float>(pos[eFreePos2]),
+                       static_cast<float>(pos[eFreeTime])});
 
-      edm4hep::CovMatrix4f& cov = to.getCovMatrix();
+      edm4hep::CovMatrix4f& cov = to_.getCovMatrix();
       std::array coords{eFreePos0, eFreePos1, eFreePos2, eFreeTime};
       for (auto i : coords) {
         for (auto j : coords) {
-          cov.setValue(static_cast<float>(vertex.fullCovariance()(i, j)),
+          cov.setValue(static_cast<float>(vertex_.fullCovariance()(i, j)),
                        toEdm4hep.at(i), toEdm4hep.at(j));
         }
       }
     } else {
-      Vector3 pos = vertex.position();
-      to.setPosition({static_cast<float>(pos[eFreePos0]),
-                      static_cast<float>(pos[eFreePos1]),
-                      static_cast<float>(pos[eFreePos2])});
-      edm4hep::CovMatrix3f& cov = to.getCovMatrix();
+      Vector3 pos = vertex_.position();
+      to_.setPosition({static_cast<float>(pos[eFreePos0]),
+                       static_cast<float>(pos[eFreePos1]),
+                       static_cast<float>(pos[eFreePos2])});
+      edm4hep::CovMatrix3f& cov = to_.getCovMatrix();
       std::array coords{eFreePos0, eFreePos1, eFreePos2};
       for (auto i : coords) {
         for (auto j : coords) {
-          cov.setValue(static_cast<float>(vertex.covariance()(i, j)),
+          cov.setValue(static_cast<float>(vertex_.covariance()(i, j)),
                        toEdm4hep.at(i), toEdm4hep.at(j));
         }
       }
     }
 
-    to.setChi2(static_cast<float>(vertex.fitQuality().first));
-    to.setNdf(static_cast<int>(vertex.fitQuality().second));
+    to_.setChi2(static_cast<float>(vertex_.fitQuality().first));
+    to_.setNdf(static_cast<int>(vertex_.fitQuality().second));
   };
 
   writeVertex(vertex, to);
