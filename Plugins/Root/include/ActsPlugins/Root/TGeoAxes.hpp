@@ -47,6 +47,7 @@ class TGeoAxes {
   /// @param s A string of exactly 3 characters from [XxYyZz] with no repeated
   ///          axis letter.
   /// @throws std::invalid_argument if the string is not a valid axes encoding.
+  /// @return The parsed axes as a TGeoAxes object.
   static TGeoAxes parse(std::string_view s) {
     if (s.size() != 3 || !isValid(s[0], s[1], s[2])) {
       throw std::invalid_argument(
@@ -57,6 +58,7 @@ class TGeoAxes {
   }
 
   /// Return the axes string as a 3-character string view.
+  /// @return The axes string as a 3-character string view.
   std::string_view value() const { return {m_axes, 3}; }
 
   friend std::ostream& operator<<(std::ostream& os, const TGeoAxes& axes) {
