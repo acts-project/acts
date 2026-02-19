@@ -1019,6 +1019,12 @@ class MutablePodioTrackStateContainer final
           p != nullptr) {
         // The given source link is a TrackerHitLocal, so we can use it directly
         hit = *p;
+      } else if (auto* mp =
+                     sourceLink.getPtr<ActsPodioEdm::MutableTrackerHitLocal>();
+                 mp != nullptr) {
+        // The given source link is a MutableTrackerHitLocal; convert to the
+        // immutable view via TrackerHitLocal's converting constructor
+        hit = *mp;
       } else {
         // The given source link is not a TrackerHitLocal, so we need to ask the
         // helper to convert it to one

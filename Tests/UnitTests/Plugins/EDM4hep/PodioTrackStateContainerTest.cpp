@@ -496,14 +496,11 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
   auto i1 = tsc.addTrackState_impl();
   auto i2 = tsc.addTrackState_impl();  // this one gets no source link
 
-  // Use std::as_const to get the immutable TrackerHitLocal view, since the
-  // mutable collection's at() returns MutableTrackerHitLocal which would not
-  // match the getPtr<TrackerHitLocal>() check in setUncalibratedSourceLink_impl.
-  const auto& constHits = std::as_const(hitsCollection);
-
-  // Assign source links to the first two track states
-  tsc.setUncalibratedSourceLink_impl(i0, Acts::SourceLink{constHits.at(0)});
-  tsc.setUncalibratedSourceLink_impl(i1, Acts::SourceLink{constHits.at(1)});
+  // Assign source links to the first two track states.
+  tsc.setUncalibratedSourceLink_impl(i0,
+                                     Acts::SourceLink{hitsCollection.at(0)});
+  tsc.setUncalibratedSourceLink_impl(i1,
+                                     Acts::SourceLink{hitsCollection.at(1)});
 
   // has_impl must reflect link presence
   BOOST_CHECK(tsc.has_impl("uncalibratedSourceLink"_hash, i0));
@@ -529,7 +526,8 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
                     std::invalid_argument);
 
   // Updating an existing link: point i0 to hit2 instead of hit1
-  tsc.setUncalibratedSourceLink_impl(i0, Acts::SourceLink{constHits.at(1)});
+  tsc.setUncalibratedSourceLink_impl(i0,
+                                     Acts::SourceLink{hitsCollection.at(1)});
   {
     auto sl = tsc.getUncalibratedSourceLink_impl(i0);
     const auto* hit = sl.getPtr<ActsPodioEdm::TrackerHitLocal>();
@@ -549,35 +547,31 @@ BOOST_AUTO_TEST_CASE(InvalidHitsLinksCombination) {
 
   // Providing only hits (null links) must throw
   BOOST_CHECK_THROW(
-      (MutablePodioTrackStateContainer<>{
-          helper,
-          std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      (MutablePodioTrackStateContainer{
+          helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
           std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-          std::make_unique<ActsPodioEdm::JacobianCollection>(),
-          &hitsCollection, nullptr}),
+          std::make_unique<ActsPodioEdm::JacobianCollection>(), &hitsCollection,
+          nullptr}),
       std::invalid_argument);
 
   // Providing only links (null hits) must throw
   BOOST_CHECK_THROW(
-      (MutablePodioTrackStateContainer<>{
-          helper,
-          std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+      (MutablePodioTrackStateContainer{
+          helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
           std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-          std::make_unique<ActsPodioEdm::JacobianCollection>(),
-          nullptr, &linksCollection}),
+          std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr,
+          &linksCollection}),
       std::invalid_argument);
 
   // Providing both null is valid (identifier-based mode)
-  BOOST_CHECK_NO_THROW((MutablePodioTrackStateContainer<>{
-      helper,
-      std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+  BOOST_CHECK_NO_THROW((MutablePodioTrackStateContainer{
+      helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
       std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr, nullptr}));
 
   // Providing both non-null is valid (link-based mode)
-  BOOST_CHECK_NO_THROW((MutablePodioTrackStateContainer<>{
-      helper,
-      std::make_unique<ActsPodioEdm::TrackStateCollection>(),
+  BOOST_CHECK_NO_THROW((MutablePodioTrackStateContainer{
+      helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
       std::make_unique<ActsPodioEdm::JacobianCollection>(), &hitsCollection,
       &linksCollection}));
@@ -588,8 +582,7 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
   // in-memory collections as its mutable counterpart can correctly navigate the
   // links that were set by the mutable container.  The copy-from-mutable
   // constructor is used so that both containers share the same underlying
-  // collections; this avoids PODIO object-ID complications that arise when
-  // moving collections into a podio::Frame one-by-one.
+  // collections.
   using namespace HashedStringLiteral;
 
   NullHelper helper;
@@ -605,21 +598,22 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
   auto hit2 = hitsCollection.create();
   hit2.setCellID(22222);
 
-  MutablePodioTrackStateContainer<Acts::RefHolder> tsc{
+  MutablePodioTrackStateContainer tsc{
       helper, trackStates, params, jacs, &hitsCollection, &linksCollection};
 
   auto i0 = tsc.addTrackState_impl();
   auto i1 = tsc.addTrackState_impl();
   tsc.addTrackState_impl();  // third state intentionally has no source link
 
-  const auto& constHits = std::as_const(hitsCollection);
-  tsc.setUncalibratedSourceLink_impl(i0, Acts::SourceLink{constHits.at(0)});
-  tsc.setUncalibratedSourceLink_impl(i1, Acts::SourceLink{constHits.at(1)});
+  tsc.setUncalibratedSourceLink_impl(i0,
+                                     Acts::SourceLink{hitsCollection.at(0)});
+  tsc.setUncalibratedSourceLink_impl(i1,
+                                     Acts::SourceLink{hitsCollection.at(1)});
 
   // Construct a const container from the mutable one.  The copy constructor
   // passes through m_hits and m_links so the const container is in link-based
   // mode and shares the same underlying collections.
-  ConstPodioTrackStateContainer<Acts::ConstRefHolder> cc{tsc};
+  ConstPodioTrackStateContainer cc{tsc};
 
   BOOST_CHECK_EQUAL(cc.size_impl(), 3u);
 
@@ -641,7 +635,8 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
   }
 
   // Requesting a source link for the unlinked state must throw
-  BOOST_CHECK_THROW(cc.getUncalibratedSourceLink_impl(2), std::invalid_argument);
+  BOOST_CHECK_THROW(cc.getUncalibratedSourceLink_impl(2),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
