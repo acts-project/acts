@@ -71,7 +71,7 @@ jobs:
 
       - name: Configure
         run: >
-          source .env &&
+          CI/dependencies/activate.sh .env &&
           ccache -z &&
           cmake -B build -S . --preset=github-ci-coverage
       - name: Build
@@ -131,7 +131,7 @@ jobs:
 
       - name: Configure
         run: >
-          source .env &&
+          CI/dependencies/activate.sh .env &&
           ccache -z &&
           cmake -B build -S .
           --preset=gitlab-ci-clangtidy
@@ -181,7 +181,7 @@ jobs:
         run: pip3 install cmakeperf==0.6.1
       - name: Configure
         run: >
-          source .env &&
+          CI/dependencies/activate.sh .env &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci

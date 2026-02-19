@@ -59,7 +59,7 @@ build_gnn_cpu:
     - cd src
     - git checkout $HEAD_SHA
     - CI/dependencies/setup.sh -c g++ -e .env
-    - source .env
+    - CI/dependencies/activate.sh .env
     - cd ..
     - mkdir build
     # Here we only do a minimal build without examples to save resources
@@ -102,7 +102,7 @@ build_gnn:
     - cd src
     - git checkout $HEAD_SHA
     - CI/dependencies/setup.sh -c g++ -e .env
-    - source .env
+    - CI/dependencies/activate.sh .env
     - cd ..
     - mkdir build
     - >
@@ -133,7 +133,7 @@ test_gnn_unittests:
     - cd src
     - git checkout $HEAD_SHA
     - CI/dependencies/setup.sh -c g++ -e .env
-    - source .env
+    - CI/dependencies/activate.sh .env
     - cd ..
     - ctest --test-dir build -R "(Gnn|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
 
@@ -158,7 +158,7 @@ test_gnn_python:
     - git checkout $HEAD_SHA
     - nvidia-smi
     - CI/dependencies/setup.sh -c g++ -e .env
-    - source .env
+    - CI/dependencies/activate.sh .env
     - CI/dependencies/download_models.sh
     - ls ${MODEL_STORAGE}
     - apt-get install tree
@@ -186,7 +186,7 @@ build_gnn_tensorrt:
     - cd src
     - git checkout $HEAD_SHA
     - CI/dependencies/setup.sh -c g++ -e .env
-    - source .env
+    - CI/dependencies/activate.sh .env
     - cd ..
     - mkdir build
     - >
@@ -222,7 +222,7 @@ build_linux_ubuntu:
     - git checkout $HEAD_SHA
 
     - CI/dependencies/setup.sh -c g++ -e .env
-    - source .env
+    - CI/dependencies/activate.sh .env
 
     - cd ..
 
@@ -274,7 +274,7 @@ linux_test_examples:
     - cd src
     - git checkout $HEAD_SHA
     - CI/dependencies/setup.sh -c g++ -e .env -f
-    - source .env
+    - CI/dependencies/activate.sh .env
     - cd ..
 
     - source build/this_acts_withdeps.sh
@@ -305,7 +305,7 @@ linux_physmon:
     - cd src
     - git checkout $HEAD_SHA
     - CI/dependencies/setup.sh -c g++ -e .env -f
-    - source .env
+    - CI/dependencies/activate.sh .env
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
@@ -336,7 +336,7 @@ linux_physmon:
     - cd src
     - git checkout $HEAD_SHA
     - CI/dependencies/setup.sh -c ${CXX} -e .env
-    - source .env
+    - CI/dependencies/activate.sh .env
 
     - cd ..
     - mkdir build
