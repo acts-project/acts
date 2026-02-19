@@ -87,7 +87,10 @@ jobs:
 
       - name: Python sanity check after install
         shell: bash
-        run: source install/python/setup.sh && python -c "import acts; v = acts.Vector3(1,2,3)"
+        run: >
+          source .env &&
+          source install/python/setup.sh &&
+          python -c "import acts; v = acts.Vector3(1,2,3)"
 
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
@@ -345,8 +348,8 @@ jobs:
 
       - name: Configure
         run: >
-          . .env &&
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
@@ -365,10 +368,14 @@ jobs:
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
