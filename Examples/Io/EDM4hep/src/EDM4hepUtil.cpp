@@ -181,7 +181,7 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
 void EDM4hepUtil::writeMeasurement(
     const Acts::GeometryContext& gctx,
     const ConstVariableBoundMeasurementProxy& from,
-    ActsPodioEdm::MutableTrackerHitLocal to, const Acts::Surface& surface) {
+    ActsPodioEdm::MutableTrackerHitLocal& to, const Acts::Surface& surface) {
   long dim = from.size();
 
   const auto* placement = surface.surfacePlacement();

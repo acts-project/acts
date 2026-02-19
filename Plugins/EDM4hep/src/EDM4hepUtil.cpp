@@ -365,7 +365,7 @@ void writeMeasurement(const GeometryContext& gctx,
                       const Eigen::Map<const DynamicMatrix>& covariance,
                       std::span<const std::uint8_t> indices,
                       std::uint64_t cellId, const Acts::Surface& surface,
-                      ActsPodioEdm::MutableTrackerHitLocal to) {
+                      ActsPodioEdm::MutableTrackerHitLocal& to) {
   if (parameters.size() != covariance.rows() ||
       covariance.rows() != covariance.cols() || parameters.size() < 0 ||
       indices.size() != static_cast<std::size_t>(parameters.size())) {

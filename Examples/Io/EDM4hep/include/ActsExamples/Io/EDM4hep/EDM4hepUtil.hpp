@@ -95,19 +95,21 @@ VariableBoundMeasurementProxy readMeasurement(
     const edm4hep::TrackerHit3DCollection* fromClusters, Cluster* toCluster,
     const MapGeometryIdFrom& geometryMapper);
 
-/// Writes a measurement cluster to EDM4hep.
+/// Writes an ACTS measurement to EDM4hep.
 ///
-/// Inpersistent information:
-/// - hit index
-/// - 1D local coords?
-/// - segment path
+/// Converts bound parameters (local coordinates, time) and covariance from an
+/// ACTS measurement to a MutableTrackerHitLocal. The surface is used
+/// to obtain the detector cell ID from the DD4hepDetectorElement and to
+/// transform local coordinates to global position.
 ///
-/// Known issues:
-/// - cluster channels are written to inappropriate fields
-/// - local 2D coordinates and time are written to position
+/// @param gctx The geometry context for coordinate transformations.
+/// @param from The ACTS measurement to convert.
+/// @param to The EDM4hep tracker hit to write to.
+/// @param surface The surface associated with the measurement (must have a
+///        DD4hepDetectorElement placement).
 void writeMeasurement(const Acts::GeometryContext& gctx,
                       const ConstVariableBoundMeasurementProxy& from,
-                      ActsPodioEdm::MutableTrackerHitLocal to,
+                      ActsPodioEdm::MutableTrackerHitLocal& to,
                       const Acts::Surface& surface);
 
 /// Writes a trajectory to EDM4hep.
