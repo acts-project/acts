@@ -263,14 +263,14 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
     // initialization using default ctor
     phiSlidingWindow.resize(bg.second.size());
 
-    std::uint32_t win_idx = 0;
+    std::uint32_t winIdx = 0;
 
     // loop over n2 eta-bins in L2 layers
     for (const auto& b2Idx : bg.second) {
       const GbtsEtaBin& B2 = storage->getEtaBin(b2Idx);
 
       if (B2.empty()) {
-        win_idx++;
+        ++winIdx;
         continue;
       }
 
@@ -292,10 +292,10 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
         }
       }
 
-      phiSlidingWindow[win_idx].bin = &B2;
-      phiSlidingWindow[win_idx].hasNodes = true;
-      phiSlidingWindow[win_idx].deltaPhi = deltaPhi;
-      ++win_idx;
+      phiSlidingWindow[winIdx].bin = &B2;
+      phiSlidingWindow[winIdx].hasNodes = true;
+      phiSlidingWindow[winIdx].deltaPhi = deltaPhi;
+      ++winIdx;
     }
 
     // in GBTSv3 the outer loop goes over n1 nodes in the Layer 1 bin
@@ -317,10 +317,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
       const float z1 = n1pars[4];
 
       // the intermediate loop over sliding windows
-      for (std::uint32_t winIdx = 0; winIdx < phiSlidingWindow.size();
-           ++winIdx) {
-        GbtsSlidingWindow& slw = phiSlidingWindow[winIdx];
-
+      for (auto& slw : phiSlidingWindow) {
         if (!slw.hasNodes) {
           continue;
         }
@@ -434,7 +431,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
           // match edge candidate against edges incoming to n2
           if (m_cfg.matchBeforeCreate && (lk1 == 80000 || lk1 == 81000)) {
             // we must have enough incoming edges to decide
-            bool isGood = (n2NumEdges <= 2);
+            bool isGood = n2NumEdges <= 2;
 
             if (!isGood) {
               const float uat1 = 1.0f / expEta;
@@ -464,7 +461,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
             edgeStorage.emplace_back(B1.vn[n1Idx], B2.vn[n2Idx], expEta, curv,
                                      phi1 + dPhi1);
 
-            numCreatedEdges++;
+            ++numCreatedEdges;
 
             const std::uint32_t outEdgeIdx = nEdges;
 
@@ -769,9 +766,8 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   }
 }
 
-bool SeedFinderGbts::checkZ0BitMask(const std::uint16_t& z0BitMask,
-                                    const float& z0, const float& minZ0,
-                                    const float& z0HistoCoeff) const {
+bool SeedFinderGbts::checkZ0BitMask(std::uint16_t z0BitMask, float z0,
+                                    float minZ0, float z0HistoCoeff) const {
   if (z0BitMask == 0) {
     return true;
   }

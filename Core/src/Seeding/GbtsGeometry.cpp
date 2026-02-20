@@ -404,11 +404,11 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
   stageOffsets.reserve(51);  // 50 stages -> offsets needs +1
   stageOffsets.push_back(0);
-  
+
   std::vector<std::uint32_t> exitBins;
   while (!currentMap.empty()) {
     exitBins.clear();
-    
+
     // 2a. find all bins with zero outgoing links
 
     for (const auto& bl : currentMap) {
@@ -473,6 +473,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
       const std::vector<std::uint32_t>& bin2List = p->second.second;
 
+      // store the group
       m_binGroups.emplace_back(bin1Idx, std::vector<std::uint32_t>(bin2List));
     }
   }
