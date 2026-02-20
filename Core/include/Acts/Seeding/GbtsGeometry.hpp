@@ -128,6 +128,13 @@ class GbtsLayer final {
 
 /// Geometry helper built from silicon layers and connectors.
 class GbtsGeometry final {
+  // map key is a bin
+  // pair corresponds to outgoing and incoming bins that the current bin can
+  // connect to
+  using BinConnections =
+      std::map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
+                                        std::vector<std::uint32_t>>>;
+
  public:
   /// Constructor
   /// @param layerGeometry Silicon layers for geometry

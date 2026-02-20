@@ -11,9 +11,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <list>
 #include <map>
-#include <ranges>
 
 namespace Acts::Experimental {
 
@@ -365,36 +363,28 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   }
   // find stages of eta-bin pairs using the graph ablation algorithm
 
-  std::map<std::uint32_t,
-           std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>>
-      binMap;
+  BinConnections binMap;
 
   // 1. create a map of bin-to-bin connections
 
   // initialize with empty links
 
-  for (const auto& bg : m_binGroups) {
-    const std::uint32_t bin1 = bg.first;
-
+  for (const auto& [bin1, bin2s] : m_binGroups) {
     // add to the map
     if (binMap.find(bin1) == binMap.end()) {
-      std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>> emptyLinks;
-      binMap.insert(std::make_pair(bin1, emptyLinks));
+      binMap.try_emplace(bin1);
     }
 
-    std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>& bin1Links =
-        (*binMap.find(bin1)).second;
+    std::pair<std::vector<std::uint32_t>, std::vector<std::uint32_t>>&
+        bin1Links = (*binMap.find(bin1)).second;
 
-    for (const auto& bin2 : bg.second) {
+    for (const auto& bin2 : bin2s) {
       // add to the map
       if (binMap.find(bin2) == binMap.end()) {
-        std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>
-            emptyLinks;
-        binMap.insert(std::make_pair(bin2, emptyLinks));
+        binMap.try_emplace(bin2);
       }
 
-      std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>& bin2Links =
-          (*binMap.find(bin2)).second;
+      auto& bin2Links = (*binMap.find(bin2)).second;
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
       bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
@@ -402,58 +392,62 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   }
 
   // copy bin map as the original will be modified
-  std::map<std::uint32_t,
-           std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>>
-      currentMap(binMap);
+  BinConnections currentMap(binMap);
 
   // 2. find stages starting from the last one (i.e. bin1 with no outgoing
   // connections)
 
-  std::vector<std::vector<std::uint32_t>> stages;
+  // data for all stages
+  std::vector<std::uint32_t> stageData;
+  // defines the start and end of stage contents
+  std::vector<std::size_t> stageOffsets;
 
-  stages.reserve(50);
-
+  stageOffsets.reserve(51);  // 50 stages -> offsets needs +1
+  stageOffsets.push_back(0);
+  
+  std::vector<std::uint32_t> exitBins;
   while (!currentMap.empty()) {
     // 2a. find all bins with zero outgoing links
 
-    std::vector<std::uint32_t> exit_bins;
+    
 
     for (const auto& bl : currentMap) {
       if (!bl.second.first.empty()) {
         continue;
       }
 
-      exit_bins.push_back(bl.first);
+      exitBins.push_back(bl.first);
     }
 
     // 2b. add a new stage: vector of bin1
 
-    stages.emplace_back(exit_bins);
+    stageData.insert(stageData.end(), exitBins.begin(), exitBins.end());
+    stageOffsets.push_back(stageData.size());
 
     // 2c. remove links : graph ablation
 
-    for (const auto& bin1_key : exit_bins) {
-      auto p1 = currentMap.find(bin1_key);
+    for (const auto& bin1Key : exitBins) {
+      auto p1 = currentMap.find(bin1Key);
       if (p1 == currentMap.end()) {
         continue;
       }
       auto& bin1Links = (*p1).second;
 
-      for (const auto bin2_key : bin1Links.second) {
-        auto p2 = currentMap.find(bin2_key);
+      for (const auto bin2Key : bin1Links.second) {
+        auto p2 = currentMap.find(bin2Key);
         if (p2 == currentMap.end()) {
           continue;
         }
-        std::list<std::uint32_t>& links = (*p2).second.first;
+        std::vector<std::uint32_t>& links = p2->second.first;
 
-        links.remove(bin1_key);
+        std::erase(links, bin1Key);
       }
     }
 
     // 2d. finally, remove all exit bin1s from the map
 
-    for (auto bin1_key : exit_bins) {
-      currentMap.erase(bin1_key);
+    for (auto bin1Key : exitBins) {
+      currentMap.erase(bin1Key);
     }
   }
 
@@ -461,20 +455,26 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
   m_binGroups.clear();
 
-  for (const auto& iter :
-       std::views::reverse(stages)) {  // refill order is reverse to creation
+  // number of stages:
+  const std::size_t nStages = stageOffsets.size() - 1;
 
-    for (const auto bin1_idx : iter) {
-      const auto p = binMap.find(bin1_idx);
+  // reverse order filling
+  for (std::size_t stageIndex = nStages; stageIndex-- > 0;) {
+    const std::size_t begin = stageOffsets[stageIndex];
+    const std::size_t end = stageOffsets[stageIndex + 1];
+
+    for (std::size_t k = begin; k < end; ++k) {
+      const std::uint32_t bin1Idx = stageData[k];
+
+      const auto p = binMap.find(bin1Idx);
       if (p == binMap.end()) {
         continue;
       }
-      const std::list<std::uint32_t>& bin2_list =
-          (*p).second.second;  // bins which are incoming to bin1
 
-      std::vector<std::uint32_t> v2(bin2_list.begin(), bin2_list.end());
+      const std::vector<std::uint32_t>& bin2List = p->second.second;
+      std::vector<std::uint32_t> v2(bin2List.begin(), bin2List.end());
 
-      m_binGroups.push_back(std::make_pair(bin1_idx, v2));  // store the group
+      m_binGroups.push_back(std::make_pair(bin1Idx, std::move(v2)));
     }
   }
 }
