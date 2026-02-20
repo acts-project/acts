@@ -41,21 +41,21 @@ SeedContainer2 SeedFinderGbts::createSeeds(
   auto storage = std::make_unique<GbtsDataStorage>(m_cfg, m_geo, m_mlLut);
 
   SeedContainer2 SeedContainer;
-  std::vector<std::vector<GbtsNode>> node_storage =
+  std::vector<std::vector<GbtsNode>> nodeStorage =
       createNodes(spContainerComponents, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
-  for (std::uint16_t l = 0; l < node_storage.size(); l++) {
-    const std::vector<GbtsNode>& nodes = node_storage[l];
+  for (std::uint16_t l = 0; l < nodeStorage.size(); l++) {
+    const std::vector<GbtsNode>& nodes = nodeStorage[l];
 
     if (nodes.empty()) {
       continue;
     }
 
-    bool is_pixel = true;
+    const bool isPixel = true;
     // placeholder for now until strip hits are added in
-    if (is_pixel) {
+    if (isPixel) {
       nPixelLoaded += storage->loadPixelGraphNodes(l, nodes, m_cfg.useMl);
     } else {
       nStripLoaded += storage->loadStripGraphNodes(l, nodes);
@@ -155,20 +155,20 @@ GbtsMlLookupTable SeedFinderGbts::parseGbtsMlLookupTable(
 std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     const SpContainerComponentsType& container,
     const std::uint32_t maxLayers) const {
-  std::vector<std::vector<GbtsNode>> node_storage(maxLayers);
+  std::vector<std::vector<GbtsNode>> nodeStorage(maxLayers);
   // reserve for better efficiency
 
-  for (auto& v : node_storage) {
+  for (auto& v : nodeStorage) {
     v.reserve(10000);
   }
 
-  for (auto sp : std::get<0>(container)) {
+  for (const auto& sp : std::get<0>(container)) {
     // for every sp in container,
-    // add its variables to node_storage organised by layer
+    // add its variables to nodeStorage organised by layer
     std::uint16_t layer = sp.extra(std::get<1>(container));
 
     // add node to storage
-    GbtsNode& node = node_storage[layer].emplace_back(layer);
+    GbtsNode& node = nodeStorage[layer].emplace_back(layer);
 
     // fill the node with space point variables
 
@@ -182,7 +182,7 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     node.locPosY = sp.extra(std::get<3>(container));
   }
 
-  return node_storage;
+  return nodeStorage;
 }
 
 std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
@@ -209,7 +209,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
       maxZ0 + maxOuterRadius * static_cast<float>(roi.dzdrPlus());
 
   // correction due to limited pT resolution
-  float tripletPtMin = 0.8f * m_cfg.minPt;
+  const float tripletPtMin = 0.8f * m_cfg.minPt;
 
   // to re-scale original tunings done for the 900 MeV pT cut
   const float ptScale = (0.9f * UnitConstants::GeV) / m_cfg.minPt;
@@ -230,7 +230,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
   const float dPhiCoeff = m_cfg.lrtMode ? 1.0f * maxCurv : 0.68f * maxCurv;
 
   // the default sliding window along phi
-  float deltaPhi0 = 0.5f * m_cfg.phiSliceWidth;
+  const float deltaPhi0 = 0.5f * m_cfg.phiSliceWidth;
 
   std::uint32_t nConnections = 0;
 
@@ -241,8 +241,8 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
   // scale factor to get indexes of binned beamspot
   // assuming 16-bit z0 bitmask
 
-  std::uint32_t zBins = 16;
-  float z0HistoCoeff = zBins / (maxZ0 - minZ0 + 1e-6);
+  const std::uint32_t zBins = 16;
+  const float z0HistoCoeff = zBins / (maxZ0 - minZ0 + 1e-6);
 
   // loop over bin groups
   for (const auto& bg : m_geo->binGroups()) {
@@ -351,16 +351,16 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
           const std::uint32_t n2Idx = B2.vPhiNodes[n2PhiIdx].second;
 
-          std::uint16_t nodeInfo = B2.vIsConnected[n2Idx];
+          const std::uint16_t nodeInfo = B2.vIsConnected[n2Idx];
 
           // skip isolated nodes as their incoming edges lead to nowhere
           if ((lk1 == 80000) && (nodeInfo == 0)) {
             continue;
           }
 
-          std::uint32_t n2FirstEdge = B2.vFirstEdge[n2Idx];
-          std::uint16_t n2NumEdges = B2.vNumEdges[n2Idx];
-          std::uint32_t n2LastEdge = n2FirstEdge + n2NumEdges;
+          const std::uint32_t n2FirstEdge = B2.vFirstEdge[n2Idx];
+          const std::uint16_t n2NumEdges = B2.vNumEdges[n2Idx];
+          const std::uint32_t n2LastEdge = n2FirstEdge + n2NumEdges;
 
           const std::array<float, 5>& n2pars = B2.params[n2Idx];
 
@@ -512,7 +512,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
               // edge confirmed - update z0 histogram
 
-              std::uint32_t z0BinIndex =
+              const std::uint32_t z0BinIndex =
                   static_cast<std::uint32_t>(z0HistoCoeff * (z0 - minZ0));
 
               ++z0Histo[z0BinIndex];
@@ -585,7 +585,7 @@ std::int32_t SeedFinderGbts::runCCA(const std::uint32_t nEdges,
       std::int32_t nextLevel = pS->level;
 
       for (std::uint32_t nIdx = 0; nIdx < pS->nNei; ++nIdx) {
-        std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
+        const std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
 
         GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
 
@@ -776,8 +776,8 @@ bool SeedFinderGbts::checkZ0BitMask(const std::uint16_t& z0BitMask,
     return true;
   }
 
-  float dz = z0 - minZ0;
-  std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
+  const float dz = z0 - minZ0;
+  const std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
 
   if (((z0BitMask >> z0BinIndex) & 1) != 0) {
     return true;
@@ -787,7 +787,7 @@ bool SeedFinderGbts::checkZ0BitMask(const std::uint16_t& z0BitMask,
 
   const float z0Resolution = 2.5;
 
-  float dzm = dz - z0Resolution;
+  const float dzm = dz - z0Resolution;
 
   std::int32_t nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzm);
 
@@ -797,7 +797,7 @@ bool SeedFinderGbts::checkZ0BitMask(const std::uint16_t& z0BitMask,
     }
   }
 
-  float dzp = dz + z0Resolution;
+  const float dzp = dz + z0Resolution;
 
   nextBin = static_cast<std::uint32_t>(z0HistoCoeff * dzp);
 
