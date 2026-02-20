@@ -184,7 +184,7 @@ void GbtsDataStorage::initializeNodes(const bool useMl) {
     return;
   }
 
-  std::uint32_t nL = m_geo->numLayers();
+  const std::uint32_t nL = m_geo->numLayers();
 
   for (std::uint32_t layerIdx = 0; layerIdx < nL; ++layerIdx) {
     const GbtsLayer& pL = m_geo->getGbtsLayerByIndex(layerIdx);
