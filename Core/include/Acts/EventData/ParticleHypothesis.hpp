@@ -19,10 +19,11 @@ namespace Acts {
 // instance which would avoid copying the particle hypothesis and potentially
 // save some memory. But constexpr+static seems to require C++2b extension.
 
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 /// Specialized particle hypothesis for singly charged particles.
 ///
 /// @note This serves as a factory for common singly charge particles.
-
 class [[deprecated(
     "Use ParticleHypothesis with one charge magnitude "
     "instead")]] SinglyChargedParticleHypothesis
@@ -212,6 +213,8 @@ class [[deprecated(
                                                NonNeutralCharge{absQ});
   }
 };
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 /// Specialized particle hypothesis for any kind of charged particles.
 ///
