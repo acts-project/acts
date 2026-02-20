@@ -92,12 +92,6 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         if: always()
-        with:
-          name: coverage-build
-          path: build
-
-      - uses: actions/upload-artifact@v6
-        if: always()
         id: artifact-upload-step
         with:
           name: coverage-html
