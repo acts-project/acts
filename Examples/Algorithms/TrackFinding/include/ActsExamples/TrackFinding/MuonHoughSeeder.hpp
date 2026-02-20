@@ -99,7 +99,7 @@ class MuonHoughSeeder final : public IAlgorithm {
   /// @brief Find eta maxima from the space point bucket and fills them into a new
   ///        maximum container
   /// @param ctx: Algorithm context needed for the display of the truth-parameters
-  /// @param bucket: Spacepoint bucket of interest
+  /// @param bucket: Space point bucket of interest
   /// @param plane: Allocated hough plane to be recycled for all hough searches in the event
   MuonHoughMaxContainer constructEtaMaxima(const AlgorithmContext& ctx,
                                            const MuonSpacePointBucket& bucket,

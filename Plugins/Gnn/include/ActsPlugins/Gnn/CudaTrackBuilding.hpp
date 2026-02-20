@@ -38,7 +38,7 @@ class CudaTrackBuilding final : public TrackBuildingBase {
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
-      PipelineTensors tensors, std::vector<int> &spacepointIDs,
+      PipelineTensors tensors, std::vector<int> &spacePointIDs,
       const ExecutionContext &execContext = {}) override;
   /// Get configuration
   /// @return Configuration object

@@ -115,8 +115,8 @@ namespace ActsExamples {
 //// For the total houghHist, the int counts the number of layers with one or
 /// more
 /// hit in that bin
-// The unsigned is a counter that will point to a spacepoint or to a measurement
-// object
+// The unsigned is a counter that will point to a space point or to a
+// measurement object
 
 /// An houghHist is a 2d array of points, where each point has a value.
 /// The value starts as the number of hit layers, but can change with effects
@@ -155,7 +155,8 @@ class HoughTransformSeeder final : public IAlgorithm {
     /// the detector to use different algorithms for space point construction,
     /// e.g. single-hit space points for pixel-like detectors or double-hit
     /// space points for strip-like detectors.
-    /// Note that we don't *need* spacepoints (measurements can be used instead)
+    /// Note that we don't *need* space points (measurements can be used
+    /// instead)
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;

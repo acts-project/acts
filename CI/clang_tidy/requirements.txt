@@ -28,7 +28,7 @@ python-slugify==6.1.2
     # via codereport
 pyyaml==6.0.3
     # via -r CI/clang_tidy/requirements.in
-rich==14.3.1
+rich==14.3.2
     # via -r CI/clang_tidy/requirements.in
 setuptools==82.0.0
     # via fs
