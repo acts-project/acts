@@ -376,9 +376,13 @@ void writeMeasurement(const Acts::GeometryContext& gctx,
 
 /// Data extracted when reading a measurement from EDM4hep
 struct MeasurementData {
+  /// Measurement parameters (local coordinates)
   Acts::DynamicVector parameters;
+  /// Covariance matrix of the measurement
   Acts::DynamicMatrix covariance;
+  /// Indices of the measured parameters
   boost::container::static_vector<std::uint8_t, Acts::eBoundSize> indices;
+  /// Cell ID of the measurement
   std::uint64_t cellId{0};
 };
 
