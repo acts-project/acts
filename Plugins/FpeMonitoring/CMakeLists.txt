@@ -3,6 +3,7 @@ acts_add_library(
     src/FpeMonitor.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
+
 target_include_directories(
     ActsPluginFpeMonitoring
     PUBLIC
@@ -11,6 +12,8 @@ target_include_directories(
 )
 
 target_link_libraries(ActsPluginFpeMonitoring PUBLIC Acts::Core)
+
+acts_compile_headers(PluginFpeMonitoring GLOB include/**/*.hpp)
 
 # Fpe flags
 set(_fpe_options "")
