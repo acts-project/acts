@@ -105,7 +105,7 @@ jobs:
           name: coverage-html
           path: build/coverage/html
 
-      - name: Documentation display
+      - name: Coverage display
         run: |
           base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}'
           link="$base_link/index.html"
