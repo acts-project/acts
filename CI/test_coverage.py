@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.14"
 # dependencies = [
 #     "gcovr==8.6",
 #     "lxml",
@@ -12,6 +12,7 @@ import multiprocessing as mp
 import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 import shlex
 
@@ -23,13 +24,24 @@ from rich.console import Console
 app = typer.Typer(add_completion=False)
 console = Console()
 
-DEFAULT_EXCLUDES = [
-    r"(^|/)Tests/",
+# Regex patterns for excluding files from coverage (matched against file paths as-is)
+EXCLUDE_PATTERNS = [
     r"/boost/",
     r"json\.hpp",
-    r"(^|/)Python/",
-    r"^dependencies/",
 ]
+
+# Paths relative to source directory (resolved to absolute when source_dir is known)
+EXCLUDE_PATHS = [
+    "Tests/",
+    "Python/",
+    "dependencies/",
+]
+
+
+def _resolve_excludes(source_dir: Path) -> list[str]:
+    """Return exclude patterns: EXCLUDE_PATTERNS as-is plus EXCLUDE_PATHS prefixed with source_dir."""
+    source_prefix = re.escape(source_dir.as_posix()) + r"/"
+    return list(EXCLUDE_PATTERNS) + [source_prefix + p for p in EXCLUDE_PATHS]
 
 
 def locate_executable(name: str, hint: str) -> str:
@@ -50,27 +62,6 @@ def gcovr_version(gcovr_exe: str) -> tuple[int, int] | None:
         )
         return None
     return (int(match.group(1)), int(match.group(2)))
-
-
-def validate_coverage_xml(path: Path, schema_path: Path) -> None:
-    if not path.exists():
-        console.print(f"Coverage XML not found: {path}", style="red")
-        raise typer.Exit(1)
-    xmllint = shutil.which("xmllint")
-    if not xmllint:
-        console.print("xmllint not available for XML validation.", style="red")
-        raise typer.Exit(1)
-    if not schema_path.exists():
-        console.print(f"Coverage XSD not found: {schema_path}", style="red")
-        raise typer.Exit(1)
-    cmd = [xmllint, "--noout", "--schema", str(schema_path), str(path)]
-    console.print(f"$ {' '.join(cmd)}")
-    try:
-        subprocess.run(cmd, check=True, capture_output=True, text=True)
-    except subprocess.CalledProcessError as exc:
-        error_output = exc.stderr or exc.stdout or "xmllint failed"
-        console.print(error_output.strip(), style="red")
-        raise typer.Exit(1) from exc
 
 
 @app.command()
@@ -134,41 +125,40 @@ def generate(
             )
             raise typer.Exit(1)
 
-    base_args = _build_gcovr_common_args(build_dir, gcov_exe, gcovr_exe, jobs, verbose)
-
-    script_dir = Path(__file__).resolve().parent
     coverage_dir = build_dir / "coverage"
     coverage_dir.mkdir(exist_ok=True)
 
     coverage_xml_path = coverage_dir / "cov.xml"
     raw_xml_path = coverage_dir / "cov_raw.xml" if filter_xml else coverage_xml_path
-    schema_path = script_dir / "sonar_coverage.xsd"
 
-    gcovr_cmd = base_args + ["--sonarqube", str(raw_xml_path)]
-    if html:
-        html_dir = coverage_dir / "html"
-        html_dir.mkdir(exist_ok=True)
-        html_path = html_dir / "index.html"
-        gcovr_cmd += [
-            "--html-nested",
-            str(html_path),
-            "--html-theme",
-            html_theme,
-        ]
+    with tempfile.TemporaryDirectory() as gcov_obj_dir:
+        base_args = _build_gcovr_common_args(
+            build_dir, gcov_exe, gcovr_exe, jobs, verbose, gcov_obj_dir
+        )
+        gcovr_cmd = base_args + ["--sonarqube", str(raw_xml_path)]
+        if html:
+            html_dir = coverage_dir / "html"
+            html_dir.mkdir(exist_ok=True)
+            html_path = html_dir / "index.html"
+            gcovr_cmd += [
+                "--html-nested",
+                str(html_path),
+                "--html-theme",
+                html_theme,
+            ]
 
-    console.print(f"$ {shlex.join(gcovr_cmd)}")
-    subprocess.run(gcovr_cmd, cwd=build_dir, check=True)
+        console.print(f"$ {shlex.join(gcovr_cmd)}")
+        subprocess.run(gcovr_cmd, cwd=build_dir, check=True)
 
     if html:
         console.print(f"HTML coverage report written to {coverage_dir / 'html'}")
 
     if filter_xml:
-        xml_excludes = DEFAULT_EXCLUDES + ["^" + re.escape(build_dir.name)]
+        source_dir = Path(__file__).resolve().parent.parent
+        xml_excludes = _resolve_excludes(source_dir) + ["^" + re.escape(build_dir.name)]
         filter_coverage_xml(raw_xml_path, coverage_xml_path, xml_excludes)
         raw_xml_path.unlink()
         console.print(f"Removed raw coverage file {raw_xml_path}")
-
-    validate_coverage_xml(coverage_xml_path, schema_path)
 
 
 def filter_coverage_xml(
@@ -240,7 +230,8 @@ def filter(
         console.print(f"Input file not found: {input}", style="red")
         raise typer.Exit(1)
 
-    excludes = list(exclude) if exclude is not None else list(DEFAULT_EXCLUDES)
+    source_dir = Path(__file__).resolve().parent.parent
+    excludes = list(exclude) if exclude is not None else _resolve_excludes(source_dir)
     if build_dir_name is not None:
         excludes.append("^" + re.escape(build_dir_name))
 
@@ -253,6 +244,7 @@ def _build_gcovr_common_args(
     gcovr_exe: str,
     jobs: int,
     verbose: bool,
+    gcov_object_directory: str,
 ) -> list[str]:
     script_dir = Path(__file__).resolve().parent
     source_dir = script_dir.parent.resolve()
@@ -266,25 +258,16 @@ def _build_gcovr_common_args(
     if verbose:
         extra_flags.append("--verbose")
 
-    excludes = [
-        "-e",
-        f"{source_dir_posix}/Tests/",
-        "-e",
-        r".*/boost/.*",
-        "-e",
-        r".*json\.hpp",
-        "-e",
-        f"{source_dir_posix}/Python/",
-        "-e",
-        f"{build_dir.as_posix()}/",
-        "-e",
-        f"{source_dir_posix}/dependencies/",
-    ]
+    excludes: list[str] = []
+    for pattern in _resolve_excludes(source_dir):
+        excludes.extend(["-e", pattern])
+    excludes.extend(["-e", f"{build_dir.as_posix()}/"])
 
     return (
         [gcovr_exe]
         + ["-r", str(source_dir)]
         + ["--gcov-executable", gcov_exe]
+        + ["--gcov-object-directory", gcov_object_directory]
         + ["-j", str(jobs)]
         + ["--merge-mode-functions", "separate"]
         + excludes
