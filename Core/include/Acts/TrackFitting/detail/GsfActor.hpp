@@ -123,7 +123,7 @@ struct GsfActor {
 
   const Logger& logger() const { return *m_cfg.logger; }
 
-  using TemporaryStates = TemporaryStates<traj_t>;
+  using TemporaryStates = detail::Gsf::TemporaryStates<traj_t>;
 
   using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
