@@ -149,15 +149,18 @@ def generate(
         html_dir = coverage_dir / "html"
         html_dir.mkdir(exist_ok=True)
         html_path = html_dir / "index.html"
-        gcovr_cmd += ["--html-details", str(html_path), "--html-theme", html_theme]
+        gcovr_cmd += [
+            "--html-nested",
+            str(html_path),
+            "--html-theme",
+            html_theme,
+        ]
 
     console.print(f"$ {shlex.join(gcovr_cmd)}")
     subprocess.run(gcovr_cmd, cwd=build_dir, check=True)
 
     if html:
-        console.print(
-            f"HTML coverage report written to {coverage_dir / 'html' / 'index.html'}"
-        )
+        console.print(f"HTML coverage report written to {coverage_dir / 'html'}")
 
     if filter_xml:
         xml_excludes = DEFAULT_EXCLUDES + ["^" + re.escape(build_dir.name)]
