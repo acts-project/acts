@@ -23,8 +23,8 @@ class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
   struct Config {
     /// Which proto tracks to write
     std::string inputProtoTracks;
-    /// Spacepoint collection
-    std::string inputSpacepoints;
+    /// Space point collection
+    std::string inputSpacePoints;
     /// Output directory
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
@@ -57,8 +57,8 @@ class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacepoints{this,
-                                                            "inputSpacepoints"};
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
+                                                            "inputSpacePoints"};
 };
 
 }  // namespace ActsExamples

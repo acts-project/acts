@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/Seeding/GbtsConfig.hpp"
 #include "Acts/Seeding/GbtsDataStorage.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
-#include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -23,8 +23,8 @@
 
 namespace Acts::Experimental {
 
-/// Tuple template used to carry the spacepoint components
-using SPContainerComponentsType =
+/// Tuple template used to carry the space point components
+using SpContainerComponentsType =
     std::tuple<SpacePointContainer2, SpacePointColumnProxy<std::uint32_t, true>,
                SpacePointColumnProxy<float, true>,
                SpacePointColumnProxy<float, true>>;
@@ -32,66 +32,63 @@ using SPContainerComponentsType =
 /// Seed finder implementing the GBTs seeding workflow.
 class SeedFinderGbts {
  public:
-  /// Constructor.
-  /// @param config Configuration for the seed finder
-  /// @param gbtsGeo GBTs geometry
-  /// @param layerGeometry Layer geometry information
-  /// @param logger Logging instance
-  SeedFinderGbts(const SeedFinderGbtsConfig config,
-                 std::unique_ptr<GbtsGeometry> gbtsGeo,
-                 const std::vector<TrigInDetSiLayer>* layerGeometry,
-                 std::unique_ptr<const Acts::Logger> logger =
-                     Acts::getDefaultLogger("Finder",
-                                            Acts::Logging::Level::INFO));
-
   /// Seed metadata produced by the GBTs algorithm.
   struct SeedProperties {
     /// Constructor.
     /// @param quality Seed quality score
     /// @param clone Clone flag
-    /// @param sps Spacepoint indices
+    /// @param sps Space point indices
     SeedProperties(float quality, std::int32_t clone,
                    std::vector<std::uint32_t> sps)
-        : seedQuality(quality), isClone(clone), spacepoints(std::move(sps)) {}
+        : seedQuality(quality), isClone(clone), spacePoints(std::move(sps)) {}
 
     /// Seed quality score.
     float seedQuality{};
     /// Clone flag.
     std::int32_t isClone{};
-    /// Spacepoint indices.
-    std::vector<std::uint32_t> spacepoints{};
+    /// Space point indices.
+    std::vector<std::uint32_t> spacePoints;
 
     /// Comparison operator.
     /// @param o Other seed properties to compare
     /// @return True if this is less than other
-    bool operator<(SeedProperties const& o) const {
-      return std::tie(seedQuality, isClone, spacepoints) <
-             std::tie(o.seedQuality, o.isClone, o.spacepoints);
-    }
+    auto operator<=>(const SeedProperties& o) const = default;
   };
+
+  /// Constructor.
+  /// @param config Configuration for the seed finder
+  /// @param gbtsGeo GBTs geometry
+  /// @param layerGeometry Layer geometry information
+  /// @param logger Logging instance
+  SeedFinderGbts(const GbtsConfig& config,
+                 std::unique_ptr<GbtsGeometry> gbtsGeo,
+                 const std::vector<TrigInDetSiLayer>& layerGeometry,
+                 std::unique_ptr<const Acts::Logger> logger =
+                     Acts::getDefaultLogger("Finder",
+                                            Acts::Logging::Level::INFO));
 
   /// Create seeds from spacepoints in a region of interest.
   /// @param roi Region of interest descriptor
-  /// @param SpContainerComponents Spacepoint container components
+  /// @param SpContainerComponents Space point container components
   /// @param maxLayers Maximum number of layers
   /// @return Container with generated seeds
   SeedContainer2 createSeeds(
       const RoiDescriptor& roi,
-      const SPContainerComponentsType& SpContainerComponents,
+      const SpContainerComponentsType& SpContainerComponents,
       std::uint32_t maxLayers) const;
 
-  /// Create graph nodes from spacepoints.
-  /// @param container Spacepoint container components
+  /// Create graph nodes from space points.
+  /// @param container Space point container components
   /// @param maxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(
-      const SPContainerComponentsType& container,
+      const SpContainerComponentsType& container,
       std::uint32_t maxLayers) const;
 
   /// Parse machine learning lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
   /// @return Parsed machine learning lookup table
-  GbtsMLLookupTable parseGbtsMLLookupTable(const std::string& lutInputFile);
+  GbtsMlLookupTable parseGbtsMlLookupTable(const std::string& lutInputFile);
 
   /// Build doublet graph from nodes.
   /// @param roi Region of interest descriptor
@@ -121,13 +118,13 @@ class SeedFinderGbts {
       std::vector<SeedProperties>& vSeedCandidates) const;
 
  private:
-  SeedFinderGbtsConfig m_config;
+  GbtsConfig m_cfg{};
 
   const std::shared_ptr<const GbtsGeometry> m_geo;
 
-  const std::vector<TrigInDetSiLayer>* m_layerGeometry;
+  const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
 
-  GbtsMLLookupTable m_mlLut{};
+  GbtsMlLookupTable m_mlLut;
 
   std::unique_ptr<const Acts::Logger> m_logger =
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);

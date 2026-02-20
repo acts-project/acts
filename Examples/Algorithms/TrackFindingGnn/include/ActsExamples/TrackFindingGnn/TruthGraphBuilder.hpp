@@ -21,13 +21,13 @@
 namespace ActsExamples {
 
 /// Algorithm to create a truth graph for computing truth metrics
-/// Requires spacepoints and particles collection
+/// Requires space points and particles collection
 /// Either provide a measurements particles map, or a measurement simhit map +
 /// simhits
 class TruthGraphBuilder final : public IAlgorithm {
  public:
   struct Config {
-    /// Input spacepoint collection
+    /// Input space point collection
     std::string inputSpacePoints;
     /// Input particles collection
     std::string inputParticles;
@@ -59,12 +59,12 @@ class TruthGraphBuilder final : public IAlgorithm {
   Config m_cfg;
 
   std::vector<std::int64_t> buildFromMeasurements(
-      const SimSpacePointContainer& spacepoints,
+      const SimSpacePointContainer& spacePoints,
       const SimParticleContainer& particles,
       const IndexMultimap<ActsFatras::Barcode>& measPartMap) const;
 
   std::vector<std::int64_t> buildFromSimhits(
-      const SimSpacePointContainer& spacepoints,
+      const SimSpacePointContainer& spacePoints,
       const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
       const SimParticleContainer& particles) const;
 

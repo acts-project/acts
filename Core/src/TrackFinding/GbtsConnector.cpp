@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// TODO: update to C++17 style
 #include "Acts/TrackFinding/GbtsConnector.hpp"
 
 #include <cstring>
@@ -20,13 +19,7 @@
 
 namespace Acts::Experimental {
 
-GbtsConnection::GbtsConnection(std::uint32_t s, std::uint32_t d)
-    : m_src(s), m_dst(d) {}
-
 GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
-  m_connMap.clear();
-  m_layerGroups.clear();
-
   std::uint32_t nLinks{};
 
   std::ifstream input_ifstream(inFile.c_str(), std::ifstream::in);
@@ -35,7 +28,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
     throw std::runtime_error("connection file not found");
   }
 
-  input_ifstream >> nLinks >> m_etaBin;
+  input_ifstream >> nLinks >> etaBin;
 
   for (std::uint32_t l = 0; l < nLinks; l++) {
     std::uint32_t stage{};
@@ -74,12 +67,12 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
       }
     }
 
-    auto it = m_connMap.find(stage);
+    auto it = connMap.find(stage);
 
-    if (it == m_connMap.end()) {
+    if (it == connMap.end()) {
       std::vector<std::unique_ptr<GbtsConnection>> v;
-      v.push_back(std::move(pC));              // move the unique_ptr in
-      m_connMap.emplace(stage, std::move(v));  // move the vector into the map
+      v.push_back(std::move(pC));            // move the unique_ptr in
+      connMap.emplace(stage, std::move(v));  // move the vector into the map
     } else {
       it->second.push_back(std::move(pC));  // move into existing vector
     }
@@ -91,7 +84,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
 
   std::map<std::int32_t, std::vector<const GbtsConnection*>> newConnMap;
 
-  for (const auto& conn : m_connMap) {
+  for (const auto& conn : connMap) {
     for (const auto& up : conn.second) {
       lConns.push_back(up.get());
     }
@@ -104,24 +97,22 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
         mCounter;  // layerKey, nDst, nSrc
 
     for (const auto& conn : lConns) {
-      auto entryIt = mCounter.find(conn->m_dst);
+      auto entryIt = mCounter.find(conn->dst);
       if (entryIt != mCounter.end()) {
         (*entryIt).second.first++;
       } else {
         std::uint32_t nDst = 1;
         std::uint32_t nSrc = 0;
-        mCounter.insert(
-            std::make_pair(conn->m_dst, std::make_pair(nDst, nSrc)));
+        mCounter.insert(std::make_pair(conn->dst, std::make_pair(nDst, nSrc)));
       }
 
-      entryIt = mCounter.find(conn->m_src);
+      entryIt = mCounter.find(conn->src);
       if (entryIt != mCounter.end()) {
         (*entryIt).second.second++;
       } else {
         std::uint32_t nDst = 0;
         std::uint32_t nSrc = 1;
-        mCounter.insert(
-            std::make_pair(conn->m_src, std::make_pair(nDst, nSrc)));
+        mCounter.insert(std::make_pair(conn->src, std::make_pair(nDst, nSrc)));
       }
     }
 
@@ -144,7 +135,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
     std::list<const GbtsConnection*>::iterator cIt = lConns.begin();
 
     while (cIt != lConns.end()) {
-      if (zeroLayers.find((*cIt)->m_dst) !=
+      if (zeroLayers.find((*cIt)->dst) !=
           zeroLayers.end()) {  // check if contains
         theStage.push_back(*cIt);
         cIt = lConns.erase(cIt);
@@ -172,7 +163,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
     std::map<std::uint32_t, std::vector<const GbtsConnection*>> l1ConnMap;
 
     for (const auto* conn : vConn) {
-      std::uint32_t dst = conn->m_dst;
+      std::uint32_t dst = conn->dst;
 
       std::map<std::uint32_t, std::vector<const GbtsConnection*>>::iterator
           l1MapIt = l1ConnMap.find(dst);
@@ -192,7 +183,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
       lgv.push_back(LayerGroup(l1Group.first, l1Group.second));
     }
 
-    m_layerGroups.insert(std::make_pair(currentStage, lgv));
+    layerGroups.insert(std::make_pair(currentStage, lgv));
 
     currentStage++;
   }

@@ -26,16 +26,6 @@ Surface::Surface(const Transform3& transform)
 Surface::Surface(const SurfacePlacementBase& placement) noexcept
     : GeometryObject(), m_placement(&placement) {}
 
-Surface::Surface(const Surface& other) noexcept
-    : GeometryObject(other),
-      std::enable_shared_from_this<Surface>(),
-      m_placement(other.m_placement),
-      m_surfaceMaterial(other.m_surfaceMaterial) {
-  if (other.m_transform) {
-    m_transform = std::make_unique<Transform3>(*other.m_transform);
-  }
-}
-
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
                  const Transform3& shift) noexcept
     : GeometryObject(),
@@ -158,23 +148,6 @@ std::shared_ptr<const Surface> Surface::getSharedPtr() const {
   return shared_from_this();
 }
 
-Surface& Surface::operator=(const Surface& other) {
-  if (&other != this) {
-    GeometryObject::operator=(other);
-    // detector element, identifier & layer association are unique
-    if (other.m_transform) {
-      m_transform = std::make_unique<Transform3>(*other.m_transform);
-    } else {
-      m_transform.reset();
-    }
-    m_associatedLayer = other.m_associatedLayer;
-    m_surfaceMaterial = other.m_surfaceMaterial;
-    m_placement = other.m_placement;
-    m_isSensitive = other.m_isSensitive;
-  }
-  return *this;
-}
-
 bool Surface::operator==(const Surface& other) const {
   // (a) fast exit for pointer comparison
   if (&other == this) {
@@ -241,9 +214,7 @@ std::string Surface::toString(const GeometryContext& gctx) const {
 }
 
 Vector3 Surface::center(const GeometryContext& gctx) const {
-  // fast access via transform matrix (and not translation())
-  auto tMatrix = localToGlobalTransform(gctx).matrix();
-  return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
+  return localToGlobalTransform(gctx).translation();
 }
 
 const Transform3& Surface::transform(const GeometryContext& gctx) const {
