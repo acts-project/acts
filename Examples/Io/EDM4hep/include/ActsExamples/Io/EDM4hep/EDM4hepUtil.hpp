@@ -124,8 +124,7 @@ void writeMeasurement(const Acts::GeometryContext& gctx,
 /// @param geometryMapper Function to map cell ID to geometry identifier.
 /// @return Proxy to the created measurement.
 VariableBoundMeasurementProxy readMeasurement(
-    MeasurementContainer& container,
-    const ActsPodioEdm::TrackerHitLocal& from,
+    MeasurementContainer& container, const ActsPodioEdm::TrackerHitLocal& from,
     const MapGeometryIdFrom& geometryMapper);
 
 /// Writes a trajectory to EDM4hep.

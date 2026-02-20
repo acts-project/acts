@@ -68,7 +68,7 @@ ProcessCode EDM4hepMeasurementInputConverter::convert(
 
   for (const auto& trackerHitLocal : trackerHitLocalCollection) {
     EDM4hepUtil::readMeasurement(measurements, trackerHitLocal,
-                                m_geometryMapper);
+                                 m_geometryMapper);
   }
 
   m_outputMeasurements(ctx, std::move(measurements));

@@ -408,8 +408,7 @@ void writeMeasurement(const GeometryContext& gctx,
   }
 }
 
-MeasurementData readMeasurement(
-    const ActsPodioEdm::TrackerHitLocal& from) {
+MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from) {
   auto indices = detail::decodeIndices(from.getType());
   auto meas = from.getMeasurement();
   auto cov = from.getCovariance();
