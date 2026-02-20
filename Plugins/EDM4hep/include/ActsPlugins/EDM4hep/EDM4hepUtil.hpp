@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 #include <ActsPodioEdm/MutableTrackerHitLocal.h>
 #include <ActsPodioEdm/TrackerHitLocal.h>
 
