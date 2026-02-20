@@ -64,9 +64,10 @@ concept BoundTrackParametersConcept =
 
 namespace Concepts {
 template <typename Parameters>
-concept BoundConvertibleTrackParameters = requires(const Parameters &p) {
-  { p.toBound() } -> BoundTrackParametersConcept;
-};
+concept BoundConvertibleTrackParameters
+    [[deprecated("toBound() is deprecated")]] = requires(const Parameters &p) {
+      { p.toBound() } -> BoundTrackParametersConcept;
+    };
 }  // namespace Concepts
 
 }  // namespace Acts
