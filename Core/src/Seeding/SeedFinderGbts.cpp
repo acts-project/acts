@@ -399,7 +399,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
           if (lk1 == 80000) {  // check against non-empty z0 histogram
 
-            if (!checkZ0Bitmask(nodeInfo, z0, minZ0, z0HistoCoeff)) {
+            if (!checkZ0BitMask(nodeInfo, z0, minZ0, z0HistoCoeff)) {
               continue;
             }
           }
@@ -409,9 +409,9 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
               continue;
             }
 
-            const float zouter = z0 + maxOuterRadius * tau;
+            const float zOuter = z0 + maxOuterRadius * tau;
 
-            if (zouter < cutZMinU || zouter > cutZMaxU) {
+            if (zOuter < cutZMinU || zOuter > cutZMaxU) {
               continue;
             }
           }
@@ -769,7 +769,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   }
 }
 
-bool SeedFinderGbts::checkZ0Bitmask(const std::uint16_t& z0BitMask,
+bool SeedFinderGbts::checkZ0BitMask(const std::uint16_t& z0BitMask,
                                     const float& z0, const float& minZ0,
                                     const float& z0HistoCoeff) const {
   if (z0BitMask == 0) {
