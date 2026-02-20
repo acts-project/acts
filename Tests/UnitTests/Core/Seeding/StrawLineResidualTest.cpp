@@ -744,13 +744,6 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
       auto intersection = PlanarHelper::intersectPlane(
           muonPos, muonDir, Vector3::UnitZ(), distancesZCombined[c]);
 
-      auto alongStrip = PlanarHelper::intersectPlane(
-          intersection.position(), Vector3::UnitX(), Vector3::UnitX(), 0.);
-      auto alongWire = PlanarHelper::intersectPlane(
-          intersection.position(), Vector3::UnitY(), Vector3::UnitY(), 0);
-
-      Vector3 position = {alongStrip.pathLength(), alongWire.pathLength(),
-                          distancesZCombined[c]};
       combinedPoints[c] = std::make_shared<FitTestSpacePoint>(
           intersection.position(), Vector3::Zero(), Vector3::UnitZ(), 1._cm,
           1._cm);

@@ -226,7 +226,7 @@ std::pair<Vector3, Vector3> seedSolution(
   // separate 2D and 1D spacepoints
   const auto [spacePoints1D, spacePoint2D] = separateLayers(layerTriplet);
 
-  // the position of the seed can be evalutaed from the 2D measurement
+  // the position of the seed can be evaluated from the 2D measurement
   Vector3 seedPosition = spacePoint2D->localPosition();
   // The direction of the seed can be estimated from the second layer equation
   Vector3 seedDirection =
