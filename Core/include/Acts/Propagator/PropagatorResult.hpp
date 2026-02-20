@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/PropagatorStatistics.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 
@@ -21,13 +23,16 @@ namespace Acts {
 /// @tparam parameters_t Type of final track parameters
 /// @tparam result_list  Result pack for additional propagation
 ///                      quantities
-template <typename parameters_t, typename... result_list>
+template <typename... result_list>
 struct PropagatorResult : private detail::Extendable<result_list...> {
   using detail::Extendable<result_list...>::get;
   using detail::Extendable<result_list...>::tuple;
 
   /// Final track parameters
-  std::optional<parameters_t> endParameters = std::nullopt;
+  std::optional<BoundTrackParameters> endParameters = std::nullopt;
+  /// Final multi component track parameters
+  std::optional<MultiComponentBoundTrackParameters>
+      endParametersMultiComponent = std::nullopt;
 
   /// Full transport jacobian
   std::optional<BoundMatrix> transportJacobian = std::nullopt;

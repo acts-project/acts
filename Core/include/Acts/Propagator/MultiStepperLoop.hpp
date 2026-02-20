@@ -18,7 +18,6 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
@@ -32,7 +31,6 @@
 #include <cstddef>
 #include <limits>
 #include <sstream>
-#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -163,8 +161,10 @@ class MultiStepperLoop : public single_stepper_t {
   using typename SingleStepper::Covariance;
   using typename SingleStepper::Jacobian;
 
-  /// @brief Define an own bound state
-  using BoundState =
+  /// Single component bound state definition
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  /// Multi-component bound state definition
+  using MultiBoundState =
       std::tuple<MultiComponentBoundTrackParameters, Jacobian, double>;
 
   /// @brief The reducer type
@@ -263,33 +263,16 @@ class MultiStepperLoop : public single_stepper_t {
     return state;
   }
 
+  /// Initialize the stepper state from bound track parameters
+  /// @param state Stepper state to initialize
+  /// @param par Bound track parameters to initialize from
+  void initialize(State& state, const BoundTrackParameters& par) const;
+
   /// Initialize the stepper state from multi-component bound track parameters
   /// @param state The stepper state to initialize
   /// @param par The multi-component bound track parameters
   void initialize(State& state,
-                  const MultiComponentBoundTrackParameters& par) const {
-    if (par.components().empty()) {
-      throw std::invalid_argument(
-          "Cannot construct MultiEigenStepperLoop::State with empty "
-          "multi-component parameters");
-    }
-
-    state.particleHypothesis = par.particleHypothesis();
-
-    const auto surface = par.referenceSurface().getSharedPtr();
-
-    for (auto i = 0ul; i < par.components().size(); ++i) {
-      const auto& [weight, singlePars] = par[i];
-      auto& cmp =
-          state.components.emplace_back(SingleStepper::makeState(state.options),
-                                        weight, IntersectionStatus::onSurface);
-      SingleStepper::initialize(cmp.state, singlePars);
-    }
-
-    if (std::get<2>(par.components().front())) {
-      state.covTransport = true;
-    }
-  }
+                  const MultiComponentBoundTrackParameters& par) const;
 
   /// A proxy struct which allows access to a single component of the
   /// multi-component state. It has the semantics of a const reference, i.e.
@@ -697,6 +680,31 @@ class MultiStepperLoop : public single_stepper_t {
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const;
 
+  /// Create and return the bound state at the current position
+  ///
+  /// @brief This transports (if necessary) the covariance
+  /// to the surface and creates a bound state. It does not check
+  /// if the transported state is at the surface, this needs to
+  /// be guaranteed by the propagator.
+  /// @note This is done by combining the gaussian mixture on the specified
+  /// surface. If the conversion to bound states of some components
+  /// fails, these components are ignored unless all components fail. In this
+  /// case an error code is returned.
+  ///
+  /// @param [in] state State that will be presented as @c BoundState
+  /// @param [in] surface The surface to which we bind the state
+  /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
+  ///
+  /// @return A bound state:
+  ///   - the parameters at the surface
+  ///   - the stepwise jacobian towards it (from last bound)
+  ///   - and the path length (from start - for ordering)
+  Result<MultiBoundState> multiBoundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
+
   /// @brief If necessary fill additional members needed for curvilinearState
   ///
   /// Compute path length derivatives in case they have not been computed
@@ -724,6 +732,23 @@ class MultiStepperLoop : public single_stepper_t {
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   BoundState curvilinearState(State& state, bool transportCov = true) const;
+
+  /// Create and return a curvilinear state at the current position
+  ///
+  /// @brief This transports (if necessary) the covariance
+  /// to the current position and creates a curvilinear state.
+  /// @note This is done as a simple average over the free representation
+  /// and covariance of the components.
+  ///
+  /// @param [in] state State that will be presented as @c CurvilinearState
+  /// @param [in] transportCov Flag steering covariance transport
+  ///
+  /// @return A curvilinear state:
+  ///   - the curvilinear parameters at given position
+  ///   - the stepweise jacobian towards it (from last bound)
+  ///   - and the path length (from start - for ordering)
+  MultiBoundState multiCurvilinearState(State& state,
+                                        bool transportCov = true) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

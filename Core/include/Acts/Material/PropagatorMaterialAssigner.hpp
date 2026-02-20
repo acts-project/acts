@@ -129,10 +129,9 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
 
     using VectorHelpers::makeVector4;
     // Neutral curvilinear parameters
-    NeutralBoundTrackParameters start =
-        NeutralBoundTrackParameters::createCurvilinear(
-            makeVector4(position, 0), direction, 1, std::nullopt,
-            NeutralParticleHypothesis::geantino());
+    BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+        makeVector4(position, 0), direction, 1, std::nullopt,
+        ParticleHypothesis::geantino());
 
     // Prepare Action list and abort list
     using MaterialSurfaceCollector =

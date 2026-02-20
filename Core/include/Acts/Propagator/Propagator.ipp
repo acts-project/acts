@@ -10,15 +10,11 @@
 
 #include "Acts/Propagator/Propagator.hpp"
 
-#include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-
-#include <concepts>
 
 namespace Acts {
 
@@ -211,9 +207,6 @@ auto Propagator<S, N>::propagate(const parameters_t& start,
                                  const propagator_options_t& options,
                                  bool createFinalParameters) const
     -> Result<ResultType<propagator_options_t>> {
-  static_assert(std::copy_constructible<StepperBoundTrackParameters>,
-                "return track parameter type must be copy-constructible");
-
   auto state = makeState<propagator_options_t, path_aborter_t>(options);
 
   auto initRes =
@@ -238,9 +231,6 @@ auto Propagator<S, N>::propagate(const parameters_t& start,
                                  const Surface& target,
                                  const propagator_options_t& options) const
     -> Result<ResultType<propagator_options_t>> {
-  static_assert(BoundTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");
-
   auto state =
       makeState<propagator_options_t, target_aborter_t, path_aborter_t>(
           target, options);
@@ -256,7 +246,8 @@ auto Propagator<S, N>::propagate(const parameters_t& start,
   // Perform the actual propagation
   auto propagationResult = propagate(state);
 
-  return makeResult(std::move(state), propagationResult, target, options);
+  return makeResult(std::move(state), propagationResult, options, true,
+                    &target);
 }
 
 template <typename S, typename N>
@@ -314,7 +305,7 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
   static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
-  m_stepper.initialize(state.stepping, start.toBound());
+  m_stepper.initialize(state.stepping, start);
 
   state.position = m_stepper.position(state.stepping);
   state.direction =
@@ -342,11 +333,10 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
-auto Propagator<S, N>::makeResult(propagator_state_t state,
-                                  Result<void> propagationResult,
-                                  const propagator_options_t& /*options*/,
-                                  bool createFinalParameters) const
-    -> Result<ResultType<propagator_options_t>> {
+auto Propagator<S, N>::makeResult(
+    propagator_state_t state, Result<void> propagationResult,
+    const propagator_options_t& /*options*/, bool createFinalParameters,
+    const Surface* target) const -> Result<ResultType<propagator_options_t>> {
   // Type of the full propagation result, including output from actors
   using ThisResultType = ResultType<propagator_options_t>;
 
@@ -359,76 +349,66 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
   ThisResultType result{};
   moveStateToResult(state, result);
 
-  if (const Surface* currentSurface =
-          m_navigator.currentSurface(state.navigation);
-      createFinalParameters && currentSurface == nullptr) {
-    if (!m_stepper.prepareCurvilinearState(state.stepping)) {
-      // information to compute curvilinearState is incomplete.
-      ACTS_DEBUG("Failed to prepare curvilinear state.");
-      return PropagatorError::Failure;
+  if (createFinalParameters) {
+    if (target == nullptr) {
+      target = m_navigator.currentSurface(state.navigation);
     }
-    /// Convert into return type and fill the result object
-    auto curvState = m_stepper.curvilinearState(state.stepping);
-    // Fill the end parameters
-    result.endParameters = std::get<StepperBoundTrackParameters>(curvState);
-    // Only fill the transport jacobian when covariance transport was done
-    if (state.stepping.covTransport) {
-      result.transportJacobian = std::get<Jacobian>(curvState);
-    }
-  } else if (createFinalParameters && currentSurface != nullptr) {
-    // We are at a surface, so we need to compute the bound state
-    auto boundState = m_stepper.boundState(state.stepping, *currentSurface);
-    if (!boundState.ok()) {
-      ACTS_DEBUG("Failed to get bound state at current surface: "
-                 << boundState.error() << ": " << boundState.error().message());
-      return boundState.error();
-    }
-    // Fill the end parameters
-    result.endParameters = std::get<StepperBoundTrackParameters>(*boundState);
-    // Only fill the transport jacobian when covariance transport was done
-    if (state.stepping.covTransport) {
-      result.transportJacobian = std::get<Jacobian>(*boundState);
+
+    if (target != nullptr) {
+      // We are at a surface, so we need to compute the bound state
+      if constexpr (!HasMultiStepper) {
+        const auto boundState = m_stepper.boundState(state.stepping, *target);
+        if (!boundState.ok()) {
+          ACTS_DEBUG("Failed to get bound state at current surface: "
+                     << boundState.error() << ": "
+                     << boundState.error().message());
+          return boundState.error();
+        }
+        result.endParameters = std::get<0>(*boundState);
+        if (state.stepping.covTransport) {
+          result.transportJacobian = std::get<1>(*boundState);
+        }
+      } else {
+        const auto multiBoundState =
+            m_stepper.multiBoundState(state.stepping, *target);
+        if (!multiBoundState.ok()) {
+          ACTS_DEBUG("Failed to get multi bound state at current surface: "
+                     << multiBoundState.error() << ": "
+                     << multiBoundState.error().message());
+          return multiBoundState.error();
+        }
+        const auto boundState =
+            std::get<0>(*multiBoundState).toSingleComponent();
+        result.endParameters = boundState;
+        result.endParametersMultiComponent = std::get<0>(*multiBoundState);
+        if (state.stepping.covTransport) {
+          result.transportJacobian = std::get<1>(*multiBoundState);
+        }
+      }
+    } else {
+      if (!m_stepper.prepareCurvilinearState(state.stepping)) {
+        ACTS_DEBUG("Failed to prepare curvilinear state.");
+        return PropagatorError::Failure;
+      }
+      if constexpr (!HasMultiStepper) {
+        const auto curvState = m_stepper.curvilinearState(state.stepping);
+        result.endParameters = std::get<BoundTrackParameters>(curvState);
+        if (state.stepping.covTransport) {
+          result.transportJacobian = std::get<1>(curvState);
+        }
+      } else {
+        const auto multiCurvState =
+            m_stepper.multiCurvilinearState(state.stepping);
+        const auto curvState = std::get<0>(multiCurvState).toSingleComponent();
+        result.endParameters = curvState;
+        result.endParametersMultiComponent = std::get<0>(multiCurvState);
+        if (state.stepping.covTransport) {
+          result.transportJacobian = std::get<1>(multiCurvState);
+        }
+      }
     }
   }
 
-  return Result<ThisResultType>::success(std::move(result));
-}
-
-template <typename S, typename N>
-template <typename propagator_state_t, typename propagator_options_t>
-auto Propagator<S, N>::makeResult(propagator_state_t state,
-                                  Result<void> propagationResult,
-                                  const Surface& target,
-                                  const propagator_options_t& /*options*/) const
-    -> Result<ResultType<propagator_options_t>> {
-  // Type of the full propagation result, including output from actors
-  using ThisResultType = ResultType<propagator_options_t>;
-
-  if (!propagationResult.ok()) {
-    ACTS_DEBUG("Propagation failed: " << propagationResult.error() << ": "
-                                      << propagationResult.error().message());
-    return propagationResult.error();
-  }
-
-  // Get the bound state at the target surface
-  auto bsRes = m_stepper.boundState(state.stepping, target);
-  if (!bsRes.ok()) {
-    // This likely indicates that the position is outside the surface bounds
-    ACTS_DEBUG("Failed to get bound state at target surface: "
-               << bsRes.error() << ": " << bsRes.error().message());
-    return bsRes.error();
-  }
-  const auto& bs = *bsRes;
-
-  ThisResultType result{};
-  moveStateToResult(state, result);
-
-  // Fill the end parameters
-  result.endParameters = std::get<StepperBoundTrackParameters>(bs);
-  // Only fill the transport jacobian when covariance transport was done
-  if (state.stepping.covTransport) {
-    result.transportJacobian = std::get<Jacobian>(bs);
-  }
   return Result<ThisResultType>::success(std::move(result));
 }
 
@@ -479,8 +459,9 @@ detail::BasePropagatorHelper<derived_t>::propagateToSurface(
 
   // Without errors we can expect a valid endParameters when propagating to a
   // target surface
-  assert((*res).endParameters);
-  return std::move((*res).endParameters.value());
+  assert(res->endParameters &&
+         "Expected valid end parameters when propagating to a target surface.");
+  return std::move(res->endParameters.value());
 }
 
 }  // namespace Acts
