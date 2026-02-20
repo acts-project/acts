@@ -111,7 +111,7 @@ install(
 
 set_target_properties(
     ActsExamplesPythonBindings
-    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath};\$ORIGIN/.."
+    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
 )
 set_target_properties(
     ActsExamplesPythonBindings
@@ -177,7 +177,7 @@ install(
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
-    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath};\$ORIGIN/.."
+    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
