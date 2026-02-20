@@ -13,6 +13,7 @@
 #include <iostream>
 #include <list>
 #include <map>
+#include <ranges>
 
 namespace Acts::Experimental {
 
@@ -185,12 +186,12 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
   }
   if (m_layer->type != 0 && pL.m_layer->type != 0) {  // endcap <- endcap
 
-    float z2 = pL.m_layer->refCoord;
-    float z1 = m_layer->refCoord;
-    float r2max = pL.m_maxBinCoord.at(b2);
-    float r2min = pL.m_minBinCoord.at(b2);
-    float r1max = m_maxBinCoord.at(b1);
-    float r1min = m_minBinCoord.at(b1);
+    const float z2 = pL.m_layer->refCoord;
+    const float z1 = m_layer->refCoord;
+    const float r2max = pL.m_maxBinCoord.at(b2);
+    const float r2min = pL.m_minBinCoord.at(b2);
+    const float r1max = m_maxBinCoord.at(b1);
+    const float r1min = m_minBinCoord.at(b1);
 
     if (r1min >= r2max) {
       return false;
@@ -231,13 +232,13 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
 
   if (m_layer->type != 0 && pL.m_layer->type == 0) {  // endcap <- barrel
 
-    float z1 = m_layer->refCoord;
-    float r1max = m_maxBinCoord.at(b1);
-    float r1min = m_minBinCoord.at(b1);
+    const float z1 = m_layer->refCoord;
+    const float r1max = m_maxBinCoord.at(b1);
+    const float r1min = m_minBinCoord.at(b1);
 
-    float z2min = pL.m_minBinCoord.at(b2);
-    float z2max = pL.m_maxBinCoord.at(b2);
-    float r2 = pL.m_layer->refCoord;
+    const float z2min = pL.m_minBinCoord.at(b2);
+    const float z2max = pL.m_maxBinCoord.at(b2);
+    const float r2 = pL.m_layer->refCoord;
 
     if (r2 < r1min) {
       return false;
@@ -373,9 +374,10 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   // initialize with empty links
 
   for (const auto& bg : m_binGroups) {
-    std::uint32_t bin1 = bg.first;
+    const std::uint32_t bin1 = bg.first;
 
-    if (binMap.find(bin1) == binMap.end()) {  // add to the map
+    // add to the map
+    if (binMap.find(bin1) == binMap.end()) {
       std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>> emptyLinks;
       binMap.insert(std::make_pair(bin1, emptyLinks));
     }
@@ -383,8 +385,9 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
     std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>& bin1Links =
         (*binMap.find(bin1)).second;
 
-    for (auto bin2 : bg.second) {
-      if (binMap.find(bin2) == binMap.end()) {  // add to the map
+    for (const auto& bin2 : bg.second) {
+      // add to the map
+      if (binMap.find(bin2) == binMap.end()) {
         std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>
             emptyLinks;
         binMap.insert(std::make_pair(bin2, emptyLinks));
@@ -398,9 +401,10 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
     }
   }
 
+  // copy bin map as the original will be modified
   std::map<std::uint32_t,
            std::pair<std::list<std::uint32_t>, std::list<std::uint32_t>>>
-      currentMap(binMap);  // copy bin map as the original will be modified
+      currentMap(binMap);
 
   // 2. find stages starting from the last one (i.e. bin1 with no outgoing
   // connections)
@@ -428,14 +432,14 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
     // 2c. remove links : graph ablation
 
-    for (auto bin1_key : exit_bins) {
+    for (const auto& bin1_key : exit_bins) {
       auto p1 = currentMap.find(bin1_key);
       if (p1 == currentMap.end()) {
         continue;
       }
       auto& bin1Links = (*p1).second;
 
-      for (auto bin2_key : bin1Links.second) {
+      for (const auto bin2_key : bin1Links.second) {
         auto p2 = currentMap.find(bin2_key);
         if (p2 == currentMap.end()) {
           continue;
@@ -457,10 +461,10 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
   m_binGroups.clear();
 
-  for (auto iter = stages.rbegin(); iter != stages.rend();
-       ++iter) {  // refill order is reverse to creation
+  for (const auto& iter :
+       std::views::reverse(stages)) {  // refill order is reverse to creation
 
-    for (auto bin1_idx : (*iter)) {
+    for (const auto bin1_idx : iter) {
       const auto p = binMap.find(bin1_idx);
       if (p == binMap.end()) {
         continue;
