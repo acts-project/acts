@@ -90,8 +90,16 @@ def generate(
             "--filter/--no-filter", help="Filter the coverage XML after generation"
         ),
     ] = False,
+    html: Annotated[
+        bool,
+        typer.Option("--html/--no-html", help="Also generate HTML coverage report"),
+    ] = True,
+    html_theme: Annotated[
+        str,
+        typer.Option("--html-theme", "-t", help="HTML report theme (e.g. github.blue)"),
+    ] = "github.blue",
 ) -> None:
-    """Generate a SonarQube coverage XML report from a CMake build directory using gcovr."""
+    """Generate SonarQube XML and optionally HTML coverage reports from a CMake build directory using gcovr."""
     build_dir = build_dir.resolve()
     if not build_dir.is_dir():
         console.print(f"Build directory not found: {build_dir}", style="red")
@@ -113,7 +121,6 @@ def generate(
     )
 
     version = gcovr_version(gcovr_exe)
-    extra_flags: list[str] = []
     if version is not None:
         console.print(f"Found gcovr version {version[0]}.{version[1]}")
         if version < (5, 0):
@@ -126,49 +133,31 @@ def generate(
                 style="red",
             )
             raise typer.Exit(1)
-        elif version >= (6, 0):
-            extra_flags.append("--exclude-noncode-lines")
 
-    if verbose:
-        extra_flags.append("--verbose")
+    base_args = _build_gcovr_common_args(
+        build_dir, gcov_exe, gcovr_exe, jobs, verbose
+    )
 
     script_dir = Path(__file__).resolve().parent
-    source_dir = script_dir.parent.resolve()
     coverage_dir = build_dir / "coverage"
     coverage_dir.mkdir(exist_ok=True)
-
-    source_dir_posix = source_dir.as_posix()
-    excludes = [
-        "-e",
-        f"{source_dir_posix}/Tests/",
-        "-e",
-        r".*/boost/.*",
-        "-e",
-        r".*json\.hpp",
-        "-e",
-        f"{source_dir_posix}/Python/",
-        "-e",
-        f".*{build_dir.name}.*",
-        "-e",
-        ".*dependencies.*",
-    ]
-    gcovr = [gcovr_exe]
 
     coverage_xml_path = coverage_dir / "cov.xml"
     raw_xml_path = coverage_dir / "cov_raw.xml" if filter_xml else coverage_xml_path
     schema_path = script_dir / "sonar_coverage.xsd"
-    gcovr_sonar_cmd = (
-        gcovr
-        + ["-r", str(source_dir)]
-        + ["--gcov-executable", gcov_exe]
-        + ["-j", str(jobs)]
-        + ["--merge-mode-functions", "separate"]
-        + excludes
-        + extra_flags
-        + ["--sonarqube", str(raw_xml_path)]
-    )
-    console.print(f"$ {shlex.join(gcovr_sonar_cmd)}")
-    subprocess.run(gcovr_sonar_cmd, cwd=build_dir, check=True)
+
+    gcovr_cmd = base_args + ["--sonarqube", str(raw_xml_path)]
+    if html:
+        html_dir = coverage_dir / "html"
+        html_dir.mkdir(exist_ok=True)
+        html_path = html_dir / "index.html"
+        gcovr_cmd += ["--html-details", str(html_path), "--html-theme", html_theme]
+
+    console.print(f"$ {shlex.join(gcovr_cmd)}")
+    subprocess.run(gcovr_cmd, cwd=build_dir, check=True)
+
+    if html:
+        console.print(f"HTML coverage report written to {coverage_dir / 'html' / 'index.html'}")
 
     if filter_xml:
         xml_excludes = DEFAULT_EXCLUDES + ["^" + re.escape(build_dir.name)]
@@ -253,6 +242,51 @@ def filter(
         excludes.append("^" + re.escape(build_dir_name))
 
     filter_coverage_xml(input, output, excludes)
+
+
+def _build_gcovr_common_args(
+    build_dir: Path,
+    gcov_exe: str,
+    gcovr_exe: str,
+    jobs: int,
+    verbose: bool,
+) -> list[str]:
+    script_dir = Path(__file__).resolve().parent
+    source_dir = script_dir.parent.resolve()
+    source_dir_posix = source_dir.as_posix()
+
+    version = gcovr_version(gcovr_exe)
+    extra_flags: list[str] = []
+    if version is not None:
+        if version >= (6, 0):
+            extra_flags.append("--exclude-noncode-lines")
+    if verbose:
+        extra_flags.append("--verbose")
+
+    excludes = [
+        "-e",
+        f"{source_dir_posix}/Tests/",
+        "-e",
+        r".*/boost/.*",
+        "-e",
+        r".*json\.hpp",
+        "-e",
+        f"{source_dir_posix}/Python/",
+        "-e",
+        f".*{build_dir.name}.*",
+        "-e",
+        ".*dependencies.*",
+    ]
+
+    return (
+        [gcovr_exe]
+        + ["-r", str(source_dir)]
+        + ["--gcov-executable", gcov_exe]
+        + ["-j", str(jobs)]
+        + ["--merge-mode-functions", "separate"]
+        + excludes
+        + extra_flags
+    )
 
 
 if __name__ == "__main__":

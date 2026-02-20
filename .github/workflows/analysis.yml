@@ -96,6 +96,12 @@ jobs:
           name: coverage-build
           path: build
 
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: coverage-html
+          path: build/coverage/html
+
   clang_tidy:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404_clang19:83
