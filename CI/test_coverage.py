@@ -134,9 +134,7 @@ def generate(
             )
             raise typer.Exit(1)
 
-    base_args = _build_gcovr_common_args(
-        build_dir, gcov_exe, gcovr_exe, jobs, verbose
-    )
+    base_args = _build_gcovr_common_args(build_dir, gcov_exe, gcovr_exe, jobs, verbose)
 
     script_dir = Path(__file__).resolve().parent
     coverage_dir = build_dir / "coverage"
@@ -157,7 +155,9 @@ def generate(
     subprocess.run(gcovr_cmd, cwd=build_dir, check=True)
 
     if html:
-        console.print(f"HTML coverage report written to {coverage_dir / 'html' / 'index.html'}")
+        console.print(
+            f"HTML coverage report written to {coverage_dir / 'html' / 'index.html'}"
+        )
 
     if filter_xml:
         xml_excludes = DEFAULT_EXCLUDES + ["^" + re.escape(build_dir.name)]
@@ -273,9 +273,9 @@ def _build_gcovr_common_args(
         "-e",
         f"{source_dir_posix}/Python/",
         "-e",
-        f".*{build_dir.name}.*",
+        f"{build_dir.as_posix()}/",
         "-e",
-        ".*dependencies.*",
+        f"{source_dir_posix}/dependencies/",
     ]
 
     return (
