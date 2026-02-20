@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include <Acts/Vertexing/Vertex.hpp>
 
 #include <stdexcept>
 
@@ -28,6 +29,8 @@
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/Vector4f.h>
+#include <edm4hep/Vertex.h>
 #include <podio/podioVersion.h>
 
 #if podio_VERSION_MAJOR == 0 || \
@@ -319,5 +322,18 @@ class SimHitAssociation {
 };
 
 /// @}
+
+namespace detail {
+/// Support for both EDM4hep versions where the vertex position is a 3 or 4
+/// vector
+constexpr bool kEdm4hepVertexHasTime =
+    std::is_same_v<edm4hep::Vector4f,
+                   decltype(std::declval<edm4hep::Vertex>().getPosition())> &&
+    std::is_same_v<edm4hep::CovMatrix4f,
+                   decltype(std::declval<edm4hep::Vertex>().getCovMatrix())>;
+
+}  // namespace detail
+
+void writeVertex(const Acts::Vertex& vertex, edm4hep::MutableVertex to);
 
 }  // namespace ActsPlugins::EDM4hepUtil
