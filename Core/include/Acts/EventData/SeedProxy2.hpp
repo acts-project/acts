@@ -81,6 +81,14 @@ class SeedProxy2 {
     return *this;
   }
 
+  /// Returns a const proxy of the seed.
+  /// @return A const proxy of the seed.
+  SeedProxy2<true> asConst() const noexcept
+    requires(!ReadOnly)
+  {
+    return {*m_container, m_index};
+  }
+
   /// Gets the container holding the seed.
   /// @return A reference to the container holding the seed.
   SeedContainer2 &container() noexcept
@@ -336,6 +344,9 @@ class SeedProxy2 {
                            m_container->spacePointIndices(m_index));
   }
 
+  /// Copies the specified columns from another seed to this seed.
+  /// @param other The seed proxy to copy from.
+  /// @param columnsToCopy The columns to copy from the other seed.
   template <bool other_read_only>
   void copyFrom(const SeedProxy2<other_read_only> &other,
                 SeedColumns columnsToCopy) const

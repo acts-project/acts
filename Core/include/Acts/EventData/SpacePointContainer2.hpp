@@ -106,8 +106,13 @@ class SpacePointContainer2 {
   /// @return A mutable proxy to the newly created space point.
   MutableProxy createSpacePoint() noexcept;
 
-  void copyFrom(Index index, const SpacePointContainer2 &sourceContainer,
-                Index sourceIndex, SpacePointColumns columnsToCopy);
+  /// Copies the specified columns from another spacepoint to this spacepoint
+  /// @param index The index of the spacepoint to copy to in this container.
+  /// @param otherContainer The space point container to copy from.
+  /// @param otherIndex The index of the spacepoint to copy from in the other container.
+  /// @param columnsToCopy The columns to copy from the other spacepoint.
+  void copyFrom(Index index, const SpacePointContainer2 &otherContainer,
+                Index otherIndex, SpacePointColumns columnsToCopy);
 
   /// Creates additional columns. This will create the columns if they do not
   /// already exist.

@@ -144,6 +144,11 @@ class SeedContainer2 {
   /// @return A mutable proxy to the newly created seed.
   MutableProxy createSeed() noexcept;
 
+  /// Copies the specified columns from another seed to this seed
+  /// @param index The index of the seed to copy to in this container.
+  /// @param otherContainer The seed container to copy from.
+  /// @param otherIndex The index of the seed to copy from in the other container.
+  /// @param columnsToCopy The columns to copy from the other seed.
   void copyFrom(Index index, const SeedContainer2 &otherContainer,
                 Index otherIndex, SeedColumns columnsToCopy);
 
@@ -267,7 +272,7 @@ class SeedContainer2 {
 
  private:
   std::uint32_t m_size{0};
-  std::vector<std::size_t> m_spacePointOffsets;
+  std::vector<std::uint32_t> m_spacePointOffsets;
   std::vector<std::uint8_t> m_spacePointCounts;
   std::vector<float> m_qualities;
   std::vector<float> m_vertexZs;

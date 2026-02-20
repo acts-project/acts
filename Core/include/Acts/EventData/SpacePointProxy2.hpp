@@ -360,6 +360,9 @@ class SpacePointProxy2 {
     return m_container->resolvedIndex(m_index);
   }
 
+  /// Copies the specified columns from another space point to this space point.
+  /// @param other The space point proxy to copy from.
+  /// @param columnsToCopy The columns to copy from the other space point.
   template <bool other_read_only>
   void copyFrom(const SpacePointProxy2<other_read_only> &other,
                 SpacePointColumns columnsToCopy) const

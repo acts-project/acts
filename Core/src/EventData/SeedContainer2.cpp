@@ -119,8 +119,7 @@ void SeedContainer2::assignSpacePointIndices(
     throw std::logic_error("Space points already assigned to the seed");
   }
 
-  m_spacePointOffsets[index] =
-      static_cast<SpacePointIndex2>(m_spacePoints.size());
+  m_spacePointOffsets[index] = static_cast<std::uint32_t>(m_spacePoints.size());
   m_spacePointCounts[index] =
       static_cast<std::uint8_t>(spacePointIndices.size());
   m_spacePoints.insert(m_spacePoints.end(), spacePointIndices.begin(),
@@ -130,7 +129,8 @@ void SeedContainer2::assignSpacePointIndices(
 MutableSeedProxy2 SeedContainer2::createSeed() noexcept {
   ++m_size;
 
-  m_spacePointOffsets.push_back(m_spacePoints.size());
+  m_spacePointOffsets.push_back(
+      static_cast<std::uint32_t>(m_spacePoints.size()));
   m_spacePointCounts.push_back(static_cast<std::uint8_t>(0));
   m_qualities.push_back(-std::numeric_limits<float>::infinity());
   m_vertexZs.push_back(0.f);
