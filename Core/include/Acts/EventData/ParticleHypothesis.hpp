@@ -22,7 +22,10 @@ namespace Acts {
 /// Specialized particle hypothesis for singly charged particles.
 ///
 /// @note This serves as a factory for common singly charge particles.
-class SinglyChargedParticleHypothesis
+
+class [[deprecated(
+    "Use ParticleHypothesis with one charge magnitude "
+    "instead")]] SinglyChargedParticleHypothesis
     : public GenericParticleHypothesis<SinglyCharged> {
  public:
   /// Constructor with explicit mass
@@ -86,7 +89,10 @@ class SinglyChargedParticleHypothesis
 /// Specialized particle hypothesis for neutral particles.
 ///
 /// @note This serves as a factory for common neutral particles.
-class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
+class [[deprecated(
+    "Use ParticleHypothesis with zero charge magnitude "
+    "instead")]] NeutralParticleHypothesis
+    : public GenericParticleHypothesis<Neutral> {
  public:
   /// Constructor with explicit mass
   /// @param absPdg The absolute PDG particle code
@@ -129,7 +135,9 @@ class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
 /// Specialized particle hypothesis for non-neutral particles.
 ///
 /// @note This serves as a factory for common non-neutral particles.
-class NonNeutralChargedParticleHypothesis
+class [[deprecated(
+    "Use ParticleHypothesis with any charge magnitude "
+    "instead")]] NonNeutralChargedParticleHypothesis
     : public GenericParticleHypothesis<NonNeutralCharge> {
  public:
   /// Constructor with explicit mass and charge
@@ -232,38 +240,45 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
   /// Create a muon particle hypothesis
   /// @return Muon particle hypothesis with any charge type
   static ParticleHypothesis muon() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::muon()};
+    static const ParticleHypothesis cache(PdgParticle::eMuon);
+    return cache;
   }
   /// Create a charged pion particle hypothesis
   /// @return Charged pion particle hypothesis with any charge type
   static ParticleHypothesis pion() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::pion()};
+    static const ParticleHypothesis cache(PdgParticle::ePionPlus);
+    return cache;
   }
   /// Create an electron particle hypothesis
   /// @return Electron particle hypothesis with any charge type
   static ParticleHypothesis electron() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::electron()};
+    static const ParticleHypothesis cache(PdgParticle::eElectron);
+    return cache;
   }
   /// Create a charged kaon particle hypothesis
   /// @return Charged kaon particle hypothesis with any charge type
   static ParticleHypothesis kaon() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::kaon()};
+    static const ParticleHypothesis cache(PdgParticle::eKaonPlus);
+    return cache;
   }
   /// Create a proton particle hypothesis
   /// @return Proton particle hypothesis with any charge type
   static ParticleHypothesis proton() {
-    return ParticleHypothesis{SinglyChargedParticleHypothesis::proton()};
+    static const ParticleHypothesis cache(PdgParticle::eProton);
+    return cache;
   }
 
   /// Create a photon particle hypothesis
   /// @return Photon particle hypothesis with any charge type
   static ParticleHypothesis photon() {
-    return ParticleHypothesis{NeutralParticleHypothesis::photon()};
+    static const ParticleHypothesis cache(PdgParticle::eGamma);
+    return cache;
   }
   /// Create a neutral pion particle hypothesis
   /// @return Neutral pion particle hypothesis with any charge type
   static ParticleHypothesis pion0() {
-    return ParticleHypothesis{NeutralParticleHypothesis::pion0()};
+    static const ParticleHypothesis cache(PdgParticle::ePionZero);
+    return cache;
   }
 
   /// Create a pion-like particle hypothesis with custom charge
@@ -277,7 +292,9 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
   /// Create a neutral geantino particle hypothesis (massless neutral particle)
   /// @return Neutral geantino particle hypothesis with any charge type
   static ParticleHypothesis geantino() {
-    return ParticleHypothesis{NeutralParticleHypothesis::geantino()};
+    static const ParticleHypothesis cache(PdgParticle::eInvalid, 0,
+                                          AnyCharge{0});
+    return cache;
   }
   /// Create a charged geantino particle hypothesis with unit charge
   /// @return Charged geantino particle hypothesis with any charge type
