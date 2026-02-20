@@ -186,10 +186,18 @@ void SpacePointContainer2::copyFrom(Index index,
         "Destination container does not have all columns to copy");
   }
 
+  if (ACTS_CHECK_BIT(columnsToCopy, SpacePointColumns::SourceLinks)) {
+    assignSourceLinks(index, otherContainer.sourceLinks(otherIndex));
+  }
+
   const auto copyColumn =
       [&]<typename T>(SpacePointColumns mask,
                       std::optional<ColumnHolder<T>> &destinationColumn,
                       const std::optional<ColumnHolder<T>> &sourceColumn) {
+        if (mask == SpacePointColumns::SourceLinks) {
+          // already handled above
+          return;
+        }
         if (ACTS_CHECK_BIT(columnsToCopy, mask)) {
           assert(destinationColumn.has_value() &&
                  "Column is not available in destination container");
@@ -205,10 +213,6 @@ void SpacePointContainer2::copyFrom(Index index,
                  std::get<Is>(otherContainer.knownColumns()))),
      ...);
   }(tuple_indices<decltype(knownColumns())>{});
-
-  if (ACTS_CHECK_BIT(columnsToCopy, SpacePointColumns::SourceLinks)) {
-    assignSourceLinks(index, otherContainer.sourceLinks(otherIndex));
-  }
 }
 
 void SpacePointContainer2::assignSourceLinks(
