@@ -80,7 +80,7 @@ struct MaterialInteractor {
                                            << surface->geometryId());
 
       const MaterialSlab slab = detail::evaluateMaterialSlab(
-          state, stepper, navigator,
+          state, stepper, *surface,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::FullUpdate));
 
