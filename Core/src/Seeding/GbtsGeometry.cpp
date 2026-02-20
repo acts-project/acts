@@ -407,9 +407,9 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   
   std::vector<std::uint32_t> exitBins;
   while (!currentMap.empty()) {
-    // 2a. find all bins with zero outgoing links
-
+    exitBins.clear();
     
+    // 2a. find all bins with zero outgoing links
 
     for (const auto& bl : currentMap) {
       if (!bl.second.first.empty()) {
@@ -426,15 +426,15 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
     // 2c. remove links : graph ablation
 
-    for (const auto& bin1Key : exitBins) {
+    for (const std::uint32_t& bin1Key : exitBins) {
       auto p1 = currentMap.find(bin1Key);
       if (p1 == currentMap.end()) {
         continue;
       }
       auto& bin1Links = (*p1).second;
 
-      for (const auto bin2Key : bin1Links.second) {
-        auto p2 = currentMap.find(bin2Key);
+      for (const std::uint32_t bin2Key : bin1Links.second) {
+        const auto p2 = currentMap.find(bin2Key);
         if (p2 == currentMap.end()) {
           continue;
         }
@@ -472,9 +472,8 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
       }
 
       const std::vector<std::uint32_t>& bin2List = p->second.second;
-      std::vector<std::uint32_t> v2(bin2List.begin(), bin2List.end());
 
-      m_binGroups.push_back(std::make_pair(bin1Idx, std::move(v2)));
+      m_binGroups.emplace_back(bin1Idx, std::vector<std::uint32_t>(bin2List));
     }
   }
 }
