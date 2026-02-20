@@ -206,6 +206,10 @@ class MultiComponentBoundTrackParameters {
                    m_particleHypothesis)};
   }
 
+  /// Convert to single component parameters by merging all components into one
+  /// @return Single component bound track parameters representing the weighted average of all components
+  BoundTrackParameters toSingleComponent() const;
+
   /// Parameters vector.
   /// @return Weighted average of parameters from all components
   ParametersVector parameters() const {
