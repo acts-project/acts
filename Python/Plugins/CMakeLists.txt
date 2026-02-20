@@ -15,7 +15,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
 
         set_target_properties(
             ${_target}
-            PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+            PROPERTIES INSTALL_RPATH "${_acts_rpath_origin}/../../${CMAKE_INSTALL_LIBDIR}"
         )
         set_target_properties(
             ${_target}

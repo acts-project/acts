@@ -66,11 +66,18 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
 
+# We need to choose the ORIGIN token based on the system we are compiling for
+if(APPLE)
+  set(_acts_rpath_origin "@loader_path")
+else()
+  set(_acts_rpath_origin "\$ORIGIN")
+endif()
+
 # bake where we found external dependencies, if they
 # were not in the default library directories
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # set relative library path for ACTS libraries
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}/../${CMAKE_INSTALL_LIBDIR}")
 
 message(CHECK_START "Checking C++20 std::format support")
 try_compile(
