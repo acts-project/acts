@@ -31,6 +31,7 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: 'Download artifact'
         uses: actions/github-script@v8

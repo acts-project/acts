@@ -59,7 +59,12 @@ class DD4hepDetectorBase : public Detector {
   explicit DD4hepDetectorBase(const Config& cfg);
 
   /// Interface method to access to the DD4hep geometry
+  /// @return The DD4hep detector
   dd4hep::Detector& dd4hepDetector();
+
+  /// @return The DD4hep detector
+  /// @note This is a const reference to the DD4hep detector
+  const dd4hep::Detector& dd4hepDetector() const;
 
   /// @brief Access to the DD4hep field
   /// @return a shared pointer to the DD4hep field
@@ -123,6 +128,8 @@ class DD4hepDetector final : public DD4hepDetectorBase {
         ActsPlugins::DD4hepLayerBuilder::defaultDetectorElementFactory;
   };
 
+  /// Constructor
+  /// @param cfg The configuration
   explicit DD4hepDetector(const Config& cfg);
 
   /// Access the configuration
