@@ -130,6 +130,10 @@ class FitTestSpacePoint {
   bool measuresLoc0() const { return m_measLoc0; }
   /// @brief Check whether the space point measures the bending direction
   bool measuresLoc1() const { return m_measLoc1 || isStraw(); }
+  /// @brief Returns the dimension of the space point
+  unsigned dimension() const {
+    return (measuresLoc0() && measuresLoc1()) ? 2 : 1;
+  }
   /// @brief Sets the straw tube's drift radius
   void updateDriftR(const double updatedR) { m_driftR = updatedR; }
   /// @brief Updates the position of the space point

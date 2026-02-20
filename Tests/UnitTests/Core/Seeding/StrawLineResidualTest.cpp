@@ -208,20 +208,23 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
   }
 }
 
-void testSeed(
-    const std::array<std::shared_ptr<FitTestSpacePoint>, 4>& spacePoints,
-    const std::array<double, 4>& truthDistances, const Vector3& truthPosZ0,
-    const Vector3& truthDir) {
+template <typename Point_t, std::size_t N>
+void testSeed(const std::array<Point_t, N>& spacePoints,
+              const std::array<double, N>& truthDistances,
+              const Vector3& truthPosZ0, const Vector3& truthDir) {
   const SquareMatrix2 bMatrix =
       CombinatorialSeedSolver::betaMatrix(spacePoints);
+
   if (std::abs(bMatrix.determinant()) < std::numeric_limits<float>::epsilon()) {
     ACTS_VERBOSE(__func__ << "() " << __LINE__ << ": Beta Matrix \n"
                           << toString(bMatrix)
                           << "\nhas zero determinant - skip the combination");
     return;
   }
-  const std::array<double, 4> distsAlongStrip =
+
+  const auto distsAlongStrip =
       CombinatorialSeedSolver::defineParameters(bMatrix, spacePoints);
+
   const auto [seedPos, seedDir] =
       CombinatorialSeedSolver::seedSolution(spacePoints, distsAlongStrip);
 
@@ -232,14 +235,12 @@ void testSeed(
                       << toString(truthPosZ0) << " and truth direction "
                       << toString(truthDir));
 
-  // check the distances along the strips if they are the same
-  for (std::size_t i = 0; i < truthDistances.size(); ++i) {
+  for (std::size_t i = 0; i < distsAlongStrip.size(); ++i) {
     CHECK_CLOSE(Acts::abs(distsAlongStrip[i] + truthDistances[i]), 0.,
                 tolerance);
   }
 
   COMPARE_VECTORS(seedPos, truthPosZ0, tolerance);
-  // check the direction
   CHECK_CLOSE(std::abs(seedDir.dot(truthDir)), 1.,
               std::numeric_limits<float>::epsilon());
 }
@@ -683,6 +684,7 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
   ACTS_INFO("Run Combinatorial seed test");
   RandomEngine rndEngine{23568};
   constexpr std::size_t nStrips = 8;
+  constexpr std::size_t nCombined = 2;
 
   const std::array<Vector3, nStrips> stripDirections{
       Vector3::UnitX(),
@@ -694,8 +696,12 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
       Vector3::UnitX(),
       Vector3::UnitX()};
 
+  // place the strip measuremens and the 2D combined measurements - one layer
+  // before and one layer after the strips
   constexpr std::array<double, nStrips> distancesZ{-20., -264., 0.,  300.,
                                                    350,  370.,  400, 450.};
+
+  constexpr std::array<double, nCombined> distancesZCombined{-350., 360.};
 
   std::array<double, nStrips> parameters{};
   std::array<Vector3, nStrips> intersections{};
@@ -710,6 +716,9 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
 
     const Vector3& muonPos = line.position();
     const Vector3& muonDir = line.direction();
+
+    ACTS_DEBUG("Seed position and direction: " << toString(muonPos) << ", "
+                                               << toString(muonDir));
 
     std::array<std::shared_ptr<FitTestSpacePoint>, nStrips> spacePoints{};
     for (std::size_t layer = 0; layer < nStrips; ++layer) {
@@ -729,7 +738,25 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
           stripPos, stripDirections[layer], Vector3::UnitZ(), 1._cm, 0._cm);
     }
 
-    // let's pick four strips on fours different layers
+    // construct the combined space points
+    std::array<std::shared_ptr<FitTestSpacePoint>, nCombined> combinedPoints{};
+    for (std::size_t c = 0; c < nCombined; ++c) {
+      auto intersection = PlanarHelper::intersectPlane(
+          muonPos, muonDir, Vector3::UnitZ(), distancesZCombined[c]);
+
+      auto alongStrip = PlanarHelper::intersectPlane(
+          intersection.position(), Vector3::UnitX(), Vector3::UnitX(), 0.);
+      auto alongWire = PlanarHelper::intersectPlane(
+          intersection.position(), Vector3::UnitY(), Vector3::UnitY(), 0);
+
+      Vector3 position = {alongStrip.pathLength(), alongWire.pathLength(),
+                          distancesZCombined[c]};
+      combinedPoints[c] = std::make_shared<FitTestSpacePoint>(
+          intersection.position(), Vector3::Zero(), Vector3::UnitZ(), 1._cm,
+          1._cm);
+    }
+
+    // let's pick four strips on four different layers
     // check combinatorics
     std::array<std::shared_ptr<FitTestSpacePoint>, 4> seedSpacePoints{};
     for (unsigned int l = 0; l < distancesZ.size() - 3; ++l) {
@@ -746,6 +773,24 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
 
             testSeed(seedSpacePoints, truthDistances, muonPos, muonDir);
           }
+        }
+      }
+    }
+
+    // test the three layers combinatorics
+    std::array<std::shared_ptr<FitTestSpacePoint>, 3> seedTriplet{};
+    for (unsigned int l = 0; l < distancesZ.size() - 1; ++l) {
+      seedTriplet[0] = spacePoints[l];
+      for (unsigned int k = l + 1; k < distancesZ.size(); ++k) {
+        seedTriplet[1] = spacePoints[k];
+        for (unsigned int c = 0; c < nCombined; ++c) {
+          seedTriplet[2] = combinedPoints[c];
+
+          const std::array<double, 3> truthDistances = {
+              parameters[l], parameters[k],
+              0.};  // assume zero distance for the combined spacepoint
+
+          testSeed(seedTriplet, truthDistances, muonPos, muonDir);
         }
       }
     }
