@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -49,6 +50,8 @@ namespace Acts {
 /// from the charge-over-momentum track parameter.
 ///
 /// @{
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// Charge and momentum interpretation for neutral particles.
 struct [[deprecated(
@@ -201,6 +204,8 @@ class [[deprecated(
  private:
   float m_absQ{};
 };
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 /// Charge and momentum interpretation for arbitrarily charged particles.
 ///
