@@ -98,9 +98,17 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         if: always()
+        id: artifact-upload-step
         with:
           name: coverage-html
           path: build/coverage/html
+
+      - name: Documentation display
+        run: |
+          base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}'
+          link="$base_link/index.html"
+          echo "🛡️ Code coverage available at: $link"
+          echo "**🛡️ Code coverage available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
   clang_tidy:
     runs-on: ubuntu-latest
