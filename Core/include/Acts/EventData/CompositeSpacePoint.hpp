@@ -58,8 +58,6 @@ concept CompositeSpacePoint = requires(const SpacePointType sp) {
   /// @brief Returns whether the station space point measures the 1-st coordinate
   ///        and hence constrains the track parameters in the bending direction
   { sp.measuresLoc1() } -> std::same_as<bool>;
-  /// @brief Returns the spatial dimension of the space point
-  { sp.dimension() } -> std::same_as<unsigned>;
 };
 
 /// @brief Define the space point pointer concept as an ordinary / smart pointer

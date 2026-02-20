@@ -13,34 +13,41 @@
 namespace Acts::Experimental::detail {
 
 template <Experimental::CompositeSpacePointPtr Point_t>
-std::tuple<std::array<Point_t, 2>, Point_t> separateLayers(
+std::array<std::size_t, 3> separateLayers(
     const std::array<Point_t, 3>& layerTriplet) {
-  std::array<Point_t, 2> points1D{};
-  Point_t point2D{nullptr};
-  std::size_t idx = 0;
-
-  std::ranges::for_each(layerTriplet, [&](const auto& sp) {
-    if (sp->dimension() == 1) {
-      if (idx >= points1D.size()) {
-        throw std::runtime_error("More than two 1D space points found");
-      }
-      points1D[idx++] = sp;
-    } else if (sp->dimension() == 2) {
-      if (point2D != nullptr) {
-        throw std::runtime_error("Multiple 2D space points found");
-      }
-      point2D = sp;
-    } else {
-      throw std::runtime_error("Unexpected space point dimension");
-    }
+  // make sure we have exacxtly one 2D and two 1D measurements available
+  auto n2D = std::ranges::count_if(layerTriplet, [](const auto& sp) {
+    unsigned int dimension = sp->measuresLoc0() + sp->measuresLoc1();
+    return dimension == 2;
   });
 
-  if (point2D == nullptr || idx != points1D.size()) {
+  auto n1D = std::ranges::count_if(layerTriplet, [](const auto& sp) {
+    unsigned int dimension = sp->measuresLoc0() + sp->measuresLoc1();
+    return dimension == 1;
+  });
+
+  if (n2D != 1 || n1D != 2) {
     throw std::runtime_error(
-        "Invalid combination of measurements: expected one 2D and two 1D");
+        "Triplet must contain exactly one 2D and two 1D space points");
   }
 
-  return std::make_tuple(points1D, point2D);
+  std::array<std::size_t, 3> retIndices{
+      std::numeric_limits<std::size_t>::max()};
+
+  for (std::size_t idx = 0; idx < layerTriplet.size(); ++idx) {
+    Point_t spacePoint = layerTriplet[idx];
+    unsigned int dimension =
+        spacePoint->measuresLoc0() + spacePoint->measuresLoc1();
+    if (dimension == 1) {
+      retIndices[0] == std::numeric_limits<std::size_t>::max()
+          ? retIndices[0] = idx
+          : retIndices[1] = idx;
+    } else {
+      retIndices[2] = idx;
+    }
+  }
+
+  return retIndices;
 }
 
 }  // namespace Acts::Experimental::detail
@@ -179,7 +186,10 @@ SquareMatrix2 betaMatrix(const std::array<Point_t, 3>& layerTriplet) {
 
   // keep the 1D spacepoints and the 2D spacepoint seperately- for invariance
   // under the order of the layers
-  const auto [spacePoints1D, spacePoint2D] = separateLayers(layerTriplet);
+  std::array<std::size_t, 3> indices = separateLayers(layerTriplet);
+  Point_t spacePoint2D{layerTriplet[indices[2]]};
+  std::array<Point_t, 2> spacePoints1D{layerTriplet[indices[0]],
+                                       layerTriplet[indices[1]]};
 
   double R =
       spacePoint2D->localPosition().z() - spacePoints1D[0]->localPosition().z();
@@ -199,7 +209,10 @@ template <Experimental::CompositeSpacePointPtr Point_t>
 std::array<double, 2> defineParameters(
     const SquareMatrix2& betaMatrix,
     const std::array<Point_t, 3>& layerTriplet) {
-  const auto [spacePoints1D, spacePoint2D] = separateLayers(layerTriplet);
+  std::array<std::size_t, 3> indices = separateLayers(layerTriplet);
+  Point_t spacePoint2D{layerTriplet[indices[2]]};
+  std::array<Point_t, 2> spacePoints1D{layerTriplet[indices[0]],
+                                       layerTriplet[indices[1]]};
 
   Vector3 M = spacePoint2D->localPosition();
   double R =
@@ -224,7 +237,10 @@ std::pair<Vector3, Vector3> seedSolution(
     const std::array<Point_t, 3>& layerTriplet,
     const std::array<double, 2>& parameters) {
   // separate 2D and 1D spacepoints
-  const auto [spacePoints1D, spacePoint2D] = separateLayers(layerTriplet);
+  std::array<std::size_t, 3> indices = separateLayers(layerTriplet);
+  Point_t spacePoint2D{layerTriplet[indices[2]]};
+  std::array<Point_t, 2> spacePoints1D{layerTriplet[indices[0]],
+                                       layerTriplet[indices[1]]};
 
   // the position of the seed can be evaluated from the 2D measurement
   Vector3 seedPosition = spacePoint2D->localPosition();

@@ -169,10 +169,6 @@ class MuonSpacePoint {
   bool measuresLoc1() const { return id().measuresEta(); }
   /// @brief Returns whether the measurement constrains the non-bending plane
   bool measuresLoc0() const { return id().measuresPhi(); }
-  /// @brief Returns the dimension of the space point
-  unsigned dimension() const {
-    return (id().measuresEta() && id().measuresPhi()) ? 2 : 1;
-  }
   /// @brief Define the space point's identifier
   void setId(const MuonId& id);
   /// @brief Define the space point coordinates.

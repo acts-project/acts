@@ -27,8 +27,8 @@ namespace Acts::Experimental::detail {
 ///@param layerTriplet the space points of the combinatorics
 ///@return The tuple with the two 1D space points and one 2D spacepoint
 
-template <typename Point_t>
-std::tuple<std::array<Point_t, 2>, Point_t> separateLayers(
+template <Experimental::CompositeSpacePointPtr Point_t>
+std::array<std::size_t, 3> separateLayers(
     const std::array<Point_t, 3>& layerTriplet);
 
 }  // namespace Acts::Experimental::detail

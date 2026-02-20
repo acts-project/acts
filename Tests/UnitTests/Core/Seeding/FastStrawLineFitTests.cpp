@@ -96,8 +96,6 @@ class StrawTestPoint {
   bool measuresLoc0() const { return false; }
   /// @brief Dummy return not used in test
   bool measuresLoc1() const { return true; }
-  /// @brief space point dimension
-  unsigned dimension() const { return 1; }
   void setRadius(const double r, const double uncertR) {
     m_driftR = abs(r);
     m_cov[toUnderlying(ResidualIdx::bending)] = square(uncertR);
