@@ -102,10 +102,9 @@ BOOST_AUTO_TEST_CASE(NullCopy) {
 
 BOOST_AUTO_TEST_CASE(Release) {
   CloneablePtr<int> p(std::make_unique<int>(50));
-  int* raw = p.release();
+  std::unique_ptr<int> raw = p.release();
   BOOST_CHECK(!p);
   BOOST_CHECK_EQUAL(*raw, 50);
-  delete raw;
 }
 
 BOOST_AUTO_TEST_CASE(Reset) {

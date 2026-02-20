@@ -55,9 +55,9 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
     return *this;
   }
 
-  m_size = other.m_size;
-  m_sourceLinks = other.m_sourceLinks;
   copyColumns(other);
+  m_sourceLinks = other.m_sourceLinks;
+  m_size = other.m_size;
 
   return *this;
 }
@@ -68,9 +68,9 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
     return *this;
   }
 
-  m_size = other.m_size;
-  m_sourceLinks = std::move(other.m_sourceLinks);
   moveColumns(other);
+  m_sourceLinks = std::move(other.m_sourceLinks);
+  m_size = other.m_size;
 
   other.m_size = 0;
 
@@ -78,44 +78,64 @@ SpacePointContainer2 &SpacePointContainer2::operator=(
 }
 
 void SpacePointContainer2::copyColumns(const SpacePointContainer2 &other) {
-  m_namedColumns.reserve(other.m_namedColumns.size());
+  m_allColumns.reserve(other.m_allColumns.size());
+  m_dynamicColumns.reserve(other.m_dynamicColumns.size());
 
-  for (const auto &[name, column] : other.m_namedColumns) {
-    std::unique_ptr<ColumnHolderBase> holder =
-        column.second != nullptr ? column.second->copy() : nullptr;
-    m_namedColumns.try_emplace(name,
-                               std::pair{holder.get(), std::move(holder)});
-  }
-
-  m_knownColumns = other.m_knownColumns;
-  knownColumns() = other.knownColumns();
-}
-
-void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
-  m_namedColumns.reserve(other.m_namedColumns.size());
-
-  for (auto &[name, column] : other.m_namedColumns) {
-    m_namedColumns.try_emplace(name, std::move(column));
-  }
-
-  other.m_namedColumns.clear();
-
-  m_knownColumns = other.m_knownColumns;
-  knownColumns() = std::move(other).knownColumns();
-
-  const auto updateKnownColumnPointer =
+  const auto copyKnownColumns =
       [&]<typename T>(std::string_view name,
-                      std::optional<ColumnHolder<T>> &column) {
+                      std::optional<ColumnHolder<T>> &column,
+                      const std::optional<ColumnHolder<T>> &otherColumn) {
+        column = otherColumn;
         if (column.has_value()) {
-          m_namedColumns.at(std::string(name)).first = &column.value();
+          m_allColumns.try_emplace(std::string(name), &column.value());
         }
       };
 
   [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-    ((updateKnownColumnPointer(std::get<Is>(knownColumnNames()),
-                               std::get<Is>(knownColumns()))),
+    ((copyKnownColumns(std::get<Is>(knownColumnNames()),
+                       std::get<Is>(knownColumns()),
+                       std::get<Is>(other.knownColumns()))),
      ...);
   }(tuple_indices<decltype(knownColumns())>{});
+  m_knownColumns = other.m_knownColumns;
+
+  for (auto &[name, column] : other.m_dynamicColumns) {
+    std::unique_ptr<ColumnHolderBase> columnCopy = column->copy();
+    m_allColumns.try_emplace(name, columnCopy.get());
+    m_dynamicColumns.try_emplace(name, std::move(columnCopy));
+  }
+}
+
+void SpacePointContainer2::moveColumns(SpacePointContainer2 &other) noexcept {
+  m_allColumns.reserve(other.m_allColumns.size());
+  m_dynamicColumns.reserve(other.m_dynamicColumns.size());
+
+  const auto moveKnownColumns =
+      [&]<typename T>(std::string_view name,
+                      std::optional<ColumnHolder<T>> &column,
+                      std::optional<ColumnHolder<T>> &otherColumn) {
+        column = std::move(otherColumn);
+        if (column.has_value()) {
+          m_allColumns.try_emplace(std::string(name), &column.value());
+        }
+      };
+
+  [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+    ((moveKnownColumns(std::get<Is>(knownColumnNames()),
+                       std::get<Is>(knownColumns()),
+                       std::get<Is>(other.knownColumns()))),
+     ...);
+  }(tuple_indices<decltype(knownColumns())>{});
+  m_knownColumns = other.m_knownColumns;
+
+  for (auto &[name, column] : other.m_dynamicColumns) {
+    m_allColumns.try_emplace(name, column.get());
+    m_dynamicColumns.try_emplace(name, std::move(column));
+  }
+
+  other.m_allColumns.clear();
+  other.m_knownColumns = SpacePointColumns::None;
+  other.m_dynamicColumns.clear();
 }
 
 void SpacePointContainer2::reserve(std::uint32_t size,
@@ -125,8 +145,8 @@ void SpacePointContainer2::reserve(std::uint32_t size,
         static_cast<std::uint32_t>(size * averageSourceLinks));
   }
 
-  for (const auto &[name, column] : m_namedColumns) {
-    column.first->reserve(size);
+  for (const auto &[name, column] : m_allColumns) {
+    column->reserve(size);
   }
 }
 
@@ -134,19 +154,65 @@ void SpacePointContainer2::clear() noexcept {
   m_size = 0;
   m_sourceLinks.clear();
 
-  for (const auto &[name, column] : m_namedColumns) {
-    column.first->clear();
+  for (const auto &[name, column] : m_allColumns) {
+    column->clear();
   }
 }
 
 MutableSpacePointProxy2 SpacePointContainer2::createSpacePoint() noexcept {
   ++m_size;
 
-  for (const auto &[name, column] : m_namedColumns) {
-    column.first->emplace_back();
+  for (const auto &[name, column] : m_allColumns) {
+    column->emplace_back();
   }
 
   return MutableProxy(*this, size() - 1);
+}
+
+void SpacePointContainer2::copyFrom(Index index,
+                                    const SpacePointContainer2 &otherContainer,
+                                    Index otherIndex,
+                                    SpacePointColumns columnsToCopy) {
+  if (index >= size() || otherIndex >= otherContainer.size()) {
+    throw std::out_of_range(
+        "Index out of range in SpacePointContainer2::copyFrom");
+  }
+  if ((columnsToCopy & otherContainer.m_knownColumns) != columnsToCopy) {
+    throw std::logic_error(
+        "Source container does not have all columns to copy");
+  }
+  if ((columnsToCopy & m_knownColumns) != columnsToCopy) {
+    throw std::logic_error(
+        "Destination container does not have all columns to copy");
+  }
+
+  if (ACTS_CHECK_BIT(columnsToCopy, SpacePointColumns::SourceLinks)) {
+    assignSourceLinks(index, otherContainer.sourceLinks(otherIndex));
+  }
+
+  const auto copyColumn =
+      [&]<typename T>(SpacePointColumns mask,
+                      std::optional<ColumnHolder<T>> &destinationColumn,
+                      const std::optional<ColumnHolder<T>> &sourceColumn) {
+        if (mask == SpacePointColumns::SourceLinks) {
+          // already handled above
+          return;
+        }
+        if (ACTS_CHECK_BIT(columnsToCopy, mask)) {
+          assert(destinationColumn.has_value() &&
+                 "Column is not available in destination container");
+          assert(sourceColumn.has_value() &&
+                 "Column is not available in source container");
+          destinationColumn->proxy(*this)[index] =
+              sourceColumn->proxy(otherContainer)[otherIndex];
+        }
+      };
+
+  [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+    ((copyColumn(std::get<Is>(knownColumnMasks()), std::get<Is>(knownColumns()),
+                 std::get<Is>(otherContainer.knownColumns()))),
+     ...);
+  }(tuple_indices<decltype(knownColumns())>{});
 }
 
 void SpacePointContainer2::assignSourceLinks(
@@ -179,8 +245,7 @@ void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {
         if (ACTS_CHECK_BIT(columns, mask) && !column.has_value()) {
           column = ColumnHolder<T>(std::move(defaultValue));
           column->resize(size());
-          m_namedColumns.try_emplace(std::string(name),
-                                     std::pair{&column.value(), nullptr});
+          m_allColumns.try_emplace(std::string(name), &column.value());
           m_knownColumns = m_knownColumns | mask;
         }
       };
@@ -200,7 +265,7 @@ void SpacePointContainer2::dropColumns(SpacePointColumns columns) noexcept {
                               SpacePointColumns mask, std::string_view name,
                               std::optional<ColumnHolder<T>> &column) {
     if (ACTS_CHECK_BIT(columns, mask) && column.has_value()) {
-      m_namedColumns.erase(std::string(name));
+      m_allColumns.erase(std::string(name));
       column.reset();
       m_knownColumns = m_knownColumns & ~mask;
     }
@@ -223,12 +288,13 @@ void SpacePointContainer2::dropColumn(const std::string &name) {
     throw std::runtime_error("Cannot drop reserved column: " + name);
   }
 
-  auto it = m_namedColumns.find(name);
-  if (it == m_namedColumns.end()) {
+  auto it = m_allColumns.find(name);
+  if (it == m_allColumns.end()) {
     throw std::runtime_error("Column does not exist: " + name);
   }
 
-  m_namedColumns.erase(it);
+  m_allColumns.erase(it);
+  m_dynamicColumns.erase(name);
 }
 
 bool SpacePointContainer2::reservedColumn(const std::string &name) noexcept {

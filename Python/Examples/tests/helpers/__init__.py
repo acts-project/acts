@@ -1,117 +1,111 @@
 import os
 import shutil
+import warnings
 from typing import List, Union
 import contextlib
 
 import acts
 from acts.examples import IAlgorithm
 
+# Suppress warnings during module discovery - we only care about import success/failure
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
 
-try:
-    import acts.examples.alignment
-
-    alignmentEnabled = True
-except ImportError:
-    alignmentEnabled = False
-
-
-geant4Enabled = (
-    any(v.startswith("G4") for v in os.environ.keys())
-    or "GEANT4_DATA_DIR" in os.environ
-)
-if geant4Enabled:
     try:
-        import acts.examples.geant4
+        import acts.examples.alignment
+
+        alignmentEnabled = True
     except ImportError:
-        geant4Enabled = False
+        alignmentEnabled = False
 
-try:
-    import ROOT
+    geant4Enabled = (
+        any(v.startswith("G4") for v in os.environ.keys())
+        or "GEANT4_DATA_DIR" in os.environ
+    )
+    if geant4Enabled:
+        try:
+            import acts.examples.geant4
+        except ImportError:
+            geant4Enabled = False
 
-    rootEnabled = True
-except ImportError:
-    rootEnabled = False
-
-    if "ROOTSYS" in os.environ:  # ROOT seems to be set up, but no PyROOT
-        import warnings
-
-        warnings.warn(
-            "ROOT likely built without/with incompatible PyROOT. Skipping tests that need ROOT"
-        )
-
-try:
-    import acts.examples.geomodel
-
-    geomodelEnabled = True
-except ImportError:
-    geomodelEnabled = False
-
-dd4hepEnabled = "DD4hep_DIR" in os.environ
-if dd4hepEnabled:
     try:
-        import acts.examples.dd4hep
+        import ROOT
+
+        rootEnabled = True
     except ImportError:
-        dd4hepEnabled = False
+        rootEnabled = False
 
-try:
-    import acts.examples.hepmc3
-
-    hepmc3Enabled = True
-except ImportError:
-    hepmc3Enabled = False
-
-try:
-    import acts.examples.edm4hep
-
-    edm4hepEnabled = True
-except ImportError:
-    edm4hepEnabled = False
-
-try:
-    import acts.examples.onnx
-
-    onnxEnabled = True
-except ImportError:
-    onnxEnabled = False
-
-try:
-    from acts import covfie
-
-    covfieEnabled = True
-except ImportError:
-    covfieEnabled = False
-
-
-try:
-    import acts.examples.pythia8
-
-    pythia8Enabled = True
-except ImportError:
-    pythia8Enabled = False
-
-try:
-    import acts.examples.hashing
-
-    hashingSeedingEnabled = True
-except ImportError:
-    hashingSeedingEnabled = False
-
-
-gnnEnabled = shutil.which("nvidia-smi") is not None
-if gnnEnabled:
     try:
-        from acts.examples.gnn import TrackFindingAlgorithmGnn
+        import acts.examples.geomodel
+
+        geomodelEnabled = True
     except ImportError:
-        gnnEnabled = False
+        geomodelEnabled = False
 
-try:
-    import podio
+    dd4hepEnabled = "DD4hep_DIR" in os.environ
+    if dd4hepEnabled:
+        try:
+            import acts.examples.dd4hep
+        except ImportError:
+            dd4hepEnabled = False
 
-    podioEnabled = True
-except ModuleNotFoundError:
-    podioEnabled = False
-except ImportError:
-    podioEnabled = False
+    try:
+        import acts.examples.hepmc3
+
+        hepmc3Enabled = True
+    except ImportError:
+        hepmc3Enabled = False
+
+    try:
+        import acts.examples.edm4hep
+
+        edm4hepEnabled = True
+    except ImportError:
+        edm4hepEnabled = False
+
+    try:
+        import acts.examples.onnx
+
+        onnxEnabled = True
+    except ImportError:
+        onnxEnabled = False
+
+    try:
+        from acts import covfie
+
+        covfieEnabled = True
+    except ImportError:
+        covfieEnabled = False
+
+    try:
+        import acts.examples.pythia8
+
+        pythia8Enabled = True
+    except ImportError:
+        pythia8Enabled = False
+
+    try:
+        import acts.examples.hashing
+
+        hashingSeedingEnabled = True
+    except ImportError:
+        hashingSeedingEnabled = False
+
+    gnnEnabled = shutil.which("nvidia-smi") is not None
+    if gnnEnabled:
+        try:
+            from acts.examples.gnn import TrackFindingAlgorithmGnn
+        except ImportError:
+            gnnEnabled = False
+
+    try:
+        import podio
+
+        podioEnabled = True
+    except ModuleNotFoundError:
+        podioEnabled = False
+    except ImportError:
+        podioEnabled = False
 
 isCI = os.environ.get("CI") is not None
 

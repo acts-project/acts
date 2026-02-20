@@ -14,3 +14,5 @@ target_include_directories(
 )
 
 target_link_libraries(ActsPluginOnnx PUBLIC Acts::Core onnxruntime::onnxruntime)
+
+acts_compile_headers(PluginOnnx GLOB include/**/*.hpp)
