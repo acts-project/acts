@@ -92,6 +92,14 @@ jobs:
 
       - uses: actions/upload-artifact@v6
         if: always()
+        with:
+          name: coverage-build
+          path: |
+            build/compile_commands.json
+            build/coverage/cov.xml
+
+      - uses: actions/upload-artifact@v6
+        if: always()
         id: artifact-upload-step
         with:
           name: coverage-html
