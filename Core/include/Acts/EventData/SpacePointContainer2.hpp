@@ -62,6 +62,12 @@ enum class SpacePointColumns : std::uint32_t {
   TopStripCenter = 1 << 12,       ///< Center of the top strip
   CopyFromIndex = 1 << 13,        ///< Copy from index
 
+  XY [[deprecated("Use PackedXY instead")]] = 1 << 14,
+  ZR [[deprecated("Use PackedZR instead")]] = 1 << 15,
+  XYZ [[deprecated("Use PackedXYZ instead")]] = 1 << 16,
+  XYZR [[deprecated("Use PackedXYZR instead")]] = 1 << 17,
+  VarianceZR [[deprecated("Use PackedVarianceZR instead")]] = 1 << 18,
+
   // packed columns for performance reasons
   PackedXY = 1 << 14,          ///< X and Y coordinates
   PackedZR = 1 << 15,          ///< Z and R coordinates
