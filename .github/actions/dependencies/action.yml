@@ -26,6 +26,9 @@ inputs:
     description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
     required: false
     default: 'false'
+  env_file:
+    description: 'Where to generate the environment file'
+    required: true
 
 
 runs:
@@ -87,7 +90,7 @@ runs:
         SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
         DEPENDENCY_TAG: ${{ inputs.DEPENDENCY_TAG }}
       run: |
-        args=""
+        args="-e ${{ inputs.env_file }}"
         if [ "${{ inputs.full_install }}" == "true" ]; then
           echo "Full install"
           args="${args} -f"
