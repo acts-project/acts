@@ -13,6 +13,8 @@
 #include <ranges>
 #include <stdexcept>
 
+namespace ActsExamples {
+
 namespace {
 
 template <typename IovCollection>
@@ -41,9 +43,8 @@ bool eventWithinIOV(const std::array<std::size_t, 2>& iov,
 
 }  // namespace
 
-ActsExamples::AlignmentDecorator::AlignmentDecorator(
-    const ActsExamples::AlignmentDecorator::Config& config,
-    Acts::Logging::Level level)
+AlignmentDecorator::AlignmentDecorator(const AlignmentDecorator::Config& config,
+                                       Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("AlignmentDecorator", level)) {
   // Check for overlapping IOVs in the stores
@@ -66,8 +67,7 @@ ActsExamples::AlignmentDecorator::AlignmentDecorator(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
-    AlgorithmContext& context) {
+ProcessCode AlignmentDecorator::decorate(AlgorithmContext& context) {
   // Get the event number & look for the alignment store
   const std::size_t eventNumber = context.eventNumber;
   // A pointer to an alignment store - if set it will be used to decorate the
@@ -148,5 +148,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentDecorator::decorate(
                  << eventNumber << ", skipping decoration.");
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

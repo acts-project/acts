@@ -91,10 +91,6 @@
 #include <utility>
 #include <vector>
 
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
 using ResultDouble = Acts::Result<double>;
 using ResultBool = Acts::Result<bool>;
 using ResultUnsigned = Acts::Result<unsigned>;
@@ -119,8 +115,8 @@ namespace ActsExamples {
 //// For the total houghHist, the int counts the number of layers with one or
 /// more
 /// hit in that bin
-// The unsigned is a counter that will point to a spacepoint or to a measurement
-// object
+// The unsigned is a counter that will point to a space point or to a
+// measurement object
 
 /// An houghHist is a 2d array of points, where each point has a value.
 /// The value starts as the number of hit layers, but can change with effects
@@ -159,7 +155,8 @@ class HoughTransformSeeder final : public IAlgorithm {
     /// the detector to use different algorithms for space point construction,
     /// e.g. single-hit space points for pixel-like detectors or double-hit
     /// space points for strip-like detectors.
-    /// Note that we don't *need* spacepoints (measurements can be used instead)
+    /// Note that we don't *need* space points (measurements can be used
+    /// instead)
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
@@ -219,7 +216,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     /// === Seeds for Hough ==
     std::vector<int> threshold = {
         9};  // Minimum number of measurements per bin to accept as a
-             // prototrack/seed. Right now this is a single number, can be
+             // proto track/seed. Right now this is a single number, can be
              // expanded in the future if we want to be more clever
 
     int localMaxWindowSize = 0;  // Only create candidates from a local maximum
@@ -239,7 +236,7 @@ class HoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  HoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+  HoughTransformSeeder(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Run the seeding algorithm.
   ///

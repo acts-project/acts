@@ -18,8 +18,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsExamples {
 
 TruthGraphBuilder::TruthGraphBuilder(Config config, Logging::Level level)
-    : ActsExamples::IAlgorithm("TruthGraphBuilder", level),
-      m_cfg(std::move(config)) {
+    : IAlgorithm("TruthGraphBuilder", level), m_cfg(std::move(config)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputGraph.initialize(m_cfg.outputGraph);
@@ -39,7 +38,7 @@ TruthGraphBuilder::TruthGraphBuilder(Config config, Logging::Level level)
 }
 
 std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
-    const SimSpacePointContainer& spacepoints,
+    const SimSpacePointContainer& spacePoints,
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
   if (m_cfg.targetMinPT < 500_MeV) {
@@ -51,9 +50,9 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
   // Associate tracks to graph, collect momentum
   std::unordered_map<ActsFatras::Barcode, std::vector<std::size_t>> tracks;
 
-  for (auto i = 0ul; i < spacepoints.size(); ++i) {
+  for (auto i = 0ul; i < spacePoints.size(); ++i) {
     const auto measId =
-        spacepoints[i].sourceLinks()[0].template get<IndexSourceLink>().index();
+        spacePoints[i].sourceLinks()[0].template get<IndexSourceLink>().index();
 
     auto [a, b] = measPartMap.equal_range(measId);
     for (auto it = a; it != b; ++it) {
@@ -81,7 +80,7 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
 
     const Vector3 vtx = found->fourPosition().segment<3>(0);
     auto radiusForOrdering = [&](std::size_t i) {
-      const auto& sp = spacepoints[i];
+      const auto& sp = spacePoints[i];
       return std::hypot(sp.x() - vtx[0], sp.y() - vtx[1], sp.z() - vtx[2]);
     };
 
@@ -92,11 +91,11 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
     if (m_cfg.uniqueModules) {
       auto newEnd = std::unique(
           track.begin(), track.end(), [&](const auto& a, const auto& b) {
-            auto gidA = spacepoints[a]
+            auto gidA = spacePoints[a]
                             .sourceLinks()[0]
                             .template get<IndexSourceLink>()
                             .geometryId();
-            auto gidB = spacepoints[b]
+            auto gidB = spacePoints[b]
                             .sourceLinks()[0]
                             .template get<IndexSourceLink>()
                             .geometryId();
@@ -128,15 +127,15 @@ struct HitInfo {
 };
 
 std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
-    const SimSpacePointContainer& spacepoints,
+    const SimSpacePointContainer& spacePoints,
     const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
     const SimParticleContainer& particles) const {
   // Associate tracks to graph, collect momentum
   std::unordered_map<ActsFatras::Barcode, std::vector<HitInfo>> tracks;
 
-  for (auto i = 0ul; i < spacepoints.size(); ++i) {
+  for (auto i = 0ul; i < spacePoints.size(); ++i) {
     const auto measId =
-        spacepoints[i].sourceLinks()[0].template get<IndexSourceLink>().index();
+        spacePoints[i].sourceLinks()[0].template get<IndexSourceLink>().index();
 
     auto [a, b] = measHitMap.equal_range(measId);
     for (auto it = a; it != b; ++it) {
@@ -171,16 +170,15 @@ std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
   return truthGraph;
 }
 
-ProcessCode TruthGraphBuilder::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TruthGraphBuilder::execute(const AlgorithmContext& ctx) const {
   // Read input data
-  const auto& spacepoints = m_inputSpacePoints(ctx);
+  const auto& spacePoints = m_inputSpacePoints(ctx);
   const auto& particles = m_inputParticles(ctx);
 
   auto edges = (m_inputMeasParticlesMap.isInitialized())
-                   ? buildFromMeasurements(spacepoints, particles,
+                   ? buildFromMeasurements(spacePoints, particles,
                                            m_inputMeasParticlesMap(ctx))
-                   : buildFromSimhits(spacepoints, m_inputMeasSimhitMap(ctx),
+                   : buildFromSimhits(spacePoints, m_inputMeasSimhitMap(ctx),
                                       m_inputSimhits(ctx), particles);
 
   ACTS_DEBUG("Truth track edges: " << edges.size() / 2);

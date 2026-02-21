@@ -21,19 +21,21 @@
 using namespace Acts;
 using namespace ActsPlugins;
 
-namespace detail {
+namespace ActsExamples {
+
+namespace {
 
 template <typename Array>
-std::size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
+std::size_t fillChargeMatrix(Array& arr, const Cluster& cluster,
                              std::size_t size0 = 7u, std::size_t size1 = 7u) {
   // First, rescale the activations to sum to unity. This promotes
   // numerical stability in the index computation
   double totalAct = 0;
-  for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
+  for (const Cluster::Cell& cell : cluster.channels) {
     totalAct += cell.activation;
   }
   std::vector<double> weights;
-  for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
+  for (const Cluster::Cell& cell : cluster.channels) {
     weights.push_back(cell.activation / totalAct);
   }
 
@@ -52,7 +54,7 @@ std::size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
   // Zero the charge matrix first, to guard against leftovers
   arr = Eigen::ArrayXXf::Zero(1, size0 * size1);
   // Fill the matrix
-  for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
+  for (const Cluster::Cell& cell : cluster.channels) {
     // Translate each pixel
     int iMat = cell.bin[0] - offset0;
     int jMat = cell.bin[1] - offset1;
@@ -67,24 +69,24 @@ std::size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
   return size0 * size1;
 }
 
-}  // namespace detail
+}  // namespace
 
-ActsExamples::NeuralCalibrator::NeuralCalibrator(
-    const std::filesystem::path& modelPath, std::size_t nComponents,
-    std::vector<std::size_t> volumeIds)
+NeuralCalibrator::NeuralCalibrator(const std::filesystem::path& modelPath,
+                                   std::size_t nComponents,
+                                   std::vector<std::size_t> volumeIds)
     : m_env(ORT_LOGGING_LEVEL_WARNING, "NeuralCalibrator"),
       m_model(m_env, modelPath.c_str()),
       m_nComponents{nComponents},
       m_volumeIds{std::move(volumeIds)} {}
 
-void ActsExamples::NeuralCalibrator::calibrate(
+void NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
     const GeometryContext& gctx, const CalibrationContext& cctx,
     const SourceLink& sourceLink,
     MultiTrajectory<VectorMultiTrajectory>::TrackStateProxy& trackState) const {
   trackState.setUncalibratedSourceLink(SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
-  assert((idxSourceLink.index() < measurements.size()) and
+  assert((idxSourceLink.index() < measurements.size()) &&
          "Source link index is outside the container bounds");
 
   if (!rangeContainsValue(m_volumeIds, idxSourceLink.geometryId().volume())) {
@@ -99,7 +101,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
   // TODO: Matrix size should be configurable perhaps?
   std::size_t matSize0 = 7u;
   std::size_t matSize1 = 7u;
-  std::size_t iInput = ::detail::fillChargeMatrix(
+  std::size_t iInput = fillChargeMatrix(
       input, (*clusters)[idxSourceLink.index()], matSize0, matSize1);
 
   input[iInput++] = idxSourceLink.geometryId().volume();
@@ -179,9 +181,9 @@ void ActsExamples::NeuralCalibrator::calibrate(
         static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
             measurement);
 
-    ActsVector<kMeasurementSize> calibratedParameters =
+    Vector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
-    ActsSquareMatrix<kMeasurementSize> calibratedCovariance =
+    SquareMatrix<kMeasurementSize> calibratedCovariance =
         fixedMeasurement.covariance();
 
     calibratedParameters[boundLoc0] = output[iLoc0];
@@ -193,3 +195,5 @@ void ActsExamples::NeuralCalibrator::calibrate(
     trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
+
+}  // namespace ActsExamples

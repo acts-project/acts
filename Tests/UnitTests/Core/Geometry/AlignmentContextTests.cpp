@@ -10,15 +10,50 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/detail/TrackingGeometryPrintVisitor.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <array>
 #include <memory>
 #include <utility>
+
+namespace {
+/// Checks whether the two transforms are the same
+/// @param a: First transform to check
+/// @param b: Second transform to check
+inline bool isSame(const Acts::Transform3& a, const Acts::Transform3& b) {
+  const Acts::Transform3 c = a * b.inverse();
+  if (c.translation().norm() > Acts::s_onSurfaceTolerance) {
+    return false;
+  }
+  for (std::size_t d = 0; d < 3; ++d) {
+    const Acts::Vector3 e = Acts::Vector3::Unit(d);
+    if (std::abs(e.dot(c * e) - 1.) > Acts::s_onSurfaceTolerance) {
+      return false;
+    }
+  }
+  return true;
+}
+
+}  // namespace
+
+const Acts::Logger& logger() {
+  static const auto logObj =
+      Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+  return *logObj;
+}
 
 namespace Acts {
 class PlanarBounds;
@@ -31,8 +66,19 @@ namespace ActsTests {
 
 /// @class AlignmentContext
 struct AlignmentContext {
+  /// Return the geometry context
+  Acts::GeometryContext getContext() const {
+    return Acts::GeometryContext{this};
+  }
   /// We have 2 different transforms
-  std::shared_ptr<const std::array<Transform3, 2>> alignmentStore = nullptr;
+  using StoreType_t = std::array<Transform3, 2>;
+  std::shared_ptr<const StoreType_t> detElementAlignment = nullptr;
+  // Two transforms for the local -> global trf of the volume
+  std::shared_ptr<StoreType_t> volumeLocToGlobAlign = nullptr;
+  // Two transforms of the global -> local trf of the volume
+  std::shared_ptr<StoreType_t> volumeGlobToLocAlign = nullptr;
+  // List of portal transforms
+  std::vector<StoreType_t> portalAlignments{};
 
   /// Context index
   unsigned int alignmentIndex{0};
@@ -44,7 +90,7 @@ struct AlignmentContext {
   explicit AlignmentContext(
       std::shared_ptr<const std::array<Transform3, 2>> aStore,
       unsigned int aIndex = 0)
-      : alignmentStore(std::move(aStore)), alignmentIndex(aIndex) {}
+      : detElementAlignment(std::move(aStore)), alignmentIndex(aIndex) {}
 };
 
 /// @class AlignableDetectorElement
@@ -65,8 +111,7 @@ class AlignableDetectorElement : public SurfacePlacementBase {
   AlignableDetectorElement(std::shared_ptr<const Transform3> transform,
                            const std::shared_ptr<const PlanarBounds>& pBounds,
                            double thickness)
-      : m_elementTransform(std::move(transform)),
-        m_elementThickness(thickness) {
+      : m_elementTransform(std::move(transform)) {
     m_elementSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
     m_elementSurface->assignThickness(thickness);
   }
@@ -88,9 +133,6 @@ class AlignableDetectorElement : public SurfacePlacementBase {
   /// Non-const access to the surface associated with this detector element
   Surface& surface() override;
 
-  /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const;
-
   /// Is the detector element a sensitive element
   bool isSensitive() const override { return true; }
 
@@ -99,16 +141,14 @@ class AlignableDetectorElement : public SurfacePlacementBase {
   std::shared_ptr<const Transform3> m_elementTransform;
   /// the surface represented by it
   std::shared_ptr<Surface> m_elementSurface{nullptr};
-  /// the element thickness
-  double m_elementThickness{0.};
 };
 
 inline const Transform3& AlignableDetectorElement::localToGlobalTransform(
     const GeometryContext& gctx) const {
-  auto alignContext = gctx.get<AlignmentContext>();
-  if (alignContext.alignmentStore != nullptr &&
-      alignContext.alignmentIndex < 2) {
-    return (*(alignContext.alignmentStore))[alignContext.alignmentIndex];
+  const auto* alignContext = gctx.get<const AlignmentContext*>();
+  if (alignContext != nullptr && alignContext->detElementAlignment != nullptr &&
+      alignContext->alignmentIndex < 2) {
+    return alignContext->detElementAlignment->at(alignContext->alignmentIndex);
   }
   return (*m_elementTransform);
 }
@@ -121,9 +161,83 @@ inline Surface& AlignableDetectorElement::surface() {
   return *m_elementSurface;
 }
 
-inline double AlignableDetectorElement::thickness() const {
-  return m_elementThickness;
-}
+class AlignableVolumePlacement : public VolumePlacementBase {
+ public:
+  ///
+  explicit AlignableVolumePlacement(const Transform3& volTrf)
+      : m_locToGlob{volTrf} {}
+
+  const Transform3& localToGlobalTransform(
+      const GeometryContext& gctx) const override {
+    const auto* alignContext = gctx.get<const AlignmentContext*>();
+    if (alignContext != nullptr &&
+        alignContext->volumeLocToGlobAlign != nullptr &&
+        alignContext->alignmentIndex < 2) {
+      return alignContext->volumeLocToGlobAlign->at(
+          alignContext->alignmentIndex);
+    }
+    return m_locToGlob;
+  }
+
+  const Transform3& globalToLocalTransform(
+      const GeometryContext& gctx) const override {
+    const auto* alignContext = gctx.get<const AlignmentContext*>();
+    if (alignContext != nullptr &&
+        alignContext->volumeGlobToLocAlign != nullptr &&
+        alignContext->alignmentIndex < 2) {
+      return alignContext->volumeGlobToLocAlign->at(
+          alignContext->alignmentIndex);
+    }
+    return m_globToLoc;
+  }
+
+  const Transform3& portalLocalToGlobal(
+      const GeometryContext& gctx, const std::size_t portalIdx) const override {
+    const auto* alignContext = gctx.get<const AlignmentContext*>();
+    if (alignContext != nullptr && alignContext->alignmentIndex < 2 &&
+        alignContext->portalAlignments.size() > portalIdx) {
+      return alignContext
+          ->portalAlignments[portalIdx][alignContext->alignmentIndex];
+    }
+    assert(portalIdx < m_portalTrfs.size());
+    return m_portalTrfs[portalIdx];
+  }
+
+  void setAlignmentDelta(AlignmentContext& context, const Transform3& delta,
+                         const std::size_t idx) {
+    using StoreType_t = AlignmentContext::StoreType_t;
+    assert(idx < 2);
+
+    if (context.volumeLocToGlobAlign == nullptr) {
+      context.volumeLocToGlobAlign = std::make_shared<StoreType_t>();
+      context.volumeGlobToLocAlign = std::make_shared<StoreType_t>();
+    }
+    context.volumeLocToGlobAlign->at(idx) = m_locToGlob * delta;
+    context.volumeGlobToLocAlign->at(idx) =
+        context.volumeLocToGlobAlign->at(idx).inverse();
+
+    context.portalAlignments.resize(nPortalPlacements());
+    for (std::size_t portal = 0ul; portal < nPortalPlacements(); ++portal) {
+      context.portalAlignments[portal][idx] =
+          alignPortal(context.getContext(), portal);
+    }
+  }
+
+  void makePortalsAlignable(const GeometryContext& gctx,
+                            const std::vector<std::shared_ptr<RegularSurface>>&
+                                portalsToAlign) override {
+    VolumePlacementBase::makePortalsAlignable(gctx, portalsToAlign);
+    for (std::size_t portal = 0ul; portal < portalsToAlign.size(); ++portal) {
+      m_portalTrfs.push_back(alignPortal(gctx, portal));
+    }
+  }
+
+ private:
+  Transform3 m_locToGlob{Transform3::Identity()};
+  Transform3 m_globToLoc{m_locToGlob.inverse()};
+  std::vector<Transform3> m_portalTrfs{};
+};
+
 }  // namespace ActsTests
 
 using namespace ActsTests;
@@ -158,7 +272,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   std::array<Transform3, 2> alignmentArray = {negativeTransform,
                                               positiveTransform};
 
-  std::shared_ptr<const std::array<Transform3, 2>> alignmentStore =
+  auto detElementAlignment =
       std::make_shared<const std::array<Transform3, 2>>(alignmentArray);
 
   // The detector element at nominal position
@@ -169,17 +283,21 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   const auto& alignedSurface = alignedElement.surface();
 
   // The alignment contexts
-  GeometryContext defaultContext{AlignmentContext{}};
-  GeometryContext negativeContext{AlignmentContext{alignmentStore, 0}};
-  GeometryContext positiveContext{AlignmentContext{alignmentStore, 1}};
+  AlignmentContext alignDefault{};
+  AlignmentContext alignNegative{detElementAlignment, 0};
+  AlignmentContext alignPositive{detElementAlignment, 1};
+
+  GeometryContext defaultContext{alignDefault.getContext()};
+  GeometryContext negativeContext{alignNegative.getContext()};
+  GeometryContext positiveContext{alignPositive.getContext()};
 
   // Test the transforms
-  BOOST_CHECK(alignedSurface.localToGlobalTransform(defaultContext)
-                  .isApprox(Transform3::Identity()));
-  BOOST_CHECK(alignedSurface.localToGlobalTransform(negativeContext)
-                  .isApprox(negativeTransform));
-  BOOST_CHECK(alignedSurface.localToGlobalTransform(positiveContext)
-                  .isApprox(positiveTransform));
+  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(defaultContext),
+                     Transform3::Identity()));
+  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(negativeContext),
+                     negativeTransform));
+  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(positiveContext),
+                     positiveTransform));
 
   // Test the centers
   BOOST_CHECK_EQUAL(alignedSurface.center(defaultContext), nominalCenter);
@@ -218,6 +336,185 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
       alignedSurface.globalToLocal(positiveContext, onPositive, dummyMomentum)
           .value();
   BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
+}
+
+BOOST_AUTO_TEST_CASE(AlignVolumeTests) {
+  Transform3 volTrf1{Transform3::Identity()};
+  volTrf1.translation() = Vector3{100._mm, 200._mm, 300._mm};
+  AlignableVolumePlacement volumePlacement{volTrf1};
+
+  /// define the diamond volume bounds
+  constexpr double halfX1 = 10.0_cm;
+  constexpr double halfX2 = 12.0_cm;
+  constexpr double halfX3 = 12.0_cm;
+  constexpr double halfY1 = 5.0_cm;
+  constexpr double halfY2 = 10.0_cm;
+  constexpr double halfZ = 2.0_cm;
+
+  /// Create an alignable volume
+  Volume alignedVol1{volumePlacement,
+                     std::make_shared<DiamondVolumeBounds>(
+                         halfX1, halfX2, halfX3, halfY1, halfY2, halfZ)};
+
+  BOOST_CHECK_EQUAL(alignedVol1.isAlignable(), true);
+  BOOST_CHECK_THROW(alignedVol1.setTransform(volTrf1), std::runtime_error);
+  const AlignmentContext defaultContext{};
+  // Check that the transform of the alignable volume is defined by the
+  // placement
+
+  BOOST_CHECK_EQUAL(
+      &alignedVol1.localToGlobalTransform(defaultContext.getContext()),
+      &volumePlacement.localToGlobalTransform(defaultContext.getContext()));
+
+  BOOST_CHECK_EQUAL(
+      &alignedVol1.globalToLocalTransform(defaultContext.getContext()),
+      &volumePlacement.globalToLocalTransform(defaultContext.getContext()));
+
+  BOOST_CHECK(isSame(
+      volumePlacement.localToGlobalTransform(defaultContext.getContext()),
+      volTrf1));
+  // Then fetch the oriented surfaces
+  std::vector<OrientedSurface> orientedSurfaces =
+      alignedVol1.volumeBounds().orientedSurfaces(
+          alignedVol1.localToGlobalTransform(defaultContext.getContext()));
+
+  for (const OrientedSurface& surface : orientedSurfaces) {
+    BOOST_CHECK_EQUAL(surface.surface->isAlignable(), false);
+    BOOST_CHECK_EQUAL(surface.surface->isSensitive(), false);
+  }
+
+  std::vector<std::shared_ptr<RegularSurface>> portalSurfaces{};
+  std::ranges::transform(
+      orientedSurfaces, std::back_inserter(portalSurfaces),
+      [](const OrientedSurface& surface) { return surface.surface; });
+
+  volumePlacement.makePortalsAlignable(defaultContext.getContext(),
+                                       portalSurfaces);
+
+  // Reset the surfaces
+  orientedSurfaces = alignedVol1.volumeBounds().orientedSurfaces(
+      alignedVol1.localToGlobalTransform(defaultContext.getContext()));
+
+  for (std::size_t portal = 0ul; portal < portalSurfaces.size(); ++portal) {
+    // The portal mut be alignable
+    BOOST_CHECK_EQUAL(portalSurfaces[portal]->isAlignable(), true);
+    // But not sensitive
+    BOOST_CHECK_EQUAL(portalSurfaces[portal]->isSensitive(), false);
+    // Then check that the surface are placed at the same spot
+    BOOST_CHECK(isSame(orientedSurfaces[portal].surface->localToGlobalTransform(
+                           defaultContext.getContext()),
+                       portalSurfaces[portal]->localToGlobalTransform(
+                           defaultContext.getContext())));
+    // Also check that their bounds are the same
+    BOOST_CHECK(orientedSurfaces[portal].surface->bounds() ==
+                portalSurfaces[portal]->bounds());
+  }
+
+  AlignmentContext alignedContext{};
+  const Transform3 rotationDelta{Translation3{0., -200._mm, -300._mm} *
+                                 AngleAxis3{25._degree, Vector3{1., 0., 0.}}};
+  ACTS_INFO("Rotation correction: " << toString(rotationDelta));
+  volumePlacement.setAlignmentDelta(alignedContext, rotationDelta, 0);
+
+  const Transform3 alignedTrf =
+      volumePlacement.localToGlobalTransform(alignedContext.getContext());
+  const Transform3 assembledTrf = volTrf1 * rotationDelta;
+  ACTS_INFO("Test whether the aligned volume transform is what's expected \n"
+            << " ---- " << toString(alignedTrf) << "\n ---- "
+            << toString(assembledTrf));
+  BOOST_CHECK(isSame(alignedTrf, assembledTrf));
+
+  orientedSurfaces = alignedVol1.volumeBounds().orientedSurfaces(
+      alignedVol1.localToGlobalTransform(alignedContext.getContext()));
+
+  for (std::size_t portal = 0ul; portal < portalSurfaces.size(); ++portal) {
+    BOOST_CHECK(isSame(orientedSurfaces[portal].surface->localToGlobalTransform(
+                           alignedContext.getContext()),
+                       portalSurfaces[portal]->localToGlobalTransform(
+                           alignedContext.getContext())));
+  }
+
+  // Ensure that the bound values can no longer be updated
+  BOOST_CHECK_THROW(
+      alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
+          halfX1, 2. * halfX2, halfX3, halfY1, halfY2, halfZ)),
+      std::runtime_error);
+  // But equivalent bounds can be pushed
+  BOOST_CHECK_NO_THROW(
+      alignedVol1.assignVolumeBounds(std::make_shared<DiamondVolumeBounds>(
+          halfX1, halfX2, halfX3, halfY1, halfY2, halfZ)));
+}
+
+BOOST_AUTO_TEST_CASE(ConfinedVolumes) {
+  AlignableVolumePlacement outsidePlacement{Transform3::Identity()};
+  std::vector<std::unique_ptr<AlignableVolumePlacement>> innerPlacements{};
+
+  const AlignmentContext gctx{};
+  using namespace Acts::Experimental;
+
+  constexpr double hX = 10._cm;
+  constexpr double hY = 20._cm;
+  constexpr double hZ = 30._cm;
+
+  auto innerBounds = std::make_shared<CuboidVolumeBounds>(hX, hY, hZ);
+  auto outerBounds =
+      std::make_shared<CuboidVolumeBounds>(10. * hX, 2. * hY, 2. * hZ);
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_m, 20_m};
+  cfg.envelope[AxisDirection::AxisR] = {0, 20_m};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  // auto& cubcontainer = root->addCuboidContainer("CuboidContainer",
+  // AxisDirection::AxisX);
+  auto parentVol =
+      std::make_unique<TrackingVolume>(outsidePlacement, outerBounds, "parent");
+  parentVol->assignGeometryId(GeometryIdentifier{}.withVolume(5));
+  auto parentNode = std::make_shared<StaticBlueprintNode>(std::move(parentVol));
+  // start from the edge of the parent volume
+  const double xShift =
+      5._mm + innerBounds->get(CuboidVolumeBounds::eHalfLengthX);
+  double startX = -outerBounds->get(CuboidVolumeBounds::eHalfLengthX) + xShift;
+
+  unsigned i = 0;
+  while (startX < outerBounds->get(CuboidVolumeBounds::eHalfLengthX)) {
+    const Transform3 trf{Translation3{startX, 0., 0.}};
+    startX += 2. * xShift;
+    std::unique_ptr<TrackingVolume> childVol{};
+    auto& placement = innerPlacements.emplace_back(
+        std::make_unique<AlignableVolumePlacement>(trf));
+    childVol = std::make_unique<TrackingVolume>(
+        *placement, innerBounds, std::format("alignable_child_{:}", i));
+
+    ++i;
+    childVol->assignGeometryId(
+        GeometryIdentifier{}.withVolume(10).withLayer(i + 1));
+    auto childNode = std::make_shared<StaticBlueprintNode>(std::move(childVol));
+    parentNode->addChild(std::move(childNode));
+  }
+
+  root->addChild(std::move(parentNode));
+  auto trackingGeometry = root->construct({}, gctx.getContext(), logger());
+  const auto* rootVol =
+      trackingGeometry->findVolume(GeometryIdentifier{}.withVolume(5));
+  BOOST_CHECK_NE(rootVol, nullptr);
+  // Inspection time
+  {
+    Acts::detail::TrackingGeometryPrintVisitor printVisitor{gctx.getContext()};
+    rootVol->apply(printVisitor);
+    ACTS_INFO("Constructed tracking geometry: \n"
+              << printVisitor.stream().str());
+  }
+  // Ensure that the volume is alignable
+  BOOST_CHECK_EQUAL(rootVol->isAlignable(), true);
+  BOOST_CHECK_EQUAL(rootVol->volumePlacement(), &outsidePlacement);
+  BOOST_CHECK_EQUAL(outsidePlacement.nPortalPlacements(), 6);
+  for (const auto& [child, placement] :
+       zip(rootVol->volumes(), innerPlacements)) {
+    BOOST_CHECK_EQUAL(child.isAlignable(), true);
+    BOOST_CHECK_EQUAL(child.volumePlacement(), placement.get());
+    BOOST_CHECK_EQUAL(placement->nPortalPlacements(), 6);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END();

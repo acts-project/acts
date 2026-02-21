@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace podio {
@@ -31,11 +30,14 @@ class PodioInputConverter : public IAlgorithm {
   PodioInputConverter(const std::string& name, Acts::Logging::Level level,
                       const std::string& inputFrame);
 
+  /// Destructor for the PODIO input converter.
+  ~PodioInputConverter() override;
+
   /// Execute the algorithm. Subclasses do not implement this method.
   ///
   /// @param ctx The algorithm context
   /// @return The process code
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Convert the input @c podio::Frame object to the internal EDM format.
   ///
@@ -46,7 +48,9 @@ class PodioInputConverter : public IAlgorithm {
                               const podio::Frame& frame) const = 0;
 
  private:
-  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
+  class Impl;
+
+  std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace ActsExamples

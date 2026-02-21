@@ -12,17 +12,19 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 #include <numbers>
 
 #include <edm4hep/EDM4hepVersion.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
+#include <edm4hep/MutableVertex.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/Vector3f.h>
+#include <edm4hep/Vector4f.h>
 
 using namespace Acts;
 using namespace Acts::detail;
@@ -30,7 +32,7 @@ using namespace Acts::detail;
 namespace ActsPlugins::EDM4hepUtil {
 namespace detail {
 
-ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
+SquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
   // q/p) to the LCIO / edm4hep (see:
   // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf)
@@ -55,7 +57,7 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // [      2             sin(theta)]
   // [   sin (theta)                ]
 
-  ActsSquareMatrix<6> J;
+  SquareMatrix<6> J;
   J.setIdentity();
   double sinTheta = std::sin(theta);
   J(3, 3) = -1.0 / (sinTheta * sinTheta);
@@ -65,8 +67,7 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   return J;
 }
 
-ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
-                                        double Bz) {
+SquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega, double Bz) {
   // [     d      /                     pi\                                  ]
   // [------------|-atan(\tan\lambda) + --|                 0                ]
   // [d\tan\lambda\                     2 /                                  ]
@@ -90,7 +91,7 @@ ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
   // [  /           2    \         /            2     ]
   // [B*\\tan\lambda  + 1/     B*\/  \tan\lambda  + 1 ]
 
-  ActsSquareMatrix<6> J;
+  SquareMatrix<6> J;
   J.setIdentity();
   J(3, 3) = -1 / (tanLambda * tanLambda + 1);
   J(4, 3) = -1 * omega * tanLambda /
@@ -100,7 +101,7 @@ ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
   return J;
 }
 
-void packCovariance(const ActsSquareMatrix<6>& from, float* to) {
+void packCovariance(const SquareMatrix<6>& from, float* to) {
   for (int i = 0; i < from.rows(); i++) {
     for (int j = 0; j <= i; j++) {
       std::size_t k = (i + 1) * i / 2 + j;
@@ -109,7 +110,7 @@ void packCovariance(const ActsSquareMatrix<6>& from, float* to) {
   }
 }
 
-void unpackCovariance(const float* from, ActsSquareMatrix<6>& to) {
+void unpackCovariance(const float* from, SquareMatrix<6>& to) {
   auto k = [](std::size_t i, std::size_t j) { return (i + 1) * i / 2 + j; };
   for (int i = 0; i < to.rows(); i++) {
     for (int j = 0; j < to.cols(); j++) {
@@ -151,8 +152,8 @@ Parameters convertTrackParametersToEdm4hep(const GeometryContext& gctx,
 
   // Only run covariance conversion if we have a covariance input
   if (targetCov) {
-    ActsSquareMatrix<6> J = jacobianToEdm4hep(targetPars[eBoundTheta],
-                                              targetPars[eBoundQOverP], Bz);
+    SquareMatrix<6> J = jacobianToEdm4hep(targetPars[eBoundTheta],
+                                          targetPars[eBoundQOverP], Bz);
     result.covariance = J * targetCov.value() * J.transpose();
   }
 
@@ -173,7 +174,7 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params) {
   BoundVector targetPars;
 
-  ActsSquareMatrix<6> J =
+  SquareMatrix<6> J =
       jacobianFromEdm4hep(params.values[3], params.values[4], Bz);
 
   std::optional<BoundMatrix> cov;
@@ -237,6 +238,60 @@ edm4hep::SimTrackerHit SimHitAssociation::lookup(
 
 std::size_t SimHitAssociation::lookup(const edm4hep::SimTrackerHit& hit) const {
   return m_edm4hepToInternal.at(hit.id());
+}
+
+void writeVertex(const Vertex& vertex, edm4hep::MutableVertex to) {
+  static constexpr std::array<edm4hep::FourMomCoords, 4> toEdm4hep = []() {
+    std::array<edm4hep::FourMomCoords, 4> values{};
+    using enum edm4hep::FourMomCoords;
+    values.at(eFreePos0) = x;
+    values.at(eFreePos1) = y;
+    values.at(eFreePos2) = z;
+    values.at(eFreeTime) = t;
+    return values;
+  }();
+
+  // Wrap this in a templated lambda so we can use `if constexpr` to select the
+  // correct write function based on the type of the properties of the `to`
+  // object.
+  auto writeVertex = []<typename T>(const Vertex& vertex_, T& to_)
+    requires(std::is_same_v<T, edm4hep::MutableVertex>)
+  {
+    if constexpr (detail::kEdm4hepVertexHasTime) {
+      Vector4 pos = vertex_.fullPosition();
+      to_.setPosition({static_cast<float>(pos[eFreePos0]),
+                       static_cast<float>(pos[eFreePos1]),
+                       static_cast<float>(pos[eFreePos2]),
+                       static_cast<float>(pos[eFreeTime])});
+
+      edm4hep::CovMatrix4f& cov = to_.getCovMatrix();
+      std::array coords{eFreePos0, eFreePos1, eFreePos2, eFreeTime};
+      for (auto i : coords) {
+        for (auto j : coords) {
+          cov.setValue(static_cast<float>(vertex_.fullCovariance()(i, j)),
+                       toEdm4hep.at(i), toEdm4hep.at(j));
+        }
+      }
+    } else {
+      Vector3 pos = vertex_.position();
+      to_.setPosition({static_cast<float>(pos[eFreePos0]),
+                       static_cast<float>(pos[eFreePos1]),
+                       static_cast<float>(pos[eFreePos2])});
+      edm4hep::CovMatrix3f& cov = to_.getCovMatrix();
+      std::array coords{eFreePos0, eFreePos1, eFreePos2};
+      for (auto i : coords) {
+        for (auto j : coords) {
+          cov.setValue(static_cast<float>(vertex_.covariance()(i, j)),
+                       toEdm4hep.at(i), toEdm4hep.at(j));
+        }
+      }
+    }
+
+    to_.setChi2(static_cast<float>(vertex_.fitQuality().first));
+    to_.setNdf(static_cast<int>(vertex_.fitQuality().second));
+  };
+
+  writeVertex(vertex, to);
 }
 
 }  // namespace ActsPlugins::EDM4hepUtil

@@ -304,7 +304,7 @@ MultiIntersection3D DiscSurface::intersect(
                                             intersection.pathLength(), status));
 }
 
-ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -316,7 +316,7 @@ ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << lcphi, lsphi, 0, -lsphi / lr, lcphi / lr, 0;
 
   return loc3DToLocBound;

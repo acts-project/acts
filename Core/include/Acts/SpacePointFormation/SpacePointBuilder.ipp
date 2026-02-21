@@ -14,20 +14,20 @@
 
 namespace Acts {
 
-template <typename spacepoint_t>
-SpacePointBuilder<spacepoint_t>::SpacePointBuilder(
-    const SpacePointBuilderConfig& cfg, BuilderFunction func,
+template <typename space_point_t>
+SpacePointBuilder<space_point_t>::SpacePointBuilder(
+    const SpacePointBuilderConfig& cfg, const BuilderFunction& func,
     std::unique_ptr<const Logger> logger)
     : m_config(cfg), m_spConstructor(func), m_logger(std::move(logger)) {
   m_spUtility = std::make_shared<SpacePointUtility>(cfg);
 }
 
-template <typename spacepoint_t>
+template <typename space_point_t>
 template <template <typename...> typename container_t>
-void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
+void SpacePointBuilder<space_point_t>::buildSpacePoint(
     const GeometryContext& gctx, const std::vector<SourceLink>& sourceLinks,
     const SpacePointBuilderOptions& opt,
-    std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const {
+    std::back_insert_iterator<container_t<space_point_t>> spacePointIt) const {
   Acts::Vector3 gPos = Acts::Vector3::Zero();
   std::optional<double> gTime = std::nullopt;
   Acts::Vector2 gCov = Acts::Vector2::Zero();
@@ -90,8 +90,8 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
   spacePointIt = m_spConstructor(gPos, gTime, gCov, gCovT, std::move(slinks));
 }
 
-template <typename spacepoint_t>
-void SpacePointBuilder<spacepoint_t>::makeSourceLinkPairs(
+template <typename space_point_t>
+void SpacePointBuilder<space_point_t>::makeSourceLinkPairs(
     const GeometryContext& gctx, const std::vector<SourceLink>& slinksFront,
     const std::vector<SourceLink>& slinksBack,
     std::vector<std::pair<SourceLink, SourceLink>>& slinkPairs,

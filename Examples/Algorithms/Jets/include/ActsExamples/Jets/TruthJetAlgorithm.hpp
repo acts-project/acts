@@ -9,23 +9,25 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Jets.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsPlugins/FastJet/Jets.hpp"
 
 #include <string>
+
+#include <fastjet/JetDefinition.hh>
+#include <fastjet/PseudoJet.hh>
 
 namespace fastjet {
 class PseudoJet;
 }
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
-using TruthJetContainer = std::vector<ActsPlugins::FastJet::TruthJet>;
+using TruthJetContainer = std::vector<ActsExamples::TruthJet>;
 
 class TruthJetAlgorithm final : public IAlgorithm {
  public:
@@ -55,7 +57,7 @@ class TruthJetAlgorithm final : public IAlgorithm {
     /// Only label HS hadrons
     bool jetLabelingHSHadronsOnly = true;
     /// Enable track-jet matching
-    bool doTrackJetMatching;
+    bool doTrackJetMatching = false;
   };
 
   TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);

@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include <Acts/Vertexing/Vertex.hpp>
 
 #include <stdexcept>
 
@@ -28,6 +29,8 @@
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/Vector4f.h>
+#include <edm4hep/Vertex.h>
 #include <podio/podioVersion.h>
 
 #if podio_VERSION_MAJOR == 0 || \
@@ -54,7 +57,7 @@ static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
 namespace detail {
 struct Parameters {
-  Acts::ActsVector<6> values{};
+  Acts::Vector<6> values{};
   // Dummy default
   Acts::ParticleHypothesis particleHypothesis =
       Acts::ParticleHypothesis::pion();
@@ -62,14 +65,13 @@ struct Parameters {
   std::shared_ptr<const Acts::Surface> surface;
 };
 
-Acts::ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP,
-                                            double Bz);
+Acts::SquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
 
-Acts::ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
-                                              double Bz);
+Acts::SquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
+                                          double Bz);
 
-void unpackCovariance(const float* from, Acts::ActsSquareMatrix<6>& to);
-void packCovariance(const Acts::ActsSquareMatrix<6>& from, float* to);
+void unpackCovariance(const float* from, Acts::SquareMatrix<6>& to);
+void packCovariance(const Acts::SquareMatrix<6>& from, float* to);
 
 Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
@@ -320,5 +322,18 @@ class SimHitAssociation {
 };
 
 /// @}
+
+namespace detail {
+/// Support for both EDM4hep versions where the vertex position is a 3 or 4
+/// vector
+constexpr bool kEdm4hepVertexHasTime =
+    std::is_same_v<edm4hep::Vector4f,
+                   decltype(std::declval<edm4hep::Vertex>().getPosition())> &&
+    std::is_same_v<edm4hep::CovMatrix4f,
+                   decltype(std::declval<edm4hep::Vertex>().getCovMatrix())>;
+
+}  // namespace detail
+
+void writeVertex(const Acts::Vertex& vertex, edm4hep::MutableVertex to);
 
 }  // namespace ActsPlugins::EDM4hepUtil
