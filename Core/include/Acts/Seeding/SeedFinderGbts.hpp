@@ -58,9 +58,6 @@ class SeedFinderGbts {
 
   /// Sliding window in phi used to define range used for edge creation
   struct GbtsSlidingWindow {
-    /// Constructor.
-    GbtsSlidingWindow() = default;
-
     /// sliding window position
     std::uint32_t firstIt{};
     /// window half-width;
