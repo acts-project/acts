@@ -375,16 +375,10 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
       binMap.try_emplace(bin1);
     }
 
-    std::pair<std::vector<std::uint32_t>, std::vector<std::uint32_t>>&
-        bin1Links = (*binMap.find(bin1)).second;
+    auto& bin1Links = binMap[bin1];
 
     for (const auto& bin2 : bin2s) {
-      // add to the map
-      if (binMap.find(bin2) == binMap.end()) {
-        binMap.try_emplace(bin2);
-      }
-
-      auto& bin2Links = (*binMap.find(bin2)).second;
+      auto& bin2Links = binMap[bin2];
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
       bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
@@ -392,7 +386,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   }
 
   // copy bin map as the original will be modified
-  BinConnections currentMap(binMap);
+  BinConnections currentMap = binMap;
 
   // 2. find stages starting from the last one (i.e. bin1 with no outgoing
   // connections)
@@ -412,7 +406,10 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
     // 2a. find all bins with zero outgoing links
 
     for (const auto& bl : currentMap) {
-      if (!bl.second.first.empty()) {
+      auto& binLinks = bl.second;
+      auto& outLinks = binLinks.first;
+
+      if (!outLinks.empty()) {
         continue;
       }
 
@@ -431,14 +428,16 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
       if (p1 == currentMap.end()) {
         continue;
       }
-      auto& bin1Links = (*p1).second;
+      auto& bin1Links = p1->second;
 
       for (const std::uint32_t bin2Key : bin1Links.second) {
         const auto p2 = currentMap.find(bin2Key);
         if (p2 == currentMap.end()) {
           continue;
         }
-        std::vector<std::uint32_t>& links = p2->second.first;
+
+        auto& binLinks = p2->second;
+        std::vector<std::uint32_t>& links = binLinks.first;
 
         std::erase(links, bin1Key);
       }
@@ -471,7 +470,8 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
         continue;
       }
 
-      const std::vector<std::uint32_t>& bin2List = p->second.second;
+      const auto& binLists = p->second;
+      const std::vector<std::uint32_t>& bin2List = binLists.second;
 
       // store the group
       m_binGroups.emplace_back(bin1Idx, std::vector<std::uint32_t>(bin2List));
