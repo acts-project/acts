@@ -10,9 +10,9 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointColumnProxy2.hpp"
+#include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/SpacePointContainer2Column.hpp"
-#include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 #include "Acts/Utilities/detail/ContainerRange.hpp"
@@ -42,40 +42,6 @@ class SpacePointProxy2;
 using MutableSpacePointProxy2 = SpacePointProxy2<false>;
 /// Const proxy to a space point for read-only access
 using ConstSpacePointProxy2 = SpacePointProxy2<true>;
-
-/// Enumeration of available columns for space point data storage
-enum class SpacePointColumns : std::uint32_t {
-  None = 0,  ///< No columns
-
-  SourceLinks = 1 << 0,           ///< Source link information
-  X = 1 << 1,                     ///< X coordinate
-  Y = 1 << 2,                     ///< Y coordinate
-  Z = 1 << 3,                     ///< Z coordinate
-  R = 1 << 4,                     ///< Radial coordinate
-  Phi = 1 << 5,                   ///< Azimuthal angle
-  Time = 1 << 6,                  ///< Time information
-  VarianceZ = 1 << 7,             ///< Variance in Z direction
-  VarianceR = 1 << 8,             ///< Variance in radial direction
-  TopStripVector = 1 << 9,        ///< Vector for the top strip
-  BottomStripVector = 1 << 10,    ///< Vector for the bottom strip
-  StripCenterDistance = 1 << 11,  ///< Distance to the strip center
-  TopStripCenter = 1 << 12,       ///< Center of the top strip
-  CopyFromIndex = 1 << 13,        ///< Copy from index
-
-  // packed columns for performance reasons
-  XY = 1 << 14,          ///< X and Y coordinates
-  ZR = 1 << 15,          ///< Z and R coordinates
-  XYZ = 1 << 16,         ///< X, Y, and Z coordinates
-  XYZR = 1 << 17,        ///< X, Y, Z, and R coordinates
-  VarianceZR = 1 << 18,  ///< Variance in Z and R directions
-
-  /// All strip-related columns
-  Strip =
-      TopStripVector | BottomStripVector | StripCenterDistance | TopStripCenter,
-};
-
-/// Enable bitwise operators for SpacePointColumns enum
-ACTS_DEFINE_ENUM_BITWISE_OPERATORS(SpacePointColumns);
 
 /// A container for space points, which can hold additional columns of data
 /// and allows for efficient access to space points and their associated source
@@ -140,6 +106,14 @@ class SpacePointContainer2 {
   /// @return A mutable proxy to the newly created space point.
   MutableProxy createSpacePoint() noexcept;
 
+  /// Copies the specified columns from another spacepoint to this spacepoint
+  /// @param index The index of the spacepoint to copy to in this container.
+  /// @param otherContainer The space point container to copy from.
+  /// @param otherIndex The index of the spacepoint to copy from in the other container.
+  /// @param columnsToCopy The columns to copy from the other spacepoint.
+  void copyFrom(Index index, const SpacePointContainer2 &otherContainer,
+                Index otherIndex, SpacePointColumns columnsToCopy);
+
   /// Creates additional columns. This will create the columns if they do not
   /// already exist.
   /// @param columns The columns to create.
@@ -180,7 +154,7 @@ class SpacePointContainer2 {
   /// @param name The name of the column.
   /// @return True if the column exists, false otherwise.
   bool hasColumn(const std::string &name) const noexcept {
-    return m_namedColumns.contains(name);
+    return m_allColumns.contains(name);
   }
 
   /// Returns a mutable reference to the Column with the given name.
@@ -1021,12 +995,10 @@ class SpacePointContainer2 {
 
   std::uint32_t m_size{0};
 
-  std::unordered_map<
-      std::string,
-      std::pair<ColumnHolderBase *, std::unique_ptr<ColumnHolderBase>>,
-      std::hash<std::string_view>, std::equal_to<>>
-      m_namedColumns;
+  std::unordered_map<std::string, ColumnHolderBase *> m_allColumns;
   SpacePointColumns m_knownColumns{SpacePointColumns::None};
+  std::unordered_map<std::string, std::unique_ptr<ColumnHolderBase>>
+      m_dynamicColumns;
 
   std::vector<SourceLink> m_sourceLinks;
 
@@ -1133,18 +1105,18 @@ class SpacePointContainer2 {
     auto holder = std::make_unique<Holder>();
     holder->resize(size());
     auto proxy = holder->proxy(*this);
-    m_namedColumns.try_emplace(name,
-                               std::pair{holder.get(), std::move(holder)});
+    m_allColumns.try_emplace(name, holder.get());
+    m_dynamicColumns.try_emplace(name, std::move(holder));
     return proxy;
   }
 
   template <typename Holder>
   auto columnImpl(const std::string &name) const {
-    auto it = m_namedColumns.find(name);
-    if (it == m_namedColumns.end()) {
+    auto it = m_allColumns.find(name);
+    if (it == m_allColumns.end()) {
       throw std::runtime_error("Column not found: " + name);
     }
-    auto &holder = dynamic_cast<Holder &>(*it->second.first);
+    auto &holder = dynamic_cast<Holder &>(*it->second);
     return holder.proxy();
   }
 };
