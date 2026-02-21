@@ -136,6 +136,7 @@ BOOST_AUTO_TEST_CASE(KnownExtraColumns) {
 
 BOOST_AUTO_TEST_CASE(NamedExtraColumns) {
   SpacePointContainer2 container;
+  const SpacePointContainer2 &constContainer = container;
 
   BOOST_CHECK(!container.hasColumn("extra1"));
   BOOST_CHECK(!container.hasColumn("extra2"));
@@ -146,7 +147,7 @@ BOOST_AUTO_TEST_CASE(NamedExtraColumns) {
       container.column<int>("extra1");
   ConstSpacePointColumnProxy<int> extra1Const1 = extra1Mutable1.asConst();
   ConstSpacePointColumnProxy<int> extra1Const2 =
-      const_cast<const SpacePointContainer2 &>(container).column<int>("extra1");
+      constContainer.column<int>("extra1");
 
   BOOST_CHECK(container.hasColumn("extra1"));
   BOOST_CHECK(!container.hasColumn("extra2"));
