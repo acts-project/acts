@@ -161,7 +161,7 @@ struct SeedFinderConfig {
   /// Alignment uncertainties, used for uncertainties in the
   /// non-measurement-plane of the modules
   /// which otherwise would be 0
-  /// will be added to spacepoint measurement uncertainties (and therefore also
+  /// will be added to space point measurement uncertainties (and therefore also
   /// multiplied by sigmaError)
   /// FIXME: call align1 and align2
   float zAlign = 0 * UnitConstants::mm;

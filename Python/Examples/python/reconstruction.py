@@ -423,14 +423,14 @@ def addSeeding(
             logger.info("Using Hough Transform seeding")
             houghTransformConfig.inputSpacePoints = [spacePoints]
             houghTransformConfig.inputMeasurements = "measurements"
-            houghTransformConfig.outputProtoTracks = "prototracks"
+            houghTransformConfig.outputProtoTracks = "protoTracks"
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
         elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
             logger.info("Using Adaptive Hough Transform seeding")
             adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
-            adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
+            adaptiveHoughTransformConfig.outputProtoTracks = "protoTracks"
             adaptiveHoughTransformConfig.outputSeeds = "seeds"
             adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
             adaptiveHoughTransformConfig.threshold = 4
@@ -516,20 +516,20 @@ def addSeeding(
         )
         s.addAlgorithm(parEstimateAlg)
 
-        prototracks = "seed-prototracks"
+        protoTracks = "seed-protoTracks"
         s.addAlgorithm(
-            acts.examples.SeedsToPrototracks(
+            acts.examples.SeedsToProtoTracks(
                 level=logLevel,
                 inputSeeds="estimatedseeds",
-                outputProtoTracks=prototracks,
+                outputProtoTracks=protoTracks,
             )
         )
 
         tracks = "seed-tracks"
         s.addAlgorithm(
-            acts.examples.PrototracksToTracks(
+            acts.examples.ProtoTracksToTracks(
                 level=logLevel,
-                inputProtoTracks=prototracks,
+                inputProtoTracks=protoTracks,
                 inputTrackParameters="estimatedparameters",
                 inputMeasurements="measurements",
                 outputTracks=tracks,
@@ -554,7 +554,7 @@ def addSeeding(
                 s,
                 outputDirRoot,
                 tracks,
-                prototracks,
+                protoTracks,
                 selectedParticles,
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
@@ -1330,7 +1330,7 @@ def addSeedPerformanceWriters(
     sequence: acts.examples.Sequencer,
     outputDirRoot: Union[Path, str],
     tracks: str,
-    prototracks: str,
+    protoTracks: str,
     selectedParticles: str,
     inputParticles: str,
     outputTrackParameters: str,
@@ -1361,7 +1361,7 @@ def addSeedPerformanceWriters(
         RootTrackParameterWriter(
             level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
-            inputProtoTracks=prototracks,
+            inputProtoTracks=protoTracks,
             inputParticles=inputParticles,
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -1392,7 +1392,7 @@ def addSeedFilterML(
     selectedParticles = "particles_selected"
     seeds = "seeds"
     estParams = "estimatedparameters"
-    prototracks = "seed-prototracks-ML"
+    protoTracks = "seed-protoTracks-ML"
     tracks = "seed-tracks-ML"
 
     filterML = SeedFilterMLAlgorithm(
@@ -1413,17 +1413,17 @@ def addSeedFilterML(
     s.addWhiteboardAlias("estimatedparameters", "filtered-parameters")
 
     s.addAlgorithm(
-        acts.examples.SeedsToPrototracks(
+        acts.examples.SeedsToProtoTracks(
             level=customLogLevel,
             inputSeeds=seeds,
-            outputProtoTracks=prototracks,
+            outputProtoTracks=protoTracks,
         )
     )
 
     s.addAlgorithm(
-        acts.examples.PrototracksToTracks(
+        acts.examples.ProtoTracksToTracks(
             level=customLogLevel,
-            inputProtoTracks=prototracks,
+            inputProtoTracks=protoTracks,
             inputTrackParameters="estimatedparameters",
             outputTracks=tracks,
         )
@@ -1966,21 +1966,21 @@ def addGnn(
         graphConstructor: Graph construction stage (TorchMetricLearning, ModuleMapCuda, etc.)
         edgeClassifiers: List of edge classification stages (run sequentially)
         trackBuilder: Track building stage (BoostTrackBuilding, CudaTrackBuilding, etc.)
-        nodeFeatures: List of node features to extract from spacepoints/clusters
+        nodeFeatures: List of node features to extract from space points/clusters
         featureScales: Scaling factors for each feature
-        trackingGeometry: Optional tracking geometry for creating spacepoints
-        geometrySelection: Optional geometry selection file for spacepoint creation
-        inputSpacePoints: Name of input spacepoint collection (default: "spacepoints")
+        trackingGeometry: Optional tracking geometry for creating space points
+        geometrySelection: Optional geometry selection file for space point creation
+        inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
         logLevel: Logging level
 
     Note:
         The trackingGeometry parameter serves two distinct purposes depending on the workflow:
-        1. Spacepoint creation: When provided along with geometrySelection, creates spacepoints
+        1. Space point creation: When provided along with geometrySelection, creates space points
            from measurements using SpacePointMaker (typical for simulation workflows)
         2. Module map usage: Some graph constructors (e.g., ModuleMapCuda) require
-           trackingGeometry to map module IDs even when using pre-existing spacepoints
+           trackingGeometry to map module IDs even when using pre-existing space points
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1996,7 +1996,7 @@ def addGnn(
         level=customLogLevel(),
         inputSpacePoints=inputSpacePoints,
         inputClusters=inputClusters,
-        outputProtoTracks="gnn_prototracks",
+        outputProtoTracks="gnn-protoTracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
@@ -2004,13 +2004,13 @@ def addGnn(
         featureScales=featureScales,
     )
     s.addAlgorithm(findingAlg)
-    s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
+    s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)
 
-    # Convert prototracks to tracks
+    # Convert proto tracks to tracks
     s.addAlgorithm(
-        acts.examples.PrototracksToTracks(
+        acts.examples.ProtoTracksToTracks(
             level=customLogLevel(),
-            inputProtoTracks="prototracks",
+            inputProtoTracks="protoTracks",
             inputMeasurements="measurements",
             outputTracks="tracks",
         )
@@ -2478,7 +2478,7 @@ def addHoughVertexFinding(
 
     findHoughVertex = HoughVertexFinderAlgorithm(
         level=customLogLevel(),
-        inputSpacepoints=inputSpacePoints,
+        inputSpacePoints=inputSpacePoints,
         outputVertices=outputVertices,
     )
     s.addAlgorithm(findHoughVertex)

@@ -7,13 +7,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
-#include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
-#include "ActsExamples/Utilities/PrototracksToTracks.hpp"
-#include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
+#include "ActsExamples/Utilities/ProtoTracksToParameters.hpp"
+#include "ActsExamples/Utilities/ProtoTracksToSeeds.hpp"
+#include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
+#include "ActsExamples/Utilities/SeedsToProtoTracks.hpp"
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
-#include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsExamples/Utilities/TrajectoriesToProtoTracks.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
@@ -26,8 +26,8 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addUtilities(py::module& mex) {
-  ACTS_PYTHON_DECLARE_ALGORITHM(TrajectoriesToPrototracks, mex,
-                                "TrajectoriesToPrototracks", inputTrajectories,
+  ACTS_PYTHON_DECLARE_ALGORITHM(TrajectoriesToProtoTracks, mex,
+                                "TrajectoriesToProtoTracks", inputTrajectories,
                                 outputProtoTracks);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(TracksToTrajectories, mex,
@@ -37,10 +37,10 @@ void addUtilities(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(TracksToParameters, mex, "TracksToParameters",
                                 inputTracks, outputTrackParameters);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(SeedsToPrototracks, mex, "SeedsToPrototracks",
+  ACTS_PYTHON_DECLARE_ALGORITHM(SeedsToProtoTracks, mex, "SeedsToProtoTracks",
                                 inputSeeds, outputProtoTracks);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(PrototracksToSeeds, mex, "PrototracksToSeeds",
+  ACTS_PYTHON_DECLARE_ALGORITHM(ProtoTracksToSeeds, mex, "ProtoTracksToSeeds",
                                 inputProtoTracks, inputSpacePoints, outputSeeds,
                                 outputProtoTracks);
 
@@ -49,9 +49,14 @@ void addUtilities(py::module& mex) {
       inputMeasurementParticleMap, outputMeasurementParticleMap,
       geometrySelection);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(PrototracksToTracks, mex, "PrototracksToTracks",
+  ACTS_PYTHON_DECLARE_ALGORITHM(ProtoTracksToTracks, mex, "ProtoTracksToTracks",
                                 inputMeasurements, inputProtoTracks,
                                 inputTrackParameters, outputTracks);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ProtoTracksToParameters, mex, "ProtoTracksToParameters", inputProtoTracks,
+      inputSpacePoints, outputSeeds, outputParameters, outputProtoTracks,
+      geometry, magneticField, buildTightSeeds);
 }
 
 }  // namespace ActsPython

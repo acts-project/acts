@@ -39,6 +39,7 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Save PR metadata
         if: github.event_name == 'pull_request'
@@ -71,6 +72,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S . --preset=github-ci-coverage
       - name: Build
         run: cmake --build build
@@ -86,14 +88,80 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          pip3 install gcovr==7.2
+          CI/dependencies/run.sh .env pip3 install gcovr==7.2
           && cd build
-          && /usr/bin/python3 ../CI/test_coverage.py
+          && ../CI/dependencies/run.sh ../.env /usr/bin/python3 ../CI/test_coverage.py
 
       - uses: actions/upload-artifact@v6
         with:
           name: coverage-build
           path: build
+
+  clang_tidy:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404_clang19:83
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark workspace as safe
+        run: git config --global --add safe.directory /__w/acts/acts
+
+      - name: Fetch base branch
+        if: github.event_name == 'pull_request'
+        run: git fetch origin "${{ github.base_ref }}"
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install clang-tidy
+        run: |
+          apt-get update && apt-get install -y clang-tidy-19
+          ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
+          ln -sf /usr/bin/clang++-19 /usr/bin/clang++
+          ln -sf /usr/bin/clang-19 /usr/bin/clang
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: clang++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Configure
+        run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=gitlab-ci-clangtidy
+
+      - name: Run codegen
+        run: cmake --build build --target ActsCodegen
+
+      - name: Analyze (PR - changed files only)
+        if: github.event_name == 'pull_request'
+        run: >
+          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          analyze build fixes.yml --base-ref "origin/${{ github.base_ref }}"
+
+      - name: Analyze (push - all files)
+        if: github.event_name == 'push'
+        run: >
+          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          analyze build fixes.yml --all
+
+      - name: Upload fixes
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: clang-tidy-fixes
+          path: fixes.yml
+
+      - name: Annotate
+        run: >
+          uv run CI/clang_tidy/run_clang_tidy_pr.py
+          annotate fixes.yml
 
   build_performance:
     runs-on: ubuntu-latest
@@ -107,11 +175,14 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Install dependencies
         run: pip3 install cmakeperf==0.6.1
       - name: Configure
         run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=RelWithDebInfo

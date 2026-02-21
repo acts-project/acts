@@ -31,12 +31,6 @@ EDM4hepMeasurementInputConverter::EDM4hepMeasurementInputConverter(
     throw std::invalid_argument("Missing measurement output collection");
   }
 
-  if (m_cfg.inputFrame.empty()) {
-    throw std::invalid_argument("Missing input frame");
-  }
-
-  m_inputFrame.initialize(m_cfg.inputFrame);
-
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);

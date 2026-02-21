@@ -1,0 +1,100 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/TrackFinding/MeasurementSelector.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/Utilities/Zip.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
+
+#include <string>
+#include <vector>
+
+namespace ActsExamples {
+
+/// This algorithm starts a CKF of from a given proto track.
+/// This means: If for any given surface there exists a measurements
+/// in the proto track, this measurement is returned.
+/// Otherwise (typically after the end of the proto track), the algorithm
+/// falls back to providing all possible measurements on the surface.
+///
+class TrackFindingFromProtoTracksAlgorithm final : public IAlgorithm {
+ public:
+  struct Config {
+    /// Input proto tracks collection.
+    std::string inputProtoTracks;
+
+    /// Input measurements
+    std::string inputMeasurements;
+
+    /// Input track parameters
+    std::string inputInitialTrackParameters;
+
+    /// Output tracks collection.
+    std::string outputTracks;
+
+    /// CKF measurement selector config
+    Acts::MeasurementSelector::Config measurementSelectorCfg;
+
+    /// CKF function
+    std::shared_ptr<TrackFindingAlgorithm::TrackFinderFunction> findTracks;
+
+    /// Tracking Geometry
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+
+    /// Magnetic field
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
+    /// Additional tag to distinguish loggers
+    std::string tag = "";
+  };
+
+  /// Constructor of the track finding algorithm
+  ///
+  /// @param cfg is the config struct to configure the algorithm
+  /// @param level is the logging level
+  TrackFindingFromProtoTracksAlgorithm(Config cfg, Acts::Logging::Level lvl);
+
+  /// Filter the measurements
+  ///
+  /// @param ctx is the algorithm context that holds event-wise information
+  /// @return a process code to steer the algorithm flow
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  ProcessCode finalize() override;
+
+  const Config& config() const { return m_cfg; }
+
+ private:
+  Config m_cfg;
+
+  mutable std::mutex m_mutex;
+  mutable std::vector<unsigned> m_nTracksPerSeeds;
+
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+  ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
+      this, "InputInitialTrackParameters"};
+
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+};
+
+}  // namespace ActsExamples
