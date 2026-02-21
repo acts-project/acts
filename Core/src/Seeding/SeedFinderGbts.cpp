@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/SeedFinderGbts.hpp"
 
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/GbtsTrackingFilter.hpp"
 
 #include <algorithm>
@@ -35,14 +36,13 @@ SeedFinderGbts::SeedFinderGbts(
 }
 
 SeedContainer2 SeedFinderGbts::createSeeds(
-    const RoiDescriptor& roi,
-    const SpContainerComponentsType& spContainerComponents,
+    const RoiDescriptor& roi, const SpacePointContainer2& spacePoints,
     const std::uint32_t maxLayers) const {
   auto storage = std::make_unique<GbtsDataStorage>(m_cfg, m_geo, m_mlLut);
 
   SeedContainer2 SeedContainer;
   std::vector<std::vector<GbtsNode>> node_storage =
-      createNodes(spContainerComponents, maxLayers);
+      createNodes(spacePoints, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
@@ -87,8 +87,7 @@ SeedContainer2 SeedFinderGbts::createSeeds(
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
   std::vector<SeedProperties> vSeedCandidates;
-  extractSeedsFromTheGraph(maxLevel, graphStats.first,
-                           std::get<0>(spContainerComponents).size(),
+  extractSeedsFromTheGraph(maxLevel, graphStats.first, spacePoints.size(),
                            edgeStorage, vSeedCandidates);
 
   if (vSeedCandidates.empty()) {
@@ -153,19 +152,22 @@ GbtsMlLookupTable SeedFinderGbts::parseGbtsMlLookupTable(
 }
 
 std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
-    const SpContainerComponentsType& container,
+    const SpacePointContainer2& spacePoints,
     const std::uint32_t maxLayers) const {
+  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  auto clusterWidthColomn = spacePoints.column<float>("clusterWidth");
+  auto localPositionColomn = spacePoints.column<float>("localPositionY");
+
   std::vector<std::vector<GbtsNode>> node_storage(maxLayers);
   // reserve for better efficiency
-
   for (auto& v : node_storage) {
     v.reserve(10000);
   }
 
-  for (auto sp : std::get<0>(container)) {
+  for (auto sp : spacePoints) {
     // for every sp in container,
     // add its variables to node_storage organised by layer
-    std::uint16_t layer = sp.extra(std::get<1>(container));
+    std::uint16_t layer = sp.extra(layerColumn);
 
     // add node to storage
     GbtsNode& node = node_storage[layer].emplace_back(layer);
@@ -178,8 +180,8 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     node.r = sp.r();
     node.phi = sp.phi();
     node.idx = sp.index();
-    node.pcw = sp.extra(std::get<2>(container));
-    node.locPosY = sp.extra(std::get<3>(container));
+    node.pcw = sp.extra(clusterWidthColomn);
+    node.locPosY = sp.extra(localPositionColomn);
   }
 
   return node_storage;

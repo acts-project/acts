@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/GbtsConfig.hpp"
 #include "Acts/Seeding/GbtsDataStorage.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
@@ -17,17 +18,10 @@
 
 #include <memory>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
 namespace Acts::Experimental {
-
-/// Tuple template used to carry the space point components
-using SpContainerComponentsType =
-    std::tuple<SpacePointContainer2, SpacePointColumnProxy<std::uint32_t, true>,
-               SpacePointColumnProxy<float, true>,
-               SpacePointColumnProxy<float, true>>;
 
 /// Seed finder implementing the GBTs seeding workflow.
 class SeedFinderGbts {
@@ -69,21 +63,33 @@ class SeedFinderGbts {
 
   /// Create seeds from spacepoints in a region of interest.
   /// @param roi Region of interest descriptor
-  /// @param SpContainerComponents Space point container components
+  /// @param spacePoints Space point container
   /// @param maxLayers Maximum number of layers
   /// @return Container with generated seeds
-  SeedContainer2 createSeeds(
-      const RoiDescriptor& roi,
-      const SpContainerComponentsType& SpContainerComponents,
-      std::uint32_t maxLayers) const;
+  SeedContainer2 createSeeds(const RoiDescriptor& roi,
+                             const SpacePointContainer2& spacePoints,
+                             std::uint32_t maxLayers) const;
+
+ private:
+  GbtsConfig m_cfg{};
+
+  const std::shared_ptr<const GbtsGeometry> m_geo;
+
+  const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
+
+  GbtsMlLookupTable m_mlLut;
+
+  std::unique_ptr<const Acts::Logger> m_logger =
+      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
+
+  const Acts::Logger& logger() const { return *m_logger; }
 
   /// Create graph nodes from space points.
-  /// @param container Space point container components
+  /// @param spacePoints Space point container
   /// @param maxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(
-      const SpContainerComponentsType& container,
-      std::uint32_t maxLayers) const;
+      const SpacePointContainer2& spacePoints, std::uint32_t maxLayers) const;
 
   /// Parse machine learning lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
@@ -116,20 +122,6 @@ class SeedFinderGbts {
       std::uint32_t maxLevel, std::uint32_t nEdges, std::int32_t nHits,
       std::vector<GbtsEdge>& edgeStorage,
       std::vector<SeedProperties>& vSeedCandidates) const;
-
- private:
-  GbtsConfig m_cfg{};
-
-  const std::shared_ptr<const GbtsGeometry> m_geo;
-
-  const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
-
-  GbtsMlLookupTable m_mlLut;
-
-  std::unique_ptr<const Acts::Logger> m_logger =
-      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
-
-  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts::Experimental
