@@ -57,6 +57,8 @@ class SpacePointColumnProxy {
     requires ReadOnly
       : m_container(&other.container()), m_column(&other.column()) {}
 
+  /// Returns the number of entries in the space point column.
+  /// @return The size of the space point column.
   std::uint32_t size() const noexcept { return column().size(); }
 
   /// Returns a const proxy of the space point column.
