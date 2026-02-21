@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SpacePointColumnProxy2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 
@@ -139,20 +140,30 @@ BOOST_AUTO_TEST_CASE(NamedExtraColumns) {
   BOOST_CHECK(!container.hasColumn("extra1"));
   BOOST_CHECK(!container.hasColumn("extra2"));
 
-  auto extra1 = container.createColumn<int>("extra1");
+  MutableSpacePointColumnProxy<int> extra1Mutable1 =
+      container.createColumn<int>("extra1");
+  MutableSpacePointColumnProxy<int> extra1Mutable2 =
+      container.column<int>("extra1");
+  ConstSpacePointColumnProxy<int> extra1Const1 = extra1Mutable1.asConst();
+  ConstSpacePointColumnProxy<int> extra1Const2 =
+      const_cast<const SpacePointContainer2 &>(container).column<int>("extra1");
 
   BOOST_CHECK(container.hasColumn("extra1"));
   BOOST_CHECK(!container.hasColumn("extra2"));
 
   MutableSpacePointProxy2 sp = container.createSpacePoint();
-  sp.extra(extra1) = 100;
+  sp.extra(extra1Mutable1) = 100;
+
+  BOOST_CHECK_EQUAL(sp.extra(extra1Mutable1), 100);
+  BOOST_CHECK_EQUAL(sp.extra(extra1Mutable2), 100);
+  BOOST_CHECK_EQUAL(sp.extra(extra1Const1), 100);
+  BOOST_CHECK_EQUAL(sp.extra(extra1Const2), 100);
 
   auto extra2 = container.createColumn<int>("extra2");
 
   BOOST_CHECK(container.hasColumn("extra1"));
   BOOST_CHECK(container.hasColumn("extra2"));
 
-  BOOST_CHECK_EQUAL(sp.extra(extra1), 100);
   BOOST_CHECK_EQUAL(sp.extra(extra2), 0);
 }
 
