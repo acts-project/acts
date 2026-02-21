@@ -35,7 +35,7 @@ std::array<std::size_t, 3> separateLayers(
       std::numeric_limits<std::size_t>::max()};
 
   for (std::size_t idx = 0; idx < layerTriplet.size(); ++idx) {
-    Point_t spacePoint = layerTriplet[idx];
+    const Point_t& spacePoint = layerTriplet[idx];
     unsigned int dimension =
         spacePoint->measuresLoc0() + spacePoint->measuresLoc1();
     if (dimension == 1) {
