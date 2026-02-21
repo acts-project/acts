@@ -57,6 +57,8 @@ class SpacePointColumnProxy {
     requires ReadOnly
       : m_container(&other.container()), m_column(&other.column()) {}
 
+  std::uint32_t size() const noexcept { return column().size(); }
+
   /// Returns a const proxy of the space point column.
   /// @return A const proxy of the space point column.
   SpacePointColumnProxy<T, true> asConst() const noexcept
@@ -174,8 +176,6 @@ class SpacePointColumnProxy {
  private:
   Container *m_container{};
   Column *m_column{};
-
-  std::uint32_t size() const noexcept { return column().size(); }
 
   std::vector<Value> &column() noexcept
     requires(!ReadOnly)
