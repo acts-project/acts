@@ -766,9 +766,8 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   }
 }
 
-bool SeedFinderGbts::checkZ0BitMask(const std::uint16_t z0BitMask,
-                                    const float z0, const float minZ0,
-                                    const float z0HistoCoeff) const {
+bool SeedFinderGbts::checkZ0BitMask(std::uint16_t z0BitMask, float z0,
+                                    float minZ0, float z0HistoCoeff) const {
   if (z0BitMask == 0) {
     return true;
   }
