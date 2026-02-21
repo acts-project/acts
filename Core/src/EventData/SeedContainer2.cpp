@@ -9,7 +9,6 @@
 #include "Acts/EventData/SeedContainer2.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <limits>
@@ -110,22 +109,6 @@ const SpacePointContainer2 &SeedContainer2::spacePointContainer() const {
   return *m_constSpacePointContainer;
 }
 
-void SeedContainer2::assignSpacePointIndices(
-    Index index, std::span<const SpacePointIndex2> spacePointIndices) {
-  if (index >= size()) {
-    throw std::out_of_range("Index out of range in SpacePointContainer2");
-  }
-  if (m_spacePointCounts[index] != 0) {
-    throw std::logic_error("Space points already assigned to the seed");
-  }
-
-  m_spacePointOffsets[index] = static_cast<std::uint32_t>(m_spacePoints.size());
-  m_spacePointCounts[index] =
-      static_cast<std::uint8_t>(spacePointIndices.size());
-  m_spacePoints.insert(m_spacePoints.end(), spacePointIndices.begin(),
-                       spacePointIndices.end());
-}
-
 MutableSeedProxy2 SeedContainer2::createSeed() noexcept {
   ++m_size;
 
@@ -148,14 +131,14 @@ void SeedContainer2::copyFrom(Index index, const SeedContainer2 &otherContainer,
   }
 
   if (ACTS_CHECK_BIT(columnsToCopy, SeedColumns::SpacePointIndices)) {
-    assignSpacePointIndices(index,
-                            otherContainer.spacePointIndices(otherIndex));
+    at(index).assignSpacePointIndices(
+        otherContainer.at(otherIndex).spacePointIndices());
   }
   if (ACTS_CHECK_BIT(columnsToCopy, SeedColumns::Quality)) {
-    m_qualities[index] = otherContainer.quality(otherIndex);
+    at(index).quality() = otherContainer.at(otherIndex).quality();
   }
   if (ACTS_CHECK_BIT(columnsToCopy, SeedColumns::VertexZ)) {
-    m_vertexZs[index] = otherContainer.vertexZ(otherIndex);
+    at(index).vertexZ() = otherContainer.at(otherIndex).vertexZ();
   }
 }
 

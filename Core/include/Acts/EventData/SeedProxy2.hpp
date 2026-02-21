@@ -111,14 +111,27 @@ class SeedProxy2 {
       std::span<const SpacePointIndex2> spacePointIndices)
     requires(!ReadOnly)
   {
-    m_container->assignSpacePointIndices(m_index, spacePointIndices);
+    if (m_index >= m_container->size()) {
+      throw std::out_of_range("Index out of range in SeedContainer2");
+    }
+    if (m_container->m_spacePointCounts[m_index] != 0) {
+      throw std::logic_error("Space points already assigned to the seed");
+    }
+
+    m_container->m_spacePointOffsets[m_index] =
+        static_cast<std::uint32_t>(m_container->m_spacePoints.size());
+    m_container->m_spacePointCounts[m_index] =
+        static_cast<std::uint8_t>(spacePointIndices.size());
+    m_container->m_spacePoints.insert(m_container->m_spacePoints.end(),
+                                      spacePointIndices.begin(),
+                                      spacePointIndices.end());
   }
 
   /// Returns the size of the seed, i.e., the number of space points
   /// associated with it.
   /// @return The number of space points in the seed.
   [[nodiscard]] std::size_t size() const noexcept {
-    return m_container->spacePointIndices(m_index).size();
+    return spacePointIndices().size();
   }
   /// Checks if the seed is empty, i.e., has no space points associated with it.
   /// @return True if the seed is empty, false otherwise.
@@ -132,35 +145,43 @@ class SeedProxy2 {
   std::span<SpacePointIndex2> spacePointIndices() noexcept
     requires(!ReadOnly)
   {
-    return m_container->spacePointIndices(m_index);
+    const std::size_t offset = accessImpl(m_container->m_spacePointOffsets);
+    const std::size_t count = accessImpl(m_container->m_spacePointCounts);
+    return std::span<SpacePointIndex2>(
+        m_container->m_spacePoints.data() + offset, count);
   }
   /// Mutable access to the quality of the seed.
   /// @return A mutable reference to the quality of the seed.
   float &quality() noexcept
     requires(!ReadOnly)
   {
-    return m_container->quality(m_index);
+    return accessImpl(m_container->m_qualities);
   }
   /// Mutable access to the vertex Z coordinate of the seed.
   /// @return A mutable reference to the vertex Z coordinate of the seed.
   float &vertexZ() noexcept
     requires(!ReadOnly)
   {
-    return m_container->vertexZ(m_index);
+    return accessImpl(m_container->m_vertexZs);
   }
 
   /// Const access to the space point indices of the seed.
   /// @return A span of space point indices associated with the seed.
   ///         This span is read-only and cannot be modified.
   std::span<const SpacePointIndex2> spacePointIndices() const noexcept {
-    return m_container->spacePointIndices(m_index);
+    const std::size_t offset = accessImpl(m_container->m_spacePointOffsets);
+    const std::size_t count = accessImpl(m_container->m_spacePointCounts);
+    return std::span<const SpacePointIndex2>(
+        m_container->m_spacePoints.data() + offset, count);
   }
   /// Const access to the quality of the seed.
   /// @return The quality of the seed.
-  float quality() const noexcept { return m_container->quality(m_index); }
+  float quality() const noexcept {
+    return accessImpl(m_container->m_qualities);
+  }
   /// Const access to the vertex Z coordinate of the seed.
   /// @return The vertex Z coordinate of the seed.
-  float vertexZ() const noexcept { return m_container->vertexZ(m_index); }
+  float vertexZ() const noexcept { return accessImpl(m_container->m_vertexZs); }
 
   /// Iterator over space points referenced by the seed.
   class SpacePointIterator {
@@ -359,6 +380,12 @@ class SeedProxy2 {
  private:
   ContainerType *m_container{nullptr};
   IndexType m_index{0};
+
+  template <typename Column>
+  auto &accessImpl(Column &&column) const {
+    assert(m_index < column.size() && "Index out of bounds");
+    return column[m_index];
+  }
 };
 
 }  // namespace Acts
