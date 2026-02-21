@@ -1070,36 +1070,21 @@ class SpacePointContainer2 {
         std::array<float, 4>{0, 0, 0, 0}, std::array<float, 2>{0, 0});
   }
 
-  auto knownColumns() & noexcept {
-    return std::tie(m_sourceLinkOffsetColumn, m_sourceLinkCountColumn,
-                    m_xColumn, m_yColumn, m_zColumn, m_rColumn, m_phiColumn,
-                    m_timeColumn, m_varianceZColumn, m_varianceRColumn,
-                    m_topStripVectorColumn, m_bottomStripVectorColumn,
-                    m_stripCenterDistanceColumn, m_topStripCenterColumn,
-                    m_copyFromIndexColumn, m_xyColumn, m_zrColumn, m_xyzColumn,
-                    m_xyzrColumn, m_varianceZRColumn);
+  template <typename Self>
+  static auto knownColumns(Self &&self) noexcept {
+    return std::tie(self.m_sourceLinkOffsetColumn, self.m_sourceLinkCountColumn,
+                    self.m_xColumn, self.m_yColumn, self.m_zColumn,
+                    self.m_rColumn, self.m_phiColumn, self.m_timeColumn,
+                    self.m_varianceZColumn, self.m_varianceRColumn,
+                    self.m_topStripVectorColumn, self.m_bottomStripVectorColumn,
+                    self.m_stripCenterDistanceColumn,
+                    self.m_topStripCenterColumn, self.m_copyFromIndexColumn,
+                    self.m_xyColumn, self.m_zrColumn, self.m_xyzColumn,
+                    self.m_xyzrColumn, self.m_varianceZRColumn);
   }
-  auto knownColumns() const & noexcept {
-    return std::tie(m_sourceLinkOffsetColumn, m_sourceLinkCountColumn,
-                    m_xColumn, m_yColumn, m_zColumn, m_rColumn, m_phiColumn,
-                    m_timeColumn, m_varianceZColumn, m_varianceRColumn,
-                    m_topStripVectorColumn, m_bottomStripVectorColumn,
-                    m_stripCenterDistanceColumn, m_topStripCenterColumn,
-                    m_copyFromIndexColumn, m_xyColumn, m_zrColumn, m_xyzColumn,
-                    m_xyzrColumn, m_varianceZRColumn);
-  }
-  auto knownColumns() && noexcept {
-    return std::tuple(
-        std::move(m_sourceLinkOffsetColumn), std::move(m_sourceLinkCountColumn),
-        std::move(m_xColumn), std::move(m_yColumn), std::move(m_zColumn),
-        std::move(m_rColumn), std::move(m_phiColumn), std::move(m_timeColumn),
-        std::move(m_varianceZColumn), std::move(m_varianceRColumn),
-        std::move(m_topStripVectorColumn), std::move(m_bottomStripVectorColumn),
-        std::move(m_stripCenterDistanceColumn),
-        std::move(m_topStripCenterColumn), std::move(m_copyFromIndexColumn),
-        std::move(m_xyColumn), std::move(m_zrColumn), std::move(m_xyzColumn),
-        std::move(m_xyzrColumn), std::move(m_varianceZRColumn));
-  }
+  auto knownColumns() & noexcept { return knownColumns(*this); }
+  auto knownColumns() const & noexcept { return knownColumns(*this); }
+  auto knownColumns() && noexcept { return knownColumns(*this); }
 
   void copyColumns(const SpacePointContainer2 &other);
   void moveColumns(SpacePointContainer2 &other) noexcept;
@@ -1123,26 +1108,26 @@ class SpacePointContainer2 {
     return proxy;
   }
 
-  template <typename Holder>
-  MutableSpacePointColumnProxy<typename Holder::Value> columnImpl(
-      const std::string &name) {
-    const auto it = m_allColumns.find(name);
-    if (it == m_allColumns.end()) {
+  template <typename Holder, typename Self>
+  static auto columnImpl(Self &&self, const std::string &name) {
+    const auto it = self.m_allColumns.find(name);
+    if (it == self.m_allColumns.end()) {
       throw std::runtime_error("Column not found: " + name);
     }
     auto &holder = dynamic_cast<Holder &>(*it->second);
-    return holder.proxy(*this);
+    return holder.proxy(self);
+  }
+
+  template <typename Holder>
+  MutableSpacePointColumnProxy<typename Holder::Value> columnImpl(
+      const std::string &name) {
+    return columnImpl<Holder>(*this, name);
   }
 
   template <typename Holder>
   ConstSpacePointColumnProxy<typename Holder::Value> columnImpl(
       const std::string &name) const {
-    const auto it = m_allColumns.find(name);
-    if (it == m_allColumns.end()) {
-      throw std::runtime_error("Column not found: " + name);
-    }
-    auto &holder = dynamic_cast<Holder &>(*it->second);
-    return holder.proxy(*this);
+    return columnImpl<Holder>(*this, name);
   }
 };
 
