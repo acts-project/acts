@@ -137,8 +137,8 @@ class SeedFinderGbts {
   /// @param minZ0 Minimum value of beam spot z coordinate
   /// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
   /// @return Whether segment is within beamspot range
-  bool checkZ0BitMask(std::uint16_t z0BitMask, float z0, float minZ0,
-                      float z0HistoCoeff) const;
+  bool checkZ0BitMask(const std::uint16_t z0BitMask, const float z0,
+                      const float minZ0, const float z0HistoCoeff) const;
 
  private:
   GbtsConfig m_cfg{};
