@@ -11,7 +11,6 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <map>
 
 namespace Acts::Experimental {
 
@@ -197,28 +196,28 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
 
     if (z2 > 0) {  // positive endcap
 
-      float z0Max = z1 - r1min * (z2 - z1) / (r2max - r1min);
+      const float z0Max = z1 - r1min * (z2 - z1) / (r2max - r1min);
 
       if (z0Max < minZ0 - tol) {
         return false;
       }
 
       if (r2min > r1max) {
-        float z0Min = z1 - r1max * (z2 - z1) / (r2min - r1max);
+        const float z0Min = z1 - r1max * (z2 - z1) / (r2min - r1max);
 
         if (z0Min > maxZ0 + tol) {
           return false;
         }
       }
     } else {  // negative endcap
-      float z0Min = z1 - r1min * (z2 - z1) / (r2max - r1min);
+      const float z0Min = z1 - r1min * (z2 - z1) / (r2max - r1min);
 
       if (z0Min > maxZ0 + tol) {
         return false;
       }
 
       if (r2min > r1max) {
-        float z0Max = z1 - r1max * (z2 - z1) / (r2min - r1max);
+        const float z0Max = z1 - r1max * (z2 - z1) / (r2min - r1max);
 
         if (z0Max < minZ0 - tol) {
           return false;
@@ -363,7 +362,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   }
   // find stages of eta-bin pairs using the graph ablation algorithm
 
-  BinConnections binMap;
+  BinConnections originalBinMap;
 
   // 1. create a map of bin-to-bin connections
 
@@ -371,22 +370,22 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
   for (const auto& [bin1, bin2s] : m_binGroups) {
     // add to the map
-    if (binMap.find(bin1) == binMap.end()) {
-      binMap.try_emplace(bin1);
-    }
 
-    auto& bin1Links = binMap[bin1];
+    auto& bin1Links = originalBinMap[bin1];
 
     for (const auto& bin2 : bin2s) {
-      auto& bin2Links = binMap[bin2];
+      auto& bin2Links = originalBinMap[bin2];
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
       bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
     }
   }
 
-  // copy bin map as the original will be modified
-  BinConnections currentMap = binMap;
+  // const reference used as we are not modifying originalBinMap after creation
+  const BinConnections& constBinMap = originalBinMap;
+
+  // copy bin map as original is still needed
+  BinConnections currentMap = constBinMap;
 
   // 2. find stages starting from the last one (i.e. bin1 with no outgoing
   // connections)
@@ -465,8 +464,8 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
     for (std::size_t k = begin; k < end; ++k) {
       const std::uint32_t bin1Idx = stageData[k];
 
-      const auto p = binMap.find(bin1Idx);
-      if (p == binMap.end()) {
+      const auto p = constBinMap.find(bin1Idx);
+      if (p == constBinMap.end()) {
         continue;
       }
 

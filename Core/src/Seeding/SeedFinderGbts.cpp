@@ -324,7 +324,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
         const GbtsEtaBin& B2 = *slw.bin;
 
-        float deltaPhi = slw.deltaPhi;
+        const float deltaPhi = slw.deltaPhi;
 
         // sliding window phi1 +/- deltaPhi
 
@@ -725,7 +725,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   std::uint32_t trackId = 0;
 
   for (const auto& seed : vSeedCandidates) {
-    trackId++;
+    ++trackId;
 
     // loop over space points indices
     for (const auto& h : seed.spacePoints) {
