@@ -430,7 +430,8 @@ CompositeSpacePointLineFitter::fit(
         continue;
       }
       ACTS_VERBOSE(__func__ << "() " << __LINE__
-                            << ": Calculate residual w.r.t." << toString(*spacePoint));
+                            << ": Calculate residual w.r.t."
+                            << toString(*spacePoint));
       // Calculate the residual & derivatives
       if (pullCalculator.config().parsToUse.back() == FitParIndex::t0) {
         double driftV{fitOpts.calibrator->driftVelocity(fitOpts.calibContext,
