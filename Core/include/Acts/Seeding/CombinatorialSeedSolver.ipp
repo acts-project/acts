@@ -210,11 +210,11 @@ std::array<double, 2> defineParameters(
     const SquareMatrix2& betaMatrix,
     const std::array<Point_t, 3>& layerTriplet) {
   std::array<std::size_t, 3> indices = separateLayers(layerTriplet);
-  Point_t spacePoint2D{layerTriplet[indices[2]]};
+  const Point_t& spacePoint2D{layerTriplet[indices[2]]};
   std::array<Point_t, 2> spacePoints1D{layerTriplet[indices[0]],
                                        layerTriplet[indices[1]]};
 
-  Vector3 M = spacePoint2D->localPosition();
+  const Vector3& M = spacePoint2D->localPosition();
   double R =
       spacePoint2D->localPosition().z() - spacePoints1D[0]->localPosition().z();
   double L =
@@ -243,7 +243,7 @@ std::pair<Vector3, Vector3> seedSolution(
                                        layerTriplet[indices[1]]};
 
   // the position of the seed can be evaluated from the 2D measurement
-  Vector3 seedPosition = spacePoint2D->localPosition();
+  const Vector3& seedPosition = spacePoint2D->localPosition();
   // The direction of the seed can be estimated from the second layer equation
   Vector3 seedDirection =
       (spacePoints1D[0]->localPosition() +
