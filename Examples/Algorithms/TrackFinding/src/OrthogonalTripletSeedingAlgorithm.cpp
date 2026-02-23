@@ -102,8 +102,8 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::XY |
-      Acts::SpacePointColumns::ZR | Acts::SpacePointColumns::Phi |
+      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::PackedXY |
+      Acts::SpacePointColumns::PackedZR | Acts::SpacePointColumns::Phi |
       Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR);
   coreSpacePoints.reserve(spacePoints.size());
 

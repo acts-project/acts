@@ -258,9 +258,9 @@ BOOST_AUTO_TEST_CASE(CopyFrom) {
   }
 
   {
-    SpacePointContainer2 copyTo(SpacePointColumns::XY);
+    SpacePointContainer2 copyTo(SpacePointColumns::PackedXY);
     MutableSpacePointProxy2 sp = copyTo.createSpacePoint();
-    BOOST_CHECK_THROW(sp.copyFrom(container.at(0), SpacePointColumns::XY),
+    BOOST_CHECK_THROW(sp.copyFrom(container.at(0), SpacePointColumns::PackedXY),
                       std::logic_error);
   }
 
