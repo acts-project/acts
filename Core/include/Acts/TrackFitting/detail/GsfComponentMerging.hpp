@@ -127,7 +127,7 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
   CVec cMean = CVec::Zero();
   double sumOfWeights = 0;
 
-  for (auto &&cmp : cmps) {
+  for (const auto &cmp : cmps) {
     auto &&[weight_l, pars_l] = projector(cmp);
 
     CVec pars_l_c = pars_l;
@@ -162,10 +162,11 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
 template <typename component_range_t, typename projector_t>
 BoundVector mergeGaussianMixtureMode(const component_range_t &cmps,
                                      const projector_t &projector) {
-  const auto maxWeightIt = std::ranges::max_element(cmps, {}, [&](auto &&cmp) {
-    auto &&[weight_l, pars_l] = projector(cmp);
-    return weight_l;
-  });
+  const auto maxWeightIt =
+      std::ranges::max_element(cmps, {}, [&](const auto &cmp) {
+        auto &&[weight_l, pars_l] = projector(cmp);
+        return weight_l;
+      });
   auto &&[weight_l, pars_l] = projector(*maxWeightIt);
   return pars_l;
 }
@@ -192,7 +193,7 @@ BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
   BoundMatrix cov = BoundMatrix::Zero();
   double sumOfWeights = 0;
 
-  for (auto &&cmp : cmps) {
+  for (const auto &cmp : cmps) {
     auto &&[weight_l, pars_l, cov_l] = projector(cmp);
 
     cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
