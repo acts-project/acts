@@ -13,14 +13,14 @@
 
 namespace Acts {
 
-BoundTrackParameters MultiComponentBoundTrackParameters::toSingleComponent()
-    const {
+BoundTrackParameters MultiComponentBoundTrackParameters::merge(
+    const ComponentMergeMethod method) const {
   auto [singleParams, singleCov] = detail::Gsf::mergeGaussianMixture(
       m_components,
       [](const auto& cmp) -> std::tuple<double, BoundVector, BoundMatrix> {
         return {std::get<0>(cmp), std::get<1>(cmp), *std::get<2>(cmp)};
       },
-      *m_surface, ComponentMergeMethod::eMean);
+      *m_surface, method);
   return BoundTrackParameters(m_surface, singleParams, singleCov,
                               m_particleHypothesis);
 }
