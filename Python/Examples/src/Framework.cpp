@@ -96,7 +96,12 @@ class PyReadDataHandle : public ReadDataHandleBase {
   PyReadDataHandle(SequenceElement* parent, py::object pytype,
                    const std::string& name)
       : ReadDataHandleBase(parent, name) {
-    m_entry = &WhiteBoardRegistry::find(pytype);
+    m_entry = WhiteBoardRegistry::find(pytype);
+    if (m_entry == nullptr) {
+      throw py::type_error("Type '" +
+                           pytype.attr("__qualname__").cast<std::string>() +
+                           "' is not registered for WhiteBoard access");
+    }
     if (m_entry->typeinfo == nullptr) {
       throw py::type_error("Type '" +
                            pytype.attr("__qualname__").cast<std::string>() +

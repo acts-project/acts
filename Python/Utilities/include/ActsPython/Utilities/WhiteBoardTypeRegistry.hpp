@@ -49,8 +49,11 @@ class WhiteBoardRegistry {
     std::uint64_t typeHash{0};
   };
 
-  static RegistryEntry& find(const pybind11::object& pyType) {
-    return instance().at(pyType.ptr());
+  static RegistryEntry* find(const pybind11::object& pyType) {
+    if (auto it = instance().find(pyType.ptr()); it != instance().end()) {
+      return &it->second;
+    }
+    return nullptr;
   }
 
  private:
