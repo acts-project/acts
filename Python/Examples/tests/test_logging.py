@@ -95,6 +95,67 @@ def test_consum_logger_function(capfd):
         logger.verbose("verbose message")
 
 
+def test_clone_preserves_name_and_level():
+    logger = acts.getDefaultLogger("original", acts.logging.INFO)
+    cloned = logger.clone()
+    assert cloned.name == "original"
+    assert cloned.level == acts.logging.INFO
+
+
+def test_clone_with_new_name():
+    logger = acts.getDefaultLogger("original", acts.logging.INFO)
+    cloned = logger.clone(name="renamed")
+    assert cloned.name == "renamed"
+    assert cloned.level == acts.logging.INFO
+
+
+def test_clone_with_new_level():
+    logger = acts.getDefaultLogger("original", acts.logging.INFO)
+    cloned = logger.clone(level=acts.logging.DEBUG)
+    assert cloned.name == "original"
+    assert cloned.level == acts.logging.DEBUG
+
+
+@acts.with_log_threshold(acts.logging.FATAL)
+def test_clone_with_name_and_level():
+    logger = acts.getDefaultLogger("original", acts.logging.INFO)
+    cloned = logger.clone(name="new_name", level=acts.logging.ERROR)
+    assert cloned.name == "new_name"
+    assert cloned.level == acts.logging.ERROR
+
+
+def test_clone_level_only_overload():
+    logger = acts.getDefaultLogger("original", acts.logging.INFO)
+    cloned = logger.clone(acts.logging.WARNING)
+    assert cloned.name == "original"
+    assert cloned.level == acts.logging.WARNING
+
+
+def test_clone_is_independent(capfd):
+    logger = acts.getDefaultLogger("original", acts.logging.INFO)
+    cloned = logger.clone(level=acts.logging.DEBUG)
+    # cloned filters at DEBUG, original still at INFO
+    cloned.debug("from clone")
+    logger.debug("from original")
+    captured = capfd.readouterr()
+    assert "from clone" in captured.out
+    assert "from original" not in captured.out
+
+
+def test_clone_with_suffix():
+    logger = acts.getDefaultLogger("base", acts.logging.INFO)
+    cloned = logger.cloneWithSuffix("_sub")
+    assert cloned.name == "base_sub"
+    assert cloned.level == acts.logging.INFO
+
+
+def test_clone_with_suffix_and_level():
+    logger = acts.getDefaultLogger("base", acts.logging.INFO)
+    cloned = logger.cloneWithSuffix("_sub", acts.logging.DEBUG)
+    assert cloned.name == "base_sub"
+    assert cloned.level == acts.logging.DEBUG
+
+
 def test_config_with_logger(capfd):
     logger = acts.getDefaultLogger("test_config_with_logger", acts.logging.VERBOSE)
     config = acts.logging._ConfigWithLogger(logger)

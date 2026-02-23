@@ -71,16 +71,28 @@ void addUtilities(py::module_& m) {
             };
       };
 
-      auto logger = py::class_<Logger, py::smart_holder>(m, "Logger")
-                        .def("log", &Logger::log)
-                        .def_property_readonly("level", &Logger::level)
-                        .def_property_readonly("name", &Logger::name)
-                        .def("verbose", makeLogFunction(Logging::VERBOSE))
-                        .def("debug", makeLogFunction(Logging::DEBUG))
-                        .def("info", makeLogFunction(Logging::INFO))
-                        .def("warning", makeLogFunction(Logging::WARNING))
-                        .def("error", makeLogFunction(Logging::ERROR))
-                        .def("fatal", makeLogFunction(Logging::FATAL));
+      auto logger =
+          py::class_<Logger, py::smart_holder>(m, "Logger")
+              .def("log", &Logger::log)
+              .def_property_readonly("level", &Logger::level)
+              .def_property_readonly("name", &Logger::name)
+              .def("verbose", makeLogFunction(Logging::VERBOSE))
+              .def("debug", makeLogFunction(Logging::DEBUG))
+              .def("info", makeLogFunction(Logging::INFO))
+              .def("warning", makeLogFunction(Logging::WARNING))
+              .def("error", makeLogFunction(Logging::ERROR))
+              .def("fatal", makeLogFunction(Logging::FATAL))
+              .def("clone",
+                   py::overload_cast<const std::optional<std::string>&,
+                                     const std::optional<Logging::Level>&>(
+                       &Logger::clone, py::const_),
+                   py::arg("name") = py::none(), py::arg("level") = py::none())
+              .def(
+                  "clone",
+                  py::overload_cast<Logging::Level>(&Logger::clone, py::const_),
+                  py::arg("level"))
+              .def("cloneWithSuffix", &Logger::cloneWithSuffix,
+                   py::arg("suffix"), py::arg("level") = py::none());
     }
 
     static std::unordered_map<std::string, std::unique_ptr<const Logger>>
