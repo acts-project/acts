@@ -8,14 +8,8 @@
 
 #pragma once
 
-// TODO: update to C++17 style
 #include <atomic>
-#include <iostream>
-#include <map>
-#include <ostream>
 #include <vector>
-
-#include <stdint.h>
 
 namespace Acts::Experimental {
 
@@ -45,18 +39,6 @@ class RoiDescriptor {
                 double phiMinus, double phiPlus, double zed = 0,
                 double zedMinus = -s_zedWidthDefault,
                 double zedPlus = s_zedWidthDefault);
-  // zedminus - s_zedWidthDefault = 225 //from ROIDescriptor
-
-  /// Copy constructor
-  /// @param roi The RoI to copy
-  RoiDescriptor(const RoiDescriptor& roi);
-  /// Copy assignment operator
-  /// @param r The RoI to copy
-  /// @return Reference to this RoI
-  RoiDescriptor& operator=(const RoiDescriptor& r);
-
-  // Destructor
-  ~RoiDescriptor();
 
   // Methods to retrieve data members
 

@@ -23,6 +23,8 @@ target_link_libraries(
         podio::podioRootIO
 )
 
+acts_compile_headers(PluginEDM4hep GLOB include/**/*.hpp)
+
 find_file(
     _edm4hep_yaml
     NAME

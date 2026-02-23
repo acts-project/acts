@@ -75,12 +75,12 @@ class TrackBuildingBase {
   /// Perform track building
   ///
   /// @param tensors Input pipeline tensors
-  /// @param spacepointIDs IDs of the nodes (must have size=n_nodes)
+  /// @param spacePointIDs IDs of the nodes (must have size=n_nodes)
   /// @param execContext Device & stream information
   ///
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
-      PipelineTensors tensors, std::vector<int> &spacepointIDs,
+      PipelineTensors tensors, std::vector<int> &spacePointIDs,
       const ExecutionContext &execContext = {}) = 0;
 
   virtual ~TrackBuildingBase() = default;

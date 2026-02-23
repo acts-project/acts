@@ -136,7 +136,7 @@ class FitTestSpacePoint {
   void updatePosition(const Vector3& newPos) { m_position = newPos; }
   /// @brief Updates the time of the space point
   void updateTime(const double newTime) { m_time = newTime; }
-  /// @brief Updates the time of the space point
+  /// @brief Updates the status of the space point
   void updateStatus(const bool newStatus) { m_isGood = newStatus; }
   /// @brief Check if the measurement is valid after calibration
   bool isGood() const { return m_isGood; }
@@ -545,6 +545,7 @@ class MeasurementGenerator {
   ///        drift-radius can be smeared assuming a Gaussian with a drift-radius
   ///        dependent uncertainty.
   /// @param line: The track to extrapolate
+  /// @param t0: Truth time offset of the track
   /// @param engine: Random number generator to smear the drift radius
   /// @param smearRadius: If true, the drift radius is smeared with a Gaussian
   /// @param createStrips: If true the strip measurements are created

@@ -14,15 +14,15 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t, typename callable_t>
+template <typename external_space_point_t, typename callable_t>
 inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
-                                      const external_spacepoint_t& sp,
-                                      const external_spacepoint_t& spM,
+                                      const external_space_point_t& sp,
+                                      const external_space_point_t& spM,
                                       bool bottom,
                                       callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
-  // spacepoint. Please see the other version of this function for more
+  // space point. Please see the other version of this function for more
   // detailed comments.
 
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
@@ -57,11 +57,11 @@ inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
   return LinCircle(cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame);
 }
 
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 inline void transformCoordinates(
     Acts::SpacePointMutableData& mutableData,
-    const std::vector<const external_spacepoint_t*>& vec,
-    const external_spacepoint_t& spM, bool bottom,
+    const std::vector<const external_space_point_t*>& vec,
+    const external_space_point_t& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
   const float xM = spM.x();
   const float yM = spM.y();
@@ -79,7 +79,7 @@ inline void transformCoordinates(
   int bottomFactor = bottom ? -1 : 1;
 
   for (std::size_t idx(0); idx < vec.size(); ++idx) {
-    const external_spacepoint_t* sp = vec[idx];
+    const external_space_point_t* sp = vec[idx];
 
     const float xSP = sp->x();
     const float ySP = sp->y();
@@ -128,10 +128,10 @@ inline void transformCoordinates(
   }
 }
 
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 inline bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
-    const external_spacepoint_t& sp, const double* spacepointPosition,
+    const Acts::SeedFinderConfig<external_space_point_t>& m_config,
+    const external_space_point_t& sp, const double* spacePointPosition,
     double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
@@ -147,48 +147,48 @@ inline bool xyzCoordinateCheck(
   const double yBottomStripVector = bottomStripVector[1];
   const double zBottomStripVector = bottomStripVector[2];
 
-  // cross product between top strip vector and spacepointPosition
-  double d1[3] = {yTopStripVector * spacepointPosition[2] -
-                      zTopStripVector * spacepointPosition[1],
-                  zTopStripVector * spacepointPosition[0] -
-                      xTopStripVector * spacepointPosition[2],
-                  xTopStripVector * spacepointPosition[1] -
-                      yTopStripVector * spacepointPosition[0]};
+  // cross product between top strip vector and spacePointPosition
+  double d1[3] = {yTopStripVector * spacePointPosition[2] -
+                      zTopStripVector * spacePointPosition[1],
+                  zTopStripVector * spacePointPosition[0] -
+                      xTopStripVector * spacePointPosition[2],
+                  xTopStripVector * spacePointPosition[1] -
+                      yTopStripVector * spacePointPosition[0]};
 
   // scalar product between bottom strip vector and d1
   double bd1 = xBottomStripVector * d1[0] + yBottomStripVector * d1[1] +
                zBottomStripVector * d1[2];
 
   // compatibility check using distance between strips to evaluate if
-  // spacepointPosition is inside the bottom detector element
+  // spacePointPosition is inside the bottom detector element
   double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
                stripCenterDistance[2] * d1[2]);
   if (std::abs(s1) > std::abs(bd1) * m_config.toleranceParam) {
     return false;
   }
 
-  // cross product between bottom strip vector and spacepointPosition
-  double d0[3] = {yBottomStripVector * spacepointPosition[2] -
-                      zBottomStripVector * spacepointPosition[1],
-                  zBottomStripVector * spacepointPosition[0] -
-                      xBottomStripVector * spacepointPosition[2],
-                  xBottomStripVector * spacepointPosition[1] -
-                      yBottomStripVector * spacepointPosition[0]};
+  // cross product between bottom strip vector and spacePointPosition
+  double d0[3] = {yBottomStripVector * spacePointPosition[2] -
+                      zBottomStripVector * spacePointPosition[1],
+                  zBottomStripVector * spacePointPosition[0] -
+                      xBottomStripVector * spacePointPosition[2],
+                  xBottomStripVector * spacePointPosition[1] -
+                      yBottomStripVector * spacePointPosition[0]};
 
   // compatibility check using distance between strips to evaluate if
-  // spacepointPosition is inside the top detector element
+  // spacePointPosition is inside the top detector element
   double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
                stripCenterDistance[2] * d0[2]);
   if (std::abs(s0) > std::abs(bd1) * m_config.toleranceParam) {
     return false;
   }
 
-  // if arrive here spacepointPosition is compatible with strip directions and
+  // if arrive here spacePointPosition is compatible with strip directions and
   // detector elements
 
   const Acts::Vector3& topStripCenterPosition = sp.topStripCenterPosition();
 
-  // spacepointPosition corrected with respect to the top strip position and
+  // spacePointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
   s0 = s0 / bd1;
   outputCoordinates[0] = topStripCenterPosition[0] + xTopStripVector * s0;

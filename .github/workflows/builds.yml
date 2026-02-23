@@ -39,6 +39,7 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         id: ccache-restore
@@ -52,6 +53,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -85,7 +87,10 @@ jobs:
 
       - name: Python sanity check after install
         shell: bash
-        run: source install/python/setup.sh && python -c "import acts; v = acts.Vector3(1,2,3)"
+        run: >
+          source .env &&
+          source install/python/setup.sh &&
+          python -c "import acts; v = acts.Vector3(1,2,3)"
 
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
@@ -97,6 +102,7 @@ jobs:
 
       - name: Downstream configure
         run: >
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -126,6 +132,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
+          env_file: .env
 
       - uses: actions/download-artifact@v7
         with:
@@ -141,6 +148,7 @@ jobs:
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
         run: |
+          source .env
           source build/this_acts_withdeps.sh
           pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
@@ -164,6 +172,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
+          env_file: .env
 
       - uses: actions/download-artifact@v7
         with:
@@ -176,6 +185,7 @@ jobs:
         shell: bash
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
+          source .env
           source build/this_acts_withdeps.sh
           CI/physmon/phys_perf_mon.sh all physmon
 
@@ -242,6 +252,7 @@ jobs:
         with:
           compiler: ${{ matrix.cxx }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         uses: actions/cache/restore@v5
@@ -255,6 +266,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
@@ -285,6 +297,7 @@ jobs:
 
       - name: Downstream configure
         run: >
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -320,10 +333,13 @@ jobs:
         with:
           compiler: clang++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         uses: actions/cache/restore@v5
         id: ccache-restore
+        env:
+          DYLD_LIBRARY_PATH: ""
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -333,12 +349,10 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-
-      - run: ls -al /Users/runner/work/acts/acts/dependencies/view/lib
-      - run: find /Users/runner/work/acts/acts/dependencies/view/lib -type l -name "libRIO.*"
 
       - name: Build
         run: cmake --build build
@@ -354,10 +368,14 @@ jobs:
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -369,6 +387,7 @@ jobs:
 
       - name: Downstream configure
         run: >
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -379,9 +398,7 @@ jobs:
         run: cmake --build build-downstream
 
       - name: Downstream run
-        run: >
-          PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && ./build-downstream/bin/ShowActsVersion
+        run: ./build-downstream/bin/ShowActsVersion
 
   external_eic-shell:
     runs-on: ubuntu-latest
@@ -573,6 +590,7 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         id: ccache-restore
@@ -587,13 +605,13 @@ jobs:
         run: ccache -z
 
       - name: Build wheel with pip
-        run: pip wheel . -v
+        run: CI/dependencies/run.sh .env pip wheel . -v
 
       - name: ccache stats
         run: ccache -s
 
       - name: Install wheel
-        run: pip install $(ls ./*.whl)
+        run: CI/dependencies/run.sh .env pip install $(ls ./*.whl)
 
       - name: Save ccache
         uses: actions/cache/save@v5
@@ -608,4 +626,4 @@ jobs:
           path: "*.whl"
 
       - name: Test
-        run: python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
+        run: CI/dependencies/run.sh .env python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
