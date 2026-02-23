@@ -46,9 +46,10 @@
 
 namespace ActsExamples {
 
-Geant4SimulationBase::Geant4SimulationBase(const Config& cfg, std::string name,
-                                           Acts::Logging::Level level)
-    : IAlgorithm(name, Acts::getDefaultLogger(name, level)) {
+Geant4SimulationBase::Geant4SimulationBase(
+    const Config& cfg, std::string name,
+    std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm(name, std::move(logger)) {
   if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
   }
@@ -59,14 +60,12 @@ Geant4SimulationBase::Geant4SimulationBase(const Config& cfg, std::string name,
     throw std::invalid_argument("Missing random numbers");
   }
 
-  m_logger = Acts::getDefaultLogger("Geant4", level);
-
   m_eventStore = std::make_shared<Geant4::EventStore>();
 
   // tweak logging
   // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
   // 3 would be also possible, but that produces infinite amount of output.
-  m_geant4Level = logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
+  m_geant4Level = m_logger->level() == Acts::Logging::VERBOSE ? 2 : 0;
 }
 
 Geant4SimulationBase::~Geant4SimulationBase() = default;
@@ -163,8 +162,9 @@ std::shared_ptr<Geant4Handle> Geant4SimulationBase::geant4Handle() const {
 }
 
 Geant4Simulation::Geant4Simulation(const Config& cfg,
-                                   Acts::Logging::Level level)
-    : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
+                                   std::unique_ptr<const Acts::Logger> logger)
+    : Geant4SimulationBase(cfg, "Geant4Simulation", std::move(logger)),
+      m_cfg(cfg) {
   m_geant4Instance =
       m_cfg.geant4Handle
           ? m_cfg.geant4Handle
@@ -252,7 +252,8 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   // Set the magnetic field
   if (cfg.magneticField) {
-    ACTS_INFO("Setting ACTS configured field to Geant4.");
+    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+                         "Setting ACTS configured field to Geant4.");
 
     Geant4::MagneticFieldWrapper::Config g4FieldCfg;
     g4FieldCfg.magneticField = cfg.magneticField;
@@ -271,8 +272,9 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
   // ACTS sensitive surfaces are provided, so hit creation is turned on
   if (cfg.sensitiveSurfaceMapper != nullptr) {
     Geant4::SensitiveSurfaceMapper::State sState;
-    ACTS_INFO(
-        "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
+    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+                         "Remapping selected volumes from Geant4 to "
+                         "Acts::Surface::GeometryID");
     cfg.sensitiveSurfaceMapper->remapSensitiveNames(
         sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), g4World,
         Acts::Transform3::Identity());
@@ -281,8 +283,9 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
         sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), false,
         false);
     if (!allSurfacesMapped) {
-      ACTS_WARNING(
-          "Not all sensitive surfaces have been mapped to Geant4 volumes!");
+      ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::WARNING,
+                           "Not all sensitive surfaces have been mapped to "
+                           "Geant4 volumes!");
     }
 
     sensitiveSteppingActionAccess->assignSurfaceMapping(
@@ -327,9 +330,10 @@ ProcessCode Geant4Simulation::execute(const AlgorithmContext& ctx) const {
   return ProcessCode::SUCCESS;
 }
 
-Geant4MaterialRecording::Geant4MaterialRecording(const Config& cfg,
-                                                 Acts::Logging::Level level)
-    : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
+Geant4MaterialRecording::Geant4MaterialRecording(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : Geant4SimulationBase(cfg, "Geant4Simulation", std::move(logger)),
+      m_cfg(cfg) {
   auto physicsListName = "MaterialPhysicsList";
   m_geant4Instance =
       m_cfg.geant4Handle

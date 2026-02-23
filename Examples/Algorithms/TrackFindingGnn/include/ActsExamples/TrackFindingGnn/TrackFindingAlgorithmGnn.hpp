@@ -130,7 +130,8 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingAlgorithmGnn(Config cfg, Acts::Logging::Level lvl);
+  TrackFindingAlgorithmGnn(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~TrackFindingAlgorithmGnn() override = default;
 

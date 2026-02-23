@@ -52,8 +52,8 @@ class GreedyAmbiguityResolutionAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  GreedyAmbiguityResolutionAlgorithm(const Config& cfg,
-                                     Acts::Logging::Level lvl);
+  GreedyAmbiguityResolutionAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the ambiguity resolution algorithm.
   ///

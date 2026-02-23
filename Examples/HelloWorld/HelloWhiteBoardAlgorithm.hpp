@@ -27,7 +27,7 @@ class HelloWhiteBoardAlgorithm : public IAlgorithm {
   };
 
   explicit HelloWhiteBoardAlgorithm(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Read input and copy to the output
   ProcessCode execute(const AlgorithmContext& ctx) const override;

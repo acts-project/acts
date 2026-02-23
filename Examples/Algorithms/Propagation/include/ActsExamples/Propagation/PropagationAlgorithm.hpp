@@ -62,7 +62,8 @@ class PropagationAlgorithm : public IAlgorithm {
   /// Constructor
   /// @param [in] config is the configuration struct
   /// @param [in] loglevel is the logging level
-  PropagationAlgorithm(const Config& config, Acts::Logging::Level level);
+  PropagationAlgorithm(const Config& config,
+                       std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method
   /// @param [in] the algorithm context for event consistency

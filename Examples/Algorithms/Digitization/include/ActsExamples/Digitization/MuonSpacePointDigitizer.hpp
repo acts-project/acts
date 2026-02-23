@@ -67,7 +67,8 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     double rpcDeadTime{50. * Acts::UnitConstants::ns};
   };
   /// @brief Constructor
-  MuonSpacePointDigitizer(const Config& cfg, Acts::Logging::Level lvl);
+  MuonSpacePointDigitizer(const Config& cfg,
+                          std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// @brief Initialize the digitizer
   ProcessCode initialize() override;

@@ -14,9 +14,8 @@
 namespace ActsExamples {
 
 TrackParamsLookupEstimation::TrackParamsLookupEstimation(
-    const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("TrackParamsLookupEstimation",
-                 Acts::getDefaultLogger("TrackParamsLookupEstimation", level)),
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackParamsLookupEstimation", std::move(logger)),
       m_cfg(config) {
   // Iterate over the reference layers and create
   // track parameter accumulators

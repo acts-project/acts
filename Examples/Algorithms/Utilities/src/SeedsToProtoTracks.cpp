@@ -15,9 +15,9 @@
 
 namespace ActsExamples {
 
-SeedsToProtoTracks::SeedsToProtoTracks(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("SeedsToProtoTracks",
-                 Acts::getDefaultLogger("SeedsToProtoTracks", lvl)),
+SeedsToProtoTracks::SeedsToProtoTracks(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("SeedsToProtoTracks", std::move(logger)),
       m_cfg(std::move(cfg)) {
   m_inputSeeds.initialize(m_cfg.inputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);

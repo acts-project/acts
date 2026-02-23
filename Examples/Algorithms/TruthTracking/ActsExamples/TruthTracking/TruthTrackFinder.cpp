@@ -19,10 +19,8 @@
 namespace ActsExamples {
 
 TruthTrackFinder::TruthTrackFinder(const Config& config,
-                                   Acts::Logging::Level level)
-    : IAlgorithm("TruthTrackFinder",
-                 Acts::getDefaultLogger("TruthTrackFinder", level)),
-      m_cfg(config) {
+                                   std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TruthTrackFinder", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }

@@ -17,18 +17,18 @@
 
 namespace ActsExamples {
 
-CoreMaterialMapping::CoreMaterialMapping(const CoreMaterialMapping::Config& cfg,
-                                         Acts::Logging::Level level)
-    : IAlgorithm("CoreMaterialMapping",
-                 Acts::getDefaultLogger("CoreMaterialMapping", level)),
-      m_cfg(cfg) {
+CoreMaterialMapping::CoreMaterialMapping(
+    const CoreMaterialMapping::Config& cfg,
+    std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("CoreMaterialMapping", std::move(logger)), m_cfg(cfg) {
   // Prepare the I/O collections
   m_inputMaterialTracks.initialize(m_cfg.inputMaterialTracks);
   m_outputMappedMaterialTracks.initialize(m_cfg.mappedMaterialTracks);
   m_outputUnmappedMaterialTracks.initialize(m_cfg.unmappedMaterialTracks);
 
-  ACTS_INFO("This algorithm requires inter-event information, "
-            << "run in single-threaded mode!");
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+                       "This algorithm requires inter-event information, "
+                           << "run in single-threaded mode!");
 
   if (m_cfg.materialMapper == nullptr) {
     throw std::invalid_argument("Missing material mapper");

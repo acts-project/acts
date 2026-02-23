@@ -216,10 +216,8 @@ struct SeedComparison {
 }  // namespace
 
 HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
-    Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm(
-          "HashingPrototypeSeedingAlgorithm",
-          Acts::getDefaultLogger("HashingPrototypeSeedingAlgorithm", lvl)),
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HashingPrototypeSeedingAlgorithm", std::move(logger)),
       m_cfg(std::move(cfg)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);

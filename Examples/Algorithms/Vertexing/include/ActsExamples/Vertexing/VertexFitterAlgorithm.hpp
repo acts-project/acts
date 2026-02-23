@@ -51,7 +51,8 @@ class VertexFitterAlgorithm final : public IAlgorithm {
             .asDiagonal();
   };
 
-  VertexFitterAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  VertexFitterAlgorithm(const Config& cfg,
+                        std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Fit the input vertices.
   ///

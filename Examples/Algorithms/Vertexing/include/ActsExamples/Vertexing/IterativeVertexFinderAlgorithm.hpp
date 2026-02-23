@@ -52,8 +52,9 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
     int maxIterations = 1000;
   };
 
-  IterativeVertexFinderAlgorithm(const Config& config,
-                                 Acts::Logging::Level level);
+  IterativeVertexFinderAlgorithm(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Find vertices using iterative vertex finder algorithm.
   ///

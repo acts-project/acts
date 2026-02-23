@@ -92,8 +92,9 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::size_t simultaneousSeeds = 1;
   };
 
-  AdaptiveMultiVertexFinderAlgorithm(const Config& config,
-                                     Acts::Logging::Level level);
+  AdaptiveMultiVertexFinderAlgorithm(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Find vertices using the adaptive multi vertex finder algorithm.
   ///

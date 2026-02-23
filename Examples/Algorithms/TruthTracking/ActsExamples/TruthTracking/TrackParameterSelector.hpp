@@ -48,7 +48,8 @@ class TrackParameterSelector final : public IAlgorithm {
     double ptMax = std::numeric_limits<double>::infinity();
   };
 
-  TrackParameterSelector(const Config& config, Acts::Logging::Level level);
+  TrackParameterSelector(const Config& config,
+                         std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

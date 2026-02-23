@@ -35,7 +35,8 @@ class EDM4hepParticleOutputConverter final : public PodioOutputConverter {
   ///
   /// @params cfg is the configuration object
   /// @params lvl is the logging level
-  EDM4hepParticleOutputConverter(const Config& cfg, Acts::Logging::Level lvl);
+  EDM4hepParticleOutputConverter(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

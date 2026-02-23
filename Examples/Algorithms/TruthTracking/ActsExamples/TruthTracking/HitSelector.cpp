@@ -14,9 +14,9 @@
 
 namespace ActsExamples {
 
-HitSelector::HitSelector(const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("HitSelector", Acts::getDefaultLogger("HitSelector", level)),
-      m_cfg(config) {
+HitSelector::HitSelector(const Config& config,
+                         std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HitSelector", std::move(logger)), m_cfg(config) {
   if (m_cfg.minX >= m_cfg.maxX || m_cfg.minY >= m_cfg.maxY ||
       m_cfg.minZ >= m_cfg.maxZ || m_cfg.minR >= m_cfg.maxR ||
       m_cfg.minTime >= m_cfg.maxTime ||
@@ -30,18 +30,31 @@ HitSelector::HitSelector(const Config& config, Acts::Logging::Level level)
   m_inputParticlesSelected.maybeInitialize(m_cfg.inputParticlesSelected);
   m_outputHits.initialize(m_cfg.outputHits);
 
-  ACTS_DEBUG("selection particles " << m_cfg.inputParticlesSelected);
-  ACTS_DEBUG("selection hit x [" << m_cfg.minX << "," << m_cfg.maxX << ")");
-  ACTS_DEBUG("selection hit y [" << m_cfg.minY << "," << m_cfg.maxY << ")");
-  ACTS_DEBUG("selection hit z [" << m_cfg.minZ << "," << m_cfg.maxZ << ")");
-  ACTS_DEBUG("selection hit r [" << m_cfg.minR << "," << m_cfg.maxR << ")");
-  ACTS_DEBUG("selection hit time [" << m_cfg.minTime << "," << m_cfg.maxTime
-                                    << ")");
-  ACTS_DEBUG("selection hit energy loss [" << m_cfg.minEnergyLoss << ","
-                                           << m_cfg.maxEnergyLoss << ")");
-  ACTS_DEBUG("selection primary vertex ID [" << m_cfg.minPrimaryVertexId << ","
-                                             << m_cfg.maxPrimaryVertexId
-                                             << ")");
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "selection particles " << m_cfg.inputParticlesSelected);
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
+      "selection hit x [" << m_cfg.minX << "," << m_cfg.maxX << ")");
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
+      "selection hit y [" << m_cfg.minY << "," << m_cfg.maxY << ")");
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
+      "selection hit z [" << m_cfg.minZ << "," << m_cfg.maxZ << ")");
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
+      "selection hit r [" << m_cfg.minR << "," << m_cfg.maxR << ")");
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
+      "selection hit time [" << m_cfg.minTime << "," << m_cfg.maxTime << ")");
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "selection hit energy loss ["
+                           << m_cfg.minEnergyLoss << "," << m_cfg.maxEnergyLoss
+                           << ")");
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "selection primary vertex ID ["
+                           << m_cfg.minPrimaryVertexId << ","
+                           << m_cfg.maxPrimaryVertexId << ")");
 }
 
 ProcessCode HitSelector::execute(const AlgorithmContext& ctx) const {

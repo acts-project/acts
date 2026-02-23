@@ -40,7 +40,8 @@ class RefittingAlgorithm final : public IAlgorithm {
   ///
   /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
-  RefittingAlgorithm(Config config, Acts::Logging::Level level);
+  RefittingAlgorithm(Config config,
+                     std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method of the fitting algorithm
   ///

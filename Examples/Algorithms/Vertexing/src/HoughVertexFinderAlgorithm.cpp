@@ -16,16 +16,16 @@
 
 namespace ActsExamples {
 
-HoughVertexFinderAlgorithm::HoughVertexFinderAlgorithm(const Config& cfg,
-                                                       Acts::Logging::Level lvl)
-    : IAlgorithm("HoughVertexFinder",
-                 Acts::getDefaultLogger("HoughVertexFinder", lvl)),
-      m_cfg(cfg) {
+HoughVertexFinderAlgorithm::HoughVertexFinderAlgorithm(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HoughVertexFinder", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inputSpacePoints.empty()) {
-    ACTS_ERROR("You have to provide seeds");
+    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::ERROR,
+                         "You have to provide seeds");
   }
   if (m_cfg.outputVertices.empty()) {
-    ACTS_ERROR("Missing output vertices collection");
+    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::ERROR,
+                         "Missing output vertices collection");
   }
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);

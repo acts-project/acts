@@ -16,11 +16,9 @@
 
 namespace ActsExamples {
 
-VertexTruthMatcher::VertexTruthMatcher(const Config& config,
-                                       Acts::Logging::Level level)
-    : IAlgorithm("VertexTruthMatcher",
-                 Acts::getDefaultLogger("VertexTruthMatcher", level)),
-      m_cfg(config) {
+VertexTruthMatcher::VertexTruthMatcher(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("VertexTruthMatcher", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputVertices.empty()) {
     throw std::invalid_argument("Collection with vertices missing");
   }

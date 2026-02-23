@@ -69,7 +69,8 @@ class TrackFindingFromProtoTracksAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingFromProtoTracksAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFindingFromProtoTracksAlgorithm(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Filter the measurements
   ///

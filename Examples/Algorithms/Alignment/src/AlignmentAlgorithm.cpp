@@ -19,9 +19,9 @@
 
 namespace ActsExamples {
 
-AlignmentAlgorithm::AlignmentAlgorithm(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("AlignmentAlgorithm",
-                 Acts::getDefaultLogger("AlignmentAlgorithm", lvl)),
+AlignmentAlgorithm::AlignmentAlgorithm(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("AlignmentAlgorithm", std::move(logger)),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");

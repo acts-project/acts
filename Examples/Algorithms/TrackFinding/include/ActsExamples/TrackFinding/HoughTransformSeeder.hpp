@@ -236,7 +236,8 @@ class HoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  HoughTransformSeeder(const Config& cfg, Acts::Logging::Level lvl);
+  HoughTransformSeeder(const Config& cfg,
+                       std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the seeding algorithm.
   ///
@@ -262,9 +263,6 @@ class HoughTransformSeeder final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  std::unique_ptr<const Acts::Logger> m_logger;
-  const Acts::Logger& logger() const { return *m_logger; }
-
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>

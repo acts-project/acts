@@ -122,7 +122,8 @@ class ParticleSelector final : public IAlgorithm {
     MeasurementCounter measurementCounter;
   };
 
-  ParticleSelector(const Config& config, Acts::Logging::Level level);
+  ParticleSelector(const Config& config,
+                   std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

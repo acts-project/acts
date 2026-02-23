@@ -110,22 +110,20 @@ struct FatrasSimulationT final : detail::FatrasSimulation {
   Simulation simulation;
 
   FatrasSimulationT(const ActsExamples::FatrasSimulation::Config &cfg,
-                    Acts::Logging::Level lvl)
+                    const Acts::Logger &logger)
       : simulation(
             ChargedSimulation(
-                ChargedPropagator(
-                    ChargedStepper(cfg.magneticField),
-                    Acts::Navigator({cfg.trackingGeometry},
-                                    Acts::getDefaultLogger("SimNav", lvl)),
-                    Acts::getDefaultLogger("SimProp", lvl)),
-                Acts::getDefaultLogger("Simulation", lvl)),
+                ChargedPropagator(ChargedStepper(cfg.magneticField),
+                                  Acts::Navigator({cfg.trackingGeometry},
+                                                  logger.clone("SimNav")),
+                                  logger.clone("SimProp")),
+                logger.clone("Simulation")),
             NeutralSimulation(
-                NeutralPropagator(
-                    NeutralStepper(),
-                    Acts::Navigator({cfg.trackingGeometry},
-                                    Acts::getDefaultLogger("SimNav", lvl)),
-                    Acts::getDefaultLogger("SimProp", lvl)),
-                Acts::getDefaultLogger("Simulation", lvl))) {
+                NeutralPropagator(NeutralStepper(),
+                                  Acts::Navigator({cfg.trackingGeometry},
+                                                  logger.clone("SimNav")),
+                                  logger.clone("SimProp")),
+                logger.clone("Simulation"))) {
     using namespace ActsFatras;
     using namespace ActsFatras::detail;
     // apply the configuration
@@ -177,17 +175,24 @@ struct FatrasSimulationT final : detail::FatrasSimulation {
 
 }  // namespace
 
-FatrasSimulation::FatrasSimulation(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("FatrasSimulation",
-                 Acts::getDefaultLogger("FatrasSimulation", lvl)),
-      m_cfg(std::move(cfg)) {
-  ACTS_DEBUG("hits on sensitive surfaces: " << m_cfg.generateHitsOnSensitive);
-  ACTS_DEBUG("hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
-  ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
+FatrasSimulation::FatrasSimulation(Config cfg,
+                                   std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("FatrasSimulation", std::move(logger)), m_cfg(std::move(cfg)) {
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
+      "hits on sensitive surfaces: " << m_cfg.generateHitsOnSensitive);
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
+      "hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
+      "hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
 
   if (!m_cfg.generateHitsOnSensitive && !m_cfg.generateHitsOnMaterial &&
       !m_cfg.generateHitsOnPassive) {
-    ACTS_WARNING("FatrasSimulation not configured to generate any hits!");
+    ACTS_LOG_WITH_LOGGER(
+        *m_logger, Acts::Logging::WARNING,
+        "FatrasSimulation not configured to generate any hits!");
   }
 
   if (!m_cfg.trackingGeometry) {
@@ -201,7 +206,7 @@ FatrasSimulation::FatrasSimulation(Config cfg, Acts::Logging::Level lvl)
   }
 
   // construct the simulation for the specific magnetic field
-  m_sim = std::make_unique<FatrasSimulationT>(m_cfg, lvl);
+  m_sim = std::make_unique<FatrasSimulationT>(m_cfg, *m_logger);
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputParticles.initialize(m_cfg.outputParticles);

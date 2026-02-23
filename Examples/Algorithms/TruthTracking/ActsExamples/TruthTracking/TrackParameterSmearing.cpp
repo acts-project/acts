@@ -19,11 +19,9 @@
 
 namespace ActsExamples {
 
-TrackParameterSmearing::TrackParameterSmearing(const Config& config,
-                                               Acts::Logging::Level level)
-    : IAlgorithm("TrackParameterSmearing",
-                 Acts::getDefaultLogger("TrackParameterSmearing", level)),
-      m_cfg(config) {
+TrackParameterSmearing::TrackParameterSmearing(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackParameterSmearing", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameters collection");
   }
@@ -35,36 +33,48 @@ TrackParameterSmearing::TrackParameterSmearing(const Config& config,
   }
 
   if (m_cfg.particleHypothesis) {
-    ACTS_INFO("Override truth particle hypothesis with "
-              << *m_cfg.particleHypothesis);
+    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+                         "Override truth particle hypothesis with "
+                             << *m_cfg.particleHypothesis);
   }
 
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 
-  ACTS_DEBUG("smearing track param loc0 " << m_cfg.sigmaLoc0 << " A "
-                                          << m_cfg.sigmaLoc0PtA << " B "
-                                          << m_cfg.sigmaLoc0PtB);
-  ACTS_DEBUG("smearing track param loc1 " << m_cfg.sigmaLoc1 << " A "
-                                          << m_cfg.sigmaLoc1PtA << " B "
-                                          << m_cfg.sigmaLoc1PtB);
-  ACTS_DEBUG("smearing track param time " << m_cfg.sigmaTime);
-  ACTS_DEBUG("smearing track param phi " << m_cfg.sigmaPhi);
-  ACTS_DEBUG("smearing track param theta " << m_cfg.sigmaTheta);
-  ACTS_DEBUG("smearing track param q/p " << m_cfg.sigmaPtRel);
-  ACTS_DEBUG(
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "smearing track param loc0 "
+                           << m_cfg.sigmaLoc0 << " A " << m_cfg.sigmaLoc0PtA
+                           << " B " << m_cfg.sigmaLoc0PtB);
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "smearing track param loc1 "
+                           << m_cfg.sigmaLoc1 << " A " << m_cfg.sigmaLoc1PtA
+                           << " B " << m_cfg.sigmaLoc1PtB);
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "smearing track param time " << m_cfg.sigmaTime);
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "smearing track param phi " << m_cfg.sigmaPhi);
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "smearing track param theta " << m_cfg.sigmaTheta);
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "smearing track param q/p " << m_cfg.sigmaPtRel);
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
       "initial sigmas "
-      << Acts::BoundVector(
-             m_cfg.initialSigmas.value_or(std::array<double, 6>()).data())
-             .transpose());
-  ACTS_DEBUG("initial sigma pt rel " << m_cfg.initialSigmaPtRel);
-  ACTS_DEBUG(
+          << Acts::BoundVector(
+                 m_cfg.initialSigmas.value_or(std::array<double, 6>()).data())
+                 .transpose());
+  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                       "initial sigma pt rel " << m_cfg.initialSigmaPtRel);
+  ACTS_LOG_WITH_LOGGER(
+      *m_logger, Acts::Logging::DEBUG,
       "initial var inflation "
-      << Acts::BoundVector(m_cfg.initialVarInflation.data()).transpose());
+          << Acts::BoundVector(m_cfg.initialVarInflation.data()).transpose());
   if (m_cfg.particleHypothesis) {
-    ACTS_DEBUG("particle hypothesis " << *m_cfg.particleHypothesis);
+    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                         "particle hypothesis " << *m_cfg.particleHypothesis);
   } else {
-    ACTS_DEBUG("particle hypothesis truth");
+    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                         "particle hypothesis truth");
   }
 }
 

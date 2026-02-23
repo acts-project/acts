@@ -30,7 +30,8 @@ class TrajectoriesToProtoTracks final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrajectoriesToProtoTracks(Config cfg, Acts::Logging::Level lvl);
+  TrajectoriesToProtoTracks(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the algorithm.
   ///

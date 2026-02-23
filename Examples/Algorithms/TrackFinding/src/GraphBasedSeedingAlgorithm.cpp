@@ -25,11 +25,9 @@
 
 namespace ActsExamples {
 
-GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(Config cfg,
-                                                       Acts::Logging::Level lvl)
-    : IAlgorithm("SeedingAlgorithm",
-                 Acts::getDefaultLogger("SeedingAlgorithm", lvl)),
-      m_cfg(std::move(cfg)) {
+GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("SeedingAlgorithm", std::move(logger)), m_cfg(std::move(cfg)) {
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);

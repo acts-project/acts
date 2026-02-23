@@ -17,9 +17,9 @@
 
 namespace ActsExamples {
 
-ProtoTracksToTracks::ProtoTracksToTracks(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("ProtoTracksToTracks",
-                 Acts::getDefaultLogger("ProtoTracksToTracks", lvl)),
+ProtoTracksToTracks::ProtoTracksToTracks(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("ProtoTracksToTracks", std::move(logger)),
       m_cfg(std::move(cfg)) {
   m_outputTracks.initialize(m_cfg.outputTracks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);

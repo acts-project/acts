@@ -43,8 +43,9 @@ class EDM4hepSimHitOutputConverter final : public PodioOutputConverter {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepSimHitOutputConverter(const Config& config,
-                               Acts::Logging::Level level);
+  EDM4hepSimHitOutputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

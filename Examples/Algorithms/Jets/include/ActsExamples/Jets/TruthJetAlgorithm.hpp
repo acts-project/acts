@@ -60,7 +60,8 @@ class TruthJetAlgorithm final : public IAlgorithm {
     bool doTrackJetMatching = false;
   };
 
-  TruthJetAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  TruthJetAlgorithm(const Config& cfg,
+                    std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
   ProcessCode finalize() override;

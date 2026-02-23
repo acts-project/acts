@@ -29,7 +29,9 @@ class ParticleTrackParamExtractor final : public IAlgorithm {
     std::string outputTrackParameters;
   };
 
-  ParticleTrackParamExtractor(const Config& config, Acts::Logging::Level level);
+  ParticleTrackParamExtractor(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

@@ -20,8 +20,9 @@ namespace ActsExamples {
 
 EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
     const EDM4hepMeasurementOutputConverter::Config& config,
-    Acts::Logging::Level level)
-    : PodioOutputConverter("EDM4hepMeasurementOutputConverter", level),
+    std::unique_ptr<const Acts::Logger> logger)
+    : PodioOutputConverter("EDM4hepMeasurementOutputConverter",
+                           std::move(logger)),
       m_cfg(config) {
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);

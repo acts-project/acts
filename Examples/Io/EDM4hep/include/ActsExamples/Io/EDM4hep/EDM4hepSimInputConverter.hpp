@@ -90,7 +90,9 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepSimInputConverter(const Config& config, Acts::Logging::Level level);
+  EDM4hepSimInputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

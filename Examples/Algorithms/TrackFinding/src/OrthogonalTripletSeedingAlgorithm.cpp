@@ -63,10 +63,8 @@ static inline bool itkFastTrackingSPselect(const SimSpacePoint &sp) {
 }  // namespace
 
 OrthogonalTripletSeedingAlgorithm::OrthogonalTripletSeedingAlgorithm(
-    const Config &cfg, Acts::Logging::Level lvl)
-    : IAlgorithm(
-          "OrthogonalTripletSeedingAlgorithm",
-          Acts::getDefaultLogger("OrthogonalTripletSeedingAlgorithm", lvl)),
+    const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("OrthogonalTripletSeedingAlgorithm", std::move(logger)),
       m_cfg(cfg) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
@@ -95,9 +93,9 @@ OrthogonalTripletSeedingAlgorithm::OrthogonalTripletSeedingAlgorithm(
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
 
-  m_filterLogger = logger().cloneWithSuffix("Filter");
+  m_filterLogger = m_logger->cloneWithSuffix("Filter");
 
-  m_seedFinder = Acts::TripletSeeder(logger().cloneWithSuffix("Finder"));
+  m_seedFinder = Acts::TripletSeeder(m_logger->cloneWithSuffix("Finder"));
 }
 
 ProcessCode OrthogonalTripletSeedingAlgorithm::execute(

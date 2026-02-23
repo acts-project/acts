@@ -68,8 +68,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   const Config &config() const { return m_cfg; }
 
   /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  GraphBasedSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  /// @param logger is the logger for the algorithm
+  GraphBasedSeedingAlgorithm(Config cfg,
+                             std::unique_ptr<const Acts::Logger> logger);
 
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
