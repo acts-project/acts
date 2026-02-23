@@ -83,6 +83,32 @@ def test_not_initialized_raises():
         handle(wb)
 
 
+@acts.with_log_threshold(acts.logging.FATAL)
+def test_wrong_key_raises():
+    class WrongKeyInspector(acts.examples.IAlgorithm):
+        def __init__(self):
+            super().__init__(name="WrongKeyInspector", level=acts.logging.INFO)
+            self.particles = acts.examples.ReadDataHandle(
+                self, acts.examples.SimParticleContainer, "InputParticles"
+            )
+            self.particles.initialize("wrong_key")
+
+        def execute(self, context):
+            return acts.examples.ProcessCode.SUCCESS
+
+    s = _make_sequencer(events=3)
+    inspector = WrongKeyInspector()
+    with pytest.raises(KeyError, match="does not exist"):
+        wb = acts.examples.WhiteBoard(acts.logging.WARNING)
+        inspector.particles(wb)
+
+    with pytest.raises(
+        RuntimeError,
+        match="Sequence configuration error: Missing data handle for key 'wrong_key'",
+    ):
+        s.addAlgorithm(inspector)
+
+
 # ---------------------------------------------------------------------------
 # Integration test
 # ---------------------------------------------------------------------------
