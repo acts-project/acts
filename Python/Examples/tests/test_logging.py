@@ -84,3 +84,23 @@ def test_logging_threshold_context_manager_exception():
             assert acts.logging.getFailureThreshold() == acts.logging.ERROR
             raise RuntimeError("test")
     assert acts.logging.getFailureThreshold() == acts.logging.WARNING
+
+
+def test_consum_logger_function(capfd):
+    logger = acts.getDefaultLogger("test_consum_logger_function", acts.logging.VERBOSE)
+    acts.logging._consumeLoggerFunction(logger)
+    captured = capfd.readouterr()
+    assert "consumed logger logs" in captured.out
+    with pytest.raises(ValueError):
+        logger.verbose("verbose message")
+
+
+def test_config_with_logger(capfd):
+    logger = acts.getDefaultLogger("test_config_with_logger", acts.logging.VERBOSE)
+    config = acts.logging._ConfigWithLogger(logger)
+    with pytest.raises(ValueError):
+        logger.verbose("verbose message")
+    config.logger.verbose("verbose message")
+    captured = capfd.readouterr()
+    assert "test_config_" in captured.out
+    assert "verbose message" in captured.out

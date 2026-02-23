@@ -71,7 +71,7 @@ void addUtilities(py::module_& m) {
             };
       };
 
-      auto logger = py::class_<Logger, std::unique_ptr<Logger>>(m, "Logger")
+      auto logger = py::class_<Logger, py::smart_holder>(m, "Logger")
                         .def("log", &Logger::log)
                         .def_property_readonly("level", &Logger::level)
                         .def_property_readonly("name", &Logger::name)
@@ -136,6 +136,20 @@ void addUtilities(py::module_& m) {
         }
       }
     });
+
+    logging.def("_consumeLoggerFunction",
+                [](std::unique_ptr<const Logger> logger) {
+                  logger->log(Logging::VERBOSE, "consumed logger logs");
+                });
+
+    struct ConfigWithLogger {
+      std::unique_ptr<const Logger> logger;
+    };
+
+    py::class_<ConfigWithLogger>(logging, "_ConfigWithLogger")
+        .def(py::init<std::unique_ptr<const Logger>>(), "logger"_a)
+        .def_property_readonly(
+            "logger", [](ConfigWithLogger& self) { return self.logger.get(); });
   }
 
   // Add axis related classes
