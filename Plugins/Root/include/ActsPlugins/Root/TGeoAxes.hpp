@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <array>
 #include <ostream>
 #include <stdexcept>
 #include <string_view>
