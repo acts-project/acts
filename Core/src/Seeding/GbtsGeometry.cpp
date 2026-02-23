@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -362,7 +363,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   }
   // find stages of eta-bin pairs using the graph ablation algorithm
 
-  BinConnections originalBinMap;
+  BinConnections binMap;
 
   // 1. create a map of bin-to-bin connections
 
@@ -371,21 +372,18 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   for (const auto& [bin1, bin2s] : m_binGroups) {
     // add to the map
 
-    auto& bin1Links = originalBinMap[bin1];
+    auto& bin1Links = binMap[bin1];
 
     for (const auto& bin2 : bin2s) {
-      auto& bin2Links = originalBinMap[bin2];
+      auto& bin2Links = binMap[bin2];
 
       bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
       bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
     }
   }
 
-  // const reference used as we are not modifying originalBinMap after creation
-  const BinConnections& constBinMap = originalBinMap;
-
   // copy bin map as original is still needed
-  BinConnections currentMap = constBinMap;
+  const BinConnections originalBinMap = binMap;
 
   // 2. find stages starting from the last one (i.e. bin1 with no outgoing
   // connections)
@@ -399,12 +397,12 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   stageOffsets.push_back(0);
 
   std::vector<std::uint32_t> exitBins;
-  while (!currentMap.empty()) {
+  while (!binMap.empty()) {
     exitBins.clear();
 
     // 2a. find all bins with zero outgoing links
 
-    for (const auto& bl : currentMap) {
+    for (const auto& bl : binMap) {
       auto& binLinks = bl.second;
       auto& outLinks = binLinks.first;
 
@@ -415,6 +413,9 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
       exitBins.push_back(bl.first);
     }
 
+    // order exit bins (important for graph building)
+    std::sort(exitBins.begin(), exitBins.end());
+
     // 2b. add a new stage: vector of bin1
 
     stageData.insert(stageData.end(), exitBins.begin(), exitBins.end());
@@ -423,15 +424,15 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
     // 2c. remove links : graph ablation
 
     for (const std::uint32_t& bin1Key : exitBins) {
-      auto p1 = currentMap.find(bin1Key);
-      if (p1 == currentMap.end()) {
+      auto p1 = binMap.find(bin1Key);
+      if (p1 == binMap.end()) {
         continue;
       }
       auto& bin1Links = p1->second;
 
       for (const std::uint32_t bin2Key : bin1Links.second) {
-        const auto p2 = currentMap.find(bin2Key);
-        if (p2 == currentMap.end()) {
+        const auto p2 = binMap.find(bin2Key);
+        if (p2 == binMap.end()) {
           continue;
         }
 
@@ -445,7 +446,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
     // 2d. finally, remove all exit bin1s from the map
 
     for (auto bin1Key : exitBins) {
-      currentMap.erase(bin1Key);
+      binMap.erase(bin1Key);
     }
   }
 
@@ -464,8 +465,8 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
     for (std::size_t k = begin; k < end; ++k) {
       const std::uint32_t bin1Idx = stageData[k];
 
-      const auto p = constBinMap.find(bin1Idx);
-      if (p == constBinMap.end()) {
+      const auto p = originalBinMap.find(bin1Idx);
+      if (p == originalBinMap.end()) {
         continue;
       }
 

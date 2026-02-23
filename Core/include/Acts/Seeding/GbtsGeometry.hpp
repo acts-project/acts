@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -132,8 +133,8 @@ class GbtsGeometry final {
   // pair corresponds to outgoing and incoming bins that the current bin can
   // connect to
   using BinConnections =
-      std::map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
-                                        std::vector<std::uint32_t>>>;
+      std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
+                                                  std::vector<std::uint32_t>>>;
 
  public:
   /// Constructor
