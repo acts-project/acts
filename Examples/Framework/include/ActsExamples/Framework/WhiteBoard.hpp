@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -28,14 +29,16 @@ namespace ActsExamples {
 ///
 /// This is an append-only container that takes ownership of the objects
 /// added to it. Once an object has been added, it can only be read but not
-/// be modified. Trying to replace an existing object is considered an error.
-/// Its lifetime is bound to the lifetime of the white board.
+/// be modified. Trying to replace an existing object is considered an
+/// error. Its lifetime is bound to the lifetime of the white board.
 class WhiteBoard {
  private:
   // type-erased value holder for move-constructible types
   struct IHolder {
     virtual ~IHolder() = default;
     virtual const std::type_info& type() const = 0;
+    virtual const void* data() const = 0;
+    virtual std::uint64_t typeHash() const = 0;
   };
   template <Acts::Concepts::nothrow_move_constructible T>
   struct HolderT : public IHolder {
@@ -43,6 +46,8 @@ class WhiteBoard {
 
     explicit HolderT(T&& v) : value(std::move(v)) {}
     const std::type_info& type() const override { return typeid(T); }
+    std::uint64_t typeHash() const override { return Acts::typeHash<T>(); }
+    const void* data() const override { return std::addressof(value); }
   };
 
   struct StringHash {
@@ -82,6 +87,11 @@ class WhiteBoard {
 
   std::vector<std::string> getKeys() const;
 
+  /// Returns a (value_ptr, type_info*) pair for use with Python bindings.
+  /// Returns {nullptr, nullptr} if the key does not exist.
+  // std::pair<const void*, const std::type_info*> getTypeErased(
+  //     const std::string& name) const;
+
  private:
   /// Find similar names for suggestions with levenshtein-distance
   std::vector<std::string_view> similarNames(const std::string_view& name,
@@ -115,6 +125,8 @@ class WhiteBoard {
 
   template <typename T>
   HolderT<T>* getHolder(const std::string& name) const;
+
+  IHolder* getHolder(const std::string& name) const;
 
   template <typename T>
   T pop(const std::string& name);

@@ -76,4 +76,11 @@ constexpr HashedString operator""_hash(char const* s, std::size_t count) {
 }
 
 }  // namespace HashedStringLiteral
+
+template <typename T>
+std::uint64_t typeHash() {
+  const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
+  return value;
+}
+
 }  // namespace Acts

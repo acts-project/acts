@@ -48,9 +48,15 @@ with _src.open() as fh:
 class FpeMaker(acts.examples.IAlgorithm):
     def __init__(self, name):
         acts.examples.IAlgorithm.__init__(self, name, acts.logging.INFO)
+        self.space_points = acts.examples.ReadDataHandle(
+            acts.SpacePoints, "space_points"
+        )
+        self.space_points.initialize("space_points")
 
     def execute(self, context):
         i = context.eventNumber % 4
+
+        sps: acts.SpacePoints = self.spacepoints(context.eventStore)
 
         if i == 0 or i == 1:
             acts.examples.FpeMonitor._trigger_divbyzero()
