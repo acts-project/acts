@@ -20,7 +20,9 @@
 
 namespace Acts::detail::Gsf {
 
-/// Reduce Gaussian mixture
+/// Reduce Gaussian mixture into a single parameter vector and covariance, using
+/// the specified method to reduce the mixture.
+///
 /// @param mixture The mixture iterable
 /// @param surface The surface, on which the bound state is
 /// @param method How to reduce the mixture
@@ -29,7 +31,8 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
     std::span<const GsfComponent> mixture, const Surface &surface,
     ComponentMergeMethod method);
 
-/// Merge two GSF components into one
+/// Merge two Gaussian mixture components into one
+///
 /// @param a First component
 /// @param b Second component
 /// @param surface The surface, on which the bound state is
@@ -93,56 +96,8 @@ auto angleDescriptionSwitch(const Surface &surface, Callable &&callable) {
   }
 }
 
-/// Compute the covariance of a Gaussian mixture given the mean. The function
-/// takes iterators to allow for arbitrary ranges to be combined. The dimension
-/// of the vectors is inferred from the inputs.
-///
-/// @param cmps The component range to merge
-/// @param projector A projector to extract the weight, parameters and covariance
-///        from the components
-/// @param mean The precomputed mean of the mixture
-/// @param sumOfWeights The precomputed sum of weights of the mixture
-/// @param angleDesc The angle description object
-/// @return covariance
-template <typename component_range_t, typename projector_t,
-          typename angle_desc_t>
-BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
-                                    const projector_t &projector,
-                                    const BoundVector &mean,
-                                    double sumOfWeights,
-                                    const angle_desc_t &angleDesc) {
-  BoundMatrix cov = BoundMatrix::Zero();
-
-  for (const auto &cmp : cmps) {
-    const auto &[weight_l, pars_l, cov_l] = projector(cmp);
-
-    cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
-
-    BoundVector diff = pars_l - mean;
-
-    // Apply corrections for cyclic coordinates
-    const auto handleCyclicCov = [&l = pars_l, &m = mean,
-                                  &diff = diff](const auto &desc) {
-      diff[desc.idx] = difference_periodic(l[desc.idx] / desc.constant,
-                                           m[desc.idx] / desc.constant,
-                                           2 * std::numbers::pi) *
-                       desc.constant;
-    };
-    std::apply([&](auto... dsc) { (handleCyclicCov(dsc), ...); }, angleDesc);
-
-    cov += weight_l * diff * diff.transpose();
-  }
-
-  cov /= sumOfWeights;
-  return cov;
-}
-
-/// Combine multiple components into one representative track state object. The
-/// function takes iterators to allow for arbitrary ranges to be combined. The
-/// dimension of the vectors is inferred from the inputs.
-///
-/// @note If one component does not contain a covariance, no covariance is
-/// computed.
+/// Combine multiple components into one representative parameter object. The
+/// function takes iterators to allow for arbitrary ranges to be combined.
 ///
 /// @note The correct mean and variances for cyclic coordinates or spherical
 /// coordinates (theta, phi) must generally be computed using a special circular
@@ -150,19 +105,18 @@ BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
 /// only works well for close components.
 ///
 /// @param cmps The component range to merge
-/// @param projector A projector to extract the weight, parameters and covariance
-///        from the components
+/// @param projector A projector to extract the weight and parameters from the components
 /// @param angleDesc The angle description object
-/// @return parameters and covariance
+/// @return parameters
 template <typename component_range_t, typename projector_t,
           typename angle_desc_t>
-std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
-    const component_range_t &cmps, const projector_t &projector,
-    const angle_desc_t &angleDesc) {
+BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
+                                     const projector_t &projector,
+                                     const angle_desc_t &angleDesc) {
   // Early return in case of range with length 1
   if (cmps.size() == 1) {
-    const auto &[beginWeight, beginPars, beginCov] = projector(cmps.front());
-    return {beginPars / beginWeight, beginCov / beginWeight};
+    auto &&[beginWeight, beginPars] = projector(cmps.front());
+    return beginPars;
   }
 
   // Do the (circular) mean with complex arithmetic.
@@ -171,10 +125,10 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
   // weight.
   using CVec = Eigen::Matrix<std::complex<double>, eBoundSize, 1>;
   CVec cMean = CVec::Zero();
-  double sumOfWeights{0.0};
+  double sumOfWeights = 0;
 
-  for (const auto &cmp : cmps) {
-    const auto &[weight_l, pars_l, cov_l] = projector(cmp);
+  for (auto &&cmp : cmps) {
+    auto &&[weight_l, pars_l] = projector(cmp);
 
     CVec pars_l_c = pars_l;
 
@@ -196,15 +150,138 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
   };
   std::apply([&](auto... dsc) { (getArg(dsc), ...); }, angleDesc);
 
+  return mean;
+}
+
+/// Combine multiple components into one representative parameter object. The
+/// function takes iterators to allow for arbitrary ranges to be combined.
+///
+/// @param cmps The component range to merge
+/// @param projector A projector to extract the weight and parameters from the components
+/// @return parameters
+template <typename component_range_t, typename projector_t>
+BoundVector mergeGaussianMixtureMode(const component_range_t &cmps,
+                                     const projector_t &projector) {
+  const auto maxWeightIt = std::ranges::max_element(cmps, {}, [&](auto &&cmp) {
+    auto &&[weight_l, pars_l] = projector(cmp);
+    return weight_l;
+  });
+  auto &&[weight_l, pars_l] = projector(*maxWeightIt);
+  return pars_l;
+}
+
+/// Compute the covariance of a Gaussian mixture given the mean. The function
+/// takes iterators to allow for arbitrary ranges to be combined.
+///
+/// @param cmps The component range to merge
+/// @param projector A projector to extract the weight and parameters from the components
+/// @param mean The precomputed mean of the mixture
+/// @param angleDesc The angle description object
+/// @return covariance
+template <typename component_range_t, typename projector_t,
+          typename angle_desc_t>
+BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
+                                    const projector_t &projector,
+                                    const BoundVector &mean,
+                                    const angle_desc_t &angleDesc) {
+  if (cmps.size() == 1) {
+    auto &&[beginWeight, beginPars, beginCov] = projector(cmps.front());
+    return beginCov;
+  }
+
+  BoundMatrix cov = BoundMatrix::Zero();
+  double sumOfWeights = 0;
+
+  for (auto &&cmp : cmps) {
+    auto &&[weight_l, pars_l, cov_l] = projector(cmp);
+
+    cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
+
+    BoundVector diff = pars_l - mean;
+
+    // Apply corrections for cyclic coordinates
+    const auto handleCyclicCov = [&l = pars_l, &m = mean,
+                                  &diff = diff](const auto &desc) {
+      diff[desc.idx] = difference_periodic(l[desc.idx] / desc.constant,
+                                           m[desc.idx] / desc.constant,
+                                           2 * std::numbers::pi) *
+                       desc.constant;
+    };
+    std::apply([&](auto... dsc) { (handleCyclicCov(dsc), ...); }, angleDesc);
+
+    sumOfWeights += weight_l;
+    cov += weight_l * diff * diff.transpose();
+  }
+
+  cov /= sumOfWeights;
+
+  return cov;
+}
+
+/// Combine multiple components into one representative track state object. The
+/// function takes iterators to allow for arbitrary ranges to be combined.
+///
+/// @note The correct mean and variances for cyclic coordinates or spherical
+/// coordinates (theta, phi) must generally be computed using a special circular
+/// mean or in cartesian coordinates. This implements a approximation, which
+/// only works well for close components.
+///
+/// @param cmps The component range to merge
+/// @param projector A projector to extract the weight, parameters and covariance
+///        from the components
+/// @param angleDesc The angle description object
+/// @return parameters and covariance
+template <typename component_range_t, typename projector_t,
+          typename angle_desc_t>
+std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
+    const component_range_t &cmps, const projector_t &projector,
+    const angle_desc_t &angleDesc) {
+  if (cmps.size() == 1) {
+    auto &&[beginWeight, beginPars, beginCov] = projector(cmps.front());
+    return {beginPars, beginCov};
+  }
+
+  const BoundVector mean = mergeGaussianMixtureMean(
+      cmps,
+      [&](auto &&c) {
+        auto &&[weight_l, pars_l, cov_l] = projector(c);
+        return std::forward_as_tuple(weight_l, pars_l);
+      },
+      angleDesc);
+
   // MARK: fpeMaskBegin(FLTUND, 1, #2347)
   const BoundMatrix cov =
-      mergeGaussianMixtureCov(cmps, projector, mean, sumOfWeights, angleDesc);
+      mergeGaussianMixtureCov(cmps, projector, mean, angleDesc);
   // MARK: fpeMaskEnd(FLTUND)
 
   return {mean, cov};
 }
 
-/// Reduce Gaussian mixture
+/// Reduce Gaussian mixture into a single parameter vector, using the specified
+/// method to reduce the mixture.
+///
+/// @param cmps The component range to merge
+/// @param projector A projector to extract the weight and parameters from the components
+/// @param angleDesc The angle description object
+/// @param method How to reduce the mixture
+/// @return parameters
+template <typename component_range_t, typename projector_t,
+          typename angle_desc_t>
+BoundVector mergeGaussianMixtureParams(const component_range_t &cmps,
+                                       const projector_t &projector,
+                                       const angle_desc_t &angleDesc,
+                                       ComponentMergeMethod method) {
+  if (method == ComponentMergeMethod::eMean) {
+    return mergeGaussianMixtureMean(cmps, projector, angleDesc);
+  } else if (method == ComponentMergeMethod::eMaxWeight) {
+    return mergeGaussianMixtureMode(cmps, projector);
+  } else {
+    throw std::logic_error("Invalid component merge method");
+  }
+}
+
+/// Reduce Gaussian mixture into a single parameter vector and covariance, using
+/// the specified method to reduce the mixture.
 ///
 /// @param cmps The component range to merge
 /// @param projector A projector to extract the weight, parameters and covariance
@@ -223,20 +300,36 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
   if (method == ComponentMergeMethod::eMean) {
     return {mean, cov};
   } else if (method == ComponentMergeMethod::eMaxWeight) {
-    const auto maxWeightIt =
-        std::ranges::max_element(cmps, {}, [&](const auto &cmp) {
-          const auto &[weight_l, pars_l, cov_l] = projector(cmp);
-          return weight_l;
-        });
-    const auto &[weight_l, pars_l, cov_l] = projector(*maxWeightIt);
-
-    return {pars_l, cov};
+    const BoundVector mode = mergeGaussianMixtureMode(cmps, [&](auto &&c) {
+      auto &&[weight_l, pars_l, cov_l] = projector(c);
+      return std::forward_as_tuple(weight_l, pars_l);
+    });
+    return {mode, cov};
   } else {
     throw std::logic_error("Invalid component merge method");
   }
 }
 
-/// Reduce Gaussian mixture
+/// Reduce Gaussian mixture into a single parameter vector, using the specified
+/// method to reduce the mixture.
+///
+/// @param cmps The component range to merge
+/// @param projector A projector to extract the weight and parameters from the components
+/// @param surface The surface, which the bound state is on
+/// @param method How to reduce the mixture
+/// @return parameters
+template <typename component_range_t, typename projector_t>
+BoundVector mergeGaussianMixtureParams(const component_range_t &cmps,
+                                       const projector_t &projector,
+                                       const Surface &surface,
+                                       ComponentMergeMethod method) {
+  return angleDescriptionSwitch(surface, [&](const auto &desc) {
+    return mergeGaussianMixtureParams(cmps, projector, desc, method);
+  });
+}
+
+/// Reduce Gaussian mixture into a single parameter vector and covariance, using
+/// the specified method to reduce the mixture.
 ///
 /// @param cmps The component range to merge
 /// @param projector A projector to extract the weight, parameters and covariance
