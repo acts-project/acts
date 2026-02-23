@@ -426,7 +426,7 @@ jobs:
 
       - name: Build
         id: build
-        uses: eic/docker-run-action@v3
+        uses: eic/docker-run-action@v4
         continue-on-error: true
         with:
           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
