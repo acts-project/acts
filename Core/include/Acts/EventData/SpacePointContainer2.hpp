@@ -809,6 +809,9 @@ class SpacePointContainer2 {
   /// column. Otherwise, it will return the index itself.
   /// @param index The index to resolve.
   /// @return The resolved index.
+  [[deprecated(
+      "Use copyFromIndex() instead to get the original index, and resolve it "
+      "manually if needed. This method will be removed in a future version.")]]
   SpacePointIndex2 resolvedIndex(Index index) const noexcept {
     if (m_copyFromIndexColumn.has_value()) {
       return this->copyFromIndex(index);
