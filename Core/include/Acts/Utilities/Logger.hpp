@@ -63,17 +63,23 @@
   };                                                                           \
   __local_acts_logger logger(log_object);
 
+/// Log a message at the specified level with an explicit logger instance
+/// @param lgr The logger instance (must be a Acts::Logger reference)
+/// @param level The logging level
+/// @param x The message to log
+#define ACTS_LOG_WITH_LOGGER(lgr, level, x) \
+  do {                                      \
+    if ((lgr).doPrint(level)) {             \
+      std::ostringstream os;                \
+      os << x;                              \
+      (lgr).log(level, os.str());           \
+    }                                       \
+  } while (0)
+
 /// Log a message at the specified level
 /// @param level The logging level
 /// @param x The message to log
-#define ACTS_LOG(level, x)           \
-  do {                               \
-    if (logger().doPrint(level)) {   \
-      std::ostringstream os;         \
-      os << x;                       \
-      logger().log(level, os.str()); \
-    }                                \
-  } while (0)
+#define ACTS_LOG(level, x) ACTS_LOG_WITH_LOGGER(logger(), level, x)
 
 /// @brief macro for verbose debug output
 ///
