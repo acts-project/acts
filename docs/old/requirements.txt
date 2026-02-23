@@ -94,7 +94,7 @@ pyyaml==6.0.3
     # via myst-parser
 requests==2.32.5
     # via sphinx
-rich==14.3.2
+rich==14.3.3
     # via
     #   -r docs/old/requirements.in
     #   typer
@@ -127,7 +127,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/old/requirements.in
-typer==0.24.0
+typer==0.24.1
     # via -r docs/old/requirements.in
 typing-extensions==4.15.0
     # via
