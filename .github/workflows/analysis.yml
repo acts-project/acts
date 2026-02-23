@@ -39,6 +39,7 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Save PR metadata
         if: github.event_name == 'pull_request'
@@ -71,6 +72,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S . --preset=github-ci-coverage
       - name: Build
         run: cmake --build build
@@ -86,9 +88,9 @@ jobs:
           && du -sh build
       - name: Coverage
         run: >
-          pip3 install gcovr==7.2
+          CI/dependencies/run.sh .env pip3 install gcovr==7.2
           && cd build
-          && /usr/bin/python3 ../CI/test_coverage.py
+          && ../CI/dependencies/run.sh ../.env /usr/bin/python3 ../CI/test_coverage.py
 
       - uses: actions/upload-artifact@v6
         with:
@@ -111,7 +113,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: git fetch origin "${{ github.base_ref }}"
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
 
       - name: Install clang-tidy
         run: |
@@ -125,9 +127,12 @@ jobs:
         with:
           compiler: clang++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Configure
         run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=gitlab-ci-clangtidy
 
@@ -170,19 +175,22 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
-      - name: Install dependencies
-        run: pip3 install cmakeperf==0.6.1
       - name: Configure
         run: >
+          ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=RelWithDebInfo
           -DCMAKE_CXX_FLAGS="-Werror"
-          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_ODD=OFF
+      - uses: astral-sh/setup-uv@v7
+
       - name: Measure
-        run: cmakeperf collect build/compile_commands.json -o perf.csv
+        run: uvx cmakeperf==0.6.1 collect build/compile_commands.json -o perf.csv
+
       - name: Results
         run: cmakeperf print perf.csv
       - uses: actions/upload-artifact@v6

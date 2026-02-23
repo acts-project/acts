@@ -14,6 +14,8 @@
 
 #include <stdexcept>
 
+#include <boost/core/no_exceptions_support.hpp>
+
 using namespace Acts;
 
 namespace ActsTests {
@@ -201,6 +203,68 @@ BOOST_AUTO_TEST_CASE(ZipIterate) {
     BOOST_CHECK_NE(z, 0);
 
     ++checkIndex;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CopyFrom) {
+  SpacePointContainer2 container(SpacePointColumns::SourceLinks |
+                                 SpacePointColumns::X | SpacePointColumns::Y |
+                                 SpacePointColumns::Z);
+  container.reserve(1);
+
+  {
+    MutableSpacePointProxy2 sp = container.createSpacePoint();
+    sp.assignSourceLinks(std::array<SourceLink, 1>{SourceLink(42)});
+    sp.x() = 1;
+    sp.y() = 2;
+    sp.z() = 3;
+  }
+
+  {
+    SpacePointContainer2 copyTo(SpacePointColumns::SourceLinks |
+                                SpacePointColumns::X | SpacePointColumns::Y |
+                                SpacePointColumns::Z);
+    MutableSpacePointProxy2 sp = copyTo.createSpacePoint();
+    sp.copyFrom(container.at(0),
+                SpacePointColumns::SourceLinks | SpacePointColumns::X |
+                    SpacePointColumns::Y | SpacePointColumns::Z);
+
+    BOOST_CHECK_EQUAL(sp.x(), 1);
+    BOOST_CHECK_EQUAL(sp.y(), 2);
+    BOOST_CHECK_EQUAL(sp.z(), 3);
+    BOOST_CHECK_EQUAL(sp.sourceLinks().size(), 1u);
+    BOOST_CHECK_EQUAL(sp.sourceLinks()[0].get<int>(), 42);
+  }
+
+  {
+    SpacePointContainer2 copyTo(SpacePointColumns::X | SpacePointColumns::Y);
+    MutableSpacePointProxy2 sp = copyTo.createSpacePoint();
+    sp.copyFrom(container.at(0), SpacePointColumns::X | SpacePointColumns::Y);
+
+    BOOST_CHECK_EQUAL(sp.x(), 1);
+    BOOST_CHECK_EQUAL(sp.y(), 2);
+  }
+
+  {
+    SpacePointContainer2 copyTo(SpacePointColumns::PackedXY);
+    MutableSpacePointProxy2 sp = copyTo.createSpacePoint();
+    BOOST_CHECK_THROW(sp.copyFrom(container.at(0), SpacePointColumns::PackedXY),
+                      std::logic_error);
+  }
+
+  {
+    SpacePointContainer2 copyTo(SpacePointColumns::X | SpacePointColumns::Y);
+    MutableSpacePointProxy2 sp = copyTo.createSpacePoint();
+    BOOST_CHECK_THROW(
+        sp.copyFrom(container.at(0), SpacePointColumns::SourceLinks),
+        std::logic_error);
+  }
+
+  {
+    SpacePointContainer2 copyTo(SpacePointColumns::X | SpacePointColumns::Y);
+    MutableSpacePointProxy2 sp = copyTo.createSpacePoint();
+    BOOST_CHECK_THROW(sp.copyFrom(container.at(0), SpacePointColumns::All),
+                      std::logic_error);
   }
 }
 

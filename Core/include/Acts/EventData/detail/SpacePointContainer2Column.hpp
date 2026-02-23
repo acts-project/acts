@@ -37,6 +37,8 @@ class ColumnHolderBase {
   virtual void resize(std::size_t size) = 0;
   virtual void clear() = 0;
   virtual void emplace_back() = 0;
+  virtual void copyFrom(const ColumnHolderBase &source, std::size_t sourceIndex,
+                        std::size_t destinationIndex) = 0;
 };
 
 template <typename T>
@@ -67,6 +69,11 @@ class ColumnHolder final : public ColumnHolderBase {
   void clear() override { m_data.clear(); }
   void resize(std::size_t size) override { m_data.resize(size, m_default); }
   void emplace_back() override { m_data.emplace_back(m_default); }
+  void copyFrom(const ColumnHolderBase &source, std::size_t sourceIndex,
+                std::size_t destinationIndex) override {
+    const auto &typedSource = static_cast<const ColumnHolder<T> &>(source);
+    m_data[destinationIndex] = typedSource.m_data[sourceIndex];
+  }
 
  private:
   Value m_default{};
