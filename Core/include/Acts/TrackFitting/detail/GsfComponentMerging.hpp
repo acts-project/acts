@@ -21,7 +21,7 @@
 namespace Acts::detail::Gsf {
 
 template <typename Tuple>
-auto forward_first_two(Tuple &&t) {
+decltype(auto) forward_first_two(Tuple &&t) {
   return std::forward_as_tuple(std::get<0>(std::forward<Tuple>(t)),
                                std::get<1>(std::forward<Tuple>(t)));
 }
