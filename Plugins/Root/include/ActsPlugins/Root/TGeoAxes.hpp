@@ -59,7 +59,7 @@ class TGeoAxes {
 
   /// Return the axes string as a 3-character string view.
   /// @return The axes string as a 3-character string view.
-  std::string_view value() const { return {m_axes, 3}; }
+  std::string_view value() const { return {m_axes.data(), 3}; }
 
   friend std::ostream& operator<<(std::ostream& os, const TGeoAxes& axes) {
     return os << axes.value();
@@ -67,7 +67,9 @@ class TGeoAxes {
 
  private:
   struct Checked {
-    char a, b, c;
+    char a;
+    char b;
+    char c;
   };
 
   static constexpr bool isAxisChar(char c) {
@@ -98,18 +100,20 @@ class TGeoAxes {
   // which manifests as a compile error at the call site.
   static consteval Checked makeChecked(char a, char b, char c) {
     if (!isAxisChar(a) || !isAxisChar(b) || !isAxisChar(c)) {
-      throw "TGeoAxes: each character must be one of X x Y y Z z";
+      throw std::invalid_argument(
+          "TGeoAxes: each character must be one of X x Y y Z z");
     }
     if (baseAxis(a) == baseAxis(b) || baseAxis(b) == baseAxis(c) ||
         baseAxis(a) == baseAxis(c)) {
-      throw "TGeoAxes: each axis (X, Y, Z) must appear exactly once";
+      throw std::invalid_argument(
+          "TGeoAxes: each axis (X, Y, Z) must appear exactly once");
     }
     return {a, b, c};
   }
 
-  explicit constexpr TGeoAxes(Checked v) : m_axes{v.a, v.b, v.c, '\0'} {}
+  explicit constexpr TGeoAxes(Checked v) : m_axes{v.a, v.b, v.c} {}
 
-  char m_axes[4];
+  std::array<char, 3> m_axes;
 };
 
 /// @}
