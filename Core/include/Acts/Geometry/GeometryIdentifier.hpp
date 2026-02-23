@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/OstreamFormatter.hpp"
+
 #include <cstdint>
 #include <functional>
 #include <iosfwd>
@@ -260,6 +262,7 @@ struct GeometryIdentifierHook {
 };
 
 }  // namespace Acts
+
 // specialize std::hash so GeometryIdentifier can be used e.g. in an
 // unordered_map
 namespace std {
@@ -270,3 +273,6 @@ struct hash<Acts::GeometryIdentifier> {
   }
 };
 }  // namespace std
+
+// specialize std::formatter so GeometryIdentifier can be used with std::format
+ACTS_OSTREAM_FORMATTER(Acts::GeometryIdentifier);
