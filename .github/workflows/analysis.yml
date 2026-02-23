@@ -177,8 +177,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
-      - name: Install dependencies
-        run: pip3 install cmakeperf==0.6.1
       - name: Configure
         run: >
           ccache -z &&
@@ -187,10 +185,12 @@ jobs:
           --preset=github-ci
           -DCMAKE_BUILD_TYPE=RelWithDebInfo
           -DCMAKE_CXX_FLAGS="-Werror"
-          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_ODD=OFF
+      - uses: astral-sh/setup-uv@v5
+
       - name: Measure
-        run: cmakeperf collect build/compile_commands.json -o perf.csv
+        run: uvx cmakeperf==0.6.1 collect build/compile_commands.json -o perf.csv
+
       - name: Results
         run: cmakeperf print perf.csv
       - uses: actions/upload-artifact@v6
