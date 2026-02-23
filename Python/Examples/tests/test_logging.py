@@ -14,7 +14,7 @@ def test_get_default_logger_default_level():
     assert logger.level == acts.logging.INFO
 
 
-@acts.with_log_threshold(acts.logging.MAX)
+@acts.with_log_threshold(acts.logging.FATAL)
 def test_get_default_logger_different_levels():
     for level in (
         acts.logging.VERBOSE,

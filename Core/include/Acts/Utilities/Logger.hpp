@@ -370,14 +370,13 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
   ///
   /// @param [in] lvl threshold debug level
   explicit DefaultFilterPolicy(Level lvl) : m_level(lvl) {
-    if (lvl >= getFailureThreshold()) {
+    if (lvl > getFailureThreshold()) {
       throw ThresholdFailure(
           "Requested debug level is incompatible with "
           "the ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
           " configuration. See "
-          "https://acts.readthedocs.io/en/latest/core/misc/"
-          "logging.html#logging-thresholds");
+          "https://cern.ch/acts-log-thresh");
     }
   }
 
