@@ -608,7 +608,7 @@ def test_edm4hep_tracks_reader(tmp_path):
         EDM4hepTrackInputConverter(
             level=acts.logging.VERBOSE,
             inputFrame="events",
-            inputTracks="kf_tracks",
+            inputTracks=converter.config.outputTracks,
             outputTracks="kf_tracks",
             Bz=2 * u.T,
         )
