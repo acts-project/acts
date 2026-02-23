@@ -208,8 +208,10 @@ class MultiComponentBoundTrackParameters {
                    m_particleHypothesis)};
   }
 
-  /// Merge to single component parameters
-  /// @return Single component bound track parameters representing the weighted average of all components
+  /// Merge component mixture into a single set of parameters using the
+  /// specified method.
+  /// @param method Method to use for merging the components into a single set of parameters
+  /// @return Single component bound track parameters representing the mixture
   BoundTrackParameters merge(ComponentMergeMethod method) const;
 
   /// Parameters vector.
