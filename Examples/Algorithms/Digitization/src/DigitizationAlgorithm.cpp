@@ -29,7 +29,9 @@ namespace ActsExamples {
 
 DigitizationAlgorithm::DigitizationAlgorithm(Config config,
                                              Acts::Logging::Level level)
-    : IAlgorithm("DigitizationAlgorithm", level), m_cfg(std::move(config)) {
+    : IAlgorithm("DigitizationAlgorithm",
+                 Acts::getDefaultLogger("DigitizationAlgorithm", level)),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }

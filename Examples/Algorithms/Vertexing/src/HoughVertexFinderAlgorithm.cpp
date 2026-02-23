@@ -18,7 +18,9 @@ namespace ActsExamples {
 
 HoughVertexFinderAlgorithm::HoughVertexFinderAlgorithm(const Config& cfg,
                                                        Acts::Logging::Level lvl)
-    : IAlgorithm("HoughVertexFinder", lvl), m_cfg(cfg) {
+    : IAlgorithm("HoughVertexFinder",
+                 Acts::getDefaultLogger("HoughVertexFinder", lvl)),
+      m_cfg(cfg) {
   if (m_cfg.inputSpacePoints.empty()) {
     ACTS_ERROR("You have to provide seeds");
   }

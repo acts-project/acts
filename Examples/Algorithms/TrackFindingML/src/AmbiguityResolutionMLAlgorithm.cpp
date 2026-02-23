@@ -34,7 +34,8 @@ static bool sourceLinkEquality(const SourceLink& a, const SourceLink& b) {
 
 AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
     const Config& cfg, Logging::Level lvl)
-    : IAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
+    : IAlgorithm("AmbiguityResolutionMLAlgorithm",
+                 Acts::getDefaultLogger("AmbiguityResolutionMLAlgorithm", lvl)),
       m_cfg(cfg),
       m_ambiML(m_cfg.toAmbiguityResolutionMLConfig(), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {

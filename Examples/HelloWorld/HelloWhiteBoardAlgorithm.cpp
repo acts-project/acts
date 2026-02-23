@@ -14,7 +14,9 @@ namespace ActsExamples {
 
 HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(const Config& cfg,
                                                    Acts::Logging::Level level)
-    : IAlgorithm("HelloWhiteBoard", level), m_cfg(cfg) {
+    : IAlgorithm("HelloWhiteBoard",
+                 Acts::getDefaultLogger("HelloWhiteBoard", level)),
+      m_cfg(cfg) {
   // non-optional config settings must be checked on construction.
   if (m_cfg.input.empty()) {
     throw std::invalid_argument("Missing input collection");

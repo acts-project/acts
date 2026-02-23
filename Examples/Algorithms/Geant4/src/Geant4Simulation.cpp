@@ -48,7 +48,7 @@ namespace ActsExamples {
 
 Geant4SimulationBase::Geant4SimulationBase(const Config& cfg, std::string name,
                                            Acts::Logging::Level level)
-    : IAlgorithm(std::move(name), level) {
+    : IAlgorithm(name, Acts::getDefaultLogger(name, level)) {
   if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
   }

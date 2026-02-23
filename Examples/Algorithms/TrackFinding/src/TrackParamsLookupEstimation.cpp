@@ -15,7 +15,9 @@ namespace ActsExamples {
 
 TrackParamsLookupEstimation::TrackParamsLookupEstimation(
     const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("TrackParamsLookupEstimation", level), m_cfg(config) {
+    : IAlgorithm("TrackParamsLookupEstimation",
+                 Acts::getDefaultLogger("TrackParamsLookupEstimation", level)),
+      m_cfg(config) {
   // Iterate over the reference layers and create
   // track parameter accumulators
   for (const auto& [geoId, refSurface] : m_cfg.refLayers) {

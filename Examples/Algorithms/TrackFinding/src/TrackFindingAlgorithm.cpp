@@ -254,7 +254,9 @@ class BranchStopper {
 
 TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
                                              Acts::Logging::Level level)
-    : IAlgorithm("TrackFindingAlgorithm", level), m_cfg(std::move(config)) {
+    : IAlgorithm("TrackFindingAlgorithm",
+                 Acts::getDefaultLogger("TrackFindingAlgorithm", level)),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }

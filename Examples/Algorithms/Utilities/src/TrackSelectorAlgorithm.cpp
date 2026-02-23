@@ -21,7 +21,8 @@ namespace ActsExamples {
 
 TrackSelectorAlgorithm::TrackSelectorAlgorithm(const Config& config,
                                                Acts::Logging::Level level)
-    : IAlgorithm("TrackSelector", level),
+    : IAlgorithm("TrackSelector",
+                 Acts::getDefaultLogger("TrackSelector", level)),
       m_cfg(config),
       m_selector(config.selectorConfig) {
   if (m_cfg.inputTracks.empty()) {

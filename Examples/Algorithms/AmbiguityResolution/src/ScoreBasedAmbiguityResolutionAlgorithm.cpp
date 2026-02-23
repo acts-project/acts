@@ -87,7 +87,9 @@ bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
 
 ScoreBasedAmbiguityResolutionAlgorithm::ScoreBasedAmbiguityResolutionAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("ScoreBasedAmbiguityResolutionAlgorithm", lvl),
+    : IAlgorithm("ScoreBasedAmbiguityResolutionAlgorithm",
+                 Acts::getDefaultLogger(
+                     "ScoreBasedAmbiguityResolutionAlgorithm", lvl)),
       m_cfg(cfg),
       m_ambi(transformConfig(cfg, m_cfg.configFile), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {

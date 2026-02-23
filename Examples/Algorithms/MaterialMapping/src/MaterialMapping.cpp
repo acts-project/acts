@@ -19,7 +19,8 @@ namespace ActsExamples {
 
 MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
                                  Acts::Logging::Level level)
-    : IAlgorithm("MaterialMapping", level),
+    : IAlgorithm("MaterialMapping",
+                 Acts::getDefaultLogger("MaterialMapping", level)),
       m_cfg(cfg),
       m_mappingState(cfg.geoContext, cfg.magFieldContext),
       m_mappingStateVol(cfg.geoContext, cfg.magFieldContext) {

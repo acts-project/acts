@@ -64,7 +64,10 @@ static inline bool itkFastTrackingSPselect(const SimSpacePoint &sp) {
 
 OrthogonalTripletSeedingAlgorithm::OrthogonalTripletSeedingAlgorithm(
     const Config &cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("OrthogonalTripletSeedingAlgorithm", lvl), m_cfg(cfg) {
+    : IAlgorithm(
+          "OrthogonalTripletSeedingAlgorithm",
+          Acts::getDefaultLogger("OrthogonalTripletSeedingAlgorithm", lvl)),
+      m_cfg(cfg) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 

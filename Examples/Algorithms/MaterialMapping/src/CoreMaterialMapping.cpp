@@ -19,7 +19,9 @@ namespace ActsExamples {
 
 CoreMaterialMapping::CoreMaterialMapping(const CoreMaterialMapping::Config& cfg,
                                          Acts::Logging::Level level)
-    : IAlgorithm("CoreMaterialMapping", level), m_cfg(cfg) {
+    : IAlgorithm("CoreMaterialMapping",
+                 Acts::getDefaultLogger("CoreMaterialMapping", level)),
+      m_cfg(cfg) {
   // Prepare the I/O collections
   m_inputMaterialTracks.initialize(m_cfg.inputMaterialTracks);
   m_outputMappedMaterialTracks.initialize(m_cfg.mappedMaterialTracks);

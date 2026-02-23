@@ -22,7 +22,8 @@ namespace ActsExamples {
 
 SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(const Config& cfg,
                                              Logging::Level lvl)
-    : IAlgorithm("SeedFilterMLAlgorithm", lvl),
+    : IAlgorithm("SeedFilterMLAlgorithm",
+                 Acts::getDefaultLogger("SeedFilterMLAlgorithm", lvl)),
       m_cfg(cfg),
       m_seedClassifier(m_cfg.inputSeedFilterNN.c_str()) {
   if (m_cfg.inputTrackParameters.empty()) {

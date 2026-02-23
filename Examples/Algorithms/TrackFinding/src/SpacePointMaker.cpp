@@ -153,7 +153,9 @@ Acts::Result<SimSpacePoint> createStripSpacePoint(
 }  // namespace
 
 SpacePointMaker::SpacePointMaker(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("SpacePointMaker",
+                 Acts::getDefaultLogger("SpacePointMaker", lvl)),
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement input collection");
   }

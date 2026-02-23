@@ -15,7 +15,7 @@
 namespace ActsExamples {
 
 HelloLoggerAlgorithm::HelloLoggerAlgorithm(Acts::Logging::Level level)
-    : IAlgorithm("HelloLogger", level) {}
+    : IAlgorithm("HelloLogger", Acts::getDefaultLogger("HelloLogger", level)) {}
 
 ProcessCode HelloLoggerAlgorithm::execute(const AlgorithmContext& ctx) const {
   ACTS_INFO(" Hello World! (from event=" << ctx.eventNumber);

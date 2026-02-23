@@ -22,7 +22,9 @@ namespace ActsExamples {
 
 TrackTruthMatcher::TrackTruthMatcher(const Config& config,
                                      Acts::Logging::Level level)
-    : IAlgorithm("TrackTruthMatcher", level), m_cfg(config) {
+    : IAlgorithm("TrackTruthMatcher",
+                 Acts::getDefaultLogger("TrackTruthMatcher", level)),
+      m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks");
   }

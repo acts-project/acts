@@ -217,7 +217,9 @@ struct SeedComparison {
 
 HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
     Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("HashingPrototypeSeedingAlgorithm", lvl),
+    : IAlgorithm(
+          "HashingPrototypeSeedingAlgorithm",
+          Acts::getDefaultLogger("HashingPrototypeSeedingAlgorithm", lvl)),
       m_cfg(std::move(cfg)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);

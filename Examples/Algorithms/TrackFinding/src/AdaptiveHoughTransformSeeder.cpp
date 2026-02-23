@@ -91,7 +91,8 @@ AccumulatorSection AccumulatorSection::right(float xFraction) const {
 
 AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
     const Config &cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("AdaptiveHoughTransformSeeder", lvl),
+    : IAlgorithm("AdaptiveHoughTransformSeeder",
+                 Acts::getDefaultLogger("AdaptiveHoughTransformSeeder", lvl)),
       m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("AdaptiveHoughTransformSeeder", lvl)) {
   for (const auto &spName : config().inputSpacePoints) {

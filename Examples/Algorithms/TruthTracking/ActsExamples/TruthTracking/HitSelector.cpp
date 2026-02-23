@@ -15,7 +15,8 @@
 namespace ActsExamples {
 
 HitSelector::HitSelector(const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("HitSelector", level), m_cfg(config) {
+    : IAlgorithm("HitSelector", Acts::getDefaultLogger("HitSelector", level)),
+      m_cfg(config) {
   if (m_cfg.minX >= m_cfg.maxX || m_cfg.minY >= m_cfg.maxY ||
       m_cfg.minZ >= m_cfg.maxZ || m_cfg.minR >= m_cfg.maxR ||
       m_cfg.minTime >= m_cfg.maxTime ||

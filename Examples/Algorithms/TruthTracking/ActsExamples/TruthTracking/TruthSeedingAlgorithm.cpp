@@ -27,7 +27,9 @@ namespace ActsExamples {
 
 TruthSeedingAlgorithm::TruthSeedingAlgorithm(Config cfg,
                                              Acts::Logging::Level lvl)
-    : IAlgorithm("TruthSeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("TruthSeedingAlgorithm",
+                 Acts::getDefaultLogger("TruthSeedingAlgorithm", lvl)),
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }

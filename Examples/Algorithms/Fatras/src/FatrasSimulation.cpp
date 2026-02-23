@@ -178,7 +178,9 @@ struct FatrasSimulationT final : detail::FatrasSimulation {
 }  // namespace
 
 FatrasSimulation::FatrasSimulation(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("FatrasSimulation", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("FatrasSimulation",
+                 Acts::getDefaultLogger("FatrasSimulation", lvl)),
+      m_cfg(std::move(cfg)) {
   ACTS_DEBUG("hits on sensitive surfaces: " << m_cfg.generateHitsOnSensitive);
   ACTS_DEBUG("hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
   ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);

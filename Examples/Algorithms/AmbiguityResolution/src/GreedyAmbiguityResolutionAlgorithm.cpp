@@ -44,7 +44,9 @@ bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
 
 GreedyAmbiguityResolutionAlgorithm::GreedyAmbiguityResolutionAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("GreedyAmbiguityResolutionAlgorithm", lvl),
+    : IAlgorithm(
+          "GreedyAmbiguityResolutionAlgorithm",
+          Acts::getDefaultLogger("GreedyAmbiguityResolutionAlgorithm", lvl)),
       m_cfg(cfg),
       m_core(transformConfig(cfg), logger().clone()) {
   if (m_cfg.inputTracks.empty()) {

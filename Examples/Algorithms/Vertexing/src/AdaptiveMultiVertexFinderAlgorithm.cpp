@@ -43,7 +43,8 @@ namespace ActsExamples {
 
 AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
     const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("AdaptiveMultiVertexFinder", level),
+    : IAlgorithm("AdaptiveMultiVertexFinder",
+                 Acts::getDefaultLogger("AdaptiveMultiVertexFinder", level)),
       m_cfg(config),
       m_propagator{[&]() {
         // Set up SympyStepper

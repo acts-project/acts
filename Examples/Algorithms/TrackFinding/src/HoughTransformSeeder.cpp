@@ -43,7 +43,8 @@ thread_local std::vector<std::shared_ptr<HoughMeasurementStruct>>
 
 HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
                                            Acts::Logging::Level lvl)
-    : IAlgorithm("HoughTransformSeeder", lvl),
+    : IAlgorithm("HoughTransformSeeder",
+                 Acts::getDefaultLogger("HoughTransformSeeder", lvl)),
       m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("HoughTransformSeeder", lvl)) {
   // require space points or input measurements (or both), but at least one kind

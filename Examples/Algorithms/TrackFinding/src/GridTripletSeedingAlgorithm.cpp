@@ -64,7 +64,9 @@ static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
 
 GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("GridTripletSeedingAlgorithm", lvl), m_cfg(cfg) {
+    : IAlgorithm("GridTripletSeedingAlgorithm",
+                 Acts::getDefaultLogger("GridTripletSeedingAlgorithm", lvl)),
+      m_cfg(cfg) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 

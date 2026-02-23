@@ -22,7 +22,9 @@ using namespace Acts::UnitLiterals;
 namespace ActsExamples {
 
 ProtoTracksToParameters::ProtoTracksToParameters(Config cfg, Logging::Level lvl)
-    : IAlgorithm("ProtoTracksToParameters", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("ProtoTracksToParameters",
+                 Acts::getDefaultLogger("ProtoTracksToParameters", lvl)),
+      m_cfg(std::move(cfg)) {
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);

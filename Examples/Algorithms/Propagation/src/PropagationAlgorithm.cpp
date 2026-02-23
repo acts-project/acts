@@ -19,7 +19,9 @@ namespace ActsExamples {
 
 PropagationAlgorithm::PropagationAlgorithm(
     const PropagationAlgorithm::Config& config, Acts::Logging::Level level)
-    : IAlgorithm("PropagationAlgorithm", level), m_cfg(config) {
+    : IAlgorithm("PropagationAlgorithm",
+                 Acts::getDefaultLogger("PropagationAlgorithm", level)),
+      m_cfg(config) {
   if (!m_cfg.propagatorImpl) {
     throw std::invalid_argument("Config needs to contain a propagator");
   }

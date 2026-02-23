@@ -55,7 +55,8 @@ auto phiHoughWidth_strip = [](double, const MuonSpacePoint& strip) {
 };
 
 MuonHoughSeeder::MuonHoughSeeder(const Config& cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("MuonHoughSeeder", lvl),
+    : IAlgorithm("MuonHoughSeeder",
+                 Acts::getDefaultLogger("MuonHoughSeeder", lvl)),
       m_cfg(cfg),
       m_logger(Acts::getDefaultLogger(name(), lvl)) {
   if (m_cfg.inSpacePoints.empty()) {

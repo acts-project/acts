@@ -19,7 +19,9 @@ namespace ActsExamples {
 
 TrajectoriesToProtoTracks::TrajectoriesToProtoTracks(Config cfg,
                                                      Acts::Logging::Level lvl)
-    : IAlgorithm("TrajectoriesToProtoTracks", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("TrajectoriesToProtoTracks",
+                 Acts::getDefaultLogger("TrajectoriesToProtoTracks", lvl)),
+      m_cfg(std::move(cfg)) {
   m_inputTrajectories.initialize(m_cfg.inputTrajectories);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }

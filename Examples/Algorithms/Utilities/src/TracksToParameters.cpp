@@ -24,7 +24,9 @@
 namespace ActsExamples {
 
 TracksToParameters::TracksToParameters(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("TracksToParameters", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("TracksToParameters",
+                 Acts::getDefaultLogger("TracksToParameters", lvl)),
+      m_cfg(std::move(cfg)) {
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }

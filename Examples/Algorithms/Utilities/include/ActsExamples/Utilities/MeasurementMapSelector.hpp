@@ -47,8 +47,10 @@ class MeasurementMapSelector final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  MeasurementMapSelector(Config cfg, Acts::Logging::Level lvl)
-      : IAlgorithm("MeasurementMapSelector", lvl), m_cfg(std::move(cfg)) {
+  MeasurementMapSelector(Config cfg,
+                         std::unique_ptr<const Acts::Logger> logger = nullptr)
+      : IAlgorithm("MeasurementMapSelector", std::move(logger)),
+        m_cfg(std::move(cfg)) {
     m_inputMeasurements.initialize(m_cfg.inputMeasurements);
     m_inputMap.initialize(m_cfg.inputMeasurementParticleMap);
     m_outputMap.initialize(m_cfg.outputMeasurementParticleMap);

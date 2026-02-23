@@ -52,7 +52,9 @@ namespace ActsExamples {
 
 MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
                                                  Logging::Level lvl)
-    : IAlgorithm("MuonSpacePointDigitizer", lvl), m_cfg{cfg} {
+    : IAlgorithm("MuonSpacePointDigitizer",
+                 Acts::getDefaultLogger("MuonSpacePointDigitizer", lvl)),
+      m_cfg{cfg} {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("No sim hits have been parsed ");
   }

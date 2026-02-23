@@ -18,7 +18,9 @@ using namespace Acts::UnitLiterals;
 namespace ActsExamples {
 
 TruthGraphBuilder::TruthGraphBuilder(Config config, Logging::Level level)
-    : IAlgorithm("TruthGraphBuilder", level), m_cfg(std::move(config)) {
+    : IAlgorithm("TruthGraphBuilder",
+                 Acts::getDefaultLogger("TruthGraphBuilder", level)),
+      m_cfg(std::move(config)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputGraph.initialize(m_cfg.outputGraph);
