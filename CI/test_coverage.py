@@ -248,7 +248,6 @@ def _build_gcovr_common_args(
 ) -> list[str]:
     script_dir = Path(__file__).resolve().parent
     source_dir = script_dir.parent.resolve()
-    source_dir_posix = source_dir.as_posix()
 
     version = gcovr_version(gcovr_exe)
     extra_flags: list[str] = []
@@ -273,7 +272,7 @@ def _build_gcovr_common_args(
         + ["--gcov-ignore-errors", "source_not_found"]
         + ["--gcov-ignore-errors", "no_object_file_found"]
         + excludes
-        + extra_flags,
+        + extra_flags
     )
 
 
