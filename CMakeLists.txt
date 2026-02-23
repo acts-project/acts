@@ -202,9 +202,9 @@ include(CheckCXXSourceCompiles)
 
 # We need to set the ORIGIN token based on the system we are compiling for
 if(APPLE)
-  set(_acts_rpath_origin "@loader_path")
+    set(_acts_rpath_origin "@loader_path")
 else()
-  set(_acts_rpath_origin "\$ORIGIN")
+    set(_acts_rpath_origin "\$ORIGIN")
 endif()
 
 # Set flags dependent whether we build ACTS in the default configuration or for deployment in pip with scikit-build-core
@@ -219,10 +219,6 @@ if(ACTS_BUILD_PYTHON_WHEEL)
         message(WARNING "scikit-build-core not detected for building wheel")
     endif()
 
-    # For deployment with pip, we build static libs
-    #set(BUILD_SHARED_LIBS FALSE)
-    #set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
     # Set installation paths for proper python package creation
     # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
     set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
@@ -233,15 +229,13 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}")
     set(_acts_python_install_dir "acts")
     set(_acts_python_modules_rpath "${_acts_rpath_origin}")
-else()
-    # GNU-like installation paths, e.g. lib/, include/, ...
-    if(PROJECT_IS_TOP_LEVEL)
-        include(GNUInstallDirs)
-    endif()
-
+elseif(PROJECT_IS_TOP_LEVEL)
+    include(GNUInstallDirs)
     set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}/../${CMAKE_INSTALL_LIBDIR}")
     set(_acts_python_install_dir "python/acts")
-    set(_acts_python_modules_rpath "${_acts_rpath_origin}/../../${CMAKE_INSTALL_LIBDIR}")
+    set(_acts_python_modules_rpath
+        "${_acts_rpath_origin}/../../${CMAKE_INSTALL_LIBDIR}"
+    )
 endif()
 
 include(ActsCompilerOptions) # default compile options

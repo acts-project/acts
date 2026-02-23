@@ -28,7 +28,9 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
 
         set_target_properties(
             ${_target}
-            PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
+            PROPERTIES
+                INSTALL_RPATH
+                    "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
         )
         set_target_properties(
             ${_target}
@@ -111,7 +113,8 @@ install(
 
 set_target_properties(
     ActsExamplesPythonBindings
-    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
+    PROPERTIES
+        INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
 )
 set_target_properties(
     ActsExamplesPythonBindings
@@ -177,7 +180,8 @@ install(
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
-    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
+    PROPERTIES
+        INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
