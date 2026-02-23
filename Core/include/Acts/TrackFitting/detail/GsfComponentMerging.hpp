@@ -296,7 +296,7 @@ template <typename component_range_t, typename projector_t,
 std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
     const component_range_t &cmps, const projector_t &projector,
     const angle_desc_t &angleDesc, ComponentMergeMethod method) {
-  const auto &[mean, cov] =
+  const auto [mean, cov] =
       mergeGaussianMixtureMeanCov(cmps, projector, angleDesc);
 
   if (method == ComponentMergeMethod::eMean) {
