@@ -15,10 +15,26 @@ namespace Acts {
 
 BoundTrackParameters MultiComponentBoundTrackParameters::merge(
     const ComponentMergeMethod method) const {
-  auto [singleParams, singleCov] = detail::Gsf::mergeGaussianMixture(
+  const bool hasCov = std::get<2>(m_components.front()).has_value();
+
+  if (!hasCov) {
+    const auto [singleParams, singleCov] = detail::Gsf::mergeGaussianMixture(
+        m_components,
+        [](const auto& cmp)
+            -> std::tuple<double, const BoundVector&, BoundMatrix> {
+          return {std::get<0>(cmp), std::get<1>(cmp), BoundMatrix::Identity()};
+        },
+        *m_surface, method);
+    return BoundTrackParameters(m_surface, singleParams, std::nullopt,
+                                m_particleHypothesis);
+  }
+
+  const auto [singleParams, singleCov] = detail::Gsf::mergeGaussianMixture(
       m_components,
-      [](const auto& cmp) -> std::tuple<double, BoundVector, BoundMatrix> {
-        return {std::get<0>(cmp), std::get<1>(cmp), *std::get<2>(cmp)};
+      [](const auto& cmp)
+          -> std::tuple<double, const BoundVector&, const BoundMatrix&> {
+        return {std::get<0>(cmp), std::get<1>(cmp),
+                std::get<2>(cmp).value_or(BoundMatrix::Identity())};
       },
       *m_surface, method);
   return BoundTrackParameters(m_surface, singleParams, singleCov,
