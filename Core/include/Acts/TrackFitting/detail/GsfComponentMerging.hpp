@@ -115,7 +115,7 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
                                      const angle_desc_t &angleDesc) {
   // Early return in case of range with length 1
   if (cmps.size() == 1) {
-    auto [weight_, pars_l] = projector(cmps.front());
+    const auto &[weight_l, pars_l] = projector(cmps.front());
     return pars_l;
   }
 
@@ -128,7 +128,7 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
   double sumOfWeights = 0;
 
   for (const auto &cmp : cmps) {
-    auto [weight_l, pars_l] = projector(cmp);
+    const auto &[weight_l, pars_l] = projector(cmp);
 
     CVec pars_l_c = pars_l;
 
@@ -164,10 +164,10 @@ BoundVector mergeGaussianMixtureMode(const component_range_t &cmps,
                                      const projector_t &projector) {
   const auto maxWeightIt =
       std::ranges::max_element(cmps, {}, [&](const auto &cmp) {
-        auto [weight_l, pars_l] = projector(cmp);
+        const auto &[weight_l, pars_l] = projector(cmp);
         return weight_l;
       });
-  auto [weight_max, pars_l] = projector(*maxWeightIt);
+  const auto &[weight_max, pars_l] = projector(*maxWeightIt);
   return pars_l;
 }
 
@@ -186,7 +186,7 @@ BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
                                     const BoundVector &mean,
                                     const angle_desc_t &angleDesc) {
   if (cmps.size() == 1) {
-    auto [weight_l, pars_l, cov_l] = projector(cmps.front());
+    const auto &[weight_l, pars_l, cov_l] = projector(cmps.front());
     return cov_l;
   }
 
@@ -194,7 +194,7 @@ BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
   double sumOfWeights = 0;
 
   for (const auto &cmp : cmps) {
-    auto [weight_l, pars_l, cov_l] = projector(cmp);
+    const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
     cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
 
@@ -238,15 +238,15 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
     const component_range_t &cmps, const projector_t &projector,
     const angle_desc_t &angleDesc) {
   if (cmps.size() == 1) {
-    auto [weight_l, pars_l, cov_l] = projector(cmps.front());
+    const auto &[weight_l, pars_l, cov_l] = projector(cmps.front());
     return {pars_l, cov_l};
   }
 
   const BoundVector mean = mergeGaussianMixtureMean(
       cmps,
-      [&](auto &&c) {
+      [&](const auto &c) {
         auto [weight_l, pars_l, cov_l] = projector(c);
-        return std::tuple(weight_l, pars_l);
+        return std::tuple(std::move(weight_l), std::move(pars_l));
       },
       angleDesc);
 
@@ -301,9 +301,9 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
   if (method == ComponentMergeMethod::eMean) {
     return {mean, cov};
   } else if (method == ComponentMergeMethod::eMaxWeight) {
-    const BoundVector mode = mergeGaussianMixtureMode(cmps, [&](auto &&c) {
+    const BoundVector mode = mergeGaussianMixtureMode(cmps, [&](const auto &c) {
       auto [weight_l, pars_l, cov_l] = projector(c);
-      return std::tuple(weight_l, pars_l);
+      return std::tuple(std::move(weight_l), std::move(pars_l));
     });
     return {mode, cov};
   } else {
