@@ -11,6 +11,11 @@ from acts._adapter import _patch_config
 
 _patch_config(ActsExamplesPythonBindings)
 
+# Aliases for Fatras types (backward compatibility; prefer acts.examples.fatras.Barcode)
+SimBarcode = ActsExamplesPythonBindings.fatras.Barcode
+ProcessType = ActsExamplesPythonBindings.fatras.ProcessType
+ParticleOutcome = ActsExamplesPythonBindings.fatras.ParticleOutcome
+
 _propagators = []
 _concrete_propagators = []
 for stepper in ("Eigen", "Atlas", "StraightLine", "Sympy"):
