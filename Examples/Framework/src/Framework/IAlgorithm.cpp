@@ -15,8 +15,14 @@
 namespace ActsExamples {
 
 IAlgorithm::IAlgorithm(std::string name, Acts::Logging::Level level)
+    : IAlgorithm(std::move(name), Acts::getDefaultLogger(name, level)) {}
+
+IAlgorithm::IAlgorithm(std::string name,
+                       std::unique_ptr<const Acts::Logger> logger)
     : m_name(std::move(name)),
-      m_logger(Acts::getDefaultLogger(m_name, level)) {}
+      m_logger(logger != nullptr
+                   ? std::move(logger)
+                   : Acts::getDefaultLogger(m_name, Acts::Logging::INFO)) {}
 
 std::string IAlgorithm::name() const {
   return m_name;
