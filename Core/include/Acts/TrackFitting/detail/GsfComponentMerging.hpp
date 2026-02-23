@@ -121,8 +121,8 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
                                      const angle_desc_t &angleDesc) {
   // Early return in case of range with length 1
   if (cmps.size() == 1) {
-    decltype(auto) weight_pars_l = projector(cmps.front());
-    return std::get<1>(weight_pars_l);
+    const auto &[weight_l, pars_l] = projector(cmps.front());
+    return pars_l;
   }
 
   // Do the (circular) mean with complex arithmetic.
@@ -134,10 +134,7 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
   double sumOfWeights = 0;
 
   for (const auto &cmp : cmps) {
-    decltype(auto) weight_pars_l = projector(cmp);
-    const double weight_l = std::get<0>(weight_pars_l);
-    const auto &pars_l = std::get<1>(weight_pars_l);
-
+    const auto &[weight_l, pars_l] = projector(cmp);
     CVec cPars_l = pars_l;
 
     const auto setPolar = [&](const auto &desc) {
@@ -172,11 +169,11 @@ BoundVector mergeGaussianMixtureMode(const component_range_t &cmps,
                                      const projector_t &projector) {
   const auto maxWeightIt =
       std::ranges::max_element(cmps, {}, [&](const auto &cmp) {
-        decltype(auto) weight_pars = projector(cmp);
-        return std::get<0>(weight_pars);
+        const auto &[weight_l, pars_l] = projector(cmp);
+        return weight_l;
       });
-  decltype(auto) weight_pars = projector(*maxWeightIt);
-  return std::get<1>(weight_pars);
+  const auto &[weight_max, pars_max] = projector(*maxWeightIt);
+  return pars_max;
 }
 
 /// Compute the covariance of a Gaussian mixture given the mean. The function
@@ -194,18 +191,15 @@ BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
                                     const BoundVector &mean,
                                     const angle_desc_t &angleDesc) {
   if (cmps.size() == 1) {
-    decltype(auto) weight_pars_cov_l = projector(cmps.front());
-    return std::get<2>(weight_pars_cov_l);
+    const auto &[weight_l, pars_l, cov_l] = projector(cmps.front());
+    return cov_l;
   }
 
   BoundMatrix cov = BoundMatrix::Zero();
   double sumOfWeights = 0;
 
   for (const auto &cmp : cmps) {
-    decltype(auto) weight_pars_cov_l = projector(cmp);
-    const double weight_l = std::get<0>(weight_pars_cov_l);
-    const auto &pars_l = std::get<1>(weight_pars_cov_l);
-    const auto &cov_l = std::get<2>(weight_pars_cov_l);
+    const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
     cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
 
@@ -249,8 +243,8 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
     const component_range_t &cmps, const projector_t &projector,
     const angle_desc_t &angleDesc) {
   if (cmps.size() == 1) {
-    decltype(auto) weight_pars_cov_l = projector(cmps.front());
-    return {std::get<1>(weight_pars_cov_l), std::get<2>(weight_pars_cov_l)};
+    const auto &[weight_l, pars_l, cov_l] = projector(cmps.front());
+    return {pars_l, cov_l};
   }
 
   const BoundVector mean = mergeGaussianMixtureMean(
@@ -302,7 +296,7 @@ template <typename component_range_t, typename projector_t,
 std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
     const component_range_t &cmps, const projector_t &projector,
     const angle_desc_t &angleDesc, ComponentMergeMethod method) {
-  const auto [mean, cov] =
+  const auto &[mean, cov] =
       mergeGaussianMixtureMeanCov(cmps, projector, angleDesc);
 
   if (method == ComponentMergeMethod::eMean) {
