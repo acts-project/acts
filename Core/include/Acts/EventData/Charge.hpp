@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/ChargeConcept.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -51,8 +51,11 @@ namespace Acts {
 ///
 /// @{
 
+ACTS_PUSH_IGNORE_DEPRECATED()
+
 /// Charge and momentum interpretation for neutral particles.
-struct Neutral {
+struct [[deprecated(
+    "Use AnyCharge with zero charge magnitude instead")]] Neutral {
   constexpr Neutral() = default;
 
   // TODO remove this method after grad refactor; currently track parameters
@@ -101,10 +104,9 @@ struct Neutral {
   constexpr bool operator==(const Neutral& rhs) const noexcept = default;
 };
 
-static_assert(ChargeConcept<Neutral>, "Neutral does not fulfill ChargeConcept");
-
 /// Charge and momentum interpretation for particles with +-e charge.
-struct SinglyCharged {
+struct [[deprecated(
+    "Use AnyCharge with one charge magnitude instead")]] SinglyCharged {
   constexpr SinglyCharged() = default;
 
   // TODO remove this method after grad refactor; currently track parameters
@@ -153,12 +155,10 @@ struct SinglyCharged {
   constexpr bool operator==(const SinglyCharged& rhs) const noexcept = default;
 };
 
-static_assert(ChargeConcept<SinglyCharged>,
-              "SinglyCharged does not fulfill ChargeConcept");
-
 /// Charge and momentum interpretation for arbitrarily charged but not neutral
 /// particles.
-class NonNeutralCharge {
+class [[deprecated(
+    "Use AnyCharge with any charge magnitude instead")]] NonNeutralCharge {
  public:
   /// Construct with the magnitude of the input charge.
   /// @param absQ Absolute charge magnitude (must be positive for non-neutral particles)
@@ -205,8 +205,7 @@ class NonNeutralCharge {
   float m_absQ{};
 };
 
-static_assert(ChargeConcept<NonNeutralCharge>,
-              "NonNeutralCharge does not fulfill ChargeConcept");
+ACTS_POP_IGNORE_DEPRECATED()
 
 /// Charge and momentum interpretation for arbitrarily charged particles.
 ///
@@ -221,9 +220,11 @@ class AnyCharge {
     assert((0 <= absQ) && "Input charge magnitude must be zero or positive");
   }
   /// Construct from a SinglyCharged particle
+  [[deprecated("Use AnyCharge with one charge magnitude instead")]]
   constexpr explicit AnyCharge(SinglyCharged /*unused*/) noexcept
       : m_absQ{UnitConstants::e} {}
   /// Construct from a Neutral particle
+  [[deprecated("Use AnyCharge with zero charge magnitude instead")]]
   constexpr explicit AnyCharge(Neutral /*unused*/) noexcept {}
 
   /// Get the absolute charge magnitude
@@ -260,9 +261,6 @@ class AnyCharge {
  private:
   float m_absQ{};
 };
-
-static_assert(ChargeConcept<AnyCharge>,
-              "AnyCharge does not fulfill ChargeConcept");
 
 /// @}
 
