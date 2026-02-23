@@ -93,9 +93,6 @@ class Propagator final
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =
       detail::stepper_bound_parameters_type_t<stepper_t>;
-  static_assert(BoundTrackParametersConcept<StepperBoundTrackParameters>,
-                "Stepper bound track parameters do not fulfill bound "
-                "parameters concept.");
   static_assert(std::copy_constructible<StepperBoundTrackParameters>,
                 "return track parameter type must be copy-constructible");
 

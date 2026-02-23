@@ -18,7 +18,6 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
@@ -32,7 +31,6 @@
 #include <cstddef>
 #include <limits>
 #include <sstream>
-#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -268,27 +266,19 @@ class MultiStepperLoop : public single_stepper_t {
   /// @param par The multi-component bound track parameters
   void initialize(State& state,
                   const MultiComponentBoundTrackParameters& par) const {
-    if (par.components().empty()) {
-      throw std::invalid_argument(
-          "Cannot construct MultiEigenStepperLoop::State with empty "
-          "multi-component parameters");
-    }
-
     state.particleHypothesis = par.particleHypothesis();
 
     const auto surface = par.referenceSurface().getSharedPtr();
 
-    for (auto i = 0ul; i < par.components().size(); ++i) {
-      const auto& [weight, singlePars] = par[i];
+    for (auto i = 0ul; i < par.size(); ++i) {
+      const auto [weight, singlePars] = par[i];
       auto& cmp =
           state.components.emplace_back(SingleStepper::makeState(state.options),
                                         weight, IntersectionStatus::onSurface);
       SingleStepper::initialize(cmp.state, singlePars);
     }
 
-    if (std::get<2>(par.components().front())) {
-      state.covTransport = true;
-    }
+    state.covTransport = par.hasCovariance();
   }
 
   /// A proxy struct which allows access to a single component of the
