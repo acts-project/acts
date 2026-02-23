@@ -6,8 +6,6 @@ import json
 import acts
 import acts.examples
 
-u = acts.UnitConstants
-
 from acts.examples.simulation import (
     addParticleGun,
     ParticleConfig,
@@ -26,6 +24,9 @@ from acts.examples.reconstruction import (
     addKalmanTracks,
     addTrackWriters,
 )
+
+u = acts.UnitConstants
+
 
 if "__main__" == __name__:
     # GenericDetector
@@ -60,9 +61,7 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    outputDir = (Path.cwd(),)
-
-    s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
+    s = acts.examples.Sequencer(events=10, numThreads=-1, logLevel=acts.logging.INFO)
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
