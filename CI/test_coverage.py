@@ -28,6 +28,7 @@ console = Console()
 EXCLUDE_PATTERNS = [
     r"/boost/",
     r"json\.hpp",
+    "/dependencies/",
 ]
 
 # Paths relative to source directory (resolved to absolute when source_dir is known)
