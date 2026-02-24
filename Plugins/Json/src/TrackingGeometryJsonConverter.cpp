@@ -64,8 +64,7 @@ constexpr const char* kHeaderKey = "acts-geometry-volumes";
 constexpr const char* kVersionKey = "format-version";
 constexpr const char* kScopeKey = "scope";
 constexpr const char* kScopeValue = "volumes-bounds-portals";
-constexpr int kCurrentFormatVersion = 2;
-constexpr int kLegacyFormatVersion = 1;
+constexpr int kFormatVersion = 1;
 
 constexpr const char* kRootVolumeIdKey = "root_volume_id";
 constexpr const char* kVolumesKey = "volumes";
@@ -486,7 +485,6 @@ struct VolumeRecord {
   nlohmann::json bounds;
   std::vector<std::size_t> children;
   std::vector<std::size_t> portalIds;
-  nlohmann::json legacyPortals = nlohmann::json::array();
 };
 
 /// Temporary decoded representation of one serialized portal entry.
@@ -496,20 +494,17 @@ struct PortalRecord {
 };
 
 /// Validate top-level schema metadata for tracking-geometry JSON payload.
-int verifySchemaHeader(const nlohmann::json& encoded) {
+void verifySchemaHeader(const nlohmann::json& encoded) {
   if (!encoded.contains(kHeaderKey)) {
     throw std::invalid_argument("Missing geometry JSON header");
   }
   const auto& header = encoded.at(kHeaderKey);
-  const int formatVersion = header.at(kVersionKey).get<int>();
-  if (formatVersion != kLegacyFormatVersion &&
-      formatVersion != kCurrentFormatVersion) {
+  if (header.at(kVersionKey).get<int>() != kFormatVersion) {
     throw std::invalid_argument("Unsupported geometry JSON format version");
   }
   if (header.at(kScopeKey).get<std::string>() != kScopeValue) {
     throw std::invalid_argument("Unexpected geometry JSON scope");
   }
-  return formatVersion;
 }
 
 /// Traverse volume hierarchy in depth-first order and fill deterministic
@@ -657,7 +652,7 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
     const Options& /*options*/) const {
   nlohmann::json encoded;
   encoded[kHeaderKey] = nlohmann::json::object();
-  encoded[kHeaderKey][kVersionKey] = kCurrentFormatVersion;
+  encoded[kHeaderKey][kVersionKey] = kFormatVersion;
   encoded[kHeaderKey][kScopeKey] = kScopeValue;
 
   std::vector<const TrackingVolume*> orderedVolumes;
@@ -724,22 +719,20 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
 ///
 /// The reconstruction is performed in phases: validate header, decode all
 /// volume records, instantiate volumes, attach child hierarchy, then decode and
-/// attach portals (shared by ID in current schema or in-volume for legacy
-/// payloads).
+/// attach shared portals by ID.
 std::shared_ptr<Acts::TrackingVolume>
 Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
     const Options& /*options*/) const {
-  const int formatVersion = verifySchemaHeader(encoded);
+  verifySchemaHeader(encoded);
 
-  if (!encoded.contains(kVolumesKey) || !encoded.contains(kRootVolumeIdKey)) {
+  if (!encoded.contains(kVolumesKey) || !encoded.contains(kRootVolumeIdKey) ||
+      !encoded.contains(kPortalsKey)) {
     throw std::invalid_argument(
         "Missing volume payload in tracking geometry JSON");
   }
 
   std::unordered_map<std::size_t, VolumeRecord> records;
-  bool hasPortalIdsInAnyVolume = false;
-  bool hasLegacyPortalsInAnyVolume = false;
   for (const auto& jVolume : encoded.at(kVolumesKey)) {
     VolumeRecord record;
     record.volumeId = jVolume.at(kVolumeIdKey).get<std::size_t>();
@@ -751,11 +744,6 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     record.bounds = jVolume.at(kBoundsKey);
     record.children = jVolume.value(kChildrenKey, std::vector<std::size_t>{});
     record.portalIds = jVolume.value(kPortalIdsKey, std::vector<std::size_t>{});
-    record.legacyPortals = jVolume.value(kPortalsKey, nlohmann::json::array());
-
-    hasPortalIdsInAnyVolume = hasPortalIdsInAnyVolume || jVolume.contains(kPortalIdsKey);
-    hasLegacyPortalsInAnyVolume =
-        hasLegacyPortalsInAnyVolume || jVolume.contains(kPortalsKey);
 
     const auto inserted = records.emplace(record.volumeId, std::move(record));
     if (!inserted.second) {
@@ -763,30 +751,14 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     }
   }
 
-  if (hasPortalIdsInAnyVolume && hasLegacyPortalsInAnyVolume) {
-    throw std::invalid_argument(
-        "Mixed portal schema: both portal_ids and legacy volume portals found");
-  }
-  if (formatVersion == kCurrentFormatVersion && hasLegacyPortalsInAnyVolume) {
-    throw std::invalid_argument(
-        "Current portal schema does not allow in-volume portal payloads");
-  }
-
   std::unordered_map<std::size_t, PortalRecord> portalRecords;
-  if (hasPortalIdsInAnyVolume) {
-    if (!encoded.contains(kPortalsKey)) {
-      throw std::invalid_argument(
-          "Missing top-level portal payload for portal ID references");
-    }
-
-    for (const auto& jPortal : encoded.at(kPortalsKey)) {
-      PortalRecord record;
-      record.portalId = jPortal.at(kPortalIdKey).get<std::size_t>();
-      record.payload = jPortal;
-      const auto inserted = portalRecords.emplace(record.portalId, std::move(record));
-      if (!inserted.second) {
-        throw std::invalid_argument("Duplicate serialized portal ID");
-      }
+  for (const auto& jPortal : encoded.at(kPortalsKey)) {
+    PortalRecord record;
+    record.portalId = jPortal.at(kPortalIdKey).get<std::size_t>();
+    record.payload = jPortal;
+    const auto inserted = portalRecords.emplace(record.portalId, std::move(record));
+    if (!inserted.second) {
+      throw std::invalid_argument("Duplicate serialized portal ID");
     }
   }
 
@@ -908,34 +880,21 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   };
 
   PortalPointerLookup portalPointers;
-  if (hasPortalIdsInAnyVolume) {
-    for (const auto& [portalId, record] : portalRecords) {
-      const auto inserted = portalPointers.emplace(portalId, decodePortal(record.payload));
-      if (!inserted) {
-        throw std::invalid_argument("Portal pointer reconstruction failed");
-      }
+  for (const auto& [portalId, record] : portalRecords) {
+    const auto inserted = portalPointers.emplace(portalId, decodePortal(record.payload));
+    if (!inserted) {
+      throw std::invalid_argument("Portal pointer reconstruction failed");
+    }
+  }
+
+  for (const auto& [volumeId, record] : records) {
+    auto* volume = volumePointers.find(volumeId);
+    if (volume == nullptr) {
+      throw std::invalid_argument("Volume pointer reconstruction failed");
     }
 
-    for (const auto& [volumeId, record] : records) {
-      auto* volume = volumePointers.find(volumeId);
-      if (volume == nullptr) {
-        throw std::invalid_argument("Volume pointer reconstruction failed");
-      }
-
-      for (const std::size_t portalId : record.portalIds) {
-        volume->addPortal(portalPointers.at(portalId));
-      }
-    }
-  } else if (hasLegacyPortalsInAnyVolume) {
-    for (const auto& [volumeId, record] : records) {
-      auto* volume = volumePointers.find(volumeId);
-      if (volume == nullptr) {
-        throw std::invalid_argument("Volume pointer reconstruction failed");
-      }
-
-      for (const auto& jPortal : record.legacyPortals) {
-        volume->addPortal(decodePortal(jPortal));
-      }
+    for (const std::size_t portalId : record.portalIds) {
+      volume->addPortal(portalPointers.at(portalId));
     }
   }
 
