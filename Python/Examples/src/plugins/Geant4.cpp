@@ -120,13 +120,11 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
   {
     using Algorithm = Geant4Simulation;
     using Config = Algorithm::Config;
-    auto alg =
-        py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
-            mod, "Geant4Simulation")
-            .def(py::init<const Config&, Logging::Level>(), py::arg("config"),
-                 py::arg("level"))
-            .def_property_readonly("config", &Algorithm::config);
 
+    auto [alg, _c] = declareAlgorithm<Algorithm, Geant4SimulationBase>(
+        mod, "Geant4Simulation");
+
+    // Config inherits from Geant4SimulationBase::Config; re-declare with base
     auto c1 = py::class_<Config, Geant4SimulationBase::Config,
                          std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
@@ -141,12 +139,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
   {
     using Algorithm = Geant4MaterialRecording;
     using Config = Algorithm::Config;
-    auto alg =
-        py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
-            mod, "Geant4MaterialRecording")
-            .def(py::init<const Config&, Logging::Level>(), py::arg("config"),
-                 py::arg("level"))
-            .def_property_readonly("config", &Algorithm::config);
+
+    auto [alg, _c] = declareAlgorithm<Algorithm, Geant4SimulationBase>(
+        mod, "Geant4MaterialRecording");
 
     auto c = py::class_<Config, Geant4SimulationBase::Config,
                         std::shared_ptr<Config>>(alg, "Config")
