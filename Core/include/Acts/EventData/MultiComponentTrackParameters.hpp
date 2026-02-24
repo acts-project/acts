@@ -130,6 +130,11 @@ class MultiComponentBoundTrackParameters {
       m_parameters.push_back(params);
       if constexpr (std::is_same_v<CovarianceMatrix, covariance_t>) {
         m_covariances.push_back(cov);
+      } else if (std::is_same_v<std::optional<CovarianceMatrix>,
+                                covariance_t>) {
+        if (cov.has_value()) {
+          m_covariances.push_back(*cov);
+        }
       }
     }
   }
@@ -218,7 +223,7 @@ class MultiComponentBoundTrackParameters {
     for (std::size_t i = 0; i < size(); ++i) {
       cmps.emplace_back(
           m_weights[i], m_parameters[i],
-          hasCovariance() ? std::nullopt : std::optional(m_covariances[i]));
+          hasCovariance() ? std::optional(m_covariances[i]) : std::nullopt);
     }
     return cmps;
   }
@@ -229,8 +234,8 @@ class MultiComponentBoundTrackParameters {
   std::pair<double, Parameters> operator[](std::size_t i) const {
     return {m_weights[i],
             Parameters(m_surface, m_parameters[i],
-                       hasCovariance() ? std::nullopt
-                                       : std::optional(m_covariances[i]),
+                       hasCovariance() ? std::optional(m_covariances[i])
+                                       : std::nullopt,
                        m_particleHypothesis)};
   }
 

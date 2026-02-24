@@ -34,10 +34,10 @@ BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(test_constructors) {
   std::vector<std::tuple<double, BoundVector, BoundMatrix>> a;
-  a.push_back({1.0, BoundVector::Ones(), BoundMatrix::Identity()});
+  a.emplace_back(1.0, BoundVector::Ones(), BoundMatrix::Identity());
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>> b;
-  b.push_back({1.0, BoundVector::Ones(), BoundMatrix::Identity()});
+  b.emplace_back(1.0, BoundVector::Ones(), BoundMatrix::Identity());
 
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
@@ -75,7 +75,8 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
       std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
           a;
       for (int i = 0; i < 4; ++i) {
-        a.push_back({0.25, single_pars.parameters(), single_pars.covariance()});
+        a.emplace_back(0.25, single_pars.parameters(),
+                       single_pars.covariance());
       }
       return MultiComponentBoundTrackParameters(surface, a, particleHypothesis);
     }();
