@@ -418,7 +418,7 @@ class CombinatorialKalmanFilter {
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
       detail::performMaterialInteraction(
-          state, stepper, navigator,
+          state, stepper, currentState.referenceSurface(),
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PostUpdate),
           NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
@@ -480,7 +480,7 @@ class CombinatorialKalmanFilter {
 
       // Update state and stepper with pre material effects
       detail::performMaterialInteraction(
-          state, stepper, navigator,
+          state, stepper, surface,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PreUpdate),
           NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
@@ -611,7 +611,7 @@ class CombinatorialKalmanFilter {
 
       // Update state and stepper with post material effects
       detail::performMaterialInteraction(
-          state, stepper, navigator,
+          state, stepper, surface,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::PostUpdate),
           NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());

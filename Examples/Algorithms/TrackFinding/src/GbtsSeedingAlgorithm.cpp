@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 
+#include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -72,9 +73,7 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  auto spContainerComponents = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
-  const auto &coreSpacePoints =
-      std::get<Acts::SpacePointContainer2>(spContainerComponents);
+  auto coreSpacePoints = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
   std::uint32_t maxLayers = m_layerIdMap.size();
@@ -86,13 +85,12 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
 
   // create the seeds
   SeedContainer seeds =
-      m_finder->createSeeds(internalRoi, spContainerComponents, maxLayers);
+      m_finder->createSeeds(internalRoi, coreSpacePoints, maxLayers);
 
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
     for (auto &spIndex : seed.spacePointIndices()) {
-      spIndex =
-          coreSpacePoints.at(spIndex).sourceLinks()[0].get<SpacePointIndex>();
+      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
     }
   }
 
@@ -140,20 +138,19 @@ GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::Experimental::SpContainerComponentsType
-GbtsSeedingAlgorithm::makeSpContainer(const SpacePointContainer &spacePoints,
-                                      std::map<ActsIDs, GbtsIDs> map) const {
+Acts::SpacePointContainer2 GbtsSeedingAlgorithm::makeSpContainer(
+    const SpacePointContainer &spacePoints,
+    std::map<ActsIDs, GbtsIDs> map) const {
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::X |
-      Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
-      Acts::SpacePointColumns::R | Acts::SpacePointColumns::Phi);
+      Acts::SpacePointColumns::X | Acts::SpacePointColumns::Y |
+      Acts::SpacePointColumns::Z | Acts::SpacePointColumns::R |
+      Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::CopyFromIndex);
 
   // add new column for layer ID and clusterwidth
   auto layerColomn = coreSpacePoints.createColumn<std::uint32_t>("layerId");
-  auto clusterWidthColomn =
-      coreSpacePoints.createColumn<float>("Cluster_Width");
+  auto clusterWidthColomn = coreSpacePoints.createColumn<float>("clusterWidth");
   auto localPositionColomn =
-      coreSpacePoints.createColumn<float>("LocalPositionY");
+      coreSpacePoints.createColumn<float>("localPositionY");
   coreSpacePoints.reserve(spacePoints.size());
 
   // for loop filling space point container and assigning layer ID's using the
@@ -218,13 +215,12 @@ GbtsSeedingAlgorithm::makeSpContainer(const SpacePointContainer &spacePoints,
 
     auto newSp = coreSpacePoints.createSpacePoint();
 
-    newSp.assignSourceLinks(
-        std::array<Acts::SourceLink, 1>{Acts::SourceLink(spacePoint.index())});
     newSp.x() = spacePoint.x();
     newSp.y() = spacePoint.y();
     newSp.z() = spacePoint.z();
     newSp.r() = spacePoint.r();
     newSp.phi() = std::atan2(spacePoint.y(), spacePoint.x());
+    newSp.copyFromIndex() = spacePoint.index();
     newSp.extra(layerColomn) = std::get<2>(find->second);
     // false input as this is not available in examples
     newSp.extra(clusterWidthColomn) = 0;
@@ -233,9 +229,7 @@ GbtsSeedingAlgorithm::makeSpContainer(const SpacePointContainer &spacePoints,
 
   ACTS_VERBOSE("space point collection successfully assigned layerId's");
 
-  return std::make_tuple(std::move(coreSpacePoints), layerColomn.asConst(),
-                         clusterWidthColomn.asConst(),
-                         localPositionColomn.asConst());
+  return coreSpacePoints;
 }
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>

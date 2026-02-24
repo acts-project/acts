@@ -18,6 +18,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Root/ITGeoIdentifierProvider.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 
 #include <algorithm>
 #include <array>
@@ -75,7 +76,7 @@ class TGeoLayerBuilder : public Acts::ILayerBuilder {
     /// Identify the sensor(s) by name
     std::vector<std::string> sensorNames = {};
     /// The local axis definition of TGeo object to Acts::Surface
-    std::string localAxes = "XYZ";
+    TGeoAxes localAxes = "XYZ";
     /// Parse ranges: parameter and ranges
     std::vector<RangeConfig> parseRanges = {};
     /// Layer splitting: parameter and tolerance
@@ -97,7 +98,7 @@ class TGeoLayerBuilder : public Acts::ILayerBuilder {
   /// Type alias for detector element factory function
   using ElementFactory = std::function<std::shared_ptr<TGeoDetectorElement>(
       const TGeoDetectorElement::Identifier&, const TGeoNode&,
-      const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+      const TGeoMatrix& tGeoMatrix, TGeoAxes axes, double scalor,
       std::shared_ptr<const Acts::ISurfaceMaterial> material)>;
 
   /// Default factory function for creating TGeoDetectorElement instances.
@@ -110,9 +111,8 @@ class TGeoLayerBuilder : public Acts::ILayerBuilder {
   /// @return Shared pointer to the created TGeoDetectorElement
   static std::shared_ptr<TGeoDetectorElement> defaultElementFactory(
       const TGeoDetectorElement::Identifier& identifier,
-      const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix,
-      const std::string& axes, double scalor,
-      std::shared_ptr<const Acts::ISurfaceMaterial> material);
+      const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix, TGeoAxes axes,
+      double scalor, std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
   /// @struct Config
   /// @brief nested configuration struct for steering of the layer builder
