@@ -93,7 +93,8 @@ std::vector<ActsPlugins::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       ActsPlugins::TGeoLayerBuilder::LayerConfig lConfig;
       lConfig.volumeName = volume.subVolumeName.at(ncp);
       lConfig.sensorNames = volume.sensitiveNames.at(ncp);
-      lConfig.localAxes = volume.sensitiveAxes.at(ncp);
+      lConfig.localAxes =
+          ActsPlugins::TGeoAxes::parse(volume.sensitiveAxes.at(ncp));
       lConfig.envelope = {config.layerEnvelopeR, config.layerEnvelopeR};
 
       auto rR = volume.rRange.at(ncp);
