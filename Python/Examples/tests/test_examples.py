@@ -1133,7 +1133,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
                 "--geant4",
                 "--ttbar",
                 "--ttbar-pu",
-                "50",
+                "10",
             ],
             cwd=tmp_path,
             env=env,

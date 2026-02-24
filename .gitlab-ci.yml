@@ -167,8 +167,8 @@ test_gnn_python:
     - python3 -m pip install -r Python/Examples/tests/requirements.txt
     # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
     - python3 -c "from acts.examples.gnn import ModuleMapCuda"
-    - pytest -rfExw -k torch -v --collect-only
-    - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
+    - pytest -rsfExw -k torch -v --collect-only
+    - pytest -rsFExw -k gpu -v # For now only test torch GPU pipeline
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -279,7 +279,7 @@ linux_test_examples:
 
     - source build/this_acts_withdeps.sh
     - cd src
-    - pytest -rfExw -k "not gnn" -v
+    - pytest -rsfExw --durations=10 -k "not gnn" -v
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -448,7 +448,7 @@ linux_ubuntu_2404_clang19:
     - source build/this_acts_withdeps.sh
     - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
     - cd src
-    - pytest -rfExw -k "not gnn" -v -n1
+    - pytest -rsfExw --durations=10 -k "not gnn" -v -n1
 
 lcg_106a:
   extends: .lcg_base_job
