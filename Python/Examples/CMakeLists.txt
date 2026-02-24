@@ -88,7 +88,6 @@ target_sources(
     PRIVATE
         src/Framework.cpp
         src/ExampleAlgorithms.cpp
-        src/Fatras.cpp
         src/Generators.cpp
         src/AmbiguityResolution.cpp
         src/Detector.cpp

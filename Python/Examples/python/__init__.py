@@ -4,17 +4,13 @@ from typing import Optional, Protocol, Union, List, Dict, Tuple
 import os
 import re
 import acts
+import acts.fatras
 
 from .ActsExamplesPythonBindings import *
 
 from acts._adapter import _patch_config
 
 _patch_config(ActsExamplesPythonBindings)
-
-# Aliases for Fatras types (backward compatibility; prefer acts.examples.fatras.Barcode)
-SimBarcode = ActsExamplesPythonBindings.fatras.Barcode
-ProcessType = ActsExamplesPythonBindings.fatras.ProcessType
-ParticleOutcome = ActsExamplesPythonBindings.fatras.ParticleOutcome
 
 _propagators = []
 _concrete_propagators = []

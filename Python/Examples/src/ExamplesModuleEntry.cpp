@@ -17,7 +17,6 @@ namespace ActsPython {
 
 void addFramework(py::module& mex);
 void addAmbiguityResolution(py::module& mex);
-void addFatras(py::module& mex);
 void addGenerators(py::module& mex);
 void addExampleAlgorithms(py::module& mex);
 void addDetector(py::module& mex);
@@ -41,7 +40,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
 
   addFramework(mex);
   addAmbiguityResolution(mex);
-  addFatras(mex);
   addGenerators(mex);
   addExampleAlgorithms(mex);
   addDetector(mex);

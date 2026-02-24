@@ -138,24 +138,12 @@ void addGenerators(py::module& mex) {
            py::arg("fixed"))
       .def_readwrite("fixed", &FixedPrimaryVertexPositionGenerator::fixed);
 
-  // SimParticleState (must be defined before SimParticle for constructor)
-  py::class_<SimParticleState>(mex, "SimParticleState")
-      .def(py::init<>())
-      .def(py::init<SimBarcode, Acts::PdgParticle, double, double>(),
-           py::arg("particleId"), py::arg("pdg"), py::arg("charge"),
-           py::arg("mass"))
-      .def(py::init<SimBarcode, Acts::PdgParticle>(), py::arg("particleId"),
-           py::arg("pdg"))
-      .def_property_readonly("particleId", &SimParticleState::particleId)
-      .def_property_readonly("pdg", &SimParticleState::pdg)
-      .def_property_readonly("absolutePdg", &SimParticleState::absolutePdg)
-      .def_property_readonly("charge", &SimParticleState::charge)
-      .def_property_readonly("mass", &SimParticleState::mass)
-      .def_property_readonly("fourPosition", &SimParticleState::fourPosition)
-      .def_property_readonly("fourMomentum", &SimParticleState::fourMomentum)
-      .def_property_readonly("direction", &SimParticleState::direction)
-      .def_property_readonly("absoluteMomentum",
-                             &SimParticleState::absoluteMomentum);
+  // Aliases for Fatras types mirroring C++
+  auto fatras = py::module_::import("acts.fatras");
+  mex.attr("SimBarcode") = fatras.attr("Barcode");
+  mex.attr("ProcessType") = fatras.attr("ProcessType");
+  mex.attr("ParticleOutcome") = fatras.attr("ParticleOutcome");
+  mex.attr("SimParticleState") = fatras.attr("Particle");
 
   // SimParticle
   py::class_<SimParticle>(mex, "SimParticle")
