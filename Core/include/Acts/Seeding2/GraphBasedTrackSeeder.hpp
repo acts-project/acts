@@ -30,10 +30,10 @@ using SpContainerComponentsType =
                SpacePointColumnProxy<float, true>,
                SpacePointColumnProxy<float, true>>;
 
-/// Seed finder implementing the GBTs seeding workflow.
+/// Seed finder implementing the GBTS seeding workflow.
 class GraphBasedTrackSeeder {
  public:
-  /// Seed metadata produced by the GBTs algorithm.
+  /// Seed metadata produced by the GBTS algorithm.
   struct SeedProperties {
     /// Constructor.
     /// @param quality Seed quality score
@@ -70,7 +70,7 @@ class GraphBasedTrackSeeder {
 
   /// Constructor.
   /// @param config Configuration for the seed finder
-  /// @param gbtsGeo GBTs geometry
+  /// @param gbtsGeo GBTS geometry
   /// @param layerGeometry Layer geometry information
   /// @param logger Logging instance
   GraphBasedTrackSeeder(const GbtsConfig& config,

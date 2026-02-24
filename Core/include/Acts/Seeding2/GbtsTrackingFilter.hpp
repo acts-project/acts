@@ -17,7 +17,7 @@
 
 namespace Acts::Experimental {
 
-/// Per-edge tracking state used by the GBTs filter.
+/// Per-edge tracking state used by the GBTS filter.
 struct GbtsEdgeState final {
  public:
   GbtsEdgeState() = default;
@@ -57,7 +57,7 @@ struct GbtsEdgeState final {
   float s{};
 };
 
-/// Tracking filter operating on the GBTs edge graph.
+/// Tracking filter operating on the GBTS edge graph.
 class GbtsTrackingFilter final {
  public:
   /// Maximum number of edge states

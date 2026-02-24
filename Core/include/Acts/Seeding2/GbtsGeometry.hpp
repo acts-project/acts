@@ -18,7 +18,7 @@
 
 namespace Acts::Experimental {
 
-/// Lightweight silicon layer description for GBTs geometry.
+/// Lightweight silicon layer description for GBTS geometry.
 struct TrigInDetSiLayer final {
   /// Constructor.
   /// @param subdet_ Subdetector identifier
@@ -46,7 +46,7 @@ struct TrigInDetSiLayer final {
   float maxBound{};
 };
 
-/// Layer helper with eta-bin access for GBTs seeding.
+/// Layer helper with eta-bin access for GBTS seeding.
 class GbtsLayer final {
  public:
   /// Constructor
