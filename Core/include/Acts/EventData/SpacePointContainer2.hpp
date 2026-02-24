@@ -10,9 +10,9 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointColumnProxy2.hpp"
+#include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/SpacePointContainer2Column.hpp"
-#include "Acts/Utilities/EnumBitwiseOperators.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 #include "Acts/Utilities/detail/ContainerRange.hpp"
@@ -42,40 +42,6 @@ class SpacePointProxy2;
 using MutableSpacePointProxy2 = SpacePointProxy2<false>;
 /// Const proxy to a space point for read-only access
 using ConstSpacePointProxy2 = SpacePointProxy2<true>;
-
-/// Enumeration of available columns for space point data storage
-enum class SpacePointColumns : std::uint32_t {
-  None = 0,  ///< No columns
-
-  SourceLinks = 1 << 0,           ///< Source link information
-  X = 1 << 1,                     ///< X coordinate
-  Y = 1 << 2,                     ///< Y coordinate
-  Z = 1 << 3,                     ///< Z coordinate
-  R = 1 << 4,                     ///< Radial coordinate
-  Phi = 1 << 5,                   ///< Azimuthal angle
-  Time = 1 << 6,                  ///< Time information
-  VarianceZ = 1 << 7,             ///< Variance in Z direction
-  VarianceR = 1 << 8,             ///< Variance in radial direction
-  TopStripVector = 1 << 9,        ///< Vector for the top strip
-  BottomStripVector = 1 << 10,    ///< Vector for the bottom strip
-  StripCenterDistance = 1 << 11,  ///< Distance to the strip center
-  TopStripCenter = 1 << 12,       ///< Center of the top strip
-  CopyFromIndex = 1 << 13,        ///< Copy from index
-
-  // packed columns for performance reasons
-  XY = 1 << 14,          ///< X and Y coordinates
-  ZR = 1 << 15,          ///< Z and R coordinates
-  XYZ = 1 << 16,         ///< X, Y, and Z coordinates
-  XYZR = 1 << 17,        ///< X, Y, Z, and R coordinates
-  VarianceZR = 1 << 18,  ///< Variance in Z and R directions
-
-  /// All strip-related columns
-  Strip =
-      TopStripVector | BottomStripVector | StripCenterDistance | TopStripCenter,
-};
-
-/// Enable bitwise operators for SpacePointColumns enum
-ACTS_DEFINE_ENUM_BITWISE_OPERATORS(SpacePointColumns);
 
 /// A container for space points, which can hold additional columns of data
 /// and allows for efficient access to space points and their associated source
@@ -140,6 +106,14 @@ class SpacePointContainer2 {
   /// @return A mutable proxy to the newly created space point.
   MutableProxy createSpacePoint() noexcept;
 
+  /// Copies the specified columns from another spacepoint to this spacepoint
+  /// @param index The index of the spacepoint to copy to in this container.
+  /// @param otherContainer The space point container to copy from.
+  /// @param otherIndex The index of the spacepoint to copy from in the other container.
+  /// @param columnsToCopy The columns to copy from the other spacepoint.
+  void copyFrom(Index index, const SpacePointContainer2 &otherContainer,
+                Index otherIndex, SpacePointColumns columnsToCopy);
+
   /// Creates additional columns. This will create the columns if they do not
   /// already exist.
   /// @param columns The columns to create.
@@ -180,7 +154,7 @@ class SpacePointContainer2 {
   /// @param name The name of the column.
   /// @return True if the column exists, false otherwise.
   bool hasColumn(const std::string &name) const noexcept {
-    return m_namedColumns.contains(name);
+    return m_allColumns.contains(name);
   }
 
   /// Returns a mutable reference to the Column with the given name.
@@ -311,9 +285,9 @@ class SpacePointContainer2 {
   /// @return A mutable proxy to the variance zr column.
   MutableSpacePointColumnProxy<std::array<float, 2>>
   varianceZRColumn() noexcept {
-    assert(m_varianceZRColumn.has_value() &&
-           "Column 'varianceZR' does not exist");
-    return m_varianceZRColumn->proxy(*this);
+    assert(m_varianceZrColumn.has_value() &&
+           "Column 'varianceZr' does not exist");
+    return m_varianceZrColumn->proxy(*this);
   }
 
   /// Returns a const proxy to the x coordinate column.
@@ -432,11 +406,11 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the variance zr column.
   /// @return A const proxy to the variance zr column.
-  ConstSpacePointColumnProxy<std::array<float, 2>> varianceZRColumn()
+  ConstSpacePointColumnProxy<std::array<float, 2>> varianceZrColumn()
       const noexcept {
-    assert(m_varianceZRColumn.has_value() &&
-           "Column 'varianceZR' does not exist");
-    return m_varianceZRColumn->proxy(*this);
+    assert(m_varianceZrColumn.has_value() &&
+           "Column 'varianceZr' does not exist");
+    return m_varianceZrColumn->proxy(*this);
   }
 
   /// Returns a mutable proxy to the space point at the given index.
@@ -645,10 +619,10 @@ class SpacePointContainer2 {
   /// @param index The index of the space point.
   /// @return A mutable reference to the variance zr of the space point.
   std::array<float, 2> &varianceZR(Index index) noexcept {
-    assert(m_varianceZRColumn.has_value() &&
-           "Column 'varianceZR' does not exist");
-    assert(index < m_varianceZRColumn->size() && "Index out of bounds");
-    return m_varianceZRColumn->proxy(*this)[index];
+    assert(m_varianceZrColumn.has_value() &&
+           "Column 'varianceZr' does not exist");
+    assert(index < m_varianceZrColumn->size() && "Index out of bounds");
+    return m_varianceZrColumn->proxy(*this)[index];
   }
 
   /// Const access to the source links at the given index.
@@ -824,10 +798,10 @@ class SpacePointContainer2 {
   /// @param index The index of the space point.
   /// @return A const reference to the variance zr of the space point.
   const std::array<float, 2> &varianceZR(Index index) const noexcept {
-    assert(m_varianceZRColumn.has_value() &&
-           "Column 'varianceZR' does not exist");
-    assert(index < m_varianceZRColumn->size() && "Index out of bounds");
-    return m_varianceZRColumn->proxy(*this)[index];
+    assert(m_varianceZrColumn.has_value() &&
+           "Column 'varianceZr' does not exist");
+    assert(index < m_varianceZrColumn->size() && "Index out of bounds");
+    return m_varianceZrColumn->proxy(*this)[index];
   }
 
   /// Resolves the index to the actual index in the container.
@@ -835,6 +809,9 @@ class SpacePointContainer2 {
   /// column. Otherwise, it will return the index itself.
   /// @param index The index to resolve.
   /// @return The resolved index.
+  [[deprecated(
+      "Use copyFromIndex() instead to get the original index, and resolve it "
+      "manually if needed. This method will be removed in a future version.")]]
   SpacePointIndex2 resolvedIndex(Index index) const noexcept {
     if (m_copyFromIndexColumn.has_value()) {
       return this->copyFromIndex(index);
@@ -1021,16 +998,14 @@ class SpacePointContainer2 {
 
   std::uint32_t m_size{0};
 
-  std::unordered_map<
-      std::string,
-      std::pair<ColumnHolderBase *, std::unique_ptr<ColumnHolderBase>>,
-      std::hash<std::string_view>, std::equal_to<>>
-      m_namedColumns;
+  std::unordered_map<std::string, ColumnHolderBase *> m_allColumns;
   SpacePointColumns m_knownColumns{SpacePointColumns::None};
+  std::unordered_map<std::string, std::unique_ptr<ColumnHolderBase>>
+      m_dynamicColumns;
 
   std::vector<SourceLink> m_sourceLinks;
 
-  std::optional<ColumnHolder<SpacePointIndex2>> m_sourceLinkOffsetColumn;
+  std::optional<ColumnHolder<std::uint32_t>> m_sourceLinkOffsetColumn;
   std::optional<ColumnHolder<std::uint8_t>> m_sourceLinkCountColumn;
 
   std::optional<ColumnHolder<float>> m_xColumn;
@@ -1057,14 +1032,15 @@ class SpacePointContainer2 {
   std::optional<ColumnHolder<std::array<float, 2>>> m_zrColumn;
   std::optional<ColumnHolder<std::array<float, 3>>> m_xyzColumn;
   std::optional<ColumnHolder<std::array<float, 4>>> m_xyzrColumn;
-  std::optional<ColumnHolder<std::array<float, 2>>> m_varianceZRColumn;
+  std::optional<ColumnHolder<std::array<float, 2>>> m_varianceZrColumn;
 
   static auto knownColumnMasks() noexcept {
     using enum SpacePointColumns;
     return std::tuple(SourceLinks, SourceLinks, X, Y, Z, R, Phi, Time,
                       VarianceZ, VarianceR, TopStripVector, BottomStripVector,
-                      StripCenterDistance, TopStripCenter, CopyFromIndex, XY,
-                      ZR, XYZ, XYZR, VarianceZR);
+                      StripCenterDistance, TopStripCenter, CopyFromIndex,
+                      PackedXY, PackedZR, PackedXYZ, PackedXYZR,
+                      PackedVarianceZR);
   }
 
   static auto knownColumnNames() noexcept {
@@ -1072,16 +1048,16 @@ class SpacePointContainer2 {
                       "phi", "time", "varianceZ", "varianceR", "topStripVector",
                       "bottomStripVector", "stripCenterDistance",
                       "topStripCenter", "copyFromIndex", "xy", "zr", "xyz",
-                      "xyzr", "varianceZR");
+                      "xyzr", "varianceZr");
   }
 
   static auto knownColumnDefaults() noexcept {
     return std::tuple(
-        SpacePointIndex2{0}, std::uint8_t{0}, float{0}, float{0}, float{0},
+        std::uint32_t{0}, std::uint8_t{0}, float{0}, float{0}, float{0},
         float{0}, float{0}, float{NoTime}, float{0}, float{0},
         std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
         std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
-        SpacePointIndex2{0}, std::array<float, 2>{0, 0},
+        std::uint32_t{0}, std::array<float, 2>{0, 0},
         std::array<float, 2>{0, 0}, std::array<float, 3>{0, 0, 0},
         std::array<float, 4>{0, 0, 0, 0}, std::array<float, 2>{0, 0});
   }
@@ -1093,7 +1069,7 @@ class SpacePointContainer2 {
                     m_topStripVectorColumn, m_bottomStripVectorColumn,
                     m_stripCenterDistanceColumn, m_topStripCenterColumn,
                     m_copyFromIndexColumn, m_xyColumn, m_zrColumn, m_xyzColumn,
-                    m_xyzrColumn, m_varianceZRColumn);
+                    m_xyzrColumn, m_varianceZrColumn);
   }
   auto knownColumns() const & noexcept {
     return std::tie(m_sourceLinkOffsetColumn, m_sourceLinkCountColumn,
@@ -1102,7 +1078,7 @@ class SpacePointContainer2 {
                     m_topStripVectorColumn, m_bottomStripVectorColumn,
                     m_stripCenterDistanceColumn, m_topStripCenterColumn,
                     m_copyFromIndexColumn, m_xyColumn, m_zrColumn, m_xyzColumn,
-                    m_xyzrColumn, m_varianceZRColumn);
+                    m_xyzrColumn, m_varianceZrColumn);
   }
   auto knownColumns() && noexcept {
     return std::tuple(
@@ -1114,7 +1090,7 @@ class SpacePointContainer2 {
         std::move(m_stripCenterDistanceColumn),
         std::move(m_topStripCenterColumn), std::move(m_copyFromIndexColumn),
         std::move(m_xyColumn), std::move(m_zrColumn), std::move(m_xyzColumn),
-        std::move(m_xyzrColumn), std::move(m_varianceZRColumn));
+        std::move(m_xyzrColumn), std::move(m_varianceZrColumn));
   }
 
   void copyColumns(const SpacePointContainer2 &other);
@@ -1133,18 +1109,18 @@ class SpacePointContainer2 {
     auto holder = std::make_unique<Holder>();
     holder->resize(size());
     auto proxy = holder->proxy(*this);
-    m_namedColumns.try_emplace(name,
-                               std::pair{holder.get(), std::move(holder)});
+    m_allColumns.try_emplace(name, holder.get());
+    m_dynamicColumns.try_emplace(name, std::move(holder));
     return proxy;
   }
 
   template <typename Holder>
   auto columnImpl(const std::string &name) const {
-    auto it = m_namedColumns.find(name);
-    if (it == m_namedColumns.end()) {
+    auto it = m_allColumns.find(name);
+    if (it == m_allColumns.end()) {
       throw std::runtime_error("Column not found: " + name);
     }
-    auto &holder = dynamic_cast<Holder &>(*it->second.first);
+    auto &holder = dynamic_cast<Holder &>(*it->second);
     return holder.proxy();
   }
 };
