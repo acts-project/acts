@@ -105,13 +105,19 @@ struct DD4hepDetectorElementExtension {
   /// @param de The DD4hep detector element to wrap (must not be nullptr)
   explicit DD4hepDetectorElementExtension(
       std::shared_ptr<DD4hepDetectorElement> de)
-      : detectorElement(std::move(de)) {
-    throw_assert(detectorElement != nullptr,
+      : m_detectorElement(std::move(de)) {
+    throw_assert(m_detectorElement != nullptr,
                  "DD4hepDetectorElement is nullptr");
   }
 
+  /// Access the underlying DD4hep detector element
+  /// @return The DD4hep detector element
+  const DD4hepDetectorElement& detectorElement() const {
+    return *m_detectorElement;
+  }
+
  private:
-  std::shared_ptr<DD4hepDetectorElement> detectorElement;
+  std::shared_ptr<DD4hepDetectorElement> m_detectorElement;
 };
 
 /// @}

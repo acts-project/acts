@@ -83,6 +83,79 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
   CHECK_ANY_ALLOCATIONS();
 }
 
+BOOST_AUTO_TEST_CASE(AnyAsPtr) {
+  {
+    // small type: correct type returns non-null pointer
+    Any a{42};
+    int* p = a.asPtr<int>();
+    BOOST_REQUIRE_NE(p, static_cast<int*>(nullptr));
+    BOOST_CHECK_EQUAL(*p, 42);
+
+    // wrong type returns nullptr
+    BOOST_CHECK_EQUAL(a.asPtr<float>(), static_cast<float*>(nullptr));
+    BOOST_CHECK_EQUAL(a.asPtr<double>(), static_cast<double*>(nullptr));
+
+    // mutation through pointer
+    *p = 99;
+    BOOST_CHECK_EQUAL(a.as<int>(), 99);
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // large (heap-allocated) type: correct type returns non-null pointer
+    std::array<unsigned long, 5> v{10, 20, 30, 40, 50};
+    Any a{v};
+    auto* p = a.asPtr<std::array<unsigned long, 5>>();
+    BOOST_REQUIRE_NE(p, static_cast<decltype(p)>(nullptr));
+    BOOST_CHECK_EQUAL_COLLECTIONS(p->begin(), p->end(), v.begin(), v.end());
+
+    // wrong type returns nullptr
+    BOOST_CHECK_EQUAL(a.asPtr<int>(), static_cast<int*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // empty Any returns nullptr
+    Any a;
+    BOOST_CHECK_EQUAL(a.asPtr<int>(), static_cast<int*>(nullptr));
+    BOOST_CHECK_EQUAL(a.asPtr<float>(), static_cast<float*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // const overload
+    const Any a{3.14f};
+    const float* p = a.asPtr<float>();
+    BOOST_REQUIRE_NE(p, static_cast<const float*>(nullptr));
+    BOOST_CHECK_EQUAL(*p, 3.14f);
+
+    // wrong type on const Any
+    BOOST_CHECK_EQUAL(a.asPtr<int>(), static_cast<const int*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // const overload with empty Any
+    const Any a;
+    BOOST_CHECK_EQUAL(a.asPtr<int>(), static_cast<const int*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // const overload with heap-allocated type
+    std::array<int, 64> v{};
+    v.fill(7);
+    const Any a{v};
+    const auto* p = a.asPtr<std::array<int, 64>>();
+    BOOST_REQUIRE_NE(p, static_cast<decltype(p)>(nullptr));
+    for (const auto& elem : *p) {
+      BOOST_CHECK_EQUAL(elem, 7);
+    }
+    BOOST_CHECK_EQUAL(a.asPtr<float>(), static_cast<const float*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
 BOOST_AUTO_TEST_CASE(AnyAssignConstructEmpty) {
   Any a;
   Any b;

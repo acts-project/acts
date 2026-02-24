@@ -5,8 +5,6 @@ acts_add_library(
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
-acts_compile_headers(PluginEDM4hep GLOB include/**/*.hpp)
-
 target_include_directories(
     ActsPluginEDM4hep
     PUBLIC
@@ -24,6 +22,8 @@ target_link_libraries(
         podio::podio
         podio::podioRootIO
 )
+
+acts_compile_headers(PluginEDM4hep GLOB include/**/*.hpp)
 
 find_file(
     _edm4hep_yaml

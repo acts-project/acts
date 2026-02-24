@@ -225,6 +225,34 @@ class AnyBase : public AnyBaseAll {
     return *std::bit_cast<const T*>(dataPtr());
   }
 
+  /// Get pointer to stored value of specified type
+  /// @tparam T Type to retrieve (must be exact type, no const/ref)
+  /// @return Pointer to the stored value, or nullptr if the type doesn't match
+  ///         or the Any is empty
+  template <typename T>
+  T* asPtr() {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+      return nullptr;
+    }
+    return std::bit_cast<T*>(dataPtr());
+  }
+
+  /// Get const pointer to stored value of specified type
+  /// @tparam T Type to retrieve (must be exact type, no const/ref)
+  /// @return Const pointer to the stored value, or nullptr if the type doesn't
+  ///         match or the Any is empty
+  template <typename T>
+  const T* asPtr() const {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+      return nullptr;
+    }
+    return std::bit_cast<const T*>(dataPtr());
+  }
+
   ~AnyBase() { destroy(); }
 
   /// Copy constructor
