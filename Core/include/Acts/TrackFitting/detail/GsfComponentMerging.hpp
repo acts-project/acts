@@ -20,6 +20,12 @@
 
 namespace Acts::detail::Gsf {
 
+template <typename Tuple>
+auto forward_first_two(Tuple &&t) {
+  return std::forward_as_tuple(std::get<0>(std::forward<Tuple>(t)),
+                               std::get<1>(std::forward<Tuple>(t)));
+}
+
 /// Reduce Gaussian mixture into a single parameter vector and covariance, using
 /// the specified method to reduce the mixture.
 ///
@@ -242,11 +248,7 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixtureMeanCov(
   }
 
   const BoundVector mean = mergeGaussianMixtureMean(
-      cmps,
-      [&](const auto &c) {
-        const auto [weight_l, pars_l, cov_l] = projector(c);
-        return std::tuple(weight_l, pars_l);
-      },
+      cmps, [&](const auto &c) { return forward_first_two(projector(c)); },
       angleDesc);
 
   // MARK: fpeMaskBegin(FLTUND, 1, #2347)
@@ -300,10 +302,8 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
   if (method == ComponentMergeMethod::eMean) {
     return {mean, cov};
   } else if (method == ComponentMergeMethod::eMaxWeight) {
-    const BoundVector mode = mergeGaussianMixtureMode(cmps, [&](const auto &c) {
-      const auto [weight_l, pars_l, cov_l] = projector(c);
-      return std::tuple(weight_l, pars_l);
-    });
+    const BoundVector mode = mergeGaussianMixtureMode(
+        cmps, [&](const auto &c) { return forward_first_two(projector(c)); });
     return {mode, cov};
   } else {
     throw std::logic_error("Invalid component merge method");

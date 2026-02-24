@@ -217,21 +217,26 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 /// [weight, parameters, covariance]. Therefore, it contains a MultiTrajectory
 /// and for now a std::map for the weights
 template <StatesType type, typename traj_t>
-struct MultiTrajectoryProjector {
-  const traj_t &mt;
-  const std::map<TrackIndexType, double> &weights;
+class MultiTrajectoryProjector {
+  const traj_t *mt{};
+  const std::map<TrackIndexType, double> *weights{};
+
+ public:
+  MultiTrajectoryProjector(const traj_t &mt,
+                           const std::map<TrackIndexType, double> &weights)
+      : mt(&mt), weights(&weights) {}
 
   auto operator()(TrackIndexType idx) const {
-    const auto proxy = mt.getTrackState(idx);
+    const auto proxy = mt->getTrackState(idx);
     switch (type) {
       case StatesType::ePredicted:
-        return std::tuple(weights.at(idx), proxy.predicted(),
+        return std::tuple(weights->at(idx), proxy.predicted(),
                           proxy.predictedCovariance());
       case StatesType::eFiltered:
-        return std::tuple(weights.at(idx), proxy.filtered(),
+        return std::tuple(weights->at(idx), proxy.filtered(),
                           proxy.filteredCovariance());
       case StatesType::eSmoothed:
-        return std::tuple(weights.at(idx), proxy.smoothed(),
+        return std::tuple(weights->at(idx), proxy.smoothed(),
                           proxy.smoothedCovariance());
       default:
         throw std::invalid_argument(
