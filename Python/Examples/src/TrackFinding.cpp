@@ -7,12 +7,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Seeding/GbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding2/GbtsConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
-#include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
@@ -66,7 +66,8 @@ void addTrackFinding(py::module& mex) {
 
   {
     using Config = Acts::Experimental::GbtsConfig;
-    auto c = py::class_<Config>(mex, "GbtsConfig").def(py::init<>());
+    auto c =
+        py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, phiSliceWidth,
                        nMaxPhiSlice, lutInputFile);
     patchKwargsConstructor(c);
@@ -106,9 +107,9 @@ void addTrackFinding(py::module& mex) {
       useDeltaRinsteadOfTopRadius, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm", inputSpacePoints,
-      outputSeeds, seedFinderConfig, layerMappingFile, trackingGeometry,
-      actsGbtsMap, fillModuleCsv, inputClusters);
+      GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
+      trackingGeometry, actsGbtsMap, fillModuleCsv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
