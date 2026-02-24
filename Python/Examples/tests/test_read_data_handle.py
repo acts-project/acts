@@ -129,7 +129,7 @@ def test_read_particles_via_handle():
             particles = self.particles(context.eventStore)
             assert isinstance(particles, acts.examples.SimParticleContainer)
 
-            print(f"Found {len(particles)} particles")
+            self.logger.info("Found {} particles", len(particles))
 
             for particle in particles:
                 print(particle)
