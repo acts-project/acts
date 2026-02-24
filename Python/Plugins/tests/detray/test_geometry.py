@@ -17,19 +17,11 @@ def test_barcode():
     assert barcode.extra == 5
 
 
-def test_dtyped_index():
-    didx = detray.dtyped_index()
-    didx.id = 1
-    didx.index = 2
-    assert didx.id == 1
-    assert didx.index == 2
-    # i don't know how i produce an invalid value
-    # assert not didx.is_invalid
-    # assert not didx.is_invalid_id
-    # assert not didx.is_invalid_index
-    didx.shift(1)
-    assert didx.index == 3
-    # assert didx.is_invalid
-    # assert didx.is_invalid_id
-    # assert didx.is_invalid_index
-    assert str(didx) == "[id = 1(1) | index = 3]"
+def test_toy_metadata():
+    print(detray.toy.metadata)
+
+    print(detray.toy.metadata.mask_ids.e_rectangle2)
+    detray.toy.mask_link(
+        detray.toy.metadata.mask_ids.e_rectangle2,
+        detray.toy.mask_link.index_type(),
+    )

@@ -14,6 +14,8 @@
 #include <string>
 
 #include <detray/builders/detector_builder.hpp>
+#include <detray/definitions/algebra.hpp>
+#include <detray/detectors/toy_metadata.hpp>
 #include <detray/geometry/barcode.hpp>
 #include <detray/geometry/surface_descriptor.hpp>
 #include <pybind11/operators.h>
@@ -24,6 +26,32 @@
 
 namespace py = pybind11;
 using namespace pybind11::literals;
+
+template <typename metadata_t>
+void addGeometry(py::module& m) {
+  using metadata = metadata_t;
+  using mask_link = metadata::mask_link;
+
+  auto pyMetadata = py::class_<metadata>(m, "metadata");
+  // auto pyMaskLink = py::class_<mask_link>(pyMetadata, "mask_link");
+
+  py::enum_<typename metadata::mask_ids>(pyMetadata, "mask_ids")
+      // py::enum_<typename mask_link::id_type>(pyMaskLink, "id_type")
+      .value("e_rectangle2", metadata::mask_ids::e_rectangle2)
+      .value("e_trapezoid2", metadata::mask_ids::e_trapezoid2)
+      .value("e_portal_cylinder2", metadata::mask_ids::e_portal_cylinder2)
+      .value("e_portal_ring2", metadata::mask_ids::e_portal_ring2)
+      .value("e_cylinder2", metadata::mask_ids::e_cylinder2);
+
+  auto pyMaskLink = py::class_<mask_link>(m, "mask_link")
+                        .def(py::init<>())
+                        .def(py::init<const typename mask_link::id_type,
+                                      const typename mask_link::index_type>())
+                        .def_property("id", &mask_link::id, &mask_link::set_id);
+
+  py::class_<typename mask_link::index_type>(pyMaskLink, "index_type")
+      .def(py::init<>());
+}
 
 PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
   using namespace ActsPlugins;
@@ -57,28 +85,6 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsDetray, detray) {
 
   // py::class_<detray::dindex>(detray, "dindex");
 
-  using dtyped_index = detray::dtyped_index<detray::dindex, detray::dindex>;
-  py::class_<detray::dtyped_index<detray::dindex, detray::dindex>>(
-      detray, "dtyped_index")
-      .def(py::init<>())
-      .def_property("id", &dtyped_index::id, &dtyped_index::set_id)
-      .def(py::init<const detray::dindex, const detray::dindex>())
-      .def_property("index", &dtyped_index::index, &dtyped_index::set_index)
-      .def_property("id", &dtyped_index::id, &dtyped_index::set_id)
-      .def("shift", &dtyped_index::shift<dtyped_index::index_type>)
-      .def_property_readonly("is_invalid", &dtyped_index::is_invalid)
-      .def_property_readonly("is_invalid_id", &dtyped_index::is_invalid_id)
-      .def_property_readonly("is_invalid_index",
-                             &dtyped_index::is_invalid_index)
-      .def(py::self == py::self)
-      .def(py::self + py::self)
-      .def(py::self += py::self)
-      .def(py::self - py::self)
-      .def(py::self -= py::self)
-      .def("__str__", [](const dtyped_index& self) {
-        std::stringstream ss;
-        ss << self;
-        return ss.str();
-      });
-  ;
+  auto toy = detray.def_submodule("toy");
+  addGeometry<detray::toy_metadata<detray::array<float>>>(toy);
 }
