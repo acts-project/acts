@@ -119,17 +119,28 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
 
   {
     using Algorithm = Geant4Simulation;
-    using Config = Algorithm::Config;
 
-    auto [alg, _c] = declareAlgorithm<Algorithm, Geant4SimulationBase>(
-        mod, "Geant4Simulation");
+    auto alg =
+        py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
+            mod, "Geant4Simulation")
+            .def(py::init(
+                     [](const Algorithm::Config& cfg, Logging::Level level) {
+                       return std::make_shared<Algorithm>(
+                           cfg, getDefaultLogger("Geant4Simulation", level));
+                     }),
+                 py::arg("config"), py::arg("level"))
+            .def(py::init([](const Algorithm::Config& cfg,
+                             std::unique_ptr<const Logger> logger) {
+                   return std::make_shared<Algorithm>(cfg, std::move(logger));
+                 }),
+                 py::arg("config"), py::arg("logger"))
+            .def_property_readonly("config", &Algorithm::config);
 
-    // Config inherits from Geant4SimulationBase::Config; re-declare with base
-    auto c1 = py::class_<Config, Geant4SimulationBase::Config,
-                         std::shared_ptr<Config>>(alg, "Config")
-                  .def(py::init<>());
+    auto c = py::class_<Algorithm::Config, Geant4SimulationBase::Config,
+                        std::shared_ptr<Algorithm::Config>>(alg, "Config")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT(
-        c1, outputSimHits, outputParticles, outputPropagationSummaries,
+        c, outputSimHits, outputParticles, outputPropagationSummaries,
         sensitiveSurfaceMapper, magneticField, physicsList, killVolume,
         killAfterTime, killSecondaries, recordHitsOfCharged,
         recordHitsOfNeutrals, recordHitsOfPrimaries, recordHitsOfSecondaries,
@@ -138,13 +149,24 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
 
   {
     using Algorithm = Geant4MaterialRecording;
-    using Config = Algorithm::Config;
+    auto alg =
+        py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
+            mod, "Geant4MaterialRecording")
+            .def(py::init([](const Algorithm::Config& cfg,
+                             Logging::Level level) {
+                   return std::make_shared<Algorithm>(
+                       cfg, getDefaultLogger("Geant4MaterialRecording", level));
+                 }),
+                 py::arg("config"), py::arg("level"))
+            .def(py::init([](const Algorithm::Config& cfg,
+                             std::unique_ptr<const Logger> logger) {
+                   return std::make_shared<Algorithm>(cfg, std::move(logger));
+                 }),
+                 py::arg("config"), py::arg("logger"))
+            .def_property_readonly("config", &Algorithm::config);
 
-    auto [alg, _c] = declareAlgorithm<Algorithm, Geant4SimulationBase>(
-        mod, "Geant4MaterialRecording");
-
-    auto c = py::class_<Config, Geant4SimulationBase::Config,
-                        std::shared_ptr<Config>>(alg, "Config")
+    auto c = py::class_<Algorithm::Config, Geant4SimulationBase::Config,
+                        std::shared_ptr<Algorithm::Config>>(alg, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, outputMaterialTracks, excludeMaterials);
   }
