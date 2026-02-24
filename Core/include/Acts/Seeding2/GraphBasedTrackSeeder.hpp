@@ -1,0 +1,158 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/Seeding2/GbtsConfig.hpp"
+#include "Acts/Seeding2/GbtsDataStorage.hpp"
+#include "Acts/Seeding2/GbtsGeometry.hpp"
+#include "Acts/Seeding2/RoiDescriptor.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+namespace Acts::Experimental {
+
+/// Tuple template used to carry the space point components
+using SpContainerComponentsType =
+    std::tuple<SpacePointContainer2, SpacePointColumnProxy<std::uint32_t, true>,
+               SpacePointColumnProxy<float, true>,
+               SpacePointColumnProxy<float, true>>;
+
+/// Seed finder implementing the GBTs seeding workflow.
+class GraphBasedTrackSeeder {
+ public:
+  /// Seed metadata produced by the GBTs algorithm.
+  struct SeedProperties {
+    /// Constructor.
+    /// @param quality Seed quality score
+    /// @param clone Clone flag
+    /// @param sps Space point indices
+    SeedProperties(float quality, std::int32_t clone,
+                   std::vector<std::uint32_t> sps)
+        : seedQuality(quality), isClone(clone), spacePoints(std::move(sps)) {}
+
+    /// Seed quality score.
+    float seedQuality{};
+    /// Clone flag.
+    std::int32_t isClone{};
+    /// Space point indices.
+    std::vector<std::uint32_t> spacePoints;
+
+    /// Comparison operator.
+    /// @param o Other seed properties to compare
+    /// @return True if this is less than other
+    auto operator<=>(const SeedProperties& o) const = default;
+  };
+
+  /// Sliding window in phi used to define range used for edge creation
+  struct SlidingWindow {
+    /// sliding window position
+    std::uint32_t firstIt{};
+    /// window half-width;
+    float deltaPhi{};
+    /// active or not
+    bool hasNodes{};
+    /// associated eta bin
+    const GbtsEtaBin* bin{};
+  };
+
+  /// Constructor.
+  /// @param config Configuration for the seed finder
+  /// @param gbtsGeo GBTs geometry
+  /// @param layerGeometry Layer geometry information
+  /// @param logger Logging instance
+  GraphBasedTrackSeeder(const GbtsConfig& config,
+                        std::unique_ptr<GbtsGeometry> gbtsGeo,
+                        const std::vector<TrigInDetSiLayer>& layerGeometry,
+                        std::unique_ptr<const Acts::Logger> logger =
+                            Acts::getDefaultLogger("Finder",
+                                                   Acts::Logging::Level::INFO));
+
+  /// Create seeds from spacepoints in a region of interest.
+  /// @param roi Region of interest descriptor
+  /// @param SpContainerComponents Space point container components
+  /// @param maxLayers Maximum number of layers
+  /// @return Container with generated seeds
+  SeedContainer2 createSeeds(
+      const RoiDescriptor& roi,
+      const SpContainerComponentsType& SpContainerComponents,
+      std::uint32_t maxLayers) const;
+
+  /// Create graph nodes from space points.
+  /// @param container Space point container components
+  /// @param maxLayers Maximum number of layers
+  /// @return Vector of node vectors organized by layer
+  std::vector<std::vector<GbtsNode>> createNodes(
+      const SpContainerComponentsType& container,
+      std::uint32_t maxLayers) const;
+
+  /// Parse machine learning lookup table from file.
+  /// @param lutInputFile Path to the lookup table input file
+  /// @return Parsed machine learning lookup table
+  GbtsMlLookupTable parseGbtsMlLookupTable(const std::string& lutInputFile);
+
+  /// Build doublet graph from nodes.
+  /// @param roi Region of interest descriptor
+  /// @param storage Data storage containing nodes
+  /// @param edgeStorage Storage for generated edges
+  /// @return Pair of edge count and maximum level
+  std::pair<std::int32_t, std::int32_t> buildTheGraph(
+      const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
+      std::vector<GbtsEdge>& edgeStorage) const;
+
+  /// Run connected component analysis on the graph.
+  /// @param nEdges Number of edges in the graph
+  /// @param edgeStorage Storage containing graph edges
+  /// @return Number of connected components found
+  std::int32_t runCCA(std::uint32_t nEdges,
+                      std::vector<GbtsEdge>& edgeStorage) const;
+
+  /// Extract seed candidates from the graph.
+  /// @param maxLevel Maximum level in the graph
+  /// @param nEdges Number of edges
+  /// @param nHits Number of hits
+  /// @param edgeStorage Storage containing edges
+  /// @param vSeedCandidates Output vector for seed candidates
+  void extractSeedsFromTheGraph(
+      std::uint32_t maxLevel, std::uint32_t nEdges, std::int32_t nHits,
+      std::vector<GbtsEdge>& edgeStorage,
+      std::vector<SeedProperties>& vSeedCandidates) const;
+
+  /// Check to see if z0 of segment is within the expected z range of the
+  /// beamspot
+  /// @param z0BitMask Sets allowed bins of allowed z value
+  /// @param z0 Estimated z0 of segments z value at beamspot
+  /// @param minZ0 Minimum value of beam spot z coordinate
+  /// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
+  /// @return Whether segment is within beamspot range
+  bool checkZ0BitMask(std::uint16_t z0BitMask, float z0, float minZ0,
+                      float z0HistoCoeff) const;
+
+ private:
+  GbtsConfig m_cfg{};
+
+  const std::shared_ptr<const GbtsGeometry> m_geo;
+
+  const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
+
+  GbtsMlLookupTable m_mlLut;
+
+  std::unique_ptr<const Acts::Logger> m_logger =
+      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
+
+  const Acts::Logger& logger() const { return *m_logger; }
+};
+
+}  // namespace Acts::Experimental
