@@ -491,7 +491,13 @@ int Sequencer::run() {
               ACTS_VERBOSE("Execute " << alg->typeName() << ": "
                                       << alg->name());
               try {
-                if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
+                auto processCode = alg->internalExecute(++context);
+                if (processCode == ProcessCode::SKIP) {
+                  ACTS_VERBOSE("Skip event signal received from "
+                               << alg->typeName() << ": " << alg->name());
+                  m_nSkippedEvents++;
+                  break;
+                } else if (processCode != ProcessCode::SUCCESS) {
                   throw std::runtime_error("Failed to process event data");
                 }
               } catch (const std::exception& e) {
@@ -578,6 +584,13 @@ int Sequencer::run() {
   Duration totalReal = std::accumulate(
       clocksAlgorithms.begin(), clocksAlgorithms.end(), Duration::zero());
   std::size_t numEvents = lastEvent - firstEvent;
+  if (m_nSkippedEvents > 0) {
+    ACTS_INFO("Attention: Skipped " << m_nSkippedEvents
+                                    << " events during execution");
+    ACTS_INFO(
+        "As this can happen if any algorithm is configured to skip events, "
+        "processed event and timing information are not accurate.");
+  }
   ACTS_INFO("Processed " << numEvents << " events in " << asString(totalWall)
                          << " (wall clock)");
   ACTS_INFO("Average time per event: " << perEvent(totalReal, numEvents));
