@@ -16,6 +16,7 @@
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -47,6 +48,18 @@ class SeedFinderGbts {
     /// @param o Other seed properties to compare
     /// @return True if this is less than other
     auto operator<=>(const SeedProperties& o) const = default;
+  };
+
+  /// Sliding window in phi used to define range used for edge creation
+  struct GbtsSlidingWindow {
+    /// sliding window position
+    std::uint32_t firstIt{};
+    /// window half-width;
+    float deltaPhi{};
+    /// active or not
+    bool hasNodes{};
+    /// associated eta bin
+    const GbtsEtaBin* bin{};
   };
 
   /// Constructor.
@@ -122,6 +135,16 @@ class SeedFinderGbts {
       std::uint32_t maxLevel, std::uint32_t nEdges, std::int32_t nHits,
       std::vector<GbtsEdge>& edgeStorage,
       std::vector<SeedProperties>& vSeedCandidates) const;
+
+  /// Check to see if z0 of segment is within the expected z range of the
+  /// beamspot
+  /// @param z0BitMask Sets allowed bins of allowed z value
+  /// @param z0 Estimated z0 of segments z value at beamspot
+  /// @param minZ0 Minimum value of beam spot z coordinate
+  /// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
+  /// @return Whether segment is within beamspot range
+  bool checkZ0BitMask(std::uint16_t z0BitMask, float z0, float minZ0,
+                      float z0HistoCoeff) const;
 };
 
 }  // namespace Acts::Experimental

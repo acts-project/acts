@@ -13,10 +13,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <memory>
 #include <numbers>
-#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -41,21 +41,21 @@ SeedContainer2 SeedFinderGbts::createSeeds(
   auto storage = std::make_unique<GbtsDataStorage>(m_cfg, m_geo, m_mlLut);
 
   SeedContainer2 SeedContainer;
-  std::vector<std::vector<GbtsNode>> node_storage =
+  std::vector<std::vector<GbtsNode>> nodeStorage =
       createNodes(spacePoints, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
-  for (std::uint16_t l = 0; l < node_storage.size(); l++) {
-    const std::vector<GbtsNode>& nodes = node_storage[l];
+  for (std::uint16_t l = 0; l < nodeStorage.size(); l++) {
+    const std::vector<GbtsNode>& nodes = nodeStorage[l];
 
     if (nodes.empty()) {
       continue;
     }
 
-    bool is_pixel = true;
+    const bool isPixel = true;
     // placeholder for now until strip hits are added in
-    if (is_pixel) {
+    if (isPixel) {
       nPixelLoaded += storage->loadPixelGraphNodes(l, nodes, m_cfg.useMl);
     } else {
       nStripLoaded += storage->loadStripGraphNodes(l, nodes);
@@ -155,22 +155,23 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     const SpacePointContainer2& spacePoints,
     const std::uint32_t maxLayers) const {
   auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
-  auto clusterWidthColomn = spacePoints.column<float>("clusterWidth");
-  auto localPositionColomn = spacePoints.column<float>("localPositionY");
+  auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
+  auto localPositionColumn = spacePoints.column<float>("localPositionY");
 
-  std::vector<std::vector<GbtsNode>> node_storage(maxLayers);
+  std::vector<std::vector<GbtsNode>> nodeStorage(maxLayers);
   // reserve for better efficiency
-  for (auto& v : node_storage) {
+
+  for (auto& v : nodeStorage) {
     v.reserve(10000);
   }
 
-  for (auto sp : spacePoints) {
+  for (const auto& sp : spacePoints) {
     // for every sp in container,
-    // add its variables to node_storage organised by layer
-    std::uint16_t layer = sp.extra(layerColumn);
+    // add its variables to nodeStorage organised by layer
+    const std::uint16_t layer = sp.extra(layerColumn);
 
     // add node to storage
-    GbtsNode& node = node_storage[layer].emplace_back(layer);
+    GbtsNode& node = nodeStorage[layer].emplace_back(layer);
 
     // fill the node with space point variables
 
@@ -180,11 +181,11 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     node.r = sp.r();
     node.phi = sp.phi();
     node.idx = sp.index();
-    node.pcw = sp.extra(clusterWidthColomn);
-    node.locPosY = sp.extra(localPositionColomn);
+    node.pcw = sp.extra(clusterWidthColumn);
+    node.locPosY = sp.extra(localPositionColumn);
   }
 
-  return node_storage;
+  return nodeStorage;
 }
 
 std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
@@ -211,7 +212,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
       maxZ0 + maxOuterRadius * static_cast<float>(roi.dzdrPlus());
 
   // correction due to limited pT resolution
-  float tripletPtMin = 0.8f * m_cfg.minPt;
+  const float tripletPtMin = 0.8f * m_cfg.minPt;
 
   // to re-scale original tunings done for the 900 MeV pT cut
   const float ptScale = (0.9f * UnitConstants::GeV) / m_cfg.minPt;
@@ -232,13 +233,19 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
   const float dPhiCoeff = m_cfg.lrtMode ? 1.0f * maxCurv : 0.68f * maxCurv;
 
   // the default sliding window along phi
-  float deltaPhi = 0.5f * m_cfg.phiSliceWidth;
+  const float deltaPhi0 = 0.5f * m_cfg.phiSliceWidth;
 
   std::uint32_t nConnections = 0;
 
   edgeStorage.reserve(m_cfg.nMaxEdges);
 
   std::uint32_t nEdges = 0;
+
+  // scale factor to get indexes of binned beamspot
+  // assuming 16-bit z0 bitmask
+
+  const std::uint32_t zBins = 16;
+  const float z0HistoCoeff = zBins / (maxZ0 - minZ0 + 1e-6);
 
   // loop over bin groups
   for (const auto& bg : m_geo->binGroups()) {
@@ -252,15 +259,29 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
     const std::uint32_t lk1 = B1.layerKey;
 
-    for (const int b2Idx : bg.second) {
+    // prepare a sliding window for each bin2 in the group
+
+    std::vector<GbtsSlidingWindow> phiSlidingWindow;
+
+    // initialization using default ctor
+    phiSlidingWindow.resize(bg.second.size());
+
+    std::uint32_t winIdx = 0;
+
+    // loop over n2 eta-bins in L2 layers
+    for (const auto& b2Idx : bg.second) {
       const GbtsEtaBin& B2 = storage->getEtaBin(b2Idx);
 
       if (B2.empty()) {
+        ++winIdx;
         continue;
       }
 
       const float rb2 = B2.maxRadius;
 
+      float deltaPhi = deltaPhi0;  // the default
+
+      // override the default window width
       if (m_cfg.useEtaBinning) {
         const float absDr = std::fabs(rb2 - rb1);
         if (m_cfg.useOldTunings) {
@@ -274,46 +295,72 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
         }
       }
 
-      std::uint32_t firstIt = 0;
-      // loop over nodes in Layer 1
-      for (std::uint32_t n1Idx = 0; n1Idx < B1.vn.size(); ++n1Idx) {
-        std::vector<std::uint32_t>& v1In = B1.in[n1Idx];
+      phiSlidingWindow[winIdx].bin = &B2;
+      phiSlidingWindow[winIdx].hasNodes = true;
+      phiSlidingWindow[winIdx].deltaPhi = deltaPhi;
+      ++winIdx;
+    }
 
-        if (v1In.size() >= gbtsMaxSegPerNode) {
+    // in GBTSv3 the outer loop goes over n1 nodes in the Layer 1 bin
+    for (std::uint32_t n1Idx = 0; n1Idx < B1.vn.size(); ++n1Idx) {
+      // initialization using the top watermark of the edge storage
+      B1.vFirstEdge[n1Idx] = nEdges;
+
+      // the counter for the incoming graph edges created for n1
+      std::uint16_t numCreatedEdges = 0;
+
+      bool isConnected = false;
+
+      std::array<std::uint8_t, 16> z0Histo = {};
+
+      const std::array<float, 5>& n1pars = B1.params[n1Idx];
+
+      const float phi1 = n1pars[2];
+      const float r1 = n1pars[3];
+      const float z1 = n1pars[4];
+
+      // the intermediate loop over sliding windows
+      for (auto& slw : phiSlidingWindow) {
+        if (!slw.hasNodes) {
           continue;
         }
 
-        const std::array<float, 5>& n1pars = B1.params[n1Idx];
+        const GbtsEtaBin& B2 = *slw.bin;
 
-        const float phi1 = n1pars[2];
-        const float r1 = n1pars[3];
-        const float z1 = n1pars[4];
+        const float deltaPhi = slw.deltaPhi;
 
         // sliding window phi1 +/- deltaPhi
 
         const float minPhi = phi1 - deltaPhi;
         const float maxPhi = phi1 + deltaPhi;
 
-        // sliding window over nodes in Layer 2
-        for (std::uint32_t n2PhiIdx = firstIt; n2PhiIdx < B2.vPhiNodes.size();
-             n2PhiIdx++) {
+        // the inner loop over n2 nodes using sliding window
+        for (std::uint32_t n2PhiIdx = slw.firstIt;
+             n2PhiIdx < B2.vPhiNodes.size(); ++n2PhiIdx) {
           const float phi2 = B2.vPhiNodes[n2PhiIdx].first;
 
           if (phi2 < minPhi) {
-            firstIt = n2PhiIdx;
+            // update the window position
+            slw.firstIt = n2PhiIdx;
             continue;
           }
           if (phi2 > maxPhi) {
+            // break and go to the next window
             break;
           }
 
           const std::uint32_t n2Idx = B2.vPhiNodes[n2PhiIdx].second;
 
-          const std::vector<std::uint32_t>& v2In = B2.in[n2Idx];
+          const std::uint16_t nodeInfo = B2.vIsConnected[n2Idx];
 
-          if (v2In.size() >= gbtsMaxSegPerNode) {
+          // skip isolated nodes as their incoming edges lead to nowhere
+          if ((lk1 == 80000) && (nodeInfo == 0)) {
             continue;
           }
+
+          const std::uint32_t n2FirstEdge = B2.vFirstEdge[n2Idx];
+          const std::uint16_t n2NumEdges = B2.vNumEdges[n2Idx];
+          const std::uint32_t n2LastEdge = n2FirstEdge + n2NumEdges;
 
           const std::array<float, 5>& n2pars = B2.params[n2Idx];
 
@@ -348,16 +395,23 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
             continue;
           }
 
-          if (m_cfg.doubletFilterRZ) {
-            const float z0 = z1 - r1 * tau;
+          const float z0 = z1 - r1 * tau;
 
+          if (lk1 == 80000) {  // check against non-empty z0 histogram
+
+            if (!checkZ0BitMask(nodeInfo, z0, minZ0, z0HistoCoeff)) {
+              continue;
+            }
+          }
+
+          if (m_cfg.doubletFilterRZ) {
             if (z0 < minZ0 || z0 > maxZ0) {
               continue;
             }
 
-            const float zouter = z0 + maxOuterRadius * tau;
+            const float zOuter = z0 + maxOuterRadius * tau;
 
-            if (zouter < cutZMinU || zouter > cutZMaxU) {
+            if (zOuter < cutZMinU || zOuter > cutZMaxU) {
               continue;
             }
           }
@@ -380,12 +434,13 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
           // match edge candidate against edges incoming to n2
           if (m_cfg.matchBeforeCreate && (lk1 == 80000 || lk1 == 81000)) {
             // we must have enough incoming edges to decide
-            bool isGood = v2In.size() <= 2;
+            bool isGood = n2NumEdges <= 2;
 
             if (!isGood) {
               const float uat1 = 1.0f / expEta;
 
-              for (const auto& n2InIdx : v2In) {
+              for (std::uint32_t n2InIdx = n2FirstEdge; n2InIdx < n2LastEdge;
+                   ++n2InIdx) {
                 const float tau2 = edgeStorage.at(n2InIdx).p[0];
                 const float tauRatio = tau2 * uat1 - 1.0f;
 
@@ -409,9 +464,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
             edgeStorage.emplace_back(B1.vn[n1Idx], B2.vn[n2Idx], expEta, curv,
                                      phi1 + dPhi1);
 
-            if (v1In.size() < gbtsMaxSegPerNode) {
-              v1In.push_back(nEdges);
-            }
+            ++numCreatedEdges;
 
             const std::uint32_t outEdgeIdx = nEdges;
 
@@ -420,7 +473,8 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
             const float curv2 = curv;
 
             // looking for neighbours of the new edge
-            for (const auto& inEdgeIdx : v2In) {
+            for (std::uint32_t inEdgeIdx = n2FirstEdge; inEdgeIdx < n2LastEdge;
+                 ++inEdgeIdx) {
               GbtsEdge* pS = &(edgeStorage.at(inEdgeIdx));
 
               if (pS->nNei >= gbtsNumSegConns) {
@@ -454,14 +508,42 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
               pS->vNei[pS->nNei] = outEdgeIdx;
               ++pS->nNei;
 
+              isConnected = true;  // there is at least one good match
+
+              // edge confirmed - update z0 histogram
+
+              const std::uint32_t z0BinIndex =
+                  static_cast<std::uint32_t>(z0HistoCoeff * (z0 - minZ0));
+
+              ++z0Histo[z0BinIndex];
+
               nConnections++;
             }
             nEdges++;
           }
-        }  // loop over n2 (outer) nodes
-      }  // loop over n1 (inner) nodes
-    }  // loop over bins in Layer 2
-  }  // loop over bin groups
+        }  // loop over n2 (outer) nodes inside a sliding window on n2 bin
+      }  // loop over sliding windows associated with n2 bins
+
+      // updating the n1 node attributes
+
+      B1.vNumEdges[n1Idx] = numCreatedEdges;
+      if (isConnected) {
+        std::uint16_t z0BitMask = 0x0;
+
+        for (std::uint32_t bIdx = 0; bIdx < 16; ++bIdx) {
+          if (z0Histo[bIdx] == 0) {
+            continue;
+          }
+
+          z0BitMask |= (1 << bIdx);
+        }
+
+        // non-zero mask indicates that there is at least one connected edge
+        B1.vIsConnected[n1Idx] = z0BitMask;
+      }
+
+    }  // loop over n1 (inner) nodes
+  }  // loop over bin groups: a single n1 bin and multiple n2 bins
 
   if (nEdges >= m_cfg.nMaxEdges) {
     ACTS_WARNING(
@@ -503,7 +585,7 @@ std::int32_t SeedFinderGbts::runCCA(const std::uint32_t nEdges,
       std::int32_t nextLevel = pS->level;
 
       for (std::uint32_t nIdx = 0; nIdx < pS->nNei; ++nIdx) {
-        std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
+        const std::uint32_t nextEdgeIdx = pS->vNei[nIdx];
 
         GbtsEdge* pN = &(edgeStorage[nextEdgeIdx]);
 
@@ -641,32 +723,25 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
                       return s1 < s2;
                     });
 
-  std::vector<std::int32_t> vTrackIds(vSeedCandidates.size());
-
-  // fills the vector from 1 to N
-
-  std::iota(vTrackIds.begin(), vTrackIds.end(), 1);
-
   std::vector<std::uint32_t> h2t(nHits + 1, 0);  // hit to track associations
 
-  std::uint32_t seedIdx = 0;
+  std::uint32_t trackId = 0;
 
   for (const auto& seed : vSeedCandidates) {
+    ++trackId;
+
     // loop over space points indices
     for (const auto& h : seed.spacePoints) {
       const std::uint32_t hitId = h + 1;
 
       const std::uint32_t tid = h2t[hitId];
-      const std::uint32_t trackId = vTrackIds[seedIdx];
 
-      // un-used hit or used by a lesser track
+      // unused hit or used by a lesser track
       if (tid == 0 || tid > trackId) {
         // overwrite
         h2t[hitId] = trackId;
       }
     }
-
-    seedIdx++;
   }
 
   for (std::uint32_t trackIdx = 0; trackIdx < vSeedCandidates.size();
@@ -674,7 +749,7 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
     const std::uint32_t nTotal = vSeedCandidates[trackIdx].spacePoints.size();
     std::uint32_t nOther = 0;
 
-    const std::uint32_t trackId = vTrackIds[trackIdx];
+    trackId = trackIdx + 1;
 
     for (const auto& h : vSeedCandidates[trackIdx].spacePoints) {
       const std::uint32_t hitId = h + 1;
@@ -692,6 +767,47 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
       vSeedCandidates[trackIdx].isClone = -1;
     }
   }
+}
+
+bool SeedFinderGbts::checkZ0BitMask(const std::uint16_t z0BitMask,
+                                    const float z0, const float minZ0,
+                                    const float z0HistoCoeff) const {
+  if (z0BitMask == 0) {
+    return true;
+  }
+
+  const float dz = z0 - minZ0;
+  const std::int32_t z0BinIndex = static_cast<std::int32_t>(z0HistoCoeff * dz);
+
+  if (((z0BitMask >> z0BinIndex) & 1) != 0) {
+    return true;
+  }
+
+  // check adjacent bins as well
+
+  const float z0Resolution = 2.5;
+
+  const float dzm = dz - z0Resolution;
+
+  std::int32_t nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzm);
+
+  if (nextBin >= 0 && nextBin != z0BinIndex) {
+    if (((z0BitMask >> nextBin) & 1) != 0) {
+      return true;
+    }
+  }
+
+  const float dzp = dz + z0Resolution;
+
+  nextBin = static_cast<std::uint32_t>(z0HistoCoeff * dzp);
+
+  if (nextBin < 16 && nextBin != z0BinIndex) {
+    if (((z0BitMask >> nextBin) & 1) != 0) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 }  // namespace Acts::Experimental
