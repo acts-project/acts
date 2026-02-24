@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/GbtsGeometry.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -130,8 +131,9 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
   const float z1max = m_maxBinCoord.at(b1);
   const float r1 = m_layer->refCoord;
 
+  const float tol = 5.0f;
+
   if (m_layer->type == 0 && pL.m_layer->type == 0) {  // barrel <- barrel
-    const float tol = 5.0f;
 
     const float minB2 = pL.m_minBinCoord.at(b2);
     const float maxB2 = pL.m_maxBinCoord.at(b2);
@@ -175,10 +177,102 @@ bool GbtsLayer::verifyBin(const GbtsLayer& pL, const std::uint32_t b1,
       z0Min = (z1min * r2max - z2 * r1) / (r2max - r1);
     }
 
-    if (z0Max < minZ0 || z0Min > maxZ0) {
+    if (z0Max < minZ0 - tol || z0Min > maxZ0 + tol) {
       return false;
     }
     return true;
+  }
+  if (m_layer->type != 0 && pL.m_layer->type != 0) {  // endcap <- endcap
+
+    const float z2 = pL.m_layer->refCoord;
+    const float z1 = m_layer->refCoord;
+    const float r2max = pL.m_maxBinCoord.at(b2);
+    const float r2min = pL.m_minBinCoord.at(b2);
+    const float r1max = m_maxBinCoord.at(b1);
+    const float r1min = m_minBinCoord.at(b1);
+
+    if (r1min >= r2max) {
+      return false;
+    }
+
+    if (z2 > 0) {  // positive endcap
+
+      const float z0Max = z1 - r1min * (z2 - z1) / (r2max - r1min);
+
+      if (z0Max < minZ0 - tol) {
+        return false;
+      }
+
+      if (r2min > r1max) {
+        const float z0Min = z1 - r1max * (z2 - z1) / (r2min - r1max);
+
+        if (z0Min > maxZ0 + tol) {
+          return false;
+        }
+      }
+    } else {  // negative endcap
+      const float z0Min = z1 - r1min * (z2 - z1) / (r2max - r1min);
+
+      if (z0Min > maxZ0 + tol) {
+        return false;
+      }
+
+      if (r2min > r1max) {
+        const float z0Max = z1 - r1max * (z2 - z1) / (r2min - r1max);
+
+        if (z0Max < minZ0 - tol) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  if (m_layer->type != 0 && pL.m_layer->type == 0) {  // endcap <- barrel
+
+    const float z1 = m_layer->refCoord;
+    const float r1max = m_maxBinCoord.at(b1);
+    const float r1min = m_minBinCoord.at(b1);
+
+    const float z2min = pL.m_minBinCoord.at(b2);
+    const float z2max = pL.m_maxBinCoord.at(b2);
+    const float r2 = pL.m_layer->refCoord;
+
+    if (r2 < r1min) {
+      return false;
+    }
+
+    // interval 1
+
+    float z0Min = z1 - (z2max - z1) / (r2 / r1max - 1);
+    float z0Max = z1 - (z2max - z1) / (r2 / r1min - 1);
+
+    if (z0Min > z0Max) {
+      std::swap(z0Min, z0Max);
+    }
+
+    bool beyondRange = (z0Max < minZ0 - tol || z0Min > maxZ0 + tol);
+
+    if (!beyondRange) {
+      return true;
+    }
+
+    // interval 2
+
+    z0Min = z1 - (z2min - z1) / (r2 / r1max - 1);
+    z0Max = z1 - (z2min - z1) / (r2 / r1min - 1);
+
+    if (z0Min > z0Max) {
+      std::swap(z0Min, z0Max);
+    }
+
+    beyondRange = (z0Max < minZ0 - tol || z0Min > maxZ0 + tol);
+
+    if (!beyondRange) {
+      return true;
+    }
+
+    return false;
   }
 
   return true;
@@ -257,7 +351,7 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
           if (bin1Idx != lastBin1) {
             // adding a new group
             m_binGroups.emplace_back(bin1Idx,
-                                     std::vector<std::int32_t>(1, bin2Idx));
+                                     std::vector<std::uint32_t>(1, bin2Idx));
             lastBin1 = bin1Idx;
           } else {
             // extend the last group
@@ -265,6 +359,122 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
           }
         }
       }
+    }
+  }
+  // find stages of eta-bin pairs using the graph ablation algorithm
+
+  BinConnections binMap;
+
+  // 1. create a map of bin-to-bin connections
+
+  // initialize with empty links
+
+  for (const auto& [bin1, bin2s] : m_binGroups) {
+    // add to the map
+
+    auto& bin1Links = binMap[bin1];
+
+    for (const auto& bin2 : bin2s) {
+      auto& bin2Links = binMap[bin2];
+
+      bin1Links.second.push_back(bin2);  // incoming link bin1 <- bin2
+      bin2Links.first.push_back(bin1);   // outgoing link bin2 -> bin1
+    }
+  }
+
+  // copy bin map as original is still needed
+  const BinConnections originalBinMap = binMap;
+
+  // 2. find stages starting from the last one (i.e. bin1 with no outgoing
+  // connections)
+
+  // data for all stages
+  std::vector<std::uint32_t> stageData;
+  // defines the start and end of stage contents
+  std::vector<std::size_t> stageOffsets;
+
+  stageOffsets.reserve(51);  // 50 stages -> offsets needs +1
+  stageOffsets.push_back(0);
+
+  std::vector<std::uint32_t> exitBins;
+  while (!binMap.empty()) {
+    exitBins.clear();
+
+    // 2a. find all bins with zero outgoing links
+
+    for (const auto& bl : binMap) {
+      auto& binLinks = bl.second;
+      auto& outLinks = binLinks.first;
+
+      if (!outLinks.empty()) {
+        continue;
+      }
+
+      exitBins.push_back(bl.first);
+    }
+
+    // order exit bins (important for graph building)
+    std::sort(exitBins.begin(), exitBins.end());
+
+    // 2b. add a new stage: vector of bin1
+
+    stageData.insert(stageData.end(), exitBins.begin(), exitBins.end());
+    stageOffsets.push_back(stageData.size());
+
+    // 2c. remove links : graph ablation
+
+    for (const std::uint32_t& bin1Key : exitBins) {
+      auto p1 = binMap.find(bin1Key);
+      if (p1 == binMap.end()) {
+        continue;
+      }
+      auto& bin1Links = p1->second;
+
+      for (const std::uint32_t bin2Key : bin1Links.second) {
+        const auto p2 = binMap.find(bin2Key);
+        if (p2 == binMap.end()) {
+          continue;
+        }
+
+        auto& binLinks = p2->second;
+        std::vector<std::uint32_t>& links = binLinks.first;
+
+        std::erase(links, bin1Key);
+      }
+    }
+
+    // 2d. finally, remove all exit bin1s from the map
+
+    for (auto bin1Key : exitBins) {
+      binMap.erase(bin1Key);
+    }
+  }
+
+  // 3. Refill binGroups with staged bin pair collections.
+
+  m_binGroups.clear();
+
+  // number of stages:
+  const std::size_t nStages = stageOffsets.size() - 1;
+
+  // reverse order filling
+  for (std::size_t stageIndex = nStages; stageIndex-- > 0;) {
+    const std::size_t begin = stageOffsets[stageIndex];
+    const std::size_t end = stageOffsets[stageIndex + 1];
+
+    for (std::size_t k = begin; k < end; ++k) {
+      const std::uint32_t bin1Idx = stageData[k];
+
+      const auto p = originalBinMap.find(bin1Idx);
+      if (p == originalBinMap.end()) {
+        continue;
+      }
+
+      const auto& binLists = p->second;
+      const std::vector<std::uint32_t>& bin2List = binLists.second;
+
+      // store the group
+      m_binGroups.emplace_back(bin1Idx, std::vector<std::uint32_t>(bin2List));
     }
   }
 }

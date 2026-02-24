@@ -34,11 +34,11 @@ enum class SpacePointColumns : std::uint32_t {
   CopyFromIndex = 1 << 13,        ///< Copy from index
 
   // packed columns for performance reasons
-  XY = 1 << 14,          ///< X and Y coordinates
-  ZR = 1 << 15,          ///< Z and R coordinates
-  XYZ = 1 << 16,         ///< X, Y, and Z coordinates
-  XYZR = 1 << 17,        ///< X, Y, Z, and R coordinates
-  VarianceZR = 1 << 18,  ///< Variance in Z and R directions
+  PackedXY = 1 << 14,          ///< X and Y coordinates
+  PackedZR = 1 << 15,          ///< Z and R coordinates
+  PackedXYZ = 1 << 16,         ///< X, Y, and Z coordinates
+  PackedXYZR = 1 << 17,        ///< X, Y, Z, and R coordinates
+  PackedVarianceZR = 1 << 18,  ///< Variance in Z and R directions
 
   /// All strip-related columns
   Strip =
@@ -47,7 +47,14 @@ enum class SpacePointColumns : std::uint32_t {
   /// All columns
   All = SourceLinks | X | Y | Z | R | Phi | Time | VarianceZ | VarianceR |
         TopStripVector | BottomStripVector | StripCenterDistance |
-        TopStripCenter | CopyFromIndex | XY | ZR | XYZ | XYZR | VarianceZR,
+        TopStripCenter | CopyFromIndex | PackedXY | PackedZR | PackedXYZ |
+        PackedXYZR | PackedVarianceZR,
+
+  XY [[deprecated("Use PackedXY instead")]] = 1 << 14,
+  ZR [[deprecated("Use PackedZR instead")]] = 1 << 15,
+  XYZ [[deprecated("Use PackedXYZ instead")]] = 1 << 16,
+  XYZR [[deprecated("Use PackedXYZR instead")]] = 1 << 17,
+  VarianceZR [[deprecated("Use PackedVarianceZR instead")]] = 1 << 18,
 };
 
 /// Enable bitwise operators for SpacePointColumns enum
