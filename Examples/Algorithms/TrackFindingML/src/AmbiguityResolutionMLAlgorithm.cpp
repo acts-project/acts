@@ -36,7 +36,7 @@ AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("AmbiguityResolutionMLAlgorithm", std::move(logger)),
       m_cfg(cfg),
-      m_ambiML(m_cfg.toAmbiguityResolutionMLConfig(), m_logger->clone()) {
+      m_ambiML(m_cfg.toAmbiguityResolutionMLConfig(), this->logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
   }

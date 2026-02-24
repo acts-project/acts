@@ -47,7 +47,7 @@
 namespace ActsExamples {
 
 Geant4SimulationBase::Geant4SimulationBase(
-    const Config& cfg, std::string name,
+    const Config& cfg, const std::string& name,
     std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm(name, std::move(logger)) {
   if (cfg.inputParticles.empty()) {
@@ -65,7 +65,7 @@ Geant4SimulationBase::Geant4SimulationBase(
   // tweak logging
   // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
   // 3 would be also possible, but that produces infinite amount of output.
-  m_geant4Level = m_logger->level() == Acts::Logging::VERBOSE ? 2 : 0;
+  m_geant4Level = this->logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
 }
 
 Geant4SimulationBase::~Geant4SimulationBase() = default;
@@ -185,7 +185,7 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
     prCfg.eventStore = m_eventStore;
     // G4RunManager will take care of deletion
     auto primaryGeneratorAction = new Geant4::SimParticleTranslation(
-        prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
+        prCfg, this->logger().cloneWithSuffix("SimParticleTranslation"));
     // Set the primary generator action
     runManager().SetUserAction(primaryGeneratorAction);
   }
@@ -201,7 +201,7 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
     trackingCfg.keepParticlesWithoutHits = cfg.keepParticlesWithoutHits;
     // G4RunManager will take care of deletion
     auto trackingAction = new Geant4::ParticleTrackingAction(
-        trackingCfg, m_logger->cloneWithSuffix("ParticleTracking"));
+        trackingCfg, this->logger().cloneWithSuffix("ParticleTracking"));
     runManager().SetUserAction(trackingAction);
   }
 
@@ -229,11 +229,11 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
 
     Geant4::SteppingActionList::Config steppingCfg;
     steppingCfg.actions.push_back(std::make_unique<Geant4::ParticleKillAction>(
-        particleKillCfg, m_logger->cloneWithSuffix("Killer")));
+        particleKillCfg, this->logger().cloneWithSuffix("Killer")));
 
     auto sensitiveSteppingAction =
         std::make_unique<Geant4::SensitiveSteppingAction>(
-            stepCfg, m_logger->cloneWithSuffix("SensitiveStepping"));
+            stepCfg, this->logger().cloneWithSuffix("SensitiveStepping"));
     sensitiveSteppingActionAccess = sensitiveSteppingAction.get();
 
     steppingCfg.actions.push_back(std::move(sensitiveSteppingAction));
@@ -252,7 +252,7 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   // Set the magnetic field
   if (cfg.magneticField) {
-    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                          "Setting ACTS configured field to Geant4.");
 
     Geant4::MagneticFieldWrapper::Config g4FieldCfg;
@@ -272,7 +272,7 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
   // ACTS sensitive surfaces are provided, so hit creation is turned on
   if (cfg.sensitiveSurfaceMapper != nullptr) {
     Geant4::SensitiveSurfaceMapper::State sState;
-    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                          "Remapping selected volumes from Geant4 to "
                          "Acts::Surface::GeometryID");
     cfg.sensitiveSurfaceMapper->remapSensitiveNames(
@@ -283,7 +283,7 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
         sState, Acts::GeometryContext::dangerouslyDefaultConstruct(), false,
         false);
     if (!allSurfacesMapped) {
-      ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::WARNING,
+      ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
                            "Not all sensitive surfaces have been mapped to "
                            "Geant4 volumes!");
     }
@@ -340,7 +340,7 @@ Geant4MaterialRecording::Geant4MaterialRecording(
           ? m_cfg.geant4Handle
           : Geant4Manager::instance().createHandle(
                 std::make_unique<Geant4::MaterialPhysicsList>(
-                    m_logger->cloneWithSuffix("MaterialPhysicsList")),
+                    this->logger().cloneWithSuffix("MaterialPhysicsList")),
                 physicsListName);
   if (m_geant4Instance->physicsListName != physicsListName) {
     throw std::runtime_error("inconsistent physics list");
@@ -363,7 +363,7 @@ Geant4MaterialRecording::Geant4MaterialRecording(
 
     // G4RunManager will take care of deletion
     auto primaryGeneratorAction = new Geant4::SimParticleTranslation(
-        prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
+        prCfg, this->logger().cloneWithSuffix("SimParticleTranslation"));
     // Set the primary generator action
     runManager().SetUserAction(primaryGeneratorAction);
   }
@@ -379,7 +379,7 @@ Geant4MaterialRecording::Geant4MaterialRecording(
     trackingCfg.keepParticlesWithoutHits = true;
     // G4RunManager will take care of deletion
     auto trackingAction = new Geant4::ParticleTrackingAction(
-        trackingCfg, m_logger->cloneWithSuffix("ParticleTracking"));
+        trackingCfg, this->logger().cloneWithSuffix("ParticleTracking"));
     runManager().SetUserAction(trackingAction);
   }
 
@@ -394,7 +394,7 @@ Geant4MaterialRecording::Geant4MaterialRecording(
     steppingCfg.excludeMaterials = m_cfg.excludeMaterials;
     // G4RunManager will take care of deletion
     auto steppingAction = new Geant4::MaterialSteppingAction(
-        steppingCfg, m_logger->cloneWithSuffix("MaterialSteppingAction"));
+        steppingCfg, this->logger().cloneWithSuffix("MaterialSteppingAction"));
     runManager().SetUserAction(steppingAction);
   }
 

@@ -179,19 +179,19 @@ FatrasSimulation::FatrasSimulation(Config cfg,
                                    std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("FatrasSimulation", std::move(logger)), m_cfg(std::move(cfg)) {
   ACTS_LOG_WITH_LOGGER(
-      *m_logger, Acts::Logging::DEBUG,
+      this->logger(), Acts::Logging::DEBUG,
       "hits on sensitive surfaces: " << m_cfg.generateHitsOnSensitive);
   ACTS_LOG_WITH_LOGGER(
-      *m_logger, Acts::Logging::DEBUG,
+      this->logger(), Acts::Logging::DEBUG,
       "hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
   ACTS_LOG_WITH_LOGGER(
-      *m_logger, Acts::Logging::DEBUG,
+      this->logger(), Acts::Logging::DEBUG,
       "hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
 
   if (!m_cfg.generateHitsOnSensitive && !m_cfg.generateHitsOnMaterial &&
       !m_cfg.generateHitsOnPassive) {
     ACTS_LOG_WITH_LOGGER(
-        *m_logger, Acts::Logging::WARNING,
+        this->logger(), Acts::Logging::WARNING,
         "FatrasSimulation not configured to generate any hits!");
   }
 
@@ -206,7 +206,7 @@ FatrasSimulation::FatrasSimulation(Config cfg,
   }
 
   // construct the simulation for the specific magnetic field
-  m_sim = std::make_unique<FatrasSimulationT>(m_cfg, *m_logger);
+  m_sim = std::make_unique<FatrasSimulationT>(m_cfg, this->logger());
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputParticles.initialize(m_cfg.outputParticles);

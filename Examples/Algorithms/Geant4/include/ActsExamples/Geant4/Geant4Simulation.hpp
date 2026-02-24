@@ -70,7 +70,7 @@ class Geant4SimulationBase : public IAlgorithm {
     std::shared_ptr<Geant4Handle> geant4Handle;
   };
 
-  Geant4SimulationBase(const Config& cfg, std::string name,
+  Geant4SimulationBase(const Config& cfg, const std::string& name,
                        std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~Geant4SimulationBase() override;

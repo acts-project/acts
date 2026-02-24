@@ -210,14 +210,14 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             DigitizedParameters dParameters;
 
             if (simHit.depositedEnergy() < m_cfg.minEnergyDeposit) {
-              ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::VERBOSE,
+              ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::VERBOSE,
                                    "Skip hit because energy deposit to small");
               continue;
             }
 
             // Geometric part - 0, 1, 2 local parameters are possible
             if (!digitizer.geometric.indices.empty()) {
-              ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::VERBOSE,
+              ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::VERBOSE,
                                    "Configured to geometric digitize "
                                        << digitizer.geometric.indices.size()
                                        << " parameters.");
@@ -228,12 +228,12 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                   cfg.segmentation, cfg.thickness);
               if (!channelsRes.ok() || channelsRes->empty()) {
                 ACTS_LOG_WITH_LOGGER(
-                    *m_logger, Acts::Logging::DEBUG,
+                    this->logger(), Acts::Logging::DEBUG,
                     "Geometric channelization did not work, skipping this "
                     "hit.");
                 continue;
               }
-              ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::VERBOSE,
+              ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::VERBOSE,
                                    "Activated " << channelsRes->size()
                                                 << " channels for this hit.");
               dParameters =
@@ -242,7 +242,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
             // Smearing part - (optionally) rest
             if (!digitizer.smearing.indices.empty()) {
-              ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::VERBOSE,
+              ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::VERBOSE,
                                    "Configured to smear "
                                        << digitizer.smearing.indices.size()
                                        << " parameters.");
@@ -250,7 +250,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                   digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
               if (!res.ok()) {
                 ++skippedHits;
-                ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+                ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
                                      "Problem in hit smearing, skip hit ("
                                          << res.error().message() << ")");
                 continue;
@@ -266,7 +266,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
             // Check on success - threshold could have eliminated all channels
             if (dParameters.values.empty()) {
               ACTS_LOG_WITH_LOGGER(
-                  *m_logger, Acts::Logging::VERBOSE,
+                  this->logger(), Acts::Logging::VERBOSE,
                   "Parameter digitization did not yield a measurement.");
               continue;
             }

@@ -81,7 +81,7 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(
   m_outputSimHitAssociation.maybeInitialize(m_cfg.outputSimHitAssociation);
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
-  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "Configured EDM4hepSimInputConverter:");
   auto printCut = [](std::optional<double> opt) {
     if (opt.has_value()) {
@@ -90,11 +90,11 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(
       return std::string{"<none>"};
     }
   };
-  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "- particle r: [" << printCut(m_cfg.particleRMin) << ", "
                                          << printCut(m_cfg.particleRMax)
                                          << "] mm");
-  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "- particle z: [" << printCut(m_cfg.particleZMin) << ", "
                                          << printCut(m_cfg.particleZMax)
                                          << "] mm");
@@ -105,7 +105,7 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(
             surface->surfacePlacement());
 
     if (detElement == nullptr) {
-      ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::ERROR,
+      ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::ERROR,
                            "Surface has no associated detector element");
       return;
     }

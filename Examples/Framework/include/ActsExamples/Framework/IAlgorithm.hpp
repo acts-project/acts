@@ -60,10 +60,10 @@ class IAlgorithm : public SequenceElement {
 
  protected:
   const Acts::Logger& logger() const { return *m_logger; }
-  std::unique_ptr<const Acts::Logger> m_logger;
 
  private:
   std::string m_name;
+  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
 }  // namespace ActsExamples

@@ -126,9 +126,9 @@ GridTripletSeedingAlgorithm::GridTripletSeedingAlgorithm(
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
 
-  m_filterLogger = m_logger->cloneWithSuffix("Filter");
+  m_filterLogger = this->logger().cloneWithSuffix("Filter");
 
-  m_seedFinder = Acts::TripletSeeder(m_logger->cloneWithSuffix("Finder"));
+  m_seedFinder = Acts::TripletSeeder(this->logger().cloneWithSuffix("Finder"));
 }
 
 ProcessCode GridTripletSeedingAlgorithm::execute(

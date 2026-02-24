@@ -82,12 +82,12 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(
         "Missing particle-to-simulated-hits map output collection");
   }
 
-  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::DEBUG,
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
                        "Retrieve sim hits and particles from "
                            << m_cfg.inputSimHits << " & "
                            << m_cfg.inputParticles);
   ACTS_LOG_WITH_LOGGER(
-      *m_logger, Acts::Logging::DEBUG,
+      this->logger(), Acts::Logging::DEBUG,
       "Write produced space points to " << m_cfg.outputSpacePoints);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.initialize(m_cfg.inputParticles);

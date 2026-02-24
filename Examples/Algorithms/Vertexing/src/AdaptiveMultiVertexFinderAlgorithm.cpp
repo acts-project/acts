@@ -57,15 +57,16 @@ AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
         Acts::ImpactPointEstimator::Config ipEstimatorCfg(m_cfg.bField,
                                                           m_propagator);
         return Acts::ImpactPointEstimator(
-            ipEstimatorCfg, m_logger->cloneWithSuffix("ImpactPointEstimator"));
+            ipEstimatorCfg,
+            this->logger().cloneWithSuffix("ImpactPointEstimator"));
       }()},
       m_linearizer{[&] {
         // Set up the helical track linearizer
         Linearizer::Config ltConfig;
         ltConfig.bField = m_cfg.bField;
         ltConfig.propagator = m_propagator;
-        return Linearizer(ltConfig,
-                          m_logger->cloneWithSuffix("HelicalTrackLinearizer"));
+        return Linearizer(
+            ltConfig, this->logger().cloneWithSuffix("HelicalTrackLinearizer"));
       }()},
       m_vertexSeeder{makeVertexSeeder()},
       m_vertexFinder{makeVertexFinder(m_vertexSeeder)} {
@@ -88,7 +89,7 @@ AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
       (!m_cfg.inputTruthParticles.empty() ||
        !m_cfg.inputTruthVertices.empty())) {
     ACTS_LOG_WITH_LOGGER(
-        *m_logger, Acts::Logging::INFO,
+        this->logger(), Acts::Logging::INFO,
         "Ignoring truth input as seed finder is not TruthSeeder");
     m_cfg.inputTruthVertices.clear();
     m_cfg.inputTruthVertices.clear();

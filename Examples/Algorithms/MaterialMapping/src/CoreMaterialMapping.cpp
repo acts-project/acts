@@ -26,7 +26,7 @@ CoreMaterialMapping::CoreMaterialMapping(
   m_outputMappedMaterialTracks.initialize(m_cfg.mappedMaterialTracks);
   m_outputUnmappedMaterialTracks.initialize(m_cfg.unmappedMaterialTracks);
 
-  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "This algorithm requires inter-event information, "
                            << "run in single-threaded mode!");
 

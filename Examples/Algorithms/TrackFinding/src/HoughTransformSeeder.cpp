@@ -124,16 +124,16 @@ HoughTransformSeeder::HoughTransformSeeder(
   auto geoSelEnd = m_cfg.geometrySelection.end();
   auto geoSelLastUnique = std::unique(geoSelBeg, geoSelEnd, isDuplicate);
   if (geoSelLastUnique != geoSelEnd) {
-    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::WARNING,
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
                          "Removed "
                              << std::distance(geoSelLastUnique, geoSelEnd)
                              << " geometry selection duplicates");
     m_cfg.geometrySelection.erase(geoSelLastUnique, geoSelEnd);
   }
-  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "Hough geometry selection:");
   for (const auto& geoId : m_cfg.geometrySelection) {
-    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO, "  " << geoId);
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO, "  " << geoId);
   }
 
   // Fill convenience variables

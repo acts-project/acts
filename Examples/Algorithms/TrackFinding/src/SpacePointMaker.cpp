@@ -208,7 +208,7 @@ SpacePointMaker::SpacePointMaker(Config cfg,
   const auto geoSelLastUnique =
       std::ranges::unique(m_cfg.geometrySelection, isDuplicate);
   if (geoSelLastUnique.begin() != geoSelLastUnique.end()) {
-    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::WARNING,
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
                          "Removed " << std::distance(geoSelLastUnique.begin(),
                                                      geoSelLastUnique.end())
                                     << " geometry selection duplicates");

@@ -20,12 +20,10 @@ HoughVertexFinderAlgorithm::HoughVertexFinderAlgorithm(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("HoughVertexFinder", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inputSpacePoints.empty()) {
-    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::ERROR,
-                         "You have to provide seeds");
+    throw std::invalid_argument("Missing input space points collection");
   }
   if (m_cfg.outputVertices.empty()) {
-    ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::ERROR,
-                         "Missing output vertices collection");
+    throw std::invalid_argument("Missing output vertices collection");
   }
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);

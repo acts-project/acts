@@ -32,7 +32,7 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
   m_inputMaterialTracks.initialize(m_cfg.inputMaterialTracks);
   m_outputMaterialTracks.initialize(m_cfg.mappingMaterialCollection);
 
-  ACTS_LOG_WITH_LOGGER(*m_logger, Acts::Logging::INFO,
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "This algorithm requires inter-event information, "
                            << "run in single-threaded mode!");
 
