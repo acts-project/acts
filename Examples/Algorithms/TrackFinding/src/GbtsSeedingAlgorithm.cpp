@@ -353,8 +353,10 @@ GbtsSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) const {
     if (currentIndex != inputVector.end()) {  // not end so does exist
       std::size_t index = std::distance(inputVector.begin(), currentIndex);
       inputVector[index].refCoord += rc;
-      inputVector[index].minBound += minBound;
-      inputVector[index].maxBound += maxBound;
+      inputVector[index].minBound =
+          std::min(inputVector[index].minBound, minBound);
+      inputVector[index].maxBound =
+          std::max(inputVector[index].maxBound, maxBound);
       countVector[index] += 1;  // increase count at the index
 
     } else {  // end so doesn't exists

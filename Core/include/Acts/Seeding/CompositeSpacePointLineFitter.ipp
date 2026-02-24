@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -86,7 +87,7 @@ CompositeSpacePointLineFitter::fastPrecFit(
                         << (fitTime ? "with" : "no") << " time>() " << __LINE__
                         << " - Precision fit converged. " << (*result));
 
-    if (result->chi2 / static_cast<double>(result->nDoF) <
+    if (result->chi2 / std::max(1., static_cast<double>(result->nDoF)) <
         m_cfg.badFastChi2SignSwap) {
       return result;
     }
@@ -354,11 +355,6 @@ CompositeSpacePointLineFitter::fit(
                                          resCfg.parsToUse, fitDelegate);
     }
     if (fastResult.converged) {
-      if (fitTime) {
-        fastResult.parameters[toUnderlying(FitParIndex::t0)] -=
-            (fitOpts.localToGlobal * line.position()).norm() /
-            PhysicalConstants::c;
-      }
       static_cast<FitParameters&>(result) = std::move(fastResult);
       ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Fast fit converged.");
       // Use the result from the fast fitter as final answer
@@ -563,9 +559,15 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ", hessian: \n"
                         << toString(miniHessian)
                         << ", determinant: " << miniHessian.determinant());
-
-  auto inverseH = safeInverse(miniHessian);
-  // The Hessian can safely be inverted
+  std::optional<SquareMatrix<N>> inverseH{std::nullopt};
+  if (miniHessian.trace() > Acts::s_epsilon &&
+      miniHessian.determinant() > Acts::s_epsilon) {
+    inverseH = safeInverse(miniHessian);
+  } else {
+    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
+                        << ": Hessian is singular or not positive definite. "
+                           "Fallback to gradient decent.");
+  }
   if (inverseH) {
     const Vector<N> update{(*inverseH) * miniGradient};
     // We compute also the normalized update, defined as the parameter
@@ -605,10 +607,15 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
     ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Inverted Hessian \n"
                           << toString(*inverseH) << "\n-> Update parameters by "
-                          << toString(update));
+                          << toString(update)
+                          << ", normUpdate: " << std::sqrt(normUpdate));
     miniPars -= update;
 
   } else if (retCode != UpdateStep::converged) {
+    ACTS_DEBUG(
+        __func__
+        << "<" << N << ">() - " << __LINE__
+        << ": Inversion of the Hessian Failed, fallback to gradient decent.");
     // Fall back to gradient decent with a fixed damping factor
     const Vector<N> update{std::min(m_cfg.gradientStep, miniGradient.norm()) *
                            miniGradient.normalized()};

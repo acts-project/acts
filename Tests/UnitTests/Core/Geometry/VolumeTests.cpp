@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   Transform3 shift(Transform3::Identity());
   Vector3 shiftTranslation{-4_mm, -5_mm, -6_mm};
   shift.translation() = shiftTranslation;
-  Volume volumeShift = volume.shifted(shift);
+  Volume volumeShift = volume.shifted(gctx, shift);
   BOOST_CHECK_EQUAL(
       volumeShift.center(gctx),
       (shift * volume.localToGlobalTransform(gctx)).translation());
