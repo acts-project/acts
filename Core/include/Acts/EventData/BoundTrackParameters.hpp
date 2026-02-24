@@ -140,7 +140,10 @@ class BoundTrackParameters {
 
   /// Convert this track parameter object to the general type-erased one
   /// @return Type-erased bound track parameters
-  BoundTrackParameters toBound() const { return BoundTrackParameters{*this}; }
+  [[deprecated("You already have a bound track parameter at hand")]]
+  BoundTrackParameters toBound() const {
+    return BoundTrackParameters{*this};
+  }
 
   /// Parameters vector.
   /// @return Mutable reference to the parameters vector

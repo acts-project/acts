@@ -10,4 +10,7 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
 target_link_libraries(ActsPluginCovfie PUBLIC Acts::Core covfie::core)
+
+acts_compile_headers(PluginCovfie GLOB include/**/*.hpp)

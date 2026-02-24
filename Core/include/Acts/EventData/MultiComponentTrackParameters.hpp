@@ -181,7 +181,10 @@ class MultiComponentBoundTrackParameters {
 
   /// Comply with bound convertible, in this case return a copy
   /// @return Copy of this multi-component track parameters
-  MultiComponentBoundTrackParameters toBound() const { return *this; }
+  [[deprecated("You already have a bound track parameter at hand")]]
+  MultiComponentBoundTrackParameters toBound() const {
+    return *this;
+  }
 
   /// Access the parameters
   /// @return Reference to the vector of parameter components
