@@ -240,20 +240,20 @@ def make_sequencer(
             outputJets="output_jets",
             jetPtMin=10 * u.GeV,
         ),
-        loglevel=acts.logging.DEBUG,
+        loglevel=acts.logging.INFO,
     )
 
-    # s.addWriter(
-    #     acts.examples.root.RootTrackSummaryWriter(
-    #         level=acts.logging.VERBOSE,
-    #         inputTracks="tracks",
-    #         inputParticles="particles_selected",
-    #         inputJets="output_jets",
-    #         writeJets=True,
-    #         inputTrackParticleMatching="track_particle_matching",
-    #         filePath=str(outputDir / "tracksummary_kf.root"),
-    #     )
-    # )
+    s.addWriter(
+        acts.examples.root.RootTrackSummaryWriter(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            inputParticles="particles_selected",
+            inputJets="output_jets",
+            writeJets=True,
+            inputTrackParticleMatching="track_particle_matching",
+            filePath=str(outputDir / "tracksummary_kf.root"),
+        )
+    )
 
 
 def make_geometry():
