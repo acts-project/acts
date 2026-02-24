@@ -462,7 +462,7 @@ void verifySchemaHeader(const nlohmann::json& encoded) {
   }
 }
 
-void collectVolumesDfs(
+void collectVolumesDepthFirst(
     const Acts::TrackingVolume& volume,
     std::vector<const Acts::TrackingVolume*>& orderedVolumes,
     Acts::TrackingGeometryJsonConverter::VolumeIdLookup& volumeIds) {
@@ -472,7 +472,7 @@ void collectVolumesDfs(
   orderedVolumes.push_back(&volume);
 
   for (const auto& child : volume.volumes()) {
-    collectVolumesDfs(child, orderedVolumes, volumeIds);
+    collectVolumesDepthFirst(child, orderedVolumes, volumeIds);
   }
 }
 
@@ -579,7 +579,7 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
 
   std::vector<const TrackingVolume*> orderedVolumes;
   VolumeIdLookup volumeIds;
-  collectVolumesDfs(world, orderedVolumes, volumeIds);
+  collectVolumesDepthFirst(world, orderedVolumes, volumeIds);
 
   encoded[kRootVolumeIdKey] = volumeIds.at(world);
   encoded[kVolumesKey] = nlohmann::json::array();
