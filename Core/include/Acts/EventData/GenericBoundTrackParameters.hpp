@@ -157,6 +157,7 @@ class GenericBoundTrackParameters {
 
   /// Convert this track parameter object to the general type-erased one
   /// @return Type-erased bound track parameters
+  [[deprecated("You already have a bound track parameter at hand")]]
   GenericBoundTrackParameters<Acts::ParticleHypothesis> toBound() const {
     return GenericBoundTrackParameters<Acts::ParticleHypothesis>{*this};
   }
