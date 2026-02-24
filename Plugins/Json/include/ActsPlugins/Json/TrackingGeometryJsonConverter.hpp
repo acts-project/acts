@@ -55,7 +55,7 @@ class TrackingGeometryJsonConverter {
   struct Options {};
 
   /// Generic lookup from object pointer identity to serialized object ID.
-  template <typename object_t>
+  template <typename object_t, const char* kContext>
   struct PointerToIdLookup {
     /// Insert a new object to ID mapping.
     ///
@@ -79,8 +79,8 @@ class TrackingGeometryJsonConverter {
       auto it = m_objectIds.find(&object);
       if (it == m_objectIds.end()) {
         throw std::invalid_argument(
-            "Pointer-to-ID lookup failed: object is outside serialized "
-            "hierarchy");
+            "Pointer-to-ID lookup failed for " + std::string{kContext} +
+            ": object is outside serialized hierarchy");
       }
       return it->second;
     }
@@ -90,7 +90,7 @@ class TrackingGeometryJsonConverter {
   };
 
   /// Generic lookup from serialized ID to non-owning object pointer.
-  template <typename object_t>
+  template <typename object_t, const char* kContext>
   struct IdToPointerLookup {
     /// Insert a new serialized ID to object pointer mapping.
     ///
@@ -123,7 +123,8 @@ class TrackingGeometryJsonConverter {
       auto* object = find(objectId);
       if (object == nullptr) {
         throw std::invalid_argument(
-            "ID-to-pointer lookup failed: unknown serialized object ID");
+            "ID-to-pointer lookup failed for " + std::string{kContext} +
+            ": unknown serialized object ID");
       }
       return *object;
     }
@@ -133,7 +134,7 @@ class TrackingGeometryJsonConverter {
   };
 
   /// Generic lookup from serialized ID to owning shared pointer.
-  template <typename object_t>
+  template <typename object_t, const char* kContext>
   struct IdToSharedPointerLookup {
     /// Insert a new serialized ID to shared pointer mapping.
     ///
@@ -166,7 +167,8 @@ class TrackingGeometryJsonConverter {
       auto it = m_objects.find(objectId);
       if (it == m_objects.end()) {
         throw std::invalid_argument(
-            "ID-to-shared-pointer lookup failed: unknown serialized object ID");
+            "ID-to-shared-pointer lookup failed for " +
+            std::string{kContext} + ": unknown serialized object ID");
       }
       return it->second;
     }
@@ -175,10 +177,16 @@ class TrackingGeometryJsonConverter {
     std::unordered_map<std::size_t, std::shared_ptr<object_t>> m_objects;
   };
 
-  using VolumeIdLookup = PointerToIdLookup<TrackingVolume>;
-  using VolumePointerLookup = IdToPointerLookup<TrackingVolume>;
-  using PortalIdLookup = PointerToIdLookup<Portal>;
-  using PortalPointerLookup = IdToSharedPointerLookup<Portal>;
+  static inline constexpr char kVolumeLookupContext[] = "volume";
+  static inline constexpr char kPortalLookupContext[] = "portal";
+
+  using VolumeIdLookup =
+      PointerToIdLookup<TrackingVolume, kVolumeLookupContext>;
+  using VolumePointerLookup =
+      IdToPointerLookup<TrackingVolume, kVolumeLookupContext>;
+  using PortalIdLookup = PointerToIdLookup<Portal, kPortalLookupContext>;
+  using PortalPointerLookup =
+      IdToSharedPointerLookup<Portal, kPortalLookupContext>;
 
   using VolumeBoundsEncoder =
       TypeDispatcher<VolumeBounds, nlohmann::json()>;
