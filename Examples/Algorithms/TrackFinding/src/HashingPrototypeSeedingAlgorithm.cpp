@@ -382,6 +382,8 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
       for (auto& spIndex : seed.spacePointIndices()) {
         spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
       }
+
+      uniqueSeeds.insert(seed.asConst());
     }
   }
 
