@@ -23,6 +23,7 @@
 namespace Acts {
 
 class PortalLinkBase;
+class Portal;
 class TrackingGeometry;
 class TrackingVolume;
 class VolumeBounds;
@@ -37,13 +38,16 @@ class VolumeBounds;
 /// - Serialization:
 ///   - traverse the `TrackingVolume::volumes()` tree in depth-first order
 ///   - assign stable in-file volume IDs
-///   - write each volume transform, bounds payload, children IDs, and portals
+///   - collect unique portals and assign stable in-file portal IDs
+///   - write each volume transform, bounds payload, children IDs, and portal IDs
+///   - write all unique portals once in a top-level portal table
 ///   - encode portal links by concrete kind via registered dispatchers
 /// - Deserialization:
 ///   - validate schema header and collect all volume records
 ///   - instantiate all volumes first and build ID->pointer lookup
 ///   - attach child volumes to reconstruct the tree
-///   - decode portal links by kind, then rebuild `Portal` objects
+///   - decode unique portals by kind, then attach shared portal pointers to
+///     volumes via portal IDs
 ///   - return a reconstructed world `TrackingVolume` (or `TrackingGeometry`)
 class TrackingGeometryJsonConverter {
  public:
@@ -124,6 +128,82 @@ class TrackingGeometryJsonConverter {
 
    private:
     std::unordered_map<std::size_t, TrackingVolume*> m_volumes;
+  };
+
+  /// Lookup structure from portal pointer to serialized portal ID.
+  struct PortalIdLookup {
+    /// Insert a new portal to ID mapping.
+    ///
+    /// @param portal is the source portal pointer key
+    /// @param portalId is the serialized ID to assign
+    ///
+    /// @return true if insertion happened, false if the portal was already
+    ///         present
+    bool emplace(const Portal& portal, std::size_t portalId) {
+      return m_portalIds.emplace(&portal, portalId).second;
+    }
+
+    /// Resolve a serialized portal ID from a portal reference.
+    ///
+    /// @param portal is the source portal key
+    ///
+    /// @return associated serialized portal ID
+    ///
+    /// @throw std::invalid_argument if the portal is not in the lookup
+    std::size_t at(const Portal& portal) const {
+      auto it = m_portalIds.find(&portal);
+      if (it == m_portalIds.end()) {
+        throw std::invalid_argument(
+            "Portal lookup failed: portal is outside serialized hierarchy");
+      }
+      return it->second;
+    }
+
+   private:
+    std::unordered_map<const Portal*, std::size_t> m_portalIds;
+  };
+
+  /// Lookup structure from serialized portal ID to reconstructed shared portal
+  /// pointer.
+  struct PortalPointerLookup {
+    /// Insert a new serialized ID to portal pointer mapping.
+    ///
+    /// @param portalId is the serialized ID key
+    /// @param portal is the target shared portal object
+    ///
+    /// @return true if insertion happened, false if the ID was already present
+    bool emplace(std::size_t portalId, std::shared_ptr<Portal> portal) {
+      return m_portals.emplace(portalId, std::move(portal)).second;
+    }
+
+    /// Try to find a mapped portal pointer by serialized ID.
+    ///
+    /// @param portalId is the serialized ID key
+    ///
+    /// @return mapped shared portal pointer, or nullptr if not found
+    std::shared_ptr<Portal> find(std::size_t portalId) const {
+      auto it = m_portals.find(portalId);
+      return it == m_portals.end() ? nullptr : it->second;
+    }
+
+    /// Resolve a mapped portal pointer by serialized ID.
+    ///
+    /// @param portalId is the serialized ID key
+    ///
+    /// @return mapped shared portal pointer
+    ///
+    /// @throw std::invalid_argument if the ID is not mapped
+    const std::shared_ptr<Portal>& at(std::size_t portalId) const {
+      auto it = m_portals.find(portalId);
+      if (it == m_portals.end()) {
+        throw std::invalid_argument(
+            "Portal pointer lookup failed: unknown serialized portal ID");
+      }
+      return it->second;
+    }
+
+   private:
+    std::unordered_map<std::size_t, std::shared_ptr<Portal>> m_portals;
   };
 
   using VolumeBoundsEncoder =

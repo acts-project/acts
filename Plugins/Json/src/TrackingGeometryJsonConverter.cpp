@@ -54,6 +54,7 @@ namespace {
 ///   - normalize enum-like values (axis/shape metadata) to stable JSON strings
 ///   - encode bounds and portal-link polymorphic payloads using kind tags
 ///   - emit volumes in deterministic depth-first order and connect them by IDs
+///   - emit unique portals in a top-level table and refer to them from volumes
 /// - Decoder side:
 ///   - read and validate schema metadata
 ///   - construct all volumes first, then attach children and portals
@@ -63,17 +64,20 @@ constexpr const char* kHeaderKey = "acts-geometry-volumes";
 constexpr const char* kVersionKey = "format-version";
 constexpr const char* kScopeKey = "scope";
 constexpr const char* kScopeValue = "volumes-bounds-portals";
-constexpr int kFormatVersion = 1;
+constexpr int kCurrentFormatVersion = 2;
+constexpr int kLegacyFormatVersion = 1;
 
 constexpr const char* kRootVolumeIdKey = "root_volume_id";
 constexpr const char* kVolumesKey = "volumes";
+constexpr const char* kPortalsKey = "portals";
 constexpr const char* kVolumeIdKey = "volume_id";
+constexpr const char* kPortalIdKey = "portal_id";
 constexpr const char* kNameKey = "name";
 constexpr const char* kGeometryIdKey = "geometry_id";
 constexpr const char* kTransformKey = "transform";
 constexpr const char* kBoundsKey = "bounds";
 constexpr const char* kChildrenKey = "children";
-constexpr const char* kPortalsKey = "portals";
+constexpr const char* kPortalIdsKey = "portal_ids";
 
 constexpr const char* kPortalSurfaceKey = "surface";
 constexpr const char* kAlongNormalKey = "along_normal";
@@ -481,21 +485,31 @@ struct VolumeRecord {
   Acts::Transform3 transform{Acts::Transform3::Identity()};
   nlohmann::json bounds;
   std::vector<std::size_t> children;
-  nlohmann::json portals = nlohmann::json::array();
+  std::vector<std::size_t> portalIds;
+  nlohmann::json legacyPortals = nlohmann::json::array();
+};
+
+/// Temporary decoded representation of one serialized portal entry.
+struct PortalRecord {
+  std::size_t portalId = 0u;
+  nlohmann::json payload;
 };
 
 /// Validate top-level schema metadata for tracking-geometry JSON payload.
-void verifySchemaHeader(const nlohmann::json& encoded) {
+int verifySchemaHeader(const nlohmann::json& encoded) {
   if (!encoded.contains(kHeaderKey)) {
     throw std::invalid_argument("Missing geometry JSON header");
   }
   const auto& header = encoded.at(kHeaderKey);
-  if (header.at(kVersionKey).get<int>() != kFormatVersion) {
+  const int formatVersion = header.at(kVersionKey).get<int>();
+  if (formatVersion != kLegacyFormatVersion &&
+      formatVersion != kCurrentFormatVersion) {
     throw std::invalid_argument("Unsupported geometry JSON format version");
   }
   if (header.at(kScopeKey).get<std::string>() != kScopeValue) {
     throw std::invalid_argument("Unexpected geometry JSON scope");
   }
+  return formatVersion;
 }
 
 /// Traverse volume hierarchy in depth-first order and fill deterministic
@@ -511,6 +525,23 @@ void collectVolumesDepthFirst(
 
   for (const auto& child : volume.volumes()) {
     collectVolumesDepthFirst(child, orderedVolumes, volumeIds);
+  }
+}
+
+/// Traverse volume hierarchy in depth-first order and collect unique portal
+/// pointers into deterministic serialization order plus ID lookup.
+void collectPortalsDepthFirst(
+    const Acts::TrackingVolume& volume,
+    std::vector<const Acts::Portal*>& orderedPortals,
+    Acts::TrackingGeometryJsonConverter::PortalIdLookup& portalIds) {
+  for (const auto& portal : volume.portals()) {
+    if (portalIds.emplace(portal, orderedPortals.size())) {
+      orderedPortals.push_back(&portal);
+    }
+  }
+
+  for (const auto& child : volume.volumes()) {
+    collectPortalsDepthFirst(child, orderedPortals, portalIds);
   }
 }
 
@@ -619,22 +650,50 @@ Acts::TrackingGeometryJsonConverter::portalLinkFromJson(
 /// Serialize one world volume hierarchy to JSON.
 ///
 /// This writes schema metadata, emits all reachable volumes in deterministic
-/// depth-first order, and stores portals/links with explicit kind-tagged
-/// payloads.
+/// depth-first order, stores per-volume portal references, and writes unique
+/// portal payloads/links with explicit kind tags in a top-level portal table.
 nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
     const GeometryContext& gctx, const TrackingVolume& world,
     const Options& /*options*/) const {
   nlohmann::json encoded;
   encoded[kHeaderKey] = nlohmann::json::object();
-  encoded[kHeaderKey][kVersionKey] = kFormatVersion;
+  encoded[kHeaderKey][kVersionKey] = kCurrentFormatVersion;
   encoded[kHeaderKey][kScopeKey] = kScopeValue;
 
   std::vector<const TrackingVolume*> orderedVolumes;
   VolumeIdLookup volumeIds;
   collectVolumesDepthFirst(world, orderedVolumes, volumeIds);
 
+  std::vector<const Portal*> orderedPortals;
+  PortalIdLookup portalIds;
+  collectPortalsDepthFirst(world, orderedPortals, portalIds);
+
   encoded[kRootVolumeIdKey] = volumeIds.at(world);
   encoded[kVolumesKey] = nlohmann::json::array();
+  encoded[kPortalsKey] = nlohmann::json::array();
+
+  for (const auto* portal : orderedPortals) {
+    nlohmann::json jPortal;
+    jPortal[kPortalIdKey] = portalIds.at(*portal);
+    jPortal[kPortalSurfaceKey] =
+        SurfaceJsonConverter::toJson(gctx, portal->surface(), {.writeMaterial = false});
+
+    if (const auto* along = portal->getLink(Direction::AlongNormal());
+        along != nullptr) {
+      jPortal[kAlongNormalKey] = portalLinkToJson(gctx, *along, volumeIds);
+    } else {
+      jPortal[kAlongNormalKey] = nullptr;
+    }
+
+    if (const auto* opposite = portal->getLink(Direction::OppositeNormal());
+        opposite != nullptr) {
+      jPortal[kOppositeNormalKey] = portalLinkToJson(gctx, *opposite, volumeIds);
+    } else {
+      jPortal[kOppositeNormalKey] = nullptr;
+    }
+
+    encoded[kPortalsKey].push_back(std::move(jPortal));
+  }
 
   for (const auto* volume : orderedVolumes) {
     nlohmann::json jVolume;
@@ -650,28 +709,9 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
       jVolume[kChildrenKey].push_back(volumeIds.at(child));
     }
 
-    jVolume[kPortalsKey] = nlohmann::json::array();
+    jVolume[kPortalIdsKey] = nlohmann::json::array();
     for (const auto& portal : volume->portals()) {
-      nlohmann::json jPortal;
-      jPortal[kPortalSurfaceKey] = SurfaceJsonConverter::toJson(
-          gctx, portal.surface(), {.writeMaterial = false});
-
-      if (const auto* along = portal.getLink(Direction::AlongNormal());
-          along != nullptr) {
-        jPortal[kAlongNormalKey] = portalLinkToJson(gctx, *along, volumeIds);
-      } else {
-        jPortal[kAlongNormalKey] = nullptr;
-      }
-
-      if (const auto* opposite = portal.getLink(Direction::OppositeNormal());
-          opposite != nullptr) {
-        jPortal[kOppositeNormalKey] =
-            portalLinkToJson(gctx, *opposite, volumeIds);
-      } else {
-        jPortal[kOppositeNormalKey] = nullptr;
-      }
-
-      jVolume[kPortalsKey].push_back(std::move(jPortal));
+      jVolume[kPortalIdsKey].push_back(portalIds.at(portal));
     }
 
     encoded[kVolumesKey].push_back(std::move(jVolume));
@@ -684,12 +724,13 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
 ///
 /// The reconstruction is performed in phases: validate header, decode all
 /// volume records, instantiate volumes, attach child hierarchy, then decode and
-/// attach portals.
+/// attach portals (shared by ID in current schema or in-volume for legacy
+/// payloads).
 std::shared_ptr<Acts::TrackingVolume>
 Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
     const Options& /*options*/) const {
-  verifySchemaHeader(encoded);
+  const int formatVersion = verifySchemaHeader(encoded);
 
   if (!encoded.contains(kVolumesKey) || !encoded.contains(kRootVolumeIdKey)) {
     throw std::invalid_argument(
@@ -697,6 +738,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   }
 
   std::unordered_map<std::size_t, VolumeRecord> records;
+  bool hasPortalIdsInAnyVolume = false;
+  bool hasLegacyPortalsInAnyVolume = false;
   for (const auto& jVolume : encoded.at(kVolumesKey)) {
     VolumeRecord record;
     record.volumeId = jVolume.at(kVolumeIdKey).get<std::size_t>();
@@ -707,11 +750,43 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
         Transform3JsonConverter::fromJson(jVolume.at(kTransformKey));
     record.bounds = jVolume.at(kBoundsKey);
     record.children = jVolume.value(kChildrenKey, std::vector<std::size_t>{});
-    record.portals = jVolume.value(kPortalsKey, nlohmann::json::array());
+    record.portalIds = jVolume.value(kPortalIdsKey, std::vector<std::size_t>{});
+    record.legacyPortals = jVolume.value(kPortalsKey, nlohmann::json::array());
+
+    hasPortalIdsInAnyVolume = hasPortalIdsInAnyVolume || jVolume.contains(kPortalIdsKey);
+    hasLegacyPortalsInAnyVolume =
+        hasLegacyPortalsInAnyVolume || jVolume.contains(kPortalsKey);
 
     const auto inserted = records.emplace(record.volumeId, std::move(record));
     if (!inserted.second) {
       throw std::invalid_argument("Duplicate serialized volume ID");
+    }
+  }
+
+  if (hasPortalIdsInAnyVolume && hasLegacyPortalsInAnyVolume) {
+    throw std::invalid_argument(
+        "Mixed portal schema: both portal_ids and legacy volume portals found");
+  }
+  if (formatVersion == kCurrentFormatVersion && hasLegacyPortalsInAnyVolume) {
+    throw std::invalid_argument(
+        "Current portal schema does not allow in-volume portal payloads");
+  }
+
+  std::unordered_map<std::size_t, PortalRecord> portalRecords;
+  if (hasPortalIdsInAnyVolume) {
+    if (!encoded.contains(kPortalsKey)) {
+      throw std::invalid_argument(
+          "Missing top-level portal payload for portal ID references");
+    }
+
+    for (const auto& jPortal : encoded.at(kPortalsKey)) {
+      PortalRecord record;
+      record.portalId = jPortal.at(kPortalIdKey).get<std::size_t>();
+      record.payload = jPortal;
+      const auto inserted = portalRecords.emplace(record.portalId, std::move(record));
+      if (!inserted.second) {
+        throw std::invalid_argument("Duplicate serialized portal ID");
+      }
     }
   }
 
@@ -796,41 +871,71 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 
   attachChildren(rootVolumeId);
 
-  for (const auto& [volumeId, record] : records) {
-    auto* volume = volumePointers.find(volumeId);
-    if (volume == nullptr) {
-      throw std::invalid_argument("Volume pointer reconstruction failed");
+  auto decodePortal = [&](const nlohmann::json& jPortal) {
+    std::unique_ptr<PortalLinkBase> along = nullptr;
+    std::unique_ptr<PortalLinkBase> opposite = nullptr;
+
+    if (!jPortal.at(kAlongNormalKey).is_null()) {
+      along = portalLinkFromJson(gctx, jPortal.at(kAlongNormalKey), volumePointers);
+    }
+    if (!jPortal.at(kOppositeNormalKey).is_null()) {
+      opposite =
+          portalLinkFromJson(gctx, jPortal.at(kOppositeNormalKey), volumePointers);
+    }
+    if (along == nullptr && opposite == nullptr) {
+      throw std::invalid_argument("Portal has no links");
     }
 
-    for (const auto& jPortal : record.portals) {
-      std::unique_ptr<PortalLinkBase> along = nullptr;
-      std::unique_ptr<PortalLinkBase> opposite = nullptr;
+    auto portal =
+        std::make_shared<Portal>(gctx, std::move(along), std::move(opposite));
 
-      if (!jPortal.at(kAlongNormalKey).is_null()) {
-        along = portalLinkFromJson(gctx, jPortal.at(kAlongNormalKey),
-                                   volumePointers);
+    if (jPortal.contains(kPortalSurfaceKey) &&
+        jPortal.at(kPortalSurfaceKey).contains("geo_id")) {
+      const auto expectedSurfaceId =
+          jPortal.at(kPortalSurfaceKey).at("geo_id").get<std::uint64_t>();
+      const GeometryIdentifier expectedIdentifier(expectedSurfaceId);
+      const bool isPortalStyleIdentifier =
+          expectedIdentifier.boundary() == 0u && expectedIdentifier.layer() == 0u &&
+          expectedIdentifier.approach() == 0u &&
+          expectedIdentifier.sensitive() == 0u && expectedIdentifier.extra() != 0u;
+      if (isPortalStyleIdentifier &&
+          portal->surface().geometryId().value() != expectedSurfaceId) {
+        portal->surface().assignGeometryId(expectedIdentifier);
       }
-      if (!jPortal.at(kOppositeNormalKey).is_null()) {
-        opposite = portalLinkFromJson(gctx, jPortal.at(kOppositeNormalKey),
-                                      volumePointers);
+    }
+
+    return portal;
+  };
+
+  PortalPointerLookup portalPointers;
+  if (hasPortalIdsInAnyVolume) {
+    for (const auto& [portalId, record] : portalRecords) {
+      const auto inserted = portalPointers.emplace(portalId, decodePortal(record.payload));
+      if (!inserted) {
+        throw std::invalid_argument("Portal pointer reconstruction failed");
       }
-      if (along == nullptr && opposite == nullptr) {
-        throw std::invalid_argument("Portal has no links");
+    }
+
+    for (const auto& [volumeId, record] : records) {
+      auto* volume = volumePointers.find(volumeId);
+      if (volume == nullptr) {
+        throw std::invalid_argument("Volume pointer reconstruction failed");
       }
 
-      auto portal =
-          std::make_shared<Portal>(gctx, std::move(along), std::move(opposite));
-
-      if (jPortal.contains(kPortalSurfaceKey)) {
-        const auto expectedSurfaceId =
-            jPortal.at(kPortalSurfaceKey).at("geo_id").get<std::uint64_t>();
-        if (portal->surface().geometryId().value() != expectedSurfaceId) {
-          portal->surface().assignGeometryId(
-              GeometryIdentifier(expectedSurfaceId));
-        }
+      for (const std::size_t portalId : record.portalIds) {
+        volume->addPortal(portalPointers.at(portalId));
+      }
+    }
+  } else if (hasLegacyPortalsInAnyVolume) {
+    for (const auto& [volumeId, record] : records) {
+      auto* volume = volumePointers.find(volumeId);
+      if (volume == nullptr) {
+        throw std::invalid_argument("Volume pointer reconstruction failed");
       }
 
-      volume->addPortal(std::move(portal));
+      for (const auto& jPortal : record.legacyPortals) {
+        volume->addPortal(decodePortal(jPortal));
+      }
     }
   }
 

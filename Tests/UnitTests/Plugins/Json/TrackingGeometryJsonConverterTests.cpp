@@ -114,6 +114,18 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   root->addPortal(
       std::make_shared<Portal>(Direction::AlongNormal(), std::move(gridLink)));
 
+  auto sharedPortalBounds = std::make_shared<const RectangleBounds>(0.75, 0.75);
+  auto sharedPortalSurface = Surface::makeShared<PlaneSurface>(
+      Transform3::Identity(), sharedPortalBounds);
+  sharedPortalSurface->assignGeometryId(
+      GeometryIdentifier{}.withVolume(1u).withExtra(16u));
+
+  auto sharedPortal = std::make_shared<Portal>(
+      gctx, std::make_unique<TrivialPortalLink>(sharedPortalSurface, *childPtr),
+      std::make_unique<TrivialPortalLink>(sharedPortalSurface, *rootPtr));
+  root->addPortal(sharedPortal);
+  childPtr->addPortal(sharedPortal);
+
   TrackingGeometryJsonConverter converter;
   nlohmann::json encoded = converter.toJson(gctx, *root);
   TemporaryDirectory tmpDir{};
@@ -151,7 +163,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   for (auto& portal : decodedRoot->portals()) {
     decodedPortals.push_back(&portal);
   }
-  BOOST_REQUIRE_EQUAL(decodedPortals.size(), 3u);
+  BOOST_REQUIRE_EQUAL(decodedPortals.size(), 4u);
 
   const auto* decodedTrivial = dynamic_cast<const TrivialPortalLink*>(
       decodedPortals.at(0)->getLink(Direction::AlongNormal()));
@@ -180,6 +192,21 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({1u})->volumeName(), "child");
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({2u})->volumeName(), "root");
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({3u})->volumeName(), "child");
+
+  std::vector<Portal*> decodedChildPortals;
+  for (auto& portal : decodedChildren.front()->portals()) {
+    decodedChildPortals.push_back(&portal);
+  }
+  BOOST_REQUIRE_EQUAL(decodedChildPortals.size(), 1u);
+
+  bool sharedPortalPreserved = false;
+  for (Portal* rootPortal : decodedPortals) {
+    if (rootPortal == decodedChildPortals.front()) {
+      sharedPortalPreserved = true;
+      break;
+    }
+  }
+  BOOST_CHECK(sharedPortalPreserved);
 
   auto decodedGeometry =
       converter.trackingGeometryFromJson(gctx, encodedFromFile);
