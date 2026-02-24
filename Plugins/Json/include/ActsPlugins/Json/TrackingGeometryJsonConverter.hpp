@@ -30,8 +30,21 @@ class VolumeBounds;
 /// @addtogroup json_plugin
 /// @{
 
-/// Converter for tracking geometry JSON payloads focused on volumes,
-/// volume bounds and portals.
+/// Converter for tracking geometry JSON payloads focused on volumes, volume
+/// bounds and portals.
+///
+/// High-level conversion overview:
+/// - Serialization:
+///   - traverse the `TrackingVolume::volumes()` tree in depth-first order
+///   - assign stable in-file volume IDs
+///   - write each volume transform, bounds payload, children IDs, and portals
+///   - encode portal links by concrete kind via registered dispatchers
+/// - Deserialization:
+///   - validate schema header and collect all volume records
+///   - instantiate all volumes first and build ID->pointer lookup
+///   - attach child volumes to reconstruct the tree
+///   - decode portal links by kind, then rebuild `Portal` objects
+///   - return a reconstructed world `TrackingVolume` (or `TrackingGeometry`)
 class TrackingGeometryJsonConverter {
  public:
   /// JSON serialization options for tracking geometry conversion.
@@ -39,10 +52,24 @@ class TrackingGeometryJsonConverter {
 
   /// Lookup structure from volume pointer to serialized volume ID.
   struct VolumeIdLookup {
+    /// Insert a new volume to ID mapping.
+    ///
+    /// @param volume is the source volume pointer key
+    /// @param volumeId is the serialized ID to assign
+    ///
+    /// @return true if insertion happened, false if the volume was already
+    ///         present
     bool emplace(const TrackingVolume& volume, std::size_t volumeId) {
       return m_volumeIds.emplace(&volume, volumeId).second;
     }
 
+    /// Resolve a serialized volume ID from a volume reference.
+    ///
+    /// @param volume is the source volume key
+    ///
+    /// @return associated serialized volume ID
+    ///
+    /// @throw std::invalid_argument if the volume is not in the lookup
     std::size_t at(const TrackingVolume& volume) const {
       auto it = m_volumeIds.find(&volume);
       if (it == m_volumeIds.end()) {
@@ -59,15 +86,33 @@ class TrackingGeometryJsonConverter {
   /// Lookup structure from serialized volume ID to reconstructed volume
   /// pointer.
   struct VolumePointerLookup {
+    /// Insert a new serialized ID to volume pointer mapping.
+    ///
+    /// @param volumeId is the serialized ID key
+    /// @param volume is the target volume object
+    ///
+    /// @return true if insertion happened, false if the ID was already present
     bool emplace(std::size_t volumeId, TrackingVolume& volume) {
       return m_volumes.emplace(volumeId, &volume).second;
     }
 
+    /// Try to find a mapped volume pointer by serialized ID.
+    ///
+    /// @param volumeId is the serialized ID key
+    ///
+    /// @return raw pointer to the mapped volume, or nullptr if not found
     TrackingVolume* find(std::size_t volumeId) const {
       auto it = m_volumes.find(volumeId);
       return it == m_volumes.end() ? nullptr : it->second;
     }
 
+    /// Resolve a mapped volume reference by serialized ID.
+    ///
+    /// @param volumeId is the serialized ID key
+    ///
+    /// @return reference to mapped volume
+    ///
+    /// @throw std::invalid_argument if the ID is not mapped
     TrackingVolume& at(std::size_t volumeId) const {
       auto* volume = find(volumeId);
       if (volume == nullptr) {
@@ -117,6 +162,9 @@ class TrackingGeometryJsonConverter {
     static Config defaultConfig();
   };
 
+  /// Construct converter with custom or default dispatch configuration.
+  ///
+  /// @param config is the conversion dispatch configuration
   explicit TrackingGeometryJsonConverter(Config config = Config::defaultConfig());
 
   /// Convert a tracking geometry to JSON.

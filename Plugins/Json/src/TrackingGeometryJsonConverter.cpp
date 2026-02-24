@@ -49,6 +49,16 @@
 
 namespace {
 
+/// Internal notes on the conversion flow used in this translation unit:
+/// - Encoder side:
+///   - normalize enum-like values (axis/shape metadata) to stable JSON strings
+///   - encode bounds and portal-link polymorphic payloads using kind tags
+///   - emit volumes in deterministic depth-first order and connect them by IDs
+/// - Decoder side:
+///   - read and validate schema metadata
+///   - construct all volumes first, then attach children and portals
+///   - rebuild polymorphic portal links from kind-tagged payloads
+
 constexpr const char* kHeaderKey = "acts-geometry-volumes";
 constexpr const char* kVersionKey = "format-version";
 constexpr const char* kScopeKey = "scope";
@@ -97,6 +107,7 @@ constexpr const char* kTrivialPortalLinkKind = "TrivialPortalLink";
 constexpr const char* kCompositePortalLinkKind = "CompositePortalLink";
 constexpr const char* kGridPortalLinkKind = "GridPortalLink";
 
+/// Convert axis boundary enum to stable JSON string representation.
 std::string axisBoundaryTypeToString(Acts::AxisBoundaryType boundaryType) {
   using enum Acts::AxisBoundaryType;
   switch (boundaryType) {
@@ -111,6 +122,7 @@ std::string axisBoundaryTypeToString(Acts::AxisBoundaryType boundaryType) {
   }
 }
 
+/// Convert axis boundary string from JSON back to enum representation.
 Acts::AxisBoundaryType axisBoundaryTypeFromString(
     const std::string& encodedBoundaryType) {
   if (encodedBoundaryType == "Open") {
@@ -126,6 +138,7 @@ Acts::AxisBoundaryType axisBoundaryTypeFromString(
                               encodedBoundaryType);
 }
 
+/// Convert axis type enum to stable JSON string representation.
 std::string axisTypeToString(Acts::AxisType axisType) {
   using enum Acts::AxisType;
   switch (axisType) {
@@ -138,6 +151,7 @@ std::string axisTypeToString(Acts::AxisType axisType) {
   }
 }
 
+/// Convert axis type string from JSON back to enum representation.
 Acts::AxisType axisTypeFromString(const std::string& encodedAxisType) {
   if (encodedAxisType == "Equidistant") {
     return Acts::AxisType::Equidistant;
@@ -148,6 +162,7 @@ Acts::AxisType axisTypeFromString(const std::string& encodedAxisType) {
   throw std::invalid_argument("Unknown AxisType string: " + encodedAxisType);
 }
 
+/// Serialize one generic axis payload used by grid portal links.
 nlohmann::json axisToJson(const Acts::IAxis& axis) {
   nlohmann::json jAxis;
   jAxis[kAxisTypeKey] = axisTypeToString(axis.getType());
@@ -159,6 +174,7 @@ nlohmann::json axisToJson(const Acts::IAxis& axis) {
   return jAxis;
 }
 
+/// Deserialize one generic axis payload used by grid portal links.
 std::unique_ptr<Acts::IAxis> axisFromJson(const nlohmann::json& jAxis) {
   Acts::AxisType axisType = axisTypeFromString(jAxis.at(kAxisTypeKey));
   Acts::AxisBoundaryType boundaryType =
@@ -174,6 +190,7 @@ std::unique_ptr<Acts::IAxis> axisFromJson(const nlohmann::json& jAxis) {
       boundaryType, jAxis.at(kEdgesKey).get<std::vector<double>>());
 }
 
+/// Generic helper to decode concrete volume bounds from JSON "values".
 template <typename bounds_t>
 std::unique_ptr<Acts::VolumeBounds> decodeVolumeBoundsT(
     const nlohmann::json& jBounds) {
@@ -187,6 +204,7 @@ std::unique_ptr<Acts::VolumeBounds> decodeVolumeBoundsT(
   return std::make_unique<bounds_t>(boundValues);
 }
 
+/// Generic helper to encode concrete volume bounds to kind + values payload.
 template <typename bounds_t>
 nlohmann::json encodeVolumeBoundsT(const bounds_t& bounds,
                                    std::string_view kind) {
@@ -196,35 +214,42 @@ nlohmann::json encodeVolumeBoundsT(const bounds_t& bounds,
   return jBounds;
 }
 
+/// Encode `ConeVolumeBounds` payload.
 nlohmann::json encodeConeVolumeBounds(const Acts::ConeVolumeBounds& bounds) {
   return encodeVolumeBoundsT(bounds, kConeVolumeBoundsKind);
 }
 
+/// Encode `CuboidVolumeBounds` payload.
 nlohmann::json encodeCuboidVolumeBounds(
     const Acts::CuboidVolumeBounds& bounds) {
   return encodeVolumeBoundsT(bounds, kCuboidVolumeBoundsKind);
 }
 
+/// Encode `CutoutCylinderVolumeBounds` payload.
 nlohmann::json encodeCutoutCylinderVolumeBounds(
     const Acts::CutoutCylinderVolumeBounds& bounds) {
   return encodeVolumeBoundsT(bounds, kCutoutCylinderVolumeBoundsKind);
 }
 
+/// Encode `CylinderVolumeBounds` payload.
 nlohmann::json encodeCylinderVolumeBounds(
     const Acts::CylinderVolumeBounds& bounds) {
   return encodeVolumeBoundsT(bounds, kCylinderVolumeBoundsKind);
 }
 
+/// Encode `GenericCuboidVolumeBounds` payload.
 nlohmann::json encodeGenericCuboidVolumeBounds(
     const Acts::GenericCuboidVolumeBounds& bounds) {
   return encodeVolumeBoundsT(bounds, kGenericCuboidVolumeBoundsKind);
 }
 
+/// Encode `TrapezoidVolumeBounds` payload.
 nlohmann::json encodeTrapezoidVolumeBounds(
     const Acts::TrapezoidVolumeBounds& bounds) {
   return encodeVolumeBoundsT(bounds, kTrapezoidVolumeBoundsKind);
 }
 
+/// Deserialize a portal surface and enforce `RegularSurface` type.
 std::shared_ptr<Acts::RegularSurface> regularSurfaceFromJson(
     const nlohmann::json& jSurface) {
   auto surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
@@ -235,6 +260,7 @@ std::shared_ptr<Acts::RegularSurface> regularSurfaceFromJson(
   return regular;
 }
 
+/// Build a concrete `GridPortalLink` from decoded surface and axis payload(s).
 std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
     const std::shared_ptr<Acts::RegularSurface>& surface,
     Acts::AxisDirection direction, const Acts::IAxis& axis0,
@@ -273,6 +299,7 @@ std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
   return grid;
 }
 
+/// Encode a `TrivialPortalLink` payload including target volume ID.
 nlohmann::json encodeTrivialPortalLink(
     const Acts::TrivialPortalLink& link, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometryJsonConverter& /*converter*/,
@@ -285,6 +312,8 @@ nlohmann::json encodeTrivialPortalLink(
   return jLink;
 }
 
+/// Encode a `CompositePortalLink` payload including recursively encoded
+/// children.
 nlohmann::json encodeCompositePortalLink(
     const Acts::CompositePortalLink& link, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometryJsonConverter& converter,
@@ -301,6 +330,7 @@ nlohmann::json encodeCompositePortalLink(
   return jLink;
 }
 
+/// Encode a `GridPortalLink` payload with axes, bins and artifact links.
 nlohmann::json encodeGridPortalLink(
     const Acts::GridPortalLink& link, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometryJsonConverter& converter,
@@ -360,6 +390,7 @@ nlohmann::json encodeGridPortalLink(
   return jLink;
 }
 
+/// Decode a `TrivialPortalLink` payload.
 std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
     const nlohmann::json& encoded, const Acts::GeometryContext& /*gctx*/,
     const Acts::TrackingGeometryJsonConverter& /*converter*/,
@@ -370,6 +401,7 @@ std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
                                                    volumes.at(targetVolumeId));
 }
 
+/// Decode a `CompositePortalLink` payload with recursive child decoding.
 std::unique_ptr<Acts::PortalLinkBase> decodeCompositePortalLink(
     const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometryJsonConverter& converter,
@@ -383,6 +415,8 @@ std::unique_ptr<Acts::PortalLinkBase> decodeCompositePortalLink(
                                                      direction);
 }
 
+/// Decode a `GridPortalLink` payload including axis/bin assignment and
+/// artifacts.
 std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
     const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometryJsonConverter& converter,
@@ -439,6 +473,7 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
   return grid;
 }
 
+/// Temporary decoded representation of one serialized volume entry.
 struct VolumeRecord {
   std::size_t volumeId = 0u;
   std::string name;
@@ -449,6 +484,7 @@ struct VolumeRecord {
   nlohmann::json portals = nlohmann::json::array();
 };
 
+/// Validate top-level schema metadata for tracking-geometry JSON payload.
 void verifySchemaHeader(const nlohmann::json& encoded) {
   if (!encoded.contains(kHeaderKey)) {
     throw std::invalid_argument("Missing geometry JSON header");
@@ -462,6 +498,8 @@ void verifySchemaHeader(const nlohmann::json& encoded) {
   }
 }
 
+/// Traverse volume hierarchy in depth-first order and fill deterministic
+/// serialization order plus ID lookup.
 void collectVolumesDepthFirst(
     const Acts::TrackingVolume& volume,
     std::vector<const Acts::TrackingVolume*>& orderedVolumes,
@@ -476,6 +514,8 @@ void collectVolumesDepthFirst(
   }
 }
 
+/// Ensure stable geometry identifiers exist for volumes, boundaries and portal
+/// surfaces before emitting `TrackingGeometry`.
 void ensureIdentifiers(Acts::TrackingVolume& volume,
                        Acts::GeometryIdentifier::Value& nextVolumeId) {
   Acts::GeometryIdentifier volumeId = volume.geometryId();
@@ -510,6 +550,8 @@ void ensureIdentifiers(Acts::TrackingVolume& volume,
 
 }  // namespace
 
+/// Build default converter configuration with all supported bounds and portal
+/// link encoders/decoders registered.
 Acts::TrackingGeometryJsonConverter::Config
 Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
   Config cfg;
@@ -546,22 +588,27 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
   return cfg;
 }
 
+/// Construct converter from a configuration object.
 Acts::TrackingGeometryJsonConverter::TrackingGeometryJsonConverter(
     Config config)
     : m_cfg(std::move(config)) {}
 
+/// Serialize a full `TrackingGeometry` by delegating to world volume
+/// serialization.
 nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
     const GeometryContext& gctx, const TrackingGeometry& geometry,
     const Options& options) const {
   return toJson(gctx, *geometry.highestTrackingVolume(), options);
 }
 
+/// Serialize a single portal link using the configured type dispatcher.
 nlohmann::json Acts::TrackingGeometryJsonConverter::portalLinkToJson(
     const GeometryContext& gctx, const PortalLinkBase& link,
     const VolumeIdLookup& volumeIds) const {
   return m_cfg.encodePortalLink(link, gctx, *this, volumeIds);
 }
 
+/// Deserialize a single portal link using the configured kind dispatcher.
 std::unique_ptr<Acts::PortalLinkBase>
 Acts::TrackingGeometryJsonConverter::portalLinkFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
@@ -569,6 +616,11 @@ Acts::TrackingGeometryJsonConverter::portalLinkFromJson(
   return m_cfg.decodePortalLink(encoded, gctx, *this, volumes);
 }
 
+/// Serialize one world volume hierarchy to JSON.
+///
+/// This writes schema metadata, emits all reachable volumes in deterministic
+/// depth-first order, and stores portals/links with explicit kind-tagged
+/// payloads.
 nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
     const GeometryContext& gctx, const TrackingVolume& world,
     const Options& /*options*/) const {
@@ -628,6 +680,11 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
   return encoded;
 }
 
+/// Deserialize one world `TrackingVolume` hierarchy from JSON.
+///
+/// The reconstruction is performed in phases: validate header, decode all
+/// volume records, instantiate volumes, attach child hierarchy, then decode and
+/// attach portals.
 std::shared_ptr<Acts::TrackingVolume>
 Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
@@ -785,6 +842,10 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   return std::shared_ptr<TrackingVolume>(std::move(root));
 }
 
+/// Deserialize a full `TrackingGeometry` from serialized world-volume payload.
+///
+/// After world volume reconstruction this also ensures missing geometry
+/// identifiers are assigned consistently.
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::trackingGeometryFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
