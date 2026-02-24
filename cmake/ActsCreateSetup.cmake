@@ -5,6 +5,7 @@ configure_file(
     ${PROJECT_BINARY_DIR}/this_acts.sh
     @ONLY
 )
+message(STATUS "making setup script with dependencies: ${ROOT_DIR}")
 configure_file(
     ${CMAKE_CURRENT_LIST_DIR}/setup_withdeps.sh.in
     ${PROJECT_BINARY_DIR}/this_acts_withdeps.sh

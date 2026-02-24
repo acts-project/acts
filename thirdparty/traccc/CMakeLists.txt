@@ -21,6 +21,8 @@ FetchContent_Declare(traccc SYSTEM ${ACTS_TRACCC_SOURCE})
 
 set(ACTS_TRACCC_SCALARTYPE "double")
 
+set(TRACCC_USE_ROOT OFF CACHE BOOL "Do not use ROOT as part of Traccc")
+
 set(TRACCC_CUSTOM_SCALARTYPE
     "${ACTS_TRACCC_SCALARTYPE}"
     CACHE STRING
