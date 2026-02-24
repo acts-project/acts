@@ -12,8 +12,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
-#include <type_traits>
-#include <utility>
+#include <typeinfo>
 
 namespace Acts {
 /// @brief Type alias for hashed string representation

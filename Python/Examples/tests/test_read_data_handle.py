@@ -83,7 +83,6 @@ def test_not_initialized_raises():
         handle(wb)
 
 
-@acts.with_log_threshold(acts.logging.FATAL)
 def test_wrong_key_raises():
     class WrongKeyInspector(acts.examples.IAlgorithm):
         def __init__(self):
