@@ -101,7 +101,7 @@ def test_wrong_key_raises():
         wb = acts.examples.WhiteBoard(acts.logging.WARNING)
         inspector.particles(wb)
 
-    with pytest.raises(
+    with acts.logging.ScopedFailureThreshold(acts.logging.FATAL), pytest.raises(
         RuntimeError,
         match="Sequence configuration error: Missing data handle for key 'wrong_key'",
     ):
@@ -129,8 +129,7 @@ def test_read_particles_via_handle():
             particles = self.particles(context.eventStore)
             assert isinstance(particles, acts.examples.SimParticleContainer)
 
-            self.logger.info(f"Found {len(particles)} particles")
-            self.logger.info("Found {} particles <- this also works", len(particles))
+            print(f"Found {len(particles)} particles")
 
             for particle in particles:
                 print(particle)
