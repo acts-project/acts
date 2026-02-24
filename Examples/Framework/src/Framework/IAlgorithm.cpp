@@ -19,10 +19,10 @@ IAlgorithm::IAlgorithm(std::string name, Acts::Logging::Level level)
 
 IAlgorithm::IAlgorithm(std::string name,
                        std::unique_ptr<const Acts::Logger> logger)
-    : m_name(std::move(name)),
-      m_logger(logger != nullptr
+    : m_logger(logger != nullptr
                    ? std::move(logger)
-                   : Acts::getDefaultLogger(m_name, Acts::Logging::INFO)) {}
+                   : Acts::getDefaultLogger(name, Acts::Logging::INFO)),
+      m_name(std::move(name)) {}
 
 std::string IAlgorithm::name() const {
   return m_name;
