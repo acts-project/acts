@@ -29,8 +29,8 @@ namespace ActsExamples {
 ///
 /// This is an append-only container that takes ownership of the objects
 /// added to it. Once an object has been added, it can only be read but not
-/// be modified. Trying to replace an existing object is considered an
-/// error. Its lifetime is bound to the lifetime of the white board.
+/// be modified. Trying to replace an existing object is considered an error.
+/// Its lifetime is bound to the lifetime of the white board.
 class WhiteBoard {
  private:
   // type-erased value holder for move-constructible types
@@ -86,11 +86,6 @@ class WhiteBoard {
   void copyFrom(const WhiteBoard& other);
 
   std::vector<std::string> getKeys() const;
-
-  /// Returns a (value_ptr, type_info*) pair for use with Python bindings.
-  /// Returns {nullptr, nullptr} if the key does not exist.
-  // std::pair<const void*, const std::type_info*> getTypeErased(
-  //     const std::string& name) const;
 
  private:
   /// Find similar names for suggestions with levenshtein-distance
