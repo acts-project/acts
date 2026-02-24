@@ -130,7 +130,8 @@
             "displayName": "GitLab-CI LCG",
             "inherits": "ci-common",
             "cacheVariables": {
-                "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF"
+                "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF",
+                "ACTS_USE_SYSTEM_PYBIND11": "OFF"
             }
         },
         {
