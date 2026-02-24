@@ -54,157 +54,131 @@ class TrackingGeometryJsonConverter {
   /// JSON serialization options for tracking geometry conversion.
   struct Options {};
 
-  /// Lookup structure from volume pointer to serialized volume ID.
-  struct VolumeIdLookup {
-    /// Insert a new volume to ID mapping.
+  /// Generic lookup from object pointer identity to serialized object ID.
+  template <typename object_t>
+  struct PointerToIdLookup {
+    /// Insert a new object to ID mapping.
     ///
-    /// @param volume is the source volume pointer key
-    /// @param volumeId is the serialized ID to assign
+    /// @param object is the source object pointer key
+    /// @param objectId is the serialized ID to assign
     ///
-    /// @return true if insertion happened, false if the volume was already
+    /// @return true if insertion happened, false if the object was already
     ///         present
-    bool emplace(const TrackingVolume& volume, std::size_t volumeId) {
-      return m_volumeIds.emplace(&volume, volumeId).second;
+    bool emplace(const object_t& object, std::size_t objectId) {
+      return m_objectIds.emplace(&object, objectId).second;
     }
 
-    /// Resolve a serialized volume ID from a volume reference.
+    /// Resolve a serialized object ID from an object reference.
     ///
-    /// @param volume is the source volume key
+    /// @param object is the source object key
     ///
-    /// @return associated serialized volume ID
+    /// @return associated serialized object ID
     ///
-    /// @throw std::invalid_argument if the volume is not in the lookup
-    std::size_t at(const TrackingVolume& volume) const {
-      auto it = m_volumeIds.find(&volume);
-      if (it == m_volumeIds.end()) {
+    /// @throw std::invalid_argument if the object is not in the lookup
+    std::size_t at(const object_t& object) const {
+      auto it = m_objectIds.find(&object);
+      if (it == m_objectIds.end()) {
         throw std::invalid_argument(
-            "Volume lookup failed: volume is outside serialized hierarchy");
+            "Pointer-to-ID lookup failed: object is outside serialized "
+            "hierarchy");
       }
       return it->second;
     }
 
    private:
-    std::unordered_map<const TrackingVolume*, std::size_t> m_volumeIds;
+    std::unordered_map<const object_t*, std::size_t> m_objectIds;
   };
 
-  /// Lookup structure from serialized volume ID to reconstructed volume
-  /// pointer.
-  struct VolumePointerLookup {
-    /// Insert a new serialized ID to volume pointer mapping.
+  /// Generic lookup from serialized ID to non-owning object pointer.
+  template <typename object_t>
+  struct IdToPointerLookup {
+    /// Insert a new serialized ID to object pointer mapping.
     ///
-    /// @param volumeId is the serialized ID key
-    /// @param volume is the target volume object
+    /// @param objectId is the serialized ID key
+    /// @param object is the target object
     ///
     /// @return true if insertion happened, false if the ID was already present
-    bool emplace(std::size_t volumeId, TrackingVolume& volume) {
-      return m_volumes.emplace(volumeId, &volume).second;
+    bool emplace(std::size_t objectId, object_t& object) {
+      return m_objects.emplace(objectId, &object).second;
     }
 
-    /// Try to find a mapped volume pointer by serialized ID.
+    /// Try to find a mapped object pointer by serialized ID.
     ///
-    /// @param volumeId is the serialized ID key
+    /// @param objectId is the serialized ID key
     ///
-    /// @return raw pointer to the mapped volume, or nullptr if not found
-    TrackingVolume* find(std::size_t volumeId) const {
-      auto it = m_volumes.find(volumeId);
-      return it == m_volumes.end() ? nullptr : it->second;
+    /// @return raw pointer to the mapped object, or nullptr if not found
+    object_t* find(std::size_t objectId) const {
+      auto it = m_objects.find(objectId);
+      return it == m_objects.end() ? nullptr : it->second;
     }
 
-    /// Resolve a mapped volume reference by serialized ID.
+    /// Resolve a mapped object reference by serialized ID.
     ///
-    /// @param volumeId is the serialized ID key
+    /// @param objectId is the serialized ID key
     ///
-    /// @return reference to mapped volume
+    /// @return reference to mapped object
     ///
     /// @throw std::invalid_argument if the ID is not mapped
-    TrackingVolume& at(std::size_t volumeId) const {
-      auto* volume = find(volumeId);
-      if (volume == nullptr) {
+    object_t& at(std::size_t objectId) const {
+      auto* object = find(objectId);
+      if (object == nullptr) {
         throw std::invalid_argument(
-            "Volume pointer lookup failed: unknown serialized volume ID");
+            "ID-to-pointer lookup failed: unknown serialized object ID");
       }
-      return *volume;
+      return *object;
     }
 
    private:
-    std::unordered_map<std::size_t, TrackingVolume*> m_volumes;
+    std::unordered_map<std::size_t, object_t*> m_objects;
   };
 
-  /// Lookup structure from portal pointer to serialized portal ID.
-  struct PortalIdLookup {
-    /// Insert a new portal to ID mapping.
+  /// Generic lookup from serialized ID to owning shared pointer.
+  template <typename object_t>
+  struct IdToSharedPointerLookup {
+    /// Insert a new serialized ID to shared pointer mapping.
     ///
-    /// @param portal is the source portal pointer key
-    /// @param portalId is the serialized ID to assign
-    ///
-    /// @return true if insertion happened, false if the portal was already
-    ///         present
-    bool emplace(const Portal& portal, std::size_t portalId) {
-      return m_portalIds.emplace(&portal, portalId).second;
-    }
-
-    /// Resolve a serialized portal ID from a portal reference.
-    ///
-    /// @param portal is the source portal key
-    ///
-    /// @return associated serialized portal ID
-    ///
-    /// @throw std::invalid_argument if the portal is not in the lookup
-    std::size_t at(const Portal& portal) const {
-      auto it = m_portalIds.find(&portal);
-      if (it == m_portalIds.end()) {
-        throw std::invalid_argument(
-            "Portal lookup failed: portal is outside serialized hierarchy");
-      }
-      return it->second;
-    }
-
-   private:
-    std::unordered_map<const Portal*, std::size_t> m_portalIds;
-  };
-
-  /// Lookup structure from serialized portal ID to reconstructed shared portal
-  /// pointer.
-  struct PortalPointerLookup {
-    /// Insert a new serialized ID to portal pointer mapping.
-    ///
-    /// @param portalId is the serialized ID key
-    /// @param portal is the target shared portal object
+    /// @param objectId is the serialized ID key
+    /// @param object is the target shared object
     ///
     /// @return true if insertion happened, false if the ID was already present
-    bool emplace(std::size_t portalId, std::shared_ptr<Portal> portal) {
-      return m_portals.emplace(portalId, std::move(portal)).second;
+    bool emplace(std::size_t objectId, std::shared_ptr<object_t> object) {
+      return m_objects.emplace(objectId, std::move(object)).second;
     }
 
-    /// Try to find a mapped portal pointer by serialized ID.
+    /// Try to find a mapped shared pointer by serialized ID.
     ///
-    /// @param portalId is the serialized ID key
+    /// @param objectId is the serialized ID key
     ///
-    /// @return mapped shared portal pointer, or nullptr if not found
-    std::shared_ptr<Portal> find(std::size_t portalId) const {
-      auto it = m_portals.find(portalId);
-      return it == m_portals.end() ? nullptr : it->second;
+    /// @return mapped shared pointer, or nullptr if not found
+    std::shared_ptr<object_t> find(std::size_t objectId) const {
+      auto it = m_objects.find(objectId);
+      return it == m_objects.end() ? nullptr : it->second;
     }
 
-    /// Resolve a mapped portal pointer by serialized ID.
+    /// Resolve a mapped shared pointer by serialized ID.
     ///
-    /// @param portalId is the serialized ID key
+    /// @param objectId is the serialized ID key
     ///
-    /// @return mapped shared portal pointer
+    /// @return mapped shared pointer reference
     ///
     /// @throw std::invalid_argument if the ID is not mapped
-    const std::shared_ptr<Portal>& at(std::size_t portalId) const {
-      auto it = m_portals.find(portalId);
-      if (it == m_portals.end()) {
+    const std::shared_ptr<object_t>& at(std::size_t objectId) const {
+      auto it = m_objects.find(objectId);
+      if (it == m_objects.end()) {
         throw std::invalid_argument(
-            "Portal pointer lookup failed: unknown serialized portal ID");
+            "ID-to-shared-pointer lookup failed: unknown serialized object ID");
       }
       return it->second;
     }
 
    private:
-    std::unordered_map<std::size_t, std::shared_ptr<Portal>> m_portals;
+    std::unordered_map<std::size_t, std::shared_ptr<object_t>> m_objects;
   };
+
+  using VolumeIdLookup = PointerToIdLookup<TrackingVolume>;
+  using VolumePointerLookup = IdToPointerLookup<TrackingVolume>;
+  using PortalIdLookup = PointerToIdLookup<Portal>;
+  using PortalPointerLookup = IdToSharedPointerLookup<Portal>;
 
   using VolumeBoundsEncoder =
       TypeDispatcher<VolumeBounds, nlohmann::json()>;
