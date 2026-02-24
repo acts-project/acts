@@ -8,12 +8,13 @@
 
 #include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 
-#include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Geometry/CompositePortalLink.hpp"
+#include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
@@ -22,7 +23,6 @@
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/Axis.hpp"
@@ -151,8 +151,7 @@ Acts::AxisType axisTypeFromString(const std::string& encodedAxisType) {
 nlohmann::json axisToJson(const Acts::IAxis& axis) {
   nlohmann::json jAxis;
   jAxis[kAxisTypeKey] = axisTypeToString(axis.getType());
-  jAxis[kBoundaryTypeKey] =
-      axisBoundaryTypeToString(axis.getBoundaryType());
+  jAxis[kBoundaryTypeKey] = axisBoundaryTypeToString(axis.getBoundaryType());
   jAxis[kMinKey] = axis.getMin();
   jAxis[kMaxKey] = axis.getMax();
   jAxis[kNBinsKey] = axis.getNBins();
@@ -226,11 +225,13 @@ nlohmann::json encodeTrapezoidVolumeBounds(
   return encodeVolumeBoundsT(bounds, kTrapezoidVolumeBoundsKind);
 }
 
-std::size_t lookupVolumeId(const Acts::TrackingGeometryJsonConverter::VolumeIdMap& volumeIds,
-                           const Acts::TrackingVolume& volume) {
+std::size_t lookupVolumeId(
+    const Acts::TrackingGeometryJsonConverter::VolumeIdMap& volumeIds,
+    const Acts::TrackingVolume& volume) {
   auto it = volumeIds.find(&volume);
   if (it == volumeIds.end()) {
-    throw std::invalid_argument("Portal link points to volume outside serialized hierarchy");
+    throw std::invalid_argument(
+        "Portal link points to volume outside serialized hierarchy");
   }
   return it->second;
 }
@@ -265,7 +266,8 @@ std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
     axis0.visit([&](const auto& a0) {
       using axis_t = std::remove_cvref_t<decltype(a0)>;
       axis_t axisCopy = a0;
-      grid = Acts::GridPortalLink::make(surface, direction, std::move(axisCopy));
+      grid =
+          Acts::GridPortalLink::make(surface, direction, std::move(axisCopy));
     });
   } else {
     axis0.visit([&](const auto& a0) {
@@ -285,7 +287,8 @@ std::unique_ptr<Acts::GridPortalLink> makeGridPortalLink(
   }
 
   if (grid->direction() != direction) {
-    throw std::invalid_argument("Decoded grid direction does not match payload");
+    throw std::invalid_argument(
+        "Decoded grid direction does not match payload");
   }
 
   return grid;
@@ -313,8 +316,8 @@ nlohmann::json encodeCompositePortalLink(
   jLink[kChildrenKey] = nlohmann::json::array();
 
   for (const auto& child : link.links()) {
-    jLink[kChildrenKey].push_back(converter.portalLinkToJson(
-        gctx, child, volumeIds));
+    jLink[kChildrenKey].push_back(
+        converter.portalLinkToJson(gctx, child, volumeIds));
   }
   return jLink;
 }
@@ -379,7 +382,7 @@ nlohmann::json encodeGridPortalLink(
 }
 
 std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
-    const Acts::GeometryContext& /*gctx*/, const nlohmann::json& encoded,
+    const nlohmann::json& encoded, const Acts::GeometryContext& /*gctx*/,
     const Acts::TrackingGeometryJsonConverter& /*converter*/,
     const Acts::TrackingGeometryJsonConverter::VolumePointerMap& volumes) {
   auto surface = regularSurfaceFromJson(encoded.at(kPortalSurfaceKey));
@@ -389,7 +392,7 @@ std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
 }
 
 std::unique_ptr<Acts::PortalLinkBase> decodeCompositePortalLink(
-    const Acts::GeometryContext& gctx, const nlohmann::json& encoded,
+    const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometryJsonConverter& converter,
     const Acts::TrackingGeometryJsonConverter::VolumePointerMap& volumes) {
   const auto direction = encoded.at(kDirectionKey).get<Acts::AxisDirection>();
@@ -402,7 +405,7 @@ std::unique_ptr<Acts::PortalLinkBase> decodeCompositePortalLink(
 }
 
 std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
-    const Acts::GeometryContext& gctx, const nlohmann::json& encoded,
+    const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
     const Acts::TrackingGeometryJsonConverter& converter,
     const Acts::TrackingGeometryJsonConverter::VolumePointerMap& volumes) {
   auto surface = regularSurfaceFromJson(encoded.at(kPortalSurfaceKey));
@@ -416,8 +419,9 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
     throw std::invalid_argument("GridPortalLink requires 1 or 2 axes");
   }
 
-  auto grid = makeGridPortalLink(surface, direction, *axes.at(0),
-                                 axes.size() == 2u ? axes.at(1).get() : nullptr);
+  auto grid =
+      makeGridPortalLink(surface, direction, *axes.at(0),
+                         axes.size() == 2u ? axes.at(1).get() : nullptr);
 
   Acts::AnyGridView<const Acts::TrackingVolume*> view(grid->grid());
   const auto dim = view.dimensions();
@@ -543,30 +547,29 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerFunction(encodeCompositePortalLink)
       .registerFunction(encodeGridPortalLink);
 
-  cfg.decodeVolumeBounds.emplace(kConeVolumeBoundsKind,
-                                 decodeVolumeBoundsT<ConeVolumeBounds>);
-  cfg.decodeVolumeBounds.emplace(kCuboidVolumeBoundsKind,
-                                 decodeVolumeBoundsT<CuboidVolumeBounds>);
-  cfg.decodeVolumeBounds.emplace(
-      kCutoutCylinderVolumeBoundsKind,
-      decodeVolumeBoundsT<CutoutCylinderVolumeBounds>);
-  cfg.decodeVolumeBounds.emplace(kCylinderVolumeBoundsKind,
-                                 decodeVolumeBoundsT<CylinderVolumeBounds>);
-  cfg.decodeVolumeBounds.emplace(
-      kGenericCuboidVolumeBoundsKind,
-      decodeVolumeBoundsT<GenericCuboidVolumeBounds>);
-  cfg.decodeVolumeBounds.emplace(kTrapezoidVolumeBoundsKind,
-                                 decodeVolumeBoundsT<TrapezoidVolumeBounds>);
+  cfg.decodeVolumeBounds.registerKind(kConeVolumeBoundsKind,
+                                      decodeVolumeBoundsT<ConeVolumeBounds>)
+      .registerKind(kCuboidVolumeBoundsKind,
+                    decodeVolumeBoundsT<CuboidVolumeBounds>)
+      .registerKind(kCutoutCylinderVolumeBoundsKind,
+                    decodeVolumeBoundsT<CutoutCylinderVolumeBounds>)
+      .registerKind(kCylinderVolumeBoundsKind,
+                    decodeVolumeBoundsT<CylinderVolumeBounds>)
+      .registerKind(kGenericCuboidVolumeBoundsKind,
+                    decodeVolumeBoundsT<GenericCuboidVolumeBounds>)
+      .registerKind(kTrapezoidVolumeBoundsKind,
+                    decodeVolumeBoundsT<TrapezoidVolumeBounds>);
 
-  cfg.decodePortalLink.emplace(kTrivialPortalLinkKind, decodeTrivialPortalLink);
-  cfg.decodePortalLink.emplace(kCompositePortalLinkKind,
-                               decodeCompositePortalLink);
-  cfg.decodePortalLink.emplace(kGridPortalLinkKind, decodeGridPortalLink);
+  cfg.decodePortalLink.registerKind(kTrivialPortalLinkKind,
+                                    decodeTrivialPortalLink)
+      .registerKind(kCompositePortalLinkKind, decodeCompositePortalLink)
+      .registerKind(kGridPortalLinkKind, decodeGridPortalLink);
 
   return cfg;
 }
 
-Acts::TrackingGeometryJsonConverter::TrackingGeometryJsonConverter(Config config)
+Acts::TrackingGeometryJsonConverter::TrackingGeometryJsonConverter(
+    Config config)
     : m_cfg(std::move(config)) {}
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
@@ -585,12 +588,7 @@ std::unique_ptr<Acts::PortalLinkBase>
 Acts::TrackingGeometryJsonConverter::portalLinkFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
     const VolumePointerMap& volumes) const {
-  const auto kind = encoded.at(kKindKey).get<std::string>();
-  auto decoder = m_cfg.decodePortalLink.find(kind);
-  if (decoder == m_cfg.decodePortalLink.end()) {
-    throw std::invalid_argument("Unsupported portal link kind: " + kind);
-  }
-  return decoder->second(gctx, encoded, *this, volumes);
+  return m_cfg.decodePortalLink(encoded, gctx, *this, volumes);
 }
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
@@ -670,7 +668,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     record.name = jVolume.at(kNameKey).get<std::string>();
     record.geometryId =
         jVolume.value(kGeometryIdKey, GeometryIdentifier::Value{0u});
-    record.transform = Transform3JsonConverter::fromJson(jVolume.at(kTransformKey));
+    record.transform =
+        Transform3JsonConverter::fromJson(jVolume.at(kTransformKey));
     record.bounds = jVolume.at(kBoundsKey);
     record.children = jVolume.value(kChildrenKey, std::vector<std::size_t>{});
     record.portals = jVolume.value(kPortalsKey, nlohmann::json::array());
@@ -691,16 +690,9 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   VolumePointerMap volumePointers;
 
   for (const auto& [volumeId, record] : records) {
-    const auto kind = record.bounds.at(kKindKey).get<std::string>();
-    auto decoder = m_cfg.decodeVolumeBounds.find(kind);
-    if (decoder == m_cfg.decodeVolumeBounds.end()) {
-      throw std::invalid_argument("Unsupported volume bounds kind: " + kind);
-    }
-
-    auto volumeBounds = decoder->second(record.bounds);
-    auto volume =
-        std::make_unique<TrackingVolume>(record.transform, std::move(volumeBounds),
-                                         record.name);
+    auto volumeBounds = m_cfg.decodeVolumeBounds(record.bounds);
+    auto volume = std::make_unique<TrackingVolume>(
+        record.transform, std::move(volumeBounds), record.name);
 
     GeometryIdentifier geometryId(record.geometryId);
     if (geometryId == GeometryIdentifier{}) {
@@ -716,7 +708,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   for (const auto& [volumeId, record] : records) {
     for (std::size_t childId : record.children) {
       if (!records.contains(childId)) {
-        throw std::invalid_argument("Serialized child volume ID does not exist");
+        throw std::invalid_argument(
+            "Serialized child volume ID does not exist");
       }
       if (childId == volumeId) {
         throw std::invalid_argument("Volume cannot be its own child");
@@ -729,10 +722,9 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   }
   for (const auto& [volumeId, count] : parentCounts) {
     if (count > 1u) {
-      throw std::invalid_argument(
-          "Serialized volume hierarchy is not a tree");
+      throw std::invalid_argument("Serialized volume hierarchy is not a tree");
     }
-    (void)volumeId;
+    static_cast<void>(volumeId);
   }
 
   std::unordered_set<std::size_t> visiting;
@@ -824,6 +816,6 @@ Acts::TrackingGeometryJsonConverter::trackingGeometryFromJson(
   GeometryIdentifier::Value nextVolumeId = 1u;
   ensureIdentifiers(*world, nextVolumeId);
 
-  return std::make_shared<TrackingGeometry>(world, nullptr, GeometryIdentifierHook{},
-                                            getDummyLogger(), false);
+  return std::make_shared<TrackingGeometry>(
+      world, nullptr, GeometryIdentifierHook{}, getDummyLogger(), false);
 }

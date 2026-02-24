@@ -10,8 +10,8 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
+#include "ActsPlugins/Json/JsonKindDispatcher.hpp"
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -50,11 +50,13 @@ class TrackingGeometryJsonConverter {
                      const TrackingGeometryJsonConverter&, const VolumeIdMap&)>;
 
   using VolumeBoundsDecoder =
-      std::function<std::unique_ptr<VolumeBounds>(const nlohmann::json&)>;
+      JsonKindDispatcher<std::unique_ptr<VolumeBounds>>;
 
-  using PortalLinkDecoder = std::function<std::unique_ptr<PortalLinkBase>(
-      const GeometryContext&, const nlohmann::json&,
-      const TrackingGeometryJsonConverter&, const VolumePointerMap&)>;
+  using PortalLinkDecoder =
+      JsonKindDispatcher<std::unique_ptr<PortalLinkBase>,
+                         const GeometryContext&,
+                         const TrackingGeometryJsonConverter&,
+                         const VolumePointerMap&>;
 
   /// Configuration for the tracking geometry JSON converter.
   struct Config {
@@ -64,11 +66,11 @@ class TrackingGeometryJsonConverter {
     /// Dispatcher for portal link serialization.
     PortalLinkEncoder encodePortalLink{};
 
-    /// Decoder map for volume bounds by kind tag.
-    std::unordered_map<std::string, VolumeBoundsDecoder> decodeVolumeBounds{};
+    /// Decoder dispatcher for volume bounds by kind tag.
+    VolumeBoundsDecoder decodeVolumeBounds{"kind", "volume bounds"};
 
-    /// Decoder map for portal links by kind tag.
-    std::unordered_map<std::string, PortalLinkDecoder> decodePortalLink{};
+    /// Decoder dispatcher for portal links by kind tag.
+    PortalLinkDecoder decodePortalLink{"kind", "portal link"};
 
     /// Construct default config with all supported converters registered.
     static Config defaultConfig();
