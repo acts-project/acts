@@ -394,9 +394,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
 
   for (const auto& seed : uniqueSeeds) {
     auto newSeed = seeds.createSeed();
-    newSeed.assignSpacePointIndices(seed.spacePointIndices());
-    newSeed.vertexZ() = seed.vertexZ();
-    newSeed.quality() = seed.quality();
+    newSeed.copyFrom(seed, Acts::SeedColumns::All);
   }
 
   m_outputSeeds(ctx, std::move(seeds));
