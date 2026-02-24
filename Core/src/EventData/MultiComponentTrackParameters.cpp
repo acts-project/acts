@@ -18,8 +18,17 @@ namespace Acts {
 
 BoundTrackParameters MultiComponentBoundTrackParameters::merge(
     const ComponentMergeMethod method) const {
-  assert(!hasCovariance() &&
-         "Merging is only supported if covariance matrices are available");
+  if (!hasCovariance()) {
+    const BoundVector singleParams = detail::Gsf::mergeGaussianMixtureParams(
+        std::views::iota(std::size_t{0}, size()),
+        [this](const std::size_t i) -> std::tuple<double, const BoundVector&> {
+          return {m_weights[i], m_parameters[i]};
+        },
+        *m_surface, method);
+    return BoundTrackParameters(m_surface, singleParams, std::nullopt,
+                                m_particleHypothesis);
+  }
+
   const auto [singleParams, singleCov] = detail::Gsf::mergeGaussianMixture(
       std::views::iota(std::size_t{0}, size()),
       [this](const std::size_t i)

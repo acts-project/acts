@@ -301,7 +301,11 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   using detail::Gsf::CyclicAngle;
   const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
   const auto [mean_test, boundCov_test] = detail::Gsf::mergeGaussianMixture(
-      cmps, std::identity{}, d, ComponentMergeMethod::eMean);
+      cmps,
+      [](const GsfComponent &c) {
+        return std::tie(c.weight, c.boundPars, c.boundCov);
+      },
+      d, ComponentMergeMethod::eMean);
 
   BOOST_CHECK(std::abs(detail::difference_periodic(
                   mean_data[0], mean_test[0], 2 * std::numbers::pi)) < 1.e-1);
