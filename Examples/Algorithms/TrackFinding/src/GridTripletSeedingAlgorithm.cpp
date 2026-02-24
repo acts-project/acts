@@ -156,7 +156,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::XY | Acts::SpacePointColumns::ZR |
+      Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
       Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
       Acts::SpacePointColumns::CopyFromIndex);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());

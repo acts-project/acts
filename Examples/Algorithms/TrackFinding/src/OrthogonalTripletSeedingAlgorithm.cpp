@@ -102,7 +102,7 @@ ProcessCode OrthogonalTripletSeedingAlgorithm::execute(
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::XY | Acts::SpacePointColumns::ZR |
+      Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
       Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::VarianceZ |
       Acts::SpacePointColumns::VarianceR |
       Acts::SpacePointColumns::CopyFromIndex);
