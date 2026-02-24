@@ -8,8 +8,8 @@ class PyAlgorithm(acts.examples.IAlgorithm):
     def __init__(self, name: str, output_file: Path, skip_even: bool):
         acts.examples.IAlgorithm.__init__(self, name, acts.logging.INFO)
         self.name = name
-        self.output_file = output_file 
-        self.skip_even = skip_even        
+        self.output_file = output_file
+        self.skip_even = skip_even
 
     def execute(self, context):
 
@@ -22,6 +22,7 @@ class PyAlgorithm(acts.examples.IAlgorithm):
             return acts.examples.ProcessCode.SKIP
 
         return acts.examples.ProcessCode.SUCCESS
+
 
 def _read_sequence(path: Path) -> list[int]:
     with path.open(encoding="utf-8") as f:
