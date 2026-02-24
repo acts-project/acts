@@ -19,8 +19,6 @@
 
 namespace Acts::Experimental {
 
-/// Maximum number of segments per node
-constexpr std::uint32_t gbtsMaxSegPerNode = 1000;
 /// Number of segment connections
 constexpr std::uint32_t gbtsNumSegConns = 6;
 
@@ -76,10 +74,16 @@ struct GbtsEtaBin final {
   std::vector<const GbtsNode*> vn;
   /// Phi-indexed nodes
   std::vector<std::pair<float, std::uint32_t>> vPhiNodes;
-  /// vectors of incoming edges, stores indices of edges in the edge vector
-  std::vector<std::vector<std::uint32_t>> in;
   /// node attributes: minCutOnTau, maxCutOnTau, phi, r, z;
   std::vector<std::array<float, 5>> params;
+  /// the index of the first incoming graph edge attached to the node
+  std::vector<std::uint32_t> vFirstEdge;
+  /// the total number of incoming graph edges attached to this node
+  std::vector<std::uint16_t> vNumEdges;
+  /// flag to indicate the node's outer neighbourhood isolation from previously
+  /// built graph
+  std::vector<std::uint16_t> vIsConnected;
+
   /// Minimum radius in bin
   float minRadius{};
   /// Maximum radius in bin

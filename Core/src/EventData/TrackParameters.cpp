@@ -14,11 +14,12 @@ namespace Acts {
 
 // ensure concrete classes satisfy the concepts
 
+ACTS_PUSH_IGNORE_DEPRECATED()
 static_assert(BoundTrackParametersConcept<SinglyChargedBoundTrackParameters>);
 static_assert(FreeTrackParametersConcept<SinglyChargedFreeTrackParameters>);
-
 static_assert(BoundTrackParametersConcept<NeutralBoundTrackParameters>);
 static_assert(FreeTrackParametersConcept<NeutralFreeTrackParameters>);
+ACTS_POP_IGNORE_DEPRECATED()
 
 static_assert(BoundTrackParametersConcept<BoundTrackParameters>);
 static_assert(FreeTrackParametersConcept<FreeTrackParameters>);
