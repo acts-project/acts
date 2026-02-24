@@ -270,7 +270,6 @@ def _build_gcovr_common_args(
         + ["-j", str(jobs)]
         + ["--merge-mode-functions", "separate"]
         + ["--gcov-ignore-errors", "source_not_found"]
-        + ["--gcov-ignore-errors", "no_object_file_found"]
         + excludes
         + extra_flags
     )
