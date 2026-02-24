@@ -91,6 +91,8 @@ class TrackParameterSmearing final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  void logSmearingConfig() const;
+
   Config m_cfg;
 
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{

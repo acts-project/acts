@@ -132,6 +132,8 @@ class ParticleSelector final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  void logSelectionConfig() const;
+
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};

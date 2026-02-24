@@ -76,6 +76,8 @@ class HitSelector final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  void logSelectionConfig() const;
+
   Config m_cfg;
 
   ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};

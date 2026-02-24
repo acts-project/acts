@@ -32,49 +32,41 @@ TrackParameterSmearing::TrackParameterSmearing(
     throw std::invalid_argument("Missing random numbers tool");
   }
 
-  if (m_cfg.particleHypothesis) {
-    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
-                         "Override truth particle hypothesis with "
-                             << *m_cfg.particleHypothesis);
-  }
-
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "smearing track param loc0 "
-                           << m_cfg.sigmaLoc0 << " A " << m_cfg.sigmaLoc0PtA
-                           << " B " << m_cfg.sigmaLoc0PtB);
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "smearing track param loc1 "
-                           << m_cfg.sigmaLoc1 << " A " << m_cfg.sigmaLoc1PtA
-                           << " B " << m_cfg.sigmaLoc1PtB);
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "smearing track param time " << m_cfg.sigmaTime);
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "smearing track param phi " << m_cfg.sigmaPhi);
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "smearing track param theta " << m_cfg.sigmaTheta);
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "smearing track param q/p " << m_cfg.sigmaPtRel);
-  ACTS_LOG_WITH_LOGGER(
-      this->logger(), Acts::Logging::DEBUG,
-      "initial sigmas "
-          << Acts::BoundVector(
-                 m_cfg.initialSigmas.value_or(std::array<double, 6>()).data())
-                 .transpose());
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "initial sigma pt rel " << m_cfg.initialSigmaPtRel);
-  ACTS_LOG_WITH_LOGGER(
-      this->logger(), Acts::Logging::DEBUG,
-      "initial var inflation "
-          << Acts::BoundVector(m_cfg.initialVarInflation.data()).transpose());
+  logSmearingConfig();
+}
+
+void TrackParameterSmearing::logSmearingConfig() const {
   if (m_cfg.particleHypothesis) {
-    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                         "particle hypothesis " << *m_cfg.particleHypothesis);
+    ACTS_INFO("Override truth particle hypothesis with "
+              << *m_cfg.particleHypothesis);
+  }
+
+  ACTS_DEBUG("smearing track param loc0 " << m_cfg.sigmaLoc0 << " A "
+                                          << m_cfg.sigmaLoc0PtA << " B "
+                                          << m_cfg.sigmaLoc0PtB);
+  ACTS_DEBUG("smearing track param loc1 " << m_cfg.sigmaLoc1 << " A "
+                                          << m_cfg.sigmaLoc1PtA << " B "
+                                          << m_cfg.sigmaLoc1PtB);
+  ACTS_DEBUG("smearing track param time " << m_cfg.sigmaTime);
+  ACTS_DEBUG("smearing track param phi " << m_cfg.sigmaPhi);
+  ACTS_DEBUG("smearing track param theta " << m_cfg.sigmaTheta);
+  ACTS_DEBUG("smearing track param q/p " << m_cfg.sigmaPtRel);
+  ACTS_DEBUG(
+      "initial sigmas "
+      << Acts::BoundVector(
+             m_cfg.initialSigmas.value_or(std::array<double, 6>()).data())
+             .transpose());
+  ACTS_DEBUG("initial sigma pt rel " << m_cfg.initialSigmaPtRel);
+  ACTS_DEBUG(
+      "initial var inflation "
+      << Acts::BoundVector(m_cfg.initialVarInflation.data()).transpose());
+  if (m_cfg.particleHypothesis) {
+    ACTS_DEBUG("particle hypothesis " << *m_cfg.particleHypothesis);
   } else {
-    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                         "particle hypothesis truth");
+    ACTS_DEBUG("particle hypothesis truth");
   }
 }
 

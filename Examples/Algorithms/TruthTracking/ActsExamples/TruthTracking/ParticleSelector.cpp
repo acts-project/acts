@@ -88,52 +88,39 @@ ParticleSelector::ParticleSelector(const Config& config,
         "and inputMeasurements");
   }
 
-  ACTS_LOG_WITH_LOGGER(
-      this->logger(), Acts::Logging::DEBUG,
-      "selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax << ")");
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "selection particle |z| [" << m_cfg.absZMin << ","
-                                                  << m_cfg.absZMax << ")");
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "selection particle time [" << m_cfg.timeMin << ","
-                                                   << m_cfg.timeMax << ")");
-  ACTS_LOG_WITH_LOGGER(
-      this->logger(), Acts::Logging::DEBUG,
-      "selection particle phi [" << m_cfg.phiMin << "," << m_cfg.phiMax << ")");
-  ACTS_LOG_WITH_LOGGER(
-      this->logger(), Acts::Logging::DEBUG,
-      "selection particle eta [" << m_cfg.etaMin << "," << m_cfg.etaMax << ")");
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "selection particle |eta| [" << m_cfg.absEtaMin << ","
-                                                    << m_cfg.absEtaMax << ")");
-  ACTS_LOG_WITH_LOGGER(
-      this->logger(), Acts::Logging::DEBUG,
-      "selection particle pt [" << m_cfg.ptMin << "," << m_cfg.ptMax << ")");
-  ACTS_LOG_WITH_LOGGER(
-      this->logger(), Acts::Logging::DEBUG,
-      "selection particle m [" << m_cfg.mMin << "," << m_cfg.mMax << ")");
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "selection particle hits [" << m_cfg.hitsMin << ","
-                                                   << m_cfg.hitsMax << ")");
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "selection particle measurements ["
-                           << m_cfg.measurementsMin << ","
-                           << m_cfg.measurementsMax << ")");
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "remove charged particles " << m_cfg.removeCharged);
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "remove neutral particles " << m_cfg.removeNeutral);
-  ACTS_LOG_WITH_LOGGER(
-      this->logger(), Acts::Logging::DEBUG,
-      "remove secondary particles " << m_cfg.removeSecondaries);
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG, "exclude pdgs: ");
+  logSelectionConfig();
+}
+
+void ParticleSelector::logSelectionConfig() const {
+  ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
+                                        << ")");
+  ACTS_DEBUG("selection particle |z| [" << m_cfg.absZMin << "," << m_cfg.absZMax
+                                        << ")");
+  ACTS_DEBUG("selection particle time [" << m_cfg.timeMin << ","
+                                         << m_cfg.timeMax << ")");
+  ACTS_DEBUG("selection particle phi [" << m_cfg.phiMin << "," << m_cfg.phiMax
+                                        << ")");
+  ACTS_DEBUG("selection particle eta [" << m_cfg.etaMin << "," << m_cfg.etaMax
+                                        << ")");
+  ACTS_DEBUG("selection particle |eta| [" << m_cfg.absEtaMin << ","
+                                          << m_cfg.absEtaMax << ")");
+  ACTS_DEBUG("selection particle pt [" << m_cfg.ptMin << "," << m_cfg.ptMax
+                                       << ")");
+  ACTS_DEBUG("selection particle m [" << m_cfg.mMin << "," << m_cfg.mMax
+                                      << ")");
+  ACTS_DEBUG("selection particle hits [" << m_cfg.hitsMin << ","
+                                         << m_cfg.hitsMax << ")");
+  ACTS_DEBUG("selection particle measurements ["
+             << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
+  ACTS_DEBUG("remove charged particles " << m_cfg.removeCharged);
+  ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
+  ACTS_DEBUG("remove secondary particles " << m_cfg.removeSecondaries);
+  ACTS_DEBUG("exclude pdgs: ");
   for (auto pdg : m_cfg.excludeAbsPdgs) {
-    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG, "  " << pdg);
+    ACTS_DEBUG("  " << pdg);
   }
-  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
-                       "primary vertex ID [" << m_cfg.minPrimaryVertexId << ","
-                                             << m_cfg.maxPrimaryVertexId
-                                             << ")");
+  ACTS_DEBUG("primary vertex ID [" << m_cfg.minPrimaryVertexId << ","
+                                   << m_cfg.maxPrimaryVertexId << ")");
 }
 
 ProcessCode ParticleSelector::execute(const AlgorithmContext& ctx) const {
