@@ -118,8 +118,8 @@ class AlignmentAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  AlignmentAlgorithm(Config cfg,
-                     std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit AlignmentAlgorithm(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method of the alignment algorithm
   ///

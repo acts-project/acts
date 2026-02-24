@@ -29,8 +29,9 @@ class HepMC3OutputConverter : public IAlgorithm {
     std::string inputVertices;
     std::string outputEvent;
   };
-  HepMC3OutputConverter(const Config& config,
-                        std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit HepMC3OutputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   const Config& config() const { return m_cfg; }
 

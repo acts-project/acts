@@ -52,8 +52,9 @@ class HepMC3InputConverter : public IAlgorithm {
     bool checkConsistency = false;
   };
 
-  HepMC3InputConverter(const Config& config,
-                       std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit HepMC3InputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   const Config& config() const { return m_cfg; }
 

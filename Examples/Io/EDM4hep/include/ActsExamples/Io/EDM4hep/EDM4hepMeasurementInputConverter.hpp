@@ -45,7 +45,7 @@ class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepMeasurementInputConverter(
+  explicit EDM4hepMeasurementInputConverter(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = nullptr);
 

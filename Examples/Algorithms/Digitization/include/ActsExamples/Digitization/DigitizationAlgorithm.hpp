@@ -88,8 +88,8 @@ class DigitizationAlgorithm final : public IAlgorithm {
   ///
   /// @param config is the algorithm configuration
   /// @param level is the logging level
-  DigitizationAlgorithm(Config config,
-                        std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit DigitizationAlgorithm(
+      Config config, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Build measurement from simulation hits at input.
   ///

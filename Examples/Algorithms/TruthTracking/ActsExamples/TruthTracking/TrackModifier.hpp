@@ -35,8 +35,8 @@ class TrackModifier final : public IAlgorithm {
     bool killTime{false};
   };
 
-  TrackModifier(const Config& config,
-                std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit TrackModifier(const Config& config,
+                         std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

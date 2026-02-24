@@ -67,8 +67,8 @@ class HitSelector final : public IAlgorithm {
         std::numeric_limits<std::uint64_t>::max();
   };
 
-  HitSelector(const Config& config,
-              std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit HitSelector(const Config& config,
+                       std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

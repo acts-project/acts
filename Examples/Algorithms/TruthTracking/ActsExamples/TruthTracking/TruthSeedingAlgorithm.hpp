@@ -72,8 +72,8 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TruthSeedingAlgorithm(Config cfg,
-                        std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit TruthSeedingAlgorithm(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the truth seeding algorithm.
   ///

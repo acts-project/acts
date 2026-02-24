@@ -49,7 +49,7 @@ class TrackParamsLookupEstimation : public IAlgorithm {
   };
 
   /// @brief Constructor
-  TrackParamsLookupEstimation(
+  explicit TrackParamsLookupEstimation(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = nullptr);
 

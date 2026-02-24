@@ -92,7 +92,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrackParamsEstimationAlgorithm(
+  explicit TrackParamsEstimationAlgorithm(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the track parameters making algorithm.

@@ -69,8 +69,8 @@ class ProtoTracksToParameters final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  ProtoTracksToParameters(Config cfg,
-                          std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit ProtoTracksToParameters(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~ProtoTracksToParameters() override;
 

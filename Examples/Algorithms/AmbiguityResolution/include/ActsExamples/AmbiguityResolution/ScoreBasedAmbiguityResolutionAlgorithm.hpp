@@ -64,7 +64,7 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  ScoreBasedAmbiguityResolutionAlgorithm(
+  explicit ScoreBasedAmbiguityResolutionAlgorithm(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the ambiguity resolution algorithm.

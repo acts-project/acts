@@ -83,8 +83,8 @@ class FatrasSimulation final : public IAlgorithm {
   ///
   /// @param cfg is the configuration struct
   /// @param lvl is the logging level
-  FatrasSimulation(Config cfg,
-                   std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit FatrasSimulation(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
   ~FatrasSimulation() override;
 
   /// Run the simulation for a single event.

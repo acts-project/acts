@@ -30,8 +30,8 @@ class SeedsToProtoTracks final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedsToProtoTracks(Config cfg,
-                     std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit SeedsToProtoTracks(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the algorithm.
   ///

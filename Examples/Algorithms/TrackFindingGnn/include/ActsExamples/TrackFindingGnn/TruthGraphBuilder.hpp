@@ -47,8 +47,8 @@ class TruthGraphBuilder final : public IAlgorithm {
     bool uniqueModules = false;
   };
 
-  TruthGraphBuilder(Config cfg,
-                    std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit TruthGraphBuilder(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~TruthGraphBuilder() override = default;
 

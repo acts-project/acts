@@ -52,7 +52,7 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
     int maxIterations = 1000;
   };
 
-  IterativeVertexFinderAlgorithm(
+  explicit IterativeVertexFinderAlgorithm(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = nullptr);
 

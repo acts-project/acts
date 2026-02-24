@@ -83,8 +83,8 @@ class MuonHoughSeeder final : public IAlgorithm {
         visualizationFunction{};
   };
 
-  MuonHoughSeeder(const Config& cfg,
-                  std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit MuonHoughSeeder(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
   ~MuonHoughSeeder() override;
 
   /// Run the seeding algorithm.

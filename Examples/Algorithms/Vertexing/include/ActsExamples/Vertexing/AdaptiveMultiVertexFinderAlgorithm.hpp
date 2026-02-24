@@ -92,7 +92,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::size_t simultaneousSeeds = 1;
   };
 
-  AdaptiveMultiVertexFinderAlgorithm(
+  explicit AdaptiveMultiVertexFinderAlgorithm(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = nullptr);
 

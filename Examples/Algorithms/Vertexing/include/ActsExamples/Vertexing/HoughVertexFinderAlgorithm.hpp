@@ -35,7 +35,7 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
     Acts::Vector3 defVtxPosition{0., 0., 0.};
   };
 
-  HoughVertexFinderAlgorithm(
+  explicit HoughVertexFinderAlgorithm(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// @brief Find a vertex using space points

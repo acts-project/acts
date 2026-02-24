@@ -29,7 +29,7 @@ class ParticleTrackParamExtractor final : public IAlgorithm {
     std::string outputTrackParameters;
   };
 
-  ParticleTrackParamExtractor(
+  explicit ParticleTrackParamExtractor(
       const Config& config,
       std::unique_ptr<const Acts::Logger> logger = nullptr);
 

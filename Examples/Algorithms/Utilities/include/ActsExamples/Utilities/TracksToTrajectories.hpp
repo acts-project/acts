@@ -30,8 +30,8 @@ class TracksToTrajectories final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TracksToTrajectories(Config cfg,
-                       std::unique_ptr<const Acts::Logger> logger = nullptr);
+  explicit TracksToTrajectories(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the algorithm.
   ///
