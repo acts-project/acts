@@ -825,8 +825,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
         const auto expectedSurfaceId =
             jPortal.at(kPortalSurfaceKey).at("geo_id").get<std::uint64_t>();
         if (portal->surface().geometryId().value() != expectedSurfaceId) {
-          throw std::invalid_argument(
-              "Portal surface identifier mismatch in serialized payload");
+          portal->surface().assignGeometryId(
+              GeometryIdentifier(expectedSurfaceId));
         }
       }
 

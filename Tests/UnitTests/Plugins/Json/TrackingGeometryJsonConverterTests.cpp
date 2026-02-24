@@ -23,11 +23,14 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/Axis.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 #include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 
+#include <functional>
 #include <fstream>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace ActsTests {
@@ -184,6 +187,77 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   BOOST_REQUIRE(decodedGeometry->highestTrackingVolume() != nullptr);
   BOOST_CHECK_EQUAL(decodedGeometry->highestTrackingVolume()->volumeName(),
                     "root");
+}
+
+BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTripGen3Cylindrical) {
+  using namespace Acts;
+
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+  CylindricalTrackingGeometry cylindricalGeometryBuilder(gctx, true);
+  auto sourceGeometry = cylindricalGeometryBuilder();
+
+  BOOST_REQUIRE(sourceGeometry != nullptr);
+  BOOST_REQUIRE(sourceGeometry->highestTrackingVolume() != nullptr);
+  BOOST_CHECK(sourceGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen3);
+
+  auto countVolumesAndPortals = [](const TrackingVolume& world) {
+    std::size_t volumeCount = 0u;
+    std::size_t portalCount = 0u;
+
+    std::function<void(const TrackingVolume&)> traverse =
+        [&](const TrackingVolume& volume) {
+          ++volumeCount;
+          for (const auto& portal : volume.portals()) {
+            static_cast<void>(portal);
+            ++portalCount;
+          }
+          for (const auto& child : volume.volumes()) {
+            traverse(child);
+          }
+        };
+
+    traverse(world);
+    return std::pair{volumeCount, portalCount};
+  };
+
+  const auto [sourceVolumeCount, sourcePortalCount] =
+      countVolumesAndPortals(*sourceGeometry->highestTrackingVolume());
+  BOOST_CHECK_GT(sourceVolumeCount, 0u);
+  BOOST_CHECK_GT(sourcePortalCount, 0u);
+
+  TrackingGeometryJsonConverter converter;
+  nlohmann::json encoded = converter.toJson(gctx, *sourceGeometry);
+
+  TemporaryDirectory tmpDir{};
+  auto jsonPath = tmpDir.path() / "tracking_geometry_gen3_roundtrip.json";
+
+  {
+    std::ofstream out(jsonPath);
+    BOOST_REQUIRE(out.good());
+    out << encoded.dump(2);
+  }
+
+  nlohmann::json encodedFromFile;
+  {
+    std::ifstream in(jsonPath);
+    BOOST_REQUIRE(in.good());
+    in >> encodedFromFile;
+  }
+
+  auto decodedGeometry =
+      converter.trackingGeometryFromJson(gctx, encodedFromFile);
+  BOOST_REQUIRE(decodedGeometry != nullptr);
+  BOOST_REQUIRE(decodedGeometry->highestTrackingVolume() != nullptr);
+
+  const auto [decodedVolumeCount, decodedPortalCount] =
+      countVolumesAndPortals(*decodedGeometry->highestTrackingVolume());
+
+  BOOST_CHECK_EQUAL(decodedVolumeCount, sourceVolumeCount);
+  BOOST_CHECK_EQUAL(decodedPortalCount, sourcePortalCount);
+  BOOST_CHECK_EQUAL(decodedGeometry->highestTrackingVolume()->volumeName(),
+                    sourceGeometry->highestTrackingVolume()->volumeName());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
