@@ -37,7 +37,6 @@
 #include <numbers>
 #include <optional>
 #include <random>
-#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -246,20 +245,6 @@ struct MultiStepperTester {
         BOOST_CHECK_EQUAL(cmp.state.covTransport, Cov);
       }
     }
-  }
-
-  void test_multi_stepper_state_invalid() const {
-    MultiOptions options(geoCtx, magCtx);
-    options.maxStepSize = defaultStepSize;
-
-    MultiStepper multiStepper(defaultBField);
-
-    // Empty component vector
-    const auto multi_pars = makeDefaultBoundPars(false, 0);
-    MultiState state = multiStepper.makeState(options);
-
-    BOOST_CHECK_THROW(multiStepper.initialize(state, multi_pars),
-                      std::invalid_argument);
   }
 
   ////////////////////////////////////////////////////////////////////////

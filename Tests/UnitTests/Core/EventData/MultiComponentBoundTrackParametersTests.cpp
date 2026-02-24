@@ -58,6 +58,12 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
   BOOST_CHECK(ap.toComponents() == bp.toComponents());
   BOOST_CHECK(bp.toComponents() == aps.toComponents());
   BOOST_CHECK(aps.toComponents() == bps.toComponents());
+
+  BOOST_CHECK_THROW(
+      MultiComponentBoundTrackParameters(
+          surface, std::vector<std::tuple<double, BoundVector, BoundMatrix>>{},
+          particleHypothesis),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(test_accessors) {
