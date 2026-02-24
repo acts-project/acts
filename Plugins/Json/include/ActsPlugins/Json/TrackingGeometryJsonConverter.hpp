@@ -12,7 +12,9 @@
 #include "Acts/Utilities/TypeDispatcher.hpp"
 #include "ActsPlugins/Json/JsonKindDispatcher.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 
@@ -35,11 +37,49 @@ class TrackingGeometryJsonConverter {
   /// JSON serialization options for tracking geometry conversion.
   struct Options {};
 
-  /// Mapping from volume pointer to serialized volume ID.
-  using VolumeIdMap = std::unordered_map<const TrackingVolume*, std::size_t>;
+  /// Lookup structure from volume pointer to serialized volume ID.
+  struct VolumeIdLookup {
+    bool emplace(const TrackingVolume& volume, std::size_t volumeId) {
+      return m_volumeIds.emplace(&volume, volumeId).second;
+    }
 
-  /// Mapping from serialized volume ID to reconstructed volume pointer.
-  using VolumePointerMap = std::unordered_map<std::size_t, TrackingVolume*>;
+    std::size_t at(const TrackingVolume& volume) const {
+      auto it = m_volumeIds.find(&volume);
+      if (it == m_volumeIds.end()) {
+        throw std::invalid_argument(
+            "Volume lookup failed: volume is outside serialized hierarchy");
+      }
+      return it->second;
+    }
+
+   private:
+    std::unordered_map<const TrackingVolume*, std::size_t> m_volumeIds;
+  };
+
+  /// Lookup structure from serialized volume ID to reconstructed volume
+  /// pointer.
+  struct VolumePointerLookup {
+    bool emplace(std::size_t volumeId, TrackingVolume& volume) {
+      return m_volumes.emplace(volumeId, &volume).second;
+    }
+
+    TrackingVolume* find(std::size_t volumeId) const {
+      auto it = m_volumes.find(volumeId);
+      return it == m_volumes.end() ? nullptr : it->second;
+    }
+
+    TrackingVolume& at(std::size_t volumeId) const {
+      auto* volume = find(volumeId);
+      if (volume == nullptr) {
+        throw std::invalid_argument(
+            "Volume pointer lookup failed: unknown serialized volume ID");
+      }
+      return *volume;
+    }
+
+   private:
+    std::unordered_map<std::size_t, TrackingVolume*> m_volumes;
+  };
 
   using VolumeBoundsEncoder =
       TypeDispatcher<VolumeBounds, nlohmann::json()>;
@@ -47,7 +87,8 @@ class TrackingGeometryJsonConverter {
   using PortalLinkEncoder = TypeDispatcher<
       PortalLinkBase,
       nlohmann::json(const GeometryContext&,
-                     const TrackingGeometryJsonConverter&, const VolumeIdMap&)>;
+                     const TrackingGeometryJsonConverter&,
+                     const VolumeIdLookup&)>;
 
   using VolumeBoundsDecoder =
       JsonKindDispatcher<std::unique_ptr<VolumeBounds>>;
@@ -56,7 +97,7 @@ class TrackingGeometryJsonConverter {
       JsonKindDispatcher<std::unique_ptr<PortalLinkBase>,
                          const GeometryContext&,
                          const TrackingGeometryJsonConverter&,
-                         const VolumePointerMap&>;
+                         const VolumePointerLookup&>;
 
   /// Configuration for the tracking geometry JSON converter.
   struct Config {
@@ -101,12 +142,12 @@ class TrackingGeometryJsonConverter {
   /// Serialize one portal link using the configured dispatcher.
   nlohmann::json portalLinkToJson(const GeometryContext& gctx,
                                   const PortalLinkBase& link,
-                                  const VolumeIdMap& volumeIds) const;
+                                  const VolumeIdLookup& volumeIds) const;
 
   /// Deserialize one portal link using configured decoders.
   std::unique_ptr<PortalLinkBase> portalLinkFromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
-      const VolumePointerMap& volumes) const;
+      const VolumePointerLookup& volumes) const;
 
  private:
   Config m_cfg;
