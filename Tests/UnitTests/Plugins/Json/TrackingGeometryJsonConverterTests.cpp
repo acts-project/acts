@@ -23,8 +23,10 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/Axis.hpp"
+#include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
 #include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 
+#include <fstream>
 #include <memory>
 #include <vector>
 
@@ -111,7 +113,23 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
 
   TrackingGeometryJsonConverter converter;
   nlohmann::json encoded = converter.toJson(gctx, *root);
-  auto decodedRoot = converter.trackingVolumeFromJson(gctx, encoded);
+  TemporaryDirectory tmpDir{};
+  auto jsonPath = tmpDir.path() / "tracking_geometry_roundtrip.json";
+
+  {
+    std::ofstream out(jsonPath);
+    BOOST_REQUIRE(out.good());
+    out << encoded.dump(2);
+  }
+
+  nlohmann::json encodedFromFile;
+  {
+    std::ifstream in(jsonPath);
+    BOOST_REQUIRE(in.good());
+    in >> encodedFromFile;
+  }
+
+  auto decodedRoot = converter.trackingVolumeFromJson(gctx, encodedFromFile);
 
   BOOST_REQUIRE(decodedRoot != nullptr);
   BOOST_CHECK_EQUAL(decodedRoot->volumeName(), "root");
@@ -160,7 +178,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({2u})->volumeName(), "root");
   BOOST_CHECK_EQUAL(decodedGridView.atLocalBins({3u})->volumeName(), "child");
 
-  auto decodedGeometry = converter.trackingGeometryFromJson(gctx, encoded);
+  auto decodedGeometry =
+      converter.trackingGeometryFromJson(gctx, encodedFromFile);
   BOOST_REQUIRE(decodedGeometry != nullptr);
   BOOST_REQUIRE(decodedGeometry->highestTrackingVolume() != nullptr);
   BOOST_CHECK_EQUAL(decodedGeometry->highestTrackingVolume()->volumeName(),
