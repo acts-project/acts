@@ -23,12 +23,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/Axis.hpp"
+#include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "ActsTests/CommonHelpers/TemporaryDirectory.hpp"
-#include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 
-#include <functional>
 #include <fstream>
+#include <functional>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -64,18 +64,18 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
       GeometryIdentifier{}.withVolume(1u).withExtra(11u));
   auto trivialLink =
       std::make_unique<TrivialPortalLink>(trivialSurface, *childPtr);
-  root->addPortal(
-      std::make_shared<Portal>(Direction::AlongNormal(), std::move(trivialLink)));
+  root->addPortal(std::make_shared<Portal>(Direction::AlongNormal(),
+                                           std::move(trivialLink)));
 
   auto compositeBounds = std::make_shared<const RectangleBounds>(1., 1.);
   Transform3 compositeTransformA = Transform3::Identity();
   compositeTransformA.pretranslate(Vector3{-1., 0., 0.});
   Transform3 compositeTransformB = Transform3::Identity();
   compositeTransformB.pretranslate(Vector3{1., 0., 0.});
-  auto compositeSurfaceA = Surface::makeShared<PlaneSurface>(
-      compositeTransformA, compositeBounds);
-  auto compositeSurfaceB = Surface::makeShared<PlaneSurface>(
-      compositeTransformB, compositeBounds);
+  auto compositeSurfaceA =
+      Surface::makeShared<PlaneSurface>(compositeTransformA, compositeBounds);
+  auto compositeSurfaceB =
+      Surface::makeShared<PlaneSurface>(compositeTransformB, compositeBounds);
   compositeSurfaceA->assignGeometryId(
       GeometryIdentifier{}.withVolume(1u).withExtra(12u));
   compositeSurfaceB->assignGeometryId(
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), gridBounds);
   gridSurface->assignGeometryId(
       GeometryIdentifier{}.withVolume(1u).withExtra(14u));
-  auto gridLink = GridPortalLink::make(
-      gridSurface, AxisDirection::AxisX, Axis{AxisBound, -2., 2., 2});
+  auto gridLink = GridPortalLink::make(gridSurface, AxisDirection::AxisX,
+                                       Axis{AxisBound, -2., 2., 2});
   AnyGridView<const TrackingVolume*> gridView(gridLink->grid());
   gridView.atLocalBins({0u}) = rootPtr;
   gridView.atLocalBins({1u}) = childPtr;
@@ -277,6 +277,10 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTripGen3Cylindrical) {
       converter.trackingGeometryFromJson(gctx, encodedFromFile);
   BOOST_REQUIRE(decodedGeometry != nullptr);
   BOOST_REQUIRE(decodedGeometry->highestTrackingVolume() != nullptr);
+
+  decodedGeometry->apply([](TrackingVolume& volume) {
+    // volume.setNavigationPolicy();
+  });
 
   const auto [decodedVolumeCount, decodedPortalCount] =
       countVolumesAndPortals(*decodedGeometry->highestTrackingVolume());

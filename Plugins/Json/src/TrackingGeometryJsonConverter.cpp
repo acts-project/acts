@@ -401,7 +401,7 @@ std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
   auto surface = regularSurfaceFromJson(encoded.at(kPortalSurfaceKey));
   const auto targetVolumeId = encoded.at(kTargetVolumeIdKey).get<std::size_t>();
   return std::make_unique<Acts::TrivialPortalLink>(std::move(surface),
-                                                   volumes.at(targetVolumeId));
+                                                   *volumes.at(targetVolumeId));
 }
 
 /// Decode a `CompositePortalLink` payload with recursive child decoding.
@@ -452,7 +452,7 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
     if (!jBin.at(kTargetVolumeIdKey).is_null()) {
       const auto targetVolumeId =
           jBin.at(kTargetVolumeIdKey).get<std::size_t>();
-      target = &volumes.at(targetVolumeId);
+      target = volumes.at(targetVolumeId);
     }
     view.atLocalBins(localIndices) = target;
   }
@@ -593,8 +593,9 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerFunction(encodeCompositePortalLink)
       .registerFunction(encodeGridPortalLink);
 
-  cfg.decodeVolumeBounds.registerKind(kConeVolumeBoundsKind,
-                                      decodeVolumeBoundsT<ConeVolumeBounds>)
+  cfg.decodeVolumeBounds
+      .registerKind(kConeVolumeBoundsKind,
+                    decodeVolumeBoundsT<ConeVolumeBounds>)
       .registerKind(kCuboidVolumeBoundsKind,
                     decodeVolumeBoundsT<CuboidVolumeBounds>)
       .registerKind(kCutoutCylinderVolumeBoundsKind,
@@ -606,8 +607,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerKind(kTrapezoidVolumeBoundsKind,
                     decodeVolumeBoundsT<TrapezoidVolumeBounds>);
 
-  cfg.decodePortalLink.registerKind(kTrivialPortalLinkKind,
-                                    decodeTrivialPortalLink)
+  cfg.decodePortalLink
+      .registerKind(kTrivialPortalLinkKind, decodeTrivialPortalLink)
       .registerKind(kCompositePortalLinkKind, decodeCompositePortalLink)
       .registerKind(kGridPortalLinkKind, decodeGridPortalLink);
 
@@ -670,8 +671,8 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
   for (const auto* portal : orderedPortals) {
     nlohmann::json jPortal;
     jPortal[kPortalIdKey] = portalIds.at(*portal);
-    jPortal[kPortalSurfaceKey] =
-        SurfaceJsonConverter::toJson(gctx, portal->surface(), {.writeMaterial = false});
+    jPortal[kPortalSurfaceKey] = SurfaceJsonConverter::toJson(
+        gctx, portal->surface(), {.writeMaterial = false});
 
     if (const auto* along = portal->getLink(Direction::AlongNormal());
         along != nullptr) {
@@ -682,7 +683,8 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
 
     if (const auto* opposite = portal->getLink(Direction::OppositeNormal());
         opposite != nullptr) {
-      jPortal[kOppositeNormalKey] = portalLinkToJson(gctx, *opposite, volumeIds);
+      jPortal[kOppositeNormalKey] =
+          portalLinkToJson(gctx, *opposite, volumeIds);
     } else {
       jPortal[kOppositeNormalKey] = nullptr;
     }
@@ -756,7 +758,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     PortalRecord record;
     record.portalId = jPortal.at(kPortalIdKey).get<std::size_t>();
     record.payload = jPortal;
-    const auto inserted = portalRecords.emplace(record.portalId, std::move(record));
+    const auto inserted =
+        portalRecords.emplace(record.portalId, std::move(record));
     if (!inserted.second) {
       throw std::invalid_argument("Duplicate serialized portal ID");
     }
@@ -782,7 +785,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     }
     volume->assignGeometryId(geometryId);
 
-    volumePointers.emplace(volumeId, *volume);
+    volumePointers.emplace(volumeId, volume.get());
     storage.emplace(volumeId, std::move(volume));
   }
 
@@ -848,11 +851,12 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     std::unique_ptr<PortalLinkBase> opposite = nullptr;
 
     if (!jPortal.at(kAlongNormalKey).is_null()) {
-      along = portalLinkFromJson(gctx, jPortal.at(kAlongNormalKey), volumePointers);
+      along =
+          portalLinkFromJson(gctx, jPortal.at(kAlongNormalKey), volumePointers);
     }
     if (!jPortal.at(kOppositeNormalKey).is_null()) {
-      opposite =
-          portalLinkFromJson(gctx, jPortal.at(kOppositeNormalKey), volumePointers);
+      opposite = portalLinkFromJson(gctx, jPortal.at(kOppositeNormalKey),
+                                    volumePointers);
     }
     if (along == nullptr && opposite == nullptr) {
       throw std::invalid_argument("Portal has no links");
@@ -867,9 +871,11 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
           jPortal.at(kPortalSurfaceKey).at("geo_id").get<std::uint64_t>();
       const GeometryIdentifier expectedIdentifier(expectedSurfaceId);
       const bool isPortalStyleIdentifier =
-          expectedIdentifier.boundary() == 0u && expectedIdentifier.layer() == 0u &&
+          expectedIdentifier.boundary() == 0u &&
+          expectedIdentifier.layer() == 0u &&
           expectedIdentifier.approach() == 0u &&
-          expectedIdentifier.sensitive() == 0u && expectedIdentifier.extra() != 0u;
+          expectedIdentifier.sensitive() == 0u &&
+          expectedIdentifier.extra() != 0u;
       if (isPortalStyleIdentifier &&
           portal->surface().geometryId().value() != expectedSurfaceId) {
         portal->surface().assignGeometryId(expectedIdentifier);
@@ -881,7 +887,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 
   PortalPointerLookup portalPointers;
   for (const auto& [portalId, record] : portalRecords) {
-    const auto inserted = portalPointers.emplace(portalId, decodePortal(record.payload));
+    const auto inserted =
+        portalPointers.emplace(portalId, decodePortal(record.payload));
     if (!inserted) {
       throw std::invalid_argument("Portal pointer reconstruction failed");
     }

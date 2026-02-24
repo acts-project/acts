@@ -89,92 +89,51 @@ class TrackingGeometryJsonConverter {
     std::unordered_map<const object_t*, std::size_t> m_objectIds;
   };
 
-  /// Generic lookup from serialized ID to non-owning object pointer.
-  template <typename object_t, const char* kContext>
-  struct IdToPointerLookup {
-    /// Insert a new serialized ID to object pointer mapping.
+  /// Generic lookup from serialized ID to pointer-like object holder.
+  ///
+  /// `pointer_t` can be a raw pointer (`object_t*`) or an owning pointer-like
+  /// type such as `std::shared_ptr<object_t>`.
+  template <typename object_t, typename pointer_t, const char* kContext>
+  struct IdToPointerLikeLookup {
+    /// Insert a new serialized ID to object mapping.
     ///
     /// @param objectId is the serialized ID key
-    /// @param object is the target object
+    /// @param object is the target pointer-like object
     ///
     /// @return true if insertion happened, false if the ID was already present
-    bool emplace(std::size_t objectId, object_t& object) {
-      return m_objects.emplace(objectId, &object).second;
-    }
-
-    /// Try to find a mapped object pointer by serialized ID.
-    ///
-    /// @param objectId is the serialized ID key
-    ///
-    /// @return raw pointer to the mapped object, or nullptr if not found
-    object_t* find(std::size_t objectId) const {
-      auto it = m_objects.find(objectId);
-      return it == m_objects.end() ? nullptr : it->second;
-    }
-
-    /// Resolve a mapped object reference by serialized ID.
-    ///
-    /// @param objectId is the serialized ID key
-    ///
-    /// @return reference to mapped object
-    ///
-    /// @throw std::invalid_argument if the ID is not mapped
-    object_t& at(std::size_t objectId) const {
-      auto* object = find(objectId);
-      if (object == nullptr) {
-        throw std::invalid_argument(
-            "ID-to-pointer lookup failed for " + std::string{kContext} +
-            ": unknown serialized object ID");
-      }
-      return *object;
-    }
-
-   private:
-    std::unordered_map<std::size_t, object_t*> m_objects;
-  };
-
-  /// Generic lookup from serialized ID to owning shared pointer.
-  template <typename object_t, const char* kContext>
-  struct IdToSharedPointerLookup {
-    /// Insert a new serialized ID to shared pointer mapping.
-    ///
-    /// @param objectId is the serialized ID key
-    /// @param object is the target shared object
-    ///
-    /// @return true if insertion happened, false if the ID was already present
-    bool emplace(std::size_t objectId, std::shared_ptr<object_t> object) {
+    bool emplace(std::size_t objectId, pointer_t object) {
       return m_objects.emplace(objectId, std::move(object)).second;
     }
 
-    /// Try to find a mapped shared pointer by serialized ID.
+    /// Try to find a mapped pointer-like object by serialized ID.
     ///
     /// @param objectId is the serialized ID key
     ///
-    /// @return mapped shared pointer, or nullptr if not found
-    std::shared_ptr<object_t> find(std::size_t objectId) const {
+    /// @return mapped pointer-like object, or null-equivalent if not found
+    pointer_t find(std::size_t objectId) const {
       auto it = m_objects.find(objectId);
-      return it == m_objects.end() ? nullptr : it->second;
+      return it == m_objects.end() ? pointer_t{} : it->second;
     }
 
-    /// Resolve a mapped shared pointer by serialized ID.
+    /// Resolve a mapped pointer-like object by serialized ID.
     ///
     /// @param objectId is the serialized ID key
     ///
-    /// @return mapped shared pointer reference
+    /// @return mapped pointer-like object reference
     ///
     /// @throw std::invalid_argument if the ID is not mapped
-    const std::shared_ptr<object_t>& at(std::size_t objectId) const {
+    const pointer_t& at(std::size_t objectId) const {
       auto it = m_objects.find(objectId);
       if (it == m_objects.end()) {
         throw std::invalid_argument(
-            "ID-to-shared-pointer lookup failed for " +
-            std::string{kContext} + ": unknown serialized object ID");
+            "ID-to-pointer lookup failed for " + std::string{kContext} +
+            ": unknown serialized object ID");
       }
       return it->second;
     }
 
    private:
-    std::unordered_map<std::size_t, std::shared_ptr<object_t>> m_objects;
+    std::unordered_map<std::size_t, pointer_t> m_objects;
   };
 
   static inline constexpr char kVolumeLookupContext[] = "volume";
@@ -182,11 +141,11 @@ class TrackingGeometryJsonConverter {
 
   using VolumeIdLookup =
       PointerToIdLookup<TrackingVolume, kVolumeLookupContext>;
-  using VolumePointerLookup =
-      IdToPointerLookup<TrackingVolume, kVolumeLookupContext>;
+  using VolumePointerLookup = IdToPointerLikeLookup<
+      TrackingVolume, TrackingVolume*, kVolumeLookupContext>;
   using PortalIdLookup = PointerToIdLookup<Portal, kPortalLookupContext>;
-  using PortalPointerLookup =
-      IdToSharedPointerLookup<Portal, kPortalLookupContext>;
+  using PortalPointerLookup = IdToPointerLikeLookup<
+      Portal, std::shared_ptr<Portal>, kPortalLookupContext>;
 
   using VolumeBoundsEncoder =
       TypeDispatcher<VolumeBounds, nlohmann::json()>;
