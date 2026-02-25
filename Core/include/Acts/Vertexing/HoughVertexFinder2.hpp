@@ -19,12 +19,12 @@
 
 namespace Acts {
 
-/// @brief Implements the vertex finder based on the spacepoints using Hough transform
+/// @brief Implements the vertex finder based on the space points using Hough transform
 /// For more information, see arXiv:2410.14494
 /// 0. Assumes there is only 1 vertex and that it has a high multiplicity
 /// 1. Estimates what eta range is really necessary
-/// 2. Creates Hough space (z_vtx - cot(theta)) from spacepoints within that eta
-/// range
+/// 2. Creates Hough space (z_vtx - cot(theta)) from space points within that
+/// eta range
 /// 3. Subtracts the coincidentally crossed lines in the Hough space
 /// 4. Makes a projection to the Z axis and finds a peak - that is the vertex
 /// position
@@ -34,7 +34,7 @@ class HoughVertexFinder2 {
  public:
   /// Configuration struct
   struct Config {
-    /// Ideal amount of spacepoints; |eta| range will be limited to
+    /// Ideal amount of space points; |eta| range will be limited to
     /// contain approximately this amount of SPs
     std::uint32_t targetSPs = 10000;
 
