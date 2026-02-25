@@ -171,12 +171,14 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   std::ranges::sort(moduleIds);
 
   SpacePointContainer sortedSpacePoints(
-      SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z);
+      SpacePointColumns::SourceLinks | SpacePointColumns::X |
+      SpacePointColumns::Y | SpacePointColumns::Z);
   sortedSpacePoints.reserve(spacePoints.size());
   for (int isp : idxs) {
     const auto& sp = spacePoints[isp];
 
     auto newSp = sortedSpacePoints.createSpacePoint();
+    newSp.assignSourceLinks(sp.sourceLinks());
     newSp.x() = sp.x();
     newSp.y() = sp.y();
     newSp.z() = sp.z();
