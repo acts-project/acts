@@ -313,8 +313,8 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
   const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::XY |
-      Acts::SpacePointColumns::ZR | Acts::SpacePointColumns::VarianceZ |
+      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::PackedXY |
+      Acts::SpacePointColumns::PackedZR | Acts::SpacePointColumns::VarianceZ |
       Acts::SpacePointColumns::VarianceR | Acts::SpacePointColumns::Phi);
 
   // create and train the hashing model

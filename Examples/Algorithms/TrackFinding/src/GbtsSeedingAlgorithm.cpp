@@ -73,7 +73,7 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  auto SpContainerComponents = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
+  auto coreSpacePoints = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
   std::uint32_t maxLayers = m_layerIdMap.size();
@@ -86,7 +86,7 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   // create the seeds
 
   Acts::SeedContainer2 seeds =
-      m_finder->createSeeds(internalRoi, SpContainerComponents, maxLayers);
+      m_finder->createSeeds(internalRoi, coreSpacePoints, maxLayers);
 
   // move seeds to simseedcontainer to be used down stream taking fist middle
   // and last sps currently as simseeds need to be hard types so only 3
@@ -98,19 +98,15 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
     auto sps = seed.spacePointIndices();
     std::uint32_t indices = sps.size() - 1;
     std::size_t mid = static_cast<std::size_t>(std::round(indices / 2.0));
-    seedContainerForStorage.emplace_back(
-        *std::get<0>(SpContainerComponents)
-             .at(sps[0])  // first space point
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>(),
-        *std::get<0>(SpContainerComponents)
-             .at(sps[mid])  // middle space point
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>(),
-        *std::get<0>(SpContainerComponents)
-             .at(sps[indices])  // last space point
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>());
+    seedContainerForStorage.emplace_back(*coreSpacePoints.at(sps[0])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint *>(),
+                                         *coreSpacePoints.at(sps[mid])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint *>(),
+                                         *coreSpacePoints.at(sps[indices])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint *>());
 
     seedContainerForStorage.back().setVertexZ(seed.vertexZ());
     seedContainerForStorage.back().setQuality(seed.quality());
@@ -160,9 +156,9 @@ GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::Experimental::SpContainerComponentsType
-GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
-                                      std::map<ActsIDs, GbtsIDs> map) const {
+Acts::SpacePointContainer2 GbtsSeedingAlgorithm::makeSpContainer(
+    const SimSpacePointContainer &spacePoints,
+    std::map<ActsIDs, GbtsIDs> map) const {
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::X |
       Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
@@ -170,10 +166,9 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
 
   // add new column for layer ID and clusterwidth
   auto layerColomn = coreSpacePoints.createColumn<std::uint32_t>("layerId");
-  auto clusterWidthColomn =
-      coreSpacePoints.createColumn<float>("Cluster_Width");
+  auto clusterWidthColomn = coreSpacePoints.createColumn<float>("clusterWidth");
   auto localPositionColomn =
-      coreSpacePoints.createColumn<float>("LocalPositionY");
+      coreSpacePoints.createColumn<float>("localPositionY");
   coreSpacePoints.reserve(spacePoints.size());
 
   // for loop filling space point container and assigning layer ID's using the
@@ -253,9 +248,7 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
 
   ACTS_VERBOSE("space point collection successfully assigned layerId's");
 
-  return std::make_tuple(std::move(coreSpacePoints), layerColomn.asConst(),
-                         clusterWidthColomn.asConst(),
-                         localPositionColomn.asConst());
+  return coreSpacePoints;
 }
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>
@@ -353,8 +346,10 @@ GbtsSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) const {
     if (currentIndex != inputVector.end()) {  // not end so does exist
       std::size_t index = std::distance(inputVector.begin(), currentIndex);
       inputVector[index].refCoord += rc;
-      inputVector[index].minBound += minBound;
-      inputVector[index].maxBound += maxBound;
+      inputVector[index].minBound =
+          std::min(inputVector[index].minBound, minBound);
+      inputVector[index].maxBound =
+          std::max(inputVector[index].maxBound, maxBound);
       countVector[index] += 1;  // increase count at the index
 
     } else {  // end so doesn't exists
