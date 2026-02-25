@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 using namespace Acts;
 
