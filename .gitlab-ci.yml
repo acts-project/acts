@@ -450,18 +450,6 @@ linux_ubuntu_2404_clang19:
     - cd src
     - pytest -rfExw -k "not gnn" -v -n1
 
-lcg_106a:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "106a"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - clang16
-
 lcg_107:
   extends: .lcg_base_job
 
@@ -473,6 +461,7 @@ lcg_107:
       - OS: [alma9]
         COMPILER:
           - gcc13
+          - clang16
 
 lcg_107a:
   extends: .lcg_base_job
