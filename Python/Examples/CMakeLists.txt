@@ -85,6 +85,7 @@ target_sources(
     ActsExamplesPythonBindings
     PRIVATE
         src/Framework.cpp
+        src/EventData.cpp
         src/ExampleAlgorithms.cpp
         src/Generators.cpp
         src/AmbiguityResolution.cpp

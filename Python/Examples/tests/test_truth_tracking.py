@@ -99,6 +99,43 @@ def test_python_track_access(generic_detector_config, tmp_path):
             s=seq,
         )
 
+        class TrackAccess(acts.examples.IAlgorithm):
+            def __init__(self):
+                super().__init__("TrackAccess", acts.logging.INFO)
+
+                self.tracks = acts.examples.ReadDataHandle(
+                    self, acts.examples.ConstTrackContainer, "InputTracks"
+                )
+                self.tracks.initialize("selected-tracks")
+
+            def execute(self, context):
+                self.logger.info("Track access")
+
+                tracks = self.tracks(context.eventStore)
+                assert isinstance(tracks, acts.examples.ConstTrackContainer)
+
+                self.logger.info("Tracks: {}", len(tracks))
+                for track in tracks:
+                    self.logger.info("Track: {}", track)
+                    self.logger.info("Track index: {}", track.index)
+                    self.logger.info("Track tip index: {}", track.tipIndex)
+                    self.logger.info("Track stem index: {}", track.stemIndex)
+                    self.logger.info(
+                        "Track reference surface: {}", track.referenceSurface
+                    )
+                    self.logger.info(
+                        "Track has reference surface: {}", track.hasReferenceSurface
+                    )
+                    self.logger.info("Track parameters: {}", track.parameters)
+                    self.logger.info("Track covariance: {}", track.covariance)
+                    self.logger.info(
+                        "Track particle hypothesis: {}", track.particleHypothesis
+                    )
+
+                return acts.examples.ProcessCode.SUCCESS
+
+        seq.addAlgorithm(TrackAccess())
+
         seq.run()
 
 

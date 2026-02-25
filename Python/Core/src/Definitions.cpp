@@ -8,10 +8,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 
 #include <format>
+#include <sstream>
 #include <type_traits>
 
 #include <pybind11/pybind11.h>
@@ -98,6 +100,40 @@ void addDefinitions(py::module_& m) {
       .def("__str__", [](const Vector4& self) {
         return std::format("({}, {}, {}, {})", self[0], self[1], self[2],
                            self[3]);
+      });
+
+  py::class_<BoundVector>(m, "BoundVector")
+      .def(py::init<double, double, double, double, double, double>())
+      .def(py::init([](std::array<double, 6> a) {
+        BoundVector v;
+        v << a[0], a[1], a[2], a[3], a[4], a[5];
+        return v;
+      }))
+      .def_static("Zero", []() -> BoundVector { return BoundVector::Zero(); })
+      .def("__getitem__",
+           [](const BoundVector& self, Eigen::Index i) { return self[i]; })
+      .def("__str__", [](const BoundVector& self) {
+        return std::format("({}, {}, {}, {}, {}, {})", self[0], self[1],
+                           self[2], self[3], self[4], self[5]);
+      });
+
+  py::class_<BoundMatrix>(m, "BoundMatrix")
+      .def(py::init([]() { return BoundMatrix::Zero(); }))
+      .def_static("Zero", []() -> BoundMatrix { return BoundMatrix::Zero(); })
+      .def_static("Identity",
+                  []() -> BoundMatrix { return BoundMatrix::Identity(); })
+      .def("__getitem__",
+           [](const BoundMatrix& self, py::object idx) {
+             py::tuple t = idx.cast<py::tuple>();
+             if (py::len(t) != 2) {
+               throw py::index_error("BoundMatrix index must be (i, j)");
+             }
+             return self(t[0].cast<Eigen::Index>(), t[1].cast<Eigen::Index>());
+           })
+      .def("__str__", [](const BoundMatrix& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
       });
 
   py::class_<Translation3>(m, "Translation3")
