@@ -9,10 +9,9 @@
 #pragma once
 
 #include "Acts/Utilities/HashedString.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Utilities/TypeTag.hpp"
 
 #include <functional>
-#include <typeindex>
 #include <unordered_map>
 
 #include <pybind11/pybind11.h>
@@ -27,14 +26,21 @@ class WhiteBoardRegistry {
   /// Register a pybind11-bound type T for WhiteBoard read access.
   /// Call this immediately after the py::class_<T> definition.
   template <typename... Ts>
-  static void registerType(const pybind11::class_<Ts...>& pyType) {
+  static void registerClass(const pybind11::class_<Ts...>& pyClass) {
+    namespace py = pybind11;
+    using type = pybind11::class_<Ts...>::type;
+    registerType<type>(pyClass);
+  }
+
+  template <typename T>
+  static void registerType(const pybind11::object& pyType) {
     namespace py = pybind11;
 
-    using type = pybind11::class_<Ts...>::type;
+    using type = T;
 
     instance()[pyType.ptr()] = {
         .fn = [](const void* ptr, const py::object& wbPy) -> py::object {
-          // wb py seems to be needed to ensure correct lifetime
+          // wb needed to ensure correct lifetime
           return py::cast(*static_cast<const type*>(ptr),
                           py::return_value_policy::reference_internal, wbPy);
         },

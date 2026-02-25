@@ -145,7 +145,7 @@ void addGenerators(py::module& mex) {
             return py::make_iterator(self.begin(), self.end());
           });
 
-  WhiteBoardRegistry::registerType(simParticleContainer);
+  WhiteBoardRegistry::registerClass(simParticleContainer);
 
   {
     using Config = ParametricParticleGenerator::Config;
