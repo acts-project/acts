@@ -1331,11 +1331,11 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 
 
 @pytest.mark.odd
-def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
+def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
     if detector_config.name == "generic":
         pytest.skip("No strip space point formation for the generic detector currently")
 
-    from strip_spacepoints import createStripSpacePoints
+    from strip_space_points import createStripSpacePoints
 
     s = Sequencer(events=20, numThreads=-1)
 

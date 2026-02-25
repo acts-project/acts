@@ -49,7 +49,7 @@ class Seed {
   float seedQuality() const;
 
  private:
-  std::array<const external_space_point_t*, N> m_spacepoints{};
+  std::array<const external_space_point_t*, N> m_spacePoints{};
   float m_vertexZ{0.f};
   float m_seedQuality{-std::numeric_limits<float>::infinity()};
 };

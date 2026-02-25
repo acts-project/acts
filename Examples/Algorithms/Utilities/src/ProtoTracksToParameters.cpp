@@ -90,8 +90,8 @@ ProcessCode ProtoTracksToParameters::execute(
   for (auto &track : protoTracks) {
     ACTS_VERBOSE("Try to get seed from proto track with " << track.size()
                                                           << " hits");
-    // Make proto track unique with respect to volume and layer
-    // so we don't get a seed where we have two space points on the same layer
+    // Make proto track unique with respect to volume and layer so we don't get
+    // a seed where we have two space points on the same layer
 
     // Here, we want to create a seed only if the proto track with removed
     // unique layer-volume space points has 3 or more hits. However, if this is
