@@ -52,11 +52,11 @@ ProcessCode ProtoTracksToParameters::execute(
 
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
   const auto &sps = m_inputSpacePoints(ctx);
-  auto prototracks = m_inputProtoTracks(ctx);
+  auto protoTracks = m_inputProtoTracks(ctx);
 
   // Make some lookup tables and pre-allocate some space
   // Note this is a heuristic, since it is not garantueed that each measurement
-  // is part of a spacepoint
+  // is part of a space point
   std::vector<SpacePointIndex> indexToSpacePoint(2 * sps.size(), nullIndex);
   std::vector<GeometryIdentifier> indexToGeoId(2 * sps.size(),
                                                GeometryIdentifier{0});
@@ -74,29 +74,29 @@ ProcessCode ProtoTracksToParameters::execute(
   }
 
   ProtoTrackContainer seededTracks;
-  seededTracks.reserve(prototracks.size());
+  seededTracks.reserve(protoTracks.size());
 
   SeedContainer seeds;
   seeds.assignSpacePointContainer(sps);
-  seeds.reserve(prototracks.size());
+  seeds.reserve(protoTracks.size());
 
   TrackParametersContainer parameters;
-  parameters.reserve(prototracks.size());
+  parameters.reserve(protoTracks.size());
 
-  // Loop over the prototracks to make seeds
+  // Loop over the proto tracks to make seeds
   ProtoTrack tmpTrack;
   std::vector<SpacePointIndex> tmpSps;
   std::size_t skippedTracks = 0;
-  for (auto &track : prototracks) {
-    ACTS_VERBOSE("Try to get seed from prototrack with " << track.size()
-                                                         << " hits");
-    // Make prototrack unique with respect to volume and layer
-    // so we don't get a seed where we have two spacepoints on the same layer
+  for (auto &track : protoTracks) {
+    ACTS_VERBOSE("Try to get seed from proto track with " << track.size()
+                                                          << " hits");
+    // Make proto track unique with respect to volume and layer
+    // so we don't get a seed where we have two space points on the same layer
 
-    // Here, we want to create a seed only if the prototrack with removed unique
-    // layer-volume spacepoints has 3 or more hits. However, if this is the
-    // case, we want to keep the whole prototrack. Therefore, we operate on a
-    // tmpTrack.
+    // Here, we want to create a seed only if the proto track with removed
+    // unique layer-volume space points has 3 or more hits. However, if this is
+    // the case, we want to keep the whole proto track. Therefore, we operate on
+    // a tmpTrack.
     std::ranges::sort(track, {}, [&](const auto &t) {
       return std::make_tuple(indexToGeoId[t].volume(), indexToGeoId[t].layer());
     });
@@ -129,7 +129,7 @@ ProcessCode ProtoTracksToParameters::execute(
     std::ranges::copy(result, std::back_inserter(tmpSps));
 
     if (tmpSps.size() < 3) {
-      ACTS_WARNING("Could not find all spacepoints, skip");
+      ACTS_WARNING("Could not find all space points, skip");
       skippedTracks++;
       continue;
     }
@@ -208,8 +208,8 @@ ProcessCode ProtoTracksToParameters::execute(
     ACTS_WARNING("Skipped seeding of " << skippedTracks);
   }
 
-  ACTS_DEBUG("Seeded " << seeds.size() << " out of " << prototracks.size()
-                       << " prototracks");
+  ACTS_DEBUG("Seeded " << seeds.size() << " out of " << protoTracks.size()
+                       << " proto tracks");
 
   m_outputSeeds(ctx, std::move(seeds));
   m_outputProtoTracks(ctx, std::move(seededTracks));
