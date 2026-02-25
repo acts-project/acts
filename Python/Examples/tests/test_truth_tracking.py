@@ -214,7 +214,7 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
             events=100, numThreads=-1, logLevel=acts.logging.INFO
         )
         trackingGeometry = generic_detector_config.trackingGeometry
-        field = generic_detector_config.field
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
         digiConfigFile = generic_detector_config.digiConfigFile
 
         rnd = acts.examples.RandomNumbers(seed=42)
@@ -268,20 +268,8 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
             field,
             rnd=rnd,
             inputParticles="particles_generated",
-            seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-            trackSmearingSigmas=TrackSmearingSigmas(
-                # zero everything so the KF has a chance to find the measurements
-                loc0=0,
-                loc0PtA=0,
-                loc0PtB=0,
-                loc1=0,
-                loc1PtA=0,
-                loc1PtB=0,
-                time=0,
-                phi=0,
-                theta=0,
-                ptRel=0,
-            ),
+            seedingAlgorithm=SeedingAlgorithm.GridTriplet,
+            geoSelectionConfigFile=generic_detector_config.geometrySelection,
             particleHypothesis=acts.ParticleHypothesis.muon,
             initialSigmas=[
                 1 * u.mm,
@@ -296,25 +284,31 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
             initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
         )
 
-        addKalmanTracks(
-            s,
-            trackingGeometry,
-            field,
-            reverseFilteringMomThreshold,
-            reverseFilteringCovarianceScaling,
+        spConverter = acts.examples.SpacePointConverter(
+            inputSpacePoints="spacepoints",
+            outputSpacePoints="spacepoints2",
+            logger=logger,
         )
+        s.addAlgorithm(spConverter)
 
-        s.addAlgorithm(
-            acts.examples.TrackSelectorAlgorithm(
-                level=acts.logging.INFO,
-                inputTracks="tracks",
-                outputTracks="selected-tracks",
-                selectorConfig=acts.TrackSelector.Config(
-                    minMeasurements=7,
-                ),
-            )
-        )
-        s.addWhiteboardAlias("tracks", "selected-tracks")
+        class SpacePointAccess(acts.examples.IAlgorithm):
+            def __init__(self):
+                super().__init__("SpacePointAccess", acts.logging.INFO)
+
+                self.spacePoints = acts.examples.ReadDataHandle(
+                    self, acts.SpacePointContainer2, "InputSpacePoints"
+                )
+                self.spacePoints.initialize("spacepoints2")
+
+            def execute(self, context):
+                self.logger.info("Space point access")
+                spacePoints = self.spacePoints(context.eventStore)
+
+                return acts.examples.ProcessCode.SUCCESS
+
+        s.addAlgorithm(SpacePointAccess())
+
+        s.run()
 
 
 def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
