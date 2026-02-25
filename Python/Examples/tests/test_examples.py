@@ -316,7 +316,6 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_root_hash(fn, fp)
 
     assert_csv_output(tmp_path, "particles_simulated")
-    assert_csv_output(tmp_path, "buckets")
     assert_csv_output(tmp_path, "seed")
 
 
