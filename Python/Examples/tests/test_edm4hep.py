@@ -5,6 +5,7 @@ import math
 import tempfile
 import shutil
 import pytest
+import filelock
 
 from helpers import (
     edm4hepEnabled,
@@ -391,16 +392,18 @@ def generate_input_test_edm4hep_simhit_reader(input, output, particle_type):
 
 # Session scoped fixture that uses a temp folder
 @pytest.fixture(scope="session", params=["mu-", "pi-"])
-def ddsim_input_session(request):
+def ddsim_input_session(request, tmp_path_factory):
     particle_type = request.param
-    with tempfile.TemporaryDirectory() as tmp_dir:
+
+    tmp_dir = tmp_path_factory.getbasetemp().parent
+    output_file = Path(tmp_dir) / "output_edm4hep.root"
+
+    with filelock.FileLock(str(output_file) + ".lock"):
         odd_xml_file = str(
             getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
         )
 
-        output_file = str(Path(tmp_dir) / "output_edm4hep.root")
-
-        if not os.path.exists(output_file):
+        if not output_file.exists():
             # explicitly ask for "spawn" as CI failures were observed with "fork"
             spawn_context = multiprocessing.get_context("spawn")
             p = spawn_context.Process(
@@ -412,16 +415,17 @@ def ddsim_input_session(request):
             if p.exitcode != 0:
                 raise RuntimeError("ddsim process failed")
 
-            assert os.path.exists(output_file)
+            assert output_file.exists()
 
-        yield output_file
+    return output_file
 
 
 # Function scoped fixture that uses a temp folder
 @pytest.fixture(scope="function")
 def ddsim_input(ddsim_input_session, tmp_path):
-    tmp_file = str(tmp_path / "output_edm4hep.root")
-    shutil.copy(ddsim_input_session, tmp_file)
+    tmp_file = tmp_path / "output_edm4hep.root"
+    os.link(ddsim_input_session, tmp_file)
+    # shutil.copy(ddsim_input_session, tmp_file)
     return tmp_file
 
 
@@ -608,7 +612,7 @@ def test_edm4hep_tracks_reader(tmp_path):
         EDM4hepTrackInputConverter(
             level=acts.logging.VERBOSE,
             inputFrame="events",
-            inputTracks="kf_tracks",
+            inputTracks=converter.config.outputTracks,
             outputTracks="kf_tracks",
             Bz=2 * u.T,
         )
@@ -619,6 +623,7 @@ def test_edm4hep_tracks_reader(tmp_path):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+@pytest.mark.slow
 def test_edm4hep_reader(ddsim_input):
     from acts.examples.edm4hep import PodioReader
 

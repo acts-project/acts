@@ -68,14 +68,14 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, double t0,
 
 /// Estimate free track parameters from three space points
 ///
-/// @tparam spacepoint_iterator_t The type of space point iterator
+/// @tparam space_point_range_t The type of space point range
 ///
 /// @param spRange is the range of space points
 /// @param bField is the magnetic field vector
 ///
 /// @return the free parameters
-template <std::ranges::range spacepoint_range_t>
-FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
+template <std::ranges::range space_point_range_t>
+FreeVector estimateTrackParamsFromSeed(space_point_range_t spRange,
                                        const Vector3& bField) {
   // Check the number of provided space points
   if (spRange.size() != 3) {
@@ -121,7 +121,7 @@ Result<BoundVector> estimateTrackParamsFromSeed(
 
 /// Estimate bound track parameters from three space points
 ///
-/// @tparam spacepoint_iterator_t The type of space point iterator
+/// @tparam space_point_range_t The type of space point range
 ///
 /// @param gctx is the geometry context
 /// @param spRange is the range of space points
@@ -130,9 +130,9 @@ Result<BoundVector> estimateTrackParamsFromSeed(
 /// @param bField is the magnetic field vector
 ///
 /// @return bound parameters
-template <std::ranges::range spacepoint_range_t>
+template <std::ranges::range space_point_range_t>
 Result<BoundVector> estimateTrackParamsFromSeed(const GeometryContext& gctx,
-                                                spacepoint_range_t spRange,
+                                                space_point_range_t spRange,
                                                 const Surface& surface,
                                                 const Vector3& bField) {
   const FreeVector freeParams = estimateTrackParamsFromSeed(spRange, bField);
