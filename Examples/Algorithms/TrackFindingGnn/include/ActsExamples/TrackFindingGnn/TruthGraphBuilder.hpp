@@ -8,12 +8,11 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Graph.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
