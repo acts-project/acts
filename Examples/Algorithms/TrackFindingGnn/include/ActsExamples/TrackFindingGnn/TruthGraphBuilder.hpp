@@ -14,7 +14,6 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
@@ -59,17 +58,17 @@ class TruthGraphBuilder final : public IAlgorithm {
   Config m_cfg;
 
   std::vector<std::int64_t> buildFromMeasurements(
-      const SimSpacePointContainer& spacePoints,
+      const SpacePointContainer& spacePoints,
       const SimParticleContainer& particles,
       const IndexMultimap<ActsFatras::Barcode>& measPartMap) const;
 
   std::vector<std::int64_t> buildFromSimhits(
-      const SimSpacePointContainer& spacePoints,
+      const SpacePointContainer& spacePoints,
       const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
       const SimParticleContainer& particles) const;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMeasParticlesMap{
       this, "InputMeasParticlesMap"};
