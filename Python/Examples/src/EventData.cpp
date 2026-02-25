@@ -73,9 +73,7 @@ void addEventData(py::module& mex) {
                [](const ConstTrackContainer& self) {
                  return py::make_iterator(self.begin(), self.end());
                })
-          // .def("__getitem__", [](const TrackContainer& self, size_t index) {
-          //   return self.getTrack(index);
-          // })
+          .def("__getitem__", &ConstTrackContainer::getTrack)
 
           // Zero-copy numpy array views of the underlying SoA columns.
           // The returned arrays are read-only and keep the container alive via
