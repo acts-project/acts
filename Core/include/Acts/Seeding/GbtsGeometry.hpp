@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -128,6 +129,13 @@ class GbtsLayer final {
 
 /// Geometry helper built from silicon layers and connectors.
 class GbtsGeometry final {
+  // map key is a bin
+  // pair corresponds to outgoing and incoming bins that the current bin can
+  // connect to
+  using BinConnections =
+      std::unordered_map<std::uint32_t, std::pair<std::vector<std::uint32_t>,
+                                                  std::vector<std::uint32_t>>>;
+
  public:
   /// Constructor
   /// @param layerGeometry Silicon layers for geometry
@@ -159,7 +167,7 @@ class GbtsGeometry final {
   std::uint32_t numLayers() const { return m_layArray.size(); }
   /// Get bin groups
   /// @return Bin groups vector
-  const std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>>&
+  const std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>>&
   binGroups() const {
     return m_binGroups;
   }
@@ -184,7 +192,7 @@ class GbtsGeometry final {
   std::uint32_t m_nEtaBins{};
 
   /// Bin groups
-  std::vector<std::pair<std::int32_t, std::vector<std::int32_t>>> m_binGroups;
+  std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>> m_binGroups;
 };
 
 }  // namespace Acts::Experimental

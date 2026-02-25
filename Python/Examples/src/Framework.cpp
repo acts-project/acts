@@ -112,6 +112,7 @@ void addFramework(py::module& mex) {
 
   py::enum_<ProcessCode>(mex, "ProcessCode")
       .value("SUCCESS", ProcessCode::SUCCESS)
+      .value("SKIP", ProcessCode::SKIP)
       .value("ABORT", ProcessCode::ABORT)
       .value("END", ProcessCode::END);
 

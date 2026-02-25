@@ -21,6 +21,8 @@ namespace Acts::Experimental {
 GbtsEtaBin::GbtsEtaBin() {
   // TODO config
   vn.reserve(1000);
+  vFirstEdge.reserve(1000);
+  vNumEdges.reserve(1000);
 }
 
 void GbtsEtaBin::sortByPhi() {
@@ -56,12 +58,9 @@ void GbtsEtaBin::initializeNodes() {
 
   params.resize(vn.size());
 
-  in.resize(vn.size());
-  for (auto& v : in) {
-    // TODO config
-    // reasonably high number of incoming edges per node
-    v.reserve(50);
-  }
+  vFirstEdge.resize(vn.size(), 0);
+  vNumEdges.resize(vn.size(), 0);
+  vIsConnected.resize(vn.size(), 0);
 
   std::ranges::transform(
       vn.begin(), vn.end(), params.begin(), [](const GbtsNode* pN) {
@@ -185,7 +184,7 @@ void GbtsDataStorage::initializeNodes(const bool useMl) {
     return;
   }
 
-  std::uint32_t nL = m_geo->numLayers();
+  const std::uint32_t nL = m_geo->numLayers();
 
   for (std::uint32_t layerIdx = 0; layerIdx < nL; ++layerIdx) {
     const GbtsLayer& pL = m_geo->getGbtsLayerByIndex(layerIdx);

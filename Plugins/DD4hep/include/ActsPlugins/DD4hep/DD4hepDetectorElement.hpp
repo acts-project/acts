@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
 #include <map>
@@ -72,8 +73,6 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// 	- "YZX" -> node y axis is tracking x axis, etc.
   ///		- "XzY" -> negative node z axis is tracking y axis, etc.
   /// @param scalor is the scale factor for unit conversion if needed
-  /// @param isDisc in case the sensitive detector module should be translated
-  ///        as disc (e.g. for endcaps) this flag should be set to true
   /// @note In the translation from a 3D geometry (TGeo) which only knows
   ///       tubes to a 2D geometry (Tracking geometry) a distinction if the
   ///       module should be described as a cylinder or a disc surface needs to
@@ -84,8 +83,8 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   ///       will be translated into a cylindrical surface.
   /// @param material Optional material of detector element
   explicit DD4hepDetectorElement(
-      const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
-      double scalor = 1., bool isDisc = false,
+      const dd4hep::DetElement detElement, TGeoAxes axes = "XYZ",
+      double scalor = 1.,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   ~DD4hepDetectorElement() override = default;
