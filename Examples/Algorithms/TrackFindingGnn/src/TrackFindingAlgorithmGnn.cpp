@@ -164,7 +164,7 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   auto t02 = Clock::now();
 
   // Sort the space points by module ide. Required by module map
-  std::vector<SpacePointIndex> idxs(numSpacePoints);
+  std::vector<int> idxs(numSpacePoints);
   std::iota(idxs.begin(), idxs.end(), 0);
   std::ranges::sort(idxs, {}, [&](auto i) { return moduleIds[i]; });
 
@@ -173,8 +173,8 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   SpacePointContainer sortedSpacePoints(
       SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z);
   sortedSpacePoints.reserve(spacePoints.size());
-  for (auto isp : idxs) {
-    auto& sp = spacePoints[isp];
+  for (int isp : idxs) {
+    const auto& sp = spacePoints[isp];
 
     auto newSp = sortedSpacePoints.createSpacePoint();
     newSp.x() = sp.x();

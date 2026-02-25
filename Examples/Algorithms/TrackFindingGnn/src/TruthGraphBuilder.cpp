@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <algorithm>
 
