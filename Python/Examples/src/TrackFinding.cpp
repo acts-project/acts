@@ -66,8 +66,7 @@ void addTrackFinding(py::module& mex) {
 
   {
     using Config = Acts::Experimental::GbtsConfig;
-    auto c =
-        py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
+    auto c = py::class_<Config>(mex, "GbtsConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, phiSliceWidth,
                        nMaxPhiSlice, lutInputFile);
     patchKwargsConstructor(c);
