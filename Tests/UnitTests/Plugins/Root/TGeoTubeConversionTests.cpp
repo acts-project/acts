@@ -48,10 +48,10 @@ ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
 
-std::vector<std::string> allowedAxes = {"XY*", "Xy*", "xy*", "xY*",
-                                        "YX*", "yx*", "yX*", "Yx*"};
+std::vector<TGeoAxes> allowedAxes = {"XYZ", "XyZ", "xyZ", "xYZ",
+                                     "YXZ", "yxZ", "yXZ", "YxZ"};
 
-std::vector<std::string> notAllowedAxes = {"YZ*", "ZX*", "ZY*"};
+std::vector<TGeoAxes> notAllowedAxes = {"YZX", "ZXY", "ZYX"};
 
 BOOST_AUTO_TEST_SUITE(RootSuite)
 

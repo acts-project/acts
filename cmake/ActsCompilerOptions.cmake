@@ -69,8 +69,6 @@ set(CMAKE_MACOSX_RPATH 1)
 # bake where we found external dependencies, if they
 # were not in the default library directories
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-# set relative library path for ACTS libraries
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
 message(CHECK_START "Checking C++20 std::format support")
 try_compile(
