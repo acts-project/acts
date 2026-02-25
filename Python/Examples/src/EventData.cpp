@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
 
@@ -144,6 +145,11 @@ void addEventData(py::module& mex) {
                                  }));
 
   WhiteBoardRegistry::registerClass(constTrackContainer);
+
+  // Register types from core with the whiteboard registry
+  auto m = py::module_::import("acts");
+  WhiteBoardRegistry::registerType<Acts::SpacePointContainer2>(
+      m.attr("SpacePointContainer2"));
 }
 
 }  // namespace ActsPython

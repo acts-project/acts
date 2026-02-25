@@ -87,23 +87,25 @@ void addEventData(py::module_& m) {
       });
 
   // SpacePointContainer2
-  py::class_<SpacePointContainer2>(m, "SpacePointContainer2")
-      .def(py::init<SpacePointColumns>(),
-           py::arg("columns") = SpacePointColumns::None)
-      .def_property_readonly("size", &SpacePointContainer2::size)
-      .def_property_readonly("empty", &SpacePointContainer2::empty)
-      .def_property_readonly("hasColumns", &SpacePointContainer2::hasColumns)
-      .def("reserve", &SpacePointContainer2::reserve, py::arg("size"),
-           py::arg("averageSourceLinks") = 1)
-      .def("clear", &SpacePointContainer2::clear)
-      .def("__len__", &SpacePointContainer2::size)
-      .def("__getitem__",
-           [](const SpacePointContainer2& self, SpacePointIndex2 idx) {
-             return ConstSpacePointProxy2(self, idx);
-           })
-      .def("__iter__", [](const SpacePointContainer2& self) {
-        return py::make_iterator(self.begin(), self.end());
-      });
+  auto spc2 =
+      py::class_<SpacePointContainer2>(m, "SpacePointContainer2")
+          .def(py::init<SpacePointColumns>(),
+               py::arg("columns") = SpacePointColumns::None)
+          .def_property_readonly("size", &SpacePointContainer2::size)
+          .def_property_readonly("empty", &SpacePointContainer2::empty)
+          .def_property_readonly("hasColumns",
+                                 &SpacePointContainer2::hasColumns)
+          .def("reserve", &SpacePointContainer2::reserve, py::arg("size"),
+               py::arg("averageSourceLinks") = 1)
+          .def("clear", &SpacePointContainer2::clear)
+          .def("__len__", &SpacePointContainer2::size)
+          .def("__getitem__",
+               [](const SpacePointContainer2& self, SpacePointIndex2 idx) {
+                 return ConstSpacePointProxy2(self, idx);
+               })
+          .def("__iter__", [](const SpacePointContainer2& self) {
+            return py::make_iterator(self.begin(), self.end());
+          });
 
   // ConstSpacePointProxy2
   py::class_<ConstSpacePointProxy2>(m, "ConstSpacePointProxy2")
