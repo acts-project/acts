@@ -97,6 +97,9 @@ if (PluginGnn IN_LIST Acts_COMPONENTS)
     find_dependency(TensorRT)
   endif()
 endif()
+if (ExamplesFramework IN_LIST Acts_COMPONENTS)
+    find_dependency(HepMC3 @HEPMC3_VERSION@ CONFIG EXACT)
+endif()
 
 # dependencies that we have built ourselves but cannot be
 # straightforwardly handed to cmake
