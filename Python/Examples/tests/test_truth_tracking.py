@@ -83,8 +83,8 @@ def test_truth_tracking_kalman(
         assert entry.hasFittedParams
 
 
-def test_python_track_access(detector_config):
-    with detector_config.detector:
+def test_python_track_access(generic_detector_config, tmp_path):
+    with generic_detector_config.detector:
         from truth_tracking_kalman import runTruthTrackingKalman
 
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -92,11 +92,10 @@ def test_python_track_access(detector_config):
         seq = Sequencer(events=10, numThreads=1)
 
         runTruthTrackingKalman(
-            trackingGeometry=detector_config.trackingGeometry,
+            trackingGeometry=generic_detector_config.trackingGeometry,
             field=field,
-            digiConfigFile=detector_config.digiConfigFile,
+            digiConfigFile=generic_detector_config.digiConfigFile,
             outputDir=tmp_path,
-            reverseFilteringMomThreshold=revFiltMomThresh,
             s=seq,
         )
 
