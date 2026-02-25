@@ -163,41 +163,6 @@ jobs:
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml
 
-  build_performance:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install dependencies
-        uses: ./.github/actions/dependencies
-        with:
-          compiler: g++
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          env_file: .env
-
-      - name: Configure
-        run: >
-          ccache -z &&
-          CI/dependencies/run.sh .env
-          cmake -B build -S .
-          --preset=github-ci
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          -DCMAKE_CXX_FLAGS="-Werror"
-          -DACTS_BUILD_ODD=OFF
-      - uses: astral-sh/setup-uv@v7
-
-      - name: Measure
-        run: uvx cmakeperf==0.6.1 collect build/compile_commands.json -o perf.csv
-
-      - name: Results
-        run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v6
-        with:
-          name: cmakeperf
-          path: perf.csv
-
   # metric_tracking:
   #   runs-on: ubuntu-latest
   #   needs: build_performance
