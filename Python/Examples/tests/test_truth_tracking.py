@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 import acts
@@ -96,7 +94,7 @@ def test_python_track_access(generic_detector_config, tmp_path):
             field=field,
             digiConfigFile=generic_detector_config.digiConfigFile,
             outputDir=tmp_path,
-            numParticles=10000,
+            numParticles=100,
             s=seq,
         )
 
@@ -205,20 +203,17 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TrackSmearingSigmas,
-        addKalmanTracks,
     )
 
     with generic_detector_config.detector:
         s = acts.examples.Sequencer(
-            events=100, numThreads=-1, logLevel=acts.logging.INFO
+            events=100, numThreads=1, logLevel=acts.logging.INFO
         )
         trackingGeometry = generic_detector_config.trackingGeometry
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
         digiConfigFile = generic_detector_config.digiConfigFile
 
         rnd = acts.examples.RandomNumbers(seed=42)
-        outputDir = Path(tmp_path)
 
         logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
 
@@ -292,6 +287,7 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
         s.addAlgorithm(spConverter)
 
         class SpacePointAccess(acts.examples.IAlgorithm):
+
             def __init__(self):
                 super().__init__("SpacePointAccess", acts.logging.INFO)
 
@@ -300,9 +296,24 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
                 )
                 self.spacePoints.initialize("spacepoints2")
 
-            def execute(self, context):
+            def execute(self, context: acts.examples.AlgorithmContext):
                 self.logger.info("Space point access")
-                spacePoints = self.spacePoints(context.eventStore)
+                # @TODO: Try to have this auto-deduce the type
+                spacePoints: acts.SpacePointContainer2 = self.spacePoints(
+                    context.eventStore
+                )
+
+                for sp in spacePoints:
+                    self.logger.info("Space point: {}", sp.x)
+
+                spacePoints.x
+
+                # print(spacePoints.x)
+                # print(spacePoints.y)
+                # # print(spacePoints.z)
+                # # print(spacePoints.r)
+                # print(spacePoints.xy)
+                # print(spacePoints.xy[:, 0])
 
                 return acts.examples.ProcessCode.SUCCESS
 

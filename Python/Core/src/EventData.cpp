@@ -25,6 +25,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <string>
 #include <vector>
 
 #include <pybind11/numpy.h>
@@ -47,7 +48,109 @@ auto spanToNumpy1d(std::span<T> s, const py::object& base) {
       s.data(),                                  // data ptr
       base                                       // base/owner
   );
-};
+}
+
+/// Zero-copy 2D view over a column of std::array<float, 2> (e.g. xy, zr).
+/// Returns shape (N, 2), dtype float32, read-only.
+/// Throws if the container does not have the required column.
+using Array2ColumnGetter = ConstSpacePointColumnProxy<std::array<float, 2>> (
+    SpacePointContainer2::*)() const;
+auto arrayColumn2(Array2ColumnGetter getColumn,
+                  SpacePointColumns requiredColumn,
+                  const std::string_view& columnName) {
+  return [getColumn, requiredColumn,
+          columnName](const SpacePointContainer2& self) {
+    if (!self.hasColumns(requiredColumn)) {
+      throw py::attribute_error(
+          std::format("SpacePointContainer2 does not have "
+                      "the {} column",
+                      columnName));
+    }
+    const auto N = static_cast<py::ssize_t>(self.size());
+    if (N == 0) {
+      auto arr = py::array_t<float>({0, 2});
+      arr.attr("flags").attr("writeable") = py::bool_(false);
+      return arr;
+    }
+    const auto col = (self.*getColumn)();
+    const auto& data = col.data();
+    constexpr py::ssize_t rowStride = 2 * sizeof(float);
+    constexpr py::ssize_t colStride = sizeof(float);
+    auto arr = py::array_t<float>({N, py::ssize_t{2}}, {rowStride, colStride},
+                                  reinterpret_cast<const float*>(data.data()),
+                                  py::cast(self));
+    arr.attr("flags").attr("writeable") = py::bool_(false);
+    return arr;
+  };
+}
+
+/// Zero-copy 2D view over a column of std::array<float, 3> (e.g.
+/// topStripVector). Returns shape (N, 3), dtype float32, read-only.
+/// Throws if the container does not have the required column.
+using Array3ColumnGetter = ConstSpacePointColumnProxy<std::array<float, 3>> (
+    SpacePointContainer2::*)() const;
+auto arrayColumn3(Array3ColumnGetter getColumn,
+                  SpacePointColumns requiredColumn,
+                  const std::string_view& columnName) {
+  return [getColumn, requiredColumn,
+          columnName](const SpacePointContainer2& self) {
+    if (!self.hasColumns(requiredColumn)) {
+      throw py::attribute_error(
+          std::format("SpacePointContainer2 does not have "
+                      "the {} column",
+                      columnName));
+    }
+    const auto N = static_cast<py::ssize_t>(self.size());
+    if (N == 0) {
+      auto arr = py::array_t<float>({0, 3});
+      arr.attr("flags").attr("writeable") = py::bool_(false);
+      return arr;
+    }
+    const auto col = (self.*getColumn)();
+    const auto& data = col.data();
+    constexpr py::ssize_t rowStride = 3 * sizeof(float);
+    constexpr py::ssize_t colStride = sizeof(float);
+    auto arr = py::array_t<float>({N, py::ssize_t{3}}, {rowStride, colStride},
+                                  reinterpret_cast<const float*>(data.data()),
+                                  py::cast(self));
+    arr.attr("flags").attr("writeable") = py::bool_(false);
+    return arr;
+  };
+}
+
+/// Zero-copy 2D view over a column of std::array<float, 4> (e.g. xyzr).
+/// Returns shape (N, 4), dtype float32, read-only.
+/// Throws if the container does not have the required column.
+using Array4ColumnGetter = ConstSpacePointColumnProxy<std::array<float, 4>> (
+    SpacePointContainer2::*)() const;
+auto arrayColumn4(Array4ColumnGetter getColumn,
+                  SpacePointColumns requiredColumn,
+                  const std::string_view& columnName) {
+  return [getColumn, requiredColumn,
+          columnName](const SpacePointContainer2& self) {
+    if (!self.hasColumns(requiredColumn)) {
+      throw py::attribute_error(
+          std::format("SpacePointContainer2 does not have "
+                      "the {} column",
+                      columnName));
+    }
+    const auto N = static_cast<py::ssize_t>(self.size());
+    if (N == 0) {
+      auto arr = py::array_t<float>({0, 4});
+      arr.attr("flags").attr("writeable") = py::bool_(false);
+      return arr;
+    }
+    const auto col = (self.*getColumn)();
+    const auto& data = col.data();
+    constexpr py::ssize_t rowStride = 4 * sizeof(float);
+    constexpr py::ssize_t colStride = sizeof(float);
+    auto arr = py::array_t<float>({N, py::ssize_t{4}}, {rowStride, colStride},
+                                  reinterpret_cast<const float*>(data.data()),
+                                  py::cast(self));
+    arr.attr("flags").attr("writeable") = py::bool_(false);
+    return arr;
+  };
+}
 
 /// @brief This adds the classes from Core/EventData to the python module
 /// @param m the pybind11 core module
@@ -106,6 +209,56 @@ void addEventData(py::module_& m) {
           .def("__iter__", [](const SpacePointContainer2& self) {
             return py::make_iterator(self.begin(), self.end());
           });
+
+  using FloatColumnGetter =
+      ConstSpacePointColumnProxy<float> (SpacePointContainer2::*)() const;
+  auto floatColumn = [](FloatColumnGetter column) {
+    return [column](const SpacePointContainer2& self) {
+      return spanToNumpy1d((self.*column)().data(), py::cast(self));
+    };
+  };
+
+  spc2.def_property_readonly("x", floatColumn(&SpacePointContainer2::xColumn))
+      .def_property_readonly("y", floatColumn(&SpacePointContainer2::yColumn))
+      .def_property_readonly("z", floatColumn(&SpacePointContainer2::zColumn))
+      .def_property_readonly("r", floatColumn(&SpacePointContainer2::rColumn))
+      .def_property_readonly("phi",
+                             floatColumn(&SpacePointContainer2::phiColumn))
+      .def_property_readonly("time",
+                             floatColumn(&SpacePointContainer2::timeColumn))
+      .def_property_readonly(
+          "varianceZ", floatColumn(&SpacePointContainer2::varianceZColumn))
+      .def_property_readonly(
+          "varianceR", floatColumn(&SpacePointContainer2::varianceRColumn))
+      .def_property_readonly("xyColumn",
+                             arrayColumn2(&SpacePointContainer2::xyColumn,
+                                          SpacePointColumns::PackedXY, "xy"))
+      .def_property_readonly("zrColumn",
+                             arrayColumn2(&SpacePointContainer2::zrColumn,
+                                          SpacePointColumns::PackedZR, "zr"));
+
+  spc2.def_property_readonly("xy",
+                             arrayColumn2(&SpacePointContainer2::xyColumn,
+                                          SpacePointColumns::PackedXY, "xy"))
+      .def_property_readonly("zr",
+                             arrayColumn2(&SpacePointContainer2::zrColumn,
+                                          SpacePointColumns::PackedZR, "zr"))
+      .def_property_readonly("xyz",
+                             arrayColumn3(&SpacePointContainer2::xyzColumn,
+                                          SpacePointColumns::PackedXYZ, "xyz"))
+      .def_property_readonly(
+          "xyzr", arrayColumn4(&SpacePointContainer2::xyzrColumn,
+                               SpacePointColumns::PackedXYZR, "xyzr"));
+
+  spc2.def_property_readonly(
+      "varianceZRColumn",
+      arrayColumn2(&SpacePointContainer2::varianceZRColumn,
+                   SpacePointColumns::PackedVarianceZR, "varianceZR"));
+
+  spc2.def_property_readonly(
+      "topStripVectorColumn",
+      arrayColumn3(&SpacePointContainer2::topStripVectorColumn,
+                   SpacePointColumns::TopStripVector, "topStripVector"));
 
   // ConstSpacePointProxy2
   py::class_<ConstSpacePointProxy2>(m, "ConstSpacePointProxy2")
