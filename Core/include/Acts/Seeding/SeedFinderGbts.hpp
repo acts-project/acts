@@ -74,7 +74,7 @@ class SeedFinderGbts {
                      Acts::getDefaultLogger("Finder",
                                             Acts::Logging::Level::INFO));
 
-  /// Create seeds from spacepoints in a region of interest.
+  /// Create seeds from space points in a region of interest.
   /// @param roi Region of interest descriptor
   /// @param spacePoints Space point container
   /// @param maxLayers Maximum number of layers
