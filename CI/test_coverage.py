@@ -28,9 +28,6 @@ console = Console()
 EXCLUDE_PATTERNS = [
     r"/boost/",
     r"json\.hpp",
-    "/dependencies/",
-    "dependencies",
-    ".*dependencies.*",
 ]
 
 # Paths relative to source directory (resolved to absolute when source_dir is known)
@@ -38,6 +35,8 @@ EXCLUDE_PATHS = [
     "Tests/",
     "Python/",
     "dependencies/",
+    "spack/",
+    "thirdparty/",
 ]
 
 
