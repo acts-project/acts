@@ -29,6 +29,8 @@ EXCLUDE_PATTERNS = [
     r"/boost/",
     r"json\.hpp",
     "/dependencies/",
+    "dependencies",
+    ".*dependencies.*",
 ]
 
 # Paths relative to source directory (resolved to absolute when source_dir is known)
