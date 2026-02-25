@@ -89,15 +89,20 @@ def test_python_track_access(generic_detector_config, tmp_path):
 
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-        seq = Sequencer(events=10, numThreads=1)
+        seq = Sequencer(events=100, numThreads=-1)
 
         runTruthTrackingKalman(
             trackingGeometry=generic_detector_config.trackingGeometry,
             field=field,
             digiConfigFile=generic_detector_config.digiConfigFile,
             outputDir=tmp_path,
+            numParticles=10000,
             s=seq,
         )
+
+        import hist
+        import math
+        import numpy as np
 
         class TrackAccess(acts.examples.IAlgorithm):
             def __init__(self):
@@ -108,6 +113,36 @@ def test_python_track_access(generic_detector_config, tmp_path):
                 )
                 self.tracks.initialize("selected-tracks")
 
+                self.hists = {}
+                self.hists["d0"] = hist.Hist(
+                    hist.axis.Regular(10, -0.1, 0.1, name="d0"),
+                    label="d0",
+                )
+                self.hists["z0"] = hist.Hist(
+                    hist.axis.Regular(10, -1, 1, name="z0"),
+                    label="z0",
+                )
+                self.hists["phi"] = hist.Hist(
+                    hist.axis.Regular(10, math.pi, -math.pi, name="phi"),
+                    label="phi",
+                )
+                self.hists["theta"] = hist.Hist(
+                    hist.axis.Regular(10, 0, math.pi, name="theta"),
+                    label="theta",
+                )
+                self.hists["eta"] = hist.Hist(
+                    hist.axis.Regular(10, -5, 5, name="eta"),
+                    label="eta",
+                )
+                self.hists["qop"] = hist.Hist(
+                    hist.axis.Regular(10, -1, 1, name="qop"),
+                    label="qop",
+                )
+                self.hists["nTracks"] = hist.Hist(
+                    hist.axis.Regular(10, 9800, 10200, name="nTracks"),
+                    label="nTracks",
+                )
+
             def execute(self, context):
                 self.logger.info("Track access")
 
@@ -115,28 +150,43 @@ def test_python_track_access(generic_detector_config, tmp_path):
                 assert isinstance(tracks, acts.examples.ConstTrackContainer)
 
                 self.logger.info("Tracks: {}", len(tracks))
-                for track in tracks:
-                    self.logger.info("Track: {}", track)
-                    self.logger.info("Track index: {}", track.index)
-                    self.logger.info("Track tip index: {}", track.tipIndex)
-                    self.logger.info("Track stem index: {}", track.stemIndex)
-                    self.logger.info(
-                        "Track reference surface: {}", track.referenceSurface
-                    )
-                    self.logger.info(
-                        "Track has reference surface: {}", track.hasReferenceSurface
-                    )
-                    self.logger.info("Track parameters: {}", track.parameters)
-                    self.logger.info("Track covariance: {}", track.covariance)
-                    self.logger.info(
-                        "Track particle hypothesis: {}", track.particleHypothesis
-                    )
 
+                self.hists["d0"].fill(tracks.parameters[:, 0])
+                self.hists["z0"].fill(tracks.parameters[:, 1])
+                self.hists["phi"].fill(tracks.parameters[:, 2])
+                self.hists["theta"].fill(tracks.parameters[:, 3])
+                self.hists["eta"].fill(-np.log(np.tan(tracks.parameters[:, 3] / 2)))
+                self.hists["qop"].fill(tracks.parameters[:, 4])
+                self.hists["nTracks"].fill(len(tracks))
+                # for track in tracks:
+                #     self.logger.info("Track: {}", track)
+                #     self.logger.info("Track index: {}", track.index)
+                #     self.logger.info("Track tip index: {}", track.tipIndex)
+                #     self.logger.info("Track stem index: {}", track.stemIndex)
+                #     self.logger.info(
+                #         "Track reference surface: {}", track.referenceSurface
+                #     )
+                #     self.logger.info(
+                #         "Track has reference surface: {}", track.hasReferenceSurface
+                #     )
+                #     self.logger.info("Track parameters: {}", track.parameters)
+                #     self.logger.info("Track covariance: {}", track.covariance)
+                #     self.logger.info(
+                #         "Track particle hypothesis: {}", track.particleHypothesis
+                #     )
+
+                return acts.examples.ProcessCode.SUCCESS
+
+            def finalize(self):
+                for h in self.hists.values():
+                    print(h.label)
+                    print(h)
                 return acts.examples.ProcessCode.SUCCESS
 
         seq.addAlgorithm(TrackAccess())
 
-        seq.run()
+        with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
+            seq.run()
 
 
 def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):

@@ -20,6 +20,7 @@ def runTruthTrackingKalman(
     generatedParticleType: acts.PdgParticle = acts.PdgParticle.eMuon,
     reverseFilteringMomThreshold=0 * u.GeV,
     reverseFilteringCovarianceScaling=100.0,
+    numParticles=1,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -64,7 +65,9 @@ def runTruthTrackingKalman(
     if inputParticlePath is None:
         addParticleGun(
             s,
-            ParticleConfig(num=1, pdg=generatedParticleType, randomizeCharge=True),
+            ParticleConfig(
+                num=numParticles, pdg=generatedParticleType, randomizeCharge=True
+            ),
             EtaConfig(-3.0, 3.0, uniform=True),
             MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
