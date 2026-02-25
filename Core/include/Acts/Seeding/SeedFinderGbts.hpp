@@ -9,25 +9,20 @@
 #pragma once
 
 #include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding/GbtsConfig.hpp"
 #include "Acts/Seeding/GbtsDataStorage.hpp"
 #include "Acts/Seeding/GbtsGeometry.hpp"
 #include "Acts/TrackFinding/RoiDescriptor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
 namespace Acts::Experimental {
-
-/// Tuple template used to carry the space point components
-using SpContainerComponentsType =
-    std::tuple<SpacePointContainer2, SpacePointColumnProxy<std::uint32_t, true>,
-               SpacePointColumnProxy<float, true>,
-               SpacePointColumnProxy<float, true>>;
 
 /// Seed finder implementing the GBTs seeding workflow.
 class SeedFinderGbts {
@@ -55,6 +50,18 @@ class SeedFinderGbts {
     auto operator<=>(const SeedProperties& o) const = default;
   };
 
+  /// Sliding window in phi used to define range used for edge creation
+  struct GbtsSlidingWindow {
+    /// sliding window position
+    std::uint32_t firstIt{};
+    /// window half-width;
+    float deltaPhi{};
+    /// active or not
+    bool hasNodes{};
+    /// associated eta bin
+    const GbtsEtaBin* bin{};
+  };
+
   /// Constructor.
   /// @param config Configuration for the seed finder
   /// @param gbtsGeo GBTs geometry
@@ -67,23 +74,35 @@ class SeedFinderGbts {
                      Acts::getDefaultLogger("Finder",
                                             Acts::Logging::Level::INFO));
 
-  /// Create seeds from spacepoints in a region of interest.
+  /// Create seeds from space points in a region of interest.
   /// @param roi Region of interest descriptor
-  /// @param SpContainerComponents Space point container components
+  /// @param spacePoints Space point container
   /// @param maxLayers Maximum number of layers
   /// @return Container with generated seeds
-  SeedContainer2 createSeeds(
-      const RoiDescriptor& roi,
-      const SpContainerComponentsType& SpContainerComponents,
-      std::uint32_t maxLayers) const;
+  SeedContainer2 createSeeds(const RoiDescriptor& roi,
+                             const SpacePointContainer2& spacePoints,
+                             std::uint32_t maxLayers) const;
+
+ private:
+  GbtsConfig m_cfg{};
+
+  const std::shared_ptr<const GbtsGeometry> m_geo;
+
+  const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
+
+  GbtsMlLookupTable m_mlLut;
+
+  std::unique_ptr<const Acts::Logger> m_logger =
+      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
+
+  const Acts::Logger& logger() const { return *m_logger; }
 
   /// Create graph nodes from space points.
-  /// @param container Space point container components
+  /// @param spacePoints Space point container
   /// @param maxLayers Maximum number of layers
   /// @return Vector of node vectors organized by layer
   std::vector<std::vector<GbtsNode>> createNodes(
-      const SpContainerComponentsType& container,
-      std::uint32_t maxLayers) const;
+      const SpacePointContainer2& spacePoints, std::uint32_t maxLayers) const;
 
   /// Parse machine learning lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
@@ -117,19 +136,15 @@ class SeedFinderGbts {
       std::vector<GbtsEdge>& edgeStorage,
       std::vector<SeedProperties>& vSeedCandidates) const;
 
- private:
-  GbtsConfig m_cfg{};
-
-  const std::shared_ptr<const GbtsGeometry> m_geo;
-
-  const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
-
-  GbtsMlLookupTable m_mlLut;
-
-  std::unique_ptr<const Acts::Logger> m_logger =
-      Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
-
-  const Acts::Logger& logger() const { return *m_logger; }
+  /// Check to see if z0 of segment is within the expected z range of the
+  /// beamspot
+  /// @param z0BitMask Sets allowed bins of allowed z value
+  /// @param z0 Estimated z0 of segments z value at beamspot
+  /// @param minZ0 Minimum value of beam spot z coordinate
+  /// @param z0HistoCoeff Scalfactor that converts z coodindate into bin index
+  /// @return Whether segment is within beamspot range
+  bool checkZ0BitMask(std::uint16_t z0BitMask, float z0, float minZ0,
+                      float z0HistoCoeff) const;
 };
 
 }  // namespace Acts::Experimental
