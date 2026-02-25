@@ -189,6 +189,134 @@ def test_python_track_access(generic_detector_config, tmp_path):
             seq.run()
 
 
+def test_python_space_point_access(generic_detector_config, tmp_path):
+    from acts.examples.simulation import (
+        addParticleGun,
+        ParticleConfig,
+        EtaConfig,
+        PhiConfig,
+        MomentumConfig,
+        addFatras,
+        addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
+    )
+
+    from acts.examples.reconstruction import (
+        addSeeding,
+        SeedingAlgorithm,
+        TrackSmearingSigmas,
+        addKalmanTracks,
+    )
+
+    with generic_detector_config.detector:
+        s = acts.examples.Sequencer(
+            events=100, numThreads=-1, logLevel=acts.logging.INFO
+        )
+        trackingGeometry = generic_detector_config.trackingGeometry
+        field = generic_detector_config.field
+        digiConfigFile = generic_detector_config.digiConfigFile
+
+        rnd = acts.examples.RandomNumbers(seed=42)
+        outputDir = Path(tmp_path)
+
+        logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
+
+        addParticleGun(
+            s,
+            ParticleConfig(num=10, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+            EtaConfig(-3.0, 3.0, uniform=True),
+            MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
+            PhiConfig(0.0, 360.0 * u.degree),
+            vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(0, 0, 0, 0),
+            ),
+            multiplicity=1,
+            rnd=rnd,
+        )
+
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            rnd=rnd,
+            enableInteractions=True,
+        )
+
+        addDigitization(
+            s,
+            trackingGeometry,
+            field,
+            digiConfigFile=digiConfigFile,
+            rnd=rnd,
+        )
+
+        addDigiParticleSelection(
+            s,
+            ParticleSelectorConfig(
+                pt=(0.9 * u.GeV, None),
+                measurements=(7, None),
+                removeNeutral=True,
+                removeSecondaries=True,
+            ),
+        )
+
+        addSeeding(
+            s,
+            trackingGeometry,
+            field,
+            rnd=rnd,
+            inputParticles="particles_generated",
+            seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+            trackSmearingSigmas=TrackSmearingSigmas(
+                # zero everything so the KF has a chance to find the measurements
+                loc0=0,
+                loc0PtA=0,
+                loc0PtB=0,
+                loc1=0,
+                loc1PtA=0,
+                loc1PtB=0,
+                time=0,
+                phi=0,
+                theta=0,
+                ptRel=0,
+            ),
+            particleHypothesis=acts.ParticleHypothesis.muon,
+            initialSigmas=[
+                1 * u.mm,
+                1 * u.mm,
+                1 * u.degree,
+                1 * u.degree,
+                0 / u.GeV,
+                1 * u.ns,
+            ],
+            initialSigmaQoverPt=0.1 / u.GeV,
+            initialSigmaPtRel=0.1,
+            initialVarInflation=[1e0, 1e0, 1e0, 1e0, 1e0, 1e0],
+        )
+
+        addKalmanTracks(
+            s,
+            trackingGeometry,
+            field,
+            reverseFilteringMomThreshold,
+            reverseFilteringCovarianceScaling,
+        )
+
+        s.addAlgorithm(
+            acts.examples.TrackSelectorAlgorithm(
+                level=acts.logging.INFO,
+                inputTracks="tracks",
+                outputTracks="selected-tracks",
+                selectorConfig=acts.TrackSelector.Config(
+                    minMeasurements=7,
+                ),
+            )
+        )
+        s.addWhiteboardAlias("tracks", "selected-tracks")
+
+
 def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     from truth_tracking_gsf import runTruthTrackingGsf
 
