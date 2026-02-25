@@ -15,7 +15,7 @@ if [[ -n "${LINKCHECK_START_URL:-}" ]]; then
   START_URL="${LINKCHECK_START_URL}"
 else
   LINKCHECK_START_PATH="${LINKCHECK_START_PATH:-${REPO_ROOT}/build/docs/html/index.html}"
-  START_URL="file://${LINKCHECK_START_PATH}"
+  START_URL="${LINKCHECK_START_PATH}"
 fi
 
 if command -v gh >/dev/null 2>&1; then
