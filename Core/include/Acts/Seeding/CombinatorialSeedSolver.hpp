@@ -23,9 +23,9 @@ namespace Acts::Experimental::detail {
 
 /// Helper function that splits the layers' spacepoints between the 2D and two
 /// 1D ones when three layer combinatorics are available
-///@tparam Point_t the space point type
-///@param layerTriplet the space points of the combinatorics
-///@return The tuple with the two 1D space points and one 2D spacepoint
+/// @tparam Point_t the space point type
+/// @param layerTriplet the space points of the combinatorics
+/// @return The tuple with the two 1D space points and one 2D spacepoint
 
 template <Experimental::CompositeSpacePointPtr Point_t>
 std::array<std::size_t, 3> separateLayers(
@@ -37,8 +37,8 @@ namespace Acts::Experimental::CombinatorialSeedSolver {
 
 /// A Combinatorial Seed Solver for seed estimation from combinatoric hits from
 /// four or three layers
-// (e.g Muon NSW seeding for ATLAS) with overloaded functions to implement the
-// mathematics
+/// (e.g Muon NSW seeding for ATLAS) with overloaded functions to implement the
+/// mathematics
 /// The combinatoric layers are expected to be sorted in z in chamber's frame
 
 /// ===============================
@@ -64,7 +64,7 @@ namespace Acts::Experimental::CombinatorialSeedSolver {
 template <Experimental::CompositeSpacePointPtr Point_t>
 SquareMatrix2 betaMatrix(const std::array<Point_t, 4>& layerQuartett);
 
-// Calculates the parameters lambda,alpha,gamma,kappa of the system
+/// Calculates the parameters lambda,alpha,gamma,kappa of the system
 /// @tparam Point_t the space point type
 /// @param betaMatrix the betaMatrix for the system
 /// @param layerQuartett the space points of the combinatorics
@@ -90,7 +90,7 @@ std::pair<Vector3, Vector3> seedSolution(
 
 /// A combinatorial seed solver from three available layers where one 2D
 /// measurement and two 1D measurement are available(e.g STgc from NSW)
-///***The layers equations for the three layers (Si,Di) can be */
+/// ***The layers equations for the three layers (Si,Di) can be */
 /// P = M //from the 2D measurement
 /// S1 + beta*D1 = M + R*Dm //1st layer of the 1D measurement
 /// S2 + delta*D2 = M + L*Dm //2nd layer of the 1D measurement
