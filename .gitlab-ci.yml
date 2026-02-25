@@ -497,4 +497,16 @@ lcg_108:
       - OS: [alma9]
         COMPILER:
           - gcc15
+
+lcg_109:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "109"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc15
           - clang19
