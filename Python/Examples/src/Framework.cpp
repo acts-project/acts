@@ -86,6 +86,16 @@ class PyIAlgorithm : public IAlgorithm {
     }
   }
 
+  ProcessCode initialize() override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE(ProcessCode, IAlgorithm, initialize, );
+  }
+
+  ProcessCode finalize() override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE(ProcessCode, IAlgorithm, finalize, );
+  }
+
   std::string_view typeName() const override { return "Algorithm"; }
 
   const Acts::Logger& pyLogger() const { return logger(); }
