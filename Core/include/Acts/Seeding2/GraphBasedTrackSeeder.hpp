@@ -10,10 +10,10 @@
 
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/Seeding/GbtsConfig.hpp"
-#include "Acts/Seeding/GbtsDataStorage.hpp"
-#include "Acts/Seeding/GbtsGeometry.hpp"
-#include "Acts/TrackFinding/RoiDescriptor.hpp"
+#include "Acts/Seeding2/GbtsConfig.hpp"
+#include "Acts/Seeding2/GbtsDataStorage.hpp"
+#include "Acts/Seeding2/GbtsGeometry.hpp"
+#include "Acts/Seeding2/RoiDescriptor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstdint>
@@ -24,10 +24,10 @@
 
 namespace Acts::Experimental {
 
-/// Seed finder implementing the GBTs seeding workflow.
-class SeedFinderGbts {
+/// Seed finder implementing the GBTS seeding workflow.
+class GraphBasedTrackSeeder {
  public:
-  /// Seed metadata produced by the GBTs algorithm.
+  /// Seed metadata produced by the GBTS algorithm.
   struct SeedProperties {
     /// Constructor.
     /// @param quality Seed quality score
@@ -51,7 +51,7 @@ class SeedFinderGbts {
   };
 
   /// Sliding window in phi used to define range used for edge creation
-  struct GbtsSlidingWindow {
+  struct SlidingWindow {
     /// sliding window position
     std::uint32_t firstIt{};
     /// window half-width;
@@ -64,15 +64,15 @@ class SeedFinderGbts {
 
   /// Constructor.
   /// @param config Configuration for the seed finder
-  /// @param gbtsGeo GBTs geometry
+  /// @param gbtsGeo GBTS geometry
   /// @param layerGeometry Layer geometry information
   /// @param logger Logging instance
-  SeedFinderGbts(const GbtsConfig& config,
-                 std::unique_ptr<GbtsGeometry> gbtsGeo,
-                 const std::vector<TrigInDetSiLayer>& layerGeometry,
-                 std::unique_ptr<const Acts::Logger> logger =
-                     Acts::getDefaultLogger("Finder",
-                                            Acts::Logging::Level::INFO));
+  GraphBasedTrackSeeder(const GbtsConfig& config,
+                        std::unique_ptr<GbtsGeometry> gbtsGeo,
+                        const std::vector<TrigInDetSiLayer>& layerGeometry,
+                        std::unique_ptr<const Acts::Logger> logger =
+                            Acts::getDefaultLogger("Finder",
+                                                   Acts::Logging::Level::INFO));
 
   /// Create seeds from space points in a region of interest.
   /// @param roi Region of interest descriptor
