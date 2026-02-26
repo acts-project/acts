@@ -60,11 +60,24 @@ concept has_write_method =
 template <typename A, typename B>
 auto declareAlgorithm(pybind11::module_& m, const char* name) {
   using Config = typename A::Config;
-  auto alg = pybind11::class_<A, B, std::shared_ptr<A>>(m, name)
-                 .def(pybind11::init<const Config&, Acts::Logging::Level>(),
-                      pybind11::arg("config"), pybind11::arg("level"))
-                 .def_property_readonly("config", &A::config);
-  auto c = pybind11::class_<Config>(alg, "Config").def(pybind11::init<>());
+  namespace py = pybind11;
+  auto alg =
+      py::class_<A, B, std::shared_ptr<A>>(m, name)
+          .def(py::init([name](const Config& cfg, Acts::Logging::Level level) {
+                 return std::make_shared<A>(
+                     cfg, Acts::getDefaultLogger(name, level));
+               }),
+               py::arg("config"), py::arg("level"))
+          .def(py::init([](const Config& cfg,
+                           std::unique_ptr<const Acts::Logger> logger) {
+                 return std::make_shared<A>(cfg, std::move(logger));
+               }),
+               py::arg("config"), py::arg("logger"))
+          .def_property_readonly("config", &A::config);
+  auto c = py::class_<Config>(alg, "Config");
+  if constexpr (std::is_default_constructible_v<Config>) {
+    c.def(py::init<>());
+  }
   return std::tuple{alg, c};
 }
 

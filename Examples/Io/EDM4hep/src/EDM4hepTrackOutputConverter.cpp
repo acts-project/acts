@@ -16,8 +16,8 @@
 namespace ActsExamples {
 
 EDM4hepTrackOutputConverter::EDM4hepTrackOutputConverter(
-    const Config& config, Acts::Logging::Level level)
-    : PodioOutputConverter("EDM4hepTrackOutputConverter", level),
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioOutputConverter("EDM4hepTrackOutputConverter", std::move(logger)),
       m_cfg(config) {
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);

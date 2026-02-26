@@ -20,9 +20,9 @@ using namespace ActsPlugins;
 
 namespace ActsExamples {
 
-SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(const Config& cfg,
-                                             Logging::Level lvl)
-    : IAlgorithm("SeedFilterMLAlgorithm", lvl),
+SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("SeedFilterMLAlgorithm", std::move(logger)),
       m_cfg(cfg),
       m_seedClassifier(m_cfg.inputSeedFilterNN.c_str()) {
   if (m_cfg.inputTrackParameters.empty()) {

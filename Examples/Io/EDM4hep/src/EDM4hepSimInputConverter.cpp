@@ -54,9 +54,10 @@ struct ParticleInfo {
 
 }  // namespace detail
 
-EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
-                                                   Acts::Logging::Level level)
-    : PodioInputConverter("EDM4hepSimInputConverter", level, config.inputFrame),
+EDM4hepSimInputConverter::EDM4hepSimInputConverter(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioInputConverter("EDM4hepSimInputConverter", config.inputFrame,
+                          std::move(logger)),
       m_cfg(config) {
   if (m_cfg.outputParticlesGenerator.empty()) {
     throw std::invalid_argument(
@@ -80,7 +81,8 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_outputSimHitAssociation.maybeInitialize(m_cfg.outputSimHitAssociation);
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
-  ACTS_INFO("Configured EDM4hepSimInputConverter:");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "Configured EDM4hepSimInputConverter:");
   auto printCut = [](std::optional<double> opt) {
     if (opt.has_value()) {
       return std::to_string(opt.value());
@@ -88,10 +90,14 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
       return std::string{"<none>"};
     }
   };
-  ACTS_INFO("- particle r: [" << printCut(m_cfg.particleRMin) << ", "
-                              << printCut(m_cfg.particleRMax) << "] mm");
-  ACTS_INFO("- particle z: [" << printCut(m_cfg.particleZMin) << ", "
-                              << printCut(m_cfg.particleZMax) << "] mm");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "- particle r: [" << printCut(m_cfg.particleRMin) << ", "
+                                         << printCut(m_cfg.particleRMax)
+                                         << "] mm");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "- particle z: [" << printCut(m_cfg.particleZMin) << ", "
+                                         << printCut(m_cfg.particleZMax)
+                                         << "] mm");
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
     const auto* detElement =
@@ -99,7 +105,8 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
             surface->surfacePlacement());
 
     if (detElement == nullptr) {
-      ACTS_ERROR("Surface has no associated detector element");
+      ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::ERROR,
+                           "Surface has no associated detector element");
       return;
     }
 

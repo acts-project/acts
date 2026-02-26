@@ -152,8 +152,9 @@ Acts::Result<SimSpacePoint> createStripSpacePoint(
 
 }  // namespace
 
-SpacePointMaker::SpacePointMaker(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
+SpacePointMaker::SpacePointMaker(Config cfg,
+                                 std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("SpacePointMaker", std::move(logger)), m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement input collection");
   }
@@ -207,9 +208,10 @@ SpacePointMaker::SpacePointMaker(Config cfg, Acts::Logging::Level lvl)
   const auto geoSelLastUnique =
       std::ranges::unique(m_cfg.geometrySelection, isDuplicate);
   if (geoSelLastUnique.begin() != geoSelLastUnique.end()) {
-    ACTS_WARNING("Removed " << std::distance(geoSelLastUnique.begin(),
-                                             geoSelLastUnique.end())
-                            << " geometry selection duplicates");
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
+                         "Removed " << std::distance(geoSelLastUnique.begin(),
+                                                     geoSelLastUnique.end())
+                                    << " geometry selection duplicates");
     m_cfg.geometrySelection.erase(geoSelLastUnique.begin(),
                                   geoSelLastUnique.end());
   }

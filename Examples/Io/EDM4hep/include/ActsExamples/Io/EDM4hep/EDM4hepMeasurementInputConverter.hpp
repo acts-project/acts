@@ -45,8 +45,9 @@ class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepMeasurementInputConverter(const Config& config,
-                                   Acts::Logging::Level level);
+  explicit EDM4hepMeasurementInputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Read out data from the input stream.
   ProcessCode convert(const AlgorithmContext& ctx,
