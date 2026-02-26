@@ -226,14 +226,14 @@ struct MultiTrajectoryProjector {
     const auto proxy = mt.getTrackState(idx);
     switch (type) {
       case StatesType::ePredicted:
-        return std::make_tuple(weights.at(idx), proxy.predicted(),
-                               proxy.predictedCovariance());
+        return std::tuple(weights.at(idx), proxy.predicted(),
+                          proxy.predictedCovariance());
       case StatesType::eFiltered:
-        return std::make_tuple(weights.at(idx), proxy.filtered(),
-                               proxy.filteredCovariance());
+        return std::tuple(weights.at(idx), proxy.filtered(),
+                          proxy.filteredCovariance());
       case StatesType::eSmoothed:
-        return std::make_tuple(weights.at(idx), proxy.smoothed(),
-                               proxy.smoothedCovariance());
+        return std::tuple(weights.at(idx), proxy.smoothed(),
+                          proxy.smoothedCovariance());
       default:
         throw std::invalid_argument(
             "Incorrect StatesType, should be ePredicted"

@@ -8,4 +8,10 @@ target_sources(
         DoubletSeedFinder.cpp
         TripletSeedFinder.cpp
         TripletSeeder.cpp
+        GbtsDataStorage.cpp
+        GbtsGeometry.cpp
+        GbtsTrackingFilter.cpp
+        GraphBasedTrackSeeder.cpp
+        GbtsConnector.cpp
+        RoiDescriptor.cpp
 )
