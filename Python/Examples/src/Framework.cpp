@@ -83,6 +83,8 @@ class PyIAlgorithm : public IAlgorithm {
   }
 
   std::string_view typeName() const override { return "Algorithm"; }
+
+  const Acts::Logger& pyLogger() const { return logger(); }
 };
 
 void trigger_divbyzero() {
@@ -160,7 +162,10 @@ void addFramework(py::module& mex) {
                               std::unique_ptr<const Logger>>(),
                py::arg("name"), py::arg("logger"))
           .def("execute", &IAlgorithm::execute)
-          .def_property_readonly("logger", &PyIAlgorithm::logger);
+          .def_property_readonly(
+              "logger", [](const PyIAlgorithm& self) -> const Acts::Logger& {
+                return self.pyLogger();
+              });
 
   using Config = Sequencer::Config;
   auto sequencer =
