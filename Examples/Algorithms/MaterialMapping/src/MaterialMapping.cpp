@@ -18,8 +18,8 @@
 namespace ActsExamples {
 
 MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
-                                 Acts::Logging::Level level)
-    : IAlgorithm("MaterialMapping", level),
+                                 std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("MaterialMapping", std::move(logger)),
       m_cfg(cfg),
       m_mappingState(cfg.geoContext, cfg.magFieldContext),
       m_mappingStateVol(cfg.geoContext, cfg.magFieldContext) {
@@ -32,8 +32,9 @@ MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
   m_inputMaterialTracks.initialize(m_cfg.inputMaterialTracks);
   m_outputMaterialTracks.initialize(m_cfg.mappingMaterialCollection);
 
-  ACTS_INFO("This algorithm requires inter-event information, "
-            << "run in single-threaded mode!");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "This algorithm requires inter-event information, "
+                           << "run in single-threaded mode!");
 
   if (m_cfg.materialSurfaceMapper) {
     // Generate and retrieve the central cache object

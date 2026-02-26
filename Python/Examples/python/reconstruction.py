@@ -379,8 +379,7 @@ def addSeeding(
     """
 
     logLevel = acts.examples.defaultLogging(s, logLevel)()
-    logger = acts.logging.getLogger("addSeeding")
-    logger.setLevel(logLevel)
+    logger = acts.getDefaultLogger("addSeeding", logLevel)
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
@@ -496,7 +495,7 @@ def addSeeding(
                 logLevel,
             )
         else:
-            logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
+            logger.fatal("unknown seedingAlgorithm {}", seedingAlgorithm)
 
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
             level=logLevel,

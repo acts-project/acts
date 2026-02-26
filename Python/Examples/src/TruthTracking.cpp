@@ -55,11 +55,7 @@ void addTruthTracking(py::module& mex) {
     using Alg = ParticleSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "ParticleSelector")
-                   .def(py::init<const Alg::Config&, Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
+    auto [alg, c0] = declareAlgorithm<Alg, IAlgorithm>(mex, "ParticleSelector");
 
     {
       auto mc = py::class_<Alg::MeasurementCounter>(alg, "MeasurementCounter")
@@ -67,8 +63,7 @@ void addTruthTracking(py::module& mex) {
                     .def("addCounter", &Alg::MeasurementCounter::addCounter);
     }
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
+    auto c = c0;
     ACTS_PYTHON_STRUCT(
         c, inputParticles, inputParticleMeasurementsMap, inputMeasurements,
         outputParticles, rhoMin, rhoMax, absZMin, absZMax, timeMin, timeMax,
@@ -96,13 +91,8 @@ void addTruthTracking(py::module& mex) {
     using Alg = TrackParameterSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackParameterSelector")
-                   .def(py::init<const Alg::Config&, Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    auto [alg, c] =
+        declareAlgorithm<Alg, IAlgorithm>(mex, "TrackParameterSelector");
 
     ACTS_PYTHON_STRUCT(c, inputTrackParameters, outputTrackParameters, loc0Min,
                        loc0Max, loc1Min, loc1Max, timeMin, timeMax, phiMin,
