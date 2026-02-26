@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import Union
+from typing import Callable, TypeVar, Union
 import os
 import warnings
+import functools
 
 
 from .ActsPythonBindings import *
@@ -38,6 +39,22 @@ def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
 
 
 _patch_config(ActsPythonBindings)
+
+
+T = TypeVar("T")
+
+
+class with_log_threshold:
+    def __init__(self, level: logging.Level):
+        self.level = level
+
+    def __call__(self, func: Callable[..., T]) -> Callable[..., T]:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> T:
+            with logging.ScopedFailureThreshold(self.level):
+                return func(*args, **kwargs)
+
+        return wrapper
 
 
 @staticmethod

@@ -45,19 +45,17 @@ using namespace ActsExamples;
 namespace ActsPython {
 void addMaterialMapping(py::module& mex) {
   {
-    using Alg = MaterialMapping;
-
-    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "MaterialMapping")
-                   .def(py::init<const Alg::Config&, Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def("scoringParameters", &Alg::scoringParameters)
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Alg::Config>(alg, "Config")
-                 .def(py::init<const GeometryContext&,
-                               const MagneticFieldContext&>());
-
+    auto [alg, c] =
+        declareAlgorithm<MaterialMapping, IAlgorithm>(mex, "MaterialMapping");
+    alg.def("scoringParameters", &MaterialMapping::scoringParameters);
+    // Config also needs the geometry+field constructor because geoContext and
+    // magFieldContext are reference_wrapper fields with no default constructor.
+    c.def(py::init([](const Acts::GeometryContext& gc,
+                      const Acts::MagneticFieldContext& mfc) {
+            MaterialMapping::Config cfg{gc, mfc};
+            return cfg;
+          }),
+          py::arg("geoContext"), py::arg("magFieldContext"));
     ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappingMaterialCollection,
                        materialSurfaceMapper, materialVolumeMapper,
                        materialWriters, trackingGeometry, geoContext,
@@ -77,32 +75,17 @@ void addMaterialMapping(py::module& mex) {
   }
 
   {
-    auto mmca =
-        py::class_<CoreMaterialMapping, IAlgorithm,
-                   std::shared_ptr<CoreMaterialMapping>>(mex,
-                                                         "CoreMaterialMapping")
-            .def(py::init<const CoreMaterialMapping::Config&, Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
-
-    auto c = py::class_<CoreMaterialMapping::Config>(mmca, "Config")
-                 .def(py::init<>());
+    auto [mmca, c] = declareAlgorithm<CoreMaterialMapping, IAlgorithm>(
+        mex, "CoreMaterialMapping");
     ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
                        unmappedMaterialTracks, materialMapper,
                        materiaMaplWriters);
   }
 
   {
-    auto mv =
-        py::class_<MaterialValidation, IAlgorithm,
-                   std::shared_ptr<MaterialValidation>>(mex,
-                                                        "MaterialValidation")
-            .def(py::init<const MaterialValidation::Config&, Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def("execute", &MaterialValidation::execute)
-            .def_property_readonly("config", &MaterialValidation::config);
-
-    auto c =
-        py::class_<MaterialValidation::Config>(mv, "Config").def(py::init<>());
+    auto [mv, c] = declareAlgorithm<MaterialValidation, IAlgorithm>(
+        mex, "MaterialValidation");
+    mv.def("execute", &MaterialValidation::execute);
     ACTS_PYTHON_STRUCT(c, ntracks, startPosition, phiRange, etaRange,
                        randomNumberSvc, materialValidater,
                        outputMaterialTracks);

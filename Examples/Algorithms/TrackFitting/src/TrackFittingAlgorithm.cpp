@@ -33,9 +33,10 @@
 
 namespace ActsExamples {
 
-TrackFittingAlgorithm::TrackFittingAlgorithm(Config config,
-                                             Acts::Logging::Level level)
-    : IAlgorithm("TrackFittingAlgorithm", level), m_cfg(std::move(config)) {
+TrackFittingAlgorithm::TrackFittingAlgorithm(
+    Config config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackFittingAlgorithm", std::move(logger)),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
   }

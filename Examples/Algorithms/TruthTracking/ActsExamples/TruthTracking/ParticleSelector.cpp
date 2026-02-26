@@ -59,8 +59,8 @@ bool ParticleSelector::MeasurementCounter::isValidParticle(
 }
 
 ParticleSelector::ParticleSelector(const Config& config,
-                                   Acts::Logging::Level level)
-    : IAlgorithm("ParticleSelector", level), m_cfg(config) {
+                                   std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("ParticleSelector", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
   }
@@ -88,6 +88,10 @@ ParticleSelector::ParticleSelector(const Config& config,
         "and inputMeasurements");
   }
 
+  logSelectionConfig();
+}
+
+void ParticleSelector::logSelectionConfig() const {
   ACTS_DEBUG("selection particle rho [" << m_cfg.rhoMin << "," << m_cfg.rhoMax
                                         << ")");
   ACTS_DEBUG("selection particle |z| [" << m_cfg.absZMin << "," << m_cfg.absZMax

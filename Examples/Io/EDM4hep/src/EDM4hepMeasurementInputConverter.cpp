@@ -23,9 +23,9 @@ namespace ActsExamples {
 
 EDM4hepMeasurementInputConverter::EDM4hepMeasurementInputConverter(
     const EDM4hepMeasurementInputConverter::Config& config,
-    Acts::Logging::Level level)
-    : PodioInputConverter("EDM4hepMeasurementInputConverter", level,
-                          config.inputFrame),
+    std::unique_ptr<const Acts::Logger> logger)
+    : PodioInputConverter("EDM4hepMeasurementInputConverter", config.inputFrame,
+                          std::move(logger)),
       m_cfg(config) {
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");

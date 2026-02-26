@@ -28,7 +28,8 @@ class ProtoTracksToSeeds final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  ProtoTracksToSeeds(Config cfg, Acts::Logging::Level lvl);
+  explicit ProtoTracksToSeeds(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the algorithm.
   ///
