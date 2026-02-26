@@ -90,10 +90,9 @@ AccumulatorSection AccumulatorSection::right(float xFraction) const {
 }
 
 AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
-    const Config &cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("AdaptiveHoughTransformSeeder", lvl),
-      m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("AdaptiveHoughTransformSeeder", lvl)) {
+    const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("AdaptiveHoughTransformSeeder", std::move(logger)),
+      m_cfg(cfg) {
   for (const auto &spName : config().inputSpacePoints) {
     const auto &handle = m_inputSpacePoints.emplace_back(
         std::make_unique<ReadDataHandle<SimSpacePointContainer>>(

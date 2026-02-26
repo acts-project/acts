@@ -63,8 +63,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
   }
 
   {
-    auto [alg, config] = declareAlgorithm<EDM4hepSimInputConverter, IAlgorithm>(
-        m, "EDM4hepSimInputConverter");
+    auto [alg, config] =
+        declareAlgorithm<EDM4hepSimInputConverter, PodioInputConverter>(
+            m, "EDM4hepSimInputConverter");
     ACTS_PYTHON_STRUCT(
         config, inputFrame, inputParticles, inputSimHits,
         outputParticlesGenerator, outputParticlesSimulation, outputSimHits,
@@ -83,9 +84,12 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
                         &Config::particlePtMax);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(EDM4hepTrackInputConverter, m,
-                                "EDM4hepTrackInputConverter", inputFrame,
-                                inputTracks, outputTracks, Bz);
+  {
+    auto [alg, c] =
+        declareAlgorithm<EDM4hepTrackInputConverter, PodioInputConverter>(
+            m, "EDM4hepTrackInputConverter");
+    ACTS_PYTHON_STRUCT(c, inputFrame, inputTracks, outputTracks, Bz);
+  }
 
   {
     auto [alg, config] =
@@ -95,10 +99,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
                        outputSimTrackerHits);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(EDM4hepMeasurementInputConverter, m,
-                                "EDM4hepMeasurementInputConverter", inputFrame,
-                                outputMeasurements, outputMeasurementSimHitsMap,
-                                outputClusters);
+  {
+    auto [alg, c] =
+        declareAlgorithm<EDM4hepMeasurementInputConverter, PodioInputConverter>(
+            m, "EDM4hepMeasurementInputConverter");
+    ACTS_PYTHON_STRUCT(c, inputFrame, outputMeasurements,
+                       outputMeasurementSimHitsMap, outputClusters);
+  }
 
   {
     auto [alg, config] = declareAlgorithm<EDM4hepMeasurementOutputConverter,

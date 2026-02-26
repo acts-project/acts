@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/GbtsDataStorage.hpp"
+#include "Acts/Seeding2/GbtsDataStorage.hpp"
 
-#include "Acts/Seeding/GbtsGeometry.hpp"
+#include "Acts/Seeding2/GbtsGeometry.hpp"
 
 #include <algorithm>
 #include <cmath>

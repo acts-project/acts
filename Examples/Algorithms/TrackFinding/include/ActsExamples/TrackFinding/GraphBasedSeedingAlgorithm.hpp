@@ -12,7 +12,7 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Seeding/SeedFinderGbts.hpp"
+#include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -25,7 +25,7 @@
 
 namespace ActsExamples {
 
-class GbtsSeedingAlgorithm final : public IAlgorithm {
+class GraphBasedSeedingAlgorithm final : public IAlgorithm {
  public:
   using ActsIDs = std::array<std::uint64_t, 2>;
   using GbtsIDs = std::array<std::uint32_t, 3>;
@@ -68,8 +68,9 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   const Config &config() const { return m_cfg; }
 
   /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  /// @param logger is the logger for the algorithm
+  explicit GraphBasedSeedingAlgorithm(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger);
 
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
@@ -91,7 +92,8 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
   std::vector<Acts::Experimental::TrigInDetSiLayer> m_layerGeometry{};
 
   /// actual seed finder algorithm
-  std::unique_ptr<const Acts::Experimental::SeedFinderGbts> m_finder = nullptr;
+  std::unique_ptr<const Acts::Experimental::GraphBasedTrackSeeder> m_finder =
+      nullptr;
 
   /// used to assign LayerIds to the GbtsActsMap
   mutable std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};

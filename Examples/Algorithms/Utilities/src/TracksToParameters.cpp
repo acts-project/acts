@@ -23,8 +23,10 @@
 
 namespace ActsExamples {
 
-TracksToParameters::TracksToParameters(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("TracksToParameters", lvl), m_cfg(std::move(cfg)) {
+TracksToParameters::TracksToParameters(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TracksToParameters", std::move(logger)),
+      m_cfg(std::move(cfg)) {
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }

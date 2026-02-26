@@ -33,7 +33,8 @@ class ProtoTracksToTracks final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  ProtoTracksToTracks(Config cfg, Acts::Logging::Level lvl);
+  explicit ProtoTracksToTracks(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the algorithm.
   ///

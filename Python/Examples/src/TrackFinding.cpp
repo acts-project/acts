@@ -7,12 +7,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
-#include "Acts/Seeding/GbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding2/GbtsConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
-#include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
@@ -106,9 +106,9 @@ void addTrackFinding(py::module& mex) {
       useDeltaRinsteadOfTopRadius, useExtraCuts);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      GbtsSeedingAlgorithm, mex, "GbtsSeedingAlgorithm", inputSpacePoints,
-      outputSeeds, seedFinderConfig, layerMappingFile, trackingGeometry,
-      actsGbtsMap, fillModuleCsv, inputClusters);
+      GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
+      inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
+      trackingGeometry, actsGbtsMap, fillModuleCsv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,
@@ -142,31 +142,24 @@ void addTrackFinding(py::module& mex) {
 
   {
     using Alg = TrackFindingAlgorithm;
-    using Config = Alg::Config;
 
-    auto alg =
-        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackFindingAlgorithm")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config)
-            .def_static("makeTrackFinderFunction",
-                        [](std::shared_ptr<const Acts::TrackingGeometry>
-                               trackingGeometry,
-                           std::shared_ptr<const Acts::MagneticFieldProvider>
-                               magneticField,
-                           Acts::Logging::Level level) {
-                          return Alg::makeTrackFinderFunction(
-                              std::move(trackingGeometry),
-                              std::move(magneticField),
-                              *Acts::getDefaultLogger("TrackFinding", level));
-                        });
+    auto [alg, c] =
+        declareAlgorithm<Alg, IAlgorithm>(mex, "TrackFindingAlgorithm");
+
+    alg.def_static(
+        "makeTrackFinderFunction",
+        [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+           Acts::Logging::Level level) {
+          return Alg::makeTrackFinderFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              *Acts::getDefaultLogger("TrackFinding", level));
+        });
 
     py::class_<Alg::TrackFinderFunction,
                std::shared_ptr<Alg::TrackFinderFunction>>(
         alg, "TrackFinderFunction");
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, inputMeasurements, inputInitialTrackParameters,
                        inputSeeds, outputTracks, trackingGeometry,
                        magneticField, findTracks, measurementSelectorCfg,
