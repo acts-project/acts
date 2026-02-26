@@ -12,6 +12,7 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -46,7 +47,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// contains all the options used to steer the algorithm
     /// includes both user options available to change in the python script and
     /// those seen just be the algorithm
-    Acts::Experimental::GbtsConfig seedFinderConfig;
+    Acts::Experimental::GraphBasedTrackSeeder::Config seedFinderConfig;
+
+    Acts::Experimental::GbtsTrackingFilter::Config trackingFilterConfig;
 
     /// the connection table (parsed from csv file) used to make geoemetry cuts
     /// be GBTS
@@ -56,21 +59,17 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// GBTS
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
 
-    /// conversion between ACTS labelling of volume, layer and modules to that
-    /// used by GBTS
-    mutable std::map<ActsIDs, GbtsIDs> actsGbtsMap;
-
     bool fillModuleCsv = false;
   };
-
-  /// access to config
-  /// allows python bindings to work
-  const Config &config() const { return m_cfg; }
 
   /// @param cfg is the algorithm configuration
   /// @param logger is the logger for the algorithm
   explicit GraphBasedSeedingAlgorithm(
-      Config cfg, std::unique_ptr<const Acts::Logger> logger);
+      const Config &cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
+
+  /// access to config
+  /// allows python bindings to work
+  const Config &config() const { return m_cfg; }
 
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
@@ -80,23 +79,17 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// holds all objects either used in initialise or handed out of algorithm
   Config m_cfg{};
 
-  /// object that processes and holds connection table information
-  std::unique_ptr<Acts::Experimental::GbtsConnector> m_connector = nullptr;
-
-  /// object that holds all geometry information after:
-  /// connection table has been processed
-  /// vector of logical layers that have been created
-  std::unique_ptr<Acts::Experimental::GbtsGeometry> m_gbtsGeo = nullptr;
-
-  /// collection of geometry objects used by GBTS
-  std::vector<Acts::Experimental::TrigInDetSiLayer> m_layerGeometry{};
-
   /// actual seed finder algorithm
-  std::unique_ptr<const Acts::Experimental::GraphBasedTrackSeeder> m_finder =
-      nullptr;
+  std::optional<Acts::Experimental::GraphBasedTrackSeeder> m_finder;
+
+  std::optional<Acts::Experimental::GbtsTrackingFilter> m_filter;
+
+  /// conversion between ACTS labelling of volume, layer and modules to that
+  /// used by GBTS
+  std::map<ActsIDs, GbtsIDs> m_actsGbtsMap;
 
   /// used to assign LayerIds to the GbtsActsMap
-  mutable std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
+  std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
 
   /// handle that points to the container of input space points
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
@@ -120,9 +113,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// makes the geometry objects used by GBTS that correspond to the objects in
   /// the connection table for ease these are sometimes called "logical layers"
   std::vector<Acts::Experimental::TrigInDetSiLayer> layerNumbering(
-      const Acts::GeometryContext &gctx) const;
+      const Acts::GeometryContext &gctx);
 
-  void printSeedFinderGbtsConfig(const Acts::Experimental::GbtsConfig &cfg);
+  void printConfig() const;
 };
 
 }  // namespace ActsExamples

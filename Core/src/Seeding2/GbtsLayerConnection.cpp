@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/GbtsConnector.hpp"
+#include "Acts/Seeding2/GbtsLayerConnection.hpp"
 
 #include <cstring>
 #include <fstream>
@@ -19,7 +19,8 @@
 
 namespace Acts::Experimental {
 
-GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
+GbtsLayerConnectionMap::GbtsLayerConnectionMap(std::string& inFile,
+                                               bool lrtMode) {
   std::uint32_t nLinks{};
 
   std::ifstream input_ifstream(inFile.c_str(), std::ifstream::in);
@@ -42,7 +43,7 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
     input_ifstream >> lIdx >> stage >> src >> dst >> height >> width >>
         nEntries;
 
-    auto pC = std::make_unique<GbtsConnection>(src, dst);
+    auto pC = std::make_unique<GbtsLayerConnection>(src, dst);
 
     std::uint32_t dummy{};
 
@@ -67,12 +68,11 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
       }
     }
 
-    auto it = connMap.find(stage);
-
-    if (it == connMap.end()) {
-      std::vector<std::unique_ptr<GbtsConnection>> v;
-      v.push_back(std::move(pC));            // move the unique_ptr in
-      connMap.emplace(stage, std::move(v));  // move the vector into the map
+    if (auto it = connectionMap.find(stage); it == connectionMap.end()) {
+      std::vector<std::unique_ptr<GbtsLayerConnection>> v;
+      v.push_back(std::move(pC));  // move the unique_ptr in
+      connectionMap.emplace(stage,
+                            std::move(v));  // move the vector into the map
     } else {
       it->second.push_back(std::move(pC));  // move into existing vector
     }
@@ -80,11 +80,11 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
 
   // re-arrange the connection stages
 
-  std::list<const GbtsConnection*> lConns;
+  std::list<const GbtsLayerConnection*> lConns;
 
-  std::map<std::int32_t, std::vector<const GbtsConnection*>> newConnMap;
+  std::map<std::int32_t, std::vector<const GbtsLayerConnection*>> newConnMap;
 
-  for (const auto& conn : connMap) {
+  for (const auto& conn : connectionMap) {
     for (const auto& up : conn.second) {
       lConns.push_back(up.get());
     }
@@ -130,9 +130,9 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
 
     // remove connections which use zeroLayer as destination
 
-    std::vector<const GbtsConnection*> theStage;
+    std::vector<const GbtsLayerConnection*> theStage;
 
-    std::list<const GbtsConnection*>::iterator cIt = lConns.begin();
+    std::list<const GbtsLayerConnection*>::iterator cIt = lConns.begin();
 
     while (cIt != lConns.end()) {
       if (zeroLayers.find((*cIt)->dst) !=
@@ -155,22 +155,22 @@ GbtsConnector::GbtsConnector(std::string& inFile, bool lrtMode) {
   // iterations
 
   for (const auto& it : std::views::reverse(newConnMap)) {
-    const std::vector<const GbtsConnection*>& vConn = it.second;
+    const std::vector<const GbtsLayerConnection*>& vConn = it.second;
 
     // loop over links, extract all connections for the stage, group sources by
     // L1 (dst) index
 
-    std::map<std::uint32_t, std::vector<const GbtsConnection*>> l1ConnMap;
+    std::map<std::uint32_t, std::vector<const GbtsLayerConnection*>> l1ConnMap;
 
     for (const auto* conn : vConn) {
       std::uint32_t dst = conn->dst;
 
-      std::map<std::uint32_t, std::vector<const GbtsConnection*>>::iterator
+      std::map<std::uint32_t, std::vector<const GbtsLayerConnection*>>::iterator
           l1MapIt = l1ConnMap.find(dst);
       if (l1MapIt != l1ConnMap.end()) {
         (*l1MapIt).second.push_back(conn);
       } else {
-        std::vector<const GbtsConnection*> v = {conn};
+        std::vector<const GbtsLayerConnection*> v = {conn};
         l1ConnMap.insert(std::make_pair(dst, v));
       }
     }

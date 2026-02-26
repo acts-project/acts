@@ -12,6 +12,8 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Seeding2/GbtsLayerConnection.hpp"
+#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
@@ -26,44 +28,45 @@
 namespace ActsExamples {
 
 GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
-    Config cfg, std::unique_ptr<const Acts::Logger> logger)
-    : IAlgorithm("SeedingAlgorithm", std::move(logger)), m_cfg(std::move(cfg)) {
+    const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("SeedingAlgorithm", std::move(logger)), m_cfg(cfg) {
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_inputClusters.initialize(m_cfg.inputClusters);
 
-  // parse the mapping file and turn into map
-  m_cfg.actsGbtsMap = makeActsGbtsMap();
-
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
-  m_layerGeometry =
+  auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
   // create the connection objects
-  m_connector = std::make_unique<Acts::Experimental::GbtsConnector>(
+  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap(
       m_cfg.seedFinderConfig.connectorInputFile,
       m_cfg.seedFinderConfig.lrtMode);
 
   // option that allows for adding custom eta binning (default is at 0.2)
   if (m_cfg.seedFinderConfig.etaBinOverride != 0.0f) {
-    m_connector->etaBin = m_cfg.seedFinderConfig.etaBinOverride;
+    layerConnectionMap.etaBin = m_cfg.seedFinderConfig.etaBinOverride;
   }
 
   // initialise the object that holds all the geometry information needed for
   // the algorithm
-  m_gbtsGeo = std::make_unique<Acts::Experimental::GbtsGeometry>(
-      m_layerGeometry, m_connector);
+  auto geometry = std::make_shared<Acts::Experimental::GbtsGeometry>(
+      layerGeometry, layerConnectionMap);
 
-  // manually convert min Pt as no conversion available in ACTS Examples
-  // (currently inputs as 0.9 GeV but need 900 MeV)
+  m_finder = Acts::Experimental::GraphBasedTrackSeeder(
+      Acts::Experimental::GraphBasedTrackSeeder::DerivedConfig(
+          m_cfg.seedFinderConfig),
+      geometry, this->logger().cloneWithSuffix("GbtsFinder"));
 
-  m_finder = std::make_unique<Acts::Experimental::GraphBasedTrackSeeder>(
-      m_cfg.seedFinderConfig, std::move(m_gbtsGeo), m_layerGeometry,
-      this->logger().cloneWithSuffix("GbtsFinder"));
+  m_filter = Acts::Experimental::GbtsTrackingFilter(m_cfg.trackingFilterConfig,
+                                                    geometry);
 
-  printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
+  // parse the mapping file and turn into map
+  m_actsGbtsMap = makeActsGbtsMap();
+
+  printConfig();
 }
 
 ProcessCode GraphBasedSeedingAlgorithm::execute(
@@ -75,7 +78,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  auto coreSpacePoints = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
+  auto coreSpacePoints = makeSpContainer(spacePoints, m_actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
   std::uint32_t maxLayers = m_layerIdMap.size();
@@ -88,7 +91,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // create the seeds
 
   Acts::SeedContainer2 seeds =
-      m_finder->createSeeds(internalRoi, coreSpacePoints, maxLayers);
+      m_finder->createSeeds(coreSpacePoints, internalRoi, maxLayers, *m_filter);
 
   // move seeds to simseedcontainer to be used down stream taking fist middle
   // and last sps currently as simseeds need to be hard types so only 3
@@ -255,8 +258,7 @@ Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
 }
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>
-GraphBasedSeedingAlgorithm::layerNumbering(
-    const Acts::GeometryContext &gctx) const {
+GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
   std::vector<Acts::Experimental::TrigInDetSiLayer> inputVector{};
   std::vector<std::size_t> countVector{};
 
@@ -293,15 +295,15 @@ GraphBasedSeedingAlgorithm::layerNumbering(
     auto actsJointId = actsVolId * 100 + actsLayId;
     // here the key needs to be pair of(vol*100+lay, 0)
     auto key = ActsIDs{actsJointId, 0};
-    auto find = m_cfg.actsGbtsMap.find(key);
+    auto find = m_actsGbtsMap.find(key);
     // initialise first to avoid FLTUND later
     std::uint32_t gbtsId = 0;
     // new map, item is pair want first
     gbtsId = std::get<0>(find->second);
     // if end then make new key of (vol*100+lay, modid)
-    if (find == m_cfg.actsGbtsMap.end()) {
+    if (find == m_actsGbtsMap.end()) {
       key = ActsIDs{actsJointId, mod_id};  // mod ID
-      find = m_cfg.actsGbtsMap.find(key);
+      find = m_actsGbtsMap.find(key);
       gbtsId = std::get<0>(find->second);
     }
 
@@ -403,43 +405,42 @@ GraphBasedSeedingAlgorithm::layerNumbering(
   return inputVector;
 }
 
-void GraphBasedSeedingAlgorithm::printSeedFinderGbtsConfig(
-    const Acts::Experimental::GbtsConfig &cfg) {
-  ACTS_DEBUG("===== SeedFinderGbtsConfig =====");
-
-  ACTS_DEBUG("BeamSpotCorrection: " << cfg.beamSpotCorrection);
-  ACTS_DEBUG("connectorInputFile: " << cfg.connectorInputFile);
-  ACTS_DEBUG("lutInputFile: " << cfg.lutInputFile);
-  ACTS_DEBUG("lrtMode: " << cfg.lrtMode);
-  ACTS_DEBUG("useMl: " << cfg.useMl);
-  ACTS_DEBUG("matchBeforeCreate: " << cfg.matchBeforeCreate);
-  ACTS_DEBUG("useOldTunings: " << cfg.useOldTunings);
-  ACTS_DEBUG("tauRatioCut: " << cfg.tauRatioCut);
-  ACTS_DEBUG("tauRatioPrecut: " << cfg.tauRatioPrecut);
-  ACTS_DEBUG("etaBinOverride: " << cfg.etaBinOverride);
-  ACTS_DEBUG("nMaxPhiSlice: " << cfg.nMaxPhiSlice);
-  ACTS_DEBUG("minPt: " << cfg.minPt);
-  ACTS_DEBUG("phiSliceWidth: " << cfg.phiSliceWidth);
-  ACTS_DEBUG("ptCoeff: " << cfg.ptCoeff);
-  ACTS_DEBUG("useEtaBinning: " << cfg.useEtaBinning);
-  ACTS_DEBUG("doubletFilterRZ: " << cfg.doubletFilterRZ);
-  ACTS_DEBUG("nMaxEdges: " << cfg.nMaxEdges);
-  ACTS_DEBUG("minDeltaRadius: " << cfg.minDeltaRadius);
-  ACTS_DEBUG("sigmaMS: " << cfg.sigmaMS);
-  ACTS_DEBUG("radLen: " << cfg.radLen);
-  ACTS_DEBUG("sigmaX: " << cfg.sigmaX);
-  ACTS_DEBUG("sigmaY: " << cfg.sigmaY);
-  ACTS_DEBUG("weightX: " << cfg.weightX);
-  ACTS_DEBUG("weightY: " << cfg.weightY);
-  ACTS_DEBUG("maxDChi2X: " << cfg.maxDChi2X);
-  ACTS_DEBUG("maxDChi2Y: " << cfg.maxDChi2Y);
-  ACTS_DEBUG("addHit: " << cfg.addHit);
-  ACTS_DEBUG("maxCurvature: " << cfg.maxCurvature);
-  ACTS_DEBUG("maxZ0: " << cfg.maxZ0);
-  ACTS_DEBUG("edgeMaskMinEta: " << cfg.edgeMaskMinEta);
-  ACTS_DEBUG("hitShareThreshold: " << cfg.hitShareThreshold);
-  ACTS_DEBUG("maxEndcapClusterWidth: " << cfg.maxEndcapClusterWidth);
-
+void GraphBasedSeedingAlgorithm::printConfig() const {
+  ACTS_DEBUG("===== GraphBasedTrackSeeder =====");
+  const auto &cfg1 = m_cfg.seedFinderConfig;
+  ACTS_DEBUG("BeamSpotCorrection: " << cfg1.beamSpotCorrection);
+  ACTS_DEBUG("connectorInputFile: " << cfg1.connectorInputFile);
+  ACTS_DEBUG("lutInputFile: " << cfg1.lutInputFile);
+  ACTS_DEBUG("lrtMode: " << cfg1.lrtMode);
+  ACTS_DEBUG("useMl: " << cfg1.useMl);
+  ACTS_DEBUG("matchBeforeCreate: " << cfg1.matchBeforeCreate);
+  ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
+  ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
+  ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
+  ACTS_DEBUG("etaBinOverride: " << cfg1.etaBinOverride);
+  ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
+  ACTS_DEBUG("minPt: " << cfg1.minPt);
+  ACTS_DEBUG("ptCoeff: " << cfg1.ptCoeff);
+  ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
+  ACTS_DEBUG("doubletFilterRZ: " << cfg1.doubletFilterRZ);
+  ACTS_DEBUG("nMaxEdges: " << cfg1.nMaxEdges);
+  ACTS_DEBUG("minDeltaRadius: " << cfg1.minDeltaRadius);
+  ACTS_DEBUG("edgeMaskMinEta: " << cfg1.edgeMaskMinEta);
+  ACTS_DEBUG("hitShareThreshold: " << cfg1.hitShareThreshold);
+  ACTS_DEBUG("maxEndcapClusterWidth: " << cfg1.maxEndcapClusterWidth);
+  ACTS_DEBUG("===== GbtsTrackFilter =====");
+  const auto &cfg2 = m_cfg.trackingFilterConfig;
+  ACTS_DEBUG("sigmaMS: " << cfg2.sigmaMS);
+  ACTS_DEBUG("radLen: " << cfg2.radLen);
+  ACTS_DEBUG("sigmaX: " << cfg2.sigmaX);
+  ACTS_DEBUG("sigmaY: " << cfg2.sigmaY);
+  ACTS_DEBUG("weightX: " << cfg2.weightX);
+  ACTS_DEBUG("weightY: " << cfg2.weightY);
+  ACTS_DEBUG("maxDChi2X: " << cfg2.maxDChi2X);
+  ACTS_DEBUG("maxDChi2Y: " << cfg2.maxDChi2Y);
+  ACTS_DEBUG("addHit: " << cfg2.addHit);
+  ACTS_DEBUG("maxCurvature: " << cfg2.maxCurvature);
+  ACTS_DEBUG("maxZ0: " << cfg2.maxZ0);
   ACTS_DEBUG("================================");
 }
 

@@ -21,32 +21,33 @@
 
 namespace Acts::Experimental {
 
+GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
+    : Config(config) {
+  phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;
+}
+
 GraphBasedTrackSeeder::GraphBasedTrackSeeder(
-    const GbtsConfig& config, std::unique_ptr<GbtsGeometry> gbtsGeo,
-    const std::vector<TrigInDetSiLayer>& layerGeometry,
+    const DerivedConfig& config, std::shared_ptr<GbtsGeometry> geometry,
     std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(config),
-      m_geo(std::move(gbtsGeo)),
-      m_layerGeometry(&layerGeometry),
+      m_geometry(std::move(geometry)),
       m_logger(std::move(logger)) {
-  m_cfg.phiSliceWidth = 2 * std::numbers::pi_v<float> / m_cfg.nMaxPhiSlice;
-
   m_mlLut = parseGbtsMlLookupTable(m_cfg.lutInputFile);
 }
 
 SeedContainer2 GraphBasedTrackSeeder::createSeeds(
-    const RoiDescriptor& roi, const SpacePointContainer2& spacePoints,
-    const std::uint32_t maxLayers) const {
-  auto storage = std::make_unique<GbtsDataStorage>(m_cfg, m_geo, m_mlLut);
+    const SpacePointContainer2& spacePoints, const RoiDescriptor& roi,
+    const std::uint32_t maxLayers, const GbtsTrackingFilter& filter) const {
+  GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
   SeedContainer2 SeedContainer;
-  std::vector<std::vector<GbtsNode>> nodeStorage =
+  std::vector<std::vector<GbtsNode>> nodesPerLayer =
       createNodes(spacePoints, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
-  for (std::uint16_t l = 0; l < nodeStorage.size(); l++) {
-    const std::vector<GbtsNode>& nodes = nodeStorage[l];
+  for (std::uint16_t l = 0; l < nodesPerLayer.size(); l++) {
+    const std::vector<GbtsNode>& nodes = nodesPerLayer[l];
 
     if (nodes.empty()) {
       continue;
@@ -55,24 +56,25 @@ SeedContainer2 GraphBasedTrackSeeder::createSeeds(
     const bool isPixel = true;
     // placeholder for now until strip hits are added in
     if (isPixel) {
-      nPixelLoaded += storage->loadPixelGraphNodes(l, nodes, m_cfg.useMl);
+      nPixelLoaded += nodeStorage.loadPixelGraphNodes(
+          l, nodes, m_cfg.useMl, m_cfg.maxEndcapClusterWidth);
     } else {
-      nStripLoaded += storage->loadStripGraphNodes(l, nodes);
+      nStripLoaded += nodeStorage.loadStripGraphNodes(l, nodes);
     }
   }
   ACTS_DEBUG("Loaded " << nPixelLoaded << " pixel space points and "
                        << nStripLoaded << " strip space points");
 
-  storage->sortByPhi();
+  nodeStorage.sortByPhi();
 
-  storage->initializeNodes(m_cfg.useMl);
+  nodeStorage.initializeNodes(m_cfg.useMl);
 
-  storage->generatePhiIndexing(1.5f * m_cfg.phiSliceWidth);
+  nodeStorage.generatePhiIndexing(1.5f * m_cfg.phiSliceWidth);
 
   std::vector<GbtsEdge> edgeStorage;
 
   std::pair<std::int32_t, std::int32_t> graphStats =
-      buildTheGraph(roi, storage, edgeStorage);
+      buildTheGraph(roi, nodeStorage, edgeStorage);
 
   ACTS_DEBUG("Created graph with " << graphStats.first << " edges and "
                                    << graphStats.second << " edge links");
@@ -87,7 +89,7 @@ SeedContainer2 GraphBasedTrackSeeder::createSeeds(
 
   std::vector<SeedProperties> vSeedCandidates;
   extractSeedsFromTheGraph(maxLevel, graphStats.first, spacePoints.size(),
-                           edgeStorage, vSeedCandidates);
+                           edgeStorage, vSeedCandidates, filter);
 
   if (vSeedCandidates.empty()) {
     ACTS_WARNING("No Seed Candidates");
@@ -157,10 +159,9 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
   auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
   auto localPositionColumn = spacePoints.column<float>("localPositionY");
 
-  std::vector<std::vector<GbtsNode>> nodeStorage(maxLayers);
+  std::vector<std::vector<GbtsNode>> nodesPerLayer(maxLayers);
   // reserve for better efficiency
-
-  for (auto& v : nodeStorage) {
+  for (auto& v : nodesPerLayer) {
     v.reserve(10000);
   }
 
@@ -170,7 +171,7 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
     const std::uint16_t layer = sp.extra(layerColumn);
 
     // add node to storage
-    GbtsNode& node = nodeStorage[layer].emplace_back(layer);
+    GbtsNode& node = nodesPerLayer[layer].emplace_back(layer);
 
     // fill the node with space point variables
 
@@ -184,11 +185,11 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
     node.locPosY = sp.extra(localPositionColumn);
   }
 
-  return nodeStorage;
+  return nodesPerLayer;
 }
 
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
-    const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
+    const RoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     std::vector<GbtsEdge>& edgeStorage) const {
   // phi cut for triplets
   const float cutDPhiMax = m_cfg.lrtMode ? 0.07f : 0.012f;
@@ -247,8 +248,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   const float z0HistoCoeff = zBins / (maxZ0 - minZ0 + 1e-6);
 
   // loop over bin groups
-  for (const auto& bg : m_geo->binGroups()) {
-    GbtsEtaBin& B1 = storage->getEtaBin(bg.first);
+  for (const auto& bg : m_geometry->binGroups()) {
+    GbtsEtaBin& B1 = nodeStorage.getEtaBin(bg.first);
 
     if (B1.empty()) {
       continue;
@@ -269,7 +270,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     // loop over n2 eta-bins in L2 layers
     for (const auto& b2Idx : bg.second) {
-      const GbtsEtaBin& B2 = storage->getEtaBin(b2Idx);
+      const GbtsEtaBin& B2 = nodeStorage.getEtaBin(b2Idx);
 
       if (B2.empty()) {
         ++winIdx;
@@ -627,7 +628,8 @@ std::int32_t GraphBasedTrackSeeder::runCCA(
 void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     std::uint32_t maxLevel, std::uint32_t nEdges, std::int32_t nHits,
     std::vector<GbtsEdge>& edgeStorage,
-    std::vector<SeedProperties>& vSeedCandidates) const {
+    std::vector<SeedProperties>& vSeedCandidates,
+    const GbtsTrackingFilter& filter) const {
   vSeedCandidates.clear();
 
   // a triplet + 2 confirmation
@@ -667,14 +669,14 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   vSeedCandidates.reserve(vSeeds.size());
 
-  GbtsTrackingFilter tFilter(m_cfg, *m_layerGeometry, edgeStorage);
+  GbtsTrackingFilter::State filterState{};
 
   for (GbtsEdge* pS : vSeeds) {
     if (pS->level == -1) {
       continue;
     }
 
-    GbtsEdgeState rs = tFilter.followTrack(*pS);
+    GbtsEdgeState rs = filter.followTrack(filterState, edgeStorage, *pS);
 
     if (!rs.initialized) {
       continue;

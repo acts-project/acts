@@ -8,6 +8,8 @@
 
 #include "Acts/Seeding2/GbtsGeometry.hpp"
 
+#include "Acts/Seeding2/GbtsLayerConnection.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -298,14 +300,15 @@ std::int32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
 }
 
 GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
-                           const std::unique_ptr<GbtsConnector>& conn) {
+                           const GbtsLayerConnectionMap& layerConnections)
+    : m_layerGeometry(layerGeometry) {
   // TODO configurable z0 range
   const float minZ0 = -168.0f;
   const float maxZ0 = 168.0f;
 
-  m_etaBinWidth = conn->etaBin;
+  m_etaBinWidth = layerConnections.etaBin;
 
-  for (const TrigInDetSiLayer& layer : layerGeometry) {
+  for (const TrigInDetSiLayer& layer : m_layerGeometry) {
     const GbtsLayer& pL = addNewLayer(layer, m_nEtaBins);
     m_nEtaBins += pL.numOfBins();
   }
@@ -315,13 +318,13 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
 
   std::int32_t lastBin1 = -1;
 
-  for (const auto& [layer, vConn] : conn->connMap) {
+  for (const auto& [layer, vConn] : layerConnections.connectionMap) {
     for (const auto& connection : vConn) {
       const std::uint32_t src = connection->src;  // n2 : the new connectors
       const std::uint32_t dst = connection->dst;  // n1
 
-      const GbtsLayer* pL1 = getGbtsLayerByKey(dst);
-      const GbtsLayer* pL2 = getGbtsLayerByKey(src);
+      const GbtsLayer* pL1 = layerByKey(dst);
+      const GbtsLayer* pL2 = layerByKey(src);
       if (pL1 == nullptr) {
         std::cout << " skipping invalid dst layer " << dst << std::endl;
         continue;
@@ -479,14 +482,14 @@ GbtsGeometry::GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
   }
 }
 
-const GbtsLayer* GbtsGeometry::getGbtsLayerByKey(std::uint32_t key) const {
+const GbtsLayer* GbtsGeometry::layerByKey(std::uint32_t key) const {
   if (const auto it = m_layMap.find(key); it != m_layMap.end()) {
     return it->second;
   }
   return nullptr;
 }
 
-const GbtsLayer& GbtsGeometry::getGbtsLayerByIndex(std::int32_t idx) const {
+const GbtsLayer& GbtsGeometry::layerByIndex(std::int32_t idx) const {
   return *m_layArray.at(idx);
 }
 
