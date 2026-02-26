@@ -64,8 +64,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   };
 
   /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  GraphBasedSeedingAlgorithm(const Config &cfg, Acts::Logging::Level lvl);
+  /// @param logger is the logger for the algorithm
+  explicit GraphBasedSeedingAlgorithm(
+      const Config &cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// access to config
   /// allows python bindings to work

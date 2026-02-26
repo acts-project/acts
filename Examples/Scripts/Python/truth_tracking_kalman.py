@@ -59,7 +59,7 @@ def runTruthTrackingKalman(
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
-    logger = acts.logging.getLogger("Truth tracking example")
+    logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
 
     if inputParticlePath is None:
         addParticleGun(
@@ -76,7 +76,7 @@ def runTruthTrackingKalman(
             rnd=rnd,
         )
     else:
-        logger.info("Reading particles from %s", inputParticlePath.resolve())
+        logger.info("Reading particles from {}", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
             RootParticleReader(
@@ -96,7 +96,7 @@ def runTruthTrackingKalman(
             enableInteractions=True,
         )
     else:
-        logger.info("Reading hits from %s", inputHitsPath.resolve())
+        logger.info("Reading hits from {}", inputHitsPath.resolve())
         assert inputHitsPath.exists()
         s.addReader(
             RootSimHitReader(

@@ -118,31 +118,24 @@ void addTrackFinding(py::module& mex) {
 
   {
     using Alg = TrackFindingAlgorithm;
-    using Config = Alg::Config;
 
-    auto alg =
-        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackFindingAlgorithm")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config)
-            .def_static("makeTrackFinderFunction",
-                        [](std::shared_ptr<const Acts::TrackingGeometry>
-                               trackingGeometry,
-                           std::shared_ptr<const Acts::MagneticFieldProvider>
-                               magneticField,
-                           Acts::Logging::Level level) {
-                          return Alg::makeTrackFinderFunction(
-                              std::move(trackingGeometry),
-                              std::move(magneticField),
-                              *Acts::getDefaultLogger("TrackFinding", level));
-                        });
+    auto [alg, c] =
+        declareAlgorithm<Alg, IAlgorithm>(mex, "TrackFindingAlgorithm");
+
+    alg.def_static(
+        "makeTrackFinderFunction",
+        [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+           Acts::Logging::Level level) {
+          return Alg::makeTrackFinderFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              *Acts::getDefaultLogger("TrackFinding", level));
+        });
 
     py::class_<Alg::TrackFinderFunction,
                std::shared_ptr<Alg::TrackFinderFunction>>(
         alg, "TrackFinderFunction");
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, inputMeasurements, inputInitialTrackParameters,
                        inputSeeds, outputTracks, trackingGeometry,
                        magneticField, findTracks, measurementSelectorCfg,

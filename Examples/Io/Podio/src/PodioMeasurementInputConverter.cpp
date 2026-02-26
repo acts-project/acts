@@ -17,9 +17,9 @@
 namespace ActsExamples {
 
 PodioMeasurementInputConverter::PodioMeasurementInputConverter(
-    const Config& config, Acts::Logging::Level level)
-    : PodioInputConverter{"PodioMeasurementInputConverter", level,
-                          config.inputFrame},
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioInputConverter{"PodioMeasurementInputConverter", config.inputFrame,
+                          std::move(logger)},
       m_cfg(config) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument(

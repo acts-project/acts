@@ -19,9 +19,9 @@
 
 namespace ActsExamples {
 
-TrackParameterSmearing::TrackParameterSmearing(const Config& config,
-                                               Acts::Logging::Level level)
-    : IAlgorithm("TrackParameterSmearing", level), m_cfg(config) {
+TrackParameterSmearing::TrackParameterSmearing(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackParameterSmearing", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameters collection");
   }
@@ -32,13 +32,17 @@ TrackParameterSmearing::TrackParameterSmearing(const Config& config,
     throw std::invalid_argument("Missing random numbers tool");
   }
 
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
+
+  logSmearingConfig();
+}
+
+void TrackParameterSmearing::logSmearingConfig() const {
   if (m_cfg.particleHypothesis) {
     ACTS_INFO("Override truth particle hypothesis with "
               << *m_cfg.particleHypothesis);
   }
-
-  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
-  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 
   ACTS_DEBUG("smearing track param loc0 " << m_cfg.sigmaLoc0 << " A "
                                           << m_cfg.sigmaLoc0PtA << " B "

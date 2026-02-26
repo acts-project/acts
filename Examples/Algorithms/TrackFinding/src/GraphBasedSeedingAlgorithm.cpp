@@ -24,9 +24,9 @@
 
 namespace ActsExamples {
 
-GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(const Config &cfg,
-                                                       Acts::Logging::Level lvl)
-    : IAlgorithm("GraphBasedSeedingAlgorithm", lvl), m_cfg(cfg) {
+GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
+    const Config &cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("GraphBasedSeedingAlgorithm", std::move(logger)), m_cfg(cfg) {
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
@@ -60,7 +60,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(const Config &cfg,
 
   m_finder = std::make_unique<Acts::Experimental::GraphBasedTrackSeeder>(
       m_cfg.seedFinderConfig, std::move(m_gbtsGeo), m_layerGeometry,
-      logger().cloneWithSuffix("GbtsFinder"));
+      this->logger().cloneWithSuffix("GbtsFinder"));
 
   printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
 }

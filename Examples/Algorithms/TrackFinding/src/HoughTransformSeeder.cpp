@@ -40,11 +40,9 @@ static inline std::string to_string(std::vector<T> v);
 thread_local std::vector<std::shared_ptr<HoughMeasurementStruct>>
     houghMeasurementStructs;
 
-HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
-                                           Acts::Logging::Level lvl)
-    : IAlgorithm("HoughTransformSeeder", lvl),
-      m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("HoughTransformSeeder", lvl)) {
+HoughTransformSeeder::HoughTransformSeeder(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HoughTransformSeeder", std::move(logger)), m_cfg(cfg) {
   // require space points or input measurements (or both), but at least one kind
   // of input
   if (m_cfg.inputMeasurements.empty() && m_cfg.inputSpacePoints.empty()) {
@@ -110,13 +108,16 @@ HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
   auto geoSelEnd = m_cfg.geometrySelection.end();
   auto geoSelLastUnique = std::unique(geoSelBeg, geoSelEnd, isDuplicate);
   if (geoSelLastUnique != geoSelEnd) {
-    ACTS_WARNING("Removed " << std::distance(geoSelLastUnique, geoSelEnd)
-                            << " geometry selection duplicates");
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
+                         "Removed "
+                             << std::distance(geoSelLastUnique, geoSelEnd)
+                             << " geometry selection duplicates");
     m_cfg.geometrySelection.erase(geoSelLastUnique, geoSelEnd);
   }
-  ACTS_INFO("Hough geometry selection:");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "Hough geometry selection:");
   for (const auto& geoId : m_cfg.geometrySelection) {
-    ACTS_INFO("  " << geoId);
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO, "  " << geoId);
   }
 
   // Fill convenience variables
