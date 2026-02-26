@@ -1,4 +1,8 @@
 [filtering]
+# Do not check localhost URLs (e.g. documentation examples for serve.py)
+ignore=
+  ^http://localhost
+  ^https://localhost
 # Suppress http-redirected warnings only for URLs we intentionally keep as-is
 # (e.g. DOI links - canonical identifiers that redirect to publishers)
 ignorewarningsforurls=
