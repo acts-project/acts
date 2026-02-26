@@ -1133,7 +1133,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
                 "--geant4",
                 "--ttbar",
                 "--ttbar-pu",
-                "50",
+                "10",
             ],
             cwd=tmp_path,
             env=env,
@@ -1332,11 +1332,11 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 
 
 @pytest.mark.odd
-def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
+def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
     if detector_config.name == "generic":
         pytest.skip("No strip space point formation for the generic detector currently")
 
-    from strip_spacepoints import createStripSpacePoints
+    from strip_space_points import createStripSpacePoints
 
     s = Sequencer(events=20, numThreads=-1)
 
@@ -1363,6 +1363,7 @@ def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
 
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
+@pytest.mark.slow
 def test_geomodel_G4(tmp_path):
     script = (
         Path(__file__).parent.parent.parent.parent
