@@ -76,6 +76,10 @@ constexpr HashedString operator""_hash(char const* s, std::size_t count) {
 
 }  // namespace HashedStringLiteral
 
+/// Hash for a type. Since it's not possible to hash a type at compile-time,
+/// this function returns a runtime hash but caches it in a static variable.
+/// @tparam T Type to hash
+/// @return Hashed string representation
 template <typename T>
 std::uint64_t typeHash() {
   const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
