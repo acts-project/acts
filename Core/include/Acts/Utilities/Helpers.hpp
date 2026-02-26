@@ -226,6 +226,20 @@ bool rangeContainsValue(const R& range, const T& value) {
   return std::ranges::find(range, value) != std::ranges::end(range);
 }
 
+/// This function checks if at least one string from a given range is
+/// contained within a specified string (value).
+///
+/// @tparam R The type of the range (e.g., vector<string>, list<string>, array<string>).
+/// @param range The range to search within.
+///
+/// @return `true` if a such a string in range is found, `false` otherwise.
+template <typename R>
+bool rangeContainsSubstring(const R& range, std::string_view value) {
+  return std::ranges::any_of(range, [&](std::string_view s) {
+    return value.find(s) != std::string_view::npos;
+  });
+}
+
 /// Helper struct that can turn a set of lambdas into a single entity with
 /// overloaded call operator. This can be useful for example in a std::visit
 /// call.
