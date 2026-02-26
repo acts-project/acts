@@ -109,7 +109,6 @@ class PyReadDataHandle : public ReadDataHandleBase {
     }
 
     m_pytype = std::move(pytype);
-    // Can't use the main `typeHash` function here because it's not a template
     registerAsReadHandle();
   }
 

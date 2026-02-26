@@ -18,13 +18,33 @@
 
 namespace ActsPython {
 
+/// The WhiteBoard is an event-store container that holds arbitrary C++ objects
+/// by name. Python algorithms need to read these objects through pybind11, but
+/// the WhiteBoard stores them in a type-erased form (`void*`). This registry
+/// bridges that gap by mapping Python types to their C++ counterparts and
+/// providing a downcast function that converts the stored pointer into a
+/// properly reference-managed pybind11 object.
+///
+/// Usage:
+/// 1. When defining pybind11 bindings for a type T that will be stored on the
+///    WhiteBoard, call `WhiteBoardRegistry::registerClass(pyClass)` or
+///    `WhiteBoardRegistry::registerType<T>(pyType)` immediately after the
+///    py::class_<T> definition.
+/// 2. When a Python algorithm creates a `ReadDataHandle` for that type, the
+///    registry is consulted to find the type info and downcast function for
+///    safe retrieval from the `WhiteBoard`.
 class WhiteBoardRegistry {
  public:
+  /// Function that converts a type-erased pointer from the WhiteBoard into a
+  /// pybind11 object. The wbPy argument is used for reference_internal
+  /// lifetime.
   using DowncastFunction = std::function<pybind11::object(
       const void* data, const pybind11::object& wbPy)>;
 
   /// Register a pybind11-bound type T for WhiteBoard read access.
-  /// Call this immediately after the py::class_<T> definition.
+  /// Call this after the `py::class_<T>` definition.
+  /// @tparam Ts The types to register.
+  /// @param pyClass The pybind11 class object to register.
   template <typename... Ts>
   static void registerClass(const pybind11::class_<Ts...>& pyClass) {
     namespace py = pybind11;
@@ -32,6 +52,11 @@ class WhiteBoardRegistry {
     registerType<type>(pyClass);
   }
 
+  /// Register a C++ type `~T` with its pybind11 Python type for WhiteBoard
+  /// access. Use when the `py::class_<T>` type cannot be deduced (e.g. for
+  /// template types).
+  /// @tparam T The C++ type to register.
+  /// @param pyType The pybind11 Python type object to register.
   template <typename T>
   static void registerType(const pybind11::object& pyType) {
     namespace py = pybind11;
@@ -49,12 +74,17 @@ class WhiteBoardRegistry {
     };
   }
 
+  /// Per-type registry entry: downcast function and type metadata for lookups.
   struct RegistryEntry {
-    DowncastFunction fn{nullptr};
-    const std::type_info* typeinfo{nullptr};
-    std::uint64_t typeHash{0};
+    DowncastFunction fn{
+        nullptr};  ///< Converts `void*` + `WhiteBoard` -> `py::object`
+    const std::type_info* typeinfo{nullptr};  ///< C++ type for type checking
+    std::uint64_t typeHash{0};  ///< Hash for runtime type verification
   };
 
+  /// Look up a registered type by its pybind11 Python type object.
+  /// @param pyType The pybind11 Python type object to look up.
+  /// @return Pointer to the `RegistryEntry`, or `nullptr` if not registered
   static RegistryEntry* find(const pybind11::object& pyType) {
     if (auto it = instance().find(pyType.ptr()); it != instance().end()) {
       return &it->second;
