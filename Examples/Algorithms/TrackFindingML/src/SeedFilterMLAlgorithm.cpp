@@ -8,12 +8,7 @@
 
 #include "ActsExamples/TrackFindingML/SeedFilterMLAlgorithm.hpp"
 
-#include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/TrackFindingML/SeedFilterDBScanClustering.hpp"
-
-#include <iterator>
-#include <map>
 
 using namespace Acts;
 using namespace ActsPlugins;
@@ -28,24 +23,24 @@ SeedFilterMLAlgorithm::SeedFilterMLAlgorithm(
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters input collection");
   }
-  if (m_cfg.inputSimSeeds.empty()) {
+  if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seed input collection");
   }
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters output collection");
   }
-  if (m_cfg.outputSimSeeds.empty()) {
+  if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing seed output collection");
   }
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
-  m_inputSimSeeds.initialize(m_cfg.inputSimSeeds);
+  m_inputSeeds.initialize(m_cfg.inputSeeds);
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
-  m_outputSimSeeds.initialize(m_cfg.outputSimSeeds);
+  m_outputSeeds.initialize(m_cfg.outputSeeds);
 }
 
 ProcessCode SeedFilterMLAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
-  const auto& seeds = m_inputSimSeeds(ctx);
+  const auto& seeds = m_inputSeeds(ctx);
   const auto& params = m_inputTrackParameters(ctx);
   if (seeds.size() != params.size()) {
     throw std::invalid_argument(
@@ -65,16 +60,18 @@ ProcessCode SeedFilterMLAlgorithm::execute(const AlgorithmContext& ctx) const {
     double phi = params[i].parameters()[eBoundPhi];
 
     // Fill and weight the clustering inputs
-    clusteringParams.push_back(
-        {phi / m_cfg.clusteringWeighPhi, eta / m_cfg.clusteringWeighEta,
-         seeds[i].z() / m_cfg.clusteringWeighZ, pT / m_cfg.clusteringWeighPt});
+    clusteringParams.push_back({phi / m_cfg.clusteringWeighPhi,
+                                eta / m_cfg.clusteringWeighEta,
+                                seeds[i].vertexZ() / m_cfg.clusteringWeighZ,
+                                pT / m_cfg.clusteringWeighPt});
 
     // Fill the NN input
-    networkInput.row(i) << pT, eta, phi, seeds[i].sp()[0]->x(),
-        seeds[i].sp()[0]->y(), seeds[i].sp()[0]->z(), seeds[i].sp()[1]->x(),
-        seeds[i].sp()[1]->y(), seeds[i].sp()[1]->z(), seeds[i].sp()[2]->x(),
-        seeds[i].sp()[2]->y(), seeds[i].sp()[2]->z(), seeds[i].z(),
-        seeds[i].seedQuality();
+    networkInput.row(i) << pT, eta, phi, seeds[i].spacePoints()[0].x(),
+        seeds[i].spacePoints()[0].y(), seeds[i].spacePoints()[0].z(),
+        seeds[i].spacePoints()[1].x(), seeds[i].spacePoints()[1].y(),
+        seeds[i].spacePoints()[1].z(), seeds[i].spacePoints()[2].x(),
+        seeds[i].spacePoints()[2].y(), seeds[i].spacePoints()[2].z(),
+        seeds[i].vertexZ(), seeds[i].quality();
   }
 
   // Cluster the tracks using DBscan
@@ -82,24 +79,28 @@ ProcessCode SeedFilterMLAlgorithm::execute(const AlgorithmContext& ctx) const {
                                       m_cfg.minPointsDBScan);
 
   // Select the ID of the track we want to keep
-  std::vector<std::size_t> goodSeed = m_seedClassifier.solveAmbiguity(
+  std::vector<std::size_t> goodSeedIndices = m_seedClassifier.solveAmbiguity(
       cluster, networkInput, m_cfg.minSeedScore);
 
   // Create the output seed collection
-  SimSeedContainer outputSeeds;
-  outputSeeds.reserve(goodSeed.size());
+  SeedContainer outputSeeds;
+  outputSeeds.assignSpacePointContainer(seeds.spacePointContainer());
+  outputSeeds.reserve(goodSeedIndices.size());
 
   // Create the output track parameters collection
   TrackParametersContainer outputTrackParameters;
-  outputTrackParameters.reserve(goodSeed.size());
+  outputTrackParameters.reserve(goodSeedIndices.size());
 
-  for (auto i : goodSeed) {
-    outputSeeds.push_back(seeds[i]);
+  for (std::size_t i : goodSeedIndices) {
+    auto newSeed = outputSeeds.createSeed();
+    newSeed.assignSpacePointIndices(seeds[i].spacePointIndices());
+    newSeed.vertexZ() = seeds[i].vertexZ();
+    newSeed.quality() = seeds[i].quality();
     outputTrackParameters.push_back(params[i]);
   }
 
-  m_outputSimSeeds(ctx, SimSeedContainer{outputSeeds});
-  m_outputTrackParameters(ctx, TrackParametersContainer{outputTrackParameters});
+  m_outputSeeds(ctx, std::move(outputSeeds));
+  m_outputTrackParameters(ctx, std::move(outputTrackParameters));
 
   return ProcessCode::SUCCESS;
 }
