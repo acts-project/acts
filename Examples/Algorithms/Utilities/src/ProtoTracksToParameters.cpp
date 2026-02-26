@@ -14,7 +14,6 @@
 #include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
-#include <limits>
 #include <tuple>
 
 using namespace Acts;
@@ -47,9 +46,6 @@ ProtoTracksToParameters::~ProtoTracksToParameters() = default;
 
 ProcessCode ProtoTracksToParameters::execute(
     const AlgorithmContext &ctx) const {
-  static constexpr SpacePointIndex nullIndex =
-      std::numeric_limits<SpacePointIndex>::max();
-
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
   const auto &sps = m_inputSpacePoints(ctx);
   auto protoTracks = m_inputProtoTracks(ctx);
@@ -57,7 +53,8 @@ ProcessCode ProtoTracksToParameters::execute(
   // Make some lookup tables and pre-allocate some space
   // Note this is a heuristic, since it is not garantueed that each measurement
   // is part of a space point
-  std::vector<SpacePointIndex> indexToSpacePoint(2 * sps.size(), nullIndex);
+  std::vector<SpacePointIndex> indexToSpacePoint(2 * sps.size(),
+                                                 kSpacePointIndex2Invalid);
   std::vector<GeometryIdentifier> indexToGeoId(2 * sps.size(),
                                                GeometryIdentifier{0});
 
@@ -65,7 +62,7 @@ ProcessCode ProtoTracksToParameters::execute(
     for (const auto &sl : sp.sourceLinks()) {
       const auto &isl = sl.template get<IndexSourceLink>();
       if (isl.index() >= indexToSpacePoint.size()) {
-        indexToSpacePoint.resize(isl.index() + 1, nullIndex);
+        indexToSpacePoint.resize(isl.index() + 1, kSpacePointIndex2Invalid);
         indexToGeoId.resize(isl.index() + 1, GeometryIdentifier{0});
       }
       indexToSpacePoint.at(isl.index()) = sp.index();
@@ -122,7 +119,7 @@ ProcessCode ProtoTracksToParameters::execute(
     auto result =
         track | std::views::filter([&](auto i) {
           return i < indexToSpacePoint.size() &&
-                 indexToSpacePoint.at(i) != nullIndex;
+                 indexToSpacePoint.at(i) != kSpacePointIndex2Invalid;
         }) |
         std::views::transform([&](auto i) { return indexToSpacePoint.at(i); });
     tmpSps.clear();
@@ -175,12 +172,12 @@ ProcessCode ProtoTracksToParameters::execute(
     }
 
     // Get the magnetic field at the bottom space point
-    auto fieldRes = m_cfg.magneticField->getField(bottomSpVec, bCache);
+    const auto fieldRes = m_cfg.magneticField->getField(bottomSpVec, bCache);
     if (!fieldRes.ok()) {
       ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
-    const Acts::Vector3 field = *fieldRes;
+    const Acts::Vector3 &field = *fieldRes;
 
     if (field.norm() < m_cfg.bFieldMin) {
       ACTS_WARNING("Magnetic field at seed is too small " << field.norm());

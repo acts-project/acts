@@ -130,12 +130,12 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
 
     // Get the magnetic field at the bottom space point
-    auto fieldRes = m_cfg.magneticField->getField(bottomSpVec, bCache);
+    const auto fieldRes = m_cfg.magneticField->getField(bottomSpVec, bCache);
     if (!fieldRes.ok()) {
       ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
-    const Acts::Vector3 field = *fieldRes;
+    const Acts::Vector3& field = *fieldRes;
 
     if (field.norm() < m_cfg.bFieldMin) {
       ACTS_WARNING("Magnetic field at seed " << iseed << " is too small "

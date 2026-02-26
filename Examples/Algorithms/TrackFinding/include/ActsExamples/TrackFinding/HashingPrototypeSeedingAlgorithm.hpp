@@ -22,6 +22,8 @@
 
 namespace ActsExamples {
 
+using SpacePointsBuckets = std::vector<std::vector<SpacePointIndex>>;
+
 /// Construct track seeds from space points.
 class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
  public:
@@ -221,8 +223,7 @@ class HashingPrototypeSeedingAlgorithm final : public IAlgorithm {
                                                          "InputSpacePoints"};
 
   WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
-  WriteDataHandle<std::vector<std::vector<SpacePointIndex>>> m_outputBuckets{
-      this, "OutputBuckets"};
+  WriteDataHandle<SpacePointsBuckets> m_outputBuckets{this, "OutputBuckets"};
 };
 
 }  // namespace ActsExamples

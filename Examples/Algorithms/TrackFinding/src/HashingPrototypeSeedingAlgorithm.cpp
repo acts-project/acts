@@ -93,7 +93,7 @@ void buildModel(AnnoyModel& model) {
   model.build(nTrees);
 }
 
-std::vector<std::vector<SpacePointIndex>> computeSpacePointsBuckets(
+SpacePointsBuckets computeSpacePointsBuckets(
     const AnnoyModel& annoyModel, const Acts::SpacePointContainer2& spacePoints,
     const std::size_t bucketSize, const std::size_t zBins,
     const std::size_t phiBins, const double layerRMin, const double layerRMax,
@@ -164,7 +164,7 @@ std::vector<std::vector<SpacePointIndex>> computeSpacePointsBuckets(
     }
   }
 
-  std::vector<std::vector<SpacePointIndex>> result;
+  SpacePointsBuckets result;
   result.reserve(resultSets.size());
   for (const auto& spSet : resultSets) {
     if (!spSet.empty()) {
@@ -342,7 +342,7 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
   buildModel(hashingModel);
 
   // create buckets based on hashing model
-  std::vector<std::vector<SpacePointIndex>> buckets = computeSpacePointsBuckets(
+  SpacePointsBuckets buckets = computeSpacePointsBuckets(
       hashingModel, coreSpacePoints, m_cfg.bucketSize, m_cfg.zBins,
       m_cfg.phiBins, m_cfg.layerRMin, m_cfg.layerRMax, m_cfg.layerZMin,
       m_cfg.layerZMax);
