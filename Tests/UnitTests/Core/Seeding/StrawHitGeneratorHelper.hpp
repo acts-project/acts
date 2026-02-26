@@ -250,7 +250,7 @@ class SpCalibrator {
     for (std::size_t n = 0; n < s_driftRUncertCoeffs.size(); ++n) {
       s += s_driftRUncertCoeffs[n] * Acts::detail::chebychevPolyTn(x, n);
     }
-    return s;
+    return std::sqrt(s);
   }
   /// @brief Provide a fast estimate of the time of flight of the particle. Used in the Fast Fitter.
   /// @param measurement: measurement. It should be a straw measurement
@@ -797,7 +797,9 @@ ParamVec_t startParameters(const Line_t& line, const Container_t& hits) {
     auto seedPars = CompositeSpacePointLineSeeder::constructTangentLine(
         **lastTube, **firstTube,
         CompositeSpacePointLineSeeder::encodeAmbiguity(signLast, signFirst));
-    tanBeta = std::tan(seedPars.theta);
+    const auto seedDir = CompositeSpacePointLineSeeder::makeDirection(
+        **firstTube, seedPars.theta);
+    tanBeta = seedDir.y() / seedDir.z();
     pars[toUnderlying(FitParIndex::y0)] = seedPars.y0;
   } else {
     auto firstEta = std::ranges::find_if(hits, [](const auto& sp) {
