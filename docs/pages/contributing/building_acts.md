@@ -40,7 +40,7 @@ components:
 - [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the GNN plugin and some examples
 - [Pythia8](https://pythia.org) for some examples
 - [ROOT](https://root.cern.ch) >= 6.20 for the ROOT plugin and the examples
-- [Sphinx](https://www.sphinx-doc.org/en/master/) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
+- [Graphviz](https://www.graphviz.org/) for class diagrams and other graphs in the documentation
 - [libtorch](https://docs.pytorch.org/cppdocs/installing.html) for the GNN plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
 - [FastJet](https://fastjet.fr/) >= 3.4.0 for the FastJet plugin
@@ -186,51 +186,44 @@ more information.
 
 # Building the documentation
 
-The documentation uses [Doxygen][doxygen] to extract the source code
-documentation and [Sphinx][sphinx] with the [Breathe][breathe] extension to
-generate the documentation website. To build the documentation locally, you
-need to have [Doxygen][doxygen] version `1.9.5` or newer installed.
-[Sphinx][sphinx] and a few other dependencies can be installed using the Python
-package manager `pip`:
+The documentation is built using [Doxygen][doxygen], which extracts the source
+code documentation and generates the HTML website. The build uses the
+[doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme for
+styling.
 
-```console
-cd <source>
-pip install -r docs/requirements.txt
-```
+To build the documentation locally, you need:
 
-> [!tip]
-> It is **strongly recommended** to use a [virtual
->environment](https://realpython.com/python-virtual-environments-a-primer/) for
->this purpose! For example, run
->
-> ```console
-> python -m venv docvenv
-> source docvenv/bin/activate
-> ```
->
-> to create a local virtual environment, and then run the `pip` command above.
+- [Doxygen][doxygen] version 1.9.4 or newer
+- [Graphviz](https://www.graphviz.org/) for class diagrams and other graphs
 
-To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
+Configure the build with the `ACTS_BUILD_DOCS` option enabled:
 
 ```console
 cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
 ```
 
-Then the documentation can be build with this target
+Then build the documentation:
 
 ```console
 cmake --build <build> --target docs
 ```
 
-The default option includes the Doxygen, Sphinx, and the Breathe extension,
-i.e. the source code information can be used in the manually written
-documentation. An attempt is made to pull in symbols that are cross-referenced from
-other parts of the documentation. This is not guaranteed to work: in case
-of errors you will need to manually pull in symbols to be documented.
+The generated HTML documentation will be in `<build>/docs/html/`. Open
+`<build>/docs/html/index.html` in a browser to view it.
+
+For a live preview with automatic rebuilds when files change, you can use the
+`serve.py` script (requires Python 3.11+ with [uv](https://docs.astral.sh/uv/) or
+the typer, rich, and livereload packages):
+
+```console
+uv run docs/serve.py --build-dir <build>
+```
+
+If your build directory is `build`, you can omit the `--build-dir` option. This
+serves the documentation at http://localhost:8000 and rebuilds when you edit
+source files or documentation.
 
 [doxygen]: https://doxygen.nl/
-[sphinx]: https://www.sphinx-doc.org/en/master/
-[breathe]: https://breathe.readthedocs.io/en/latest/
 
 # Build options {#build-options}
 
