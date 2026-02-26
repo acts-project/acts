@@ -147,6 +147,7 @@ jobs:
           PYTEST_MD_REPORT: true
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
+          PYTEST_ADDOPTS: "-rs --durations=10"
         run: |
           source .env
           source build/this_acts_withdeps.sh
@@ -626,4 +627,4 @@ jobs:
           path: "*.whl"
 
       - name: Test
-        run: CI/dependencies/run.sh .env python3 -c "import acts; import acts.examples; v = acts.Vector3(1,2,3)"
+        run: CI/dependencies/run.sh .env python3 Python/Examples/scripts/hello_world_kalman.py

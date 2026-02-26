@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
 #include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
@@ -24,9 +24,9 @@
 
 namespace ActsExamples {
 
-GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(const Config &cfg,
-                                           Acts::Logging::Level lvl)
-    : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(cfg) {
+GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(const Config &cfg,
+                                                       Acts::Logging::Level lvl)
+    : IAlgorithm("GraphBasedSeedingAlgorithm", lvl), m_cfg(cfg) {
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
@@ -58,14 +58,15 @@ GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(const Config &cfg,
   // manually convert min Pt as no conversion available in ACTS Examples
   // (currently inputs as 0.9 GeV but need 900 MeV)
 
-  m_finder = std::make_unique<Acts::Experimental::SeedFinderGbts>(
+  m_finder = std::make_unique<Acts::Experimental::GraphBasedTrackSeeder>(
       m_cfg.seedFinderConfig, std::move(m_gbtsGeo), m_layerGeometry,
       logger().cloneWithSuffix("GbtsFinder"));
 
   printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
 }
 
-ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
+ProcessCode GraphBasedSeedingAlgorithm::execute(
+    const AlgorithmContext &ctx) const {
   // initialise input space points from handle and define new container
   const SpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
@@ -99,8 +100,9 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   return ProcessCode::SUCCESS;
 }
 
-std::map<GbtsSeedingAlgorithm::ActsIDs, GbtsSeedingAlgorithm::GbtsIDs>
-GbtsSeedingAlgorithm::makeActsGbtsMap() const {
+std::map<GraphBasedSeedingAlgorithm::ActsIDs,
+         GraphBasedSeedingAlgorithm::GbtsIDs>
+GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
   std::map<ActsIDs, GbtsIDs> actsToGbtsMap;
 
   // prepare the acts to gbts mapping file
@@ -138,7 +140,7 @@ GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::SpacePointContainer2 GbtsSeedingAlgorithm::makeSpContainer(
+Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
     const SpacePointContainer &spacePoints,
     std::map<ActsIDs, GbtsIDs> map) const {
   Acts::SpacePointContainer2 coreSpacePoints(
@@ -233,7 +235,8 @@ Acts::SpacePointContainer2 GbtsSeedingAlgorithm::makeSpContainer(
 }
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>
-GbtsSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) const {
+GraphBasedSeedingAlgorithm::layerNumbering(
+    const Acts::GeometryContext &gctx) const {
   std::vector<Acts::Experimental::TrigInDetSiLayer> inputVector{};
   std::vector<std::size_t> countVector{};
 
@@ -380,7 +383,7 @@ GbtsSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) const {
   return inputVector;
 }
 
-void GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
+void GraphBasedSeedingAlgorithm::printSeedFinderGbtsConfig(
     const Acts::Experimental::GbtsConfig &cfg) {
   ACTS_DEBUG("===== SeedFinderGbtsConfig =====");
 

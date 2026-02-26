@@ -1302,7 +1302,7 @@ def addGbtsSeeding(
         ),
     )
 
-    seedingAlg = acts.examples.GbtsSeedingAlgorithm(
+    seedingAlg = acts.examples.GraphBasedSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds="seeds",
