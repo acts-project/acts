@@ -31,19 +31,19 @@ The following dependencies are required to build the ACTS core library:
 The following dependencies are optional and are needed to build additional
 components:
 
-- [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the GNN plugin and its examples
+- [CUDA](https://developer.nvidia.com/cuda) for the CUDA plugin and the GNN plugin and its examples
 - [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 - [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 - [Geant4](https://geant4.org/) for some examples
 - [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
-- [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
+- [Intel Threading Building Blocks](https://github.com/uxlfoundation/oneTBB) >= 2020.1 for the examples
 - [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the GNN plugin and some examples
 - [Pythia8](https://pythia.org) for some examples
 - [ROOT](https://root.cern.ch) >= 6.20 for the ROOT plugin and the examples
-- [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
-- [libtorch](https://pytorch.org/cppdocs/installing.html) for the GNN plugin
+- [Sphinx](https://www.sphinx-doc.org/en/master/) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
+- [libtorch](https://docs.pytorch.org/cppdocs/installing.html) for the GNN plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
-- [FastJet](http://fastjet.fr/) >= 3.4.0 for the FastJet plugin
+- [FastJet](https://fastjet.fr/) >= 3.4.0 for the FastJet plugin
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -233,8 +233,8 @@ other parts of the documentation. This is not guaranteed to work: in case
 of errors you will need to manually pull in symbols to be documented.
 
 [doxygen]: https://doxygen.nl/
-[sphinx]: https://www.sphinx-doc.org
-[breathe]: https://breathe.readthedocs.io
+[sphinx]: https://www.sphinx-doc.org/en/master/
+[breathe]: https://breathe.readthedocs.io/en/latest/
 
 ## Build options
 

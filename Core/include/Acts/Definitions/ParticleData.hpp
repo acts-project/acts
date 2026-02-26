@@ -48,7 +48,8 @@ std::optional<float> findMass(PdgParticle pdg);
 float findMassOfNucleus(PdgParticle pdg);
 
 /// Calculate the mass of a nucleus using Bethe-Weizsacker formula
-/// Parameters obtained from https://www.actaphys.uj.edu.pl/R/37/6/1833
+/// Parameters obtained from
+/// https://www.actaphys.uj.edu.pl/index_n.php?I=R&V=37&N=6#1833
 ///
 /// @param pdg PDG particle number for the nucleus
 /// @return Mass in native units
