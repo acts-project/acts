@@ -164,25 +164,18 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   auto t02 = Clock::now();
 
   // Sort the space points by module ide. Required by module map
-  std::vector<int> idxs(numSpacePoints);
-  std::iota(idxs.begin(), idxs.end(), 0);
-  std::ranges::sort(idxs, {}, [&](auto i) { return moduleIds[i]; });
+  std::vector<SpacePointIndex> sortedSpacePointIndices(numSpacePoints);
+  std::iota(sortedSpacePointIndices.begin(), sortedSpacePointIndices.end(), 0);
+  std::ranges::sort(sortedSpacePointIndices, {},
+                    [&](auto i) { return moduleIds[i]; });
 
-  std::ranges::sort(moduleIds);
+  std::vector<std::uint64_t> sortedModuleIds;
+  sortedModuleIds.reserve(moduleIds.size());
+  std::ranges::transform(sortedSpacePointIndices,
+                         std::back_inserter(sortedModuleIds),
+                         [&](auto i) { return moduleIds[i]; });
 
-  SpacePointContainer sortedSpacePoints(
-      SpacePointColumns::SourceLinks | SpacePointColumns::X |
-      SpacePointColumns::Y | SpacePointColumns::Z);
-  sortedSpacePoints.reserve(spacePoints.size());
-  for (int isp : idxs) {
-    const auto& sp = spacePoints[isp];
-
-    auto newSp = sortedSpacePoints.createSpacePoint();
-    newSp.assignSourceLinks(sp.sourceLinks());
-    newSp.x() = sp.x();
-    newSp.y() = sp.y();
-    newSp.z() = sp.z();
-  }
+  const auto sortedSpacePoints = spacePoints.subset(sortedSpacePointIndices);
 
   auto t03 = Clock::now();
 
@@ -207,6 +200,10 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
 #else
   Device device = {Device::Type::eCUDA, 0};
 #endif
+  // TODO `idxs` seems not to be used anymore and should be removed from the
+  // input
+  std::vector<int> idxs(numSpacePoints);
+  std::iota(idxs.begin(), idxs.end(), 0);
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
   ACTS_NVTX_START(post_processing);

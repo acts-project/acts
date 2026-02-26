@@ -18,6 +18,8 @@ using SpacePointIndex = Acts::SpacePointIndex2;
 using SpacePointProxy = Acts::SpacePointContainer2::MutableProxy;
 using ConstSpacePointProxy = Acts::SpacePointContainer2::ConstProxy;
 
+using ConstSpacePointSubset = Acts::SpacePointContainer2::ConstSubset;
+
 using SpacePointColumns = Acts::SpacePointColumns;
 using SpacePointContainer = Acts::SpacePointContainer2;
 
