@@ -1,0 +1,5 @@
+[filtering]
+# Suppress http-redirected warnings only for URLs we intentionally keep as-is
+# (e.g. DOI links - canonical identifiers that redirect to publishers)
+ignorewarningsforurls=
+  ^https://dx\.doi\.org/ ^http-redirected

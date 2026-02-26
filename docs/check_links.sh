@@ -44,6 +44,7 @@ done
 echo "Loaded ${#IGNORE_PATTERNS[@]} external link ignore patterns"
 
 uvx --from LinkChecker linkchecker \
+  --config="${SCRIPT_DIR}/linkcheckerrc" \
   --check-extern \
   --threads="${LINKCHECK_THREADS}" \
   --timeout="${LINKCHECK_TIMEOUT}" \
