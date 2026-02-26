@@ -216,8 +216,8 @@ struct SeedComparison {
 }  // namespace
 
 HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
-    Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("HashingPrototypeSeedingAlgorithm", lvl),
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HashingPrototypeSeedingAlgorithm", std::move(logger)),
       m_cfg(std::move(cfg)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
@@ -247,9 +247,9 @@ HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
 
-  m_filterLogger = logger().cloneWithSuffix("Filter");
+  m_filterLogger = this->logger().cloneWithSuffix("Filter");
 
-  m_seedFinder = Acts::TripletSeeder(logger().cloneWithSuffix("Finder"));
+  m_seedFinder = Acts::TripletSeeder(this->logger().cloneWithSuffix("Finder"));
 }
 
 ProcessCode HashingPrototypeSeedingAlgorithm::execute(

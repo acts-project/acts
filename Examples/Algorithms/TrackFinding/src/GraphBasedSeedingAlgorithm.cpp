@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
@@ -25,8 +25,9 @@
 
 namespace ActsExamples {
 
-GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
+GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("SeedingAlgorithm", std::move(logger)), m_cfg(std::move(cfg)) {
   // initialise the space point, seed and cluster handles
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
@@ -58,14 +59,15 @@ GbtsSeedingAlgorithm::GbtsSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl)
   // manually convert min Pt as no conversion available in ACTS Examples
   // (currently inputs as 0.9 GeV but need 900 MeV)
 
-  m_finder = std::make_unique<Acts::Experimental::SeedFinderGbts>(
+  m_finder = std::make_unique<Acts::Experimental::GraphBasedTrackSeeder>(
       m_cfg.seedFinderConfig, std::move(m_gbtsGeo), m_layerGeometry,
-      logger().cloneWithSuffix("GbtsFinder"));
+      this->logger().cloneWithSuffix("GbtsFinder"));
 
   printSeedFinderGbtsConfig(m_cfg.seedFinderConfig);
 }
 
-ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
+ProcessCode GraphBasedSeedingAlgorithm::execute(
+    const AlgorithmContext &ctx) const {
   // initialise input space points from handle and define new container
   const SimSpacePointContainer &spacePoints = m_inputSpacePoints(ctx);
 
@@ -73,7 +75,7 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  auto SpContainerComponents = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
+  auto coreSpacePoints = makeSpContainer(spacePoints, m_cfg.actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
   std::uint32_t maxLayers = m_layerIdMap.size();
@@ -86,7 +88,7 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   // create the seeds
 
   Acts::SeedContainer2 seeds =
-      m_finder->createSeeds(internalRoi, SpContainerComponents, maxLayers);
+      m_finder->createSeeds(internalRoi, coreSpacePoints, maxLayers);
 
   // move seeds to simseedcontainer to be used down stream taking fist middle
   // and last sps currently as simseeds need to be hard types so only 3
@@ -98,19 +100,15 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
     auto sps = seed.spacePointIndices();
     std::uint32_t indices = sps.size() - 1;
     std::size_t mid = static_cast<std::size_t>(std::round(indices / 2.0));
-    seedContainerForStorage.emplace_back(
-        *std::get<0>(SpContainerComponents)
-             .at(sps[0])  // first space point
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>(),
-        *std::get<0>(SpContainerComponents)
-             .at(sps[mid])  // middle space point
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>(),
-        *std::get<0>(SpContainerComponents)
-             .at(sps[indices])  // last space point
-             .sourceLinks()[0]
-             .get<const SimSpacePoint *>());
+    seedContainerForStorage.emplace_back(*coreSpacePoints.at(sps[0])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint *>(),
+                                         *coreSpacePoints.at(sps[mid])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint *>(),
+                                         *coreSpacePoints.at(sps[indices])
+                                              .sourceLinks()[0]
+                                              .get<const SimSpacePoint *>());
 
     seedContainerForStorage.back().setVertexZ(seed.vertexZ());
     seedContainerForStorage.back().setQuality(seed.quality());
@@ -121,8 +119,9 @@ ProcessCode GbtsSeedingAlgorithm::execute(const AlgorithmContext &ctx) const {
   return ProcessCode::SUCCESS;
 }
 
-std::map<GbtsSeedingAlgorithm::ActsIDs, GbtsSeedingAlgorithm::GbtsIDs>
-GbtsSeedingAlgorithm::makeActsGbtsMap() const {
+std::map<GraphBasedSeedingAlgorithm::ActsIDs,
+         GraphBasedSeedingAlgorithm::GbtsIDs>
+GraphBasedSeedingAlgorithm::makeActsGbtsMap() const {
   std::map<ActsIDs, GbtsIDs> actsToGbtsMap;
 
   // prepare the acts to gbts mapping file
@@ -160,9 +159,9 @@ GbtsSeedingAlgorithm::makeActsGbtsMap() const {
   return actsToGbtsMap;
 }
 
-Acts::Experimental::SpContainerComponentsType
-GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
-                                      std::map<ActsIDs, GbtsIDs> map) const {
+Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
+    const SimSpacePointContainer &spacePoints,
+    std::map<ActsIDs, GbtsIDs> map) const {
   Acts::SpacePointContainer2 coreSpacePoints(
       Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::X |
       Acts::SpacePointColumns::Y | Acts::SpacePointColumns::Z |
@@ -170,10 +169,9 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
 
   // add new column for layer ID and clusterwidth
   auto layerColomn = coreSpacePoints.createColumn<std::uint32_t>("layerId");
-  auto clusterWidthColomn =
-      coreSpacePoints.createColumn<float>("Cluster_Width");
+  auto clusterWidthColomn = coreSpacePoints.createColumn<float>("clusterWidth");
   auto localPositionColomn =
-      coreSpacePoints.createColumn<float>("LocalPositionY");
+      coreSpacePoints.createColumn<float>("localPositionY");
   coreSpacePoints.reserve(spacePoints.size());
 
   // for loop filling space point container and assigning layer ID's using the
@@ -253,13 +251,12 @@ GbtsSeedingAlgorithm::makeSpContainer(const SimSpacePointContainer &spacePoints,
 
   ACTS_VERBOSE("space point collection successfully assigned layerId's");
 
-  return std::make_tuple(std::move(coreSpacePoints), layerColomn.asConst(),
-                         clusterWidthColomn.asConst(),
-                         localPositionColomn.asConst());
+  return coreSpacePoints;
 }
 
 std::vector<Acts::Experimental::TrigInDetSiLayer>
-GbtsSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) const {
+GraphBasedSeedingAlgorithm::layerNumbering(
+    const Acts::GeometryContext &gctx) const {
   std::vector<Acts::Experimental::TrigInDetSiLayer> inputVector{};
   std::vector<std::size_t> countVector{};
 
@@ -406,7 +403,7 @@ GbtsSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) const {
   return inputVector;
 }
 
-void GbtsSeedingAlgorithm::printSeedFinderGbtsConfig(
+void GraphBasedSeedingAlgorithm::printSeedFinderGbtsConfig(
     const Acts::Experimental::GbtsConfig &cfg) {
   ACTS_DEBUG("===== SeedFinderGbtsConfig =====");
 

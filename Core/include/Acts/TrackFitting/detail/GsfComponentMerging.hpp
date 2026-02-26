@@ -97,12 +97,8 @@ auto angleDescriptionSwitch(const Surface &surface, Callable &&callable) {
 }
 
 /// Combine multiple components into one representative parameter object. The
-/// function takes iterators to allow for arbitrary ranges to be combined.
-///
-/// @note The correct mean and variances for cyclic coordinates or spherical
-/// coordinates (theta, phi) must generally be computed using a special circular
-/// mean or in cartesian coordinates. This implements a approximation, which
-/// only works well for close components.
+/// function takes a range and a projector to allow for arbitrary input to be
+/// combined.
 ///
 /// @param cmps The component range to merge
 /// @param projector A projector to extract the weight and parameters from the components
@@ -153,14 +149,15 @@ BoundVector mergeGaussianMixtureMean(const component_range_t &cmps,
 }
 
 /// Combine multiple components into one representative parameter object. The
-/// function takes iterators to allow for arbitrary ranges to be combined.
+/// function takes a range and a projector to allow for arbitrary input to be
+/// combined.
 ///
 /// @param cmps The component range to merge
 /// @param projector A projector to extract the weight and parameters from the components
 /// @return parameters
 template <typename component_range_t, typename projector_t>
-BoundVector mergeGaussianMixtureMode(const component_range_t &cmps,
-                                     const projector_t &projector) {
+BoundVector mergeGaussianMixtureMaxWeight(const component_range_t &cmps,
+                                          const projector_t &projector) {
   const auto maxWeightIt =
       std::ranges::max_element(cmps, {}, [&](const auto &cmp) {
         const auto [weight_l, pars_l] = projector(cmp);
@@ -171,7 +168,7 @@ BoundVector mergeGaussianMixtureMode(const component_range_t &cmps,
 }
 
 /// Compute the covariance of a Gaussian mixture given the mean. The function
-/// takes iterators to allow for arbitrary ranges to be combined.
+/// takes a range and a projector to allow for arbitrary input to be combined.
 ///
 /// @param cmps The component range to merge
 /// @param projector A projector to extract the weight and parameters from the components
@@ -218,13 +215,9 @@ BoundMatrix mergeGaussianMixtureCov(const component_range_t &cmps,
   return cov;
 }
 
-/// Combine multiple components into one representative track state object. The
-/// function takes iterators to allow for arbitrary ranges to be combined.
-///
-/// @note The correct mean and variances for cyclic coordinates or spherical
-/// coordinates (theta, phi) must generally be computed using a special circular
-/// mean or in cartesian coordinates. This implements a approximation, which
-/// only works well for close components.
+/// Combine multiple components into one representative parameter object. The
+/// function takes a range and a projector to allow for arbitrary input to be
+/// combined.
 ///
 /// @param cmps The component range to merge
 /// @param projector A projector to extract the weight, parameters and covariance
@@ -274,7 +267,7 @@ BoundVector mergeGaussianMixtureParams(const component_range_t &cmps,
   if (method == ComponentMergeMethod::eMean) {
     return mergeGaussianMixtureMean(cmps, projector, angleDesc);
   } else if (method == ComponentMergeMethod::eMaxWeight) {
-    return mergeGaussianMixtureMode(cmps, projector);
+    return mergeGaussianMixtureMaxWeight(cmps, projector);
   } else {
     throw std::logic_error("Invalid component merge method");
   }
@@ -300,10 +293,11 @@ std::tuple<BoundVector, BoundMatrix> mergeGaussianMixture(
   if (method == ComponentMergeMethod::eMean) {
     return {mean, cov};
   } else if (method == ComponentMergeMethod::eMaxWeight) {
-    const BoundVector mode = mergeGaussianMixtureMode(cmps, [&](const auto &c) {
-      const auto [weight_l, pars_l, cov_l] = projector(c);
-      return std::tuple(weight_l, pars_l);
-    });
+    const BoundVector mode =
+        mergeGaussianMixtureMaxWeight(cmps, [&](const auto &c) {
+          const auto [weight_l, pars_l, cov_l] = projector(c);
+          return std::tuple(weight_l, pars_l);
+        });
     return {mode, cov};
   } else {
     throw std::logic_error("Invalid component merge method");

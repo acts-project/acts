@@ -84,8 +84,8 @@ class MaterialMapping : public IAlgorithm {
   ///
   /// @param cfg The configuration struct carrying the used tools
   /// @param level The output logging level
-  explicit MaterialMapping(const Config& cfg,
-                           Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit MaterialMapping(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method
   ///

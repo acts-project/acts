@@ -21,8 +21,10 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-ProtoTracksToParameters::ProtoTracksToParameters(Config cfg, Logging::Level lvl)
-    : IAlgorithm("ProtoTracksToParameters", lvl), m_cfg(std::move(cfg)) {
+ProtoTracksToParameters::ProtoTracksToParameters(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("ProtoTracksToParameters", std::move(logger)),
+      m_cfg(std::move(cfg)) {
   m_outputSeeds.initialize(m_cfg.outputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
@@ -87,10 +89,10 @@ ProcessCode ProtoTracksToParameters::execute(
     ACTS_VERBOSE("Try to get seed from proto track with " << track.size()
                                                           << " hits");
     // Make proto track unique with respect to volume and layer so we don't get
-    // a seed where we have two spacepoints on the same layer
+    // a seed where we have two space points on the same layer
 
     // Here, we want to create a seed only if the proto track with removed
-    // unique layer-volume spacepoints has 3 or more hits. However, if this is
+    // unique layer-volume space points has 3 or more hits. However, if this is
     // the case, we want to keep the whole proto track. Therefore, we operate on
     // a tmpTrack.
     std::ranges::sort(track, {}, [&](const auto &t) {
