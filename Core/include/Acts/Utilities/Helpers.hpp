@@ -231,6 +231,7 @@ bool rangeContainsValue(const R& range, const T& value) {
 ///
 /// @tparam R The type of the range (e.g., vector<string>, list<string>, array<string>).
 /// @param range The range to search within.
+/// @param value The string in which we search for substrings from the range
 ///
 /// @return `true` if a such a string in range is found, `false` otherwise.
 template <typename R>
