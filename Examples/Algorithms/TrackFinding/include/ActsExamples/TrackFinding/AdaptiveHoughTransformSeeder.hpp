@@ -13,12 +13,10 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -28,10 +26,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class TrackingGeometry;
-}
 
 namespace ActsExamples {
 
@@ -181,18 +175,9 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
-    ///
-    /// We allow multiple space point collections to allow different parts of
-    /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
-    /// space points for strip-like detectors.
-    /// Note that we don't *need* space points (measurements can be used
-    /// instead)
-    std::vector<std::string> inputSpacePoints;
+    std::string inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
-    /// Output hough track collection.
-    std::string outputProtoTracks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     float phiWrap =
@@ -233,14 +218,14 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     /// @param inverseR inverse of radius of the SP
     /// @param phiAngle azimuthal angle of the SP
     /// @param zpos z position of the SP
-    /// @param l link to space point
+    /// @param spacePointIndex index of the original space point, needed to construct seeds in the end
     PreprocessedMeasurement(double inverseR, double phiAngle, double zpos,
-                            Acts::SourceLink l)
-        : invr(inverseR), phi(phiAngle), z(zpos), link(std::move(l)) {}
-    double invr;
-    double phi;
-    double z;
-    Acts::SourceLink link;
+                            SpacePointIndex spacePointIndex)
+        : invr(inverseR), phi(phiAngle), z(zpos), sp(spacePointIndex) {}
+    double invr{};
+    double phi{};
+    double z{};
+    SpacePointIndex sp{};
   };
 
   template <typename measurement_t = PreprocessedMeasurement>
@@ -376,21 +361,16 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
 
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
 
-  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
-      m_inputSpacePoints{};
-
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// @brief fill vector pf measurements from input space points
   /// @param measurements - vector to fill
   void preparePreprocessedMeasurements(
-      const AlgorithmContext &ctx,
+      const SpacePointContainer &spacePoints,
       std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief split the measurements into sections in phi
@@ -435,7 +415,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the input to be translated
   /// @param measurements are input measurements
   void makeSeeds(
-      SimSeedContainer &seeds, const std::vector<AccumulatorSection> &solutions,
+      SeedContainer &seeds, const std::vector<AccumulatorSection> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   using LineParamFunctor =

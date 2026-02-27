@@ -24,7 +24,7 @@ SeedsToProtoTracks::SeedsToProtoTracks(
 }
 
 ProcessCode SeedsToProtoTracks::execute(const AlgorithmContext& ctx) const {
-  const auto seeds = m_inputSeeds(ctx);
+  const SeedContainer& seeds = m_inputSeeds(ctx);
 
   ProtoTrackContainer tracks;
   tracks.reserve(seeds.size());
@@ -36,4 +36,5 @@ ProcessCode SeedsToProtoTracks::execute(const AlgorithmContext& ctx) const {
 
   return ProcessCode::SUCCESS;
 }
+
 }  // namespace ActsExamples
