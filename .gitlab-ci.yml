@@ -58,10 +58,8 @@ build_gnn_cpu:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
-
+    - CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
     - cd ..
     - mkdir build
     # Here we only do a minimal build without examples to save resources
@@ -103,9 +101,8 @@ build_gnn:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
+    - CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
     - cd ..
     - mkdir build
     - >
@@ -135,9 +132,8 @@ test_gnn_unittests:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
+    - CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
     - cd ..
     - ctest --test-dir build -R "(Gnn|ConnectedComponentsCuda|JunctionRemoval|Tensor)"
 
@@ -161,9 +157,8 @@ test_gnn_python:
     - cd src
     - git checkout $HEAD_SHA
     - nvidia-smi
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
+    - CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
     - CI/dependencies/download_models.sh
     - ls ${MODEL_STORAGE}
     - apt-get install tree
@@ -172,8 +167,8 @@ test_gnn_python:
     - python3 -m pip install -r Python/Examples/tests/requirements.txt
     # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
     - python3 -c "from acts.examples.gnn import ModuleMapCuda"
-    - pytest -rfExw -k torch -v --collect-only
-    - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
+    - pytest -rsfExw -k torch -v --collect-only
+    - pytest -rsFExw -k gpu -v # For now only test torch GPU pipeline
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -190,9 +185,8 @@ build_gnn_tensorrt:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env
-      source .env
+    - CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
     - cd ..
     - mkdir build
     - >
@@ -227,11 +221,10 @@ build_linux_ubuntu:
     - cd src
     - git checkout $HEAD_SHA
 
-    - cd ..
+    - CI/dependencies/setup.sh -c g++ -e .env
+    - source .env
 
-    - |
-      src/CI/dependencies/setup.sh -c g++ -e .env
-      source .env
+    - cd ..
 
     - mkdir build
     - >
@@ -280,14 +273,13 @@ linux_test_examples:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env -f
-      source .env
+    - CI/dependencies/setup.sh -c g++ -e .env -f
+    - source .env
     - cd ..
 
     - source build/this_acts_withdeps.sh
     - cd src
-    - pytest -rfExw -k "not gnn" -v
+    - pytest -rsfExw --durations=10 -k "not gnn" -v
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -312,9 +304,8 @@ linux_physmon:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c g++ -e .env -f
-      source .env
+    - CI/dependencies/setup.sh -c g++ -e .env -f
+    - source .env
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
@@ -344,9 +335,8 @@ linux_physmon:
 
     - cd src
     - git checkout $HEAD_SHA
-    - |
-      CI/dependencies/setup.sh -c ${CXX} -e .env
-      source .env
+    - CI/dependencies/setup.sh -c ${CXX} -e .env
+    - source .env
 
     - cd ..
     - mkdir build
@@ -458,19 +448,7 @@ linux_ubuntu_2404_clang19:
     - source build/this_acts_withdeps.sh
     - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
     - cd src
-    - pytest -rfExw -k "not gnn" -v -n1
-
-lcg_106a:
-  extends: .lcg_base_job
-
-  variables:
-    LCG_VERSION: "106a"
-
-  parallel:
-    matrix:
-      - OS: [alma9]
-        COMPILER:
-          - clang16
+    - pytest -rsfExw --durations=10 -k "not gnn" -v -n1
 
 lcg_107:
   extends: .lcg_base_job
@@ -483,6 +461,7 @@ lcg_107:
       - OS: [alma9]
         COMPILER:
           - gcc13
+          - clang16
 
 lcg_107a:
   extends: .lcg_base_job
@@ -501,6 +480,18 @@ lcg_108:
 
   variables:
     LCG_VERSION: "108"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc15
+
+lcg_109:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "109"
 
   parallel:
     matrix:

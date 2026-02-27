@@ -16,8 +16,9 @@
 
 namespace ActsExamples {
 
-TrackModifier::TrackModifier(const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("TrackModifier", level), m_cfg(config) {
+TrackModifier::TrackModifier(const Config& config,
+                             std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackModifier", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks");
   }

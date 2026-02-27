@@ -10,13 +10,14 @@
 
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 using namespace Acts;
 
 namespace ActsExamples {
 
 std::vector<float> createFeatures(
-    const SimSpacePointContainer& spacePoints, const ClusterContainer* clusters,
+    const ConstSpacePointSubset& spacePoints, const ClusterContainer* clusters,
     const std::vector<TrackFindingAlgorithmGnn::NodeFeature>& nodeFeatures,
     const std::vector<float>& featureScales) {
   using namespace ActsExamples;

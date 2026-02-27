@@ -12,17 +12,19 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 #include <numbers>
 
 #include <edm4hep/EDM4hepVersion.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
+#include <edm4hep/MutableVertex.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/Vector3f.h>
+#include <edm4hep/Vector4f.h>
 
 using namespace Acts;
 using namespace Acts::detail;
@@ -103,7 +105,7 @@ void packCovariance(const SquareMatrix<6>& from, float* to) {
   for (int i = 0; i < from.rows(); i++) {
     for (int j = 0; j <= i; j++) {
       std::size_t k = (i + 1) * i / 2 + j;
-      to[k] = from(i, j);
+      to[k] = static_cast<float>(from(i, j));
     }
   }
 }
@@ -236,6 +238,204 @@ edm4hep::SimTrackerHit SimHitAssociation::lookup(
 
 std::size_t SimHitAssociation::lookup(const edm4hep::SimTrackerHit& hit) const {
   return m_edm4hepToInternal.at(hit.id());
+}
+
+void writeVertex(const Vertex& vertex, edm4hep::MutableVertex to) {
+  static constexpr std::array<edm4hep::FourMomCoords, 4> toEdm4hep = []() {
+    std::array<edm4hep::FourMomCoords, 4> values{};
+    using enum edm4hep::FourMomCoords;
+    values.at(eFreePos0) = x;
+    values.at(eFreePos1) = y;
+    values.at(eFreePos2) = z;
+    values.at(eFreeTime) = t;
+    return values;
+  }();
+
+  // Wrap this in a templated lambda so we can use `if constexpr` to select the
+  // correct write function based on the type of the properties of the `to`
+  // object.
+  auto writeVertex = []<typename T>(const Vertex& vertex_, T& to_)
+    requires(std::is_same_v<T, edm4hep::MutableVertex>)
+  {
+    if constexpr (detail::kEdm4hepVertexHasTime) {
+      Vector4 pos = vertex_.fullPosition();
+      to_.setPosition({static_cast<float>(pos[eFreePos0]),
+                       static_cast<float>(pos[eFreePos1]),
+                       static_cast<float>(pos[eFreePos2]),
+                       static_cast<float>(pos[eFreeTime])});
+
+      edm4hep::CovMatrix4f& cov = to_.getCovMatrix();
+      std::array coords{eFreePos0, eFreePos1, eFreePos2, eFreeTime};
+      for (auto i : coords) {
+        for (auto j : coords) {
+          cov.setValue(static_cast<float>(vertex_.fullCovariance()(i, j)),
+                       toEdm4hep.at(i), toEdm4hep.at(j));
+        }
+      }
+    } else {
+      Vector3 pos = vertex_.position();
+      to_.setPosition({static_cast<float>(pos[eFreePos0]),
+                       static_cast<float>(pos[eFreePos1]),
+                       static_cast<float>(pos[eFreePos2])});
+      edm4hep::CovMatrix3f& cov = to_.getCovMatrix();
+      std::array coords{eFreePos0, eFreePos1, eFreePos2};
+      for (auto i : coords) {
+        for (auto j : coords) {
+          cov.setValue(static_cast<float>(vertex_.covariance()(i, j)),
+                       toEdm4hep.at(i), toEdm4hep.at(j));
+        }
+      }
+    }
+
+    to_.setChi2(static_cast<float>(vertex_.fitQuality().first));
+    to_.setNdf(static_cast<int>(vertex_.fitQuality().second));
+  };
+
+  writeVertex(vertex, to);
+}
+
+namespace detail {
+/// Encode a list of bound parameter indices into a 32-bit integer.
+///
+/// This function bit-packs up to 6 parameter indices (each 0-5 corresponding to
+/// eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundTheta, eBoundQOverP, eBoundTime)
+/// into a single 32-bit unsigned integer for storage in EDM4hep format.
+///
+/// Bit layout:
+///   - Bits 0-3:   Number of indices (size)
+///   - Bits 4-7:   First index
+///   - Bits 8-11:  Second index
+///   - Bits 12-15: Third index
+///   - (and so on, up to 6 indices total)
+///
+/// @param indices Span of parameter indices to encode (max 6 elements)
+/// @return Packed 32-bit unsigned integer containing all indices
+std::uint32_t encodeIndices(std::span<const std::uint8_t> indices) {
+  if (indices.size() > eBoundSize) {
+    throw std::runtime_error(
+        "Number of indices exceeds maximum of 6 for EDM4hep");
+  }
+  std::uint32_t result = 0;
+
+  std::uint8_t shift = 0;
+  result |= (indices.size() << 0);
+  shift += 4;
+
+  for (std::uint8_t index : indices) {
+    if (index > eBoundSize) {
+      throw std::runtime_error(
+          "Index out of range: can only encode indices up to 4 bits (0-15)");
+    }
+    result |= (static_cast<std::uint32_t>(index) << shift);
+    shift += 4;
+  }
+  return result;
+}
+
+/// Decode a 32-bit integer back into a list of bound parameter indices.
+///
+/// This function unpacks a bit-packed integer (created by encodeIndices) back
+/// into the original list of parameter indices. See encodeIndices for the bit
+/// layout specification.
+///
+/// @param type Packed 32-bit unsigned integer containing encoded indices
+/// @return Vector of decoded parameter indices (0-5 for each bound parameter)
+boost::container::static_vector<SubspaceIndex, eBoundSize> decodeIndices(
+    std::uint32_t type) {
+  boost::container::static_vector<SubspaceIndex, eBoundSize> result;
+  std::uint8_t size = type & 0xF;
+  if (size > eBoundSize) {
+    throw std::runtime_error(
+        "Number of indices exceeds maximum of 6 for EDM4hep");
+  }
+  result.resize(size);
+  for (std::size_t i = 0; i < result.size(); ++i) {
+    result[i] = (type >> ((i + 1) * 4)) & 0xF;
+    if (result[i] > eBoundSize) {
+      throw std::runtime_error(
+          "Index out of range: can only encode indices up to 4 bits (0-15)");
+    }
+  }
+  return result;
+}
+}  // namespace detail
+
+void writeMeasurement(const GeometryContext& gctx,
+                      const Eigen::Map<const DynamicVector>& parameters,
+                      const Eigen::Map<const DynamicMatrix>& covariance,
+                      std::span<const std::uint8_t> indices,
+                      std::uint64_t cellId, const Acts::Surface& surface,
+                      ActsPodioEdm::MutableTrackerHitLocal& to) {
+  if (parameters.size() != covariance.rows() ||
+      covariance.rows() != covariance.cols() || parameters.size() < 0 ||
+      indices.size() != static_cast<std::size_t>(parameters.size())) {
+    throw std::runtime_error(
+        "Size mismatch between parameters and covariance matrix");
+  }
+
+  auto dim = static_cast<std::size_t>(parameters.size());
+
+  if (cellId != 0) {
+    to.setCellID(cellId);
+  }
+
+  to.setType(detail::encodeIndices(indices));
+
+  auto loc0 = std::ranges::find(indices, eBoundLoc0);
+  auto loc1 = std::ranges::find(indices, eBoundLoc1);
+  auto time = std::ranges::find(indices, eBoundTime);
+
+  if (loc0 != indices.end() && loc1 != indices.end()) {
+    Vector2 loc{parameters[std::distance(indices.begin(), loc0)],
+                parameters[std::distance(indices.begin(), loc1)]};
+    Vector3 global = surface.localToGlobal(gctx, loc, Vector3::UnitZ());
+    global /= Acts::UnitConstants::mm;
+    to.setPosition({global.x(), global.y(), global.z()});
+  }
+
+  if (time != indices.end()) {
+    std::size_t timeOffset = std::distance(indices.begin(), time);
+    to.setTime(
+        static_cast<float>(parameters[timeOffset] / Acts::UnitConstants::ns));
+  }
+
+  for (double value : std::span{parameters.data(), dim}) {
+    to.addToMeasurement(static_cast<float>(value));
+  }
+
+  for (double value : std::span{covariance.data(), dim * dim}) {
+    to.addToCovariance(static_cast<float>(value));
+  }
+}
+
+MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from) {
+  auto indices = detail::decodeIndices(from.getType());
+  auto meas = from.getMeasurement();
+  auto cov = from.getCovariance();
+
+  const auto dim = indices.size();
+  if (meas.size() != dim || cov.size() != dim * dim) {
+    throw std::runtime_error(
+        std::format("Size mismatch in EDM4hep tracker hit: measurement size "
+                    "{}, covariance size {}, indices size {}",
+                    meas.size(), cov.size(), dim));
+  }
+
+  MeasurementData result;
+  result.cellId = from.getCellID();
+  result.indices = std::move(indices);
+
+  for (std::size_t i = 0; i < dim; ++i) {
+    result.parameters(result.indices[i]) = meas[i];
+  }
+  for (std::size_t i = 0; i < dim; ++i) {
+    for (std::size_t j = 0; j < dim; ++j) {
+      result.covariance(result.indices[i], result.indices[j]) =
+          cov[i * dim + j];  // row-major
+    }
+  }
+
+  return result;
 }
 
 }  // namespace ActsPlugins::EDM4hepUtil

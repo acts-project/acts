@@ -8,12 +8,13 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 
 namespace ActsExamples {
 
 std::vector<float> createFeatures(
-    const SimSpacePointContainer &spacePoints, const ClusterContainer *clusters,
+    const ConstSpacePointSubset &spacePoints, const ClusterContainer *clusters,
     const std::vector<TrackFindingAlgorithmGnn::NodeFeature> &nodeFeatures,
     const std::vector<float> &featureScales);
 
