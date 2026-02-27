@@ -578,6 +578,7 @@ def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
         converter = EDM4hepMeasurementOutputConverter(
             level=acts.logging.INFO,
             inputMeasurements=digiAlg.config.outputMeasurements,
+            outputTrackerHitsLocal="ActsTrackerHitsLocal",
             trackingGeometry=trackingGeometry,
         )
         s.addAlgorithm(converter)
@@ -606,6 +607,7 @@ def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
             EDM4hepMeasurementInputConverter(
                 level=acts.logging.WARNING,
                 inputFrame="events",
+                inputTrackerHitsLocal="ActsTrackerHitsLocal",
                 outputMeasurements="measurements",
                 outputMeasurementSimHitsMap="simhitsmap",
                 dd4hepDetector=detector,

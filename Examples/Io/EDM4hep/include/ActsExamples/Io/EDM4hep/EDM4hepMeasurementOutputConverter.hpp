@@ -36,7 +36,7 @@ class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
     /// Which measurement collection to write.
     std::string inputMeasurements;
     /// Name of the output tracker hit raw collection.
-    std::string outputTrackerHitsLocal = "ActsTrackerHitsLocal";
+    std::string outputTrackerHitsLocal;
 
     /// Tracking geometry for surface lookup (local-to-global transform).
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;

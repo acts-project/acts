@@ -29,7 +29,7 @@ class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
     /// Where to read the input frame from.
     std::string inputFrame;
     /// Name of the input tracker hit local collection.
-    std::string inputTrackerHitsLocal = "ActsTrackerHitsLocal";
+    std::string inputTrackerHitsLocal;
     /// Output measurement collection.
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.

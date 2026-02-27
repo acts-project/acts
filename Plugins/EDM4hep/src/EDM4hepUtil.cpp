@@ -413,7 +413,7 @@ MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from) {
   auto meas = from.getMeasurement();
   auto cov = from.getCovariance();
 
-  const auto dim = static_cast<std::size_t>(indices.size());
+  const auto dim = indices.size();
   if (meas.size() != dim || cov.size() != dim * dim) {
     throw std::runtime_error(
         std::format("Size mismatch in EDM4hep tracker hit: measurement size "
