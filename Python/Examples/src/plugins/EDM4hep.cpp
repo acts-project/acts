@@ -18,7 +18,6 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/PodioTrackOutputConverter.hpp"
-#include "ActsExamples/Io/Podio/PodioMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 #include "ActsExamples/Io/Podio/PodioWriter.hpp"
@@ -53,17 +52,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
 
   py::class_<PodioInputConverter, IAlgorithm,
              std::shared_ptr<PodioInputConverter>>(m, "PodioInputConverter");
-
-  {
-    auto [alg, config] =
-        declareAlgorithm<PodioMeasurementInputConverter, PodioInputConverter>(
-            m, "PodioMeasurementInputConverter");
-    ACTS_PYTHON_STRUCT(
-        config, inputMeasurements, inputFrame, outputMeasurements,
-        outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
-        outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
-        inputSimHits, inputSimHitAssociation);
-  }
 
   {
     auto [alg, config] =
@@ -116,7 +104,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
                                           PodioOutputConverter>(
         m, "EDM4hepMeasurementOutputConverter");
     ACTS_PYTHON_STRUCT(config, inputMeasurements, outputTrackerHitsLocal,
-                       trackingGeometry);
+                       trackingGeometry, inputSimHitAssociation,
+                       inputMeasurementSimHitsMap, outputSimHitLinks);
   }
 
   {
@@ -145,7 +134,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
     auto [alg, config] =
         declareAlgorithm<PodioTrackOutputConverter, PodioOutputConverter>(
             m, "PodioTrackOutputConverter");
-    ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks, inputMeasurements,
+    ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks, inputTrackerHitsLocal,
                        detector);
   }
 }

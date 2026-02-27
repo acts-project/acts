@@ -11,7 +11,6 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "ActsExamples/Io/EDM4hep/DD4hepPodioConversionHelper.hpp"
-#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsPlugins/EDM4hep/PodioTrackContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioTrackStateContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioUtil.hpp"
@@ -20,7 +19,6 @@
 #include "ActsPodioEdm/TrackCollection.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
 #include "ActsPodioEdm/TrackStateHitLinkCollection.h"
-#include "ActsPodioEdm/TrackerHitLocalCollection.h"
 
 #include <stdexcept>
 
@@ -36,11 +34,12 @@ PodioTrackOutputConverter::PodioTrackOutputConverter(
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing output tracks collection");
   }
-
+  if (m_cfg.inputTrackerHitsLocal.empty()) {
+    throw std::invalid_argument("Missing input tracker hits local collection");
+  }
   if (m_cfg.detector == nullptr) {
     throw std::invalid_argument("Missing detector");
   }
-
   if (m_cfg.detector->trackingGeometry() == nullptr) {
     throw std::invalid_argument("Tracking geometry not found");
   }
@@ -48,43 +47,28 @@ PodioTrackOutputConverter::PodioTrackOutputConverter(
   const auto prefix = m_cfg.outputTracks;
 
   m_inputTracks.initialize(m_cfg.inputTracks);
+  m_inputTrackerHitsLocal.initialize(m_cfg.inputTrackerHitsLocal);
   m_outputTracks.initialize(prefix);
   m_outputTrackStates.initialize(
       ActsPlugins::PodioTrackStateContainerBase::trackStatesKey(prefix));
-  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_outputMeasurements.initialize(
-      ActsPlugins::PodioTrackStateContainerBase::trackerHitsKey(prefix));
   m_outputTrackStateHitLinks.initialize(
       ActsPlugins::PodioTrackStateContainerBase::trackStateHitLinksKey(prefix));
 }
 
 ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
     const AlgorithmContext& context) const {
-  // Read input tracks
   const auto& inputTracks = m_inputTracks(context);
 
   ACTS_VERBOSE("Converting " << inputTracks.size()
                              << " tracks to Podio format");
 
-  const auto& inputMeasurements = m_inputMeasurements(context);
-
-  auto outputMeasurements =
-      std::make_unique<ActsPodioEdm::TrackerHitLocalCollection>();
-
-  ACTS_VERBOSE("Writing " << inputMeasurements.size()
-                          << " measurements to PODIO format");
-  for (const auto& meas : inputMeasurements) {
-    ActsPodioEdm::MutableTrackerHitLocal to = outputMeasurements->create();
-    writeMeasurement(context.geoContext, meas, to);
-  }
+  const auto& trackerHitsLocal = m_inputTrackerHitsLocal(context);
 
   auto trackStateHitLinks =
       std::make_unique<ActsPodioEdm::TrackStateHitLinkCollection>();
 
-  DD4hepPodioConversionHelper helper(*m_cfg.detector, *outputMeasurements);
+  DD4hepPodioConversionHelper helper(*m_cfg.detector, trackerHitsLocal);
 
-  // Create external Podio collections that we'll own and write to the event
-  // store
   auto trackCollection = std::make_unique<ActsPodioEdm::TrackCollection>();
   auto trackStateCollection =
       std::make_unique<ActsPodioEdm::TrackStateCollection>();
@@ -92,20 +76,16 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
       std::make_unique<ActsPodioEdm::BoundParametersCollection>();
   auto jacsCollection = std::make_unique<ActsPodioEdm::JacobianCollection>();
 
-  // Create Podio backends using RefHolder for externally owned collections
   ActsPlugins::MutablePodioTrackStateContainer trackStateContainer(
       helper, *trackStateCollection, *paramsCollection, *jacsCollection,
       trackStateHitLinks.get());
   ActsPlugins::MutablePodioTrackContainer trackContainer(helper,
                                                          *trackCollection);
 
-  // Wrap in Acts TrackContainer
   Acts::TrackContainer outputTracks{trackContainer, trackStateContainer};
 
-  // Used for sanity checking
   std::size_t nUncalibratedSourceLinks = 0;
 
-  // Copy all tracks using the high-level copyFrom API
   for (const auto& inputTrack : inputTracks) {
     for (const auto& ts : inputTrack.trackStatesReversed()) {
       if (ts.hasUncalibratedSourceLink()) {
@@ -114,8 +94,6 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
     }
 
     auto outputTrack = outputTracks.makeTrack();
-
-    // Use copyFrom to handle all track-level and track state copying
     outputTrack.copyFrom(inputTrack);
   }
 
@@ -139,10 +117,8 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
     return ProcessCode::ABORT;
   }
 
-  // Write collections to event store
   m_outputTracks(context, std::move(trackCollection));
   m_outputTrackStates(context, std::move(trackStateCollection));
-  m_outputMeasurements(context, std::move(outputMeasurements));
   m_outputTrackStateHitLinks(context, std::move(trackStateHitLinks));
 
   return ProcessCode::SUCCESS;
@@ -153,53 +129,8 @@ std::vector<std::string> PodioTrackOutputConverter::collections() const {
   return {
       prefix,
       ActsPlugins::PodioTrackStateContainerBase::trackStatesKey(prefix),
-      ActsPlugins::PodioTrackStateContainerBase::trackerHitsKey(prefix),
       ActsPlugins::PodioTrackStateContainerBase::trackStateHitLinksKey(prefix),
   };
-}
-
-void PodioTrackOutputConverter::writeMeasurement(
-    const Acts::GeometryContext& gctx,
-    const ConstVariableBoundMeasurementProxy& meas,
-    ActsPodioEdm::MutableTrackerHitLocal& to) const {
-  const auto* surface = surfaceByIdentifier(meas.geometryId());
-  if (surface == nullptr) {
-    std::stringstream ss;
-    ss << "Surface not found for geometry ID " << meas.geometryId();
-    throw std::runtime_error(ss.str());
-  }
-  const auto cellId = cellIdFromSurface(*surface);
-
-  ActsPlugins::EDM4hepUtil::writeMeasurement(
-      gctx, meas.parameters(), meas.covariance(),
-      meas.subspaceHelper().indices(), cellId, *surface, to);
-}
-
-const Acts::Surface* PodioTrackOutputConverter::surfaceByIdentifier(
-    Acts::GeometryIdentifier geometryId) const {
-  const auto surface =
-      m_cfg.detector->trackingGeometry()->findSurface(geometryId);
-  if (surface == nullptr) {
-    std::stringstream ss;
-    ss << "Surface not found for geometry ID " << geometryId;
-    throw std::runtime_error(ss.str());
-  }
-  return surface;
-}
-
-dd4hep::CellID PodioTrackOutputConverter::cellIdFromSurface(
-    const Acts::Surface& surface) {
-  const auto* placement = surface.surfacePlacement();
-  if (placement == nullptr) {
-    throw std::runtime_error("Surface placement not found");
-  }
-  const auto* dd4hepDetectorElement =
-      dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(placement);
-  if (dd4hepDetectorElement == nullptr) {
-    throw std::runtime_error(
-        "Surface placement is not a DD4hepDetectorElement");
-  }
-  return dd4hepDetectorElement->sourceElement().volumeID();
 }
 
 }  // namespace ActsExamples

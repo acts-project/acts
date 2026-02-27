@@ -703,6 +703,7 @@ def test_edm4hep_tracks_reader(tmp_path):
 @pytest.mark.slow
 def test_edm4hep_podio_track_output_converter(tmp_path):
     from acts.examples.edm4hep import (
+        EDM4hepMeasurementOutputConverter,
         PodioTrackOutputConverter,
         PodioWriter,
     )
@@ -728,12 +729,23 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
 
         out = tmp_path / "podio_tracks.root"
 
-        # Create converter
+        # The TrackerHitLocal key must match what ConstPodioTrackStateContainer
+        # looks for: outputTracks + "_trackerHits"
+        hits_key = "ActsPodioTracks_trackerHits"
+
+        measConverter = EDM4hepMeasurementOutputConverter(
+            level=acts.logging.VERBOSE,
+            inputMeasurements="measurements",
+            outputTrackerHitsLocal=hits_key,
+            trackingGeometry=trackingGeometry,
+        )
+        s.addAlgorithm(measConverter)
+
         converter = PodioTrackOutputConverter(
             level=acts.logging.VERBOSE,
             inputTracks="kf_tracks",
             outputTracks="ActsPodioTracks",
-            inputMeasurements="measurements",
+            inputTrackerHitsLocal=hits_key,
             detector=detector,
         )
         s.addAlgorithm(converter)
@@ -743,7 +755,7 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
                 level=acts.logging.VERBOSE,
                 outputPath=out,
                 category="events",
-                collections=converter.collections,
+                collections=measConverter.collections + converter.collections,
             )
         )
 

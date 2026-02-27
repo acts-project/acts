@@ -10,14 +10,11 @@
 
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 #include <ActsPodioEdm/TrackerHitLocalCollection.h>
+#include <ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h>
 
 #include <stdexcept>
-
-#include <edm4hep/TrackerHitPlane.h>
-#include <edm4hep/TrackerHitPlaneCollection.h>
-#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -32,18 +29,32 @@ EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
         "EDM4hepMeasurementOutputConverter: trackingGeometry is null");
   }
 
+  const bool hasAssoc = m_cfg.inputSimHitAssociation.has_value();
+  const bool hasMap = m_cfg.inputMeasurementSimHitsMap.has_value();
+  const bool hasLinks = m_cfg.outputSimHitLinks.has_value();
+  if (hasAssoc != hasMap || hasMap != hasLinks) {
+    throw std::invalid_argument(
+        "EDM4hepMeasurementOutputConverter: inputSimHitAssociation, "
+        "inputMeasurementSimHitsMap, and outputSimHitLinks must all be set or "
+        "all be unset");
+  }
+
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputTrackerHitsLocal.initialize(m_cfg.outputTrackerHitsLocal);
+  m_inputSimHitAssociation.maybeInitialize(m_cfg.inputSimHitAssociation);
+  m_inputMeasurementSimHitsMap.maybeInitialize(
+      m_cfg.inputMeasurementSimHitsMap);
+  m_outputSimHitLinks.maybeInitialize(m_cfg.outputSimHitLinks);
 }
 
 ProcessCode EDM4hepMeasurementOutputConverter::execute(
     const AlgorithmContext& ctx) const {
-  ActsPodioEdm::TrackerHitLocalCollection hits;
-
-  const auto measurements = m_inputMeasurements(ctx);
+  const auto& measurements = m_inputMeasurements(ctx);
 
   ACTS_VERBOSE("Writing " << measurements.size()
                           << " measurements in this event.");
+
+  auto hits = std::make_unique<ActsPodioEdm::TrackerHitLocalCollection>();
 
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     ConstVariableBoundMeasurementProxy from =
@@ -58,8 +69,28 @@ ProcessCode EDM4hepMeasurementOutputConverter::execute(
           std::to_string(from.geometryId().value()));
     }
 
-    auto to = hits.create();
+    auto to = hits->create();
     EDM4hepUtil::writeMeasurement(ctx.geoContext, from, to, *surface);
+  }
+
+  if (m_outputSimHitLinks.isInitialized()) {
+    const auto& simHitAssociation = m_inputSimHitAssociation(ctx);
+    const auto& measToSimHits = m_inputMeasurementSimHitsMap(ctx);
+
+    ActsPlugins::EDM4hepUtil::SimHitForHitIndex lookup =
+        [&measToSimHits,
+         &simHitAssociation](std::size_t i) -> std::optional<edm4hep::SimTrackerHit> {
+      auto it = measToSimHits.find(static_cast<Index>(i));
+      if (it == measToSimHits.end()) {
+        return std::nullopt;
+      }
+      return simHitAssociation.lookup(it->second);
+    };
+
+    auto links = std::make_unique<
+        ActsPodioEdm::TrackerHitLocalSimTrackerHitLinkCollection>();
+    ActsPlugins::EDM4hepUtil::writeTrackerHitSimHitLinks(*hits, *links, lookup);
+    m_outputSimHitLinks(ctx, std::move(links));
   }
 
   m_outputTrackerHitsLocal(ctx, std::move(hits));
@@ -69,7 +100,11 @@ ProcessCode EDM4hepMeasurementOutputConverter::execute(
 
 std::vector<std::string> EDM4hepMeasurementOutputConverter::collections()
     const {
-  return {m_cfg.outputTrackerHitsLocal};
+  std::vector<std::string> result = {m_cfg.outputTrackerHitsLocal};
+  if (m_cfg.outputSimHitLinks.has_value()) {
+    result.push_back(m_cfg.outputSimHitLinks.value());
+  }
+  return result;
 }
 
 }  // namespace ActsExamples
