@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -32,7 +32,8 @@ void CollectionBaseWriteHandle::store(
   add(wb, std::move(collection));
 }
 
-bool CollectionBaseWriteHandle::isCompatible(const DataHandleBase& other) const {
+bool CollectionBaseWriteHandle::isCompatible(
+    const DataHandleBase& other) const {
   const auto baseCollectionHash =
       Acts::typeHash<std::unique_ptr<podio::CollectionBase>>();
   if (other.typeHash() == baseCollectionHash) {
@@ -40,7 +41,7 @@ bool CollectionBaseWriteHandle::isCompatible(const DataHandleBase& other) const 
   }
 
   const auto* typedReadHandle =
-      dynamic_cast<const detail::CollectionBaseTypedReadHandle*>(&other);
+      dynamic_cast<const detail::PodioCollectionTypedReadHandle*>(&other);
   return typedReadHandle != nullptr &&
          typedReadHandle->collectionTypeHash() == m_declaredTypeHash;
 }

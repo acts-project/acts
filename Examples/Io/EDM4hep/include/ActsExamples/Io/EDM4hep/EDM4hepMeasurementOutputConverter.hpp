@@ -11,10 +11,15 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
 #include <string>
+
+namespace edm4hep {
+class TrackerHitPlaneCollection;
+class TrackerHit3DCollection;
+}  // namespace edm4hep
 
 namespace ActsExamples {
 
@@ -66,10 +71,10 @@ class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
 
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
-  CollectionBaseWriteHandle m_outputTrackerHitsPlane{this,
-                                                     "OutputTrackerHitsPlane"};
-  CollectionBaseWriteHandle m_outputTrackerHitsRaw{this,
-                                                   "OutputTrackerHitsRaw"};
+  PodioCollectionWriteHandle<edm4hep::TrackerHitPlaneCollection>
+      m_outputTrackerHitsPlane{this, "OutputTrackerHitsPlane"};
+  PodioCollectionWriteHandle<edm4hep::TrackerHit3DCollection>
+      m_outputTrackerHitsRaw{this, "OutputTrackerHitsRaw"};
 };
 
 }  // namespace ActsExamples
