@@ -54,7 +54,7 @@ set(ACTS_NLOHMANNJSON_SOURCE
 )
 
 # translate version string to the historical Mille release naming convention
-string (REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
+string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
     "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=ae4bf37de8d835aa8adc2960bb795a2080233a4c8af3d4b55adf395e20df0f3e"
     CACHE STRING
