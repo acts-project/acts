@@ -26,6 +26,13 @@ namespace ActsExamples {
 class RootMeasurementPerformanceWriter final
     : public WriterT<MeasurementContainer> {
  public:
+  enum class MeasurementClassification {
+    Unknown = 0,
+    Matched,
+    Merged,
+    Fake,
+  };
+
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
@@ -44,6 +51,9 @@ class RootMeasurementPerformanceWriter final
     std::string fileMode = "RECREATE";
     /// The tree name
     std::string treeName = "measurements";
+
+    /// Matching ratio threshold for measurement to particle matching
+    double matchingRatio = 0.5;
 
     Acts::Experimental::AxisVariant countAxis =
         Acts::Experimental::BoostRegularAxis{10, 0, 10, "Count"};
@@ -101,14 +111,16 @@ class RootMeasurementPerformanceWriter final
   /// the output file
   TFile* m_outputFile = nullptr;
 
-  std::optional<Acts::Experimental::Histogram1> m_nContributingSimHits;
-  std::optional<Acts::Experimental::Histogram1> m_nContributingParticles;
-  std::optional<Acts::Experimental::Histogram1> m_purity;
+  std::optional<Acts::Experimental::Histogram1> m_measurementContributingHits;
+  std::optional<Acts::Experimental::Histogram1>
+      m_measurementContributingParticles;
+  std::optional<Acts::Experimental::Histogram1> m_measurementPurity;
+  std::optional<Acts::Experimental::Histogram1> m_measurementClassification;
 
-  std::optional<Acts::Experimental::Efficiency1> m_effVsZ;
-  std::optional<Acts::Experimental::Efficiency1> m_effVsR;
-  std::optional<Acts::Experimental::Efficiency1> m_effVsEta;
-  std::optional<Acts::Experimental::Efficiency1> m_effVsPhi;
+  std::optional<Acts::Experimental::Efficiency1> m_hitEffVsZ;
+  std::optional<Acts::Experimental::Efficiency1> m_hitEffVsR;
+  std::optional<Acts::Experimental::Efficiency1> m_hitEffVsEta;
+  std::optional<Acts::Experimental::Efficiency1> m_hitEffVsPhi;
 };
 
 }  // namespace ActsExamples

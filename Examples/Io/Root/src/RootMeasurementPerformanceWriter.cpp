@@ -68,23 +68,33 @@ RootMeasurementPerformanceWriter::RootMeasurementPerformanceWriter(
 
   m_outputFile->cd();
 
-  m_nContributingSimHits.emplace("nContributingSimHits",
-                                 "Number of contributing simulated hits",
-                                 std::array{m_cfg.countAxis});
-  m_nContributingParticles.emplace("nContributingParticles",
-                                   "Number of contributing particles",
-                                   std::array{m_cfg.countAxis});
-  m_purity.emplace("purity", "Measurements purity",
-                   std::array{m_cfg.purityAxis});
+  m_measurementContributingHits.emplace(
+      "measurement_n_contributing_hits",
+      "Measurement number of contributing simulated hits",
+      std::array{m_cfg.countAxis});
+  m_measurementContributingParticles.emplace(
+      "measurement_n_contributing_particles",
+      "Measurement number of contributing particles",
+      std::array{m_cfg.countAxis});
+  m_measurementPurity.emplace("measurement_purity", "Measurements purity",
+                              std::array{m_cfg.purityAxis});
+  m_measurementClassification.emplace(
+      "measurement_classification", "Measurement classification",
+      std::array{Acts::Experimental::AxisVariant(
+          Acts::Experimental::BoostRegularAxis{4, 0, 4, "Classification"})});
 
-  m_effVsZ.emplace("efficiency_vs_z", "Measurement efficiency vs z",
-                   std::array{m_cfg.zAxis});
-  m_effVsR.emplace("efficiency_vs_r", "Measurement efficiency vs r",
-                   std::array{m_cfg.rAxis});
-  m_effVsEta.emplace("efficiency_vs_eta", "Measurement efficiency vs eta",
-                     std::array{m_cfg.etaAxis});
-  m_effVsPhi.emplace("efficiency_vs_phi", "Measurement efficiency vs phi",
-                     std::array{m_cfg.phiAxis});
+  m_hitEffVsZ.emplace("hit_efficiency_vs_z",
+                      "Hit to measurement efficiency vs z",
+                      std::array{m_cfg.zAxis});
+  m_hitEffVsR.emplace("hit_efficiency_vs_r",
+                      "Hit to measurement efficiency vs r",
+                      std::array{m_cfg.rAxis});
+  m_hitEffVsEta.emplace("hit_efficiency_vs_eta",
+                        "Hit to measurement efficiency vs eta",
+                        std::array{m_cfg.etaAxis});
+  m_hitEffVsPhi.emplace("hit_efficiency_vs_phi",
+                        "Hit to measurement efficiency vs phi",
+                        std::array{m_cfg.phiAxis});
 }
 
 RootMeasurementPerformanceWriter::~RootMeasurementPerformanceWriter() {
@@ -97,14 +107,15 @@ ProcessCode RootMeasurementPerformanceWriter::finalize() {
   // Close the file if it's yours
   m_outputFile->cd();
 
-  ActsPlugins::toRoot(*m_nContributingSimHits)->Write();
-  ActsPlugins::toRoot(*m_nContributingParticles)->Write();
-  ActsPlugins::toRoot(*m_purity)->Write();
+  ActsPlugins::toRoot(*m_measurementContributingHits)->Write();
+  ActsPlugins::toRoot(*m_measurementContributingParticles)->Write();
+  ActsPlugins::toRoot(*m_measurementPurity)->Write();
+  ActsPlugins::toRoot(*m_measurementClassification)->Write();
 
-  ActsPlugins::toRoot(*m_effVsZ)->Write();
-  ActsPlugins::toRoot(*m_effVsR)->Write();
-  ActsPlugins::toRoot(*m_effVsEta)->Write();
-  ActsPlugins::toRoot(*m_effVsPhi)->Write();
+  ActsPlugins::toRoot(*m_hitEffVsZ)->Write();
+  ActsPlugins::toRoot(*m_hitEffVsR)->Write();
+  ActsPlugins::toRoot(*m_hitEffVsEta)->Write();
+  ActsPlugins::toRoot(*m_hitEffVsPhi)->Write();
 
   m_outputFile->Close();
 
@@ -129,10 +140,20 @@ ProcessCode RootMeasurementPerformanceWriter::writeT(
     const double nContributingSimHits = contributingSimHits.size();
     const double nContributingParticles = contributingParticles.size();
     const double purity = 1.0 / nContributingParticles;
+    const MeasurementClassification classification = [&]() {
+      if (nContributingParticles == 0) {
+        return MeasurementClassification::Fake;
+      } else if (purity > m_cfg.matchingRatio) {
+        return MeasurementClassification::Matched;
+      } else {
+        return MeasurementClassification::Merged;
+      }
+    }();
 
-    m_nContributingSimHits->fill({nContributingSimHits});
-    m_nContributingParticles->fill({nContributingParticles});
-    m_purity->fill({purity});
+    m_measurementContributingHits->fill({nContributingSimHits});
+    m_measurementContributingParticles->fill({nContributingParticles});
+    m_measurementPurity->fill({purity});
+    m_measurementClassification->fill({static_cast<double>(classification)});
   }
 
   for (const auto& simHit : simHits) {
@@ -148,10 +169,10 @@ ProcessCode RootMeasurementPerformanceWriter::writeT(
     const double phi = Acts::VectorHelpers::phi(normalizedPosition);
     const double eta = Acts::VectorHelpers::eta(normalizedPosition);
 
-    m_effVsZ->fill({z}, efficient);
-    m_effVsR->fill({r}, efficient);
-    m_effVsEta->fill({eta}, efficient);
-    m_effVsPhi->fill({phi}, efficient);
+    m_hitEffVsZ->fill({z}, efficient);
+    m_hitEffVsR->fill({r}, efficient);
+    m_hitEffVsEta->fill({eta}, efficient);
+    m_hitEffVsPhi->fill({phi}, efficient);
   }
 
   return ProcessCode::SUCCESS;
