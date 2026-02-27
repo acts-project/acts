@@ -14,6 +14,7 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
@@ -377,9 +378,9 @@ auto Propagator<S, N>::makeResult(
                      << multiBoundState.error().message());
           return multiBoundState.error();
         }
-        const auto boundState =
-            std::get<0>(*multiBoundState).toSingleComponent();
-        result.endParameters = boundState;
+        result.endParameters =
+            std::get<0>(*multiBoundState)
+                .merge(state.stepping.options.componentMergeMethod);
         result.endParametersMultiComponent = std::get<0>(*multiBoundState);
         if (state.stepping.covTransport) {
           result.transportJacobian = std::get<1>(*multiBoundState);
@@ -399,8 +400,9 @@ auto Propagator<S, N>::makeResult(
       } else {
         const auto multiCurvState =
             m_stepper.multiCurvilinearState(state.stepping);
-        const auto curvState = std::get<0>(multiCurvState).toSingleComponent();
-        result.endParameters = curvState;
+        result.endParameters =
+            std::get<0>(multiCurvState)
+                .merge(state.stepping.options.componentMergeMethod);
         result.endParametersMultiComponent = std::get<0>(multiCurvState);
         if (state.stepping.covTransport) {
           result.transportJacobian = std::get<1>(multiCurvState);

@@ -22,6 +22,7 @@
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -185,6 +186,9 @@ class MultiStepperLoop final {
 
   struct Options : public SingleOptions {
     using SingleOptions::SingleOptions;
+
+    ComponentMergeMethod componentMergeMethod =
+        ComponentMergeMethod::eMaxWeight;
   };
 
   /// State container for multi-component stepping.

@@ -23,9 +23,9 @@ void MultiStepperLoop<S, R>::initialize(State& state,
 
   state.components.clear();
   auto& cmp =
-      state.components.emplace_back(SingleStepper::makeState(state.options), 1.,
-                                    IntersectionStatus::onSurface);
-  SingleStepper::initialize(cmp.state, par);
+      state.components.emplace_back(m_singleStepper.makeState(state.options),
+                                    1., IntersectionStatus::onSurface);
+  m_singleStepper.initialize(cmp.state, par);
 
   state.covTransport = par.covariance().has_value();
   state.pathAccumulated = 0;
@@ -51,9 +51,9 @@ void MultiStepperLoop<S, R>::initialize(
   for (auto i = 0ul; i < par.components().size(); ++i) {
     const auto& [weight, singlePars] = par[i];
     auto& cmp =
-        state.components.emplace_back(SingleStepper::makeState(state.options),
+        state.components.emplace_back(m_singleStepper.makeState(state.options),
                                       weight, IntersectionStatus::onSurface);
-    SingleStepper::initialize(cmp.state, singlePars);
+    m_singleStepper.initialize(cmp.state, singlePars);
   }
 
   state.covTransport = std::get<2>(par.components().front()).has_value();
@@ -76,7 +76,8 @@ auto MultiStepperLoop<S, R>::boundState(
     return result.error();
   }
   const auto& [multiBoundParams, jacobian, pathLength] = *result;
-  return BoundState{multiBoundParams.toSingleComponent(), jacobian, pathLength};
+  return BoundState{multiBoundParams.merge(state.options.componentMergeMethod),
+                    jacobian, pathLength};
 }
 
 template <Concepts::SingleStepper S, typename R>
@@ -135,7 +136,8 @@ auto MultiStepperLoop<S, R>::curvilinearState(
     State& state, bool transportCov) const -> BoundState {
   MultiBoundState result = multiCurvilinearState(state, transportCov);
   const auto& [multiBoundParams, jacobian, pathLength] = result;
-  return BoundState{multiBoundParams.toSingleComponent(), jacobian, pathLength};
+  return BoundState{multiBoundParams.merge(state.options.componentMergeMethod),
+                    jacobian, pathLength};
 }
 
 template <Concepts::SingleStepper S, typename R>
