@@ -111,7 +111,7 @@ def test_edm4hep_measurement_writer(tmp_path, ptcl_gun, rng):
         s.addWriter(
             PodioWriter(
                 level=acts.logging.VERBOSE,
-                outputPath=str(out),
+                outputPath=out,
                 category="events",
                 collections=converter.collections,
             )
@@ -150,7 +150,7 @@ def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
     s.addWriter(
         PodioWriter(
             level=acts.logging.INFO,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -183,7 +183,7 @@ def test_edm4hep_particle_writer(tmp_path, ptcl_gun):
     s.addWriter(
         PodioWriter(
             level=acts.logging.INFO,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -220,7 +220,7 @@ def test_edm4hep_particle_writer_separate_files(tmp_path, ptcl_gun):
     s.addWriter(
         PodioWriter(
             level=acts.logging.INFO,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
             separateFilesPerThread=True,
@@ -298,7 +298,7 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
     s.addWriter(
         PodioWriter(
             level=acts.logging.VERBOSE,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -347,7 +347,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     s.addWriter(
         PodioWriter(
             level=acts.logging.VERBOSE,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -435,7 +435,7 @@ def ddsim_input_session(request, tmp_path_factory):
     tmp_dir = tmp_path_factory.getbasetemp().parent
     output_file = Path(tmp_dir) / "output_edm4hep.root"
 
-    with filelock.FileLock(str(output_file) + ".lock"):
+    with filelock.FileLock(output_file.as_posix() + ".lock"):
         odd_xml_file = str(
             getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
         )
@@ -585,7 +585,7 @@ def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
         s.addWriter(
             PodioWriter(
                 level=acts.logging.INFO,
-                outputPath=str(out),
+                outputPath=out,
                 category="events",
                 collections=converter.collections,
             )
@@ -598,7 +598,7 @@ def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
         s.addReader(
             PodioReader(
                 level=acts.logging.WARNING,
-                inputPath=str(out),
+                inputPath=out,
                 outputFrame="events",
                 category="events",
             )
@@ -666,7 +666,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.addWriter(
         PodioWriter(
             level=acts.logging.VERBOSE,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -678,7 +678,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.addReader(
         PodioReader(
             level=acts.logging.VERBOSE,
-            inputPath=str(out),
+            inputPath=out,
             outputFrame="events",
             category="events",
         )
@@ -701,55 +701,6 @@ def test_edm4hep_tracks_reader(tmp_path):
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 @pytest.mark.slow
 def test_edm4hep_podio_track_output_converter(tmp_path):
-    """
-        Test for PodioTrackOutputConverter.
-    <<<<<<<<<<< conflict 1 of 2
-    %%%%%%%%%%% diff from: uqtypuvt 62cdaf8c "change conversion helper interface: sourcelinks not always convertible to identifier" (parents of rebased revision)
-    \\\\\\\\\\\        to: uqtypuvt a287e713 "change conversion helper interface: sourcelinks not always convertible to identifier" (rebase destination)
-    -
-    +
-         Note: This test is a placeholder pending ConversionHelper implementation.
-    -
-    +
-         The algorithm:
-         - Reads ConstTrackContainer from the whiteboard
-         - Creates PodioTrackContainer backends with externally owned collections
-         - Copies all tracks using the copyFrom() API
-         - Writes collections to the event store
-    -
-    +
-         Example usage:
-    -
-    +
-         ```python
-         from acts.examples.edm4hep import PodioTrackOutputConverter, PodioWriter
-    -
-    +
-         # Create conversion helper (detector-specific)
-         helper = MyConversionHelper(trackingGeometry)
-    -
-    +
-         # Configure converter
-         config = acts.examples.PodioTrackOutputConverterConfig()
-         config.inputTracks = "tracks"
-         config.outputTracks = "podio_tracks"
-    -
-    +
-    +++++++++++ tvullrpn bfc050b9 "minimal function converter with indices" (rebased revision)
-
-        This test verifies that ConstTrackContainer can be successfully converted to
-        PodioTrackContainer format and written to a PODIO file. It uses the DD4hep-based
-        ConversionHelper for surface/sourcelink mapping.
-
-        The test:
-        1. Sets up a simple detector and tracking geometry
-        2. Runs truth tracking to generate tracks
-        3. Uses PodioTrackOutputConverter to write tracks in PODIO format
-        4. Verifies the output file is created and contains valid data
-
-        This tests the native ACTS EDM4hep format which preserves all track states
-        and dynamic columns, unlike the standard EDM4hep conversion.
-    """
     from acts.examples.edm4hep import (
         PodioTrackOutputConverter,
         PodioWriter,
@@ -789,7 +740,7 @@ def test_edm4hep_podio_track_output_converter(tmp_path):
         s.addWriter(
             PodioWriter(
                 level=acts.logging.VERBOSE,
-                outputPath=str(out),
+                outputPath=out,
                 category="events",
                 collections=converter.collections,
             )
@@ -874,7 +825,7 @@ def test_edm4hep_writer_copy(ddsim_input, tmp_path):
         PodioWriter(
             level=acts.logging.VERBOSE,
             inputFrame="myframe",
-            outputPath=str(target_file),
+            outputPath=target_file,
             category="myevents",
         )
     )
