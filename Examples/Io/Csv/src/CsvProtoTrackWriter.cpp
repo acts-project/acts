@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -44,14 +43,14 @@ ProcessCode CsvProtoTrackWriter::writeT(const AlgorithmContext& ctx,
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index measurementId : tracks[trackId]) {
-      const auto spr = findSpacePointForIndex(measurementId, spacePoints);
-      if (spr == nullptr) {
+      const std::optional<ConstSpacePointProxy> sp =
+          findSpacePointForIndex(measurementId, spacePoints);
+      if (!sp.has_value()) {
         ACTS_WARNING("Could not convert index " << measurementId
                                                 << " to space point");
         continue;
       }
-      const auto& sp = *spr;
-      writer.append({trackId, measurementId, sp.x(), sp.y(), sp.z()});
+      writer.append({trackId, measurementId, sp->x(), sp->y(), sp->z()});
     }
   }
   return ProcessCode::SUCCESS;

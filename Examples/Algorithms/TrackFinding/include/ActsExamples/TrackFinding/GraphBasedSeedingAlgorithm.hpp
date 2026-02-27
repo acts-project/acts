@@ -15,8 +15,8 @@
 #include "Acts/Seeding2/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
@@ -92,14 +92,14 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   std::map<std::uint32_t, std::uint32_t> m_layerIdMap{};
 
   /// handle that points to the container of input space points
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
 
-  /// handle that points to clusters used by space points
+  // handle that points to the container of input clusters
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   /// handle that points to container of output seeds
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// make the map between ACTS geometry ID's and GBTS geometry ID's
   std::map<ActsIDs, GbtsIDs> makeActsGbtsMap() const;
@@ -107,7 +107,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
   /// make the container that holds space points that have been given
   /// all the variables needed for GBTS algorithm to run
   Acts::SpacePointContainer2 makeSpContainer(
-      const SimSpacePointContainer &spacePoints,
+      const SpacePointContainer &spacePoints,
       std::map<ActsIDs, GbtsIDs> map) const;
 
   /// makes the geometry objects used by GBTS that correspond to the objects in
