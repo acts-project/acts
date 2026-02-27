@@ -108,8 +108,8 @@ auto MultiStepperLoop<S, R>::multiBoundState(
             .closest()
             .position();
 
-    auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
-                                        freeToBoundCorrection);
+    auto bs = m_singleStepper.boundState(cmpState, surface, transportCov,
+                                         freeToBoundCorrection);
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
@@ -148,7 +148,7 @@ auto MultiStepperLoop<S, R>::multiCurvilinearState(
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
-    const auto [cp, jac, pl] = SingleStepper::curvilinearState(
+    const auto [cp, jac, pl] = m_singleStepper.curvilinearState(
         state.components[i].state, transportCov);
 
     cmps.emplace_back(state.components[i].weight,
@@ -240,7 +240,7 @@ Result<double> MultiStepperLoop<S, R>::step(
     }
 
     results.emplace_back(
-        SingleStepper::step(component.state, propDir, material));
+        m_singleStepper.step(component.state, propDir, material));
 
     if (results.back()->ok()) {
       accumulatedPathLength += component.weight * results.back()->value();

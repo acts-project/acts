@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -63,7 +64,12 @@ class PySequenceElement : public SequenceElement {
 
 class PyIAlgorithm : public IAlgorithm {
  public:
-  using IAlgorithm::IAlgorithm;
+  explicit PyIAlgorithm(std::string name,
+                        std::unique_ptr<const Logger> logger = nullptr)
+      : IAlgorithm(std::move(name), std::move(logger)) {}
+
+  PyIAlgorithm(std::string name, Logging::Level level)
+      : IAlgorithm(std::move(name), getDefaultLogger(name, level)) {}
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     py::gil_scoped_acquire acquire{};
@@ -77,6 +83,8 @@ class PyIAlgorithm : public IAlgorithm {
   }
 
   std::string_view typeName() const override { return "Algorithm"; }
+
+  const Acts::Logger& pyLogger() const { return logger(); }
 };
 
 void trigger_divbyzero() {
@@ -112,6 +120,7 @@ void addFramework(py::module& mex) {
 
   py::enum_<ProcessCode>(mex, "ProcessCode")
       .value("SUCCESS", ProcessCode::SUCCESS)
+      .value("SKIP", ProcessCode::SKIP)
       .value("ABORT", ProcessCode::ABORT)
       .value("END", ProcessCode::END);
 
@@ -149,7 +158,14 @@ void addFramework(py::module& mex) {
                  PyIAlgorithm>(mex, "IAlgorithm")
           .def(py::init_alias<const std::string&, Logging::Level>(),
                py::arg("name"), py::arg("level"))
-          .def("execute", &IAlgorithm::execute);
+          .def(py::init_alias<const std::string&,
+                              std::unique_ptr<const Logger>>(),
+               py::arg("name"), py::arg("logger"))
+          .def("execute", &IAlgorithm::execute)
+          .def_property_readonly(
+              "logger", [](const PyIAlgorithm& self) -> const Acts::Logger& {
+                return self.pyLogger();
+              });
 
   using Config = Sequencer::Config;
   auto sequencer =

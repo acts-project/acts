@@ -15,14 +15,16 @@
 
 namespace ActsExamples {
 
-SeedsToProtoTracks::SeedsToProtoTracks(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("SeedsToProtoTracks", lvl), m_cfg(std::move(cfg)) {
+SeedsToProtoTracks::SeedsToProtoTracks(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("SeedsToProtoTracks", std::move(logger)),
+      m_cfg(std::move(cfg)) {
   m_inputSeeds.initialize(m_cfg.inputSeeds);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
 ProcessCode SeedsToProtoTracks::execute(const AlgorithmContext& ctx) const {
-  const auto seeds = m_inputSeeds(ctx);
+  const SeedContainer& seeds = m_inputSeeds(ctx);
 
   ProtoTrackContainer tracks;
   tracks.reserve(seeds.size());
@@ -34,4 +36,5 @@ ProcessCode SeedsToProtoTracks::execute(const AlgorithmContext& ctx) const {
 
   return ProcessCode::SUCCESS;
 }
+
 }  // namespace ActsExamples

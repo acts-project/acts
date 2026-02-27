@@ -81,7 +81,9 @@ class TrackParameterSmearing final : public IAlgorithm {
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
   };
 
-  TrackParameterSmearing(const Config& config, Acts::Logging::Level level);
+  explicit TrackParameterSmearing(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
@@ -89,6 +91,8 @@ class TrackParameterSmearing final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  void logSmearingConfig() const;
+
   Config m_cfg;
 
   ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
