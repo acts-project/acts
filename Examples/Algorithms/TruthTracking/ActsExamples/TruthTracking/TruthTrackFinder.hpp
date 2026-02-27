@@ -45,7 +45,9 @@ class TruthTrackFinder final : public IAlgorithm {
     std::string outputProtoTracks;
   };
 
-  TruthTrackFinder(const Config& config, Acts::Logging::Level level);
+  explicit TruthTrackFinder(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

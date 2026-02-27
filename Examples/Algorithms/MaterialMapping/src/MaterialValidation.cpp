@@ -14,9 +14,10 @@
 
 namespace ActsExamples {
 
-MaterialValidation::MaterialValidation(const MaterialValidation::Config& cfg,
-                                       Acts::Logging::Level level)
-    : IAlgorithm("MaterialValidation", level), m_cfg(cfg) {
+MaterialValidation::MaterialValidation(
+    const MaterialValidation::Config& cfg,
+    std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("MaterialValidation", std::move(logger)), m_cfg(cfg) {
   // Prepare the I/O collections
   m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
   // Check the configuration - material validater

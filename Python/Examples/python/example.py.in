@@ -9,6 +9,6 @@ try :
 
     _patch_config(ActsExamplesPythonBindings@EXAMPLE_NAME@)
 
-except ImportError:
+except ModuleNotFoundError:
     warnings.warn("@EXAMPLE_NAME@ example component not available. Try building with @EXAMPLE_BUILD_FLAG@=ON.")
     raise

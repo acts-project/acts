@@ -21,6 +21,7 @@ def test_constant_field_conversion():
 
 
 @pytest.mark.skipif(not covfieEnabled, reason="Covfie plugin not available")
+@pytest.mark.slow
 def test_inhomogeneous_field_conversion():
     from acts import covfie
 

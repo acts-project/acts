@@ -9,14 +9,12 @@
 #pragma once
 
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
 namespace ActsExamples {
 
@@ -39,7 +37,7 @@ class CsvSeedWriter : public WriterT<TrackParametersContainer> {
     /// Input estimated track parameters collection.
     std::string inputTrackParameters;
     /// Input seed collection.
-    std::string inputSimSeeds;
+    std::string inputSeeds;
     /// Input collection of simulated hits.
     std::string inputSimHits;
     /// Input hit-particles map collection.
@@ -73,28 +71,12 @@ class CsvSeedWriter : public WriterT<TrackParametersContainer> {
   Config m_cfg;  ///< The config class
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<SimSeedContainer> m_inputSimSeeds{this, "InputSimSeeds"};
+  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
   ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
-
-  /// @brief Struct for brief seed summary info
-  ///
-  struct SeedInfo {
-    std::size_t seedID = 0;
-    ActsFatras::Barcode particleId;
-    float seedPt = -1;
-    float seedPhi = 0;
-    float seedEta = 0;
-    float vertexZ = 0;
-    float quality = -1;
-    boost::container::small_vector<Acts::Vector3, 3> globalPosition;
-    float truthDistance = -1;
-    std::string seedType = "unknown";
-    ProtoTrack measurementsID;
-  };
 };
 
 }  // namespace ActsExamples
