@@ -9,8 +9,6 @@
 #include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
@@ -85,7 +83,7 @@ ProcessCode RootSpacePointWriter::finalize() {
 }
 
 ProcessCode RootSpacePointWriter::writeT(
-    const AlgorithmContext& ctx, const SimSpacePointContainer& spacePoints) {
+    const AlgorithmContext& ctx, const SpacePointContainer& spacePoints) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -97,11 +95,11 @@ ProcessCode RootSpacePointWriter::writeT(
   // Get the event number
   m_eventId = ctx.eventNumber;
   for (const auto& sp : spacePoints) {
-    const auto& sl1 = sp.sourceLinks().at(0).get<IndexSourceLink>();
+    const auto& sl1 = sp.sourceLinks()[0].get<IndexSourceLink>();
     m_measurementId1 = sl1.index();
     m_geometryId1 = sl1.geometryId().value();
     if (sp.sourceLinks().size() == 2) {
-      const auto& sl2 = sp.sourceLinks().at(1).get<IndexSourceLink>();
+      const auto& sl2 = sp.sourceLinks()[1].get<IndexSourceLink>();
       m_measurementId2 = sl2.index();
       m_geometryId2 = sl2.geometryId().value();
     }
@@ -127,11 +125,12 @@ ProcessCode RootSpacePointWriter::writeT(
     m_y = sp.y() / Acts::UnitConstants::mm;
     m_z = sp.z() / Acts::UnitConstants::mm;
     m_r = sp.r() / Acts::UnitConstants::mm;
-    m_t = sp.t() ? *sp.t() / Acts::UnitConstants::ns
-                 : std::numeric_limits<double>::quiet_NaN();
+    m_t = sp.time() / Acts::UnitConstants::ns;
     // write sp dimensions
-    m_var_r = sp.varianceR() / Acts::UnitConstants::mm;
-    m_var_z = sp.varianceZ() / Acts::UnitConstants::mm;
+    m_var_r =
+        sp.varianceR() / (Acts::UnitConstants::mm * Acts::UnitConstants::mm);
+    m_var_z =
+        sp.varianceZ() / (Acts::UnitConstants::mm * Acts::UnitConstants::mm);
     // Fill the tree
     m_outputTree->Fill();
   }

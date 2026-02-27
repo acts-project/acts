@@ -11,13 +11,12 @@
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
 #include <tuple>
 
 using namespace Acts;
-using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
@@ -56,7 +55,8 @@ ProcessCode ProtoTracksToParameters::execute(
   // Make some lookup tables and pre-allocate some space
   // Note this is a heuristic, since it is not garantueed that each measurement
   // is part of a space point
-  std::vector<const SimSpacePoint *> indexToSpacePoint(2 * sps.size(), nullptr);
+  std::vector<SpacePointIndex> indexToSpacePoint(2 * sps.size(),
+                                                 kSpacePointIndex2Invalid);
   std::vector<GeometryIdentifier> indexToGeoId(2 * sps.size(),
                                                GeometryIdentifier{0});
 
@@ -64,10 +64,10 @@ ProcessCode ProtoTracksToParameters::execute(
     for (const auto &sl : sp.sourceLinks()) {
       const auto &isl = sl.template get<IndexSourceLink>();
       if (isl.index() >= indexToSpacePoint.size()) {
-        indexToSpacePoint.resize(isl.index() + 1, nullptr);
+        indexToSpacePoint.resize(isl.index() + 1, kSpacePointIndex2Invalid);
         indexToGeoId.resize(isl.index() + 1, GeometryIdentifier{0});
       }
-      indexToSpacePoint.at(isl.index()) = &sp;
+      indexToSpacePoint.at(isl.index()) = sp.index();
       indexToGeoId.at(isl.index()) = isl.geometryId();
     }
   }
@@ -75,7 +75,8 @@ ProcessCode ProtoTracksToParameters::execute(
   ProtoTrackContainer seededTracks;
   seededTracks.reserve(protoTracks.size());
 
-  SimSeedContainer seeds;
+  SeedContainer seeds;
+  seeds.assignSpacePointContainer(sps);
   seeds.reserve(protoTracks.size());
 
   TrackParametersContainer parameters;
@@ -83,7 +84,7 @@ ProcessCode ProtoTracksToParameters::execute(
 
   // Loop over the proto tracks to make seeds
   ProtoTrack tmpTrack;
-  std::vector<const SimSpacePoint *> tmpSps;
+  std::vector<SpacePointIndex> tmpSps;
   std::size_t skippedTracks = 0;
   for (auto &track : protoTracks) {
     ACTS_VERBOSE("Try to get seed from proto track with " << track.size()
@@ -120,7 +121,7 @@ ProcessCode ProtoTracksToParameters::execute(
     auto result =
         track | std::views::filter([&](auto i) {
           return i < indexToSpacePoint.size() &&
-                 indexToSpacePoint.at(i) != nullptr;
+                 indexToSpacePoint.at(i) != kSpacePointIndex2Invalid;
         }) |
         std::views::transform([&](auto i) { return indexToSpacePoint.at(i); });
     tmpSps.clear();
@@ -132,54 +133,74 @@ ProcessCode ProtoTracksToParameters::execute(
       continue;
     }
 
-    std::ranges::sort(tmpSps, {}, [](const auto &t) { return t->r(); });
+    std::ranges::sort(
+        tmpSps, {}, [&sps](const SpacePointIndex &t) { return sps.at(t).r(); });
 
     // Simply use r = m*z + t and solve for r=0 to find z vertex position...
     // Probably not the textbook way to do
-    const auto m = (tmpSps.back()->r() - tmpSps.front()->r()) /
-                   (tmpSps.back()->z() - tmpSps.front()->z());
-    const auto t = tmpSps.front()->r() - m * tmpSps.front()->z();
-    const auto z_vertex = -t / m;
-    const auto s = tmpSps.size();
+    const float m = (sps.at(tmpSps.back()).r() - sps.at(tmpSps.front()).r()) /
+                    (sps.at(tmpSps.back()).z() - sps.at(tmpSps.front()).z());
+    const float t = sps.at(tmpSps.front()).r() - m * sps.at(tmpSps.front()).z();
+    const float vertexZ = -t / m;
+    const std::size_t s = tmpSps.size();
 
-    SimSeed seed =
-        m_cfg.buildTightSeeds
-            ? SimSeed(*tmpSps.at(0), *tmpSps.at(1), *tmpSps.at(2))
-            : SimSeed(*tmpSps.at(0), *tmpSps.at(s / 2), *tmpSps.at(s - 1));
-    seed.setVertexZ(z_vertex);
+    auto seed = seeds.createSeed();
+    if (m_cfg.buildTightSeeds) {
+      seed.assignSpacePointIndices(
+          std::array{tmpSps.at(0), tmpSps.at(1), tmpSps.at(2)});
+    } else {
+      seed.assignSpacePointIndices(
+          std::array{tmpSps.at(0), tmpSps.at(s / 2), tmpSps.at(s - 1)});
+    }
+    seed.vertexZ() = vertexZ;
 
     // Compute parameters
-    const auto &bottomSP = seed.sp().front();
-    const auto geoId = bottomSP->sourceLinks()
-                           .front()
-                           .template get<IndexSourceLink>()
-                           .geometryId();
-    const auto &surface = *m_cfg.geometry->findSurface(geoId);
 
-    auto fieldRes = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
+    const ConstSpacePointProxy bottomSp = seed.spacePoints()[0];
+    const ConstSpacePointProxy middleSp = seed.spacePoints()[1];
+    const ConstSpacePointProxy topSp = seed.spacePoints()[2];
+
+    const Acts::Vector3 bottomSpVec{bottomSp.x(), bottomSp.y(), bottomSp.z()};
+    const Acts::Vector3 middleSpVec{middleSp.x(), middleSp.y(), middleSp.z()};
+    const Acts::Vector3 topSpVec{topSp.x(), topSp.y(), topSp.z()};
+
+    const auto bottomGeoId =
+        bottomSp.sourceLinks()[0].template get<IndexSourceLink>().geometryId();
+    const Surface *bottomSurface = m_cfg.geometry->findSurface(bottomGeoId);
+    if (bottomSurface == nullptr) {
+      ACTS_WARNING(
+          "Surface from source link is not found in the tracking geometry");
+      continue;
+    }
+
+    // Get the magnetic field at the bottom space point
+    const auto fieldRes = m_cfg.magneticField->getField(bottomSpVec, bCache);
     if (!fieldRes.ok()) {
       ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
-    Vector3 field = *fieldRes;
+    const Acts::Vector3 &field = *fieldRes;
 
     if (field.norm() < m_cfg.bFieldMin) {
       ACTS_WARNING("Magnetic field at seed is too small " << field.norm());
       continue;
     }
 
-    auto parsResult =
-        estimateTrackParamsFromSeed(ctx.geoContext, seed.sp(), surface, field);
-    if (!parsResult.ok()) {
-      ACTS_WARNING("Skip track because of bad params");
+    // Estimate the track parameters from seed
+    Acts::Result<Acts::BoundVector> boundParams =
+        Acts::estimateTrackParamsFromSeed(
+            ctx.geoContext, *bottomSurface, bottomSpVec,
+            std::isnan(bottomSp.time()) ? 0.0 : bottomSp.time(), middleSpVec,
+            topSpVec, field);
+    if (!boundParams.ok()) {
+      ACTS_WARNING("Failed to estimate track parameters from seed: "
+                   << boundParams.error().message());
+      continue;
     }
-    const auto &pars = *parsResult;
 
     seededTracks.push_back(track);
-    seeds.emplace_back(seed);
-    parameters.push_back(BoundTrackParameters(
-        surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
+    parameters.emplace_back(bottomSurface->getSharedPtr(), *boundParams,
+                            m_covariance, m_cfg.particleHypothesis);
   }
 
   if (skippedTracks > 0) {

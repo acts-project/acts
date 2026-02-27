@@ -8,14 +8,16 @@
 
 #pragma once
 
-#include "Acts/EventData/Seed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
-
-#include <vector>
+#include "Acts/EventData/SeedContainer2.hpp"
+#include "Acts/EventData/Types.hpp"
 
 namespace ActsExamples {
-using SimSeed = Acts::Seed<SimSpacePoint>;
-/// Container of sim seed
-using SimSeedContainer = std::vector<SimSeed>;
+
+using SeedIndex = Acts::SeedIndex2;
+
+using SeedProxy = Acts::SeedContainer2::MutableProxy;
+using ConstSeedProxy = Acts::SeedContainer2::ConstProxy;
+
+using SeedContainer = Acts::SeedContainer2;
 
 }  // namespace ActsExamples

@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <algorithm>
 
@@ -40,7 +41,7 @@ TruthGraphBuilder::TruthGraphBuilder(Config config,
 }
 
 std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
-    const SimSpacePointContainer& spacePoints,
+    const SpacePointContainer& spacePoints,
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
   if (m_cfg.targetMinPT < 500_MeV) {
@@ -129,7 +130,7 @@ struct HitInfo {
 };
 
 std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
-    const SimSpacePointContainer& spacePoints,
+    const SpacePointContainer& spacePoints,
     const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
     const SimParticleContainer& particles) const {
   // Associate tracks to graph, collect momentum

@@ -569,7 +569,7 @@ def addSeeding(
             csvSeedWriter = acts.examples.CsvSeedWriter(
                 level=logLevel,
                 inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
-                inputSimSeeds=seeds,
+                inputSeeds=seeds,
                 inputSimHits="simhits",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -577,15 +577,6 @@ def addSeeding(
                 fileName=str(f"seed.csv"),
             )
             s.addWriter(csvSeedWriter)
-
-            if seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
-                s.addWriter(
-                    acts.examples.CsvSpacePointsBucketWriter(
-                        level=logLevel,
-                        inputBuckets=buckets,
-                        outputDir=str(outputDirCsv),
-                    )
-                )
 
     return s
 
@@ -671,7 +662,7 @@ def addTruthEstimatedSeeding(
         level=logLevel,
         inputParticles=inputParticles,
         inputParticleMeasurementsMap="particle_measurements_map",
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         inputSimHits="simhits",
         inputMeasurementSimHitsMap="measurement_simhits_map",
         outputParticles="truth_seeded_particles",
@@ -853,7 +844,7 @@ def addStandardSeeding(
 
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
         **acts.examples.defaultKWArgs(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
@@ -1152,7 +1143,7 @@ def addOrthogonalSeeding(
     )
     seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         outputSeeds="seeds",
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
@@ -1397,10 +1388,10 @@ def addSeedFilterML(
     filterML = SeedFilterMLAlgorithm(
         level=customLogLevel,
         inputTrackParameters="estimatedparameters",
-        inputSimSeeds="seeds",
+        inputSeeds="seeds",
         inputSeedFilterNN=onnxModelFile,
         outputTrackParameters="filtered-parameters",
-        outputSimSeeds="filtered-seeds",
+        outputSeeds="filtered-seeds",
         **acts.examples.defaultKWArgs(
             epsilonDBScan=config.epsilonDBScan,
             minPointsDBScan=config.minPointsDBScan,
@@ -1461,7 +1452,7 @@ def addSeedFilterML(
         csvSeedWriter = acts.examples.CsvSeedWriter(
             level=customLogLevel,
             inputTrackParameters=estParams,
-            inputSimSeeds=seeds,
+            inputSeeds=seeds,
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",

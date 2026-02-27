@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -19,10 +20,11 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
@@ -38,10 +40,12 @@ namespace ActsExamples {
 
 namespace {
 
-SimSpacePoint createPixelSpacePoint(
+static constexpr float nanf = std::numeric_limits<float>::quiet_NaN();
+
+void createPixelSpacePoint(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface,
     const ConstVariableBoundMeasurementProxy& measurement,
-    const IndexSourceLink& sourceLink) {
+    const IndexSourceLink& sourceLink, SpacePointContainer& spacePoints) {
   const Acts::Vector2 local = measurement.fullParameters().head<2>();
   const Acts::SquareMatrix2 localCov =
       measurement.fullCovariance().topLeftCorner<2, 2>();
@@ -58,9 +62,15 @@ SimSpacePoint createPixelSpacePoint(
   const Acts::Vector2 varZR = Acts::PixelSpacePointBuilder::computeVarianceZR(
       gctx, surface, global, localCov);
 
-  SimSpacePoint result(global, t, varZR[1], varZR[0], varT,
-                       {Acts::SourceLink(sourceLink)});
-  return result;
+  auto sp = spacePoints.createSpacePoint();
+  sp.assignSourceLinks(std::array{Acts::SourceLink(sourceLink)});
+  sp.x() = global.x();
+  sp.y() = global.y();
+  sp.z() = global.z();
+  sp.r() = Acts::fastHypot(global.x(), global.y());
+  sp.time() = t.value_or(nanf);
+  sp.varianceZ() = varZR[0];
+  sp.varianceR() = varZR[1];
 }
 
 Acts::StripSpacePointBuilder::StripEnds getStripEnds(
@@ -96,12 +106,13 @@ Acts::StripSpacePointBuilder::StripEnds getStripEnds(
   return Acts::StripSpacePointBuilder::StripEnds{globalTop, globalBottom};
 }
 
-Acts::Result<SimSpacePoint> createStripSpacePoint(
+Acts::Result<void> createStripSpacePoint(
     const Acts::GeometryContext& gctx, const Acts::Surface& surface1,
     const Acts::Surface& surface2,
     const ConstVariableBoundMeasurementProxy& measurement1,
     const ConstVariableBoundMeasurementProxy& measurement2,
-    const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2) {
+    const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2,
+    SpacePointContainer& spacePoints) {
   const Acts::StripSpacePointBuilder::StripEnds stripEnds1 =
       getStripEnds(gctx, surface1, measurement1);
   const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
@@ -128,26 +139,34 @@ Acts::Result<SimSpacePoint> createStripSpacePoint(
   const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
       gctx, surface1, *spacePoint, var1, var2, theta);
 
-  const double topHalfStripLength =
-      0.5 * (stripEnds1.top - stripEnds1.bottom).norm();
-  const double bottomHalfStripLength =
-      0.5 * (stripEnds2.top - stripEnds2.bottom).norm();
-  const Acts::Vector3 topStripDirection =
-      (stripEnds1.top - stripEnds1.bottom).normalized();
-  const Acts::Vector3 bottomStripDirection =
-      (stripEnds2.top - stripEnds2.bottom).normalized();
+  const Acts::Vector3 topStripVector = stripEnds1.top - stripEnds1.bottom;
+  const Acts::Vector3 bottomStripVector = stripEnds2.top - stripEnds2.bottom;
   const Acts::Vector3 stripCenterDistance =
       (0.5 * (stripEnds1.top + stripEnds1.bottom) -
        0.5 * (stripEnds2.top + stripEnds2.bottom));
-  const Acts::Vector3 topStripCenterPosition =
+  const Acts::Vector3 topStripCenter =
       0.5 * (stripEnds1.top + stripEnds1.bottom);
 
-  SimSpacePoint result(
-      *spacePoint, std::nullopt, varZR[1], varZR[0], std::nullopt,
-      {Acts::SourceLink(sourceLink1), Acts::SourceLink(sourceLink2)},
-      topHalfStripLength, bottomHalfStripLength, topStripDirection,
-      bottomStripDirection, stripCenterDistance, topStripCenterPosition);
-  return result;
+  auto sp = spacePoints.createSpacePoint();
+  sp.assignSourceLinks(
+      std::array{Acts::SourceLink(sourceLink1), Acts::SourceLink(sourceLink2)});
+  sp.x() = spacePoint->x();
+  sp.y() = spacePoint->y();
+  sp.z() = spacePoint->z();
+  sp.r() = Acts::fastHypot(spacePoint->x(), spacePoint->y());
+  sp.time() = nanf;
+  sp.varianceZ() = varZR[0];
+  sp.varianceR() = varZR[1];
+  Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
+      topStripVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(sp.bottomStripVector().data()) =
+      bottomStripVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
+      stripCenterDistance.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(sp.topStripCenter().data()) =
+      topStripCenter.cast<float>();
+
+  return Acts::Result<void>::success();
 }
 
 }  // namespace
@@ -323,7 +342,11 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
 
   const auto& measurements = m_inputMeasurements(ctx);
 
-  SimSpacePointContainer spacePoints;
+  SpacePointContainer spacePoints(
+      SpacePointColumns::SourceLinks | SpacePointColumns::X |
+      SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
+      SpacePointColumns::Time | SpacePointColumns::VarianceZ |
+      SpacePointColumns::VarianceR | SpacePointColumns::Strip);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
@@ -346,8 +369,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           continue;
         }
 
-        spacePoints.emplace_back(createPixelSpacePoint(
-            ctx.geoContext, surface, measurement, sourceLink));
+        createPixelSpacePoint(ctx.geoContext, surface, measurement, sourceLink,
+                              spacePoints);
       }
     }
   }
@@ -492,19 +515,14 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       const ConstVariableBoundMeasurementProxy measurement2 =
           measurements.getMeasurement(sourceLink2.index());
 
-      const Acts::Result<SimSpacePoint> spacePoint = createStripSpacePoint(
-          ctx.geoContext, surface1, surface2, measurement1, measurement2,
-          sourceLink1, sourceLink2);
-      if (spacePoint.ok()) {
-        spacePoints.push_back(*spacePoint);
-      }
+      createStripSpacePoint(ctx.geoContext, surface1, surface2, measurement1,
+                            measurement2, sourceLink1, sourceLink2,
+                            spacePoints);
     }
 
     ACTS_DEBUG("Built " << spacePoints.size() - nSpacePointsBefore
                         << " space points for selector " << sel);
   }
-
-  spacePoints.shrink_to_fit();
 
   ACTS_DEBUG("Created " << spacePoints.size() - nPixelSpacePoints
                         << " strip space points");
