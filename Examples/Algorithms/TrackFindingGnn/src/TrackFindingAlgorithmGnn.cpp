@@ -9,12 +9,12 @@
 #include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsPlugins/Gnn/GraphStoreHook.hpp"
 #include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
@@ -147,14 +147,12 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   std::vector<std::uint64_t> moduleIds;
   moduleIds.reserve(spacePoints.size());
 
-  for (auto isp = 0ul; isp < numSpacePoints; ++isp) {
-    const auto& sp = spacePoints[isp];
-
+  for (const auto& sp : spacePoints) {
     // For now just take the first index since does require one single index
     // per space point
     // TODO does it work for the module map construction to use only the first
     // sp?
-    const auto& sl1 = sp.sourceLinks().at(0).template get<IndexSourceLink>();
+    const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
 
     if (m_cfg.geometryIdMap != nullptr) {
       moduleIds.push_back(m_cfg.geometryIdMap->right.at(sl1.geometryId()));
@@ -166,16 +164,18 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   auto t02 = Clock::now();
 
   // Sort the space points by module ide. Required by module map
-  std::vector<int> idxs(numSpacePoints);
-  std::iota(idxs.begin(), idxs.end(), 0);
-  std::ranges::sort(idxs, {}, [&](auto i) { return moduleIds[i]; });
+  std::vector<SpacePointIndex> sortedSpacePointIndices(numSpacePoints);
+  std::iota(sortedSpacePointIndices.begin(), sortedSpacePointIndices.end(), 0);
+  std::ranges::sort(sortedSpacePointIndices, {},
+                    [&](auto i) { return moduleIds[i]; });
 
-  std::ranges::sort(moduleIds);
+  std::vector<std::uint64_t> sortedModuleIds;
+  sortedModuleIds.reserve(moduleIds.size());
+  std::ranges::transform(sortedSpacePointIndices,
+                         std::back_inserter(sortedModuleIds),
+                         [&](auto i) { return moduleIds[i]; });
 
-  SimSpacePointContainer sortedSpacePoints;
-  sortedSpacePoints.reserve(spacePoints.size());
-  std::ranges::transform(idxs, std::back_inserter(sortedSpacePoints),
-                         [&](auto i) { return spacePoints[i]; });
+  const auto sortedSpacePoints = spacePoints.subset(sortedSpacePointIndices);
 
   auto t03 = Clock::now();
 
@@ -200,6 +200,10 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
 #else
   Device device = {Device::Type::eCUDA, 0};
 #endif
+  // TODO `idxs` seems not to be used anymore and should be removed from the
+  // input
+  std::vector<int> idxs(numSpacePoints);
+  std::iota(idxs.begin(), idxs.end(), 0);
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
   ACTS_NVTX_START(post_processing);
