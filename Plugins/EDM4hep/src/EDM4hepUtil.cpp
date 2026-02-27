@@ -340,9 +340,9 @@ std::uint32_t encodeIndices(std::span<const std::uint8_t> indices) {
 ///
 /// @param type Packed 32-bit unsigned integer containing encoded indices
 /// @return Vector of decoded parameter indices (0-5 for each bound parameter)
-boost::container::static_vector<std::uint8_t, eBoundSize> decodeIndices(
+boost::container::static_vector<SubspaceIndex, eBoundSize> decodeIndices(
     std::uint32_t type) {
-  boost::container::static_vector<std::uint8_t, eBoundSize> result;
+  boost::container::static_vector<SubspaceIndex, eBoundSize> result;
   std::uint8_t size = type & 0xF;
   if (size > eBoundSize) {
     throw std::runtime_error(
@@ -425,15 +425,13 @@ MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from) {
   result.cellId = from.getCellID();
   result.indices = std::move(indices);
 
-  result.parameters.resize(dim);
   for (std::size_t i = 0; i < dim; ++i) {
-    result.parameters(i) = meas[i];
+    result.parameters(result.indices[i]) = meas[i];
   }
-
-  result.covariance.resize(dim, dim);
   for (std::size_t i = 0; i < dim; ++i) {
     for (std::size_t j = 0; j < dim; ++j) {
-      result.covariance(i, j) = cov[i * dim + j];  // row-major
+      result.covariance(result.indices[i], result.indices[j]) =
+          cov[i * dim + j];  // row-major
     }
   }
 

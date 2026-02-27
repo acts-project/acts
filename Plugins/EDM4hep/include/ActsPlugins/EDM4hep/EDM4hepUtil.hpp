@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -26,6 +27,7 @@
 #include <span>
 #include <stdexcept>
 
+#include <boost/container/static_vector.hpp>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
@@ -340,8 +342,8 @@ void writeVertex(const Acts::Vertex& vertex, edm4hep::MutableVertex to);
 namespace detail {
 // These functions are exposed here so they can be used from the unit tests
 std::uint32_t encodeIndices(std::span<const std::uint8_t> indices);
-boost::container::static_vector<std::uint8_t, Acts::eBoundSize> decodeIndices(
-    std::uint32_t type);
+boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
+decodeIndices(std::uint32_t type);
 }  // namespace detail
 
 /// Write a measurement to an EDM4hep tracker hit
@@ -376,12 +378,13 @@ void writeMeasurement(const Acts::GeometryContext& gctx,
 
 /// Data extracted when reading a measurement from EDM4hep
 struct MeasurementData {
-  /// Measurement parameters (local coordinates)
-  Acts::DynamicVector parameters;
-  /// Covariance matrix of the measurement
-  Acts::DynamicMatrix covariance;
-  /// Indices of the measured parameters
-  boost::container::static_vector<std::uint8_t, Acts::eBoundSize> indices;
+  /// Measurement parameters (local coordinates, full bound space)
+  Acts::BoundVector parameters{Acts::BoundVector::Zero()};
+  /// Covariance matrix of the measurement (full bound space)
+  Acts::BoundMatrix covariance{Acts::BoundMatrix::Zero()};
+  /// Indices of the measured parameters (subspace)
+  boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
+      indices;
   /// Cell ID of the measurement
   std::uint64_t cellId{0};
 };

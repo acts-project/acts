@@ -210,9 +210,19 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
   auto data = ActsPlugins::EDM4hepUtil::readMeasurement(from);
   Acts::GeometryIdentifier geometryId = geometryMapper(data.cellId);
 
+  const auto dim = data.indices.size();
+  Acts::DynamicVector parameters(dim);
+  Acts::DynamicMatrix covariance(dim, dim);
+  for (std::size_t i = 0; i < dim; ++i) {
+    parameters(i) = data.parameters(data.indices[i]);
+    for (std::size_t j = 0; j < dim; ++j) {
+      covariance(i, j) = data.covariance(data.indices[i], data.indices[j]);
+    }
+  }
+
   return container.emplaceMeasurement(
-      static_cast<std::uint8_t>(data.indices.size()), geometryId, data.indices,
-      data.parameters, data.covariance);
+      static_cast<std::uint8_t>(dim), geometryId, data.indices, parameters,
+      covariance);
 }
 
 void EDM4hepUtil::writeTrajectory(
