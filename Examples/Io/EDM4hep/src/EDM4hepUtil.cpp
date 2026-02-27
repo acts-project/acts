@@ -220,9 +220,9 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
     }
   }
 
-  return container.emplaceMeasurement(
-      static_cast<std::uint8_t>(dim), geometryId, data.indices, parameters,
-      covariance);
+  return container.emplaceMeasurement(static_cast<std::uint8_t>(dim),
+                                      geometryId, data.indices, parameters,
+                                      covariance);
 }
 
 void EDM4hepUtil::writeTrajectory(
