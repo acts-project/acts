@@ -659,6 +659,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     converter = EDM4hepTrackOutputConverter(
         level=acts.logging.VERBOSE,
         inputTracks="kf_tracks",
+        outputTracks="ActsTracks",
         Bz=2 * u.T,
     )
     s.addAlgorithm(converter)
