@@ -26,9 +26,10 @@
 
 namespace ActsExamples {
 
-PodioTrackOutputConverter::PodioTrackOutputConverter(const Config& config,
-                                                     Acts::Logging::Level level)
-    : PodioOutputConverter("PodioTrackOutputConverter", level), m_cfg(config) {
+PodioTrackOutputConverter::PodioTrackOutputConverter(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioOutputConverter("PodioTrackOutputConverter", std::move(logger)),
+      m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
   }

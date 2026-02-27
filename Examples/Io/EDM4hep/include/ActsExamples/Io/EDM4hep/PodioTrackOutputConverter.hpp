@@ -53,9 +53,10 @@ class PodioTrackOutputConverter : public PodioOutputConverter {
 
   /// Constructor
   /// @param config is the configuration object
-  /// @param level is the output logging level
+  /// @param logger is the logger
   explicit PodioTrackOutputConverter(
-      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
