@@ -43,7 +43,7 @@ EXCLUDE_PATHS = [
 def _resolve_excludes(source_dir: Path) -> list[str]:
     """Return exclude patterns: EXCLUDE_PATTERNS as-is plus EXCLUDE_PATHS prefixed with source_dir."""
     source_prefix = re.escape(source_dir.as_posix()) + r"/"
-    return list(EXCLUDE_PATTERNS) + [source_prefix + p for p in EXCLUDE_PATHS]
+    return EXCLUDE_PATTERNS + [source_prefix + p for p in EXCLUDE_PATHS]
 
 
 def locate_executable(name: str, hint: str) -> str:
@@ -83,14 +83,6 @@ def generate(
             "--filter/--no-filter", help="Filter the coverage XML after generation"
         ),
     ] = False,
-    html: Annotated[
-        bool,
-        typer.Option("--html/--no-html", help="Also generate HTML coverage report"),
-    ] = True,
-    html_theme: Annotated[
-        str,
-        typer.Option("--html-theme", "-t", help="HTML report theme (e.g. github.blue)"),
-    ] = "github.blue",
 ) -> None:
     """Generate SonarQube XML and optionally HTML coverage reports from a CMake build directory using gcovr."""
     build_dir = build_dir.resolve()
@@ -106,7 +98,7 @@ def generate(
 
     gcov_exe = gcov or locate_executable(
         "gcov",
-        "gcov not installed. Install GCC coverage tooling or pass --gcov.",
+        "gcov not installed. Install GCC coverage tooling or pass the path to gcov with --gcov.",
     )
     gcovr_exe = locate_executable(
         "gcovr",
@@ -138,22 +130,20 @@ def generate(
             build_dir, gcov_exe, gcovr_exe, jobs, verbose, gcov_obj_dir
         )
         gcovr_cmd = base_args + ["--sonarqube", str(raw_xml_path)]
-        if html:
-            html_dir = coverage_dir / "html"
-            html_dir.mkdir(exist_ok=True)
-            html_path = html_dir / "index.html"
-            gcovr_cmd += [
-                "--html-nested",
-                str(html_path),
-                "--html-theme",
-                html_theme,
-            ]
+        html_dir = coverage_dir / "html"
+        html_dir.mkdir(exist_ok=True)
+        html_path = html_dir / "index.html"
+        gcovr_cmd += [
+            "--html-nested",
+            str(html_path),
+            "--html-theme",
+            "github.blue",
+        ]
 
         console.print(f"$ {shlex.join(gcovr_cmd)}")
         subprocess.run(gcovr_cmd, cwd=build_dir, check=True)
 
-    if html:
-        console.print(f"HTML coverage report written to {coverage_dir / 'html'}")
+    console.print(f"HTML coverage report written to {coverage_dir / 'html'}")
 
     if filter_xml:
         source_dir = Path(__file__).resolve().parent.parent
@@ -170,7 +160,7 @@ def filter_coverage_xml(
 
     patterns = [re.compile(p) for p in excludes]
 
-    tree = etree.parse(input_path)  # noqa: S320
+    tree = etree.parse(input_path)
     root = tree.getroot()
 
     removed = 0
@@ -214,32 +204,6 @@ def filter_coverage_xml(
     console.print(f"Filtered coverage written to {output_path}")
 
 
-@app.command()
-def filter(
-    input: Annotated[Path, typer.Argument(help="Input coverage XML file")],
-    output: Annotated[Path, typer.Argument(help="Output filtered coverage XML file")],
-    exclude: Annotated[
-        list[str] | None,
-        typer.Option("--exclude", "-e", help="Regex pattern to exclude file paths"),
-    ] = None,
-    build_dir_name: Annotated[
-        str | None,
-        typer.Option(help="Build directory name to exclude from coverage paths"),
-    ] = None,
-) -> None:
-    """Filter a SonarQube coverage XML file by removing file entries matching exclude patterns."""
-    if not input.exists():
-        console.print(f"Input file not found: {input}", style="red")
-        raise typer.Exit(1)
-
-    source_dir = Path(__file__).resolve().parent.parent
-    excludes = list(exclude) if exclude is not None else _resolve_excludes(source_dir)
-    if build_dir_name is not None:
-        excludes.append("^" + re.escape(build_dir_name))
-
-    filter_coverage_xml(input, output, excludes)
-
-
 def _build_gcovr_common_args(
     build_dir: Path,
     gcov_exe: str,
@@ -253,9 +217,8 @@ def _build_gcovr_common_args(
 
     version = gcovr_version(gcovr_exe)
     extra_flags: list[str] = []
-    if version is not None:
-        if version >= (6, 0):
-            extra_flags.append("--exclude-noncode-lines")
+    if version is not None and version >= (6, 0):
+        extra_flags.append("--exclude-noncode-lines")
     if verbose:
         extra_flags.append("--verbose")
 
