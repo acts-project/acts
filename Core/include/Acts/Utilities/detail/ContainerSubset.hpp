@@ -11,24 +11,25 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/ContainerConcepts.hpp"
 
-#include <span>
+#include <compare>
+#include <iterator>
 #include <stdexcept>
 
 namespace Acts::detail {
 
 template <typename Derived, typename DerivedReadOnly, typename Container,
-          typename Value, typename Index, bool ReadOnly>
+          typename Value, typename IndexContainer, bool ReadOnly>
 class ContainerSubset {
  public:
   using container_type = const_if_t<ReadOnly, Container>;
   using value_type = Value;
-  using index_type = Index;
   static constexpr bool read_only = ReadOnly;
-  using index_subset_type = std::span<const index_type>;
+  using index_container_type = IndexContainer;
+  using index_type = typename index_container_type::value_type;
 
   class Iterator {
    public:
-    using subset_iterator = index_subset_type::iterator;
+    using subset_iterator = index_container_type::iterator;
 
     using value_type = Value;
     using difference_type = std::ptrdiff_t;
@@ -138,12 +139,12 @@ class ContainerSubset {
   using iterator = Iterator;
 
   constexpr ContainerSubset(container_type &container,
-                            const index_subset_type &subset) noexcept
-      : m_container(&container), m_subset(subset) {}
+                            index_container_type subset) noexcept
+      : m_container(&container), m_subset(std::move(subset)) {}
   template <bool OtherReadOnly>
   explicit constexpr ContainerSubset(
-      const ContainerSubset<Derived, DerivedReadOnly, Container, Value, Index,
-                            OtherReadOnly> &other) noexcept
+      const ContainerSubset<Derived, DerivedReadOnly, Container, Value,
+                            IndexContainer, OtherReadOnly> &other) noexcept
     requires(ReadOnly && !OtherReadOnly)
       : m_container(&other.container()), m_subset(other.subset()) {}
 
@@ -154,51 +155,51 @@ class ContainerSubset {
   }
 
   constexpr container_type &container() const noexcept { return *m_container; }
-  constexpr const index_subset_type &subset() const noexcept {
+  constexpr const index_container_type &subset() const noexcept {
     return m_subset;
   }
 
-  constexpr std::size_t size() const noexcept { return m_subset.size(); }
+  constexpr std::size_t size() const noexcept { return subset().size(); }
   constexpr bool empty() const noexcept { return size() == 0; }
 
   constexpr Derived subrange(std::size_t offset) const noexcept {
-    return {container(), m_subset.subspan(offset)};
+    return {container(), subset().subspan(offset)};
   }
   constexpr Derived subrange(std::size_t offset,
                              std::size_t count) const noexcept {
-    return {container(), m_subset.subspan(offset, count)};
+    return {container(), subset().subspan(offset, count)};
   }
 
   constexpr auto front() const noexcept {
-    return container()[m_subset.front()];
+    return container()[subset().front()];
   }
-  constexpr auto back() const noexcept { return container()[m_subset.back()]; }
+  constexpr auto back() const noexcept { return container()[subset().back()]; }
 
   constexpr iterator begin() const noexcept {
-    return iterator(*m_container, m_subset.begin());
+    return iterator(container(), subset().begin());
   }
   constexpr iterator end() const noexcept {
-    return iterator(*m_container, m_subset.end());
+    return iterator(container(), subset().end());
   }
 
-  constexpr auto operator[](Index index) const noexcept
+  constexpr auto operator[](index_type index) const noexcept
     requires(ContainerHasArrayAccess<Container>)
   {
     assert(index < size() && "Index out of bounds");
-    return (*m_container)[m_subset[index]];
+    return container()[subset()[index]];
   }
-  constexpr auto at(Index index) const
+  constexpr auto at(index_type index) const
     requires(ContainerHasAt<Container>)
   {
     if (index >= size()) {
       throw std::out_of_range("Index out of bounds");
     }
-    return m_container->at(m_subset[index]);
+    return container().at(subset()[index]);
   }
 
  private:
   container_type *m_container{};
-  index_subset_type m_subset{};
+  index_container_type m_subset{};
 };
 
 }  // namespace Acts::detail
