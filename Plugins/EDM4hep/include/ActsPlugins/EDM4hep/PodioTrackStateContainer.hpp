@@ -29,7 +29,7 @@ ACTS_DIAGNOSTIC_IGNORE("-Wold-style-cast")
 #include "ActsPodioEdm/TrackStateCollection.h"
 #include "ActsPodioEdm/TrackStateHitLinkCollection.h"
 #include "ActsPodioEdm/TrackStateInfo.h"
-#include "ActsPodioEdm/TrackerHitLocalCollection.h"
+#include "ActsPodioEdm/MutableTrackerHitLocal.h"
 ACTS_DIAGNOSTIC_POP()
 
 #include <any>
@@ -366,25 +366,18 @@ class ConstPodioTrackStateContainer final
   /// @param trackStates Track state collection
   /// @param params Parameters collection
   /// @param jacs Jacobian collection
-  /// @param hits Optional tracker hits collection (for link-based uncalibrated source links)
   /// @param links Optional track state–hit links collection
   ConstPodioTrackStateContainer(
       const PodioUtil::ConversionHelper& helper,
       holder_t<const ActsPodioEdm::TrackStateCollection> trackStates,
       holder_t<const ActsPodioEdm::BoundParametersCollection> params,
       holder_t<const ActsPodioEdm::JacobianCollection> jacs,
-      const ActsPodioEdm::TrackerHitLocalCollection* hits = nullptr,
       const ActsPodioEdm::TrackStateHitLinkCollection* links = nullptr)
       : m_helper{helper},
         m_collection{std::move(trackStates)},
         m_params{std::move(params)},
         m_jacs{std::move(jacs)},
-        m_hits{hits},
         m_links{links} {
-    if ((m_hits == nullptr) != (m_links == nullptr)) {
-      throw std::invalid_argument(
-          "Hits and links must be either both nullptr or both not nullptr");
-    }
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
@@ -424,21 +417,14 @@ class ConstPodioTrackStateContainer final
             PodioTrackStateContainerBase::trackStateJacobiansKey(suffix))} {
     const std::string trackStatesKey =
         PodioTrackStateContainerBase::trackStatesKey(suffix);
-    const std::string hitsKey =
-        PodioTrackStateContainerBase::trackerHitsKey(suffix);
     const std::string linksKey =
         PodioTrackStateContainerBase::trackStateHitLinksKey(suffix);
-    const auto* hitsColl = frame.get(hitsKey);
     const auto* linksColl = frame.get(linksKey);
-    if (hitsColl != nullptr && linksColl != nullptr) {
-      const auto* hits =
-          dynamic_cast<const ActsPodioEdm::TrackerHitLocalCollection*>(
-              hitsColl);
+    if (linksColl != nullptr) {
       const auto* links =
           dynamic_cast<const ActsPodioEdm::TrackStateHitLinkCollection*>(
               linksColl);
-      if (hits != nullptr && links != nullptr) {
-        m_hits = hits;
+      if (links != nullptr) {
         m_links = links;
       }
     }
@@ -553,9 +539,7 @@ class ConstPodioTrackStateContainer final
  private:
   friend class PodioTrackStateContainerBase;
 
-  bool storeUncalibrated() const {
-    return m_hits != nullptr && m_links != nullptr;
-  }
+  bool storeUncalibrated() const { return m_links != nullptr; }
 
   std::reference_wrapper<const PodioUtil::ConversionHelper> m_helper;
   holder_t<const ActsPodioEdm::TrackStateCollection> m_collection;
@@ -568,7 +552,6 @@ class ConstPodioTrackStateContainer final
       m_dynamic;
   std::vector<Acts::HashedString> m_dynamicKeys;
 
-  const ActsPodioEdm::TrackerHitLocalCollection* m_hits = nullptr;
   const ActsPodioEdm::TrackStateHitLinkCollection* m_links = nullptr;
 };
 
@@ -606,19 +589,13 @@ class MutablePodioTrackStateContainer final
       holder_t<ActsPodioEdm::TrackStateCollection> trackStates,
       holder_t<ActsPodioEdm::BoundParametersCollection> params,
       holder_t<ActsPodioEdm::JacobianCollection> jacs,
-      ActsPodioEdm::TrackerHitLocalCollection* hits = nullptr,
       ActsPodioEdm::TrackStateHitLinkCollection* links = nullptr)
       : m_helper{helper},
         m_collection{std::move(trackStates)},
         m_params{std::move(params)},
         m_jacs{std::move(jacs)},
-        m_hits{hits},
         m_links{links} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
-    if ((m_hits == nullptr) != (m_links == nullptr)) {
-      throw std::invalid_argument(
-          "Hits and links must be either both nullptr or both not nullptr");
-    }
   }
 
   /// Constructor from references (for RefHolder)
@@ -631,7 +608,6 @@ class MutablePodioTrackStateContainer final
       ActsPodioEdm::TrackStateCollection& trackStates,
       ActsPodioEdm::BoundParametersCollection& params,
       ActsPodioEdm::JacobianCollection& jacs,
-      ActsPodioEdm::TrackerHitLocalCollection* hits = nullptr,
       ActsPodioEdm::TrackStateHitLinkCollection* links = nullptr)
     requires std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
                             Acts::RefHolder<ActsPodioEdm::TrackStateCollection>>
@@ -639,13 +615,8 @@ class MutablePodioTrackStateContainer final
         m_collection{trackStates},
         m_params{params},
         m_jacs{jacs},
-        m_hits{hits},
         m_links{links} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
-    if ((m_hits == nullptr) != (m_links == nullptr)) {
-      throw std::invalid_argument(
-          "Hits and links must be either both nullptr or both not nullptr");
-    }
   }
 
   /// Get const track parameters for a track state
@@ -1186,9 +1157,7 @@ class MutablePodioTrackStateContainer final
   }
 
  private:
-  bool storeUncalibrated() const {
-    return m_hits != nullptr && m_links != nullptr;
-  }
+  bool storeUncalibrated() const { return m_links != nullptr; }
 
   template <template <typename...> class other_holder_t>
   friend class ConstPodioTrackStateContainer;
@@ -1199,7 +1168,6 @@ class MutablePodioTrackStateContainer final
   holder_t<ActsPodioEdm::BoundParametersCollection> m_params;
   holder_t<ActsPodioEdm::JacobianCollection> m_jacs;
 
-  ActsPodioEdm::TrackerHitLocalCollection* m_hits = nullptr;
   ActsPodioEdm::TrackStateHitLinkCollection* m_links = nullptr;
 
   std::vector<std::shared_ptr<const Acts::Surface>> m_surfaces;
@@ -1232,7 +1200,6 @@ MutablePodioTrackStateContainer(PodioUtil::ConversionHelper&,
                                 ActsPodioEdm::TrackStateCollection&,
                                 ActsPodioEdm::BoundParametersCollection&,
                                 ActsPodioEdm::JacobianCollection&,
-                                ActsPodioEdm::TrackerHitLocalCollection*,
                                 ActsPodioEdm::TrackStateHitLinkCollection*)
     -> MutablePodioTrackStateContainer<Acts::RefHolder>;
 
@@ -1248,7 +1215,6 @@ inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
       m_params{*other.m_params},
       m_jacs{*other.m_jacs},
       m_surfaces{other.m_surfaces},
-      m_hits{other.m_hits},
       m_links{other.m_links} {
   for (const auto& [key, col] : other.m_dynamic) {
     m_dynamic.insert({key, col->asConst()});
@@ -1266,7 +1232,6 @@ inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
       m_params{std::move(other.m_params)},
       m_jacs{std::move(other.m_jacs)},
       m_surfaces{std::move(other.m_surfaces)},
-      m_hits{other.m_hits},
       m_links{other.m_links} {
   for (auto& [key, col] : other.m_dynamic) {
     m_dynamic.insert({key, std::move(col)});

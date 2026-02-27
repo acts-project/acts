@@ -95,7 +95,7 @@ ActsExamples::ProcessCode PodioTrackOutputConverter::execute(
   // Create Podio backends using RefHolder for externally owned collections
   ActsPlugins::MutablePodioTrackStateContainer trackStateContainer(
       helper, *trackStateCollection, *paramsCollection, *jacsCollection,
-      outputMeasurements.get(), trackStateHitLinks.get());
+      trackStateHitLinks.get());
   ActsPlugins::MutablePodioTrackContainer trackContainer(helper,
                                                          *trackCollection);
 
