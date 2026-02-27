@@ -8,7 +8,6 @@ message(STATUS "Building Mille as part of the Acts project")
 
 # Declare where to get Eigen from.
 FetchContent_Declare(Mille SYSTEM ${ACTS_MILLE_SOURCE})
-FetchContent_MakeAvailable(Mille)
 
 # Now set up its build.
 FetchContent_MakeAvailable(Mille)
