@@ -9,7 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
@@ -17,6 +17,10 @@
 
 namespace podio {
 class CollectionBase;
+}
+
+namespace ActsPodioEdm {
+class MeasurementCollection;
 }
 
 namespace ActsExamples {
@@ -63,7 +67,8 @@ class PodioMeasurementOutputConverter : public PodioOutputConverter {
   ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 
-  CollectionBaseWriteHandle m_outputMeasurements{this, "OutputMeasurements"};
+  PodioCollectionWriteHandle<ActsPodioEdm::MeasurementCollection>
+      m_outputMeasurements{this, "OutputMeasurements"};
 };
 
 }  // namespace ActsExamples
