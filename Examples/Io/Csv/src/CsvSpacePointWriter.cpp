@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -39,7 +38,7 @@ ProcessCode CsvSpacePointWriter::finalize() {
 }
 
 ProcessCode CsvSpacePointWriter::writeT(
-    const AlgorithmContext& ctx, const SimSpacePointContainer& spacePoints) {
+    const AlgorithmContext& ctx, const SpacePointContainer& spacePoints) {
   // Open per-event file for all components
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "spacepoint.csv", ctx.eventNumber);
@@ -62,8 +61,7 @@ ProcessCode CsvSpacePointWriter::writeT(
     spData.x = sp.x() / Acts::UnitConstants::mm;
     spData.y = sp.y() / Acts::UnitConstants::mm;
     spData.z = sp.z() / Acts::UnitConstants::mm;
-    spData.t = sp.t() ? *sp.t() / Acts::UnitConstants::ns
-                      : std::numeric_limits<double>::quiet_NaN();
+    spData.t = sp.time() / Acts::UnitConstants::ns;
     spData.var_r = sp.varianceR() / Acts::UnitConstants::mm;
     spData.var_z = sp.varianceZ() / Acts::UnitConstants::mm;
     writerSP.append(spData);

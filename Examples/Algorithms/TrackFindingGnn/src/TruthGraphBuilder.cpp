@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <algorithm>
 
@@ -17,8 +18,10 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
-TruthGraphBuilder::TruthGraphBuilder(Config config, Logging::Level level)
-    : IAlgorithm("TruthGraphBuilder", level), m_cfg(std::move(config)) {
+TruthGraphBuilder::TruthGraphBuilder(Config config,
+                                     std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TruthGraphBuilder", std::move(logger)),
+      m_cfg(std::move(config)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputGraph.initialize(m_cfg.outputGraph);
@@ -38,7 +41,7 @@ TruthGraphBuilder::TruthGraphBuilder(Config config, Logging::Level level)
 }
 
 std::vector<std::int64_t> TruthGraphBuilder::buildFromMeasurements(
-    const SimSpacePointContainer& spacePoints,
+    const SpacePointContainer& spacePoints,
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
   if (m_cfg.targetMinPT < 500_MeV) {
@@ -127,7 +130,7 @@ struct HitInfo {
 };
 
 std::vector<std::int64_t> TruthGraphBuilder::buildFromSimhits(
-    const SimSpacePointContainer& spacePoints,
+    const SpacePointContainer& spacePoints,
     const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
     const SimParticleContainer& particles) const {
   // Associate tracks to graph, collect momentum

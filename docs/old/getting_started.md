@@ -105,6 +105,13 @@ provided by the machine. It is suggested to select a recent `<lcg_release>`
 and `<lcg_platform>` combination. (Have a look at the CI jobs to get an
 overview on what we are currently testing):
 
+Current LCG/compiler combinations covered in CI are:
+
+- `LCG_107`: `gcc13`, `clang16`
+- `LCG_107a`: `gcc14`
+- `LCG_108`: `gcc15`
+- `LCG_109`: `gcc15`, `clang19`
+
 ```console
 source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
 ```
@@ -124,7 +131,7 @@ and they contain all the dependencies required to build ACTS.
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
 
-- `alma9` (HEP-specific software from LCG 106 or 107 and various clang versions)
+- `alma9` (HEP-specific software from LCG 107/107a/108/109 and compilers `gcc13`, `gcc14`, `gcc15`, `clang16`, `clang19`)
 - `macOS-10.15`
 
 :::{attention}

@@ -70,8 +70,8 @@ class Geant4SimulationBase : public IAlgorithm {
     std::shared_ptr<Geant4Handle> geant4Handle;
   };
 
-  Geant4SimulationBase(const Config& cfg, std::string name,
-                       Acts::Logging::Level level);
+  Geant4SimulationBase(const Config& cfg, const std::string& name,
+                       std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~Geant4SimulationBase() override;
 
@@ -94,8 +94,6 @@ class Geant4SimulationBase : public IAlgorithm {
   G4RunManager& runManager() const;
 
   Geant4::EventStore& eventStore() const;
-
-  std::unique_ptr<const Acts::Logger> m_logger;
 
   std::shared_ptr<Geant4::EventStore> m_eventStore;
 
@@ -157,8 +155,8 @@ class Geant4Simulation final : public Geant4SimulationBase {
   ///
   /// @param config is the configuration struct
   /// @param level is the logging level to be used
-  explicit Geant4Simulation(const Config& cfg,
-                            Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit Geant4Simulation(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~Geant4Simulation() override;
 
@@ -200,7 +198,7 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
   /// @param config is the configuration struct
   /// @param level is the logging level to be used
   explicit Geant4MaterialRecording(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~Geant4MaterialRecording() override;
 

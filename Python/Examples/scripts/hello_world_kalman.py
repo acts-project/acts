@@ -56,7 +56,7 @@ if "__main__" == __name__:
     digiConfigFile = Path.cwd() / "digi-config-minimal.json"
     with open(digiConfigFile, "w") as f:
         json.dump(digiConfig, f, indent=4)
-    logger = acts.logging.getLogger("Truth tracking example")
+    logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
     logger.info(f"Saved minimal digitization config to {digiConfigFile}")
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
