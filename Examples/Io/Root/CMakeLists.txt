@@ -29,6 +29,7 @@ acts_add_library(
     src/RootVertexNTupleWriter.cpp
     src/RootMuonSpacePointWriter.cpp
     src/RootMuonSpacePointReader.cpp
+    src/RootMeasurementPerformanceWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot

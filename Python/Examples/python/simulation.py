@@ -848,6 +848,21 @@ def addDigitization(
         s.addWriter(
             acts.examples.root.RootMeasurementWriter(rmwConfig, customLogLevel())
         )
+        rmpwConfig = acts.examples.root.RootMeasurementPerformanceWriter.Config(
+            inputMeasurements=digiAlg.config.outputMeasurements,
+            inputSimHits=digiAlg.config.inputSimHits,
+            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            inputMeasurementParticlesMap=digiAlg.config.outputMeasurementParticlesMap,
+            inputSimHitMeasurementsMap=digiAlg.config.outputSimHitMeasurementsMap,
+            filePath=str(
+                outputDirRoot / f"performance_{digiAlg.config.outputMeasurements}.root"
+            ),
+        )
+        s.addWriter(
+            acts.examples.root.RootMeasurementPerformanceWriter(
+                rmpwConfig, customLogLevel()
+            )
+        )
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
