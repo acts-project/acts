@@ -33,6 +33,7 @@ EDM4hepParticleOutputConverter::EDM4hepParticleOutputConverter(
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputParticles.declareConcreteType<edm4hep::MCParticleCollection>();
 }
 
 ProcessCode EDM4hepParticleOutputConverter::execute(

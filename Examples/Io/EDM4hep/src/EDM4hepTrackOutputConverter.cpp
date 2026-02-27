@@ -21,6 +21,7 @@ EDM4hepTrackOutputConverter::EDM4hepTrackOutputConverter(
       m_cfg(config) {
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
+  m_outputTracks.declareConcreteType<edm4hep::TrackCollection>();
 }
 
 ProcessCode EDM4hepTrackOutputConverter::execute(

@@ -25,6 +25,7 @@ PodioMeasurementOutputConverter::PodioMeasurementOutputConverter(
       m_cfg{config} {
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurements.declareConcreteType<ActsPodioEdm::MeasurementCollection>();
 
   if (m_cfg.inputSimHitAssociation.has_value() !=
       m_cfg.inputMeasurementSimHitsMap.has_value()) {

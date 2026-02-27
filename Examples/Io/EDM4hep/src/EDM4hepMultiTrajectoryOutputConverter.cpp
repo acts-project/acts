@@ -39,6 +39,7 @@ EDM4hepMultiTrajectoryOutputConverter::EDM4hepMultiTrajectoryOutputConverter(
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
   m_outputTracks.initialize(m_cfg.outputTracks);
   m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  m_outputTracks.declareConcreteType<edm4hep::TrackCollection>();
 }
 
 ProcessCode EDM4hepMultiTrajectoryOutputConverter::execute(
