@@ -25,6 +25,14 @@ namespace {
 std::string demangleAndShorten(std::string name) {
   name = boost::core::demangle(name.c_str());
 
+  // Normalize libc++ std::__1 namespace to std::
+  boost::algorithm::replace_all(name, "std::__1::", "std::");
+
+  // Remove default deleter from unique_ptr
+  const static std::regex unique_ptr_pattern(
+      R"??(std::unique_ptr<(.*),\s*std::default_delete<(\1\s*)>\s*>)??");
+  name = std::regex_replace(name, unique_ptr_pattern, "std::unique_ptr<$1>");
+
   // Remove std::allocator from vector
   const static std::regex vector_pattern(
       R"??(std::vector<(.*), std::allocator<(\1\s*)>\s*>)??");
