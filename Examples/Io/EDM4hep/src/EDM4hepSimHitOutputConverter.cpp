@@ -43,6 +43,8 @@ EDM4hepSimHitOutputConverter::EDM4hepSimHitOutputConverter(
   m_outputParticles.maybeInitialize(m_cfg.outputParticles);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_outputSimTrackerHits.initialize(m_cfg.outputSimTrackerHits);
+  m_outputParticles.declareConcreteType<edm4hep::MCParticleCollection>();
+  m_outputSimTrackerHits.declareConcreteType<edm4hep::SimTrackerHitCollection>();
 }
 
 ProcessCode EDM4hepSimHitOutputConverter::execute(

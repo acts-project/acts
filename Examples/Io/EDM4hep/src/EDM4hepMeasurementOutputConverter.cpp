@@ -28,6 +28,8 @@ EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
   m_outputTrackerHitsPlane.initialize(m_cfg.outputTrackerHitsPlane);
   m_outputTrackerHitsRaw.initialize(m_cfg.outputTrackerHitsRaw);
+  m_outputTrackerHitsPlane.declareConcreteType<edm4hep::TrackerHitPlaneCollection>();
+  m_outputTrackerHitsRaw.declareConcreteType<edm4hep::TrackerHit3DCollection>();
 }
 
 ProcessCode EDM4hepMeasurementOutputConverter::execute(
