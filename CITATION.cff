@@ -121,7 +121,7 @@ authors:
 - given-names: Carlo
   family-names: Varni
   affiliation: AGH University of Krakow
-version: v45.2.0
+version: v45.3.0
 date-released: 2025-11-14
 repository-code: https://github.com/acts-project/acts
 license: MPL-2.0
