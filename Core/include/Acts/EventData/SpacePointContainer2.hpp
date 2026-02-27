@@ -34,8 +34,7 @@ namespace Acts {
 /// Sentinel value for space points without timing information
 static constexpr float NoTime = std::numeric_limits<float>::quiet_NaN();
 
-class SpacePointContainer2;
-template <bool read_only>
+template <bool>
 class SpacePointProxy2;
 /// Mutable proxy to a space point allowing modification
 using MutableSpacePointProxy2 = SpacePointProxy2<false>;
