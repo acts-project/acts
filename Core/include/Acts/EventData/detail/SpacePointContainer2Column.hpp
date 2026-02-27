@@ -61,7 +61,7 @@ class ColumnHolder final : public ColumnHolderBase {
   }
 
   std::unique_ptr<ColumnHolderBase> copy() const override {
-    return std::make_unique<detail::sp::ColumnHolder<T>>(*this);
+    return std::make_unique<ColumnHolder<T>>(*this);
   }
 
   std::size_t size() const override { return m_data.size(); }
