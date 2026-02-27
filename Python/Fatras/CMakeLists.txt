@@ -46,6 +46,6 @@ foreach(f ${py_files})
 
     install(
         FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${ACTS_PYTHON_INSTALL_DIR}/${_rel}
+        DESTINATION ${_acts_python_install_dir}/${_rel}
     )
 endforeach()
