@@ -100,19 +100,20 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
   }
 
   {
-    auto [alg, c] =
+    auto [alg, config] =
         declareAlgorithm<EDM4hepMeasurementInputConverter, PodioInputConverter>(
             m, "EDM4hepMeasurementInputConverter");
-    ACTS_PYTHON_STRUCT(c, inputFrame, outputMeasurements,
-                       outputMeasurementSimHitsMap, outputClusters);
+    ACTS_PYTHON_STRUCT(config, inputFrame, inputTrackerHitsLocal,
+                       outputMeasurements, outputMeasurementSimHitsMap,
+                       outputClusters, dd4hepDetector);
   }
 
   {
     auto [alg, config] = declareAlgorithm<EDM4hepMeasurementOutputConverter,
                                           PodioOutputConverter>(
         m, "EDM4hepMeasurementOutputConverter");
-    ACTS_PYTHON_STRUCT(config, inputMeasurements, inputClusters,
-                       outputTrackerHitsPlane, outputTrackerHitsRaw);
+    ACTS_PYTHON_STRUCT(config, inputMeasurements, outputTrackerHitsLocal,
+                       trackingGeometry);
   }
 
   {
