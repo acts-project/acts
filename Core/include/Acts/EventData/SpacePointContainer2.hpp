@@ -58,6 +58,12 @@ class SpacePointContainer2 {
   using MutableProxy = MutableSpacePointProxy2;
   /// Type alias for const space point proxy
   using ConstProxy = ConstSpacePointProxy2;
+  /// Type alias for mutable column proxy
+  template <typename T>
+  using MutableColumnProxy = MutableSpacePointColumnProxy<T>;
+  /// Type alias for const column proxy
+  template <typename T>
+  using ConstColumnProxy = ConstSpacePointColumnProxy<T>;
 
   /// Constructs and empty space point container.
   /// @param columns The columns to create in the container.
@@ -138,7 +144,7 @@ class SpacePointContainer2 {
   /// @throws std::runtime_error if a column with the same name already exists.
   /// @throws std::runtime_error if the column name is reserved.
   template <typename T>
-  MutableSpacePointColumnProxy<T> createColumn(const std::string &name) {
+  MutableColumnProxy<T> createColumn(const std::string &name) {
     return createColumnImpl<ColumnHolder<T>>(name);
   }
 
@@ -162,7 +168,7 @@ class SpacePointContainer2 {
   /// @return A mutable reference to the column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  MutableSpacePointColumnProxy<T> column(const std::string &name) {
+  MutableColumnProxy<T> column(const std::string &name) {
     return columnImpl<ColumnHolder<T>>(name);
   }
 
@@ -172,79 +178,77 @@ class SpacePointContainer2 {
   /// @return A const reference to the column.
   /// @throws std::runtime_error if the column does not exist.
   template <typename T>
-  ConstSpacePointColumnProxy<T> column(const std::string &name) const {
+  ConstColumnProxy<T> column(const std::string &name) const {
     return columnImpl<ColumnHolder<T>>(name);
   }
 
   /// Returns a mutable proxy to the x coordinate column.
   /// @return A mutable proxy to the x coordinate column.
-  MutableSpacePointColumnProxy<float> xColumn() noexcept {
+  MutableColumnProxy<float> xColumn() noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
     return m_xColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the y coordinate column.
   /// @return A mutable proxy to the y coordinate column.
-  MutableSpacePointColumnProxy<float> yColumn() noexcept {
+  MutableColumnProxy<float> yColumn() noexcept {
     assert(m_yColumn.has_value() && "Column 'y' does not exist");
     return m_yColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the z coordinate column.
   /// @return A mutable proxy to the z coordinate column.
-  MutableSpacePointColumnProxy<float> zColumn() noexcept {
+  MutableColumnProxy<float> zColumn() noexcept {
     assert(m_zColumn.has_value() && "Column 'z' does not exist");
     return m_zColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the r coordinate column.
   /// @return A mutable proxy to the r coordinate column.
-  MutableSpacePointColumnProxy<float> rColumn() noexcept {
+  MutableColumnProxy<float> rColumn() noexcept {
     assert(m_rColumn.has_value() && "Column 'r' does not exist");
     return m_rColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the phi coordinate column.
   /// @return A mutable proxy to the phi coordinate column.
-  MutableSpacePointColumnProxy<float> phiColumn() noexcept {
+  MutableColumnProxy<float> phiColumn() noexcept {
     assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
     return m_phiColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the time column.
   /// @return A mutable proxy to the time column.
-  MutableSpacePointColumnProxy<float> timeColumn() noexcept {
+  MutableColumnProxy<float> timeColumn() noexcept {
     assert(m_timeColumn.has_value() && "Column 'time' does not exist");
     return m_timeColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the variance in Z direction column.
   /// @return A mutable proxy to the variance in Z direction column.
-  MutableSpacePointColumnProxy<float> varianceZColumn() noexcept {
+  MutableColumnProxy<float> varianceZColumn() noexcept {
     assert(m_varianceZColumn.has_value() &&
            "Column 'varianceZ' does not exist");
     return m_varianceZColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the variance in R direction column.
   /// @return A mutable proxy to the variance in R direction column.
-  MutableSpacePointColumnProxy<float> varianceRColumn() noexcept {
+  MutableColumnProxy<float> varianceRColumn() noexcept {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `top strip vector` column.
   /// @return A mutable proxy to the `top strip vector` column.
-  MutableSpacePointColumnProxy<std::array<float, 3>>
-  topStripVectorColumn() noexcept {
+  MutableColumnProxy<std::array<float, 3>> topStripVectorColumn() noexcept {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
     return m_topStripVectorColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `bottom strip vector` column.
   /// @return A mutable proxy to the `bottom strip vector` column.
-  MutableSpacePointColumnProxy<std::array<float, 3>>
-  bottomStripVectorColumn() noexcept {
+  MutableColumnProxy<std::array<float, 3>> bottomStripVectorColumn() noexcept {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
     return m_bottomStripVectorColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `strip center distance` column.
   /// @return A mutable proxy to the `strip center distance` column.
-  MutableSpacePointColumnProxy<std::array<float, 3>>
+  MutableColumnProxy<std::array<float, 3>>
   stripCenterDistanceColumn() noexcept {
     assert(m_stripCenterDistanceColumn.has_value() &&
            "Column 'stripCenterDistance' does not exist");
@@ -252,48 +256,45 @@ class SpacePointContainer2 {
   }
   /// Returns a mutable proxy to the `top strip center` column.
   /// @return A mutable proxy to the `top strip center` column.
-  MutableSpacePointColumnProxy<std::array<float, 3>>
-  topStripCenterColumn() noexcept {
+  MutableColumnProxy<std::array<float, 3>> topStripCenterColumn() noexcept {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
     return m_topStripCenterColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `copy from index` column.
   /// @return A mutable proxy to the `copy from index` column.
-  MutableSpacePointColumnProxy<SpacePointIndex2>
-  copyFromIndexColumn() noexcept {
+  MutableColumnProxy<SpacePointIndex2> copyFromIndexColumn() noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `xy` coordinates column.
   /// @return A mutable proxy to the `xy` coordinates column.
-  MutableSpacePointColumnProxy<std::array<float, 2>> xyColumn() noexcept {
+  MutableColumnProxy<std::array<float, 2>> xyColumn() noexcept {
     assert(m_xyColumn.has_value() && "Column 'xy' does not exist");
     return m_xyColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `zr` coordinates column.
   /// @return A mutable proxy to the `zr` coordinates column.
-  MutableSpacePointColumnProxy<std::array<float, 2>> zrColumn() noexcept {
+  MutableColumnProxy<std::array<float, 2>> zrColumn() noexcept {
     assert(m_zrColumn.has_value() && "Column 'zr' does not exist");
     return m_zrColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `xyz` coordinates column.
   /// @return A mutable proxy to the `xyz` coordinates column.
-  MutableSpacePointColumnProxy<std::array<float, 3>> xyzColumn() noexcept {
+  MutableColumnProxy<std::array<float, 3>> xyzColumn() noexcept {
     assert(m_xyzColumn.has_value() && "Column 'xyz' does not exist");
     return m_xyzColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `xyzr` coordinates column.
   /// @return A mutable proxy to the `xyzr` coordinates column.
-  MutableSpacePointColumnProxy<std::array<float, 4>> xyzrColumn() noexcept {
+  MutableColumnProxy<std::array<float, 4>> xyzrColumn() noexcept {
     assert(m_xyzrColumn.has_value() && "Column 'xyzr' does not exist");
     return m_xyzrColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `variance zr` column.
   /// @return A mutable proxy to the `variance zr` column.
-  MutableSpacePointColumnProxy<std::array<float, 2>>
-  varianceZRColumn() noexcept {
+  MutableColumnProxy<std::array<float, 2>> varianceZRColumn() noexcept {
     assert(m_varianceZRColumn.has_value() &&
            "Column 'varianceZR' does not exist");
     return m_varianceZRColumn->proxy(*this);
@@ -301,65 +302,64 @@ class SpacePointContainer2 {
 
   /// Returns a const proxy to the x coordinate column.
   /// @return A const proxy to the x coordinate column.
-  ConstSpacePointColumnProxy<float> xColumn() const noexcept {
+  ConstColumnProxy<float> xColumn() const noexcept {
     assert(m_xColumn.has_value() && "Column 'x' does not exist");
     return m_xColumn->proxy(*this);
   }
   /// Returns a const proxy to the y coordinate column.
   /// @return A const proxy to the y coordinate column.
-  ConstSpacePointColumnProxy<float> yColumn() const noexcept {
+  ConstColumnProxy<float> yColumn() const noexcept {
     assert(m_yColumn.has_value() && "Column 'y' does not exist");
     return m_yColumn->proxy(*this);
   }
   /// Returns a const proxy to the z coordinate column.
   /// @return A const proxy to the z coordinate column.
-  ConstSpacePointColumnProxy<float> zColumn() const noexcept {
+  ConstColumnProxy<float> zColumn() const noexcept {
     assert(m_zColumn.has_value() && "Column 'z' does not exist");
     return m_zColumn->proxy(*this);
   }
   /// Returns a const proxy to the r coordinate column.
   /// @return A const proxy to the r coordinate column.
-  ConstSpacePointColumnProxy<float> rColumn() const noexcept {
+  ConstColumnProxy<float> rColumn() const noexcept {
     assert(m_rColumn.has_value() && "Column 'r' does not exist");
     return m_rColumn->proxy(*this);
   }
   /// Returns a const proxy to the phi coordinate column.
   /// @return A const proxy to the phi coordinate column.
-  ConstSpacePointColumnProxy<float> phiColumn() const noexcept {
+  ConstColumnProxy<float> phiColumn() const noexcept {
     assert(m_phiColumn.has_value() && "Column 'phi' does not exist");
     return m_phiColumn->proxy(*this);
   }
   /// Returns a const proxy to the time column.
   /// @return A const proxy to the time column.
-  ConstSpacePointColumnProxy<float> timeColumn() const noexcept {
+  ConstColumnProxy<float> timeColumn() const noexcept {
     assert(m_timeColumn.has_value() && "Column 'time' does not exist");
     return m_timeColumn->proxy(*this);
   }
   /// Returns a const proxy to the variance in Z direction column.
   /// @return A const proxy to the variance in Z direction column.
-  ConstSpacePointColumnProxy<float> varianceZColumn() const noexcept {
+  ConstColumnProxy<float> varianceZColumn() const noexcept {
     assert(m_varianceZColumn.has_value() &&
            "Column 'varianceZ' does not exist");
     return m_varianceZColumn->proxy(*this);
   }
   /// Returns a const proxy to the variance in R direction column.
   /// @return A const proxy to the variance in R direction column.
-  ConstSpacePointColumnProxy<float> varianceRColumn() const noexcept {
+  ConstColumnProxy<float> varianceRColumn() const noexcept {
     assert(m_varianceRColumn.has_value() &&
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
   }
   /// Returns a const proxy to the `top strip vector` column.
   /// @return A const proxy to the `top strip vector` column.
-  ConstSpacePointColumnProxy<std::array<float, 3>> topStripVectorColumn()
-      const noexcept {
+  ConstColumnProxy<std::array<float, 3>> topStripVectorColumn() const noexcept {
     assert(m_topStripVectorColumn.has_value() &&
            "Column 'topStripVector' does not exist");
     return m_topStripVectorColumn->proxy(*this);
   }
   /// Returns a const proxy to the `bottom strip vector` column.
   /// @return A const proxy to the `bottom strip vector` column.
-  ConstSpacePointColumnProxy<std::array<float, 3>> bottomStripVectorColumn()
+  ConstColumnProxy<std::array<float, 3>> bottomStripVectorColumn()
       const noexcept {
     assert(m_bottomStripVectorColumn.has_value() &&
            "Column 'bottomStripVector' does not exist");
@@ -367,7 +367,7 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the `strip center distance` column.
   /// @return A const proxy to the `strip center distance` column.
-  ConstSpacePointColumnProxy<std::array<float, 3>> stripCenterDistanceColumn()
+  ConstColumnProxy<std::array<float, 3>> stripCenterDistanceColumn()
       const noexcept {
     assert(m_stripCenterDistanceColumn.has_value() &&
            "Column 'stripCenterDistance' does not exist");
@@ -375,48 +375,45 @@ class SpacePointContainer2 {
   }
   /// Returns a const proxy to the `top strip center` column.
   /// @return A const proxy to the `top strip center` column.
-  ConstSpacePointColumnProxy<std::array<float, 3>> topStripCenterColumn()
-      const noexcept {
+  ConstColumnProxy<std::array<float, 3>> topStripCenterColumn() const noexcept {
     assert(m_topStripCenterColumn.has_value() &&
            "Column 'topStripCenter' does not exist");
     return m_topStripCenterColumn->proxy(*this);
   }
   /// Returns a const proxy to the `copy from index` column.
   /// @return A const proxy to the `copy from index` column.
-  ConstSpacePointColumnProxy<SpacePointIndex2> copyFromIndexColumn()
-      const noexcept {
+  ConstColumnProxy<SpacePointIndex2> copyFromIndexColumn() const noexcept {
     assert(m_copyFromIndexColumn.has_value() &&
            "Column 'copyFromIndex' does not exist");
     return m_copyFromIndexColumn->proxy(*this);
   }
   /// Returns a const proxy to the `xy` coordinates column.
   /// @return A const proxy to the `xy` coordinates column.
-  ConstSpacePointColumnProxy<std::array<float, 2>> xyColumn() const noexcept {
+  ConstColumnProxy<std::array<float, 2>> xyColumn() const noexcept {
     assert(m_xyColumn.has_value() && "Column 'xy' does not exist");
     return m_xyColumn->proxy(*this);
   }
   /// Returns a const proxy to the `zr` coordinates column.
   /// @return A const proxy to the `zr` coordinates column.
-  ConstSpacePointColumnProxy<std::array<float, 2>> zrColumn() const noexcept {
+  ConstColumnProxy<std::array<float, 2>> zrColumn() const noexcept {
     assert(m_zrColumn.has_value() && "Column 'zr' does not exist");
     return m_zrColumn->proxy(*this);
   }
   /// Returns a const proxy to the `xyz` coordinates column.
   /// @return A const proxy to the `xyz` coordinates column.
-  ConstSpacePointColumnProxy<std::array<float, 3>> xyzColumn() const noexcept {
+  ConstColumnProxy<std::array<float, 3>> xyzColumn() const noexcept {
     assert(m_xyzColumn.has_value() && "Column 'xyz' does not exist");
     return m_xyzColumn->proxy(*this);
   }
   /// Returns a const proxy to the `xyzr` coordinates column.
   /// @return A const proxy to the `xyzr` coordinates column.
-  ConstSpacePointColumnProxy<std::array<float, 4>> xyzrColumn() const noexcept {
+  ConstColumnProxy<std::array<float, 4>> xyzrColumn() const noexcept {
     assert(m_xyzrColumn.has_value() && "Column 'xyzr' does not exist");
     return m_xyzrColumn->proxy(*this);
   }
   /// Returns a const proxy to the `variance zr` column.
   /// @return A const proxy to the `variance zr` column.
-  ConstSpacePointColumnProxy<std::array<float, 2>> varianceZRColumn()
-      const noexcept {
+  ConstColumnProxy<std::array<float, 2>> varianceZRColumn() const noexcept {
     assert(m_varianceZRColumn.has_value() &&
            "Column 'varianceZR' does not exist");
     return m_varianceZRColumn->proxy(*this);
@@ -448,9 +445,8 @@ class SpacePointContainer2 {
   template <bool read_only>
   using Iterator = Acts::detail::ContainerIterator<
       SpacePointContainer2,
-      std::conditional_t<read_only, ConstSpacePointProxy2,
-                         MutableSpacePointProxy2>,
-      Index, read_only>;
+      std::conditional_t<read_only, ConstProxy, MutableProxy>, Index,
+      read_only>;
 
   /// Type alias for mutable iterator over space points
   using iterator = Iterator<false>;
@@ -489,7 +485,7 @@ class SpacePointContainer2 {
     /// @param columns Additional columns to zip with the range
     /// @return Zipped range with additional columns
     template <typename... Ts>
-    auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
+    auto zip(const ConstColumnProxy<Ts> &...columns) const noexcept {
       return Base::container().zip(Base::range(), columns...);
     }
   };
@@ -515,15 +511,13 @@ class SpacePointContainer2 {
   template <bool read_only>
   class Subset : public Acts::detail::ContainerSubset<
                      Subset<read_only>, Subset<true>, SpacePointContainer2,
-                     std::conditional_t<read_only, ConstSpacePointProxy2,
-                                        MutableSpacePointProxy2>,
+                     std::conditional_t<read_only, ConstProxy, MutableProxy>,
                      SpacePointIndex2, read_only> {
    public:
     /// Base class type
     using Base = Acts::detail::ContainerSubset<
         Subset<read_only>, Subset<true>, SpacePointContainer2,
-        std::conditional_t<read_only, ConstSpacePointProxy2,
-                           MutableSpacePointProxy2>,
+        std::conditional_t<read_only, ConstProxy, MutableProxy>,
         SpacePointIndex2, read_only>;
 
     using Base::Base;
@@ -532,7 +526,7 @@ class SpacePointContainer2 {
     /// @param columns Additional columns to zip with the subset
     /// @return Zipped subset with additional columns
     template <typename... Ts>
-    auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
+    auto zip(const ConstColumnProxy<Ts> &...columns) const noexcept {
       return Base::container().zip(Base::subset(), columns...);
     }
   };
@@ -558,7 +552,7 @@ class SpacePointContainer2 {
   /// @param columns The columns to zip.
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
-  auto zip(const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
+  auto zip(const MutableColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(std::ranges::iota_view<Index, Index>(0, size()),
                      columns.data()...);
   }
@@ -566,7 +560,7 @@ class SpacePointContainer2 {
   /// @param columns The columns to zip.
   /// @return A zipped const range of space point data.
   template <typename... Ts>
-  auto zip(const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
+  auto zip(const ConstColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(std::ranges::iota_view<Index, Index>(0, size()),
                      columns.data()...);
   }
@@ -577,7 +571,7 @@ class SpacePointContainer2 {
   /// @return A zipped mutable range of space point data.
   template <typename... Ts>
   auto zip(const IndexRange &range,
-           const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
+           const MutableColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(
         std::ranges::iota_view<Index, Index>(range.first, range.second),
         columns.data().subspan(range.first, range.second - range.first)...);
@@ -588,7 +582,7 @@ class SpacePointContainer2 {
   /// @return A zipped const range of space point data.
   template <typename... Ts>
   auto zip(const IndexRange &range,
-           const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
+           const ConstColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(
         std::ranges::iota_view<Index, Index>(range.first, range.second),
         columns.data().subspan(range.first, range.second - range.first)...);
@@ -601,7 +595,7 @@ class SpacePointContainer2 {
   /// @return Zipped range for iteration over indices and column data
   template <typename... Ts>
   auto zip(const IndexSubset &subset,
-           const MutableSpacePointColumnProxy<Ts> &...columns) noexcept {
+           const MutableColumnProxy<Ts> &...columns) noexcept {
     return Acts::zip(subset, columns.subset(subset)...);
   }
 
@@ -612,7 +606,7 @@ class SpacePointContainer2 {
   /// @return Const zipped range for iteration over indices and column data
   template <typename... Ts>
   auto zip(const IndexSubset &subset,
-           const ConstSpacePointColumnProxy<Ts> &...columns) const noexcept {
+           const ConstColumnProxy<Ts> &...columns) const noexcept {
     return Acts::zip(subset, columns.subset(subset)...);
   }
 
@@ -712,7 +706,7 @@ class SpacePointContainer2 {
   static bool reservedColumn(const std::string &name) noexcept;
 
   template <typename Holder>
-  MutableSpacePointColumnProxy<typename Holder::Value> createColumnImpl(
+  MutableColumnProxy<typename Holder::Value> createColumnImpl(
       const std::string &name) {
     if (reservedColumn(name)) {
       throw std::runtime_error("Column name is reserved: " + name);
@@ -739,13 +733,13 @@ class SpacePointContainer2 {
   }
 
   template <typename Holder>
-  MutableSpacePointColumnProxy<typename Holder::Value> columnImpl(
+  MutableColumnProxy<typename Holder::Value> columnImpl(
       const std::string &name) {
     return columnImpl<Holder>(*this, name);
   }
 
   template <typename Holder>
-  ConstSpacePointColumnProxy<typename Holder::Value> columnImpl(
+  ConstColumnProxy<typename Holder::Value> columnImpl(
       const std::string &name) const {
     return columnImpl<Holder>(*this, name);
   }
