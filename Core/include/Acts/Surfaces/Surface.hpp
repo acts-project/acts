@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -41,7 +40,7 @@ class IVisualization3D;
 
 /// @class Surface
 ///
-/// @brief Abstract Base Class for tracking surfaces
+/// Abstract Base Class for tracking surfaces
 ///
 /// The Surface class builds the core of the Acts Tracking Geometry.
 /// All other geometrical objects are either extending the surface or
@@ -180,18 +179,6 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return the contextual transform
-  [[deprecated(
-      "Please use localToGlobalTransform(const GeometryContext& gctx) "
-      "instead")]]
-  const Transform3& transform(const GeometryContext& gctx) const;
-  /// Return method for the surface Transform3 by reference
-  /// In case a detector element is associated the surface transform
-  /// is just forwarded to the detector element in order to keep the
-  /// (mis-)alignment cache cetrally handled
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  ///
-  /// @return the contextual transform
   const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
 
   /// Return method for the surface center
@@ -217,13 +204,7 @@ class Surface : public virtual GeometryObject,
   /// @return SurfaceBounds by reference
   virtual const SurfaceBounds& bounds() const = 0;
 
-  /// Return method for the associated Detector Element
-  /// @deprecated This method is deprecated in favour of surfacePlacement()
-  /// @return plain pointer to the DetectorElement, can be nullptr
-  [[deprecated("Please use surfacePlacement()")]]
-  const DetectorElementBase* associatedDetectorElement() const;
-
-  /// @brief Return the associated surface placement if there is any
+  /// Return the associated surface placement if there is any
   /// @return Pointer to the surface placement, can be nullptr
   const SurfacePlacementBase* surfacePlacement() const;
 
@@ -231,7 +212,7 @@ class Surface : public virtual GeometryObject,
   /// @return Layer by plain pointer, can be nullptr
   const Layer* associatedLayer() const;
 
-  /// @brief Return the thickness of the surface in the normal direction
+  /// Return the thickness of the surface in the normal direction
   /// @return The surface thickness
   double thickness() const;
 
@@ -251,16 +232,7 @@ class Surface : public virtual GeometryObject,
   const std::shared_ptr<const ISurfaceMaterial>& surfaceMaterialSharedPtr()
       const;
 
-  /// Assign a detector element
-  ///
-  /// @deprecated: The method is deprecated in favour of assignSurfacePlacement()
-  /// @param detelement Detector element which is represented by this surface
-  [[deprecated(
-      "Please use assignSurfacePlacement(const SurfacePlacementBase& "
-      "placement) instead")]]
-  void assignDetectorElement(const SurfacePlacementBase& detelement);
-
-  /// @brief Assign a placement object which may dynamically align the surface in space
+  /// Assign a placement object which may dynamically align the surface in space
   /// @param placement: Placement object defining the surface's position
   void assignSurfacePlacement(const SurfacePlacementBase& placement);
 
@@ -277,7 +249,7 @@ class Surface : public virtual GeometryObject,
   /// @param isSensitive Boolean flag to set sensitivity
   /// @throw logic_error if the surface is associated to a detector element
   void assignIsSensitive(bool isSensitive);
-  /// @brief Assign the thickness of the surface in the
+  /// Assign the thickness of the surface in the
   ///        orthogonal dimension
   /// @param thick: Thickness parameter to assign (>=0)
   void assignThickness(double thick);
@@ -476,10 +448,10 @@ class Surface : public virtual GeometryObject,
   /// @return The surface class name as a string
   virtual std::string name() const = 0;
 
-  /// @brief Returns whether the Surface is sensitive
+  /// Returns whether the Surface is sensitive
   /// @return True if the surface is sensitive
   bool isSensitive() const;
-  /// @brief Returns whether the Surface is alignable
+  /// Returns whether the Surface is alignable
   /// @return True if the surface is alignable
   bool isAlignable() const;
 
@@ -580,7 +552,7 @@ class Surface : public virtual GeometryObject,
   /// Flag to indicate whether the surface is sensitive
   bool m_isSensitive{false};
 
-  /// @brief Thickness of the surface in the normal direction
+  /// Thickness of the surface in the normal direction
   double m_thickness{0.};
   /// Calculate the derivative of bound track parameters w.r.t.
   /// alignment parameters of its reference surface (i.e. origin in global 3D

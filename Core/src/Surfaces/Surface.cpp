@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
@@ -217,10 +216,6 @@ Vector3 Surface::center(const GeometryContext& gctx) const {
   return localToGlobalTransform(gctx).translation();
 }
 
-const Transform3& Surface::transform(const GeometryContext& gctx) const {
-  return localToGlobalTransform(gctx);
-}
-
 const Transform3& Surface::localToGlobalTransform(
     const GeometryContext& gctx) const {
   if (m_placement != nullptr) {
@@ -313,10 +308,6 @@ const SurfacePlacementBase* Surface::surfacePlacement() const {
   return m_placement;
 }
 
-const DetectorElementBase* Surface::associatedDetectorElement() const {
-  return dynamic_cast<const DetectorElementBase*>(m_placement);
-}
-
 double Surface::thickness() const {
   return m_thickness;
 }
@@ -337,10 +328,6 @@ const ISurfaceMaterial* Surface::surfaceMaterial() const {
 const std::shared_ptr<const ISurfaceMaterial>&
 Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
-}
-
-void Surface::assignDetectorElement(const SurfacePlacementBase& detelement) {
-  assignSurfacePlacement(detelement);
 }
 
 void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
