@@ -118,7 +118,6 @@ class PyReadDataHandle : public ReadDataHandleBase {
                            "' is not registered for WhiteBoard access");
     }
 
-    m_pytype = std::move(pytype);
     registerAsReadHandle();
   }
 
@@ -150,7 +149,6 @@ class PyReadDataHandle : public ReadDataHandleBase {
   }
 
  private:
-  py::object m_pytype;
   const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
 };
 
