@@ -20,7 +20,6 @@ Volume::Volume(const Transform3& transform,
     : GeometryObject(),
       m_transform{std::make_unique<Transform3>(transform)},
       m_itransform{std::make_unique<Transform3>(transform.inverse())},
-      m_center{transform.translation()},
       m_volumeBounds(std::move(volbounds)) {}
 
 Volume Volume::shifted(const GeometryContext& gctx,
@@ -32,11 +31,6 @@ Volume::Volume(VolumePlacementBase& positioner,
     : GeometryObject{},
       m_volumeBounds{std::move(volbounds)},
       m_placement{&positioner} {}
-
-Volume::Volume(const Volume& vol, const Transform3& shift)
-    : Volume{shift * (vol.m_transform ? (*vol.m_transform)
-                                      : Transform3::Identity()),
-             vol.m_volumeBounds} {}
 
 Vector3 Volume::referencePosition(const GeometryContext& gctx,
                                   AxisDirection aDir) const {
@@ -58,11 +52,6 @@ bool Volume::inside(const GeometryContext& gctx, const Vector3& gpos,
                     double tol) const {
   Vector3 posInVolFrame = globalToLocalTransform(gctx) * gpos;
   return volumeBounds().inside(posInVolFrame, tol);
-}
-bool Volume::inside(const Vector3& gpos, double tol) const {
-  ACTS_PUSH_IGNORE_DEPRECATED()
-  return volumeBounds().inside(itransform() * gpos, tol);
-  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::ostream& operator<<(std::ostream& sl, const Volume& vol) {
@@ -123,22 +112,9 @@ const Transform3& Volume::globalToLocalTransform(
   assert(m_itransform != nullptr);
   return (*m_itransform);
 }
-const Transform3& Volume::transform() const {
-  assert(m_transform != nullptr);
-  return (*m_transform);
-}
-
-const Transform3& Volume::itransform() const {
-  assert(m_itransform != nullptr);
-  return (*m_itransform);
-}
 
 Vector3 Volume::center(const GeometryContext& gctx) const {
   return localToGlobalTransform(gctx).translation();
-}
-
-const Vector3& Volume::center() const {
-  return m_center;
 }
 
 const VolumeBounds& Volume::volumeBounds() const {
@@ -172,7 +148,6 @@ void Volume::setTransform(const Transform3& transform) {
   }
   m_transform = std::make_unique<Transform3>(transform);
   m_itransform = std::make_unique<Transform3>(transform.inverse());
-  m_center = transform.translation();
 }
 
 bool Volume::operator==(const Volume& other) const {
