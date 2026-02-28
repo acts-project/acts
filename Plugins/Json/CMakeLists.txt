@@ -18,6 +18,7 @@ acts_add_library(
     src/DetrayJsonHelper.cpp
     src/JsonDetectorElement.cpp
     src/JsonSurfacesReader.cpp
+    src/TrackingGeometryJsonConverter.cpp
     src/DefinitionsJsonConverter.cpp
     src/Seeding2ConfigJsonConverter.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
