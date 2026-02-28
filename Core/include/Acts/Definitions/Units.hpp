@@ -54,7 +54,8 @@ namespace Acts {
 ///
 /// To further simplify the usage, physical quantities can also be expressed
 /// via [C++ user
-/// literals](https://en.cppreference.com/w/cpp/language/user_literal) defined
+/// literals](https://en.cppreference.com/w/cpp/language/user_literal.html)
+/// defined
 /// in @ref Acts::UnitLiterals. This allows us to express quantities in a
 /// concise way:
 ///

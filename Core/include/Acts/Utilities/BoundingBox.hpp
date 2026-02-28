@@ -131,15 +131,15 @@ class AxisAlignedBoundingBox {
 
   /// @brief Implements the slab method for Ray/AABB intersections.
   ///
-  /// See https://tavianator.com/fast-branchless-raybounding-box-intersections/,
-  /// https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/,
-  /// https://medium.com/@bromanz/another-view-on-the-classic-ray-aabb-intersection-algorithm-for-bvh-traversal-41125138b525
-  /// The original algorithms is described in "Graphics Gems (1990)" [1]
-  /// (https://doi.org/10.1016/B978-0-08-050753-8.50084-X)
+  /// @sa https://tavianator.com/2011/ray_box.html
+  /// @sa https://tavianator.com/2015/ray_box_nan.html
+  /// @sa https://medium.com/@bromanz/another-view-on-the-classic-ray-aabb-intersection-algorithm-for-bvh-traversal-41125138b525
+  /// @sa The original algorithm is described in "Graphics Gems (1990)" @cite GraphicsGems1990
   ///
   /// @note This implementation may treat parallel rays on any of the slabs
   ///       as **outside** due to how @c NaNs are handled by Eigen.
-  ///       See https://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
+  ///       See [this
+  ///       issue](https://eigen.tuxfamily.org/bz/show_bug.cgi?id=564).
   /// @param ray The ray to intersect with
   /// @return Whether the ray intersects this AABB
   bool intersect(const Ray<value_type, DIM>& ray) const;
