@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -36,6 +37,8 @@ class WhiteBoard {
   struct IHolder {
     virtual ~IHolder() = default;
     virtual const std::type_info& type() const = 0;
+    virtual const void* data() const = 0;
+    virtual std::uint64_t typeHash() const = 0;
   };
   template <Acts::Concepts::nothrow_move_constructible T>
   struct HolderT : public IHolder {
@@ -43,6 +46,8 @@ class WhiteBoard {
 
     explicit HolderT(T&& v) : value(std::move(v)) {}
     const std::type_info& type() const override { return typeid(T); }
+    std::uint64_t typeHash() const override { return Acts::typeHash<T>(); }
+    const void* data() const override { return std::addressof(value); }
   };
 
   struct StringHash {
@@ -115,6 +120,8 @@ class WhiteBoard {
 
   template <typename T>
   HolderT<T>* getHolder(const std::string& name) const;
+
+  IHolder* getHolder(const std::string& name) const;
 
   template <typename T>
   T pop(const std::string& name);

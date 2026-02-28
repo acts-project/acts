@@ -14,6 +14,7 @@
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -136,7 +137,15 @@ void addGenerators(py::module& mex) {
       .def_readwrite("fixed", &FixedPrimaryVertexPositionGenerator::fixed);
 
   py::class_<SimParticle>(mex, "SimParticle");
-  py::class_<SimParticleContainer>(mex, "SimParticleContainer");
+  auto simParticleContainer =
+      py::class_<SimParticleContainer>(mex, "SimParticleContainer")
+          .def("__len__",
+               [](const SimParticleContainer& self) { return self.size(); })
+          .def("__iter__", [](const SimParticleContainer& self) {
+            return py::make_iterator(self.begin(), self.end());
+          });
+
+  WhiteBoardRegistry::registerClass(simParticleContainer);
 
   {
     using Config = ParametricParticleGenerator::Config;
