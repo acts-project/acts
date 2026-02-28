@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Utilities/HashedString.hpp"
-
 #include <any>
 #include <array>
 #include <cassert>
@@ -198,7 +196,7 @@ class AnyBase : public AnyBaseAll {
   T& as() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       throw std::bad_any_cast{};
     }
 
@@ -216,7 +214,7 @@ class AnyBase : public AnyBaseAll {
   const T& as() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       throw std::bad_any_cast{};
     }
 
@@ -371,7 +369,6 @@ class AnyBase : public AnyBaseAll {
     void* (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
     bool heapAllocated{false};
-    std::uint64_t typeHash{0};
   };
 
   template <typename T>
@@ -400,8 +397,6 @@ class AnyBase : public AnyBaseAll {
                     heapAllocated<T>()) {
         h.copy = &copyImpl<T>;
       }
-
-      h.typeHash = typeHash<T>();
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
