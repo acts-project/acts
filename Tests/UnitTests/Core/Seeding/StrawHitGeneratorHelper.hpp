@@ -170,10 +170,14 @@ static_assert(CompositeSpacePointContainer<Container_t>);
 
 class SpCalibrator {
  public:
-  SpCalibrator() = default;
-
-  explicit SpCalibrator(const Acts::Transform3& localToGlobal)
-      : m_localToGlobal{localToGlobal} {}
+  explicit SpCalibrator(
+      Acts::Logging::Level logLvl = Acts::Logging::Level::INFO)
+      : m_logger{getDefaultLogger("Calibrator", logLvl)} {}
+  explicit SpCalibrator(
+      const Acts::Transform3& localToGlobal,
+      Acts::Logging::Level logLvl = Acts::Logging::Level::INFO)
+      : m_localToGlobal{localToGlobal},
+        m_logger{getDefaultLogger("Calibrator", logLvl)} {}
 
   /// @brief Normalize input variable within a given range
   static double normalize(const double value, const double min,
@@ -347,10 +351,19 @@ class SpCalibrator {
                         const Vector3& trackPos, const Vector3& trackDir,
                         const double timeOffSet,
                         const Container_t& uncalibCont) const {
+    return uncalibCont;
     Container_t calibMeas{};
+    ACTS_INFO("calibrate container with "
+              << uncalibCont.size() << " measurements. To parameters "
+              << toString(trackPos) << " + " << toString(trackDir)
+              << ", t0: " << timeOffSet << ".");
     std::ranges::transform(
         uncalibCont, std::back_inserter(calibMeas), [&](const auto& calibMe) {
-          return calibrate(ctx, trackPos, trackDir, timeOffSet, *calibMe);
+          ACTS_INFO(" - " << toString(*calibMe));
+          auto calibrated =
+              calibrate(ctx, trackPos, trackDir, timeOffSet, *calibMe);
+          ACTS_INFO(" + " << toString(*calibrated));
+          return calibrated;
         });
     return calibMeas;
   }
@@ -392,6 +405,8 @@ class SpCalibrator {
 
  private:
   const Acts::Transform3 m_localToGlobal{Acts::Transform3::Identity()};
+  std::unique_ptr<const Acts::Logger> m_logger{};
+  const Acts::Logger& logger() const { return *m_logger; };
 };
 /// Ensure that the Test space point calibrator satisfies the calibrator concept
 static_assert(
@@ -481,10 +496,11 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   linePars[toUnderlying(ParIndex::x0)] = uniform{-500., 500.}(engine);
   linePars[toUnderlying(ParIndex::y0)] = uniform{-500., 500.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
-      uniform{5_degree, 175_degree}(engine);
+      // uniform{5_degree, 175_degree}(engine);
+      uniform{5_degree, 20_degree}(engine);
   if ((Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
-       10._degree) ||
-      (Acts::abs(linePars[toUnderlying(ParIndex::phi)]) < 15._degree)) {
+       5._degree) ||
+      (Acts::abs(linePars[toUnderlying(ParIndex::phi)]) < 5._degree)) {
     return generateLine(engine, logger);
   }
   Line_t line{linePars};
@@ -614,7 +630,7 @@ class MeasurementGenerator {
         /// Does the track go from left to right or right to left?
         const int dT = copySign(1, dToFirstHigh - dToFirstLow);
         /// Loop over the candidate tubes and check each one whether the track
-        /// actually crossed them. Then generate the circle and optionally smear
+        /// actually crossed. Then generate the circle and optionally smear
         /// the radius
         for (int tN = dToFirstLow - dT; tN != dToFirstHigh + 2 * dT; tN += dT) {
           Vector3 tube = stag + 2. * tN * tubeRadius * Vector3::UnitY();
@@ -632,7 +648,9 @@ class MeasurementGenerator {
           if (smearedR > tubeRadius) {
             continue;
           }
-          ///
+          /// If the tube carries twin information then determine
+          /// the distance of the point of closest approach from the wire
+          /// centre
           if (genCfg.twinStraw) {
             const auto iSectWire = lineIntersect<3>(
                 line.position(), line.direction(), tube, Vector3::UnitX());

@@ -91,6 +91,11 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
 
   CompSpacePointAuxiliaries resCalc{resCfg,
                                     Acts::getDefaultLogger("testRes", logLvl)};
+  CompSpacePointAuxiliaries resCalcUp{
+      resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
+  CompSpacePointAuxiliaries resCalcDn{
+      resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
+
   resCalc.updateSpatialResidual(line, testPoint);
   ACTS_INFO(__func__ << "() - " << __LINE__ << ": Test residual w.r.t. "
                      << toString(testPoint));
@@ -178,10 +183,8 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
     const Line_t lineUp{lineParsUp};
     const Line_t lineDn{lineParsDn};
 
-    CompSpacePointAuxiliaries resCalcUp{
-        resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
-    CompSpacePointAuxiliaries resCalcDn{
-        resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
+    resCalcUp.reset();
+    resCalcDn.reset();
 
     resCalcUp.updateSpatialResidual(lineUp, testPoint);
     resCalcDn.updateSpatialResidual(lineDn, testPoint);
@@ -197,9 +200,6 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
     COMPARE_VECTORS(numDeriv, resCalc.gradient(par), tolerance);
     /// Next attempt to calculate the second derivative
     for (auto par1 : resCfg.parsToUse) {
-      if (par1 > par) {
-        break;
-      }
       const Vector_t numDeriv1{
           (resCalcUp.gradient(par1) - resCalcDn.gradient(par1)) / (2. * h)};
       ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
@@ -468,7 +468,6 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   }
 }
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
-  return;
   RandomEngine rndEngine{2525};
   ACTS_INFO("Run WireResidualTest");
   const Vector_t wirePos{100._cm, 50._cm, 30._cm};
@@ -568,7 +567,14 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   resCfg.useHessian = true;
   resCfg.calcAlongStrip = true;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
-                      /*ParIdx::t0*/};
+                      ParIdx::t0};
+
+  CompSpacePointAuxiliaries resCalc{resCfg,
+                                    Acts::getDefaultLogger("testRes", logLvl)};
+  CompSpacePointAuxiliaries resCalcUp{
+      resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
+  CompSpacePointAuxiliaries resCalcDn{
+      resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
 
   Line_t line{};
 
@@ -576,14 +582,8 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
 
   const double t0{0._ns};
 
-  auto testChi2 = [&line, &t0, &resCfg](const FitTestSpacePoint& testMe) {
-    CompSpacePointAuxiliaries resCalc{
-        resCfg, Acts::getDefaultLogger("testRes", logLvl)};
-    CompSpacePointAuxiliaries resCalcUp{
-        resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
-    CompSpacePointAuxiliaries resCalcDn{
-        resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
-
+  auto testChi2 = [&](const FitTestSpacePoint& testMe) {
+    resCalc.reset();
     using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
     ChiSq_t chi2{};
     ACTS_DEBUG(__func__ << "() " << __LINE__ << ":\n"
@@ -616,8 +616,10 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
                                                     t0, testMe),
                 chi2.chi2, 1.e-10);
 
-    constexpr double h = 1.e-7;
+    constexpr double h = 1.e-8;
     for (const auto par : resCfg.parsToUse) {
+      resCalcUp.reset();
+      resCalcDn.reset();
       Pars_t lineParsUp{line.parameters()};
       Pars_t lineParsDn{line.parameters()};
 
@@ -634,7 +636,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
       /// Calculate the updated chi2
       line.updateParameters(lineParsUp);
       if (Acts::rangeContainsValue(resCfg.parsToUse, ParIdx::t0)) {
-        resCalcUp.updateFullResidual(line, t0, testMe);
+        resCalcUp.updateFullResidual(line, t0Up, testMe);
       } else {
         resCalcUp.updateSpatialResidual(line, testMe);
         chi2Up.hessian(toUnderlying(ParIdx::t0), toUnderlying(ParIdx::t0)) = 1.;
@@ -644,7 +646,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
       line.updateParameters(lineParsDn);
 
       if (Acts::rangeContainsValue(resCfg.parsToUse, ParIdx::t0)) {
-        resCalcDn.updateFullResidual(line, t0, testMe);
+        resCalcDn.updateFullResidual(line, t0Dn, testMe);
         chi2Dn.hessian(toUnderlying(ParIdx::t0), toUnderlying(ParIdx::t0)) = 1.;
 
       } else {
@@ -700,13 +702,12 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
     //      {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
     const double R = 5._cm;
 
-    //// Test ordinary straws
-    //  testChi2(FitTestSpacePoint{
-    //      line.point(20._cm) + R * line.direction().cross(Vector_t::UnitX()),
-    //      Vector3::UnitX(), R, 10._mm});
+    // Test ordinary straws
+    testChi2(FitTestSpacePoint{
+        line.point(20._cm) + R * line.direction().cross(Vector_t::UnitX()),
+        Vector3::UnitX(), R, 10._mm});
 
-    /// Test straws with information on the position along the
-    /// tube
+    // Test straws with information on the position along the tube
 
     const double dZ = 2._cm;
     testChi2(FitTestSpacePoint{

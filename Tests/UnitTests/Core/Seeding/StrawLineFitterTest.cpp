@@ -26,9 +26,9 @@
 using TimePoint_t = std::chrono::system_clock::time_point;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::VERBOSE;
+constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 100000;
-constexpr long int nThreads = 16;
+constexpr long int nThreads = 1;
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
@@ -236,6 +236,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   fitCfg.calcAlongStraw = true;
   fitCfg.recalibrate = false;
   fitCfg.useFastFitter = false;
+  fitCfg.maxIter = 100;
   fitCfg.ranges[toUnderlying(FitParIndex::theta)] =
       std::array{1._degree, 179._degree};
   fitCfg.ranges[toUnderlying(FitParIndex::phi)] =
