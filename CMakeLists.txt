@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.14)
 unset(ENV{CPATH})
 
 # must be set before project(...) call; version module is needed before
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # determine project version; sets _acts_version and _acts_commit_hash
 include(ActsRetrieveVersion)
