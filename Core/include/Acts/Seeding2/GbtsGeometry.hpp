@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding2/GbtsConnector.hpp"
+#include "Acts/Seeding2/GbtsLayerConnection.hpp"
 
 #include <cstdint>
 #include <map>
@@ -139,37 +139,45 @@ class GbtsGeometry final {
  public:
   /// Constructor
   /// @param layerGeometry Silicon layers for geometry
-  /// @param conn Connector for layer connections
+  /// @param layerConnections Layer connections map
   GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
-               const std::unique_ptr<GbtsConnector>& conn);
+               const GbtsLayerConnectionMap& layerConnections);
 
-  /// Get layer by key
-  /// @param key Layer key
-  /// @return Pointer to layer or nullptr
-  const GbtsLayer* getGbtsLayerByKey(std::uint32_t key) const;
-  /// Get layer by index
-  /// @param idx Layer index
-  /// @return Reference to layer
-  const GbtsLayer& getGbtsLayerByIndex(std::int32_t idx) const;
-
-  /// Get layer key by index
-  /// @param idx Layer index
-  /// @return Layer key
-  inline std::uint32_t getGbtsLayerKeyByIndex(std::uint32_t idx) const {
-    return m_layerKeys.at(idx);
+  /// Get the layer geometry
+  const std::vector<TrigInDetSiLayer>& layerGeometry() const {
+    return m_layerGeometry;
   }
 
   /// Get number of eta bins
   /// @return Number of eta bins
   std::uint32_t numBins() const { return m_nEtaBins; }
+
   /// Get number of layers
   /// @return Number of layers
   std::uint32_t numLayers() const { return m_layArray.size(); }
+
   /// Get bin groups
   /// @return Bin groups vector
   const std::vector<std::pair<std::uint32_t, std::vector<std::uint32_t>>>&
   binGroups() const {
     return m_binGroups;
+  }
+
+  /// Get layer by key
+  /// @param key Layer key
+  /// @return Pointer to layer or nullptr
+  const GbtsLayer* layerByKey(std::uint32_t key) const;
+
+  /// Get layer by index
+  /// @param idx Layer index
+  /// @return Reference to layer
+  const GbtsLayer& layerByIndex(std::int32_t idx) const;
+
+  /// Get layer key by index
+  /// @param idx Layer index
+  /// @return Layer key
+  inline std::uint32_t layerKeyByIndex(std::uint32_t idx) const {
+    return m_layerKeys.at(idx);
   }
 
  private:
@@ -182,6 +190,8 @@ class GbtsGeometry final {
   /// Eta bin width
   float m_etaBinWidth{};
 
+  /// Layer geometry
+  std::vector<TrigInDetSiLayer> m_layerGeometry;
   /// Layer map
   std::map<std::uint32_t, GbtsLayer*> m_layMap;
   /// Layer array

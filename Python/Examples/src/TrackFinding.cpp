@@ -6,8 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding2/GbtsConfig.hpp"
-#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
@@ -39,14 +38,6 @@ void addTrackFinding(py::module& mex) {
                                 inputMeasurements, outputSpacePoints,
                                 trackingGeometry, geometrySelection,
                                 stripGeometrySelection);
-
-  {
-    using Config = Acts::Experimental::GbtsConfig;
-    auto c = py::class_<Config>(mex, "GbtsConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, phiSliceWidth,
-                       nMaxPhiSlice, lutInputFile);
-    patchKwargsConstructor(c);
-  }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GridTripletSeedingAlgorithm, mex, "GridTripletSeedingAlgorithm",
@@ -81,10 +72,19 @@ void addTrackFinding(py::module& mex) {
       maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
       useDeltaRinsteadOfTopRadius, useExtraCuts);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      GraphBasedSeedingAlgorithm, mex, "GraphBasedSeedingAlgorithm",
-      inputSpacePoints, outputSeeds, seedFinderConfig, layerMappingFile,
-      trackingGeometry, actsGbtsMap, fillModuleCsv, inputClusters);
+  {
+    using Config = Acts::Experimental::GraphBasedTrackSeeder::Config;
+    auto c =
+        py::class_<Config>(mex, "GraphBasedSeedingConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, minPt, connectorInputFile, nMaxPhiSlice,
+                       lutInputFile);
+    patchKwargsConstructor(c);
+  }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(GraphBasedSeedingAlgorithm, mex,
+                                "GraphBasedSeedingAlgorithm", inputSpacePoints,
+                                outputSeeds, seedFinderConfig, layerMappingFile,
+                                trackingGeometry, fillModuleCsv, inputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       HoughTransformSeeder, mex, "HoughTransformSeeder", inputSpacePoints,

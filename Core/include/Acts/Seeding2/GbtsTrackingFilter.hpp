@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Seeding2/GbtsConfig.hpp"
 #include "Acts/Seeding2/GbtsDataStorage.hpp"
 #include "Acts/Seeding2/GbtsGeometry.hpp"
 
@@ -63,24 +62,74 @@ class GbtsTrackingFilter final {
   /// Maximum number of edge states
   static constexpr std::uint32_t GbtsMaxEdgeState = 2500;
 
+  struct Config {
+    /// Multiple scattering sigma (for 900 MeV track at eta=0).
+    float sigmaMS = 0.016;
+    /// Radiation length fraction per layer (2.5% per layer).
+    float radLen = 0.025;
+
+    /// Measurement uncertainty in x direction.
+    float sigmaX = 0.08;
+    /// Measurement uncertainty in y direction.
+    float sigmaY = 0.25;
+
+    /// Measurement weight in x direction.
+    float weightX = 0.5;
+    /// Measurement weight in y direction.
+    float weightY = 0.5;
+
+    /// Maximum delta chi2 in x direction.
+    float maxDChi2X = 5.0;
+    /// Maximum delta chi2 in y direction.
+    float maxDChi2Y = 6.0;
+
+    /// Chi2 penalty for adding a hit.
+    float addHit = 14.0;
+
+    /// Maximum track curvature.
+    float maxCurvature = 1e-3f;
+    /// Maximum longitudinal impact parameter.
+    float maxZ0 = 170.0;
+  };
+
+  struct State {
+    /// State vector
+    std::vector<GbtsEdgeState*> stateVec;
+
+    /// State storage array
+    std::array<GbtsEdgeState, GbtsMaxEdgeState> stateStore{};
+
+    /// Global state counter
+    std::uint32_t globalStateCounter{0};
+  };
+
   /// Constructor
   /// @param config Configuration for seed finder
-  /// @param layerGeometry Geometry layer description
+  /// @param geometry GBTS geometry for layer information
   /// @param sb Edge storage
-  GbtsTrackingFilter(const GbtsConfig& config,
-                     const std::vector<TrigInDetSiLayer>& layerGeometry,
-                     std::vector<GbtsEdge>& sb);
+  GbtsTrackingFilter(const Config& config,
+                     const std::shared_ptr<const GbtsGeometry>& geometry);
 
   /// Follow track starting from edge
+  /// @param state Tracking filter state
+  /// @param sb Edge storage
   /// @param pS Starting edge
   /// @return Final edge state after following the track
-  GbtsEdgeState followTrack(GbtsEdge& pS);
+  GbtsEdgeState followTrack(State& state, std::vector<GbtsEdge>& sb,
+                            GbtsEdge& pS) const;
 
  private:
+  /// Configuration for the tracking filter.
+  Config m_cfg{};
+
+  /// GBTS geometry for layer information
+  std::shared_ptr<const GbtsGeometry> m_geometry;
+
   /// Propagate edge state
   /// @param pS Edge to propagate from
   /// @param ts Edge state to update
-  void propagate(GbtsEdge& pS, GbtsEdgeState& ts);
+  void propagate(State& state, std::vector<GbtsEdge>& sb, GbtsEdge& pS,
+                 GbtsEdgeState& ts) const;
 
   /// Update edge state with edge
   /// @param pS Edge to update with
@@ -92,24 +141,6 @@ class GbtsTrackingFilter final {
   /// @param l Layer index
   /// @return Layer type
   std::uint32_t getLayerType(std::uint32_t l) const;
-
-  /// Configuration for seed finder
-  const GbtsConfig* m_cfg{};
-
-  /// Geometry layer description
-  const std::vector<TrigInDetSiLayer>* m_layerGeometry{};
-
-  /// Edge storage
-  std::vector<GbtsEdge>* m_segStore{};
-
-  /// State vector
-  std::vector<GbtsEdgeState*> m_stateVec;
-
-  /// State storage array
-  std::array<GbtsEdgeState, GbtsMaxEdgeState> m_stateStore{};
-
-  /// Global state counter
-  std::uint32_t m_globalStateCounter{0};
 };
 
 }  // namespace Acts::Experimental

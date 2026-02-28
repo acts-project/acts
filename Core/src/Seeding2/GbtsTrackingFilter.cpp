@@ -59,51 +59,52 @@ void GbtsEdgeState::initialize(const GbtsEdge& pS) {
 }
 
 GbtsTrackingFilter::GbtsTrackingFilter(
-    const GbtsConfig& config,
-    const std::vector<TrigInDetSiLayer>& layerGeometry,
-    std::vector<GbtsEdge>& sb)
-    : m_cfg(&config), m_layerGeometry(&layerGeometry), m_segStore(&sb) {}
+    const Config& config, const std::shared_ptr<const GbtsGeometry>& geometry)
+    : m_cfg(config), m_geometry(geometry) {}
 
-GbtsEdgeState GbtsTrackingFilter::followTrack(GbtsEdge& pS) {
+GbtsEdgeState GbtsTrackingFilter::followTrack(State& state,
+                                              std::vector<GbtsEdge>& sb,
+                                              GbtsEdge& pS) const {
   if (pS.level == -1) {
     // already collected
     return GbtsEdgeState(false);
   }
 
-  m_globalStateCounter = 0;
+  state.globalStateCounter = 0;
 
   // create track state
 
-  GbtsEdgeState& pInitState = m_stateStore[m_globalStateCounter];
-  ++m_globalStateCounter;
+  GbtsEdgeState& pInitState = state.stateStore[state.globalStateCounter];
+  ++state.globalStateCounter;
 
   pInitState.initialize(pS);
 
-  m_stateVec.clear();
+  state.stateVec.clear();
 
   // recursive branching and propagation
 
-  propagate(pS, pInitState);
+  propagate(state, sb, pS, pInitState);
 
-  if (m_stateVec.empty()) {
+  if (state.stateVec.empty()) {
     return GbtsEdgeState(false);
   }
 
-  std::ranges::sort(m_stateVec, std::ranges::greater{},
+  std::ranges::sort(state.stateVec, std::ranges::greater{},
                     [](const GbtsEdgeState* s) { return s->j; });
 
-  m_globalStateCounter = 0;
+  state.globalStateCounter = 0;
 
-  return *m_stateVec.front();
+  return *state.stateVec.front();
 }
 
-void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
-  if (m_globalStateCounter >= GbtsMaxEdgeState) {
+void GbtsTrackingFilter::propagate(State& state, std::vector<GbtsEdge>& sb,
+                                   GbtsEdge& pS, GbtsEdgeState& ts) const {
+  if (state.globalStateCounter >= GbtsMaxEdgeState) {
     return;
   }
 
-  GbtsEdgeState& newTs = m_stateStore[m_globalStateCounter];
-  ++m_globalStateCounter;
+  GbtsEdgeState& newTs = state.stateStore[state.globalStateCounter];
+  ++state.globalStateCounter;
   newTs = ts;
 
   newTs.vs.push_back(&pS);
@@ -124,7 +125,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
   for (std::uint32_t nIdx = 0; nIdx < pS.nNei; ++nIdx) {
     const std::uint32_t nextSegmentIdx = pS.vNei[nIdx];
 
-    GbtsEdge& pN = (*m_segStore)[nextSegmentIdx];
+    GbtsEdge& pN = sb[nextSegmentIdx];
 
     if (pN.level == -1) {
       // already collected
@@ -139,21 +140,21 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
   // the end of chain
   if (lCont.empty()) {
     // store in the vector
-    if (m_globalStateCounter < GbtsMaxEdgeState) {
-      if (m_stateVec.empty()) {
+    if (state.globalStateCounter < GbtsMaxEdgeState) {
+      if (state.stateVec.empty()) {
         // add the first segment state
-        GbtsEdgeState* p = &m_stateStore[m_globalStateCounter];
-        ++m_globalStateCounter;
+        GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];
+        ++state.globalStateCounter;
         *p = newTs;
-        m_stateVec.push_back(p);
+        state.stateVec.push_back(p);
       } else {
         // compare with the best and add
-        const float bestSoFar = m_stateVec.front()->j;
+        const float bestSoFar = state.stateVec.front()->j;
         if (newTs.j > bestSoFar) {
-          GbtsEdgeState* p = &m_stateStore[m_globalStateCounter];
-          ++m_globalStateCounter;
+          GbtsEdgeState* p = &state.stateStore[state.globalStateCounter];
+          ++state.globalStateCounter;
           *p = newTs;
-          m_stateVec.push_back(p);
+          state.stateVec.push_back(p);
         }
       }
     }
@@ -161,7 +162,7 @@ void GbtsTrackingFilter::propagate(GbtsEdge& pS, GbtsEdgeState& ts) {
     // branching
     for (GbtsEdge* sIt : lCont) {
       // recursive call
-      propagate(*sIt, newTs);
+      propagate(state, sb, *sIt, newTs);
     }
   }
 }
@@ -184,11 +185,11 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
 
   const float lenCorr = type1 == 0 ? invSin2 : invSin2 / tau2;
 
-  const float minPtFrac = std::abs(ts.x[2]) / m_cfg->maxCurvature;
+  const float minPtFrac = std::abs(ts.x[2]) / m_cfg.maxCurvature;
 
-  const float corrMS = m_cfg->sigmaMS * minPtFrac;
+  const float corrMS = m_cfg.sigmaMS * minPtFrac;
 
-  const float sigma2 = m_cfg->radLen * lenCorr * corrMS * corrMS;  // /invSin2
+  const float sigma2 = m_cfg.radLen * lenCorr * corrMS * corrMS;  // /invSin2
 
   ts.cx[1][1] += sigma2;
 
@@ -253,24 +254,24 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
 
   if (type == 0) {
     // barrel TODO: split into barrel Pixel and barrel SCT
-    sigma_rz = m_cfg->sigmaY * m_cfg->sigmaY;
+    sigma_rz = m_cfg.sigmaY * m_cfg.sigmaY;
   } else {
-    sigma_rz = m_cfg->sigmaY * ts.y[1];
+    sigma_rz = m_cfg.sigmaY * ts.y[1];
     sigma_rz = sigma_rz * sigma_rz;
   }
 
-  const float Dx = 1.0 / (Cx[0][0] + m_cfg->sigmaX * m_cfg->sigmaX);
+  const float Dx = 1.0 / (Cx[0][0] + m_cfg.sigmaX * m_cfg.sigmaX);
 
   const float Dy = 1.0 / (Cy[0][0] + sigma_rz);
 
   const float dchi2_x = resid_x * resid_x * Dx;
   const float dchi2_y = resid_y * resid_y * Dy;
 
-  if (dchi2_x > m_cfg->maxDChi2X || dchi2_y > m_cfg->maxDChi2Y) {
+  if (dchi2_x > m_cfg.maxDChi2X || dchi2_y > m_cfg.maxDChi2Y) {
     return false;
   }
 
-  ts.j += m_cfg->addHit - dchi2_x * m_cfg->weightX - dchi2_y * m_cfg->weightY;
+  ts.j += m_cfg.addHit - dchi2_x * m_cfg.weightX - dchi2_y * m_cfg.weightY;
 
   // state update
 
@@ -281,7 +282,7 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
     ts.x[i] = X[i] + Kx[i] * resid_x;
   }
 
-  if (std::abs(ts.x[2]) > m_cfg->maxCurvature) {
+  if (std::abs(ts.x[2]) > m_cfg.maxCurvature) {
     return false;
   }
 
@@ -291,7 +292,7 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
 
   const float z0 = ts.y[0] - refY * ts.y[1];
 
-  if (std::abs(z0) > m_cfg->maxZ0) {
+  if (std::abs(z0) > m_cfg.maxZ0) {
     return false;
   }
 
@@ -312,7 +313,7 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
 }
 
 std::uint32_t GbtsTrackingFilter::getLayerType(const std::uint32_t l) const {
-  return m_layerGeometry->at(l).type;
+  return m_geometry->layerGeometry().at(l).type;
 }
 
 }  // namespace Acts::Experimental

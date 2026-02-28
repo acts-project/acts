@@ -16,24 +16,24 @@
 namespace Acts::Experimental {
 
 /// Connection between two GBTS layers with binning information.
-struct GbtsConnection {
+struct GbtsLayerConnection {
   /// Constructor
   /// @param src_ Source layer index
   /// @param dst_ Destination layer index
-  GbtsConnection(std::uint32_t src_, std::uint32_t dst_)
+  GbtsLayerConnection(std::uint32_t src_, std::uint32_t dst_)
       : src(src_), dst(dst_) {};
 
   /// Source and destination layer indices
-  std::uint32_t src;
+  std::uint32_t src{};
   /// Destination layer index
-  std::uint32_t dst;
+  std::uint32_t dst{};
 
   /// Binning table for the connection
   std::vector<std::int32_t> binTable;
 };
 
 /// Loader and container for GBTS layer connection data.
-struct GbtsConnector {
+struct GbtsLayerConnectionMap {
  public:
   /// Group of connections targeting a destination layer.
   struct LayerGroup {
@@ -41,28 +41,29 @@ struct GbtsConnector {
     /// @param dst_ Destination layer key
     /// @param sources_ Vector of source connections
     LayerGroup(std::uint32_t dst_,
-               const std::vector<const GbtsConnection*>& sources_)
+               const std::vector<const GbtsLayerConnection*>& sources_)
         : dst(dst_), sources(sources_) {};
 
     /// The target layer of the group
     std::uint32_t dst{};
 
     /// The source layers of the group
-    std::vector<const GbtsConnection*> sources;
+    std::vector<const GbtsLayerConnection*> sources;
   };
 
   /// Constructor
   /// @param inFile Input configuration file path
   /// @param lrtMode Enable LRT (Large Radius Tracking) mode
-  GbtsConnector(std::string& inFile, bool lrtMode);
+  GbtsLayerConnectionMap(std::string& inFile, bool lrtMode);
 
   /// Eta bin size
   float etaBin{};
 
   /// Map of layer groups indexed by layer
-  std::map<std::int32_t, std::vector<struct LayerGroup>> layerGroups;
+  std::map<std::int32_t, std::vector<LayerGroup>> layerGroups;
   /// Map of connections indexed by layer
-  std::map<std::int32_t, std::vector<std::unique_ptr<GbtsConnection>>> connMap;
+  std::map<std::int32_t, std::vector<std::unique_ptr<GbtsLayerConnection>>>
+      connectionMap;
 };
 
 }  // namespace Acts::Experimental

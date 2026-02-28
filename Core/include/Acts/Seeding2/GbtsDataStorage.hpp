@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Seeding2/GbtsConfig.hpp"
-
 #include <array>
 #include <cstdint>
 #include <limits>
@@ -93,25 +91,23 @@ struct GbtsEtaBin final {
   std::uint32_t layerKey{0};
 };
 
-/// Storage container for GBTS nodes and edges.
-class GbtsDataStorage final {
+/// Storage container for GBTS nodes
+class GbtsNodeStorage final {
  public:
-  /// Constructor
-  /// @param config Configuration for seed finder
   /// @param geometry Shared pointer to GBTS geometry
   /// @param mlLut Machine learning lookup table
-  explicit GbtsDataStorage(const GbtsConfig& config,
-                           std::shared_ptr<const GbtsGeometry> geometry,
+  explicit GbtsNodeStorage(std::shared_ptr<const GbtsGeometry> geometry,
                            GbtsMlLookupTable mlLut);
 
   /// Load pixel graph nodes
   /// @param layerIndex Layer index for the nodes
   /// @param coll Collection of nodes to load
   /// @param useMl Use machine learning features
+  /// @param maxEndcapClusterWidth Maximum cluster width for endcap nodes
   /// @return Number of nodes loaded
   std::uint32_t loadPixelGraphNodes(std::uint16_t layerIndex,
                                     const std::span<const GbtsNode> coll,
-                                    bool useMl);
+                                    bool useMl, float maxEndcapClusterWidth);
   /// Load strip graph nodes
   /// @param layerIndex Layer index for the nodes
   /// @param coll Collection of nodes to load
@@ -143,10 +139,7 @@ class GbtsDataStorage final {
 
  private:
   /// GBTS geometry
-  std::shared_ptr<const GbtsGeometry> m_geo;
-
-  /// Configuration for seed finder
-  GbtsConfig m_cfg{};
+  std::shared_ptr<const GbtsGeometry> m_geometry;
 
   /// Machine learning lookup table
   GbtsMlLookupTable m_mlLut;
