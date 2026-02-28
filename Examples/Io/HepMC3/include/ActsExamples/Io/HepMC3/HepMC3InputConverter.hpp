@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
