@@ -88,6 +88,7 @@ target_sources(
     PRIVATE
         src/Framework.cpp
         src/ExampleAlgorithms.cpp
+        src/DispatchAlgorithms.cpp
         src/Generators.cpp
         src/AmbiguityResolution.cpp
         src/Detector.cpp
@@ -134,6 +135,7 @@ target_link_libraries(
         Acts::ExamplesDigitization
         Acts::ExamplesGenerators
         Acts::ExamplesMaterialMapping
+        Acts::ExamplesDispatchAlgorithms
         Acts::ExamplesUtilities
         Acts::ExamplesIoCsv
         Acts::ExamplesIoObj
