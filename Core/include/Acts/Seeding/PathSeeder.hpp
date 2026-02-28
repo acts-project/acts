@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GridIterator.hpp"

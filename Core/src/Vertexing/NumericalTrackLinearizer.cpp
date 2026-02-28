@@ -8,7 +8,6 @@
 
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"

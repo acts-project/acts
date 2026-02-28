@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/FreeTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "ActsPlugins/Json/TrackParametersJsonConverter.hpp"

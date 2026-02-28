@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"

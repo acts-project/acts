@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"

@@ -12,7 +12,6 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 
 #include <format>
-#include <type_traits>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -258,19 +257,16 @@ void addDefinitions(py::module_& m) {
   // Add the parsePdgParticle function
   m.def("parsePdgParticle", &parsePdgParticle, py::arg("name"));
 
-  py::class_<GenericParticleHypothesis<AnyCharge>>(
-      m, "GenericParticleHypothesisAnyCharge");
-
-  py::class_<ParticleHypothesis, GenericParticleHypothesis<AnyCharge>>(
-      m, "ParticleHypothesis")
+  py::class_<ParticleHypothesis>(m, "ParticleHypothesis")
       .def(py::init([](PdgParticle absPdg, float mass, float absCharge) {
-             return ParticleHypothesis(absPdg, mass, AnyCharge{absCharge});
+             return ParticleHypothesis(absPdg, mass,
+                                       ChargeHypothesis{absCharge});
            }),
            py::arg("pdg"), py::arg("mass"), py::arg("absCharge"))
       .def(py::init([](std::underlying_type_t<PdgParticle> absPdg, float mass,
                        float absCharge) {
              return ParticleHypothesis(static_cast<PdgParticle>(absPdg), mass,
-                                       AnyCharge{absCharge});
+                                       ChargeHypothesis{absCharge});
            }),
            py::arg("absPdg"), py::arg("mass"), py::arg("absCharge"))
       .def("__str__",

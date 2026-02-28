@@ -11,7 +11,6 @@
 #include "Acts/Propagator/RiddersPropagator.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 
 #include <numbers>
 

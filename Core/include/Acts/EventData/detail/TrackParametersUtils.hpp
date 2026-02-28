@@ -8,22 +8,19 @@
 
 #pragma once
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 
 namespace Acts::detail {
 
 /// @brief Shorthand for Bound or Free track parameters
 template <class parameters_t>
-concept isBoundOrFreeTrackParams =
-    Acts::FreeTrackParametersConcept<parameters_t> ||
-    Acts::BoundTrackParametersConcept<parameters_t>;
+concept isBoundOrFreeTrackParams = FreeTrackParametersConcept<parameters_t> ||
+                                   BoundTrackParametersConcept<parameters_t>;
 
 /// @brief Shorthand for GenericBoundTrackParameters
 template <class parameters_t>
-concept isGenericBoundTrackParams =
-    std::same_as<parameters_t, Acts::GenericBoundTrackParameters<
-                                   typename parameters_t::ParticleHypothesis>>;
+concept isBoundTrackParams = std::same_as<parameters_t, BoundTrackParameters>;
 
 /// @brief Concept that restricts the type of the
 /// accumulation grid cell

@@ -29,8 +29,8 @@ constexpr auto kInvalid = kTrackIndexInvalid;
 
 template <typename factory_t>
 class MultiTrajectoryTestsCommon {
-  using ParametersVector = BoundTrackParameters::ParametersVector;
-  using CovarianceMatrix = BoundTrackParameters::CovarianceMatrix;
+  using ParametersVector = BoundVector;
+  using CovarianceMatrix = BoundMatrix;
   using Jacobian = BoundMatrix;
 
   using trajectory_t = typename factory_t::trajectory_t;

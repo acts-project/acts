@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 

@@ -12,8 +12,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -215,7 +215,7 @@ class Particle {
   Acts::ParticleHypothesis hypothesis() const {
     return Acts::ParticleHypothesis(
         absolutePdg(), static_cast<float>(mass()),
-        Acts::AnyCharge{static_cast<float>(absoluteCharge())});
+        Acts::ChargeHypothesis{static_cast<float>(absoluteCharge())});
   }
   /// Particl qOverP.
   /// @return The charge over momentum ratio

@@ -10,7 +10,6 @@
 
 #include "ActsAlignment/Kernel/Alignment.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"

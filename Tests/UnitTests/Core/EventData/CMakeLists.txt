@@ -1,5 +1,4 @@
 add_unittest(BoundTrackParameters BoundTrackParametersTests.cpp)
-add_unittest(Charge ChargeTests.cpp)
 add_unittest(CurvilinearTrackParameters CurvilinearTrackParametersTests.cpp)
 add_unittest(FreeTrackParameters FreeTrackParametersTests.cpp)
 add_unittest(MeasurementHelpers MeasurementHelpersTests.cpp)

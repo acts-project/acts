@@ -13,16 +13,12 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericFreeTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/FreeTrackParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
 #include <optional>
-#include <utility>
-#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 

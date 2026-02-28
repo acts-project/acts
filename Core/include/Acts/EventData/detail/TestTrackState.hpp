@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
