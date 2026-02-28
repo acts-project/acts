@@ -14,7 +14,6 @@
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <cassert>
-#include <span>
 #include <vector>
 
 namespace Acts {
@@ -176,74 +175,6 @@ class SeedContainer2 {
   /// @return A const proxy to the seed at the given index.
   ConstProxy operator[](Index index) const noexcept;
 
-  /// Assigns space point indices to the seed at the given index.
-  /// @param index The index of the seed to assign space point indices to.
-  /// @param spacePointIndices A span of space point indices to assign to the seed.
-  /// @throws std::out_of_range if the index is out of range.
-  /// @throws std::logic_error if space point indices are already assigned to the seed.
-  void assignSpacePointIndices(
-      Index index, std::span<const SpacePointIndex2> spacePointIndices);
-
-  /// Mutable access to the space point indices of the seed at the given index.
-  /// @param index The index of the seed.
-  /// @return A span of space point indices associated with the seed at the given
-  ///         index.
-  std::span<SpacePointIndex2> spacePointIndices(Index index) noexcept {
-    assert(index < m_spacePointCounts.size() && "Index out of bounds");
-    assert(index < m_spacePointOffsets.size() && "Index out of bounds");
-    return std::span<SpacePointIndex2>(
-        m_spacePoints.data() + m_spacePointOffsets[index],
-        m_spacePoints.data() + m_spacePointOffsets[index] +
-            m_spacePointCounts[index]);
-  }
-
-  /// Mutable access to the quality of the seed at the given index.
-  /// @param index The index of the seed.
-  /// @return A mutable reference to the quality of the seed at the given index.
-  float &quality(Index index) noexcept {
-    assert(index < m_qualities.size() && "Index out of bounds");
-    return m_qualities[index];
-  }
-
-  /// Mutable access to the vertex Z coordinate of the seed at the given index.
-  /// @param index The index of the seed.
-  /// @return A mutable reference to the vertex Z coordinate of the seed at the
-  float &vertexZ(Index index) noexcept {
-    assert(index < m_vertexZs.size() && "Index out of bounds");
-    return m_vertexZs[index];
-  }
-
-  /// Const access to the space point indices of the seed at the given index.
-  /// @param index The index of the seed.
-  /// @return A span of space point indices associated with the seed at the given
-  ///         index.
-  std::span<const SpacePointIndex2> spacePointIndices(
-      Index index) const noexcept {
-    assert(index < m_spacePointCounts.size() && "Index out of bounds");
-    assert(index < m_spacePointOffsets.size() && "Index out of bounds");
-    return std::span<const SpacePointIndex2>(
-        m_spacePoints.data() + m_spacePointOffsets[index],
-        m_spacePoints.data() + m_spacePointOffsets[index] +
-            m_spacePointCounts[index]);
-  }
-
-  /// Const access to the quality of the seed at the given index.
-  /// @param index The index of the seed.
-  /// @return A const reference to the quality of the seed at the given index.
-  float quality(Index index) const noexcept {
-    assert(index < m_qualities.size() && "Index out of bounds");
-    return m_qualities[index];
-  }
-
-  /// Const access to the vertex Z coordinate of the seed at the given index.
-  /// @param index The index of the seed.
-  /// @return A const reference to the vertex Z coordinate of the seed at the
-  ///         given index.
-  float vertexZ(Index index) const noexcept {
-    assert(index < m_vertexZs.size() && "Index out of bounds");
-    return m_vertexZs[index];
-  }
-
   /// Type alias for iterator template over seed container
   template <bool read_only>
   using Iterator = detail::ContainerIterator<
@@ -271,6 +202,9 @@ class SeedContainer2 {
   const_iterator end() const noexcept { return const_iterator(*this, size()); }
 
  private:
+  template <bool>
+  friend class SeedProxy2;
+
   std::uint32_t m_size{0};
   std::vector<std::uint32_t> m_spacePointOffsets;
   std::vector<std::uint8_t> m_spacePointCounts;
