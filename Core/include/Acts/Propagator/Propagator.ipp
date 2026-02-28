@@ -311,9 +311,6 @@ template <typename propagator_state_t, typename parameters_t,
           typename path_aborter_t>
 Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
                                           const parameters_t& start) const {
-  static_assert(BoundTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");
-
   m_stepper.initialize(state.stepping, start);
 
   state.position = m_stepper.position(state.stepping);

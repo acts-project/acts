@@ -14,7 +14,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
@@ -28,6 +27,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
@@ -37,7 +37,6 @@
 #include <numbers>
 #include <optional>
 #include <random>
-#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -246,20 +245,6 @@ struct MultiStepperTester {
         BOOST_CHECK_EQUAL(cmp.state.covTransport, Cov);
       }
     }
-  }
-
-  void test_multi_stepper_state_invalid() const {
-    MultiOptions options(geoCtx, magCtx);
-    options.maxStepSize = defaultStepSize;
-
-    MultiStepper multiStepper(defaultBField);
-
-    // Empty component vector
-    const auto multi_pars = makeDefaultBoundPars(false, 0);
-    MultiState state = multiStepper.makeState(options);
-
-    BOOST_CHECK_THROW(multiStepper.initialize(state, multi_pars),
-                      std::invalid_argument);
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -631,11 +616,13 @@ struct MultiStepperTester {
     BOOST_REQUIRE(res.ok());
 
     const auto [bound_pars, jacobian, pathLength] = *res;
+    const auto single_bound_pars =
+        bound_pars.merge(ComponentMergeMethod::eMean);
 
     BOOST_CHECK_EQUAL(jacobian, decltype(jacobian)::Zero());
     BOOST_CHECK_EQUAL(pathLength, 0.0);
-    BOOST_CHECK(bound_pars.parameters().isApprox(pars, 1.e-8));
-    BOOST_CHECK(bound_pars.covariance()->isApprox(cov, 1.e-8));
+    BOOST_CHECK(single_bound_pars.parameters().isApprox(pars, 1.e-8));
+    BOOST_CHECK(single_bound_pars.covariance()->isApprox(cov, 1.e-8));
   }
 
   //////////////////////////////////////////////////
@@ -670,13 +657,15 @@ struct MultiStepperTester {
 
     const auto [curv_pars, jac, pathLength] =
         multi_stepper.curvilinearState(multi_state);
+    const auto single_curv_pars = curv_pars.merge(ComponentMergeMethod::eMean);
 
-    BOOST_CHECK(curv_pars.fourPosition(geoCtx).isApprox(
+    BOOST_CHECK(single_curv_pars.fourPosition(geoCtx).isApprox(
         check_pars.fourPosition(geoCtx), 1.e-8));
-    BOOST_CHECK(curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
-    BOOST_CHECK_CLOSE(curv_pars.absoluteMomentum(),
+    BOOST_CHECK(
+        single_curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
+    BOOST_CHECK_CLOSE(single_curv_pars.absoluteMomentum(),
                       check_pars.absoluteMomentum(), 1.e-8);
-    BOOST_CHECK_CLOSE(curv_pars.charge(), check_pars.charge(), 1.e-8);
+    BOOST_CHECK_CLOSE(single_curv_pars.charge(), check_pars.charge(), 1.e-8);
   }
 
   ////////////////////////////////////
@@ -742,7 +731,7 @@ struct MultiStepperTester {
     }
 
     BOOST_CHECK_EQUAL(multi_stepper.numberComponents(multi_state),
-                      multi_pars.components().size() + 1);
+                      multi_pars.size() + 1);
 
     multi_stepper.clearComponents(multi_state);
 

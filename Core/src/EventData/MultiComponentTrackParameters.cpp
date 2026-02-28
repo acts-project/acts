@@ -11,17 +11,18 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 
+#include <cstddef>
+#include <ranges>
+
 namespace Acts {
 
 BoundTrackParameters MultiComponentBoundTrackParameters::merge(
     const ComponentMergeMethod method) const {
-  const bool hasCov = std::get<2>(m_components.front()).has_value();
-
-  if (!hasCov) {
+  if (!hasCovariance()) {
     const BoundVector singleParams = detail::Gsf::mergeGaussianMixtureParams(
-        m_components,
-        [](const auto& cmp) -> std::tuple<double, const BoundVector&> {
-          return {std::get<0>(cmp), std::get<1>(cmp)};
+        std::views::iota(std::size_t{0}, size()),
+        [this](const std::size_t i) -> std::tuple<double, const BoundVector&> {
+          return {m_weights[i], m_parameters[i]};
         },
         *m_surface, method);
     return BoundTrackParameters(m_surface, singleParams, std::nullopt,
@@ -29,10 +30,10 @@ BoundTrackParameters MultiComponentBoundTrackParameters::merge(
   }
 
   const auto [singleParams, singleCov] = detail::Gsf::mergeGaussianMixture(
-      m_components,
-      [](const auto& cmp)
+      std::views::iota(std::size_t{0}, size()),
+      [this](const std::size_t i)
           -> std::tuple<double, const BoundVector&, const BoundMatrix&> {
-        return {std::get<0>(cmp), std::get<1>(cmp), std::get<2>(cmp).value()};
+        return {m_weights[i], m_parameters[i], m_covariances[i]};
       },
       *m_surface, method);
   return BoundTrackParameters(m_surface, singleParams, singleCov,
