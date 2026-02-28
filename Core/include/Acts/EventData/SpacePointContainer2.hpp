@@ -902,16 +902,14 @@ class SpacePointContainer2 {
   template <bool read_only>
   class Subset : public Acts::detail::ContainerSubset<
                      Subset<read_only>, Subset<true>, SpacePointContainer2,
-                     std::conditional_t<read_only, ConstSpacePointProxy2,
-                                        MutableSpacePointProxy2>,
-                     SpacePointIndex2, read_only> {
+                     std::conditional_t<read_only, ConstProxy, MutableProxy>,
+                     std::span<const Index>, read_only> {
    public:
     /// Base class type
     using Base = Acts::detail::ContainerSubset<
         Subset<read_only>, Subset<true>, SpacePointContainer2,
-        std::conditional_t<read_only, ConstSpacePointProxy2,
-                           MutableSpacePointProxy2>,
-        SpacePointIndex2, read_only>;
+        std::conditional_t<read_only, ConstProxy, MutableProxy>,
+        std::span<const Index>, read_only>;
 
     using Base::Base;
 
