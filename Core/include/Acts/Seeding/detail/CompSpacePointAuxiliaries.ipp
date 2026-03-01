@@ -30,11 +30,17 @@ std::string toString(const SpacePoint_t& measurement) {
         Experimental::detail::CompSpacePointAuxiliaries::ResidualIdx;
     if (measurement.isStraw()) {
       return std::format(
-          "straw SP @ {:} with r: {:.3f}+-{:.3f} & wire : {:} ",
+          "{:}straw SP @ {:} with r: {:.3f}+-{:.3f} & wire : {:}{:} ",
+          measurement.measuresLoc0() ? "twin-" : "",
           toString(measurement.localPosition()), measurement.driftRadius(),
           std::sqrt(
               measurement.covariance()[toUnderlying(ResidualIdx::bending)]),
-          toString(measurement.sensorDirection()));
+          toString(measurement.sensorDirection()),
+          measurement.measuresLoc0()
+              ? std::format(", dZ: {:.3f}",
+                            std::sqrt(measurement.covariance()[toUnderlying(
+                                ResidualIdx::nonBending)]))
+              : "");
     } else {
       return std::format(
           "strip SP @ {:} with normal: {:}, strip dir: {:}, to next {:}, "

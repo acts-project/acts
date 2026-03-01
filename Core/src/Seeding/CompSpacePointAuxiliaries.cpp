@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 //
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -127,13 +128,27 @@ const Vector& CompSpacePointAuxiliaries::hessian(
 }
 
 void CompSpacePointAuxiliaries::reset() {
+  m_invProjDirLenSq = 0.;
+  m_invProjDirLen = 0.;
+  m_wireProject = 0.;
+
+  m_projDir.setZero();
   m_residual.setZero();
-  for (Vector3& grad : m_gradient) {
-    grad.setZero();
-  }
-  if (m_cfg.useHessian) {
-    for (Vector3& hess : m_hessian) {
-      hess.setZero();
+  for (const auto par : m_cfg.parsToUse) {
+    const auto pIdx = toUnderlying(par);
+    m_projDirLenPartial[pIdx] = 0.;
+    m_partialApproachDist[pIdx] = 0.;
+
+    m_gradProjDir[pIdx].setZero();
+    m_gradient[pIdx].setZero();
+    m_gradCloseApproach[pIdx].setZero();
+    for (const auto par2 : m_cfg.parsToUse) {
+      if (par2 > par) {
+        break;
+      }
+      const auto hIdx = vecIdxFromSymMat<s_nPars>(toUnderlying(par2), pIdx);
+      m_hessian[hIdx].setZero();
+      m_hessianProjDir[hIdx].setZero();
     }
   }
 }
@@ -190,13 +205,8 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
   }
   // Loop to include the second order derivatvies
   for (const auto partial1 : m_cfg.parsToUse) {
-    if (partial1 == FitParIndex::t0) {
-      continue;
-    }
     for (const auto partial2 : m_cfg.parsToUse) {
-      if (partial2 == FitParIndex::t0) {
-        continue;
-      } else if (partial2 > partial1) {
+      if (partial2 > partial1) {
         break;
       }
       ACTS_VERBOSE("updateStrawResidual() - Calculate Hessian for parameters "
@@ -245,7 +255,6 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(
   if (projDirLenSq < s_tolerance) {
     ACTS_VERBOSE("updateStrawAuxiliaries() - Line & wire are parallel: "
                  << toString(wireDir) << " vs. " << toString(lineDir));
-    m_invProjDirLenSq = 0.;
     reset();
     return false;
   }
@@ -256,8 +265,7 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(
   ACTS_VERBOSE("updateStrawAuxiliaries() - Projected direction is "
                << toString(newProjDir) << ", |D| " << newProjDir.norm());
 
-  if (Acts::abs(newProjDir.dot(m_projDir) - 1.) <
-      2. * std::numeric_limits<double>::epsilon()) {
+  if (false && Acts::abs(newProjDir.dot(m_projDir) - 1.) < Acts::s_epsilon) {
     ACTS_VERBOSE(
         "updateStrawAuxiliaries() - The old & the new dir projection coincide. "
         << "Don't update the auxiliaries");

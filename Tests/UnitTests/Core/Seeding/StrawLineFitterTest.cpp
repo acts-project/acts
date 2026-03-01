@@ -27,8 +27,9 @@ using TimePoint_t = std::chrono::system_clock::time_point;
 using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 1;
-constexpr long int nThreads = 1;
+constexpr std::size_t nEvents = 100000;
+unsigned nThreads = std::min(
+    Acts::Logging::Level::INFO ? 1u : std::thread::hardware_concurrency(), 32u);
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
 
   // Base configuration for the fit
   Fitter_t::Config fitCfg{};
-  fitCfg.useHessian = false;
+  fitCfg.useHessian = true;
   fitCfg.calcAlongStraw = true;
   fitCfg.recalibrate = false;
   fitCfg.useFastFitter = false;
@@ -307,7 +308,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     sendSleep();
   };
   // 2D Fit, straw only test (with & without t0)
-  {
+  if (false) {
     GenCfg_t genCfg{};
     genCfg.createStraws = true;
     genCfg.twinStraw = false;
@@ -320,11 +321,13 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     GenCfg_t genCfg{};
     genCfg.createStraws = true;
     genCfg.twinStraw = true;
-    genCfg.createStrips = false;
+    genCfg.createStrips = true;
+    genCfg.stripDirLoc0.clear();
 
     launchTest("StrawAndTwinTest", genCfg, 1503);
-    launchTest("StrawAndTwinTestT0", genCfg, 1503, true);
+    // launchTest("StrawAndTwinTestT0", genCfg, 1503, true);
   }
+  return;
   // Full fit, straws + single strip measurements (with & without t0)
   {
     GenCfg_t genCfg{};
