@@ -28,7 +28,8 @@ using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 100000;
-constexpr long int nThreads = 1;
+unsigned nThreads = std::min(
+    Acts::Logging::Level::INFO ? 1u : std::thread::hardware_concurrency(), 32u);
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
@@ -236,7 +237,6 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
   fitCfg.calcAlongStraw = true;
   fitCfg.recalibrate = false;
   fitCfg.useFastFitter = false;
-  fitCfg.maxIter = 100;
   fitCfg.ranges[toUnderlying(FitParIndex::theta)] =
       std::array{1._degree, 179._degree};
   fitCfg.ranges[toUnderlying(FitParIndex::phi)] =
@@ -288,12 +288,11 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
                         const unsigned seed, const bool fitTime = false) {
     Fitter_t::Config baseCfg{fitTime ? enableTime(fitCfg) : fitCfg};
     sendSleep();
-    // timings.emplace_back("Fast" + testName,
-    //                      std::async(std::launch::async, [&]() {
-    //                        return runFitTest(fastOnly(baseCfg), genCfg,
-    //                                          "Fast" + testName, seed,
-    //                                          *outFile);
-    //                      }));
+    timings.emplace_back("Fast" + testName,
+                         std::async(std::launch::async, [&]() {
+                           return runFitTest(fastOnly(baseCfg), genCfg,
+                                             "Fast" + testName, seed, *outFile);
+                         }));
     sendSleep();
     timings.emplace_back(testName, std::async(std::launch::async, [&]() {
                            return runFitTest(baseCfg, genCfg, testName, seed,
@@ -301,12 +300,11 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
                          }));
 
     sendSleep();
-    // timings.emplace_back(
-    //     "FastPre" + testName, std::async(std::launch::async, [&]() {
-    //       return runFitTest(fastPreFit(baseCfg), genCfg, "FastPre" +
-    //       testName,
-    //                         seed, *outFile);
-    //     }));
+    timings.emplace_back(
+        "FastPre" + testName, std::async(std::launch::async, [&]() {
+          return runFitTest(fastPreFit(baseCfg), genCfg, "FastPre" + testName,
+                            seed, *outFile);
+        }));
     sendSleep();
   };
   // 2D Fit, straw only test (with & without t0)
