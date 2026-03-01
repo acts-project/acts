@@ -18,7 +18,7 @@ babel==2.18.0
     # via sphinx
 breathe==4.36.0
     # via -r docs/old/requirements.in
-certifi==2026.1.4
+certifi==2026.2.25
     # via requests
 cffi==2.0.0
     # via cryptography
