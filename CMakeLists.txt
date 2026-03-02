@@ -106,10 +106,10 @@ option(ACTS_BUILD_EXAMPLES "Build basic examples components" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_FASTJET "Build FastJet plugin" OFF)
-option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" ON)
@@ -159,15 +159,21 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_EDM4HEP
     OR
+    ACTS_BUILD_EXAMPLES_FASTJET
+    OR
     ACTS_BUILD_EXAMPLES_GEANT4
-    OR
-    ACTS_BUILD_EXAMPLES_HASHING
-    OR
-    ACTS_BUILD_EXAMPLES_PYTHIA8
     OR
     ACTS_BUILD_EXAMPLES_GNN
     OR
+    ACTS_BUILD_EXAMPLES_HASHING
+    OR
+    ACTS_BUILD_EXAMPLES_PODIO
+    OR
+    ACTS_BUILD_EXAMPLES_PYTHIA8
+    OR
     ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
+    OR
+    ACTS_BUILD_EXAMPLES_ROOT
 )
 # core plugins might be required by examples or depend on each other
 set_option_if(
