@@ -26,10 +26,10 @@ ACTS_DIAGNOSTIC_PUSH()
 ACTS_DIAGNOSTIC_IGNORE("-Wold-style-cast")
 #include "ActsPodioEdm/BoundParametersCollection.h"
 #include "ActsPodioEdm/JacobianCollection.h"
+#include "ActsPodioEdm/MutableTrackerHitLocal.h"
 #include "ActsPodioEdm/TrackStateCollection.h"
 #include "ActsPodioEdm/TrackStateHitLinkCollection.h"
 #include "ActsPodioEdm/TrackStateInfo.h"
-#include "ActsPodioEdm/MutableTrackerHitLocal.h"
 ACTS_DIAGNOSTIC_POP()
 
 #include <any>

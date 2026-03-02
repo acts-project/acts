@@ -78,8 +78,8 @@ ProcessCode EDM4hepMeasurementOutputConverter::execute(
     const auto& measToSimHits = m_inputMeasurementSimHitsMap(ctx);
 
     ActsPlugins::EDM4hepUtil::SimHitForHitIndex lookup =
-        [&measToSimHits,
-         &simHitAssociation](std::size_t i) -> std::optional<edm4hep::SimTrackerHit> {
+        [&measToSimHits, &simHitAssociation](
+            std::size_t i) -> std::optional<edm4hep::SimTrackerHit> {
       auto it = measToSimHits.find(static_cast<Index>(i));
       if (it == measToSimHits.end()) {
         return std::nullopt;

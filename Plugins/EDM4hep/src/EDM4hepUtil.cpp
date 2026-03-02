@@ -9,13 +9,13 @@
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "ActsPodioEdm/TrackerHitLocalCollection.h"
-#include "ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
+#include "ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h"
 
 #include <numbers>
 
