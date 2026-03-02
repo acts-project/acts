@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 namespace Acts {
@@ -29,6 +31,22 @@ class OpenDataDetector final : public DD4hepDetectorBase {
             double scale)>;
 
     ElementFactory detectorElementFactory = defaultDetectorElementFactory;
+
+    /// If true, use the LayerAssembler API directly (barrel/endcap separately)
+    /// instead of the BarrelEndcapAssembler wrapper. For illustration.
+    bool useDirectLayerAssembler = false;
+
+    /// Envelope for the blueprint root (world volume). Values in mm.
+    Acts::ExtentEnvelope blueprintEnvelope =
+        Acts::ExtentEnvelope::Zero()
+            .set(Acts::AxisDirection::AxisZ, {20., 20.})
+            .set(Acts::AxisDirection::AxisR, {0., 20.});
+
+    /// Envelope for layer volumes. Values in mm.
+    Acts::ExtentEnvelope layerEnvelope =
+        Acts::ExtentEnvelope::Zero()
+            .set(Acts::AxisDirection::AxisZ, {2., 2.})
+            .set(Acts::AxisDirection::AxisR, {2., 2.});
   };
 
   static std::shared_ptr<ActsPlugins::DD4hepDetectorElement>
@@ -42,6 +60,12 @@ class OpenDataDetector final : public DD4hepDetectorBase {
 
  private:
   void construct(const Acts::GeometryContext& gctx);
+
+  /// Construction path using BarrelEndcapAssembler (wraps LayerAssembler).
+  void constructBarrelEndcap(const Acts::GeometryContext& gctx);
+
+  /// Construction path using LayerAssembler directly. For illustration.
+  void constructDirectLayer(const Acts::GeometryContext& gctx);
 
   Config m_cfg;
 };

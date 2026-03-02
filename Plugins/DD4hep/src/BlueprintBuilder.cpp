@@ -9,42 +9,41 @@
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/ContainerBlueprintNode.hpp"
-#include "Acts/Geometry/Extent.hpp"
-#include "Acts/Geometry/Layer.hpp"
-#include "Acts/Geometry/LayerBlueprintNode.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
-#include "ActsPlugins/Root/TGeoVolumeConverter.hpp"
-#include <Acts/Utilities/Ranges.hpp>
 
-#include <ranges>
+#include <functional>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetType.h>
 #include <DD4hep/Detector.h>
 #include <DDRec/DetectorData.h>
-#include <boost/algorithm/string/join.hpp>
-
-using namespace Acts::Ranges;
 
 namespace ActsPlugins::DD4hep {
 
 using ActsPlugins::TGeoAxes;
 
-std::shared_ptr<DD4hepDetectorElement> BlueprintBuilder::defaultElementFactory(
-    const dd4hep::DetElement& detElement, TGeoAxes axes, double lengthScale) {
+DD4hepBackend::DetectorElementPtr DD4hepBackend::defaultElementFactory(
+    const Element& detElement, AxisDefinition axes, double lengthScale) {
   return std::make_shared<DD4hepDetectorElement>(detElement, axes, lengthScale);
 }
 
-std::shared_ptr<DD4hepDetectorElement> BlueprintBuilder::createDetectorElement(
-    const dd4hep::DetElement& detElement, TGeoAxes axes) const {
+DD4hepBackend::DD4hepBackend(const Config& cfg, const Acts::Logger& logger)
+    : m_cfg(cfg), m_logger(&logger) {
+  if (m_cfg.dd4hepDetector == nullptr) {
+    throw std::invalid_argument("DD4hepBackend: dd4hepDetector is null");
+  }
+}
+
+DD4hepBackend::DetectorElementPtr DD4hepBackend::createDetectorElement(
+    const Element& detElement, AxisDefinition axes) const {
   auto elem = m_cfg.elementFactory(detElement, axes, m_cfg.lengthScale);
 
   detElement.addExtension<DD4hepDetectorElementExtension>(
@@ -60,80 +59,60 @@ void visitSubtree(
   visitor(detElement);
 
   for (auto& [name, child] : detElement.children()) {
+    (void)name;
     visitSubtree(child, visitor);
   }
 }
 
 }  // namespace
 
-std::optional<dd4hep::DetElement> BlueprintBuilder::findDetElementByName(
-    const dd4hep::DetElement& parent, const std::string& name) {
-  if (parent.name() == name) {
-    return parent;
-  }
-
-  for (const auto& [childName, child] : parent.children()) {
-    auto result = findDetElementByName(child, name);
-    if (result.has_value()) {
-      return result;
-    }
-  }
-
-  return std::nullopt;
-}
-
-std::optional<dd4hep::DetElement> BlueprintBuilder::findDetElementByName(
-    const std::string& name) const {
-  return findDetElementByName(world(), name);
-}
-
-std::string BlueprintBuilder::getPathToElementName(
-    const dd4hep::DetElement& elem, const std::string& separator) const {
-  std::vector<std::string> names;
-  names.emplace_back(elem.name());
-  auto parent = elem.parent();
-  while (parent != world()) {
-    names.emplace_back(parent.name());
-    parent = parent.parent();
-  }
-  std::ranges::reverse(names);
-  return boost::algorithm::join(names, separator);
-}
-
-std::vector<dd4hep::DetElement> BlueprintBuilder::findDetElementByNamePattern(
-    const dd4hep::DetElement& parent, const std::regex& pattern) {
-  std::vector<dd4hep::DetElement> matches;
-
-  visitSubtree(parent, [&](const auto& elem) {
-    if (std::regex_match(elem.name(), pattern)) {
-      matches.push_back(elem);
-    }
-  });
-
-  return matches;
-}
-
-dd4hep::DetElement BlueprintBuilder::world() const {
+DD4hepBackend::Element DD4hepBackend::world() const {
   return m_cfg.dd4hepDetector->world();
 }
 
-std::vector<dd4hep::DetElement> BlueprintBuilder::resolveSensitives(
-    const dd4hep::DetElement& detElement) {
-  std::vector<dd4hep::DetElement> sensitives;
-  visitSubtree(detElement, [&](const auto& elem) {
-    if (elem.volume().isSensitive()) {
-      sensitives.push_back(elem);
-    }
-  });
-  return sensitives;
+std::string_view DD4hepBackend::nameOf(const Element& element) const {
+  return element.name();
+}
+
+std::vector<DD4hepBackend::Element> DD4hepBackend::children(
+    const Element& parent) const {
+  std::vector<Element> result;
+  result.reserve(parent.children().size());
+  for (const auto& [name, child] : parent.children()) {
+    (void)name;
+    result.push_back(child);
+  }
+  return result;
+}
+
+DD4hepBackend::Element DD4hepBackend::parent(const Element& element) const {
+  return element.parent();
+}
+
+bool DD4hepBackend::isSensitive(const Element& element) const {
+  return element.volume().isSensitive();
+}
+
+bool DD4hepBackend::isBarrel(const Element& element) const {
+  return dd4hep::DetType{element.typeFlag()}.is(dd4hep::DetType::BARREL);
+}
+
+bool DD4hepBackend::isEndcap(const Element& element) const {
+  return dd4hep::DetType{element.typeFlag()}.is(dd4hep::DetType::ENDCAP);
+}
+
+bool DD4hepBackend::isTracker(const Element& element) const {
+  return dd4hep::DetType{element.typeFlag()}.is(dd4hep::DetType::TRACKER);
+}
+
+bool DD4hepBackend::isWorld(const Element& element) const {
+  return element == world();
 }
 
 namespace {
 Acts::Transform3 convertTGeoTransform(const TGeoShape& shape,
                                       const TGeoMatrix& transform,
                                       TGeoAxes axes, double lengthScale) {
-  // This is somewhat duplicated from the TGeoDetectorElement constructor
-  //
   const Double_t* translation = transform.GetTranslation();
   const Double_t* rotation = transform.GetRotationMatrix();
 
@@ -162,43 +141,22 @@ Acts::Transform3 convertTGeoTransform(const TGeoShape& shape,
       std::string(shape.ClassName()));
 }
 
-std::vector<dd4hep::DetElement> findDetElementsByType(
-    const dd4hep::DetElement& parent,
-    dd4hep::DetType::DetectorTypeEnumeration type) {
-  std::vector<dd4hep::DetElement> result;
-  visitSubtree(parent, [&](const auto& elem) {
-    dd4hep::DetType subDetType{elem.typeFlag()};
-    if (subDetType.is(type)) {
-      result.push_back(elem);
-    }
-  });
-  return result;
-}
-
 }  // namespace
 
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-BlueprintBuilder::makeLayer(const dd4hep::DetElement& detElement, TGeoAxes axes,
-                            std::optional<TGeoAxes> layerAxes) const {
-  ACTS_DEBUG("Adding layer from element: " << detElement.name());
-  return makeLayer(detElement, resolveSensitives(detElement), axes,
-                   std::nullopt, layerAxes);
-}
+DD4hepBackend::makeLayer(const dd4hep::DetElement& parent,
+                         std::span<const dd4hep::DetElement> sensitives,
+                         const LayerSpec& layerSpec) const {
+  ACTS_DEBUG("Adding layer from element: " << parent.name());
 
-std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-BlueprintBuilder::makeLayer(const dd4hep::DetElement& parent,
-                            std::span<const dd4hep::DetElement> sensitives,
-                            TGeoAxes axes, std::optional<std::string> layerName,
-                            std::optional<TGeoAxes> layerAxes) const {
-  ACTS_DEBUG("Adding layer from element: "
-             << getPathToElementName(parent, "/")
-             << (layerName.has_value()
-                     ? "(layerName: " + layerName.value() + ")"
-                     : ""));
+  if (!layerSpec.axes.has_value()) {
+    throw std::runtime_error("DD4hepBackend::makeLayer: axes not set");
+  }
 
-  const auto postfix = layerName.has_value() ? "|" + layerName.value() : "";
-  auto node = std::make_shared<Acts::Experimental::LayerBlueprintNode>(
-      getPathToElementName(parent) + postfix);
+  const auto nodeName =
+      layerSpec.layerName.value_or(std::string{nameOf(parent)});
+  auto node =
+      std::make_shared<Acts::Experimental::LayerBlueprintNode>(nodeName);
 
   ACTS_DEBUG("Using " << sensitives.size() << " sensitive elements.");
   ACTS_DEBUG("Adding layer with name: " << node->name());
@@ -207,19 +165,19 @@ BlueprintBuilder::makeLayer(const dd4hep::DetElement& parent,
   surfaces.reserve(sensitives.size());
 
   for (const auto& sensitive : sensitives) {
-    auto elem = createDetectorElement(sensitive, axes);
+    auto elem = createDetectorElement(sensitive, layerSpec.axes.value());
     surfaces.push_back(elem->surface().getSharedPtr());
   }
 
   node->setSurfaces(std::move(surfaces));
 
-  if (layerAxes.has_value()) {
+  if (layerSpec.layerAxes.has_value()) {
     ACTS_DEBUG("Finding layer transform automatically using layer axes: "
-               << layerAxes.value());
+               << layerSpec.layerAxes.value());
     Acts::Transform3 layerTransform =
         convertTGeoTransform(*parent.placement().ptr()->GetVolume()->GetShape(),
                              parent.nominal().worldTransformation(),
-                             layerAxes.value(), m_cfg.lengthScale);
+                             layerSpec.layerAxes.value(), m_cfg.lengthScale);
 
     ACTS_VERBOSE(" -> Layer transform:\n" << layerTransform.matrix());
     node->setTransform(layerTransform);
@@ -229,7 +187,7 @@ BlueprintBuilder::makeLayer(const dd4hep::DetElement& parent,
 }
 
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
-BlueprintBuilder::makeBeampipe() const {
+DD4hepBackend::makeBeampipe() const {
   std::optional<dd4hep::DetElement> beampipeElement = std::nullopt;
 
   visitSubtree(world(), [&](const dd4hep::DetElement& elem) {
@@ -278,266 +236,6 @@ BlueprintBuilder::makeBeampipe() const {
 
   return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
       std::move(volume));
-}
-
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-BlueprintBuilder::addLayers(const dd4hep::DetElement& container, TGeoAxes axes,
-                            Acts::AxisDirection direction,
-                            const std::regex& layerPattern,
-                            const Acts::ExtentEnvelope& envelope) {
-  ACTS_DEBUG("Adding layers to container " << container.name());
-  using enum Acts::AxisDirection;
-  using namespace Acts::UnitLiterals;
-  auto node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          container.name(), direction);
-  const auto& layerElements =
-      findDetElementByNamePattern(container, layerPattern);
-
-  if (container.children().empty()) {
-    ACTS_WARNING("Container " << container.name()
-                              << " has no children, no layers added.");
-  }
-  for (const auto& element : layerElements) {
-    auto layer = makeLayer(element, axes);
-    layer->setEnvelope(envelope);
-
-    node->addChild(layer);
-  }
-
-  return node;
-}
-
-LayerHelper BlueprintBuilder::layerHelper() const {
-  return LayerHelper(*this);
-}
-
-BarrelEndcapAssemblyHelper BlueprintBuilder::barrelEndcapAssemblyHelper()
-    const {
-  return BarrelEndcapAssemblyHelper(*this);
-}
-
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-BlueprintBuilder::makeBarrelEndcapAssembly(
-    const dd4hep::DetElement& assembly, const std::regex& layerPattern,
-    TGeoAxes barrelAxes, TGeoAxes endcapAxes,
-    const LayerHelper::Customizer& customizer) const {
-  ACTS_INFO(
-      "Converting barrel-endcap assembly from element: " << assembly.name());
-  auto isTracker = [](auto& elem) {
-    return dd4hep::DetType{elem.typeFlag()}.is(dd4hep::DetType::TRACKER);
-  };
-
-  auto barrels = findDetElementsByType(assembly, dd4hep::DetType::BARREL) |
-                 std::views::filter(isTracker) | to<std::vector>;
-
-  ACTS_DEBUG("Have " << barrels.size() << " barrel elements in assembly "
-                     << assembly.name());
-  if (barrels.size() > 1) {
-    ACTS_ERROR("Expected exactly zero or one barrel in assembly "
-               << assembly.name() << ", found " << barrels.size());
-    throw std::runtime_error(std::format(
-        "Expected exactly zero or one barrel in assembly {}", assembly.name()));
-  }
-
-  auto endcaps = findDetElementsByType(assembly, dd4hep::DetType::ENDCAP) |
-                 std::views::filter(isTracker) | to<std::vector>;
-
-  ACTS_DEBUG("Have " << endcaps.size() << " endcap elements in assembly "
-                     << assembly.name());
-
-  std::shared_ptr node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          assembly.name(), Acts::AxisDirection::AxisZ);
-
-  for (const auto& barrel : barrels) {
-    node->addChild(layerHelper()
-                       .barrel()
-                       .setAxes(barrelAxes)
-                       .setPattern(layerPattern)
-                       .setContainer(barrel)
-                       .customize(customizer)
-                       .build());
-  }
-
-  for (const auto& endcap : endcaps) {
-    node->addChild(layerHelper()
-                       .endcap()
-                       .setAxes(endcapAxes)
-                       .setPattern(layerPattern)
-                       .setContainer(endcap)
-                       .customize(customizer)
-                       .build());
-  }
-
-  return node;
-}
-
-LayerHelper& LayerHelper::setContainer(const std::string& name) {
-  m_container = m_builder->findDetElementByName(name);
-  if (!m_container.has_value()) {
-    throw std::runtime_error("Could not find DetElement with name " + name +
-                             " in LayerHelper");
-  }
-  return *this;
-}
-
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-LayerHelper::build() const {
-  const auto& logger = m_builder->logger();
-
-  if (!m_layerType.has_value()) {
-    throw std::runtime_error("Layer type not set in LayerHelper");
-  }
-
-  if (!m_axes.has_value()) {
-    throw std::runtime_error("Axes not set in LayerHelper");
-  }
-
-  if (!m_pattern.has_value()) {
-    throw std::runtime_error("Pattern not set in LayerHelper");
-  }
-
-  if (!m_container.has_value()) {
-    throw std::runtime_error("Container not set in LayerHelper");
-  }
-
-  Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
-                                    ? Acts::AxisDirection::AxisR
-                                    : Acts::AxisDirection::AxisZ;
-
-  const auto& container = m_container.value();
-  auto node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          container.name(), axisDir);
-
-  if (m_attachmentStrategy.has_value()) {
-    node->setAttachmentStrategy(m_attachmentStrategy.value());
-  }
-
-  const auto& layerElements =
-      m_builder->findDetElementByNamePattern(container, m_pattern.value());
-
-  if (layerElements.empty()) {
-    ACTS_LOG(m_emptyOk ? Acts::Logging::INFO : Acts::Logging::ERROR,
-             "No layers found in container " << container.name()
-                                             << " matching pattern");
-    if (!m_emptyOk) {
-      throw std::runtime_error(
-          std::format("No layers found in container {} matching pattern",
-                      container.name()));
-    }
-  }
-  for (const auto& element : layerElements) {
-    auto layer = m_builder->makeLayer(element, m_axes.value(), m_layerAxes);
-    if (m_envelope.has_value()) {
-      layer->setEnvelope(m_envelope.value());
-    }
-
-    if (m_customizer) {
-      layer = m_customizer(element, std::move(layer));
-    }
-
-    node->addChild(layer);
-  }
-
-  return node;
-}
-
-void LayerHelper::addTo(Acts::Experimental::BlueprintNode& node) const {
-  node.addChild(build());
-}
-
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-BarrelEndcapAssemblyHelper::build() const {
-  using enum Acts::AxisDirection;
-
-  const auto& logger = m_builder->logger();
-
-  if (!m_assembly.has_value()) {
-    throw std::runtime_error(
-        "Assembly detector element not set in BarrelEndcapAssemblyHelper");
-  }
-
-  if (!m_barrelAxes.has_value()) {
-    throw std::runtime_error(
-        "Barrel axes not set in BarrelEndcapAssemblyHelper");
-  }
-
-  if (!m_endcapAxes.has_value()) {
-    throw std::runtime_error(
-        "Endcap axes not set in BarrelEndcapAssemblyHelper");
-  }
-
-  if (!m_layerPattern.has_value()) {
-    throw std::runtime_error(
-        "Layer pattern not set in BarrelEndcapAssemblyHelper");
-  }
-
-  const auto& assembly = m_assembly.value();
-
-  ACTS_INFO(
-      "Converting barrel-endcap assembly from element: " << assembly.name());
-  auto isTracker = [](auto& elem) {
-    return dd4hep::DetType{elem.typeFlag()}.is(dd4hep::DetType::TRACKER);
-  };
-
-  auto barrels = findDetElementsByType(assembly, dd4hep::DetType::BARREL) |
-                 std::views::filter(isTracker) | to<std::vector>;
-
-  ACTS_DEBUG("Have " << barrels.size() << " barrel elements in assembly "
-                     << assembly.name());
-  if (barrels.size() > 1) {
-    ACTS_ERROR("Expected exactly zero or one barrel in assembly "
-               << assembly.name() << ", found " << barrels.size());
-    throw std::runtime_error(std::format(
-        "Expected exactly zero or one barrel in assembly {}", assembly.name()));
-  }
-
-  auto endcaps = findDetElementsByType(assembly, dd4hep::DetType::ENDCAP) |
-                 std::views::filter(isTracker) | to<std::vector>;
-
-  ACTS_DEBUG("Have " << endcaps.size() << " endcap elements in assembly "
-                     << assembly.name());
-
-  std::shared_ptr node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          assembly.name(), Acts::AxisDirection::AxisZ);
-
-  for (const auto& barrel : barrels) {
-    auto barrelNode = m_builder->layerHelper()
-                          .barrel()
-                          .setAxes(m_barrelAxes.value())
-                          .setPattern(m_layerPattern.value())
-                          .setContainer(barrel)
-                          .customize(m_layerCustomizer)
-                          .build();
-    if (m_customizer) {
-      barrelNode = m_customizer(barrel, std::move(barrelNode));
-    }
-    node->addChild(barrelNode);
-  }
-
-  for (const auto& endcap : endcaps) {
-    auto endcapNode = m_builder->layerHelper()
-                          .endcap()
-                          .setAxes(m_endcapAxes.value())
-                          .setPattern(m_layerPattern.value())
-                          .setContainer(endcap)
-                          .customize(m_layerCustomizer)
-                          .build();
-    if (m_customizer) {
-      endcapNode = m_customizer(endcap, std::move(endcapNode));
-    }
-    node->addChild(endcapNode);
-  }
-
-  return node;
-}
-
-void BarrelEndcapAssemblyHelper::addTo(
-    Acts::Experimental::BlueprintNode& node) const {
-  node.addChild(build());
 }
 
 }  // namespace ActsPlugins::DD4hep
