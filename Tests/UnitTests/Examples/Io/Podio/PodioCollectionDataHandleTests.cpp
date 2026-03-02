@@ -22,6 +22,7 @@
 #include <podio/CollectionBase.h>
 
 using namespace ActsExamples;
+using Acts::Logging::ScopedFailureThreshold;
 
 namespace ActsTests {
 
@@ -33,6 +34,8 @@ static const auto logger =
 BOOST_AUTO_TEST_SUITE(PodioCollectionDataHandleSuite)
 
 BOOST_AUTO_TEST_CASE(EmulationCompatibility) {
+  ScopedFailureThreshold st(Acts::Logging::Level::FATAL);
+
   DummySequenceElement dummyElement;
 
   DataHandleBase::StateMapType state;
