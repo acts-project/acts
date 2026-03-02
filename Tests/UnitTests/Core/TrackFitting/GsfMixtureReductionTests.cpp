@@ -14,8 +14,8 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
-#include "Acts/Utilities/Zip.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
 #include <cstddef>

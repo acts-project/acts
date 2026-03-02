@@ -82,9 +82,9 @@ void Acts::reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
   detail::Gsf::reduceWithKLDistanceImpl(cmpCache, maxCmpsAfterMerge, surface);
 }
 
-void Acts::reduceMixtureWithKLDistanceNaive(std::vector<Acts::GsfComponent> &cmpCache,
-                                      std::size_t maxCmpsAfterMerge,
-                                      const Surface &surface) {
+void Acts::reduceMixtureWithKLDistanceNaive(
+    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
+    const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
@@ -97,8 +97,8 @@ void Acts::reduceMixtureWithKLDistanceNaive(std::vector<Acts::GsfComponent> &cmp
 
     for (std::size_t i = 0; i < cmpCache.size(); ++i) {
       for (std::size_t j = i + 1; j < cmpCache.size(); ++j) {
-        double distance = detail::Gsf::computeSymmetricKlDivergence(
-            cmpCache[i], cmpCache[j]);
+        double distance =
+            detail::Gsf::computeSymmetricKlDivergence(cmpCache[i], cmpCache[j]);
         if (distance < minDistance) {
           minDistance = distance;
           minI = i;
@@ -111,8 +111,8 @@ void Acts::reduceMixtureWithKLDistanceNaive(std::vector<Acts::GsfComponent> &cmp
     // auto prevCmpJ = cmpCache[minJ];
 
     // Merge the two closest components
-    cmpCache[minI] =
-        detail::Gsf::mergeTwoComponents(cmpCache[minI], cmpCache[minJ], surface);
+    cmpCache[minI] = detail::Gsf::mergeTwoComponents(cmpCache[minI],
+                                                     cmpCache[minJ], surface);
 
     /*std::cout << std::format("NAIVE: Merge with phi: {:.3f} + {:.3f} ->
        {:.3f}, weight: {:.3f} + {:.3f} -> {:.3f}",
@@ -128,4 +128,3 @@ void Acts::reduceMixtureWithKLDistanceNaive(std::vector<Acts::GsfComponent> &cmp
 
   assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
 }
-
