@@ -27,8 +27,7 @@ PYBIND11_MODULE(ActsFatrasPythonBindings, fatras) {
       .def_static("Invalid", &Barcode::Invalid)
       .def("isValid", [](const Barcode& b) { return b.isValid(); })
       .def_property(
-          "vertexPrimary",
-          [](const Barcode& b) { return b.vertexPrimary(); },
+          "vertexPrimary", [](const Barcode& b) { return b.vertexPrimary(); },
           [](Barcode& b, Barcode::PrimaryVertexId id) {
             b = b.withVertexPrimary(id);
           })
@@ -43,7 +42,9 @@ PYBIND11_MODULE(ActsFatrasPythonBindings, fatras) {
           [](Barcode& b, Barcode::ParticleId id) { b = b.withParticle(id); })
       .def_property(
           "generation", [](const Barcode& b) { return b.generation(); },
-          [](Barcode& b, Barcode::GenerationId id) { b = b.withGeneration(id); })
+          [](Barcode& b, Barcode::GenerationId id) {
+            b = b.withGeneration(id);
+          })
       .def_property(
           "subParticle", [](const Barcode& b) { return b.subParticle(); },
           [](Barcode& b, Barcode::SubParticleId id) {
