@@ -8,6 +8,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
@@ -16,9 +17,12 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
 
+#include <stdexcept>
+
+#include <boost/core/demangle.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -82,9 +86,70 @@ class PyIAlgorithm : public IAlgorithm {
     }
   }
 
+  ProcessCode initialize() override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE(ProcessCode, IAlgorithm, initialize, );
+  }
+
+  ProcessCode finalize() override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE(ProcessCode, IAlgorithm, finalize, );
+  }
+
   std::string_view typeName() const override { return "Algorithm"; }
 
   const Acts::Logger& pyLogger() const { return logger(); }
+};
+
+class PyReadDataHandle : public ReadDataHandleBase {
+ public:
+  PyReadDataHandle(SequenceElement* parent, py::object pytype,
+                   const std::string& name)
+      : ReadDataHandleBase(parent, name) {
+    m_entry = WhiteBoardRegistry::find(pytype);
+    if (m_entry == nullptr) {
+      throw py::type_error("Type '" +
+                           pytype.attr("__qualname__").cast<std::string>() +
+                           "' is not registered for WhiteBoard access");
+    }
+    if (m_entry->typeinfo == nullptr) {
+      throw py::type_error("Type '" +
+                           pytype.attr("__qualname__").cast<std::string>() +
+                           "' is not registered for WhiteBoard access");
+    }
+
+    registerAsReadHandle();
+  }
+
+  const std::type_info& typeInfo() const override { return *m_entry->typeinfo; }
+
+  std::uint64_t typeHash() const override { return m_entry->typeHash; }
+
+  py::object call(const py::object& wbPy) const {
+    if (!isInitialized()) {
+      throw std::runtime_error("ReadDataHandle '" + name() +
+                               "' not initialized");
+    }
+    const auto& wb = wbPy.cast<const ActsExamples::WhiteBoard&>();
+
+    if (!wb.exists(key())) {
+      throw py::key_error("Key '" + key() + "' does not exist");
+    }
+
+    const auto& holder = getHolder(wb);
+
+    if (m_entry->typeHash != holder->typeHash()) {
+      const auto& expected = boost::core::demangle(m_entry->typeinfo->name());
+      const auto& actual = boost::core::demangle(holder->type().name());
+      throw py::type_error("Type mismatch for key '" + key() + "'. Expected " +
+                           expected + " but got " + actual);
+    }
+
+    return m_entry->fn(holder->data(), wbPy);
+  }
+
+ private:
+  const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
 };
 
 void trigger_divbyzero() {
@@ -131,6 +196,23 @@ void addFramework(py::module& mex) {
            py::arg("level"), py::arg("name") = "WhiteBoard")
       .def("exists", &WhiteBoard::exists)
       .def_property_readonly("keys", &WhiteBoard::getKeys);
+
+  py::class_<PyReadDataHandle>(mex, "ReadDataHandle")
+      .def(py::init([](const py::object& parent_py, py::object pytype,
+                       const std::string& name) {
+             auto* parent = parent_py.cast<SequenceElement*>();
+             return std::make_unique<PyReadDataHandle>(parent,
+                                                       std::move(pytype), name);
+           }),
+           py::arg("parent"), py::arg("type"), py::arg("name"),
+           py::keep_alive<1, 2>())
+      .def(
+          "initialize",
+          [](PyReadDataHandle& self, std::string_view key) {
+            self.initialize(key);
+          },
+          py::arg("key"))
+      .def("__call__", &PyReadDataHandle::call, py::arg("whiteboard"));
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<std::size_t, std::size_t, WhiteBoard&, std::size_t>(),
