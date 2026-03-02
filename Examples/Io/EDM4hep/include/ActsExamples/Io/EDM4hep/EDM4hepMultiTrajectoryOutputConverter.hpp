@@ -14,8 +14,9 @@
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
-#include <edm4hep/TrackCollection.h>
 #include <string>
+
+#include <edm4hep/TrackCollection.h>
 
 namespace ActsExamples {
 
