@@ -75,6 +75,7 @@ option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system 
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
+option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
@@ -198,6 +199,7 @@ set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
+set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 # feature tests
 include(CheckCXXSourceCompiles)
 
