@@ -210,9 +210,14 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
   }
   // Loop to include the second order derivatvies
   for (const auto partial1 : m_cfg.parsToUse) {
+    if (partial1 == FitParIndex::t0) {
+      continue;
+    }
     for (const auto partial2 : m_cfg.parsToUse) {
       if (partial2 > partial1) {
         break;
+      } else if (partial2 == FitParIndex::t0) {
+        continue;
       }
       ACTS_VERBOSE("updateStrawResidual() - Calculate Hessian for parameters "
                    << parName(partial1) << ", " << parName(partial2) << ".");
