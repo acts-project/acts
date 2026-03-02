@@ -163,11 +163,10 @@ ProcessCode RootMeasurementPerformanceWriter::writeT(
     const bool efficient = nRelatedMeasurements > 0;
 
     const Acts::Vector3& position = simHit.position();
-    const Acts::Vector3 normalizedPosition = simHit.position().normalized();
     const double z = position.z();
     const double r = Acts::VectorHelpers::perp(position);
-    const double phi = Acts::VectorHelpers::phi(normalizedPosition);
-    const double eta = Acts::VectorHelpers::eta(normalizedPosition);
+    const double phi = Acts::VectorHelpers::phi(position);
+    const double eta = Acts::VectorHelpers::eta(position);
 
     m_hitEffVsZ->fill({z}, efficient);
     m_hitEffVsR->fill({r}, efficient);
