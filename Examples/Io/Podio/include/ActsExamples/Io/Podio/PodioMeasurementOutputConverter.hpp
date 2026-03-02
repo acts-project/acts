@@ -12,16 +12,9 @@
 #include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPodioEdm/MeasurementCollection.h"
 
 #include <edm4hep/SimTrackerHit.h>
-
-namespace podio {
-class CollectionBase;
-}
-
-namespace ActsPodioEdm {
-class MeasurementCollection;
-}
 
 namespace ActsExamples {
 
