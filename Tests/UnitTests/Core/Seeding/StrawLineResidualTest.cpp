@@ -33,7 +33,7 @@ using Vector_t = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
 
 constexpr auto logLvl = Logging::Level::INFO;
-constexpr std::size_t nEvents = 100;
+constexpr std::size_t nEvents = 10000;
 constexpr double tolerance = 1.e-3;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
@@ -77,6 +77,7 @@ BOOST_AUTO_TEST_SUITE(SeedingSuite)
 void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
   Config_t resCfg{};
   resCfg.useHessian = true;
+  resCfg.pruneHessianDiag = false;
   resCfg.calcAlongStrip = false;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta};
   Line_t line{linePars};
@@ -257,6 +258,7 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
   Config_t resCfg{};
   resCfg.localToGlobal = locToGlob;
   resCfg.useHessian = true;
+  resCfg.pruneHessianDiag = false;
   resCfg.calcAlongStrip = true;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta,
                       ParIdx::t0};
@@ -335,7 +337,6 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
 }
 BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   ACTS_INFO("Calibration straw point test ");
-  return;
 
   constexpr double recordedT = 15._ns;
   constexpr std::array<double, 3> rtCoeffs{0., 75. / 1_ns,
@@ -343,6 +344,7 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
 
   Config_t resCfg{};
   resCfg.useHessian = true;
+  resCfg.pruneHessianDiag = false;
   resCfg.calcAlongStrip = true;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
                       ParIdx::t0};
@@ -503,7 +505,6 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
   }
 }
 BOOST_AUTO_TEST_CASE(StripResidual) {
-  return;
   ACTS_INFO("Run StripResidualTest");
   RandomEngine rndEngine{2505};
   const Vector_t stripPos{75._cm, -75._cm, 100._cm};
@@ -527,7 +528,6 @@ BOOST_AUTO_TEST_CASE(StripResidual) {
 }
 
 BOOST_AUTO_TEST_CASE(TimeStripResidual) {
-  return;
   Pars_t linePars{};
   linePars[toUnderlying(ParIdx::phi)] = 60._degree;
   linePars[toUnderlying(ParIdx::theta)] = 45_degree;
@@ -566,8 +566,9 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   Config_t resCfg{};
   resCfg.useHessian = true;
   resCfg.calcAlongStrip = true;
+  resCfg.pruneHessianDiag = false;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
-                      /* ParIdx::t0*/};
+                      ParIdx::t0};
 
   CompSpacePointAuxiliaries resCalc{resCfg,
                                     Acts::getDefaultLogger("testRes", logLvl)};
@@ -685,22 +686,20 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
     line = generateLine(rndEngine, logger());
 
     /// Test orthogonal strips
-    //  testChi2(FitTestSpacePoint{
-    //      line.point(20._cm) + 5._cm *
-    //      line.direction().cross(Vector_t::UnitX()),
-    //      makeDirectionFromPhiTheta(0_degree, 90._degree),
-    //      makeDirectionFromPhiTheta(90._degree, 0._degree),
-    //      15._ns,
-    //      {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+    testChi2(FitTestSpacePoint{
+        line.point(20._cm) + 5._cm * line.direction().cross(Vector_t::UnitX()),
+        makeDirectionFromPhiTheta(0_degree, 90._degree),
+        makeDirectionFromPhiTheta(90._degree, 0._degree),
+        15._ns,
+        {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
 
-    /// Test strips with stereo
-    //  testChi2(FitTestSpacePoint{
-    //      line.point(20._cm) + 5._cm *
-    //      line.direction().cross(Vector_t::UnitX()),
-    //      makeDirectionFromPhiTheta(0_degree, 45._degree),
-    //      makeDirectionFromPhiTheta(60._degree, 0._degree),
-    //      15._ns,
-    //      {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+    // Test strips with stereo
+    testChi2(FitTestSpacePoint{
+        line.point(20._cm) + 5._cm * line.direction().cross(Vector_t::UnitX()),
+        makeDirectionFromPhiTheta(0_degree, 45._degree),
+        makeDirectionFromPhiTheta(60._degree, 0._degree),
+        15._ns,
+        {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
     constexpr double R = 5._cm;
     // Test ordinary straws
     testChi2(FitTestSpacePoint{
@@ -728,6 +727,7 @@ BOOST_AUTO_TEST_CASE(TwinHessianCalc) {
   Config_t resCfg{};
   resCfg.useHessian = true;
   resCfg.calcAlongStrip = true;
+  resCfg.pruneHessianDiag = true;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta};
 
   CompSpacePointAuxiliaries resCalc{
@@ -742,6 +742,7 @@ BOOST_AUTO_TEST_CASE(TwinHessianCalc) {
   genCfg.createStraws = true;
   genCfg.smearRadius = true;
   genCfg.twinStraw = true;
+  genCfg.smearTwin = true;
   genCfg.createStrips = false;
 
   for (std::size_t ev = 0; ev < nEvents; ++ev) {
@@ -749,7 +750,6 @@ BOOST_AUTO_TEST_CASE(TwinHessianCalc) {
     chi2.reset();
 
     const Line_t line = generateLine(rndEngine, logger());
-
     for (const auto& measurement :
          MeasurementGenerator::spawn(line, 0., rndEngine, genCfg, logger())) {
       resCalc.updateSpatialResidual(line, *measurement);
@@ -760,10 +760,11 @@ BOOST_AUTO_TEST_CASE(TwinHessianCalc) {
     const SquareMatrix<4> miniHessian{chi2.hessian.block<4, 4>(0, 0)};
 
     BOOST_CHECK_GE(miniHessian.determinant(), Acts::s_epsilon);
-
     ACTS_INFO(__func__ << "() - " << __LINE__ << ":\n"
-                       << miniHessian << ", \n: " << miniHessian.determinant()
-                       << "," << printEigenDecomposition(miniHessian));
+                       << miniHessian << ", determinant: "
+                       << miniHessian.determinant() << ",\n"
+                       << printEigenDecomposition(miniHessian));
+    assert(miniHessian.determinant() > Acts::s_epsilon);
   }
 }
 

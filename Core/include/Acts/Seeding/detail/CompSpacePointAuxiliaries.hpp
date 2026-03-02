@@ -92,6 +92,9 @@ class CompSpacePointAuxiliaries {
     Acts::Transform3 localToGlobal{Acts::Transform3::Identity()};
     /// @brief Flag toggling whether the hessian of the residual shall be calculated
     bool useHessian{false};
+    /// @brief Flag toggling whether the diagonal terms of the chiSq's Hessian are protected against
+    ///        negative contributions from the second order term
+    bool pruneHessianDiag{true};
     /// @brief Flag toggling whether the along the wire component of straws shall be calculated
     ///        if provided by the straw measurement.
     bool calcAlongStraw{true};

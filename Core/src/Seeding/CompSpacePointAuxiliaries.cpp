@@ -91,11 +91,36 @@ void CompSpacePointAuxiliaries::updateChiSq(
       }
       ACTS_VERBOSE("updateChiSq() - Update chi2 hessian w.r.t. "
                    << parName(partial1) << " & " << parName(partial2) << ".");
-      chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2)) +=
-          2. * contract(gradient(partial1), gradient(partial2)) +
-          (m_cfg.useHessian
-               ? 2. * contract(residual(), hessian(partial1, partial2))
-               : 0.0);
+
+      double& hessElem =
+          chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2));
+
+      const double firstOrder =
+          2. * contract(gradient(partial1), gradient(partial2));
+      hessElem += firstOrder;
+
+      if (!m_cfg.useHessian) {
+        continue;
+      }
+      const double secondOrder =
+          2. * contract(residual(), hessian(partial1, partial2));
+      // The diagonal of the Hessian needs to be >=0 to end up at a
+      // positive definite matrix. It may happen that the first partial
+      // derivative of the chi2 is zero and the second one has a small
+      // but negative contribution. Combined with a small uncertainty
+      // this contribution may not be anhilated by other measurements
+      if (partial1 == partial2 && secondOrder < 0. &&
+          Acts::abs(secondOrder) > firstOrder) {
+        ACTS_VERBOSE(
+            "updateChiSq() - Detected negative diagonal element. First order: "
+            << firstOrder << ", second order: " << secondOrder
+            << " --> Apply pruning: "
+            << (m_cfg.pruneHessianDiag ? "yay" : "nay"));
+        if (m_cfg.pruneHessianDiag) {
+          continue;
+        }
+      }
+      hessElem += secondOrder;
     }
   }
 }
@@ -265,7 +290,7 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(
   ACTS_VERBOSE("updateStrawAuxiliaries() - Projected direction is "
                << toString(newProjDir) << ", |D| " << newProjDir.norm());
 
-  if (false && Acts::abs(newProjDir.dot(m_projDir) - 1.) < Acts::s_epsilon) {
+  if (Acts::abs(newProjDir.dot(m_projDir) - 1.) < Acts::s_epsilon) {
     ACTS_VERBOSE(
         "updateStrawAuxiliaries() - The old & the new dir projection coincide. "
         << "Don't update the auxiliaries");
@@ -430,7 +455,7 @@ void CompSpacePointAuxiliaries::updateStripResidual(
   const double normDot = normal.dot(line.direction());
 
   constexpr double tolerance = 1.e-12;
-  if (std::abs(normDot) < tolerance) {
+  if (Acts::abs(normDot) < tolerance) {
     reset();
     ACTS_WARNING(
         "updateStripResidual() - Segment line is embedded into the strip plane "
