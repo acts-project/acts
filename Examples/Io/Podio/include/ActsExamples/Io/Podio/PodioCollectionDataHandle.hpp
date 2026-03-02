@@ -8,14 +8,16 @@
 
 #pragma once
 
+// Include podio first to ensure full definition before any forward declarations
+// in the DataHandle include chain. Required for std::is_base_of_v constraint.
+#include <podio/CollectionBase.h>
+
 #include "ActsExamples/Framework/DataHandle.hpp"
 
 #include <concepts>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
-
-#include <podio/CollectionBase.h>
 
 namespace ActsExamples {
 

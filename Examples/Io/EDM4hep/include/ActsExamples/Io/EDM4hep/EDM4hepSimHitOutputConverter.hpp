@@ -14,12 +14,9 @@
 #include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
+#include <edm4hep/MCParticleCollection.h>
+#include <edm4hep/SimTrackerHitCollection.h>
 #include <string>
-
-namespace edm4hep {
-class MCParticleCollection;
-class SimTrackerHitCollection;
-}  // namespace edm4hep
 
 namespace ActsExamples {
 

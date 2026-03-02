@@ -13,11 +13,8 @@
 #include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
+#include <edm4hep/MCParticleCollection.h>
 #include <string>
-
-namespace edm4hep {
-class MCParticleCollection;
-}  // namespace edm4hep
 
 namespace ActsExamples {
 
