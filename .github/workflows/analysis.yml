@@ -56,7 +56,7 @@ jobs:
 
       - name: Persist PR metadata
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: PR_metadata
           path: PR_metadata.json
@@ -90,7 +90,7 @@ jobs:
         run: |
           uv run --no-project CI/test_coverage.py build --filter
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-build
@@ -98,7 +98,7 @@ jobs:
             build/compile_commands.json
             build/coverage/cov.xml
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         id: artifact-upload-step
         with:
@@ -168,7 +168,7 @@ jobs:
 
       - name: Upload fixes
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: clang-tidy-fixes
           path: fixes.yml
