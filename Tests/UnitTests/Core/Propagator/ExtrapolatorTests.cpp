@@ -56,7 +56,7 @@ Navigator navigator({tGeometry});
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 2_T});
 EigenStepperType estepper(bField);

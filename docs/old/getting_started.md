@@ -105,6 +105,13 @@ provided by the machine. It is suggested to select a recent `<lcg_release>`
 and `<lcg_platform>` combination. (Have a look at the CI jobs to get an
 overview on what we are currently testing):
 
+Current LCG/compiler combinations covered in CI are:
+
+- `LCG_107`: `gcc13`, `clang16`
+- `LCG_107a`: `gcc14`
+- `LCG_108`: `gcc15`
+- `LCG_109`: `gcc15`, `clang19`
+
 ```console
 source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
 ```
@@ -124,7 +131,7 @@ and they contain all the dependencies required to build ACTS.
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
 
-- `alma9` (HEP-specific software from LCG 106 or 107 and various clang versions)
+- `alma9` (HEP-specific software from LCG 107/107a/108/109 and compilers `gcc13`, `gcc14`, `gcc15`, `clang16`, `clang19`)
 - `macOS-10.15`
 
 :::{attention}
@@ -259,13 +266,13 @@ components.
 | ACTS_USE_SYSTEM_LIBS                | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_USE_SYSTEM_ACTSVG              | Use the ActSVG system library<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                             |
 | ACTS_USE_SYSTEM_ALGEBRAPLUGINS      | Use a system-provided algebra-plugins<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                     |
-| ACTS_SETUP_ALGEBRAPLUGINS           | If we want to setup algebra-plugins<br> type: `bool`, default: `ON`                                                                                                                                                                |
+| ACTS_SETUP_ALGEBRAPLUGINS           | If we want to set up algebra-plugins<br> type: `bool`, default: `ON`                                                                                                                                                               |
 | ACTS_USE_SYSTEM_COVFIE              | Use a system-provided covfie<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
-| ACTS_SETUP_COVFIE                   | If we want to setup covfie<br> type: `bool`, default: `ON`                                                                                                                                                                         |
+| ACTS_SETUP_COVFIE                   | If we want to set up covfie<br> type: `bool`, default: `ON`                                                                                                                                                                        |
 | ACTS_USE_SYSTEM_DETRAY              | Use a system-provided detray<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
-| ACTS_SETUP_DETRAY                   | If we want to setup detray<br> type: `bool`, default: `ON`                                                                                                                                                                         |
+| ACTS_SETUP_DETRAY                   | If we want to set up detray<br> type: `bool`, default: `ON`                                                                                                                                                                        |
 | ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
-| ACTS_SETUP_VECMEM                   | If we want to setup vecmem<br> type: `bool`, default: `ON`                                                                                                                                                                         |
+| ACTS_SETUP_VECMEM                   | If we want to set up vecmem<br> type: `bool`, default: `ON`                                                                                                                                                                        |
 | ACTS_USE_SYSTEM_TRACCC              | Use a system-provided traccc<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
 | ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                               |
 | ACTS_USE_SYSTEM_PYBIND11            | Use a system installation of pybind11<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                     |
@@ -275,7 +282,6 @@ components.
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
-| ACTS_BUILD_PLUGIN_FASTJET           | Build FastJet plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_GEOMODEL          | Build GeoModel plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                             |
 | ACTS_BUILD_PLUGIN_TRACCC            | Build Traccc plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
@@ -289,13 +295,13 @@ components.
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_ROOT              | Build ROOT plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_SETUP_ANNOY                    | Explicitly set up Annoy for the project<br> type: `bool`, default: `OFF`                                                                                                                                                           |
-| ACTS_BUILD_PLUGIN_HASHING           | Build Hashing plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_FATRAS_GEANT4            | Build Geant4 Fatras package<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_ALIGNMENT                | Build Alignment package<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
+| ACTS_BUILD_EXAMPLES_FASTJET         | Build FastJet-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_EXAMPLES_GNN             | Build the GNN example code<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |

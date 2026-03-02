@@ -196,7 +196,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   const bool isMappedMaterial =
       Acts::rangeContainsValue(m_cfg.materialMappings, volumeMaterialName);
   const bool isMappedVolume =
-      Acts::rangeContainsValue(m_cfg.volumeMappings, volumeName);
+      Acts::rangeContainsSubstring(m_cfg.volumeMappings, volumeName);
 
   if (!(isSensitive || isMappedMaterial || isMappedVolume)) {
     ACTS_VERBOSE("Did not try mapping '"

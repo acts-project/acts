@@ -36,11 +36,15 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// @param bIn Input magnetic field
     Config(VertexFitter fitter, std::shared_ptr<const IVertexFinder> sfinder,
            ImpactPointEstimator ipEst,
-           std::shared_ptr<const MagneticFieldProvider> bIn)
+           std::shared_ptr<const MagneticFieldProvider> bIn) noexcept
         : vertexFitter(std::move(fitter)),
           seedFinder(std::move(sfinder)),
           ipEstimator(std::move(ipEst)),
           bField{std::move(bIn)} {}
+
+    /// Move constructor
+    /// @param other is the other adaptive multi vertex finder
+    Config(Config&& other) noexcept = default;
 
     /// Vertex fitter
     VertexFitter vertexFitter;

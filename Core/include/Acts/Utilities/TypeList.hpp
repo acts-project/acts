@@ -39,8 +39,10 @@ constexpr std::size_t size{getSize<L>()};
 template <typename = void>
 struct getFront {};
 
+/// Get the first type from a type list
 template <typename T, typename... Ts>
 struct getFront<TypeList<T, Ts...>> {
+  /// First type in list
   using type = T;
 };
 
@@ -53,14 +55,17 @@ using front = typename getFront<L>::type;
 template <typename = void>
 struct getBack {};
 
+/// Get the last type from a type list
 template <typename T, typename... Ts>
 struct getBack<TypeList<T, Ts...>> {
+  /// Last type in list
   using type = std::conditional_t<sizeof...(Ts) == 0, T,
                                   typename getBack<TypeList<Ts...>>::type>;
 };
-// Base case
+/// Base case for empty type list
 template <>
 struct getBack<TypeList<>> {
+  /// Void for empty list
   using type = void;
 };
 template <typename L>
@@ -72,8 +77,10 @@ using back = typename getBack<L>::type;
 template <typename N, typename = void>
 struct doPushBack {};
 
+/// Append a type to the back of a type list
 template <typename N, typename... Ts>
 struct doPushBack<N, TypeList<Ts...>> {
+  /// Type list with appended type
   using type = TypeList<Ts..., N>;
 };
 template <typename L, typename N>
@@ -85,8 +92,10 @@ using push_back = typename doPushBack<N, L>::type;
 template <typename N, typename = void>
 struct doPushFront {};
 
+/// Prepend a type to the front of a type list
 template <typename N, typename... Ts>
 struct doPushFront<N, TypeList<Ts...>> {
+  /// Type list with prepended type
   using type = TypeList<N, Ts...>;
 };
 
@@ -99,17 +108,21 @@ using push_front = typename doPushFront<N, L>::type;
 template <template <typename> typename Pred, typename... Ts>
 struct filter {};
 
+/// Base case for empty type list filter
 template <template <typename> typename Pred>
 struct filter<Pred> {
+  /// Empty type list
   using type = TypeList<>;
 };
 
+/// Filter a type list using a predicate
 template <typename T, typename... Ts, template <typename> typename Pred>
 struct filter<Pred, T, Ts...> {
  private:
   using _next_type = typename filter<Pred, Ts...>::type;
 
  public:
+  /// Filtered type list
   using type =
       std::conditional_t<Pred<T>::value, push_front<_next_type, T>, _next_type>;
 };
@@ -120,8 +133,10 @@ struct filter<Pred, T, Ts...> {
 template <template <typename...> typename F, typename T>
 struct apply {};
 
+/// Apply a type function to types in a type list
 template <template <typename...> typename F, typename... Ts>
 struct apply<F, TypeList<Ts...>> {
+  /// Result type of applying function to type list
   using type = F<Ts...>;
 };
 /// @}
@@ -131,8 +146,10 @@ struct apply<F, TypeList<Ts...>> {
 template <template <typename> typename F, typename T>
 struct map {};
 
+/// Map a type function over each type in a type list
 template <template <typename> typename F, typename... Ts>
 struct map<F, TypeList<Ts...>> {
+  /// Result type list after mapping function over each type
   using type = TypeList<typename F<Ts>::type...>;
 };
 /// @}
@@ -142,13 +159,17 @@ struct map<F, TypeList<Ts...>> {
 template <typename T, typename L>
 struct count {};
 
+/// Base case for empty type list count
 template <typename T>
 struct count<T, TypeList<>> {
+  /// Count value for empty list
   static constexpr std::size_t value = 0;
 };
 
+/// Count occurrences of a type in a type list
 template <typename T, typename U, typename... Us>
 struct count<T, TypeList<U, Us...>> {
+  /// Count value for non-empty list
   static constexpr std::size_t value =
       std::conditional_t<std::is_same_v<T, U>,
                          std::integral_constant<std::size_t, 1>,

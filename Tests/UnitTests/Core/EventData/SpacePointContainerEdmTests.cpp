@@ -78,7 +78,7 @@ class Adapter {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
-BOOST_AUTO_TEST_CASE(spacepoint_container_edm_traits) {
+BOOST_AUTO_TEST_CASE(space_point_container_edm_traits) {
   using adapter_t = Adapter;
   using container_t = SpacePointContainer<adapter_t, detail::RefHolder>;
   using proxy_t = SpacePointProxy<container_t>;
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_traits) {
                    std::random_access_iterator_tag>);
 }
 
-BOOST_AUTO_TEST_CASE(spacepoint_container_edm_constructors) {
+BOOST_AUTO_TEST_CASE(space_point_container_edm_constructors) {
   std::size_t nExternalPoints = 10;
   SpacePointCollection externalCollection(nExternalPoints);
 
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_constructors) {
   BOOST_CHECK_EQUAL(spContainerVal.size(), nExternalPoints);
 }
 
-BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
+BOOST_AUTO_TEST_CASE(space_point_container_edm_functionalities) {
   std::size_t nExternalPoints = 100;
   SpacePointCollection externalCollection;
   externalCollection.reserve(nExternalPoints);

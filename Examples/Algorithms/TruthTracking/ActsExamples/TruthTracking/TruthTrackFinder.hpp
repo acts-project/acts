@@ -35,8 +35,7 @@ class TruthTrackFinder final : public IAlgorithm {
     std::string inputParticles;
     /// The input particle-measurements map collection.
     std::string inputParticleMeasurementsMap;
-    /// The input measurements collection that is used to sort the proto
-    /// tracks.
+    /// The input measurements collection that is used to sort the proto tracks.
     std::string inputMeasurements;
     /// The input sim hits collection that is used to create the proto tracks.
     std::string inputSimHits;
@@ -46,7 +45,9 @@ class TruthTrackFinder final : public IAlgorithm {
     std::string outputProtoTracks;
   };
 
-  TruthTrackFinder(const Config& config, Acts::Logging::Level level);
+  explicit TruthTrackFinder(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

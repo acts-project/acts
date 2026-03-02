@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     BOOST_REQUIRE_NE(pSur, nullptr);
     CHECK_CLOSE_ABS(pSur->center(tgContext), cfg.position, 1e-9);
     BOOST_CHECK_NE(pSur->surfaceMaterial(), nullptr);
-    BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
+    BOOST_CHECK_EQUAL(pSur->isSensitive(), true);
   }
 
   ////////////////////////////////////////////////////////////////////

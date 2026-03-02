@@ -51,17 +51,28 @@ inline GaussianComponent inverseTransformComponent(
 /// @addtogroup track_fitting
 /// @{
 
+/// Interface for Bethe-Heitler Gaussian mixture approximations.
 /// @ingroup material
 class BetheHeitlerApprox {
  public:
+  /// Type alias for Gaussian mixture component
   using Component = detail::GaussianComponent;
 
   virtual ~BetheHeitlerApprox() = default;
 
+  /// Maximum number of components in the mixture
+  /// @return Maximum number of components
   virtual std::size_t maxComponents() const = 0;
 
+  /// Check if x/X0 value is valid for this approximation
+  /// @param xOverX0 Material thickness in radiation lengths
+  /// @return True if value is valid
   virtual bool validXOverX0(double xOverX0) const = 0;
 
+  /// Compute mixture for given x/X0
+  /// @param xOverX0 Material thickness in radiation lengths
+  /// @param mixture Output span for mixture components
+  /// @return Span of computed mixture components
   virtual std::span<Component> mixture(double xOverX0,
                                        std::span<Component> mixture) const = 0;
 };
@@ -112,9 +123,13 @@ class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
 /// @ingroup material
 class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
  public:
+  /// Polynomial coefficient sets for a Gaussian mixture component.
   struct PolyData {
+    /// Polynomial coefficients for component weight
     std::vector<double> weightCoeffs;
+    /// Polynomial coefficients for component mean
     std::vector<double> meanCoeffs;
+    /// Polynomial coefficients for component variance
     std::vector<double> varCoeffs;
   };
 

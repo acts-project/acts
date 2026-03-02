@@ -87,6 +87,10 @@ class TrackStateTypeBase {
   using enum TrackStateFlag;
 
   /// Assigns the flags from another TrackStateTypeBase
+  /// @tparam DerivedOther The derived type of the other object
+  /// @tparam ReadOnlyOther Whether the other object is read-only
+  /// @param other The track state type to copy from
+  /// @return Reference to this object
   template <typename DerivedOther, bool ReadOnlyOther>
   Derived operator=(
       const TrackStateTypeBase<DerivedOther, ReadOnlyOther>& other)
@@ -353,7 +357,11 @@ class TrackStateTypeBase {
   }
 
  protected:
+  /// Cast to derived class
+  /// @return Reference to derived object
   Derived& self() { return static_cast<Derived&>(*this); }
+  /// Cast to derived class (const)
+  /// @return Const reference to derived object
   const Derived& self() const { return static_cast<const Derived&>(*this); }
 
   /// Returns the bitset representation of the underlying raw data
@@ -380,16 +388,23 @@ class TrackStateTypeBase {
 /// @c TrackStateTypeBase captured by value.
 class TrackStateType : public TrackStateTypeBase<TrackStateType, false> {
  public:
+  /// Base class type
   using Base = TrackStateTypeBase<TrackStateType, false>;
 
   TrackStateType() = default;
+  /// Construct from raw value
+  /// @param raw The raw flag bits
   explicit TrackStateType(raw_type raw) : m_raw{raw} {
     Base::assertConsistency();
   }
 
   using Base::operator=;
 
+  /// Access raw storage
+  /// @return Reference to raw storage
   raw_type& raw() { return m_raw; }
+  /// Access raw storage (const)
+  /// @return Const reference to raw storage
   const raw_type& raw() const { return m_raw; }
 
  private:
@@ -402,9 +417,13 @@ template <bool ReadOnly>
 class TrackStateTypeMap
     : public TrackStateTypeBase<TrackStateTypeMap<ReadOnly>, ReadOnly> {
  public:
+  /// Base class type
   using Base = TrackStateTypeBase<TrackStateTypeMap<ReadOnly>, ReadOnly>;
+  /// Underlying raw storage type, const-qualified based on ReadOnly
   using raw_type = const_if_t<ReadOnly, typename Base::raw_type>;
 
+  /// Constructor from external raw storage reference
+  /// @param raw_ref Reference to external raw storage
   explicit TrackStateTypeMap(raw_type& raw_ref) : m_raw_ptr{&raw_ref} {
     assert(m_raw_ptr != nullptr && "TrackStateTypeMap - raw reference is null");
     Base::assertConsistency();
@@ -412,18 +431,24 @@ class TrackStateTypeMap
 
   using Base::operator=;
 
+  /// Access raw storage
+  /// @return Reference to raw storage
   raw_type& raw()
     requires(!ReadOnly)
   {
     return *m_raw_ptr;
   }
+  /// Access raw storage (const)
+  /// @return Const reference to raw storage
   const raw_type& raw() const { return *m_raw_ptr; }
 
  private:
   raw_type* m_raw_ptr{nullptr};
 };
 
+/// Mutable track state type map allowing modification
 using MutableTrackStateTypeMap = TrackStateTypeMap<false>;
+/// Const track state type map for read-only access
 using ConstTrackStateTypeMap = TrackStateTypeMap<true>;
 
 }  // namespace Acts

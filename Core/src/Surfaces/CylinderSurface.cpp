@@ -37,14 +37,12 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 CylinderSurface::CylinderSurface(const CylinderSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                  const CylinderSurface& other,
                                  const Transform3& shift)
-    : GeometryObject(),
-      RegularSurface(gctx, other, shift),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
                                  double halfz, double halfphi, double avphi,
@@ -54,8 +52,8 @@ CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
           radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 CylinderSurface::CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                                 const DetectorElementBase& detelement)
-    : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
+                                 const SurfacePlacementBase& placement)
+    : RegularSurface{placement}, m_bounds(std::move(cbounds)) {
   // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
@@ -331,7 +329,7 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -345,7 +343,7 @@ ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
   const double lsphi = std::sin(lphi);
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr, 0, 0, 0, 1;
 
   return loc3DToLocBound;
@@ -359,8 +357,7 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
   ACTS_VERBOSE("Merging cylinder surfaces in " << axisDirectionName(direction)
                                                << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");

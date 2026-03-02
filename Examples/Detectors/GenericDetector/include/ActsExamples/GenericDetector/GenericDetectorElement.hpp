@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
 #include <memory>
 
@@ -29,7 +29,7 @@ namespace ActsExamples {
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
 ///
-class GenericDetectorElement : public Acts::DetectorElementBase {
+class GenericDetectorElement : public Acts::SurfacePlacementBase {
  public:
   using identifier_type = unsigned long long;
   using identifier_diff = long long;
@@ -83,7 +83,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   Acts::Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  double thickness() const;
 
   /// The identifier of the detector element
   Identifier identifier() const;

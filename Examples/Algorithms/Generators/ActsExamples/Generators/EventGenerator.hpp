@@ -38,7 +38,7 @@ namespace ActsExamples {
 /// This must be a reader and not just an algorithm since it might read in
 /// pre-computed generator samples, e.g. via HepMC, and therefore has an
 /// internal state that will be modified.
-class EventGenerator final : public ActsExamples::IReader {
+class EventGenerator final : public IReader {
  public:
   /// Combined set of generator functions.
   ///

@@ -17,10 +17,11 @@
 
 namespace Acts {
 
+/// Lightweight particle properties description.
 struct ParticleData {
-  float charge{};
-  float mass{};
-  std::string_view name;
+  float charge{};         ///< Particle electric charge
+  float mass{};           ///< Particle mass
+  std::string_view name;  ///< Particle name
 };
 
 /// Find the charge for a given PDG particle number.
@@ -123,6 +124,9 @@ bool isQuark(PdgParticle pdg);
 /// @return True if the particle is interacting, false otherwise
 bool isInteracting(PdgParticle pdg);
 
+/// @brief Get hadron type classification
+/// @param pdg PDG particle number
+/// @return Hadron type
 HadronType hadronType(PdgParticle pdg);
 
 }  // namespace ParticleIdHelper

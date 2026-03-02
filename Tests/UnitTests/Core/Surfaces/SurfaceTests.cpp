@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   SurfaceStub surface(detElement);
 
   // associatedDetectorElement
-  BOOST_CHECK_EQUAL(surface.associatedDetectorElement(), &detElement);
+  BOOST_CHECK_EQUAL(surface.surfacePlacement(), &detElement);
 
   // test associatelayer, associatedLayer
   surface.associateLayer(*pLayer);

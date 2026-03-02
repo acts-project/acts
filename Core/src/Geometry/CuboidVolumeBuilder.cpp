@@ -47,6 +47,7 @@ std::shared_ptr<const Surface> CuboidVolumeBuilder::buildSurface(
     surface = Surface::makeShared<PlaneSurface>(
         cfg.rBounds,
         *(cfg.detElementConstructor(trafo, cfg.rBounds, cfg.thickness)));
+    surface->assignThickness(cfg.thickness);
   } else {
     surface = Surface::makeShared<PlaneSurface>(trafo, cfg.rBounds);
   }
@@ -103,7 +104,6 @@ std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
 std::pair<double, double> CuboidVolumeBuilder::binningRange(
     const GeometryContext& gctx,
     const CuboidVolumeBuilder::VolumeConfig& cfg) const {
-  using namespace UnitLiterals;
   // Construct return value
   std::pair<double, double> minMax = std::make_pair(
       std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());

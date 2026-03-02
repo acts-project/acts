@@ -17,6 +17,7 @@ namespace Acts {
 
 class NavigationStream;
 class AppendOnlyNavigationStream;
+class NavigationPolicyState;
 class Logger;
 
 /// Struct that serves as the argument to the navigation delegate.
@@ -33,8 +34,8 @@ struct NavigationArguments {
 
 /// Central alias for the navigation delegate. This type is owning to support
 /// (type-erased) navigation delegate chains (i.e. multiple policies).
-using NavigationDelegate =
-    Delegate<void(const GeometryContext&, const NavigationArguments&,
-                  AppendOnlyNavigationStream&, const Logger&)>;
+using NavigationDelegate = Delegate<void(
+    const GeometryContext&, const NavigationArguments&, NavigationPolicyState&,
+    AppendOnlyNavigationStream&, const Logger&)>;
 
 }  // namespace Acts

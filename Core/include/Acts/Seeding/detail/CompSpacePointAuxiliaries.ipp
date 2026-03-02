@@ -101,8 +101,7 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
       const double stripAngle = b1.dot(b2);
       if (stripAngle > tolerance) {
         const double invDist = 1. / (1. - square(stripAngle));
-        ActsSquareMatrix<2> stereoDecomp{invDist *
-                                         ActsSquareMatrix<2>::Identity()};
+        SquareMatrix<2> stereoDecomp{invDist * SquareMatrix<2>::Identity()};
         stereoDecomp(1, 0) = stereoDecomp(0, 1) = -stripAngle * invDist;
         dist = stereoDecomp * dist;
       }
@@ -131,7 +130,6 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
                                            const Transform3& localToGlobal,
                                            const double t0,
                                            const SpacePoint_t& hit) {
-  using namespace Acts::UnitLiterals;
   return chi2Term(
       pos, dir,
       t0 + (localToGlobal * extrapolateToPlane(pos, dir, hit)).norm() /

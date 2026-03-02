@@ -13,20 +13,15 @@
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
 
 #include <cstddef>
 #include <memory>
-#include <string>
 #include <utility>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace ActsExamples {
-class IReader;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -113,28 +108,24 @@ void addGenerators(py::module& mex) {
       .def_readwrite("tStdDev",
                      &GaussianDisplacedVertexPositionGenerator::tStdDev);
 
-  py::class_<
-      ActsExamples::UniformPrimaryVertexPositionGenerator,
-      ActsExamples::PrimaryVertexPositionGenerator,
-      std::shared_ptr<ActsExamples::UniformPrimaryVertexPositionGenerator>>(
+  py::class_<UniformPrimaryVertexPositionGenerator,
+             PrimaryVertexPositionGenerator,
+             std::shared_ptr<UniformPrimaryVertexPositionGenerator>>(
       mex, "UniformVertexGenerator")
       .def(py::init<>())
       .def(py::init([](const Acts::Vector4& min, const Acts::Vector4& max) {
-             ActsExamples::UniformPrimaryVertexPositionGenerator g;
+             UniformPrimaryVertexPositionGenerator g;
              g.min = min;
              g.max = max;
              return g;
            }),
            py::arg("min"), py::arg("max"))
-      .def_readwrite("min",
-                     &ActsExamples::UniformPrimaryVertexPositionGenerator::min)
-      .def_readwrite("max",
-                     &ActsExamples::UniformPrimaryVertexPositionGenerator::max);
+      .def_readwrite("min", &UniformPrimaryVertexPositionGenerator::min)
+      .def_readwrite("max", &UniformPrimaryVertexPositionGenerator::max);
 
-  py::class_<
-      ActsExamples::FixedPrimaryVertexPositionGenerator,
-      ActsExamples::PrimaryVertexPositionGenerator,
-      std::shared_ptr<ActsExamples::FixedPrimaryVertexPositionGenerator>>(
+  py::class_<FixedPrimaryVertexPositionGenerator,
+             PrimaryVertexPositionGenerator,
+             std::shared_ptr<FixedPrimaryVertexPositionGenerator>>(
       mex, "FixedVertexGenerator")
       .def(py::init<>())
       .def(py::init([](const Vector4& v) {
@@ -146,7 +137,15 @@ void addGenerators(py::module& mex) {
       .def_readwrite("fixed", &FixedPrimaryVertexPositionGenerator::fixed);
 
   py::class_<SimParticle>(mex, "SimParticle");
-  py::class_<SimParticleContainer>(mex, "SimParticleContainer");
+  auto simParticleContainer =
+      py::class_<SimParticleContainer>(mex, "SimParticleContainer")
+          .def("__len__",
+               [](const SimParticleContainer& self) { return self.size(); })
+          .def("__iter__", [](const SimParticleContainer& self) {
+            return py::make_iterator(self.begin(), self.end());
+          });
+
+  WhiteBoardRegistry::registerClass(simParticleContainer);
 
   {
     using Config = ParametricParticleGenerator::Config;

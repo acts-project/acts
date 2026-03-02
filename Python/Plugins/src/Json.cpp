@@ -64,7 +64,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
 
     json.def("readSurfaceVectorFromJson", JsonSurfacesReader::readVector);
 
-    py::class_<JsonDetectorElement, DetectorElementBase,
+    py::class_<JsonDetectorElement, SurfacePlacementBase,
                std::shared_ptr<JsonDetectorElement>>(json,
                                                      "JsonDetectorElement")
         .def("surface", [](JsonDetectorElement& self) {

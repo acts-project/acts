@@ -10,16 +10,11 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <iterator>
-#include <limits>
 #include <optional>
 #include <ostream>
-#include <type_traits>
 #include <utility>
 
 #include "ParticleDataTable.hpp"
@@ -88,6 +83,10 @@ std::optional<T> findCached(Acts::PdgParticle pdg,
       return findCachedImpl<T, eAntiProton, type>(map);
     case eLead:
       return findCachedImpl<T, eLead, type>(map);
+    case eKaon0Short:
+      return findCachedImpl<T, eKaon0Short, type>(map);
+    case eLambda0:
+      return findCachedImpl<T, eLambda0, type>(map);
     default:
       return std::nullopt;
   }
@@ -96,13 +95,13 @@ std::optional<T> findCached(Acts::PdgParticle pdg,
 }  // namespace
 
 std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
-  if (auto cached = findCached<float, Type::Charge>(pdg, kParticlesMapCharge);
+  if (auto cached = findCached<float, Type::Charge>(pdg, particlesMapCharge());
       cached) {
     return cached;
   }
 
-  const auto it = kParticlesMapCharge.find(pdg);
-  if (it == kParticlesMapCharge.end()) {
+  const auto it = particlesMapCharge().find(pdg);
+  if (it == particlesMapCharge().end()) {
     if (isNucleus(pdg)) {
       return Acts::findChargeOfNucleus(pdg);
     } else {
@@ -117,8 +116,8 @@ float Acts::findChargeOfNucleus(Acts::PdgParticle pdg) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
   auto pdgGround = makeNucleusGroundState(pdg);
-  const auto it = kParticlesMapCharge.find(pdgGround);
-  if (it == kParticlesMapCharge.end()) {
+  const auto it = particlesMapCharge().find(pdgGround);
+  if (it == particlesMapCharge().end()) {
     // extract charge from PDG number
     auto ZandA = extractNucleusZandA(pdg);
     return static_cast<float>(ZandA.first);
@@ -127,13 +126,13 @@ float Acts::findChargeOfNucleus(Acts::PdgParticle pdg) {
 }
 
 std::optional<float> Acts::findMass(Acts::PdgParticle pdg) {
-  if (auto cached = findCached<float, Type::Mass>(pdg, kParticlesMapMass);
+  if (auto cached = findCached<float, Type::Mass>(pdg, particlesMapMass());
       cached) {
     return cached;
   }
 
-  const auto it = kParticlesMapMass.find(pdg);
-  if (it == kParticlesMapMass.end()) {
+  const auto it = particlesMapMass().find(pdg);
+  if (it == particlesMapMass().end()) {
     if (isNucleus(pdg)) {
       return Acts::findMassOfNucleus(pdg);
     } else {
@@ -148,8 +147,8 @@ float Acts::findMassOfNucleus(Acts::PdgParticle pdg) {
     throw std::invalid_argument("PDG must represent a nucleus");
   }
   auto pdgGround = makeNucleusGroundState(pdg);
-  const auto it = kParticlesMapMass.find(pdgGround);
-  if (it == kParticlesMapMass.end()) {
+  const auto it = particlesMapMass().find(pdgGround);
+  if (it == particlesMapMass().end()) {
     // calculate mass using Bethe-Weizsacker formula
     return calculateNucleusMass(pdg);
   }
@@ -187,13 +186,13 @@ float Acts::calculateNucleusMass(Acts::PdgParticle pdg) {
 
 std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {
   if (auto cached =
-          findCached<const char* const, Type::Name>(pdg, kParticlesMapName);
+          findCached<const char* const, Type::Name>(pdg, particlesMapName());
       cached) {
     return cached;
   }
 
-  const auto it = kParticlesMapName.find(pdg);
-  if (it == kParticlesMapName.end()) {
+  const auto it = particlesMapName().find(pdg);
+  if (it == particlesMapName().end()) {
     if (isNucleus(pdg)) {
       return Acts::findNameOfNucleus(pdg);
     } else {
@@ -209,8 +208,8 @@ std::optional<std::string_view> Acts::findNameOfNucleus(Acts::PdgParticle pdg) {
   }
 
   auto pdgGround = makeNucleusGroundState(pdg);
-  const auto it = kParticlesMapName.find(pdgGround);
-  if (it == kParticlesMapName.end()) {
+  const auto it = particlesMapName().find(pdgGround);
+  if (it == particlesMapName().end()) {
     return std::nullopt;
   }
   return it->second;
@@ -269,6 +268,12 @@ std::optional<std::string_view> Acts::pdgToShortAbsString(PdgParticle pdg) {
   }
   if (pdg == eLead) {
     return "lead";
+  }
+  if (pdg == eKaon0Short) {
+    return "Kaon0Short";
+  }
+  if (pdg == eLambda0) {
+    return "Lambda0";
   }
   return std::nullopt;
 }

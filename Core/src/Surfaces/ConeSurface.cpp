@@ -32,32 +32,26 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 ConeSurface::ConeSurface(const ConeSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 ConeSurface::ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
                          const Transform3& shift)
-    : GeometryObject(),
-      RegularSurface(gctx, other, shift),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 ConeSurface::ConeSurface(const Transform3& transform, double alpha,
                          bool symmetric)
-    : GeometryObject(),
-      RegularSurface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric)) {}
 
 ConeSurface::ConeSurface(const Transform3& transform, double alpha, double zmin,
                          double zmax, double halfPhi)
-    : GeometryObject(),
-      RegularSurface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi)) {
 }
 
 ConeSurface::ConeSurface(const Transform3& transform,
                          std::shared_ptr<const ConeBounds> cbounds)
-    : GeometryObject(),
-      RegularSurface(transform),
-      m_bounds(std::move(cbounds)) {
+    : RegularSurface(transform), m_bounds(std::move(cbounds)) {
   throw_assert(m_bounds, "ConeBounds must not be nullptr");
 }
 
@@ -377,7 +371,7 @@ AlignmentToPathMatrix ConeSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -391,7 +385,7 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
   const double lsphi = std::sin(lphi);
   // Solve for radius R
   const double R = localPos.z() * bounds().tanAlpha();
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr,
       lphi * bounds().tanAlpha(), 0, 0, 1;
 

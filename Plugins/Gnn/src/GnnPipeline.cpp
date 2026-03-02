@@ -53,7 +53,7 @@ GnnPipeline::GnnPipeline(
 
 std::vector<std::vector<int>> GnnPipeline::run(
     std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
-    std::vector<int> &spacepointIDs, Device device, const GnnHook &hook,
+    std::vector<int> &spacePointIds, Device device, const GnnHook &hook,
     GnnTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = device;
@@ -69,7 +69,7 @@ std::vector<std::vector<int>> GnnPipeline::run(
     auto t0 = std::chrono::high_resolution_clock::now();
     ACTS_NVTX_START(graph_construction);
     auto tensors =
-        (*m_graphConstructor)(features, spacepointIDs.size(), moduleIds, ctx);
+        (*m_graphConstructor)(features, spacePointIds.size(), moduleIds, ctx);
     ACTS_NVTX_STOP(graph_construction);
     auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -99,7 +99,7 @@ std::vector<std::vector<int>> GnnPipeline::run(
 
     t0 = std::chrono::high_resolution_clock::now();
     ACTS_NVTX_START(track_building);
-    auto res = (*m_trackBuilder)(std::move(tensors), spacepointIDs, ctx);
+    auto res = (*m_trackBuilder)(std::move(tensors), spacePointIds, ctx);
     ACTS_NVTX_STOP(track_building);
     t1 = std::chrono::high_resolution_clock::now();
 

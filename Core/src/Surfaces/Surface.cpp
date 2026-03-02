@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
@@ -22,21 +23,11 @@ namespace Acts {
 Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
 
-Surface::Surface(const DetectorElementBase& detelement)
-    : GeometryObject(), m_associatedDetElement(&detelement) {}
-
-Surface::Surface(const Surface& other)
-    : GeometryObject(other),
-      std::enable_shared_from_this<Surface>(),
-      m_associatedDetElement(other.m_associatedDetElement),
-      m_surfaceMaterial(other.m_surfaceMaterial) {
-  if (other.m_transform) {
-    m_transform = std::make_unique<Transform3>(*other.m_transform);
-  }
-}
+Surface::Surface(const SurfacePlacementBase& placement) noexcept
+    : GeometryObject(), m_placement(&placement) {}
 
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
-                 const Transform3& shift)
+                 const Transform3& shift) noexcept
     : GeometryObject(),
       m_transform(std::make_unique<Transform3>(
           shift * other.localToGlobalTransform(gctx))),
@@ -112,7 +103,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
   alignToLoc3D.block<1, 3>(eZ, eAlignmentRotation0) =
       pcRowVec * rotToLocalZAxis;
   // The derivative of bound local w.r.t. local 3D Cartesian coordinates
-  ActsMatrix<2, 3> loc3DToBoundLoc =
+  Matrix<2, 3> loc3DToBoundLoc =
       localCartesianToBoundLocalDerivative(gctx, position);
   // Initialize the derivative of bound parameters w.r.t. alignment
   // parameters without path correction
@@ -157,23 +148,6 @@ std::shared_ptr<const Surface> Surface::getSharedPtr() const {
   return shared_from_this();
 }
 
-Surface& Surface::operator=(const Surface& other) {
-  if (&other != this) {
-    GeometryObject::operator=(other);
-    // detector element, identifier & layer association are unique
-    if (other.m_transform) {
-      m_transform = std::make_unique<Transform3>(*other.m_transform);
-    } else {
-      m_transform.reset();
-    }
-    m_associatedLayer = other.m_associatedLayer;
-    m_surfaceMaterial = other.m_surfaceMaterial;
-    m_associatedDetElement = other.m_associatedDetElement;
-    m_isSensitive = other.m_isSensitive;
-  }
-  return *this;
-}
-
 bool Surface::operator==(const Surface& other) const {
   // (a) fast exit for pointer comparison
   if (&other == this) {
@@ -188,7 +162,7 @@ bool Surface::operator==(const Surface& other) const {
     return false;
   }
   // (d) compare  detector elements
-  if (m_associatedDetElement != other.m_associatedDetElement) {
+  if (m_placement != other.m_placement) {
     return false;
   }
   // (e) compare transform values
@@ -240,9 +214,7 @@ std::string Surface::toString(const GeometryContext& gctx) const {
 }
 
 Vector3 Surface::center(const GeometryContext& gctx) const {
-  // fast access via transform matrix (and not translation())
-  auto tMatrix = localToGlobalTransform(gctx).matrix();
-  return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
+  return localToGlobalTransform(gctx).translation();
 }
 
 const Transform3& Surface::transform(const GeometryContext& gctx) const {
@@ -251,8 +223,8 @@ const Transform3& Surface::transform(const GeometryContext& gctx) const {
 
 const Transform3& Surface::localToGlobalTransform(
     const GeometryContext& gctx) const {
-  if (m_associatedDetElement != nullptr) {
-    return m_associatedDetElement->localToGlobalTransform(gctx);
+  if (m_placement != nullptr) {
+    return m_placement->localToGlobalTransform(gctx);
   }
   return *m_transform;
 }
@@ -337,8 +309,21 @@ FreeToPathMatrix Surface::freeToPathDerivative(const GeometryContext& gctx,
   return freeToPath;
 }
 
+const SurfacePlacementBase* Surface::surfacePlacement() const {
+  return m_placement;
+}
+
 const DetectorElementBase* Surface::associatedDetectorElement() const {
-  return m_associatedDetElement;
+  return dynamic_cast<const DetectorElementBase*>(m_placement);
+}
+
+double Surface::thickness() const {
+  return m_thickness;
+}
+
+void Surface::assignThickness(double thick) {
+  assert(thick >= 0.);
+  m_thickness = thick;
 }
 
 const Layer* Surface::associatedLayer() const {
@@ -354,8 +339,12 @@ Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
 }
 
-void Surface::assignDetectorElement(const DetectorElementBase& detelement) {
-  m_associatedDetElement = &detelement;
+void Surface::assignDetectorElement(const SurfacePlacementBase& detelement) {
+  assignSurfacePlacement(detelement);
+}
+
+void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
+  m_placement = &placement;
   // resetting the transform as it will be handled through the detector element
   // now
   m_transform.reset();
@@ -380,7 +369,7 @@ void Surface::visualize(IVisualization3D& helper, const GeometryContext& gctx,
 }
 
 void Surface::assignIsSensitive(bool isSensitive) {
-  if (m_associatedDetElement != nullptr) {
+  if (m_placement != nullptr) {
     throw std::logic_error(
         "Cannot assign sensitivity to a surface associated to a detector "
         "element.");
@@ -389,10 +378,13 @@ void Surface::assignIsSensitive(bool isSensitive) {
 }
 
 bool Surface::isSensitive() const {
-  if (m_associatedDetElement != nullptr) {
-    return m_associatedDetElement->isSensitive();
+  if (m_placement != nullptr) {
+    return m_placement->isSensitive();
   }
   return m_isSensitive;
+}
+bool Surface::isAlignable() const {
+  return m_placement != nullptr;
 }
 
 }  // namespace Acts

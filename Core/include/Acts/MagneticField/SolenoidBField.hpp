@@ -93,6 +93,7 @@ namespace Acts {
 ///
 class SolenoidBField final : public MagneticFieldProvider {
  public:
+  /// Cache payload for magnetic field evaluation.
   struct Cache {
     /// @brief Constructor with magnetic field context
     explicit Cache(const MagneticFieldContext& /*mctx*/) {}

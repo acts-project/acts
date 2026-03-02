@@ -22,8 +22,9 @@ void GreedyAmbiguityResolution::computeInitialState(
     source_link_equality_t&& sourceLinkEquality) const {
   auto measurementIndexMap =
       std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
-                         source_link_equality_t>(0, sourceLinkHash,
-                                                 sourceLinkEquality);
+                         source_link_equality_t>(
+          0, std::forward<source_link_hash_t>(sourceLinkHash),
+          std::forward<source_link_equality_t>(sourceLinkEquality));
 
   // Iterate through all input tracks, collect their properties like measurement
   // count and chi2 and fill the measurement map in order to relate tracks to
@@ -45,7 +46,7 @@ void GreedyAmbiguityResolution::computeInitialState(
     }
 
     state.trackTips.push_back(track.index());
-    state.trackChi2.push_back(track.chi2() / track.nDoF());
+    state.trackChi2.push_back(track.chi2() / static_cast<float>(track.nDoF()));
     state.measurementsPerTrack.push_back(std::move(measurements));
     state.selectedTracks.insert(state.numberOfTracks);
 

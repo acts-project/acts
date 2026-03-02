@@ -36,7 +36,7 @@ class GenericFreeTrackParameters {
   /// Type alias for free track parameters vector
   using ParametersVector = FreeVector;
   /// Type alias for free track covariance matrix
-  using CovarianceMatrix = FreeSquareMatrix;
+  using CovarianceMatrix = FreeMatrix;
   /// Type alias for particle hypothesis used in reconstruction
   using ParticleHypothesis = particle_hypothesis_t;
 
@@ -227,7 +227,7 @@ class GenericFreeTrackParameters {
 
  private:
   FreeVector m_params;
-  std::optional<FreeSquareMatrix> m_cov;
+  std::optional<FreeMatrix> m_cov;
   // TODO use [[no_unique_address]] once we switch to C++20
   ParticleHypothesis m_particleHypothesis;
 

@@ -12,14 +12,12 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <memory>
-
 #include "HelloData.hpp"
 
 namespace ActsExamples {
 
 /// Example algorithm that reads/writes data from/to the event store.
-class HelloWhiteBoardAlgorithm : public ActsExamples::IAlgorithm {
+class HelloWhiteBoardAlgorithm : public IAlgorithm {
  public:
   struct Config {
     /// Input collection name.
@@ -29,10 +27,10 @@ class HelloWhiteBoardAlgorithm : public ActsExamples::IAlgorithm {
   };
 
   explicit HelloWhiteBoardAlgorithm(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Read input and copy to the output
-  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   ReadDataHandle<HelloDataCollection> m_readHandle{this, "Input"};
   WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};

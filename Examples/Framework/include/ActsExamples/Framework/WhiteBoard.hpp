@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <Acts/Utilities/Concepts.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <memory>
-#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -37,6 +37,8 @@ class WhiteBoard {
   struct IHolder {
     virtual ~IHolder() = default;
     virtual const std::type_info& type() const = 0;
+    virtual const void* data() const = 0;
+    virtual std::uint64_t typeHash() const = 0;
   };
   template <Acts::Concepts::nothrow_move_constructible T>
   struct HolderT : public IHolder {
@@ -44,6 +46,8 @@ class WhiteBoard {
 
     explicit HolderT(T&& v) : value(std::move(v)) {}
     const std::type_info& type() const override { return typeid(T); }
+    std::uint64_t typeHash() const override { return Acts::typeHash<T>(); }
+    const void* data() const override { return std::addressof(value); }
   };
 
   struct StringHash {
@@ -117,6 +121,8 @@ class WhiteBoard {
   template <typename T>
   HolderT<T>* getHolder(const std::string& name) const;
 
+  IHolder* getHolder(const std::string& name) const;
+
   template <typename T>
   T pop(const std::string& name);
 
@@ -134,15 +140,12 @@ class WhiteBoard {
   friend class DataHandleBase;
 };
 
-}  // namespace ActsExamples
-
-inline ActsExamples::WhiteBoard::WhiteBoard(
-    std::unique_ptr<const Acts::Logger> logger, AliasMapType objectAliases)
+inline WhiteBoard::WhiteBoard(std::unique_ptr<const Acts::Logger> logger,
+                              AliasMapType objectAliases)
     : m_logger(std::move(logger)), m_objectAliases(std::move(objectAliases)) {}
 
 template <typename T>
-ActsExamples::WhiteBoard::HolderT<T>* ActsExamples::WhiteBoard::getHolder(
-    const std::string& name) const {
+WhiteBoard::HolderT<T>* WhiteBoard::getHolder(const std::string& name) const {
   auto it = m_store.find(name);
   if (it == m_store.end()) {
     const auto names = similarNames(name, 10, 3);
@@ -172,7 +175,7 @@ ActsExamples::WhiteBoard::HolderT<T>* ActsExamples::WhiteBoard::getHolder(
 }
 
 template <typename T>
-inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
+inline const T& WhiteBoard::get(const std::string& name) const {
   ACTS_VERBOSE("Attempt to get object '" << name << "' of type "
                                          << typeid(T).name());
   ACTS_VERBOSE("Retrieved object '" << name << "'");
@@ -181,7 +184,7 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
 }
 
 template <typename T>
-T ActsExamples::WhiteBoard::pop(const std::string& name) {
+T WhiteBoard::pop(const std::string& name) {
   ACTS_VERBOSE("Pop object '" << name << "'");
   // This will throw if the object is not of the requested type or does not
   // exist
@@ -192,7 +195,9 @@ T ActsExamples::WhiteBoard::pop(const std::string& name) {
   return std::move(holder->value);
 }
 
-inline bool ActsExamples::WhiteBoard::exists(const std::string& name) const {
+inline bool WhiteBoard::exists(const std::string& name) const {
   // TODO remove this function?
   return m_store.contains(name);
 }
+
+}  // namespace ActsExamples

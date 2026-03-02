@@ -419,8 +419,6 @@ void CompSpacePointAuxiliaries::updateStripResidual(
     const Line_t& line, const Vector& normal, const Vector& sensorN,
     const Vector& sensorD, const Vector& stripPos, const bool isBending,
     const bool isNonBending) {
-  using namespace Acts::UnitLiterals;
-
   const double normDot = normal.dot(line.direction());
 
   constexpr double tolerance = 1.e-12;

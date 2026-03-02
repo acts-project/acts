@@ -266,6 +266,8 @@ class GridSurfaceMaterialT
     return m_materialAccessor.slab(m_grid, m_globalToGridLocal(gp));
   }
 
+  using ISurfaceMaterial::materialSlab;
+
   /// Scale operator
   ///
   /// @param factor is the scale factor applied

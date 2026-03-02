@@ -67,15 +67,15 @@ ModuleClusters::digitizedParameters() {
 
 // Needed for clusterization
 int getCellRow(const ModuleValue& mval) {
-  if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
-    return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[0];
+  if (std::holds_alternative<Cluster::Cell>(mval.value)) {
+    return std::get<Cluster::Cell>(mval.value).bin[0];
   }
   throw std::domain_error("ModuleValue does not contain cell!");
 }
 
-int getCellColumn(const ActsExamples::ModuleValue& mval) {
-  if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
-    return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[1];
+int getCellColumn(const ModuleValue& mval) {
+  if (std::holds_alternative<Cluster::Cell>(mval.value)) {
+    return std::get<Cluster::Cell>(mval.value).bin[1];
   }
   throw std::domain_error("ModuleValue does not contain cell!");
 }
@@ -90,7 +90,7 @@ std::vector<ModuleValue> ModuleClusters::createCellCollection() {
     if (!std::holds_alternative<Cluster::Cell>(mval.value)) {
       continue;
     }
-    const auto& cell = std::get<ActsExamples::Cluster::Cell>(mval.value).bin;
+    const auto& cell = std::get<Cluster::Cell>(mval.value).bin;
 
     if (const auto it = uniqueCells.find(cell); it != uniqueCells.end()) {
       // Cell already exists, so merge the hit sources

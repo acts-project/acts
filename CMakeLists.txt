@@ -63,13 +63,13 @@ option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_ALGEBRAPLUGINS "If we want to setup algebra-plugins" ON)
+option(ACTS_SETUP_ALGEBRAPLUGINS "If we want to set up algebra-plugins" ON)
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_COVFIE "If we want to setup covfie" ON)
+option(ACTS_SETUP_COVFIE "If we want to set up covfie" ON)
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_DETRAY "If we want to setup detray" ON)
+option(ACTS_SETUP_DETRAY "If we want to set up detray" ON)
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_VECMEM "If we want to setup vecmem" ON)
+option(ACTS_SETUP_VECMEM "If we want to set up vecmem" ON)
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
@@ -80,7 +80,6 @@ option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
-option(ACTS_BUILD_PLUGIN_FASTJET "Build FastJet plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
@@ -94,7 +93,6 @@ option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
-option(ACTS_BUILD_PLUGIN_HASHING "Build Hashing plugin" OFF)
 # python related options
 option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
@@ -107,6 +105,7 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 option(ACTS_BUILD_EXAMPLES "Build basic examples components" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_FASTJET "Build FastJet plugin" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
@@ -180,12 +179,7 @@ set_option_if(
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
-set_option_if(
-    ACTS_BUILD_PLUGIN_ROOT
-    ACTS_BUILD_PLUGIN_DD4HEP
-    OR
-    ACTS_BUILD_EXAMPLES
-)
+set_option_if(ACTS_BUILD_PLUGIN_ROOT ACTS_BUILD_PLUGIN_DD4HEP)
 set_option_if(
     ACTS_BUILD_PLUGIN_IDENTIFICATION
     ACTS_BUILD_PLUGIN_ROOT
@@ -196,16 +190,22 @@ set_option_if(
 )
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES)
-set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_PLUGIN_FASTJET)
+set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES_FASTJET)
 set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_BUILD_PLUGIN_HASHING ACTS_BUILD_EXAMPLES_HASHING)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 # feature tests
 include(CheckCXXSourceCompiles)
+
+# We need to set the ORIGIN token based on the system we are compiling for
+if(APPLE)
+    set(_acts_rpath_origin "@loader_path")
+else()
+    set(_acts_rpath_origin "\$ORIGIN")
+endif()
 
 # Set flags dependent whether we build ACTS in the default configuration or for deployment in pip with scikit-build-core
 if(ACTS_BUILD_PYTHON_WHEEL)
@@ -219,50 +219,40 @@ if(ACTS_BUILD_PYTHON_WHEEL)
         message(WARNING "scikit-build-core not detected for building wheel")
     endif()
 
-    # For deployment with pip, we build static libs
-    set(BUILD_SHARED_LIBS FALSE)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
     # Set installation paths for proper python package creation
     # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
     set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
     set(CMAKE_INSTALL_LIBDIR "acts")
-    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}}) # Don't install headers
+    set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}) # Don't install headers
     set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
     set(CMAKE_INSTALL_DATADIR "acts/share")
-    set(ACTS_PYTHON_INSTALL_DIR "acts")
-else()
-    # GNU-like installation paths, e.g. lib/, include/, ...
+    set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}")
+    set(_acts_python_install_dir "acts")
+    set(_acts_python_modules_rpath "${_acts_rpath_origin}")
+elseif(PROJECT_IS_TOP_LEVEL)
     include(GNUInstallDirs)
-    set(ACTS_PYTHON_INSTALL_DIR "python")
+    set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}/../${CMAKE_INSTALL_LIBDIR}")
+    set(_acts_python_install_dir "python/acts")
+    set(_acts_python_modules_rpath
+        "${_acts_rpath_origin}/../../${CMAKE_INSTALL_LIBDIR}"
+    )
 endif()
 
 include(ActsCompilerOptions) # default compile options
 include(ActsComponentsHelpers) # handle components via add_..._if commands
 include(ActsStaticAnalysis)
 
-# function that tests if the root installation is compatible
-function(check_root_compatibility)
-    get_target_property(
-        ROOT_INCLUDE_DIR
-        ROOT::Core
-        INTERFACE_INCLUDE_DIRECTORIES
-    )
-    set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
-    #yolo
-    #check_cxx_source_compiles(" #include <string>\n #include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
-    #if(NOT ROOT_COMPATIBILITY_CHECK)
-    #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
-    #endif()
-endfunction()
+acts_disable_static_analysis() # disable static analysis for thirdparty dependencies, will be enabled later for the main code
 
-# place build products in `<build>/bin` and `<build>/lib` for simple use
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-    "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
-)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-    "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
-)
+if(PROJECT_IS_TOP_LEVEL)
+    # place build products in `<build>/bin` and `<build>/lib` for simple use
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
+        "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
+    )
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+        "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
+    )
+endif()
 
 # This needs to happen before we set up any targets
 if(ACTS_FORCE_ASSERTIONS)
@@ -297,7 +287,7 @@ set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
-set(_acts_pybind11_version 2.13.1)
+set(_acts_pybind11_version 3.0.1)
 set(_acts_detray_version 0.103.0)
 set(_acts_traccc_version 0.26.1)
 set(_acts_covfie_version 0.15.2)
@@ -444,9 +434,6 @@ if(ACTS_BUILD_PLUGIN_JSON)
         add_subdirectory(thirdparty/nlohmann_json)
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_FASTJET)
-    find_package(FastJet ${_acts_fastjet_version} REQUIRED)
-endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     find_package(GeoModelCore CONFIG)
     if(NOT GeoModelCore_FOUND)
@@ -466,6 +453,14 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
     find_package(GeoModelIO ${GeoModelCore_VERSION} REQUIRED EXACT CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_ROOT)
+    # In the ATLAS build, the ROOT find_package call does not find VDT unless these variables are set.
+    # This should not affect other environments.
+    find_package(VDT)
+    if(VDT_FOUND)
+        set(VDT_INCLUDE_DIR "${VDT_INCLUDE_DIR}" CACHE PATH "")
+        set(VDT_LIBRARY "${VDT_vdt_LIBRARY}" CACHE FILEPATH "")
+    endif()
+
     find_package(
         ROOT
         ${_acts_root_version}
@@ -473,7 +468,6 @@ if(ACTS_BUILD_PLUGIN_ROOT)
         CONFIG
         COMPONENTS Geom Graf Tree RIO Hist
     )
-    check_root_compatibility()
 endif()
 if(ACTS_BUILD_ANALYSIS_APPS)
     find_package(
@@ -483,7 +477,6 @@ if(ACTS_BUILD_ANALYSIS_APPS)
         CONFIG
         COMPONENTS Geom Graf
     )
-    check_root_compatibility()
 endif()
 if(ACTS_BUILD_PLUGIN_GNN)
     if(ACTS_GNN_ENABLE_CUDA)
@@ -580,16 +573,24 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
         add_subdirectory(thirdparty/traccc)
     endif()
 endif()
-if(ACTS_SETUP_ANNOY OR ACTS_BUILD_PLUGIN_HASHING)
-    add_subdirectory(thirdparty/Annoy)
-endif()
 
 # examples dependencies
 if(ACTS_BUILD_EXAMPLES)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
+    set(_acts_hepmc3_components "search")
+    if(ACTS_BUILD_EXAMPLES_ROOT)
+        list(APPEND _acts_hepmc3_components "rootIO")
+    endif()
+
+    find_package(
+        HepMC3
+        ${_acts_hepmc3_version}
+        REQUIRED
+        CONFIG
+        COMPONENTS ${_acts_hepmc3_components}
+    )
 
     # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
     if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)
@@ -612,7 +613,9 @@ if(ACTS_BUILD_EXAMPLES)
             CONFIG
             COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
         )
-        check_root_compatibility()
+    endif()
+    if(ACTS_BUILD_EXAMPLES_FASTJET)
+        find_package(FastJet ${_acts_fastjet_version} REQUIRED)
     endif()
     if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
         find_package(
@@ -634,11 +637,16 @@ if(ACTS_BUILD_EXAMPLES)
     if(ACTS_BUILD_EXAMPLES_PYTHIA8)
         find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
     endif()
+    if(ACTS_SETUP_ANNOY OR ACTS_BUILD_EXAMPLES_HASHING)
+        add_subdirectory(thirdparty/Annoy)
+    endif()
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
     find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
 endif()
+
+acts_enable_static_analysis() # enable static analysis for the main code, after dependencies are set up
 
 # core library, core plugins, and other components
 add_component(Core Core)

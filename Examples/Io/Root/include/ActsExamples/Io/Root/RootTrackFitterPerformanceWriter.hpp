@@ -26,7 +26,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out the residual and pull of track parameters and efficiency.
 ///
@@ -82,13 +81,10 @@ class RootTrackFitterPerformanceWriter final
   TFile* m_outputFile{nullptr};
   /// Plot tool for residuals and pulls.
   ResPlotTool m_resPlotTool;
-  ResPlotTool::Cache m_resPlotCache;
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
-  EffPlotTool::Cache m_effPlotCache;
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::Cache m_trackSummaryPlotCache{};
 };
 
 }  // namespace ActsExamples

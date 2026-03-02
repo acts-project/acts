@@ -492,9 +492,9 @@ void Acts::from_json(const nlohmann::json& j,
   if (mpMatrix.empty()) {
     material = new Acts::ProtoSurfaceMaterial(bUtility, mapType);
   } else if (bUtility.bins() == 1) {
-    material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], mapType);
+    material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], 1, mapType);
   } else {
-    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, mapType);
+    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, 1, mapType);
   }
 }
 

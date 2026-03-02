@@ -62,10 +62,9 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   // construct with thickness:
   auto pPlaneLayerWithThickness = PlaneLayer::create(
       pTransform, pRectangle, std::move(pSurfaceArray), thickness);
-  BOOST_CHECK_EQUAL(pPlaneLayerWithThickness->thickness(), thickness);
+  BOOST_CHECK_EQUAL(pPlaneLayerWithThickness->layerThickness(), thickness);
   // with an approach descriptor...
-  std::unique_ptr<ApproachDescriptor> ad(
-      new GenericApproachDescriptor(aSurfaces));
+  auto ad(std::make_unique<GenericApproachDescriptor>(aSurfaces));
   auto adPtr = ad.get();
   auto pPlaneLayerWithApproachDescriptor =
       PlaneLayer::create(pTransform, pRectangle, std::move(pSurfaceArray),

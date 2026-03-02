@@ -27,16 +27,25 @@ namespace ActsPlugins {
 /// @addtogroup gnn_plugin
 /// @{
 
+/// Edge classifier using TensorRT inference
 class TensorRTEdgeClassifier final : public EdgeClassificationBase {
  public:
+  /// Configuration struct for TensorRT edge classifier
   struct Config {
+    /// Path to the TensorRT model file
     std::string modelPath;
+    /// List of feature indices to use for edge classification
     std::vector<int> selectedFeatures;
+    /// Classification score threshold for edge filtering
     float cut = 0.5;
 
+    /// Number of parallel execution contexts for inference
     std::size_t numExecutionContexts = 1;
   };
 
+  /// Constructor
+  /// @param cfg Configuration parameters
+  /// @param logger Logging instance
   TensorRTEdgeClassifier(const Config &cfg,
                          std::unique_ptr<const Acts::Logger> logger);
   ~TensorRTEdgeClassifier();
@@ -44,6 +53,8 @@ class TensorRTEdgeClassifier final : public EdgeClassificationBase {
   PipelineTensors operator()(PipelineTensors tensors,
                              const ExecutionContext &execContext = {}) override;
 
+  /// Get the configuration
+  /// @return Copy of the configuration struct
   Config config() const { return m_cfg; }
 
  private:

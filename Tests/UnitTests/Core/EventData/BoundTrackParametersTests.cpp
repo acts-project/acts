@@ -44,7 +44,7 @@ using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
-const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
+const BoundMatrix cov = BoundMatrix::Identity();
 
 void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                      double time, double phi, double theta, double p, double q,

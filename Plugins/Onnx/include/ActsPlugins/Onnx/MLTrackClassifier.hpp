@@ -16,8 +16,8 @@ namespace ActsPlugins {
 /// @addtogroup onnx_plugin
 /// @{
 
-// Specialized class that labels tracks as good/duplicate/fake using a
-// deep neural network.
+/// Specialized class that labels tracks as good/duplicate/fake using a
+/// deep neural network.
 class MLTrackClassifier : public OnnxRuntimeBase {
   using OnnxRuntimeBase::OnnxRuntimeBase;
 

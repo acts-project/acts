@@ -224,7 +224,7 @@ which retains only the higher quality seeds. If this limit is exceeded, the algo
 checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
 
 
-:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (SpacePointMutableData& , CandidatesForMiddleSp<const external_spacepoint_t>&, collection_t&) const
+:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (SpacePointMutableData& , CandidatesForMiddleSp<const external_space_point_t>&, collection_t&) const
 :outline:
 :::
 

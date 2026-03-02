@@ -243,6 +243,7 @@ class ContainerBlueprintNode : public BlueprintNode {
       m_gaps;
 };
 
+/// Container blueprint node stacking cylindrical volumes.
 class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
  public:
   using ContainerBlueprintNode::ContainerBlueprintNode;
@@ -272,10 +273,12 @@ class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
                                          const Logger& logger) override;
 
  protected:
+  /// @brief Type name for cylinder container
   inline static const std::string s_typeName = "Cylinder";
   const std::string& typeName() const override;
 };
 
+/// Container blueprint node stacking cuboid volumes.
 class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
  public:
   using ContainerBlueprintNode::ContainerBlueprintNode;
@@ -305,6 +308,7 @@ class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
                                          const Logger& logger) override;
 
  protected:
+  /// @brief Type name for cuboid container
   inline static const std::string s_typeName = "Cuboid";
   const std::string& typeName() const override;
 };

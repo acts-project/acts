@@ -77,16 +77,28 @@ using Identifier = std::uint64_t;
 constexpr Identifier kNoIdentifier = std::numeric_limits<Identifier>::max();
 constexpr int kNoSurface = -1;
 
-// @TODO: We might want to consider making this a type erased type that's not an interface
+/// Helper interface for converting between ACTS and PODIO types
 /// @ingroup edm4hep_plugin
 class ConversionHelper {
  public:
+  /// Convert surface to identifier
+  /// @param surface The surface to convert
+  /// @return Optional identifier for the surface
   virtual std::optional<Identifier> surfaceToIdentifier(
       const Acts::Surface& surface) const = 0;
+  /// Convert identifier to surface
+  /// @param identifier The identifier to convert
+  /// @return Pointer to the surface
   virtual const Acts::Surface* identifierToSurface(
       Identifier identifier) const = 0;
 
+  /// Convert source link to identifier
+  /// @param sl The source link to convert
+  /// @return Identifier for the source link
   virtual Identifier sourceLinkToIdentifier(const Acts::SourceLink& sl) = 0;
+  /// Convert identifier to source link
+  /// @param identifier The identifier to convert
+  /// @return Source link for the identifier
   virtual Acts::SourceLink identifierToSourceLink(
       Identifier identifier) const = 0;
 };

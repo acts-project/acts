@@ -52,7 +52,7 @@ using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
 
-struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
+struct GsfFitterFunctionImpl final : public TrackFitterFunction {
   Fitter fitter;
   DirectFitter directFitter;
 

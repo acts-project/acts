@@ -186,6 +186,7 @@ class CompositeSpacePointLineSeeder {
       std::unique_ptr<const Logger> logger = getDefaultLogger(
           "CompositeSpacePointLineSeeder", Logging::Level::INFO));
   /// @brief Return the configuration object of the seeder
+  /// @return Configuration object
   const Config& config() const { return m_cfg; }
 
   /// @brief Enumeration to pick one of the four tangent lines to
@@ -231,24 +232,29 @@ class CompositeSpacePointLineSeeder {
   };
 
   /// @brief Converts the line tangent ambiguity into a string
+  /// @param ambi Tangent ambiguity
+  /// @return String representation
   static std::string toString(const TangentAmbi ambi);
   /// @brief Translate the combination of two drift signs into the proper
   ///        tangent ambiguity enum value
-  /// @param signTop: Left/right sign of the top straw tube
-  /// @param signBottom: Left/right sign of the bottom straw tube
+  /// @param signTop Left/right sign of the top straw tube
+  /// @param signBottom Left/right sign of the bottom straw tube
+  /// @return Tangent ambiguity
   static TangentAmbi encodeAmbiguity(const int signTop, const int signBottom);
   /// @brief Construct the line that is tangential to a pair of two straw circle measurements
-  /// @param topHit: First straw hit
-  /// @param bottomHit: Second straw hit
-  /// @param ambi: Left right ambiguity of the bottom & top hit
+  /// @param topHit First straw hit
+  /// @param bottomHit Second straw hit
+  /// @param ambi Left right ambiguity of the bottom & top hit
+  /// @return Tangent line parameters
   template <CompositeSpacePoint Sp_t>
   static TwoCircleTangentPars constructTangentLine(const Sp_t& topHit,
                                                    const Sp_t& bottomHit,
                                                    const TangentAmbi ambi);
   /// @brief Creates the direction vector from the reference hit used to
   ///        construct the tangent seed and the result on theta
-  /// @param refHit: Reference hit to define the local axes (Bottom hit)
-  /// @param tanAngle: Theta value from the TwoCircleTangentPars
+  /// @param refHit Reference hit to define the local axes (Bottom hit)
+  /// @param tanAngle Theta value from the TwoCircleTangentPars
+  /// @return Direction vector
   template <CompositeSpacePoint Spt_t>
   static Vector makeDirection(const Spt_t& refHit, const double tanAngle);
 
@@ -353,8 +359,10 @@ class CompositeSpacePointLineSeeder {
       return ostr;
     }
     /// @brief Return the number of generated seeds
+    /// @return Number of generated seeds
     std::size_t nGenSeeds() const { return m_seenSolutions.size(); }
     /// @brief Returns the pattern parameters
+    /// @return Pattern parameters
     const SeedParam_t& initialParameters() const { return m_initialPars; }
     /// @brief Grant the embedding class access to the private members
     friend CompositeSpacePointLineSeeder;
@@ -389,11 +397,12 @@ class CompositeSpacePointLineSeeder {
   ///        which the seed shall be constructed. Then, the nextSeed() returns
   ///        the next best seed candidate which can then be fitted. The user
   ///        continues to call the method until a nullopt is returned.
-  /// @param cctx: Experiment specific calibration context to be piped back to the
+  /// @param cctx Experiment specific calibration context to be piped back to the
   ///              caller such that the space points may be calibrated during
   ///              the seeding process.
-  /// @param state: Mutable reference to the SeedingState object from which all the
+  /// @param state Mutable reference to the SeedingState object from which all the
   ///               segment seeds are constructed.
+  /// @return Next seed candidate or nullopt if none available
   template <CompositeSpacePointContainer UncalibCont_t,
             CompositeSpacePointContainer CalibCont_t,
             detail::CompSpacePointSeederDelegate<UncalibCont_t, CalibCont_t>

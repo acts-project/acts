@@ -12,6 +12,7 @@ target_sources(
         HomogeneousVolumeMaterial.cpp
         Interactions.cpp
         IntersectionMaterialAssigner.cpp
+        ISurfaceMaterial.cpp
         Material.cpp
         MaterialGridHelper.cpp
         MaterialInteractionAssignment.cpp

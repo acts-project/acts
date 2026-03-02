@@ -39,8 +39,11 @@ class VolumeStack : public Volume {
   static Volume& initialVolume(std::span<Volume*> volumes);
 
  protected:
+  /// Pair of resize strategies for volume stacking
   struct ResizeStrategies {
+    /// First resize strategy
     VolumeResizeStrategy first;
+    /// Second resize strategy
     VolumeResizeStrategy second;
 
     friend std::ostream& operator<<(std::ostream& os,

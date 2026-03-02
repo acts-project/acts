@@ -113,8 +113,8 @@ ProcessCode RootMuonSpacePointWriter::finalize() {
   m_file->cd();
   m_file->Write();
   m_file.reset();
-  ACTS_INFO("Wrote muon spacepoints to tree '" << m_cfg.treeName << "' in '"
-                                               << m_cfg.filePath << "'");
+  ACTS_INFO("Wrote muon space points to tree '" << m_cfg.treeName << "' in '"
+                                                << m_cfg.filePath << "'");
 
   return ProcessCode::SUCCESS;
 }

@@ -67,6 +67,13 @@ def generate_code():
     """
     Generate
     """
+
+    lines = CODE_HEADER.splitlines()
+
+    lines.append(
+        f"static constexpr std::uint32_t kParticlesCount = {len(Particle.all())}u;"
+    )
+
     # ensure the rows are sorted by the signed pdg number (first column)
     # name, c++ type, and output format for each column
     columns = [
@@ -74,19 +81,13 @@ def generate_code():
         ("mass", "Mass", "float", "{}f", convert_mass_to_GeV),
         ("name", "Name", " const  char* const", '"{}"', identity),
     ]
-    lines = []
-    lines = [
-        CODE_HEADER,
-        f"static constexpr uint32_t kParticlesCount = {len(Particle.all())}u;",
-    ]
     # build a separate array for each column
     for variable_name, target_name, type_name, value_format, transform in columns:
+        cpp_name = f"particlesMap{target_name}"
+        map_type = f"std::map<std::int32_t, {type_name}>"
 
-        cpp_name = f"kParticlesMap{target_name}"
-
-        lines.append(
-            f"static const std::map<std::int32_t, {type_name}> {cpp_name} = {{"
-        )
+        lines.append(f"inline const {map_type}& {cpp_name}() {{")
+        lines.append(f"static const {map_type} map = {{")
 
         for p in Particle.all():
             value = getattr(p, variable_name)
@@ -104,6 +105,8 @@ def generate_code():
                 )
 
         lines.append("};")
+        lines.append("return map;")
+        lines.append("}")
 
     # ensure we end with a newline
     lines.append("")

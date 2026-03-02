@@ -13,9 +13,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <sstream>
 #include <type_traits>
+#include <unordered_map>
 
-#include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -25,24 +26,6 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
-
-class PythonLogger {
- public:
-  PythonLogger(const std::string& name, Logging::Level level)
-      : m_name{name}, m_logger{getDefaultLogger(m_name, level)} {}
-
-  void log(Logging::Level level, const std::string& message) const {
-    m_logger->log(level, message);
-  }
-
-  void setLevel(Logging::Level level) {
-    m_logger = getDefaultLogger(m_name, level);
-  }
-
- private:
-  std::string m_name;
-  std::unique_ptr<const Logger> m_logger;
-};
 
 /// @brief This adds the classes from Core/Utilities to the python module
 /// @param m the pybind11 core module
@@ -76,70 +59,52 @@ void addUtilities(py::module_& m) {
           return self >= other;
         });
 
-    auto makeLogFunction = [](Logging::Level level) {
-      return
-          [level](PythonLogger& logger, const std::string& fmt, py::args args) {
-            auto locals = py::dict();
-            locals["args"] = args;
-            locals["fmt"] = fmt;
-            py::exec(R"(
-        message = fmt % args
-    )",
-                     py::globals(), locals);
+    {
+      auto makeLogFunction = [](Logging::Level level) {
+        return
+            [level](const Logger& logger, const py::str& fmt, py::args args) {
+              if (!logger.doPrint(level)) {
+                return;
+              }
 
-            auto message = locals["message"].cast<std::string>();
-
-            logger.log(level, message);
-          };
-    };
-
-    py::class_<Logger>(m, "Logger");
-
-    auto logger = py::class_<PythonLogger, std::shared_ptr<PythonLogger>>(
-                      logging, "Logger")
-                      .def("log", &PythonLogger::log)
-                      .def("verbose", makeLogFunction(Logging::VERBOSE))
-                      .def("debug", makeLogFunction(Logging::DEBUG))
-                      .def("info", makeLogFunction(Logging::INFO))
-                      .def("warning", makeLogFunction(Logging::WARNING))
-                      .def("error", makeLogFunction(Logging::ERROR))
-                      .def("fatal", makeLogFunction(Logging::FATAL))
-                      .def("setLevel", &PythonLogger::setLevel);
-
-    static std::unordered_map<std::string, std::shared_ptr<PythonLogger>>
-        pythonLoggers = {
-            {"root", std::make_shared<PythonLogger>("Python", Logging::INFO)}};
-
-    logging.def(
-        "getLogger",
-        [](const std::string& name) {
-          if (!pythonLoggers.contains(name)) {
-            pythonLoggers[name] =
-                std::make_shared<PythonLogger>(name, Logging::INFO);
-          }
-          return pythonLoggers[name];
-        },
-        py::arg("name") = "root");
-
-    logging.def("setLevel", [](Logging::Level level) {
-      pythonLoggers.at("root")->setLevel(level);
-    });
-
-    auto makeModuleLogFunction = [](Logging::Level level) {
-      return [level](const std::string& fmt, py::args args) {
-        auto locals = py::dict();
-        locals["args"] = args;
-        locals["fmt"] = fmt;
-        py::exec(R"(
-        message = fmt % args
-    )",
-                 py::globals(), locals);
-
-        auto message = locals["message"].cast<std::string>();
-
-        pythonLoggers.at("root")->log(level, message);
+              logger.log(level, fmt.format(*args));
+            };
       };
-    };
+
+      auto logger =
+          py::class_<Logger, py::smart_holder>(m, "Logger")
+              .def("log", &Logger::log)
+              .def_property_readonly("level", &Logger::level)
+              .def_property_readonly("name", &Logger::name)
+              .def("verbose", makeLogFunction(Logging::VERBOSE))
+              .def("debug", makeLogFunction(Logging::DEBUG))
+              .def("info", makeLogFunction(Logging::INFO))
+              .def("warning", makeLogFunction(Logging::WARNING))
+              .def("error", makeLogFunction(Logging::ERROR))
+              .def("fatal", makeLogFunction(Logging::FATAL))
+              .def("clone",
+                   py::overload_cast<const std::optional<std::string>&,
+                                     const std::optional<Logging::Level>&>(
+                       &Logger::clone, py::const_),
+                   py::arg("name") = py::none(), py::arg("level") = py::none())
+              .def(
+                  "clone",
+                  py::overload_cast<Logging::Level>(&Logger::clone, py::const_),
+                  py::arg("level"))
+              .def("cloneWithSuffix", &Logger::cloneWithSuffix,
+                   py::arg("suffix"), py::arg("level") = py::none());
+    }
+
+    static std::unordered_map<std::string, std::unique_ptr<const Logger>>
+        loggerCache;
+
+    m.def(
+        "getDefaultLogger",
+        [](const std::string& name, Logging::Level level) {
+          return getDefaultLogger(name, level);
+        },
+        py::arg("name"), py::arg("level") = Logging::INFO,
+        py::return_value_policy::take_ownership);
 
     logging.def("setFailureThreshold", &Logging::setFailureThreshold);
     logging.def("getFailureThreshold", &Logging::getFailureThreshold);
@@ -184,12 +149,19 @@ void addUtilities(py::module_& m) {
       }
     });
 
-    logging.def("verbose", makeModuleLogFunction(Logging::VERBOSE));
-    logging.def("debug", makeModuleLogFunction(Logging::DEBUG));
-    logging.def("info", makeModuleLogFunction(Logging::INFO));
-    logging.def("warning", makeModuleLogFunction(Logging::WARNING));
-    logging.def("error", makeModuleLogFunction(Logging::ERROR));
-    logging.def("fatal", makeModuleLogFunction(Logging::FATAL));
+    logging.def("_consumeLoggerFunction",
+                [](std::unique_ptr<const Logger> logger) {
+                  logger->log(Logging::VERBOSE, "consumed logger logs");
+                });
+
+    struct ConfigWithLogger {
+      std::unique_ptr<const Logger> logger;
+    };
+
+    py::class_<ConfigWithLogger>(logging, "_ConfigWithLogger")
+        .def(py::init<std::unique_ptr<const Logger>>(), "logger"_a)
+        .def_property_readonly(
+            "logger", [](ConfigWithLogger& self) { return self.logger.get(); });
   }
 
   // Add axis related classes

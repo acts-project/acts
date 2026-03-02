@@ -252,7 +252,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 
   //
   double rMax = 10.6071, rMin = 9.59111;  // empirical - w/o envelopes
-  CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2. * envR, 1e-3);
+  CHECK_CLOSE_REL(layer->layerThickness(), (rMax - rMin) + 2. * envR, 1e-3);
 
   const CylinderBounds* bounds = &layer->bounds();
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), (rMax + rMin) / 2., 1e-3);
@@ -273,7 +273,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   pl2.envelope[AxisDirection::AxisZ] = {envZ, envZ};
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, 30, 7, pl2));
-  CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
+  CHECK_CLOSE_REL(layer->layerThickness(), (rMax - rMin) + 2 * envR, 1e-3);
   bounds = &layer->bounds();
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), (rMax + rMin) / 2., 1e-3);
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eHalfLengthZ), 14 + envZ, 1e-3);
@@ -288,7 +288,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, 13, 3, pl2));
-  CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
+  CHECK_CLOSE_REL(layer->layerThickness(), (rMax - rMin) + 2 * envR, 1e-3);
   bounds = &layer->bounds();
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), (rMax + rMin) / 2., 1e-3);
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eHalfLengthZ), 14 + envZ, 1e-3);
@@ -309,7 +309,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   pl3.extent.range(AxisDirection::AxisZ).set(-25, 25);
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl3));
-  CHECK_CLOSE_REL(layer->thickness(), 19, 1e-3);
+  CHECK_CLOSE_REL(layer->layerThickness(), 19, 1e-3);
   bounds = &layer->bounds();
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eR), 10.5, 1e-3);
   CHECK_CLOSE_REL(bounds->get(CylinderBounds::eHalfLengthZ), 25, 1e-3);
@@ -343,7 +343,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   pl.extent.range(AxisDirection::AxisR).set(5., 25.);
   std::shared_ptr<DiscLayer> layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, equidistant, equidistant, pl));
-  CHECK_CLOSE_REL(layer->thickness(), 20, 1e-3);
+  CHECK_CLOSE_REL(layer->layerThickness(), 20, 1e-3);
   const RadialBounds* bounds =
       dynamic_cast<const RadialBounds*>(&layer->bounds());
   CHECK_CLOSE_REL(bounds->rMin(), 5, 1e-3);
@@ -373,7 +373,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
       p_LC->discLayer(tgContext, surfaces, nBinsR, nBinsPhi, pl2));
 
   double rMin = 8, rMax = 22.0227;
-  CHECK_CLOSE_REL(layer->thickness(), 0.4 + 2 * envZ, 1e-3);
+  CHECK_CLOSE_REL(layer->layerThickness(), 0.4 + 2 * envZ, 1e-3);
   bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
   CHECK_CLOSE_REL(bounds->rMin(), rMin - envMinR, 1e-3);
   CHECK_CLOSE_REL(bounds->rMax(), rMax + envMaxR, 1e-3);
@@ -395,7 +395,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
 
   layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, equidistant, equidistant, pl2));
-  CHECK_CLOSE_REL(layer->thickness(), 0.4 + 2 * envZ, 1e-3);
+  CHECK_CLOSE_REL(layer->layerThickness(), 0.4 + 2 * envZ, 1e-3);
   bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
   CHECK_CLOSE_REL(bounds->rMin(), rMin - envMinR, 1e-3);
   CHECK_CLOSE_REL(bounds->rMax(), rMax + envMaxR, 1e-3);
