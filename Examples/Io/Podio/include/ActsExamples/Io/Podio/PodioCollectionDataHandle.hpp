@@ -10,14 +10,14 @@
 
 // Include podio first to ensure full definition before any forward declarations
 // in the DataHandle include chain. Required for std::is_base_of_v constraint.
-#include <podio/CollectionBase.h>
-
 #include "ActsExamples/Framework/DataHandle.hpp"
 
 #include <concepts>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+
+#include <podio/CollectionBase.h>
 
 namespace ActsExamples {
 
@@ -32,8 +32,6 @@ class PodioCollectionTypedReadHandle : public ReadDataHandleBase {
   using ReadDataHandleBase::ReadDataHandleBase;
 
  public:
-  virtual ~PodioCollectionTypedReadHandle() = default;
-
   /// Hash of the concrete collection type for compatibility checking.
   /// Used by @ref PodioCollectionWriteHandle::isCompatible to validate that
   /// typed read handles match the declared write handle type.
