@@ -201,8 +201,8 @@ class SurfaceArray {
         return m_neighborMaps.at(0).at(0);  // overflow bin
       }
       const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
-      const double neighborDistance = std::min<double>(
-          m_maxNeighborDistance, 1.0 / std::abs(normal.dot(direction)));
+      const double neighborDistance = std::clamp<double>(
+          1.0 / std::abs(normal.dot(direction)), 1, m_maxNeighborDistance);
       const std::uint8_t neighborMapIndex =
           static_cast<std::uint8_t>(neighborDistance - 1);
       const std::array<double, 2> gridLocal = surfaceToGridLocal(*surfaceLocal);
@@ -324,9 +324,9 @@ class SurfaceArray {
       }
     };
 
+    /// calculate neighbors for every bin and store in map
     void populateNeighborCache() {
-      // calculate neighbors for every bin and store in map
-      for (std::size_t globalBin = 0; globalBin < m_grid.size(); globalBin++) {
+      for (std::size_t globalBin = 0; globalBin < m_grid.size(); ++globalBin) {
         if (!isValidBin(globalBin)) {
           continue;
         }
