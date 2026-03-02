@@ -194,8 +194,8 @@ class SurfaceArray {
                                    const Vector3& direction) const override {
       auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
-      const auto surfaceLocal =
-          findSurfaceLocal(gctx, position, direction, m_tolerance);
+      const auto surfaceLocal = findSurfaceLocal(
+          gctx, position, direction, std::numeric_limits<double>::infinity());
       if (!surfaceLocal.has_value()) {
         return m_neighborMaps.at(0).at(0);  // overflow bin
       }
@@ -283,7 +283,7 @@ class SurfaceArray {
       const std::array<std::size_t, 2> startIndices =
           m_grid.localBinsFromGlobalBin(startBin);
       const auto startNeighborIndices =
-          m_grid.neighborHoodIndices(startIndices, 1);
+          m_grid.neighborHoodIndices(startIndices, 1u);
 
       std::set<std::size_t> visited({startBin});
       std::vector<std::size_t> queue(startNeighborIndices.begin(),
@@ -317,7 +317,7 @@ class SurfaceArray {
         m_grid.at(current).push_back(&surface);
 
         const auto neighborIndices =
-            m_grid.neighborHoodIndices(currentIndices, 1);
+            m_grid.neighborHoodIndices(currentIndices, 1u);
         queue.insert(queue.end(), neighborIndices.begin(),
                      neighborIndices.end());
       }
@@ -339,7 +339,7 @@ class SurfaceArray {
           neighbors.clear();
 
           for (const std::size_t idx :
-               m_grid.neighborHoodIndices(indices, neighborMapIndex + 1)) {
+               m_grid.neighborHoodIndices(indices, neighborMapIndex + 1u)) {
             const std::vector<const Surface*>& binContent = m_grid.at(idx);
             std::copy(binContent.begin(), binContent.end(),
                       std::back_inserter(neighbors));
