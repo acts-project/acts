@@ -38,7 +38,7 @@ std::unique_ptr<TH1F> toRoot(const Acts::Experimental::Histogram1& boostHist);
 /// @return Raw pointer to new TH2F (caller owns and must delete)
 std::unique_ptr<TH2F> toRoot(const Acts::Experimental::Histogram2& boostHist);
 
-/// Convert Histogram2 to ROOT TH3F
+/// Convert Histogram3 to ROOT TH3F
 ///
 /// Creates a new ROOT TH3F histogram with the same binning, content, and
 /// errors as the input boost histogram.
