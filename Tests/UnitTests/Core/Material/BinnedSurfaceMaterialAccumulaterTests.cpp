@@ -213,10 +213,9 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
                     std::invalid_argument);
 
   // Invalid surface amongst empty hits
-  BOOST_CHECK_THROW(
-      bsma.accumulate(*state, tContext, {},
-                      {{invalidSurface.get(), 50 * d1, d1}}),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(bsma.accumulate(*state, tContext, {},
+                                    {{invalidSurface.get(), 50 * d1, d1}}),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

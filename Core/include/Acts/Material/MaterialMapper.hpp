@@ -42,9 +42,6 @@ class MaterialMapper {
     /// State of the surface material accumulator
     std::unique_ptr<ISurfaceMaterialAccumulater::State>
         surfaceMaterialAccumulaterState;
-
-    /// Geometry context of the latest mapping call
-    GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
   };
 
   /// @brief nested options struct
@@ -83,8 +80,10 @@ class MaterialMapper {
 
   /// Finalize the maps
   /// @param state Material mapping state containing collected data
+  /// @param gctx Geometry context for finalization
   /// @return Tracking geometry material map with finalized surface and volume materials
-  TrackingGeometryMaterial finalizeMaps(const State& state) const;
+  TrackingGeometryMaterial finalizeMaps(const State& state,
+                                        const GeometryContext& gctx) const;
 
  private:
   /// Access method to the logger

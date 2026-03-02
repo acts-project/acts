@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
   }
 
   // Get the maps
-  auto [surfaceMaps, volumeMaps] = mapper.finalizeMaps(*state);
+  auto [surfaceMaps, volumeMaps] = mapper.finalizeMaps(*state, tContext);
 
   BOOST_CHECK(surfaceMaps.size() == 3);
   BOOST_CHECK(volumeMaps.empty());

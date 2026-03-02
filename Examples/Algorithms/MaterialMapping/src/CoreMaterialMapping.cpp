@@ -39,7 +39,7 @@ CoreMaterialMapping::CoreMaterialMapping(
 
 CoreMaterialMapping::~CoreMaterialMapping() {
   Acts::TrackingGeometryMaterial detectorMaterial =
-      m_cfg.materialMapper->finalizeMaps(*m_mappingState);
+      m_cfg.materialMapper->finalizeMaps(*m_mappingState, m_cfg.geoContext);
   // Loop over the available writers and write the maps
   for (auto& imw : m_cfg.materiaMaplWriters) {
     imw->writeMaterial(detectorMaterial);

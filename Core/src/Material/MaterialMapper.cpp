@@ -35,8 +35,6 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
                                   const MagneticFieldContext& mctx,
                                   const RecordedMaterialTrack& rmTrack,
                                   const Options& options) const {
-  state.geoContext = gctx;
-
   // The recorded material track
   const auto& [starDir, recordedMaterial] = rmTrack;
   const auto& [position, direction] = starDir;
@@ -82,13 +80,13 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
 }
 
 Acts::TrackingGeometryMaterial Acts::MaterialMapper::finalizeMaps(
-    const State& state) const {
+    const State& state, const GeometryContext& gctx) const {
   // The final maps
   TrackingGeometryMaterial detectorMaterialMaps;
   // The surface maps
   detectorMaterialMaps.first =
       m_cfg.surfaceMaterialAccumulater->finalizeMaterial(
-          *state.surfaceMaterialAccumulaterState, state.geoContext);
+          *state.surfaceMaterialAccumulaterState, gctx);
 
   return detectorMaterialMaps;
 }

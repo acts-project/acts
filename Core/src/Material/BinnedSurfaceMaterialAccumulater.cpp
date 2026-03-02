@@ -52,8 +52,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::initializeState(
       binUtility = adjustBinUtility(binUtility, *surface, gctx);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state.accumulatedMaterial[geoID] =
-          AccumulatedSurfaceMaterial(binUtility);
+      state.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(binUtility);
       // Material accumulation  is created for this
       continue;
     }
@@ -68,8 +67,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::initializeState(
       binUtility = adjustBinUtility(binUtility, *surface, gctx);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state.accumulatedMaterial[geoID] =
-          AccumulatedSurfaceMaterial(binUtility);
+      state.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(binUtility);
       // Material accumulation  is created for this
       continue;
     }
@@ -92,8 +90,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::initializeState(
 }
 
 void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
-    ISurfaceMaterialAccumulater::State& state,
-    const GeometryContext& gctx,
+    ISurfaceMaterialAccumulater::State& state, const GeometryContext& gctx,
     const std::vector<MaterialInteraction>& interactions,
     const std::vector<IAssignmentFinder::SurfaceAssignment>&
         surfacesWithoutAssignment) const {
