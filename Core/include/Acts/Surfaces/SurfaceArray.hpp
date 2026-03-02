@@ -124,14 +124,21 @@ class SurfaceArray {
     /// @param tolerance The tolerance used for intersection checks
     /// @param axes The axes used for the grid
     /// @param bValues Optional vector of axis directions for binning
+    /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
+    /// @param neighborScaleFactor Scale factor for neighbor distance when looking for next neighbors
     SurfaceGridLookup(std::shared_ptr<RegularSurface> representative,
                       double tolerance, std::tuple<Axis1, Axis2> axes,
-                      std::vector<AxisDirection> bValues = {})
+                      std::vector<AxisDirection> bValues = {},
+                      std::uint8_t maxNeighborDistance = 1)
         : m_representative(std::move(representative)),
           m_tolerance(tolerance),
           m_grid(std::move(axes)),
-          m_binValues(std::move(bValues)) {
-      m_neighborMap.resize(m_grid.size());
+          m_binValues(std::move(bValues)),
+          m_maxNeighborDistance(maxNeighborDistance) {
+      m_neighborMaps.resize(maxNeighborDistance);
+      for (auto& neighborMap : m_neighborMaps) {
+        neighborMap.resize(m_grid.size());
+      }
     }
 
     /// @brief Fill provided surfaces into the contained @c Grid.
@@ -159,7 +166,9 @@ class SurfaceArray {
 
     const SurfaceVector& lookup(const Vector3& position,
                                 const Vector3& direction) const override {
-      return m_grid.at(findGlobalBin(position, direction,
+      auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+      return m_grid.at(findGlobalBin(gctx, position, direction,
                                      std::numeric_limits<double>::infinity()));
     }
 
@@ -184,8 +193,21 @@ class SurfaceArray {
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     const SurfaceVector& neighbors(const Vector3& position,
                                    const Vector3& direction) const override {
-      return m_neighborMap.at(findGlobalBin(
-          position, direction, std::numeric_limits<double>::infinity()));
+      auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+      const auto surfaceLocal =
+          findSurfaceLocal(gctx, position, direction, m_tolerance);
+      if (!surfaceLocal.has_value()) {
+        return m_neighborMaps.at(0).at(0);  // overflow bin
+      }
+      const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
+      const double neighborDistance = std::min<double>(
+          m_maxNeighborDistance, 1.0 / std::abs(normal.dot(direction)));
+      const std::uint8_t neighborMapIndex =
+          static_cast<std::uint8_t>(neighborDistance - 1);
+      const std::array<double, 2> gridLocal = surfaceToGridLocal(*surfaceLocal);
+      const std::size_t globalBin = m_grid.globalBinFromPosition(gridLocal);
+      return m_neighborMaps.at(neighborMapIndex).at(globalBin);
     }
 
     /// @brief Returns the total size of the grid (including under/overflow
@@ -248,7 +270,8 @@ class SurfaceArray {
                                         const Surface& surface) {
       const Vector3 pos = surface.referencePosition(gctx, AxisDirection::AxisR);
       const Vector3 normal = m_representative->normal(gctx, pos);
-      const std::size_t globalBin = findGlobalBin(pos, normal, m_tolerance);
+      const std::size_t globalBin =
+          findGlobalBin(gctx, pos, normal, m_tolerance);
       if (globalBin != 0) {
         m_grid.at(globalBin).push_back(&surface);
       }
@@ -303,25 +326,30 @@ class SurfaceArray {
 
     void populateNeighborCache() {
       // calculate neighbors for every bin and store in map
-      for (std::size_t i = 0; i < m_grid.size(); i++) {
-        if (!isValidBin(i)) {
+      for (std::size_t globalBin = 0; globalBin < m_grid.size(); globalBin++) {
+        if (!isValidBin(globalBin)) {
           continue;
         }
         const std::array<std::size_t, 2> indices =
-            m_grid.localBinsFromGlobalBin(i);
-        std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
-        neighbors.clear();
+            m_grid.localBinsFromGlobalBin(globalBin);
 
-        for (std::size_t idx : m_grid.neighborHoodIndices(indices, 1u)) {
-          const std::vector<const Surface*>& binContent = m_grid.at(idx);
-          std::copy(binContent.begin(), binContent.end(),
-                    std::back_inserter(neighbors));
+        for (std::uint8_t neighborDistance = 1;
+             neighborDistance <= m_maxNeighborDistance; ++neighborDistance) {
+          std::vector<const Surface*>& neighbors =
+              m_neighborMaps.at(neighborDistance).at(globalBin);
+          neighbors.clear();
+
+          for (std::size_t idx : m_grid.neighborHoodIndices(indices, 1u)) {
+            const std::vector<const Surface*>& binContent = m_grid.at(idx);
+            std::copy(binContent.begin(), binContent.end(),
+                      std::back_inserter(neighbors));
+          }
+
+          std::ranges::sort(neighbors);
+          auto last = std::ranges::unique(neighbors);
+          neighbors.erase(last.begin(), last.end());
+          neighbors.shrink_to_fit();
         }
-
-        std::ranges::sort(neighbors);
-        auto last = std::ranges::unique(neighbors);
-        neighbors.erase(last.begin(), last.end());
-        neighbors.shrink_to_fit();
       }
     }
 
@@ -354,10 +382,10 @@ class SurfaceArray {
       return gridLocal;
     }
 
-    std::size_t findGlobalBin(const Vector3& position, const Vector3& direction,
-                              double tolerance) const {
-      auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-
+    std::optional<Vector2> findSurfaceLocal(const GeometryContext& gctx,
+                                            const Vector3& position,
+                                            const Vector3& direction,
+                                            double tolerance) const {
       const Intersection3D intersection =
           m_representative
               ->intersect(gctx, position, direction,
@@ -365,13 +393,23 @@ class SurfaceArray {
               .closest();
       if (!intersection.isValid() ||
           std::abs(intersection.pathLength()) > tolerance) {
-        return 0;  // overflow bin
+        return std::nullopt;  // overflow bin
       }
       const Vector2 surfaceLocal =
           m_representative
               ->globalToLocal(gctx, intersection.position(), direction)
               .value();
-      const std::array<double, 2> gridLocal = surfaceToGridLocal(surfaceLocal);
+      return surfaceLocal;
+    }
+    std::size_t findGlobalBin(const GeometryContext& gctx,
+                              const Vector3& position, const Vector3& direction,
+                              double tolerance) const {
+      const auto surfaceLocal =
+          findSurfaceLocal(gctx, position, direction, tolerance);
+      if (!surfaceLocal.has_value()) {
+        return 0;  // overflow bin
+      }
+      const std::array<double, 2> gridLocal = surfaceToGridLocal(*surfaceLocal);
       return m_grid.globalBinFromPosition(gridLocal);
     }
 
@@ -379,7 +417,8 @@ class SurfaceArray {
     double m_tolerance{};
     Grid_t m_grid;
     std::vector<AxisDirection> m_binValues;
-    std::vector<SurfaceVector> m_neighborMap;
+    std::uint8_t m_maxNeighborDistance{};
+    std::vector<std::vector<SurfaceVector>> m_neighborMaps;
   };
 
   /// @brief Lookup implementation which wraps one element and always returns
