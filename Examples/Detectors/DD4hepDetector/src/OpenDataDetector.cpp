@@ -16,8 +16,11 @@
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+// Current (real) builder — will become BlueprintBuilder<DD4hepBackend> via alias
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+// Current TGeoAxes location — would move to ActsPlugins/GeometryAxes.hpp
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 #include <Acts/Geometry/Blueprint.hpp>
 #include <Acts/Geometry/BlueprintOptions.hpp>
 #include <Acts/Geometry/BoundarySurfaceFace.hpp>
@@ -39,6 +42,109 @@
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
+
+// ============================================================================
+// MOCK — illustrating the proposed backend-abstraction design.
+//
+// In real code these declarations would live in:
+//
+//   ActsPlugins/GeometryAxes.hpp
+//     — TGeoAxes renamed and lifted here (zero external deps, trivial move)
+//
+//   ActsPlugins/GeometryBackend.hpp
+//     — shared concept; no geometry-source dependency
+//
+//   ActsPlugins/DD4hep/DD4hepBackend.hpp
+//     — DD4hep-specific backend struct with LayerSpec
+//
+//   ActsPlugins/DD4hep/BlueprintBuilder.hpp  (updated)
+//     — type aliases keep existing names unchanged for callers
+// ============================================================================
+namespace mock {
+
+// Renamed from TGeoAxes. Same consteval construction, same validation.
+// The name "TGeo" was always an accident of where the class first appeared —
+// the concept (axis permutation encoding) is geometry-source-agnostic.
+using GeometryAxes = ActsPlugins::TGeoAxes;
+
+// Shared concept. Geometry-source backends must satisfy this to be usable
+// with the generic LayerHelper<B> and BarrelEndcapAssemblyHelper<B>.
+//
+// Deliberately excludes makeLayer from the concept: the construction signature
+// varies per backend (DD4hep/TGeo need axes, GeoModel derives them from shape),
+// so it is enforced backend-internally rather than in the shared concept.
+template <typename B>
+concept GeometryBackend =
+    requires {
+      typename B::Element;   // native handle — value, pointer, or smart pointer
+      typename B::LayerSpec; // backend-specific construction config
+    } &&
+    requires(const B& b, const typename B::Element& e, const std::string& name,
+             const std::regex& pat) {
+      // Tree traversal — name/pattern based, consistent across all backends
+      { b.findByName(e, name) } -> std::same_as<std::optional<typename B::Element>>;
+      { b.findByPattern(e, pat) } -> std::same_as<std::vector<typename B::Element>>;
+      { b.nameOf(e) } -> std::convertible_to<std::string_view>;
+      // Role detection — DD4hep uses type flags; TGeo/GeoModel use naming
+      { b.isBarrel(e) } -> std::convertible_to<bool>;
+      { b.isEndcap(e) } -> std::convertible_to<bool>;
+      // Root of the world tree, for convenience findByName(name) overloads
+      { b.world() } -> std::same_as<typename B::Element>;
+    };
+
+// DD4hep backend. Moves the construction knowledge that currently lives
+// inside BlueprintBuilder out into an explicit, swappable struct.
+struct DD4hepBackend {
+  using Element = dd4hep::DetElement;
+
+  // LayerSpec carries the axes configuration needed to construct a detector
+  // element from a DD4hep node. TGeoBackend::LayerSpec would be identical
+  // (both use TGeo internally). GeoModelBackend::LayerSpec would be empty —
+  // its converters derive orientation from the shape geometry automatically.
+  struct LayerSpec {
+    GeometryAxes axes;
+    std::optional<GeometryAxes> layerAxes;
+  };
+
+  // Config: moves here from BlueprintBuilder::Config (same fields)
+  // Methods: findByName, findByPattern, nameOf, isBarrel, isEndcap, world,
+  //          makeLayer(Element, LayerSpec), makeBeampipe()
+  // isBarrel/isEndcap implemented using DD4hep type flags (reliable, as
+  // discussed — not name-based)
+};
+
+// Type aliases live in ActsPlugins/DD4hep/BlueprintBuilder.hpp.
+// Existing callers keep the unqualified names unchanged — zero breakage.
+//
+//   using DD4hepBlueprintBuilder =
+//       ActsPlugins::BlueprintBuilder<DD4hepBackend>;
+//   using DD4hepLayerHelper =
+//       ActsPlugins::LayerHelper<DD4hepBackend>;
+//   using DD4hepBarrelEndcapAssemblyHelper =
+//       ActsPlugins::BarrelEndcapAssemblyHelper<DD4hepBackend>;
+//
+// A TGeo equivalent would look like:
+//
+//   struct TGeoBackend {
+//     using Element   = TGeoNode*;
+//     using LayerSpec = DD4hepBackend::LayerSpec; // identical — same axes concept
+//     // isBarrel/isEndcap: name-pattern based (configurable)
+//   };
+//   using TGeoBlueprintBuilder = ActsPlugins::BlueprintBuilder<TGeoBackend>;
+//
+// And GeoModel:
+//
+//   struct GeoModelBackend {
+//     using Element   = PVConstLink;
+//     struct LayerSpec {};  // empty — orientation derived from shape
+//     // isBarrel/isEndcap: TBD, likely name-based initially
+//   };
+//   using GeoModelBlueprintBuilder = ActsPlugins::BlueprintBuilder<GeoModelBackend>;
+
+}  // namespace mock
+// ============================================================================
+// END MOCK
+// ============================================================================
 
 namespace ActsExamples {
 OpenDataDetector::OpenDataDetector(const Config& cfg,
@@ -89,6 +195,8 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
   using namespace Acts::UnitLiterals;
   using enum AxisDirection;
 
+  // In the new design this would be DD4hepBlueprintBuilder — a type alias for
+  // BlueprintBuilder<DD4hepBackend>. Config structure is unchanged.
   ActsPlugins::DD4hep::BlueprintBuilder builder{
       {
           .dd4hepDetector = &dd4hepDetector(),
@@ -120,6 +228,11 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
         std::format(fmt, std::forward<Args>(values)...));
   };
 
+  // Customizer type would be DD4hepLayerHelper::Customizer (via alias).
+  // The lambda body is unchanged — it receives the native dd4hep::DetElement,
+  // so experiment code retains full access to backend-specific data.
+  // Generic lambdas (auto& elem) would also work for cross-backend customizers
+  // that only operate on ACTS node types.
   auto makeCustomizer = [&](const std::string& det,
                             const std::regex& layerPattern)
       -> ActsPlugins::DD4hep::LayerHelper::Customizer {
@@ -154,42 +267,53 @@ void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
     };
   };
 
+  // Generic lambda — auto& elem means this works with any backend's
+  // BarrelEndcapAssemblyHelper::Customizer without modification.
   auto customizeContainer = [&](const auto& /*elem*/, auto node) {
     node->setAttachmentStrategy(AttachmentStrategy::Gap);
     node->setResizeStrategies(ResizeStrategy::Gap, ResizeStrategy::Gap);
     return node;
   };
 
-  auto pixelAssembly = builder.findDetElementByName("Pixels").value();
+  // Key API changes vs. today:
+  //
+  //   setAssembly("Pixels")         — string overload added; no need to call
+  //                                   findDetElementByName externally first
+  //
+  //   setLayerFilter(layerPattern)  — renamed from setLayerPattern; name now
+  //                                   reflects that only matching is used here,
+  //                                   not capture groups (those remain the
+  //                                   caller's responsibility in customizeLayer)
+  //
+  //   setAxes("XYZ", "XZY")        — unchanged, but now conditionally compiled
+  //                                   via `requires` on Backend::LayerSpec
+  //                                   having an axes field; GeoModel callers
+  //                                   simply don't call this method
+
   std::regex pixelLayerPattern{"(?:PixelLayer|PixelEndcap[NP])(\\d)"};
   builder.barrelEndcapAssemblyHelper()
-      .setAssembly(pixelAssembly)
+      .setAssembly("Pixels")
       .setAxes("XYZ", "XZY")
-      .setLayerPattern(pixelLayerPattern)
-      // .setEndcapPatterns(
-      //     {"layer_0_neg", "layer_1_neg", "layer_0_pos", "layer_1_pos"})
-      // .setBarrelPatterns({"layer_0", "layer_1"})
+      .setLayerFilter(pixelLayerPattern)
       .customizeLayer(makeCustomizer("pix", pixelLayerPattern))
       .customize(customizeContainer)
       .addTo(outer);
 
-  auto sstripAssembly = builder.findDetElementByName("ShortStrips").value();
   std::regex sstripLayerPattern{
       "(?:ShortStripLayer|ShortStripEndcap[NP])(\\d)"};
   builder.barrelEndcapAssemblyHelper()
-      .setAssembly(sstripAssembly)
+      .setAssembly("ShortStrips")
       .setAxes("XYZ", "XZY")
-      .setLayerPattern(sstripLayerPattern)
+      .setLayerFilter(sstripLayerPattern)
       .customizeLayer(makeCustomizer("ss", sstripLayerPattern))
       .customize(customizeContainer)
       .addTo(outer);
 
-  auto lstripAssembly = builder.findDetElementByName("LongStrips").value();
   std::regex lstripLayerPattern{"(?:LongStripLayer|LongStripEndcap[NP])(\\d)"};
   builder.barrelEndcapAssemblyHelper()
-      .setAssembly(lstripAssembly)
+      .setAssembly("LongStrips")
       .setAxes("XYZ", "XZY")
-      .setLayerPattern(lstripLayerPattern)
+      .setLayerFilter(lstripLayerPattern)
       .customizeLayer(makeCustomizer("ls", lstripLayerPattern))
       .customize(customizeContainer)
       .addTo(outer);
