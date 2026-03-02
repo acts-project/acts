@@ -11,6 +11,10 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
+#include <ActsPodioEdm/TrackerHitLocalCollection.h>
+
+#include <stdexcept>
 
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
@@ -24,23 +28,18 @@ EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
     : PodioOutputConverter("EDM4hepMeasurementOutputConverter",
                            std::move(logger)),
       m_cfg(config) {
+  if (m_cfg.trackingGeometry == nullptr) {
+    throw std::runtime_error(
+        "EDM4hepMeasurementOutputConverter: trackingGeometry is null");
+  }
+
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
-  m_outputTrackerHitsPlane.initialize(m_cfg.outputTrackerHitsPlane);
-  m_outputTrackerHitsRaw.initialize(m_cfg.outputTrackerHitsRaw);
+  m_outputTrackerHitsLocal.initialize(m_cfg.outputTrackerHitsLocal);
 }
 
 ProcessCode EDM4hepMeasurementOutputConverter::execute(
     const AlgorithmContext& ctx) const {
-  ClusterContainer clusters;
-
-  edm4hep::TrackerHitPlaneCollection hitsPlane;
-  edm4hep::TrackerHit3DCollection hits;
-
-  if (!m_cfg.inputClusters.empty()) {
-    ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);
-    clusters = m_inputClusters(ctx);
-  }
+  ActsPodioEdm::TrackerHitLocalCollection hits;
 
   const auto measurements = m_inputMeasurements(ctx);
 
@@ -50,23 +49,28 @@ ProcessCode EDM4hepMeasurementOutputConverter::execute(
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     ConstVariableBoundMeasurementProxy from =
         measurements.getMeasurement(hitIdx);
-    const Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
 
-    auto to = hitsPlane.create();
-    EDM4hepUtil::writeMeasurement(
-        from, to, fromCluster, hits,
-        [](Acts::GeometryIdentifier id) { return id.value(); });
+    const Acts::Surface* surface =
+        m_cfg.trackingGeometry->findSurface(from.geometryId());
+    if (surface == nullptr) {
+      throw std::runtime_error(
+          "EDM4hepMeasurementOutputConverter: surface not found for geometry "
+          "id " +
+          std::to_string(from.geometryId().value()));
+    }
+
+    auto to = hits.create();
+    EDM4hepUtil::writeMeasurement(ctx.geoContext, from, to, *surface);
   }
 
-  m_outputTrackerHitsPlane(ctx, std::move(hitsPlane));
-  m_outputTrackerHitsRaw(ctx, std::move(hits));
+  m_outputTrackerHitsLocal(ctx, std::move(hits));
 
   return ProcessCode::SUCCESS;
 }
 
 std::vector<std::string> EDM4hepMeasurementOutputConverter::collections()
     const {
-  return {m_cfg.outputTrackerHitsPlane, m_cfg.outputTrackerHitsRaw};
+  return {m_cfg.outputTrackerHitsLocal};
 }
 
 }  // namespace ActsExamples
