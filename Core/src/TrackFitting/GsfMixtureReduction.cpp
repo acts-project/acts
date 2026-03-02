@@ -30,9 +30,6 @@ void reduceWithKLDistanceImpl(std::vector<GsfComponent> &cmpCache,
   while (remainingComponents > maxCmpsAfterMerge) {
     const auto [minI, minJ] = distances.minDistancePair();
 
-    // auto prevCmpI = cmpCache[minI];
-    // auto prevCmpJ = cmpCache[minJ];
-
     // Set one component and compute associated distances
     cmpCache[minI] =
         mergeTwoComponents(cmpCache[minI], cmpCache[minJ], surface);
@@ -107,20 +104,9 @@ void Acts::reduceMixtureWithKLDistanceNaive(
       }
     }
 
-    // auto prevCmpI = cmpCache[minI];
-    // auto prevCmpJ = cmpCache[minJ];
-
     // Merge the two closest components
     cmpCache[minI] = detail::Gsf::mergeTwoComponents(cmpCache[minI],
                                                      cmpCache[minJ], surface);
-
-    /*std::cout << std::format("NAIVE: Merge with phi: {:.3f} + {:.3f} ->
-       {:.3f}, weight: {:.3f} + {:.3f} -> {:.3f}",
-                             prevCmpI.boundPars[eBoundPhi],
-                             prevCmpJ.boundPars[eBoundPhi],
-                             cmpCache[minI].boundPars[eBoundPhi],
-                             prevCmpI.weight, prevCmpJ.weight,
-                             cmpCache[minI].weight) << std::endl;*/
 
     // Remove the merged component immediately
     cmpCache.erase(cmpCache.begin() + minJ);
