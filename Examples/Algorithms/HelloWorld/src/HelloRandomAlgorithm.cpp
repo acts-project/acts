@@ -6,13 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "HelloRandomAlgorithm.hpp"
+#include "ActsExamples/HelloWorld/HelloRandomAlgorithm.hpp"
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <random>
-
-#include "HelloData.hpp"
 
 namespace ActsExamples {
 
