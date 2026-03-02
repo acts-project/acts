@@ -496,8 +496,7 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
   linePars[toUnderlying(ParIndex::x0)] = uniform{-500., 500.}(engine);
   linePars[toUnderlying(ParIndex::y0)] = uniform{-500., 500.}(engine);
   linePars[toUnderlying(ParIndex::theta)] =
-      // uniform{2_degree, 178_degree}(engine);
-      uniform{5_degree, 20_degree}(engine);
+      uniform{2_degree, 178_degree}(engine);
   if ((Acts::abs(linePars[toUnderlying(ParIndex::theta)] - 90._degree) <
        5._degree) ||
       (Acts::abs(linePars[toUnderlying(ParIndex::phi)]) < 5._degree)) {
@@ -514,7 +513,13 @@ Line_t generateLine(RandomEngine& engine, const Logger& logger) {
                      linePars[toUnderlying(ParIndex::y0)],
                      linePars[toUnderlying(ParIndex::x0)])
       << " --> " << toString(line.position()) << " + "
-      << toString(line.direction()));
+      << toString(line.direction())
+      << "\n gradient - (t): " << toString(line.gradient(ParIndex::theta))
+      << ", (p): " << toString(line.gradient(ParIndex::phi))
+      << "\n hessian - (t,t): "
+      << toString(line.hessian(ParIndex::theta, ParIndex::theta))
+      << " (t, p): " << toString(line.hessian(ParIndex::theta, ParIndex::phi))
+      << " (p, p): " << toString(line.hessian(ParIndex::phi, ParIndex::phi)));
 
   return line;
 }
@@ -528,6 +533,8 @@ class MeasurementGenerator {
     bool smearRadius{true};
     /// @brief Straw measurement measures the coordinate along the wire
     bool twinStraw{false};
+    /// @brief Smear the measurement along wire
+    bool smearTwin{true};
     /// @brief Resolution of the coordinate along the wire measurement
     double twinStrawReso{5._cm};
     /// @brief Create strip measurements
@@ -655,7 +662,9 @@ class MeasurementGenerator {
             const auto iSectWire = lineIntersect<3>(
                 line.position(), line.direction(), tube, Vector3::UnitX());
             tube = iSectWire.position();
-            tube[eX] = normal_t{tube[eX], genCfg.twinStrawReso}(engine);
+            if (genCfg.smearTwin) {
+              tube[eX] = normal_t{tube[eX], genCfg.twinStrawReso}(engine);
+            }
           }
           ACTS_DEBUG("spawn() - Tube position: " << toString(tube)
                                                  << ", radius: " << rad);
