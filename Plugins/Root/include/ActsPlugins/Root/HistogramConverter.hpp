@@ -15,6 +15,7 @@
 class TEfficiency;
 class TH1F;
 class TH2F;
+class TH3F;
 class TProfile;
 
 namespace ActsPlugins {
@@ -36,6 +37,15 @@ std::unique_ptr<TH1F> toRoot(const Acts::Experimental::Histogram1& boostHist);
 /// @param boostHist The boost 2D histogram to convert
 /// @return Raw pointer to new TH2F (caller owns and must delete)
 std::unique_ptr<TH2F> toRoot(const Acts::Experimental::Histogram2& boostHist);
+
+/// Convert Histogram2 to ROOT TH3F
+///
+/// Creates a new ROOT TH3F histogram with the same binning, content, and
+/// errors as the input boost histogram.
+///
+/// @param boostHist The boost 3D histogram to convert
+/// @return Raw pointer to new TH3F (caller owns and must delete)
+std::unique_ptr<TH3F> toRoot(const Acts::Experimental::Histogram3& boostHist);
 
 /// Convert ProfileHistogram1 to ROOT TProfile
 ///
