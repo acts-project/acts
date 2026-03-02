@@ -21,8 +21,8 @@
 namespace ActsExamples {
 
 TrackTruthMatcher::TrackTruthMatcher(const Config& config,
-                                     Acts::Logging::Level level)
-    : IAlgorithm("TrackTruthMatcher", level), m_cfg(config) {
+                                     std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackTruthMatcher", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks");
   }

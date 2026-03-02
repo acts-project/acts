@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -66,8 +66,8 @@ class CsvSpacePointReader final : public IReader {
  private:
   Config m_cfg;
 
-  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
-      this, "OutputSpacePoints"};
+  WriteDataHandle<SpacePointContainer> m_outputSpacePoints{this,
+                                                           "OutputSpacePoints"};
 
   std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;

@@ -83,7 +83,8 @@ class MuonHoughSeeder final : public IAlgorithm {
         visualizationFunction{};
   };
 
-  MuonHoughSeeder(const Config& cfg, Acts::Logging::Level lvl);
+  explicit MuonHoughSeeder(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
   ~MuonHoughSeeder() override;
 
   /// Run the seeding algorithm.
@@ -122,8 +123,6 @@ class MuonHoughSeeder final : public IAlgorithm {
                      const AxisRange_t& axis) const;
 
   Config m_cfg;
-  std::unique_ptr<const Acts::Logger> m_logger;
-  const Acts::Logger& logger() const { return *m_logger; }
 
   ReadDataHandle<MuonSegmentContainer> m_inputTruthSegs{this,
                                                         "InputTruthSegments"};

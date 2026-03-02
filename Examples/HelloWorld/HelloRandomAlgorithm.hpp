@@ -36,7 +36,7 @@ class HelloRandomAlgorithm : public IAlgorithm {
   };
 
   explicit HelloRandomAlgorithm(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   // Generate random numbers from various distributions.
   ProcessCode execute(const AlgorithmContext& ctx) const override;

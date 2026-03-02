@@ -12,7 +12,6 @@
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
 #include <memory>
-#include <string>
 
 class TGeoNode;
 class TGeoMatrix;
@@ -29,7 +28,7 @@ using AlignedTGeoDetectorElement = Aligned<ActsPlugins::TGeoDetectorElement>;
 std::shared_ptr<AlignedTGeoDetectorElement> alignedTGeoDetectorElementFactory(
     const ActsPlugins::TGeoDetectorElement::Identifier& identifier,
     const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix,
-    const std::string& axes, double scalor,
+    ActsPlugins::TGeoAxes axes, double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
 }  // namespace ActsExamples

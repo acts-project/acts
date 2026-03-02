@@ -10,20 +10,18 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/SeedContainer2.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/EventData/Types.hpp"
 #include "Acts/Seeding2/BroadTripletSeedFilter.hpp"
 #include "Acts/Seeding2/DoubletSeedFinder.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 
 #include <cmath>
 #include <csignal>
 #include <cstddef>
+#include <set>
 #include <stdexcept>
 
 #include <annoy/annoylib.h>
@@ -47,7 +45,7 @@ static inline bool itkFastTrackingCuts(
   return true;
 }
 
-static inline bool itkFastTrackingSPselect(const SimSpacePoint& sp) {
+static inline bool itkFastTrackingSPselect(const ConstSpacePointProxy& sp) {
   // At small r we remove points beyond |z| > 200.
   float r = sp.r();
   float zabs = std::abs(sp.z());
@@ -95,12 +93,12 @@ void buildModel(AnnoyModel& model) {
   model.build(nTrees);
 }
 
-std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
+SpacePointsBuckets computeSpacePointsBuckets(
     const AnnoyModel& annoyModel, const Acts::SpacePointContainer2& spacePoints,
     const std::size_t bucketSize, const std::size_t zBins,
     const std::size_t phiBins, const double layerRMin, const double layerRMax,
     const double layerZMin, const double layerZMax) {
-  std::vector<std::set<Acts::SpacePointIndex2>> resultSets;
+  std::vector<std::set<SpacePointIndex>> resultSets;
 
   std::size_t nBins = 0;
   if (zBins > 0) {
@@ -166,7 +164,7 @@ std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
     }
   }
 
-  std::vector<std::vector<Acts::SpacePointIndex2>> result;
+  SpacePointsBuckets result;
   result.reserve(resultSets.size());
   for (const auto& spSet : resultSets) {
     if (!spSet.empty()) {
@@ -186,26 +184,26 @@ std::vector<std::vector<Acts::SpacePointIndex2>> computeSpacePointsBuckets(
 }
 
 struct SeedComparison {
-  bool operator()(const Acts::Seed<SimSpacePoint>& seed1,
-                  const Acts::Seed<SimSpacePoint>& seed2) const {
-    const auto& sp1 = seed1.sp();
-    const auto& sp2 = seed2.sp();
+  bool operator()(const ConstSeedProxy& seed1,
+                  const ConstSeedProxy& seed2) const {
+    const auto& sps1 = seed1.spacePoints();
+    const auto& sps2 = seed2.spacePoints();
 
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->z() != sp2[i]->z()) {
-        return sp1[i]->z() < sp2[i]->z();
+    for (std::size_t i = 0; i < sps1.size(); ++i) {
+      if (sps1[i].z() != sps2[i].z()) {
+        return sps1[i].z() < sps2[i].z();
       }
     }
 
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->x() != sp2[i]->x()) {
-        return sp1[i]->x() < sp2[i]->x();
+    for (std::size_t i = 0; i < sps1.size(); ++i) {
+      if (sps1[i].x() != sps2[i].x()) {
+        return sps1[i].x() < sps2[i].x();
       }
     }
 
-    for (std::size_t i = 0; i < sp1.size(); ++i) {
-      if (sp1[i]->y() != sp2[i]->y()) {
-        return sp1[i]->y() < sp2[i]->y();
+    for (std::size_t i = 0; i < sps1.size(); ++i) {
+      if (sps1[i].y() != sps2[i].y()) {
+        return sps1[i].y() < sps2[i].y();
       }
     }
 
@@ -216,8 +214,8 @@ struct SeedComparison {
 }  // namespace
 
 HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
-    Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("HashingPrototypeSeedingAlgorithm", lvl),
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HashingPrototypeSeedingAlgorithm", std::move(logger)),
       m_cfg(std::move(cfg)) {
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
@@ -247,9 +245,9 @@ HashingPrototypeSeedingAlgorithm::HashingPrototypeSeedingAlgorithm(
   m_filterConfig.useDeltaRinsteadOfTopRadius =
       m_cfg.useDeltaRinsteadOfTopRadius;
 
-  m_filterLogger = logger().cloneWithSuffix("Filter");
+  m_filterLogger = this->logger().cloneWithSuffix("Filter");
 
-  m_seedFinder = Acts::TripletSeeder(logger().cloneWithSuffix("Finder"));
+  m_seedFinder = Acts::TripletSeeder(this->logger().cloneWithSuffix("Finder"));
 }
 
 ProcessCode HashingPrototypeSeedingAlgorithm::execute(
@@ -310,12 +308,12 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
                                           filterCache, *m_filterLogger);
   static thread_local Acts::TripletSeeder::Cache cache;
 
-  const SimSpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
+  const SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
 
   Acts::SpacePointContainer2 coreSpacePoints(
-      Acts::SpacePointColumns::SourceLinks | Acts::SpacePointColumns::XY |
-      Acts::SpacePointColumns::ZR | Acts::SpacePointColumns::VarianceZ |
-      Acts::SpacePointColumns::VarianceR | Acts::SpacePointColumns::Phi);
+      Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
+      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
+      Acts::SpacePointColumns::Phi | Acts::SpacePointColumns::CopyFromIndex);
 
   // create and train the hashing model
   AnnoyModel hashingModel = createModel(m_cfg.f, m_cfg.annoySeed);
@@ -326,14 +324,13 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
     }
 
     auto newSp = coreSpacePoints.createSpacePoint();
-    newSp.assignSourceLinks(
-        std::array<Acts::SourceLink, 1>{Acts::SourceLink(&sp)});
     newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                       static_cast<float>(sp.y())};
     newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
                                       static_cast<float>(sp.r())};
     newSp.varianceZ() = static_cast<float>(sp.varianceZ());
     newSp.varianceR() = static_cast<float>(sp.varianceR());
+    newSp.copyFromIndex() = sp.index();
 
     const float phi = std::atan2(newSp.xy()[1], newSp.xy()[0]);
     const float eta = Acts::AngleHelpers::etaFromTheta(
@@ -345,74 +342,63 @@ ProcessCode HashingPrototypeSeedingAlgorithm::execute(
   buildModel(hashingModel);
 
   // create buckets based on hashing model
-  std::vector<std::vector<Acts::SpacePointIndex2>> buckets =
-      computeSpacePointsBuckets(hashingModel, coreSpacePoints, m_cfg.bucketSize,
-                                m_cfg.zBins, m_cfg.phiBins, m_cfg.layerRMin,
-                                m_cfg.layerRMax, m_cfg.layerZMin,
-                                m_cfg.layerZMax);
+  SpacePointsBuckets buckets = computeSpacePointsBuckets(
+      hashingModel, coreSpacePoints, m_cfg.bucketSize, m_cfg.zBins,
+      m_cfg.phiBins, m_cfg.layerRMin, m_cfg.layerRMax, m_cfg.layerZMin,
+      m_cfg.layerZMax);
 
   ACTS_DEBUG("Created " << buckets.size() << " buckets  from "
                         << coreSpacePoints.size() << " space points");
 
   // sort buckets by radius
   for (auto& bucket : buckets) {
-    std::ranges::sort(bucket, {}, [&](const Acts::SpacePointIndex2& spIndex) {
+    std::ranges::sort(bucket, {}, [&](const SpacePointIndex& spIndex) {
       return coreSpacePoints.at(spIndex).zr()[1];
     });
   }
 
-  std::set<Acts::Seed<SimSpacePoint>, SeedComparison> uniqueSeeds;
+  std::set<ConstSeedProxy, SeedComparison> uniqueSeeds;
+  Acts::SeedContainer2 tmpSeeds;
+  tmpSeeds.assignSpacePointContainer(spacePoints);
 
   for (const auto& bucket : buckets) {
     auto bucketSpacePoints = coreSpacePoints.subset(bucket).asConst();
 
-    Acts::SeedContainer2 seeds;
+    const std::size_t nSeedsBefore = tmpSeeds.size();
 
     for (auto middleSp : bucketSpacePoints) {
       m_seedFinder->createSeedsFromGroup(
           cache, *bottomDoubletFinder, *topDoubletFinder, *tripletFinder,
           seedFilter, coreSpacePoints, bucketSpacePoints, middleSp,
-          bucketSpacePoints, seeds);
+          bucketSpacePoints, tmpSeeds);
     }
 
-    ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
-                          << bucketSpacePoints.size() << " space points");
+    ACTS_DEBUG("Created " << tmpSeeds.size() - nSeedsBefore
+                          << " track seeds from " << bucketSpacePoints.size()
+                          << " space points");
 
-    for (const auto& seed : seeds) {
-      auto sps = seed.spacePointIndices();
+    // update seed space point indices to original space point container
+    for (auto seed : tmpSeeds) {
+      for (auto& spIndex : seed.spacePointIndices()) {
+        spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
+      }
 
-      Acts::Seed<SimSpacePoint> newSeed(*coreSpacePoints.at(sps[0])
-                                             .sourceLinks()[0]
-                                             .get<const SimSpacePoint*>(),
-                                        *coreSpacePoints.at(sps[1])
-                                             .sourceLinks()[0]
-                                             .get<const SimSpacePoint*>(),
-                                        *coreSpacePoints.at(sps[2])
-                                             .sourceLinks()[0]
-                                             .get<const SimSpacePoint*>());
-      newSeed.setVertexZ(seed.vertexZ());
-      newSeed.setQuality(seed.quality());
-
-      uniqueSeeds.insert(newSeed);
+      uniqueSeeds.insert(seed.asConst());
     }
   }
 
   ACTS_DEBUG("Total unique seeds created: " << uniqueSeeds.size());
 
-  std::vector<SimSpacePointContainer> outputBuckets;
-  for (const auto& bucket : buckets) {
-    SimSpacePointContainer spContainer;
-    for (const auto& spIndex : bucket) {
-      const auto& sp = *coreSpacePoints.at(spIndex)
-                            .sourceLinks()[0]
-                            .get<const SimSpacePoint*>();
-      spContainer.push_back(sp);
-    }
-    outputBuckets.push_back(std::move(spContainer));
+  Acts::SeedContainer2 seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+
+  for (const auto& seed : uniqueSeeds) {
+    auto newSeed = seeds.createSeed();
+    newSeed.copyFrom(seed, Acts::SeedColumns::All);
   }
 
-  m_outputSeeds(ctx, SimSeedContainer(uniqueSeeds.begin(), uniqueSeeds.end()));
-  m_outputBuckets(ctx, std::move(outputBuckets));
+  m_outputSeeds(ctx, std::move(seeds));
+  m_outputBuckets(ctx, std::move(buckets));
 
   return ProcessCode::SUCCESS;
 }

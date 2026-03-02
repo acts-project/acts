@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/GbtsConfig.hpp"
+#include "Acts/Seeding2/GbtsConfig.hpp"
 
 #include <array>
 #include <cstdint>
@@ -19,8 +19,6 @@
 
 namespace Acts::Experimental {
 
-/// Maximum number of segments per node
-constexpr std::uint32_t gbtsMaxSegPerNode = 1000;
 /// Number of segment connections
 constexpr std::uint32_t gbtsNumSegConns = 6;
 
@@ -29,7 +27,7 @@ class GbtsGeometry;
 /// Machine learning lookup table for Gbts seeding
 using GbtsMlLookupTable = std::vector<std::array<float, 5>>;
 
-/// GBTs graph node storing space point properties.
+/// GBTS graph node storing space point properties.
 struct GbtsNode final {
  public:
   /// Constructor with layer index
@@ -56,7 +54,7 @@ struct GbtsNode final {
   float locPosY{};
 };
 
-/// Eta-bin container for GBTs nodes and edge data.
+/// Eta-bin container for GBTS nodes and edge data.
 struct GbtsEtaBin final {
   GbtsEtaBin();
 
@@ -76,10 +74,16 @@ struct GbtsEtaBin final {
   std::vector<const GbtsNode*> vn;
   /// Phi-indexed nodes
   std::vector<std::pair<float, std::uint32_t>> vPhiNodes;
-  /// vectors of incoming edges, stores indices of edges in the edge vector
-  std::vector<std::vector<std::uint32_t>> in;
   /// node attributes: minCutOnTau, maxCutOnTau, phi, r, z;
   std::vector<std::array<float, 5>> params;
+  /// the index of the first incoming graph edge attached to the node
+  std::vector<std::uint32_t> vFirstEdge;
+  /// the total number of incoming graph edges attached to this node
+  std::vector<std::uint16_t> vNumEdges;
+  /// flag to indicate the node's outer neighbourhood isolation from previously
+  /// built graph
+  std::vector<std::uint16_t> vIsConnected;
+
   /// Minimum radius in bin
   float minRadius{};
   /// Maximum radius in bin
@@ -89,12 +93,12 @@ struct GbtsEtaBin final {
   std::uint32_t layerKey{0};
 };
 
-/// Storage container for GBTs nodes and edges.
+/// Storage container for GBTS nodes and edges.
 class GbtsDataStorage final {
  public:
   /// Constructor
   /// @param config Configuration for seed finder
-  /// @param geometry Shared pointer to GBTs geometry
+  /// @param geometry Shared pointer to GBTS geometry
   /// @param mlLut Machine learning lookup table
   explicit GbtsDataStorage(const GbtsConfig& config,
                            std::shared_ptr<const GbtsGeometry> geometry,
@@ -138,7 +142,7 @@ class GbtsDataStorage final {
   }
 
  private:
-  /// GBTs geometry
+  /// GBTS geometry
   std::shared_ptr<const GbtsGeometry> m_geo;
 
   /// Configuration for seed finder
@@ -151,7 +155,7 @@ class GbtsDataStorage final {
   std::vector<GbtsEtaBin> m_etaBins;
 };
 
-/// Edge between two GBTs nodes with fit parameters.
+/// Edge between two GBTS nodes with fit parameters.
 struct GbtsEdge final {
   GbtsEdge() = default;
 

@@ -11,6 +11,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
@@ -356,8 +357,13 @@ class SpacePointProxy2 {
   /// Returns the resolved index of the space point.
   /// This resolves the index if the space point was copied from another index.
   /// @return The resolved index of the space point.
+  [[deprecated(
+      "Use copyFromIndex() instead to get the original index, and resolve it "
+      "manually if needed. This method will be removed in a future version.")]]
   SpacePointIndex2 resolvedIndex() const noexcept {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return m_container->resolvedIndex(m_index);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   /// Copies the specified columns from another space point to this space point.

@@ -85,7 +85,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 pyyaml==6.0.3
     # via -r Examples/Scripts/requirements.in
-rich==14.3.2
+rich==14.3.3
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
@@ -95,7 +95,7 @@ shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.24.0
+typer==0.24.1
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.15.0
     # via

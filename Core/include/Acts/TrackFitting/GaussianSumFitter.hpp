@@ -508,7 +508,7 @@ struct GaussianSumFitter {
       const auto [finalPars, finalCov] = detail::Gsf::mergeGaussianMixture(
           params.components(),
           [](const auto& cmp) {
-            const auto& [weight_l, pars_l, opt_cov_l] = cmp;
+            auto&& [weight_l, pars_l, opt_cov_l] = cmp;
             return std::tie(weight_l, pars_l, *opt_cov_l);
           },
           params.referenceSurface(), options.componentMergeMethod);

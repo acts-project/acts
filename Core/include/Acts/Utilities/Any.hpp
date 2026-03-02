@@ -364,12 +364,6 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
-  template <typename T>
-  static std::uint64_t typeHash() {
-    const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
-    return value;
-  }
-
   struct Handler {
     void (*destroy)(void* ptr) = nullptr;
     void (*moveConstruct)(void* from, void* to) = nullptr;

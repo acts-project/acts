@@ -12,6 +12,8 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include <regex>
+#include <typeindex>
+#include <typeinfo>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/core/demangle.hpp>
@@ -73,8 +75,7 @@ void DataHandleBase::maybeInitialize(std::optional<std::string_view> key) {
 }
 
 bool WriteDataHandleBase::isCompatible(const DataHandleBase& other) const {
-  return dynamic_cast<const ReadDataHandleBase*>(&other) != nullptr &&
-         typeInfo() == other.typeInfo();
+  return typeHash() == other.typeHash();
 }
 
 void WriteDataHandleBase::emulate(StateMapType& state,
@@ -114,8 +115,7 @@ void ReadDataHandleBase::initialize(std::string_view key) {
 }
 
 bool ReadDataHandleBase::isCompatible(const DataHandleBase& other) const {
-  return dynamic_cast<const WriteDataHandleBase*>(&other) != nullptr &&
-         typeInfo() == other.typeInfo();
+  return typeHash() == other.typeHash();
 }
 
 void ReadDataHandleBase::emulate(StateMapType& state,

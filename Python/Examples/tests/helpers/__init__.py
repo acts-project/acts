@@ -15,7 +15,7 @@ with warnings.catch_warnings():
         import acts.examples.alignment
 
         alignmentEnabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         alignmentEnabled = False
 
     geant4Enabled = (
@@ -25,77 +25,77 @@ with warnings.catch_warnings():
     if geant4Enabled:
         try:
             import acts.examples.geant4
-        except ImportError:
+        except ModuleNotFoundError:
             geant4Enabled = False
 
     try:
         import ROOT
 
         rootEnabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         rootEnabled = False
 
     try:
         import acts.examples.geomodel
 
         geomodelEnabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         geomodelEnabled = False
 
     dd4hepEnabled = "DD4hep_DIR" in os.environ
     if dd4hepEnabled:
         try:
             import acts.examples.dd4hep
-        except ImportError:
+        except ModuleNotFoundError:
             dd4hepEnabled = False
 
     try:
         import acts.examples.hepmc3
 
         hepmc3Enabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         hepmc3Enabled = False
 
     try:
         import acts.examples.edm4hep
 
         edm4hepEnabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         edm4hepEnabled = False
 
     try:
         import acts.examples.onnx
 
         onnxEnabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         onnxEnabled = False
 
     try:
         from acts import covfie
 
         covfieEnabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         covfieEnabled = False
 
     try:
         import acts.examples.pythia8
 
         pythia8Enabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         pythia8Enabled = False
 
     try:
         import acts.examples.hashing
 
         hashingSeedingEnabled = True
-    except ImportError:
+    except ModuleNotFoundError:
         hashingSeedingEnabled = False
 
     gnnEnabled = shutil.which("nvidia-smi") is not None
     if gnnEnabled:
         try:
             from acts.examples.gnn import TrackFindingAlgorithmGnn
-        except ImportError:
+        except ModuleNotFoundError:
             gnnEnabled = False
 
     try:
@@ -103,8 +103,6 @@ with warnings.catch_warnings():
 
         podioEnabled = True
     except ModuleNotFoundError:
-        podioEnabled = False
-    except ImportError:
         podioEnabled = False
 
 isCI = os.environ.get("CI") is not None
