@@ -9,5 +9,5 @@
 #pragma once
 
 namespace ActsExamples {
-enum class ProcessCode { SUCCESS, ABORT, END };
+enum class ProcessCode { SUCCESS, SKIP, ABORT, END };
 }

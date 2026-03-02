@@ -20,7 +20,6 @@ acts_add_library(
     src/CsvSpacePointWriter.cpp
     src/CsvGnnGraphWriter.cpp
     src/CsvGnnGraphReader.cpp
-    src/CsvSpacePointsBucketWriter.cpp
     src/CsvBFieldWriter.cpp
     src/CsvVertexWriter.cpp
 )

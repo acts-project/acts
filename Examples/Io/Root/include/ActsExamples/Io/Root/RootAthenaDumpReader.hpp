@@ -13,7 +13,7 @@
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -149,8 +149,7 @@ class RootAthenaDumpReader : public IReader {
   /// @param imIdxMap optional remapping of indices. Since the measurement
   /// index must be continuous, we need to remap the measurements indices
   /// if we skip measurements in the first place
-  std::tuple<SimSpacePointContainer, SimSpacePointContainer,
-             SimSpacePointContainer>
+  std::tuple<SpacePointContainer, SpacePointContainer, SpacePointContainer>
   readSpacePoints(const std::optional<std::unordered_map<int, std::size_t>>
                       &imIdxMap) const;
 
@@ -161,21 +160,21 @@ class RootAthenaDumpReader : public IReader {
       const IndexMultimap<ActsFatras::Barcode> &measPartMap) const;
 
   /// Write handlers
-  WriteDataHandle<SimSpacePointContainer> m_outputPixelSpacePoints{
-      this, "outputPixelSpacePoints"};
-  WriteDataHandle<SimSpacePointContainer> m_outputStripSpacePoints{
-      this, "outputStripSpacePoints"};
-  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
-      this, "output_spacepoints"};
-  WriteDataHandle<ClusterContainer> m_outputClusters{this, "output_clusters"};
+  WriteDataHandle<SpacePointContainer> m_outputPixelSpacePoints{
+      this, "OutputPixelSpacePoints"};
+  WriteDataHandle<SpacePointContainer> m_outputStripSpacePoints{
+      this, "OutputStripSpacePoints"};
+  WriteDataHandle<SpacePointContainer> m_outputSpacePoints{this,
+                                                           "OutputSpacePoints"};
+  WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
-                                                          "output_particles"};
+                                                          "OutputParticles"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
-      this, "output_measurements"};
+      this, "OutputMeasurements"};
   WriteDataHandle<IndexMultimap<ActsFatras::Barcode>> m_outputMeasParticleMap{
-      this, "output_meas_part_map"};
+      this, "OutputMeasurementParticlesMap"};
   WriteDataHandle<InverseMultimap<ActsFatras::Barcode>> m_outputParticleMeasMap{
-      this, "output_part_meas_map"};
+      this, "OutputParticleMeasurementsMap"};
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::mutex m_read_mutex;

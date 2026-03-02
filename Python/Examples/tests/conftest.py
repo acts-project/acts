@@ -8,6 +8,7 @@ from typing import Dict
 import warnings
 import pytest_check as check
 from collections import namedtuple
+import filelock
 
 
 sys.path = [
@@ -393,27 +394,34 @@ def _do_material_recording(d: Path):
 
 
 @pytest.fixture(scope="session")
-def material_recording_session():
+def material_recording_session(tmp_path_factory):
+    tmp_dir = tmp_path_factory.getbasetemp().parent
+    d = Path(tmp_dir) / "material_recording"
+
     if not helpers.geant4Enabled:
         pytest.skip("Geantino recording requested, but Geant4 is not set up")
 
     if not helpers.dd4hepEnabled:
         pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
-    with tempfile.TemporaryDirectory() as d:
-        # explicitly ask for "spawn" as CI failures were observed with "fork"
-        spawn_context = multiprocessing.get_context("spawn")
-        p = spawn_context.Process(target=_do_material_recording, args=(d,))
-        p.start()
-        p.join()
-        if p.exitcode != 0:
-            raise RuntimeError("Failure to exeecute material recording")
+    with filelock.FileLock(str(d) + ".lock"):
 
-        yield Path(d)
+        if not d.exists():
+            d.mkdir()
+
+            # explicitly ask for "spawn" as CI failures were observed with "fork"
+            spawn_context = multiprocessing.get_context("spawn")
+            p = spawn_context.Process(target=_do_material_recording, args=(d,))
+            p.start()
+            p.join()
+            if p.exitcode != 0:
+                raise RuntimeError("Failure to execute material recording")
+
+        return Path(d)
 
 
 @pytest.fixture
 def material_recording(material_recording_session: Path, tmp_path: Path):
     target = tmp_path / material_recording_session.name
     shutil.copytree(material_recording_session, target)
-    yield target
+    return target

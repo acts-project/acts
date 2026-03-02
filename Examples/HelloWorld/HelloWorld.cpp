@@ -30,8 +30,8 @@ int main(void) {
   ActsExamples::Sequencer sequencer(seqCfg);
 
   // add HelloWorld algorithm that does nothing
-  sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::HelloLoggerAlgorithm>(logLevel));
+  sequencer.addAlgorithm(std::make_shared<ActsExamples::HelloLoggerAlgorithm>(
+      Acts::getDefaultLogger("HelloLoggerAlgorithm", logLevel)));
 
   // add HelloRandom algorithm that uses RandomNumbers to generate some
   // random numbers from various distributions.
@@ -42,8 +42,8 @@ int main(void) {
   rndCfg.gammaParameters = {{1., 1.}};
   rndCfg.drawsPerEvent = 5000;
   rndCfg.output = "random_data";
-  sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::HelloRandomAlgorithm>(rndCfg, logLevel));
+  sequencer.addAlgorithm(std::make_shared<ActsExamples::HelloRandomAlgorithm>(
+      rndCfg, Acts::getDefaultLogger("HelloRandomAlgorithm", logLevel)));
 
   // add HelloWhiteBoardAlgorithm the reads/writes data from/to the event store
   ActsExamples::HelloWhiteBoardAlgorithm::Config wbCfg;
@@ -51,8 +51,8 @@ int main(void) {
   wbCfg.input = rndCfg.output;
   wbCfg.output = "copied_data";
   sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::HelloWhiteBoardAlgorithm>(wbCfg,
-                                                               logLevel));
+      std::make_shared<ActsExamples::HelloWhiteBoardAlgorithm>(
+          wbCfg, Acts::getDefaultLogger("HelloWhiteBoardAlgorithm", logLevel)));
 
   // Run all configured algorithms and return the appropriate status.
   return sequencer.run();

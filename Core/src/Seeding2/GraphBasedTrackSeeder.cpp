@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/SeedFinderGbts.hpp"
+#include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
 
-#include "Acts/Seeding/GbtsTrackingFilter.hpp"
+#include "Acts/Seeding2/GbtsTrackingFilter.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -21,7 +21,7 @@
 
 namespace Acts::Experimental {
 
-SeedFinderGbts::SeedFinderGbts(
+GraphBasedTrackSeeder::GraphBasedTrackSeeder(
     const GbtsConfig& config, std::unique_ptr<GbtsGeometry> gbtsGeo,
     const std::vector<TrigInDetSiLayer>& layerGeometry,
     std::unique_ptr<const Acts::Logger> logger)
@@ -34,15 +34,14 @@ SeedFinderGbts::SeedFinderGbts(
   m_mlLut = parseGbtsMlLookupTable(m_cfg.lutInputFile);
 }
 
-SeedContainer2 SeedFinderGbts::createSeeds(
-    const RoiDescriptor& roi,
-    const SpContainerComponentsType& spContainerComponents,
+SeedContainer2 GraphBasedTrackSeeder::createSeeds(
+    const RoiDescriptor& roi, const SpacePointContainer2& spacePoints,
     const std::uint32_t maxLayers) const {
   auto storage = std::make_unique<GbtsDataStorage>(m_cfg, m_geo, m_mlLut);
 
   SeedContainer2 SeedContainer;
   std::vector<std::vector<GbtsNode>> nodeStorage =
-      createNodes(spContainerComponents, maxLayers);
+      createNodes(spacePoints, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
@@ -87,8 +86,7 @@ SeedContainer2 SeedFinderGbts::createSeeds(
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
   std::vector<SeedProperties> vSeedCandidates;
-  extractSeedsFromTheGraph(maxLevel, graphStats.first,
-                           std::get<0>(spContainerComponents).size(),
+  extractSeedsFromTheGraph(maxLevel, graphStats.first, spacePoints.size(),
                            edgeStorage, vSeedCandidates);
 
   if (vSeedCandidates.empty()) {
@@ -118,7 +116,7 @@ SeedContainer2 SeedFinderGbts::createSeeds(
   return SeedContainer;
 }
 
-GbtsMlLookupTable SeedFinderGbts::parseGbtsMlLookupTable(
+GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
     const std::string& lutInputFile) {
   if (!m_cfg.useMl) {
     return {};
@@ -152,9 +150,13 @@ GbtsMlLookupTable SeedFinderGbts::parseGbtsMlLookupTable(
   return mlLut;
 }
 
-std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
-    const SpContainerComponentsType& container,
+std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
+    const SpacePointContainer2& spacePoints,
     const std::uint32_t maxLayers) const {
+  auto layerColumn = spacePoints.column<std::uint32_t>("layerId");
+  auto clusterWidthColumn = spacePoints.column<float>("clusterWidth");
+  auto localPositionColumn = spacePoints.column<float>("localPositionY");
+
   std::vector<std::vector<GbtsNode>> nodeStorage(maxLayers);
   // reserve for better efficiency
 
@@ -162,10 +164,10 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     v.reserve(10000);
   }
 
-  for (const auto& sp : std::get<0>(container)) {
+  for (const auto& sp : spacePoints) {
     // for every sp in container,
     // add its variables to nodeStorage organised by layer
-    std::uint16_t layer = sp.extra(std::get<1>(container));
+    const std::uint16_t layer = sp.extra(layerColumn);
 
     // add node to storage
     GbtsNode& node = nodeStorage[layer].emplace_back(layer);
@@ -178,14 +180,14 @@ std::vector<std::vector<GbtsNode>> SeedFinderGbts::createNodes(
     node.r = sp.r();
     node.phi = sp.phi();
     node.idx = sp.index();
-    node.pcw = sp.extra(std::get<2>(container));
-    node.locPosY = sp.extra(std::get<3>(container));
+    node.pcw = sp.extra(clusterWidthColumn);
+    node.locPosY = sp.extra(localPositionColumn);
   }
 
   return nodeStorage;
 }
 
-std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
+std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const RoiDescriptor& roi, const std::unique_ptr<GbtsDataStorage>& storage,
     std::vector<GbtsEdge>& edgeStorage) const {
   // phi cut for triplets
@@ -258,7 +260,7 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
 
     // prepare a sliding window for each bin2 in the group
 
-    std::vector<GbtsSlidingWindow> phiSlidingWindow;
+    std::vector<SlidingWindow> phiSlidingWindow;
 
     // initialization using default ctor
     phiSlidingWindow.resize(bg.second.size());
@@ -550,8 +552,8 @@ std::pair<std::int32_t, std::int32_t> SeedFinderGbts::buildTheGraph(
   return std::make_pair(nEdges, nConnections);
 }
 
-std::int32_t SeedFinderGbts::runCCA(const std::uint32_t nEdges,
-                                    std::vector<GbtsEdge>& edgeStorage) const {
+std::int32_t GraphBasedTrackSeeder::runCCA(
+    const std::uint32_t nEdges, std::vector<GbtsEdge>& edgeStorage) const {
   constexpr std::uint32_t maxIter = 15;
 
   std::int32_t maxLevel = 0;
@@ -622,7 +624,7 @@ std::int32_t SeedFinderGbts::runCCA(const std::uint32_t nEdges,
   return maxLevel;
 }
 
-void SeedFinderGbts::extractSeedsFromTheGraph(
+void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     std::uint32_t maxLevel, std::uint32_t nEdges, std::int32_t nHits,
     std::vector<GbtsEdge>& edgeStorage,
     std::vector<SeedProperties>& vSeedCandidates) const {
@@ -766,9 +768,9 @@ void SeedFinderGbts::extractSeedsFromTheGraph(
   }
 }
 
-bool SeedFinderGbts::checkZ0BitMask(const std::uint16_t z0BitMask,
-                                    const float z0, const float minZ0,
-                                    const float z0HistoCoeff) const {
+bool GraphBasedTrackSeeder::checkZ0BitMask(const std::uint16_t z0BitMask,
+                                           const float z0, const float minZ0,
+                                           const float z0HistoCoeff) const {
   if (z0BitMask == 0) {
     return true;
   }

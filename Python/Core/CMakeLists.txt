@@ -25,11 +25,11 @@ target_sources(
         src/Visualization.cpp
 )
 
-install(TARGETS ActsPythonBindings DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
+install(TARGETS ActsPythonBindings DESTINATION ${_acts_python_install_dir})
 
 set_target_properties(
     ActsPythonBindings
-    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath}"
 )
 set_target_properties(
     ActsPythonBindings
@@ -58,6 +58,6 @@ foreach(f ${py_files})
 
     install(
         FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${ACTS_PYTHON_INSTALL_DIR}/${_rel}
+        DESTINATION ${_acts_python_install_dir}/${_rel}
     )
 endforeach()

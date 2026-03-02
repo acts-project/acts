@@ -200,6 +200,13 @@ set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 # feature tests
 include(CheckCXXSourceCompiles)
 
+# We need to set the ORIGIN token based on the system we are compiling for
+if(APPLE)
+    set(_acts_rpath_origin "@loader_path")
+else()
+    set(_acts_rpath_origin "\$ORIGIN")
+endif()
+
 # Set flags dependent whether we build ACTS in the default configuration or for deployment in pip with scikit-build-core
 if(ACTS_BUILD_PYTHON_WHEEL)
     # Check if skbuild is running
@@ -212,10 +219,6 @@ if(ACTS_BUILD_PYTHON_WHEEL)
         message(WARNING "scikit-build-core not detected for building wheel")
     endif()
 
-    # For deployment with pip, we build static libs
-    set(BUILD_SHARED_LIBS FALSE)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
     # Set installation paths for proper python package creation
     # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
     set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
@@ -223,13 +226,16 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}) # Don't install headers
     set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
     set(CMAKE_INSTALL_DATADIR "acts/share")
-    set(ACTS_PYTHON_INSTALL_DIR "acts")
-else()
-    # GNU-like installation paths, e.g. lib/, include/, ...
-    if(PROJECT_IS_TOP_LEVEL)
-        include(GNUInstallDirs)
-    endif()
-    set(ACTS_PYTHON_INSTALL_DIR "python/acts")
+    set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}")
+    set(_acts_python_install_dir "acts")
+    set(_acts_python_modules_rpath "${_acts_rpath_origin}")
+elseif(PROJECT_IS_TOP_LEVEL)
+    include(GNUInstallDirs)
+    set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}/../${CMAKE_INSTALL_LIBDIR}")
+    set(_acts_python_install_dir "python/acts")
+    set(_acts_python_modules_rpath
+        "${_acts_rpath_origin}/../../${CMAKE_INSTALL_LIBDIR}"
+    )
 endif()
 
 include(ActsCompilerOptions) # default compile options
@@ -281,7 +287,7 @@ set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
-set(_acts_pybind11_version 2.13.1)
+set(_acts_pybind11_version 3.0.1)
 set(_acts_detray_version 0.103.0)
 set(_acts_traccc_version 0.26.1)
 set(_acts_covfie_version 0.15.2)

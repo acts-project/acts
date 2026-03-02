@@ -75,6 +75,8 @@ class CollectionBaseWriteHandle : public WriteDataHandleBase {
   /// Get the type info for this handle
   /// @return The type info for std::unique_ptr<podio::CollectionBase>
   const std::type_info& typeInfo() const override;
+
+  std::uint64_t typeHash() const override;
 };
 
 }  // namespace ActsExamples
