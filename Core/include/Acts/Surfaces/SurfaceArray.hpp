@@ -125,7 +125,6 @@ class SurfaceArray {
     /// @param axes The axes used for the grid
     /// @param bValues Optional vector of axis directions for binning
     /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
-    /// @param neighborScaleFactor Scale factor for neighbor distance when looking for next neighbors
     SurfaceGridLookup(std::shared_ptr<RegularSurface> representative,
                       double tolerance, std::tuple<Axis1, Axis2> axes,
                       std::vector<AxisDirection> bValues = {},
