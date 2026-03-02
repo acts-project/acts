@@ -284,7 +284,7 @@ class SurfaceArray {
       const std::array<std::size_t, 2> startIndices =
           m_grid.localBinsFromGlobalBin(startBin);
       const auto startNeighborIndices =
-          m_grid.neighborHoodIndices(startIndices, 1u);
+          m_grid.neighborHoodIndices(startIndices, 1);
 
       std::set<std::size_t> visited({startBin});
       std::vector<std::size_t> queue(startNeighborIndices.begin(),
@@ -318,7 +318,7 @@ class SurfaceArray {
         m_grid.at(current).push_back(&surface);
 
         const auto neighborIndices =
-            m_grid.neighborHoodIndices(currentIndices, 1u);
+            m_grid.neighborHoodIndices(currentIndices, 1);
         queue.insert(queue.end(), neighborIndices.begin(),
                      neighborIndices.end());
       }
@@ -333,14 +333,14 @@ class SurfaceArray {
         const std::array<std::size_t, 2> indices =
             m_grid.localBinsFromGlobalBin(globalBin);
 
-        for (std::uint8_t neighborDistance = 1;
-             neighborDistance <= m_maxNeighborDistance; ++neighborDistance) {
+        for (std::uint8_t neighborMapIndex = 0;
+             neighborMapIndex < m_maxNeighborDistance; ++neighborMapIndex) {
           std::vector<const Surface*>& neighbors =
-              m_neighborMaps.at(neighborDistance).at(globalBin);
+              m_neighborMaps.at(neighborMapIndex).at(globalBin);
           neighbors.clear();
 
-          for (std::size_t idx :
-               m_grid.neighborHoodIndices(indices, neighborDistance)) {
+          for (const std::size_t idx :
+               m_grid.neighborHoodIndices(indices, neighborMapIndex + 1)) {
             const std::vector<const Surface*>& binContent = m_grid.at(idx);
             std::copy(binContent.begin(), binContent.end(),
                       std::back_inserter(neighbors));
