@@ -113,8 +113,6 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   auto cState =
       static_cast<const BinnedSurfaceMaterialAccumulater::State*>(state.get());
 
-  BOOST_CHECK_EQUAL(cState->accumulatedMaterial.size(), 3u);
-
   // Intersections
   // Track 0:
   // - Surface 0 hit once
@@ -143,6 +141,9 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
       {surfaces[2u].get(), 50 * d0, d0}};
 
   bsma.accumulate(*state, tContext, mInteractions, emptyHits);
+
+  /// The state should now be initialized
+  BOOST_CHECK_EQUAL(cState->accumulatedMaterial.size(), 3u);
 
   // Track 1:
   // - Surface 0 empty hit
