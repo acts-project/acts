@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(test_phi_angle_wrapping_simple) {
       detail::gaussianMixtureMeanCov(cmps, std::identity{}, std::tuple<>{});
 
   // This will likely be close to 0.0 (arithmetic mean), which is wrong
-  BOOST_CHECK(std::abs(meanWrong[0]) < 0.5);
+  BOOST_CHECK(std::abs(meanWrong[0]) < 1e-4);
 }
 
 BOOST_AUTO_TEST_CASE(test_mean_shuffle) {
@@ -444,7 +444,6 @@ BOOST_AUTO_TEST_CASE(test_mean_shuffle) {
       std::get<0>(detail::gaussianMixtureMeanCov(cmps, std::identity{}, desc));
 
   for (int i = 0; i < 20; ++i) {
-    std::cout << "Shuffle iteration " << i + 1 << std::endl;
     std::shuffle(cmps.begin(), cmps.end(), rng);
     const auto meanAfter = std::get<0>(
         detail::gaussianMixtureMeanCov(cmps, std::identity{}, desc));

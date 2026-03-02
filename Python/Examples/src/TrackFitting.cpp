@@ -80,7 +80,8 @@ void addTrackFitting(py::module& mex) {
 
     py::enum_<MixtureReductionAlgorithm>(mex, "MixtureReductionAlgorithm")
         .value("weightCut", MixtureReductionAlgorithm::weightCut)
-        .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
+        .value("KLDistance", MixtureReductionAlgorithm::KLDistance)
+        .value("naive", MixtureReductionAlgorithm::naive);
 
     py::class_<BetheHeitlerApprox, std::shared_ptr<BetheHeitlerApprox>>(
         mex, "BetheHeitlerApprox");

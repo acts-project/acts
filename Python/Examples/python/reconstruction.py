@@ -1543,7 +1543,7 @@ def addTruthTrackingGsf(
         "betheHeitlerApprox": bha,
         "maxComponents": 12,
         "componentMergeMethod": acts.examples.ComponentMergeMethod.maxWeight,
-        "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.KLDistance,
+        "mixtureReductionAlgorithm": acts.examples.MixtureReductionAlgorithm.naive,
         "weightCutoff": 1.0e-4,
         "reverseFilteringCovarianceScaling": 100.0,
         "level": customLogLevel(),
