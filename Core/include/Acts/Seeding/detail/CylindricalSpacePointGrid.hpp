@@ -126,12 +126,12 @@ class CylindricalSpacePointGridCreator {
       const Logger& logger = getDummyLogger());
 
   template <typename external_space_point_t,
-            typename external_spacepoint_iterator_t>
+            typename external_space_point_iterator_t>
   static void fillGrid(const SeedFinderConfig<external_space_point_t>& config,
                        const SeedFinderOptions& options,
                        CylindricalSpacePointGrid<external_space_point_t>& grid,
-                       external_spacepoint_iterator_t spBegin,
-                       external_spacepoint_iterator_t spEnd,
+                       external_space_point_iterator_t spBegin,
+                       external_space_point_iterator_t spEnd,
                        const Logger& logger = getDummyLogger());
 
   template <typename external_space_point_t, typename external_collection_t>

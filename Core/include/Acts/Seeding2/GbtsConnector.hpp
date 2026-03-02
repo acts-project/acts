@@ -15,7 +15,7 @@
 
 namespace Acts::Experimental {
 
-/// Connection between two GBTs layers with binning information.
+/// Connection between two GBTS layers with binning information.
 struct GbtsConnection {
   /// Constructor
   /// @param src_ Source layer index
@@ -32,7 +32,7 @@ struct GbtsConnection {
   std::vector<std::int32_t> binTable;
 };
 
-/// Loader and container for GBTs layer connection data.
+/// Loader and container for GBTS layer connection data.
 struct GbtsConnector {
  public:
   /// Group of connections targeting a destination layer.

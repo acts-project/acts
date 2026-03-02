@@ -11,16 +11,15 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
@@ -41,30 +40,12 @@ static inline std::string to_string(std::vector<T> v);
 thread_local std::vector<std::shared_ptr<HoughMeasurementStruct>>
     houghMeasurementStructs;
 
-HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
-                                           Acts::Logging::Level lvl)
-    : IAlgorithm("HoughTransformSeeder", lvl),
-      m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger("HoughTransformSeeder", lvl)) {
+HoughTransformSeeder::HoughTransformSeeder(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HoughTransformSeeder", std::move(logger)), m_cfg(cfg) {
   // require space points or input measurements (or both), but at least one kind
   // of input
-  bool foundInput = false;
-  for (const auto& spName : m_cfg.inputSpacePoints) {
-    if (!(spName.empty())) {
-      foundInput = true;
-    }
-
-    auto& handle = m_inputSpacePoints.emplace_back(
-        std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
-            this,
-            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
-    handle->initialize(spName);
-  }
-  if (!(m_cfg.inputMeasurements.empty())) {
-    foundInput = true;
-  }
-
-  if (!foundInput) {
+  if (m_cfg.inputMeasurements.empty() && m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument(
         "HoughTransformSeeder: Missing some kind of input (measurements of "
         "space points)");
@@ -79,8 +60,9 @@ HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
         "HoughTransformSeeder: Missing hough track seeds output collection");
   }
 
+  m_inputMeasurements.maybeInitialize(m_cfg.inputMeasurements);
+  m_inputSpacePoints.maybeInitialize(m_cfg.inputSpacePoints);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
-  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
 
   if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument(
@@ -126,13 +108,16 @@ HoughTransformSeeder::HoughTransformSeeder(const Config& cfg,
   auto geoSelEnd = m_cfg.geometrySelection.end();
   auto geoSelLastUnique = std::unique(geoSelBeg, geoSelEnd, isDuplicate);
   if (geoSelLastUnique != geoSelEnd) {
-    ACTS_WARNING("Removed " << std::distance(geoSelLastUnique, geoSelEnd)
-                            << " geometry selection duplicates");
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
+                         "Removed "
+                             << std::distance(geoSelLastUnique, geoSelEnd)
+                             << " geometry selection duplicates");
     m_cfg.geometrySelection.erase(geoSelLastUnique, geoSelEnd);
   }
-  ACTS_INFO("Hough geometry selection:");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "Hough geometry selection:");
   for (const auto& geoId : m_cfg.geometrySelection) {
-    ACTS_INFO("  " << geoId);
+    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO, "  " << geoId);
   }
 
   // Fill convenience variables
@@ -225,7 +210,7 @@ HoughHist HoughTransformSeeder::createLayerHoughHist(unsigned layer,
     if (meas->layer != layer) {
       continue;
     }
-    if (!(m_cfg.sliceTester(meas->z, meas->layer, subregion)).value()) {
+    if (!m_cfg.sliceTester(meas->z, meas->layer, subregion).value()) {
       continue;
     }
 
@@ -459,31 +444,33 @@ std::vector<std::vector<int>> HoughTransformSeeder::getComboIndices(
 }
 
 void HoughTransformSeeder::addSpacePoints(const AlgorithmContext& ctx) const {
+  if (m_cfg.inputSpacePoints.empty()) {
+    return;
+  }
+  const SpacePointContainer& spacePoints = m_inputSpacePoints(ctx);
+
   // construct the combined input container of space point pointers from all
   // configured input sources.
-  for (const auto& isp : m_inputSpacePoints) {
-    const auto& spContainer = (*isp)(ctx);
-    ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
-                            << isp->key());
-    for (auto& sp : spContainer) {
-      double r = Acts::fastHypot(sp.x(), sp.y());
-      double z = sp.z();
-      float phi = std::atan2(sp.y(), sp.x());
-      ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();
-      if (!(hitlayer.ok())) {
-        continue;
-      }
-      std::vector<Index> indices;
-      for (const auto& slink : sp.sourceLinks()) {
-        const auto& islink = slink.get<IndexSourceLink>();
-        indices.push_back(islink.index());
-      }
-
-      auto meas =
-          std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(
-              hitlayer.value(), phi, r, z, indices, HoughHitType::SP));
-      houghMeasurementStructs.push_back(meas);
+  ACTS_DEBUG("Inserting " << spacePoints.size() << " space points from "
+                          << m_inputSpacePoints.key());
+  for (ConstSpacePointProxy sp : spacePoints) {
+    const float z = sp.z();
+    const float r = sp.r();
+    const float phi = std::atan2(sp.y(), sp.x());
+    ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();
+    if (!hitlayer.ok()) {
+      continue;
     }
+    std::vector<Index> indices;
+    for (const auto& slink : sp.sourceLinks()) {
+      const auto& islink = slink.get<IndexSourceLink>();
+      indices.push_back(islink.index());
+    }
+
+    auto meas =
+        std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(
+            hitlayer.value(), phi, r, z, indices, HoughHitType::SP));
+    houghMeasurementStructs.push_back(meas);
   }
 }
 

@@ -36,4 +36,8 @@ const std::type_info& CollectionBaseWriteHandle::typeInfo() const {
   return typeid(std::unique_ptr<podio::CollectionBase>);
 }
 
+std::uint64_t CollectionBaseWriteHandle::typeHash() const {
+  return Acts::typeHash<std::unique_ptr<podio::CollectionBase>>();
+}
+
 }  // namespace ActsExamples

@@ -71,8 +71,8 @@ struct LoopComponentProxyBase {
         cmp.state, state.navigation, state.options, state.geoContext);
   }
 
-  const auto& singleStepper(const loop_stepper_t& stepper) const {
-    return static_cast<const SingleStepper&>(stepper);
+  const SingleStepper& singleStepper(const loop_stepper_t& stepper) const {
+    return stepper.singleStepper();
   }
 };
 

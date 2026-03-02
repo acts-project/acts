@@ -17,7 +17,7 @@ template <typename... args_t>
   requires(sizeof...(args_t) == N) &&
           (std::same_as<external_space_point_t, args_t> && ...)
 Seed<external_space_point_t, N>::Seed(const args_t&... points)
-    : m_spacepoints({&points...}) {}
+    : m_spacePoints({&points...}) {}
 
 template <typename external_space_point_t, std::size_t N>
 void Seed<external_space_point_t, N>::setVertexZ(float vertex) {
@@ -32,7 +32,7 @@ void Seed<external_space_point_t, N>::setQuality(float seedQuality) {
 template <typename external_space_point_t, std::size_t N>
 const std::array<const external_space_point_t*, N>&
 Seed<external_space_point_t, N>::sp() const {
-  return m_spacepoints;
+  return m_spacePoints;
 }
 
 template <typename external_space_point_t, std::size_t N>

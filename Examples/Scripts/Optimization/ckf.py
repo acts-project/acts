@@ -154,8 +154,8 @@ def runCKFTracks(
             rnd=rnd,
         )
     else:
-        acts.logging.getLogger("CKFExample").info(
-            "Reading particles from %s", inputParticlePath.resolve()
+        acts.getDefaultLogger("CKFExample", acts.logging.INFO).info(
+            "Reading particles from {}", inputParticlePath.resolve()
         )
         assert inputParticlePath.exists()
         s.addReader(

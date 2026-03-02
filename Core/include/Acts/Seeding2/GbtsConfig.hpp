@@ -15,9 +15,8 @@
 
 namespace Acts::Experimental {
 
-/// Configuration options for the GBTs seed finder.
+/// Configuration options for the graph based track seeder.
 struct GbtsConfig {
-  // GbtsSeedingAlgorithm options
   /// Enable beam spot correction.
   bool beamSpotCorrection = false;
 
