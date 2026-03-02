@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 #include <podio/CollectionBase.h>
@@ -19,58 +20,20 @@
 namespace ActsExamples {
 
 namespace detail {
-class PodioCollectionTypedReadHandle {
+/// Base class for typed Podio collection read handles.
+///
+/// Extends ReadDataHandleBase with collectionTypeHash() for compatibility
+/// checking against PodioCollectionWriteHandle. This enables single inheritance
+/// for PodioCollectionReadHandle<T>.
+class PodioCollectionTypedReadHandle : public ReadDataHandleBase {
+ protected:
+  using ReadDataHandleBase::ReadDataHandleBase;
+
  public:
   virtual ~PodioCollectionTypedReadHandle() = default;
   virtual std::uint64_t collectionTypeHash() const = 0;
 };
 }  // namespace detail
-
-/// A write handle for Podio collections that provides type-safe storage and
-/// retrieval. This handle manages the lifecycle of Podio collections and
-/// ensures they are properly stored in the event store.
-class CollectionBaseWriteHandle : public WriteDataHandleBase {
- public:
-  bool isCompatible(const DataHandleBase& other) const override;
-
-  /// Get the type info for this handle
-  /// @return The currently declared concrete collection type
-  const std::type_info& typeInfo() const override;
-
-  std::uint64_t typeHash() const override;
-
- protected:
-  /// Construct a new collection write handle
-  ///
-  /// This constructor is protected to enforce usage of
-  /// PodioCollectionWriteHandle<T> in algorithm code.
-  /// @param parent The sequence element that owns this handle
-  /// @param name The name of the handle
-  CollectionBaseWriteHandle(SequenceElement* parent, const std::string& name);
-
-  /// Declare the concrete collection type for sequencer type checking.
-  ///
-  /// Data is still stored in the whiteboard as
-  /// std::unique_ptr<podio::CollectionBase>, but reads through
-  /// PodioCollectionReadHandle<T> can be validated against this concrete type.
-  template <typename T>
-  void declareConcreteType() {
-    using Collection = std::remove_cvref_t<T>;
-    m_declaredTypeInfo = &typeid(std::unique_ptr<Collection>);
-    m_declaredTypeHash = Acts::typeHash<std::unique_ptr<Collection>>();
-  }
-
-  /// Internal method to store a collection in a whiteboard
-  /// @param wb The whiteboard to store the collection in
-  /// @param collection The collection to store
-  void store(WhiteBoard& wb,
-             std::unique_ptr<podio::CollectionBase> collection) const;
-
-  const std::type_info* m_declaredTypeInfo =
-      &typeid(std::unique_ptr<podio::CollectionBase>);
-  std::uint64_t m_declaredTypeHash =
-      Acts::typeHash<std::unique_ptr<podio::CollectionBase>>();
-};
 
 /// Type-safe PODIO collection write handle.
 ///
@@ -78,11 +41,11 @@ class CollectionBaseWriteHandle : public WriteDataHandleBase {
 /// the concrete collection type for sequencer type checking while storing as
 /// std::unique_ptr<podio::CollectionBase> in the whiteboard.
 template <typename T>
-class PodioCollectionWriteHandle final : public CollectionBaseWriteHandle {
+class PodioCollectionWriteHandle final : public WriteDataHandleBase {
  public:
   PodioCollectionWriteHandle(SequenceElement* parent, const std::string& name)
-      : CollectionBaseWriteHandle(parent, name) {
-    declareConcreteType<T>();
+      : WriteDataHandleBase{parent, name} {
+    registerAsWriteHandle();
   }
 
   void operator()(const AlgorithmContext& ctx, T collection) const {
@@ -101,6 +64,36 @@ class PodioCollectionWriteHandle final : public CollectionBaseWriteHandle {
   void operator()(WhiteBoard& wb, std::unique_ptr<T> collection) const {
     store(wb, std::move(collection));
   }
+
+  const std::type_info& typeInfo() const override {
+    return typeid(std::unique_ptr<T>);
+  }
+
+  std::uint64_t typeHash() const override {
+    return Acts::typeHash<std::unique_ptr<T>>();
+  }
+
+  bool isCompatible(const DataHandleBase& other) const override {
+    const auto baseCollectionHash =
+        Acts::typeHash<std::unique_ptr<podio::CollectionBase>>();
+    if (other.typeHash() == baseCollectionHash) {
+      return true;
+    }
+    const auto* typedReadHandle =
+        dynamic_cast<const detail::PodioCollectionTypedReadHandle*>(&other);
+    return typedReadHandle != nullptr &&
+           typedReadHandle->collectionTypeHash() == typeHash();
+  }
+
+ private:
+  void store(WhiteBoard& wb,
+             std::unique_ptr<podio::CollectionBase> collection) const {
+    if (!isInitialized()) {
+      throw std::runtime_error{"PodioCollectionWriteHandle '" + fullName() +
+                               "' not initialized"};
+    }
+    add(wb, std::move(collection));
+  }
 };
 
 /// A read handle for concrete Podio collection types.
@@ -109,11 +102,10 @@ class PodioCollectionWriteHandle final : public CollectionBaseWriteHandle {
 /// std::unique_ptr<podio::CollectionBase> and performs a checked cast to T.
 template <typename T>
 class PodioCollectionReadHandle final
-    : public ReadDataHandleBase,
-      public detail::PodioCollectionTypedReadHandle {
+    : public detail::PodioCollectionTypedReadHandle {
  public:
   PodioCollectionReadHandle(SequenceElement* parent, const std::string& name)
-      : ReadDataHandleBase{parent, name} {
+      : PodioCollectionTypedReadHandle{parent, name} {
     registerAsReadHandle();
   }
 

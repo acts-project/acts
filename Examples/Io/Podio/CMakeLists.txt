@@ -2,7 +2,6 @@ acts_add_library(
     ExamplesIoPodio
     src/PodioWriter.cpp
     src/PodioReader.cpp
-    src/PodioCollectionDataHandle.cpp
     src/PodioInputConverter.cpp
     src/PodioMeasurementOutputConverter.cpp
     src/PodioMeasurementInputConverter.cpp
