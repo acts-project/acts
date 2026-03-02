@@ -117,7 +117,7 @@ std::unique_ptr<TH3F> toRoot(const Histogram3& boostHist) {
     int rootZBin = x.index(2) + 1;
     rootHist->SetBinContent(rootXBin, rootYBin, rootZBin, content);
   }
-  
+
   // Set axis titles from axis metadata
   rootHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
   rootHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
