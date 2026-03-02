@@ -25,9 +25,6 @@ class BinnedSurfaceMaterialAccumulater final
  public:
   /// @brief Nested config struct
   struct Config {
-    /// Geometry context for coordinate transformations
-    GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
-
     /// Correct for empty bins (recommended)
     bool emptyBinCorrection = true;
 
@@ -37,6 +34,9 @@ class BinnedSurfaceMaterialAccumulater final
 
   /// @brief Nested state struct
   struct State final : public ISurfaceMaterialAccumulater::State {
+    /// Whether the accumulation map has been initialized
+    bool initialized = false;
+
     /// The accumulated material per geometry ID
     std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
         accumulatedMaterial;
@@ -59,11 +59,13 @@ class BinnedSurfaceMaterialAccumulater final
   /// @brief Accumulate the material interaction on the surface
   ///
   /// @param state is the state of the accumulater
+  /// @param gctx is the geometry context
   /// @param interactions is the material interactions, with assigned surfaces
   /// @param surfacesWithoutAssignment are the surfaces without assignment
   ///
   /// @note this the track average over the binned material
   void accumulate(ISurfaceMaterialAccumulater::State& state,
+                  const GeometryContext& gctx,
                   const std::vector<MaterialInteraction>& interactions,
                   const std::vector<IAssignmentFinder::SurfaceAssignment>&
                       surfacesWithoutAssignment) const override;
@@ -71,13 +73,18 @@ class BinnedSurfaceMaterialAccumulater final
   /// Finalize the surface material maps
   ///
   /// @param state the state of the accumulator
+  /// @param gctx is the geometry context
   ///
   /// @note this does the run average over the (binned) material
   /// @return Map of surface materials indexed by geometry identifiers
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-  finalizeMaterial(ISurfaceMaterialAccumulater::State& state) const override;
+  finalizeMaterial(ISurfaceMaterialAccumulater::State& state,
+                   const GeometryContext& gctx) const override;
 
  private:
+  /// Initialize accumulation containers for configured surfaces
+  void initializeState(State& state, const GeometryContext& gctx) const;
+
   /// Access method to the logger
   const Logger& logger() const { return *m_logger; }
 

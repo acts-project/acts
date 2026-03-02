@@ -42,6 +42,9 @@ class MaterialMapper {
     /// State of the surface material accumulator
     std::unique_ptr<ISurfaceMaterialAccumulater::State>
         surfaceMaterialAccumulaterState;
+
+    /// Geometry context of the latest mapping call
+    GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
   };
 
   /// @brief nested options struct

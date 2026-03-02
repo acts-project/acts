@@ -111,6 +111,7 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
   ///
   /// @note this the track average over the binned material
   void accumulate(ISurfaceMaterialAccumulater::State& state,
+                  const GeometryContext& /*gctx*/,
                   const std::vector<MaterialInteraction>& interactions,
                   const std::vector<IAssignmentFinder::SurfaceAssignment>&
                   /*surfacesWithoutAssignment*/) const override {
@@ -139,7 +140,8 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
   ///
   /// @note this does the run average over the (binned) material
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-  finalizeMaterial(ISurfaceMaterialAccumulater::State& state) const override {
+  finalizeMaterial(ISurfaceMaterialAccumulater::State& state,
+                   const GeometryContext& /*gctx*/) const override {
     auto cState = static_cast<State*>(&state);
 
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>

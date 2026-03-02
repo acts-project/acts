@@ -21,7 +21,14 @@ Acts::BinnedSurfaceMaterialAccumulater::BinnedSurfaceMaterialAccumulater(
 
 std::unique_ptr<Acts::ISurfaceMaterialAccumulater::State>
 Acts::BinnedSurfaceMaterialAccumulater::createState() const {
-  auto state = std::make_unique<State>();
+  return std::make_unique<State>();
+}
+
+void Acts::BinnedSurfaceMaterialAccumulater::initializeState(
+    State& state, const GeometryContext& gctx) const {
+  if (state.initialized) {
+    return;
+  }
 
   /// Create the surface accumulation
   for (const auto& surface : m_cfg.materialSurfaces) {
@@ -42,10 +49,10 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
       ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMateria is "
                  << binUtility);
       // Now adjust to surface type
-      binUtility = adjustBinUtility(binUtility, *surface, m_cfg.geoContext);
+      binUtility = adjustBinUtility(binUtility, *surface, gctx);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state->accumulatedMaterial[geoID] =
+      state.accumulatedMaterial[geoID] =
           AccumulatedSurfaceMaterial(binUtility);
       // Material accumulation  is created for this
       continue;
@@ -58,10 +65,10 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
       ACTS_DEBUG("       - (proto) binning from ProtoGridSurfaceMaterial is "
                  << binUtility);
       // Now adjust to surface type
-      binUtility = adjustBinUtility(binUtility, *surface, m_cfg.geoContext);
+      binUtility = adjustBinUtility(binUtility, *surface, gctx);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state->accumulatedMaterial[geoID] =
+      state.accumulatedMaterial[geoID] =
           AccumulatedSurfaceMaterial(binUtility);
       // Material accumulation  is created for this
       continue;
@@ -72,20 +79,21 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - binning from BinnedSurfaceMaterial is "
                  << bmp->binUtility());
-      state->accumulatedMaterial[geoID] =
+      state.accumulatedMaterial[geoID] =
           AccumulatedSurfaceMaterial(bmp->binUtility());
       // Material accumulation  is created for this
       continue;
     }
     // Create a homogeneous type of material
     ACTS_DEBUG("       - this is homogeneous material.");
-    state->accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial();
+    state.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial();
   }
-  return state;
+  state.initialized = true;
 }
 
 void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
     ISurfaceMaterialAccumulater::State& state,
+    const GeometryContext& gctx,
     const std::vector<MaterialInteraction>& interactions,
     const std::vector<IAssignmentFinder::SurfaceAssignment>&
         surfacesWithoutAssignment) const {
@@ -95,6 +103,7 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
     throw std::invalid_argument(
         "Invalid state object provided, something is seriously wrong.");
   }
+  initializeState(*cState, gctx);
 
   using MapBin =
       std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
@@ -144,7 +153,8 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
 std::map<Acts::GeometryIdentifier,
          std::shared_ptr<const Acts::ISurfaceMaterial>>
 Acts::BinnedSurfaceMaterialAccumulater::finalizeMaterial(
-    ISurfaceMaterialAccumulater::State& state) const {
+    ISurfaceMaterialAccumulater::State& state,
+    const GeometryContext& gctx) const {
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
       sMaterials;
 
@@ -154,6 +164,7 @@ Acts::BinnedSurfaceMaterialAccumulater::finalizeMaterial(
     throw std::invalid_argument(
         "Invalid state object provided, something is seriously wrong.");
   }
+  initializeState(*cState, gctx);
 
   // iterate over the map to call the total average
   for (auto& accMaterial : cState->accumulatedMaterial) {
