@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPodioEdm/detail/SubspaceIndexHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include <ActsPodioEdm/TrackerHitLocalCollection.h>
 
@@ -269,6 +270,63 @@ BOOST_AUTO_TEST_CASE(EncodeDecodeIndicesErrors) {
     BOOST_CHECK_THROW(EDM4hepUtil::detail::encodeIndices(indices),
                       std::runtime_error);
   }
+}
+
+BOOST_AUTO_TEST_CASE(TrackerHitLocalIndexApi) {
+  ActsPodioEdm::TrackerHitLocalCollection hits;
+  auto hit = hits.create();
+
+  // Initialize dimensionality via subspace indices (also sizes vectors)
+  const std::array<std::uint8_t, 2> subspace{eBoundLoc0, eBoundLoc1};
+  hit.setSubspaceIndices(subspace);
+  BOOST_CHECK_EQUAL(hit.getSubspaceIndices().size(), 2u);
+  BOOST_CHECK_EQUAL(hit.getSize(), 2u);
+  hit.setValue(1.5f, 0);
+  hit.setValue(-2.0f, 1);
+  hit.setCov(4.0f, 0, 0);
+  hit.setCov(0.25f, 0, 1);
+  hit.setCov(0.25f, 1, 0);
+  hit.setCov(9.0f, 1, 1);
+
+  CHECK_CLOSE_REL(hit.getValue(0), 1.5f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getValue(1), -2.0f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(0, 0), 4.0f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(0, 1), 0.25f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(1, 0), 0.25f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(1, 1), 9.0f, 1e-6f);
+
+  auto dims = hit.getSubspaceIndices();
+  BOOST_REQUIRE_EQUAL(dims.size(), 2);
+  BOOST_CHECK_EQUAL(dims[0], eBoundLoc0);
+  BOOST_CHECK_EQUAL(dims[1], eBoundLoc1);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// ---------------------------------------------------------------------------
+// Subspace-index helper tests
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(SubspaceIndexHelpersTest)
+
+BOOST_AUTO_TEST_CASE(GetSetMeasurementValue) {
+  using namespace ActsPlugins::EDM4hepUtil::detail;
+
+  BOOST_CHECK_EQUAL(measurementVectorOffset(0, 2), 0u);
+  BOOST_CHECK_EQUAL(measurementVectorOffset(1, 2), 1u);
+  BOOST_CHECK_THROW(measurementVectorOffset(2, 2), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(GetSetCovarianceValue) {
+  using namespace ActsPlugins::EDM4hepUtil::detail;
+
+  BOOST_CHECK_EQUAL(covarianceVectorOffset(0, 0, 2, 4), 0u);
+  BOOST_CHECK_EQUAL(covarianceVectorOffset(0, 1, 2, 4), 1u);
+  BOOST_CHECK_EQUAL(covarianceVectorOffset(1, 0, 2, 4), 2u);
+  BOOST_CHECK_EQUAL(covarianceVectorOffset(1, 1, 2, 4), 3u);
+  BOOST_CHECK_THROW(covarianceVectorOffset(2, 0, 2, 4), std::runtime_error);
+  BOOST_CHECK_THROW(covarianceVectorOffset(0, 2, 2, 4), std::runtime_error);
+  BOOST_CHECK_THROW(covarianceVectorOffset(1, 1, 2, 3), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

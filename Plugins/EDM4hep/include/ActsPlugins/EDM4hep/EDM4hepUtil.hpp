@@ -27,7 +27,6 @@
 #include <span>
 #include <stdexcept>
 
-#include <boost/container/static_vector.hpp>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
@@ -339,13 +338,6 @@ constexpr bool kEdm4hepVertexHasTime =
 
 void writeVertex(const Acts::Vertex& vertex, edm4hep::MutableVertex to);
 
-namespace detail {
-// These functions are exposed here so they can be used from the unit tests
-std::uint32_t encodeIndices(std::span<const std::uint8_t> indices);
-boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
-decodeIndices(std::uint32_t type);
-}  // namespace detail
-
 /// Write a measurement to an EDM4hep tracker hit
 ///
 /// This function converts an ACTS measurement into the EDM4hep format. It
@@ -383,7 +375,7 @@ struct MeasurementData {
   /// Covariance matrix of the measurement (full bound space)
   Acts::BoundMatrix covariance{Acts::BoundMatrix::Zero()};
   /// Indices of the measured parameters (subspace)
-  boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
+  std::vector<Acts::SubspaceIndex>
       indices;
   /// Cell ID of the measurement
   std::uint64_t cellId{0};
