@@ -564,15 +564,8 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << miniHessian << "\n"
                         << printEigenDecomposition(miniHessian)
                         << "\n, determinant: " << miniHessian.determinant());
-  std::optional<SquareMatrix<N>> inverseH{std::nullopt};
-  if (miniHessian.trace() > Acts::s_epsilon &&
-      miniHessian.determinant() > Acts::s_epsilon) {
-    inverseH = safeInverse(miniHessian);
-  } else {
-    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                        << ": Hessian is singular or not positive definite. "
-                           "Fallback to gradient decent.");
-  }
+  std::optional<SquareMatrix<N>> inverseH{safeInverse(miniHessian)};
+
   if (inverseH) {
     const Vector<N> update{(*inverseH) * miniGradient};
     // We compute also the normalized update, defined as the parameter

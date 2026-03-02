@@ -28,8 +28,10 @@ using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 100000;
-unsigned nThreads = std::min(
-    Acts::Logging::Level::INFO ? 1u : std::thread::hardware_concurrency(), 32u);
+unsigned nThreads = std::min(logLvl == Acts::Logging::Level::INFO
+                                 ? 1u
+                                 : std::thread::hardware_concurrency(),
+                             32u);
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));

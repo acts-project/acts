@@ -351,18 +351,17 @@ class SpCalibrator {
                         const Vector3& trackPos, const Vector3& trackDir,
                         const double timeOffSet,
                         const Container_t& uncalibCont) const {
-    return uncalibCont;
     Container_t calibMeas{};
-    ACTS_INFO("calibrate container with "
-              << uncalibCont.size() << " measurements. To parameters "
-              << toString(trackPos) << " + " << toString(trackDir)
-              << ", t0: " << timeOffSet << ".");
+    ACTS_DEBUG("calibrate container with "
+               << uncalibCont.size() << " measurements. To parameters "
+               << toString(trackPos) << " + " << toString(trackDir)
+               << ", t0: " << timeOffSet << ".");
     std::ranges::transform(
         uncalibCont, std::back_inserter(calibMeas), [&](const auto& calibMe) {
-          ACTS_INFO(" - " << toString(*calibMe));
+          ACTS_VERBOSE(" - " << toString(*calibMe));
           auto calibrated =
               calibrate(ctx, trackPos, trackDir, timeOffSet, *calibMe);
-          ACTS_INFO(" + " << toString(*calibrated));
+          ACTS_VERBOSE(" + " << toString(*calibrated));
           return calibrated;
         });
     return calibMeas;
