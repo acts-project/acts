@@ -99,8 +99,8 @@ void WhiteBoard::copyFrom(const WhiteBoard &other) {
   }
 }
 
-void WhiteBoard::addHolder(const std::string& name,
-                           const std::shared_ptr<Acts::AnyMoveOnly>& holder,
+void WhiteBoard::addHolder(const std::string &name,
+                           const std::shared_ptr<Acts::AnyMoveOnly> &holder,
                            std::uint64_t typeHash) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
@@ -131,7 +131,7 @@ void WhiteBoard::addHolder(const std::string& name,
   }
 }
 
-void WhiteBoard::addHolder(const std::string& name,
+void WhiteBoard::addHolder(const std::string &name,
                            std::unique_ptr<Acts::AnyMoveOnly> holder,
                            std::uint64_t typeHash) {
   addHolder(name, std::shared_ptr<Acts::AnyMoveOnly>(std::move(holder)),
@@ -140,14 +140,14 @@ void WhiteBoard::addHolder(const std::string& name,
 
 std::vector<std::string> WhiteBoard::getKeys() const {
   std::vector<std::string> keys;
-  for (const auto& [key, val] : m_store) {
+  for (const auto &[key, val] : m_store) {
     keys.push_back(key);
   }
   return keys;
 }
 
-std::pair<Acts::AnyMoveOnly*, std::uint64_t> WhiteBoard::getHolder(
-    const std::string& name) const {
+std::pair<Acts::AnyMoveOnly *, std::uint64_t> WhiteBoard::getHolder(
+    const std::string &name) const {
   auto it = m_store.find(name);
   if (it == m_store.end()) {
     throw std::out_of_range("Object '" + name + "' does not exists");
