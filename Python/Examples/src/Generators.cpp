@@ -15,7 +15,7 @@
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-#include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
+#include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <cstddef>
 #include <memory>
