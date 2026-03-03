@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
     GenCfg_t genCfg{};
     genCfg.createStraws = true;
     genCfg.twinStraw = true;
-    enCfg.createStrips = false;
+    genCfg.createStrips = false;
 
     launchTest("StrawAndTwinTest", genCfg, 1503);
     launchTest("StrawAndTwinTestT0", genCfg, 1503, true);
