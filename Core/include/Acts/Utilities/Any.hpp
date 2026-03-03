@@ -231,7 +231,7 @@ class AnyBase : public AnyBaseAll {
   T* asPtr() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       return nullptr;
     }
     return std::bit_cast<T*>(dataPtr());
@@ -245,7 +245,7 @@ class AnyBase : public AnyBaseAll {
   const T* asPtr() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       return nullptr;
     }
     return std::bit_cast<const T*>(dataPtr());
@@ -322,8 +322,7 @@ class AnyBase : public AnyBaseAll {
 
     // At this point they can't be equal and nullptr, so it's safe to
     // dereference
-    if (m_handler == other.m_handler &&
-        m_handler->typeHash == other.m_handler->typeHash) {
+    if (m_handler == other.m_handler) {
       // same type, but checked before they're not both nullptr
       move(std::move(other));
     } else {
