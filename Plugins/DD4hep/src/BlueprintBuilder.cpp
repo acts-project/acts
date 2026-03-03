@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+// Needed for explicit instantiation of template methods.
+#include "Acts/Geometry/detail/BlueprintBuilder_impl.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
@@ -239,3 +241,12 @@ DD4hepBackend::makeBeampipe() const {
 }
 
 }  // namespace ActsPlugins::DD4hep
+
+// Explicit template instantiation for DD4hepBackend. Ensures all template
+// code is compiled in this TU; other TUs use extern template and link here.
+// Must be in ::Acts::Experimental (at global scope) to match the template defs.
+namespace Acts::Experimental {
+template class BlueprintBuilder<ActsPlugins::DD4hep::DD4hepBackend>;
+template class LayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+template class BarrelEndcapAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+}  // namespace Acts::Experimental
