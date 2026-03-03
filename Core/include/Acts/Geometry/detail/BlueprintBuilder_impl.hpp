@@ -395,8 +395,8 @@ template <detail::BlueprintBackend BackendT>
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
 BlueprintBuilder<BackendT>::makeLayer(const Element& detElement,
                                       const LayerSpec& layerSpec) const {
-  auto sensitives = resolveSensitives(m_backend, detElement);
-  return makeLayerFromSensitives(detElement, sensitives, layerSpec);
+  auto sensitives = resolveSensitives(detElement);
+  return makeLayer(detElement, sensitives, layerSpec);
 }
 
 template <detail::BlueprintBackend BackendT>
@@ -530,7 +530,7 @@ BlueprintBuilder<BackendT>::findEndcapElements(const Element& assembly) const {
 
 template <detail::BlueprintBackend BackendT>
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-BlueprintBuilder<BackendT>::makeLayerFromSensitives(
+BlueprintBuilder<BackendT>::makeLayer(
     const Element& parent, std::span<const Element> sensitives,
     const LayerSpec& layerSpec) const {
   std::string fullLayerName = getPathToElementName(parent);
@@ -545,15 +545,14 @@ BlueprintBuilder<BackendT>::makeLayerFromSensitives(
 
 template <detail::BlueprintBackend BackendT>
 std::vector<typename BlueprintBuilder<BackendT>::Element>
-BlueprintBuilder<BackendT>::resolveSensitives(const Backend& backend,
-                                              const Element& detElement) {
+BlueprintBuilder<BackendT>::resolveSensitives(const Element& detElement) const {
   std::vector<Element> sensitives;
 
   std::function<void(const Element&)> visit = [&](const Element& elem) {
-    if (backend.isSensitive(elem)) {
+    if (m_backend.isSensitive(elem)) {
       sensitives.push_back(elem);
     }
-    for (const auto& child : backend.children(elem)) {
+    for (const auto& child : m_backend.children(elem)) {
       visit(child);
     }
   };
