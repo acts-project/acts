@@ -561,7 +561,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << ": Projected parameters: " << toString(miniPars)
                         << " gradient: " << toString(miniGradient)
                         << ", hessian: \n"
-                        << miniHessian << "\n"
+                        << toString(miniHessian) << "\n"
                         << printEigenDecomposition(miniHessian)
                         << "\n, determinant: " << miniHessian.determinant());
   std::optional<SquareMatrix<N>> inverseH{safeInverse(miniHessian)};
