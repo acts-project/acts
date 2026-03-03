@@ -46,7 +46,10 @@ class WhiteBoardRegistry {
   /// @tparam Ts The types to register.
   /// @param pyClass The pybind11 class object to register.
   template <typename... Ts>
-  static void registerClass(const pybind11::class_<Ts...>& pyClass) {
+  static void registerClass(const pybind11::class_<Ts...>& pyClass)
+  // requires(std::is_same_v<typename pybind11::class_<Ts...>::holder_type,
+  //                         pybind11::smart_holder>)
+  {
     namespace py = pybind11;
     using type = pybind11::class_<Ts...>::type;
     registerType<type>(pyClass);

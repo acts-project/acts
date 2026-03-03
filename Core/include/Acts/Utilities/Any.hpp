@@ -16,6 +16,7 @@
 #include <cassert>
 #include <cstddef>
 #include <type_traits>
+#include <typeinfo>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
@@ -27,7 +28,6 @@
 #include <mutex>
 #include <set>
 #include <typeindex>
-#include <typeinfo>
 #endif
 
 #if defined(_ACTS_ANY_ENABLE_VERBOSE) || defined(_ACTS_ANY_ENABLE_DEBUG)
@@ -118,8 +118,13 @@ class AnyBaseAll {};
 
 /// Small opaque type-erased type with configurable small buffer optimization
 ///
+/// @tparam SIZE Size of the internal buffer for small buffer optimization
+/// @tparam Copyable If true, stored types must be copyable and AnyBase is
+///         copyable. If false, move-only types are allowed and AnyBase is
+///         move-only (copy constructor and copy assignment are deleted).
+///
 /// @note
-/// Type requirements:
+/// Type requirements when Copyable is true:
 /// - All stored types must be copy constructible and copy assignable.
 /// - Types stored locally (`sizeof(T) <= SIZE`) must also be move constructible
 ///   and move assignable because local moves use move operations when not
@@ -128,15 +133,39 @@ class AnyBaseAll {};
 ///   pointer, so no move operations are required in that case.
 ///
 /// @note
+/// Type requirements when Copyable is false:
+/// - All stored types must be move constructible.
+/// - Types stored locally must also be move assignable.
+/// - Heap-allocated types only need move constructible (pointer steal).
+///
+/// @note
 /// In summary:
 /// - Local storage: values live inside the internal buffer; moves may invoke
 ///   move operations or buffer copies; copies use copy operations or buffer
 ///   copies when trivial.
 /// - Heap storage: values are allocated on the heap; moves transfer ownership
 ///   of the pointer; copies allocate and copy-construct the pointee.
-template <std::size_t SIZE>
+template <std::size_t SIZE, bool Copyable = true>
 class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
+
+  /// Type trait: T is storable when Copyable requires copy+move, else
+  /// move-only.
+  /// @tparam U Type to check
+  /// @return True if the type is storable, false otherwise
+  template <typename U>
+  static constexpr bool isStorable() {
+    if constexpr (std::is_base_of_v<AnyBaseAll, U>) {
+      return false;
+    } else if constexpr (Copyable) {
+      return std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U> &&
+             (sizeof(U) > SIZE || (std::is_move_assignable_v<U> &&
+                                   std::is_move_constructible_v<U>));
+    } else {
+      return std::is_move_constructible_v<U> &&
+             (sizeof(U) > SIZE || std::is_move_assignable_v<U>);
+    }
+  }
 
  public:
   /// Construct with in-place type construction
@@ -144,11 +173,7 @@ class AnyBase : public AnyBaseAll {
   /// @tparam Args Constructor argument types
   /// @param args Arguments to forward to T's constructor
   template <typename T, typename... Args>
-    requires(std::is_copy_assignable_v<std::decay_t<T>> &&
-             std::is_copy_constructible_v<std::decay_t<T>> &&
-             (sizeof(std::decay_t<T>) > SIZE ||
-              (std::is_move_assignable_v<std::decay_t<T>> &&
-               std::is_move_constructible_v<std::decay_t<T>>)))
+    requires(isStorable<std::decay_t<T>>())
   explicit AnyBase(std::in_place_type_t<T> /*unused*/, Args&&... args) {
     using U = std::decay_t<T>;
     m_handler = makeHandler<U>();
@@ -166,12 +191,7 @@ class AnyBase : public AnyBaseAll {
   /// @param value Value to store in the Any
   template <typename T>
   explicit AnyBase(T&& value) _ACTS_ANY_NOEXCEPT
-    requires(!std::same_as<std::decay_t<T>, AnyBase<SIZE>> &&
-             std::is_copy_assignable_v<std::decay_t<T>> &&
-             std::is_copy_constructible_v<std::decay_t<T>> &&
-             (sizeof(std::decay_t<T>) > SIZE ||
-              (std::is_move_assignable_v<std::decay_t<T>> &&
-               std::is_move_constructible_v<std::decay_t<T>>)))
+    requires(isStorable<std::decay_t<T>>())
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   /// Construct a new value in place, destroying any existing value
@@ -180,11 +200,7 @@ class AnyBase : public AnyBaseAll {
   /// @param args Arguments to forward to T's constructor
   /// @return Reference to the newly constructed value
   template <typename T, typename... Args>
-    requires(std::is_copy_assignable_v<std::decay_t<T>> &&
-             std::is_copy_constructible_v<std::decay_t<T>> &&
-             (sizeof(std::decay_t<T>) > SIZE ||
-              (std::is_move_assignable_v<std::decay_t<T>> &&
-               std::is_move_constructible_v<std::decay_t<T>>)))
+    requires(isStorable<std::decay_t<T>>())
   T& emplace(Args&&... args) {
     using U = std::decay_t<T>;
     destroy();
@@ -222,7 +238,8 @@ class AnyBase : public AnyBaseAll {
       throw std::bad_any_cast{};
     }
 
-    _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
+    _ACTS_ANY_VERBOSE("Get as "
+                      << (m_handler->heapAllocated ? "heap" : "local"));
 
     return *std::bit_cast<const T*>(dataPtr());
   }
@@ -257,9 +274,11 @@ class AnyBase : public AnyBaseAll {
 
   ~AnyBase() { destroy(); }
 
-  /// Copy constructor
+  /// Copy constructor (only when Copyable is true)
   /// @param other The AnyBase to copy from
-  AnyBase(const AnyBase& other) _ACTS_ANY_NOEXCEPT {
+  AnyBase(const AnyBase& other) _ACTS_ANY_NOEXCEPT
+    requires Copyable
+  {
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return;
@@ -272,10 +291,17 @@ class AnyBase : public AnyBaseAll {
     copyConstruct(other);
   }
 
-  /// Copy assignment operator
+  /// Copy constructor deleted when Copyable is false (move-only variant)
+  AnyBase(const AnyBase&)
+    requires(!Copyable)
+  = delete;
+
+  /// Copy assignment operator (only when Copyable is true)
   /// @param other The AnyBase to copy from
   /// @return Reference to this object
-  AnyBase& operator=(const AnyBase& other) _ACTS_ANY_NOEXCEPT {
+  AnyBase& operator=(const AnyBase& other) _ACTS_ANY_NOEXCEPT
+    requires Copyable
+  {
     _ACTS_ANY_VERBOSE("Copy assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
 
@@ -286,7 +312,7 @@ class AnyBase : public AnyBaseAll {
 
     if (m_handler == other.m_handler) {
       // same type, but checked before they're not both nullptr
-      copy(std::move(other));
+      copy(other);
     } else {
       if (m_handler != nullptr) {
         // this object is not empty, but have different types => destroy
@@ -294,10 +320,15 @@ class AnyBase : public AnyBaseAll {
       }
       assert(m_handler == nullptr);
       m_handler = other.m_handler;
-      copyConstruct(std::move(other));
+      copyConstruct(other);
     }
     return *this;
   }
+
+  /// Copy assignment deleted when Copyable is false (move-only variant)
+  AnyBase& operator=(const AnyBase&)
+    requires(!Copyable)
+  = delete;
 
   /// Move constructor
   /// @param other The AnyBase to move from
@@ -347,6 +378,11 @@ class AnyBase : public AnyBaseAll {
   /// @return True if a value is stored, false if empty
   explicit operator bool() const { return m_handler != nullptr; }
 
+  /// Type info of the stored value. Returns typeid(void) if empty.
+  const std::type_info& typeInfo() const {
+    return m_handler != nullptr ? *m_handler->typeInfo : typeid(void);
+  }
+
  private:
   void* dataPtr() {
     if (m_handler->heapAllocated) {
@@ -374,11 +410,13 @@ class AnyBase : public AnyBaseAll {
     void (*copy)(const void* from, void* to) = nullptr;
     bool heapAllocated{false};
     std::uint64_t typeHash{0};
+    const std::type_info* typeInfo{nullptr};
   };
 
   template <typename T>
   static const Handler* makeHandler() {
-    static_assert(!std::is_same_v<T, AnyBase<SIZE>>, "Cannot wrap any in any");
+    static_assert(!std::is_base_of_v<AnyBaseAll, std::decay_t<T>>,
+                  "Cannot wrap Any in Any");
     static const Handler static_handler = []() {
       Handler h;
       h.heapAllocated = heapAllocated<T>();
@@ -394,16 +432,21 @@ class AnyBase : public AnyBaseAll {
                     !std::is_trivially_move_assignable_v<T>) {
         h.move = &moveImpl<T>;
       }
-      if constexpr (!std::is_trivially_copy_constructible_v<T> ||
-                    heapAllocated<T>()) {
-        h.copyConstruct = &copyConstructImpl<T>;
+      if constexpr (std::is_copy_constructible_v<T>) {
+        if constexpr (!std::is_trivially_copy_constructible_v<T> ||
+                      heapAllocated<T>()) {
+          h.copyConstruct = &copyConstructImpl<T>;
+        }
       }
-      if constexpr (!std::is_trivially_copy_assignable_v<T> ||
-                    heapAllocated<T>()) {
-        h.copy = &copyImpl<T>;
+      if constexpr (std::is_copy_assignable_v<T>) {
+        if constexpr (!std::is_trivially_copy_assignable_v<T> ||
+                      heapAllocated<T>()) {
+          h.copy = &copyImpl<T>;
+        }
       }
 
       h.typeHash = typeHash<T>();
+      h.typeInfo = &typeid(T);
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
@@ -631,7 +674,12 @@ class AnyBase : public AnyBaseAll {
 /// @details This is a custom implementation similar to `std::any` but optimized for small types
 ///          that can fit into a pointer-sized buffer. Values larger than a
 ///          pointer are stored on the heap.
-using Any = AnyBase<sizeof(void*)>;
+using Any = AnyBase<sizeof(void*), true>;
+
+/// @brief Move-only variant that can store move-only types (e.g. std::unique_ptr)
+/// @details Same as Any but copy constructor and copy assignment are deleted.
+///          Use when storing types that are not copyable.
+using AnyMoveOnly = AnyBase<sizeof(void*), false>;
 
 /// @}
 
