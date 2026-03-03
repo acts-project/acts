@@ -11,6 +11,10 @@ jobs:
     # This action checks all monitored (specified in `folder_list` below) requirements.in
     # files and generates a new requirements.txt file with pip-compile. If any
     # requirements changed, a PR is created with the changes.
+
+    # Abort scheduled workflows dispatched by forks
+    if: github.event_name != 'schedule' || github.repository == 'acts-project/acts'
+
     runs-on: ubuntu-slim
     env:
       # This branch will receive updates each time the workflow runs
