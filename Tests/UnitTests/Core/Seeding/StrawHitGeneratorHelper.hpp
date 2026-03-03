@@ -128,7 +128,7 @@ constexpr double driftTimePrime(const double r) {
 constexpr std::array<double, 4> s_driftRUncertCoeffs{0.10826, -0.07182,
                                                      0.037597, -0.011712};
 /// @brief Compute the drift radius uncertanty
-constexpr double driftUncert(const double r) {
+double driftUncert(const double r) {
   const double x = detailCalib::normDriftRadius(r);
   double s{0.0};
   for (std::size_t n = 0; n < s_driftRUncertCoeffs.size(); ++n) {

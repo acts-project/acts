@@ -422,7 +422,6 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
 
   const Acts::CalibrationContext cctx{};
   SpCalibrator calibrator{logLvl};
-  using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
 
   for (std::size_t e = 0; e < nEvents; ++e) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
@@ -539,52 +538,77 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
 BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
   Config_t resCfg{};
   resCfg.useHessian = true;
-  resCfg.calcAlongStrip = true;
+  resCfg.calcAlongStrip = false;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
                       ParIdx::t0};
 
-  CompSpacePointAuxiliaries resCalc{resCfg,
-                                    Acts::getDefaultLogger("testRes", logLvl)};
-  CompSpacePointAuxiliaries resCalcUp{
-      resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
-  CompSpacePointAuxiliaries resCalcDn{
-      resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
+  using ResCalc_t = CompSpacePointAuxiliaries;
+  using ChiSq_t = ResCalc_t::ChiSqWithDerivatives;
+
+  ResCalc_t resCalc{resCfg, Acts::getDefaultLogger("chiSquareTest", logLvl)};
+
+  ChiSq_t chi2{};
+  ChiSq_t chi2Up{};
+  ChiSq_t chi2Dn{};
 
   Line_t line{};
 
+  const Acts::CalibrationContext cctx{};
+
+  const SpCalibrator calibrator{logLvl};
+
   RandomEngine rndEngine{1789};
 
-  SpCalibrator spCalibrator{loglvl};
-
-  const double t0{0._ns};
-
-  auto testChi2 = [&](FitTestSpacePoint testMe) {
+  auto runCalculation = [&line, &resCalc, &calibrator, &cctx](
+                            FitTestSpacePoint testMe, const Pars_t& pars,
+                            const double t0, ChiSq_t& chiSq, const bool calib) {
+    line.updateParameters(pars);
     resCalc.reset();
+    chiSq.reset();
+    if (calib && testMe.isStraw() &&
+        Acts::rangeContainsValue(resCalc.config().parsToUse, ParIdx::t0)) {
+      testMe = *calibrator.calibrate(cctx, line.position(), line.direction(),
+                                     t0, testMe);
+    }
 
-    using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
-    ChiSq_t chi2{};
-    ACTS_DEBUG(__func__ << "() " << __LINE__ << ":\n"
-                        << whiteSpaces(150, '+') << "\nTest space point "
-                        << toString(testMe) << "\n"
-                        << whiteSpaces(150, '+'));
-
-    const double chi2Term = CompSpacePointAuxiliaries::chi2Term(
-        line, resCfg.localToGlobal, t0, testMe);
     if (testMe.isStraw()) {
       const int sign = CompSpacePointAuxiliaries::strawSign(line, testMe);
       testMe.updateDriftR(std::copysign(testMe.driftRadius(), sign));
     }
-    if (Acts::rangeContainsValue(resCfg.parsToUse, ParIdx::t0)) {
-      resCalc.updateFullResidual(line, t0, testMe,
-                                 spCalibrator.driftVelocity(cctx, testMe),
-                                 spCalibrator.driftAcceleration(cctx, testMe)
 
-      );
+    if (Acts::rangeContainsValue(resCalc.config().parsToUse, ParIdx::t0)) {
+      resCalc.updateFullResidual(line, t0, testMe,
+                                 calibrator.driftVelocity(cctx, testMe),
+                                 calibrator.driftAcceleration(cctx, testMe));
     } else {
       resCalc.updateSpatialResidual(line, testMe);
     }
-    resCalc.updateChiSq(chi2, testMe.covariance());
-    resCalc.symmetrizeHessian(chi2);
+    resCalc.updateChiSq(chiSq, testMe.covariance());
+    resCalc.symmetrizeHessian(chiSq);
+  };
+
+  auto testChi2 = [&](const Pars_t& linePars, const double t0,
+                      FitTestSpacePoint testMe) {
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << ":\n"
+                        << whiteSpaces(150, '+') << "\nTest space point "
+                        << toString(testMe) << "\n"
+                        << whiteSpaces(150, '+'));
+    line.updateParameters(linePars);
+    double chi2Term{0.};
+    if (Acts::rangeContainsValue(resCfg.parsToUse, ParIdx::t0)) {
+      chi2Term = CompSpacePointAuxiliaries::chi2Term(line, resCfg.localToGlobal,
+                                                     t0, testMe);
+    } else {
+      chi2Term = CompSpacePointAuxiliaries::chi2Term(line, testMe);
+    }
+    if (testMe.isStraw()) {
+      testMe.updateTime(detailCalib::driftTime(testMe.driftRadius()) + t0 +
+                        calibrator.fastToF(testMe));
+    }
+
+    ACTS_DEBUG(__func__ << "() - " << __LINE__
+                        << " Evaluated chi2 term: " << chi2Term);
+    runCalculation(testMe, linePars, t0, chi2, false);
     constexpr auto N = 5u;
     for (std::size_t i = 1; i < N; ++i) {
       for (std::size_t j = 0; j <= i; ++j) {
@@ -598,13 +622,11 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
                         << toString(chi2.hessian)
                         << "\ndeterminant: " << chi2.hessian.determinant());
     CHECK_CLOSE(chi2Term, chi2.chi2, 1.e-10);
-
-    constexpr double h = 2.e-8;
+    runCalculation(testMe, linePars, t0, chi2, true);
+    constexpr double h = 5.e-8;
     for (const auto par : resCfg.parsToUse) {
-      resCalcUp.reset();
-      resCalcDn.reset();
-      Pars_t lineParsUp{line.parameters()};
-      Pars_t lineParsDn{line.parameters()};
+      Pars_t lineParsUp{linePars};
+      Pars_t lineParsDn{linePars};
 
       const auto dIdx = toUnderlying(par);
       double t0Up{t0}, t0Dn{t0};
@@ -615,24 +637,8 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
         t0Up += h;
         t0Dn -= h;
       }
-      ChiSq_t chi2Up{}, chi2Dn{};
-      /// Calculate the updated chi2
-      line.updateParameters(lineParsUp);
-      if (Acts::rangeContainsValue(resCfg.parsToUse, ParIdx::t0)) {
-        resCalcUp.updateFullResidual(line, t0Up, testMe);
-      } else {
-        resCalcUp.updateSpatialResidual(line, testMe);
-      }
-      resCalcUp.updateChiSq(chi2Up, testMe.covariance());
-
-      line.updateParameters(lineParsDn);
-
-      if (Acts::rangeContainsValue(resCfg.parsToUse, ParIdx::t0)) {
-        resCalcDn.updateFullResidual(line, t0Dn, testMe);
-      } else {
-        resCalcDn.updateSpatialResidual(line, testMe);
-      }
-      resCalcDn.updateChiSq(chi2Dn, testMe.covariance());
+      runCalculation(testMe, lineParsUp, t0Up, chi2Up, true);
+      runCalculation(testMe, lineParsDn, t0Dn, chi2Dn, true);
 
       const double anaDeriv = chi2.gradient[dIdx];
       const double numDeriv = (chi2Up.chi2 - chi2Dn.chi2) / (2. * h);
@@ -660,44 +666,61 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
                         << whiteSpaces(150, '-') << "\n"
                         << whiteSpaces(150, '-'));
   };
+
+  const double t0{2.5_ns};
+
   for (std::size_t e = 0; e < nEvents; ++e) {
     line = generateLine(rndEngine, logger());
+    const Pars_t pars = line.parameters();
 
     /// Test orthogonal strips
-    testChi2(FitTestSpacePoint{
-        line.point(20._cm) + 5._cm * line.direction().cross(Vector_t::UnitX()),
-        makeDirectionFromPhiTheta(0_degree, 90._degree),
-        makeDirectionFromPhiTheta(90._degree, 0._degree),
-        15._ns,
-        {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+    testChi2(
+        pars, t0,
+        FitTestSpacePoint{
+            line.point(20._cm) +
+                5._cm * line.direction().cross(Vector_t::UnitX()),
+            makeDirectionFromPhiTheta(0_degree, 90._degree),
+            makeDirectionFromPhiTheta(90._degree, 0._degree),
+            15._ns,
+            {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
 
     // Test strips with stereo
-    testChi2(FitTestSpacePoint{
-        line.point(20._cm) + 5._cm * line.direction().cross(Vector_t::UnitX()),
-        makeDirectionFromPhiTheta(0_degree, 45._degree),
-        makeDirectionFromPhiTheta(60._degree, 0._degree),
-        15._ns,
-        {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
-    constexpr double R = 5._cm;
+    testChi2(
+        pars, t0,
+        FitTestSpacePoint{
+            line.point(20._cm) +
+                5._cm * line.direction().cross(Vector_t::UnitX()),
+            makeDirectionFromPhiTheta(0_degree, 45._degree),
+            makeDirectionFromPhiTheta(60._degree, 0._degree),
+            15._ns,
+            {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+    constexpr double R = 12._mm;
+    const double dR = detailCalib::driftUncert(R);
     // Test ordinary straws
-    testChi2(FitTestSpacePoint{
-        line.point(20._cm) + R * line.direction().cross(Vector_t::UnitX()),
-        Vector3::UnitX(), R, 10._mm});
+    testChi2(pars, t0,
+             FitTestSpacePoint{line.point(20._cm) + R * line.direction().cross(
+                                                            Vector_t::UnitX()),
+                               Vector3::UnitX(), R, dR});
 
-    testChi2(FitTestSpacePoint{
-        line.point(40._cm) - R * line.direction().cross(Vector_t::UnitX()),
-        Vector3::UnitX(), R, 10._mm});
+    testChi2(pars, t0,
+             FitTestSpacePoint{line.point(40._cm) - R * line.direction().cross(
+                                                            Vector_t::UnitX()),
+                               Vector3::UnitX(), R, dR});
 
     // Test straws with information on the position along the tube
     constexpr double dZ = 2._cm;
-    testChi2(FitTestSpacePoint{
-        line.point(10._cm) + R * line.direction().cross(Vector_t::UnitX()) +
-            dZ * Vector_t::UnitX(),
-        Vector3::UnitX(), R, -1._mm, dZ});
-    testChi2(FitTestSpacePoint{
-        line.point(10._cm) - R * line.direction().cross(Vector_t::UnitX()) +
-            dZ * Vector_t::UnitX(),
-        Vector3::UnitX(), R, -1._mm, dZ});
+    testChi2(
+        pars, t0,
+        FitTestSpacePoint{line.point(10._cm) +
+                              R * line.direction().cross(Vector_t::UnitX()) +
+                              dZ * Vector_t::UnitX(),
+                          Vector3::UnitX(), R, dR, dZ});
+    testChi2(
+        pars, t0,
+        FitTestSpacePoint{line.point(10._cm) -
+                              R * line.direction().cross(Vector_t::UnitX()) +
+                              dZ * Vector_t::UnitX(),
+                          Vector3::UnitX(), R, dR, dZ});
   }
 }
 
