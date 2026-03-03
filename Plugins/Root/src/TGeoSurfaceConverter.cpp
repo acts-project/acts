@@ -484,3 +484,32 @@ ActsPlugins::TGeoSurfaceConverter::toSurface(const TGeoShape& tgShape,
 
   return {nullptr, 0.};
 }
+
+Acts::Transform3 ActsPlugins::TGeoSurfaceConverter::transformFromShape(
+    const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
+    double scalor) noexcept(false) {
+  const Double_t* rotation = tgMatrix.GetRotationMatrix();
+  const Double_t* translation = tgMatrix.GetTranslation();
+
+  auto [cBounds, cTransform, cThickness] =
+      cylinderComponents(tgShape, rotation, translation, axes, scalor);
+  if (cBounds != nullptr) {
+    return cTransform;
+  }
+
+  auto [dBounds, dTransform, dThickness] =
+      discComponents(tgShape, rotation, translation, axes, scalor);
+  if (dBounds != nullptr) {
+    return dTransform;
+  }
+
+  auto [pBounds, pTransform, pThickness] =
+      planeComponents(tgShape, rotation, translation, axes, scalor);
+  if (pBounds != nullptr) {
+    return pTransform;
+  }
+
+  throw std::runtime_error(
+      "Could not extract transform from TGeoShape of type " +
+      std::string(tgShape.ClassName()));
+}
