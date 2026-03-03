@@ -111,6 +111,7 @@ def main():
         ".txt",
         ".yml",
         ".xml",
+        ".sh",
     )
     suffix_allowed = (
         suffix_header
