@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(CalibratorTest) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
+BOOST_AUTO_TEST_CASE(StrawsWithT0Constraint) {
   ACTS_INFO("Calibration straw point test ");
 
   Config_t resCfg{};
@@ -410,15 +410,13 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
 
   MeasurementGenerator::Config genCfg{};
   genCfg.createStraws = true;
-  genCfg.smearRadius = true;
+  genCfg.smearRadius = false;
   genCfg.twinStraw = false;
   genCfg.createStrips = false;
 
   RandomEngine rndEngine{4711};
 
-  constexpr double h = 2.e-8_ns;
-
-  const Vector_t wirePos{100._cm, 50._cm, 30._cm};
+  constexpr double h = 5.e-8;
 
   const Acts::CalibrationContext cctx{};
   SpCalibrator calibrator{logLvl};
@@ -426,20 +424,63 @@ BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
   for (std::size_t e = 0; e < nEvents; ++e) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
     resCfg.localToGlobal = Acts::Transform3::Identity();
-    const Line_t line{generateLine(rndEngine, logger())};
+    Line_t line{generateLine(rndEngine, logger())};
+    const Pars_t linePars = line.parameters();
     const double t0 = uniform{0_ns, 50._ns}(rndEngine);
 
     const auto testMeas =
         MeasurementGenerator::spawn(line, t0, rndEngine, genCfg, logger())
             .front();
-    const auto testMeasUp = calibrator.calibrate(
-        cctx, line.position(), line.direction(), t0 + h, *testMeas);
-    const auto testMeasDn = calibrator.calibrate(
-        cctx, line.position(), line.direction(), t0 - h, *testMeas);
 
     resCalc.reset();
-    resCalcUp.reset();
-    resCalcDn.reset();
+
+    resCalc.updateFullResidual(line, t0, *testMeas,
+                               calibrator.driftVelocity(cctx, *testMeas),
+                               calibrator.driftAcceleration(cctx, *testMeas));
+
+    for (const auto par : resCfg.parsToUse) {
+      Pars_t lineParsUp{linePars};
+      Pars_t lineParsDn{linePars};
+
+      const auto dIdx = toUnderlying(par);
+      double t0Up{t0}, t0Dn{t0};
+      if (par != ParIdx::t0) {
+        lineParsUp[dIdx] += h;
+        lineParsDn[dIdx] -= h;
+      } else {
+        t0Up += h;
+        t0Dn -= h;
+      }
+      resCalcUp.reset();
+
+      line.updateParameters(lineParsUp);
+      const auto testMeasUp = calibrator.calibrate(
+          cctx, line.position(), line.direction(), t0Up, *testMeas);
+
+      resCalcUp.updateFullResidual(
+          line, t0Up, *testMeasUp, calibrator.driftVelocity(cctx, *testMeasUp),
+          calibrator.driftAcceleration(cctx, *testMeasUp));
+
+      line.updateParameters(lineParsDn);
+
+      const auto testMeasDn = calibrator.calibrate(
+          cctx, line.position(), line.direction(), t0Dn, *testMeas);
+      resCalcDn.reset();
+      resCalcDn.updateFullResidual(
+          line, t0Dn, *testMeasDn, calibrator.driftVelocity(cctx, *testMeasDn),
+          calibrator.driftAcceleration(cctx, *testMeasDn));
+
+      const Vector_t numDeriv =
+          (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
+      const Vector_t anaDeriv = resCalc.gradient(par);
+      COMPARE_VECTORS(numDeriv, anaDeriv, 1.e-3);
+      for (const auto par1 : resCfg.parsToUse) {
+        const Vector_t numDeriv1 =
+            (resCalcUp.gradient(par1) - resCalcDn.gradient(par1)) / (2. * h);
+        const Vector_t anaDeriv1 = resCalc.hessian(par1, par);
+        COMPARE_VECTORS(numDeriv1, anaDeriv1, 4.e-3);
+      }
+    }
   }
 }
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
