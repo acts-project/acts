@@ -692,6 +692,42 @@ BOOST_AUTO_TEST_CASE(AnyMoveOnlyMoveOnlyTypes) {
   static_assert(!std::is_copy_assignable_v<MoveOnlyAny>);
 }
 
+BOOST_AUTO_TEST_CASE(AnyTake) {
+  // take() moves value out and leaves Any empty
+  {
+    Any a{42};
+    BOOST_CHECK(!!a);
+    int val = a.take<int>();
+    BOOST_CHECK_EQUAL(val, 42);
+    BOOST_CHECK(!a);
+  }
+
+  // take() with move-only type
+  {
+    auto ptr = std::make_unique<int>(99);
+    Acts::AnyMoveOnly a{std::move(ptr)};
+    BOOST_CHECK(!!a);
+    auto taken = a.take<std::unique_ptr<int>>();
+    BOOST_REQUIRE_NE(taken.get(), nullptr);
+    BOOST_CHECK_EQUAL(*taken, 99);
+    BOOST_CHECK(!a);
+  }
+
+  // take() throws on wrong type
+  {
+    Any a{42};
+    BOOST_CHECK_THROW(a.take<float>(), std::bad_any_cast);
+    BOOST_CHECK(!!a);
+    BOOST_CHECK_EQUAL(a.as<int>(), 42);
+  }
+
+  // take() throws on empty
+  {
+    Any a;
+    BOOST_CHECK_THROW(a.take<int>(), std::bad_any_cast);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace ActsTests

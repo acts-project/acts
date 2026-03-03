@@ -272,6 +272,23 @@ class AnyBase : public AnyBaseAll {
     return std::bit_cast<const T*>(dataPtr());
   }
 
+  /// Move the stored value out. Leaves this Any empty.
+  /// @tparam T Type to retrieve (must be exact type, no const/ref)
+  /// @return The moved-out value
+  /// @throws std::bad_any_cast if stored type doesn't match T or Any is empty
+  template <typename T>
+  T take() {
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+      throw std::bad_any_cast{};
+    }
+    T* ptr = std::bit_cast<T*>(dataPtr());
+    T value = std::move(*ptr);
+    destroy();
+    return value;
+  }
+
   ~AnyBase() { destroy(); }
 
   /// Copy constructor (only when Copyable is true)
