@@ -111,7 +111,7 @@ void WhiteBoard::addHolder(const std::string &name,
   }
 
   StoreValue storeVal{holder, typeHash};
-  auto [storeIt, success] = m_store.insert({name, storeVal});
+  auto [storeIt, success] = m_store.try_emplace(name, storeVal);
 
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");

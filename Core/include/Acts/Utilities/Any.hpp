@@ -450,17 +450,16 @@ class AnyBase : public AnyBaseAll {
                     !std::is_trivially_move_assignable_v<T>) {
         h.move = &moveImpl<T>;
       }
-      if constexpr (std::is_copy_constructible_v<T>) {
-        if constexpr (!std::is_trivially_copy_constructible_v<T> ||
-                      heapAllocated<T>()) {
-          h.copyConstruct = &copyConstructImpl<T>;
-        }
+      if constexpr (std::is_copy_constructible_v<T> &&
+                    (!std::is_trivially_copy_constructible_v<T> ||
+                     heapAllocated<T>())) {
+        h.copyConstruct = &copyConstructImpl<T>;
       }
-      if constexpr (std::is_copy_assignable_v<T>) {
-        if constexpr (!std::is_trivially_copy_assignable_v<T> ||
-                      heapAllocated<T>()) {
-          h.copy = &copyImpl<T>;
-        }
+
+      if constexpr (std::is_copy_assignable_v<T> &&
+                    (!std::is_trivially_copy_assignable_v<T> ||
+                     heapAllocated<T>())) {
+        h.copy = &copyImpl<T>;
       }
 
       h.typeHash = typeHash<T>();
