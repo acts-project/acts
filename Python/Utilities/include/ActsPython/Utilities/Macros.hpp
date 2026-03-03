@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <concepts>
+#include <memory>
 
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/variadic/to_seq.hpp>
@@ -26,6 +27,18 @@ template <typename T>
 concept has_write_method =
     requires(T& t, const ActsExamples::AlgorithmContext& ctx) {
       { t.write(ctx) } -> std::same_as<ActsExamples::ProcessCode>;
+    };
+
+/// Concept for types usable with declareAlgorithm.
+/// Requires: nested Config type, constructors (Config const&, Level) and
+/// (Config const&, unique_ptr<Logger>), and config() returning const Config&.
+template <typename A>
+concept DeclarableAlgorithm =
+    requires { typename A::Config; } &&
+    std::constructible_from<A, const typename A::Config&,
+                            std::unique_ptr<const Acts::Logger>> &&
+    requires(const A& a) {
+      { a.config() } -> std::same_as<const typename A::Config&>;
     };
 }  // namespace ActsPython::Concepts
 
@@ -57,7 +70,7 @@ concept has_write_method =
     ACTS_PYTHON_STRUCT_END();                                    \
   } while (0)
 
-template <typename A, typename B>
+template <ActsPython::Concepts::DeclarableAlgorithm A, typename B>
 auto declareAlgorithm(pybind11::module_& m, const char* name) {
   using Config = typename A::Config;
   namespace py = pybind11;
