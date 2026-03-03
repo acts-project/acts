@@ -59,7 +59,7 @@ void runCalibratorTest(TFile& outFile) {
 
     const double r = rMin + (i + 0.5) * (rMax - rMin) / Nbin;
     h_tr.SetBinContent(i, detailCalib::driftTime(r) / 1._ns);
-    h_sr.SetBinContent(i, detailCalib::driftUncert(r));
+    h_sr.SetBinContent(i, detailCalib::driftRadUncert(r));
   }
 
   outFile.WriteObject(&h_rt, h_rt.GetName());

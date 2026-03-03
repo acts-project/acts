@@ -428,10 +428,10 @@ BOOST_AUTO_TEST_CASE(StrawsWithT0Constraint) {
     const Pars_t linePars = line.parameters();
     const double t0 = uniform{0_ns, 50._ns}(rndEngine);
 
-    const auto testMeas =
-        MeasurementGenerator::spawn(line, t0, rndEngine, genCfg, logger())
-            .front();
-
+    const auto container = MeasurementGenerator::spawn(line, t0, rndEngine, genCfg, logger());
+    BOOST_CHECK_GE(container.size(), 1u);
+    const auto testMeas = container.front();
+  
     resCalc.reset();
 
     resCalc.updateFullResidual(line, t0, *testMeas,
@@ -451,21 +451,20 @@ BOOST_AUTO_TEST_CASE(StrawsWithT0Constraint) {
         t0Up += h;
         t0Dn -= h;
       }
-      resCalcUp.reset();
 
+      resCalcUp.reset();
       line.updateParameters(lineParsUp);
       const auto testMeasUp = calibrator.calibrate(
           cctx, line.position(), line.direction(), t0Up, *testMeas);
-
       resCalcUp.updateFullResidual(
           line, t0Up, *testMeasUp, calibrator.driftVelocity(cctx, *testMeasUp),
           calibrator.driftAcceleration(cctx, *testMeasUp));
 
+      resCalcDn.reset(); 
       line.updateParameters(lineParsDn);
-
       const auto testMeasDn = calibrator.calibrate(
           cctx, line.position(), line.direction(), t0Dn, *testMeas);
-      resCalcDn.reset();
+
       resCalcDn.updateFullResidual(
           line, t0Dn, *testMeasDn, calibrator.driftVelocity(cctx, *testMeasDn),
           calibrator.driftAcceleration(cctx, *testMeasDn));
@@ -495,7 +494,7 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
     const Line_t line{generateLine(rndEngine, logger())};
     // Generate the first test measurement
     constexpr double R = 13._mm;
-    const double dR = detailCalib::driftUncert(R);
+    const double dR = detailCalib::driftRadUncert(R);
     constexpr double uncertWire = 1._cm;
     testResidual(line.parameters(),
                  FitTestSpacePoint{wirePos, wireDir1, R, dR});
@@ -736,7 +735,7 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
             15._ns,
             {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
     constexpr double R = 12._mm;
-    const double dR = detailCalib::driftUncert(R);
+    const double dR = detailCalib::driftRadUncert(R);
     // Test ordinary straws
     testChi2(pars, t0,
              FitTestSpacePoint{line.point(20._cm) + R * line.direction().cross(

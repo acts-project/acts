@@ -68,7 +68,7 @@ constexpr double driftRadius(const double t) {
   const double x = normDriftTime(t);
   double r{0.0};
   for (std::size_t n = 0; n < s_TtoRcoeffs.size(); ++n) {
-    r += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n);
+    r += s_TtoRcoeffs.at(n) * Acts::detail::chebychevPolyTn(x, n);
   }
   return r;
 }
@@ -77,7 +77,7 @@ constexpr double driftVelocity(const double t) {
   const double x = normDriftTime(t);
   double v{0.0};
   for (std::size_t n = 1; n < s_TtoRcoeffs.size(); ++n) {
-    v += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n, 1u);
+    v += s_TtoRcoeffs.at(n) * Acts::detail::chebychevPolyTn(x, n, 1u);
   }
   return v * s_timeNormFactor;
 }
@@ -86,7 +86,7 @@ constexpr double driftAcceleration(const double t) {
   const double x = normDriftTime(t);
   double a{0.0};
   for (std::size_t n = 2; n < s_TtoRcoeffs.size(); ++n) {
-    a += s_TtoRcoeffs[n] * Acts::detail::chebychevPolyTn(x, n, 2u);
+    a += s_TtoRcoeffs.at(n) * Acts::detail::chebychevPolyTn(x, n, 2u);
   }
   return a * Acts::square(s_timeNormFactor);
 }
@@ -110,7 +110,7 @@ constexpr double driftTime(const double r) {
   // const double norm =
   double t{0.0};
   for (std::size_t n = 0; n < s_RtoTcoeffs.size(); ++n) {
-    t += s_RtoTcoeffs[n] * Acts::detail::legendrePoly(x, n);
+    t += s_RtoTcoeffs.at(n) * Acts::detail::legendrePoly(x, n);
   }
   return t * 1._ns;
 }
@@ -119,7 +119,7 @@ constexpr double driftTimePrime(const double r) {
   const double x = normDriftRadius(r);
   double t{0};
   for (std::size_t n = 0; n < s_RtoTcoeffs.size(); ++n) {
-    t += s_RtoTcoeffs[n] * Acts::detail::legendrePoly(x, n, 1);
+    t += s_RtoTcoeffs.at(n) * Acts::detail::legendrePoly(x, n, 1);
   }
   return t * s_radiusNormFactor * 1._ns;
 }
@@ -128,11 +128,11 @@ constexpr double driftTimePrime(const double r) {
 constexpr std::array<double, 4> s_driftRUncertCoeffs{0.10826, -0.07182,
                                                      0.037597, -0.011712};
 /// @brief Compute the drift radius uncertanty
-double driftUncert(const double r) {
+double driftRadUncert(const double r) {
   const double x = detailCalib::normDriftRadius(r);
   double s{0.0};
   for (std::size_t n = 0; n < s_driftRUncertCoeffs.size(); ++n) {
-    s += s_driftRUncertCoeffs[n] * Acts::detail::chebychevPolyTn(x, n);
+    s += s_driftRUncertCoeffs.at(n) * Acts::detail::chebychevPolyTn(x, n);
   }
   return std::sqrt(s);
 }
@@ -156,7 +156,7 @@ class FitTestSpacePoint {
     m_covariance[toUnderlying(nonBending)] =
         Acts::square(twinUncert.value_or(0.));
     m_covariance[toUnderlying(time)] = Acts::square(
-        detailCalib::driftUncert(driftR) * detailCalib::driftTimePrime(driftR));
+        detailCalib::driftRadUncert(driftR) * detailCalib::driftTimePrime(driftR));
   }
   /// @brief Constructor for rotated straw wires
   /// @param pos: Position of the wire
@@ -176,7 +176,7 @@ class FitTestSpacePoint {
     m_covariance[toUnderlying(nonBending)] =
         Acts::square(twinUncert.value_or(0.));
     m_covariance[toUnderlying(time)] = Acts::square(
-        detailCalib::driftUncert(driftR) * detailCalib::driftTimePrime(driftR));
+        detailCalib::driftRadUncert(driftR) * detailCalib::driftTimePrime(driftR));
   }
 
   /// @brief Constructor for spatial strip measurements
@@ -678,7 +678,7 @@ class MeasurementGenerator {
           const double smearedR =
               genCfg.smearRadius
                   ? Acts::abs(
-                        normal_t{rad, detailCalib::driftUncert(rad)}(engine))
+                        normal_t{rad, detailCalib::driftRadUncert(rad)}(engine))
                   : rad;
           if (smearedR > tubeRadius) {
             continue;
@@ -703,7 +703,7 @@ class MeasurementGenerator {
                   : std::nullopt;
           auto& sp =
               measurements.emplace_back(std::make_unique<FitTestSpacePoint>(
-                  tube, smearedR, detailCalib::driftUncert(smearedR),
+                  tube, smearedR, detailCalib::driftRadUncert(smearedR),
                   twinUncert));
           sp->setLayer(i_layer);
           const double driftTime{detailCalib::driftTime(sp->driftRadius())};
