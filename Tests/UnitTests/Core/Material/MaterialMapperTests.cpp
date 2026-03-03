@@ -94,8 +94,8 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
   };
 
   /// Factory for creating the state
-  std::unique_ptr<ISurfaceMaterialAccumulater::State> createState()
-      const override {
+  std::unique_ptr<ISurfaceMaterialAccumulater::State> createState(
+      const GeometryContext& /*gctx*/) const override {
     auto state = std::make_unique<State>();
     for (auto& surface : m_surfaces) {
       state->accumulatedMaterial[surface.get()] = AccumulatedMaterialSlab();
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
 
   MaterialMapper mapper(mmConfig);
 
-  auto state = mapper.createState();
+  auto state = mapper.createState(tContext);
   BOOST_CHECK(state.get() != nullptr);
   BOOST_CHECK(state->surfaceMaterialAccumulaterState.get() != nullptr);
 

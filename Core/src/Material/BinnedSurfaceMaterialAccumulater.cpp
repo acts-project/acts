@@ -20,15 +20,9 @@ Acts::BinnedSurfaceMaterialAccumulater::BinnedSurfaceMaterialAccumulater(
     : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
 std::unique_ptr<Acts::ISurfaceMaterialAccumulater::State>
-Acts::BinnedSurfaceMaterialAccumulater::createState() const {
-  return std::make_unique<State>();
-}
-
-void Acts::BinnedSurfaceMaterialAccumulater::initializeState(
-    State& state, const GeometryContext& gctx) const {
-  if (state.initialized) {
-    return;
-  }
+Acts::BinnedSurfaceMaterialAccumulater::createState(
+    const GeometryContext& gctx) const {
+  auto state = std::make_unique<State>();
 
   /// Create the surface accumulation
   for (const auto& surface : m_cfg.materialSurfaces) {
@@ -52,7 +46,8 @@ void Acts::BinnedSurfaceMaterialAccumulater::initializeState(
       binUtility = adjustBinUtility(binUtility, *surface, gctx);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(binUtility);
+      state->accumulatedMaterial[geoID] =
+          AccumulatedSurfaceMaterial(binUtility);
       // Material accumulation  is created for this
       continue;
     }
@@ -67,7 +62,8 @@ void Acts::BinnedSurfaceMaterialAccumulater::initializeState(
       binUtility = adjustBinUtility(binUtility, *surface, gctx);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
-      state.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(binUtility);
+      state->accumulatedMaterial[geoID] =
+          AccumulatedSurfaceMaterial(binUtility);
       // Material accumulation  is created for this
       continue;
     }
@@ -77,20 +73,20 @@ void Acts::BinnedSurfaceMaterialAccumulater::initializeState(
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - binning from BinnedSurfaceMaterial is "
                  << bmp->binUtility());
-      state.accumulatedMaterial[geoID] =
+      state->accumulatedMaterial[geoID] =
           AccumulatedSurfaceMaterial(bmp->binUtility());
       // Material accumulation  is created for this
       continue;
     }
     // Create a homogeneous type of material
     ACTS_DEBUG("       - this is homogeneous material.");
-    state.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial();
+    state->accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial();
   }
-  state.initialized = true;
+  return state;
 }
 
 void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
-    ISurfaceMaterialAccumulater::State& state, const GeometryContext& gctx,
+    ISurfaceMaterialAccumulater::State& state, const GeometryContext& /*gctx*/,
     const std::vector<MaterialInteraction>& interactions,
     const std::vector<IAssignmentFinder::SurfaceAssignment>&
         surfacesWithoutAssignment) const {
@@ -100,7 +96,6 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
     throw std::invalid_argument(
         "Invalid state object provided, something is seriously wrong.");
   }
-  initializeState(*cState, gctx);
 
   using MapBin =
       std::pair<AccumulatedSurfaceMaterial*, std::array<std::size_t, 3>>;
@@ -151,7 +146,7 @@ std::map<Acts::GeometryIdentifier,
          std::shared_ptr<const Acts::ISurfaceMaterial>>
 Acts::BinnedSurfaceMaterialAccumulater::finalizeMaterial(
     ISurfaceMaterialAccumulater::State& state,
-    const GeometryContext& gctx) const {
+    const GeometryContext& /*gctx*/) const {
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
       sMaterials;
 
@@ -161,7 +156,6 @@ Acts::BinnedSurfaceMaterialAccumulater::finalizeMaterial(
     throw std::invalid_argument(
         "Invalid state object provided, something is seriously wrong.");
   }
-  initializeState(*cState, gctx);
 
   // iterate over the map to call the total average
   for (auto& accMaterial : cState->accumulatedMaterial) {

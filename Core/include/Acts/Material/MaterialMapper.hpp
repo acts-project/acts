@@ -61,8 +61,9 @@ class MaterialMapper {
           getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
 
   /// @brief Factory for creating the state
+  /// @param gctx the geometry context
   /// @return Unique pointer to a new material mapping state object
-  std::unique_ptr<State> createState() const;
+  std::unique_ptr<State> createState(const GeometryContext& gctx) const;
 
   /// @brief Map the material interactions to the surfaces
   ///

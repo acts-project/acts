@@ -37,8 +37,10 @@ class ISurfaceMaterialAccumulater {
   virtual ~ISurfaceMaterialAccumulater() = default;
 
   /// Factory for creating the state
+  /// @param gctx the geometry context
   /// @return Unique pointer to a new state object for material accumulation
-  virtual std::unique_ptr<State> createState() const = 0;
+  virtual std::unique_ptr<State> createState(
+      const GeometryContext& gctx) const = 0;
 
   /// @brief Accumulate the material interaction on the surface
   ///

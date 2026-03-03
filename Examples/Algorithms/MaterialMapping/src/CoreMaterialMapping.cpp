@@ -34,7 +34,7 @@ CoreMaterialMapping::CoreMaterialMapping(
     throw std::invalid_argument("Missing material mapper");
   }
   // Create the state object
-  m_mappingState = m_cfg.materialMapper->createState();
+  m_mappingState = m_cfg.materialMapper->createState(m_cfg.geoContext);
 }
 
 CoreMaterialMapping::~CoreMaterialMapping() {

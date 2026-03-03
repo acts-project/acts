@@ -34,9 +34,6 @@ class BinnedSurfaceMaterialAccumulater final
 
   /// @brief Nested state struct
   struct State final : public ISurfaceMaterialAccumulater::State {
-    /// Whether the accumulation map has been initialized
-    bool initialized = false;
-
     /// The accumulated material per geometry ID
     std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
         accumulatedMaterial;
@@ -52,9 +49,10 @@ class BinnedSurfaceMaterialAccumulater final
           getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
 
   /// Factory for creating the state
+  /// @param gctx is the geometry context
   /// @return Unique pointer to newly created accumulator state
-  std::unique_ptr<ISurfaceMaterialAccumulater::State> createState()
-      const override;
+  std::unique_ptr<ISurfaceMaterialAccumulater::State> createState(
+      const GeometryContext& gctx) const override;
 
   /// @brief Accumulate the material interaction on the surface
   ///
@@ -82,9 +80,6 @@ class BinnedSurfaceMaterialAccumulater final
                    const GeometryContext& gctx) const override;
 
  private:
-  /// Initialize accumulation containers for configured surfaces
-  void initializeState(State& state, const GeometryContext& gctx) const;
-
   /// Access method to the logger
   const Logger& logger() const { return *m_logger; }
 

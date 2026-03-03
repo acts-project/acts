@@ -57,11 +57,9 @@ BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
       bsmaConfig,
       getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::VERBOSE));
 
-  // Generate state and trigger initialization through finalization:
-  // this throws because the second surface has no material assigned.
-  auto state = bsma.createState();
-  BOOST_CHECK_THROW(bsma.finalizeMaterial(*state, tContext),
-                    std::invalid_argument);
+  // Generate the state - this throws because the second surface has no
+  // material assigned.
+  BOOST_CHECK_THROW(bsma.createState(tContext), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(AccumulationTest) {
@@ -108,10 +106,12 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
       getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::VERBOSE));
 
   // Generate the state
-  auto state = bsma.createState();
+  auto state = bsma.createState(tContext);
 
   auto cState =
       static_cast<const BinnedSurfaceMaterialAccumulater::State*>(state.get());
+
+  BOOST_CHECK_EQUAL(cState->accumulatedMaterial.size(), 3u);
 
   // Intersections
   // Track 0:
@@ -141,9 +141,6 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
       {surfaces[2u].get(), 50 * d0, d0}};
 
   bsma.accumulate(*state, tContext, mInteractions, emptyHits);
-
-  /// The state should now be initialized
-  BOOST_CHECK_EQUAL(cState->accumulatedMaterial.size(), 3u);
 
   // Track 1:
   // - Surface 0 empty hit

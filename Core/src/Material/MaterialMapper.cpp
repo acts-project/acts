@@ -19,13 +19,13 @@ Acts::MaterialMapper::MaterialMapper(const Config& cfg,
   }
 }
 
-std::unique_ptr<Acts::MaterialMapper::State> Acts::MaterialMapper::createState()
-    const {
+std::unique_ptr<Acts::MaterialMapper::State> Acts::MaterialMapper::createState(
+    const GeometryContext& gctx) const {
   // Create the state
   auto state = std::make_unique<State>();
   // Create the surface material accumulater state
   state->surfaceMaterialAccumulaterState =
-      m_cfg.surfaceMaterialAccumulater->createState();
+      m_cfg.surfaceMaterialAccumulater->createState(gctx);
   // Return the state object
   return state;
 }
