@@ -598,7 +598,7 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
       }
       ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
                           << ": Evaluated covariance: \n"
-                          << covariance);
+                          << toString(covariance));
       return retCode;
     }
 
