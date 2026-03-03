@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
 
@@ -39,7 +40,7 @@ class WhiteBoardRegistry {
   /// pybind11 object. The wbPy argument is used for reference_internal
   /// lifetime.
   using DowncastFunction = std::function<pybind11::object(
-      const void* data, const pybind11::object& wbPy)>;
+      const Acts::AnyMoveOnly& any, const pybind11::object& wbPy)>;
 
   /// Register a pybind11-bound type T for WhiteBoard read access.
   /// Call this after the `py::class_<T>` definition.
@@ -67,9 +68,10 @@ class WhiteBoardRegistry {
     using type = T;
 
     instance()[pyType.ptr()] = {
-        .fn = [](const void* ptr, const py::object& wbPy) -> py::object {
+        .fn = [](const Acts::AnyMoveOnly& any,
+                 const py::object& wbPy) -> py::object {
           // wb needed to ensure correct lifetime
-          return py::cast(*static_cast<const type*>(ptr),
+          return py::cast(any.as<type>(),
                           py::return_value_policy::reference_internal, wbPy);
         },
         .typeinfo = &typeid(type),

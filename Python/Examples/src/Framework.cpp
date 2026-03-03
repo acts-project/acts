@@ -136,16 +136,16 @@ class PyReadDataHandle : public ReadDataHandleBase {
       throw py::key_error("Key '" + key() + "' does not exist");
     }
 
-    const auto& holder = getHolder(wb);
+    auto [holder, storedTypeHash] = getHolder(wb);
 
-    if (m_entry->typeHash != holder->typeHash()) {
+    if (m_entry->typeHash != storedTypeHash) {
       const auto& expected = boost::core::demangle(m_entry->typeinfo->name());
-      const auto& actual = boost::core::demangle(holder->type().name());
+      const auto& actual = boost::core::demangle(holder->typeInfo().name());
       throw py::type_error("Type mismatch for key '" + key() + "'. Expected " +
                            expected + " but got " + actual);
     }
 
-    return m_entry->fn(holder->data(), wbPy);
+    return m_entry->fn(*holder, wbPy);
   }
 
  private:
