@@ -85,10 +85,6 @@ concept BlueprintBackend =
              const BackendT& backend,
              const typename BackendT::Element& element) {
       BackendT{cfg, logger};
-      {
-        backend.makeBeampipe()
-      }
-      -> std::same_as<std::shared_ptr<Acts::Experimental::StaticBlueprintNode>>;
       { backend.world() } -> std::same_as<typename BackendT::Element>;
       { backend.nameOf(element) } -> std::convertible_to<std::string_view>;
       {
@@ -99,7 +95,10 @@ concept BlueprintBackend =
       { backend.isBarrel(element) } -> std::same_as<bool>;
       { backend.isEndcap(element) } -> std::same_as<bool>;
       { backend.isTracker(element) } -> std::same_as<bool>;
-      { backend.isWorld(element) } -> std::same_as<bool>;
+      requires requires(const typename BackendT::Element& a,
+                        const typename BackendT::Element& b) {
+        { a == b } -> std::convertible_to<bool>;
+      };
     };
 
 }  // namespace detail
@@ -256,8 +255,6 @@ class BlueprintBuilder {
 
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
       const Element& detElement, const LayerSpec& layerSpec) const;
-
-  std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeBeampipe() const;
 
   LayerAssembler layers() const;
   BarrelEndcapAssembler barrelEndcap() const;

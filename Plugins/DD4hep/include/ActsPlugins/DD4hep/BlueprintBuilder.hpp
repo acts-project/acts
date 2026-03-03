@@ -77,7 +77,6 @@ class DD4hepBackend {
   bool isBarrel(const Element& element) const;
   bool isEndcap(const Element& element) const;
   bool isTracker(const Element& element) const;
-  bool isWorld(const Element& element) const;
 
   const Acts::Logger& logger() const { return *m_logger; }
 

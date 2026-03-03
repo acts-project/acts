@@ -107,10 +107,6 @@ bool DD4hepBackend::isTracker(const Element& element) const {
   return dd4hep::DetType{element.typeFlag()}.is(dd4hep::DetType::TRACKER);
 }
 
-bool DD4hepBackend::isWorld(const Element& element) const {
-  return element == world();
-}
-
 namespace {
 Acts::Transform3 convertTGeoTransform(const TGeoShape& shape,
                                       const TGeoMatrix& transform,

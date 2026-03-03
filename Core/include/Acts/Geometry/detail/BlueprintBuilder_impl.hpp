@@ -400,12 +400,6 @@ BlueprintBuilder<BackendT>::makeLayer(const Element& detElement,
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
-BlueprintBuilder<BackendT>::makeBeampipe() const {
-  return m_backend.makeBeampipe();
-}
-
-template <detail::BlueprintBackend BackendT>
 typename BlueprintBuilder<BackendT>::LayerAssembler
 BlueprintBuilder<BackendT>::layers() const {
   return LayerAssembler(*this);
@@ -459,10 +453,11 @@ std::string BlueprintBuilder<BackendT>::getPathToElementName(
   std::vector<std::string> names;
   names.emplace_back(std::string{m_backend.nameOf(elem)});
 
+  const auto world = m_backend.world();
   auto current = elem;
-  while (!m_backend.isWorld(current)) {
+  while (current != world) {
     current = m_backend.parent(current);
-    if (m_backend.isWorld(current)) {
+    if (current == world) {
       break;
     }
     names.emplace_back(std::string{m_backend.nameOf(current)});
