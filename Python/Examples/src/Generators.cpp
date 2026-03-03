@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -18,6 +19,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <sstream>
 #include <utility>
 
 #include <pybind11/pybind11.h>
@@ -136,13 +138,83 @@ void addGenerators(py::module& mex) {
            py::arg("fixed"))
       .def_readwrite("fixed", &FixedPrimaryVertexPositionGenerator::fixed);
 
-  py::class_<SimParticle>(mex, "SimParticle");
+  // Aliases for Fatras types mirroring C++
+  auto fatras = py::module_::import("acts.fatras");
+  mex.attr("SimBarcode") = fatras.attr("Barcode");
+  mex.attr("ProcessType") = fatras.attr("ProcessType");
+  mex.attr("ParticleOutcome") = fatras.attr("ParticleOutcome");
+  mex.attr("SimParticleState") = fatras.attr("Particle");
+
+  // SimParticle
+  py::class_<SimParticle>(mex, "SimParticle")
+      .def(py::init<>())
+      .def(py::init<SimBarcode, Acts::PdgParticle, double, double>(),
+           py::arg("particleId"), py::arg("pdg"), py::arg("charge"),
+           py::arg("mass"))
+      .def(py::init<SimBarcode, Acts::PdgParticle>(), py::arg("particleId"),
+           py::arg("pdg"))
+      .def(py::init<const SimParticleState&, const SimParticleState&>(),
+           py::arg("initial"), py::arg("final"))
+      .def_property_readonly("particleId", &SimParticle::particleId)
+      .def_property_readonly("pdg", &SimParticle::pdg)
+      .def_property_readonly("absolutePdg", &SimParticle::absolutePdg)
+      .def_property_readonly("charge", &SimParticle::charge)
+      .def_property_readonly("absoluteCharge", &SimParticle::absoluteCharge)
+      .def_property_readonly("mass", &SimParticle::mass)
+      .def_property_readonly("process", &SimParticle::process)
+      .def_property_readonly("isSecondary", &SimParticle::isSecondary)
+      .def_property_readonly("fourPosition", &SimParticle::fourPosition)
+      .def_property_readonly(
+          "position",
+          [](const SimParticle& p) { return Vector3(p.position()); })
+      .def_property_readonly("time", &SimParticle::time)
+      .def_property_readonly("fourMomentum", &SimParticle::fourMomentum)
+      .def_property_readonly("direction", &SimParticle::direction)
+      .def_property_readonly("theta", &SimParticle::theta)
+      .def_property_readonly("phi", &SimParticle::phi)
+      .def_property_readonly("transverseMomentum",
+                             &SimParticle::transverseMomentum)
+      .def_property_readonly("absoluteMomentum", &SimParticle::absoluteMomentum)
+      .def_property_readonly("momentum", &SimParticle::momentum)
+      .def_property_readonly("energy", &SimParticle::energy)
+      .def_property_readonly("energyLoss", &SimParticle::energyLoss)
+      .def_property_readonly("pathInX0", &SimParticle::pathInX0)
+      .def_property_readonly("pathInL0", &SimParticle::pathInL0)
+      .def_property_readonly("numberOfHits", &SimParticle::numberOfHits)
+      .def_property_readonly("outcome", &SimParticle::outcome)
+      .def_property_readonly(
+          "initialState",
+          py::overload_cast<>(&SimParticle::initialState, py::const_))
+      .def_property_readonly(
+          "finalState",
+          py::overload_cast<>(&SimParticle::finalState, py::const_))
+      .def("withParticleId", &SimParticle::withParticleId,
+           py::arg("particleId"))
+      .def("__repr__", [](const SimParticle& p) {
+        std::ostringstream oss;
+        oss << p;
+        return oss.str();
+      });
+
   auto simParticleContainer =
       py::class_<SimParticleContainer>(mex, "SimParticleContainer")
+          .def(py::init<>())
           .def("__len__",
-               [](const SimParticleContainer& self) { return self.size(); })
-          .def("__iter__", [](const SimParticleContainer& self) {
-            return py::make_iterator(self.begin(), self.end());
+               [](const SimParticleContainer& c) { return c.size(); })
+          .def(
+              "__iter__",
+              [](const SimParticleContainer& c) {
+                return py::make_iterator(c.begin(), c.end());
+              },
+              py::keep_alive<0, 1>())
+          .def("__contains__",
+               [](const SimParticleContainer& c, SimBarcode barcode) {
+                 return c.find(barcode) != c.end();
+               })
+          .def("__repr__", [](const SimParticleContainer& c) {
+            std::ostringstream oss;
+            oss << "SimParticleContainer(" << c.size() << " particles)";
+            return oss.str();
           });
 
   WhiteBoardRegistry::registerClass(simParticleContainer);

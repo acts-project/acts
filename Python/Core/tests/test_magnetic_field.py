@@ -2,7 +2,6 @@ import pytest
 import random
 
 import acts
-import acts.examples
 
 u = acts.UnitConstants
 
@@ -55,9 +54,8 @@ def test_constant_bfield():
         assert rv[2] == pytest.approx(3.0)
 
 
-def test_solenoid(conf_const):
-    solenoid = conf_const(
-        acts.SolenoidBField,
+def test_solenoid():
+    solenoid = acts.SolenoidBField(
         radius=1200 * u.mm,
         length=6000 * u.mm,
         bMagCenter=2 * u.T,
