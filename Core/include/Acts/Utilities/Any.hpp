@@ -13,6 +13,7 @@
 #include <cassert>
 #include <cstddef>
 #include <utility>
+#include <bit>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
 // #define _ACTS_ANY_ENABLE_DEBUG
