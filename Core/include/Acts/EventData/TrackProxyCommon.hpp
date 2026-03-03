@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 namespace Acts {
@@ -75,6 +76,14 @@ class TrackProxyCommon {
     requires(!read_only)
   {
     return derived().template component<IndexType, detail_tp::kStemIndexKey>();
+  }
+
+  /// Return whether the track is forward-linked, i.e. whether each track state
+  /// has a valid next-state index. Forward-linking is required to use the
+  /// inside-out @c trackStates() range.
+  /// @return True if the track is forward-linked
+  bool isForwardLinked() const {
+    return stemIndex() != kTrackIndexInvalid;
   }
 
   /// Return the number of measurements assigned to this track.
