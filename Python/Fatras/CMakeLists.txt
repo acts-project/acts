@@ -9,7 +9,7 @@ install(
 
 set_target_properties(
     ActsFatrasPythonBindings
-    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath}"
 )
 set_target_properties(
     ActsFatrasPythonBindings
