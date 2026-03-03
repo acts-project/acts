@@ -107,40 +107,6 @@ bool DD4hepBackend::isTracker(const Element& element) const {
   return dd4hep::DetType{element.typeFlag()}.is(dd4hep::DetType::TRACKER);
 }
 
-namespace {
-Acts::Transform3 convertTGeoTransform(const TGeoShape& shape,
-                                      const TGeoMatrix& transform,
-                                      TGeoAxes axes, double lengthScale) {
-  const Double_t* translation = transform.GetTranslation();
-  const Double_t* rotation = transform.GetRotationMatrix();
-
-  auto [cBounds, cTransform, cThickness] =
-      ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
-          shape, rotation, translation, axes, lengthScale);
-  if (cBounds != nullptr) {
-    return cTransform;
-  }
-
-  auto [dBounds, dTransform, dThickness] = TGeoSurfaceConverter::discComponents(
-      shape, rotation, translation, axes, lengthScale);
-  if (dBounds != nullptr) {
-    return dTransform;
-  }
-
-  auto [pBounds, pTransform, pThickness] =
-      TGeoSurfaceConverter::planeComponents(shape, rotation, translation, axes,
-                                            lengthScale);
-  if (pBounds != nullptr) {
-    return pTransform;
-  }
-
-  throw std::runtime_error(
-      "Could not extract transform from TGeoShape of type " +
-      std::string(shape.ClassName()));
-}
-
-}  // namespace
-
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
 DD4hepBackend::makeLayer(const dd4hep::DetElement& parent,
                          std::span<const dd4hep::DetElement> sensitives,
@@ -172,10 +138,10 @@ DD4hepBackend::makeLayer(const dd4hep::DetElement& parent,
   if (layerSpec.layerAxes.has_value()) {
     ACTS_DEBUG("Finding layer transform automatically using layer axes: "
                << layerSpec.layerAxes.value());
-    Acts::Transform3 layerTransform =
-        convertTGeoTransform(*parent.placement().ptr()->GetVolume()->GetShape(),
-                             parent.nominal().worldTransformation(),
-                             layerSpec.layerAxes.value(), m_cfg.lengthScale);
+    Acts::Transform3 layerTransform = TGeoSurfaceConverter::transformFromShape(
+        *parent.placement().ptr()->GetVolume()->GetShape(),
+        parent.nominal().worldTransformation(), layerSpec.layerAxes.value(),
+        m_cfg.lengthScale);
 
     ACTS_VERBOSE(" -> Layer transform:\n" << layerTransform.matrix());
     node->setTransform(layerTransform);
