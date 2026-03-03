@@ -92,3 +92,12 @@ using BarrelEndcapAssembler =
     Acts::Experimental::BarrelEndcapAssembler<DD4hepBackend>;
 
 }  // namespace ActsPlugins::DD4hep
+
+// Explicit instantiation: suppress implicit instantiation in TUs that include
+// this header. Definitions are instantiated in BlueprintBuilder.cpp.
+// Placed at global scope so we open ::Acts::Experimental, not a nested Acts.
+namespace Acts::Experimental {
+extern template class BlueprintBuilder<ActsPlugins::DD4hep::DD4hepBackend>;
+extern template class LayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+extern template class BarrelEndcapAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+}  // namespace Acts::Experimental
