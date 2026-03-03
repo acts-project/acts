@@ -270,6 +270,7 @@ class SeedProxy2 {
                                       const SpacePointIterator &b) noexcept {
       return a.m_indexPointer <=> b.m_indexPointer;
     }
+
     friend constexpr bool operator==(const SpacePointIterator &a,
                                      const SpacePointIterator &b) noexcept {
       return a.m_indexPointer == b.m_indexPointer;

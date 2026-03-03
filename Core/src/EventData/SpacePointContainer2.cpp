@@ -27,9 +27,9 @@ static_assert(std::random_access_iterator<SpacePointContainer2::iterator>);
 static_assert(
     std::random_access_iterator<SpacePointContainer2::const_iterator>);
 static_assert(
-    std::random_access_iterator<SpacePointContainer2::MutableSubset::Iterator>);
+    std::random_access_iterator<SpacePointContainer2::MutableSubset::iterator>);
 static_assert(
-    std::random_access_iterator<SpacePointContainer2::ConstSubset::Iterator>);
+    std::random_access_iterator<SpacePointContainer2::ConstSubset::iterator>);
 
 SpacePointContainer2::SpacePointContainer2(SpacePointColumns columns) noexcept {
   createColumns(columns);

@@ -27,10 +27,9 @@ class ContainerSubset {
   using index_container_type = IndexContainer;
   using index_type = typename index_container_type::value_type;
 
+  template <typename subset_iterator>
   class Iterator {
    public:
-    using subset_iterator = index_container_type::iterator;
-
     using value_type = Value;
     using difference_type = std::ptrdiff_t;
     using pointer = void;
@@ -131,12 +130,14 @@ class ContainerSubset {
       }
       return std::strong_ordering::equal;
     }
+
     friend constexpr bool operator==(const Iterator &a,
                                      const Iterator &b) noexcept {
       return a.m_iterator == b.m_iterator;
     }
   };
-  using iterator = Iterator;
+  using iterator =
+      Iterator<decltype(std::declval<const index_container_type>().begin())>;
 
   constexpr ContainerSubset(container_type &container,
                             index_container_type subset) noexcept
@@ -175,11 +176,11 @@ class ContainerSubset {
   }
   constexpr auto back() const noexcept { return container()[subset().back()]; }
 
-  constexpr iterator begin() const noexcept {
-    return iterator(container(), subset().begin());
+  constexpr auto begin() const noexcept {
+    return Iterator(container(), subset().begin());
   }
-  constexpr iterator end() const noexcept {
-    return iterator(container(), subset().end());
+  constexpr auto end() const noexcept {
+    return Iterator(container(), subset().end());
   }
 
   constexpr auto operator[](index_type index) const noexcept

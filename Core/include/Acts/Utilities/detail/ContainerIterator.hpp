@@ -133,6 +133,7 @@ class ContainerIterator {
                                     const ContainerIterator &b) noexcept {
     return a.m_index <=> b.m_index;
   }
+
   friend constexpr bool operator==(const ContainerIterator &a,
                                    const ContainerIterator &b) noexcept {
     return a.m_index == b.m_index;
