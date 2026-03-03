@@ -70,6 +70,7 @@ def main():
         "deprecated.md",
         "acts-version-manager.js",
         "tex-mml-chtml.js",
+        "Python/conftest.py",
     )
 
     suffix_header = (
