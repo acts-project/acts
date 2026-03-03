@@ -428,10 +428,11 @@ BOOST_AUTO_TEST_CASE(StrawsWithT0Constraint) {
     const Pars_t linePars = line.parameters();
     const double t0 = uniform{0_ns, 50._ns}(rndEngine);
 
-    const auto container = MeasurementGenerator::spawn(line, t0, rndEngine, genCfg, logger());
+    const auto container =
+        MeasurementGenerator::spawn(line, t0, rndEngine, genCfg, logger());
     BOOST_CHECK_GE(container.size(), 1u);
     const auto testMeas = container.front();
-  
+
     resCalc.reset();
 
     resCalc.updateFullResidual(line, t0, *testMeas,
@@ -460,7 +461,7 @@ BOOST_AUTO_TEST_CASE(StrawsWithT0Constraint) {
           line, t0Up, *testMeasUp, calibrator.driftVelocity(cctx, *testMeasUp),
           calibrator.driftAcceleration(cctx, *testMeasUp));
 
-      resCalcDn.reset(); 
+      resCalcDn.reset();
       line.updateParameters(lineParsDn);
       const auto testMeasDn = calibrator.calibrate(
           cctx, line.position(), line.direction(), t0Dn, *testMeas);

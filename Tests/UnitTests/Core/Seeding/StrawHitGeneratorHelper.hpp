@@ -124,11 +124,11 @@ constexpr double driftTimePrime(const double r) {
   return t * s_radiusNormFactor * 1._ns;
 }
 
-/// @brief Coefficients for the uncertanty on the drift radius
-constexpr std::array<double, 4> s_driftRUncertCoeffs{0.10826, -0.07182,
-                                                     0.037597, -0.011712};
 /// @brief Compute the drift radius uncertanty
 double driftRadUncert(const double r) {
+  /// @brief Coefficients for the uncertanty on the drift radius
+  constexpr std::array<double, 4> s_driftRUncertCoeffs{0.10826, -0.07182,
+                                                       0.037597, -0.011712};
   const double x = detailCalib::normDriftRadius(r);
   double s{0.0};
   for (std::size_t n = 0; n < s_driftRUncertCoeffs.size(); ++n) {
@@ -155,8 +155,9 @@ class FitTestSpacePoint {
     m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
     m_covariance[toUnderlying(nonBending)] =
         Acts::square(twinUncert.value_or(0.));
-    m_covariance[toUnderlying(time)] = Acts::square(
-        detailCalib::driftRadUncert(driftR) * detailCalib::driftTimePrime(driftR));
+    m_covariance[toUnderlying(time)] =
+        Acts::square(detailCalib::driftRadUncert(driftR) *
+                     detailCalib::driftTimePrime(driftR));
   }
   /// @brief Constructor for rotated straw wires
   /// @param pos: Position of the wire
@@ -175,8 +176,9 @@ class FitTestSpacePoint {
     m_covariance[toUnderlying(bending)] = Acts::square(driftRUncert);
     m_covariance[toUnderlying(nonBending)] =
         Acts::square(twinUncert.value_or(0.));
-    m_covariance[toUnderlying(time)] = Acts::square(
-        detailCalib::driftRadUncert(driftR) * detailCalib::driftTimePrime(driftR));
+    m_covariance[toUnderlying(time)] =
+        Acts::square(detailCalib::driftRadUncert(driftR) *
+                     detailCalib::driftTimePrime(driftR));
   }
 
   /// @brief Constructor for spatial strip measurements

@@ -141,19 +141,24 @@ void CompSpacePointAuxiliaries::reset() {
   m_residual.setZero();
   for (const auto par : m_cfg.parsToUse) {
     const auto pIdx = toUnderlying(par);
-    m_projDirLenPartial[pIdx] = 0.;
-    m_partialApproachDist[pIdx] = 0.;
-
-    m_gradProjDir[pIdx].setZero();
+    if (par != FitParIndex::t0) {
+      m_projDirLenPartial[pIdx] = 0.;
+      m_partialApproachDist[pIdx] = 0.;
+      m_gradProjDir[pIdx].setZero();
+      m_gradCloseApproach[pIdx].setZero();
+    }
     m_gradient[pIdx].setZero();
-    m_gradCloseApproach[pIdx].setZero();
+
     for (const auto par2 : m_cfg.parsToUse) {
       if (par2 > par) {
         break;
       }
-      const auto hIdx = vecIdxFromSymMat<s_nPars>(toUnderlying(par2), pIdx);
-      m_hessian[hIdx].setZero();
-      m_hessianProjDir[hIdx].setZero();
+      m_hessian[vecIdxFromSymMat<s_nPars>(toUnderlying(par2), pIdx)].setZero();
+      if (par != FitParIndex::t0 && par2 != FitParIndex::t0) {
+        const auto hIdx =
+            vecIdxFromSymMat<s_nLinePars>(toUnderlying(par2), pIdx);
+        m_hessianProjDir[hIdx].setZero();
+      }
     }
   }
 }

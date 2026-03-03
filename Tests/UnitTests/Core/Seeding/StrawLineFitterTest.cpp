@@ -26,12 +26,12 @@
 using TimePoint_t = std::chrono::system_clock::time_point;
 using Fitter_t = CompositeSpacePointLineFitter;
 
-constexpr auto logLvl = Acts::Logging::Level::DEBUG;
+constexpr auto logLvl = Acts::Logging::Level::INFO;
 constexpr std::size_t nEvents = 50;
-unsigned nThreads = std::min(logLvl != Acts::Logging::Level::INFO
-                                 ? 1u
-                                 : std::thread::hardware_concurrency(),
-                             32u);
+const unsigned nThreads = std::min(logLvl != Acts::Logging::Level::INFO
+                                       ? 1u
+                                       : std::thread::hardware_concurrency(),
+                                   1u);
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
