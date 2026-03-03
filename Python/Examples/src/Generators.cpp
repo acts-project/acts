@@ -197,7 +197,7 @@ void addGenerators(py::module& mex) {
       });
 
   auto simParticleContainer =
-      py::class_<SimParticleContainer>(mex, "SimParticleContainer")
+      py::classh<SimParticleContainer>(mex, "SimParticleContainer")
           .def(py::init<>())
           .def("__len__",
                [](const SimParticleContainer& c) { return c.size(); })

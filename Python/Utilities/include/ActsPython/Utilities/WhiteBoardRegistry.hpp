@@ -12,12 +12,19 @@
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
 
+#include <concepts>
 #include <functional>
 #include <unordered_map>
 
 #include <pybind11/pybind11.h>
 
 namespace ActsPython {
+
+/// Concept: pybind11 class must use smart_holder for WhiteBoard ownership.
+template <typename... Ts>
+concept PyClassWithSmartHolder =
+    std::same_as<typename pybind11::class_<Ts...>::holder_type,
+                 pybind11::smart_holder>;
 
 /// The WhiteBoard is an event-store container that holds arbitrary C++ objects
 /// by name. Python algorithms need to read these objects through pybind11, but
@@ -46,21 +53,6 @@ class WhiteBoardRegistry {
   /// the WhiteBoard.
   using FromPythonFunction = std::function<std::unique_ptr<Acts::AnyMoveOnly>(
       const pybind11::object& obj)>;
-
- public:
-  /// Register a pybind11-bound type T for WhiteBoard read access.
-  /// Call this after the `py::class_<T>` definition.
-  /// @tparam Ts The types to register.
-  /// @param pyClass The pybind11 class object to register.
-  template <typename... Ts>
-  static void registerClass(const pybind11::class_<Ts...>& pyClass)
-  // requires(std::is_same_v<typename pybind11::class_<Ts...>::holder_type,
-  //                         pybind11::smart_holder>)
-  {
-    namespace py = pybind11;
-    using type = pybind11::class_<Ts...>::type;
-    registerType<type>(pyClass);
-  }
 
   /// Register a C++ type T with its pybind11 Python type for WhiteBoard
   /// access. Use when the `py::class_<T>` type cannot be deduced (e.g. for
@@ -102,10 +94,19 @@ class WhiteBoardRegistry {
     };
   }
 
-  /// Function that extracts the stored pointer from an AnyMoveOnly for the
-  /// registered type. Returns nullptr if the type does not match.
-  using GetDataFunction =
-      std::function<const void*(const Acts::AnyMoveOnly& any)>;
+ public:
+  /// Register a pybind11-bound type T for WhiteBoard read access.
+  /// Call this after the `py::class_<T>` definition.
+  /// @tparam Ts The types to register.
+  /// @param pyClass The pybind11 class object to register.
+  template <typename... Ts>
+  static void registerClass(const pybind11::class_<Ts...>& pyClass)
+    requires PyClassWithSmartHolder<Ts...>
+  {
+    namespace py = pybind11;
+    using type = pybind11::class_<Ts...>::type;
+    registerType<type>(pyClass);
+  }
 
   /// Per-type registry entry: downcast function and type metadata for lookups.
   struct RegistryEntry {
