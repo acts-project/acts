@@ -74,14 +74,24 @@ class SurfaceArrayCreator {
   friend struct ActsTests::SurfaceArrayCreatorFixture;
   friend class SurfaceArray;
 
+  /// Prototype axis definition for surface binning.
   struct ProtoAxis {
+    /// Binning type (equidistant or variable)
     BinningType bType = BinningType::equidistant;
+    /// Axis direction for binning
     AxisDirection axisDir = AxisDirection::AxisX;
+    /// Number of bins
     std::size_t nBins = 0;
+    /// Minimum value of the axis
     AxisScalar min = 0;
+    /// Maximum value of the axis
     AxisScalar max = 0;
+    /// Bin edges for variable binning
     std::vector<AxisScalar> binEdges;
 
+    /// Get the bin index for a given value
+    /// @param x The value to find the bin for
+    /// @return The bin index
     std::size_t getBin(AxisScalar x) const {
       if (binEdges.empty()) {
         // equidistant
@@ -96,7 +106,7 @@ class SurfaceArrayCreator {
     }
   };
 
-  // Configuration struct
+  /// Configuration options for the surface array creator.
   struct Config {
     /// Type-erased function which determines whether two surfaces are
     /// supposed to be considered equivalent in terms of the binning
@@ -130,14 +140,14 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and
+  /// - create an array in a cylinder, binned in phi, z when extrema and
   /// bin numbers are known
   /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
@@ -152,7 +162,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, z when extremas and bin
+  /// - create an array in a cylinder, binned in phi, z when extrema and bin
   /// numbers are unknown - this method goes through the surfaces and finds
   /// out the needed information
   /// @warning This function requires the cylinder aligned with the z-axis
@@ -160,7 +170,7 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param bTypeZ the binning type in z direction (equidistant/arbitrary)
@@ -175,7 +185,7 @@ class SurfaceArrayCreator {
       const Transform3& transform = Transform3::Identity()) const;
 
   /// SurfaceArrayCreator interface method
-  /// - create an array on a disc, binned in r, phi when extremas and
+  /// - create an array on a disc, binned in r, phi when extrema and
   /// bin numbers are known
   ///
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -183,7 +193,7 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
@@ -199,7 +209,7 @@ class SurfaceArrayCreator {
 
   /// SurfaceArrayCreator interface method
   ///
-  /// - create an array in a cylinder, binned in phi, r when extremas and bin
+  /// - create an array in a cylinder, binned in phi, r when extrema and bin
   /// numbers are unknown - this method goes through the surfaces and finds
   /// out the needed information
   /// @param surfaces is the vector of pointers to sensitive surfaces
@@ -207,7 +217,7 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/arbitrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
@@ -227,7 +237,7 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
   ///
-  /// @param [in] gctx The gometry context for this building call
+  /// @param [in] gctx The geometry context for this building call
   /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -344,12 +354,12 @@ class SurfaceArrayCreator {
                                Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
-  /// Creates a equidistant @c ProtoAxis when the extremas and the bin number
+  /// Creates a equidistant @c ProtoAxis when the extrema and the bin number
   /// are
   /// It loops through the surfaces and finds out the needed information
   /// First the surfaces are sorted in the binning direction and the so called
   /// "key" surfaces (surfaces with different positions in the binning
-  /// direction) are extracted. The number of key surfaces euqals the number
+  /// direction) are extracted. The number of key surfaces equals the number
   /// of bins. Afterwards the minimum and maximum are calculated by
   /// subtracting/adding half of a bin size to the center position (in the
   /// binning direction) to the first/last surface.
@@ -385,8 +395,8 @@ class SurfaceArrayCreator {
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
-                          double layerTolerance, ProtoAxis pAxisA,
-                          ProtoAxis pAxisB) {
+                          double layerTolerance, const ProtoAxis& pAxisA,
+                          const ProtoAxis& pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 

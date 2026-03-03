@@ -42,16 +42,16 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
 ViewConfig blue{.color = {0, 0, 200}};
 
-std::vector<std::string> allowedAxes = {"XY*", "Xy*", "xy*", "xY*",
-                                        "YX*", "yx*", "yX*", "Yx*"};
+std::vector<TGeoAxes> allowedAxes = {"XYZ", "XyZ", "xyZ", "xYZ",
+                                     "YXZ", "yxZ", "yXZ", "YxZ"};
 
-std::vector<std::string> notAllowedAxes = {"YZ*", "ZX*", "ZY*"};
+std::vector<TGeoAxes> notAllowedAxes = {"YZX", "ZXY", "ZYX"};
 
 BOOST_AUTO_TEST_SUITE(RootSuite)
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
     CHECK_CLOSE_ABS(bR, 10.5, s_epsilon);
     CHECK_CLOSE_ABS(bhZ, hz, s_epsilon);
 
-    auto transform = cylinder->transform(tgContext);
+    auto transform = cylinder->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
 
     // Check if the surface is the (negative) identity

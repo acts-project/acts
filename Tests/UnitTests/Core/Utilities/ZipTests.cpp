@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Utilities/Zip.hpp>
+#include "Acts/Utilities/Zip.hpp"
 
 #include <array>
 #include <string>

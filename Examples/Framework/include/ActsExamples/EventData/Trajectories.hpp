@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -28,13 +29,13 @@ namespace ActsExamples {
 /// in the MultiTrajectory; In case of track finding, there could be
 /// multiple trajectories in the MultiTrajectory.
 struct Trajectories final {
+  using IndexType = Acts::TrackIndexType;
+
  public:
   /// (Reconstructed) trajectory with multiple states.
   using MultiTrajectory = Acts::ConstVectorMultiTrajectory;
   /// Fitted parameters identified by indices in the multi trajectory.
-  using IndexedParameters =
-      std::unordered_map<Acts::MultiTrajectoryTraits::IndexType,
-                         TrackParameters>;
+  using IndexedParameters = std::unordered_map<IndexType, TrackParameters>;
 
   /// Default construct an empty object. Required for container compatibility
   /// and to signal an error.
@@ -45,7 +46,7 @@ struct Trajectories final {
   /// /// @param tTips Tip indices that identify valid trajectories
   /// @param parameters Fitted track parameters indexed by trajectory index
   Trajectories(const MultiTrajectory& multiTraj,
-               const std::vector<Acts::MultiTrajectoryTraits::IndexType>& tTips,
+               const std::vector<IndexType>& tTips,
                const IndexedParameters& parameters)
       : m_multiTrajectory(&multiTraj),
         m_trackTips(tTips),
@@ -61,15 +62,13 @@ struct Trajectories final {
   }
 
   /// Access the tip indices that identify valid trajectories.
-  const std::vector<Acts::MultiTrajectoryTraits::IndexType>& tips() const {
-    return m_trackTips;
-  }
+  const std::vector<IndexType>& tips() const { return m_trackTips; }
 
   /// Check if a trajectory exists for the given index.
   ///
   /// @param entryIndex The trajectory entry index
   /// @return Whether there is trajectory with provided entry index
-  bool hasTrajectory(Acts::MultiTrajectoryTraits::IndexType entryIndex) const {
+  bool hasTrajectory(IndexType entryIndex) const {
     return (0 < std::count(m_trackTips.begin(), m_trackTips.end(), entryIndex));
   }
 
@@ -77,8 +76,7 @@ struct Trajectories final {
   ///
   /// @param entryIndex The trajectory entry index
   /// @return Whether having fitted track parameters or not
-  bool hasTrackParameters(
-      Acts::MultiTrajectoryTraits::IndexType entryIndex) const {
+  bool hasTrackParameters(IndexType entryIndex) const {
     return m_trackParameters.contains(entryIndex);
   }
 
@@ -86,8 +84,7 @@ struct Trajectories final {
   ///
   /// @param entryIndex The trajectory entry index
   /// @return The fitted track parameters of the trajectory
-  const TrackParameters& trackParameters(
-      Acts::MultiTrajectoryTraits::IndexType entryIndex) const {
+  const TrackParameters& trackParameters(IndexType entryIndex) const {
     auto it = m_trackParameters.find(entryIndex);
     if (it == m_trackParameters.end()) {
       throw std::runtime_error(
@@ -101,7 +98,7 @@ struct Trajectories final {
   // The track container
   const MultiTrajectory* m_multiTrajectory{nullptr};
   // The entry indices of trajectories stored in multiTrajectory
-  std::vector<Acts::MultiTrajectoryTraits::IndexType> m_trackTips = {};
+  std::vector<IndexType> m_trackTips = {};
   // The fitted parameters at the provided surface for individual trajectories
   IndexedParameters m_trackParameters = {};
 };

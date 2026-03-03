@@ -18,20 +18,17 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
-#include "ActsFatras/Digitization/Channelizer.hpp"
 
-#include <array>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
-#include <variant>
-#include <vector>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
-    const ActsExamples::CsvMeasurementWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvMeasurementWriter::CsvMeasurementWriter(const Config& config,
+                                           Acts::Logging::Level level)
     : WriterT(config.inputMeasurements, "CsvMeasurementWriter", level),
       m_cfg(config) {
   // Input container for measurements is already checked by base constructor
@@ -44,14 +41,14 @@ ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
 }
 
-ActsExamples::CsvMeasurementWriter::~CsvMeasurementWriter() = default;
+CsvMeasurementWriter::~CsvMeasurementWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::finalize() {
+ProcessCode CsvMeasurementWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
+ProcessCode CsvMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
   const auto& measurementSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
@@ -63,24 +60,22 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   std::string pathMeasurementSimHitMap = perEventFilepath(
       m_cfg.outputDir, "measurement-simhit-map.csv", ctx.eventNumber);
 
-  ActsExamples::NamedTupleCsvWriter<MeasurementData> writerMeasurements(
+  NamedTupleCsvWriter<MeasurementData> writerMeasurements(
       pathMeasurements, m_cfg.outputPrecision);
 
-  std::optional<ActsExamples::NamedTupleCsvWriter<CellData>> writerCells{
-      std::nullopt};
+  std::optional<NamedTupleCsvWriter<CellData>> writerCells{std::nullopt};
   if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE(
         "Set up writing of clusters from collection: " << m_cfg.inputClusters);
     clusters = m_inputClusters(ctx);
     std::string pathCells =
         perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
-    writerCells = ActsExamples::NamedTupleCsvWriter<CellData>{
-        pathCells, m_cfg.outputPrecision};
+    writerCells =
+        NamedTupleCsvWriter<CellData>{pathCells, m_cfg.outputPrecision};
   }
 
-  ActsExamples::NamedTupleCsvWriter<MeasurementSimHitLink>
-      writerMeasurementSimHitMap(pathMeasurementSimHitMap,
-                                 m_cfg.outputPrecision);
+  NamedTupleCsvWriter<MeasurementSimHitLink> writerMeasurementSimHitMap(
+      pathMeasurementSimHitMap, m_cfg.outputPrecision);
 
   MeasurementData meas;
   CellData cell;
@@ -157,5 +152,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
     // Increase counter
     meas.measurement_id += 1;
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

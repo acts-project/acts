@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(SplineInterpolationArray) {
   // This time we keep the original hits
   auto trajectory = Acts::Interpolation3D::spline(inputs, 100, true);
 
-  // Check the outpu type is correct
+  // Check the output type is correct
   constexpr bool isOutput =
       std::is_same_v<decltype(trajectory), decltype(inputs)>;
   BOOST_CHECK(isOutput);

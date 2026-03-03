@@ -16,10 +16,8 @@
 #include <cstddef>
 #include <limits>
 #include <string>
-#include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out particles in the TrackML comma-separated-value format.
 ///
@@ -62,7 +60,7 @@ class CsvParticleWriter final : public WriterT<SimParticleContainer> {
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
-  ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
+  ProcessCode writeT(const AlgorithmContext& ctx,
                      const SimParticleContainer& particles) override;
 
  private:

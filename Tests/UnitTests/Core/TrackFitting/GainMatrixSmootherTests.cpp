@@ -27,10 +27,11 @@ namespace {
 using namespace Acts;
 
 using ParametersVector = Acts::BoundVector;
-using CovarianceMatrix = Acts::BoundSquareMatrix;
+using CovarianceMatrix = Acts::BoundMatrix;
 using Jacobian = Acts::BoundMatrix;
 
-const Acts::GeometryContext tgContext;
+const Acts::GeometryContext tgContext =
+    Acts::GeometryContext::dangerouslyDefaultConstruct();
 
 }  // namespace
 

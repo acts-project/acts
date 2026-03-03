@@ -10,18 +10,23 @@
 
 #include "ActsAlignment/Kernel/Alignment.hpp"
 
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/detail/EigenCompat.hpp"
+#include "ActsAlignment/Kernel/AlignmentError.hpp"
+
+#include <queue>
 
 template <typename fitter_t>
-template <typename source_link_t, typename start_parameters_t,
-          typename fit_options_t>
+template <typename source_link_t, typename fit_options_t>
 Acts::Result<ActsAlignment::detail::TrackAlignmentState>
 ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const Acts::GeometryContext& gctx,
     const std::vector<source_link_t>& sourceLinks,
-    const start_parameters_t& sParameters, const fit_options_t& fitOptions,
+    const Acts::BoundTrackParameters& sParameters,
+    const fit_options_t& fitOptions,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
     const ActsAlignment::AlignmentMask& alignMask) const {
@@ -73,11 +78,10 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   alignResult.alignmentDof =
       alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
   // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
-  Acts::ActsDynamicVector sumChi2Derivative =
-      Acts::ActsDynamicVector::Zero(alignResult.alignmentDof);
-  Acts::ActsDynamicMatrix sumChi2SecondDerivative =
-      Acts::ActsDynamicMatrix::Zero(alignResult.alignmentDof,
-                                    alignResult.alignmentDof);
+  Acts::DynamicVector sumChi2Derivative =
+      Acts::DynamicVector::Zero(alignResult.alignmentDof);
+  Acts::DynamicMatrix sumChi2SecondDerivative = Acts::DynamicMatrix::Zero(
+      alignResult.alignmentDof, alignResult.alignmentDof);
   // Copy the fit options
   fit_options_t fitOptionsWithRefSurface = fitOptions;
   // Calculate contribution to chi2 derivatives from all input trajectories
@@ -127,21 +131,19 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
 
   // Get the inverse of chi2 second derivative matrix (we need this to
   // calculate the covariance of the alignment parameters)
-  // @Todo: use more stable method for solving the inverse
+  // @TODO: use more stable method for solving the inverse
   std::size_t alignDof = alignResult.alignmentDof;
-  Acts::ActsDynamicMatrix sumChi2SecondDerivativeInverse =
-      Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
+  Acts::DynamicMatrix sumChi2SecondDerivativeInverse =
+      Acts::DynamicMatrix::Zero(alignDof, alignDof);
   sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();
   if (sumChi2SecondDerivativeInverse.hasNaN()) {
     ACTS_DEBUG("Chi2 second derivative inverse has NaN");
-    // return AlignmentError::AlignmentParametersUpdateFailure;
   }
 
   // Initialize the alignment results
-  alignResult.deltaAlignmentParameters =
-      Acts::ActsDynamicVector::Zero(alignDof);
+  alignResult.deltaAlignmentParameters = Acts::DynamicVector::Zero(alignDof);
   alignResult.alignmentCovariance =
-      Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
+      Acts::DynamicMatrix::Zero(alignDof, alignDof);
   // Solve the linear equation to get alignment parameters change
   alignResult.deltaAlignmentParameters =
       -sumChi2SecondDerivative.fullPivLu().solve(sumChi2Derivative);
@@ -160,15 +162,17 @@ template <typename fitter_t>
 Acts::Result<void>
 ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     const Acts::GeometryContext& gctx,
-    const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
-    const ActsAlignment::AlignedTransformUpdater& alignedTransformUpdater,
+    const std::vector<Acts::SurfacePlacementBase*>& alignedDetElements,
+    const ActsAlignment::AlignedTransformUpdaterConcept auto&
+        alignedTransformUpdater,
     ActsAlignment::AlignmentResult& alignResult) const {
   // Update the aligned transform
   Acts::AlignmentVector deltaAlignmentParam = Acts::AlignmentVector::Zero();
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
     // 1. The original transform
     const Acts::Vector3& oldCenter = surface->center(gctx);
-    const Acts::Transform3& oldTransform = surface->transform(gctx);
+    const Acts::Transform3& oldTransform =
+        surface->localToGlobalTransform(gctx);
 
     // 2. The delta transform
     deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
@@ -310,7 +314,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
-          det->transform(alignOptions.fitOptions.geoContext);
+          det->localToGlobalTransform(alignOptions.fitOptions.geoContext);
       // write it to the result
       alignResult.alignedParameters.emplace(det, transform);
       const auto& translation = transform.translation();

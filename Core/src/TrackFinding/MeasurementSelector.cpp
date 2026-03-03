@@ -81,10 +81,9 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
 
 double MeasurementSelector::calculateChi2(
     const double* fullCalibrated, const double* fullCalibratedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Parameters predicted,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Covariance predictedCovariance,
+    TrackStateTraits<kMeasurementSizeMax, false>::Parameters predicted,
+    TrackStateTraits<kMeasurementSizeMax, false>::Covariance
+        predictedCovariance,
     BoundSubspaceIndices projector, unsigned int calibratedSize) const {
   return visit_measurement(
       calibratedSize,
@@ -98,7 +97,7 @@ double MeasurementSelector::calculateChi2(
         typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
             calibratedCovariance{fullCalibratedCovariance};
 
-        using ParametersVector = ActsVector<kMeasurementSize>;
+        using ParametersVector = Vector<kMeasurementSize>;
 
         std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
             projector.begin(), projector.begin() + kMeasurementSize);

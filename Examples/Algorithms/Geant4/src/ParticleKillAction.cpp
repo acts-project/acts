@@ -41,7 +41,8 @@ void ParticleKillAction::UserSteppingAction(const G4Step* step) {
 
   const bool outOfVolume =
       m_cfg.volume &&
-      !m_cfg.volume->inside(convertPosition(track->GetPosition()));
+      !m_cfg.volume->inside(eventStore().geoContext,
+                            convertPosition(track->GetPosition()));
   const bool outOfTime = time > m_cfg.maxTime;
   const bool invalidSecondary = m_cfg.secondaries && isSecondary;
 

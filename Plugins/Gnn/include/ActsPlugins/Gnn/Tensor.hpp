@@ -27,6 +27,9 @@ using cudaStream_t = CUstream_st *;
 
 namespace ActsPlugins {
 
+/// @addtogroup gnn_plugin
+/// @{
+
 /// A simple device description struct
 struct Device {
   /// Device type enumeration
@@ -51,6 +54,8 @@ struct Device {
   /// @return True if device type is CUDA, false otherwise
   bool isCuda() const { return type == Type::eCUDA; }
 
+  /// @brief Compare two device descriptors for equality
+  /// @return True if both devices have same type and index
   bool operator==(const Device &) const = default;
   /// @brief Compare two device descriptors for equality
   /// @param other Device to compare against
@@ -72,12 +77,13 @@ inline std::ostream &operator<<(std::ostream &os, Device device) {
 
 /// Capture the context of the execution
 struct ExecutionContext {
-  Device device{Device::Type::eCPU};
   /// Target device for execution
+  Device device{Device::Type::eCPU};
   /// CUDA stream for asynchronous execution
   std::optional<cudaStream_t> stream;
 };
 
+/// @cond
 namespace detail {
 
 using TensorDeleter = std::function<void(void *)>;
@@ -88,6 +94,7 @@ TensorPtr cloneTensorMemory(const TensorPtr &ptrFrom, std::size_t nbytes,
                             Device devFrom, const ExecutionContext &ctxTo);
 
 }  // namespace detail
+/// @endcond
 
 /// This is a very small, limited class that models a 2D tensor of arbitrary
 /// type. It is move-only, and only possible to create via static factory
@@ -140,8 +147,8 @@ class Tensor {
   std::size_t nbytes() const { return size() * sizeof(T); }
 
   /// Get the device of the tensor
-  Device device() const { return m_device; }
   /// @return Device where tensor data is stored
+  Device device() const { return m_device; }
 
  private:
   Tensor(Shape shape, detail::TensorPtr ptr, const ExecutionContext &ctx)
@@ -180,4 +187,5 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
     std::optional<cudaStream_t> stream);
 
+/// @}
 }  // namespace ActsPlugins

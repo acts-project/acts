@@ -1,4 +1,4 @@
-FROM ghcr.io/acts-project/spack-container:18.0.0_linux-ubuntu24.04_gcc-13.3.0
+FROM ghcr.io/acts-project/spack-container:19.0.0_linux-ubuntu24.04_gcc-13.3.0
 
 RUN apt-get update && apt-get install -y clangd vim
 

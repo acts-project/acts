@@ -40,18 +40,26 @@ class AtlasStepper {
   /// Type alias for Jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
-  using Covariance = BoundSquareMatrix;
+  using Covariance = BoundMatrix;
   /// Type alias for bound state (parameters, jacobian, path length)
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
+  /// Configuration for constructing an AtlasStepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Stepper options extending plain stepper settings.
   struct Options : public StepperPlainOptions {
+    /// Constructor from context objects
+    /// @param gctx Geometry context
+    /// @param mctx Magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain options
+    /// @param options Plain stepper options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -119,7 +127,7 @@ class AtlasStepper {
     /// Jacobian matrix storage for parameter derivatives
     double jacobian[eBoundSize * eBoundSize] = {};
 
-    // accummulated path length cache
+    // accumulated path length cache
     /// Accumulated path length during propagation
     double pathAccumulated = 0.;
 
@@ -237,7 +245,7 @@ class AtlasStepper {
     state.covTransport = cov.has_value();
     if (state.covTransport) {
       // copy the covariance matrix
-      state.covariance = new BoundSquareMatrix(*cov);
+      state.covariance = new BoundMatrix(*cov);
       state.useJacobian = true;
       const auto transform =
           surface.referenceFrame(state.options.geoContext, pos, dir);
@@ -484,7 +492,7 @@ class AtlasStepper {
   /// @param stype [in] The step size type to be set
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
+    static_cast<void>(direction);
     double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
@@ -586,7 +594,7 @@ class AtlasStepper {
   /// @param [in, out] state The stepping state (thread-local cache)
   /// @return true if nothing is missing after this call, false otherwise.
   bool prepareCurvilinearState(State& state) const {
-    (void)state;
+    static_cast<void>(state);
     return true;
   }
 
@@ -795,7 +803,7 @@ class AtlasStepper {
       state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
     }
 
-    state.covariance = new BoundSquareMatrix(covariance);
+    state.covariance = new BoundMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 
@@ -1216,7 +1224,7 @@ class AtlasStepper {
   ///       propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
-    (void)material;
+    static_cast<void>(material);
 
     // we use h for keeping the nominclature with the original atlas code
     auto h = state.stepSize.value() * propDir;

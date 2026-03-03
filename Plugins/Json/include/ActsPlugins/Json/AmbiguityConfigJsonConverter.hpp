@@ -18,6 +18,9 @@
 
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// @brief Type alias for detector-specific ambiguity resolution configuration
 /// @details Configuration parameters for ambiguity resolution in a specific detector component
 using DetectorConfig = ScoreBasedAmbiguityResolution::DetectorConfig;
@@ -30,4 +33,5 @@ using ConfigPair =
 /// @param p Destination ConfigPair to populate
 void from_json(const nlohmann::json& j, ConfigPair& p);
 
+/// @}
 }  // namespace Acts

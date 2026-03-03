@@ -434,7 +434,7 @@ EXTRACT_PACKAGE        = NO
 # included in the documentation.
 # The default value is: NO.
 
-EXTRACT_STATIC         = NO
+EXTRACT_STATIC         = YES
 
 # If the EXTRACT_LOCAL_CLASSES tag is set to YES, classes (and structs) defined
 # locally in source files will be included in the documentation. If set to NO,
@@ -780,6 +780,7 @@ INPUT                  = ../../Core/include \
                          ../../Plugins/Onnx/include \
                          ../../Plugins/Root/include \
                          ../../Plugins/Gnn/include \
+                         groups.dox
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -856,7 +857,7 @@ EXCLUDE_SYMBOLS        = Acts::*detail* \
 # that contain example code fragments that are included (see the \include
 # command).
 
-EXAMPLE_PATH           = .
+EXAMPLE_PATH           = ..
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp and

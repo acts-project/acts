@@ -50,7 +50,7 @@ class ObjPropagationStepsWriter : public WriterT<PropagationSummaries> {
   ~ObjPropagationStepsWriter() override = default;
 
   /// End-of-run hook
-  ProcessCode finalize() override { return ActsExamples::ProcessCode::SUCCESS; }
+  ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

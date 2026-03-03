@@ -11,11 +11,11 @@ macro(add_plugin_binding_if _name _dependency _flag)
         set(_target "ActsPluginsPythonBindings${_name}")
         pybind11_add_module(${_target} src/${_name}.cpp)
 
-        install(TARGETS ${_target} DESTINATION ${_python_install_dir})
+        install(TARGETS ${_target} DESTINATION ${_acts_python_install_dir})
 
         set_target_properties(
             ${_target}
-            PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+            PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath}"
         )
         set_target_properties(
             ${_target}
@@ -39,7 +39,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
     )
     install(
         FILES ${_python_dir}/acts/${_name_lower}.py
-        DESTINATION ${_python_install_dir}
+        DESTINATION ${_acts_python_install_dir}
     )
 endmacro()
 
@@ -48,7 +48,6 @@ add_plugin_binding_if(Detray Acts::PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
 add_plugin_binding_if(DD4hep ActsPluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
 add_plugin_binding_if(Geant4 ActsPluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
 add_plugin_binding_if(GeoModel Acts::PluginGeoModel ACTS_BUILD_PLUGIN_GEOMODEL)
-add_plugin_binding_if(Hashing Acts::PluginHashing ACTS_BUILD_PLUGIN_HASHING)
 add_plugin_binding_if(Json Acts::PluginJson ACTS_BUILD_PLUGIN_JSON)
 add_plugin_binding_if(Svg Acts::PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 add_plugin_binding_if(TGeo Acts::PluginRoot ACTS_BUILD_PLUGIN_ROOT)

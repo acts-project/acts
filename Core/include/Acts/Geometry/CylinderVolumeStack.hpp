@@ -36,6 +36,7 @@ namespace Acts {
 class CylinderVolumeStack : public VolumeStack {
  public:
   /// Constructor from a vector of volumes and direction
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes is the vector of volumes
   /// @param direction is the binning direction
   /// @param strategy is the attachment strategy
@@ -54,12 +55,14 @@ class CylinderVolumeStack : public VolumeStack {
   ///      and cannot have a @f$\phi@f$ sector or bevels.
   /// @note Preconditions are checked on construction
   CylinderVolumeStack(
-      std::vector<Volume*>& volumes, AxisDirection direction,
+      const GeometryContext& gctx, std::vector<Volume*>& volumes,
+      AxisDirection direction,
       VolumeAttachmentStrategy strategy = VolumeAttachmentStrategy::Midpoint,
       VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand,
       const Logger& logger = Acts::getDummyLogger());
 
   /// Constructor from a vector of volumes and direction
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes is the vector of volumes
   /// @param direction is the binning direction
   /// @param strategy is the attachment strategy
@@ -79,8 +82,8 @@ class CylinderVolumeStack : public VolumeStack {
   ///      and cannot have a @f$\phi@f$ sector or bevels.
   /// @note Preconditions are checked on construction
   CylinderVolumeStack(
-      std::vector<Volume*>& volumes, AxisDirection direction,
-      VolumeAttachmentStrategy strategy,
+      const GeometryContext& gctx, std::vector<Volume*>& volumes,
+      AxisDirection direction, VolumeAttachmentStrategy strategy,
       std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies,
       const Logger& logger = Acts::getDummyLogger());
 
@@ -89,22 +92,26 @@ class CylinderVolumeStack : public VolumeStack {
   /// to accommodate the new bounds and optionally create
   /// gap volumes according to the resize strategy set during
   /// construction.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volbounds is the new bounds
   /// @param transform is the new transform
   /// @param logger is the logger
   /// @pre The volume bounds need to be of type
   ///      @c CylinderVolumeBounds.
-  void update(std::shared_ptr<VolumeBounds> volbounds,
+  void update(const GeometryContext& gctx,
+              std::shared_ptr<VolumeBounds> volbounds,
               std::optional<Transform3> transform = std::nullopt,
               const Logger& logger = getDummyLogger()) override;
 
  private:
   /// Helper function called during construction that performs the
   /// internal attachment and produces the overall outer volume bounds.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param direction is the binning direction
   /// @param strategy is the attachment strategy
   /// @param logger is the logger
-  void initializeOuterVolume(AxisDirection direction,
+  void initializeOuterVolume(const GeometryContext& gctx,
+                             AxisDirection direction,
                              VolumeAttachmentStrategy strategy,
                              const Logger& logger);
 
@@ -134,13 +141,14 @@ class CylinderVolumeStack : public VolumeStack {
                                    const Logger& logger);
 
   /// Helper function that checks overlaps and attaches in z direction
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes is the vector of volumes
   /// @param strategy is the attachment strategy
   /// @param logger is the logger
   /// @return vector of gap volumes. Can be empty if none were created.
   std::vector<VolumeTuple> checkOverlapAndAttachInZ(
-      std::vector<VolumeTuple>& volumes, VolumeAttachmentStrategy strategy,
-      const Logger& logger);
+      const GeometryContext& gctx, std::vector<VolumeTuple>& volumes,
+      VolumeAttachmentStrategy strategy, const Logger& logger);
 
   /// Helper function to synchronize the r bounds of the volumes
   /// @param volumes is the vector of volumes
@@ -150,13 +158,14 @@ class CylinderVolumeStack : public VolumeStack {
       std::vector<VolumeTuple>& volumes, const Logger& logger);
 
   /// Helper function that checks overlaps and attaches in r direction
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volumes is the vector of volumes
   /// @param strategy is the attachment strategy
   /// @param logger is the logger
   /// @return vector of gap volumes. Can be empty if none were created.
   std::vector<VolumeTuple> checkOverlapAndAttachInR(
-      std::vector<VolumeTuple>& volumes, VolumeAttachmentStrategy strategy,
-      const Logger& logger);
+      const GeometryContext& gctx, std::vector<VolumeTuple>& volumes,
+      VolumeAttachmentStrategy strategy, const Logger& logger);
 
   /// Helper function to synchronize the z bounds of the volumes
   /// @param volumes is the vector of volumes

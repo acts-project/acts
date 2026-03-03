@@ -81,9 +81,9 @@ void ActsPlugins::TGeoParser::select(
           double dx = options.unit * shape->GetDX();
           double dy = options.unit * shape->GetDY();
           double dz = options.unit * shape->GetDZ();
-          for (auto x : std::vector<double>{-dx, dx}) {
-            for (auto y : std::vector<double>{-dy, dy}) {
-              for (auto z : std::vector<double>{-dz, dz}) {
+          for (auto x : {-dx, dx}) {
+            for (auto y : {-dy, dy}) {
+              for (auto z : {-dz, dz}) {
                 Vector3 edge = etrf * Vector3(x, y, z);
                 for (auto& [axisDir, checkRange] : options.parseRanges) {
                   double val = VectorHelpers::cast(edge, axisDir);

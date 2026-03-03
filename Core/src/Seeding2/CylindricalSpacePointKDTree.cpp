@@ -47,7 +47,7 @@ CylindricalSpacePointKDTree::validTupleOrthoRangeLH(
 
   /*
    * Cut: Ensure that we search only in Δr_min ≤ r - r_L ≤ Δr_max, as defined
-   * by the seeding configuration and the given lower spacepoint.
+   * by the seeding configuration and the given lower space point.
    */
   res[DimR].shrinkMin(rL + options.deltaRMin);
   res[DimR].shrinkMax(rL + options.deltaRMax);
@@ -118,7 +118,7 @@ CylindricalSpacePointKDTree::validTupleOrthoRangeHL(
 
   /*
    * Cut: Ensure that we search only in Δr_min ≤ r_H - r ≤ Δr_max, as defined
-   * by the seeding configuration and the given higher spacepoint.
+   * by the seeding configuration and the given higher space point.
    */
   res[DimR].shrinkMin(rM - options.deltaRMax);
   res[DimR].shrinkMax(rM - options.deltaRMin);
@@ -165,7 +165,7 @@ void CylindricalSpacePointKDTree::validTuples(const Options &lhOptions,
   range_t top_r = validTupleOrthoRangeLH(lhOptions, spM);
 
   /*
-   * Calculate the value of cot(θ) for this middle spacepoint.
+   * Calculate the value of cot(θ) for this middle space point.
    */
   float cotTheta =
       std::max(std::abs(spM.zr()[0] / spM.zr()[1]), lhOptions.cotThetaMax);
@@ -178,10 +178,10 @@ void CylindricalSpacePointKDTree::validTuples(const Options &lhOptions,
   float deltaRMaxBottom = spM.zr()[1] - bottom_r[DimR].min();
 
   /*
-   * Create the search range for the bottom spacepoint assuming a
+   * Create the search range for the bottom space point assuming a
    * monotonically increasing z track, by calculating the minimum z value from
    * the cot(θ), and by setting the maximum to the z position of the middle
-   * spacepoint - if the z position is higher than the middle point, then it
+   * space point - if the z position is higher than the middle point, then it
    * would be a decreasing z track!
    */
   range_t bottom_lh_r = bottom_r;
@@ -220,7 +220,7 @@ void CylindricalSpacePointKDTree::validTuples(const Options &lhOptions,
   }
 
   /*
-   * Perform the same search for candidate bottom spacepoints, but for
+   * Perform the same search for candidate bottom space points, but for
    * monotonically decreasing z tracks.
    */
   if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
@@ -248,7 +248,7 @@ void CylindricalSpacePointKDTree::validTuples(const Options &lhOptions,
   }
 
   /*
-   * And repeat for the top spacepoints for decreasing z tracks!
+   * And repeat for the top space points for decreasing z tracks!
    */
   if (!candidates.top_hl_v.empty() && search_bot_hl) {
     m_tree.rangeSearchMapDiscard(

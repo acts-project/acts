@@ -22,7 +22,8 @@
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
-using MultiTrajectoryTraits::IndexType;
+using IndexType = TrackIndexType;
+constexpr auto kInvalid = kTrackIndexInvalid;
 using namespace Acts::UnitLiterals;
 
 template <typename track_container_t, typename traj_t,
@@ -30,9 +31,9 @@ template <typename track_container_t, typename traj_t,
 struct Factory {};
 
 template <typename track_container_t, typename traj_t>
-struct Factory<track_container_t, traj_t, detail::RefHolder> {
+struct Factory<track_container_t, traj_t, RefHolder> {
   using track_container_type =
-      TrackContainer<track_container_t, traj_t, detail::RefHolder>;
+      TrackContainer<track_container_t, traj_t, RefHolder>;
 
   track_container_t vtc;
   traj_t mtj;
@@ -44,9 +45,9 @@ struct Factory<track_container_t, traj_t, detail::RefHolder> {
 };
 
 template <typename track_container_t, typename traj_t>
-struct Factory<track_container_t, traj_t, detail::ValueHolder> {
+struct Factory<track_container_t, traj_t, ValueHolder> {
   using track_container_type =
-      TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
+      TrackContainer<track_container_t, traj_t, ValueHolder>;
 
   track_container_type tc{track_container_t{}, traj_t{}};
 
@@ -81,7 +82,7 @@ using holder_types = holder_types_t<VectorTrackContainer, VectorMultiTrajectory,
 
 using const_holder_types =
     holder_types_t<ConstVectorTrackContainer, ConstVectorMultiTrajectory,
-                   detail::ValueHolder, detail::RefHolder, std::shared_ptr>;
+                   ValueHolder, RefHolder, std::shared_ptr>;
 
 namespace ActsTests {
 
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(BuildDefaultHolder) {
   static_assert(
       std::is_same_v<decltype(tc),
                      TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                                    detail::RefHolder>>,
+                                    RefHolder>>,
       "Incorrect deduced type");
   BOOST_CHECK_EQUAL(&mtj, &tc.trackStateContainer());
   BOOST_CHECK_EQUAL(&vtc, &tc.container());
@@ -112,9 +113,9 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
     VectorTrackContainer vtc{};
     TrackContainer tc{std::move(vtc), std::move(mtj)};
     static_assert(
-        std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
-                                                    VectorMultiTrajectory,
-                                                    detail::ValueHolder>>,
+        std::is_same_v<decltype(tc),
+                       TrackContainer<VectorTrackContainer,
+                                      VectorMultiTrajectory, ValueHolder>>,
         "Incorrect deduced type");
     std::decay_t<decltype(tc)> copy = tc;
     BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
@@ -124,9 +125,9 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
     TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
 
     static_assert(
-        std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
-                                                    VectorMultiTrajectory,
-                                                    detail::ValueHolder>>,
+        std::is_same_v<decltype(tc),
+                       TrackContainer<VectorTrackContainer,
+                                      VectorMultiTrajectory, ValueHolder>>,
         "Incorrect deduced type");
     tc.addTrack();
     std::decay_t<decltype(tc)> copy = tc;
@@ -138,13 +139,13 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
 BOOST_AUTO_TEST_CASE(BuildRefHolder) {
   VectorMultiTrajectory mtj{};
   VectorTrackContainer vtc{};
-  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder>
-      tc{vtc, mtj};
+  TrackContainer<VectorTrackContainer, VectorMultiTrajectory, RefHolder> tc{
+      vtc, mtj};
 
   static_assert(
       std::is_same_v<decltype(tc),
                      TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                                    detail::RefHolder>>,
+                                    RefHolder>>,
       "Incorrect deduced type");
   BOOST_CHECK_EQUAL(&mtj, &tc.trackStateContainer());
   BOOST_CHECK_EQUAL(&vtc, &tc.container());
@@ -321,7 +322,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     auto t3 = tc3.makeTrack();
     t3.copyFrom(t);  // this should work
 
-    BOOST_CHECK_NE(t3.tipIndex(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(t3.tipIndex(), kInvalid);
     BOOST_CHECK_GT(t3.nTrackStates(), 0);
     BOOST_REQUIRE_EQUAL(t.nTrackStates(), t3.nTrackStates());
 
@@ -365,7 +366,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     auto t5 = tc5.makeTrack();
     t5.copyFrom(t4);  // this should work
 
-    BOOST_CHECK_NE(t5.tipIndex(), MultiTrajectoryTraits::kInvalid);
+    BOOST_CHECK_NE(t5.tipIndex(), kInvalid);
     BOOST_CHECK_GT(t5.nTrackStates(), 0);
     BOOST_REQUIRE_EQUAL(t4.nTrackStates(), t5.nTrackStates());
 
@@ -582,8 +583,8 @@ BOOST_AUTO_TEST_CASE(CopyFromWithoutStatesInvalidatesIndices) {
   sourceTrack.linkForward();
 
   // Verify source track has valid indices
-  BOOST_CHECK_NE(sourceTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_NE(sourceTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(sourceTrack.tipIndex(), kInvalid);
+  BOOST_CHECK_NE(sourceTrack.stemIndex(), kInvalid);
   BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 3);
 
   // Set some track properties
@@ -598,16 +599,16 @@ BOOST_AUTO_TEST_CASE(CopyFromWithoutStatesInvalidatesIndices) {
   destTrack.linkForward();
 
   // Verify destination has valid indices before copy
-  BOOST_CHECK_NE(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_NE(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(destTrack.tipIndex(), kInvalid);
+  BOOST_CHECK_NE(destTrack.stemIndex(), kInvalid);
   BOOST_CHECK_EQUAL(destTrack.nTrackStates(), 2);
 
   // Copy without states
   destTrack.copyFromWithoutStates(sourceTrack);
 
   // Verify that tip and stem indices are now invalid
-  BOOST_CHECK_EQUAL(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_EQUAL(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_EQUAL(destTrack.tipIndex(), kInvalid);
+  BOOST_CHECK_EQUAL(destTrack.stemIndex(), kInvalid);
 
   // Verify that track properties were copied
   BOOST_CHECK_EQUAL(destTrack.nMeasurements(), 42);
@@ -620,7 +621,7 @@ BOOST_AUTO_TEST_CASE(CopyFromWithoutStatesInvalidatesIndices) {
   // Verify that the original track states are still in the container
   // but not accessible through the destination track
   BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 3);
-  BOOST_CHECK_NE(sourceTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(sourceTrack.tipIndex(), kInvalid);
 }
 
 BOOST_AUTO_TEST_CASE(CopyFromDeepCopyFunctionality) {
@@ -664,8 +665,8 @@ BOOST_AUTO_TEST_CASE(CopyFromDeepCopyFunctionality) {
 
   // Verify track state structure
   BOOST_CHECK_EQUAL(destTrack.nTrackStates(), 3);
-  BOOST_CHECK_NE(destTrack.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_NE(destTrack.stemIndex(), MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK_NE(destTrack.tipIndex(), kInvalid);
+  BOOST_CHECK_NE(destTrack.stemIndex(), kInvalid);
 
   // Verify track is forward-linked (can iterate forward)
   BOOST_CHECK(destTrack.innermostTrackState().has_value());
@@ -718,85 +719,6 @@ BOOST_AUTO_TEST_CASE(CopyFromDeepCopyFunctionality) {
   destTrack.nMeasurements() = 99;
   BOOST_CHECK_EQUAL(sourceTrack.nMeasurements(), 15);
   BOOST_CHECK_EQUAL(destTrack.nMeasurements(), 99);
-}
-
-BOOST_AUTO_TEST_CASE(DeprecatedCopyFromWithBooleanStillWorks) {
-  VectorTrackContainer vtc{};
-  VectorMultiTrajectory mtj{};
-  TrackContainer tc{vtc, mtj};
-
-  // Create source track with track states and properties
-  auto sourceTrack = tc.makeTrack();
-  sourceTrack.nMeasurements() = 25;
-  sourceTrack.chi2() = 78.9f;
-
-  auto ts1 = sourceTrack.appendTrackState();
-  ts1.predicted() = BoundVector::Ones() * 5.0;
-  auto ts2 = sourceTrack.appendTrackState();
-  ts2.predicted() = BoundVector::Ones() * 10.0;
-
-  BOOST_CHECK_EQUAL(sourceTrack.nTrackStates(), 2);
-
-  // Test deprecated copyFrom with copyTrackStates = true
-  auto destTrack1 = tc.makeTrack();
-
-  ACTS_DIAGNOSTIC_PUSH()
-  ACTS_DIAGNOSTIC_IGNORE("-Wdeprecated-declarations")
-
-  destTrack1.copyFrom(sourceTrack, true);  // Should do full deep copy
-
-  ACTS_DIAGNOSTIC_POP()
-
-  // Verify it worked like the non-boolean copyFrom
-  BOOST_CHECK_EQUAL(destTrack1.nMeasurements(), 25);
-  BOOST_CHECK_EQUAL(destTrack1.chi2(), 78.9f);
-  BOOST_CHECK_EQUAL(destTrack1.nTrackStates(), 2);
-  BOOST_CHECK_NE(destTrack1.tipIndex(), MultiTrajectoryTraits::kInvalid);
-  BOOST_CHECK_NE(destTrack1.stemIndex(), MultiTrajectoryTraits::kInvalid);
-
-  // Verify track states were copied (different indices, same data)
-  std::vector<BoundVector> sourceParams, destParams;
-  for (const auto& ts : sourceTrack.trackStatesReversed()) {
-    sourceParams.insert(sourceParams.begin(), ts.predicted());
-  }
-  for (const auto& ts : destTrack1.trackStatesReversed()) {
-    destParams.insert(destParams.begin(), ts.predicted());
-  }
-
-  BOOST_REQUIRE_EQUAL(sourceParams.size(), destParams.size());
-  for (std::size_t i = 0; i < sourceParams.size(); ++i) {
-    BOOST_CHECK_EQUAL(sourceParams[i], destParams[i]);
-  }
-
-  // Test deprecated copyFrom with copyTrackStates = false
-  auto destTrack2 = tc.makeTrack();
-  destTrack2.appendTrackState();  // Add some initial track states
-  destTrack2.appendTrackState();
-  destTrack2.linkForward();
-
-  ACTS_DIAGNOSTIC_PUSH()
-  ACTS_DIAGNOSTIC_IGNORE("-Wdeprecated-declarations")
-
-  destTrack2.copyFrom(sourceTrack,
-                      false);  // Should behave like copyFromWithoutStates
-
-  ACTS_DIAGNOSTIC_POP()
-
-  // The deprecated method with false should behave like copyFromWithoutStates:
-  // - Copy track properties
-  // - Invalidate tip and stem indices
-  // - Leave existing track states in container but inaccessible
-
-  // Track properties should be copied
-  BOOST_CHECK_EQUAL(destTrack2.nMeasurements(), 25);
-  BOOST_CHECK_EQUAL(destTrack2.chi2(), 78.9f);
-
-  // Tip and stem indices should be invalidated
-  BOOST_CHECK_EQUAL(destTrack2.tipIndex(), 5);
-  BOOST_CHECK_EQUAL(destTrack2.stemIndex(), 4);
-
-  // nTrackStates should return 0 due to invalid indices
-  BOOST_CHECK_EQUAL(destTrack2.nTrackStates(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

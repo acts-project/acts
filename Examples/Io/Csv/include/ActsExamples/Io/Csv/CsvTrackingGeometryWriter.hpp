@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Utilities/Logger.hpp>
 
 #include <cstddef>
 #include <limits>
@@ -24,7 +24,6 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out the geometry for all sensitive detector surfaces.
 ///

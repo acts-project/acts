@@ -165,11 +165,6 @@ struct SeedFinderOrthogonalConfig {
   /// Flag indicating whether configuration uses ACTS internal units
   bool isInInternalUnits = true;
 
-  /// Convert to internal units (deprecated, already in internal units)
-  /// @return Copy of this configuration (already in internal units)
-  //[[deprecated("SeedFinderOrthogonalConfig uses internal units")]]
-  SeedFinderOrthogonalConfig toInternalUnits() const { return *this; }
-
   /// Calculate derived quantities from the basic configuration parameters
   /// @return New configuration with derived quantities calculated
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {

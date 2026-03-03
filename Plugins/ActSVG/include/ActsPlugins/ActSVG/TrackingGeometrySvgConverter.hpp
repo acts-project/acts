@@ -26,8 +26,10 @@ namespace ActsPlugins::Svg {
 using ProtoPortal = actsvg::proto::portal<std::vector<Acts::Vector3>>;
 using ProtoLink = ProtoPortal::link;
 
+/// @ingroup actsvg_plugin
 namespace TrackingGeometryConverter {
 
+/// @ingroup actsvg_plugin
 /// Nested Options struct for the writing configuration
 struct Options {
   /// Prefix the output names
@@ -36,11 +38,15 @@ struct Options {
   Acts::GeometryHierarchyMap<LayerConverter::Options> layerOptions;
 };
 
+/// @ingroup actsvg_plugin
 /// State object to collect geometry-wise information
 struct State {
+  /// XY cross section views
   std::vector<actsvg::svg::object> xyCrossSection;
+  /// ZR cross section views
   std::vector<actsvg::svg::object> zrCrossSection;
 
+  /// Final rendered views
   std::vector<actsvg::svg::object> finalViews;
 };
 
@@ -68,21 +74,27 @@ void convert(const Acts::GeometryContext& gctx,
 
 }  // namespace TrackingGeometryConverter
 
+/// @ingroup actsvg_plugin
 namespace TrackingGeometryProjections {
 
+/// Options for tracking geometry projections
 struct Options {
+  /// Prefix for output names
   std::string prefix = "";
 
+  /// Tracking geometry converter options
   TrackingGeometryConverter::Options trackingGeometryOptions;
 
-  std::array<std::array<double, 2>, 2> rzAxes;
+  /// RZ axes ranges
+  std::array<std::array<double, 2>, 2> rzAxes{};
+  /// RZ eta line positions
   std::vector<double> rzEtaLines;
 };
 
 /// Convert into xy and zr projections only
 ///
 /// @param gctx the geometry context
-/// @param tVolume the tracking volume
+/// @param tGeometry the tracking volume
 /// @param cOptions the conversion options
 ///
 /// @note best performant if configured with options

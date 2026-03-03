@@ -61,7 +61,7 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
   stddev[eBoundPhi] = 2_degree;
   stddev[eBoundTheta] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle start from the origin
   Vector4 mPos4(-3_m, 0., 0., 0.);
   return BoundTrackParameters::createCurvilinear(
@@ -94,9 +94,9 @@ std::pair<Vector3, Vector3> stripEnds(
 }
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 
 // detector geometry
@@ -121,7 +121,7 @@ std::default_random_engine rng(42);
 BOOST_AUTO_TEST_SUITE(SpacePointFormationSuite)
 
 BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
-  (void)index;
+  static_cast<void>(index);
 
   double phi = 5._degree;
   double theta = 95._degree;
@@ -212,7 +212,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     param[eBoundLoc0] = testslink.parameters[eBoundLoc0];
     param[eBoundLoc1] = testslink.parameters[eBoundLoc1];
 
-    BoundSquareMatrix cov = BoundSquareMatrix::Zero();
+    BoundMatrix cov = BoundMatrix::Zero();
     cov.topLeftCorner<2, 2>() = testslink.covariance;
 
     return std::make_pair(param, cov);

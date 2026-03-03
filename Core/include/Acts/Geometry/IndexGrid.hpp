@@ -335,6 +335,8 @@ struct IndexGridFiller {
   /// This is useful if e.g. certain objects are to be attempted in any case,
   /// regardless of their binning.
   ///
+  /// @param iGrid The index grid to fill
+  /// @param idcs The indices to assign to all bins
   template <typename index_grid, typename indices>
   void assignToAll(index_grid& iGrid, const indices& idcs) const {
     for (std::size_t gi = 0; gi < iGrid.grid.size(true); ++gi) {

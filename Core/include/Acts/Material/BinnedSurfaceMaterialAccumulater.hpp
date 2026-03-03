@@ -26,12 +26,12 @@ class BinnedSurfaceMaterialAccumulater final
   /// @brief Nested config struct
   struct Config {
     /// Geometry context for coordinate transformations
-    GeometryContext geoContext;
+    GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 
     /// Correct for empty bins (recommended)
     bool emptyBinCorrection = true;
 
-    /// The surfaces to be used for the accummulation
+    /// The surfaces to be used for the accumulation
     std::vector<const Surface*> materialSurfaces = {};
   };
 

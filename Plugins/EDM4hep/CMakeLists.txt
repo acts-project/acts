@@ -1,6 +1,5 @@
 acts_add_library(
     PluginEDM4hep
-    SHARED
     src/EDM4hepUtil.cpp
     src/PodioUtil.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
@@ -23,6 +22,8 @@ target_link_libraries(
         podio::podio
         podio::podioRootIO
 )
+
+acts_compile_headers(PluginEDM4hep GLOB include/**/*.hpp)
 
 find_file(
     _edm4hep_yaml

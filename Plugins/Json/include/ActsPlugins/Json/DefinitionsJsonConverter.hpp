@@ -15,6 +15,9 @@
 
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// Convert Direction to JSON
 /// @param j Destination JSON object
 /// @param direction Source Direction to convert
@@ -25,4 +28,5 @@ void to_json(nlohmann::json& j, const Direction& direction);
 /// @param direction Destination Direction to populate
 void from_json(const nlohmann::json& j, Direction& direction);
 
+/// @}
 }  // namespace Acts

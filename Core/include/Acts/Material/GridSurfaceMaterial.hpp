@@ -23,6 +23,9 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 /// @brief Base class for material accessors, this is needed
 /// for the I/O of the different grid material types, in the actual
 /// implementation the material accessor is a template parameter.
@@ -263,6 +266,8 @@ class GridSurfaceMaterialT
     return m_materialAccessor.slab(m_grid, m_globalToGridLocal(gp));
   }
 
+  using ISurfaceMaterial::materialSlab;
+
   /// Scale operator
   ///
   /// @param factor is the scale factor applied
@@ -360,5 +365,7 @@ using GloballyIndexedSurfaceMaterial =
 template <typename grid_type>
 using GridSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, GridMaterialAccessor>;
+
+/// @}
 
 }  // namespace Acts

@@ -24,8 +24,13 @@ class SurfaceArray;
 
 }  // namespace Acts
 
+/// @namespace ActsPlugins::Svg::SurfaceArrayConverter
+/// @ingroup actsvg_plugin
+/// Utilities to convert a surface array into proto objects for SVG output
+
 namespace ActsPlugins::Svg::SurfaceArrayConverter {
 
+/// @ingroup actsvg_plugin
 /// Nested options struct
 struct Options {
   /// Hierarchy map of styles
@@ -35,8 +40,9 @@ struct Options {
 };
 
 /// Convert a surface array into needed constituents
+/// @ingroup actsvg_plugin
 ///
-/// @param gtcx is the geometry context of the conversion call
+/// @param gctx is the geometry context of the conversion call
 /// @param surfaceArray is the surface to convert
 /// @param cOptions the conversion options
 ///

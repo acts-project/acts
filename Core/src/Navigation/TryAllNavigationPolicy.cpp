@@ -32,8 +32,8 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
 
 void TryAllNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
+    const NavigationArguments& args, NavigationPolicyState& /*state*/,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
   ACTS_VERBOSE("TryAllNavigationPolicy");
   assert(m_volume != nullptr);
 
@@ -48,7 +48,7 @@ void TryAllNavigationPolicy::initializeCandidates(
   }
 
   for (const auto& surface : m_volume->surfaces()) {
-    bool isSensitive = surface.associatedDetectorElement() != nullptr;
+    bool isSensitive = surface.isSensitive();
     if ((m_cfg.passives && !isSensitive) || (m_cfg.sensitives && isSensitive)) {
       stream.addSurfaceCandidate(surface, args.tolerance);
     }

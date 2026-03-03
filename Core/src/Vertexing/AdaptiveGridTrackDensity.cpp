@@ -28,8 +28,8 @@ namespace {
 ///
 /// @return Multivariate Gaussian evaluated at args
 template <unsigned int nDim>
-double multivariateGaussian(const ActsVector<nDim>& args,
-                            const ActsSquareMatrix<nDim>& cov) {
+double multivariateGaussian(const Vector<nDim>& args,
+                            const SquareMatrix<nDim>& cov) {
   double exponent = -0.5 * args.transpose().dot(cov.inverse() * args);
   double gaussianDensity = safeExp(exponent) / std::sqrt(cov.determinant());
   return gaussianDensity;
@@ -182,7 +182,7 @@ AdaptiveGridTrackDensity::getMaxZTPositionAndWidth(
 AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::addTrack(
     const BoundTrackParameters& trk, DensityMap& mainDensityMap) const {
   Vector3 impactParams = trk.impactParameters();
-  ActsSquareMatrix<3> cov = trk.impactParameterCovariance().value();
+  SquareMatrix<3> cov = trk.impactParameterCovariance().value();
 
   std::uint32_t spatialTrkGridSize =
       getSpatialTrkGridSize(std::sqrt(cov(1, 1)));

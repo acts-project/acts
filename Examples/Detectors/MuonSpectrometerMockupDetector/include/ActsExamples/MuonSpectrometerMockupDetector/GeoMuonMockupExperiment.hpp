@@ -8,18 +8,16 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-///
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/GeoModel/GeoModelTree.hpp"
 
 #include <array>
 #include <cmath>
-#include <map>
 
 #include "GeoModelHelpers/GeoDeDuplicator.h"
 #include "GeoModelKernel/GeoPublisher.h"
 #include "GeoModelKernel/Units.h"
+
 namespace ActsExamples {
 /// @brief Simple Muonspectrometer geometry of an HEP experiment. The geometry is inspired by
 ///        the ATLAS' MuonSpectrometer. It consists out of three concentric

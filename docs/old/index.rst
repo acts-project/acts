@@ -1,6 +1,10 @@
 ACTS Common Tracking Software
 =============================
 
+.. attention:: ACTS Documentation has moved
+  The ACTS documentation has moved `here <https://acts-project.github.io/>`_.
+  This page is available for archival purposes only.
+
 ACTS is an experiment-independent toolkit for (charged) particle track
 reconstruction in (high energy) physics experiments implemented in modern C++.
 

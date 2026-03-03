@@ -65,12 +65,12 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// @brief Aborter for the case that a particle leaves the detector or reaches
@@ -135,11 +135,12 @@ struct StepCollector {
   /// @param [out] result Struct which is filled with the data
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& /*navigator*/, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& /*navigator*/, result_type& result,
+                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping));
+    return Result<void>::success();
   }
 
   template <typename propagator_state_t, typename stepper_t,
@@ -314,7 +315,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
-  BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
+  BoundMatrix cov2 = 8.5 * Covariance::Identity();
   BoundTrackParameters cp2 = BoundTrackParameters::createCurvilinear(
       makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,
       ParticleHypothesis::pion());

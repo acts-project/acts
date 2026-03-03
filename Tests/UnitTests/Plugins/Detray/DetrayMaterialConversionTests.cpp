@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(MaterialSlabTest) {
 }
 
 BOOST_AUTO_TEST_CASE(HomogeneousMaterialTest) {
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   // Create a transform
   Transform3 transform = Transform3::Identity();

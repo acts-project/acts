@@ -73,10 +73,13 @@ void CylinderLayer::buildApproachDescriptor() {
 
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume != nullptr) {
+    // The representing volume is built by the cylinder layer itself.
+    /// @todo Think whether the geometry context needs to be wired
+    const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
     // get the boundary surfaces
     std::vector<OrientedSurface> bSurfaces =
         m_representingVolume->volumeBounds().orientedSurfaces(
-            m_representingVolume->transform());
+            m_representingVolume->localToGlobalTransform(gctx));
 
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const Surface>> aSurfaces;

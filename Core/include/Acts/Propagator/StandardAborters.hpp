@@ -40,7 +40,7 @@ struct PathLimitReached {
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    (void)navigator;
+    static_cast<void>(navigator);
 
     // Check if the maximum allowed step size has to be updated
     double distance =
@@ -253,8 +253,8 @@ struct AnySurfaceReached {
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    (void)stepper;
-    (void)logger;
+    static_cast<void>(stepper);
+    static_cast<void>(logger);
 
     const Surface* startSurface = navigator.startSurface(state.navigation);
     const Surface* targetSurface = navigator.targetSurface(state.navigation);

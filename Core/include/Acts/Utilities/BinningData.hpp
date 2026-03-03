@@ -53,7 +53,7 @@ class BinningData {
 
   /// sub structure: describe some sub binning
   std::unique_ptr<const BinningData> subBinningData;
-  /// sub structure: additive or multipicative
+  /// sub structure: additive or multiplicative
   bool subBinningAdditive{};
 
   /// Constructor for 0D binning

@@ -51,7 +51,7 @@ namespace ActsTests {
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 
 // detector geometry
@@ -74,7 +74,7 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
   stddev[eBoundPhi] = 2_degree;
   stddev[eBoundTheta] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
   return BoundTrackParameters::createCurvilinear(
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(trackparm_estimate_aligined) {
   Vector3 sp2{-98.175, -0.325, -835.6};
   Vector3 bField{0, 0, 0.000899377};
 
-  FreeVector params = estimateTrackParamsFromSeed(sp0, sp1, sp2, bField);
+  FreeVector params = estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
   BOOST_CHECK_EQUAL(params[eFreeQOverP], 0);
 }
 

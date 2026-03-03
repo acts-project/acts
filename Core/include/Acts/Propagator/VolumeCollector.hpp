@@ -98,11 +98,12 @@ struct VolumeCollector {
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
   /// @param logger the logger object
+  /// @return Result of the action
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& logger) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& logger) const {
     auto currentVolume = navigator.currentVolume(state.navigation);
 
     // The current volume has been assigned by the navigator
@@ -127,6 +128,8 @@ struct VolumeCollector {
         ACTS_VERBOSE("Collect volume  " << currentVolume->geometryId());
       }
     }
+
+    return {};
   }
 };
 

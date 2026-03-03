@@ -1,1 +1,4 @@
-.. include:: ../../../CONTRIBUTING.rst
+Contribution Guide
+==================
+
+.. include:: ../../../CONTRIBUTING.md

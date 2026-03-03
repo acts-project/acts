@@ -1,6 +1,5 @@
 acts_add_library(
     PluginGeoModel
-    SHARED
     src/GeoModelTree.cpp
     src/GeoModelConversionError.cpp
     src/GeoModelToDetectorVolume.cpp
@@ -21,12 +20,14 @@ acts_add_library(
     src/GeoModelDetectorElementITk.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
+
 target_include_directories(
     ActsPluginGeoModel
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
 target_link_libraries(
     ActsPluginGeoModel
     PUBLIC
@@ -35,3 +36,5 @@ target_link_libraries(
         GeoModelIO::GeoModelDBManager
         GeoModelIO::GeoModelRead
 )
+
+acts_compile_headers(PluginGeoModel GLOB include/**/*.hpp)

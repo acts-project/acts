@@ -41,7 +41,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       planeSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                                globalPosition);
   // For plane surface, this should be identity matrix
-  CHECK_CLOSE_ABS(loc3DToLocBound, (ActsMatrix<2, 3>::Identity()), 1e-10);
+  CHECK_CLOSE_ABS(loc3DToLocBound, (Matrix<2, 3>::Identity()), 1e-10);
 
   // (c) Test the derivative of bound parameters (only test loc0, loc1 here)
   // w.r.t. alignment parameters
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_SUITE(PlaneSurfaceMerging)
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 // Create a test context
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 auto rBounds = std::make_shared<const RectangleBounds>(1., 2.);
 

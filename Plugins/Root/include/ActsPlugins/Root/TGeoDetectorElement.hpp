@@ -9,12 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 
-#include <iostream>
 #include <memory>
-#include <string>
 
 #include "TGeoManager.h"
 
@@ -28,6 +27,8 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @class TGeoDetectorElement
 ///
@@ -38,10 +39,13 @@ namespace ActsPlugins {
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what if not used with DD4hep?
 ///
-class TGeoDetectorElement : public Acts::DetectorElementBase {
+class TGeoDetectorElement : public Acts::SurfacePlacementBase {
  public:
+  /// Identifier type
   using identifier_type = unsigned long long;
+  /// Identifier difference type
   using identifier_diff = long long;
+  /// Identifier alias
   using Identifier = identifier_type;
 
   /// Broadcast the context type
@@ -78,8 +82,8 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   /// @param material Possible material of detector element
   TGeoDetectorElement(
       const Identifier& identifier, const TGeoNode& tGeoNode,
-      const TGeoMatrix& tGeoMatrix = TGeoIdentity(),
-      const std::string& axes = "XYZ", double scalor = 10.,
+      const TGeoMatrix& tGeoMatrix = TGeoIdentity(), TGeoAxes axes = "XYZ",
+      double scalor = 10.,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   /// Constructor with pre-computed surface
@@ -121,31 +125,34 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Acts::Transform3& transform(
-      const Acts::GeometryContext& gctx) const override;
   /// @return Reference to the transformation matrix from local to global coordinates
+  const Acts::Transform3& localToGlobalTransform(
+      const Acts::GeometryContext& gctx) const override;
 
   /// Return the nominal - non-contextual transform
-  const Acts::Transform3& nominalTransform() const;
   /// @return Reference to the nominal transformation matrix
+  const Acts::Transform3& nominalTransform() const;
 
   /// Return surface associated with this detector element
-  const Acts::Surface& surface() const override;
   /// @return Const reference to the surface
+  const Acts::Surface& surface() const override;
 
   /// Return surface associated with this detector element
   ///
   /// @note this is the non-const access
-  Acts::Surface& surface() override;
   /// @return Mutable reference to the surface
+  Acts::Surface& surface() override;
 
   /// Returns the thickness of the module
   /// @return Thickness of the detector element in units of length
-  double thickness() const override;
+  double thickness() const;
 
   /// Return the TGeoNode for back navigation
   /// @return Reference to the underlying TGeoNode
   const TGeoNode& tgeoNode() const { return *m_detElement; }
+  /// Is the detector element a sensitive element
+  /// @return Always true for this detector element type
+  bool isSensitive() const final { return true; }
 
  private:
   /// Pointer to TGeoNode (not owned)
@@ -166,7 +173,7 @@ inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {
   return m_identifier;
 }
 
-inline const Acts::Transform3& TGeoDetectorElement::transform(
+inline const Acts::Transform3& TGeoDetectorElement::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
   return m_transform;
 }
@@ -183,4 +190,5 @@ inline double TGeoDetectorElement::thickness() const {
   return m_thickness;
 }
 
+/// @}
 }  // namespace ActsPlugins

@@ -22,16 +22,16 @@ using namespace Acts;
 using namespace UnitLiterals;
 using namespace ActsTests;
 
-/// This tests intend to check the behaviour of the navigator in cases where the
-/// straight-line approach for the layer resolval can fail. This is in
-/// particular the case with bent tracks in telesocpe-like geometries, and can
+/// These tests intend to check the behaviour of the navigator in cases where
+/// the straight-line approach for the layer resolving can fail. This is in
+/// particular the case with bent tracks in telescope-like geometries, and can
 /// be fixed by not doing the bounds check in the initial resolving.
 
 using MagneticField = ConstantBField;
 using Stepper = EigenStepper<>;
 using TestPropagator = Propagator<Stepper, Navigator>;
 
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 
 std::vector<double> xPositionsOfPassedSurfaces(Navigator::Config navCfg,

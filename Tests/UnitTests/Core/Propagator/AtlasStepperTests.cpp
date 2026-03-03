@@ -51,7 +51,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 using VectorHelpers::makeVector4;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Jacobian = BoundMatrix;
 using Stepper = AtlasStepper;
 
@@ -75,7 +75,7 @@ static const auto particleHypothesis = ParticleHypothesis::pion();
 static const Covariance cov = Covariance::Identity();
 
 // context objects
-static const GeometryContext geoCtx;
+static const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 static const MagneticFieldContext magCtx;
 
 BOOST_AUTO_TEST_SUITE(PropagatorSuite)
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   auto newAbsMom = 4.2 * absMom;
   double newTime = 7.5;
   double newCharge = 1.;
-  BoundSquareMatrix newCov = 8.5 * Covariance::Identity();
+  BoundMatrix newCov = 8.5 * Covariance::Identity();
   cp = BoundTrackParameters::createCurvilinear(makeVector4(newPos, newTime),
                                                unitDir, newCharge / newAbsMom,
                                                newCov, particleHypothesis);

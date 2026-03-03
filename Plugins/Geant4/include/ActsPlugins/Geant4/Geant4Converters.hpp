@@ -52,9 +52,12 @@ using G4RotationMatrix = CLHEP::HepRotation;
 using G4Transform3D = HepGeom::Transform3D;
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
 
+/// @brief Converter for Geant4 algebra objects (transforms, vectors, rotations) to ACTS
 struct Geant4AlgebraConverter {
-  // A potential scalar between Geant4 and ACTS
+  /// Scale factor between Geant4 and ACTS units
   double scale = 1.;
 
   /// @brief Translate a geometry transform: translation only
@@ -94,6 +97,7 @@ struct Geant4AlgebraConverter {
 //
 // The obviously smallest expansion/extrusion is condensed to the epsilon
 // thin surface.
+/// @brief Converter for Geant4 shapes to ACTS surface bounds
 struct Geant4ShapeConverter {
   /// A scale between Geant4 and ACTS
   double scale = 1.;
@@ -162,11 +166,12 @@ struct Geant4ShapeConverter {
   planarBounds(const G4VSolid& g4Solid);
 };
 
+/// @brief Converter for Geant4 physical volumes to ACTS surfaces
 struct Geant4PhysicalVolumeConverter {
   /// Optionally allow to foce a type, throws exception if not possible
   Acts::Surface::SurfaceType forcedType = Acts::Surface::SurfaceType::Other;
 
-  /// @brief Convert a Geant4 phsyical volume to a surface
+  /// @brief Convert a Geant4 physical volume to a surface
   ///
   /// @param g4PhysVol the physical volume to be constructed
   /// @param toGlobal the global transformation before the volume
@@ -180,7 +185,12 @@ struct Geant4PhysicalVolumeConverter {
                                          double compressed = 0.);
 };
 
+/// @brief Converter for Geant4 materials to ACTS material description
 struct Geant4MaterialConverter {
+  /// Convert Geant4 material to ACTS material
+  /// @param g4Material Geant4 material to convert
+  /// @param compression Material compression factor
+  /// @return ACTS material description
   Acts::Material material(const G4Material& g4Material, double compression = 1);
 
   /// @brief Convert a Geant4 material to a surface material description
@@ -188,11 +198,12 @@ struct Geant4MaterialConverter {
   /// @param g4Material the geant4 material description
   /// @param original the original thickness
   /// @param compressed the compressed thickness
-  ///
+  /// @return ACTS surface material description
   std::shared_ptr<Acts::HomogeneousSurfaceMaterial> surfaceMaterial(
       const G4Material& g4Material, double original, double compressed);
 };
 
+/// @brief Converter for Geant4 volumes to ACTS volume bounds
 struct Geant4VolumeConverter {
   /// @brief Convert to cylinder bounds
   ///
@@ -203,4 +214,5 @@ struct Geant4VolumeConverter {
       const G4Tubs& g4Tubs);
 };
 
+/// @}
 }  // namespace ActsPlugins

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/OstreamFormatter.hpp"
+
 #include <cstdint>
 #include <functional>
 #include <iosfwd>
@@ -83,69 +85,6 @@ class GeometryIdentifier {
   /// surface object corresponds to, or which subsystem it belongs to
   /// @return The extra identifier component for experiment-specific use
   constexpr Value extra() const { return getBits(kExtraMask); }
-
-  /// Set the volume identifier.
-  /// @param volume The volume identifier value to set
-  /// @return Reference to this identifier for chaining
-  [[deprecated("Use withVolume() instead")]]
-  constexpr GeometryIdentifier& setVolume(Value volume) {
-    setBits(kVolumeMask, volume);
-    return *this;
-  }
-
-  /// Set the boundary identifier.
-  /// @param boundary The boundary identifier value
-  /// @return Reference to this identifier for chaining
-  [[deprecated("Use withBoundary() instead")]]
-  constexpr GeometryIdentifier& setBoundary(Value boundary) {
-    setBits(kBoundaryMask, boundary);
-    return *this;
-  }
-
-  /// Set the layer identifier.
-  /// @param layer The layer identifier value to set
-  /// @return Reference to this identifier for chaining
-  [[deprecated("Use withLayer() instead")]]
-  constexpr GeometryIdentifier& setLayer(Value layer) {
-    setBits(kLayerMask, layer);
-    return *this;
-  }
-
-  /// Set the approach identifier.
-  /// @param approach The approach identifier value
-  /// @return Reference to this identifier for chaining
-  [[deprecated("Use withApproach() instead")]]
-  constexpr GeometryIdentifier& setApproach(Value approach) {
-    setBits(kApproachMask, approach);
-    return *this;
-  }
-
-  /// Set the approach identifier - shared with Passive
-  /// @param approach The passive identifier value to set
-  /// @return Reference to this identifier for chaining
-  [[deprecated("Use withPassive() instead")]]
-  constexpr GeometryIdentifier& setPassive(Value approach) {
-    setBits(kApproachMask, approach);
-    return *this;
-  }
-
-  /// Set the sensitive identifier.
-  /// @param sensitive The sensitive identifier value to set
-  /// @return Reference to this identifier for chaining
-  [[deprecated("Use withSensitive() instead")]]
-  constexpr GeometryIdentifier& setSensitive(Value sensitive) {
-    setBits(kSensitiveMask, sensitive);
-    return *this;
-  }
-
-  /// Set the extra identifier
-  /// @param extra The extra identifier value to set
-  /// @return Reference to this identifier for chaining
-  [[deprecated("Use withExtra() instead")]]
-  constexpr GeometryIdentifier& setExtra(Value extra) {
-    return setBits(kExtraMask, extra);
-    return *this;
-  }
 
   /// Return a new identifier with the volume set to @p volume
   /// @param volume the new volume identifier
@@ -323,6 +262,7 @@ struct GeometryIdentifierHook {
 };
 
 }  // namespace Acts
+
 // specialize std::hash so GeometryIdentifier can be used e.g. in an
 // unordered_map
 namespace std {
@@ -333,3 +273,6 @@ struct hash<Acts::GeometryIdentifier> {
   }
 };
 }  // namespace std
+
+// specialize std::formatter so GeometryIdentifier can be used with std::format
+ACTS_OSTREAM_FORMATTER(Acts::GeometryIdentifier);

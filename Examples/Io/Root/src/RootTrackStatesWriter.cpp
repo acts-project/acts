@@ -291,16 +291,16 @@ ProcessCode RootTrackStatesWriter::finalize() {
 
 RootTrackStatesWriter::StateType RootTrackStatesWriter::getStateType(
     ConstTrackStateProxy state) {
-  if (state.typeFlags().test(Acts::OutlierFlag)) {
+  if (state.typeFlags().isOutlier()) {
     return StateType::eOutlier;
   }
-  if (state.typeFlags().test(Acts::MeasurementFlag)) {
+  if (state.typeFlags().isMeasurement()) {
     return StateType::eMeasurement;
   }
-  if (state.typeFlags().test(Acts::HoleFlag)) {
+  if (state.typeFlags().isHole()) {
     return StateType::eHole;
   }
-  if (state.typeFlags().test(Acts::MaterialFlag)) {
+  if (state.typeFlags().isMaterial()) {
     return StateType::eMaterial;
   }
   return StateType::eUnknown;
@@ -667,14 +667,12 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         if (ipar == ePredicted) {
           // local hit residual info
-          const Acts::ActsDynamicMatrix H =
+          const Acts::DynamicMatrix H =
               state.projectorSubspaceHelper().fullProjector().topLeftCorner(
                   state.calibratedSize(), Acts::eBoundSize);
-          const Acts::ActsDynamicMatrix V =
-              state.effectiveCalibratedCovariance();
-          const Acts::ActsDynamicMatrix resCov =
-              V + H * covariance * H.transpose();
-          const Acts::ActsDynamicVector res =
+          const Acts::DynamicMatrix V = state.effectiveCalibratedCovariance();
+          const Acts::DynamicMatrix resCov = V + H * covariance * H.transpose();
+          const Acts::DynamicVector res =
               state.effectiveCalibrated() - H * parameters;
 
           const double resX = res[Acts::eBoundLoc0];

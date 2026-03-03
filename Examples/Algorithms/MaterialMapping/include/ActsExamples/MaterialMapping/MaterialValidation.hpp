@@ -56,8 +56,8 @@ class MaterialValidation : public IAlgorithm {
   ///
   /// @param cfg The configuration struct carrying the used tools
   /// @param level The output logging level
-  explicit MaterialValidation(const Config& cfg,
-                              Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit MaterialValidation(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Destructor
   /// - it also writes out the file
@@ -66,8 +66,7 @@ class MaterialValidation : public IAlgorithm {
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const override;
+  ProcessCode execute(const AlgorithmContext& context) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

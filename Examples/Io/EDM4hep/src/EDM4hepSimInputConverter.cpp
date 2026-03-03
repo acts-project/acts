@@ -54,9 +54,10 @@ struct ParticleInfo {
 
 }  // namespace detail
 
-EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
-                                                   Acts::Logging::Level level)
-    : PodioInputConverter("EDM4hepSimInputConverter", level, config.inputFrame),
+EDM4hepSimInputConverter::EDM4hepSimInputConverter(
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioInputConverter("EDM4hepSimInputConverter", config.inputFrame,
+                          std::move(logger)),
       m_cfg(config) {
   if (m_cfg.outputParticlesGenerator.empty()) {
     throw std::invalid_argument(
@@ -80,7 +81,8 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
   m_outputSimHitAssociation.maybeInitialize(m_cfg.outputSimHitAssociation);
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
-  ACTS_INFO("Configured EDM4hepSimInputConverter:");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "Configured EDM4hepSimInputConverter:");
   auto printCut = [](std::optional<double> opt) {
     if (opt.has_value()) {
       return std::to_string(opt.value());
@@ -88,18 +90,23 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
       return std::string{"<none>"};
     }
   };
-  ACTS_INFO("- particle r: [" << printCut(m_cfg.particleRMin) << ", "
-                              << printCut(m_cfg.particleRMax) << "] mm");
-  ACTS_INFO("- particle z: [" << printCut(m_cfg.particleZMin) << ", "
-                              << printCut(m_cfg.particleZMax) << "] mm");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "- particle r: [" << printCut(m_cfg.particleRMin) << ", "
+                                         << printCut(m_cfg.particleRMax)
+                                         << "] mm");
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
+                       "- particle z: [" << printCut(m_cfg.particleZMin) << ", "
+                                         << printCut(m_cfg.particleZMax)
+                                         << "] mm");
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
     const auto* detElement =
         dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(
-            surface->associatedDetectorElement());
+            surface->surfacePlacement());
 
     if (detElement == nullptr) {
-      ACTS_ERROR("Surface has no associated detector element");
+      ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::ERROR,
+                           "Surface has no associated detector element");
       return;
     }
 
@@ -377,11 +384,12 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                                            generatorStableParticles.size());
 
       for (const auto& genParticle : generatorStableParticles) {
-        SimParticle particle =
-            EDM4hepUtil::readParticle(genParticle)
-                .withParticleId(SimBarcode()
+        nParticles += 1;
+        const auto particleId = SimBarcode()
                                     .withParticle(nParticles)
-                                    .withVertexPrimary(nPrimaryVertices));
+                                    .withVertexPrimary(nPrimaryVertices);
+        SimParticle particle =
+            EDM4hepUtil::readParticle(genParticle).withParticleId(particleId);
         particlesGeneratorUnordered->push_back(particle);
         ACTS_VERBOSE("+ add GEN particle " << particle);
         ACTS_VERBOSE("  - at " << particle.position().transpose());
@@ -583,7 +591,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     // We will (ab)use the sim hit index to store the association with the
     // incoming edm4hep simhit. The reason is that we will not have the final
     // sim hit index in the collection that's sorted by geometry id, so we can't
-    // otherwise build an assotiation map. The index will later be overwritten
+    // otherwise build an association map. The index will later be overwritten
     // based
     //
     // This index will be across the input collections,

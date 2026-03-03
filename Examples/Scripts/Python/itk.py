@@ -3,6 +3,7 @@ from pathlib import Path
 import argparse
 
 import acts
+import acts.examples
 from acts.json import MaterialMapJsonConverter
 
 from acts.examples import (

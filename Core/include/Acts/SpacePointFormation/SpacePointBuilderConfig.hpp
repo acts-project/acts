@@ -13,6 +13,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 namespace Acts {
+/// Configuration for space point builder setup.
 struct SpacePointBuilderConfig {
   /// Tracking geometry
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;

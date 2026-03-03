@@ -1,6 +1,5 @@
 acts_add_library(
     PluginGnn
-    SHARED
     src/GnnPipeline.cpp
     src/Tensor.cpp
     src/BoostTrackBuilding.cpp
@@ -8,6 +7,8 @@ acts_add_library(
     src/GraphStoreHook.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
+
+acts_compile_headers(PluginGnn GLOB include/**/*.hpp)
 
 if(ACTS_GNN_ENABLE_CUDA)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_CUDA)
@@ -61,8 +62,6 @@ target_include_directories(
 )
 
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
-
-target_link_libraries(ActsPluginGnn PRIVATE std::filesystem)
 
 if(ACTS_GNN_ENABLE_CUDA)
     target_compile_features(ActsPluginGnn PUBLIC cuda_std_20)

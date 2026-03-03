@@ -63,7 +63,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
     result.identifier = identifier.value();
   } else {
     result.identifier = kNoIdentifier;
-    assert(surface.associatedDetectorElement() == nullptr &&
+    assert(!surface.isSensitive() &&
            "Unidentified surface does not have detector element");
     // @TODO: Surface type is not well-defined for curvilinear surface: looks like any plane surface
     result.surfaceType = surface.type();
@@ -81,12 +81,12 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
     }
     result.boundValuesSize = values.size();
 
-    Eigen::Map<ActsSquareMatrix<4>> trf{result.transform.data()};
+    Eigen::Map<SquareMatrix<4>> trf{result.transform.data()};
 
     // This is safe ONLY(!) if there is no associated detector element, since
     // the surface will not inspect the geometry context at all by itself.
-    GeometryContext gctx;
-    trf = surface.transform(gctx).matrix();
+    GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+    trf = surface.localToGlobalTransform(gctx).matrix();
   }
 
   return result;
@@ -98,7 +98,7 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
     return nullptr;
   }
 
-  Eigen::Map<const ActsSquareMatrix<4>> mat{surface.transform.data()};
+  Eigen::Map<const SquareMatrix<4>> mat{surface.transform.data()};
   Transform3 transform{mat};
 
   using T = Surface::SurfaceType;

@@ -45,7 +45,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
@@ -72,7 +72,7 @@ int ntests = 500;
 int skip = 0;
 bool debugMode = false;
 
-/// the actual test nethod that runs the test can be used with several
+/// the actual test method that runs the test can be used with several
 /// propagator types
 ///
 /// @tparam propagator_t is the actual propagator type
@@ -375,7 +375,7 @@ BOOST_DATA_TEST_CASE(
   double q = -1 + 2 * charge;
 
   // define start parameters
-  BoundSquareMatrix cov;
+  BoundMatrix cov;
   // take some major correlations (off-diagonals)
   // clang-format off
     cov <<

@@ -18,11 +18,10 @@
 namespace Acts::Ccl {
 
 template <typename Cluster>
-void reserve(Cluster& /*cl*/, std::size_t /*n*/) {}
-
-template <Acts::Ccl::CanReserve Cluster>
 void reserve(Cluster& cl, std::size_t n) {
-  clusterReserve(cl, n);
+  if constexpr (Acts::Ccl::CanReserve<Cluster>) {
+    clusterReserve(cl, n);
+  }
 }
 
 template <typename Cell, std::size_t GridDim>
@@ -259,17 +258,6 @@ void labelClusters(Acts::Ccl::ClusteringData& data, CellCollection& cells,
   for (const Label label : data.labels) {
     ++data.nClusters[label - 1];
   }
-}
-
-template <typename CellCollection, typename ClusterCollection,
-          std::size_t GridDim, typename Connect>
-ClusterCollection createClusters(CellCollection& cells, Connect&& connect) {
-  ClusterCollection clusters;
-  Acts::Ccl::ClusteringData data;
-  Acts::Ccl::createClusters<CellCollection, ClusterCollection, GridDim,
-                            Connect>(data, cells, clusters,
-                                     std::forward<Connect>(connect));
-  return clusters;
 }
 
 template <typename CellCollection, typename ClusterCollection,

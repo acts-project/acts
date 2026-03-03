@@ -19,6 +19,8 @@ namespace Acts {
 /// Ownership enum for @c Delegate
 enum class DelegateType { Owning, NonOwning };
 
+/// Tag type to select a compile-time callable for Delegate.
+/// @tparam C Callable value used for binding.
 template <auto C>
 struct DelegateFuncTag {
   explicit constexpr DelegateFuncTag() = default;

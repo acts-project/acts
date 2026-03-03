@@ -35,7 +35,7 @@ class RangeXD {
     Type* element;
 
     Type& operator[](std::size_t i) {
-      (void)i;
+      static_cast<void>(i);
       assert(i == 0);
 
       return *element;

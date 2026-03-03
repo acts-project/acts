@@ -8,13 +8,10 @@
 
 #include "ActsExamples/Io/Csv/CsvMuonSegmentReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/MuonSegment.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
 
 #include <bitset>
 #include <stdexcept>
@@ -22,8 +19,9 @@
 #include "CsvOutputData.hpp"
 
 namespace ActsExamples {
-CsvMuonSegmentReader::CsvMuonSegmentReader(
-    const CsvMuonSegmentReader::Config& config, Acts::Logging::Level level)
+
+CsvMuonSegmentReader::CsvMuonSegmentReader(const Config& config,
+                                           Acts::Logging::Level level)
     : m_cfg(config),
       // TODO check that all files (hits,cells,truth) exists
       m_eventsRange(

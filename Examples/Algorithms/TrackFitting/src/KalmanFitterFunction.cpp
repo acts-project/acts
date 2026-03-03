@@ -76,7 +76,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   Acts::GainMatrixUpdater kfUpdater;
   Acts::MbfSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
-  double reverseFilteringCovarianceScaling = 1.0;
+  double reverseFilteringCovarianceScaling = 100.0;
   SimpleOutlierFinder outlierFinder;
 
   bool multipleScattering = false;
@@ -109,16 +109,16 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.propOptions, &(*options.referenceSurface));
+        extensions, options.propOptions, options.referenceSurface);
 
     kfOptions.referenceSurfaceStrategy =
-        Acts::KalmanFitterTargetSurfaceStrategy::first;
+        Acts::TrackExtrapolationStrategy::first;
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
-    kfOptions.reversedFilteringCovarianceScaling =
+    kfOptions.reverseFilteringCovarianceScaling =
         reverseFilteringCovarianceScaling;
 
     if (options.doRefit) {
@@ -159,8 +159,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
 
 }  // namespace
 
-std::shared_ptr<ActsExamples::TrackFitterFunction>
-ActsExamples::makeKalmanFitterFunction(
+std::shared_ptr<TrackFitterFunction> ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,

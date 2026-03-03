@@ -22,19 +22,10 @@
 #include <vector>
 
 namespace Acts {
-/// @brief material mapping procedure
+/// Class that implements the material mapping procedure
+/// @ingroup material_mapping
 class MaterialMapper {
  public:
-  using SurfaceMaterialMap
-      [[deprecated("Use Acts::SurfaceMaterialMaps directly")]] =
-          SurfaceMaterialMaps;
-  using VolumeMaterialMap
-      [[deprecated("Use Acts::VolumeMaterialMaps directly")]] =
-          VolumeMaterialMaps;
-  using DetectorMaterialMaps
-      [[deprecated("Use Acts::TrackingGeometryMaterial directly")]] =
-          TrackingGeometryMaterial;
-
   /// @brief nested configuration struct
   struct Config {
     /// The assignment finder for material interaction assignments

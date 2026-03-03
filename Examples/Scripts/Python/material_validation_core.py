@@ -239,7 +239,7 @@ if "__main__" == __name__:
             cOptions.materialDecorator = materialDecorator
 
             # Context and options
-            geoContext = acts.GeometryContext()
+            geoContext = acts.GeometryContext.dangerouslyDefaultConstruct()
             [detector, contextors, store] = dd4hepDetector.finalize(
                 geoContext, cOptions
             )

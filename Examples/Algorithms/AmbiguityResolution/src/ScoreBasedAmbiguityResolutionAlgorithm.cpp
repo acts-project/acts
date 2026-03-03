@@ -9,20 +9,19 @@
 #include "ActsExamples/AmbiguityResolution/ScoreBasedAmbiguityResolutionAlgorithm.hpp"
 
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsPlugins/Json/AmbiguityConfigJsonConverter.hpp"
 
 #include <fstream>
 
+namespace ActsExamples {
+
 namespace {
 
 Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
-    const ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::Config& cfg,
+    const ScoreBasedAmbiguityResolutionAlgorithm::Config& cfg,
     const std::string& configFile) {
   Acts::ScoreBasedAmbiguityResolution::Config result;
 
@@ -50,13 +49,11 @@ Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
 }
 
 std::size_t sourceLinkHash(const Acts::SourceLink& a) {
-  return static_cast<std::size_t>(
-      a.get<ActsExamples::IndexSourceLink>().index());
+  return static_cast<std::size_t>(a.get<IndexSourceLink>().index());
 }
 
 bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
-  return a.get<ActsExamples::IndexSourceLink>().index() ==
-         b.get<ActsExamples::IndexSourceLink>().index();
+  return a.get<IndexSourceLink>().index() == b.get<IndexSourceLink>().index();
 }
 
 bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
@@ -66,11 +63,11 @@ bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
   int counter = 0;
   for (const auto& ts : track.trackStatesReversed()) {
     auto iTypeFlags = ts.typeFlags();
-    if (!iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+    if (!iTypeFlags.isHole()) {
       doubleFlag = false;
     }
 
-    if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+    if (iTypeFlags.isHole()) {
       if (doubleFlag) {
         counter++;
         doubleFlag = false;
@@ -88,13 +85,11 @@ bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
 
 }  // namespace
 
-ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::
-    ScoreBasedAmbiguityResolutionAlgorithm(
-        ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::Config cfg,
-        Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("ScoreBasedAmbiguityResolutionAlgorithm", lvl),
-      m_cfg(std::move(cfg)),
-      m_ambi(transformConfig(cfg, m_cfg.configFile), logger().clone()) {
+ScoreBasedAmbiguityResolutionAlgorithm::ScoreBasedAmbiguityResolutionAlgorithm(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("ScoreBasedAmbiguityResolutionAlgorithm", std::move(logger)),
+      m_cfg(cfg),
+      m_ambi(transformConfig(cfg, m_cfg.configFile), this->logger().clone()) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
   }
@@ -105,8 +100,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode
-ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
+ProcessCode ScoreBasedAmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const auto& tracks = m_inputTracks(ctx);  // Read input data
   ACTS_VERBOSE("Number of input tracks: " << tracks.size());
@@ -126,11 +120,13 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
     destProxy.tipIndex() = srcProxy.tipIndex();
   }
 
-  ActsExamples::ConstTrackContainer outputTracks{
+  ConstTrackContainer outputTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(
           std::move(solvedTracks.container())),
       tracks.trackStateContainerHolder()};
 
   m_outputTracks(ctx, std::move(outputTracks));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

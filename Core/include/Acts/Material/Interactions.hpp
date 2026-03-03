@@ -36,7 +36,7 @@ float computeEnergyLossBethe(const MaterialSlab& slab, float m, float qOverP,
 float deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
                                   float qOverP, float absQ);
 
-/// Compute the most propable energy loss due to ionisation and excitation.
+/// Compute the most probable energy loss due to ionisation and excitation.
 ///
 /// @copydoc computeEnergyLossBethe
 ///

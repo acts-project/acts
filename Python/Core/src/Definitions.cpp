@@ -258,7 +258,11 @@ void addDefinitions(py::module_& m) {
   // Add the parsePdgParticle function
   m.def("parsePdgParticle", &parsePdgParticle, py::arg("name"));
 
-  py::class_<ParticleHypothesis>(m, "ParticleHypothesis")
+  py::class_<GenericParticleHypothesis<AnyCharge>>(
+      m, "GenericParticleHypothesisAnyCharge");
+
+  py::class_<ParticleHypothesis, GenericParticleHypothesis<AnyCharge>>(
+      m, "ParticleHypothesis")
       .def(py::init([](PdgParticle absPdg, float mass, float absCharge) {
              return ParticleHypothesis(absPdg, mass, AnyCharge{absCharge});
            }),
@@ -275,31 +279,33 @@ void addDefinitions(py::module_& m) {
              particleHypothesis.toStream(os);
              return os.str();
            })
-      .def("absolutePdg",
-           [](const ParticleHypothesis& p) { return p.absolutePdg(); })
-      .def("mass", [](const ParticleHypothesis& p) { return p.mass(); })
-      .def("absoluteCharge",
-           [](const ParticleHypothesis& p) { return p.absoluteCharge(); })
+      .def_property_readonly("absolutePdg", &ParticleHypothesis::absolutePdg)
+      .def_property_readonly("mass", &ParticleHypothesis::mass)
+      .def_property_readonly("absoluteCharge",
+                             &ParticleHypothesis::absoluteCharge)
       .def_property_readonly_static(
           "muon",
-          [](py::object /* self */) { return ParticleHypothesis::muon(); })
+          [](const py::object& /*self*/) { return ParticleHypothesis::muon(); })
       .def_property_readonly_static(
           "pion",
-          [](py::object /* self */) { return ParticleHypothesis::pion(); })
-      .def_property_readonly_static(
-          "electron",
-          [](py::object /* self */) { return ParticleHypothesis::electron(); })
+          [](const py::object& /*self*/) { return ParticleHypothesis::pion(); })
+      .def_property_readonly_static("electron",
+                                    [](const py::object& /*self*/) {
+                                      return ParticleHypothesis::electron();
+                                    })
       .def_property_readonly_static(
           "kaon",
-          [](py::object /* self */) { return ParticleHypothesis::kaon(); })
+          [](const py::object& /*self*/) { return ParticleHypothesis::kaon(); })
+      .def_property_readonly_static("proton",
+                                    [](const py::object& /*self*/) {
+                                      return ParticleHypothesis::proton();
+                                    })
+      .def_property_readonly_static("geantino",
+                                    [](const py::object& /*self*/) {
+                                      return ParticleHypothesis::geantino();
+                                    })
       .def_property_readonly_static(
-          "proton",
-          [](py::object /* self */) { return ParticleHypothesis::proton(); })
-      .def_property_readonly_static(
-          "geantino",
-          [](py::object /* self */) { return ParticleHypothesis::geantino(); })
-      .def_property_readonly_static(
-          "chargedGeantino", [](py::object /* self */) {
+          "chargedGeantino", [](const py::object& /*self*/) {
             return ParticleHypothesis::chargedGeantino();
           });
 }

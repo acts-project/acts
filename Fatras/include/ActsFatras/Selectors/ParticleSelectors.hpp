@@ -19,7 +19,7 @@ struct EveryParticle {
   /// @param particle The particle to evaluate (unused)
   /// @return Always true
   bool operator()(const Particle &particle) const {
-    (void)particle;
+    static_cast<void>(particle);
     return true;
   }
 };

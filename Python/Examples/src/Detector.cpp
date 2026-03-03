@@ -8,9 +8,9 @@
 
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/DetectorCommons/StructureSelector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
@@ -90,11 +90,6 @@ void addDetector(py::module& mex) {
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
                        surfaceType, binValue, materialDecorator, logLevel);
-  }
-
-  {
-    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
-        mex, "DetectorElementBase");
   }
 }
 

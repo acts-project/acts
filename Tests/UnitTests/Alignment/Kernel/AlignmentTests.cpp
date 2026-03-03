@@ -65,7 +65,7 @@ KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
 
 // Create a test context
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 const CalibrationContext calCtx;
 
@@ -211,7 +211,7 @@ BoundTrackParameters makeParameters() {
   stddev[eBoundPhi] = 0.5_degree;
   stddev[eBoundTheta] = 0.5_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   auto loc0 = 0. + stddev[eBoundLoc0] * normalDist(rng);
   auto loc1 = 0. + stddev[eBoundLoc1] * normalDist(rng);
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Construct a non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
-      [](DetectorElementBase* /*element*/, const GeometryContext& /*gctx*/,
+      [](SurfacePlacementBase* /*element*/, const GeometryContext& /*gctx*/,
          const Transform3& /*transform*/) { return true; };
 
   // Construct the alignment options
@@ -353,8 +353,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   // Check the projection matrix
   BOOST_CHECK_EQUAL(alignState.projectionMatrix.rows(), 12);
   BOOST_CHECK_EQUAL(alignState.projectionMatrix.cols(), 36);
-  const ActsMatrix<2, 6> proj = alignState.projectionMatrix.block<2, 6>(0, 0);
-  const ActsMatrix<2, 6> refProj = ActsMatrix<2, 6>::Identity();
+  const Matrix<2, 6> proj = alignState.projectionMatrix.block<2, 6>(0, 0);
+  const Matrix<2, 6> refProj = Matrix<2, 6>::Identity();
   CHECK_CLOSE_ABS(proj, refProj, 1e-10);
   // Check the residual
   BOOST_CHECK_EQUAL(alignState.residual.size(), 12);

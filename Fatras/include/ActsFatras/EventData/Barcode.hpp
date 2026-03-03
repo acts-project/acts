@@ -97,13 +97,19 @@ namespace ActsFatras {
 /// particles are known.
 class Barcode {
  public:
+  /// Identifier type for primary vertex
   using PrimaryVertexId = std::uint16_t;
+  /// Identifier type for secondary vertex
   using SecondaryVertexId = std::uint16_t;
+  /// Identifier type for particle
   using ParticleId = std::uint32_t;
+  /// Identifier type for generation
   using GenerationId = std::uint8_t;
+  /// Identifier type for sub-particle
   using SubParticleId = std::uint32_t;
 
-  // Construct an invalid barcode with all levels set to zero.
+  /// Construct an invalid barcode with all levels set to zero.
+  /// @return An invalid barcode
   static constexpr Barcode Invalid() { return Barcode(); }
 
   /// Empty barcode
@@ -120,13 +126,18 @@ class Barcode {
   Barcode& operator=(Barcode&&) = default;
 
   ///  Compare two barcodes
+  /// @return True if barcodes are equal
   bool operator==(const Barcode&) const = default;
   friend constexpr auto operator<=>(Barcode lhs, Barcode rhs) {
     return lhs.asVector() <=> rhs.asVector();
   }
 
   /// Check validity of the barcode
+  /// @param b The barcode to check
+  /// @return True if barcode is valid
   static constexpr bool isValid(const Barcode& b) { return b != Invalid(); }
+  /// Check if this barcode is valid
+  /// @return True if this barcode is valid
   constexpr bool isValid() const { return isValid(*this); }
 
   /// Return the primary vertex identifier.
@@ -152,54 +163,10 @@ class Barcode {
   constexpr SubParticleId subParticle() const { return subParticleID; }
 
   /// Export barcode as vector
+  /// @return Vector of barcode components
   constexpr std::vector<std::uint32_t> asVector() const {
     return {vertexPrimary(), vertexSecondary(), particle(), generation(),
             subParticle()};
-  }
-
-  /// Set the primary vertex identifier.
-  /// @param id Primary vertex identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withVertexPrimary() instead")]]
-  constexpr Barcode& setVertexPrimary(PrimaryVertexId id) {
-    vertexPrimaryID = id;
-    return *this;
-  }
-
-  /// Set the secondary vertex identifier.
-  /// @param id Secondary vertex identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withVertexSecondary() instead")]]
-  constexpr Barcode& setVertexSecondary(SecondaryVertexId id) {
-    vertexSecondaryID = id;
-    return *this;
-  }
-
-  /// Set the parent particle identifier.
-  /// @param id Particle identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withParticle() instead")]]
-  constexpr Barcode& setParticle(ParticleId id) {
-    particleID = id;
-    return *this;
-  }
-
-  /// Set the particle identifier.
-  /// @param id Generation identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withGeneration() instead")]]
-  constexpr Barcode& setGeneration(GenerationId id) {
-    generationID = id;
-    return *this;
-  }
-
-  /// Set the process identifier.
-  /// @param id Sub-particle identifier to set
-  /// @return Reference to this barcode for chaining
-  [[deprecated("Use withSubParticle() instead")]]
-  constexpr Barcode& setSubParticle(SubParticleId id) {
-    subParticleID = id;
-    return *this;
   }
 
   /// Create a new barcode with a different primary vertex identifier.
@@ -296,6 +263,7 @@ class Barcode {
   }
 
   /// Reduce the barcode to the particle identifier.
+  /// @return Barcode with subparticle identifier set to zero
   constexpr Barcode withoutSubparticle() const {
     // Provide a pseudo-barcode that contains all fields but not the
     // subparticle counter. This can be used as key in a map to store the
@@ -315,6 +283,7 @@ class Barcode {
   }
 
   /// Get hash of the barcode
+  /// @return Hash value of the barcode
   std::size_t hash() const {
     std::size_t seed = 0;
     boost::hash_combine(seed, vertexPrimary());

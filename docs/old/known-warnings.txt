@@ -9,3 +9,13 @@
 .*undefined label: .*namespace_acts_.*
 # I think these are because we use specialization
 .*undefined label: .*bdt.*
+
+# ignore after decommissioning old docs setup
+.*doxygentypedef: Cannot find typedef.*
+.*doxygenfunction: Cannot find function.*
+.*doxygenenum: Cannot find enum.*
+.*undefined label:.*
+.*cpp:enum reference target not found:.*
+.*cpp:func reference target not found:.*
+.*cpp:enumerator reference target not found:.*
+.*cpp:func reference target not found:.*

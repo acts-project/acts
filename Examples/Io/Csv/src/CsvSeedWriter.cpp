@@ -8,15 +8,6 @@
 
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 
-#include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -29,19 +20,37 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 
-using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::CsvSeedWriter::CsvSeedWriter(
-    const ActsExamples::CsvSeedWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+namespace {
+
+/// @brief Struct for brief seed summary info
+///
+struct SeedInfo {
+  std::size_t seedID = 0;
+  ActsFatras::Barcode particleId;
+  float seedPt = -1;
+  float seedPhi = 0;
+  float seedEta = 0;
+  float vertexZ = 0;
+  float quality = -1;
+  boost::container::small_vector<Acts::Vector3, 3> globalPosition;
+  float truthDistance = -1;
+  std::string seedType = "unknown";
+  ProtoTrack measurementsID;
+};
+
+}  // namespace
+
+CsvSeedWriter::CsvSeedWriter(const Config& config, Acts::Logging::Level level)
     : WriterT<TrackParametersContainer>(config.inputTrackParameters,
                                         "CsvSeedWriter", level),
       m_cfg(config) {
-  if (m_cfg.inputSimSeeds.empty()) {
+  if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing space points input collection");
   }
   if (m_cfg.inputSimHits.empty()) {
@@ -61,17 +70,16 @@ ActsExamples::CsvSeedWriter::CsvSeedWriter(
     throw std::invalid_argument("Missing output directory");
   }
 
-  m_inputSimSeeds.initialize(m_cfg.inputSimSeeds);
+  m_inputSeeds.initialize(m_cfg.inputSeeds);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
   m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx,
-    const TrackParametersContainer& trackParams) {
+ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
+                                  const TrackParametersContainer& trackParams) {
   // Read additional input collections
-  const auto& seeds = m_inputSimSeeds(ctx);
+  const auto& seeds = m_inputSeeds(ctx);
   const auto& simHits = m_inputSimHits(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
   const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
@@ -98,7 +106,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
 
     // Get the proto track from which the track parameters are estimated
     const auto& seed = seeds[iparams];
-    const auto& ptrack = seedToPrototrack(seed);
+    const auto& ptrack = seedToProtoTrack(seed);
 
     std::vector<ParticleHitCount> particleHitCounts;
     identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
@@ -142,9 +150,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     }
     // Store the global position of the space points
     boost::container::small_vector<Acts::Vector3, 3> globalPosition;
-    for (auto spacePointPtr : seed.sp()) {
-      Acts::Vector3 pos(spacePointPtr->x(), spacePointPtr->y(),
-                        spacePointPtr->z());
+    for (auto sp : seed.spacePoints()) {
+      Acts::Vector3 pos(sp.x(), sp.y(), sp.z());
       globalPosition.push_back(pos);
     }
 
@@ -156,8 +163,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
                    std::sin(params[Acts::eBoundTheta]);
     toAdd.seedPhi = seedPhi;
     toAdd.seedEta = seedEta;
-    toAdd.vertexZ = seed.z();
-    toAdd.quality = seed.seedQuality();
+    toAdd.vertexZ = seed.vertexZ();
+    toAdd.quality = seed.quality();
     toAdd.globalPosition = globalPosition;
     toAdd.truthDistance = truthDistance;
     toAdd.seedType = truthMatched ? "duplicate" : "fake";
@@ -198,3 +205,5 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

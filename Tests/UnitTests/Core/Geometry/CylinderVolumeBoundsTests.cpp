@@ -177,10 +177,10 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-10., 10.))) ^
         bdata::xrange(100),
     alpha, beta, gamma, posX, posY, posZ, index) {
-  (void)index;
+  static_cast<void>(index);
 
   // Create a test context
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   // position of volume
   const Vector3 pos(posX, posY, posZ);
@@ -252,7 +252,7 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   float tol = 1e-4;
 
@@ -300,14 +300,14 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
 }
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   CylinderVolumeBounds cvb(5, 10, 20);
 
   auto cvbOrientedSurfaces = cvb.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 4);
 
-  auto geoCtx = GeometryContext();
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   Vector3 xaxis(1., 0., 0.);
   Vector3 yaxis(0., 1., 0.);
   Vector3 zaxis(0., 0., 1.);
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
     BOOST_CHECK(!cvb.inside(outsideCvb));
 
     // Test the orientation of the boundary surfaces
-    auto rot = os.surface->transform(geoCtx).rotation();
+    auto rot = os.surface->localToGlobalTransform(geoCtx).rotation();
     BOOST_CHECK(rot.col(0).isApprox(xaxis));
     BOOST_CHECK(rot.col(1).isApprox(yaxis));
     BOOST_CHECK(rot.col(2).isApprox(zaxis));

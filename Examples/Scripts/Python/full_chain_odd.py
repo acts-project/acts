@@ -184,7 +184,7 @@ s = acts.examples.Sequencer(
 
 if args.edm4hep:
     import acts.examples.edm4hep
-    from acts.examples.podio import PodioReader
+    from acts.examples.edm4hep import PodioReader
 
     s.addReader(
         PodioReader(

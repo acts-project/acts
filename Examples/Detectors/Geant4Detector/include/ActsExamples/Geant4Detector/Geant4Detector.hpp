@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsPlugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
@@ -32,11 +31,6 @@ struct Geant4Detector : public Detector {
     const G4VPhysicalVolume* g4World = nullptr;
     /// The Converter options: detector surfaces
     ActsPlugins::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
-    /// The corresponding ProtoDetector
-    Acts::ProtoDetector protoDetector;
-    /// Optional geometry identifier hook to be used during closure
-    std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
-        std::make_shared<Acts::GeometryIdentifierHook>();
     /// Logging level of the child tools
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };

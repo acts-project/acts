@@ -26,6 +26,8 @@ class G4VPhysicalVolume;
 using G4Transform3D = HepGeom::Transform3D;
 
 namespace ActsPlugins {
+/// @addtogroup geant4_plugin
+/// @{
 
 class Geant4DetectorElement;
 class IGeant4PhysicalVolumeSelector;
@@ -60,8 +62,8 @@ class Geant4DetectorSurfaceFactory {
       std::tuple<std::shared_ptr<Geant4DetectorElement>,
                  std::shared_ptr<Acts::Surface>>;
 
-  using Geant4PassiveSurface = std::shared_ptr<Acts::Surface>;
   /// Type alias for passive surface
+  using Geant4PassiveSurface = std::shared_ptr<Acts::Surface>;
 
   /// Nested cache that records the conversion status
   struct Cache {
@@ -127,4 +129,5 @@ class Geant4DetectorSurfaceFactory {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace ActsPlugins

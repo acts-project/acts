@@ -48,7 +48,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 CylindricalTrackingGeometry cGeometry(tgContext);
@@ -230,7 +230,7 @@ template <std::ranges::range ref_surfaces_t>
 #endif
 void runSimpleTest(const std::vector<const Surface*>& surfaces,
                    Direction direction, const Surface* startSurface,
-                   ref_surfaces_t expectedSurfaces) {
+                   const ref_surfaces_t& expectedSurfaces) {
   Propagator<StraightLineStepper, DirectNavigator> prop(StraightLineStepper{},
                                                         DirectNavigator{});
 

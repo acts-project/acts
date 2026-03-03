@@ -1,6 +1,7 @@
 target_sources(
     ActsCore
     PRIVATE
+        AlignablePortalVisitor.cpp
         ConeLayer.cpp
         ConeVolumeBounds.cpp
         CuboidVolumeBounds.cpp
@@ -11,7 +12,6 @@ target_sources(
         CylinderVolumeBuilder.cpp
         CylinderVolumeHelper.cpp
         Extent.cpp
-        KDTreeTrackingGeometryBuilder.cpp
         DiscLayer.cpp
         GenericApproachDescriptor.cpp
         GenericCuboidVolumeBounds.cpp
@@ -26,13 +26,14 @@ target_sources(
         Polyhedron.cpp
         ProtoLayer.cpp
         ProtoLayerHelper.cpp
+        VolumePlacementBase.cpp
         SurfaceArrayCreator.cpp
         TrackingGeometry.cpp
         TrackingGeometryBuilder.cpp
         TrackingVolume.cpp
         TrackingVolumeArrayCreator.cpp
         TrapezoidVolumeBounds.cpp
-        ConvexPolygonVolumeBounds.cpp
+        DiamondVolumeBounds.cpp
         Volume.cpp
         VolumeBounds.cpp
         CylinderVolumeStack.cpp
@@ -44,7 +45,6 @@ target_sources(
         CompositePortalLink.cpp
         PortalLinkBase.cpp
         PortalError.cpp
-        ProtoDetector.cpp
         CylinderPortalShell.cpp
         CuboidPortalShell.cpp
         BlueprintNode.cpp
@@ -59,11 +59,12 @@ target_sources(
         GeometryIdentifierBlueprintNode.cpp
         TrackingGeometryVisitor.cpp
         TrapezoidPortalShell.cpp
-        ConvexPolygonPortalShell.cpp
+        DiamondPortalShell.cpp
         VolumeStack.cpp
         ContainerBlueprintNode.cpp
         MultiWireVolumeBuilder.cpp
         ReferenceGenerators.cpp
-        detail/TrackingGeometryPrintVisitor.cpp
-        detail/BoundDeduplicator.cpp
+        TrackingGeometryPrintVisitor.cpp
+        BoundDeduplicator.cpp
+        PortalPlacement.cpp
 )

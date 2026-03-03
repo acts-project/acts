@@ -30,6 +30,7 @@ class ContextType {
   /// @tparam T The type of the value to construct from
   /// @param value The value to construct from
   template <typename T>
+    requires(!std::is_base_of_v<ContextType, std::decay_t<T>>)
   explicit ContextType(T&& value) : m_data{std::forward<T>(value)} {}
 
   /// Copy construct a new Context Type object from anything. Must be explicit.
@@ -37,6 +38,7 @@ class ContextType {
   /// @tparam T The type of the value to construct from
   /// @param value The value to construct from
   template <typename T>
+    requires(!std::is_base_of_v<ContextType, std::decay_t<T>>)
   explicit ContextType(const T& value) : m_data{value} {}
 
   /// Move assignment of anything to this object is allowed.
@@ -45,6 +47,7 @@ class ContextType {
   /// @param value The value to assign
   /// @return ContextType&
   template <typename T>
+    requires(!std::is_base_of_v<ContextType, std::decay_t<T>>)
   ContextType& operator=(T&& value) {
     m_data = std::forward<T>(value);
     return *this;
@@ -56,6 +59,7 @@ class ContextType {
   /// @param value The value to assign
   /// @return ContextType&
   template <typename T>
+    requires(!std::is_base_of_v<ContextType, std::decay_t<T>>)
   ContextType& operator=(const T& value) {
     m_data = value;
     return *this;

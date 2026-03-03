@@ -16,7 +16,7 @@
 namespace Acts {
 class GeometryContext;
 class TrackingGeometry;
-class DetectorElementBase;
+class SurfacePlacementBase;
 class Logger;
 }  // namespace Acts
 
@@ -62,9 +62,11 @@ class Detector {
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  Acts::GeometryContext m_nominalGeometryContext;
+  Acts::GeometryContext m_nominalGeometryContext{
+      Acts::GeometryContext::dangerouslyDefaultConstruct()};
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
-  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> m_detectorStore;
+  std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>
+      m_detectorStore;
   std::vector<std::shared_ptr<IContextDecorator>> m_contextDecorators;
 };
 

@@ -23,6 +23,8 @@ class TGeoNode;
 class TGeoVolume;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @brief TGeoParser is a helper struct that
 /// walks recursively through a TGeometry and selects by
@@ -34,10 +36,11 @@ struct TGeoParser {
   /// Type alias for parsing range as min/max bounds pair
   using ParseRange = std::pair<double, double>;
 
+  /// Structure holding a selected TGeo node with its global transform
   struct SelectedNode {
-    // The selected geo node
+    /// The selected geo node
     const TGeoNode* node = nullptr;
-    // The transform to global
+    /// The transform to global
     std::unique_ptr<TGeoMatrix> transform = nullptr;
   };
 
@@ -88,4 +91,5 @@ struct TGeoParser {
   static TGeoNode* findNodeRecursive(TGeoNode* currentNode,
                                      const char* volumeName);
 };
+/// @}
 }  // namespace ActsPlugins

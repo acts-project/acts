@@ -231,7 +231,7 @@ class BinUtility {
     return m_binningData[ba].nextDirection(position, direction);
   }
 
-  /// Bin from a 2D vector (following local parameters defintitions)
+  /// Bin from a 2D vector (following local parameters definitions)
   /// - no optional transform applied
   /// - USE WITH CARE !!
   ///

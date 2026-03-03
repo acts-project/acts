@@ -8,8 +8,8 @@
 
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 
-#include "Acts/Geometry/ConvexPolygonVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
@@ -41,16 +41,22 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
                                     : VolumeBounds::BoundsType::eOther;
   if (!(boundsType == VolumeBounds::BoundsType::eTrapezoid ||
         boundsType == VolumeBounds::BoundsType::eCuboid ||
-        boundsType == VolumeBounds::BoundsType::eConvexPolygon)) {
+        boundsType == VolumeBounds::BoundsType::eDiamond)) {
     throw std::invalid_argument(
         "MultiWireStructureBuilder: Only trapezoid cuboid or diamond bounds "
         "are "
         "supported");
   }
 
-  std::unique_ptr<TrackingVolume> trackingVolume =
-      std::make_unique<TrackingVolume>(m_config.transform, m_config.bounds,
-                                       m_config.name);
+  std::unique_ptr<TrackingVolume> trackingVolume{};
+
+  if (m_config.alignablePlacement == nullptr) {
+    trackingVolume = std::make_unique<TrackingVolume>(
+        m_config.transform, m_config.bounds, m_config.name);
+  } else {
+    trackingVolume = std::make_unique<TrackingVolume>(
+        *m_config.alignablePlacement, m_config.bounds, m_config.name);
+  }
 
   // Add the surfaces to the tracking volume
   for (auto& surface : m_config.mlSurfaces) {

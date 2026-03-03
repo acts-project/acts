@@ -40,10 +40,10 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 BOOST_AUTO_TEST_SUITE(VertexingSuite)
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  SquareMatrix3 constrCov = ActsSquareMatrix<3>::Identity();
+  SquareMatrix3 constrCov = SquareMatrix<3>::Identity();
 
   Vertex constraint(constraintPos);
   constraint.setCovariance(constrCov);

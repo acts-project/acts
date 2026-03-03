@@ -16,11 +16,9 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
-#include <limits>
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Select tracks by applying some selection cuts.
 class TrackSelectorAlgorithm final : public IAlgorithm {
@@ -34,7 +32,9 @@ class TrackSelectorAlgorithm final : public IAlgorithm {
     Acts::TrackSelector::Config selectorConfig;
   };
 
-  TrackSelectorAlgorithm(const Config& config, Acts::Logging::Level level);
+  explicit TrackSelectorAlgorithm(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

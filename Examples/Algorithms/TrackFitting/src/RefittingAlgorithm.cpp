@@ -32,9 +32,10 @@
 
 namespace ActsExamples {
 
-RefittingAlgorithm::RefittingAlgorithm(Config config,
-                                       Acts::Logging::Level level)
-    : IAlgorithm("RefittingAlgorithm", level), m_cfg(std::move(config)) {
+RefittingAlgorithm::RefittingAlgorithm(
+    Config config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("RefittingAlgorithm", std::move(logger)),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
   }
@@ -61,8 +62,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto itrack = 0ul;
   for (const auto& track : inputTracks) {
     // Check if you are not in picking mode
+    ++itrack;
     if (m_cfg.pickTrack > -1 &&
-        static_cast<std::size_t>(m_cfg.pickTrack) != itrack++) {
+        static_cast<std::size_t>(m_cfg.pickTrack) != itrack - 1) {
       continue;
     }
 
@@ -130,9 +132,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
         ACTS_DEBUG("No refitted parameters for track " << itrack);
       }
     } else {
-      ACTS_WARNING("Fit failed for track "
-                   << itrack << " with error: " << result.error() << ", "
-                   << result.error().message());
+      ACTS_WARNING("Fit failed for event "
+                   << ctx.eventNumber << " track " << itrack << " with error: "
+                   << result.error() << ", " << result.error().message());
     }
     ++itrack;
   }

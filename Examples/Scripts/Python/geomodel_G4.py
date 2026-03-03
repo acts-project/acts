@@ -112,7 +112,7 @@ def main():
 
     args = parser.parse_args()
 
-    gContext = acts.GeometryContext()
+    gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
     logLevel = logging.INFO
 
     # Create the tracking geometry builder for the muon system
@@ -131,11 +131,21 @@ def main():
         mockUpCfg.dbName = "ActsGeoMS.db"
         mockUpCfg.nSectors = 12
         mockUpCfg.nEtaStations = 8
-        mockUpCfg.buildEndcaps = False
+        mockUpCfg.buildEndcaps = True
         mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
             mockUpCfg, "GeoMockUpMS", logLevel
         )
-        gmBuilderConfig.stationNames = ["Inner", "Middle", "Outer"]
+        gmBuilderConfig.stationNames = [
+            "BI",
+            "BM",
+            "BO",
+            "EAI",
+            "EAM",
+            "EAO",
+            "ECI",
+            "ECM",
+            "ECO",
+        ]
 
         gmTree = mockUpBuilder.constructMS()
     else:
@@ -149,7 +159,7 @@ def main():
         "SmallWheelGasGap",
     ]
     gmFactoryConfig.convertSubVolumes = True
-    gmFactoryConfig.convertBox = ["MDT", "RPC"]
+    gmFactoryConfig.convertBox = ["MDT", "RPC", "SmallWheel", "TGC"]
 
     gmFactory = gm.GeoModelDetectorObjectFactory(gmFactoryConfig, logLevel)
     # The options
@@ -205,6 +215,19 @@ def main():
             level=logLevel,
             inputSpacePoints="MuonSpacePoints",
             filePath=f"{args.outDir}/MS_SpacePoints.root",
+        )
+    )
+
+    from acts.examples.root import RootMeasurementWriter
+
+    algSequence.addWriter(
+        RootMeasurementWriter(
+            level=logLevel,
+            inputMeasurements="measurements",
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            filePath=str("measurements.root"),
+            surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
     )
 

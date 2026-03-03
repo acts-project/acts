@@ -41,7 +41,7 @@ const bool testCylinder = true;
 const bool testStraw = true;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 // Create a test plane in 10 m distance
 // Some random transform
@@ -98,7 +98,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-0.3, 0.3))) ^
         bdata::xrange(ntests),
     phi, theta, index) {
-  (void)index;
+  static_cast<void>(index);
 
   std::cout << std::endl
             << "Benchmarking theta=" << theta << ", phi=" << phi << "..."

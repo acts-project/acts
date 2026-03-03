@@ -89,8 +89,8 @@ PipelineTensors TorchMetricLearning::operator()(
 
   const std::int64_t numAllFeatures = inputValues.size() / numNodes;
 
-  // printout the r,phi,z of the first spacepoint
-  ACTS_VERBOSE("First spacepoint information: " << [&]() {
+  // printout the r,phi,z of the first space point
+  ACTS_VERBOSE("First space point information: " << [&]() {
     std::stringstream ss;
     for (int i = 0; i < numAllFeatures; ++i) {
       ss << inputValues[i] << "  ";

@@ -22,17 +22,19 @@ class GeometryIdentifier;
 }
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// @brief Helper class to manage the I/O of measurements and associated clusters
 /// to and from ROOT files.
 class RootMeasurementIo {
  public:
-  // Configuration struct
+  /// Configuration struct for measurement I/O
   struct Config {
-    // Indicate the reconstruction indices to be stored
+    /// Indicate the reconstruction indices to be stored
     std::vector<Acts::BoundIndices>& recoIndices;
 
-    // Indicate the cluster indices to be stored
+    /// Indicate the cluster indices to be stored
     std::vector<Acts::BoundIndices>& clusterIndices;
   };
 
@@ -134,4 +136,5 @@ class RootMeasurementIo {
   MeasurementPayload m_measurementPayload;
   ClusterPayload m_clusterPayload;
 };
+/// @}
 }  // namespace ActsPlugins

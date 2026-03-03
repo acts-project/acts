@@ -12,15 +12,14 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -40,12 +39,7 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     /// The input measurement-sim hits map collection.
     std::string inputMeasurementSimHitsMap;
     /// Input space point collections.
-    ///
-    /// We allow multiple space point collections to allow different parts of
-    /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
-    /// space points for strip-like detectors.
-    std::vector<std::string> inputSpacePoints;
+    std::string inputSpacePoints;
     /// Output successfully seeded truth particles.
     std::string outputParticles;
     /// Output proto track collection.
@@ -72,7 +66,8 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TruthSeedingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  explicit TruthSeedingAlgorithm(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the truth seeding algorithm.
   ///
@@ -92,14 +87,14 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputHits"};
   ReadDataHandle<InverseMultimap<Index>> m_inputMeasurementSimHitsMap{
       this, "MeasurementSimHitsMap"};
-  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
-      m_inputSpacePoints{};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<std::vector<Acts::ParticleHypothesis>>
       m_outputParticleHypotheses{this, "OutputParticleHypotheses"};
 };

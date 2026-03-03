@@ -14,22 +14,34 @@
 #include <memory>
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
+/// Track building implementation using CUDA
 class CudaTrackBuilding final : public TrackBuildingBase {
  public:
+  /// Configuration for CUDA track building
   struct Config {
+    /// Use one block implementation
     bool useOneBlockImplementation = true;
+    /// Do junction removal
     bool doJunctionRemoval = false;
+    /// Minimum candidate size
     std::size_t minCandidateSize = 3;
   };
 
+  /// Constructor
+  /// @param cfg Configuration object
+  /// @param logger Logger instance
   CudaTrackBuilding(const Config &cfg,
                     std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
-      PipelineTensors tensors, std::vector<int> &spacepointIDs,
+      PipelineTensors tensors, std::vector<int> &spacePointIDs,
       const ExecutionContext &execContext = {}) override;
+  /// Get configuration
+  /// @return Configuration object
   const Config &config() const { return m_cfg; }
 
  private:
@@ -38,4 +50,5 @@ class CudaTrackBuilding final : public TrackBuildingBase {
   const auto &logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace ActsPlugins

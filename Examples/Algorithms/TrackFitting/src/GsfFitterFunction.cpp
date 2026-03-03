@@ -52,7 +52,7 @@ using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
 
-struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
+struct GsfFitterFunctionImpl final : public TrackFitterFunction {
   Fitter fitter;
   DirectFitter directFitter;
 
@@ -67,7 +67,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       MixtureReductionAlgorithm::KLDistance;
   Acts::ComponentMergeMethod mergeMethod =
       Acts::ComponentMergeMethod::eMaxWeight;
-  double reverseFilteringCovarianceScaling = 1.0;
+  double reverseFilteringCovarianceScaling = 100.0;
 
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 

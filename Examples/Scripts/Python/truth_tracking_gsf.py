@@ -56,7 +56,7 @@ def runTruthTrackingGsf(
 
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
-    logger = acts.logging.getLogger("GSF Example")
+    logger = acts.getDefaultLogger("GSF Example", acts.logging.INFO)
 
     if inputParticlePath is None:
         addParticleGun(
@@ -73,7 +73,7 @@ def runTruthTrackingGsf(
             rnd=rnd,
         )
     else:
-        logger.info("Reading particles from %s", inputParticlePath.resolve())
+        logger.info("Reading particles from {}", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
             RootParticleReader(
@@ -93,7 +93,7 @@ def runTruthTrackingGsf(
             enableInteractions=True,
         )
     else:
-        logger.info("Reading hits from %s", inputSimHitsPath.resolve())
+        logger.info("Reading hits from {}", inputSimHitsPath.resolve())
         s.addReader(
             RootSimHitReader(
                 level=acts.logging.INFO,
@@ -129,7 +129,7 @@ def runTruthTrackingGsf(
         inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         trackSmearingSigmas=TrackSmearingSigmas(
-            # zero eveything so the GSF has a chance to find the measurements
+            # zero everything so the GSF has a chance to find the measurements
             loc0=0,
             loc0PtA=0,
             loc0PtB=0,

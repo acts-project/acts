@@ -9,18 +9,20 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/AnyTrackStateProxy.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
-#include <optional>
+#include <utility>
 
 namespace Acts {
 
 /// Kalman trajectory smoother based on the Modified Bryson–Frazier (mBF)
 /// smoother.
+///
+/// @ingroup track_fitting
 ///
 /// The benefit of the mBF smoother is that it does not require the inverse of
 /// the full covariance matrix, but only the inverse of the residual covariance
@@ -47,8 +49,8 @@ class MbfSmoother {
   Result<void> operator()(const GeometryContext& gctx, traj_t& trajectory,
                           std::size_t entryIndex,
                           const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
-    (void)logger;
+    static_cast<void>(gctx);
+    static_cast<void>(logger);
 
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
@@ -63,7 +65,7 @@ class MbfSmoother {
       // ensure the track state has a smoothed component
       ts.addComponents(TrackStatePropMask::Smoothed);
 
-      InternalTrackState internalTrackState(ts);
+      AnyMutableTrackStateProxy internalTrackState(ts);
 
       // Smoothe the current state
       calculateSmoothed(internalTrackState, bigLambdaHat, smallLambdaHat);
@@ -74,10 +76,12 @@ class MbfSmoother {
       }
 
       // Update the lambdas depending on the type of track state
-      if (ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
-        visitMeasurement(internalTrackState, bigLambdaHat, smallLambdaHat);
+      if (ts.typeFlags().isMeasurement()) {
+        visitMeasurement(AnyConstTrackStateProxy{ts}, bigLambdaHat,
+                         smallLambdaHat);
       } else {
-        visitNonMeasurement(internalTrackState, bigLambdaHat, smallLambdaHat);
+        visitNonMeasurement(std::as_const(ts).jacobian(), bigLambdaHat,
+                            smallLambdaHat);
       }
     });
 
@@ -85,71 +89,19 @@ class MbfSmoother {
   }
 
  private:
-  /// Internal track state representation for the smoother.
-  /// @note This allows us to move parts of the implementation into the .cpp
-  struct InternalTrackState final {
-    using Jacobian =
-        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                  false>::Covariance;
-    using Parameters =
-        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                  false>::Parameters;
-    using Covariance =
-        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                  false>::Covariance;
-
-    struct Measurement final {
-      unsigned int calibratedSize{0};
-      // This is used to build a covariance matrix view in the .cpp file
-      const double* calibrated{nullptr};
-      const double* calibratedCovariance{nullptr};
-      BoundSubspaceIndices projector;
-
-      template <typename TrackStateProxy>
-      explicit Measurement(TrackStateProxy ts)
-          : calibratedSize(ts.calibratedSize()),
-            calibrated(ts.effectiveCalibrated().data()),
-            calibratedCovariance(ts.effectiveCalibratedCovariance().data()),
-            projector(ts.projectorSubspaceIndices()) {}
-    };
-
-    Jacobian jacobian;
-
-    Parameters predicted;
-    Covariance predictedCovariance;
-    Parameters filtered;
-    Covariance filteredCovariance;
-    Parameters smoothed;
-    Covariance smoothedCovariance;
-
-    std::optional<Measurement> measurement;
-
-    template <typename TrackStateProxy>
-    explicit InternalTrackState(TrackStateProxy ts)
-        : jacobian(ts.jacobian()),
-          predicted(ts.predicted()),
-          predictedCovariance(ts.predictedCovariance()),
-          filtered(ts.filtered()),
-          filteredCovariance(ts.filteredCovariance()),
-          smoothed(ts.smoothed()),
-          smoothedCovariance(ts.smoothedCovariance()),
-          measurement(ts.typeFlags().test(TrackStateFlag::MeasurementFlag)
-                          ? std::optional<Measurement>(ts)
-                          : std::nullopt) {}
-  };
-
   /// Calculate the smoothed parameters and covariance.
-  void calculateSmoothed(InternalTrackState& ts,
+  void calculateSmoothed(AnyMutableTrackStateProxy& ts,
                          const BoundMatrix& bigLambdaHat,
                          const BoundVector& smallLambdaHat) const;
 
   /// Visit a non-measurement track state and update the lambdas.
-  void visitNonMeasurement(const InternalTrackState& ts,
-                           BoundMatrix& bigLambdaHat,
-                           BoundVector& smallLambdaHat) const;
+  void visitNonMeasurement(
+      const AnyConstTrackStateProxy::ConstCovarianceMap& jacobian,
+      BoundMatrix& bigLambdaHat, BoundVector& smallLambdaHat) const;
 
   /// Visit a measurement track state and update the lambdas.
-  void visitMeasurement(const InternalTrackState& ts, BoundMatrix& bigLambdaHat,
+  void visitMeasurement(const AnyConstTrackStateProxy& ts,
+                        BoundMatrix& bigLambdaHat,
                         BoundVector& smallLambdaHat) const;
 };
 

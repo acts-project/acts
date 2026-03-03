@@ -211,7 +211,7 @@ struct Simulation {
       // required to allow correct particle id numbering for secondaries later
       if ((inputParticle.particleId().generation() != 0u) ||
           (inputParticle.particleId().subParticle() != 0u)) {
-        return detail::SimulationError::eInvalidInputParticleId;
+        return detail::SimulationError::InvalidInputParticleId;
       }
 
       // Do a *depth-first* simulation of the particle and its secondaries,
@@ -223,9 +223,9 @@ struct Simulation {
       //         during iteration. New secondaries are added to and failed
       //         particles might be removed. To avoid issues, access must always
       //         occur via indices.
-      auto iinitial = simulatedParticlesInitial.size();
+      std::size_t iinitial = simulatedParticlesInitial.size();
       simulatedParticlesInitial.push_back(inputParticle);
-      for (; iinitial < simulatedParticlesInitial.size(); ++iinitial) {
+      while (iinitial < simulatedParticlesInitial.size()) {
         const auto &initialParticle = simulatedParticlesInitial[iinitial];
 
         // only simulatable particles are pushed to the container and here we
@@ -258,6 +258,8 @@ struct Simulation {
         // before the particle is simulated since the particle id is used to
         // associate generated hits back to the particle.
         renumberTailParticleIds(simulatedParticlesInitial, iinitial);
+
+        ++iinitial;
       }
     }
 

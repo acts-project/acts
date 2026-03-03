@@ -26,7 +26,7 @@ struct Helper {
   std::shared_ptr<Surface> surface;
   BinUtility segmentation;
 
-  GeometryContext gctx{};
+  GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
   double thickness = 125_um;
   Vector3 driftDir = Vector3::Zero();
 

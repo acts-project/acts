@@ -1,5 +1,5 @@
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    acts_add_library(ExamplesMuonSpectrometerMockupDetector SHARED)
+    acts_add_library(ExamplesMuonSpectrometerMockupDetector)
 
     target_link_libraries(
         ActsExamplesMuonSpectrometerMockupDetector

@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto physErr = make_intrusive<GeoFullPhysVol>(logErr);
   // create pars for conversion
   ActsPlugins::GeoModelDetectorObjectFactory::Config gmConfig;
-  GeometryContext gContext;
+  auto gContext = GeometryContext::dangerouslyDefaultConstruct();
   ActsPlugins::GeoModelDetectorObjectFactory::Cache trapCache;
   ActsPlugins::GeoModelDetectorObjectFactory::Cache polyCache;
   ActsPlugins::GeoModelDetectorObjectFactory::Cache errCache;

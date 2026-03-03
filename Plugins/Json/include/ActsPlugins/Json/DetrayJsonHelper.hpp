@@ -16,7 +16,14 @@
 
 #include <nlohmann/json.hpp>
 
+/// @namespace Acts::DetrayJsonHelper
+/// @ingroup json_plugin
+/// @todo Move this to the @ref ActsPlugins namespace
+
 namespace Acts::DetrayJsonHelper {
+
+/// @addtogroup json_plugin
+/// @{
 
 /// @brief Helper function to switch keys from ACTS to detray
 ///
@@ -64,4 +71,5 @@ void addVolumeLink(nlohmann::json& jSurface, int vLink);
 /// @return the acceleration link idnetifier
 std::size_t accelerationLink(std::span<const AxisDirection> casts);
 
+/// @}
 }  // namespace Acts::DetrayJsonHelper

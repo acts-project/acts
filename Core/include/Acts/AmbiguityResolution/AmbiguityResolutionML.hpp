@@ -9,16 +9,12 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/AmbiguityNetworkConcept.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <vector>
 
 namespace Acts {
@@ -28,6 +24,7 @@ namespace Acts {
 template <AmbiguityNetworkConcept AmbiguityNetwork>
 class AmbiguityResolutionML {
  public:
+  /// @brief Configuration for the ambiguity resolution algorithm.
   struct Config {
     /// Path to the model file for the duplicate neural network
     std::string inputDuplicateNN = "";
@@ -84,7 +81,7 @@ class AmbiguityResolutionML {
       }
       measurements.clear();
       for (auto ts : track.trackStatesReversed()) {
-        if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        if (ts.typeFlags().isMeasurement()) {
           SourceLink sourceLink = ts.getUncalibratedSourceLink();
           // assign a new measurement index if the source link was not seen yet
           auto emplace = measurementIndexMap.try_emplace(

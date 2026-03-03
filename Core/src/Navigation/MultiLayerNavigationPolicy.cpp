@@ -9,6 +9,7 @@
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 
 #include "Acts/Geometry/ReferenceGenerators.hpp"
+#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 
 namespace Acts::Experimental {
@@ -23,7 +24,7 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
   // Fill the grid with surfaces
   std::vector<std::shared_ptr<const Surface>> surfaces = {};
   for (const auto& surface : m_volume.surfaces()) {
-    if (surface.associatedDetectorElement() == nullptr) {
+    if (!surface.isSensitive()) {
       continue;
     }
     surfaces.push_back(surface.getSharedPtr());
@@ -35,12 +36,12 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
 }
 
 void MultiLayerNavigationPolicy::initializeCandidates(
-    [[maybe_unused]] const GeometryContext& gctx,
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
+    const GeometryContext& gctx, const NavigationArguments& args,
+    NavigationPolicyState& /*state*/, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates initialization for volume"
                << m_volume.volumeName());
-  const Transform3& itransform = m_volume.itransform();
+  const Transform3& itransform = m_volume.globalToLocalTransform(gctx);
   const Vector3 locPosition = itransform * args.position;
   const Vector3 locDirection = itransform.linear() * args.direction;
 

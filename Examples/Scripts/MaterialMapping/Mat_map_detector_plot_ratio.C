@@ -84,9 +84,9 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, std::
 /// detectors : list of the ID of the volume constitutive of the Geometry/sub-detector
 /// nbprocess : number of parameter to be processed
 /// name : name of the output directory.
-/// name_prop : name of the output directory for the map valdation.
+/// name_prop : name of the output directory for the map validation.
 /// name_geant : name of the output directory for the geantino scan.
-/// The map valdation and geantino scan plots are only saved if name_prop and name_geant are defined.
+/// The map validation and geantino scan plots are only saved if name_prop and name_geant are defined.
 
 void Mat_map_detector_plot_ratio(std::string input_file_prop = "", std::string input_file_geant = "", std::vector<int> detectors = vector<int>(), int nbprocess = -1, std::string name = "", std::string name_prop = "", std::string name_geant = ""){
 

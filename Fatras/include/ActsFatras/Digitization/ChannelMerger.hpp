@@ -13,6 +13,7 @@
 #include "ActsFatras/Digitization/DigitizationData.hpp"
 
 #include <array>
+#include <map>
 #include <utility>
 
 namespace ActsFatras {
@@ -21,7 +22,7 @@ namespace ActsFatras {
 /// channel merging.
 ///
 /// @tparam signal_t The type of signal, needs operator+= to be defined
-/// @tparam kSize the dimensonality of the object (cluster)
+/// @tparam kSize the dimensionality of the object (cluster)
 ///
 /// @param channels The channels from one cluster
 ///

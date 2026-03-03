@@ -13,9 +13,10 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-// can not match our naming guidelines.
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 
 /// Convert Transform3 to JSON
 /// @param j Destination JSON object
@@ -53,4 +54,6 @@ nlohmann::json toJson(const Transform3& t, const Options& options = {});
 Transform3 fromJson(const nlohmann::json& jTransform);
 
 }  // namespace Transform3JsonConverter
+
+/// @}
 }  // namespace Acts

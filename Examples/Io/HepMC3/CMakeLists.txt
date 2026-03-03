@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesIoHepMC3
-    SHARED
     src/HepMC3Reader.cpp
     src/HepMC3Writer.cpp
     src/HepMC3InputConverter.cpp
@@ -11,16 +10,12 @@ acts_add_library(
 )
 target_include_directories(
     ActsExamplesIoHepMC3
-    SYSTEM
-    PUBLIC ${HEPMC3_INCLUDE_DIR}
-)
-target_include_directories(
-    ActsExamplesIoHepMC3
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
 target_link_libraries(
     ActsExamplesIoHepMC3
-    PUBLIC Acts::ExamplesFramework ${HEPMC3_LIBRARIES}
+    PUBLIC Acts::ExamplesFramework HepMC3::HepMC3
     PRIVATE Acts::Fatras nlohmann_json::nlohmann_json
 )
 
@@ -89,7 +84,7 @@ if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
 endif()
 
 message(CHECK_START "Examples HepMC3 IO: checking for ROOT IO")
-if(TARGET HepMC3::rootIO)
+if(ACTS_BUILD_EXAMPLES_ROOT AND TARGET HepMC3::rootIO)
     message(CHECK_PASS "found")
     target_link_libraries(ActsExamplesIoHepMC3 PRIVATE HepMC3::rootIO)
     target_compile_definitions(

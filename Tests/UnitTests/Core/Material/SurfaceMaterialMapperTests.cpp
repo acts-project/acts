@@ -95,7 +95,7 @@ std::shared_ptr<const TrackingGeometry> trackingGeometry() {
   auto centralVolumeBounds =
       std::make_shared<const CylinderVolumeBounds>(0., 40., 110.);
 
-  GeometryContext gCtx;
+  auto gCtx = GeometryContext::dangerouslyDefaultConstruct();
   auto centralVolume =
       centralVolumeBuilder->trackingVolume(gCtx, nullptr, centralVolumeBounds);
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   SurfaceMaterialMapper smMapper(smmConfig, std::move(propagator));
 
   /// Create some contexts
-  GeometryContext gCtx;
+  auto gCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext mfCtx;
 
   /// Now create the mapper state

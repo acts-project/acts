@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #ifndef ACTS_GNN_CPUONLY
-#include <ActsPlugins/Gnn/detail/CudaUtils.hpp>
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 #endif
 
 #ifndef ACTS_GNN_CPUONLY

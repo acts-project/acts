@@ -84,7 +84,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
 
     const Acts::Experimental::Gx2FitterOptions gx2fOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.propOptions, &(*options.referenceSurface),
+        extensions, options.propOptions, options.referenceSurface,
         multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,
         relChi2changeCutOff);
 
@@ -118,7 +118,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
 
 }  // namespace
 
-std::shared_ptr<ActsExamples::TrackFitterFunction>
+std::shared_ptr<TrackFitterFunction>
 ActsExamples::makeGlobalChiSquareFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
@@ -137,7 +137,7 @@ ActsExamples::makeGlobalChiSquareFitterFunction(
   Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
   Propagator propagator(stepper, std::move(navigator),
                         logger.cloneWithSuffix("Propagator"));
-  Fitter trackFitter(std::move(propagator), logger.cloneWithSuffix("Fitter"));
+  Fitter trackFitter(propagator, logger.cloneWithSuffix("Fitter"));
 
   // Direct fitter
   Acts::DirectNavigator directNavigator{

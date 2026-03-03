@@ -2,5 +2,5 @@
 
 :::{toctree}
 clustering
-spacepoint_formation
+space_point_formation
 :::

@@ -61,10 +61,10 @@ class TGeoDetector : public Detector {
     struct LayerTriplet {
       LayerTriplet() = default;
 
-      explicit LayerTriplet(T value)
+      explicit LayerTriplet(const T& value)
           : negative{value}, central{value}, positive{value} {}
 
-      LayerTriplet(T _negative, T _central, T _positive)
+      LayerTriplet(const T& _negative, const T& _central, const T& _positive)
           : negative{_negative}, central{_central}, positive{_positive} {}
 
       T negative;
@@ -142,4 +142,10 @@ class TGeoDetector : public Detector {
   Config m_cfg;
 };
 
+std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetectorWrapper(
+    const TGeoDetector::Config& config, const Acts::GeometryContext& context,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+        detElementStore,
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator,
+    const Acts::Logger& logger);
 }  // namespace ActsExamples
