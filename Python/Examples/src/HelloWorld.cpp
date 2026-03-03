@@ -25,8 +25,8 @@ using namespace Acts;
 namespace ActsPython {
 
 void addHelloWorld(py::module& mex) {
-  py::class_<HelloLoggerAlgorithm, IAlgorithm, std::shared_ptr<HelloLoggerAlgorithm>>(
-      mex, "HelloLoggerAlgorithm")
+  py::class_<HelloLoggerAlgorithm, IAlgorithm,
+             std::shared_ptr<HelloLoggerAlgorithm>>(mex, "HelloLoggerAlgorithm")
       .def(py::init([](Logging::Level level) {
              return std::make_shared<HelloLoggerAlgorithm>(
                  getDefaultLogger("HelloLoggerAlgorithm", level));

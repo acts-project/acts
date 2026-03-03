@@ -43,10 +43,10 @@ class HelloRandomAlgorithm : public IAlgorithm {
   /// Get the current algorithm configuration
   const Config& config() const { return m_cfg; }
 
-  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
-
  private:
   Config m_cfg;
+
+  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
 };
 
 }  // namespace ActsExamples
