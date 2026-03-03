@@ -92,7 +92,7 @@ void OpenDataDetector::constructBarrelEndcap(
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(builder.makeBeampipe());
+  outer.addChild(builder.backend().makeBeampipe());
 
   auto constant = [this]<typename... Args>(std::format_string<Args...> fmt,
                                            Args&&... values) -> int {
@@ -187,7 +187,7 @@ void OpenDataDetector::constructDirectLayer(const Acts::GeometryContext& gctx) {
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(builder.makeBeampipe());
+  outer.addChild(builder.backend().makeBeampipe());
 
   auto constant = [this]<typename... Args>(std::format_string<Args...> fmt,
                                            Args&&... values) -> int {
