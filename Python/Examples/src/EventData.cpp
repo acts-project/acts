@@ -7,9 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
+#include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
+#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
@@ -19,6 +21,55 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addEventData(py::module& mex) {
+  py::class_<Acts::TrackStateType>(mex, "TrackStateTypeFlags")
+      .def_property_readonly("isMeasurement",
+                             &Acts::TrackStateType::isMeasurement)
+      .def_property_readonly("isOutlier", &Acts::TrackStateType::isOutlier)
+      .def_property_readonly("isHole", &Acts::TrackStateType::isHole)
+      .def_property_readonly("hasMaterial", &Acts::TrackStateType::hasMaterial)
+      .def_property_readonly("isSharedHit", &Acts::TrackStateType::isSharedHit)
+      .def_property_readonly("hasParameters",
+                             &Acts::TrackStateType::hasParameters);
+
+  py::class_<ConstTrackStateProxy>(mex, "ConstTrackStateProxy")
+      .def_property_readonly("typeFlags",
+                             [](const ConstTrackStateProxy& self) {
+                               return Acts::TrackStateType{
+                                   self.typeFlags().raw()};
+                             })
+      .def_property_readonly("hasPredicted",
+                             &ConstTrackStateProxy::hasPredicted)
+      .def_property_readonly("hasFiltered", &ConstTrackStateProxy::hasFiltered)
+      .def_property_readonly("hasSmoothed", &ConstTrackStateProxy::hasSmoothed)
+      .def_property_readonly("predicted",
+                             [](const ConstTrackStateProxy& self) {
+                               return Acts::BoundVector{self.predicted()};
+                             })
+      .def_property_readonly("filtered",
+                             [](const ConstTrackStateProxy& self) {
+                               return Acts::BoundVector{self.filtered()};
+                             })
+      .def_property_readonly("smoothed",
+                             [](const ConstTrackStateProxy& self) {
+                               return Acts::BoundVector{self.smoothed()};
+                             })
+      .def_property_readonly(
+          "predictedCovariance",
+          [](const ConstTrackStateProxy& self) {
+            return Acts::BoundMatrix{self.predictedCovariance()};
+          })
+      .def_property_readonly(
+          "filteredCovariance",
+          [](const ConstTrackStateProxy& self) {
+            return Acts::BoundMatrix{self.filteredCovariance()};
+          })
+      .def_property_readonly(
+          "smoothedCovariance",
+          [](const ConstTrackStateProxy& self) {
+            return Acts::BoundMatrix{self.smoothedCovariance()};
+          })
+      .def_property_readonly("pathLength", &ConstTrackStateProxy::pathLength);
+
   auto constTrackProxy =
       py::class_<ConstTrackProxy>(mex, "ConstTrackProxy")
           .def_property_readonly("index", &ConstTrackProxy::index)
@@ -41,7 +92,28 @@ void addEventData(py::module& mex) {
                                    return Acts::BoundMatrix{self.covariance()};
                                  })
           .def_property_readonly("particleHypothesis",
-                                 &ConstTrackProxy::particleHypothesis);
+                                 &ConstTrackProxy::particleHypothesis)
+          .def_property_readonly("nMeasurements",
+                                 &ConstTrackProxy::nMeasurements)
+          .def_property_readonly("nHoles", &ConstTrackProxy::nHoles)
+          .def_property_readonly("isForwardLinked",
+                                 &ConstTrackProxy::isForwardLinked)
+          .def_property_readonly(
+              "trackStatesReversed",
+              py::cpp_function(
+                  [](const ConstTrackProxy& self) {
+                    auto range = self.trackStatesReversed();
+                    return py::make_iterator(range.begin(), range.end());
+                  },
+                  py::keep_alive<0, 1>()))
+          .def_property_readonly(
+              "trackStates",
+              py::cpp_function(
+                  [](const ConstTrackProxy& self) {
+                    auto range = self.trackStates();
+                    return py::make_iterator(range.begin(), range.end());
+                  },
+                  py::keep_alive<0, 1>()));
 
   // Mark a numpy array as non-writeable and return it.
   const auto readOnly = [](auto arr) {
@@ -68,7 +140,7 @@ void addEventData(py::module& mex) {
   };
 
   auto constTrackContainer =
-      py::class_<ConstTrackContainer>(mex, "ConstTrackContainer")
+      py::classh<ConstTrackContainer>(mex, "ConstTrackContainer")
           .def("__len__", &ConstTrackContainer::size)
           .def("__iter__",
                [](const ConstTrackContainer& self) {
@@ -146,10 +218,19 @@ void addEventData(py::module& mex) {
 
   WhiteBoardRegistry::registerClass(constTrackContainer);
 
-  // Register types from core with the whiteboard registry
-  auto m = py::module_::import("acts");
-  WhiteBoardRegistry::registerType<Acts::SpacePointContainer2>(
-      m.attr("SpacePointContainer2"));
+  auto protoTrackContainer =
+      py::classh<ProtoTrackContainer>(mex, "ProtoTrackContainer")
+          .def(py::init<>())
+          .def("__len__", &ProtoTrackContainer::size)
+          .def("__getitem__", [](const ProtoTrackContainer& self,
+                                 size_t index) { return self[index]; })
+          .def("__iter__", [](const ProtoTrack& self) {
+            return py::make_iterator(self.begin(), self.end());
+          });
+
+  WhiteBoardRegistry::registerClass(protoTrackContainer);
+
+  mex.attr("kTrackIndexInvalid") = Acts::kTrackIndexInvalid;
 }
 
 }  // namespace ActsPython

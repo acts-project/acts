@@ -20,6 +20,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <array>
 #include <memory>
@@ -191,7 +192,7 @@ void addEventData(py::module_& m) {
 
   // SpacePointContainer2
   auto spc2 =
-      py::class_<SpacePointContainer2>(m, "SpacePointContainer2")
+      py::classh<SpacePointContainer2>(m, "SpacePointContainer2")
           .def(py::init<SpacePointColumns>(),
                py::arg("columns") = SpacePointColumns::None)
           .def_property_readonly("size", &SpacePointContainer2::size)
@@ -260,6 +261,8 @@ void addEventData(py::module_& m) {
       arrayColumn3(&SpacePointContainer2::topStripVectorColumn,
                    SpacePointColumns::TopStripVector, "topStripVector"));
 
+  WhiteBoardRegistry::registerClass(spc2);
+
   // ConstSpacePointProxy2
   py::class_<ConstSpacePointProxy2>(m, "ConstSpacePointProxy2")
       .def_property_readonly("index", &ConstSpacePointProxy2::index)
@@ -273,18 +276,21 @@ void addEventData(py::module_& m) {
       .def_property_readonly("varianceR", &ConstSpacePointProxy2::varianceR);
 
   // SeedContainer2
-  py::class_<SeedContainer2>(m, "SeedContainer2")
-      .def(py::init<>())
-      .def_property_readonly("size", &SeedContainer2::size)
-      .def_property_readonly("empty", &SeedContainer2::empty)
-      .def("__len__", &SeedContainer2::size)
-      .def("__getitem__",
-           [](const SeedContainer2& self, SeedIndex2 idx) {
-             return ConstSeedProxy2(self, idx);
-           })
-      .def("__iter__", [](const SeedContainer2& self) {
-        return py::make_iterator(self.begin(), self.end());
-      });
+  auto seedContainer2 =
+      py::classh<SeedContainer2>(m, "SeedContainer2")
+          .def(py::init<>())
+          .def_property_readonly("size", &SeedContainer2::size)
+          .def_property_readonly("empty", &SeedContainer2::empty)
+          .def("__len__", &SeedContainer2::size)
+          .def("__getitem__",
+               [](const SeedContainer2& self, SeedIndex2 idx) {
+                 return ConstSeedProxy2(self, idx);
+               })
+          .def("__iter__", [](const SeedContainer2& self) {
+            return py::make_iterator(self.begin(), self.end());
+          });
+
+  WhiteBoardRegistry::registerClass(seedContainer2);
 
   // ConstSeedProxy2
   py::class_<ConstSeedProxy2>(m, "ConstSeedProxy2")

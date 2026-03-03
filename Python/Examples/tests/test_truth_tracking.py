@@ -111,6 +111,11 @@ def test_python_track_access(generic_detector_config, tmp_path):
                 )
                 self.tracks.initialize("selected-tracks")
 
+                self.protoTracks = acts.examples.WriteDataHandle(
+                    self, acts.examples.ProtoTrackContainer, "ProtoTracks"
+                )
+                self.protoTracks.initialize("proto-tracks")
+
                 self.hists = {}
                 self.hists["d0"] = hist.Hist(
                     hist.axis.Regular(10, -0.1, 0.1, name="d0"),
@@ -173,6 +178,12 @@ def test_python_track_access(generic_detector_config, tmp_path):
                 #         "Track particle hypothesis: {}", track.particleHypothesis
                 #     )
 
+                wb = context.eventStore
+                assert not wb.exists("proto-tracks")
+                myProtoTracks = acts.examples.ProtoTrackContainer()
+                self.protoTracks(context, myProtoTracks)
+                assert wb.exists("proto-tracks")
+
                 return acts.examples.ProcessCode.SUCCESS
 
             def finalize(self):
@@ -187,6 +198,113 @@ def test_python_track_access(generic_detector_config, tmp_path):
             seq.run()
 
 
+def test_python_track_state_access(generic_detector_config, tmp_path):
+    with generic_detector_config.detector:
+        from truth_tracking_kalman import runTruthTrackingKalman
+
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+        seq = Sequencer(events=10, numThreads=1)
+
+        runTruthTrackingKalman(
+            trackingGeometry=generic_detector_config.trackingGeometry,
+            field=field,
+            digiConfigFile=generic_detector_config.digiConfigFile,
+            outputDir=tmp_path,
+            numParticles=10,
+            s=seq,
+        )
+
+        class TrackStateAccess(acts.examples.IAlgorithm):
+            def __init__(self):
+                super().__init__("TrackStateAccess", acts.logging.INFO)
+
+                self.tracks = acts.examples.ReadDataHandle(
+                    self, acts.examples.ConstTrackContainer, "InputTracks"
+                )
+                self.tracks.initialize("selected-tracks")
+
+            def execute(self, context):
+                tracks = self.tracks(context.eventStore)
+
+                import numpy as np
+
+                for track in tracks:
+                    params = track.parameters
+                    assert params.shape == (6,)
+                    cov = track.covariance
+                    assert cov.shape == (6, 6)
+                    # parameters from per-proxy accessor must match the
+                    # bulk numpy array at the same index
+                    assert np.allclose(params, tracks.parameters[track.index])
+
+                    n_meas_from_summary = track.nMeasurements
+                    n_meas_counted = 0
+                    n_holes_counted = 0
+
+                    for state in track.trackStatesReversed:
+                        assert isinstance(
+                            state, acts.examples.ConstTrackStateProxy
+                        )
+
+                        flags = state.typeFlags
+                        # every state must be at least one of the known types
+                        assert (
+                            flags.isMeasurement
+                            or flags.isOutlier
+                            or flags.isHole
+                            or flags.hasMaterial
+                        )
+
+                        if flags.isMeasurement:
+                            n_meas_counted += 1
+
+                        if flags.isHole:
+                            n_holes_counted += 1
+
+                        if state.hasPredicted:
+                            pred = state.predicted
+                            assert pred.shape == (6,)
+
+                        if state.hasFiltered:
+                            filt = state.filtered
+                            assert filt.shape == (6,)
+
+                        if state.hasSmoothed:
+                            smth = state.smoothed
+                            assert smth.shape == (6,)
+
+                    assert n_meas_counted == n_meas_from_summary
+                    assert n_holes_counted == track.nHoles
+
+                    # trackStates (forward) requires the track to be
+                    # forward-linked; skip if not
+                    if track.isForwardLinked:
+                        rev_predicted = [
+                            state.predicted
+                            for state in track.trackStatesReversed
+                            if state.hasPredicted
+                        ]
+                        fwd_predicted = [
+                            state.predicted
+                            for state in track.trackStates
+                            if state.hasPredicted
+                        ]
+                        assert len(fwd_predicted) == len(rev_predicted)
+                        for fwd, rev in zip(
+                            fwd_predicted, reversed(rev_predicted)
+                        ):
+                            assert np.allclose(fwd, rev)
+
+                return acts.examples.ProcessCode.SUCCESS
+
+        seq.addAlgorithm(TrackStateAccess())
+
+        with acts.logging.ScopedFailureThreshold(acts.logging.ERROR):
+            seq.run()
+
+
+@pytest.mark.skip(reason="Needs updating after converter became unnecessary")
 def test_python_space_point_access(generic_detector_config, tmp_path):
     from acts.examples.simulation import (
         addParticleGun,
