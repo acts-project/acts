@@ -28,12 +28,10 @@
 #include <podio/ROOTFrameWriter.h>
 #endif
 
+#include <podio/Frame.h>
+
 namespace ActsPodioEdm {
 class Surface;
-}
-
-namespace podio {
-class Frame;
 }
 
 namespace ActsPlugins {

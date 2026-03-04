@@ -12,11 +12,9 @@
 #include "ActsPlugins/Root/RootMagneticFieldIo.hpp"
 #include "ActsPlugins/Root/RootMaterialDecorator.hpp"
 #include "ActsPlugins/Root/RootMaterialMapIo.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
-#include <vector>
 
 #include <TGeoManager.h>
 #include <TGeoVolume.h>
