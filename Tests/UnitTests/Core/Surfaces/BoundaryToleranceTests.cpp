@@ -14,9 +14,11 @@
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Surfaces)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SurfaceSuite)
 
 BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
   using enum BoundaryTolerance::ToleranceMode;
@@ -255,4 +257,4 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckNegativeToleranceTrap) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

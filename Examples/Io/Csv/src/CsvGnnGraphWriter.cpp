@@ -8,26 +8,22 @@
 
 #include "ActsExamples/Io/Csv/CsvGnnGraphWriter.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
-#include <stdexcept>
 #include <vector>
 
 #include "CsvOutputData.hpp"
 
-ActsExamples::CsvGnnGraphWriter::CsvGnnGraphWriter(
-    const ActsExamples::CsvGnnGraphWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+CsvGnnGraphWriter::CsvGnnGraphWriter(const Config& config,
+                                     Acts::Logging::Level level)
     : WriterT(config.inputGraph, "CsvGnnGraphWriter", level), m_cfg(config) {}
 
-ActsExamples::ProcessCode ActsExamples::CsvGnnGraphWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx, const Graph& graph) {
+ProcessCode CsvGnnGraphWriter::writeT(const AlgorithmContext& ctx,
+                                      const Graph& graph) {
   assert(graph.weights.empty() ||
          (graph.edges.size() / 2 == graph.weights.size()));
   assert(graph.edges.size() % 2 == 0);
@@ -39,7 +35,7 @@ ActsExamples::ProcessCode ActsExamples::CsvGnnGraphWriter::writeT(
   std::string path = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  ActsExamples::NamedTupleCsvWriter<GraphData> writer(path);
+  NamedTupleCsvWriter<GraphData> writer(path);
 
   const auto nEdges = graph.edges.size() / 2;
   for (auto i = 0ul; i < nEdges; ++i) {
@@ -50,5 +46,7 @@ ActsExamples::ProcessCode ActsExamples::CsvGnnGraphWriter::writeT(
     writer.append(edge);
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

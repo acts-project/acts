@@ -53,7 +53,7 @@ class BinningData {
 
   /// sub structure: describe some sub binning
   std::unique_ptr<const BinningData> subBinningData;
-  /// sub structure: additive or multipicative
+  /// sub structure: additive or multiplicative
   bool subBinningAdditive{};
 
   /// Constructor for 0D binning
@@ -203,6 +203,7 @@ class BinningData {
   /// Assignment operator
   ///
   /// @param bdata is the source object
+  /// @return Reference to this BinningData after assignment
   BinningData& operator=(const BinningData& bdata) {
     if (this != &bdata) {
       type = bdata.type;
@@ -250,6 +251,7 @@ class BinningData {
   }
 
   /// Return the number of bins - including sub bins
+  /// @return Total number of bins including sub-bins
   std::size_t bins() const { return m_totalBins; }
 
   /// Return the boundaries  - including sub boundaries

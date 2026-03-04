@@ -23,8 +23,8 @@ namespace ActsExamples {
 
 EDM4hepSimHitOutputConverter::EDM4hepSimHitOutputConverter(
     const EDM4hepSimHitOutputConverter::Config& config,
-    Acts::Logging::Level level)
-    : EDM4hepOutputConverter("EDM4hepSimHitOutputConverter", level),
+    std::unique_ptr<const Acts::Logger> logger)
+    : PodioOutputConverter("EDM4hepSimHitOutputConverter", std::move(logger)),
       m_cfg(config) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -58,7 +58,7 @@ ProcessCode EDM4hepSimHitOutputConverter::execute(
     auto particles = m_inputParticles(ctx);
 
     for (const auto& particle : particles) {
-      auto p = mcParticles->create();
+      auto p = mcParticles.create();
       particleMap[particle.particleId()] = p;
       EDM4hepUtil::writeParticle(particle, p);
     }
@@ -76,7 +76,7 @@ ProcessCode EDM4hepSimHitOutputConverter::execute(
   const auto& simHits = m_inputSimHits(ctx);
 
   for (const auto& simHit : simHits) {
-    auto simTrackerHit = simTrackerHitCollection->create();
+    auto simTrackerHit = simTrackerHitCollection.create();
     EDM4hepUtil::writeSimHit(
         simHit, simTrackerHit, particleMapper,
         [](Acts::GeometryIdentifier id) { return id.value(); });

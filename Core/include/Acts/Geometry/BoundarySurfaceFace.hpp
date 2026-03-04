@@ -15,7 +15,7 @@ namespace Acts {
 ///  @enum BoundarySurfaceFace
 ///
 ///  Enum to describe the position of the BoundarySurface
-///  respectively to the frame orientatin of the volume,
+///  respectively to the frame orientation of the volume,
 ///  this is mainly meant for code readability.
 ///
 ///  The different numeration sequences can be found in the
@@ -55,6 +55,10 @@ enum BoundarySurfaceFace {
 
 };
 
+/// Stream operator for BoundarySurfaceFace
+/// @param os Output stream
+/// @param face BoundarySurfaceFace to output
+/// @return Reference to output stream
 inline std::ostream& operator<<(std::ostream& os, BoundarySurfaceFace& face) {
   os << "BoundarySurfaceFace::";
 

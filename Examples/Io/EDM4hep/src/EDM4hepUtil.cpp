@@ -12,11 +12,15 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
+#include <ActsPodioEdm/TrackerHitLocal.h>
+
+#include <cstdint>
 
 #include "edm4hep/TrackState.h"
 
@@ -67,10 +71,11 @@ void EDM4hepUtil::writeParticle(const SimParticle& from,
        static_cast<float>(from.finalState().fourMomentum().z())});
 }
 
-ActsFatras::Hit EDM4hepUtil::readSimHit(
-    const edm4hep::SimTrackerHit& from, const MapParticleIdFrom& particleMapper,
-    const MapGeometryIdFrom& geometryMapper) {
-  auto particle = Acts::EDM4hepUtil::getParticle(from);
+ActsFatras::Hit EDM4hepUtil::readSimHit(const edm4hep::SimTrackerHit& from,
+                                        const MapParticleIdFrom& particleMapper,
+                                        const MapGeometryIdFrom& geometryMapper,
+                                        std::uint32_t index) {
+  auto particle = ActsPlugins::EDM4hepUtil::getParticle(from);
   ActsFatras::Barcode particleId = particleMapper(particle);
 
   const auto mass = particle.getMass() * 1_GeV;
@@ -100,10 +105,6 @@ ActsFatras::Hit EDM4hepUtil::readSimHit(
 
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
-  // Can extract from time, but we need a complete picture of the trajectory
-  // first
-  std::int32_t index = -1;
-
   return ActsFatras::Hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
                          index);
 }
@@ -117,7 +118,8 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   const auto delta4 = from.momentum4After() - momentum4Before;
 
   if (particleMapper) {
-    Acts::EDM4hepUtil::setParticle(to, particleMapper(from.particleId()));
+    ActsPlugins::EDM4hepUtil::setParticle(to,
+                                          particleMapper(from.particleId()));
   }
 
   if (geometryMapper) {
@@ -178,37 +180,49 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
 }
 
 void EDM4hepUtil::writeMeasurement(
+    const Acts::GeometryContext& gctx,
     const ConstVariableBoundMeasurementProxy& from,
-    edm4hep::MutableTrackerHitPlane to, const Cluster* /*fromCluster*/,
-    edm4hep::TrackerHit3DCollection& /*toClusters*/,
-    const MapGeometryIdTo& geometryMapper) {
-  Acts::GeometryIdentifier geoId = from.geometryId();
+    ActsPodioEdm::MutableTrackerHitLocal& to, const Acts::Surface& surface) {
+  long dim = from.size();
 
-  if (geometryMapper) {
-    // no need for digitization as we only want to identify the sensor
-    to.setCellID(geometryMapper(geoId));
+  const auto* placement = surface.surfacePlacement();
+  if (placement == nullptr) {
+    throw std::runtime_error("Surface placement not found");
+  }
+  const auto* dd4hepDetectorElement =
+      dynamic_cast<const ActsPlugins::DD4hepDetectorElement*>(placement);
+  if (dd4hepDetectorElement == nullptr) {
+    throw std::runtime_error(
+        "Surface placement is not a DD4hepDetectorElement");
   }
 
-  const auto& parameters = from.fullParameters();
-  const auto& covariance = from.fullCovariance();
+  std::uint64_t cellId = dd4hepDetectorElement->sourceElement().volumeID();
 
-  to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
+  ActsPlugins::EDM4hepUtil::writeMeasurement(
+      gctx, {from.parameters().data(), dim},
+      {from.covariance().data(), dim, dim}, from.subspaceHelper().indices(),
+      cellId, surface, to);
+}
 
-  to.setType(Acts::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
-  // TODO set uv (which are in global spherical coordinates with r=1)
-  to.setPosition({parameters[Acts::eBoundLoc0], parameters[Acts::eBoundLoc1],
-                  parameters[Acts::eBoundTime]});
+VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
+    MeasurementContainer& container, const ActsPodioEdm::TrackerHitLocal& from,
+    const MapGeometryIdFrom& geometryMapper) {
+  auto data = ActsPlugins::EDM4hepUtil::readMeasurement(from);
+  Acts::GeometryIdentifier geometryId = geometryMapper(data.cellId);
 
-  to.setCovMatrix({
-      static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
-      static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc0)),
-      static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
-      0,
-      0,
-      0,
-  });
+  const auto dim = data.indices.size();
+  Acts::DynamicVector parameters(dim);
+  Acts::DynamicMatrix covariance(dim, dim);
+  for (std::size_t i = 0; i < dim; ++i) {
+    parameters(i) = data.parameters(data.indices[i]);
+    for (std::size_t j = 0; j < dim; ++j) {
+      covariance(i, j) = data.covariance(data.indices[i], data.indices[j]);
+    }
+  }
 
-  // @TODO: Check if we can write cell info
+  return container.emplaceMeasurement(static_cast<std::uint8_t>(dim),
+                                      geometryId, data.indices, parameters,
+                                      covariance);
 }
 
 void EDM4hepUtil::writeTrajectory(
@@ -234,7 +248,7 @@ void EDM4hepUtil::writeTrajectory(
   multiTrajectory.visitBackwards(fromIndex, [&](const auto& state) {
     // we only fill the track states with non-outlier measurement
     auto typeFlags = state.typeFlags();
-    if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!typeFlags.isMeasurement()) {
       return true;
     }
 
@@ -247,9 +261,9 @@ void EDM4hepUtil::writeTrajectory(
     // Convert to LCIO track parametrization expected by EDM4hep
     // This will create an ad-hoc perigee surface if the input parameters are
     // not bound on a perigee surface already
-    Acts::EDM4hepUtil::detail::Parameters converted =
-        Acts::EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz,
-                                                                   parObj);
+    ActsPlugins::EDM4hepUtil::detail::Parameters converted =
+        ActsPlugins::EDM4hepUtil::detail::convertTrackParametersToEdm4hep(
+            gctx, Bz, parObj);
 
     trackState.D0 = converted.values[0];
     trackState.Z0 = converted.values[1];
@@ -258,8 +272,8 @@ void EDM4hepUtil::writeTrajectory(
     trackState.omega = converted.values[4];
     trackState.time = converted.values[5];
 
-    // Converted parameters are relative to an ad-hoc perigee surface created at
-    // the hit location
+    // Converted parameters are relative to an ad-hoc perigee surface created
+    // at the hit location
     auto center = converted.surface->center(gctx);
     trackState.referencePoint.x = center.x();
     trackState.referencePoint.y = center.y();
@@ -271,12 +285,14 @@ void EDM4hepUtil::writeTrajectory(
       };
 
       // clang-format off
-      trackState.covMatrix = {c(0, 0),
-                              c(1, 0), c(1, 1),
-                              c(2, 0), c(2, 1), c(2, 2),
-                              c(3, 0), c(3, 1), c(3, 2), c(3, 3),
-                              c(4, 0), c(4, 1), c(4, 2), c(4, 3), c(4, 4),
-                              c(5, 0), c(5, 1), c(5, 2), c(5, 3), c(5, 4), c(5, 5)};
+      trackState.covMatrix = edm4hep::CovMatrix6f{
+        c(0, 0),
+        c(1, 0), c(1, 1),
+        c(2, 0), c(2, 1), c(2, 2),
+        c(3, 0), c(3, 1), c(3, 2), c(3, 3),
+        c(4, 0), c(4, 1), c(4, 2), c(4, 3), c(4, 4),
+        c(5, 0), c(5, 1), c(5, 2), c(5, 3), c(5, 4), c(5, 5)
+      };
       // clang-format on
     }
 

@@ -11,14 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include <Acts/EventData/Charge.hpp>
-#include <Acts/EventData/MultiComponentTrackParameters.hpp>
-#include <Acts/Surfaces/PlaneSurface.hpp>
 
 #include <algorithm>
 #include <initializer_list>
@@ -31,13 +31,16 @@ using namespace Acts;
 
 static const auto particleHypothesis = ParticleHypothesis::pion();
 
-BOOST_AUTO_TEST_CASE(test_constructors) {
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> a;
-  a.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
+namespace ActsTests {
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-      b;
-  b.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
+BOOST_AUTO_TEST_CASE(test_constructors) {
+  std::vector<std::tuple<double, BoundVector, BoundMatrix>> a;
+  a.push_back({1.0, BoundVector::Ones(), BoundMatrix::Identity()});
+
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>> b;
+  b.push_back({1.0, BoundVector::Ones(), BoundMatrix::Identity()});
 
   std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
@@ -61,9 +64,9 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
 }
 
 BOOST_AUTO_TEST_CASE(test_accessors) {
-  using cov_t = std::optional<BoundSquareMatrix>;
-  for (const auto &cov : {cov_t{}, cov_t{BoundSquareMatrix::Identity()},
-                          cov_t{BoundSquareMatrix::Identity()}}) {
+  using cov_t = std::optional<BoundMatrix>;
+  for (const auto &cov : {cov_t{}, cov_t{BoundMatrix::Identity()},
+                          cov_t{BoundMatrix::Identity()}}) {
     std::shared_ptr<PlaneSurface> surface =
         CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
             .planeSurface();
@@ -72,8 +75,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
                                            particleHypothesis);
 
     const auto multi_pars = [&]() {
-      std::vector<
-          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+      std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
           a;
       for (int i = 0; i < 4; ++i) {
         a.push_back({0.25, single_pars.parameters(), single_pars.covariance()});
@@ -84,21 +86,27 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     BOOST_CHECK_EQUAL(multi_pars.absoluteMomentum(),
                       single_pars.absoluteMomentum());
     BOOST_CHECK_EQUAL(multi_pars.charge(), single_pars.charge());
-    BOOST_CHECK_EQUAL(multi_pars.fourPosition(GeometryContext{}),
-                      single_pars.fourPosition(GeometryContext{}));
+    BOOST_CHECK_EQUAL(
+        multi_pars.fourPosition(GeometryContext::dangerouslyDefaultConstruct()),
+        single_pars.fourPosition(
+            GeometryContext::dangerouslyDefaultConstruct()));
     BOOST_CHECK_EQUAL(multi_pars.momentum(), single_pars.momentum());
     BOOST_CHECK_EQUAL(multi_pars.parameters(), single_pars.parameters());
-    BOOST_CHECK_EQUAL(multi_pars.position(GeometryContext{}),
-                      single_pars.position(GeometryContext{}));
+    BOOST_CHECK_EQUAL(
+        multi_pars.position(GeometryContext::dangerouslyDefaultConstruct()),
+        single_pars.position(GeometryContext::dangerouslyDefaultConstruct()));
     BOOST_CHECK_EQUAL(multi_pars.transverseMomentum(),
                       single_pars.transverseMomentum());
     BOOST_CHECK_EQUAL(multi_pars.direction(), single_pars.direction());
 
     // Check the behaviour for std::nullopt or zero covariance
-    if (cov && *cov != BoundSquareMatrix::Zero()) {
+    if (cov && *cov != BoundMatrix::Zero()) {
       BOOST_CHECK_EQUAL(*multi_pars.covariance(), *single_pars.covariance());
     } else {
       BOOST_CHECK(!multi_pars.covariance());
     }
   }
 }
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

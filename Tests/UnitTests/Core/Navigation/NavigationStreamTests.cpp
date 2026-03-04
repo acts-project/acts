@@ -12,81 +12,70 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-namespace {
+using namespace Acts;
+
+namespace ActsTests {
 
 // This creates a set of plane surfaces along the z axis
-std::vector<std::shared_ptr<Acts::Surface>> createPlaneSurfaces() {
-  auto rectangle = std::make_shared<Acts::RectangleBounds>(10., 10.);
+std::vector<std::shared_ptr<Surface>> createPlaneSurfaces() {
+  auto rectangle = std::make_shared<RectangleBounds>(10., 10.);
   // Surface A:
   // This surface should not be reachable from (0.,0.,0.) position along z
-  Acts::Transform3 aTransform = Acts::Transform3::Identity();
-  aTransform.pretranslate(Acts::Vector3(0., 0., -20.));
-  auto surfaceA =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(aTransform, rectangle);
+  Transform3 aTransform = Transform3::Identity();
+  aTransform.pretranslate(Vector3(0., 0., -20.));
+  auto surfaceA = Surface::makeShared<PlaneSurface>(aTransform, rectangle);
   // Surface B:
   // This surface should not be reachable from (0.,0.,0.) position along z with
   // boundary check
-  Acts::Transform3 bTransform = Acts::Transform3::Identity();
-  bTransform.pretranslate(Acts::Vector3(50., 50., 100.));
-  auto surfaceB =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(bTransform, rectangle);
+  Transform3 bTransform = Transform3::Identity();
+  bTransform.pretranslate(Vector3(50., 50., 100.));
+  auto surfaceB = Surface::makeShared<PlaneSurface>(bTransform, rectangle);
   // Surface C:
-  Acts::Transform3 cTransform = Acts::Transform3::Identity();
-  cTransform.pretranslate(Acts::Vector3(0., 0., 200.));
-  auto surfaceC =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(cTransform, rectangle);
+  Transform3 cTransform = Transform3::Identity();
+  cTransform.pretranslate(Vector3(0., 0., 200.));
+  auto surfaceC = Surface::makeShared<PlaneSurface>(cTransform, rectangle);
   // Surface D:
-  Acts::Transform3 dTransform = Acts::Transform3::Identity();
-  dTransform.pretranslate(Acts::Vector3(0., 0., 400.));
-  auto surfaceD =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(dTransform, rectangle);
+  Transform3 dTransform = Transform3::Identity();
+  dTransform.pretranslate(Vector3(0., 0., 400.));
+  auto surfaceD = Surface::makeShared<PlaneSurface>(dTransform, rectangle);
 
   // Let's fill them shuffled
   return {surfaceC, surfaceA, surfaceD, surfaceB};
 }
 
 // This creates a set of cylinder surfaces
-std::vector<std::shared_ptr<Acts::Surface>> createCylinders() {
+std::vector<std::shared_ptr<Surface>> createCylinders() {
   // Surface A:
   // A concentric cylinder with a radius of 10 and a half length of 20
-  Acts::Transform3 aTransform = Acts::Transform3::Identity();
-  auto surfaceA =
-      Acts::Surface::makeShared<Acts::CylinderSurface>(aTransform, 10., 20);
+  Transform3 aTransform = Transform3::Identity();
+  auto surfaceA = Surface::makeShared<CylinderSurface>(aTransform, 10., 20);
 
   // Surface B:
   // A  small cylinder sitting at 20, 20
-  Acts::Transform3 bTransform = Acts::Transform3::Identity();
-  bTransform.pretranslate(Acts::Vector3(20., 20., 0.));
-  auto surfaceB =
-      Acts::Surface::makeShared<Acts::CylinderSurface>(bTransform, 2., 10);
+  Transform3 bTransform = Transform3::Identity();
+  bTransform.pretranslate(Vector3(20., 20., 0.));
+  auto surfaceB = Surface::makeShared<CylinderSurface>(bTransform, 2., 10);
 
   // Surface C:
   // A concentric cylinder with a radius of 40 and a half length of 20
-  Acts::Transform3 cTransform = Acts::Transform3::Identity();
-  auto surfaceC =
-      Acts::Surface::makeShared<Acts::CylinderSurface>(cTransform, 40., 20);
+  Transform3 cTransform = Transform3::Identity();
+  auto surfaceC = Surface::makeShared<CylinderSurface>(cTransform, 40., 20);
 
   // Surface C:
   // A concentric, but shifted cylinder with a radius of 50 and a half length of
   // 5
-  Acts::Transform3 dTransform = Acts::Transform3::Identity();
-  dTransform.pretranslate(Acts::Vector3(0., 0., 10.));
-  auto surfaceD =
-      Acts::Surface::makeShared<Acts::CylinderSurface>(dTransform, 50., 5.);
+  Transform3 dTransform = Transform3::Identity();
+  dTransform.pretranslate(Vector3(0., 0., 10.));
+  auto surfaceD = Surface::makeShared<CylinderSurface>(dTransform, 50., 5.);
 
   // Return in a shuffled order
   return {surfaceC, surfaceB, surfaceA, surfaceD};
 }
 
-}  // namespace
-
-using namespace Acts;
-
-auto gContext = GeometryContext();
+auto gContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(Navigation)
 
@@ -96,8 +85,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
 
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(*surface,
-                                        Acts::BoundaryTolerance::None());
+    nStreamTemplate.addSurfaceCandidate(*surface, BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
 
@@ -145,7 +133,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
   // (5) Test de-duplication
   nStream = nStreamTemplate;
   nStreamTemplate.addSurfaceCandidate(*surfaces.at(0),
-                                      Acts::BoundaryTolerance::None());
+                                      BoundaryTolerance::None());
   // One surface is duplicated in the stream
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 5u);
   // Initialize stream reaches all surfaces, but also de-duplicates
@@ -163,8 +151,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // reachable and intersections inside bounds
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(*surface,
-                                        Acts::BoundaryTolerance::None());
+    nStreamTemplate.addSurfaceCandidate(*surface, BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
 
@@ -211,7 +198,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   CHECK_CLOSE_ABS(
       nStream.currentCandidate().pathLength(), s_onSurfaceTolerance,
       std::numeric_limits<double>::epsilon() + s_onSurfaceTolerance);
-  BOOST_CHECK_EQUAL(nStream.currentCandidate().intersection.status(),
+  BOOST_CHECK_EQUAL(nStream.currentCandidate().status(),
                     IntersectionStatus::onSurface);
   // Let's say the stepper confirms this
   BOOST_CHECK(nStream.switchToNextCandidate());
@@ -242,7 +229,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   for (const auto& surface : surfaces) {
     const Surface* pointer = surface.get();
     nStreamTemplate.addSurfaceCandidates({&pointer, 1},
-                                         Acts::BoundaryTolerance::None());
+                                         BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
 
@@ -297,3 +284,5 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

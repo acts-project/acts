@@ -171,6 +171,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   void setConfiguration(const Config& cvhConfig);
 
   /// Get configuration method
+  /// @return Copy of the current configuration
   Config getConfiguration() const;
 
   /// Set logging instance

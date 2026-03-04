@@ -26,31 +26,28 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
 #include <memory>
 #include <optional>
 #include <random>
 #include <string>
-#include <string_view>
 #include <tuple>
 #include <vector>
 
 #include "FitterTestsCommon.hpp"
 
-namespace {
-
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
 
 static const auto electron = ParticleHypothesis::electron();
 
@@ -74,12 +71,11 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using BetheHeitlerApprox = AtlasBetheHeitlerApprox<6, 5>;
-using GSF =
-    GaussianSumFitter<Propagator, BetheHeitlerApprox, VectorMultiTrajectory>;
+using GSF = GaussianSumFitter<Propagator, VectorMultiTrajectory>;
 
-const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
-                  makeDefaultBetheHeitlerApprox());
+const GSF gsfZero(
+    makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
+    std::make_shared<AtlasBetheHeitlerApprox>(makeDefaultBetheHeitlerApprox()));
 
 std::default_random_engine rng(42);
 
@@ -117,7 +113,7 @@ auto makeParameters() {
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
@@ -134,7 +130,7 @@ auto makeParameters() {
   Acts::BoundVector deltaQOP = Acts::BoundVector::Zero();
   deltaQOP[eBoundQOverP] = 0.01_GeV;
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps = {
+  std::vector<std::tuple<double, BoundVector, BoundMatrix>> cmps = {
       {0.2, cp.parameters(), cov},
       {0.2, cp.parameters() + deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() + deltaLOC0 - deltaLOC1 - deltaQOP, cov},
@@ -145,9 +141,7 @@ auto makeParameters() {
       cp.referenceSurface().getSharedPtr(), cmps, electron));
 }
 
-}  // namespace
-
-BOOST_AUTO_TEST_SUITE(TrackFittingGsf)
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto multi_pars = makeParameters();
@@ -243,3 +237,5 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

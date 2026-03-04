@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Gnn/detail/buildEdges.hpp"
+#include "ActsPlugins/Gnn/detail/buildEdges.hpp"
 
-#include "Acts/Plugins/Gnn/detail/TensorVectorConversion.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/KDTree.hpp"
+#include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
 
 #include <iostream>
 #include <mutex>
@@ -31,10 +31,12 @@
 
 using namespace torch::indexing;
 
-torch::Tensor Acts::detail::postprocessEdgeTensor(torch::Tensor edges,
-                                                  bool removeSelfLoops,
-                                                  bool removeDuplicates,
-                                                  bool flipDirections) {
+using namespace Acts;
+
+torch::Tensor ActsPlugins::detail::postprocessEdgeTensor(torch::Tensor edges,
+                                                         bool removeSelfLoops,
+                                                         bool removeDuplicates,
+                                                         bool flipDirections) {
   // Remove self-loops
   if (removeSelfLoops) {
     torch::Tensor selfLoopMask = edges.index({0}) != edges.index({1});
@@ -62,13 +64,13 @@ torch::Tensor Acts::detail::postprocessEdgeTensor(torch::Tensor edges,
   return edges.toType(torch::kInt64);
 }
 
-torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
-                                           float rVal, int kVal,
-                                           bool flipDirections) {
+torch::Tensor ActsPlugins::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
+                                                  float rVal, int kVal,
+                                                  bool flipDirections) {
 #ifndef ACTS_GNN_CPUONLY
   const auto device = embedFeatures.device();
 
-  const std::int64_t numSpacepoints = embedFeatures.size(0);
+  const std::int64_t numSpacePoints = embedFeatures.size(0);
   const int dim = embedFeatures.size(1);
 
   const int grid_params_size = 8;
@@ -90,11 +92,11 @@ torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
   torch::Tensor grid_max;
   torch::Tensor grid_size;
 
-  torch::Tensor embedTensor = embedFeatures.reshape({1, numSpacepoints, dim});
+  torch::Tensor embedTensor = embedFeatures.reshape({1, numSpacePoints, dim});
   torch::Tensor gridParamsCuda =
       torch::zeros({batch_size, grid_params_size}, device).to(torch::kFloat32);
   torch::Tensor r_tensor = torch::full({batch_size}, rVal, device);
-  torch::Tensor lengths = torch::full({batch_size}, numSpacepoints, device);
+  torch::Tensor lengths = torch::full({batch_size}, numSpacePoints, device);
 
   // build the grid
   for (int i = 0; i < batch_size; i++) {
@@ -132,11 +134,11 @@ torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
   torch::Tensor pc_grid_cnt =
       torch::zeros({batch_size, G}, device).to(torch::kInt32);
   torch::Tensor pc_grid_cell =
-      torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
+      torch::full({batch_size, numSpacePoints}, -1, device).to(torch::kInt32);
   torch::Tensor pc_grid_idx =
-      torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
+      torch::full({batch_size, numSpacePoints}, -1, device).to(torch::kInt32);
 
-  // put spacepoints into the grid
+  // put space points into the grid
   InsertPointsCUDA(embedTensor, lengths.to(torch::kInt64), gridParamsCuda,
                    pc_grid_cnt, pc_grid_cell, pc_grid_idx, G);
 
@@ -148,10 +150,10 @@ torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
   pc_grid_off = PrefixSumCUDA(pc_grid_cnt, grid_params);
 
   torch::Tensor sorted_points =
-      torch::zeros({batch_size, numSpacepoints, dim}, device)
+      torch::zeros({batch_size, numSpacePoints, dim}, device)
           .to(torch::kFloat32);
   torch::Tensor sorted_points_idxs =
-      torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
+      torch::full({batch_size, numSpacePoints}, -1, device).to(torch::kInt32);
 
   CountingSortCUDA(embedTensor, lengths.to(torch::kInt64), pc_grid_cell,
                    pc_grid_idx, pc_grid_off, sorted_points, sorted_points_idxs);
@@ -174,7 +176,7 @@ torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
                                flipDirections);
 #else
   throw std::runtime_error(
-      "ACTS not compiled with CUDA, cannot run Acts::buildEdgesFRNN");
+      "ACTS not compiled with CUDA, cannot run ActsPlugins::buildEdgesFRNN");
 #endif
 }
 
@@ -213,7 +215,7 @@ struct BuildEdgesKDTree {
     ////////////////
     // Build tree //
     ////////////////
-    using KDTree = Acts::KDTree<Dim, int, float, Span>;
+    using KDTree = KDTree<Dim, int, float, Span>;
 
     typename KDTree::vector_t features;
     features.reserve(embedFeatures.size(0));
@@ -235,9 +237,9 @@ struct BuildEdgesKDTree {
     for (int iself = 0; iself < embedFeatures.size(0); ++iself) {
       const Span<float, Dim> self{dataPtr + iself * Dim};
 
-      Acts::RangeXD<Dim, float> range;
+      RangeXD<Dim, float> range;
       for (auto j = 0ul; j < Dim; ++j) {
-        range[j] = Acts::Range1D<float>(self[j] - rVal, self[j] + rVal);
+        range[j] = Range1D<float>(self[j] - rVal, self[j] + rVal);
       }
 
       tree.rangeSearchMapDiscard(
@@ -250,21 +252,21 @@ struct BuildEdgesKDTree {
     }
 
     // Transpose is necessary here, clone to get ownership
-    return Acts::detail::vectorToTensor2D(edges, 2).t().clone();
+    return ActsPlugins::detail::vectorToTensor2D(edges, 2).t().clone();
   }
 };
 
-torch::Tensor Acts::detail::buildEdgesKDTree(torch::Tensor &embedFeatures,
-                                             float rVal, int kVal,
-                                             bool flipDirections) {
-  auto tensor = Acts::template_switch<BuildEdgesKDTree, 1, 12>(
+torch::Tensor ActsPlugins::detail::buildEdgesKDTree(
+    torch::Tensor &embedFeatures, float rVal, int kVal, bool flipDirections) {
+  auto tensor = template_switch<BuildEdgesKDTree, 1, 12>(
       embedFeatures.size(1), embedFeatures, rVal, kVal);
 
   return postprocessEdgeTensor(tensor, true, true, flipDirections);
 }
 
-torch::Tensor Acts::detail::buildEdges(torch::Tensor &embedFeatures, float rVal,
-                                       int kVal, bool flipDirections) {
+torch::Tensor ActsPlugins::detail::buildEdges(torch::Tensor &embedFeatures,
+                                              float rVal, int kVal,
+                                              bool flipDirections) {
 #ifndef ACTS_GNN_CPUONLY
   if (torch::cuda::is_available()) {
     return detail::buildEdgesFRNN(embedFeatures, rVal, kVal, flipDirections);

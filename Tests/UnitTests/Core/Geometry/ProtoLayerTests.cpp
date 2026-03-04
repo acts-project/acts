@@ -10,17 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <memory>
@@ -29,11 +29,13 @@
 #include <string>
 #include <vector>
 
-namespace Acts::Test::Layers {
+using namespace Acts;
 
-GeometryContext tgContext = GeometryContext();
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 // Test both const and non-const versions
 template <bool IsConst>
@@ -175,13 +177,13 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTestsNonConst) {
 
 BOOST_AUTO_TEST_CASE(OrientedLayer) {
   using enum AxisDirection;
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
 
   Transform3 base = Transform3::Identity();
 
   auto recBounds = std::make_shared<RectangleBounds>(3_mm, 6_mm);
 
-  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
+  std::vector<std::unique_ptr<SurfacePlacementBase>> detectorElements;
 
   auto makeFan = [&](double yrot, double thickness = 0) {
     detectorElements.clear();
@@ -280,4 +282,4 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

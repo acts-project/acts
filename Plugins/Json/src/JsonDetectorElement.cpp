@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Json/JsonDetectorElement.hpp"
+#include "ActsPlugins/Json/JsonDetectorElement.hpp"
 
-#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
+#include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
 namespace Acts {
 
@@ -18,7 +18,8 @@ JsonDetectorElement::JsonDetectorElement(const nlohmann::json &jSurface,
     : m_thickness(thickness) {
   m_surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
   m_transform = Transform3JsonConverter::fromJson(jSurface["transform"]);
-  m_surface->assignDetectorElement(*this);
+  m_surface->assignSurfacePlacement(*this);
+  m_surface->assignThickness(thickness);
 }
 
 const Surface &JsonDetectorElement::surface() const {
@@ -29,7 +30,7 @@ Surface &JsonDetectorElement::surface() {
   return *m_surface;
 }
 
-const Transform3 &JsonDetectorElement::transform(
+const Transform3 &JsonDetectorElement::localToGlobalTransform(
     const GeometryContext & /*gctx*/) const {
   return m_transform;
 }

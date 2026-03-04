@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/AmbiguityResolutionML.hpp"
-#include "Acts/Plugins/Onnx/AmbiguityTrackClassifier.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsPlugins/Onnx/AmbiguityTrackClassifier.hpp"
 
 #include <string>
 
@@ -26,7 +26,7 @@ namespace ActsExamples {
 ///  3) In each cluster keep the track with the highest score
 class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
   using AmbiguityResolution =
-      Acts::AmbiguityResolutionML<Acts::AmbiguityTrackClassifier>;
+      Acts::AmbiguityResolutionML<ActsPlugins::AmbiguityTrackClassifier>;
 
  public:
   struct Config {
@@ -48,7 +48,8 @@ class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AmbiguityResolutionMLAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  explicit AmbiguityResolutionMLAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the ambiguity resolution algorithm.
   ///

@@ -14,7 +14,7 @@
 
 #include <Eigen/Dense>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 
@@ -165,7 +165,7 @@ void TripletSeeder::createSeedsFromGroups(
     for (auto& bottomSpGroup : bottomSpGroups) {
       // Find the first bottom space point that is within the deltaRMax of the
       // first middle space point.
-      auto low = std::ranges::lower_bound(
+      const auto low = std::ranges::lower_bound(
           bottomSpGroup, firstMiddleSpR - bottomFinder.config().deltaRMax, {},
           [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
       bottomSpGroup = bottomSpGroup.subrange(low - bottomSpGroup.begin());
@@ -174,7 +174,7 @@ void TripletSeeder::createSeedsFromGroups(
     for (auto& topSpGroup : topSpGroups) {
       // Find the first top space point that is within the deltaRMin of the
       // first middle space point.
-      auto low = std::ranges::lower_bound(
+      const auto low = std::ranges::lower_bound(
           topSpGroup, firstMiddleSpR + topFinder.config().deltaRMin, {},
           [&](const ConstSpacePointProxy2& sp) { return sp.zr()[1]; });
       topSpGroup = topSpGroup.subrange(low - topSpGroup.begin());
@@ -201,4 +201,4 @@ void TripletSeeder::createSeedsFromGroups(
   }
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

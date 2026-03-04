@@ -12,10 +12,11 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include <ActsExamples/Digitization/MeasurementCreation.hpp>
+#include "ActsExamples/EventData/SpacePoint.hpp"
 
 #include <algorithm>
 
@@ -24,27 +25,17 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace {
-std::uint64_t concatInts(int a, int b) {
-  auto va = static_cast<std::uint32_t>(a);
-  auto vb = static_cast<std::uint32_t>(b);
-  std::uint64_t value = (static_cast<std::uint64_t>(va) << 32) | vb;
-  return value;
-}
+namespace ActsExamples {
 
-std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
-  return {static_cast<std::uint32_t>((v & 0xFFFFFFFF00000000LL) >> 32),
-          static_cast<std::uint32_t>(v & 0xFFFFFFFFLL)};
-}
+namespace {
 
 /// In cases when there is built up a particle collection in an iterative way it
 /// can be way faster to build up a vector and afterwards use a special
 /// constructor to speed up the set creation.
-inline auto particleVectorToSet(
-    std::vector<ActsExamples::SimParticle>& particles) {
+inline auto particleVectorToSet(std::vector<SimParticle>& particles) {
   using namespace ActsExamples;
   auto cmp = [](const auto& a, const auto& b) {
-    return a.particleId().value() == b.particleId().value();
+    return a.particleId() == b.particleId();
   };
 
   std::ranges::sort(particles, detail::CompareParticleId{});
@@ -58,8 +49,6 @@ inline auto particleVectorToSet(
 }  // namespace
 
 enum SpacePointType { ePixel = 1, eStrip = 2 };
-
-namespace ActsExamples {
 
 RootAthenaDumpReader::RootAthenaDumpReader(
     const RootAthenaDumpReader::Config& config, Acts::Logging::Level level)
@@ -78,7 +67,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputPixelSpacePoints.initialize(m_cfg.outputPixelSpacePoints);
   m_outputStripSpacePoints.initialize(m_cfg.outputStripSpacePoints);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
-  if (!m_cfg.onlySpacepoints) {
+  if (!m_cfg.onlySpacePoints) {
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
     m_outputClusters.initialize(m_cfg.outputClusters);
     if (!m_cfg.noTruth) {
@@ -102,7 +91,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   // Cluster features
   m_inputchain->SetBranchAddress("nCL", &nCL);
   m_inputchain->SetBranchAddress("CLindex", CLindex);
-  m_inputchain->SetBranchAddress("CLhardware", &CLhardware);
+  m_inputchain->SetBranchAddress("CLhardware", &CLhardware.get());
   m_inputchain->SetBranchAddress("CLx", CLx);
   m_inputchain->SetBranchAddress("CLy", CLy);
   m_inputchain->SetBranchAddress("CLz", CLz);
@@ -112,9 +101,9 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLphi_module", CLphi_module);
   m_inputchain->SetBranchAddress("CLside", CLside);
   m_inputchain->SetBranchAddress("CLmoduleID", CLmoduleID);
-  m_inputchain->SetBranchAddress("CLphis", &CLphis);
-  m_inputchain->SetBranchAddress("CLetas", &CLetas);
-  m_inputchain->SetBranchAddress("CLtots", &CLtots);
+  m_inputchain->SetBranchAddress("CLphis", &CLphis.get());
+  m_inputchain->SetBranchAddress("CLetas", &CLetas.get());
+  m_inputchain->SetBranchAddress("CLtots", &CLtots.get());
   m_inputchain->SetBranchAddress("CLloc_direction1", CLloc_direction1);
   m_inputchain->SetBranchAddress("CLloc_direction2", CLloc_direction2);
   m_inputchain->SetBranchAddress("CLloc_direction3", CLloc_direction3);
@@ -132,14 +121,15 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLnorm_x", CLnorm_x);
   m_inputchain->SetBranchAddress("CLnorm_y", CLnorm_y);
   m_inputchain->SetBranchAddress("CLnorm_z", CLnorm_z);
-  m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov);
+  m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov.get());
   if (!m_cfg.noTruth) {
     m_inputchain->SetBranchAddress("CLparticleLink_eventIndex",
-                                   &CLparticleLink_eventIndex);
+                                   &CLparticleLink_eventIndex.get());
     m_inputchain->SetBranchAddress("CLparticleLink_barcode",
-                                   &CLparticleLink_barcode);
-    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked);
-    m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
+                                   &CLparticleLink_barcode.get());
+    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked.get());
+    m_inputchain->SetBranchAddress("CLparticle_charge",
+                                   &CLparticle_charge.get());
   }
 
   // Particle features
@@ -164,11 +154,12 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout);
     m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus);
     m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode);
-    m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID);
-    m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
+    m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID.get());
+    m_inputchain->SetBranchAddress("Part_vParentBarcode",
+                                   &Part_vParentBarcode.get());
   }
 
-  // Spacepoint features
+  // Space point features
   m_inputchain->SetBranchAddress("nSP", &nSP);
   m_inputchain->SetBranchAddress("SPindex", SPindex);
   m_inputchain->SetBranchAddress("SPx", SPx);
@@ -183,13 +174,14 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_inputchain->SetBranchAddress("SPcovz", SPcovz);
     m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
     m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
-    m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
+    m_inputchain->SetBranchAddress("SPtopStripDirection",
+                                   &SPtopStripDirection.get());
     m_inputchain->SetBranchAddress("SPbottomStripDirection",
-                                   &SPbottomStripDirection);
+                                   &SPbottomStripDirection.get());
     m_inputchain->SetBranchAddress("SPstripCenterDistance",
-                                   &SPstripCenterDistance);
+                                   &SPstripCenterDistance.get());
     m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
-                                   &SPtopStripCenterPosition);
+                                   &SPtopStripCenterPosition.get());
   }
 
   // These quantities are not used currently and thus commented out
@@ -251,8 +243,14 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
       continue;
     }
 
-    SimBarcode dummyBarcode{
-        concatInts(Part_barcode[ip], Part_event_number[ip])};
+    SimBarcode dummyBarcode =
+        SimBarcode()
+            .withVertexPrimary(
+                static_cast<SimBarcode::PrimaryVertexId>(Part_event_number[ip]))
+            .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                Part_barcode[ip] < s_maxBarcodeForPrimary ? 0 : 1))
+            .withParticle(
+                static_cast<SimBarcode::ParticleId>(Part_barcode[ip]));
     SimParticleState particle(dummyBarcode,
                               static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
@@ -399,7 +397,8 @@ RootAthenaDumpReader::readMeasurements(
 
       if (!inside) {
         const Acts::Vector3 v =
-            surface->transform(gctx).inverse() * cluster.globalPosition;
+            surface->localToGlobalTransform(gctx).inverse() *
+            cluster.globalPosition;
         ACTS_WARNING("Projected position is not in surface bounds for "
                      << surface->geometryId() << ", skip hit");
         ACTS_WARNING("Position in local coordinates: " << v.transpose());
@@ -412,7 +411,8 @@ RootAthenaDumpReader::readMeasurements(
 
       if (!loc.ok()) {
         const Acts::Vector3 v =
-            surface->transform(gctx).inverse() * cluster.globalPosition;
+            surface->localToGlobalTransform(gctx).inverse() *
+            cluster.globalPosition;
         ACTS_WARNING("Global-to-local fit failed on "
                      << geoId << " (z dist: " << v[2]
                      << ", projected on surface: " << std::boolalpha << inside
@@ -456,7 +456,13 @@ RootAthenaDumpReader::readMeasurements(
       for (const auto& [subevt, barcode] :
            Acts::zip(CLparticleLink_eventIndex->at(im),
                      CLparticleLink_barcode->at(im))) {
-        SimBarcode dummyBarcode{concatInts(barcode, subevt)};
+        SimBarcode dummyBarcode =
+            SimBarcode()
+                .withVertexPrimary(
+                    static_cast<SimBarcode::PrimaryVertexId>(subevt))
+                .withVertexSecondary(static_cast<SimBarcode::SecondaryVertexId>(
+                    barcode < s_maxBarcodeForPrimary ? 0 : 1))
+                .withParticle(static_cast<SimBarcode::ParticleId>(barcode));
         // If we don't find the particle, create one with default values
         if (particles.find(dummyBarcode) == particles.end()) {
           ACTS_VERBOSE("Particle with subevt "
@@ -489,17 +495,27 @@ RootAthenaDumpReader::readMeasurements(
           std::move(imIdxMap)};
 }
 
-std::tuple<SimSpacePointContainer, SimSpacePointContainer,
-           SimSpacePointContainer>
-RootAthenaDumpReader::readSpacepoints(
+std::tuple<SpacePointContainer, SpacePointContainer, SpacePointContainer>
+RootAthenaDumpReader::readSpacePoints(
     const std::optional<std::unordered_map<int, std::size_t>>& imIdxMap) const {
-  SimSpacePointContainer pixelSpacePoints;
+  SpacePointContainer pixelSpacePoints(
+      SpacePointColumns::SourceLinks | SpacePointColumns::X |
+      SpacePointColumns::Y | SpacePointColumns::Z |
+      SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR);
   pixelSpacePoints.reserve(nSP);
 
-  SimSpacePointContainer stripSpacePoints;
+  SpacePointContainer stripSpacePoints(
+      SpacePointColumns::SourceLinks | SpacePointColumns::X |
+      SpacePointColumns::Y | SpacePointColumns::Z |
+      SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR |
+      SpacePointColumns::Strip);
   stripSpacePoints.reserve(nSP);
 
-  SimSpacePointContainer spacePoints;
+  SpacePointContainer spacePoints(
+      SpacePointColumns::SourceLinks | SpacePointColumns::X |
+      SpacePointColumns::Y | SpacePointColumns::Z |
+      SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR |
+      SpacePointColumns::Strip);
   spacePoints.reserve(nSP);
 
   // Loop on space points
@@ -545,12 +561,12 @@ RootAthenaDumpReader::readSpacepoints(
 
     auto cl1GeoId = getGeoId(CLmoduleID[cl1Index]);
     if (!cl1GeoId) {
-      ACTS_WARNING("Could not find geoId for spacepoint cluster 1");
+      ACTS_WARNING("Could not find geoId for space point cluster 1");
       continue;
     }
 
     if (imIdxMap && !imIdxMap->contains(cl1Index)) {
-      ACTS_WARNING("Measurement 1 for spacepoint " << isp << " not created");
+      ACTS_WARNING("Measurement 1 for space point " << isp << " not created");
       continue;
     }
 
@@ -558,25 +574,35 @@ RootAthenaDumpReader::readSpacepoints(
                           imIdxMap ? imIdxMap->at(cl1Index) : cl1Index);
     sLinks.emplace_back(first);
 
-    // First create pixel spacepoint here, later maybe overwrite with strip
-    // spacepoint
-    SimSpacePoint sp(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
-                     sLinks);
+    // First create pixel space point here, later maybe overwrite with strip
+    // space point
+    auto sp = spacePoints.createSpacePoint();
+    sp.x() = globalPos.x();
+    sp.y() = globalPos.y();
+    sp.z() = globalPos.z();
+    sp.varianceR() = spCovr;
+    sp.varianceZ() = spCovz;
 
     if (type == ePixel) {
-      pixelSpacePoints.push_back(sp);
+      auto pixelSp = pixelSpacePoints.createSpacePoint();
+      pixelSp.assignSourceLinks(sLinks);
+      pixelSp.x() = globalPos.x();
+      pixelSp.y() = globalPos.y();
+      pixelSp.z() = globalPos.z();
+      pixelSp.varianceR() = spCovr;
+      pixelSp.varianceZ() = spCovz;
     } else {
       const auto cl2Index = SPCL2_index[isp];
       assert(cl2Index >= 0 && cl2Index < nCL);
 
-      auto cl2GeoId = getGeoId(CLmoduleID[cl1Index]);
+      auto cl2GeoId = getGeoId(CLmoduleID[cl2Index]);
       if (!cl2GeoId) {
-        ACTS_WARNING("Could not find geoId for spacepoint cluster 2");
+        ACTS_WARNING("Could not find geoId for space point cluster 2");
         continue;
       }
 
       if (imIdxMap && !imIdxMap->contains(cl2Index)) {
-        ACTS_WARNING("Measurement 2 for spacepoint " << isp << " not created");
+        ACTS_WARNING("Measurement 2 for space point " << isp << " not created");
         continue;
       }
 
@@ -584,11 +610,10 @@ RootAthenaDumpReader::readSpacepoints(
                              imIdxMap ? imIdxMap->at(cl2Index) : cl2Index);
       sLinks.emplace_back(second);
 
-      using Vector3f = Eigen::Matrix<float, 3, 1>;
-      Vector3f topStripDirection = Vector3f::Zero();
-      Vector3f bottomStripDirection = Vector3f::Zero();
-      Vector3f stripCenterDistance = Vector3f::Zero();
-      Vector3f topStripCenterPosition = Vector3f::Zero();
+      Eigen::Vector3f topStripDirection = Eigen::Vector3f::Zero();
+      Eigen::Vector3f bottomStripDirection = Eigen::Vector3f::Zero();
+      Eigen::Vector3f stripCenterDistance = Eigen::Vector3f::Zero();
+      Eigen::Vector3f topStripCenterPosition = Eigen::Vector3f::Zero();
 
       if (m_haveStripFeatures) {
         topStripDirection = {SPtopStripDirection->at(isp).at(0),
@@ -604,17 +629,30 @@ RootAthenaDumpReader::readSpacepoints(
                                   SPtopStripCenterPosition->at(isp).at(1),
                                   SPtopStripCenterPosition->at(isp).at(2)};
       }
-      sp = SimSpacePoint(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
-                         sLinks, SPhl_topstrip[isp], SPhl_botstrip[isp],
-                         topStripDirection.cast<double>(),
-                         bottomStripDirection.cast<double>(),
-                         stripCenterDistance.cast<double>(),
-                         topStripCenterPosition.cast<double>());
 
-      stripSpacePoints.push_back(sp);
+      auto stripSp = stripSpacePoints.createSpacePoint();
+      stripSp.assignSourceLinks(sLinks);
+      stripSp.x() = globalPos.x();
+      stripSp.y() = globalPos.y();
+      stripSp.z() = globalPos.z();
+      stripSp.varianceR() = spCovr;
+      stripSp.varianceZ() = spCovz;
+      Eigen::Map<Eigen::Vector3f>(stripSp.topStripVector().data()) =
+          topStripDirection.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.bottomStripVector().data()) =
+          bottomStripDirection.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.stripCenterDistance().data()) =
+          stripCenterDistance.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.topStripCenter().data()) =
+          topStripCenterPosition.cast<float>();
+
+      sp.topStripVector() = stripSp.topStripVector();
+      sp.bottomStripVector() = stripSp.bottomStripVector();
+      sp.stripCenterDistance() = stripSp.stripCenterDistance();
+      sp.topStripCenter() = stripSp.topStripCenter();
     }
 
-    spacePoints.push_back(sp);
+    sp.assignSourceLinks(sLinks);
   }
 
   if (m_cfg.skipOverlapSPsEta || m_cfg.skipOverlapSPsPhi) {
@@ -624,7 +662,7 @@ RootAthenaDumpReader::readSpacepoints(
   if (spacePoints.size() <
       (static_cast<std::size_t>(nSP) - skippedSpacePoints)) {
     ACTS_WARNING("Could not convert " << nSP - spacePoints.size() << " of "
-                                      << nSP << " spacepoints");
+                                      << nSP << " space points");
   }
 
   ACTS_DEBUG("Created " << spacePoints.size() << " overall space points");
@@ -641,7 +679,7 @@ std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
 RootAthenaDumpReader::reprocessParticles(
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
-  std::vector<ActsExamples::SimParticle> newParticles;
+  std::vector<SimParticle> newParticles;
   newParticles.reserve(particles.size());
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
   newMeasPartMap.reserve(measPartMap.size());
@@ -655,26 +693,24 @@ RootAthenaDumpReader::reprocessParticles(
     const auto [begin, end] = partMeasMap.equal_range(particle.particleId());
 
     if (begin == end) {
-      ACTS_VERBOSE("Particle " << particle.particleId().value()
+      ACTS_VERBOSE("Particle " << particle.particleId()
                                << " has no measurements");
       continue;
     }
 
-    auto [athBarcode, athSubevent] = splitInt(particle.particleId().value());
-    auto primary = (athBarcode < s_maxBarcodeForPrimary);
-
-    ActsFatras::Barcode fatrasBarcode;
+    auto primary = particle.particleId().vertexSecondary() == 0;
 
     // vertex primary shouldn't be zero for a valid particle
-    fatrasBarcode.setVertexPrimary(1);
+    ActsFatras::Barcode fatrasBarcode =
+        ActsFatras::Barcode().withVertexPrimary(1);
     if (primary) {
-      fatrasBarcode.setVertexSecondary(0);
-      fatrasBarcode.setParticle(primaryCount);
+      fatrasBarcode =
+          fatrasBarcode.withVertexSecondary(0).withParticle(primaryCount);
       assert(primaryCount < std::numeric_limits<std::uint16_t>::max());
       primaryCount++;
     } else {
-      fatrasBarcode.setVertexSecondary(1);
-      fatrasBarcode.setParticle(secondaryCount);
+      fatrasBarcode =
+          fatrasBarcode.withVertexSecondary(1).withParticle(secondaryCount);
       assert(primaryCount < std::numeric_limits<std::uint16_t>::max());
       secondaryCount++;
     }
@@ -708,7 +744,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
 
   std::optional<std::unordered_map<int, std::size_t>> optImIdxMap;
 
-  if (!m_cfg.onlySpacepoints) {
+  if (!m_cfg.onlySpacePoints) {
     SimParticleContainer candidateParticles;
 
     if (!m_cfg.noTruth) {
@@ -733,7 +769,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
   }
 
   auto [spacePoints, pixelSpacePoints, stripSpacePoints] =
-      readSpacepoints(optImIdxMap);
+      readSpacePoints(optImIdxMap);
 
   m_outputPixelSpacePoints(ctx, std::move(pixelSpacePoints));
   m_outputStripSpacePoints(ctx, std::move(stripSpacePoints));

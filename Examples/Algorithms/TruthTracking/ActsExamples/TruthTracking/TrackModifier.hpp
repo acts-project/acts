@@ -17,7 +17,6 @@
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Modify tracks based on configuration.
 class TrackModifier final : public IAlgorithm {
@@ -36,7 +35,8 @@ class TrackModifier final : public IAlgorithm {
     bool killTime{false};
   };
 
-  TrackModifier(const Config& config, Acts::Logging::Level level);
+  explicit TrackModifier(const Config& config,
+                         std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

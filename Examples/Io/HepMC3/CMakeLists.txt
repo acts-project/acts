@@ -1,32 +1,29 @@
 acts_add_library(
     ExamplesIoHepMC3
-    SHARED
     src/HepMC3Reader.cpp
     src/HepMC3Writer.cpp
     src/HepMC3InputConverter.cpp
     src/HepMC3OutputConverter.cpp
     src/HepMC3Util.cpp
-)
-target_include_directories(
-    ActsExamplesIoHepMC3
-    SYSTEM
-    PUBLIC ${HEPMC3_INCLUDE_DIR}
+    src/HepMC3FactoryWrappers.cpp
+    src/HepMC3Metadata.cpp
 )
 target_include_directories(
     ActsExamplesIoHepMC3
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
 target_link_libraries(
     ActsExamplesIoHepMC3
-    PUBLIC Acts::ExamplesFramework ${HEPMC3_LIBRARIES}
-    PRIVATE Acts::Fatras
+    PUBLIC Acts::ExamplesFramework HepMC3::HepMC3
+    PRIVATE Acts::Fatras nlohmann_json::nlohmann_json
 )
 
 # HepMC3 version < 3.3.0 had non-inline pseudo static members that give linker errors:
 # https://gitlab.cern.ch/hepmc/HepMC3/-/merge_requests/284
 if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
     # The code below conditionally tries to find a number of compression libraries,
-    # and will then configure the HepMC3 IO target to make use of them
+    # and will then configure the HepMC3 IO targets to make use of them
     # conditionally.
     target_compile_definitions(
         ActsExamplesIoHepMC3
@@ -87,12 +84,12 @@ if(${HEPMC3_VERSION} VERSION_GREATER_EQUAL 3.2.7)
 endif()
 
 message(CHECK_START "Examples HepMC3 IO: checking for ROOT IO")
-if(TARGET HepMC3::rootIO)
+if(ACTS_BUILD_EXAMPLES_ROOT AND TARGET HepMC3::rootIO)
     message(CHECK_PASS "found")
     target_link_libraries(ActsExamplesIoHepMC3 PRIVATE HepMC3::rootIO)
     target_compile_definitions(
         ActsExamplesIoHepMC3
-        PRIVATE ACTS_HEPMC3_ROOT_SUPPORT=1
+        PRIVATE HEPMC3_ROOT_SUPPORT=1
     )
 else()
     message(CHECK_PASS "not found")

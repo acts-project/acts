@@ -17,9 +17,11 @@
 #include "EventDataView3DBase.hpp"
 #include "Visualization3DTester.hpp"
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Visualization)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(VisualizationSuite)
 
 BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationObj) {
   ObjVisualization3D obj;
@@ -101,4 +103,4 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

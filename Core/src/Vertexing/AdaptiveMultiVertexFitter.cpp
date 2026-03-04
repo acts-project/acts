@@ -13,7 +13,24 @@
 #include "Acts/Vertexing/KalmanVertexUpdater.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
+namespace Acts {
+
+AdaptiveMultiVertexFitter::AdaptiveMultiVertexFitter(
+    Config cfg, std::unique_ptr<const Logger> logger)
+    : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
+  if (!m_cfg.extractParameters.connected()) {
+    throw std::invalid_argument(
+        "AdaptiveMultiVertexFitter: No function to extract parameters "
+        "from InputTrack_t provided.");
+  }
+
+  if (!m_cfg.trackLinearizer.connected()) {
+    throw std::invalid_argument(
+        "AdaptiveMultiVertexFitter: No track linearizer provided.");
+  }
+}
+
+Result<void> AdaptiveMultiVertexFitter::fit(
     State& state, const VertexingOptions& vertexingOptions) const {
   // Reset annealing tool
   state.annealingState = AnnealingUtility::State();
@@ -65,7 +82,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
       // Check if we use the constraint during the vertex fit
       if (state.vtxInfoMap[vtx].constraint.fullCovariance() !=
           SquareMatrix4::Zero()) {
-        const Acts::Vertex& constraint = state.vtxInfoMap[vtx].constraint;
+        const Vertex& constraint = state.vtxInfoMap[vtx].constraint;
         vtx->setFullPosition(constraint.fullPosition());
         vtx->setFitQuality(constraint.fitQuality());
         vtx->setFullCovariance(constraint.fullCovariance());
@@ -115,20 +132,22 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
   return {};
 }
 
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
-    State& state, Vertex& newVertex,
+Result<void> AdaptiveMultiVertexFitter::addVtxToFit(
+    State& state, const std::vector<Vertex*>& newVertices,
     const VertexingOptions& vertexingOptions) const {
-  if (state.vtxInfoMap[&newVertex].trackLinks.empty()) {
-    ACTS_ERROR(
-        "newVertex does not have any associated tracks (i.e., its trackLinks "
-        "are empty).");
-    return VertexingError::EmptyInput;
+  for (const auto& newVertex : newVertices) {
+    if (state.vtxInfoMap[newVertex].trackLinks.empty()) {
+      ACTS_ERROR(
+          "newVertex does not have any associated tracks (i.e., its trackLinks "
+          "are empty).");
+      return VertexingError::EmptyInput;
+    }
   }
 
-  std::vector<Vertex*> verticesToFit = {&newVertex};
+  std::vector<Vertex*> verticesToFit = newVertices;
 
   // List of vertices added in last iteration
-  std::vector<Vertex*> lastIterAddedVertices = {&newVertex};
+  std::vector<Vertex*> lastIterAddedVertices = newVertices;
   // List of vertices added in current iteration
   std::vector<Vertex*> currentIterAddedVertices;
 
@@ -169,14 +188,16 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
 
   state.vertexCollection = verticesToFit;
 
-  // Save the 3D impact parameters of all tracks associated with newVertex.
-  auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
-  if (!res.ok()) {
-    // Print vertices and associated tracks if logger is in debug mode
-    if (logger().doPrint(Logging::DEBUG)) {
-      logDebugData(state, vertexingOptions.geoContext);
+  for (Vertex* newVertexPtr : newVertices) {
+    // Save the 3D impact parameters of all tracks associated with newVertex.
+    auto res = prepareVertexForFit(state, newVertexPtr, vertexingOptions);
+    if (!res.ok()) {
+      // Print vertices and associated tracks if logger is in debug mode
+      if (logger().doPrint(Logging::DEBUG)) {
+        logDebugData(state, vertexingOptions.geoContext);
+      }
+      return res.error();
     }
-    return res.error();
   }
 
   // Perform fit on all added vertices
@@ -188,12 +209,12 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::addVtxToFit(
   return {};
 }
 
-bool Acts::AdaptiveMultiVertexFitter::isAlreadyInList(
+bool AdaptiveMultiVertexFitter::isAlreadyInList(
     Vertex* vtx, const std::vector<Vertex*>& vertices) const {
   return rangeContainsValue(vertices, vtx);
 }
 
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(
+Result<void> AdaptiveMultiVertexFitter::prepareVertexForFit(
     State& state, Vertex* vtx, const VertexingOptions& vertexingOptions) const {
   // Vertex info object
   auto& vtxInfo = state.vtxInfoMap[vtx];
@@ -214,7 +235,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::prepareVertexForFit(
   return {};
 }
 
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
+Result<void> AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
     State& state, Vertex* vtx, const VertexingOptions& vertexingOptions) const {
   VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
 
@@ -236,14 +257,13 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
       vtxInfo.impactParams3D.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
-    Acts::Result<double> compatibilityResult(0.);
+    Result<double> compatibilityResult(0.);
     if (m_cfg.useTime) {
       compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
           vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
           vtxInfo.oldPosition);
     } else {
-      Acts::Vector3 vertexPosOnly =
-          VectorHelpers::position(vtxInfo.oldPosition);
+      Vector3 vertexPosOnly = VectorHelpers::position(vtxInfo.oldPosition);
       compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
           vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
           vertexPosOnly);
@@ -257,7 +277,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
   return {};
 }
 
-Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
+Result<void> AdaptiveMultiVertexFitter::setWeightsAndUpdate(
     State& state, const VertexingOptions& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
     VertexInfo& vtxInfo = state.vtxInfoMap[vtx];
@@ -310,7 +330,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
 }
 
 std::vector<double>
-Acts::AdaptiveMultiVertexFitter::collectTrackToVertexCompatibilities(
+AdaptiveMultiVertexFitter::collectTrackToVertexCompatibilities(
     State& state, const InputTrack& trk) const {
   // Compatibilities of trk wrt all of its associated vertices
   std::vector<double> trkToVtxCompatibilities;
@@ -333,7 +353,7 @@ Acts::AdaptiveMultiVertexFitter::collectTrackToVertexCompatibilities(
   return trkToVtxCompatibilities;
 }
 
-bool Acts::AdaptiveMultiVertexFitter::checkSmallShift(State& state) const {
+bool AdaptiveMultiVertexFitter::checkSmallShift(State& state) const {
   for (auto* vtx : state.vertexCollection) {
     Vector3 diff =
         state.vtxInfoMap[vtx].oldPosition.template head<3>() - vtx->position();
@@ -346,7 +366,7 @@ bool Acts::AdaptiveMultiVertexFitter::checkSmallShift(State& state) const {
   return true;
 }
 
-void Acts::AdaptiveMultiVertexFitter::doVertexSmoothing(State& state) const {
+void AdaptiveMultiVertexFitter::doVertexSmoothing(State& state) const {
   for (const auto vtx : state.vertexCollection) {
     for (const auto& trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
@@ -362,8 +382,8 @@ void Acts::AdaptiveMultiVertexFitter::doVertexSmoothing(State& state) const {
   }
 }
 
-void Acts::AdaptiveMultiVertexFitter::logDebugData(
-    const State& state, const Acts::GeometryContext& geoContext) const {
+void AdaptiveMultiVertexFitter::logDebugData(
+    const State& state, const GeometryContext& geoContext) const {
   ACTS_DEBUG("Encountered an error when fitting the following "
              << state.vertexCollection.size() << " vertices:");
   for (std::size_t vtxInd = 0; vtxInd < state.vertexCollection.size();
@@ -387,3 +407,5 @@ void Acts::AdaptiveMultiVertexFitter::logDebugData(
     }
   }
 }
+
+}  // namespace Acts

@@ -45,10 +45,11 @@ class HelicalTrackLinearizer {
  public:
   /// @brief Configuration struct
   struct Config {
-    // The magnetic field
+    /// The magnetic field provider for helical track propagation
     std::shared_ptr<const MagneticFieldProvider> bField =
         std::make_shared<NullBField>();
 
+    /// Track propagator for linearization calculations
     std::shared_ptr<const BasePropagator> propagator;
 
     /// Tolerance determining how close we need to get to the Perigee surface to

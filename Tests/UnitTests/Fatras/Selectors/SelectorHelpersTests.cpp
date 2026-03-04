@@ -55,7 +55,9 @@ struct CombineFixture {
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(FatrasSelectorHelpers)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(SelectorsSuite)
 
 BOOST_AUTO_TEST_CASE(Min) {
   // require a minimum eta value of 0.5
@@ -136,3 +138,5 @@ BOOST_AUTO_TEST_CASE(Or2) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

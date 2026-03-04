@@ -26,16 +26,20 @@ class SeedFilter;
 /// @brief Structure that holds configuration parameters for the orthogonal seed finder algorithm
 template <typename SpacePoint>
 struct SeedFinderOrthogonalConfig {
+  /// Shared pointer to the seed filter for quality assessment
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
 
   /// Seeding parameters for geometry settings and detector ROI
 
   // Limiting location of all measurements
   float phiMin = -std::numbers::pi_v<float>;
+  /// Maximum phi angle for space-point selection
   float phiMax = std::numbers::pi_v<float>;
   /// limiting location of measurements
   float zMin = -2800 * Acts::UnitConstants::mm;
+  /// Maximum z coordinate for space-point selection
   float zMax = 2800 * Acts::UnitConstants::mm;
+  /// Maximum radius for space-point selection
   float rMax = 600 * Acts::UnitConstants::mm;
   /// @warning If rMin is smaller than impactMax, the bin size will be 2*pi,
   /// which will make seeding very slow!
@@ -49,6 +53,7 @@ struct SeedFinderOrthogonalConfig {
   /// useVariableMiddleSPRange is set to false and the vector rRangeMiddleSP is
   /// empty, we use (rMinMiddle, rMaxMiddle) to cut the middle space-points
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
+  /// Maximum radius for middle space-point selection
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
   /// If useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can
   /// be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}
@@ -59,6 +64,7 @@ struct SeedFinderOrthogonalConfig {
   /// based on the maximum and minimum r values of the space-points in the event
   /// and a deltaR (deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange)
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+  /// Maximum delta R for variable middle SP range calculation
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
   /// Vector containing minimum and maximum z boundaries for cutting middle
@@ -87,11 +93,12 @@ struct SeedFinderOrthogonalConfig {
 
   /// Maximum allowed cotTheta between two space-points in doublet, used to
   /// check if forward angle is within bounds
-  float cotThetaMax = 7.40627;  // equivalent to 2.7 eta (pseudorapidity)
+  float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
 
   /// Limiting location of collision region in z-axis used to check if doublet
   /// origin is within reasonable bounds
   float collisionRegionMin = -150 * Acts::UnitConstants::mm;
+  /// Maximum z extent of collision region for doublet validation
   float collisionRegionMax = +150 * Acts::UnitConstants::mm;
 
   /// Enable cut on the compatibility between interaction point and doublet,
@@ -142,21 +149,24 @@ struct SeedFinderOrthogonalConfig {
 
   /// derived values, set on SeedFinder construction
   float highland = 0;
+  /// Squared maximum scattering angle for track validation
   float maxScatteringAngle2 = 0;
 
-  // Delegate to apply experiment specific cuts
+  /// Delegate to apply experiment specific cuts during seeding
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
       DelegateFuncTag<&noopExperimentCuts>{}};
 
   /// defaults experimental cuts to no operation in both seeding algorithms
+  /// @return Always returns true (no cuts applied)
   static bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
     return true;
   }
 
+  /// Flag indicating whether configuration uses ACTS internal units
   bool isInInternalUnits = true;
-  //[[deprecated("SeedFinderOrthogonalConfig uses internal units")]]
-  SeedFinderOrthogonalConfig toInternalUnits() const { return *this; }
 
+  /// Calculate derived quantities from the basic configuration parameters
+  /// @return New configuration with derived quantities calculated
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
     SeedFinderOrthogonalConfig config = *this;
     config.highland = approximateHighlandScattering(config.radLengthPerSeed);

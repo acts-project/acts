@@ -21,11 +21,13 @@
 namespace {
 
 namespace ds = ActsTests::PropagationDatasets;
-using namespace Acts::UnitLiterals;
 
-using Stepper = Acts::StraightLineStepper;
-using Propagator = Acts::Propagator<Stepper>;
-using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
+using namespace Acts;
+using namespace UnitLiterals;
+
+using Stepper = StraightLineStepper;
+using TestPropagator = Propagator<Stepper>;
+using RiddersPropagator = RiddersPropagator<TestPropagator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
@@ -34,11 +36,11 @@ constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.0125;
 
-const Acts::GeometryContext geoCtx;
-const Acts::MagneticFieldContext magCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext magCtx;
 
 const Stepper stepper;
-const Propagator propagator(stepper);
+const TestPropagator propagator(stepper);
 const RiddersPropagator riddersPropagator(propagator);
 
 }  // namespace

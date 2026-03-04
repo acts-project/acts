@@ -20,8 +20,9 @@
 
 namespace bdata = boost::unit_test::data;
 
-namespace Acts::Test {
-//
+using namespace Acts;
+
+namespace ActsTests {
 
 /// Unit test for testing the wraps() function of the CylinderVolumeBuilder
 BOOST_DATA_TEST_CASE(
@@ -46,7 +47,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(10., 15.))) ^
         bdata::xrange(100),
     left, right, central, inner, outer, length, index) {
-  (void)index;
+  static_cast<void>(index);
   // inner volume
   VolumeConfig innerConfig;
   innerConfig.rMin = 0.;
@@ -138,7 +139,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(10., 15.))) ^
         bdata::xrange(100),
     left, right, central, inner, outer, length, index) {
-  (void)index;
+  static_cast<void>(index);
   // inner volume
   VolumeConfig innerConfig;
   innerConfig.rMin = 0.;
@@ -229,7 +230,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(11., 15.))) ^
         bdata::xrange(100),
     inner, outer, index) {
-  (void)index;
+  static_cast<void>(index);
   // reference volume
   VolumeConfig Config0;
   Config0.rMin = 5.;
@@ -300,7 +301,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(0., 4.))) ^
         bdata::xrange(100),
     left, right, inner, index) {
-  (void)index;
+  static_cast<void>(index);
   // inner volume
   VolumeConfig Config0;
   Config0.rMin = 0.;
@@ -372,4 +373,4 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK(Config0.overlapsInZ(Config7));
 }
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

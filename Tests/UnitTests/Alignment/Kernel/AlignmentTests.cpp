@@ -30,15 +30,16 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
+#include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <random>
 #include <string>
@@ -47,26 +48,24 @@ namespace {
 
 using namespace Acts;
 using namespace ActsAlignment;
-using namespace Acts::Test;
+using namespace ActsTests;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
-using StraightPropagator =
-    Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-using ConstantFieldStepper = Acts::EigenStepper<>;
-using ConstantFieldPropagator =
-    Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
+using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
+using ConstantFieldStepper = EigenStepper<>;
+using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 
-using KalmanUpdater = Acts::GainMatrixUpdater;
-using KalmanSmoother = Acts::GainMatrixSmoother;
+using KalmanUpdater = GainMatrixUpdater;
+using KalmanSmoother = GainMatrixSmoother;
 using KalmanFitterType =
-    Acts::KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
+    KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
 
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
 
 // Create a test context
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 const MagneticFieldContext magCtx;
 const CalibrationContext calCtx;
 
@@ -94,9 +93,9 @@ struct TelescopeDetector {
   explicit TelescopeDetector(std::reference_wrapper<const GeometryContext> gctx)
       : geoContext(gctx) {
     // Construct the rotation
-    rotation.col(0) = Acts::Vector3(0, 0, -1);
-    rotation.col(1) = Acts::Vector3(0, 1, 0);
-    rotation.col(2) = Acts::Vector3(1, 0, 0);
+    rotation.col(0) = Vector3(0, 0, -1);
+    rotation.col(1) = Vector3(0, 1, 0);
+    rotation.col(2) = Vector3(1, 0, 0);
 
     // Boundaries of the surfaces
     rBounds = std::make_shared<const RectangleBounds>(0.1_m, 0.1_m);
@@ -212,7 +211,7 @@ BoundTrackParameters makeParameters() {
   stddev[eBoundPhi] = 0.5_degree;
   stddev[eBoundTheta] = 0.5_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   auto loc0 = 0. + stddev[eBoundLoc0] * normalDist(rng);
   auto loc1 = 0. + stddev[eBoundLoc1] * normalDist(rng);
@@ -302,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Construct a non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
-      [](DetectorElementBase* /*element*/, const GeometryContext& /*gctx*/,
+      [](SurfacePlacementBase* /*element*/, const GeometryContext& /*gctx*/,
          const Transform3& /*transform*/) { return true; };
 
   // Construct the alignment options
@@ -354,8 +353,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   // Check the projection matrix
   BOOST_CHECK_EQUAL(alignState.projectionMatrix.rows(), 12);
   BOOST_CHECK_EQUAL(alignState.projectionMatrix.cols(), 36);
-  const ActsMatrix<2, 6> proj = alignState.projectionMatrix.block<2, 6>(0, 0);
-  const ActsMatrix<2, 6> refProj = ActsMatrix<2, 6>::Identity();
+  const Matrix<2, 6> proj = alignState.projectionMatrix.block<2, 6>(0, 0);
+  const Matrix<2, 6> refProj = Matrix<2, 6>::Identity();
   CHECK_CLOSE_ABS(proj, refProj, 1e-10);
   // Check the residual
   BOOST_CHECK_EQUAL(alignState.residual.size(), 12);

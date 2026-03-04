@@ -146,7 +146,7 @@ def main():
     """
     start_values = {
         "maxSeedsPerSpM": 1,
-        "cotThetaMax": 7.40627,
+        "cotThetaMax": 10.01788,
         "sigmaScattering": 50,
         "radLengthPerSeed": 0.1,
         "impactMax": 3.0,

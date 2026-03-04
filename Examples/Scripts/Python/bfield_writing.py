@@ -3,17 +3,18 @@ from pathlib import Path
 
 import acts
 import acts.examples
+import acts.examples.root
 
 u = acts.UnitConstants
 
 
 def RootBFieldWrite(bField, fileName, treeName="solenoid", level=acts.logging.VERBOSE):
-    cfg = acts.examples.RootBFieldWriter.Config()
+    cfg = acts.examples.root.RootBFieldWriter.Config()
     cfg.bField = bField
-    cfg.gridType = acts.examples.RootBFieldWriter.GridType.rz
+    cfg.gridType = acts.examples.root.RootBFieldWriter.GridType.rz
     cfg.fileName = str(fileName)
     cfg.treeName = treeName
-    acts.examples.RootBFieldWriter.run(cfg, level)
+    acts.examples.root.RootBFieldWriter.run(cfg, level)
     return cfg
 
 
@@ -44,7 +45,7 @@ def runBFieldWriting(outputDir: Path, rewrites: int = 0):
     for i in range(rewrites):
         print(f"Now read back {cfg.fileName}")
 
-        field2 = acts.examples.MagneticFieldMapRz(cfg.fileName, tree="solenoid")
+        field2 = acts.root.MagneticFieldMapRz(cfg.fileName, tree="solenoid")
         cfg2 = RootBFieldWrite(field2, outputDir / f"solenoid{i+2}.root")
         CsvBFieldWrite(field2, outputDir / f"solenoid{i+2}.csv")
         cfg = cfg2

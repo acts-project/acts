@@ -46,8 +46,8 @@ struct ParticleMatchEntry {
 }  // namespace
 
 TruthVertexFinder::TruthVertexFinder(const Config& config,
-                                     Acts::Logging::Level level)
-    : IAlgorithm("TruthVertexFinder", level), m_cfg(config) {
+                                     std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TruthVertexFinder", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
   }
@@ -140,7 +140,7 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
       std::unordered_map<SimVertexBarcode, std::vector<TrackIndex>>
           protoVertexTrackMap2;
       for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap) {
-        auto vertexId2 = SimVertexBarcode(vertexId).setVertexSecondary(0);
+        auto vertexId2 = SimVertexBarcode(vertexId).withVertexSecondary(0);
         auto& vertexTracks2 = protoVertexTrackMap2[vertexId2];
         vertexTracks2.insert(vertexTracks2.end(), vertexTracks.begin(),
                              vertexTracks.end());

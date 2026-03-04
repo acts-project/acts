@@ -13,9 +13,9 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <cstdint>
 
@@ -50,7 +50,7 @@ const auto parametersPhotonConversion = momentumPhi * momentumTheta ^ rngSeed;
 // utility function to build a particle from the dataset parameters
 inline ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double phi,
                                          double theta, double p) {
-  const auto id = ActsFatras::Barcode().setVertexPrimary(1).setParticle(1);
+  const auto id = ActsFatras::Barcode().withVertexPrimary(1).withParticle(1);
   return ActsFatras::Particle(id, pdg)
       .setPosition4(0, 0, 0, 0)
       .setDirection(Acts::makeDirectionFromPhiTheta(phi, theta))

@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
@@ -41,21 +42,31 @@ class IVolumeMaterial;
 /// p the momentum magnitude and B the magnetic field
 ///
 template <typename extension_t = EigenStepperDefaultExtension>
-class EigenStepper {
+class EigenStepper final {
  public:
-  /// Jacobian, Covariance and State definitions
+  /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSquareMatrix;
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
+  /// Bound state tuple containing parameters, Jacobian, and path length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
+  /// Configuration for the Eigen stepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Stepper options including geometry and magnetic field contexts.
   struct Options : public StepperPlainOptions {
+    /// Constructor from geometry and magnetic field contexts
+    /// @param gctx The geometry context
+    /// @param mctx The magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain options
+    /// @param options The plain options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -75,6 +86,7 @@ class EigenStepper {
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
+    /// Configuration options for the Eigen stepper
     Options options;
 
     /// Internal free vector parameters
@@ -86,6 +98,7 @@ class EigenStepper {
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
     bool covTransport = false;
+    /// Covariance matrix for track parameter uncertainties
     Covariance cov = Covariance::Zero();
 
     /// The full jacobian of the transport entire transport
@@ -100,7 +113,7 @@ class EigenStepper {
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
-    /// Accummulated path length state
+    /// Accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
@@ -125,10 +138,10 @@ class EigenStepper {
 
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
     struct {
-      /// Magnetic field evaulations
-      Vector3 B_first, B_middle, B_last;
+      /// Magnetic field evaluations
+      Vector3 B_first{}, B_middle{}, B_last{};
       /// k_i of the RKN4 algorithm
-      Vector3 k1, k2, k3, k4;
+      Vector3 k1{}, k2{}, k3{}, k4{};
       /// k_i elements of the momenta
       std::array<double, 4> kQoP{};
     } stepData;
@@ -146,10 +159,22 @@ class EigenStepper {
   /// @param [in] config The configuration of the stepper
   explicit EigenStepper(const Config& config) : m_bField(config.bField) {}
 
+  /// Create a stepper state from given options
+  /// @param options Configuration options for the stepper state
+  /// @return Initialized stepper state object
   State makeState(const Options& options) const;
 
+  /// Initialize the stepper state from bound track parameters
+  /// @param state Stepper state to initialize
+  /// @param par Bound track parameters to initialize from
   void initialize(State& state, const BoundTrackParameters& par) const;
 
+  /// Initialize the stepper state from bound parameters and surface
+  /// @param state Stepper state to initialize
+  /// @param boundParams Vector of bound track parameters
+  /// @param cov Optional covariance matrix
+  /// @param particleHypothesis Particle hypothesis for the track
+  /// @param surface Surface associated with the parameters
   void initialize(State& state, const BoundVector& boundParams,
                   const std::optional<BoundMatrix>& cov,
                   ParticleHypothesis particleHypothesis,
@@ -161,6 +186,7 @@ class EigenStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
+  /// @return Magnetic field vector at the given position or error
   Result<Vector3> getField(State& state, const Vector3& pos) const {
     // get the field from the cell
     return m_bField->getField(pos, state.fieldCache);
@@ -169,6 +195,7 @@ class EigenStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Current global position vector
   Vector3 position(const State& state) const {
     return state.pars.template segment<3>(eFreePos0);
   }
@@ -176,6 +203,7 @@ class EigenStepper {
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Current normalized direction vector
   Vector3 direction(const State& state) const {
     return state.pars.template segment<3>(eFreeDir0);
   }
@@ -183,11 +211,13 @@ class EigenStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Charge over momentum (q/p) value
   double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Absolute momentum magnitude
   double absoluteMomentum(const State& state) const {
     return particleHypothesis(state).extractMomentum(qOverP(state));
   }
@@ -195,6 +225,7 @@ class EigenStepper {
   /// Momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Current momentum vector
   Vector3 momentum(const State& state) const {
     return absoluteMomentum(state) * direction(state);
   }
@@ -202,6 +233,7 @@ class EigenStepper {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Electric charge of the particle
   double charge(const State& state) const {
     return particleHypothesis(state).extractCharge(qOverP(state));
   }
@@ -209,6 +241,7 @@ class EigenStepper {
   /// Particle hypothesis
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Reference to the particle hypothesis used
   const ParticleHypothesis& particleHypothesis(const State& state) const {
     return state.particleHypothesis;
   }
@@ -216,6 +249,7 @@ class EigenStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return The time coordinate from the free parameters vector
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
@@ -231,6 +265,7 @@ class EigenStepper {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger A @c Logger instance
+  /// @return Status of the intersection indicating whether surface was reached
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction propDir, const BoundaryTolerance& boundaryTolerance,
@@ -249,14 +284,13 @@ class EigenStepper {
   /// the surface is reached.
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param target [in] The NavigationTarget
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+  void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
-    double stepSize = oIntersection.pathLength();
+    static_cast<void>(direction);
+    double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
 
@@ -275,6 +309,7 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
+  /// @return Current step size for the specified constraint type
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
     return state.stepSize.value(stype);
   }
@@ -290,6 +325,7 @@ class EigenStepper {
   /// Output the Step Size - single component
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
+  /// @return String representation of the current step size
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
   }

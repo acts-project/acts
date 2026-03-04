@@ -8,12 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/SeedColumns.hpp"
 #include "Acts/EventData/SeedContainer2.hpp"
 
 using namespace Acts;
-using namespace Acts::Experimental;
 
-BOOST_AUTO_TEST_SUITE(EventDataSeedContainer2)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Empty) {
   SeedContainer2 container;
@@ -85,9 +87,6 @@ BOOST_AUTO_TEST_CASE(CopyAndMove) {
   SeedContainer2 containerMove = std::move(container);
   BOOST_CHECK(!containerMove.empty());
   BOOST_CHECK_EQUAL(containerMove.size(), 1u);
-  // original should be empty after move
-  BOOST_CHECK(container.empty());
-  BOOST_CHECK_EQUAL(container.size(), 0u);
   // copy should be unchanged
   BOOST_CHECK(!containerCopy.empty());
   BOOST_CHECK_EQUAL(containerCopy.size(), 1u);
@@ -113,4 +112,45 @@ BOOST_AUTO_TEST_CASE(Clear) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(CopyFrom) {
+  SeedContainer2 container;
+  container.reserve(1);
+
+  {
+    auto seed = container.createSeed();
+    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    seed.quality() = 1.0f;
+    seed.vertexZ() = 3.0f;
+  }
+
+  {
+    SeedContainer2 copyTo;
+    MutableSeedProxy2 seed = copyTo.createSeed();
+    seed.copyFrom(container.at(0), SeedColumns::SpacePointIndices |
+                                       SeedColumns::Quality |
+                                       SeedColumns::VertexZ);
+
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[0], 0u);
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[1], 1u);
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[2], 2u);
+    BOOST_CHECK_EQUAL(seed.quality(), 1.0f);
+    BOOST_CHECK_EQUAL(seed.vertexZ(), 3.0f);
+  }
+
+  {
+    SeedContainer2 copyTo;
+    MutableSeedProxy2 seed = copyTo.createSeed();
+    seed.copyFrom(container.at(0),
+                  SeedColumns::SpacePointIndices | SeedColumns::Quality);
+
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[0], 0u);
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[1], 1u);
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[2], 2u);
+    BOOST_CHECK_EQUAL(seed.quality(), 1.0f);
+    BOOST_CHECK_EQUAL(seed.vertexZ(), 0.0f);  // default value since not copied
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

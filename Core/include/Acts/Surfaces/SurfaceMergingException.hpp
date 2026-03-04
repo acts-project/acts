@@ -18,6 +18,10 @@ class Surface;
 /// @brief Exception type failures to merge two surfaces
 class SurfaceMergingException : public std::exception {
  public:
+  /// Constructor for surface merging exception
+  /// @param surfaceA First surface that failed to merge
+  /// @param surfaceB Second surface that failed to merge
+  /// @param reason Description of why the merge failed
   SurfaceMergingException(std::weak_ptr<const Surface> surfaceA,
                           std::weak_ptr<const Surface> surfaceB,
                           const std::string& reason)
@@ -25,6 +29,8 @@ class SurfaceMergingException : public std::exception {
         m_surfaceB(std::move(surfaceB)),
         m_message(std::string{"Failure to merge surfaces: "} + reason) {}
 
+  /// Get exception description
+  /// @return C-style string describing the exception
   const char* what() const throw() override { return m_message.c_str(); }
 
  private:

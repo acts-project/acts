@@ -8,11 +8,7 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
 
-#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
-
-#include <stdexcept>
+#include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <edm4hep/TrackCollection.h>
 #include <podio/Frame.h>
@@ -20,14 +16,14 @@
 namespace ActsExamples {
 
 EDM4hepTrackOutputConverter::EDM4hepTrackOutputConverter(
-    const Config& config, Acts::Logging::Level level)
-    : EDM4hepOutputConverter("EDM4hepTrackOutputConverter", level),
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioOutputConverter("EDM4hepTrackOutputConverter", std::move(logger)),
       m_cfg(config) {
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode EDM4hepTrackOutputConverter::execute(
+ProcessCode EDM4hepTrackOutputConverter::execute(
     const AlgorithmContext& context) const {
   edm4hep::TrackCollection trackCollection;
 
@@ -35,7 +31,8 @@ ActsExamples::ProcessCode EDM4hepTrackOutputConverter::execute(
 
   for (const auto& from : tracks) {
     auto to = trackCollection.create();
-    Acts::EDM4hepUtil::writeTrack(context.geoContext, from, to, m_cfg.Bz);
+    ActsPlugins::EDM4hepUtil::writeTrack(context.geoContext, from, to,
+                                         m_cfg.Bz);
   }
 
   m_outputTracks(context, std::move(trackCollection));

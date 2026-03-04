@@ -9,22 +9,18 @@
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/AnyTrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <array>
 #include <cmath>
@@ -32,7 +28,6 @@
 #include <cstdint>
 #include <ios>
 #include <limits>
-#include <memory>
 #include <numbers>
 #include <optional>
 #include <ostream>
@@ -63,6 +58,9 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
+  if (m_cfg.writeJets) {
+    m_inputJets.maybeInitialize(m_cfg.inputJets);
+  }
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -95,7 +93,16 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_outputTree->Branch("outlierLayer", &m_outlierLayer);
 
   m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
-  m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
+  m_outputTree->Branch("majorityParticleId_vertex_primary",
+                       &m_majorityParticleVertexPrimary);
+  m_outputTree->Branch("majorityParticleId_vertex_secondary",
+                       &m_majorityParticleVertexSecondary);
+  m_outputTree->Branch("majorityParticleId_particle",
+                       &m_majorityParticleParticle);
+  m_outputTree->Branch("majorityParticleId_generation",
+                       &m_majorityParticleGeneration);
+  m_outputTree->Branch("majorityParticleId_sub_particle",
+                       &m_majorityParticleSubParticle);
   m_outputTree->Branch("trackClassification", &m_trackClassification);
   m_outputTree->Branch("t_charge", &m_t_charge);
   m_outputTree->Branch("t_time", &m_t_time);
@@ -194,6 +201,15 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   if (m_cfg.writeGx2fSpecific) {
     m_outputTree->Branch("nUpdatesGx2f", &m_nUpdatesGx2f);
   }
+
+  if (m_cfg.writeJets) {
+    m_outputTree->Branch("nJets", &m_nJets);
+    m_outputTree->Branch("jet_pt", &m_jet_pt);
+    m_outputTree->Branch("jet_eta", &m_jet_eta);
+    m_outputTree->Branch("jet_phi", &m_jet_phi);
+    m_outputTree->Branch("jet_label", &m_jet_label);
+    m_outputTree->Branch("ntracks_per_jets", &m_ntracks_per_jets);
+  }
 }
 
 RootTrackSummaryWriter::~RootTrackSummaryWriter() {
@@ -236,6 +252,31 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   // Get the event number
   m_eventNr = ctx.eventNumber;
 
+  std::vector<ActsExamples::TruthJet> jets;
+  std::unordered_map<std::size_t, std::vector<std::int32_t>>
+      jetToTrackIndicesMap;
+
+  // Fill the jet vector if requested
+  if (m_cfg.writeJets) {
+    auto& inputJets = m_inputJets(ctx);
+    jets = inputJets;
+
+    // Loop over jets and fill jet kinematic variables
+    for (std::size_t ijet = 0; ijet < jets.size(); ++ijet) {
+      m_nJets.push_back(jets.size());
+      Acts::Vector4 jet_4mom = jets[ijet].fourMomentum();
+      Acts::Vector3 jet_3mom{jet_4mom[0], jet_4mom[1], jet_4mom[2]};
+
+      float jet_theta = theta(jet_3mom);
+
+      m_jet_pt.push_back(perp(jet_4mom));
+      m_jet_eta.push_back(std::atanh(std::cos(jet_theta)));
+      m_jet_phi.push_back(phi(jet_4mom));
+      m_jet_label.push_back(static_cast<int>(jets[ijet].jetLabel()));
+      m_ntracks_per_jets.push_back(jets[ijet].associatedTracks().size());
+    }
+  }
+
   for (const auto& track : tracks) {
     m_trackNr.push_back(track.index());
 
@@ -259,12 +300,11 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         const auto& geoID = state.referenceSurface().geometryId();
         const auto& volume = geoID.volume();
         const auto& layer = geoID.layer();
-        if (state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+        if (state.typeFlags().isOutlier()) {
           outlierChi2.push_back(state.chi2());
           outlierVolume.push_back(volume);
           outlierLayer.push_back(layer);
-        } else if (state.typeFlags().test(
-                       Acts::TrackStateFlag::MeasurementFlag)) {
+        } else if (state.typeFlags().isMeasurement()) {
           measurementChi2.push_back(state.chi2());
           measurementVolume.push_back(volume);
           measurementLayer.push_back(layer);
@@ -279,8 +319,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     }
 
     // Initialize the truth particle info
-    ActsFatras::Barcode majorityParticleId(
-        std::numeric_limits<std::size_t>::max());
+    ActsFatras::Barcode majorityParticleId{};
     TrackMatchClassification trackClassification =
         TrackMatchClassification::Unknown;
     unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
@@ -324,8 +363,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
         const auto& particle = *ip;
         ACTS_VERBOSE("Find the truth particle with barcode "
-                     << majorityParticleId << "="
-                     << majorityParticleId.value());
+                     << majorityParticleId << "=" << majorityParticleId.hash());
         // Get the truth particle info at vertex
         t_p = particle.absoluteMomentum();
         t_charge = static_cast<int>(particle.charge());
@@ -344,7 +382,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         t_prodR = std::sqrt(t_vx * t_vx + t_vy * t_vy);
 
         if (pSurface != nullptr) {
-          auto intersection =
+          Acts::Intersection3D intersection =
               pSurface
                   ->intersect(ctx.geoContext, particle.position(),
                               particle.direction(),
@@ -364,7 +402,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         }
       } else {
         ACTS_DEBUG("Truth particle with barcode "
-                   << majorityParticleId << "=" << majorityParticleId.value()
+                   << majorityParticleId << "=" << majorityParticleId.hash()
                    << " not found in the input collection!");
       }
     }
@@ -375,7 +413,13 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     // Push the corresponding truth particle info for the track.
     // Always push back even if majority particle not found
-    m_majorityParticleId.push_back(majorityParticleId.value());
+    m_majorityParticleVertexPrimary.push_back(
+        majorityParticleId.vertexPrimary());
+    m_majorityParticleVertexSecondary.push_back(
+        majorityParticleId.vertexSecondary());
+    m_majorityParticleParticle.push_back(majorityParticleId.particle());
+    m_majorityParticleGeneration.push_back(majorityParticleId.generation());
+    m_majorityParticleSubParticle.push_back(majorityParticleId.subParticle());
     m_trackClassification.push_back(static_cast<int>(trackClassification));
     m_nMajorityHits.push_back(nMajorityHits);
     m_t_charge.push_back(t_charge);
@@ -562,7 +606,11 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   m_outlierLayer.clear();
 
   m_nMajorityHits.clear();
-  m_majorityParticleId.clear();
+  m_majorityParticleVertexPrimary.clear();
+  m_majorityParticleVertexSecondary.clear();
+  m_majorityParticleParticle.clear();
+  m_majorityParticleGeneration.clear();
+  m_majorityParticleSubParticle.clear();
   m_trackClassification.clear();
   m_t_charge.clear();
   m_t_time.clear();
@@ -655,6 +703,15 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   }
 
   m_nUpdatesGx2f.clear();
+
+  if (m_cfg.writeJets) {
+    m_nJets.clear();
+    m_jet_pt.clear();
+    m_jet_eta.clear();
+    m_jet_phi.clear();
+    m_jet_label.clear();
+    m_ntracks_per_jets.clear();
+  }
 
   return ProcessCode::SUCCESS;
 }

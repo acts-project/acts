@@ -132,6 +132,9 @@ class CylinderVolumeBounds : public VolumeBounds {
   CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
   ~CylinderVolumeBounds() override = default;
+  /// Assignment operator
+  /// @param cylbo Source cylinder volume bounds to copy from
+  /// @return Reference to this object after assignment
   CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;
 
   VolumeBounds::BoundsType type() const final {
@@ -148,6 +151,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   ///
   /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
+  /// @return True if the position is inside the cylinder bounds
   bool inside(const Vector3& pos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
@@ -184,19 +188,23 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param aDir is the axis direction used for the binning
+  /// @return Reference offset vector for the given axis direction
   Vector3 referenceOffset(AxisDirection aDir) const override;
 
   /// Binning borders in double
   ///
   /// @param aDir is the axis direction used for the binning
+  /// @return Reference border value for the given axis direction
   double referenceBorder(AxisDirection aDir) const override;
 
   /// Output Method for std::ostream
   /// @param os is the output stream
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& os) const override;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The requested bound value
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Set a bound value

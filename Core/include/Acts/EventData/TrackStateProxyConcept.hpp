@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -22,6 +23,7 @@
 namespace Acts {
 
 namespace detail {
+
 using Parameters = Eigen::Map<BoundVector>;
 using Covariance = Eigen::Map<BoundMatrix>;
 
@@ -29,10 +31,10 @@ using ConstParameters = Eigen::Map<const BoundVector>;
 using ConstCovariance = Eigen::Map<const BoundMatrix>;
 
 using Measurement = Eigen::Map<Vector2>;
-using MeasurementCovariance = Eigen::Map<ActsSquareMatrix<2>>;
+using MeasurementCovariance = Eigen::Map<SquareMatrix<2>>;
 
 using ConstMeasurement = Eigen::Map<const Vector2>;
-using ConstMeasurementCovariance = Eigen::Map<const ActsSquareMatrix<2>>;
+using ConstMeasurementCovariance = Eigen::Map<const SquareMatrix<2>>;
 
 using DynamicMeasurement =
     Eigen::Map<Eigen::Matrix<Covariance::Scalar, Eigen::Dynamic, 1,
@@ -111,6 +113,33 @@ concept TrackStateProxyConcept =
       { cv.hasProjector() } -> std::same_as<bool>;
       { v.hasProjector() } -> std::same_as<bool>;
 
+      { v.projectorSubspaceIndices() } -> std::same_as<BoundSubspaceIndices>;
+      { cv.projectorSubspaceIndices() } -> std::same_as<BoundSubspaceIndices>;
+
+      {
+        v.template projectorSubspaceIndices<4>()
+      } -> std::same_as<SubspaceIndices<4>>;
+      {
+        cv.template projectorSubspaceIndices<4>()
+      } -> std::same_as<SubspaceIndices<4>>;
+
+      {
+        v.projectorSubspaceHelper()
+      } -> std::same_as<VariableBoundSubspaceHelper>;
+      {
+        cv.projectorSubspaceHelper()
+      } -> std::same_as<VariableBoundSubspaceHelper>;
+
+      {
+        v.template projectorSubspaceHelper<4>()
+      } -> std::same_as<FixedBoundSubspaceHelper<4>>;
+      {
+        cv.template projectorSubspaceHelper<4>()
+      } -> std::same_as<FixedBoundSubspaceHelper<4>>;
+
+      { cv.hasUncalibratedSourceLink() } -> std::same_as<bool>;
+      { v.hasUncalibratedSourceLink() } -> std::same_as<bool>;
+
       { cv.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
       { v.getUncalibratedSourceLink() } -> std::same_as<SourceLink>;
 
@@ -136,7 +165,7 @@ concept TrackStateProxyConcept =
 
       { cv.pathLength() } -> std::same_as<double>;
 
-      { cv.typeFlags() } -> std::same_as<ConstTrackStateType>;
+      { cv.typeFlags() } -> std::same_as<ConstTrackStateTypeMap>;
     };
 
 template <typename T>
@@ -172,11 +201,11 @@ concept ConstTrackStateProxyConcept =
         v.effectiveCalibratedCovariance()
       } -> std::same_as<detail::ConstDynamicMeasurementCovariance>;
 
-      { v.chi2() } -> std::same_as<double>;
+      { v.chi2() } -> std::same_as<float>;
 
       { v.pathLength() } -> std::same_as<double>;
 
-      { v.typeFlags() } -> std::same_as<ConstTrackStateType>;
+      { v.typeFlags() } -> std::same_as<ConstTrackStateTypeMap>;
     };
 
 template <typename T>
@@ -187,23 +216,6 @@ concept MutableTrackStateProxyConcept =
              Eigen::Matrix<double, 3, 6> projector,
              ProjectorBitset projectorBitset, SourceLink sl,
              std::size_t measdim) {
-      { v.shareFrom(mask, mask) };
-
-      {
-        v.shareFrom(
-            std::declval<typename T::Trajectory::ConstTrackStateProxy>(), mask)
-      };
-
-      { v.shareFrom(std::declval<T>(), mask) };
-
-      // Cannot verify copyFrom compatibility with other backend proxies
-      {
-        v.copyFrom(std::declval<typename T::Trajectory::ConstTrackStateProxy>(),
-                   mask)
-      };
-
-      { v.copyFrom(std::declval<T>(), mask) };
-
       { v.unset(mask) };
 
       // Cannot verify for all types, so just check int
@@ -224,11 +236,11 @@ concept MutableTrackStateProxyConcept =
 
       { v.jacobian() } -> std::same_as<detail::Covariance>;
 
-      { v.setProjector(projector) };
+      requires requires(BoundSubspaceIndices m) {
+        v.setProjectorSubspaceIndices(m);
+      };
 
-      { v.setProjectorBitset(projectorBitset) };
-
-      { v.setUncalibratedSourceLink(sl) };
+      { v.setUncalibratedSourceLink(std::move(sl)) };
 
       { v.template calibrated<2>() } -> std::same_as<detail::Measurement>;
       {
@@ -242,17 +254,17 @@ concept MutableTrackStateProxyConcept =
 
       { v.allocateCalibrated(measdim) };
 
-      { v.allocateCalibrated(ActsVector<1>{}, ActsSquareMatrix<1>{}) };
+      { v.allocateCalibrated(Vector<1>{}, SquareMatrix<1>{}) };
       // Assuming intermediate values are also allowed
       {
-        v.allocateCalibrated(ActsVector<eBoundSize>{},
-                             ActsSquareMatrix<eBoundSize>{})
+        v.allocateCalibrated(Vector<eBoundSize>{}, SquareMatrix<eBoundSize>{})
       };
 
-      { v.chi2() } -> std::same_as<double&>;
+      { v.chi2() } -> std::same_as<float&>;
 
       { v.pathLength() } -> std::same_as<double&>;
 
-      { v.typeFlags() } -> std::same_as<TrackStateType>;
+      { v.typeFlags() } -> std::same_as<MutableTrackStateTypeMap>;
     };
+
 }  // namespace Acts

@@ -71,6 +71,8 @@ class AdaptiveGridTrackDensity {
     /// Optional minimal and maximal number of bins in time direction
     GridSizeRange temporalTrkGridSizeRange = {std::nullopt, std::nullopt};
 
+    /// Flag indicating whether to use time information in track density
+    /// calculation
     bool useTime = false;
 
     /// Do NOT use just the z-bin with the highest
@@ -88,6 +90,7 @@ class AdaptiveGridTrackDensity {
   };
 
   /// Constructor
+  /// @param cfg The configuration parameters
   explicit AdaptiveGridTrackDensity(const Config& cfg);
 
   /// @brief Returns the z and t coordinate of maximum (surrounding)

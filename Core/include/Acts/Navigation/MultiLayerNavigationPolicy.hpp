@@ -8,15 +8,11 @@
 
 #pragma once
 
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
-#include "Acts/Detector/detail/ReferenceGenerators.hpp"
+#include "Acts/Geometry/IndexGrid.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
-#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts::Experimental {
 
@@ -25,14 +21,17 @@ namespace Acts::Experimental {
 /// the grid.
 class MultiLayerNavigationPolicy : public INavigationPolicy {
  public:
-  using GridType =
-      Grid<std::vector<std::size_t>,
-           Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>,
-           Axis<AxisType::Equidistant, Acts::AxisBoundaryType::Bound>>;
-  using IndexedUpdatorType = IndexedSurfacesNavigation<GridType>;
+  /// Type alias for 2D equidistant grid holding surface indices
+  using GridType = Grid<std::vector<std::size_t>,
+                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
+                        Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
 
+  /// Type alias for indexed surfaces navigation updater
+  using IndexedUpdatorType = IndexGrid<GridType>;
+
+  /// Configuration for multilayer navigation behavior.
   struct Config {
-    // The binning expansion for grid neighbor lookups
+    /// The binning expansion for grid neighbor lookups
     std::vector<std::size_t> binExpansion = {0u, 0u};
   };
 
@@ -51,10 +50,14 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
                                       IndexedUpdatorType grid);
 
   /// Update the navigation state from the surface array
+  /// @param gctx The geometry context
   /// @param args The navigation arguments
+  /// @param state The navigation policy state
   /// @param stream The navigation stream to update
   /// @param logger The logger
-  void initializeCandidates(const NavigationArguments& args,
+  void initializeCandidates(const GeometryContext& gctx,
+                            const NavigationArguments& args,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const;
 

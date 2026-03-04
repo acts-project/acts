@@ -1,0 +1,30 @@
+# This file is part of the ACTS project.
+#
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+# This script sets up the ACTS Python bindings in the environment in a somewhat
+# robust way.
+
+if [ -n "$ZSH_VERSION" ]; then
+    python_dir=${0:a:h}
+elif [ -n "$BASH_VERSION" ]; then
+    python_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
+else
+    # If the current shell is not ZSH or Bash, we can't guarantee that the
+    # script will work, so we throw an error.
+    echo "ERROR:   neither ZSH nor Bash was detected, other shells are not supported. The environment has not been modified."
+    exit 1
+fi
+
+# Make python package available
+export PYTHONPATH="${python_dir}:${PYTHONPATH}"
+
+# This message might seem excessive, but the Acts bindings are only installed
+# for one Python version, and it is not trivial for the user to find out which.
+# Thus, we let them know explicitly so they can more easily debug any potential
+# import errors.
+echo "INFO:    Acts Python @Python_VERSION_MAJOR@.@Python_VERSION_MINOR@ bindings setup complete."

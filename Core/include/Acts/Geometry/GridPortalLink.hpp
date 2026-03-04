@@ -61,7 +61,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @return A unique pointer to the grid portal link
   template <AxisConcept axis_t>
   static std::unique_ptr<GridPortalLinkT<axis_t>> make(
-      std::shared_ptr<RegularSurface> surface, AxisDirection direction,
+      const std::shared_ptr<RegularSurface>& surface, AxisDirection direction,
       axis_t&& axis) {
     using enum AxisDirection;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
@@ -91,7 +91,8 @@ class GridPortalLink : public PortalLinkBase {
   /// @return A unique pointer to the grid portal link
   template <AxisConcept axis_1_t, AxisConcept axis_2_t>
   static std::unique_ptr<GridPortalLinkT<axis_1_t, axis_2_t>> make(
-      std::shared_ptr<RegularSurface> surface, axis_1_t axis1, axis_2_t axis2) {
+      const std::shared_ptr<RegularSurface>& surface, axis_1_t axis1,
+      axis_2_t axis2) {
     std::optional<AxisDirection> direction;
     if (dynamic_cast<const CylinderSurface*>(surface.get()) != nullptr) {
       direction = AxisDirection::AxisRPhi;
@@ -304,7 +305,7 @@ class GridPortalLink : public PortalLinkBase {
   /// @note The returned pointer can be nullptr, if the grids
   ///       given are not mergeable, because their binnings are
   ///       not compatible. This is not an error case, and needs
-  ///       to be handled by th caller! Invalid input is handled
+  ///       to be handled by the caller! Invalid input is handled
   ///       via exceptions.
   static std::unique_ptr<PortalLinkBase> merge(
       const GridPortalLink& a, const GridPortalLink& b, AxisDirection direction,
@@ -357,22 +358,33 @@ class GridPortalLink : public PortalLinkBase {
   /// @param os The output stream
   void printContents(std::ostream& os) const;
 
+  /// Get the artifact portal links
+  /// @return Span of artifact portal links
   std::span<const TrivialPortalLink> artifactPortalLinks() const;
+  /// Set the artifact portal links
+  /// @param links Vector of trivial portal links to set
   void setArtifactPortalLinks(std::vector<TrivialPortalLink> links);
 
  protected:
   /// Helper function to check consistency for grid on a cylinder surface
+  /// @param grid the grid to check
+  /// @param direction The binning direction
   /// @param cyl The cylinder surface
-  void checkConsistency(const CylinderSurface& cyl) const;
+  static void checkConsistency(const IGrid& grid, AxisDirection direction,
+                               const CylinderSurface& cyl);
 
   /// Helper function to check consistency for grid on a disc surface
+  /// @param grid the grid to check
+  /// @param direction The binning direction
   /// @param disc The disc surface
-  void checkConsistency(const DiscSurface& disc) const;
-
+  static void checkConsistency(const IGrid& grid, AxisDirection direction,
+                               const DiscSurface& disc);
   /// Helper function to check consistency for grid on a plane surface
+  /// @param grid the grid to check
+  /// @param direction The binning direction
   /// @param plane The plane surface
-  void checkConsistency(const PlaneSurface& plane) const;
-
+  static void checkConsistency(const IGrid& grid, AxisDirection direction,
+                               const PlaneSurface& plane);
   /// Expand a 1D grid to a 2D one for a cylinder surface
   /// @param surface The cylinder surface
   /// @param other The axis to use for the missing direction,
@@ -445,7 +457,7 @@ class GridPortalLinkT : public GridPortalLink {
 
     if (const auto* cylinder =
             dynamic_cast<const CylinderSurface*>(m_surface.get())) {
-      checkConsistency(*cylinder);
+      checkConsistency(m_grid, direction, *cylinder);
 
       if (direction == AxisRPhi) {
         m_projection = &projection<CylinderSurface, AxisRPhi>;
@@ -457,7 +469,7 @@ class GridPortalLinkT : public GridPortalLink {
 
     } else if (const auto* disc =
                    dynamic_cast<const DiscSurface*>(m_surface.get())) {
-      checkConsistency(*disc);
+      checkConsistency(m_grid, direction, *disc);
 
       if (direction == AxisR) {
         m_projection = &projection<DiscSurface, AxisR>;
@@ -468,7 +480,7 @@ class GridPortalLinkT : public GridPortalLink {
       }
     } else if (const auto* plane =
                    dynamic_cast<const PlaneSurface*>(m_surface.get())) {
-      checkConsistency(*plane);
+      checkConsistency(m_grid, direction, *plane);
 
       if (direction == AxisX) {
         m_projection = &projection<PlaneSurface, AxisX>;
@@ -577,7 +589,7 @@ class GridPortalLinkT : public GridPortalLink {
   /// Helper function that's assigned to project from the 2D local position to a
   /// possible 1D grid.
   template <class surface_t, AxisDirection direction>
-  static ActsVector<DIM> projection(const Vector2& position) {
+  static Vector<DIM> projection(const Vector2& position) {
     using enum AxisDirection;
     if constexpr (DIM == 2) {
       return position;
@@ -587,27 +599,27 @@ class GridPortalLinkT : public GridPortalLink {
                       "Invalid binning direction");
 
         if constexpr (direction == AxisRPhi) {
-          return ActsVector<1>{position[0]};
+          return Vector<1>{position[0]};
         } else if constexpr (direction == AxisZ) {
-          return ActsVector<1>{position[1]};
+          return Vector<1>{position[1]};
         }
       } else if constexpr (std::is_same_v<surface_t, DiscSurface>) {
         static_assert(direction == AxisR || direction == AxisPhi,
                       "Invalid binning direction");
 
         if constexpr (direction == AxisR) {
-          return ActsVector<1>{position[0]};
+          return Vector<1>{position[0]};
         } else if constexpr (direction == AxisPhi) {
-          return ActsVector<1>{position[1]};
+          return Vector<1>{position[1]};
         }
       } else if constexpr (std::is_same_v<surface_t, PlaneSurface>) {
         static_assert(direction == AxisX || direction == AxisY,
                       "Invalid binning direction");
 
         if constexpr (direction == AxisX) {
-          return ActsVector<1>{position[0]};
+          return Vector<1>{position[0]};
         } else if constexpr (direction == AxisY) {
-          return ActsVector<1>{position[1]};
+          return Vector<1>{position[1]};
         }
       }
     }
@@ -616,7 +628,7 @@ class GridPortalLinkT : public GridPortalLink {
   GridType m_grid;
 
   /// Stores a function pointer that can project from 2D to 1D if needed
-  ActsVector<DIM> (*m_projection)(const Vector2& position);
+  Vector<DIM> (*m_projection)(const Vector2& position);
 };
 
 }  // namespace Acts

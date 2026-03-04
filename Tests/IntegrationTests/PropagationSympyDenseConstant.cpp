@@ -17,7 +17,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <utility>
 
@@ -27,26 +27,28 @@
 namespace {
 
 namespace ds = ActsTests::PropagationDatasets;
-using namespace Acts::UnitLiterals;
 
-using MagneticField = Acts::ConstantBField;
-using Stepper = Acts::SympyStepper;
-using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
+using namespace Acts;
+using namespace UnitLiterals;
+
+using MagneticField = ConstantBField;
+using Stepper = SympyStepper;
+using TestPropagator = Propagator<Stepper, Navigator>;
+using RiddersPropagator = RiddersPropagator<TestPropagator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 10_um;
 constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 
-const Acts::GeometryContext geoCtx;
-const Acts::MagneticFieldContext magCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext magCtx;
 
-inline Propagator makePropagator(
-    double bz, std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
+inline TestPropagator makePropagator(
+    double bz, std::shared_ptr<const TrackingGeometry> geo) {
+  auto magField = std::make_shared<MagneticField>(Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return Propagator(std::move(stepper), Acts::Navigator({std::move(geo)}));
+  return TestPropagator(std::move(stepper), Navigator({std::move(geo)}));
 }
 
 }  // namespace
@@ -59,9 +61,9 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
-  runForwardBackwardTest<Propagator>(
-      makePropagator(bz, createDenseBlock(geoCtx)), geoCtx, magCtx,
-      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom);
+  runForwardBackwardTest(makePropagator(bz, createDenseBlock(geoCtx)), geoCtx,
+                         magCtx, makeParametersCurvilinear(phi, theta, p, q), s,
+                         epsPos, epsDir, epsMom);
 }
 
 // check effects on the parameter covariance
@@ -69,7 +71,7 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
 BOOST_DATA_TEST_CASE(DenseTelescopeCovariance,
                      ds::absMomentum* ds::chargeNonZero, p, q) {
   const double bz = 0_T;
-  const Acts::Material material = Acts::Test::makeLiquidArgon();
+  const Material material = ActsTests::makeLiquidArgon();
   const double thickness = 1_m;
 
   auto [geo, surfaces] = createDenseTelescope(geoCtx, material, thickness);

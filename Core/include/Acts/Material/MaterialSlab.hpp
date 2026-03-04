@@ -16,19 +16,35 @@
 #include <utility>
 #include <vector>
 
+// Tell the compiler to optimize the containing block assuming that
+// FP may trap.  This is sometimes needed with clang to avoid spurious FPEs
+// resulting from auto-vectorization.
+
+#if defined(__clang__) && defined(__x86_64__)
+#pragma float_control(push)
+#pragma float_control(except, on)
+#endif
+
 namespace Acts {
 
 /// Material description for an object with defined thickness.
+///
+/// @ingroup material
 ///
 /// This is intended to describe concrete surface materials.
 ///
 /// @see Material for a description of the available parameters.
 class MaterialSlab {
  public:
+  /// Create a material slab with no material content
+  /// @return Empty material slab with zero thickness and no material
   static constexpr MaterialSlab Nothing() {
     return MaterialSlab(Material::Vacuum(), 0, false);
   }
 
+  /// Create a vacuum material slab with specified thickness
+  /// @param thickness The thickness of the vacuum region
+  /// @return Vacuum material slab with the given thickness
   static constexpr MaterialSlab Vacuum(float thickness) {
     return MaterialSlab(Material::Vacuum(), thickness, false);
   }
@@ -78,18 +94,24 @@ class MaterialSlab {
   MaterialSlab(const Material& material, float thickness);
 
   /// Scale the material thickness by the given factor.
+  /// @param scale Factor by which to scale the thickness
   void scaleThickness(float scale);
 
   /// Check if the material is vacuum.
+  /// @return True if the material is vacuum or thickness is zero/negative
   bool isVacuum() const { return m_material.isVacuum() || m_thickness <= 0; }
 
   /// Access the (average) material parameters.
+  /// @return Reference to the material properties
   constexpr const Material& material() const { return m_material; }
   /// Return the thickness.
+  /// @return Material thickness in millimeters
   constexpr float thickness() const { return m_thickness; }
   /// Return the radiation length fraction.
+  /// @return Thickness as a fraction of radiation length
   constexpr float thicknessInX0() const { return m_thicknessInX0; }
   /// Return the nuclear interaction length fraction.
+  /// @return Thickness as a fraction of nuclear interaction length
   constexpr float thicknessInL0() const { return m_thicknessInL0; }
 
  private:
@@ -102,12 +124,10 @@ class MaterialSlab {
 
   constexpr MaterialSlab(const Material& material, float thickness,
                          [[maybe_unused]] bool dummy)
-      : m_material(material),
-        m_thickness(thickness),
-        m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0())
-                                              : 0),
-        m_thicknessInL0((eps < material.L0()) ? (thickness / material.L0())
-                                              : 0) {}
+      : m_material(material), m_thickness(thickness) {
+    m_thicknessInX0 = (eps < material.X0()) ? (thickness / material.X0()) : 0;
+    m_thicknessInL0 = (eps < material.L0()) ? (thickness / material.L0()) : 0;
+  }
 
   /// @brief Check if two materials are exactly equal.
   ///
@@ -126,10 +146,18 @@ class MaterialSlab {
   }
 };
 
+/// Stream operator for MaterialSlab
+/// @param os Output stream
+/// @param materialSlab MaterialSlab to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, const MaterialSlab& materialSlab);
 
-// Useful typedefs
+/// @brief Type alias for a vector of material slabs
+/// @details Used to store a collection of material slabs in sequence
 using MaterialSlabVector = std::vector<MaterialSlab>;
+
+/// @brief Type alias for a matrix of material slabs
+/// @details Used to store a 2D collection of material slabs
 using MaterialSlabMatrix = std::vector<MaterialSlabVector>;
 
 /// list of point used in the mapping of a volume
@@ -137,3 +165,7 @@ using RecordedMaterialVolumePoint =
     std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3>>>;
 
 }  // namespace Acts
+
+#if defined(__clang__) && defined(__x86_64__)
+#pragma float_control(pop)
+#endif

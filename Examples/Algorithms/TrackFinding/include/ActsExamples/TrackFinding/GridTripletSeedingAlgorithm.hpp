@@ -14,8 +14,8 @@
 #include "Acts/Seeding2/TripletSeeder.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -157,8 +157,6 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
     /// is 5%
     /// TODO: necessary to make amount of material dependent on detector region?
     float radLengthPerSeed = 0.05;
-    /// Maximum transverse momentum for scattering calculation
-    float maxPtScattering = 10 * Acts::UnitConstants::GeV;
 
     /// Tolerance parameter used to check the compatibility of space-point
     /// coordinates in xyz. This is only used in a detector specific check for
@@ -236,7 +234,8 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  GridTripletSeedingAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  explicit GridTripletSeedingAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the seeding algorithm.
   ///
@@ -249,25 +248,19 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::Experimental::CylindricalSpacePointGrid2::Config m_gridConfig;
+  Acts::CylindricalSpacePointGrid2::Config m_gridConfig;
 
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
   std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
-  Acts::Experimental::BroadTripletSeedFilter::Config m_filterConfig;
+  Acts::BroadTripletSeedFilter::Config m_filterConfig;
   std::unique_ptr<const Acts::Logger> m_filterLogger;
-  std::optional<Acts::Experimental::TripletSeeder> m_seedFinder;
+  std::optional<Acts::TripletSeeder> m_seedFinder;
 
-  Acts::Delegate<bool(const SimSpacePoint&)> m_spacePointSelector{
-      Acts::DelegateFuncTag<voidSpacePointSelector>{}};
+  Acts::Delegate<bool(const ConstSpacePointProxy&)> m_spacePointSelector;
 
-  static bool voidSpacePointSelector(const SimSpacePoint& /*sp*/) {
-    return true;
-  }
-
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
-
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// Get the proper radius validity range given a middle space point candidate.
   /// In case the radius range changes according to the z-bin we need to
@@ -276,7 +269,7 @@ class GridTripletSeedingAlgorithm final : public IAlgorithm {
   /// @param spM space point candidate to be used as middle SP in a seed
   /// @param rMiddleSPRange range object containing the minimum and maximum r for middle SP for a certain z bin
   std::pair<float, float> retrieveRadiusRangeForMiddle(
-      const Acts::Experimental::ConstSpacePointProxy2& spM,
+      const Acts::ConstSpacePointProxy2& spM,
       const Acts::Range1D<float>& rMiddleSPRange) const;
 };
 

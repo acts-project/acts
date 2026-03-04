@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -24,10 +25,14 @@
 
 class TFile;
 class TTree;
+
 namespace Acts {
 class Surface;
-class TrackingGeometry;
 }  // namespace Acts
+
+namespace ActsPlugins {
+class RootMeasurementIo;
+}  // namespace ActsPlugins
 
 namespace ActsExamples {
 
@@ -53,11 +58,19 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string inputSimHits;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
+    /// Dimensionality of the measurements to write
+    std::vector<Acts::BoundIndices> boundIndices = {
+        Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime};
+    /// And cluster indices (if available)
+    std::vector<Acts::BoundIndices> clusterIndices = {
+        Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime};
 
     /// path of the output file
     std::string filePath = "";
     /// file access mode
     std::string fileMode = "RECREATE";
+    /// The tree name
+    std::string treeName = "measurements";
 
     /// Map of the geometry identifier to the surface
     std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
@@ -88,15 +101,21 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
                      const MeasurementContainer& measurements) override;
 
  private:
-  struct DigitizationTree;
-
   Config m_cfg;
   /// protect multi-threaded writes
   std::mutex m_writeMutex;
   /// the output file
-  TFile* m_outputFile;
+  TFile* m_outputFile = nullptr;
+  // the output tree
+  TTree* m_outputTree = nullptr;
+  std::vector<std::uint32_t> m_particleVertexPrimary = {};
+  std::vector<std::uint32_t> m_particleVertexSecondary = {};
+  std::vector<std::uint32_t> m_particleParticle = {};
+  std::vector<std::uint32_t> m_particleGeneration = {};
+  std::vector<std::uint32_t> m_particleSubParticle = {};
+
   /// the output tree
-  std::unique_ptr<DigitizationTree> m_outputTree;
+  std::unique_ptr<ActsPlugins::RootMeasurementIo> m_measurementIo;
 
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};

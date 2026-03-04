@@ -9,13 +9,15 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/Types.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
 #include <span>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SpacePointContainer2;
 template <typename T, bool read_only>
@@ -33,8 +35,10 @@ class SpacePointProxy2 {
   /// modified
   static constexpr bool ReadOnly = read_only;
 
+  /// Type alias for space point index type
   using Index = SpacePointIndex2;
 
+  /// Type alias for container type (const if read-only)
   using Container = const_if_t<ReadOnly, SpacePointContainer2>;
 
   /// Constructs a space point proxy for the given container and index.
@@ -52,6 +56,38 @@ class SpacePointProxy2 {
   explicit SpacePointProxy2(const SpacePointProxy2<false> &other) noexcept
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
+
+  /// Copy assign a space point proxy.
+  /// @param other The space point proxy to copy.
+  /// @return Reference to this space point proxy after assignment.
+  SpacePointProxy2 &operator=(const SpacePointProxy2 &other) noexcept = default;
+
+  /// Copy assign a mutable space point proxy.
+  /// @param other The mutable space point proxy to copy.
+  /// @return Reference to this space point proxy after assignment.
+  SpacePointProxy2 &operator=(const SpacePointProxy2<false> &other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
+
+  /// Move assign a space point proxy.
+  /// @param other The space point proxy to move.
+  /// @return Reference to this space point proxy after assignment.
+  SpacePointProxy2 &operator=(SpacePointProxy2 &&other) noexcept = default;
+
+  /// Move assign a mutable space point proxy.
+  /// @param other The mutable space point proxy to move.
+  /// @return Reference to this space point proxy after assignment.
+  SpacePointProxy2 &operator=(SpacePointProxy2<false> &&other) noexcept
+    requires ReadOnly
+  {
+    m_container = &other.container();
+    m_index = other.index();
+    return *this;
+  }
 
   /// Returns a const proxy of the space point.
   /// @return A const proxy of the space point.
@@ -186,21 +222,36 @@ class SpacePointProxy2 {
   {
     return m_container->copyFromIndex(m_index);
   }
+  /// @brief Get mutable reference to XY coordinates of the space point
+  /// @return Mutable reference to array containing [x, y] coordinates
   std::array<float, 2> &xy() const noexcept
     requires(!ReadOnly)
   {
     return m_container->xy(m_index);
   }
+  /// @brief Get mutable reference to ZR coordinates of the space point
+  /// @return Mutable reference to array containing [z, r] coordinates
   std::array<float, 2> &zr() const noexcept
     requires(!ReadOnly)
   {
     return m_container->zr(m_index);
   }
+  /// @brief Get mutable reference to XYZ coordinates of the space point
+  /// @return Mutable reference to array containing [x, y, z] coordinates
+  std::array<float, 3> &xyz() const noexcept
+    requires(!ReadOnly)
+  {
+    return m_container->xyz(m_index);
+  }
+  /// @brief Get mutable reference to XYZR coordinates of the space point
+  /// @return Mutable reference to array containing [x, y, z, r] coordinates
   std::array<float, 4> &xyzr() const noexcept
     requires(!ReadOnly)
   {
     return m_container->xyzr(m_index);
   }
+  /// @brief Get mutable reference to ZR coordinate variances
+  /// @return Mutable reference to array containing [var_z, var_r] variances
   std::array<float, 2> &varianceZR() const noexcept
     requires(!ReadOnly)
   {
@@ -269,15 +320,28 @@ class SpacePointProxy2 {
   SpacePointIndex2 copyFromIndex() const noexcept {
     return m_container->copyFromIndex(m_index);
   }
+  /// @brief Get const reference to XY coordinates of the space point
+  /// @return Const reference to array containing [x, y] coordinates
   const std::array<float, 2> &xy() const noexcept {
     return m_container->xy(m_index);
   }
+  /// @brief Get const reference to ZR coordinates of the space point
+  /// @return Const reference to array containing [z, r] coordinates
   const std::array<float, 2> &zr() const noexcept {
     return m_container->zr(m_index);
   }
+  /// @brief Get const reference to XYZ coordinates of the space point
+  /// @return Const reference to array containing [x, y, z] coordinates
+  const std::array<float, 3> &xyz() const noexcept {
+    return m_container->xyz(m_index);
+  }
+  /// @brief Get const reference to XYZR coordinates of the space point
+  /// @return Const reference to array containing [x, y, z, r] coordinates
   const std::array<float, 4> &xyzr() const noexcept {
     return m_container->xyzr(m_index);
   }
+  /// @brief Get const reference to ZR coordinate variances
+  /// @return Const reference to array containing [var_z, var_r] variances
   const std::array<float, 2> &varianceZR() const noexcept {
     return m_container->varianceZR(m_index);
   }
@@ -293,13 +357,30 @@ class SpacePointProxy2 {
   /// Returns the resolved index of the space point.
   /// This resolves the index if the space point was copied from another index.
   /// @return The resolved index of the space point.
+  [[deprecated(
+      "Use copyFromIndex() instead to get the original index, and resolve it "
+      "manually if needed. This method will be removed in a future version.")]]
   SpacePointIndex2 resolvedIndex() const noexcept {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return m_container->resolvedIndex(m_index);
+    ACTS_POP_IGNORE_DEPRECATED()
+  }
+
+  /// Copies the specified columns from another space point to this space point.
+  /// @param other The space point proxy to copy from.
+  /// @param columnsToCopy The columns to copy from the other space point.
+  template <bool other_read_only>
+  void copyFrom(const SpacePointProxy2<other_read_only> &other,
+                SpacePointColumns columnsToCopy) const
+    requires(!ReadOnly)
+  {
+    m_container->copyFrom(m_index, other.container(), other.index(),
+                          columnsToCopy);
   }
 
  private:
-  Container *m_container{};
-  Index m_index{};
+  Container *m_container{nullptr};
+  Index m_index{0};
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

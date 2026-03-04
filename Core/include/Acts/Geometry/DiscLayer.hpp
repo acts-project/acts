@@ -12,19 +12,18 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include <memory>
-#include <utility>
 
 namespace Acts {
 
 class DiscBounds;
+class SurfaceArray;
 
 /// @class DiscLayer
 ///
 /// Class to describe a disc-like detector layer for tracking,
-/// it inhertis from both, Layer base class
+/// it inherits from both, Layer base class
 /// and DiscSurface class
 
 class DiscLayer : virtual public DiscSurface, public Layer {
@@ -46,11 +45,7 @@ class DiscLayer : virtual public DiscSurface, public Layer {
       const std::shared_ptr<const DiscBounds>& dbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
       double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      LayerType laytyp = Acts::passive) {
-    return std::shared_ptr<DiscLayer>(
-        new DiscLayer(transform, dbounds, std::move(surfaceArray), thickness,
-                      std::move(ad), laytyp));
-  }
+      LayerType laytyp = passive);
 
   DiscLayer() = delete;
   DiscLayer(const DiscLayer& cla) = delete;
@@ -61,7 +56,8 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   /// @return This method returns a surface reference
   const DiscSurface& surfaceRepresentation() const override;
 
-  // Non-const version
+  /// Non-const version of surface representation access
+  /// @return Mutable reference to the disc surface
   DiscSurface& surfaceRepresentation() override;
 
  private:
@@ -82,9 +78,11 @@ class DiscLayer : virtual public DiscSurface, public Layer {
             std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
             double thickness = 0.,
             std::unique_ptr<ApproachDescriptor> ades = nullptr,
-            LayerType laytyp = Acts::active);
+            LayerType laytyp = active);
 
   /// Copy constructor with shift
+  /// @param cla The disc layer to copy from
+  /// @param tr The transformation to apply
   DiscLayer(const DiscLayer& cla, const Transform3& tr);
 };
 

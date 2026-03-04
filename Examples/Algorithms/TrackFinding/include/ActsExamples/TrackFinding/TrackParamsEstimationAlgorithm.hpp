@@ -11,9 +11,10 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -23,13 +24,7 @@
 #include <memory>
 #include <string>
 
-namespace Acts {
-class TrackingGeometry;
-class MagneticFieldProvider;
-}  // namespace Acts
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Estimate track parameters for track seeds.
 ///
@@ -46,16 +41,19 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
-    /// Input prototracks (optional)
-    std::string inputProtoTracks;
+    /// Input proto tracks (optional).
+    std::optional<std::string> inputProtoTracks;
+    /// Input particle hypothesis (optional). If not given, the static particle
+    /// hypothesis from the config is used.
+    std::optional<std::string> inputParticleHypotheses;
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
     /// Output seed collection - only seeds with successful parameter estimation
     /// are propagated (optional)
-    std::string outputSeeds;
-    /// Output prototrack collection - only tracks with successful parameter
+    std::optional<std::string> outputSeeds;
+    /// Output proto track collection - only tracks with successful parameter
     /// estimation are propagated (optional)
-    std::string outputProtoTracks;
+    std::optional<std::string> outputProtoTracks;
 
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
@@ -94,7 +92,8 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrackParamsEstimationAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  explicit TrackParamsEstimationAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the track parameters making algorithm.
   ///
@@ -108,12 +107,14 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
   ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};
+  ReadDataHandle<std::vector<Acts::ParticleHypothesis>>
+      m_inputParticleHypotheses{this, "InputParticleHypotheses"};
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<ProtoTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 

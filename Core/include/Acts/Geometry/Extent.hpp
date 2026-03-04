@@ -25,8 +25,11 @@
 
 namespace Acts {
 
+/// @brief Type alias for envelope values in different directions
+/// @details Stores the envelope values for both positive and negative directions
 using Envelope = std::array<double, 2>;
 
+/// Zero envelope constant for no extension
 constexpr Envelope zeroEnvelope = {0, 0};
 
 /// This struct models a multi-dimensional enveloper along the axis directions
@@ -71,14 +74,23 @@ struct ExtentEnvelope {
 
   /// Helper struct for designated initializer construction
   struct Arguments {
+    /// Envelope for x-coordinate direction
     Envelope x = zeroEnvelope;
+    /// Envelope for y-coordinate direction
     Envelope y = zeroEnvelope;
+    /// Envelope for z-coordinate direction
     Envelope z = zeroEnvelope;
+    /// Envelope for radial coordinate direction
     Envelope r = zeroEnvelope;
+    /// Envelope for azimuthal angle direction
     Envelope phi = zeroEnvelope;
+    /// Envelope for r*phi coordinate direction
     Envelope rPhi = zeroEnvelope;
+    /// Envelope for polar angle direction
     Envelope theta = zeroEnvelope;
+    /// Envelope for pseudorapidity direction
     Envelope eta = zeroEnvelope;
+    /// Envelope for magnitude direction
     Envelope mag = zeroEnvelope;
   };
 
@@ -120,6 +132,8 @@ class Extent {
   explicit Extent(const ExtentEnvelope& envelope = ExtentEnvelope::Zero());
 
   /// Define a comparison operator
+  /// @param e The extent to compare with
+  /// @return True if the extents are equal, false otherwise
   bool operator==(const Extent& e) const;
 
   /// Extend with a position vertex
@@ -217,6 +231,7 @@ class Extent {
   Range1D<double> range(AxisDirection aDir) const;
 
   /// Return the N-dimension range
+  /// @return Reference to the complete multi-dimensional range
   const RangeXD<numAxisDirections(), double>& range() const;
 
   /// Return an D-dimensional sub range according to the
@@ -235,9 +250,11 @@ class Extent {
   }
 
   /// Return the envelope - non-const access
+  /// @return Reference to the envelope for modification
   ExtentEnvelope& envelope();
 
   /// Return the envelope - const access
+  /// @return Const reference to the envelope
   const ExtentEnvelope& envelope() const;
 
   /// Return the histogram store
@@ -249,6 +266,7 @@ class Extent {
   /// Access the minimum parameter
   ///
   /// @param aDir the axis direction
+  /// @return Minimum value along the specified axis direction
   double min(AxisDirection aDir) const {
     return m_range[toUnderlying(aDir)].min();
   }
@@ -256,6 +274,7 @@ class Extent {
   /// Access the maximum parameter
   ///
   /// @param aDir the axis direction
+  /// @return Maximum value along the specified axis direction
   double max(AxisDirection aDir) const {
     return m_range[toUnderlying(aDir)].max();
   }
@@ -263,6 +282,7 @@ class Extent {
   /// Access the midpoint
   ///
   /// @param aDir the axis direction
+  /// @return Midpoint value along the specified axis direction
   double medium(AxisDirection aDir) const {
     return 0.5 * (m_range[toUnderlying(aDir)].min() +
                   m_range[toUnderlying(aDir)].max());
@@ -271,6 +291,7 @@ class Extent {
   /// Access the parameter interval (i.e. the range span)
   ///
   /// @param aDir the axis direction
+  /// @return Interval size along the specified axis direction
   double interval(AxisDirection aDir) const {
     return m_range[toUnderlying(aDir)].size();
   }
@@ -305,14 +326,17 @@ class Extent {
   /// Check if this object constrains a given direction
   ///
   /// @param aDir is the axis direction
+  /// @return True if the specified axis direction is constrained, false otherwise
   bool constrains(AxisDirection aDir) const;
 
   /// Check if this object constrains any direction
+  /// @return True if any axis direction is constrained, false otherwise
   bool constrains() const;
 
   /// Convert to output stream for screen output
   ///
   /// @param indent indentation for the screen display
+  /// @return String representation of the extent
   std::string toString(const std::string& indent = "") const;
 
  private:
@@ -342,12 +366,17 @@ inline const ExtentEnvelope& Extent::envelope() const {
   return m_envelope;
 }
 
+/// Return the value histograms
+/// @return Reference to the value histograms array
 inline const std::array<std::vector<double>, numAxisDirections()>&
 Extent::valueHistograms() const {
   return m_valueHistograms;
 }
 
 /// Overload of << operator for std::ostream for debug output
+/// @param sl Output stream
+/// @param rhs Extent to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& sl, const Extent& rhs);
 
 }  // namespace Acts

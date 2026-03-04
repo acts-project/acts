@@ -18,16 +18,15 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
-#include <limits>
+using namespace Acts;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-auto tContext = GeometryContext();
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 /// @brief Interface for the material mapping that seeks the possible
 /// assignment candidates for the material interactiosn
@@ -55,21 +54,20 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
     // Intersect the surfaces
     for (auto& surface : surfaces) {
       // Get the intersection
-      auto sMultiIntersection = surface->intersect(gctx, position, direction,
-                                                   BoundaryTolerance::None());
+      MultiIntersection3D multiIntersection = surface->intersect(
+          gctx, position, direction, BoundaryTolerance::None());
       // One solution, take it
-      if (sMultiIntersection.size() == 1u &&
-          sMultiIntersection[0u].status() >=
-              Acts::IntersectionStatus::reachable &&
-          sMultiIntersection[0u].pathLength() >= 0.0) {
+      if (multiIntersection.size() == 1u &&
+          multiIntersection.at(0).status() >= IntersectionStatus::reachable &&
+          multiIntersection.at(0).pathLength() >= 0.0) {
         surfaceAssignments.push_back(
-            {surface, sMultiIntersection[0u].position(), direction});
+            {surface, multiIntersection.at(0).position(), direction});
         continue;
       }
-      if (sMultiIntersection.size() > 1u) {
+      if (multiIntersection.size() > 1u) {
         // Multiple intersections, take the closest
-        auto closestForward = sMultiIntersection.closestForward();
-        if (closestForward.status() >= Acts::IntersectionStatus::reachable &&
+        Intersection3D closestForward = multiIntersection.closestForward();
+        if (closestForward.status() >= IntersectionStatus::reachable &&
             closestForward.pathLength() > 0.0) {
           surfaceAssignments.push_back(
               {surface, closestForward.position(), direction});
@@ -158,7 +156,7 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
   std::vector<std::shared_ptr<Surface>> m_surfaces;
 };
 
-BOOST_AUTO_TEST_SUITE(MaterialMapperTestSuite)
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// @brief This test checks the data flow of the material mapper, it is not
 /// a test of the single components, which are tested individually
@@ -252,4 +250,4 @@ BOOST_AUTO_TEST_CASE(MaterialMapperInvalidTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

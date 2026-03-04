@@ -33,6 +33,7 @@ namespace Acts {
 ///
 class AnnulusBounds : public DiscBounds {
  public:
+  /// Enumeration for the different bound values
   enum BoundValues : int {
     eMinR = 0,
     eMaxR = 1,
@@ -95,10 +96,12 @@ class AnnulusBounds : public DiscBounds {
 
   /// Outstream operator
   /// @param sl is the ostream to be dumped into
+  /// @return Reference to the output stream
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// @brief Returns the right angular edge of the module
@@ -110,6 +113,7 @@ class AnnulusBounds : public DiscBounds {
   double phiMax() const { return get(eMaxPhiRel) + get(eAveragePhi); }
 
   /// Returns true for full phi coverage
+  /// @return True if the annulus covers the full azimuthal range, false otherwise
   bool coversFullAzimuth() const final {
     return (std::abs((get(eMinPhiRel) - get(eMaxPhiRel)) - std::numbers::pi) <
             s_onSurfaceTolerance);
@@ -117,14 +121,19 @@ class AnnulusBounds : public DiscBounds {
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
+  /// @param R The radius value to check
+  /// @param tolerance The tolerance for the check
+  /// @return True if the radius is within bounds (plus tolerance), false otherwise
   bool insideRadialBounds(double R, double tolerance = 0.) const final {
     return ((R + tolerance) > get(eMinR) && (R - tolerance) < get(eMaxR));
   }
 
   /// Return a reference radius for binning
+  /// @return Average radius for binning purposes
   double binningValueR() const final { return 0.5 * (get(eMinR) + get(eMaxR)); }
 
-  /// Return a reference radius for binning
+  /// Return a reference phi for binning
+  /// @return Average phi angle for binning purposes
   double binningValuePhi() const final { return get(eAveragePhi); }
 
   /// @brief Returns moduleOrigin, but rotated out, so @c averagePhi is already
@@ -137,6 +146,7 @@ class AnnulusBounds : public DiscBounds {
   /// Starting from the upper right (max R, pos locX) and proceeding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
+  /// @return Vector of corner points in polar coordinates
   std::vector<Vector2> corners() const;
 
   /// This method returns the xy coordinates of the four corners of the
@@ -156,9 +166,11 @@ class AnnulusBounds : public DiscBounds {
       unsigned int quarterSegments = 2u) const override;
 
   /// This method returns inner radius
+  /// @return Minimum radius of the annulus
   double rMin() const final { return get(eMinR); }
 
   /// This method returns outer radius
+  /// @return Maximum radius of the annulus
   double rMax() const final { return get(eMaxR); }
 
  private:

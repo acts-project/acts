@@ -13,13 +13,21 @@
 
 namespace Acts {
 
+/// Error codes for propagator operations
+/// @ingroup errors
 enum class PropagatorError {
   // ensure all values are non-zero
+  /// Propagation failed
   Failure = 1,
+  /// Propagation reached the configured maximum number of steps
   StepCountLimitReached,
+  /// Propagation reached the configured maximum number of next target calls
   NextTargetLimitReached,
 };
 
+/// Create error code from PropagatorError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::PropagatorError e);
 
 }  // namespace Acts

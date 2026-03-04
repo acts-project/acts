@@ -10,9 +10,11 @@
 
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 
+/// Aborter that stops when all components reach the target surface.
 struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
   /// If this is set, we are also happy if the mean of the components is on the
   /// surface. How the averaging is performed depends on the stepper
@@ -36,6 +38,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
   /// @param [in] stepper Stepper used for propagation
   /// @param [in] navigator Navigator used for the propagation
   /// @param logger a logger instance
+  /// @return True if the abort condition is met, false otherwise
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
@@ -49,7 +52,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
 
     // However, if mean of all is on surface, we are happy as well
     if (averageOnSurface) {
-      const auto sIntersection =
+      const Intersection3D intersection =
           surface
               ->intersect(
                   state.geoContext, stepper.position(state.stepping),
@@ -58,7 +61,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
                   averageOnSurfaceTolerance)
               .closest();
 
-      if (sIntersection.status() == IntersectionStatus::onSurface) {
+      if (intersection.status() == IntersectionStatus::onSurface) {
         ACTS_VERBOSE(
             "MultiStepperSurfaceReached aborter | "
             "Reached target in average mode");
@@ -71,7 +74,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
 
       ACTS_VERBOSE(
           "MultiStepperSurfaceReached aborter | Average distance to target: "
-          << sIntersection.pathLength());
+          << intersection.pathLength());
     }
 
     bool reached = true;

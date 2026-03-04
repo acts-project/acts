@@ -6,16 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include <Acts/ActsVersion.hpp>
+#include "Acts/ActsVersion.hpp"
 
 #include <iostream>
 
 int main(void) {
   std::cout << "Using Acts version " << Acts::VersionMajor << "."
             << Acts::VersionMinor << "." << Acts::VersionPatch << " commit "
-            << Acts::CommitHash << std::endl;
+            << Acts::CommitHash.value_or("UNKNOWN") << std::endl;
 
-  if (Acts::VersionInfo::fromHeader() != Acts::VersionInfo::fromLibrary()) {
+  if (Acts::VersionInfo::fromHeader().withoutCommit() !=
+      Acts::VersionInfo::fromLibrary().withoutCommit()) {
     std::cout << "WARNING: The version information is inconsistent!"
               << std::endl;
     std::cout << "Header: " << Acts::VersionInfo::fromHeader() << std::endl;

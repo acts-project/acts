@@ -13,9 +13,9 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -28,7 +28,9 @@
 
 using Generator = std::ranlux48;
 
-BOOST_AUTO_TEST_SUITE(FatrasPhotonConversion)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(PhysicsSuite)
 
 BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi, theta,
                      seed) {
@@ -172,3 +174,5 @@ BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion,
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

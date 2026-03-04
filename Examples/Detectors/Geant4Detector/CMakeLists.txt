@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesDetectorGeant4
-    SHARED
     src/Geant4Detector.cpp
     src/GdmlDetectorConstruction.cpp
     src/GdmlDetector.cpp

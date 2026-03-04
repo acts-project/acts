@@ -24,13 +24,15 @@
 namespace {
 
 namespace ds = ActsTests::PropagationDatasets;
-using namespace Acts::UnitLiterals;
 
-using MagneticField = Acts::ConstantBField;
-using AtlasStepper = Acts::AtlasStepper;
-using AtlasPropagator = Acts::Propagator<AtlasStepper>;
-using EigenStepper = Acts::EigenStepper<>;
-using EigenPropagator = Acts::Propagator<EigenStepper>;
+using namespace Acts;
+using namespace UnitLiterals;
+
+using MagneticField = ConstantBField;
+using AtlasStepper = AtlasStepper;
+using AtlasPropagator = Propagator<AtlasStepper>;
+using EigenStepper = EigenStepper<>;
+using EigenPropagator = Propagator<EigenStepper>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
@@ -39,11 +41,11 @@ constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.1;
 
-const Acts::GeometryContext geoCtx;
-const Acts::MagneticFieldContext magCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
+const MagneticFieldContext magCtx;
 
 inline std::pair<AtlasPropagator, EigenPropagator> makePropagators(double bz) {
-  auto field = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
+  auto field = std::make_shared<MagneticField>(Vector3(0.0, 0.0, bz));
   return {AtlasPropagator(AtlasStepper(field)),
           EigenPropagator(EigenStepper(field))};
 }

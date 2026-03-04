@@ -6,16 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/detail/GeoModelExtentHelper.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoModelExtentHelper.hpp"
 
-#include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoModelBinningHelper.hpp"
 
 #include <boost/algorithm/string.hpp>
 
-std::vector<Acts::AxisDirection>
-Acts::detail::GeoModelExentHelper::readBoundsConstaints(
+using namespace Acts;
+
+std::vector<AxisDirection>
+ActsPlugins::detail::GeoModelExentHelper::readBoundsConstaints(
     const std::string& boundsEntry, const std::string& ctype) {
   std::vector<std::string> boundsEntrySplit;
   boost::split(boundsEntrySplit, boundsEntry, boost::is_any_of(","));
@@ -24,7 +26,7 @@ Acts::detail::GeoModelExentHelper::readBoundsConstaints(
         "GeoModelBlueprintCreater: Bounds entry has to have at least 2 "
         "entries (type, values)");
   }
-  std::set<Acts::AxisDirection> constraints;
+  std::set<AxisDirection> constraints;
   // Switch on the bounds type
   if (boundsEntrySplit[0u] == "cyl") {
     // Capture the values
@@ -49,19 +51,22 @@ Acts::detail::GeoModelExentHelper::readBoundsConstaints(
   return {constraints.begin(), constraints.end()};
 }
 
-std::vector<Acts::AxisDirection>
-Acts::detail::GeoModelExentHelper::readBinningConstraints(
+std::vector<AxisDirection>
+ActsPlugins::detail::GeoModelExentHelper::readBinningConstraints(
     const std::vector<std::string>& binningEntry) {
   std::set<AxisDirection> constraints;
   // Loop over the single binning Entries
   for (const auto& sbe : binningEntry) {
     if (sbe.empty()) {
       continue;
+    } else if (sbe.size() > 2u && sbe.substr(0, 3u) == "exp") {
+      // Skip expansion entries
+      continue;
     }
     std::vector<std::string> sbTokens;
     boost::split(sbTokens, sbe, boost::is_any_of(","));
     AxisDirection bv =
-        Acts::detail::GeoModelBinningHelper::toAxisDirection(sbTokens[0]);
+        detail::GeoModelBinningHelper::toAxisDirection(sbTokens[0]);
     if (sbTokens.size() > 1u) {
       std::vector<std::string> valueTokens = {sbTokens.begin() + 1,
                                               sbTokens.end()};
@@ -74,10 +79,10 @@ Acts::detail::GeoModelExentHelper::readBinningConstraints(
   return {constraints.begin(), constraints.end()};
 }
 
-std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent>
-Acts::detail::GeoModelExentHelper::extentFromTable(
+std::tuple<VolumeBounds::BoundsType, Extent>
+ActsPlugins::detail::GeoModelExentHelper::extentFromTable(
     const std::vector<std::string>& boundsEntrySplit,
-    const Acts::Extent& externalExtent, const Acts::Extent& internalExtent,
+    const Extent& externalExtent, const Extent& internalExtent,
     bool roundInternalExtent) {
   // Check the bounds entry
   if (boundsEntrySplit.size() < 2u) {

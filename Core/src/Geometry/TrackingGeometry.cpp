@@ -158,16 +158,15 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
   void visitSurface(const Surface& surface) override {
     if (surface.geometryId() == GeometryIdentifier{}) {
       std::cout << "Surface has no geometry ID: "
-                << surface.toStream(GeometryContext()) << std::endl;
+                << surface.toStream(
+                       GeometryContext::dangerouslyDefaultConstruct())
+                << std::endl;
       throw std::invalid_argument("Surface has no geometry ID");
     }
 
     checkIdentifier(surface, "surface");
 
-    //@TODO: Why not use all of them?
-    if (surface.geometryId().sensitive() != 0) {
-      m_surfacesById.emplace(surface.geometryId(), &surface);
-    }
+    m_surfacesById.emplace(surface.geometryId(), &surface);
   }
 
   void visitLayer(const Layer& layer) override {
@@ -184,11 +183,15 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
 
   void visitBoundarySurface(
       const BoundarySurfaceT<TrackingVolume>& boundary) override {
-    checkIdentifier(boundary.surfaceRepresentation(), "boundary surface");
+    const auto& surface = boundary.surfaceRepresentation();
+    checkIdentifier(surface, "boundary surface");
+    m_surfacesById.emplace(surface.geometryId(), &surface);
   }
 
   void visitPortal(const Portal& portal) override {
-    checkIdentifier(portal.surface(), "portal");
+    const auto& surface = portal.surface();
+    checkIdentifier(surface, "portal");
+    m_surfacesById.emplace(surface.geometryId(), &surface);
   }
 
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById{};
@@ -216,7 +219,7 @@ TrackingGeometry::TrackingGeometry(
 
   ACTS_DEBUG("TrackingGeometry created with "
              << m_volumesById.size() << " volumes and " << m_surfacesById.size()
-             << " sensitive surfaces");
+             << " surfaces");
 
   m_volumesById.rehash(0);
   m_surfacesById.rehash(0);

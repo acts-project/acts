@@ -13,6 +13,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <bitset>
+#include <cassert>
 #include <optional>
 
 #include "Eigen/Dense"
@@ -77,7 +78,7 @@ auto matrixToBitset(const Eigen::PlainObjectBase<Derived>& m) {
 ///
 /// @returns The product ab
 template <typename A, typename B>
-inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
+inline Matrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
     const A& a, const B& b) {
   // Extract the sizes of the matrix types that we receive as template
   // parameters.
@@ -135,7 +136,7 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 
     // Construct the end result in this matrix, which destroys a few of Eigen's
     // built-in optimization techniques, but sadly this is necessary.
-    ActsMatrix<M, P> r;
+    Matrix<M, P> r;
 
     // C₁₁ = A₁₁ * B₁₁ + A₁₂ * B₂₁
     r.template topLeftCorner<M1, P1>().noalias() =
@@ -220,12 +221,16 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
 /// See https://godbolt.org/z/z53Er6Mzf for reasoning for the concrete numbers.
 template <typename T>
 struct ExpSafeLimit {};
+/// Safe exponent limits for double precision.
 template <>
 struct ExpSafeLimit<double> {
+  /// Maximum safe exponent value for double precision
   constexpr static double value = 500.0;
 };
+/// Safe exponent limits for single precision.
 template <>
 struct ExpSafeLimit<float> {
+  /// Maximum safe exponent value for single precision
   constexpr static float value = 50.0;
 };
 
@@ -254,6 +259,7 @@ constexpr T safeExp(T val) noexcept {
 ///        to an unrolled vector index.
 /// @param i The row index of the symmetric matrix
 /// @param k The column index of the symmetric matrix
+/// @return The corresponding vector index in the unrolled storage
 template <std::size_t N>
 constexpr std::size_t vecIdxFromSymMat(const std::size_t i, const std::size_t k)
   requires(N > 0)

@@ -84,6 +84,7 @@ struct PlanarSurfaceMask {
                                       const Segment2D& segment,
                                       bool firstInside) const;
 
+  /// 2D intersection helper for geometric calculations
   Acts::detail::IntersectionHelper2D intersector{};
 };
 

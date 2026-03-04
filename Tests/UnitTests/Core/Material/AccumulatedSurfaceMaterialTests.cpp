@@ -21,7 +21,11 @@
 #include <memory>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTest {
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
@@ -185,4 +189,6 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_variance_0D) {
   BOOST_CHECK_EQUAL(trackCount, 2u);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTest

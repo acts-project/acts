@@ -16,11 +16,13 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
@@ -44,9 +46,9 @@ using namespace Acts;
 using namespace Acts::HashedStringLiteral;
 using namespace Acts::detail::Test;
 
-using MultiTrajectoryTraits::IndexType;
+using IndexType = TrackIndexType;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 // fixed seed for reproducible tests
 std::default_random_engine rng(31415);
 
@@ -114,7 +116,33 @@ using const_holder_types =
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EventDataTrack)
+namespace ActsTests {
+
+// Static assert ensuring concept conformity where we have relevant types
+// available
+static_assert(
+    ConstTrackProxyConcept<TrackProxy<
+        VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder, true>>);
+static_assert(ConstTrackProxyConcept<
+              TrackProxy<VectorTrackContainer, VectorMultiTrajectory,
+                         detail::RefHolder, false>>);
+static_assert(MutableTrackProxyConcept<
+              TrackProxy<VectorTrackContainer, VectorMultiTrajectory,
+                         detail::RefHolder, false>>);
+static_assert(
+    !MutableTrackProxyConcept<TrackProxy<
+        VectorTrackContainer, VectorMultiTrajectory, detail::RefHolder, true>>);
+
+static_assert(ConstTrackStateProxyConcept<
+              TrackStateProxy<VectorMultiTrajectory, eBoundSize, true>>);
+static_assert(!ConstTrackStateProxyConcept<
+              TrackStateProxy<VectorMultiTrajectory, eBoundSize, false>>);
+static_assert(MutableTrackStateProxyConcept<
+              TrackStateProxy<VectorMultiTrajectory, eBoundSize, false>>);
+static_assert(!MutableTrackStateProxyConcept<
+              TrackStateProxy<VectorMultiTrajectory, eBoundSize, true>>);
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   factory_t factory;
@@ -136,7 +164,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
     }
   };
 
-  auto ts1 = mkts(MultiTrajectoryTraits::kInvalid);
+  auto ts1 = mkts(kTrackIndexInvalid);
   auto ts2 = mkts(ts1);
   auto ts3 = mkts(ts2);
   auto ts4 = mkts(ts3);
@@ -158,7 +186,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   const auto& ct = t;
 
   for (const auto& ts : ct.trackStatesReversed()) {
-    (void)ts;
+    static_cast<void>(ts);
   }
 
   BOOST_CHECK_EQUAL(t.nTrackStates(), 5);
@@ -171,7 +199,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   std::size_t i = 0;
   for (const auto& state : tNone.trackStatesReversed()) {
-    (void)state;
+    static_cast<void>(state);
     i++;
   }
   BOOST_CHECK_EQUAL(i, 0);
@@ -277,7 +305,7 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
     }
 
     for (const auto track : tc) {
-      (void)track;
+      static_cast<void>(track);
       // does not compile
       // track.parameters().setRandom();
     }
@@ -311,6 +339,18 @@ BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
   t.appendTrackState();
   t = mutTc.makeTrack();
   t.appendTrackState();
+  std::cout << "New track with l0: " << t.loc0() << ", l1: " << t.loc1()
+            << ", phi: " << t.phi() << ", theta: " << t.theta()
+            << ", q/p: " << t.qOverP() << ", q: " << t.charge()
+            << ", P: " << t.absoluteMomentum()
+            << ", pT: " << t.transverseMomentum()
+            << ", direction: " << t.direction().transpose()
+            << ", mom: " << t.momentum().transpose()
+            << ", p4: " << t.fourMomentum() << ", nStates: " << t.nTrackStates()
+            << ", nMeasurements: " << t.nMeasurements()
+            << ", nHoles: " << t.nHoles() << ", nOutlier: " << t.nOutliers()
+            << ", nShared: " << t.nSharedHits() << ", chi2: " << t.chi2()
+            << ", nDoF: " << t.nDoF() << std::endl;
 
   BOOST_CHECK_EQUAL(mutTc.size(), 2);
   BOOST_CHECK_EQUAL(mutMtj.size(), 4);
@@ -470,6 +510,14 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = tc.makeTrack();
 
+  auto perigee =
+      Surface::makeShared<Acts::PerigeeSurface>(Acts::Vector3::Zero());
+
+  t.parameters().setRandom();
+  t.covariance().setRandom();
+  t.particleHypothesis() = Acts::ParticleHypothesis::pion();
+  t.setReferenceSurface(perigee);
+
   auto ts1 = t.appendTrackState();
   ts1.predicted().setRandom();
   auto ts2 = t.appendTrackState();
@@ -477,10 +525,19 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
   auto ts3 = t.appendTrackState();
   ts3.predicted().setRandom();
 
-  auto t2 = t.shallowCopy();
+  auto t2 = tc.makeTrack();
+  t2.copyFromShallow(t);
 
   BOOST_CHECK_NE(t.index(), t2.index());
   BOOST_CHECK_EQUAL(t.nTrackStates(), t2.nTrackStates());
+
+  BOOST_CHECK_EQUAL(t.particleHypothesis(), t2.particleHypothesis());
+  BOOST_CHECK_EQUAL(t.parameters(), t2.parameters());
+  BOOST_CHECK_EQUAL(t.covariance(), t2.covariance());
+
+  BOOST_CHECK_EQUAL(t.referenceSurface().getSharedPtr(),
+                    t2.referenceSurface().getSharedPtr());
+  BOOST_CHECK_EQUAL(t.tipIndex(), t2.tipIndex());
 
   std::vector<decltype(tc)::TrackStateProxy> trackStates;
   for (const auto& ts : t.trackStatesReversed()) {
@@ -500,3 +557,5 @@ BOOST_AUTO_TEST_CASE(ShallowCopy) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

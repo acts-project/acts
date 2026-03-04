@@ -13,16 +13,27 @@
 
 namespace Acts {
 
+/// Error codes for combinatorial Kalman filter operations
+/// @ingroup errors
 enum class CombinatorialKalmanFilterError {
   // ensure all values are non-zero
+  /// Kalman update failed
   UpdateFailed = 1,
+  /// Kalman smooth failed
   SmoothFailed,
+  /// Kalman output conversion failed
   OutputConversionFailed,
+  /// Measurement selection failed
   MeasurementSelectionFailed,
+  /// Propagation reaches max steps before track finding is finished
   PropagationReachesMaxSteps,
+  /// No measurement expected on the current surface
   NoMeasurementExpected
 };
 
+/// Create error code from @ref CombinatorialKalmanFilterError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::CombinatorialKalmanFilterError e);
 
 }  // namespace Acts

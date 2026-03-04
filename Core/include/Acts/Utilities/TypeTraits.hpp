@@ -11,6 +11,9 @@
 #include <type_traits>
 
 namespace Acts {
+/// @brief Type trait that adds const qualifier to a type based on a boolean condition
+/// @tparam C Boolean condition determining whether to add const
+/// @tparam T Type to potentially make const
 template <bool C, typename T>
 using const_if_t = std::conditional_t<C, const T, T>;
 }  // namespace Acts

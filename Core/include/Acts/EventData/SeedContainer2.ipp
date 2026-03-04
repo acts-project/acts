@@ -12,20 +12,7 @@
 
 #include "Acts/EventData/SeedProxy2.hpp"
 
-#include <limits>
-
-namespace Acts::Experimental {
-
-inline MutableSeedProxy2 SeedContainer2::createSeed() noexcept {
-  ++m_size;
-
-  m_spacePointOffsets.push_back(m_spacePoints.size());
-  m_spacePointCounts.push_back(static_cast<std::uint8_t>(0));
-  m_qualities.push_back(-std::numeric_limits<float>::infinity());
-  m_vertexZs.push_back(0.f);
-
-  return MutableProxy(*this, size() - 1);
-}
+namespace Acts {
 
 inline MutableSeedProxy2 SeedContainer2::at(Index index) {
   if (index >= size()) {
@@ -49,4 +36,4 @@ inline ConstSeedProxy2 SeedContainer2::operator[](Index index) const noexcept {
   return ConstProxy(*this, index);
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

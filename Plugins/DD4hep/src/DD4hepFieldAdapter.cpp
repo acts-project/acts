@@ -6,30 +6,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
+#include "ActsPlugins/DD4hep/DD4hepFieldAdapter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 
 #include <DD4hep/Fields.h>
 #include <DD4hep/Handle.h>
 #include <DD4hep/Objects.h>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 DD4hepFieldAdapter::DD4hepFieldAdapter(dd4hep::OverlayedField field)
     : m_field{std::make_unique<dd4hep::OverlayedField>(field)} {
-  m_fieldConversionFactor =
-      dd4hep::_toDouble("1/tesla") * Acts::UnitConstants::T;
-  m_lengthConversionFactor =
-      dd4hep::_toDouble("1*mm") / Acts::UnitConstants::mm;
+  m_fieldConversionFactor = dd4hep::_toDouble("1/tesla") * UnitConstants::T;
+  m_lengthConversionFactor = dd4hep::_toDouble("1*mm") / UnitConstants::mm;
 }
 
 MagneticFieldProvider::Cache DD4hepFieldAdapter::makeCache(
-    const Acts::MagneticFieldContext& /*mctx*/) const {
+    const MagneticFieldContext& /*mctx*/) const {
   return MagneticFieldProvider::Cache{};
 }
 
@@ -50,4 +49,4 @@ Result<Vector3> DD4hepFieldAdapter::getField(
   return Result<Vector3>::success(result);
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

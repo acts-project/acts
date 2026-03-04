@@ -9,18 +9,18 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Gnn/GnnPipeline.hpp"
-#include "Acts/Plugins/Gnn/Stages.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Graph.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
+#include "ActsPlugins/Gnn/GnnPipeline.hpp"
+#include "ActsPlugins/Gnn/Stages.hpp"
 
 #include <mutex>
 #include <string>
@@ -91,25 +91,26 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
   };
 
   struct Config {
-    /// Input spacepoints collection.
+    /// Input space points collection.
     std::string inputSpacePoints;
     /// Input cluster information (Optional).
     std::string inputClusters;
     /// Input truth graph (Optional).
     std::string inputTruthGraph;
-    /// Output prototracks
+    /// Output proto tracks
     std::string outputProtoTracks;
     /// Output graph (optional)
     std::string outputGraph;
 
     /// Graph constructor
-    std::shared_ptr<Acts::GraphConstructionBase> graphConstructor;
+    std::shared_ptr<ActsPlugins::GraphConstructionBase> graphConstructor;
 
     /// List of edge classifiers
-    std::vector<std::shared_ptr<Acts::EdgeClassificationBase>> edgeClassifiers;
+    std::vector<std::shared_ptr<ActsPlugins::EdgeClassificationBase>>
+        edgeClassifiers;
 
     /// The track builder
-    std::shared_ptr<Acts::TrackBuildingBase> trackBuilder;
+    std::shared_ptr<ActsPlugins::TrackBuildingBase> trackBuilder;
 
     /// Node features
     std::vector<NodeFeature> nodeFeatures = {NodeFeature::eR, NodeFeature::ePhi,
@@ -129,7 +130,8 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingAlgorithmGnn(Config cfg, Acts::Logging::Level lvl);
+  explicit TrackFindingAlgorithmGnn(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~TrackFindingAlgorithmGnn() override = default;
 
@@ -137,18 +139,17 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Finalize and print timing
-  ActsExamples::ProcessCode finalize() final;
+  ProcessCode finalize() final;
 
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
 
-  Acts::GnnPipeline m_pipeline;
+  ActsPlugins::GnnPipeline m_pipeline;
   mutable std::mutex m_mutex;
 
   using Accumulator = boost::accumulators::accumulator_set<
@@ -166,8 +167,8 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
     Accumulator fullTime;
   } m_timing;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   ReadDataHandle<Graph> m_inputTruthGraph{this, "InputTruthGraph"};

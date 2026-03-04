@@ -1,9 +1,7 @@
 acts_add_library(
     ExamplesTrackFindingGnn
-    SHARED
     src/TrackFindingAlgorithmGnn.cpp
-    src/PrototracksToParameters.cpp
-    src/TrackFindingFromPrototrackAlgorithm.cpp
+    src/TrackFindingFromProtoTracksAlgorithm.cpp
     src/TruthGraphBuilder.cpp
     src/createFeatures.cpp
 )

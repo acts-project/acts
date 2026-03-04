@@ -14,20 +14,21 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
 #include <numbers>
 #include <optional>
 #include <utility>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 Covariance makeRandomCovariance(int seed = 31415) {
   std::srand(seed);
@@ -39,6 +40,8 @@ Covariance makeRandomCovariance(int seed = 31415) {
 
   return covMat;
 }
+
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 
 BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   // Using a large track grid so we can choose a small bin size
@@ -150,7 +153,7 @@ BOOST_AUTO_TEST_CASE(
   BoundTrackParameters params(perigeeSurface, paramVec, covMat,
                               ParticleHypothesis::pion());
 
-  ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
+  SquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
   AdaptiveGridTrackDensity::Config cfg;
   // force track to have exactly spatialTrkGridSize spatial bins for testing
@@ -198,7 +201,7 @@ BOOST_AUTO_TEST_CASE(
   // The analytical calculations of the following can be found here:
   // https://acts.readthedocs.io/en/latest/white_papers/gaussian-track-densities.html
   // Analytical maximum of the Gaussian
-  ActsSquareMatrix<3> ipWeights = ipCov.inverse();
+  SquareMatrix<3> ipWeights = ipCov.inverse();
   double denom =
       ipWeights(1, 1) * ipWeights(2, 2) - ipWeights(1, 2) * ipWeights(1, 2);
 
@@ -646,4 +649,6 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   CHECK_CLOSE_ABS(0., sixthDensitySum2D, 1e-4);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

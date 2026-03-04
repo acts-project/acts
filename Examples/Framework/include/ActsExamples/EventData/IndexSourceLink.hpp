@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -70,19 +69,6 @@ struct IndexSourceLinkSurfaceAccessor {
     return geometry.findSurface(indexSourceLink.geometryId());
   }
 };
-
-namespace Experimental {
-
-struct IndexSourceLinkSurfaceAccessor {
-  const Acts::Experimental::Detector& geometry;
-
-  const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
-    const auto& indexSourceLink = sourceLink.get<IndexSourceLink>();
-    return geometry.findSurface(indexSourceLink.geometryId());
-  }
-};
-
-}  // namespace Experimental
 
 /// Accessor for the above source link container
 ///

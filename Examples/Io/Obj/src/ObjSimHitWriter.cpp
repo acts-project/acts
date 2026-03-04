@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Visualization/Interpolation3D.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -24,9 +23,10 @@
 #include <unordered_map>
 #include <vector>
 
-ActsExamples::ObjSimHitWriter::ObjSimHitWriter(
-    const ActsExamples::ObjSimHitWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+ObjSimHitWriter::ObjSimHitWriter(const ObjSimHitWriter::Config& config,
+                                 Acts::Logging::Level level)
     : WriterT(config.inputSimHits, "ObjSimHitWriter", level), m_cfg(config) {
   // inputSimHits is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
@@ -34,8 +34,8 @@ ActsExamples::ObjSimHitWriter::ObjSimHitWriter(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
-    const AlgorithmContext& ctx, const ActsExamples::SimHitContainer& simHits) {
+ProcessCode ObjSimHitWriter::writeT(const AlgorithmContext& ctx,
+                                    const SimHitContainer& simHits) {
   // ensure exclusive access to tree/file while writing
   std::scoped_lock lock(m_writeMutex);
 
@@ -68,7 +68,8 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     }  // end simHit loop
   } else {
     // We need to associate first
-    std::unordered_map<std::size_t, std::vector<Acts::Vector4>> particleHits;
+    std::unordered_map<ActsFatras::Barcode, std::vector<Acts::Vector4>>
+        particleHits;
     // Pre-loop over hits ... write those below threshold
     for (const auto& simHit : simHits) {
       double momentum = simHit.momentum4Before().head<3>().norm();
@@ -89,12 +90,10 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
       }
       ACTS_VERBOSE("Accepting: Hit above threshold: " << momentum);
 
-      if (particleHits.find(simHit.particleId().value()) ==
-          particleHits.end()) {
-        particleHits[simHit.particleId().value()] = {};
+      if (particleHits.find(simHit.particleId()) == particleHits.end()) {
+        particleHits[simHit.particleId()] = {};
       }
-      particleHits[simHit.particleId().value()].push_back(
-          simHit.fourPosition());
+      particleHits[simHit.particleId()].push_back(simHit.fourPosition());
     }
     // Draw loop
     std::size_t lOffset = 1;
@@ -145,9 +144,11 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
   osHits.close();
   osTrajectory.close();
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::finalize() {
-  return ActsExamples::ProcessCode::SUCCESS;
+ProcessCode ObjSimHitWriter::finalize() {
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

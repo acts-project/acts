@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
@@ -17,7 +17,7 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/tbbWrap.hpp"
-#include <Acts/Utilities/Logger.hpp>
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -30,11 +30,6 @@
 #include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
-class IAlgorithm;
-class IContextDecorator;
-class IReader;
-class IWriter;
-class SequenceElement;
 
 using IterationCallback = void (*)();
 
@@ -59,8 +54,8 @@ class Sequencer {
   struct FpeMask {
     std::string file;
     std::pair<std::size_t, std::size_t> lines;
-    Acts::FpeType type;
-    std::size_t count;
+    ActsPlugins::FpeType type{};
+    std::size_t count = 0;
   };
 
   struct Config {
@@ -119,7 +114,7 @@ class Sequencer {
   void addWhiteboardAlias(const std::string &aliasName,
                           const std::string &objectName);
 
-  Acts::FpeMonitor::Result fpeResult() const;
+  ActsPlugins::FpeMonitor::Result fpeResult() const;
 
   /// Run the event loop.
   ///
@@ -161,13 +156,16 @@ class Sequencer {
   std::pair<std::size_t, std::size_t> determineEventsRange() const;
 
   std::pair<std::string, std::size_t> fpeMaskCount(
-      const boost::stacktrace::stacktrace &st, Acts::FpeType type) const;
+      const boost::stacktrace::stacktrace &st, ActsPlugins::FpeType type) const;
 
   void fpeReport() const;
 
   struct SequenceElementWithFpeResult {
     std::shared_ptr<SequenceElement> sequenceElement;
-    tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> fpeResult{};
+    std::unique_ptr<
+        tbb::enumerable_thread_specific<ActsPlugins::FpeMonitor::Result>>
+        fpeResult = std::make_unique<
+            tbb::enumerable_thread_specific<ActsPlugins::FpeMonitor::Result>>();
   };
 
   Config m_cfg;
@@ -182,12 +180,12 @@ class Sequencer {
 
   DataHandleBase::StateMapType m_whiteBoardState;
 
+  std::atomic<std::size_t> m_nSkippedEvents = 0;
   std::atomic<std::size_t> m_nUnmaskedFpe = 0;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };
 
-std::ostream &operator<<(std::ostream &os,
-                         const ActsExamples::Sequencer::FpeMask &m);
+std::ostream &operator<<(std::ostream &os, const Sequencer::FpeMask &m);
 
 }  // namespace ActsExamples

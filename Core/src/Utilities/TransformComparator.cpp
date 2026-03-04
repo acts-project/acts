@@ -8,18 +8,23 @@
 
 #include "Acts/Utilities/detail/TransformComparator.hpp"
 
+#include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/EigenCompat.hpp"
+
 namespace Acts::detail {
 TransformComparator::TransformComparator(const double transTolerance,
                                          const double rotTolerance)
     : m_tolTrans{transTolerance}, m_tolRot{rotTolerance} {}
 int TransformComparator::compare(const Acts::RotationMatrix3& a,
                                  const Acts::RotationMatrix3& b) const {
-  const Acts::Vector3 anglesA = a.eulerAngles(2, 1, 0);
-  const Acts::Vector3 anglesB = b.eulerAngles(2, 1, 0);
+  const Acts::Vector3 anglesA =
+      detail::EigenCompat::canonicalEulerAngles(a, 2, 1, 0);
+  const Acts::Vector3 anglesB =
+      detail::EigenCompat::canonicalEulerAngles(b, 2, 1, 0);
   for (int i = 0; i < 3; ++i) {
     const double diff = anglesA[i] - anglesB[i];
-    if (std::abs(diff) > m_tolRot) {
-      return diff > 0 ? 1 : -1;
+    if (Acts::abs(diff) > m_tolRot) {
+      return copySign(1, diff);
     }
   }
   return 0;

@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -24,27 +23,24 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <random>
-#include <tuple>
 #include <utility>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
+namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 // We will compare analytical and numerical computations in the case of a
 // (non-zero) constant B-field and a zero B-field.
 using HelicalPropagator = Propagator<EigenStepper<>>;
@@ -55,7 +51,7 @@ using NumericalLinearizer = NumericalTrackLinearizer;
 using StraightNumericalLinearizer = NumericalTrackLinearizer;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
@@ -88,6 +84,7 @@ std::uniform_real_distribution<double> resQoPDist(0.0, 0.1);
 // Track time resolution distribution
 std::uniform_real_distribution<double> resTDist(0.1_ns, 0.2_ns);
 
+BOOST_AUTO_TEST_SUITE(VertexingSuite)
 ///
 /// @brief Test HelicalTrackLinearizer by comparing it to NumericalTrackLinearizer.
 ///
@@ -142,7 +139,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Construct random track emerging from vicinity of vertex position
   for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
     // Random charge
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Random track parameters
     BoundVector paramVec;
@@ -200,11 +197,9 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     // In addition to comparing the output of the linearizers, we check that
     // they return non-zero quantities
     BoundVector vecBoundZero = BoundVector::Zero();
-    BoundSquareMatrix matBoundZero = BoundSquareMatrix::Zero();
-    ActsMatrix<eBoundSize, 4> matBound2SPZero =
-        ActsMatrix<eBoundSize, 4>::Zero();
-    ActsMatrix<eBoundSize, 3> matBound2MomZero =
-        ActsMatrix<eBoundSize, 3>::Zero();
+    BoundMatrix matBoundZero = BoundMatrix::Zero();
+    Matrix<eBoundSize, 4> matBound2SPZero = Matrix<eBoundSize, 4>::Zero();
+    Matrix<eBoundSize, 3> matBound2MomZero = Matrix<eBoundSize, 3>::Zero();
 
     // We check that the entries of the output quantities either
     // -) have a relative difference of less than "relTol"
@@ -275,4 +270,6 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   }
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

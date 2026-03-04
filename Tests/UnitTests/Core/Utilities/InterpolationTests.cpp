@@ -9,15 +9,18 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <vector>
 
+using namespace Acts;
 using namespace Acts::detail;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(interpolation_1d) {
   using Point = std::array<double, 1u>;
@@ -102,7 +105,7 @@ BOOST_AUTO_TEST_CASE(interpolation_3d) {
 }
 
 BOOST_AUTO_TEST_CASE(interpolation_mixed_point_values) {
-  using Point1 = ActsVector<1>;
+  using Point1 = Vector<1>;
   using Point2 = std::array<double, 1u>;
   using Point3 = std::vector<double>;
   using Values = std::array<double, 2u>;
@@ -121,4 +124,6 @@ BOOST_AUTO_TEST_CASE(interpolation_mixed_point_values) {
   CHECK_CLOSE_REL(interpolate((p << 2.3).finished(), low, high, v), 23., 1e-6);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -14,33 +14,36 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <memory>
 
-namespace ActsFatras {
+using namespace ActsFatras;
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Digitization)
+namespace ActsTests {
 
-BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
-  Acts::GeometryContext geoCtx;
+BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 
-  ActsFatras::PlanarSurfaceDrift psd;
+BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftCase) {
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
-  Acts::Vector3 cPosition = Acts::Vector3(10., 50., 12.);
-  Acts::Vector3 cNormal = Acts::Vector3(1., 1., 1.).normalized();
+  PlanarSurfaceDrift psd;
 
-  std::shared_ptr<Acts::PlaneSurface> planeSurface =
-      Acts::CurvilinearSurface(cPosition, cNormal).planeSurface();
+  Vector3 cPosition = Vector3(10., 50., 12.);
+  Vector3 cNormal = Vector3(1., 1., 1.).normalized();
+
+  std::shared_ptr<PlaneSurface> planeSurface =
+      CurvilinearSurface(cPosition, cNormal).planeSurface();
 
   double depletion = 0.250;
 
   // Nominal intersection
-  Acts::Vector3 noDrift(0., 0., 0.);
-  Acts::Vector3 holeDrift = Acts::Vector3(0.5, 0., 1.).normalized();
-  Acts::Vector3 chargeDrift = Acts::Vector3(0.5, 0., -1.).normalized();
+  Vector3 noDrift(0., 0., 0.);
+  Vector3 holeDrift = Vector3(0.5, 0., 1.).normalized();
+  Vector3 chargeDrift = Vector3(0.5, 0., -1.).normalized();
 
   // Intersect surface at normal direction and no drift
   //
@@ -48,12 +51,12 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   auto noDriftSegment = psd.toReadout(geoCtx, *planeSurface, depletion,
                                       cPosition, cNormal, noDrift);
 
-  CHECK_CLOSE_ABS(noDriftSegment[0].x(), 0., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[0].y(), 0., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[1].x(), 0., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[1].y(), 0., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[0].x(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[0].y(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[1].x(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[1].y(), 0., s_epsilon);
 
-  Acts::Vector3 particleDir = Acts::Vector3(2., 1., 1.).normalized();
+  Vector3 particleDir = Vector3(2., 1., 1.).normalized();
 
   // Intersect surface at particleDirection != normal and no drift
   //
@@ -61,10 +64,8 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   noDriftSegment = psd.toReadout(geoCtx, *planeSurface, depletion, cPosition,
                                  particleDir, noDrift);
 
-  CHECK_CLOSE_ABS(noDriftSegment[0].x(), -noDriftSegment[1].x(),
-                  Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[0].y(), -noDriftSegment[1].y(),
-                  Acts::s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[0].x(), -noDriftSegment[1].x(), s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[0].y(), -noDriftSegment[1].y(), s_epsilon);
 
   // Intersect surface at particleDirection != normal and a drift somewhat along
   // the normal and x
@@ -76,17 +77,14 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
                                       cPosition, particleDir, holeDrift);
 
   BOOST_CHECK(std::abs(driftedSegment[0].x() - driftedSegment[1].x()) >
-              Acts::s_epsilon);
+              s_epsilon);
   BOOST_CHECK(std::abs(driftedSegment[0].y() - driftedSegment[1].y()) >
-              Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[1].x(), driftedSegment[1].x(),
-                  Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[1].y(), driftedSegment[1].y(),
-                  Acts::s_epsilon);
+              s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[1].x(), driftedSegment[1].x(), s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[1].y(), driftedSegment[1].y(), s_epsilon);
   BOOST_CHECK(std::abs(driftedSegment[0].x() - noDriftSegment[0].x()) >
-              Acts::s_epsilon);
-  CHECK_CLOSE_ABS(driftedSegment[0].y(), noDriftSegment[0].y(),
-                  Acts::s_epsilon);
+              s_epsilon);
+  CHECK_CLOSE_ABS(driftedSegment[0].y(), noDriftSegment[0].y(), s_epsilon);
 
   // Intersect surface at particleDirection != normal and a drift somewhat
   // opposite the normal and y
@@ -98,19 +96,16 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
                                  particleDir, chargeDrift);
 
   BOOST_CHECK(std::abs(driftedSegment[0].x() - driftedSegment[1].x()) >
-              Acts::s_epsilon);
+              s_epsilon);
   BOOST_CHECK(std::abs(driftedSegment[0].y() - driftedSegment[1].y()) >
-              Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[0].x(), driftedSegment[0].x(),
-                  Acts::s_epsilon);
-  CHECK_CLOSE_ABS(noDriftSegment[0].y(), driftedSegment[0].y(),
-                  Acts::s_epsilon);
+              s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[0].x(), driftedSegment[0].x(), s_epsilon);
+  CHECK_CLOSE_ABS(noDriftSegment[0].y(), driftedSegment[0].y(), s_epsilon);
   BOOST_CHECK(std::abs(driftedSegment[1].x() - noDriftSegment[1].x()) >
-              Acts::s_epsilon);
-  CHECK_CLOSE_ABS(driftedSegment[1].y(), noDriftSegment[1].y(),
-                  Acts::s_epsilon);
+              s_epsilon);
+  CHECK_CLOSE_ABS(driftedSegment[1].y(), noDriftSegment[1].y(), s_epsilon);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace ActsFatras
+}  // namespace ActsTests

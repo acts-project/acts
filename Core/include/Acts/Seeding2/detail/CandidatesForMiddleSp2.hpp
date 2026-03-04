@@ -13,7 +13,7 @@
 #include <limits>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 /// @brief A description of a triplet candidate.
 struct TripletCandidate2 {
@@ -111,4 +111,4 @@ class CandidatesForMiddleSp2 {
             float zOrigin, bool isQuality);
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

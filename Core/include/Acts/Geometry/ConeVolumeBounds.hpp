@@ -85,8 +85,13 @@ class ConeVolumeBounds : public VolumeBounds {
     buildSurfaceBounds();
   }
 
+  /// Copy constructor
+  /// @param cobo Cone volume bounds to copy
   ConeVolumeBounds(const ConeVolumeBounds& cobo) = default;
   ~ConeVolumeBounds() override = default;
+  /// Assignment operator
+  /// @param cobo Cone volume bounds to assign
+  /// @return Reference to this object
   ConeVolumeBounds& operator=(const ConeVolumeBounds& cobo) = default;
 
   VolumeBounds::BoundsType type() const final { return VolumeBounds::eCone; }
@@ -101,6 +106,7 @@ class ConeVolumeBounds : public VolumeBounds {
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
+  /// @return True if the position is inside the cone volume bounds
   bool inside(const Vector3& pos, double tol = 0.) const final;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
@@ -127,29 +133,37 @@ class ConeVolumeBounds : public VolumeBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return Value of the specified bound parameter
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
-  // Return the derived innerRmin
+  /// Return the derived inner minimum radius
+  /// @return Inner minimum radius at the smallest z position
   double innerRmin() const;
 
-  // Return the derived innerRmin
+  /// Return the derived inner maximum radius
+  /// @return Inner maximum radius at the largest z position
   double innerRmax() const;
 
-  // Return the derived inner tan(alpha)
+  /// Return the derived inner tangent of the cone opening angle
+  /// @return Tangent of the inner cone opening angle
   double innerTanAlpha() const;
 
-  // Return the derived outerRmin
+  /// Return the derived outer minimum radius
+  /// @return Outer minimum radius at the smallest z position
   double outerRmin() const;
 
-  // Return the derived outerRmax
+  /// Return the derived outer maximum radius
+  /// @return Outer maximum radius at the largest z position
   double outerRmax() const;
 
-  // Return the derived outer tan(alpha)
+  /// Return the derived outer tangent of the cone opening angle
+  /// @return Tangent of the outer cone opening angle
   double outerTanAlpha() const;
 
   /// Output Method for std::ostream
   ///
   /// @param os is ostream operator to be dumped into
+  /// @return Reference to the output stream after writing
   std::ostream& toStream(std::ostream& os) const final;
 
  private:

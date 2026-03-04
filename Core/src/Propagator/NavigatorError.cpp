@@ -26,6 +26,8 @@ class NavigatorErrorCategory : public std::error_category {
         return "We did not end up inside the volume.";
       case NavigatorError::NotOnExpectedSurface:
         return "Stepper not on surface";
+      case NavigatorError::NoStartVolume:
+        return "No start volume could be resolved";
       default:
         return "unknown";
     }

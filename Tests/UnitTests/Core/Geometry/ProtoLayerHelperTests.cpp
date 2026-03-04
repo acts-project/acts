@@ -12,12 +12,12 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 #include <cstddef>
 #include <string>
@@ -28,16 +28,18 @@ namespace Acts {
 class Surface;
 }  // namespace Acts
 
-namespace Acts::Test::Layers {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   ProtoLayerHelper::Config plhConfig;
   ProtoLayerHelper plHelper(
       plhConfig, getDefaultLogger("ProtoLayerHelper", Logging::VERBOSE));
 
-  GeometryContext tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
   ObjVisualization3D objVis;
 
@@ -55,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   std::vector<const Surface*> cylinderSurfaces;
   for (std::size_t ilp = 0; ilp < layerRadii.size(); ++ilp) {
-    std::vector<Acts::Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
+    std::vector<Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
         dStore, moduleHalfX[ilp], moduleHalfY[ilp], moduleThickness[ilp],
         moduleTiltPhi[ilp], layerRadii[ilp], 2., 5., layerBinning[ilp]);
     cylinderSurfaces.insert(cylinderSurfaces.begin(), layerSurfaces.begin(),
@@ -112,7 +114,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
-    std::vector<Acts::Surface*> layerSurfaces = ctGeometry.surfacesRing(
+    std::vector<Surface*> layerSurfaces = ctGeometry.surfacesRing(
         dStore, dModuleHalfXMinY[ilp], dModuleHalfXMaxY[ilp], dModuleHalfY[ilp],
         dModuleThickness[ilp], dModuleTilt[ilp], discRadii[ilp], discZ[ilp], 2.,
         discModules[ilp]);
@@ -163,7 +165,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> rModuleThickness(11, 0.15);
 
   for (std::size_t ilp = 0; ilp < ringZ.size(); ++ilp) {
-    std::vector<Acts::Surface*> layerSurfaces = ctGeometry.surfacesRing(
+    std::vector<Surface*> layerSurfaces = ctGeometry.surfacesRing(
         dStore, rModuleHalfXMinY[ilp], rModuleHalfXMaxY[ilp], rModuleHalfY[ilp],
         rModuleThickness[ilp], rModuleTilt[ilp], ringRadii[ilp], ringZ[ilp], 2.,
         ringModules[ilp]);
@@ -223,4 +225,4 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test::Layers
+}  // namespace ActsTests

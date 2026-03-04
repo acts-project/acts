@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
@@ -30,16 +31,20 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 namespace bdata = boost::unit_test::data;
 
-BOOST_AUTO_TEST_SUITE(NavigationPolicyTests)
+namespace ActsTests {
 
-GeometryContext gctx;
+BOOST_AUTO_TEST_SUITE(NavigationSuite)
+
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 auto logger = getDefaultLogger("NavigationPolicyTests", Logging::VERBOSE);
 
 struct APolicy : public INavigationPolicy {
   APolicy(const GeometryContext& /*gctx*/, const TrackingVolume& /*volume*/,
           const Logger& /*logger*/) {}
 
-  void initializeCandidates(const NavigationArguments& /*unused*/,
+  void initializeCandidates(const GeometryContext& /*unused*/,
+                            const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*unused*/,
                             const Logger& /*unused*/) const {
     const_cast<APolicy*>(this)->executed = true;
@@ -65,7 +70,9 @@ struct BPolicy : public INavigationPolicy {
     connectDefault<BPolicy>(delegate);
   }
 
-  void initializeCandidates(const NavigationArguments& /*unused*/,
+  void initializeCandidates(const GeometryContext& /*unused*/,
+                            const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*unused*/,
                             const Logger& /*unused*/) const {
     const_cast<BPolicy*>(this)->executed = true;
@@ -94,9 +101,13 @@ BOOST_AUTO_TEST_CASE(DirectTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
   const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
@@ -131,9 +142,13 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
   const auto& policyA = dynamic_cast<const APolicy&>(*policy.policies()[0]);
@@ -148,9 +163,11 @@ BOOST_AUTO_TEST_CASE(FactoryTest) {
   NavigationDelegate delegate2;
   policyBase2->connect(delegate2);
 
-  delegate2(NavigationArguments{.position = Vector3::Zero(),
-                                .direction = Vector3::Zero()},
-            stream, *logger);
+  NavigationPolicyStateManager stateManager2;
+  stateManager2.pushState<MultiNavigationPolicy::State>();
+  policy2.createState(gctx, args, stateManager2, *logger);
+  auto policyState2 = stateManager2.currentState();
+  delegate2(gctx, args, policyState2, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy2.policies().size(), 2);
   const auto& policy2A = dynamic_cast<const APolicy&>(*policy2.policies()[0]);
@@ -178,9 +195,13 @@ BOOST_AUTO_TEST_CASE(AsUniquePtrTest) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 1);
   BOOST_CHECK(dynamic_cast<const APolicy&>(*policy.policies()[0]).executed);
@@ -201,7 +222,9 @@ struct CPolicySpecialized : public CPolicy {
     connectDefault<CPolicySpecialized<T>>(delegate);
   }
 
-  void initializeCandidates(const NavigationArguments& /*unused*/,
+  void initializeCandidates(const GeometryContext& /*unused*/,
+                            const NavigationArguments& /*unused*/,
+                            NavigationPolicyState& /*unused*/,
                             AppendOnlyNavigationStream& /*stream*/,
                             const Logger& /*logger*/) const {
     auto* self = const_cast<CPolicySpecialized<int>*>(this);
@@ -247,9 +270,13 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
 
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  delegate(NavigationArguments{.position = Vector3::Zero(),
-                               .direction = Vector3::Zero()},
-           stream, *logger);
+  NavigationArguments args{.position = Vector3::Zero(),
+                           .direction = Vector3::Zero()};
+  NavigationPolicyStateManager stateManager;
+  stateManager.pushState<MultiNavigationPolicy::State>();
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  delegate(gctx, args, policyState, stream, *logger);
 
   BOOST_REQUIRE_EQUAL(policy.policies().size(), 2);
 
@@ -276,22 +303,26 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   NavigationArguments args{.position = gpos, .direction = gdir};
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  tryAll.initializeCandidates(args, stream, logger);
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  NavigationPolicyStateManager stateManager;
+  tryAll.createState(gctx, args, stateManager, logger);
+  auto policyState = stateManager.currentState();
+  tryAll.initializeCandidates(gctx, args, policyState, stream, logger);
   main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
   std::vector<const Portal*> portals;
   for (auto& candidate : main.candidates()) {
-    if (!candidate.intersection.isValid()) {
+    if (!candidate.intersection().isValid()) {
       continue;
     }
 
     if (main.candidates().size() > 1 && posOnly &&
-        !detail::checkPathLength(candidate.intersection.pathLength(),
+        !detail::checkPathLength(candidate.intersection().pathLength(),
                                  s_onSurfaceTolerance,
                                  std::numeric_limits<double>::max(), logger)) {
       continue;
     }
 
-    portals.push_back(candidate.portal);
+    portals.push_back(&candidate.portal());
   }
 
   // Find portal types
@@ -301,16 +332,17 @@ std::vector<const Portal*> getTruth(const Vector3& position,
   const Portal* negativeDisc = nullptr;
 
   for (const Portal* portal : portals) {
-    if (portal == shell.portal(CylinderVolumeBounds::Face::OuterCylinder)) {
+    if (portal ==
+        shell.portal(CylinderVolumeBounds::Face::OuterCylinder).get()) {
       outerCylinder = portal;
     } else if (portal ==
-               shell.portal(CylinderVolumeBounds::Face::InnerCylinder)) {
+               shell.portal(CylinderVolumeBounds::Face::InnerCylinder).get()) {
       innerCylinder = portal;
     } else if (portal ==
-               shell.portal(CylinderVolumeBounds::Face::PositiveDisc)) {
+               shell.portal(CylinderVolumeBounds::Face::PositiveDisc).get()) {
       positiveDisc = portal;
     } else if (portal ==
-               shell.portal(CylinderVolumeBounds::Face::NegativeDisc)) {
+               shell.portal(CylinderVolumeBounds::Face::NegativeDisc).get()) {
       negativeDisc = portal;
     }
   }
@@ -357,14 +389,18 @@ std::vector<const Portal*> getSmart(const Vector3& position,
   Vector3 gdir = transform.linear() * direction;
   NavigationArguments args{.position = gpos, .direction = gdir};
   NavigationStream main;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
   AppendOnlyNavigationStream stream{main};
-  policy.initializeCandidates(args, stream, *logger);
+  NavigationPolicyStateManager stateManager;
+  policy.createState(gctx, args, stateManager, *logger);
+  auto policyState = stateManager.currentState();
+  policy.initializeCandidates(gctx, args, policyState, stream, *logger);
 
   std::vector<const Portal*> portals;
   // We don't filter here, because we want to test the candidates as they come
   // out of the policy
   for (auto& candidate : main.candidates()) {
-    portals.push_back(candidate.portal);
+    portals.push_back(&candidate.portal());
   }
   return portals;
 }
@@ -373,16 +409,16 @@ void checkEqual(const std::vector<const Portal*>& exp,
                 const std::vector<const Portal*>& act,
                 SingleCylinderPortalShell& shell) {
   auto which = [&](const Portal* p) -> std::string {
-    if (p == shell.portal(CylinderVolumeBounds::Face::InnerCylinder)) {
+    if (p == shell.portal(CylinderVolumeBounds::Face::InnerCylinder).get()) {
       return "InnerCylinder";
     }
-    if (p == shell.portal(CylinderVolumeBounds::Face::OuterCylinder)) {
+    if (p == shell.portal(CylinderVolumeBounds::Face::OuterCylinder).get()) {
       return "OuterCylinder";
     }
-    if (p == shell.portal(CylinderVolumeBounds::Face::PositiveDisc)) {
+    if (p == shell.portal(CylinderVolumeBounds::Face::PositiveDisc).get()) {
       return "PositiveDisc";
     }
-    if (p == shell.portal(CylinderVolumeBounds::Face::NegativeDisc)) {
+    if (p == shell.portal(CylinderVolumeBounds::Face::NegativeDisc).get()) {
       return "NegativeDisc";
     }
     BOOST_FAIL("Unknown portal");
@@ -429,7 +465,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{*cylVolume};
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
   shell.applyToVolume();
 
   {
@@ -440,7 +476,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
+    BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -455,7 +491,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -470,7 +506,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -485,7 +521,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
+    BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -500,7 +536,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -515,7 +551,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -530,7 +566,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -545,7 +581,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
+    BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -560,7 +596,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
+    BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -578,7 +614,7 @@ BOOST_DATA_TEST_CASE(
                         *logger, false);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -596,7 +632,7 @@ BOOST_DATA_TEST_CASE(
                         *logger, false);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -614,7 +650,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK(exp.size() == 1);
-    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -632,7 +668,7 @@ BOOST_DATA_TEST_CASE(
         getTruth(position, direction, transform, *cylVolume, shell, *logger);
 
     BOOST_CHECK_EQUAL(exp.size(), 1);
-    BOOST_CHECK_EQUAL(exp.at(0), shell.portal(InnerCylinder));
+    BOOST_CHECK_EQUAL(exp.at(0), shell.portal(InnerCylinder).get());
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger);
     auto act = getSmart(position, direction, transform, policy);
@@ -680,7 +716,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{*cylVolume};
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
@@ -717,7 +753,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{*cylVolume};
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
@@ -751,7 +787,7 @@ BOOST_DATA_TEST_CASE(
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
       std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
-  SingleCylinderPortalShell shell{*cylVolume};
+  SingleCylinderPortalShell shell{gctx, *cylVolume};
   shell.applyToVolume();
 
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos),
@@ -788,3 +824,5 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyZeroInnerRadiusTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

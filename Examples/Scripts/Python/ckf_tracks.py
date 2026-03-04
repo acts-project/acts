@@ -5,7 +5,8 @@ from typing import Optional
 
 import acts
 from acts import UnitConstants as u
-from acts.examples import GenericDetector, RootParticleReader
+from acts.examples import GenericDetector
+from acts.examples.root import RootParticleReader
 
 
 def runCKFTracks(
@@ -64,8 +65,8 @@ def runCKFTracks(
             rnd=rnd,
         )
     else:
-        acts.logging.getLogger("CKFExample").info(
-            "Reading particles from %s", inputParticlePath.resolve()
+        acts.getDefaultLogger("CKFExample", acts.logging.INFO).info(
+            "Reading particles from {}", inputParticlePath.resolve()
         )
         assert inputParticlePath.exists()
         s.addReader(
@@ -105,7 +106,7 @@ def runCKFTracks(
         trackingGeometry,
         field,
         TrackSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
-            # zero eveything so the CKF has a chance to find the measurements
+            # zero everything so the CKF has a chance to find the measurements
             loc0=0,
             loc0PtA=0,
             loc0PtB=0,

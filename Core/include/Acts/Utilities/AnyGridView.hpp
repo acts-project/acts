@@ -53,13 +53,17 @@ class AnyGridView {
   }
 
   /// Copy constructor
+  /// @param other The AnyGridView to copy from
   AnyGridView(const AnyGridView& other) = default;
   /// Copy assignment operator
+  /// @param other The AnyGridView to copy from
+  /// @return Reference to this AnyGridView after copying
   AnyGridView& operator=(const AnyGridView& other) = default;
 
   /// Move constructor
   AnyGridView(AnyGridView&&) noexcept = default;
   /// Move assignment operator
+  /// @return Reference to this AnyGridView after moving
   AnyGridView& operator=(AnyGridView&&) noexcept = default;
 
   /// @brief Access value at given local bin indices with mutable access
@@ -120,12 +124,14 @@ class AnyGridView {
     }
   }
 
+  /// Type-erased pointer to the underlying grid
   GridPointerType m_grid;
 };
 
 /// @brief Deduction guide for AnyGridView from Grid
 /// @tparam T Type of values stored in the grid
 /// @tparam Axes Parameter pack of axis types defining the grid
+/// @param grid The grid to create a view for
 template <typename T, typename... Axes>
 AnyGridView(Grid<T, Axes...>& grid) -> AnyGridView<T>;
 
@@ -214,12 +220,14 @@ class AnyGridConstView {
     }
   }
 
+  /// Type-erased pointer to the underlying const grid
   GridPointerType m_grid;
 };
 
 /// @brief Deduction guide for AnyGridConstView from const Grid
 /// @tparam T Type of values stored in the grid
 /// @tparam Axes Parameter pack of axis types defining the grid
+/// @param grid The const grid to create a view for
 template <typename T, typename... Axes>
 AnyGridConstView(const Grid<T, Axes...>& grid) -> AnyGridConstView<T>;
 

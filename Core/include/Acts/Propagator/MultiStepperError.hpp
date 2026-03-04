@@ -13,16 +13,28 @@
 
 namespace Acts {
 
+/// Error codes for multi-stepper operations
+/// @ingroup errors
 enum class MultiStepperError {
   // ensure all values are non-zero
+  /// Component is not on a surface
   ComponentNotOnSurface = 1,
+  /// The global BoundState/CurvilinearState can only be computed if only one
+  /// component exists
   StateOfMultipleComponentsRequested = 2,
+  /// The average track has left the current volume
   AverageTrackLeftCurrentVolume = 3,
+  /// Stepping error occurred in all components
   AllComponentsSteppingError = 4,
+  /// The conversion to the bound state failed for all components
   AllComponentsConversionToBoundFailed = 5,
+  /// The conversion to the bound state failed for some components
   SomeComponentsConversionToBoundFailed = 6
 };
 
+/// Create error code from MultiStepperError
+/// @param e The error code enum value
+/// @return Standard error code
 std::error_code make_error_code(Acts::MultiStepperError e);
 
 }  // namespace Acts

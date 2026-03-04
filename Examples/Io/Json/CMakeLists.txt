@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesIoJson
-    SHARED
     src/JsonGeometryList.cpp
     src/JsonMaterialWriter.cpp
     src/JsonSurfacesWriter.cpp

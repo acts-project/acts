@@ -31,7 +31,7 @@ pygments==2.6.1
     # via rich
 pyjwt==1.7.1
     # via pygithub
-pyyaml==5.3.1
+pyyaml==5.4.1
     # via acts-ci (pyproject.toml)
 requests==2.24.0
     # via pygithub

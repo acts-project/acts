@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -34,7 +34,7 @@
 #define SSE_STATUS_FLAGS FPU_EXCEPTION_MASK
 #define SSE_EXCEPTION_MASK (FPU_EXCEPTION_MASK << 7)
 
-namespace Acts {
+namespace ActsPlugins {
 
 namespace {
 bool areFpesEquivalent(
@@ -227,7 +227,7 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   *mxcsr |= ((*mxcsr & SSE_STATUS_FLAGS) << 7);
   *mxcsr &= ~SSE_STATUS_FLAGS;  // clear all pending SSE exceptions
 #else
-  (void)ctx;
+  static_cast<void>(ctx);
 #endif
 }
 
@@ -247,7 +247,7 @@ void FpeMonitor::enable() {
 
   stack().push(this);
 #else
-  (void)m_excepts;
+  static_cast<void>(m_excepts);
 #endif
 }
 
@@ -340,4 +340,4 @@ bool FpeMonitor::canSymbolize() {
 #endif
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

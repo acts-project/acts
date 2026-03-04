@@ -95,6 +95,7 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
 
   /// @brief Configure this node to order eligible tracking volumes using the provided
   /// function
+  /// @param compare Function to use for sorting volumes
   /// @return Reference to this node for method chaining
   GeometryIdentifierBlueprintNode& sortBy(const CompareVolumes& compare);
 

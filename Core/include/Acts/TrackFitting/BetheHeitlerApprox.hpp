@@ -8,90 +8,108 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/TrackFitting/detail/GsfUtils.hpp"
-
-#include <algorithm>
-#include <array>
-#include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <fstream>
-#include <mutex>
 #include <numbers>
-#include <random>
-#include <stdexcept>
+#include <span>
 #include <string>
-#include <tuple>
-
-#include <boost/container/static_vector.hpp>
+#include <vector>
 
 namespace Acts {
 
 namespace detail {
 
 struct GaussianComponent {
-  double weight = 0.0;
-  double mean = 0.0;
-  double var = 0.0;
+  double weight = 0;
+  double mean = 0;
+  double var = 0;
 };
 
 /// Transform a gaussian component to a space where all values are defined from
 /// [-inf, inf]
-inline void transformComponent(const GaussianComponent &cmp,
-                               double &transformed_weight,
-                               double &transformed_mean,
-                               double &transformed_var) {
-  const auto &[weight, mean, var] = cmp;
-
-  transformed_weight = std::log(weight) - std::log(1 - weight);
-  transformed_mean = std::log(mean) - std::log(1 - mean);
-  transformed_var = std::log(var);
+inline GaussianComponent transformComponent(const GaussianComponent &cmp) {
+  GaussianComponent transformed_cmp;
+  transformed_cmp.weight = std::log(cmp.weight) - std::log(1 - cmp.weight);
+  transformed_cmp.mean = std::log(cmp.mean) - std::log(1 - cmp.mean);
+  transformed_cmp.var = std::log(cmp.var);
+  return transformed_cmp;
 }
 
 /// Transform a gaussian component back from the [-inf, inf]-space to the usual
 /// space
-inline auto inverseTransformComponent(double transformed_weight,
-                                      double transformed_mean,
-                                      double transformed_var) {
+inline GaussianComponent inverseTransformComponent(
+    const GaussianComponent &transformed_cmp) {
   GaussianComponent cmp;
-  cmp.weight = 1. / (1 + std::exp(-transformed_weight));
-  cmp.mean = 1. / (1 + std::exp(-transformed_mean));
-  cmp.var = std::exp(transformed_var);
-
+  cmp.weight = 1 / (1 + std::exp(-transformed_cmp.weight));
+  cmp.mean = 1 / (1 + std::exp(-transformed_cmp.mean));
+  cmp.var = std::exp(transformed_cmp.var);
   return cmp;
 }
 
 }  // namespace detail
 
+/// @addtogroup track_fitting
+/// @{
+
+/// Interface for Bethe-Heitler Gaussian mixture approximations.
+/// @ingroup material
+class BetheHeitlerApprox {
+ public:
+  /// Type alias for Gaussian mixture component
+  using Component = detail::GaussianComponent;
+
+  virtual ~BetheHeitlerApprox() = default;
+
+  /// Maximum number of components in the mixture
+  /// @return Maximum number of components
+  virtual std::size_t maxComponents() const = 0;
+
+  /// Check if x/X0 value is valid for this approximation
+  /// @param xOverX0 Material thickness in radiation lengths
+  /// @return True if value is valid
+  virtual bool validXOverX0(double xOverX0) const = 0;
+
+  /// Compute mixture for given x/X0
+  /// @param xOverX0 Material thickness in radiation lengths
+  /// @param mixture Output span for mixture components
+  /// @return Span of computed mixture components
+  virtual std::span<Component> mixture(double xOverX0,
+                                       std::span<Component> mixture) const = 0;
+};
+
 /// This class approximates the Bethe-Heitler with only one component. This is
 /// mainly inside @ref AtlasBetheHeitlerApprox, but can also be used as the
 /// only component approximation (then probably for debugging)
-struct BetheHeitlerApproxSingleCmp {
+/// @ingroup material
+class BetheHeitlerApproxSingleCmp final : public BetheHeitlerApprox {
+ public:
   /// Returns the number of components the returned mixture will have
-  constexpr auto numComponents() const { return 1; }
+  /// @return Number of components (always 1 for single component approximation)
+  std::size_t maxComponents() const override { return 1; }
 
   /// Checks if an input is valid for the parameterization. The threshold for
   /// x/x0 is 0.002 and orientates on the values used in ATLAS
-  constexpr bool validXOverX0(double x) const {
-    return x < 0.002;
-    ;
+  /// @param xOverX0 The x/x0 value to check
+  /// @return True if x/x0 is below the threshold for single component approximation
+  bool validXOverX0(const double xOverX0) const override {
+    return xOverX0 < 0.002;
   }
 
   /// Returns array with length 1 containing a 1-component-representation of the
   /// Bethe-Heitler-Distribution
   ///
-  /// @param x pathlength in terms of the radiation length
-  static auto mixture(const double x) {
-    std::array<detail::GaussianComponent, 1> ret{};
+  /// @param xOverX0 pathlength in terms of the radiation length
+  /// @param mixture preallocated array to store the result
+  /// @return the unmodified input span containing the single component
+  std::span<Component> mixture(
+      const double xOverX0, const std::span<Component> mixture) const override {
+    mixture[0].weight = 1.0;
 
-    ret[0].weight = 1.0;
+    const double c = xOverX0 / std::numbers::ln2;
+    mixture[0].mean = std::pow(2, -c);
+    mixture[0].var = std::pow(3, -c) - std::pow(4, -c);
 
-    const double c = x / std::numbers::ln2;
-    ret[0].mean = std::pow(2, -c);
-    ret[0].var = std::pow(3, -c) - std::pow(4, -c);
-
-    return ret;
+    return mixture;
   }
 };
 
@@ -102,33 +120,41 @@ struct BetheHeitlerApproxSingleCmp {
 /// @todo This class is rather inflexible: It forces two data representations,
 /// making it a bit awkward to add a single parameterization. It would be good
 /// to generalize this at some point.
-template <int NComponents, int PolyDegree>
-class AtlasBetheHeitlerApprox {
-  static_assert(NComponents > 0);
-  static_assert(PolyDegree > 0);
-
+/// @ingroup material
+class AtlasBetheHeitlerApprox : public BetheHeitlerApprox {
  public:
+  /// Polynomial coefficient sets for a Gaussian mixture component.
   struct PolyData {
-    std::array<double, PolyDegree + 1> weightCoeffs;
-    std::array<double, PolyDegree + 1> meanCoeffs;
-    std::array<double, PolyDegree + 1> varCoeffs;
+    /// Polynomial coefficients for component weight
+    std::vector<double> weightCoeffs;
+    /// Polynomial coefficients for component mean
+    std::vector<double> meanCoeffs;
+    /// Polynomial coefficients for component variance
+    std::vector<double> varCoeffs;
   };
 
-  using Data = std::array<PolyData, NComponents>;
+  /// Type alias for array of polynomial data for all components
+  using Data = std::vector<PolyData>;
 
- private:
-  Data m_lowData;
-  Data m_highData;
-  bool m_lowTransform;
-  bool m_highTransform;
+  /// Loads a parameterization from a file according to the Atlas file
+  /// description
+  ///
+  /// @param low_parameters_path Path to the foo.par file that stores
+  /// the parameterization for low x/x0
+  /// @param high_parameters_path Path to the foo.par file that stores
+  /// the parameterization for high x/x0
+  /// @param lowLimit the upper limit for the low x/x0-data
+  /// @param highLimit the upper limit for the high x/x0-data
+  /// @param clampToRange forwarded to constructor
+  /// @param noChangeLimit forwarded to constructor
+  /// @param singleGaussianLimit forwarded to constructor
+  /// @return AtlasBetheHeitlerApprox instance loaded from parameter files
+  static AtlasBetheHeitlerApprox loadFromFiles(
+      const std::string &low_parameters_path,
+      const std::string &high_parameters_path, double lowLimit,
+      double highLimit, bool clampToRange, double noChangeLimit,
+      double singleGaussianLimit);
 
-  constexpr static double m_noChangeLimit = 0.0001;
-  constexpr static double m_singleGaussianLimit = 0.002;
-  double m_lowLimit = 0.10;
-  double m_highLimit = 0.20;
-  bool m_clampToRange = false;
-
- public:
   /// Construct the Bethe-Heitler approximation description with two
   /// parameterizations, one for lower ranges, one for higher ranges.
   /// Is it assumed that the lower limit of the high-x/x0 data is equal
@@ -141,177 +167,71 @@ class AtlasBetheHeitlerApprox {
   /// @param lowLimit the upper limit for the low data
   /// @param highLimit the upper limit for the high data
   /// @param clampToRange whether to clamp the input x/x0 to the allowed range
-  constexpr AtlasBetheHeitlerApprox(const Data &lowData, const Data &highData,
-                                    bool lowTransform, bool highTransform,
-                                    double lowLimit = 0.1,
-                                    double highLimit = 0.2,
-                                    bool clampToRange = false)
+  /// @param noChangeLimit limit below which no change is applied
+  /// @param singleGaussianLimit limit below which a single Gaussian is used
+  AtlasBetheHeitlerApprox(const Data &lowData, const Data &highData,
+                          bool lowTransform, bool highTransform,
+                          double lowLimit, double highLimit, bool clampToRange,
+                          double noChangeLimit, double singleGaussianLimit)
       : m_lowData(lowData),
         m_highData(highData),
         m_lowTransform(lowTransform),
         m_highTransform(highTransform),
         m_lowLimit(lowLimit),
         m_highLimit(highLimit),
-        m_clampToRange(clampToRange) {}
+        m_clampToRange(clampToRange),
+        m_noChangeLimit(noChangeLimit),
+        m_singleGaussianLimit(singleGaussianLimit) {}
 
   /// Returns the number of components the returned mixture will have
-  constexpr auto numComponents() const { return NComponents; }
+  /// @return Number of components in the mixture
+  std::size_t maxComponents() const override {
+    return std::max(m_lowData.size(), m_highData.size());
+  }
 
   /// Checks if an input is valid for the parameterization
   ///
-  /// @param x pathlength in terms of the radiation length
-  constexpr bool validXOverX0(double x) const {
+  /// @param xOverX0 pathlength in terms of the radiation length
+  /// @return True if x/x0 is within valid range for this parameterization
+  bool validXOverX0(const double xOverX0) const override {
     if (m_clampToRange) {
       return true;
     } else {
-      return x < m_highLimit;
+      return xOverX0 < m_highLimit;
     }
   }
 
   /// Generates the mixture from the polynomials and reweights them, so
   /// that the sum of all weights is 1
   ///
-  /// @param x pathlength in terms of the radiation length
-  auto mixture(double x) const {
-    using Array =
-        boost::container::static_vector<detail::GaussianComponent, NComponents>;
+  /// @param xOverX0 pathlength in terms of the radiation length
+  /// @param mixture preallocated array to store the result
+  /// @return the potentially modified input span containing the mixture
+  std::span<Component> mixture(
+      double xOverX0, const std::span<Component> mixture) const override;
 
-    if (m_clampToRange) {
-      x = std::clamp(x, 0.0, m_highLimit);
-    }
-
-    // Build a polynom
-    auto poly = [](double xx,
-                   const std::array<double, PolyDegree + 1> &coeffs) {
-      double sum{0.};
-      for (const auto c : coeffs) {
-        sum = xx * sum + c;
-      }
-      assert((std::isfinite(sum) && "polynom result not finite"));
-      return sum;
-    };
-
-    // Lambda which builds the components
-    auto make_mixture = [&](const Data &data, double xx, bool transform) {
-      // Value initialization should garanuee that all is initialized to zero
-      Array ret(NComponents);
-      double weight_sum = 0;
-      for (int i = 0; i < NComponents; ++i) {
-        // These transformations must be applied to the data according to ATHENA
-        // (TrkGaussianSumFilter/src/GsfCombinedMaterialEffects.cxx:79)
-        if (transform) {
-          ret[i] = detail::inverseTransformComponent(
-              poly(xx, data[i].weightCoeffs), poly(xx, data[i].meanCoeffs),
-              poly(xx, data[i].varCoeffs));
-        } else {
-          ret[i].weight = poly(xx, data[i].weightCoeffs);
-          ret[i].mean = poly(xx, data[i].meanCoeffs);
-          ret[i].var = poly(xx, data[i].varCoeffs);
-        }
-
-        weight_sum += ret[i].weight;
-      }
-
-      for (int i = 0; i < NComponents; ++i) {
-        ret[i].weight /= weight_sum;
-      }
-
-      return ret;
-    };
-
-    // Return no change
-    if (x < m_noChangeLimit) {
-      Array ret(1);
-
-      ret[0].weight = 1.0;
-      ret[0].mean = 1.0;  // p_initial = p_final
-      ret[0].var = 0.0;
-
-      return ret;
-    }
-    // Return single gaussian approximation
-    if (x < m_singleGaussianLimit) {
-      Array ret(1);
-      ret[0] = BetheHeitlerApproxSingleCmp::mixture(x)[0];
-      return ret;
-    }
-    // Return a component representation for lower x0
-    if (x < m_lowLimit) {
-      return make_mixture(m_lowData, x, m_lowTransform);
-    }
-    // Return a component representation for higher x0
-    // Cap the x because beyond the parameterization goes wild
-    const auto high_x = std::min(m_highLimit, x);
-    return make_mixture(m_highData, high_x, m_highTransform);
-  }
-
-  /// Loads a parameterization from a file according to the Atlas file
-  /// description
-  ///
-  /// @param low_parameters_path Path to the foo.par file that stores
-  /// the parameterization for low x/x0
-  /// @param high_parameters_path Path to the foo.par file that stores
-  /// the parameterization for high x/x0
-  /// @param lowLimit the upper limit for the low x/x0-data
-  /// @param highLimit the upper limit for the high x/x0-data
-  /// @param clampToRange forwarded to constructor
-  static auto loadFromFiles(const std::string &low_parameters_path,
-                            const std::string &high_parameters_path,
-                            double lowLimit = 0.1, double highLimit = 0.2,
-                            bool clampToRange = false) {
-    auto read_file = [](const std::string &filepath) {
-      std::ifstream file(filepath);
-
-      if (!file) {
-        throw std::invalid_argument("Could not open '" + filepath + "'");
-      }
-
-      std::size_t n_cmps = 0, degree = 0;
-      bool transform_code = false;
-
-      file >> n_cmps >> degree >> transform_code;
-
-      if (NComponents != n_cmps) {
-        throw std::invalid_argument("Wrong number of components in '" +
-                                    filepath + "'");
-      }
-
-      if (PolyDegree != degree) {
-        throw std::invalid_argument("Wrong polynom order in '" + filepath +
-                                    "'");
-      }
-
-      Data data;
-
-      for (auto &cmp : data) {
-        for (auto &coeff : cmp.weightCoeffs) {
-          file >> coeff;
-        }
-        for (auto &coeff : cmp.meanCoeffs) {
-          file >> coeff;
-        }
-        for (auto &coeff : cmp.varCoeffs) {
-          file >> coeff;
-        }
-      }
-
-      return std::make_tuple(data, transform_code);
-    };
-
-    const auto [lowData, lowTransform] = read_file(low_parameters_path);
-    const auto [highData, highTransform] = read_file(high_parameters_path);
-
-    return AtlasBetheHeitlerApprox(lowData, highData, lowTransform,
-                                   highTransform, lowLimit, highLimit,
-                                   clampToRange);
-  }
+ private:
+  Data m_lowData;
+  Data m_highData;
+  bool m_lowTransform = false;
+  bool m_highTransform = false;
+  double m_lowLimit = 0;
+  double m_highLimit = 0;
+  bool m_clampToRange = false;
+  double m_noChangeLimit = 0;
+  double m_singleGaussianLimit = 0;
 };
 
 /// Creates a @ref AtlasBetheHeitlerApprox object based on an ATLAS
 /// configuration, that are stored as static data in the source code.
 /// This may not be an optimal configuration, but should allow to run
 /// the GSF without the need to load files
-AtlasBetheHeitlerApprox<6, 5> makeDefaultBetheHeitlerApprox(
+/// @param clampToRange Whether to clamp values to the valid range
+/// @return AtlasBetheHeitlerApprox with default ATLAS configuration parameters
+/// @ingroup material
+AtlasBetheHeitlerApprox makeDefaultBetheHeitlerApprox(
     bool clampToRange = false);
+
+/// @}
 
 }  // namespace Acts

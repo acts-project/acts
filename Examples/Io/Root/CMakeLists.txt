@@ -1,8 +1,6 @@
 acts_add_library(
     ExamplesIoRoot
-    SHARED
     src/RootMeasurementWriter.cpp
-    src/RootMaterialDecorator.cpp
     src/RootMaterialWriter.cpp
     src/RootMaterialTrackReader.cpp
     src/RootMaterialTrackWriter.cpp
@@ -13,7 +11,7 @@ acts_add_library(
     src/RootSeedWriter.cpp
     src/RootSimHitWriter.cpp
     src/RootSimHitReader.cpp
-    src/RootSpacepointWriter.cpp
+    src/RootSpacePointWriter.cpp
     src/RootTrackParameterWriter.cpp
     src/RootTrackStatesWriter.cpp
     src/RootTrackSummaryReader.cpp
@@ -25,10 +23,13 @@ acts_add_library(
     src/RootAthenaDumpReader.cpp
     src/RootNuclearInteractionParametersWriter.cpp
     src/detail/NuclearInteractionParametrisation.cpp
-    src/TrackFinderPerformanceWriter.cpp
-    src/TrackFinderNTupleWriter.cpp
-    src/TrackFitterPerformanceWriter.cpp
-    src/VertexNTupleWriter.cpp
+    src/RootTrackFinderPerformanceWriter.cpp
+    src/RootTrackFinderNTupleWriter.cpp
+    src/RootTrackFitterPerformanceWriter.cpp
+    src/RootVertexNTupleWriter.cpp
+    src/RootMuonSpacePointWriter.cpp
+    src/RootMuonSpacePointReader.cpp
+    src/RootMeasurementPerformanceWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot
@@ -44,7 +45,7 @@ target_link_libraries(
         Acts::ExamplesTruthTracking
         Acts::ExamplesMaterialMapping
         Threads::Threads
-    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree
+    PRIVATE ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer
 )
 
 root_generate_dictionary(

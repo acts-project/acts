@@ -10,18 +10,13 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
-#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <memory>
 #include <ostream>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -52,12 +47,11 @@ Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
   m_cosIncidentAngleMaxCutoff = freeToBoundCorrection.cosIncidentAngleMaxCutoff;
 }
 
-std::optional<std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>>
+std::optional<std::tuple<Acts::BoundVector, Acts::BoundMatrix>>
 Acts::detail::CorrectedFreeToBoundTransformer::operator()(
-    const Acts::FreeVector& freeParams,
-    const Acts::FreeSquareMatrix& freeCovariance, const Acts::Surface& surface,
-    const Acts::GeometryContext& geoContext, Direction navDir,
-    const Logger& logger) const {
+    const Acts::FreeVector& freeParams, const Acts::FreeMatrix& freeCovariance,
+    const Acts::Surface& surface, const Acts::GeometryContext& geoContext,
+    Direction navDir, const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal =
@@ -81,10 +75,10 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   sampledFreeParams.reserve(sampleSize);
 
   // Initialize the covariance sqrt root matrix
-  FreeSquareMatrix covSqrt = FreeSquareMatrix::Zero();
+  FreeMatrix covSqrt = FreeMatrix::Zero();
   // SVD decomposition: freeCovariance = U*S*U^T here
-  Eigen::JacobiSVD<FreeSquareMatrix> svd(
-      freeCovariance, Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Eigen::JacobiSVD<FreeMatrix> svd(freeCovariance,
+                                   Eigen::ComputeFullU | Eigen::ComputeFullV);
   auto S = svd.singularValues();
   FreeMatrix U = svd.matrixU();
   // Get the sqrt root matrix of S
@@ -120,7 +114,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   // Initialize the mean of the bound parameters
   BoundVector bpMean = BoundVector::Zero();
   // Initialize the bound covariance
-  BoundSquareMatrix bv = BoundSquareMatrix::Zero();
+  BoundMatrix bv = BoundMatrix::Zero();
 
   // The transformed bound parameters and weight for each sampled free
   // parameters
@@ -150,7 +144,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     FreeVector correctedFreeParams = params;
 
     // Reintersect to get the corrected free params without boundary check
-    SurfaceIntersection intersection =
+    Intersection3D intersection =
         surface
             .intersect(geoContext, params.segment<3>(eFreePos0),
                        navDir * params.segment<3>(eFreeDir0),

@@ -33,7 +33,7 @@ class TrackDensityVertexFinder final : public IVertexFinder {
  public:
   /// @brief The Config struct
   struct Config {
-    // The track density estimator
+    /// The track density estimator for vertex finding
     GaussianTrackDensity trackDensityEstimator;
   };
 

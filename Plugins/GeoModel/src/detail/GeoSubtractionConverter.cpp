@@ -6,18 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/GeoModel/detail/GeoSubtractionConverter.hpp"
+#include "ActsPlugins/GeoModel/detail/GeoSubtractionConverter.hpp"
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConversionError.hpp"
-#include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
-#include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConversionError.hpp"
+#include "ActsPlugins/GeoModel/GeoModelConverters.hpp"
+#include "ActsPlugins/GeoModel/IGeoShapeConverter.hpp"
 
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoLogVol.h>
@@ -26,15 +26,17 @@
 #include <GeoModelKernel/GeoShapeShift.h>
 #include <GeoModelKernel/Units.h>
 
-Acts::Result<Acts::GeoModelSensitiveSurface>
-Acts::detail::GeoSubtractionConverter::operator()(
+using namespace Acts;
+
+Result<ActsPlugins::GeoModelSensitiveSurface>
+ActsPlugins::detail::GeoSubtractionConverter::operator()(
     [[maybe_unused]] const PVConstLink& geoPV,
     const GeoShapeSubtraction& geoSub, const Transform3& absTransform,
     SurfaceBoundFactory& boundFactory, [[maybe_unused]] bool sensitive) const {
   const GeoShape* shapeA = geoSub.getOpA();
   int shapeId = shapeA->typeID();
-  std::shared_ptr<const Acts::IGeoShapeConverter> converter =
-      Acts::geoShapesConverters(shapeId);
+  std::shared_ptr<const IGeoShapeConverter> converter =
+      geoShapesConverters(shapeId);
   if (converter == nullptr) {
     throw std::runtime_error("The converter for " + shapeA->type() +
                              " is nullptr");

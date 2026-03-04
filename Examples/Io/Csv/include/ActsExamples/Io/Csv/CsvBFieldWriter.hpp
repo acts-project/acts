@@ -25,6 +25,7 @@ class MagneticFieldProvider;
 }  // namespace Acts
 
 namespace ActsExamples {
+
 /// @brief Writer for B-fields that outputs field data in CSV format.
 ///
 /// This tool allows users to dump their magnetic field data to disk in CSV
@@ -100,4 +101,5 @@ class CsvBFieldWriter {
   static void run(const Config<Coord, Grid>& config,
                   Acts::Logging::Level level);
 };
+
 }  // namespace ActsExamples

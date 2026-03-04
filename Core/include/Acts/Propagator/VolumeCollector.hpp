@@ -16,8 +16,11 @@ namespace Acts {
 
 /// Simple struct to select volumes
 struct VolumeSelector {
+  /// Flag indicating whether to select volumes with material
   bool selectMaterial = true;
+  /// Flag indicating whether to select volumes with layers
   bool selectLayer = false;
+  /// Flag indicating whether to select passive volumes
   bool selectPassive = false;
 
   /// VolumeSelector with options
@@ -34,6 +37,7 @@ struct VolumeSelector {
   /// Call operator to check if a volume should be selected
   ///
   /// @param volume is the test volume
+  /// @return true if volume meets selection criteria
   bool operator()(const Acts::TrackingVolume& volume) const {
     if (selectMaterial && volume.volumeMaterial() != nullptr) {
       return true;
@@ -50,9 +54,12 @@ struct VolumeSelector {
 
 /// The information to be writtern out per hit volume
 struct VolumeHit {
+  /// Pointer to the tracking volume that was hit
   const TrackingVolume* volume = nullptr;
-  Vector3 position;
-  Vector3 direction;
+  /// Position where the volume was encountered
+  Vector3 position{};
+  /// Direction of propagation when volume was encountered
+  Vector3 direction{};
 };
 
 /// A Volume Collector struct
@@ -70,9 +77,11 @@ struct VolumeCollector {
   /// It has all the VolumeHit objects that
   /// are collected (and thus have been selected)
   struct this_result {
+    /// Container of collected volume hits during propagation
     std::vector<VolumeHit> collected;
   };
 
+  /// Type alias for collector result type
   using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator
@@ -89,11 +98,12 @@ struct VolumeCollector {
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
   /// @param logger the logger object
+  /// @return Result of the action
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& logger) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& logger) const {
     auto currentVolume = navigator.currentVolume(state.navigation);
 
     // The current volume has been assigned by the navigator
@@ -118,6 +128,8 @@ struct VolumeCollector {
         ACTS_VERBOSE("Collect volume  " << currentVolume->geometryId());
       }
     }
+
+    return {};
   }
 };
 

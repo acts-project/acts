@@ -49,8 +49,9 @@ class SimParticle final {
   SimParticle(SimBarcode particleId, Acts::PdgParticle pdg)
       : m_initial(particleId, pdg), m_final(particleId, pdg) {}
 
-  SimParticle(const SimParticleState& initial, const SimParticleState& final)
-      : m_initial(initial), m_final(final) {
+  SimParticle(const SimParticleState& initial,
+              const SimParticleState& finalState)
+      : m_initial(initial), m_final(finalState) {
     if (m_initial.particleId() != m_final.particleId()) {
       throw std::invalid_argument("Particle id mismatch");
     }
@@ -203,24 +204,24 @@ struct CompareParticleId {
 };
 struct PrimaryVertexIdGetter {
   SimBarcode operator()(const SimParticleState& particle) const {
-    return SimBarcode(0u).setVertexPrimary(
+    return SimBarcode().withVertexPrimary(
         particle.particleId().vertexPrimary());
   }
   SimBarcode operator()(const SimParticle& particle) const {
-    return SimBarcode(0u).setVertexPrimary(
+    return SimBarcode().withVertexPrimary(
         particle.particleId().vertexPrimary());
   }
 };
 struct SecondaryVertexIdGetter {
   SimBarcode operator()(const SimParticleState& particle) const {
-    return SimBarcode(0u)
-        .setVertexPrimary(particle.particleId().vertexPrimary())
-        .setVertexSecondary(particle.particleId().vertexSecondary());
+    return SimBarcode()
+        .withVertexPrimary(particle.particleId().vertexPrimary())
+        .withVertexSecondary(particle.particleId().vertexSecondary());
   }
   SimBarcode operator()(const SimParticle& particle) const {
-    return SimBarcode(0u)
-        .setVertexPrimary(particle.particleId().vertexPrimary())
-        .setVertexSecondary(particle.particleId().vertexSecondary());
+    return SimBarcode()
+        .withVertexPrimary(particle.particleId().vertexPrimary())
+        .withVertexSecondary(particle.particleId().vertexSecondary());
   }
 };
 struct VertexIdGetter {

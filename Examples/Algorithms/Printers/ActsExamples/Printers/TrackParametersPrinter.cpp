@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <cstddef>
@@ -18,9 +17,11 @@
 #include <stdexcept>
 #include <vector>
 
-ActsExamples::TrackParametersPrinter::TrackParametersPrinter(
-    const Config& cfg, Acts::Logging::Level level)
-    : IAlgorithm("TrackParametersPrinter", level), m_cfg(cfg) {
+namespace ActsExamples {
+
+TrackParametersPrinter::TrackParametersPrinter(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackParametersPrinter", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument(
         "Input track parameters collection is not configured");
@@ -29,8 +30,7 @@ ActsExamples::TrackParametersPrinter::TrackParametersPrinter(
   m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackParametersPrinter::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackParametersPrinter::execute(const AlgorithmContext& ctx) const {
   const auto& trackParameters = m_inputTrackParameters(ctx);
 
   ACTS_INFO("event " << ctx.eventNumber << " collection '"
@@ -42,3 +42,5 @@ ActsExamples::ProcessCode ActsExamples::TrackParametersPrinter::execute(
   }
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

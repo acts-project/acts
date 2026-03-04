@@ -26,9 +26,12 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 class Material;
 
-/// Method to setup the MaterialMapper
+/// Method to set up the MaterialMapper
 /// @param [in] materialVectorToGridMapper Function mapping the vector of
 /// material to the map of material values
 ///
@@ -59,7 +62,8 @@ class Material;
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
-MaterialMapper<
+/// @return A material mapper for RZ coordinate system with equidistant grid
+MaterialMapLookup<
     Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
          Axis<Acts::AxisType::Equidistant>>>
 materialMapperRZ(
@@ -70,7 +74,7 @@ materialMapperRZ(
     const std::vector<Acts::Material>& material,
     double lengthUnit = UnitConstants::mm);
 
-/// Method to setup the MaterialMapper
+/// Method to set up the MaterialLookup
 /// @param [in] materialVectorToGridMapper Function mapping the vector of
 /// material to the map of material values
 ///
@@ -112,7 +116,8 @@ materialMapperRZ(
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
-MaterialMapper<
+/// @return A material mapper for XYZ coordinate system with equidistant grid
+MaterialMapLookup<
     Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
          Axis<Acts::AxisType::Equidistant>, Axis<Acts::AxisType::Equidistant>>>
 materialMapperXYZ(
@@ -122,5 +127,7 @@ materialMapperXYZ(
     std::vector<double> xPos, std::vector<double> yPos,
     std::vector<double> zPos, const std::vector<Material>& material,
     double lengthUnit = UnitConstants::mm);
+
+/// @}
 
 }  // namespace Acts

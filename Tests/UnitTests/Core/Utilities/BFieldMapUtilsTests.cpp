@@ -12,9 +12,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
 #include <cstddef>
@@ -25,9 +25,12 @@ namespace bdata = boost::unit_test::data;
 
 using Acts::VectorHelpers::perp;
 
+using namespace Acts;
 using namespace Acts::detail;
 
-namespace Acts::Test {
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(bfield_creation) {
   // create grid values
@@ -255,7 +258,7 @@ BOOST_DATA_TEST_CASE(
                            std::uniform_real_distribution<double>(-20., 20.))) ^
         bdata::xrange(10),
     x, y, z, index) {
-  (void)index;
+  static_cast<void>(index);
 
   std::vector<double> rPos;
   std::vector<double> xPos;
@@ -366,4 +369,6 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_REL(value0_xyz, value4_xyz, 1e-10);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

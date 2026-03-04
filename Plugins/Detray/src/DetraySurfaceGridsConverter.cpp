@@ -6,46 +6,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Detray/DetraySurfaceGridsConverter.hpp"
+#include "ActsPlugins/Detray/DetraySurfaceGridsConverter.hpp"
 
 #include "Acts/Detector/Detector.hpp"
-#include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
-#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "ActsPlugins/Detray/DetrayConversionUtils.hpp"
+#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
 
 #include <stdexcept>
 
-namespace Acts {
+using namespace Acts;
+
+namespace ActsPlugins {
 
 /// DetraySurfaceGridsConverter converts surface grids from acts to detray
 /// format
 
-// convertAxis
-detray::io::axis_payload Acts::DetraySurfaceGridsConverter::convertAxis(
-    const Acts::IAxis& ia) {
-  detray::io::axis_payload axis_pd;
-  axis_pd.bounds = ia.getBoundaryType() == Acts::AxisBoundaryType::Bound
-                       ? detray::axis::bounds::e_closed
-                       : detray::axis::bounds::e_circular;
-  axis_pd.binning = ia.isEquidistant() ? detray::axis::binning::e_regular
-                                       : detray::axis::binning::e_irregular;
-  axis_pd.bins = ia.getNBins();
-  if (ia.isEquidistant()) {
-    axis_pd.edges = {ia.getBinEdges().front(), ia.getBinEdges().back()};
-  } else {
-    axis_pd.edges = ia.getBinEdges();
-  }
-
-  return axis_pd;
-}
-
 // convertGrid
 template <typename grid_type>
 detray::io::grid_payload<std::size_t, detray::io::accel_id>
-Acts::DetraySurfaceGridsConverter::convertGrid(const grid_type& grid,
-                                               bool swapAxis) {
+DetraySurfaceGridsConverter::convertGrid(const grid_type& grid, bool swapAxis) {
   // Get the grid axes & potentially swap them
   detray::io::grid_payload<std::size_t, detray::io::accel_id> grid_pd;
 
@@ -56,7 +38,8 @@ Acts::DetraySurfaceGridsConverter::convertGrid(const grid_type& grid,
 
   // Fill the axes in the order they are
   for (unsigned int ia = 0u; ia < grid_type::DIM; ++ia) {
-    detray::io::axis_payload axis_pd = convertAxis(*axes[ia]);
+    detray::io::axis_payload axis_pd =
+        DetrayConversionUtils::convertAxis(*axes[ia]);
     axis_pd.label = static_cast<detray::axis::label>(ia);
     grid_pd.axes.push_back(axis_pd);  // push axis to axes
   }
@@ -106,13 +89,13 @@ Acts::DetraySurfaceGridsConverter::convertGrid(const grid_type& grid,
 
 template <typename index_grid>
 detray::io::grid_payload<std::size_t, detray::io::accel_id>
-Acts::DetraySurfaceGridsConverter::convertImpl(const index_grid& indexGrid) {
+DetraySurfaceGridsConverter::convertImpl(const index_grid& indexGrid) {
   bool swapAxes = true;
 
   if constexpr (index_grid::grid_type::DIM == 2u) {
     // Check for axis swap
-    swapAxes = (indexGrid.casts[0u] == Acts::AxisDirection::AxisZ &&
-                indexGrid.casts[1u] == Acts::AxisDirection::AxisPhi);
+    swapAxes = (indexGrid.casts[0u] == AxisDirection::AxisZ &&
+                indexGrid.casts[1u] == AxisDirection::AxisPhi);
   }
 
   detray::io::grid_payload<std::size_t, detray::io::accel_id> grid_pd =
@@ -124,17 +107,16 @@ Acts::DetraySurfaceGridsConverter::convertImpl(const index_grid& indexGrid) {
 // convert
 template <typename instance_type>
 std::optional<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
-Acts::DetraySurfaceGridsConverter::convert(
-    const Acts::Experimental::InternalNavigationDelegate& delegate,
+DetraySurfaceGridsConverter::convert(
+    const Experimental::InternalNavigationDelegate& delegate,
     [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
   using ConversionDelegateType =
-      Acts::Experimental::IndexedSurfacesAllPortalsNavigation<
-          GridType, Acts::Experimental::IndexedSurfacesNavigation>;
-  using SubDelegateType =
-      Acts::Experimental::IndexedSurfacesNavigation<GridType>;
+      Experimental::IndexedSurfacesAllPortalsNavigation<
+          GridType, Experimental::IndexGridNavigation>;
+  using SubDelegateType = Experimental::IndexGrid<GridType>;
 
   // Get the instance
   const auto* instance = delegate.instance();
@@ -146,7 +128,7 @@ Acts::DetraySurfaceGridsConverter::convert(
     auto indexedSurfaces = std::get<SubDelegateType>(castedDelegate->updators);
     grid_pd = convertImpl<SubDelegateType>(indexedSurfaces);
     grid_pd.grid_link.type = static_cast<detray::io::accel_id>(
-        Acts::DetrayJsonHelper::accelerationLink(indexedSurfaces.casts));
+        DetrayJsonHelper::accelerationLink(indexedSurfaces.casts));
     grid_pd.grid_link.index = std::numeric_limits<std::size_t>::max();
     return grid_pd;
   }
@@ -156,9 +138,9 @@ Acts::DetraySurfaceGridsConverter::convert(
 
 template <typename... Args>
 std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
-Acts::DetraySurfaceGridsConverter::unrollConvert(
-    const Acts::Experimental::InternalNavigationDelegate& delegate,
-    Acts::TypeList<Args...> /*unused*/) {
+DetraySurfaceGridsConverter::unrollConvert(
+    const Experimental::InternalNavigationDelegate& delegate,
+    TypeList<Args...> /*unused*/) {
   std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
       grid_pds;
 
@@ -176,17 +158,17 @@ Acts::DetraySurfaceGridsConverter::unrollConvert(
 }
 
 detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>
-Acts::DetraySurfaceGridsConverter::convertSurfaceGrids(
-    const Acts::Experimental::Detector& detector) {
+DetraySurfaceGridsConverter::convertSurfaceGrids(
+    const Experimental::Detector& detector) {
   detray::io::detector_grids_payload<std::size_t, detray::io::accel_id>
       grids_pd = detray::io::detector_grids_payload<std::size_t,
                                                     detray::io::accel_id>();
   auto volumes = detector.volumes();
 
-  for (const auto [iv, volume] : Acts::enumerate(volumes)) {
+  for (const auto [iv, volume] : enumerate(volumes)) {
     std::vector<detray::io::grid_payload<std::size_t, detray::io::accel_id>>
         grid_pd = unrollConvert(volume->internalNavigation(),
-                                Acts::GridAxisGenerators::PossibleAxes{});
+                                GridAxisGenerators::PossibleAxes{});
 
     for (auto& grid : grid_pd) {
       detray::io::single_link_payload lnk;
@@ -198,4 +180,4 @@ Acts::DetraySurfaceGridsConverter::convertSurfaceGrids(
   return grids_pd;
 }
 
-}  // namespace Acts
+}  // namespace ActsPlugins

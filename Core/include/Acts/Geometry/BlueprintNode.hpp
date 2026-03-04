@@ -60,6 +60,7 @@ class BlueprintNode {
   virtual ~BlueprintNode() = default;
 
   /// Get the name of this node
+  /// @return Reference to the node name string
   virtual const std::string& name() const = 0;
 
   /// @anchor construction
@@ -108,6 +109,7 @@ class BlueprintNode {
   /// @param options The global construction options
   /// @param gctx The geometry context for construction (usually nominal)
   /// @param logger The logger to use for output during construction
+  /// @return Reference to portal shell containing connected portals for this node
   virtual PortalShellBase& connect(
       const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) = 0;
@@ -187,6 +189,7 @@ class BlueprintNode {
   /// @param volumeBounds The bounds of the volume
   /// @param volumeName The name of the volume
   /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created static blueprint node
   StaticBlueprintNode& addStaticVolume(
       const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
       const std::string& volumeName = "undefined",
@@ -199,6 +202,7 @@ class BlueprintNode {
   /// @param direction The direction of the stack configuration. See
   ///                  @ref Acts::CylinderVolumeStack for details.
   /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created cylinder container blueprint node
   CylinderContainerBlueprintNode& addCylinderContainer(
       const std::string& name, AxisDirection direction,
       const std::function<void(CylinderContainerBlueprintNode& cylinder)>&
@@ -211,6 +215,7 @@ class BlueprintNode {
   /// @param direction The direction of the stack configuration. See
   ///                  @ref Acts::CuboidVolumeStack for details.
   /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created cuboid container blueprint node
   CuboidContainerBlueprintNode& addCuboidContainer(
       const std::string& name, AxisDirection direction,
       const std::function<void(CuboidContainerBlueprintNode& cylinder)>&
@@ -220,6 +225,7 @@ class BlueprintNode {
   /// @param name The name of the material designator node. Used for debugging
   ///             the node tree only.
   /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created material designator blueprint node
   MaterialDesignatorBlueprintNode& addMaterial(
       const std::string& name,
       const std::function<void(MaterialDesignatorBlueprintNode& material)>&
@@ -228,12 +234,14 @@ class BlueprintNode {
   /// Convenience method for creating a @ref Acts::Experimental::LayerBlueprintNode.
   /// @param name The name of the layer node.
   /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created layer blueprint node
   LayerBlueprintNode& addLayer(
       const std::string& name,
       const std::function<void(LayerBlueprintNode& layer)>& callback = {});
 
   /// Convenience method for creating a @ref Acts::Experimental::GeometryIdentifierBlueprintNode.
   /// @param callback An optional callback that receives the node as an argument
+  /// @return Reference to the newly created geometry identifier blueprint node
   GeometryIdentifierBlueprintNode& withGeometryIdentifier(
       const std::function<void(
           GeometryIdentifierBlueprintNode& geometryIdentifier)>& callback = {});
@@ -298,10 +306,12 @@ class BlueprintNode {
 
  protected:
   /// Virtual method to determine stream representation.
+  /// @param os Output stream to write to
   /// @note This method is called by the stream operator.
   virtual void toStream(std::ostream& os) const;
 
   /// Set the depth to @p depth and update children recursively
+  /// @param depth New depth value to set
   void setDepth(std::size_t depth);
 
   /// Printing helper returning a prefix including an indent depending on the

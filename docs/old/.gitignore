@@ -1,0 +1,6 @@
+# build products
+_build/
+# auto-generated api documentation
+api/
+white_papers/*.md
+!white_papers/how_to_add.md

@@ -37,9 +37,11 @@ template <>
 struct is_error_code_enum<MyError> : std::true_type {};
 }  // namespace std
 
-namespace Acts::Test {
+using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
 BOOST_AUTO_TEST_CASE(TestConstruction) {
   {
@@ -423,4 +425,4 @@ BOOST_AUTO_TEST_CASE(AndThenResult) {
 }
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

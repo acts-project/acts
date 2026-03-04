@@ -14,7 +14,7 @@
 #include "Acts/MagneticField/SolenoidBField.hpp"
 
 // Covfie Plugin include(s)
-#include "Acts/Plugins/Covfie/FieldConversion.hpp"
+#include "ActsPlugins/Covfie/FieldConversion.hpp"
 
 // System include(s)
 #include <array>
@@ -25,17 +25,18 @@
 // Boost include(s)
 #include <boost/test/unit_test.hpp>
 
+using namespace Acts;
+using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
 
 template <typename view_t, typename iterator_t>
-void checkMagneticFieldEqual(const Acts::MagneticFieldProvider& fieldProvider,
-                             Acts::MagneticFieldProvider::Cache& cache,
-                             view_t view, iterator_t points,
-                             float error_margin_half_width) {
+void checkMagneticFieldEqual(const MagneticFieldProvider& fieldProvider,
+                             MagneticFieldProvider::Cache& cache, view_t view,
+                             iterator_t points, float error_margin_half_width) {
   for (auto point : points) {
     auto x = point[0], y = point[1], z = point[2];
 
-    auto lookupResult = fieldProvider.getField(Acts::Vector3{x, y, z}, cache);
+    auto lookupResult = fieldProvider.getField(Vector3{x, y, z}, cache);
     if (!lookupResult.ok()) {
       throw std::runtime_error{"Field lookup failure"};
     }
@@ -61,7 +62,9 @@ void checkMagneticFieldEqual(const Acts::MagneticFieldProvider& fieldProvider,
   }
 }
 
-BOOST_AUTO_TEST_SUITE(CovfiePlugin)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(CovfieSuite)
 
 BOOST_AUTO_TEST_CASE(InterpolatedMagneticField1) {
   auto localToGlobalBin_xyz = [](std::array<std::size_t, 3> binsXYZ,
@@ -74,19 +77,18 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField1) {
   std::vector<double> yPos = {0., 1., 2., 3.};
   std::vector<double> zPos = {0., 1., 2., 3.};
 
-  std::vector<Acts::Vector3> bField_xyz;
+  std::vector<Vector3> bField_xyz;
   for (int i = 0; i < 64; i++) {
-    bField_xyz.push_back(Acts::Vector3(i, i, i));
+    bField_xyz.push_back(Vector3(i, i, i));
   }
 
-  Acts::MagneticFieldContext fieldContext;
-  auto actsField = Acts::fieldMapXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
-                                     bField_xyz, 1, 1, false);
-  Acts::MagneticFieldProvider::Cache cache = actsField.makeCache(fieldContext);
+  MagneticFieldContext fieldContext;
+  auto actsField = fieldMapXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
+                               bField_xyz, 1, 1, false);
+  MagneticFieldProvider::Cache cache = actsField.makeCache(fieldContext);
 
-  Acts::CovfiePlugin::InterpolatedField field =
-      Acts::CovfiePlugin::covfieField(actsField);
-  typename Acts::CovfiePlugin::InterpolatedField::view_t view(field);
+  Covfie::InterpolatedField field = Covfie::covfieField(actsField);
+  typename Covfie::InterpolatedField::view_t view(field);
 
   std::array<std::array<float, 3>, 14> points = {{
       {0.f, 0.f, 0.f},
@@ -119,19 +121,18 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField2) {
   std::vector<double> yPos = {8., 12., 16., 20.};
   std::vector<double> zPos = {8., 12., 16., 20.};
 
-  std::vector<Acts::Vector3> bField_xyz;
+  std::vector<Vector3> bField_xyz;
   for (int i = 0; i < 64; i++) {
-    bField_xyz.push_back(Acts::Vector3(i, i * i * 0.01, i));
+    bField_xyz.push_back(Vector3(i, i * i * 0.01, i));
   }
 
-  Acts::MagneticFieldContext fieldContext;
-  auto actsField = Acts::fieldMapXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
-                                     bField_xyz, 1, 1, false);
-  Acts::MagneticFieldProvider::Cache cache = actsField.makeCache(fieldContext);
+  MagneticFieldContext fieldContext;
+  auto actsField = fieldMapXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
+                               bField_xyz, 1, 1, false);
+  MagneticFieldProvider::Cache cache = actsField.makeCache(fieldContext);
 
-  Acts::CovfiePlugin::InterpolatedField field =
-      Acts::CovfiePlugin::covfieField(actsField);
-  typename Acts::CovfiePlugin::InterpolatedField::view_t view(field);
+  Covfie::InterpolatedField field = Covfie::covfieField(actsField);
+  typename Covfie::InterpolatedField::view_t view(field);
 
   std::array<std::array<float, 3>, 14> points = {{
       {8.f, 8.f, 8.f},
@@ -154,13 +155,12 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField2) {
 }
 
 BOOST_AUTO_TEST_CASE(ConstantMagneticField1) {
-  Acts::ConstantBField actsField(Acts::Vector3{1.3f, 2.5f, 2.f});
-  Acts::MagneticFieldContext ctx;
-  Acts::MagneticFieldProvider::Cache cache = actsField.makeCache(ctx);
+  ConstantBField actsField(Vector3{1.3f, 2.5f, 2.f});
+  MagneticFieldContext ctx;
+  MagneticFieldProvider::Cache cache = actsField.makeCache(ctx);
 
-  Acts::CovfiePlugin::ConstantField field =
-      Acts::CovfiePlugin::covfieField(actsField);
-  typename Acts::CovfiePlugin::ConstantField::view_t view(field);
+  Covfie::ConstantField field = Covfie::covfieField(actsField);
+  typename Covfie::ConstantField::view_t view(field);
 
   std::array<std::array<float, 3>, 13> points = {{
       {8.f, 8.f, 8.f},
@@ -182,18 +182,18 @@ BOOST_AUTO_TEST_CASE(ConstantMagneticField1) {
 }
 
 BOOST_AUTO_TEST_CASE(SolenoidBField1) {
-  Acts::SolenoidBField::Config cfg{};
+  SolenoidBField::Config cfg{};
   cfg.length = 5.8_m;
   cfg.radius = (2.56 + 2.46) * 0.5 * 0.5_m;
   cfg.nCoils = 1154;
   cfg.bMagCenter = 2_T;
-  Acts::SolenoidBField actsField(cfg);
-  Acts::MagneticFieldContext ctx;
-  Acts::MagneticFieldProvider::Cache cache = actsField.makeCache(ctx);
+  SolenoidBField actsField(cfg);
+  MagneticFieldContext ctx;
+  MagneticFieldProvider::Cache cache = actsField.makeCache(ctx);
 
-  Acts::CovfiePlugin::InterpolatedField field = Acts::CovfiePlugin::covfieField(
+  Covfie::InterpolatedField field = Covfie::covfieField(
       actsField, cache, {21UL, 21UL, 21UL}, {0., 0., 0.}, {20., 20., 20.});
-  typename Acts::CovfiePlugin::InterpolatedField::view_t view(field);
+  typename Covfie::InterpolatedField::view_t view(field);
 
   std::array<std::array<float, 3>, 13> points = {{
       {8.f, 8.f, 8.f},
@@ -215,3 +215,5 @@ BOOST_AUTO_TEST_CASE(SolenoidBField1) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

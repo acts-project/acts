@@ -14,14 +14,12 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <array>
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class CsvGnnGraphReader final : public IReader {
  public:
@@ -44,7 +42,7 @@ class CsvGnnGraphReader final : public IReader {
   std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
+  ProcessCode read(const AlgorithmContext& ctx) override;
 
   /// Return the name of the component
   std::string name() const override { return "CsvGnnGraphReader"; }

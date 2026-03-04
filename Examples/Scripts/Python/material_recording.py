@@ -17,6 +17,7 @@ import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.hepmc3
 from acts.examples.odd import getOpenDataDetector
+from acts.examples.root import RootMaterialTrackWriter
 
 try:
     import acts.examples.geant4.geomodel
@@ -89,7 +90,7 @@ def runMaterialRecording(
     s.addAlgorithm(g4Alg)
 
     s.addWriter(
-        acts.examples.RootMaterialTrackWriter(
+        RootMaterialTrackWriter(
             prePostStep=True,
             recalculateTotals=True,
             inputMaterialTracks="material-tracks",

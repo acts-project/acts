@@ -11,7 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Geometry/VolumePlacementBase.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iosfwd>
@@ -31,49 +33,113 @@ class VolumeBounds;
 /// information.
 class Volume : public GeometryObject {
  public:
+  /// Type alias for the axis-aligned bounding box of the volume
+  /// @details Used to define the spatial extent of the volume in 3D space
   using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;
 
   /// Explicit constructor with shared arguments
   ///
   /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  Volume(const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds);
+  Volume(const Transform3& transform,
+         std::shared_ptr<VolumeBounds> volbounds) noexcept;
+  /// Constructor that connects the volume to an external alignment
+  /// I.e. the volume may move with the alignment of the surfaces
+  /// The placement of the volume is delegated to the positioner
+  /// @param positioner: Reference to the object aligning the volume
+  /// @param volbounds is the volume boundary definitions
+  Volume(VolumePlacementBase& positioner,
+         std::shared_ptr<VolumeBounds> volbounds) noexcept;
 
-  /// Copy Constructor - with optional shift
+  /// Copy Constructor
+  /// @param vol is the source volume for the copy
+  Volume(const Volume& vol) noexcept = default;
+
+  /// Copy Constructor with optional shift
   ///
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied as : shift * vol.transform()
-  Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
+  /// @deprecated: Constructor deprecated in favour of shifted(const Transform3& shift) const
+  [[deprecated("Use Volume::shifted(const Transform3& shift) const instead.")]]
+  Volume(const Volume& vol, const Transform3& shift);
 
-  Volume() = delete;
-  virtual ~Volume() = default;
+  /// Shift the volume by a transform
+  ///
+  /// @param shift is the transform to shift the volume by
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The shifted volume
+  Volume shifted(const GeometryContext& gctx, const Transform3& shift) const;
+
+  ~Volume() noexcept override = default;
 
   /// Assignment operator
   ///
   /// @param vol is the source volume to be copied
-  Volume& operator=(const Volume& vol);
+  /// @return Reference to this volume for assignment chaining
+  Volume& operator=(const Volume& vol) noexcept = default;
 
-  /// Return methods for geometry transform
+  /// Move assignment operator
+  ///
+  /// @param other is the other volume to be moved
+  /// @return Reference to this volume for assignment chaining
+  Volume& operator=(Volume&& other) noexcept = default;
+
+  /// Get the transformation matrix from the local volume frame to the global
+  /// experiment's frame
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The local to global transformation matrix
+  const Transform3& localToGlobalTransform(const GeometryContext& gctx) const;
+
+  /// Get the transformation matrix from the global experiment's frame to the
+  /// local volume frame
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The global to local transformation matrix
+  const Transform3& globalToLocalTransform(const GeometryContext& gctx) const;
+
+  /// Get the transform matrix that positions the volume in 3D space
+  /// @deprecated: Function deprecated in favour of localToGlobalTransform
+  /// @return Const reference to the transform matrix
+  [[deprecated(
+      "Use localToGlobalTransform(const GeometryContext& gctx) instead.")]]
   const Transform3& transform() const;
 
-  /// Returns the inverted transform of this volume.
+  /// Get the inverse transform matrix of the volume
+  /// @deprecated: Function deprecated in favour of globalToLocalTransform
+  /// @return Const reference to the inverse transform matrix
+  [[deprecated(
+      "Use globalToLocalTransform(const GeometryContext& gctx) instead.")]]
   const Transform3& itransform() const;
 
+  /// Set the transform matrix for the volume and update internal state
+  /// @param transform The new transform matrix to be applied
   void setTransform(const Transform3& transform);
 
-  /// returns the center of the volume
+  /// Get the center position of the volume
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return Const reference to the center position vector
+  Vector3 center(const GeometryContext& gctx) const;
+
+  /// Get the center position of the volume
+  /// @deprecated: Function deprecated in favour of
+  ///               center(const GeometryContext& gctx)
+  /// @return Const reference to the center position vector
+  [[deprecated("Use center(const GeometryContext& gctx) instead.")]]
   const Vector3& center() const;
 
-  /// Returns a const reference to the volume bounds
+  /// Get the volume bounds that define the shape of the volume
+  /// @return Const reference to the volume bounds object
   const VolumeBounds& volumeBounds() const;
 
-  /// Returns a mutable reference to the volume bounds
+  /// Get mutable access to the volume bounds
+  /// @return Reference to the volume bounds object
   VolumeBounds& volumeBounds();
 
-  /// Returns shared pointer to the volume bounds
+  /// Get shared pointer to the const volume bounds
+  /// @return Const shared pointer to the volume bounds object
   std::shared_ptr<const VolumeBounds> volumeBoundsPtr() const;
 
-  /// Returns shared pointer to the volume bounds
+  /// Get shared pointer to the mutable volume bounds
+  /// @return Shared pointer to the volume bounds object
   std::shared_ptr<VolumeBounds> volumeBoundsPtr();
 
   /// Set volume bounds and update volume bounding boxes implicitly
@@ -81,10 +147,12 @@ class Volume : public GeometryObject {
   void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
 
   /// Set the volume bounds and optionally also update the volume transform
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volbounds The volume bounds to be assigned
   /// @param transform The transform to be assigned, can be optional
   /// @param logger A logger object to log messages
-  virtual void update(std::shared_ptr<VolumeBounds> volbounds,
+  virtual void update(const GeometryContext& gctx,
+                      std::shared_ptr<VolumeBounds> volbounds,
                       std::optional<Transform3> transform = std::nullopt,
                       const Logger& logger = Acts::getDummyLogger());
 
@@ -101,12 +169,27 @@ class Volume : public GeometryObject {
 
   /// Inside() method for checks
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos is the position to be checked
   /// @param tol is the tolerance parameter
   ///
   /// @return boolean indicator if the position is inside
-  bool inside(const Vector3& gpos, double tol = 0.) const;
+  bool inside(const GeometryContext& gctx, const Vector3& gpos,
+              double tol = 0.) const;
 
+  /// Inside() method for checks
+  ///
+  /// @param gpos is the position to be checked
+  /// @param tol is the tolerance parameter
+  /// @deprecated: Function deprecated in favour of
+  ///               inside(const GeometryContext& gctx, const Vector3& gpos,
+  ///               double tol = 0.)
+  ///
+  /// @return boolean indicator if the position is inside
+  [[deprecated(
+      "Use inside(const GeometryContext& gctx, const Vector3& gpos, double tol "
+      "= 0.) instead.")]]
+  bool inside(const Vector3& gpos, double tol = 0.) const;
   /// The binning position method
   /// - as default the center is given, but may be overloaded
   ///
@@ -116,6 +199,9 @@ class Volume : public GeometryObject {
   Vector3 referencePosition(const GeometryContext& gctx,
                             AxisDirection aDir) const override;
 
+  /// Compare this volume with another for equality
+  /// @param other The other volume to compare with
+  /// @return True if the volumes are equal
   bool operator==(const Volume& other) const;
 
   /// Produces a 3D visualization of this volume
@@ -125,16 +211,39 @@ class Volume : public GeometryObject {
   void visualize(IVisualization3D& helper, const GeometryContext& gctx,
                  const ViewConfig& viewConfig) const;
 
- protected:
-  Transform3 m_transform;
-  Transform3 m_itransform;
-  Vector3 m_center;
+  /// VolumePlacement object that dynamically aligns the volume
+  /// @returns Pointer to the VolumePlacement (Might be nullptr)
+  VolumePlacementBase* volumePlacement();
+
+  /// VolumePlacement object that dynamically aligns the volume
+  /// @returns Pointer to the VolumePlacement (Might be nullptr)
+  const VolumePlacementBase* volumePlacement() const;
+
+  /// Is the volume connected to the experiment's alignment system
+  /// (I.e. it's constructed with a volumePlacement)
+  /// @returns Whether the volume can be externally aligned
+  bool isAlignable() const;
 
  private:
+  /// Transform matrix that positions the volume in 3D space
+  CloneablePtr<const Transform3> m_transform{};
+
+  /// Inverse of the transform matrix for efficient calculations
+  CloneablePtr<const Transform3> m_itransform{};
+
+  /// Center position of the volume in global coordinates
+  Vector3 m_center{Vector3::Zero()};
+
+  /// Volume bounds that define the shape and extent of the volume
   std::shared_ptr<VolumeBounds> m_volumeBounds;
+  /// Pointer to the external volume placement that's connected to the alignment
+  VolumePlacementBase* m_placement{nullptr};
 };
 
 /**Overload of << operator for std::ostream for debug output*/
+/// @param sl Output stream
+/// @param vol Volume to output
+/// @return Reference to output stream
 std::ostream& operator<<(std::ostream& sl, const Volume& vol);
 
 }  // namespace Acts

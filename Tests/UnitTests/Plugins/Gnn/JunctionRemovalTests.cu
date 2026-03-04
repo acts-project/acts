@@ -8,14 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/Gnn/detail/CudaUtils.hpp>
-#include <Acts/Plugins/Gnn/detail/JunctionRemoval.hpp>
+#include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
+#include "ActsPlugins/Gnn/detail/JunctionRemoval.hpp"
 
 #include <algorithm>
 #include <numeric>
 
 using Vi = std::vector<std::int64_t>;
 using Vf = std::vector<float>;
+
+using namespace ActsPlugins::detail;
 
 void testJunctionRemoval(const Vi &srcNodes, const Vi &dstNodes,
                          const Vf &scores, const Vi &expectedSrcNodes,
@@ -48,7 +50,7 @@ void testJunctionRemoval(const Vi &srcNodes, const Vi &dstNodes,
                                   nEdges * sizeof(float),
                                   cudaMemcpyHostToDevice, stream));
 
-  auto [cudaSrcNodesOut, nEdgesOut] = Acts::detail::junctionRemovalCuda(
+  auto [cudaSrcNodesOut, nEdgesOut] = junctionRemovalCuda(
       nEdges, nNodes, cudaScores, cudaSrcNodes, cudaDstNodes, stream);
   auto cudaDstNodesOut = cudaSrcNodesOut + nEdgesOut;
 

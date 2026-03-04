@@ -31,6 +31,7 @@ class AssertionFailureException : public std::exception {
     ///        it to the stringstream.
     /// @tparam T type of anything
     /// @param value const ref to anything
+    /// @return Reference to this StreamFormatter
     template <typename T>
     StreamFormatter& operator<<(const T& value) {
       stream << value;
@@ -59,6 +60,7 @@ class AssertionFailureException : public std::exception {
   }
 
   /// The assertion message
+  /// @return C-string containing the assertion failure message
   const char* what() const throw() override { return report.c_str(); }
 
  private:

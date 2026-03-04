@@ -12,4 +12,5 @@ target_sources(
         ProtoAxis.cpp
         ScopedTimer.cpp
         TransformComparator.cpp
+        Histogram.cpp
 )

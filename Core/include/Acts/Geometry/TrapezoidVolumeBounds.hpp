@@ -143,8 +143,16 @@ class TrapezoidVolumeBounds : public VolumeBounds {
     buildSurfaceBounds();
   }
 
+  /// Copy constructor
+  /// @param trabo Source trapezoidal volume bounds to copy from
   TrapezoidVolumeBounds(const TrapezoidVolumeBounds& trabo) = default;
+
+  /// Default destructor
   ~TrapezoidVolumeBounds() override = default;
+
+  /// Copy assignment operator
+  /// @param trabo Source trapezoidal volume bounds to assign from
+  /// @return Reference to this object
   TrapezoidVolumeBounds& operator=(const TrapezoidVolumeBounds& trabo) =
       default;
 
@@ -190,10 +198,12 @@ class TrapezoidVolumeBounds : public VolumeBounds {
 
   /// Output Method for std::ostream
   /// @param os is the output stream
+  /// @return Modified ostream for chaining
   std::ostream& toStream(std::ostream& os) const override;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
+  /// @return The bound value at the specified index
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:

@@ -8,12 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <string>
 #include <vector>
 
-namespace Acts::Test {
+using namespace ActsPlugins;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(RootSuite)
 
 /// @brief Unit test checking the match probability
 BOOST_AUTO_TEST_CASE(TGeoPrimitivesHelper_match) {
@@ -25,4 +29,6 @@ BOOST_AUTO_TEST_CASE(TGeoPrimitivesHelper_match) {
   BOOST_CHECK(TGeoPrimitivesHelper::match(candidates, "BeamPipe"));
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -34,6 +34,7 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
   std::vector<InputTrack> seedTracks = allTracks;
   std::vector<std::unique_ptr<Vertex>> allVertices;
   std::vector<Vertex*> allVerticesPtr;
+  std::vector<Vertex*> newVerticesPtr;
 
   int iteration = 0;
   std::vector<InputTrack> removedSeedTracks;
@@ -47,21 +48,20 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
     if (!seedResult.ok()) {
       return seedResult.error();
     }
-    const auto& seedOptional = *seedResult;
+    auto& seedVector = *seedResult;
 
-    if (!seedOptional.has_value()) {
+    if (seedVector.empty()) {
       ACTS_DEBUG(
           "No seed found anymore. Break and stop primary vertex finding.");
       break;
     }
-    const auto& seedVertex = seedOptional.value();
 
-    ACTS_DEBUG("Position of vertex candidate after seeding: "
-               << seedVertex.fullPosition().transpose());
-
-    allVertices.push_back(std::make_unique<Vertex>(seedVertex));
-    Vertex& vtxCandidate = *allVertices.back();
-    allVerticesPtr.push_back(&vtxCandidate);
+    newVerticesPtr.clear();
+    for (const auto& seedVertex : seedVector) {
+      allVertices.push_back(std::make_unique<Vertex>(seedVertex));
+      allVerticesPtr.push_back(allVertices.back().get());
+      newVerticesPtr.push_back(allVertices.back().get());
+    }
 
     // Clear the seed track collection that has been removed in last iteration
     // now after seed finding is done
@@ -76,85 +76,93 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::find(
       searchTracks = seedTracks;
     }
 
-    auto prepResult = canPrepareVertexForFit(searchTracks, seedTracks,
-                                             vtxCandidate, currentConstraint,
-                                             fitterState, vertexingOptions);
-
-    if (!prepResult.ok()) {
-      return prepResult.error();
+    bool preparationFailed = false;
+    for (Vertex* vtxPtr : newVerticesPtr) {
+      auto prepResult = canPrepareVertexForFit(searchTracks, seedTracks,
+                                               *vtxPtr, currentConstraint,
+                                               fitterState, vertexingOptions);
+      if (!prepResult.ok()) {
+        return prepResult.error();
+      }
+      if (!(*prepResult)) {
+        preparationFailed = true;
+        break;
+      }
+      // Update fitter state with all vertices
+      fitterState.addVertexToMultiMap(*vtxPtr);
     }
-    if (!(*prepResult)) {
-      ACTS_DEBUG(
-          "Could not prepare for fit. Discarding the vertex candindate.");
-      allVertices.pop_back();
-      allVerticesPtr.pop_back();
+    if (preparationFailed) {
+      ACTS_DEBUG("Could not prepare for fit. Discarding the vertex candidate.");
+      allVertices.erase(allVertices.end() - newVerticesPtr.size(),
+                        allVertices.end());
+      allVerticesPtr.erase(allVerticesPtr.end() - newVerticesPtr.size(),
+                           allVerticesPtr.end());
       if (m_cfg.doNotBreakWhileSeeding) {
         continue;
       } else {
         break;
       }
     }
-    // Update fitter state with all vertices
-    fitterState.addVertexToMultiMap(vtxCandidate);
 
     // Perform the fit
-    auto fitResult = m_cfg.vertexFitter.addVtxToFit(fitterState, vtxCandidate,
+    auto fitResult = m_cfg.vertexFitter.addVtxToFit(fitterState, newVerticesPtr,
                                                     vertexingOptions);
     if (!fitResult.ok()) {
       return fitResult.error();
     }
-    ACTS_DEBUG("Position of vertex candidate after the fit: "
-               << vtxCandidate.fullPosition().transpose());
-    // Check if vertex is good vertex
-    auto [nCompatibleTracks, isGoodVertex] =
-        checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, fitterState,
-                                       vertexingOptions.useConstraintInFit);
 
-    ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
-    if (nCompatibleTracks > 0) {
-      removeCompatibleTracksFromSeedTracks(vtxCandidate, seedTracks,
-                                           fitterState, removedSeedTracks);
-    } else {
-      bool removedIncompatibleTrack = removeTrackIfIncompatible(
-          vtxCandidate, seedTracks, fitterState, removedSeedTracks,
-          vertexingOptions.geoContext);
-      if (!removedIncompatibleTrack) {
-        ACTS_DEBUG(
-            "Could not remove any further track from seed tracks. Break.");
-        allVertices.pop_back();
-        allVerticesPtr.pop_back();
-        break;
+    for (Vertex* newVertexPtr : newVerticesPtr) {
+      Vertex& vtxCandidate = *newVertexPtr;
+
+      ACTS_DEBUG("Position of vertex candidate after the fit: "
+                 << vtxCandidate.fullPosition().transpose());
+      // Check if vertex is good vertex
+      auto [nCompatibleTracks, isGoodVertex] =
+          checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, fitterState,
+                                         vertexingOptions.useConstraintInFit);
+
+      ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
+      if (nCompatibleTracks > 0) {
+        removeCompatibleTracksFromSeedTracks(vtxCandidate, seedTracks,
+                                             fitterState, removedSeedTracks);
+      } else {
+        auto removedIncompatibleTrack = removeTrackIfIncompatible(
+            vtxCandidate, seedTracks, fitterState, removedSeedTracks,
+            vertexingOptions.geoContext);
+        if (!removedIncompatibleTrack.ok()) {
+          return removedIncompatibleTrack.error();
+        }
+      }
+      auto keepNewVertexResult =
+          keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
+      if (!keepNewVertexResult.ok()) {
+        return keepNewVertexResult.error();
+      }
+      bool keepVertex = isGoodVertex && *keepNewVertexResult;
+      ACTS_DEBUG("New vertex will be saved: " << keepVertex);
+
+      // Delete vertex from allVertices list again if it's not kept
+      if (!keepVertex) {
+        auto deleteVertexResult =
+            deleteLastVertex(vtxCandidate, allVertices, allVerticesPtr,
+                             fitterState, vertexingOptions);
+        if (!deleteVertexResult.ok()) {
+          return deleteVertexResult.error();
+        }
       }
     }
-    auto keepNewVertexResult =
-        keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
-    if (!keepNewVertexResult.ok()) {
-      return keepNewVertexResult.error();
-    }
-    bool keepVertex = isGoodVertex && *keepNewVertexResult;
-    ACTS_DEBUG("New vertex will be saved: " << keepVertex);
 
-    // Delete vertex from allVertices list again if it's not kept
-    if (!keepVertex) {
-      auto deleteVertexResult =
-          deleteLastVertex(vtxCandidate, allVertices, allVerticesPtr,
-                           fitterState, vertexingOptions);
-      if (!deleteVertexResult.ok()) {
-        return deleteVertexResult.error();
-      }
-    }
     iteration++;
   }  // end while loop
 
   return getVertexOutputList(allVerticesPtr, fitterState);
 }
 
-auto AdaptiveMultiVertexFinder::doSeeding(
+Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::doSeeding(
     const std::vector<InputTrack>& trackVector, Vertex& currentConstraint,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& seedFinderState,
-    const std::vector<InputTrack>& removedSeedTracks) const
-    -> Result<std::optional<Vertex>> {
+    const std::vector<InputTrack>& removedSeedTracks) const {
   VertexingOptions seedOptions = vertexingOptions;
   seedOptions.constraint = currentConstraint;
 
@@ -167,20 +175,17 @@ auto AdaptiveMultiVertexFinder::doSeeding(
   if (!seedResult.ok()) {
     return seedResult.error();
   }
-  const auto& seedVector = *seedResult;
+  auto& seedVector = *seedResult;
 
   ACTS_DEBUG("Found " << seedVector.size() << " seeds");
 
-  if (seedVector.empty()) {
-    return std::nullopt;
+  for (auto& seedVertex : seedVector) {
+    // Update constraints according to seed vertex
+    setConstraintAfterSeeding(currentConstraint, seedOptions.useConstraintInFit,
+                              seedVertex);
   }
-  Vertex seedVertex = seedVector.back();
 
-  // Update constraints according to seed vertex
-  setConstraintAfterSeeding(currentConstraint, seedOptions.useConstraintInFit,
-                            seedVertex);
-
-  return seedVertex;
+  return std::move(seedVector);
 }
 
 void AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
@@ -385,10 +390,10 @@ std::pair<int, bool> AdaptiveMultiVertexFinder::checkVertexAndCompatibleTracks(
   return {nCompatibleTracks, isGoodVertex};
 }
 
-auto AdaptiveMultiVertexFinder::removeCompatibleTracksFromSeedTracks(
+void AdaptiveMultiVertexFinder::removeCompatibleTracksFromSeedTracks(
     Vertex& vtx, std::vector<InputTrack>& seedTracks,
     VertexFitterState& fitterState,
-    std::vector<InputTrack>& removedSeedTracks) const -> void {
+    std::vector<InputTrack>& removedSeedTracks) const {
   for (const auto& trk : fitterState.vtxInfoMap[&vtx].trackLinks) {
     const auto& trkAtVtx =
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
@@ -407,7 +412,7 @@ auto AdaptiveMultiVertexFinder::removeCompatibleTracksFromSeedTracks(
   }
 }
 
-bool AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
+Result<void> AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
     Vertex& vtx, std::vector<InputTrack>& seedTracks,
     VertexFitterState& fitterState, std::vector<InputTrack>& removedSeedTracks,
     const GeometryContext& geoCtx) const {
@@ -453,11 +458,11 @@ bool AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
       seedTracks.erase(smallestDzSeedIter);
       removedSeedTracks.push_back(removedTrack.value());
     } else {
-      ACTS_DEBUG("No track found to remove. Stop vertex finding now.");
-      return false;
+      ACTS_ERROR("No track found to remove. Stop vertex finding now.");
+      return Result<void>::failure(VertexingError::CouldNotRemoveTrack);
     }
   }
-  return true;
+  return {};
 }
 
 Result<bool> AdaptiveMultiVertexFinder::keepNewVertex(
@@ -626,4 +631,5 @@ Result<std::vector<Vertex>> AdaptiveMultiVertexFinder::getVertexOutputList(
   }
   return Result<std::vector<Vertex>>(outputVec);
 }
+
 }  // namespace Acts

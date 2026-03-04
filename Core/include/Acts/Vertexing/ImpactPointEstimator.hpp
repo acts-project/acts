@@ -22,19 +22,19 @@
 
 namespace Acts {
 
+/// Impact parameters and their uncertainties with optional timing.
 struct ImpactParametersAndSigma {
-  // Impact parameters ...
+  /// Transverse impact parameter
   double d0 = 0.;
+  /// Longitudinal impact parameter
   double z0 = 0.;
-  // ... and their standard deviations wrt a vertex, e.g.:
-  // sigmaD0 = sqrt(Var(X) + Var(Y) + Var(d0)),
-  // where X and Y are the x- and y-coordinate of the vertex
+  /// Uncertainty on transverse impact parameter
   double sigmaD0 = 0.;
+  /// Uncertainty on longitudinal impact parameter
   double sigmaZ0 = 0.;
-  // Absolute difference in time between the vertex and the track at the 2D PCA
-  // ...
+  /// Time difference at the 2D PCA
   std::optional<double> deltaT = std::nullopt;
-  // ... and standard deviation wrt a vertex
+  /// Uncertainty on time difference
   std::optional<double> sigmaDeltaT = std::nullopt;
 };
 
@@ -52,6 +52,7 @@ class ImpactPointEstimator {
     MagneticFieldProvider::Cache fieldCache;
   };
 
+  /// Configuration settings for the impact point estimator.
   struct Config {
     /// @brief Config constructor if magnetic field is present
     ///
@@ -145,9 +146,9 @@ class ImpactPointEstimator {
   ///
   /// @return The compatibility value
   template <int nDim>
-  Result<double> getVertexCompatibility(
-      const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-      const ActsVector<nDim>& vertexPos) const {
+  Result<double> getVertexCompatibility(const GeometryContext& gctx,
+                                        const BoundTrackParameters* trkParams,
+                                        const Vector<nDim>& vertexPos) const {
     static_assert(nDim == 3 || nDim == 4,
                   "Only 3D and 4D vertex positions allowed");
     return getVertexCompatibility(gctx, trkParams, {vertexPos.data(), nDim});
@@ -167,11 +168,11 @@ class ImpactPointEstimator {
   /// @param trkParams Track parameters
   /// @param vtxPos Vertex position
   /// @param state The state object
+  /// @return Pair containing the distance vector and momentum direction at PCA
   template <int nDim>
-  Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
-  getDistanceAndMomentum(const GeometryContext& gctx,
-                         const BoundTrackParameters& trkParams,
-                         const ActsVector<nDim>& vtxPos, State& state) const {
+  Result<std::pair<Acts::Vector<nDim>, Acts::Vector3>> getDistanceAndMomentum(
+      const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+      const Vector<nDim>& vtxPos, State& state) const {
     static_assert(nDim == 3 || nDim == 4,
                   "Only 3D and 4D vertex positions allowed");
     auto res =
@@ -192,6 +193,7 @@ class ImpactPointEstimator {
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
   /// @param calculateTimeIP If true, the difference in time is computed
+  /// @return Impact parameters and their uncertainties for the track-vertex pair
   Result<ImpactParametersAndSigma> getImpactParameters(
       const BoundTrackParameters& track, const Vertex& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
@@ -232,11 +234,11 @@ class ImpactPointEstimator {
  private:
   Result<std::pair<Acts::Vector4, Acts::Vector3>> getDistanceAndMomentum(
       const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-      Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const;
+      Eigen::Map<const DynamicVector> vtxPos, State& state) const;
 
   Result<double> getVertexCompatibility(
       const GeometryContext& gctx, const BoundTrackParameters* trkParams,
-      Eigen::Map<const ActsDynamicVector> vertexPos) const;
+      Eigen::Map<const DynamicVector> vertexPos) const;
 
   /// Configuration object
   const Config m_cfg;

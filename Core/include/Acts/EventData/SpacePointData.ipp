@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/SpacePointData.hpp"
 
+#include <cassert>
+
 namespace Acts {
 
 inline float SpacePointData::x(const std::size_t idx) const {

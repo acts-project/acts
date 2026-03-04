@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/NavigationLayer.hpp"
 
+#include "Acts/Surfaces/SurfaceArray.hpp"
+
 namespace Acts {
 
 NavigationLayer::NavigationLayer(

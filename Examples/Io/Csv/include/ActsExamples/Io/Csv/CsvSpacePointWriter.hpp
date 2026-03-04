@@ -8,16 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
@@ -27,18 +18,18 @@ namespace ActsExamples {
 /// @class CsvSpacePointWriter
 ///
 /// This writes one file per event containing information about the
-/// spacepoints
+/// space points
 ///
 ///     event000000001-spacepoint.csv
 ///     event000000002-spacepoint.csv
 ///     ...
 ///
 /// Intrinsically thread-safe as one file per event.
-class CsvSpacePointWriter final : public WriterT<SimSpacePointContainer> {
+class CsvSpacePointWriter final : public WriterT<SpacePointContainer> {
  public:
   struct Config {
-    /// Which measurement collection to write.
-    std::string inputSpacepoints;
+    /// Which space point collection to write.
+    std::string inputSpacePoints;
     /// Where to place output files
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
@@ -64,9 +55,9 @@ class CsvSpacePointWriter final : public WriterT<SimSpacePointContainer> {
   /// and is called by the WriterT<>::write interface
   ///
   /// @param ctx The Algorithm context with per event information
-  /// @param spacepoints is the data to be written out
+  /// @param spacePoints is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimSpacePointContainer& spacepoints) override;
+                     const SpacePointContainer& spacePoints) override;
 
  private:
   Config m_cfg;

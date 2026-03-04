@@ -11,9 +11,15 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-#include <numbers>
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
+                                                   const Vector3& sp1,
+                                                   const Vector3& sp2,
+                                                   const Vector3& bField) {
+  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
+}
 
 Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
+                                                   const double t0,
                                                    const Vector3& sp1,
                                                    const Vector3& sp2,
                                                    const Vector3& bField) {
@@ -22,56 +28,36 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   // from the bottom to middle space point. Hence, the projection of the middle
   // space point on the transverse plane will be located at the x axis of the
   // new frame.
-  Vector3 relVec = sp1 - sp0;
-  Vector3 newZAxis = bField.normalized();
-  Vector3 newYAxis = newZAxis.cross(relVec).normalized();
-  Vector3 newXAxis = newYAxis.cross(newZAxis);
+  const Vector3 relVec = sp1 - sp0;
+  const Vector3 newZAxis = bField.normalized();
+  const Vector3 newYAxis = newZAxis.cross(relVec).normalized();
+  const Vector3 newXAxis = newYAxis.cross(newZAxis);
   RotationMatrix3 rotation;
   rotation.col(0) = newXAxis;
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
   // The center of the new frame is at the bottom space point
-  Translation3 trans(sp0);
+  const Translation3 trans(sp0);
   // The transform which constructs the new frame
-  Transform3 transform(trans * rotation);
+  const Transform3 transform(trans * rotation);
 
   // The coordinate of the middle and top space point in the new frame
-  Vector3 local1 = transform.inverse() * sp1;
-  Vector3 local2 = transform.inverse() * sp2;
+  const Vector3 local1 = transform.inverse() * sp1;
+  const Vector3 local2 = transform.inverse() * sp2;
 
-  // In the new frame the bottom sp is at the origin, while the middle
-  // sp in along the x axis. As such, the x-coordinate of the circle is
-  // at: x-middle / 2.
-  // The y coordinate can be found by using the straight line passing
-  // between the mid point between the middle and top sp and perpendicular to
-  // the line connecting them
-  Vector2 circleCenter;
-  circleCenter(0) = 0.5 * local1(0);
+  // Use the uv-plane to estimate the circle parameters
+  const Vector2 uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
+  const Vector2 uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
+  const Vector2 deltaUV2 = uv2 - uv1;
+  const double A = deltaUV2.y() / deltaUV2.x();
+  const double bOverS =
+      (uv1.y() * uv2.x() - uv2.y() * uv1.x()) / deltaUV2.norm();
 
-  double deltaX21 = local2(0) - local1(0);
-  double sumX21 = local2(0) + local1(0);
-  // straight line connecting the two points
-  // y = a * x + c (we don't care about c right now)
-  // we simply need the slope
-  // we compute 1./a since this is what we need for the following computation
-  double ia = deltaX21 / local2(1);
-  // Perpendicular line is then y = -1/a *x + b
-  // we can evaluate b given we know a already by imposing
-  // the line passes through P = (0.5 * (x2 + x1), 0.5 * y2)
-  double b = 0.5 * (local2(1) + ia * sumX21);
-  circleCenter(1) = -ia * circleCenter(0) + b;
-  // Radius is a signed distance between circleCenter and first sp, which is at
-  // (0, 0) in the new frame. Sign depends on the slope a (positive vs negative)
-  int sign = ia > 0 ? -1 : 1;
-  const double R = circleCenter.norm();
-  double invTanTheta =
-      local2.z() / (2 * R * std::asin(local2.head<2>().norm() / (2 * R)));
-  // The momentum direction in the new frame (the center of the circle has the
-  // coordinate (-1.*A/(2*B), 1./(2*B)))
-  double A = -circleCenter(0) / circleCenter(1);
-  Vector3 transDirection(1., A, fastHypot(1, A) * invTanTheta);
+  const double invTanTheta = local2.z() / local2.head<2>().norm();
+  const Vector3 transDirection(1, A, fastHypot(1, A) * invTanTheta);
+
   // Transform it back to the original frame
-  Vector3 direction = rotation * transDirection.normalized();
+  const Vector3 direction = rotation * transDirection.normalized();
 
   // Initialize the free parameters vector
   FreeVector params = FreeVector::Zero();
@@ -84,11 +70,23 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
 
   // The estimated q/pt in [GeV/c]^-1 (note that the pt is the projection of
   // momentum on the transverse plane of the new frame)
-  double qOverPt = sign / (bField.norm() * R);
+  const double qOverPt = 2 * bOverS / bField.norm();
   // The estimated q/p in [GeV/c]^-1
-  params[eFreeQOverP] = qOverPt / fastHypot(1., invTanTheta);
+  params[eFreeQOverP] = qOverPt / fastHypot(1, invTanTheta);
+
+  // The time parameter is set to the time of the bottom space point
+  params[eFreeTime] = t0;
 
   return params;
+}
+
+Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeed(
+    const GeometryContext& gctx, const Surface& surface, const Vector3& sp0,
+    const double t0, const Vector3& sp1, const Vector3& sp2,
+    const Vector3& bField) {
+  const FreeVector freeParams =
+      estimateTrackParamsFromSeed(sp0, t0, sp1, sp2, bField);
+  return transformFreeToBoundParameters(freeParams, surface, gctx);
 }
 
 Acts::BoundMatrix Acts::estimateTrackParamCovariance(
@@ -97,7 +95,7 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
   assert((params[eBoundTheta] > 0 && params[eBoundTheta] < std::numbers::pi) &&
          "Theta must be in the range (0, pi)");
 
-  BoundSquareMatrix result = BoundSquareMatrix::Zero();
+  BoundMatrix result = BoundMatrix::Zero();
 
   for (std::size_t i = eBoundLoc0; i < eBoundSize; ++i) {
     double sigma = config.initialSigmas[i];

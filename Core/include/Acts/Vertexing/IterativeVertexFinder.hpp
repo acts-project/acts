@@ -90,7 +90,9 @@ class IterativeVertexFinder final : public IVertexFinder {
     ///
     /// are considered compatible with the vertex.
     double significanceCutSeeding = 10;
+    /// Maximum chi-squared cut for seeding vertex candidates
     double maximumChi2cutForSeeding = 36.;
+    /// Maximum number of vertices to find per event
     int maxVertices = 50;
 
     /// Assign a certain fraction of compatible tracks to a different (so-called
@@ -100,9 +102,13 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// vertex. E.g., if splitVerticesTrkInvFraction = 2, about 50% of
     /// compatible tracks will be assigned to the split vertex.
     int splitVerticesTrkInvFraction = 2;
+    /// Flag to enable track reassignment after first vertex fit
     bool reassignTracksAfterFirstFit = false;
+    /// Flag to enable maximum tracks cut per vertex
     bool doMaxTracksCut = false;
+    /// Maximum number of tracks to consider per vertex
     int maxTracks = 5000;
+    /// Minimum track weight threshold for vertex association
     double cutOffTrackWeight = 0.01;
     /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
     /// decide if a track should be checked for reassignment to other vertices
@@ -117,17 +123,22 @@ class IterativeVertexFinder final : public IVertexFinder {
 
   /// State struct
   struct State {
+    /// Constructor with magnetic field provider and context
+    /// @param field Magnetic field provider for track extrapolation
+    /// @param _magContext Magnetic field context for field evaluation
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& _magContext)
         : magContext(_magContext),
           ipState{field.makeCache(magContext)},
           fieldCache(field.makeCache(magContext)) {}
 
+    /// Reference to magnetic field context for vertex finding
     std::reference_wrapper<const Acts::MagneticFieldContext> magContext;
 
     /// The IP estimator state
     ImpactPointEstimator::State ipState;
 
+    /// Cached magnetic field information for efficient access
     MagneticFieldProvider::Cache fieldCache;
   };
 

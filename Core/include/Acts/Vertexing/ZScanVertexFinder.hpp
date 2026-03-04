@@ -39,29 +39,30 @@ class ZScanVertexFinder final : public IVertexFinder {
     /// @param ipEst ImpactPointEstimator
     explicit Config(const ImpactPointEstimator& ipEst) : ipEstimator(ipEst) {}
 
-    // ImpactPointEstimator
+    /// Impact point estimator for vertex finding
     ImpactPointEstimator ipEstimator;
 
-    // FsmwMode1dFinder
+    /// Mode finder for 1D z-position determination
     FsmwMode1dFinder mode1dFinder;
 
-    // disables all weights, set all weights to 1.
+    /// Flag to disable all weights, set all weights to 1
     bool disableAllWeights = false;
-    // constraint parameters
+    /// Constraint cutoff parameter for vertex fitting
     float constraintcutoff = 9.;
+    /// Constraint temperature parameter for annealing
     float constrainttemp = 1.;
-    // use LogPt for weighting
+    /// Flag to use log(pT) for track weighting
     bool useLogPt = true;
-    // use pt for weighting
+    /// Flag to use pT for track weighting
     bool usePt = false;
-    // minimum pt
+    /// Minimum pT threshold for track selection
     double minPt = 0.4 * UnitConstants::GeV;
-    // exponent used for weighting if usePt
+    /// Exponent used for pT weighting when usePt is enabled
     double expPt = 1.;
-    // minimum required weight
+    /// Minimum required weight for track inclusion
     double minWeight = 0.01;
 
-    // Function to extract parameters from InputTrack
+    /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
   };
 

@@ -21,9 +21,9 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
 #include <limits>
@@ -34,13 +34,15 @@
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::detail;
 
-namespace Acts::Test {
+namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// @brief mockup of stepping state
@@ -99,7 +101,7 @@ struct Options {
   /// Contains: target aborters
   ActorList<PathLimitReached> abortList;
 
-  const Acts::Logger& logger = Acts::getDummyLogger();
+  const Logger& logger = getDummyLogger();
 };
 
 /// @brief mockup of propagtor state
@@ -111,6 +113,8 @@ struct PropagatorState {
   /// Contains: options
   Options options;
 };
+
+BOOST_AUTO_TEST_SUITE(PropagatorSuite)
 
 // This test case checks that no segmentation fault appears
 // - this tests the collection of surfaces
@@ -125,11 +129,11 @@ BOOST_DATA_TEST_CASE(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::xrange(1),
     phi, deltaPhi, index) {
-  (void)index;
-  (void)deltaPhi;
+  static_cast<void>(index);
+  static_cast<void>(deltaPhi);
 
   PropagatorState pState;
-  pState.stepping.dir = Vector3(cos(phi), sin(phi), 0.);
+  pState.stepping.dir = Vector3(std::cos(phi), std::sin(phi), 0.);
   pState.stepping.p = 100_MeV;
 
   Stepper pStepper;
@@ -137,9 +141,8 @@ BOOST_DATA_TEST_CASE(
   auto& pathLimit = pState.options.abortList.get<PathLimitReached>();
   auto initialLimit = pathLimit.internalLimit;
 
-  detail::setupLoopProtection(
-      pState, pStepper, pathLimit, false,
-      *Acts::getDefaultLogger("LoopProt", Logging::INFO));
+  detail::setupLoopProtection(pState, pStepper, pathLimit, false,
+                              *getDefaultLogger("LoopProt", Logging::INFO));
 
   auto updatedLimit =
       pState.options.abortList.get<PathLimitReached>().internalLimit;
@@ -147,7 +150,7 @@ BOOST_DATA_TEST_CASE(
 }
 
 using BField = ConstantBField;
-using EigenStepper = Acts::EigenStepper<>;
+using EigenStepper = EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper>;
 
 const int ntests = 100;
@@ -177,10 +180,10 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double p = pT / sin(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
 
   const double Bz = 2_T;
@@ -204,4 +207,6 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_REL(pz, result.endParameters->momentum().z(), 1e-2);
 }
 
-}  // namespace Acts::Test
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

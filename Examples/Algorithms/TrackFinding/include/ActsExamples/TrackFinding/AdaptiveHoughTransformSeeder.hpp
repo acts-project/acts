@@ -13,40 +13,22 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
-#include <list>
 #include <memory>
-#include <numbers>
 #include <string>
-#include <type_traits>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}
 
-namespace Acts {
-class TrackingGeometry;
-}
-
-namespace ActsExamples {
 // Helper class describing one section of the accumulator space
 class AccumulatorSection {
  public:
@@ -107,7 +89,7 @@ class AccumulatorSection {
   /// @brief true if the line defined by given parameters passes the section
   /// @param function is callable used to check crossing at the edges
   template <typename F>
-  inline bool isLineInside(F function) const &
+  inline bool isLineInside(F &&function) const &
     requires std::invocable<F, float>
   {
     const float yB = function(m_xBegin);
@@ -124,7 +106,7 @@ class AccumulatorSection {
   /// sections
   /// @return true if the lines cross in the section
   template <typename F>
-  inline bool isCrossingInside(F line1, F line2) const &
+  inline bool isCrossingInside(F &&line1, F &&line2) const &
     requires std::invocable<F, float>
   {
     // this microalgorithm idea is illustrated below
@@ -193,17 +175,9 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
-    ///
-    /// We allow multiple space point collections to allow different parts of
-    /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
-    /// space points for strip-like detectors.
-    /// Note that we don't *need* spacepoints (measurements can be used instead)
-    std::vector<std::string> inputSpacePoints;
+    std::string inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
-    /// Output hough track collection.
-    std::string outputProtoTracks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     float phiWrap =
@@ -244,14 +218,14 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     /// @param inverseR inverse of radius of the SP
     /// @param phiAngle azimuthal angle of the SP
     /// @param zpos z position of the SP
-    /// @param l link to space point
+    /// @param spacePointIndex index of the original space point, needed to construct seeds in the end
     PreprocessedMeasurement(double inverseR, double phiAngle, double zpos,
-                            Acts::SourceLink l)
-        : invr(inverseR), phi(phiAngle), z(zpos), link(std::move(l)) {}
-    double invr;
-    double phi;
-    double z;
-    Acts::SourceLink link;
+                            SpacePointIndex spacePointIndex)
+        : invr(inverseR), phi(phiAngle), z(zpos), sp(spacePointIndex) {}
+    double invr{};
+    double phi{};
+    double z{};
+    SpacePointIndex sp{};
   };
 
   template <typename measurement_t = PreprocessedMeasurement>
@@ -302,15 +276,15 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     std::erase_if(section.indices(), [lineFunctor, &measurements,
                                       &section](unsigned index) {
       const PreprocessedMeasurement &m = measurements[index];
-      return !section.isLineInside(std::bind_front(lineFunctor, m));
+      return !section.isLineInside(std::bind_front(lineFunctor, std::cref(m)));
     });
   }
 
   template <typename M>
-  void exploreParametersSpace(std::deque<AccumulatorSection> &sectionsStack,
+  void exploreParametersSpace(std::vector<AccumulatorSection> &sectionsStack,
                               const std::vector<M> &measurements,
                               const ExplorationOptions<M> &opt,
-                              std::deque<AccumulatorSection> &results) const {
+                              std::vector<AccumulatorSection> &results) const {
     using Decision = ExplorationOptions<M>::Decision;
     while (!sectionsStack.empty()) {
       ACTS_VERBOSE("Stack size " << sectionsStack.size());
@@ -337,6 +311,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
         if (thisSection.xSize() > opt.xMinBinSize &&
             thisSection.ySize() > opt.yMinBinSize) {
           // need 4 subdivisions
+          divisions.reserve(4);
           divisions.push_back(thisSection.topLeft());
           divisions.push_back(thisSection.topRight());
           divisions.push_back(thisSection.bottomLeft());
@@ -344,10 +319,12 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
         } else if (thisSection.xSize() <= opt.xMinBinSize &&
                    thisSection.ySize() > opt.yMinBinSize) {
           // only split in y
+          divisions.reserve(2);
           divisions.push_back(thisSection.top());
           divisions.push_back(thisSection.bottom());
         } else {
           // only split in x
+          divisions.reserve(2);
           divisions.push_back(thisSection.left());
           divisions.push_back(thisSection.right());
         }
@@ -370,7 +347,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AdaptiveHoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+  explicit AdaptiveHoughTransformSeeder(
+      const Config &cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the seeding algorithm.
   ///
@@ -383,24 +361,16 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  std::unique_ptr<const Acts::Logger> m_logger;
-  const Acts::Logger &logger() const { return *m_logger; }
 
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
-                                                           "OutputProtoTracks"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
 
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-
-  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
-      m_inputSpacePoints{};
-
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   /// @brief fill vector pf measurements from input space points
   /// @param measurements - vector to fill
   void preparePreprocessedMeasurements(
-      const AlgorithmContext &ctx,
+      const SpacePointContainer &spacePoints,
       std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief split the measurements into sections in phi
@@ -408,7 +378,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param stack - sections stack to fill
   /// @param measurements - measurements to fill the stack
   void fillStackPhiSplit(
-      std::deque<AccumulatorSection> &stack,
+      std::vector<AccumulatorSection> &stack,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief process sections on the stack
@@ -419,8 +389,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the output set of sections
   /// @param measurements are input measurements
   void processStackQOverPtPhi(
-      std::deque<AccumulatorSection> &input,
-      std::deque<AccumulatorSection> &output,
+      std::vector<AccumulatorSection> &input,
+      std::vector<AccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief process sections on the stack
@@ -431,13 +401,13 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the output set of sections
   /// @param measurements are input measurements
   void processStackZCotTheta(
-      std::deque<AccumulatorSection> &input,
-      std::deque<AccumulatorSection> &output,
+      std::vector<AccumulatorSection> &input,
+      std::vector<AccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   void processStackZCotThetaSplit(
-      std::deque<AccumulatorSection> &input,
-      std::deque<AccumulatorSection> &output,
+      std::vector<AccumulatorSection> &input,
+      std::vector<AccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief produce 3 Sp seeds out of solutions
@@ -445,7 +415,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the input to be translated
   /// @param measurements are input measurements
   void makeSeeds(
-      SimSeedContainer &seeds, const std::deque<AccumulatorSection> &solutions,
+      SeedContainer &seeds, const std::vector<AccumulatorSection> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   using LineParamFunctor =
@@ -473,7 +443,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       const std::vector<PreprocessedMeasurement> &measurements,
       const LineParamFunctor &lineFunctor, const unsigned threshold) const;
 
-  void deduplicate(std::deque<AccumulatorSection> &input) const;
+  void deduplicate(std::vector<AccumulatorSection> &input) const;
 };
 
 }  // namespace ActsExamples

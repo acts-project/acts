@@ -14,8 +14,9 @@
 
 namespace ActsExamples {
 
-HitSelector::HitSelector(const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("HitSelector", level), m_cfg(config) {
+HitSelector::HitSelector(const Config& config,
+                         std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("HitSelector", std::move(logger)), m_cfg(config) {
   if (m_cfg.minX >= m_cfg.maxX || m_cfg.minY >= m_cfg.maxY ||
       m_cfg.minZ >= m_cfg.maxZ || m_cfg.minR >= m_cfg.maxR ||
       m_cfg.minTime >= m_cfg.maxTime ||
@@ -29,6 +30,10 @@ HitSelector::HitSelector(const Config& config, Acts::Logging::Level level)
   m_inputParticlesSelected.maybeInitialize(m_cfg.inputParticlesSelected);
   m_outputHits.initialize(m_cfg.outputHits);
 
+  logSelectionConfig();
+}
+
+void HitSelector::logSelectionConfig() const {
   ACTS_DEBUG("selection particles " << m_cfg.inputParticlesSelected);
   ACTS_DEBUG("selection hit x [" << m_cfg.minX << "," << m_cfg.maxX << ")");
   ACTS_DEBUG("selection hit y [" << m_cfg.minY << "," << m_cfg.maxY << ")");

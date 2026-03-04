@@ -17,20 +17,31 @@
 
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
+/// Full triplet seeder which depends on a doublet and triplet seed finder, and
+/// a triplet seed filter.
 class TripletSeeder {
  public:
+  /// Cache for storing intermediate results during triplet seeding to avoid
+  /// reallocation.
   struct Cache {
+    /// Cache for bottom doublets associated with middle space points
     DoubletsForMiddleSp bottomDoublets;
+    /// Cache for top doublets associated with middle space points
     DoubletsForMiddleSp topDoublets;
 
+    /// Sorted container of bottom doublet indices with cotangent theta values
     std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedBottoms;
+    /// Sorted container of top doublet indices with cotangent theta values
     std::vector<DoubletsForMiddleSp::IndexAndCotTheta> sortedTops;
 
+    /// Cache for triplet top candidates during seed formation
     TripletTopCandidates tripletTopCandidates;
   };
 
+  /// Construct a TripletSeeder with optional logger.
+  /// @param logger Logger instance for debug output (defaults to INFO level)
   explicit TripletSeeder(std::unique_ptr<const Logger> logger =
                              getDefaultLogger("TripletSeeder",
                                               Logging::Level::INFO));
@@ -42,9 +53,9 @@ class TripletSeeder {
   /// @param topFinder Finder for top doublets
   /// @param tripletFinder Finder for triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param spacePoints Space point container
+  /// @param spacePoints space point container
   /// @param bottomSps Subset of space points to be used as innermost SP in a seed
-  /// @param middleSp Space point candidate to be used as middle SP in a seed
+  /// @param middleSp space point candidate to be used as middle SP in a seed
   /// @param topSps Subset of space points to be used as outermost SP in a seed
   /// @param outputSeeds Output container for the seeds
   void createSeedsFromGroup(Cache& cache, const DoubletSeedFinder& bottomFinder,
@@ -64,7 +75,7 @@ class TripletSeeder {
   /// @param topFinder Finder for top doublets
   /// @param tripletFinder Finder for triplet space points
   /// @param filter Triplet seed filter that defines the filtering criteria
-  /// @param spacePoints Space point container
+  /// @param spacePoints space point container
   /// @param bottomSpGroups Groups of space points to be used as innermost SP in a seed
   /// @param middleSpGroup Group of space points to be used as middle SP in a seed
   /// @param topSpGroups Groups of space points to be used as outermost SP in a seed
@@ -87,4 +98,4 @@ class TripletSeeder {
   const Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

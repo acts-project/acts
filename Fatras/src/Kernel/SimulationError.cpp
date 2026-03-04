@@ -19,7 +19,7 @@ class SimulationErrorCategory final : public std::error_category {
   const char* name() const noexcept final { return "SimulationError"; }
   std::string message(int c) const final {
     switch (static_cast<SimulationError>(c)) {
-      case SimulationError::eInvalidInputParticleId:
+      case SimulationError::InvalidInputParticleId:
         return "Input particle id with non-zero generation or sub-particle";
       default:
         return "unknown";

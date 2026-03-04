@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
+#include "ActsPlugins/DD4hep/DD4hepVolumeBuilder.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Plugins/Root/TGeoPrimitivesHelper.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsPlugins/Root/TGeoPrimitivesHelper.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -21,22 +22,26 @@
 #include <DD4hep/Volumes.h>
 #include <RtypesCore.h>
 
-Acts::DD4hepVolumeBuilder::DD4hepVolumeBuilder(
-    const Acts::DD4hepVolumeBuilder::Config& config,
+using namespace Acts;
+
+namespace ActsPlugins {
+
+DD4hepVolumeBuilder::DD4hepVolumeBuilder(
+    const DD4hepVolumeBuilder::Config& config,
     std::unique_ptr<const Logger> logger)
     : m_cfg(), m_logger(std::move(logger)) {
   setConfiguration(config);
 }
 
-Acts::DD4hepVolumeBuilder::~DD4hepVolumeBuilder() = default;
+DD4hepVolumeBuilder::~DD4hepVolumeBuilder() = default;
 
-void Acts::DD4hepVolumeBuilder::setConfiguration(
-    const Acts::DD4hepVolumeBuilder::Config& config) {
+void DD4hepVolumeBuilder::setConfiguration(
+    const DD4hepVolumeBuilder::Config& config) {
   m_cfg = config;
 }
 
-std::vector<std::shared_ptr<Acts::TrackingVolume>>
-Acts::DD4hepVolumeBuilder::centralVolumes() const {
+std::vector<std::shared_ptr<TrackingVolume>>
+DD4hepVolumeBuilder::centralVolumes() const {
   if (m_cfg.centralVolumes.empty()) {
     ACTS_VERBOSE("[L] No layers handed over for central volume!");
     return {};
@@ -87,16 +92,18 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
   return volumes;
 }
 
-Acts::Transform3 Acts::DD4hepVolumeBuilder::convertTransform(
+Transform3 DD4hepVolumeBuilder::convertTransform(
     const TGeoMatrix* tGeoTrans) const {
   // Get the placement and orientation in respect to its mother
   const Double_t* rotation = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
   return TGeoPrimitivesHelper::makeTransform(
-      Acts::Vector3(rotation[0], rotation[3], rotation[6]),
-      Acts::Vector3(rotation[1], rotation[4], rotation[7]),
-      Acts::Vector3(rotation[2], rotation[5], rotation[8]),
-      Acts::Vector3(translation[0] * UnitConstants::cm,
-                    translation[1] * UnitConstants::cm,
-                    translation[2] * UnitConstants::cm));
+      Vector3(rotation[0], rotation[3], rotation[6]),
+      Vector3(rotation[1], rotation[4], rotation[7]),
+      Vector3(rotation[2], rotation[5], rotation[8]),
+      Vector3(translation[0] * UnitConstants::cm,
+              translation[1] * UnitConstants::cm,
+              translation[2] * UnitConstants::cm));
 }
+
+}  // namespace ActsPlugins

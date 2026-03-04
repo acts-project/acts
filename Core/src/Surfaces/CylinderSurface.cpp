@@ -37,14 +37,12 @@ using VectorHelpers::perp;
 using VectorHelpers::phi;
 
 CylinderSurface::CylinderSurface(const CylinderSurface& other)
-    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject{}, RegularSurface(other), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                  const CylinderSurface& other,
                                  const Transform3& shift)
-    : GeometryObject(),
-      RegularSurface(gctx, other, shift),
-      m_bounds(other.m_bounds) {}
+    : RegularSurface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
                                  double halfz, double halfphi, double avphi,
@@ -54,8 +52,8 @@ CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
           radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 CylinderSurface::CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                                 const DetectorElementBase& detelement)
-    : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
+                                 const SurfacePlacementBase& placement)
+    : RegularSurface{placement}, m_bounds(std::move(cbounds)) {
   // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
@@ -119,8 +117,8 @@ Vector3 CylinderSurface::localToGlobal(const GeometryContext& gctx,
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[0] / r;
-  Vector3 position(r * cos(phi), r * sin(phi), lposition[1]);
-  return transform(gctx) * position;
+  Vector3 position(r * std::cos(phi), r * std::sin(phi), lposition[1]);
+  return localToGlobalTransform(gctx) * position;
 }
 
 Result<Vector2> CylinderSurface::globalToLocal(const GeometryContext& gctx,
@@ -135,7 +133,7 @@ Result<Vector2> CylinderSurface::globalToLocal(const GeometryContext& gctx,
   if (inttol < 0.01) {
     inttol = 0.01;
   }
-  const Transform3& sfTransform = transform(gctx);
+  const Transform3& sfTransform = localToGlobalTransform(gctx);
   Transform3 inverseTrans(sfTransform.inverse());
   Vector3 loc3Dframe(inverseTrans * position);
   if (std::abs(perp(loc3Dframe) - bounds().get(CylinderBounds::eR)) > inttol) {
@@ -152,13 +150,13 @@ std::string CylinderSurface::name() const {
 Vector3 CylinderSurface::normal(const GeometryContext& gctx,
                                 const Vector2& lposition) const {
   double phi = lposition[0] / m_bounds->get(CylinderBounds::eR);
-  Vector3 localNormal(cos(phi), sin(phi), 0.);
-  return transform(gctx).linear() * localNormal;
+  Vector3 localNormal(std::cos(phi), std::sin(phi), 0.);
+  return localToGlobalTransform(gctx).linear() * localNormal;
 }
 
 Vector3 CylinderSurface::normal(const GeometryContext& gctx,
                                 const Vector3& position) const {
-  const Transform3& sfTransform = transform(gctx);
+  const Transform3& sfTransform = localToGlobalTransform(gctx);
   // get it into the cylinder frame
   Vector3 pos3D = sfTransform.inverse() * position;
   // set the z coordinate to 0
@@ -181,7 +179,7 @@ const CylinderBounds& CylinderSurface::bounds() const {
 
 Polyhedron CylinderSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
-  auto ctrans = transform(gctx);
+  auto ctrans = localToGlobalTransform(gctx);
 
   // Prepare vertices and faces
   std::vector<Vector3> vertices =
@@ -193,7 +191,7 @@ Polyhedron CylinderSurface::polyhedronRepresentation(
 
 Vector3 CylinderSurface::rotSymmetryAxis(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not rotation())
-  return transform(gctx).matrix().block<3, 1>(0, 2);
+  return localToGlobalTransform(gctx).matrix().block<3, 1>(0, 2);
 }
 
 detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
@@ -218,20 +216,19 @@ detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-SurfaceMultiIntersection CylinderSurface::intersect(
+MultiIntersection3D CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
-  const auto& gctxTransform = transform(gctx);
+  const auto& gctxTransform = localToGlobalTransform(gctx);
 
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctxTransform, position, direction);
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return {{Intersection3D::invalid(), Intersection3D::invalid()},
-            *this,
-            boundaryTolerance};
+    return MultiIntersection3D(Intersection3D::Invalid(),
+                               Intersection3D::Invalid());
   }
 
   // Check the validity of the first solution
@@ -267,7 +264,7 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
   if (qe.solutions == 1) {
-    return {{first, first}, *this, boundaryTolerance};
+    return MultiIntersection3D(first, first);
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
@@ -279,9 +276,9 @@ SurfaceMultiIntersection CylinderSurface::intersect(
   Intersection3D second(solution2, qe.second, status2);
   // Order based on path length
   if (first.pathLength() <= second.pathLength()) {
-    return {{first, second}, *this, boundaryTolerance};
+    return MultiIntersection3D(first, second);
   }
-  return {{second, first}, *this, boundaryTolerance};
+  return MultiIntersection3D(second, first);
 }
 
 AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
@@ -292,7 +289,7 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
   // The rotation
-  const auto& rotation = transform(gctx).rotation();
+  const auto& rotation = localToGlobalTransform(gctx).rotation();
   // The local frame x/y/z axis
   const auto& localXAxis = rotation.col(0);
   const auto& localYAxis = rotation.col(1);
@@ -332,12 +329,12 @@ AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
+Matrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
-  const auto& sTransform = transform(gctx);
+  const auto& sTransform = localToGlobalTransform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
@@ -346,7 +343,7 @@ ActsMatrix<2, 3> CylinderSurface::localCartesianToBoundLocalDerivative(
   const double lsphi = std::sin(lphi);
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
-  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
+  Matrix<2, 3> loc3DToLocBound = Matrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr, 0, 0, 0, 1;
 
   return loc3DToLocBound;
@@ -360,8 +357,7 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
   ACTS_VERBOSE("Merging cylinder surfaces in " << axisDirectionName(direction)
                                                << " direction");
 
-  if (m_associatedDetElement != nullptr ||
-      other.m_associatedDetElement != nullptr) {
+  if (isAlignable() || other.isAlignable()) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "CylinderSurface::merge: surfaces are "
                                   "associated with a detector element");
@@ -555,6 +551,15 @@ std::pair<std::shared_ptr<CylinderSurface>, bool> CylinderSurface::mergedWith(
                                   "CylinderSurface::merge: invalid direction " +
                                       axisDirectionName(direction));
   }
+}
+
+const std::shared_ptr<const CylinderBounds>& CylinderSurface::boundsPtr()
+    const {
+  return m_bounds;
+}
+void CylinderSurface::assignSurfaceBounds(
+    std::shared_ptr<const CylinderBounds> newBounds) {
+  m_bounds = std::move(newBounds);
 }
 
 }  // namespace Acts

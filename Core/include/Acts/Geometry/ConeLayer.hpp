@@ -13,18 +13,17 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 
-#include <algorithm>
 #include <memory>
-#include <utility>
 
 namespace Acts {
+
 class ConeBounds;
+class SurfaceArray;
 
 /// @class ConeLayer
 ///
-/// Class to describe a conical detector layer for tracking, it inhertis from
+/// Class to describe a conical detector layer for tracking, it inherits from
 /// both, Layer base class and ConeSurface class
 class ConeLayer : virtual public ConeSurface, public Layer {
  public:
@@ -40,15 +39,11 @@ class ConeLayer : virtual public ConeSurface, public Layer {
   /// @todo change od and ad to unique_ptr
   ///
   /// @return is a shared pointer to a layer
-  static MutableLayerPtr create(
+  static std::shared_ptr<ConeLayer> create(
       const Transform3& transform, std::shared_ptr<const ConeBounds> cbounds,
       std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      LayerType laytyp = Acts::active) {
-    return MutableLayerPtr(new ConeLayer(transform, std::move(cbounds),
-                                         std::move(surfaceArray), thickness,
-                                         std::move(ad), laytyp));
-  }
+      LayerType laytyp = active);
 
   ConeLayer() = delete;
   ConeLayer(const ConeLayer& cla) = delete;
@@ -56,9 +51,11 @@ class ConeLayer : virtual public ConeSurface, public Layer {
   ConeLayer& operator=(const ConeLayer&) = delete;
 
   /// Transforms the layer into a Surface representation for extrapolation
+  /// @return Const reference to the cone surface representing this layer
   const ConeSurface& surfaceRepresentation() const override;
 
-  // Non-const version
+  /// Non-const version of surface representation access
+  /// @return Mutable reference to the cone surface
   ConeSurface& surfaceRepresentation() override;
 
  protected:
@@ -76,7 +73,7 @@ class ConeLayer : virtual public ConeSurface, public Layer {
             std::shared_ptr<const ConeBounds> cbounds,
             std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
             std::unique_ptr<ApproachDescriptor> ade = nullptr,
-            LayerType laytyp = Acts::active);
+            LayerType laytyp = active);
 
   /// Private copy constructor with shift, called by create(args*)
   ///

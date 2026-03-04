@@ -15,6 +15,15 @@
 
 #include <cstdint>
 
+namespace Acts {
+template <Experimental::CompositeSpacePoint SpacePoint_t>
+/// @brief Print the position, the drift radius & the sensor directions of a space point.
+///        If the space point is shipped with an ostream operator, this oone is
+///        used
+/// @param measurement: Reference to the space point to print
+std::string toString(const SpacePoint_t& measurement);
+}
+
 namespace Acts::Experimental::detail {
 /// @brief Helper class to calculate the residual between a straight line and
 ///        a CompositeSpacePoint measurement as well as the partial derivatives.
@@ -106,6 +115,8 @@ class CompSpacePointAuxiliaries {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("CompSpacePointAuxiliaries", Logging::Level::INFO));
 
+  /// @brief Returns the config object
+  const Config& config() const { return m_cfg; }
   /// @brief Updates the spatial residual components between the line and the passed
   ///        measurement. The result is cached internally and can be later
   ///        fetched by the residual(), gradient() and hessian() methods. If the
@@ -134,10 +145,9 @@ class CompSpacePointAuxiliaries {
     /// @brief Chi2 squared term
     double chi2{0.};
     /// @brief First derivative of the chi2 w.r.t. the fit parameters
-    Acts::ActsVector<s_nPars> gradient{Acts::ActsVector<s_nPars>::Zero()};
+    Acts::Vector<s_nPars> gradient{Acts::Vector<s_nPars>::Zero()};
     /// @brief Second derivative of the chi2 w.r.t. the fit parameters
-    Acts::ActsSquareMatrix<s_nPars> hessian{
-        Acts::ActsSquareMatrix<s_nPars>::Zero()};
+    Acts::SquareMatrix<s_nPars> hessian{Acts::SquareMatrix<s_nPars>::Zero()};
     /// @brief Set the chi2, the gradient and hessian back to zero
     void reset();
   };
@@ -150,7 +160,10 @@ class CompSpacePointAuxiliaries {
   /// @param cov: The composite space point's covariance values
   void updateChiSq(ChiSqWithDerivatives& chiSqObj,
                    const std::array<double, 3>& cov) const;
-
+  /// @brief Fills the upper triangle of the Hessian matrix with the
+  ///        values from the lower triangle
+  /// @param chiSqObj: Reference to the chiSqObj carrying the Hessian
+  void symmetrizeHessian(ChiSqWithDerivatives& chiSqObj) const;
   /// @brief Returns the previously calculated residual.
   const Vector& residual() const;
   /// @brief Returns the gradient of the previously calculated residual
@@ -170,12 +183,101 @@ class CompSpacePointAuxiliaries {
   static constexpr bool isPositionParam(const FitParIndex param) {
     return param == FitParIndex::x0 || param == FitParIndex::y0;
   }
+  /// @brief Extrapolates the straight line onto the space point's strip-plane defined by the
+  ///         `localPosition()` and the `planeNormal()`
+  /// @param line: Reference to the line of interest
+  /// @param hit: Reference to the hit of interest
+  template <CompositeSpacePoint SpacePoint_t>
+  static Vector extrapolateToPlane(const Line_t& line, const SpacePoint_t& hit);
+  /// @brief Extrapolates the straight line parametrized by a point and a direction
+  ///        onto the space point's strip-plane defined by the
+  ///         `localPosition()` and the `planeNormal()`
+  /// @param pos: Point on the line
+  /// @param dir: Direction of the line
+  /// @param hit: Reference to the hit of interest
+  template <CompositeSpacePoint SpacePoint_t>
+  static Vector extrapolateToPlane(const Vector& pos, const Vector& dir,
+                                   const SpacePoint_t& hit);
+  /// @brief Calculates the spaztial chiSq term of a composite space point to a line
+  /// @param line: Reference to the line of interest
+  /// @param hit: Reference to the hit of interest
+  template <CompositeSpacePoint SpacePoint_t>
+  static double chi2Term(const Line_t& line, const SpacePoint_t& hit);
+  /// @brief Calculates the spatial chiSq term of a composite space point to a line parameterized
+  ///         by a position & direction vector
+  /// @param pos: Point on the line
+  /// @param dir: Direction of the line
+  /// @param hit: Reference to the hit of interest
+  template <CompositeSpacePoint SpacePoint_t>
+  static double chi2Term(const Vector& pos, const Vector& dir,
+                         const SpacePoint_t& hit);
+  /// @brief Calculates the chiSq term of a composite space point to a line taking into account
+  ///        the time offset t0
+  /// @param line: Reference to the line of interest
+  /// @param t0: Time off set evaluated at the measurement's plane
+  /// @param hit: Reference to the hit of interest
+  template <CompositeSpacePoint SpacePoint_t>
+  static double chi2Term(const Line_t& line, const double t0,
+                         const SpacePoint_t& hit);
+  /// @brief Calculates the chiSq term of a composite space point to a line taking into account
+  ///        the time offset t0
+  /// @param pos: Point on the line
+  /// @param dir: Direction of the line
+  /// @param t0: Time off set evaluated at the measurement's plane
+  /// @param hit: Reference to the hit of interest
+  template <CompositeSpacePoint SpacePoint_t>
+  static double chi2Term(const Vector& pos, const Vector& dir, const double t0,
+                         const SpacePoint_t& hit);
+  ///  @brief Calculates the chiSq term of a composite space point taking into account
+  ///        the time offset t0 & the time of arrival of the particle assuming
+  ///        the speed of light
+  /// @param line: Reference to the line of interest
+  /// @param t0: Time off set evaluated at the measurement's plane
+  /// @param hit: Reference to the hit of interest
+  template <CompositeSpacePoint SpacePoint_t>
+  static double chi2Term(const Line_t& line,
+                         const Acts::Transform3& localToGlobal, const double t0,
+                         const SpacePoint_t& hit);
+  ///  @brief Calculates the chiSq term of a composite space point taking into account
+  ///        the time offset t0 & the time of arrival of the particle assuming
+  ///        the speed of light
+  /// @param pos: Point on the line
+  /// @param dir: Direction of the line
+  /// @param t0: Time off set evaluated at the measurement's plane
+  /// @param hit: Reference to the hit of interest
+  template <CompositeSpacePoint SpacePoint_t>
+  static double chi2Term(const Vector& pos, const Vector& dir,
+                         const Acts::Transform3& localToGlobal, const double t0,
+                         const SpacePoint_t& hit);
   /// @brief Calculate whether the track passed on the left (-1) or the right (1) side
   ///        of the straw wire. Returns 0 for strips
-  /// @param line: Reference to the
+  /// @param line: Reference to the line of interest
   /// @param strawSp: Straw measurement of interest
   template <CompositeSpacePoint Point_t>
   static int strawSign(const Line_t& line, const Point_t& strawSp);
+  /// @brief Calculate whether a generic line is on the left (-1) or right (1) side
+  ///         of the straw wire. Return 0 for strip
+  /// @param pos: Point on the line
+  /// @param dir: Direction of the line
+  /// @param strawSp: Straw measurement of interest
+  template <CompositeSpacePoint Point_t>
+  static int strawSign(const Vector& pos, const Vector& dir,
+                       const Point_t& strawSp);
+  /// @brief Calculate the straw signs for a set of measurements
+  /// @param line: Reference to the line to which the residual is calculated
+  /// @param measurements: List of straw measurements to calculate the signs for
+  template <CompositeSpacePointContainer StrawCont_t>
+  static std::vector<int> strawSigns(const Line_t& line,
+                                     const StrawCont_t& measurements);
+  /// @brief Calculate the straw signs for a set of measurements
+  /// @param pos: Point on the line
+  /// @param dir: Direction of the line
+  /// @param measurements: List of straw measurements to calculate the signs for
+  template <CompositeSpacePointContainer StrawCont_t>
+  static std::vector<int> strawSigns(const Vector& pos, const Vector& dir,
+                                     const StrawCont_t& measurements);
+  /// @brief Resets the residual and all partial derivatives to zero.
+  void reset();
 
  private:
   /// @brief Reference to the logging object
@@ -219,7 +321,7 @@ class CompSpacePointAuxiliaries {
                            const Vector& sensorN, const Vector& sensorD,
                            const Vector& stripPos, const bool isBending,
                            const bool isNonBending);
-  /// @brief Calculates the reidual of a strip measurement w.r.t. the time offset parameter
+  /// @brief Calculates the residual of a strip measurement w.r.t. the time offset parameter
   /// @param sensorN: Reference to the first basis vector inside the strip measruement plane,
   ///            which is given by the sensor normal
   /// @param sensorD: Reference to the second basis vector inside the strip measruement plane,
@@ -238,14 +340,11 @@ class CompSpacePointAuxiliaries {
   /// @param hitMinSeg: Difference of the straw position & the line reference point
   /// @param wireDir: The direction along the wire
   /// @param driftR: Current drift radius of the straw measurement
-
   /// @param driftV: Associated drift velocity given as the derivative of the r-t relation
   /// @param driftA: Associated drift acceleration given as the second derivative of the r-t relation
   void updateTimeStrawRes(const Line_t& line, const Vector& hitMinSeg,
                           const Vector& wireDir, const double driftR,
                           const double driftV, const double driftA);
-  /// @brief Resets the residual and all partial derivatives to zero.
-  void reset();
   /// @brief Resets the time residual and the partial derivatives
   void resetTime();
   Config m_cfg{};
@@ -271,7 +370,7 @@ class CompSpacePointAuxiliaries {
   std::array<Vector, s_nLinePars> m_gradProjDir{
       filledArray<Vector, s_nLinePars>(Vector::Zero())};
   /// @brief Component of the direction vector parallel to the wire
-  double m_wireProject{1.};
+  double m_wireProject{0.};
   /// @brief Length squared of the projected direction
   double m_invProjDirLenSq{0.};
   /// @brief Inverse of the projected direction length
@@ -289,8 +388,8 @@ class CompSpacePointAuxiliaries {
   /// @brief Partial derivative of the actual distance of the closest approach
   std::array<double, s_nLinePars> m_partialApproachDist{
       filledArray<double, s_nLinePars>(0.)};
-  /// @brief Tansform matrix to treat stereo angles amongst the strips
-  ActsSquareMatrix<2> m_stereoTrf{ActsSquareMatrix<2>::Identity()};
+  /// @brief Transform matrix to treat stereo angles amongst the strips
+  SquareMatrix<2> m_stereoTrf{SquareMatrix<2>::Identity()};
 };
 
 }  // namespace Acts::Experimental::detail

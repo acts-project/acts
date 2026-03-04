@@ -30,10 +30,11 @@
 #include <stdexcept>
 #include <utility>
 
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-namespace Acts::Test {
-GeometryContext gctx;
+namespace ActsTests {
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 std::size_t getVolumeIndex() {
   static std::size_t i = 1;
@@ -48,9 +49,9 @@ auto makeVolume(auto&&... pars) {
   return vol;
 };
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-BOOST_AUTO_TEST_SUITE(PortalShellTests)
+BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   auto cube = makeVolume(30_mm, 40_mm, 50_mm);
@@ -59,15 +60,16 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, 10_mm));
 
-  BOOST_CHECK_THROW(SingleCuboidPortalShell{cylVolume}, std::invalid_argument);
+  BOOST_CHECK_THROW(SingleCuboidPortalShell(gctx, cylVolume),
+                    std::invalid_argument);
 
-  SingleCuboidPortalShell shell1{cube};
+  SingleCuboidPortalShell shell1{gctx, cube};
   BOOST_CHECK_EQUAL(shell1.size(), 6);
 
   using enum CuboidVolumeBounds::Face;
 
   // XY plane
-  const auto* pXY = shell1.portal(PositiveZFace);
+  const auto pXY = shell1.portal(PositiveZFace);
   BOOST_REQUIRE_NE(pXY, nullptr);
   BOOST_CHECK_EQUAL(
       pXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, 50_mm}, -Vector3::UnitZ())
@@ -78,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto* nXY = shell1.portal(NegativeZFace);
+  const auto nXY = shell1.portal(NegativeZFace);
   BOOST_REQUIRE_NE(nXY, nullptr);
   BOOST_CHECK_EQUAL(
       nXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, -50_mm}, -Vector3::UnitZ())
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       &cube);
 
   // YZ plane
-  const auto* pYZ = shell1.portal(PositiveXFace);
+  const auto pYZ = shell1.portal(PositiveXFace);
   BOOST_REQUIRE_NE(pYZ, nullptr);
   BOOST_CHECK_EQUAL(
       pYZ->resolveVolume(gctx, Vector3{30_mm, 10_mm, 30_mm}, -Vector3::UnitX())
@@ -101,7 +103,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto* nYZ = shell1.portal(NegativeXFace);
+  const auto nYZ = shell1.portal(NegativeXFace);
   BOOST_REQUIRE_NE(nYZ, nullptr);
   BOOST_CHECK_EQUAL(
       nYZ->resolveVolume(gctx, Vector3{-30_mm, 10_mm, 30_mm}, -Vector3::UnitX())
@@ -113,7 +115,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       &cube);
 
   // ZX plane
-  const auto* pZX = shell1.portal(PositiveYFace);
+  const auto pZX = shell1.portal(PositiveYFace);
   BOOST_REQUIRE_NE(pZX, nullptr);
   BOOST_CHECK_EQUAL(
       pZX->resolveVolume(gctx, Vector3{15_mm, 40_mm, -10_mm}, -Vector3::UnitY())
@@ -124,7 +126,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto* nZX = shell1.portal(NegativeYFace);
+  const auto nZX = shell1.portal(NegativeYFace);
   BOOST_REQUIRE_NE(nZX, nullptr);
   BOOST_CHECK_EQUAL(nZX->resolveVolume(gctx, Vector3{15_mm, -40_mm, -10_mm},
                                        -Vector3::UnitY())
@@ -141,14 +143,14 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   TrackingVolume vol(Transform3::Identity(),
                      std::make_shared<CuboidVolumeBounds>(30_mm, 40_mm, 50_mm));
 
-  SingleCuboidPortalShell shell{vol};
+  SingleCuboidPortalShell shell{gctx, vol};
 
-  const auto* pXY = shell.portal(PositiveZFace);
-  const auto* nXY = shell.portal(NegativeZFace);
-  const auto* nYZ = shell.portal(NegativeXFace);
-  const auto* pZX = shell.portal(PositiveYFace);
-  auto* pYZ = shell.portal(PositiveXFace);
-  auto* nZX = shell.portal(NegativeYFace);
+  const auto pXY = shell.portal(PositiveZFace);
+  const auto nXY = shell.portal(NegativeZFace);
+  const auto nYZ = shell.portal(NegativeXFace);
+  const auto pZX = shell.portal(PositiveYFace);
+  auto pYZ = shell.portal(PositiveXFace);
+  auto nZX = shell.portal(NegativeYFace);
 
   // Setting new pYZ
   BOOST_REQUIRE_NE(pYZ, nullptr);
@@ -161,7 +163,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   auto portal2 =
       std::make_shared<Portal>(Direction::OppositeNormal(), std::move(grid));
   shell.setPortal(portal2, PositiveXFace);
-  BOOST_CHECK_EQUAL(shell.portal(PositiveXFace), portal2.get());
+  BOOST_CHECK_EQUAL(shell.portal(PositiveXFace), portal2);
 
   // Other portals should stay the same
   BOOST_CHECK_EQUAL(shell.portal(PositiveZFace), pXY);
@@ -181,39 +183,39 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
   auto portal3 =
       std::make_shared<Portal>(Direction::AlongNormal(), std::move(grid));
   shell.setPortal(portal3, NegativeYFace);
-  BOOST_CHECK_EQUAL(shell.portal(NegativeYFace), portal3.get());
+  BOOST_CHECK_EQUAL(shell.portal(NegativeYFace), portal3);
 
   // Other portals should stay the same
   BOOST_CHECK_EQUAL(shell.portal(PositiveZFace), pXY);
   BOOST_CHECK_EQUAL(shell.portal(NegativeZFace), nXY);
   BOOST_CHECK_EQUAL(shell.portal(NegativeXFace), nYZ);
   BOOST_CHECK_EQUAL(shell.portal(PositiveYFace), pZX);
-  BOOST_CHECK_EQUAL(shell.portal(PositiveXFace), portal2.get());
+  BOOST_CHECK_EQUAL(shell.portal(PositiveXFace), portal2);
 }
 
 BOOST_AUTO_TEST_SUITE(CuboidStack)
 BOOST_DATA_TEST_CASE(XYZDirection,
-                     boost::unit_test::data::make(Acts::AxisDirection::AxisX,
-                                                  Acts::AxisDirection::AxisY,
-                                                  Acts::AxisDirection::AxisZ),
+                     boost::unit_test::data::make(AxisDirection::AxisX,
+                                                  AxisDirection::AxisY,
+                                                  AxisDirection::AxisZ),
                      dir) {
   AxisDirection dirOrth1{};
   AxisDirection dirOrth2{};
   std::size_t dirIdx = 0;
   switch (dir) {
-    case Acts::AxisDirection::AxisX:
-      dirOrth1 = Acts::AxisDirection::AxisY;
-      dirOrth2 = Acts::AxisDirection::AxisZ;
+    case AxisDirection::AxisX:
+      dirOrth1 = AxisDirection::AxisY;
+      dirOrth2 = AxisDirection::AxisZ;
       dirIdx = 0;
       break;
-    case Acts::AxisDirection::AxisY:
-      dirOrth1 = Acts::AxisDirection::AxisX;
-      dirOrth2 = Acts::AxisDirection::AxisZ;
+    case AxisDirection::AxisY:
+      dirOrth1 = AxisDirection::AxisX;
+      dirOrth2 = AxisDirection::AxisZ;
       dirIdx = 1;
       break;
-    case Acts::AxisDirection::AxisZ:
-      dirOrth1 = Acts::AxisDirection::AxisX;
-      dirOrth2 = Acts::AxisDirection::AxisY;
+    case AxisDirection::AxisZ:
+      dirOrth1 = AxisDirection::AxisX;
+      dirOrth2 = AxisDirection::AxisY;
       dirIdx = 2;
       break;
     default:
@@ -241,8 +243,8 @@ BOOST_DATA_TEST_CASE(XYZDirection,
   TrackingVolume vol2(Transform3{Translation3{Vector3::Unit(dirIdx) * 100_mm}},
                       bounds2);
 
-  SingleCuboidPortalShell shell1{vol1};
-  SingleCuboidPortalShell shell2{vol2};
+  SingleCuboidPortalShell shell1{gctx, vol1};
+  SingleCuboidPortalShell shell2{gctx, vol2};
 
   std::map<CuboidVolumeBounds::Face, Vector3> centers1;
   std::map<CuboidVolumeBounds::Face, Vector3> centers2;
@@ -343,8 +345,8 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         nullptr);
   }
 
-  shell1 = SingleCuboidPortalShell{vol1};
-  shell2 = SingleCuboidPortalShell{vol2};
+  shell1 = SingleCuboidPortalShell{gctx, vol1};
+  shell2 = SingleCuboidPortalShell{gctx, vol2};
 
   BOOST_CHECK_THROW(
       CuboidStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisR),
@@ -394,11 +396,11 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
       base * Translation3{Vector3::UnitX() * 60_mm + Vector3::UnitZ() * 300_mm},
       std::make_shared<CuboidVolumeBounds>(30_mm, 100_mm, 500_mm), "vol4");
 
-  SingleCuboidPortalShell shell1{vol1};
+  SingleCuboidPortalShell shell1{gctx, vol1};
   BOOST_CHECK(shell1.isValid());
-  SingleCuboidPortalShell shell2{vol2};
+  SingleCuboidPortalShell shell2{gctx, vol2};
   BOOST_CHECK(shell2.isValid());
-  SingleCuboidPortalShell shell3{vol3};
+  SingleCuboidPortalShell shell3{gctx, vol3};
   BOOST_CHECK(shell3.isValid());
 
   CuboidStackPortalShell stack{
@@ -406,7 +408,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
 
   BOOST_CHECK(stack.isValid());
 
-  SingleCuboidPortalShell shell4{vol4};
+  SingleCuboidPortalShell shell4{gctx, vol4};
   BOOST_CHECK(shell4.isValid());
 
   CuboidStackPortalShell stack2{
@@ -417,7 +419,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
 
   auto lookup = [](auto& shell, CuboidPortalShell::Face face, Vector3 position,
                    Vector3 direction) -> const TrackingVolume* {
-    const auto* portal = shell.portal(face);
+    const auto portal = shell.portal(face);
     BOOST_REQUIRE_NE(portal, nullptr);
     return portal->resolveVolume(gctx, position, direction).value();
   };
@@ -752,7 +754,7 @@ BOOST_AUTO_TEST_CASE(Fill) {
       base * Translation3(Vector3::UnitZ() * 300_mm),
       std::make_shared<CuboidVolumeBounds>(30_mm, 100_mm, 100_mm), "vol2");
 
-  SingleCuboidPortalShell shell{vol1};
+  SingleCuboidPortalShell shell{gctx, vol1};
 
   using enum CuboidVolumeBounds::Face;
 
@@ -771,7 +773,7 @@ BOOST_AUTO_TEST_CASE(RegisterInto) {
       Transform3::Identity(),
       std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm));
 
-  SingleCuboidPortalShell shell{vol1};
+  SingleCuboidPortalShell shell{gctx, vol1};
 
   BOOST_CHECK_EQUAL(vol1.portals().size(), 0);
 
@@ -782,4 +784,4 @@ BOOST_AUTO_TEST_CASE(RegisterInto) {
 BOOST_AUTO_TEST_SUITE_END()  // CuboidStack
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

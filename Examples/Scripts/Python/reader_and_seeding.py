@@ -21,11 +21,11 @@ s = acts.examples.Sequencer(events=1, numThreads=1, outputDir="output")
 loggingLevel = acts.logging.DEBUG
 
 s.addReader(
-    acts.examples.RootAthenaDumpReader(
+    acts.examples.root.RootAthenaDumpReader(
         level=loggingLevel,
         treename="GNN4ITk",
         inputfile="Dump_GNN4Itk.root",
-        onlySpacepoints=True,
+        onlySpacePoints=True,
         outputPixelSpacePoints="pixel_spacepoints",
         outputStripSpacePoints="strip_spacepoints",
         outputSpacePoints="spacepoints",

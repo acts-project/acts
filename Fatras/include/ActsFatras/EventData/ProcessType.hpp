@@ -24,6 +24,10 @@ enum class ProcessType : std::uint32_t {
   eNuclearInteraction = 4,
 };
 
+/// Print process type to output stream
+/// @param os Output stream
+/// @param processType Process type to print
+/// @return Output stream
 std::ostream &operator<<(std::ostream &os, ProcessType processType);
 
 }  // namespace ActsFatras

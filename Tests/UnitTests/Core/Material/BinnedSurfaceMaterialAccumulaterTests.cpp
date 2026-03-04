@@ -24,11 +24,13 @@
 #include <utility>
 #include <vector>
 
-namespace Acts::Test {
+using namespace Acts;
 
-auto tContext = GeometryContext();
+namespace ActsTests {
 
-BOOST_AUTO_TEST_SUITE(BinnedSurfaceMaterialAccumulaterSuite)
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+
+BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
   std::vector<std::shared_ptr<Surface>> surfaces = {
@@ -217,4 +219,4 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts::Test
+}  // namespace ActsTests

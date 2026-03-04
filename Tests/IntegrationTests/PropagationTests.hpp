@@ -24,25 +24,26 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <utility>
 
 inline std::shared_ptr<const Acts::TrackingGeometry> createDenseBlock(
     const Acts::GeometryContext& geoCtx) {
   using namespace Acts;
+  using namespace ActsTests;
   using namespace UnitLiterals;
 
   CuboidVolumeBuilder::VolumeConfig vConf;
   vConf.position = {0., 0., 0.};
   vConf.length = {4_m, 4_m, 4_m};
   vConf.volumeMaterial =
-      std::make_shared<const HomogeneousVolumeMaterial>(Test::makeBeryllium());
+      std::make_shared<const HomogeneousVolumeMaterial>(makeBeryllium());
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg.push_back(vConf);
   conf.position = {0., 0., 0.};
@@ -173,7 +174,7 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   stddev[eBoundPhi] = 20_mrad;
   stddev[eBoundTheta] = 30_mrad;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
-  BoundSquareMatrix corr = BoundSquareMatrix::Identity();
+  BoundMatrix corr = BoundMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
   corr(eBoundLoc0, eBoundPhi) = corr(eBoundPhi, eBoundLoc0) = 0.25;
   corr(eBoundLoc1, eBoundTheta) = corr(eBoundTheta, eBoundLoc1) = -0.25;
@@ -181,7 +182,7 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundPhi, eBoundTheta) = corr(eBoundTheta, eBoundPhi) = -0.25;
   corr(eBoundPhi, eBoundQOverP) = corr(eBoundPhi, eBoundQOverP) = -0.125;
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
-  BoundSquareMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
+  BoundMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
   Vector4 pos4 = Vector4::Zero();
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));

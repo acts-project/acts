@@ -23,7 +23,7 @@
 #include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
 #include <array>
@@ -40,7 +40,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
+using namespace ActsTests;
 using namespace Acts::detail::Test;
 using namespace Acts::HashedStringLiteral;
 namespace bd = boost::unit_test::data;
@@ -49,7 +49,7 @@ using ParametersVector = BoundTrackParameters::ParametersVector;
 using CovarianceMatrix = BoundTrackParameters::CovarianceMatrix;
 using Jacobian = BoundMatrix;
 
-const GeometryContext gctx;
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 // fixed seed for reproducible tests
 std::default_random_engine rng(31415);
 
@@ -65,7 +65,9 @@ using CommonTests = MultiTrajectoryTestsCommon<Factory>;
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(EventDataMultiTrajectory)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_AUTO_TEST_CASE(Build) {
   CommonTests ct;
@@ -304,3 +306,5 @@ BOOST_AUTO_TEST_CASE(ChangeSourceLinkType) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

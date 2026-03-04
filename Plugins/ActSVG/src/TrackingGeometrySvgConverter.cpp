@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
+#include "ActsPlugins/ActSVG/TrackingGeometrySvgConverter.hpp"
 
 #include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -14,15 +14,17 @@
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 
 #include <sstream>
 #include <stdexcept>
 
-namespace Acts::Svg {
+using namespace Acts;
+
+namespace ActsPlugins::Svg {
 
 std::vector<actsvg::svg::object> TrackingGeometryConverter::convert(
     const GeometryContext& gctx, const TrackingGeometry& tGeometry,
@@ -40,11 +42,11 @@ std::vector<actsvg::svg::object> TrackingGeometryConverter::convert(
   std::vector<actsvg::svg::object> finalViews = cState.finalViews;
   if (!cState.xyCrossSection.empty()) {
     finalViews.push_back(
-        Acts::Svg::group(cState.xyCrossSection, cOptions.prefix + "layers_xy"));
+        group(cState.xyCrossSection, cOptions.prefix + "layers_xy"));
   }
   if (!cState.zrCrossSection.empty()) {
     finalViews.push_back(
-        Acts::Svg::group(cState.zrCrossSection, cOptions.prefix + "layers_zr"));
+        group(cState.zrCrossSection, cOptions.prefix + "layers_zr"));
   }
   // return all final Views
   return finalViews;
@@ -81,7 +83,7 @@ void TrackingGeometryConverter::convert(
         }
         // Collect the xy views
         if (layerSheets[LayerConverter::eCrossSectionXY].is_defined() &&
-            layer->surfaceRepresentation().type() == Acts::Surface::Cylinder) {
+            layer->surfaceRepresentation().type() == Surface::Cylinder) {
           cState.xyCrossSection.push_back(
               layerSheets[LayerConverter::eCrossSectionXY]);
         }
@@ -103,26 +105,24 @@ void TrackingGeometryConverter::convert(
 }
 
 std::array<actsvg::svg::object, 2> TrackingGeometryProjections::convert(
-    const GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
+    const GeometryContext& gctx, const TrackingGeometry& tGeometry,
     const TrackingGeometryProjections::Options& cOptions) {
   // The projections
   actsvg::svg::object xyView;
   actsvg::svg::object zrView;
 
   // Get the world volume
-  const Acts::TrackingVolume* world = tGeometry.highestTrackingVolume();
+  const TrackingVolume* world = tGeometry.highestTrackingVolume();
   if (world != nullptr) {
     // Initiate the cache
-    Acts::Svg::TrackingGeometryConverter::State cState;
+    ActsPlugins::Svg::TrackingGeometryConverter::State cState;
 
     // Run the conversion recursively
-    Acts::Svg::TrackingGeometryConverter::convert(
+    ActsPlugins::Svg::TrackingGeometryConverter::convert(
         gctx, *world, cOptions.trackingGeometryOptions, cState);
 
-    xyView = Acts::Svg::group(cState.xyCrossSection,
-                              cOptions.prefix + "projection_xy");
-    zrView = Acts::Svg::group(cState.zrCrossSection,
-                              cOptions.prefix + "projection_zr");
+    xyView = group(cState.xyCrossSection, cOptions.prefix + "projection_xy");
+    zrView = group(cState.zrCrossSection, cOptions.prefix + "projection_zr");
   }
   return {xyView, zrView};
 }
@@ -271,7 +271,7 @@ struct Visitor : TrackingGeometryVisitor {
     Svg::ProtoVolume pVolume;
     pVolume._name = volume.volumeName();
 
-    auto volumeTransform = volume.transform();
+    const Transform3& volumeTransform = volume.localToGlobalTransform(gctx);
 
     // https://github.com/acts-project/actsvg/blob/2f1aaa58365a1dd1af62dc27aea5039459a65a38/meta/include/actsvg/display/geometry.hpp#L687-L692
     enum svgBv : unsigned int {
@@ -285,7 +285,7 @@ struct Visitor : TrackingGeometryVisitor {
 
     using enum CylinderVolumeBounds::BoundValues;
     const auto& boundValues = volume.volumeBounds().values();
-    if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
+    if (volume.volumeBounds().type() == VolumeBounds::eCylinder) {
       pVolume._bound_values.resize(6);
       pVolume._bound_values.at(svgBv::rInner) =
           static_cast<actsvg::scalar>(boundValues[eMinR]);
@@ -385,4 +385,72 @@ std::vector<actsvg::svg::object> drawTrackingGeometry(
   return objects;
 }
 
-}  // namespace Acts::Svg
+namespace {
+
+struct SurfaceArrayCollector {
+  std::vector<std::tuple<GeometryIdentifier, const SurfaceArray*>>
+      surfaceArrays;
+  // Visitor pattern to collect the surface arrays
+  void operator()(const TrackingVolume* tVolume) {
+    // This is trying Gen1 first
+    const auto& cLayers = tVolume->confinedLayers();
+    if (cLayers != nullptr) {
+      for (const auto& layer : cLayers->arrayObjects()) {
+        if (layer != nullptr) {
+          const auto& surfaceArray = layer->surfaceArray();
+          if (surfaceArray != nullptr) {
+            surfaceArrays.emplace_back(layer->geometryId(), surfaceArray);
+          }
+        }
+      }
+    }
+    // Now try Gen3
+    if (const auto* policyPtr = tVolume->navigationPolicy();
+        policyPtr != nullptr) {
+      policyPtr->visit([&](const auto& policy) {
+        if (auto sArrayPolicy =
+                dynamic_cast<const SurfaceArrayNavigationPolicy*>(&policy);
+            sArrayPolicy != nullptr) {
+          surfaceArrays.emplace_back(tVolume->geometryId(),
+                                     &sArrayPolicy->surfaceArray());
+        }
+      });
+    }
+  }
+};
+}  // namespace
+
+// Helper function to be picked to draw surface arrays
+std::vector<actsvg::svg::object> drawSurfaceArrays(
+    const GeometryContext& gctx, const TrackingGeometry& tGeometry) {
+  // The svg objects to be returned
+  std::vector<actsvg::svg::object> svgSurfaceArrays;
+
+  std::vector<const SurfaceArray*> surfaceArrays;
+  // Retrieve the surface arrays from the geometry
+  // - try Gen1 first
+  SurfaceArrayCollector saCollector;
+  tGeometry.visitVolumes(saCollector);
+  // Now draw the surface arrays
+  for (const auto& [geoId, surfaceArray] : saCollector.surfaceArrays) {
+    // Get the surface array and convert it
+    auto pIndexedSurfaceGrid =
+        Svg::SurfaceArrayConverter::convert(gctx, *surfaceArray);
+
+    // Decide the xy / rz view on the grid
+    const auto& [pSurfaces, pGrid, pAssociations] = pIndexedSurfaceGrid;
+    std::string sArrayName =
+        "SurfaceArray_vol" + std::to_string(geoId.volume());
+    sArrayName += "_lay" + std::to_string(geoId.layer());
+    if (pGrid._type == actsvg::proto::grid::e_r_phi) {
+      svgSurfaceArrays.emplace_back(
+          Svg::View::xy(pIndexedSurfaceGrid, "xy_" + sArrayName));
+    } else if (pGrid._type == actsvg::proto::grid::e_z_phi) {
+      svgSurfaceArrays.emplace_back(
+          Svg::View::xy(pIndexedSurfaceGrid, "zphi_" + sArrayName));
+    }
+  }
+  return svgSurfaceArrays;
+}
+
+}  // namespace ActsPlugins::Svg

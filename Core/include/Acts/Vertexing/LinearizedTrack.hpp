@@ -46,11 +46,10 @@ struct LinearizedTrack {
   /// @param momentum Momentum at point of closest approach
   /// @param constTerm Constant term in taylor expansion
   LinearizedTrack(const BoundVector& paramsAtPCA,
-                  const BoundSquareMatrix& parCovarianceAtPCA,
-                  const BoundSquareMatrix& parWeightAtPCA,
-                  const Vector4& linPoint,
-                  const ActsMatrix<eBoundSize, 4>& posJacobian,
-                  const ActsMatrix<eBoundSize, 3>& momJacobian,
+                  const BoundMatrix& parCovarianceAtPCA,
+                  const BoundMatrix& parWeightAtPCA, const Vector4& linPoint,
+                  const Matrix<eBoundSize, 4>& posJacobian,
+                  const Matrix<eBoundSize, 3>& momJacobian,
                   const Vector4& position, const Vector3& momentum,
                   const BoundVector& constTerm)
       : parametersAtPCA(paramsAtPCA),
@@ -63,14 +62,23 @@ struct LinearizedTrack {
         momentumAtPCA(momentum),
         constantTerm(constTerm) {}
 
+  /// Track parameters at the point of closest approach
   BoundVector parametersAtPCA{BoundVector::Zero()};
-  BoundSquareMatrix covarianceAtPCA{BoundSquareMatrix::Zero()};
-  BoundSquareMatrix weightAtPCA{BoundSquareMatrix::Zero()};
+  /// Covariance matrix of track parameters at PCA
+  BoundMatrix covarianceAtPCA{BoundMatrix::Zero()};
+  /// Weight matrix (inverse covariance) at PCA
+  BoundMatrix weightAtPCA{BoundMatrix::Zero()};
+  /// 4D point where track was linearized for vertex fitting
   Vector4 linearizationPoint{Vector4::Zero()};
-  ActsMatrix<eBoundSize, 4> positionJacobian{ActsMatrix<eBoundSize, 4>::Zero()};
-  ActsMatrix<eBoundSize, 3> momentumJacobian{ActsMatrix<eBoundSize, 3>::Zero()};
+  /// Jacobian of track parameters w.r.t. vertex position
+  Matrix<eBoundSize, 4> positionJacobian{Matrix<eBoundSize, 4>::Zero()};
+  /// Jacobian of track parameters w.r.t. track momentum
+  Matrix<eBoundSize, 3> momentumJacobian{Matrix<eBoundSize, 3>::Zero()};
+  /// 4D position of track at point of closest approach
   Vector4 positionAtPCA{Vector4::Zero()};
+  /// 3D momentum vector at point of closest approach
   Vector3 momentumAtPCA{Vector3::Zero()};
+  /// Constant term in linearized track equation
   BoundVector constantTerm{BoundVector::Zero()};
 };
 

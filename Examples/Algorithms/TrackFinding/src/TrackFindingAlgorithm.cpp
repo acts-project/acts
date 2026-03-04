@@ -26,7 +26,6 @@
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -35,18 +34,17 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <cmath>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
-#include <system_error>
 #include <unordered_map>
 #include <utility>
 
@@ -77,7 +75,7 @@ class MeasurementSelector {
   explicit MeasurementSelector(Acts::MeasurementSelector selector)
       : m_selector(std::move(selector)) {}
 
-  void setSeed(const std::optional<SimSeed>& seed) { m_seed = seed; }
+  void setSeed(const std::optional<ConstSeedProxy>& seed) { m_seed = seed; }
 
   Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
                          std::vector<Traj::TrackStateProxy>::iterator>>
@@ -103,15 +101,16 @@ class MeasurementSelector {
 
  private:
   Acts::MeasurementSelector m_selector;
-  std::optional<SimSeed> m_seed;
+  std::optional<ConstSeedProxy> m_seed;
 
   bool isSeedCandidate(const Traj::TrackStateProxy& candidate) const {
     assert(candidate.hasUncalibratedSourceLink());
+    assert(m_seed.has_value());
 
     const Acts::SourceLink& sourceLink = candidate.getUncalibratedSourceLink();
 
-    for (const auto& sp : m_seed->sp()) {
-      for (const auto& sl : sp->sourceLinks()) {
+    for (const ConstSpacePointProxy sp : m_seed->spacePoints()) {
+      for (const Acts::SourceLink& sl : sp.sourceLinks()) {
         if (sourceLink.get<IndexSourceLink>() == sl.get<IndexSourceLink>()) {
           return true;
         }
@@ -130,11 +129,13 @@ using SeedIdentifier = std::array<Index, 3>;
 ///
 /// @param seed The seed to build the identifier from.
 /// @return The seed identifier.
-SeedIdentifier makeSeedIdentifier(const SimSeed& seed) {
+SeedIdentifier makeSeedIdentifier(const ConstSeedProxy& seed) {
   SeedIdentifier result;
 
-  for (const auto& [i, sp] : Acts::enumerate(seed.sp())) {
-    const Acts::SourceLink& firstSourceLink = sp->sourceLinks().front();
+  for (const auto& [i, spIndex] : Acts::enumerate(seed.spacePointIndices())) {
+    const ConstSpacePointProxy sp =
+        seed.container().spacePointContainer().at(spIndex);
+    const Acts::SourceLink& firstSourceLink = sp.sourceLinks().front();
     result.at(i) = firstSourceLink.get<IndexSourceLink>().index();
   }
 
@@ -219,15 +220,12 @@ class BranchStopper {
     if (!(m_cfg.pixelVolumeIds.empty() && m_cfg.stripVolumeIds.empty())) {
       auto& branchState = branchStateAccessor(track);
       // count both holes and outliers as holes for pixel/strip counts
-      if (trackState.typeFlags().test(Acts::TrackStateFlag::HoleFlag) ||
-          trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+      if (trackState.typeFlags().isHole() ||
+          trackState.typeFlags().isOutlier()) {
         auto volumeId = trackState.referenceSurface().geometryId().volume();
-        if (std::find(m_cfg.pixelVolumeIds.begin(), m_cfg.pixelVolumeIds.end(),
-                      volumeId) != m_cfg.pixelVolumeIds.end()) {
+        if (Acts::rangeContainsValue(m_cfg.pixelVolumeIds, volumeId)) {
           ++branchState.nPixelHoles;
-        } else if (std::find(m_cfg.stripVolumeIds.begin(),
-                             m_cfg.stripVolumeIds.end(),
-                             volumeId) != m_cfg.stripVolumeIds.end()) {
+        } else if (Acts::rangeContainsValue(m_cfg.stripVolumeIds, volumeId)) {
           ++branchState.nStripHoles;
         }
       }
@@ -258,9 +256,10 @@ class BranchStopper {
 
 }  // namespace
 
-TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
-                                             Acts::Logging::Level level)
-    : IAlgorithm("TrackFindingAlgorithm", level), m_cfg(std::move(config)) {
+TrackFindingAlgorithm::TrackFindingAlgorithm(
+    Config config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackFindingAlgorithm", std::move(logger)),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -301,7 +300,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
-  const SimSeedContainer* seeds = nullptr;
+  const SeedContainer* seeds = nullptr;
 
   if (m_inputSeeds.isInitialized()) {
     seeds = &m_inputSeeds(ctx);
@@ -442,7 +441,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     auto destProxy = tracks.makeTrack();
     // make sure we copy track states!
-    destProxy.copyFrom(track, true);
+    destProxy.copyFrom(track);
   };
 
   if (seeds != nullptr && m_cfg.seedDeduplication) {
@@ -457,7 +456,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     m_nTotalSeeds++;
 
     if (seeds != nullptr) {
-      const SimSeed& seed = seeds->at(iSeed);
+      const ConstSeedProxy seed = seeds->at(iSeed);
 
       if (m_cfg.seedDeduplication) {
         SeedIdentifier seedIdentifier = makeSeedIdentifier(seed);
@@ -480,6 +479,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const Acts::BoundTrackParameters& firstInitialParameters =
         initialParameters.at(iSeed);
+    ACTS_VERBOSE("Processing seed " << iSeed << " with initial parameters "
+                                    << firstInitialParameters);
 
     auto firstRootBranch = tracksTemp.makeTrack();
     auto firstResult = (*m_cfg.findTracks)(firstInitialParameters, firstOptions,
@@ -500,7 +501,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       // TODO a lightweight copy without copying all the track state components
       //      might be a solution
       auto trackCandidate = tracksTemp.makeTrack();
-      trackCandidate.copyFrom(firstTrack, true);
+      trackCandidate.copyFrom(firstTrack);
 
       Acts::Result<void> firstSmoothingResult{
           Acts::smoothTrack(ctx.geoContext, trackCandidate, logger())};
@@ -523,14 +524,10 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         std::optional<Acts::VectorMultiTrajectory::TrackStateProxy>
             firstMeasurementOpt;
         for (auto trackState : trackCandidate.trackStatesReversed()) {
-          bool isMeasurement = trackState.typeFlags().test(
-              Acts::TrackStateFlag::MeasurementFlag);
-          bool isOutlier =
-              trackState.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
           // We are excluding non measurement states and outlier here. Those can
           // decrease resolution because only the smoothing corrected the very
           // first prediction as filtering is not possible.
-          if (isMeasurement && !isOutlier) {
+          if (trackState.typeFlags().isMeasurement()) {
             firstMeasurementOpt = trackState;
           }
         }
@@ -554,7 +551,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           }
 
           auto secondRootBranch = tracksTemp.makeTrack();
-          secondRootBranch.copyFrom(trackCandidate, false);
+          secondRootBranch.copyFromWithoutStates(trackCandidate);
           auto secondResult =
               (*m_cfg.findTracks)(secondInitialParameters, secondOptions,
                                   tracksTemp, secondRootBranch);
@@ -573,7 +570,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               // TODO a lightweight copy without copying all the track state
               //      components might be a solution
               auto secondTrackCopy = tracksTemp.makeTrack();
-              secondTrackCopy.copyFrom(secondTrack, true);
+              secondTrackCopy.copyFrom(secondTrack);
 
               // Note that this is only valid if there are no branches
               // We disallow this by breaking this look after a second track was
@@ -583,7 +580,12 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
               firstMeasurement.previous() =
                   secondTrackCopy.outermostTrackState().index();
 
-              trackCandidate.copyFrom(secondTrackCopy, false);
+              // Retain tip and stem index of the first track
+              auto tipIndex = trackCandidate.tipIndex();
+              auto stemIndex = trackCandidate.stemIndex();
+              trackCandidate.copyFromWithoutStates(secondTrackCopy);
+              trackCandidate.tipIndex() = tipIndex;
+              trackCandidate.stemIndex() = stemIndex;
 
               // finalize the track candidate
 
@@ -643,7 +645,11 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       // if no second track was found, we will use only the first track
       if (nSecond == 0) {
         // restore the track to the original state
-        trackCandidate.copyFrom(firstTrack, false);
+        auto tipIndex = trackCandidate.tipIndex();
+        auto stemIndex = trackCandidate.stemIndex();
+        trackCandidate.copyFromWithoutStates(firstTrack);
+        trackCandidate.tipIndex() = tipIndex;
+        trackCandidate.stemIndex() = stemIndex;
 
         auto firstExtrapolationResult =
             Acts::extrapolateTrackToReferenceSurface(
@@ -731,7 +737,7 @@ void TrackFindingAlgorithm::computeSharedHits(
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {
-      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!state.typeFlags().isMeasurement()) {
         continue;
       }
 
@@ -749,19 +755,17 @@ void TrackFindingAlgorithm::computeSharedHits(
 
       // if already used, control if first track state has been marked
       // as shared
-      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
-      int indexFirstState = firstStateOnTheHit.at(hitIndex);
+      std::size_t indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+      std::size_t indexFirstState = firstStateOnTheHit.at(hitIndex);
 
       auto firstState = tracks.getTrack(indexFirstTrack)
                             .container()
                             .trackStateContainer()
                             .getTrackState(indexFirstState);
-      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
-        firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
-      }
+      firstState.typeFlags().setIsSharedHit();
 
       // Decorate this track state
-      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+      state.typeFlags().setIsSharedHit();
     }
   }
 }

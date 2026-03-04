@@ -19,6 +19,8 @@
 
 namespace Acts {
 
+/// A pair associating a tracking volume with its position vector.
+/// @note Used for ordering tracking volumes in a spatial array.
 using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3>;
 
 ///@class TrackingVolumeArrayCreator

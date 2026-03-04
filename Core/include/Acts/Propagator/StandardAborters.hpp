@@ -12,6 +12,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -21,7 +22,7 @@ namespace Acts {
 
 /// This is the condition that the pathLimit has been reached
 struct PathLimitReached {
-  /// Boolean switch for Loop protection
+  /// Internal path limit for loop protection
   double internalLimit = std::numeric_limits<double>::max();
 
   /// boolean operator for abort condition without using the result
@@ -34,11 +35,12 @@ struct PathLimitReached {
   /// @param [in] stepper Stepper used for propagation
   /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
+  /// @return True if path limit exceeded and propagation should abort
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    (void)navigator;
+    static_cast<void>(navigator);
 
     // Check if the maximum allowed step size has to be updated
     double distance =
@@ -62,7 +64,9 @@ struct PathLimitReached {
 /// This is the condition that the Surface has been reached it then triggers a
 /// propagation abort
 struct SurfaceReached {
+  /// Target surface to reach for propagation termination
   const Surface* surface = nullptr;
+  /// Boundary tolerance for surface intersection checks
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
   // TODO https://github.com/acts-project/acts/issues/2738
@@ -72,6 +76,8 @@ struct SurfaceReached {
   double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
+  /// Constructor with custom near limit
+  /// @param nLimit Distance limit to discard intersections "behind us"
   explicit SurfaceReached(double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
@@ -84,6 +90,7 @@ struct SurfaceReached {
   /// @param [in] stepper Stepper used for propagation
   /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
+  /// @return true if abort condition is met (surface reached)
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
@@ -105,16 +112,16 @@ struct SurfaceReached {
     const double farLimit = std::numeric_limits<double>::max();
     const double tolerance = state.options.surfaceTolerance;
 
-    const auto sIntersection = surface->intersect(
+    const MultiIntersection3D multiIntersection = surface->intersect(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping),
         boundaryTolerance, tolerance);
-    const auto closest = sIntersection.closest();
+    const Intersection3D closestIntersection = multiIntersection.closest();
 
     bool reached = false;
 
-    if (closest.status() == IntersectionStatus::onSurface) {
-      const double distance = closest.pathLength();
+    if (closestIntersection.status() == IntersectionStatus::onSurface) {
+      const double distance = closestIntersection.pathLength();
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target surface reached at distance (tolerance) "
@@ -124,7 +131,8 @@ struct SurfaceReached {
 
     bool intersectionFound = false;
 
-    for (const auto& intersection : sIntersection.split()) {
+    for (auto [intersectionIndex, intersection] :
+         Acts::enumerate(multiIntersection)) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
@@ -166,6 +174,7 @@ struct EndOfWorldReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] navigator The navigator object
+  /// @return True if end of world reached and propagation should abort
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
@@ -187,6 +196,7 @@ struct VolumeConstraintAborter {
   /// @param [in,out] state The propagation state object
   /// @param [in] navigator The navigator object
   /// @param logger a logger instance
+  /// @return True if volume constraints violated and propagation should abort
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
@@ -208,8 +218,7 @@ struct VolumeConstraintAborter {
         static_cast<std::uint32_t>(currentVolume->geometryId().volume());
 
     if (!constrainToVolumeIds.empty() &&
-        std::find(constrainToVolumeIds.begin(), constrainToVolumeIds.end(),
-                  currentVolumeId) == constrainToVolumeIds.end()) {
+        !rangeContainsValue(constrainToVolumeIds, currentVolumeId)) {
       ACTS_VERBOSE(
           "VolumeConstraintAborter aborter | Abort with volume constrain "
           << currentVolumeId);
@@ -217,8 +226,7 @@ struct VolumeConstraintAborter {
     }
 
     if (!endOfWorldVolumeIds.empty() &&
-        std::find(endOfWorldVolumeIds.begin(), endOfWorldVolumeIds.end(),
-                  currentVolumeId) != endOfWorldVolumeIds.end()) {
+        rangeContainsValue(endOfWorldVolumeIds, currentVolumeId)) {
       ACTS_VERBOSE(
           "VolumeConstraintAborter aborter | Abort with additional end of "
           "world volume "
@@ -232,12 +240,21 @@ struct VolumeConstraintAborter {
 
 /// Aborter that checks if the propagation has reached any surface
 struct AnySurfaceReached {
+  /// Check if any surface has been reached during propagation
+  /// @tparam propagator_state_t Type of the propagator state
+  /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  /// @param state The propagation state object
+  /// @param stepper Stepper used for propagation (unused)
+  /// @param navigator Navigator used for propagation
+  /// @param logger Logger instance (unused)
+  /// @return true if any surface has been reached, false otherwise
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    (void)stepper;
-    (void)logger;
+    static_cast<void>(stepper);
+    static_cast<void>(logger);
 
     const Surface* startSurface = navigator.startSurface(state.navigation);
     const Surface* targetSurface = navigator.targetSurface(state.navigation);

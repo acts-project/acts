@@ -1,9 +1,10 @@
 acts_add_library(
     ExamplesIoPodio
-    SHARED
     src/PodioWriter.cpp
     src/PodioReader.cpp
-    src/CollectionBaseWriteHandle.cpp
+    src/PodioInputConverter.cpp
+    src/PodioMeasurementOutputConverter.cpp
+    src/PodioMeasurementInputConverter.cpp
 )
 
 target_include_directories(
@@ -12,5 +13,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesIoPodio
-    PUBLIC podio::podio Acts::ExamplesFramework Acts::PluginPodio
+    PUBLIC podio::podio Acts::ExamplesFramework Acts::PluginEDM4hep
 )
+
+acts_compile_headers(ExamplesIoPodio GLOB include/ActsExamples/**/*.hpp)

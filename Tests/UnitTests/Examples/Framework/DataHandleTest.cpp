@@ -9,24 +9,26 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_log.hpp>
 
-#include "Acts/Tests/CommonHelpers/WhiteBoardUtilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsTests/CommonHelpers/WhiteBoardUtilities.hpp"
 
-using namespace Acts::Test;
+using namespace Acts;
 using namespace ActsExamples;
-using Acts::Logging::ScopedFailureThreshold;
+using Logging::ScopedFailureThreshold;
 
 // Global logger instance for all tests
-const Acts::Logger& logger() {
+const Logger& logger() {
   static const auto logger =
-      Acts::getDefaultLogger("DataHandleTest", Acts::Logging::VERBOSE);
+      getDefaultLogger("DataHandleTest", Logging::VERBOSE);
   return *logger;
 }
 
-BOOST_AUTO_TEST_SUITE(DataHandleTest)
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(FrameworkSuite)
 
 BOOST_AUTO_TEST_CASE(BasicOperations) {
   WhiteBoard wb;
@@ -273,7 +275,7 @@ BOOST_AUTO_TEST_CASE(EmulateStateConsistency) {
     auto& readHandle = *readHandles.emplace_back(
         std::make_unique<ReadDataHandle<int>>(&dummyElement, "test"));
     readHandle.initialize("test_key");
-    ScopedFailureThreshold st(Acts::Logging::Level::FATAL);
+    ScopedFailureThreshold st(Logging::Level::FATAL);
     BOOST_CHECK_THROW(readHandle.emulate(state, aliases, logger()),
                       SequenceConfigurationException);
   }
@@ -285,7 +287,7 @@ BOOST_AUTO_TEST_CASE(EmulateStateConsistency) {
     auto& readHandle = *readHandles.emplace_back(
         std::make_unique<ReadDataHandle<int>>(&dummyElement, "test"));
     readHandle.initialize("missing_key");
-    ScopedFailureThreshold st(Acts::Logging::Level::FATAL);
+    ScopedFailureThreshold st(Logging::Level::FATAL);
     BOOST_CHECK_THROW(readHandle.emulate(state, aliases, logger()),
                       SequenceConfigurationException);
   }
@@ -302,7 +304,7 @@ BOOST_AUTO_TEST_CASE(EmulateStateConsistency) {
     auto& writeHandle2 = *writeHandles.emplace_back(
         std::make_unique<WriteDataHandle<int>>(&dummyElement, "test2"));
     writeHandle2.initialize("duplicate_key");
-    ScopedFailureThreshold st(Acts::Logging::Level::FATAL);
+    ScopedFailureThreshold st(Logging::Level::FATAL);
     BOOST_CHECK_THROW(writeHandle2.emulate(state, aliases, logger()),
                       SequenceConfigurationException);
   }
@@ -375,7 +377,7 @@ BOOST_AUTO_TEST_CASE(ConsumeDataHandleTest) {
     auto& consumeHandle2 = *readHandles.emplace_back(
         std::make_unique<ConsumeDataHandle<int>>(&dummyElement, "test2"));
     consumeHandle2.initialize("consume_key");
-    ScopedFailureThreshold st(Acts::Logging::Level::FATAL);
+    ScopedFailureThreshold st(Logging::Level::FATAL);
     BOOST_CHECK_THROW(consumeHandle2.emulate(state, aliases, logger()),
                       SequenceConfigurationException);
   }
@@ -516,3 +518,5 @@ BOOST_AUTO_TEST_CASE(ConsumeDataHandleDestructor) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

@@ -17,57 +17,83 @@
 
 namespace Acts {
 
-/// @ingroup MagneticField
-//
 /// @class SolenoidBField
-/// Implements a multi-coil solenoid magnetic field. On every call, the field
-/// is evaluated at that exact position. The field has radially symmetry, the
-/// field vectors point in +z direction.
-/// The config exposes a target field value in the center. This value is used
-/// to empirically determine a scale factor which reproduces this field value
-/// in the center.
+/// @brief Analytical solenoid magnetic field implementation
 ///
-/// E_1(k^2) = complete elliptic integral of the 1st kind
-/// E_2(k^2) = complete elliptic integral of the 2nd kind
+/// @ingroup magnetic_field
 ///
-/// E_1(k^2) and E_2(k^2) are usually indicated as K(k^2) and E(k^2) in
+/// @section Concept
+///
+/// This class implements a multi-coil solenoid magnetic field. On every call,
+/// the field is evaluated at that exact position. The field has radially
+/// symmetry, the field vectors point in +z direction. The config exposes a
+/// target field value in the center. This value is used to empirically
+/// determine a scale factor which reproduces this field value in the center.
+///
+/// @image html bfield/quiver.png "Picture of a solenoid field in rz, with arrows indicating the direction of the field, and their size denoting the strength. The field is almost homogeneous in the center." width=100%
+///
+/// @note
+/// A configuration of
+/// ```cpp
+/// SolenoidBField::Config cfg;
+/// cfg.length = 5.8_m;
+/// cfg.radius = (2.56 + 2.46) * 0.5 * 0.5_m;
+/// cfg.nCoils = 1154;
+/// cfg.bMagCenter = 2_T;
+/// SolenoidBField bField(cfg);
+/// ```
+/// roughly corresponds to the solenoid wrapping the Inner Detector in ATLAS!
+///
+/// @warning
+/// As the evaluation of @f$E_1(k^2)@f$ and @f$E_2(k^2)@f$ is **slow**. The
+/// @ref Acts::InterpolatedBFieldMap easily outperforms
+/// @ref Acts::SolenoidBField. A helper is provided that builds a map from the
+/// analytical implementation and is much faster to lookup:
+/// @ref Acts::solenoidFieldMap.
+///
+/// @section Implementation
+///
+/// - @f$E_1(k^2)@f$ = complete elliptic integral of the 1st kind
+/// - @f$E_2(k^2)@f$ = complete elliptic integral of the 2nd kind
+///
+/// @f$E_1(k^2)@f$ and @f$E_2(k^2)@f$ are usually indicated as @f$K(k^2)@f$ and @f$E(k^2)@f$ in
 /// literature,
 /// respectively
-///              _
-///     2       /  pi / 2          2    2          - 1 / 2
-/// E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
-///  1         _/  0
 ///
-///              _          ____________________
-///     2       /  pi / 2| /       2    2
-/// E (k )  =   |        |/ 1  -  k  sin {theta} dtheta
-///  2         _/  0
+/// @f[
+/// E_1(k^2) = \int_0^{\pi/2} \left( 1 - k^2 \sin^2{\theta} \right )^{-1/2} \mathrm{d}\theta
+/// @f]
 ///
-/// k^2 = is a function of the point (r, z) and of the radius of the coil R
+/// @f[
+/// E_2(k^2) = \int_0^{\pi/2}\sqrt{1 - k^2 \sin^2{\theta}} \mathrm{d}\theta
+/// @f]
 ///
-///  2           4Rr
-/// k   =  ---------------
-///               2      2
-///        (R + r)   +  z
-/// Using these, you can evaluate the two components B_r and B_z of the
+/// @f$k^2@f$ is a function of the point @f$(r, z)@f$ and of the radius of the coil @f$R@f$
+///
+/// @f[
+/// k^2 = \frac{4Rr}{(R+r)^2 + z^2}
+/// @f]
+///
+/// Using these, you can evaluate the two components @f$B_r@f$ and @f$B_z@f$ of the
 /// magnetic field:
-///                            _                             _
-///              mu  I        |  /     2 \                    |
-///                0     kz   |  |2 - k  |    2          2    |
-/// B (r, z)  =  ----- ------ |  |-------|E (k )  -  E (k )   |
-///  r            4pi     ___ |  |      2| 2          1       |
-///                    | /  3 |_ \2 - 2k /                   _|
-///                    |/ Rr
 ///
-///                         _                                       _
-///             mu  I      |  /         2      \                     |
-///               0     k  |  | (R + r)k  - 2r |     2          2    |
-/// B (r,z)  =  ----- ---- |  | -------------- | E (k )  +  E (k )   |
-///  z           4pi    __ |  |           2    |  2          1       |
-///                   |/Rr |_ \   2r(1 - k )   /                    _|
+/// @f[
+/// B_r(r, z) = \frac{\mu_0 I}{4\pi} \frac{kz}{\sqrt{Rr^3}} \left[ \left(\frac{2-k^2}{2-2k^2}\right)E_2(k^2) - E_1(k^2) \right ]
+/// @f]
+///
+/// @f[
+/// B_z(r,z) = \frac{\mu_0 I}{4\pi} \frac{k}{\sqrt{Rr}} \left[ \left( \frac{(R+r)k^2-2r}{2r(1-k^2)} \right ) E_2(k^2) + E_1(k^2) \right ]
+/// @f]
+///
+///
+/// In the implementation the factor of @f$(\mu_0\cdot I)@f$ is defined to be a scaling
+/// factor. It is evaluated and defined as the magnetic field in the center of
+/// the
+/// coil, i.e. the scale set in @ref Acts::SolenoidBField::Config::bMagCenter.
 ///
 class SolenoidBField final : public MagneticFieldProvider {
  public:
+  /// Cache payload for magnetic field evaluation.
   struct Cache {
     /// @brief Constructor with magnetic field context
     explicit Cache(const MagneticFieldContext& /*mctx*/) {}
@@ -90,11 +116,13 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @brief the constructor with a shared pointer
   /// @note since it is a shared field, we enforce it to be const
   /// @tparam bField is the shared BField to be stored
+  /// @param config Configuration struct containing solenoid parameters
   explicit SolenoidBField(Config config);
 
   /// @brief Retrieve magnetic field value in local (r,z) coordinates
   ///
   /// @param [in] position local 2D position
+  /// @return Magnetic field vector in local (r,z) coordinates
   Vector2 getField(const Vector2& position) const;
 
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
@@ -104,6 +132,7 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @brief Get the B field at a position
   ///
   /// @param position The position to query at
+  /// @return Magnetic field vector in global coordinates
   Vector3 getField(const Vector3& position) const;
 
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const

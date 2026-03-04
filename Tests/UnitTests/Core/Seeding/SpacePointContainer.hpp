@@ -21,13 +21,13 @@ class SpacePointContainer {
   using CollectionType = collection_t;
   using ValueType = typename CollectionType::value_type;
 
-  friend Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<collection_t>, Acts::detail::RefHolder>;
+  friend Acts::SpacePointContainer<SpacePointContainer<collection_t>,
+                                   Acts::detail::RefHolder>;
 
   // default constructor is of no use. It cannot be used, so why bother?
   SpacePointContainer() = delete;
   // we never get the ownership. In both read-only and read-and-write mode
-  // the memory backend is independetly handled. This is only interfacing it to
+  // the memory backend is independently handled. This is only interfacing it to
   // ACTS
   SpacePointContainer(CollectionType&& container) = delete;
   explicit SpacePointContainer(CollectionType& container)

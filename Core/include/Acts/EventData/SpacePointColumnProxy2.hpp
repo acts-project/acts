@@ -9,14 +9,14 @@
 #pragma once
 
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Utilities/ContainerSubset.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include "Acts/Utilities/detail/ContainerSubset.hpp"
 
 #include <cassert>
 #include <span>
 #include <vector>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 class SpacePointContainer2;
 
@@ -25,12 +25,19 @@ class SpacePointContainer2;
 template <typename T, bool read_only>
 class SpacePointColumnProxy {
  public:
+  /// Flag indicating whether this space point column proxy is read-only
   constexpr static bool ReadOnly = read_only;
+  /// Type alias for space point index type
   using Index = SpacePointIndex2;
+  /// Type alias for space point index range type
   using IndexRange = SpacePointIndexRange2;
+  /// Type alias for space point index subset type
   using IndexSubset = SpacePointIndexSubset2;
+  /// Type alias for column value type
   using Value = T;
+  /// Type alias for container type (const if read-only)
   using Container = const_if_t<ReadOnly, SpacePointContainer2>;
+  /// Type alias for column container type (const if read-only)
   using Column = const_if_t<ReadOnly, std::vector<Value>>;
 
   /// Constructs a space point column proxy for the given container and column.
@@ -134,14 +141,32 @@ class SpacePointColumnProxy {
     return data()[index];
   }
 
-  class Subset
-      : public ContainerSubset<Subset, Column, Value, Index, ReadOnly> {
+  /// Subset view over selected column entries.
+  class Subset : public detail::ContainerSubset<Subset, Subset, Column, Value,
+                                                Index, ReadOnly> {
    public:
-    using Base = ContainerSubset<Subset, Column, Value, Index, ReadOnly>;
+    /// Base class type
+    using Base =
+        detail::ContainerSubset<Subset, Subset, Column, Value, Index, ReadOnly>;
 
     using Base::Base;
   };
 
+  /// Creates a subset view of this space point column based on provided
+  /// indices.
+  ///
+  /// This method creates a subset proxy that provides access to only the space
+  /// points at the indices specified in the IndexSubset. The subset maintains a
+  /// reference to the original column data without copying, enabling efficient
+  /// access to selected space points for filtering, clustering, or other
+  /// operations.
+  ///
+  /// @param subset The index subset specifying which space points to include
+  /// @return A subset proxy providing access to the selected space points
+  ///
+  /// @note The returned subset shares data with the original column
+  /// @note The subset remains valid only as long as the original column exists
+  /// @note This operation does not copy data, providing efficient subset access
   Subset subset(const IndexSubset &subset) const noexcept {
     return Subset(*m_column, subset);
   }
@@ -161,9 +186,11 @@ class SpacePointColumnProxy {
   friend class SpacePointContainer2;
 };
 
+/// Const proxy to a space point column for read-only access
 template <typename T>
 using ConstSpacePointColumnProxy = SpacePointColumnProxy<T, true>;
+/// Mutable proxy to a space point column allowing modification
 template <typename T>
 using MutableSpacePointColumnProxy = SpacePointColumnProxy<T, false>;
 
-}  // namespace Acts::Experimental
+}  // namespace Acts

@@ -9,28 +9,32 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/Json/ActsJson.hpp"
-#include "Acts/Plugins/Json/ProtoAxisJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "ActsPlugins/Json/ActsJson.hpp"
+#include "ActsPlugins/Json/ProtoAxisJsonConverter.hpp"
+#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-BOOST_AUTO_TEST_SUITE(ProtoAxisJsonConversion)
+using namespace Acts;
+
+namespace ActsTests {
+
+BOOST_AUTO_TEST_SUITE(JsonSuite)
 
 BOOST_AUTO_TEST_CASE(EquidistantProtoAxisJsonConversion) {
-  using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisType;
+  using enum AxisBoundaryType;
+  using enum AxisType;
 
   // Bound, equidistant axis
-  Acts::ProtoAxis epab(Bound, 0.0, 1.0, 10);
+  ProtoAxis epab(Bound, 0.0, 1.0, 10);
 
-  nlohmann::json jProtoAxis = Acts::ProtoAxisJsonConverter::toJson(epab);
+  nlohmann::json jProtoAxis = ProtoAxisJsonConverter::toJson(epab);
 
   BOOST_CHECK(jProtoAxis.contains("axis"));
   BOOST_CHECK(jProtoAxis.contains("autorange"));
 
-  Acts::ProtoAxis epabRead = Acts::ProtoAxisJsonConverter::fromJson(jProtoAxis);
+  ProtoAxis epabRead = ProtoAxisJsonConverter::fromJson(jProtoAxis);
 
   BOOST_CHECK_EQUAL(epabRead.getAxis(), epab.getAxis());
   BOOST_CHECK_EQUAL(epabRead.isAutorange(), epab.isAutorange());
@@ -38,18 +42,18 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxisJsonConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(AutorangeProtoAxisJsonConversion) {
-  using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisType;
+  using enum AxisBoundaryType;
+  using enum AxisType;
 
   // Bound, equidistant axis, autorange
-  Acts::ProtoAxis epa(Bound, 10);
+  ProtoAxis epa(Bound, 10);
 
-  nlohmann::json jProtoAxis = Acts::ProtoAxisJsonConverter::toJson(epa);
+  nlohmann::json jProtoAxis = ProtoAxisJsonConverter::toJson(epa);
 
   BOOST_CHECK(jProtoAxis.contains("axis"));
   BOOST_CHECK(jProtoAxis.contains("autorange"));
 
-  Acts::ProtoAxis epaRead = Acts::ProtoAxisJsonConverter::fromJson(jProtoAxis);
+  ProtoAxis epaRead = ProtoAxisJsonConverter::fromJson(jProtoAxis);
 
   BOOST_CHECK_EQUAL(epaRead.getAxis(), epa.getAxis());
   BOOST_CHECK_EQUAL(epaRead.isAutorange(), epa.isAutorange());
@@ -57,17 +61,17 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxisJsonConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(VariableProtoAxisJsonConversion) {
-  using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisType;
+  using enum AxisBoundaryType;
+  using enum AxisType;
 
   // Bound, variable axis
-  Acts::ProtoAxis vpab(Bound, {0.0, 1.0, 10});
+  ProtoAxis vpab(Bound, {0.0, 1.0, 10});
 
-  nlohmann::json jProtoAxis = Acts::ProtoAxisJsonConverter::toJson(vpab);
+  nlohmann::json jProtoAxis = ProtoAxisJsonConverter::toJson(vpab);
   BOOST_CHECK(jProtoAxis.contains("axis"));
   BOOST_CHECK(jProtoAxis.contains("autorange"));
 
-  Acts::ProtoAxis vpabRead = Acts::ProtoAxisJsonConverter::fromJson(jProtoAxis);
+  ProtoAxis vpabRead = ProtoAxisJsonConverter::fromJson(jProtoAxis);
 
   BOOST_CHECK_EQUAL(vpabRead.getAxis(), vpab.getAxis());
   BOOST_CHECK_EQUAL(vpabRead.isAutorange(), vpab.isAutorange());
@@ -84,7 +88,7 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
   // Valid input first
   nlohmann::json jValidEq = {{"axis", jValidEqAxis}, {"autorange", false}};
 
-  BOOST_CHECK_NO_THROW(Acts::ProtoAxisJsonConverter::fromJson(jValidEq));
+  BOOST_CHECK_NO_THROW(ProtoAxisJsonConverter::fromJson(jValidEq));
 
   // Invalid input - zero bins
   nlohmann::json jInvalidEqAxis = jValidEqAxis;
@@ -92,12 +96,12 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   nlohmann::json jInvalidEq = {{"axis", jInvalidEqAxis}, {"autorange", false}};
 
-  BOOST_CHECK_THROW(Acts::ProtoAxisJsonConverter::fromJson(jInvalidEq),
+  BOOST_CHECK_THROW(ProtoAxisJsonConverter::fromJson(jInvalidEq),
                     std::invalid_argument);
 
   // Invalid input - auto range without bins
   jInvalidEq = {{"axis", jInvalidEqAxis}, {"autorange", true}};
-  BOOST_CHECK_THROW(Acts::ProtoAxisJsonConverter::fromJson(jInvalidEq),
+  BOOST_CHECK_THROW(ProtoAxisJsonConverter::fromJson(jInvalidEq),
                     std::invalid_argument);
 
   // Invalid input - min >= max
@@ -106,7 +110,7 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   jInvalidEq = {{"axis", jInvalidEqAxis}, {"autorange", false}};
 
-  BOOST_CHECK_THROW(Acts::ProtoAxisJsonConverter::fromJson(jInvalidEq),
+  BOOST_CHECK_THROW(ProtoAxisJsonConverter::fromJson(jInvalidEq),
                     std::invalid_argument);
 
   nlohmann::json jValidVarAxis = {
@@ -116,7 +120,7 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   // Valid input first
   nlohmann::json jValidVar = {{"axis", jValidVarAxis}, {"autorange", false}};
-  BOOST_CHECK_NO_THROW(Acts::ProtoAxisJsonConverter::fromJson(jValidVar));
+  BOOST_CHECK_NO_THROW(ProtoAxisJsonConverter::fromJson(jValidVar));
 
   // Invalid input - less than two edges
   nlohmann::json jInvalidVarAxis = jValidVarAxis;
@@ -124,7 +128,7 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   nlohmann::json jInvalidVar = {{"axis", jInvalidVarAxis},
                                 {"autorange", false}};
-  BOOST_CHECK_THROW(Acts::ProtoAxisJsonConverter::fromJson(jInvalidVar),
+  BOOST_CHECK_THROW(ProtoAxisJsonConverter::fromJson(jInvalidVar),
                     std::invalid_argument);
 
   // Invalid input - non-increasing edges
@@ -133,8 +137,10 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   jInvalidVar = {{"axis", jInvalidVarAxis}, {"autorange", false}};
 
-  BOOST_CHECK_THROW(Acts::ProtoAxisJsonConverter::fromJson(jInvalidVar),
+  BOOST_CHECK_THROW(ProtoAxisJsonConverter::fromJson(jInvalidVar),
                     std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

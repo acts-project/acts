@@ -12,11 +12,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Json/JsonSurfacesReader.hpp"
-#include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsPlugins/Json/JsonSurfacesReader.hpp"
+#include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -25,21 +25,25 @@
 #include <Eigen/Geometry>
 #include <nlohmann/json.hpp>
 
-const std::vector<std::shared_ptr<Acts::Surface>> surfaces = []() {
-  std::vector<std::shared_ptr<Acts::Surface>> v;
+using namespace Acts;
+
+namespace ActsTests {
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+const std::vector<std::shared_ptr<Surface>> surfaces = []() {
+  std::vector<std::shared_ptr<Surface>> v;
 
   for (int i = 0; i < 3; ++i) {
-    auto bounds = std::make_shared<Acts::RectangleBounds>(1.0, 1.0);
-    Acts::Transform3 transform = Acts::Transform3::Identity();
-    transform.translate(Acts::Vector3::Random());
-    Acts::Vector3 randomAngles = Acts::Vector3::Random();
-    Acts::SquareMatrix3 rotMatrix;
-    rotMatrix = Eigen::AngleAxis(randomAngles[0], Acts::Vector3::UnitX()) *
-                Eigen::AngleAxis(randomAngles[1], Acts::Vector3::UnitY()) *
-                Eigen::AngleAxis(randomAngles[2], Acts::Vector3::UnitZ());
+    auto bounds = std::make_shared<RectangleBounds>(1.0, 1.0);
+    Transform3 transform = Transform3::Identity();
+    transform.translate(Vector3::Random());
+    Vector3 randomAngles = Vector3::Random();
+    SquareMatrix3 rotMatrix;
+    rotMatrix = Eigen::AngleAxis(randomAngles[0], Vector3::UnitX()) *
+                Eigen::AngleAxis(randomAngles[1], Vector3::UnitY()) *
+                Eigen::AngleAxis(randomAngles[2], Vector3::UnitZ());
     transform.rotate(rotMatrix);
-    v.push_back(
-        Acts::Surface::makeShared<Acts::PlaneSurface>(transform, bounds));
+    v.push_back(Surface::makeShared<PlaneSurface>(transform, bounds));
   }
 
   return v;
@@ -52,7 +56,7 @@ struct FileFixture {
     nlohmann::json js = nlohmann::json::array();
 
     for (const auto &s : surfaces) {
-      js.push_back(Acts::SurfaceJsonConverter::toJson({}, *s));
+      js.push_back(SurfaceJsonConverter::toJson(gctx, *s));
     }
 
     nlohmann::json j;
@@ -67,15 +71,19 @@ struct FileFixture {
 
 FileFixture fileFixture;
 
+BOOST_AUTO_TEST_SUITE(JsonSuite)
+
 BOOST_AUTO_TEST_CASE(surface_reading_test) {
-  auto readBackSurfaces =
-      Acts::JsonSurfacesReader::readVector({filename, {"foo"}});
+  auto readBackSurfaces = JsonSurfacesReader::readVector({filename, {"foo"}});
 
   BOOST_REQUIRE_EQUAL(surfaces.size(), readBackSurfaces.size());
-  for (auto [refSurface, surface] : Acts::zip(surfaces, readBackSurfaces)) {
+  for (auto [refSurface, surface] : zip(surfaces, readBackSurfaces)) {
+    BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
+        surface->localToGlobalTransform(gctx), 1.e-4));
+    BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
+        surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(
-        refSurface->transform({}).isApprox(surface->transform({}), 1.e-4));
-    BOOST_CHECK(refSurface->center({}).isApprox(surface->center({}), 1.e-4));
+        refSurface->center(gctx).isApprox(surface->center(gctx), 1.e-4));
     BOOST_CHECK_EQUAL(refSurface->type(), surface->type());
     BOOST_CHECK_EQUAL(refSurface->bounds().type(), surface->bounds().type());
   }
@@ -83,16 +91,22 @@ BOOST_AUTO_TEST_CASE(surface_reading_test) {
 
 BOOST_AUTO_TEST_CASE(json_detelement_reading_test) {
   auto readBackDetElements =
-      Acts::JsonSurfacesReader::readDetectorElements({filename, {"foo"}}, 1.0);
+      JsonSurfacesReader::readDetectorElements({filename, {"foo"}}, 1.0);
 
   BOOST_REQUIRE_EQUAL(surfaces.size(), readBackDetElements.size());
-  for (auto [refSurface, detElement] :
-       Acts::zip(surfaces, readBackDetElements)) {
+  for (auto [refSurface, detElement] : zip(surfaces, readBackDetElements)) {
     auto surface = &detElement->surface();
+    BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
+        surface->localToGlobalTransform(gctx), 1.e-4));
+    BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
+        surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(
-        refSurface->transform({}).isApprox(surface->transform({}), 1.e-4));
-    BOOST_CHECK(refSurface->center({}).isApprox(surface->center({}), 1.e-4));
+        refSurface->center(gctx).isApprox(surface->center(gctx), 1.e-4));
     BOOST_CHECK_EQUAL(refSurface->type(), surface->type());
     BOOST_CHECK_EQUAL(refSurface->bounds().type(), surface->bounds().type());
   }
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

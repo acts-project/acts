@@ -14,6 +14,8 @@
 //  used.
 
 #include <iosfwd>
+#include <optional>
+#include <string_view>
 
 namespace Acts {
 
@@ -25,14 +27,14 @@ constexpr unsigned int VersionPatch = @PROJECT_VERSION_PATCH@u;
 // clang-format on
 constexpr unsigned int Version =
     10000u * VersionMajor + 100u * VersionMinor + VersionPatch;
-constexpr const char* const CommitHash = "@_acts_commit_hash@";
-constexpr const char* const CommitHashShort = "@_acts_commit_hash_short@";
+constexpr std::optional<std::string_view> CommitHash = @_acts_commit_hash@;
+constexpr std::optional<std::string_view> CommitHashShort = @_acts_commit_hash_short@;
 
 struct VersionInfo {
   unsigned int versionMajor;
   unsigned int versionMinor;
   unsigned int versionPatch;
-  const char* const commitHash;
+  std::optional<std::string_view> commitHash;
 
   VersionInfo() = delete;
 
@@ -42,13 +44,15 @@ struct VersionInfo {
 
   static VersionInfo fromLibrary();
 
+  VersionInfo withoutCommit() const;
+
   bool operator==(const VersionInfo& other) const;
 
   friend std::ostream& operator<<(std::ostream& os, const VersionInfo& vi);
 
  private:
   VersionInfo(unsigned int majorIn, unsigned int minorIn, unsigned int patchIn,
-              const char* const commitHashIn);
+              std::optional<std::string_view> commitHashIn);
 };
 
 }  // namespace Acts

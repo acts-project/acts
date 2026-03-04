@@ -12,9 +12,13 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cassert>
 #include <limits>
+#include <numbers>
 
 #include "Eigen/Dense"
 
@@ -251,6 +255,23 @@ inline std::pair<double, double> incidentAngles(
   double phi = std::atan2(trfDir[2], trfDir[0]);
   double theta = std::atan2(trfDir[2], trfDir[1]);
   return {phi, theta};
+}
+
+/// Calculate the deltaR between two vectors.
+/// @note DeltaR is defined as sqrt(deltaPhi^2 + deltaEta^2)
+/// @tparam Derived Eigen derived concrete type
+/// @param v1 First vector
+/// @param v2 Second vector
+/// @return The deltaR value
+template <typename Derived>
+double deltaR(const Eigen::MatrixBase<Derived>& v1,
+              const Eigen::MatrixBase<Derived>& v2)
+  requires(Eigen::MatrixBase<Derived>::RowsAtCompileTime == 3)
+{
+  const double dphi =
+      detail::difference_periodic(phi(v1), phi(v2), 2 * std::numbers::pi);
+  const double deta = eta(v1) - eta(v2);
+  return fastHypot(dphi, deta);
 }
 
 }  // namespace Acts::VectorHelpers

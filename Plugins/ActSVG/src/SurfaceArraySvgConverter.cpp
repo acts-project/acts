@@ -6,19 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
+#include "ActsPlugins/ActSVG/SurfaceArraySvgConverter.hpp"
 
-#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "ActsPlugins/ActSVG/SurfaceSvgConverter.hpp"
 
 #include <algorithm>
 #include <numbers>
 
-std::tuple<std::vector<Acts::Svg::ProtoSurfaces>, Acts::Svg::ProtoGrid,
-           std::vector<Acts::Svg::ProtoAssociations> >
-Acts::Svg::SurfaceArrayConverter::convert(
+using namespace Acts;
+
+ActsPlugins::Svg::ProtoIndexedSurfaceGrid
+ActsPlugins::Svg::SurfaceArrayConverter::convert(
     const GeometryContext& gctx, const SurfaceArray& surfaceArray,
     const SurfaceArrayConverter::Options& cOptions) {
   // Prepare the return objects
@@ -32,7 +33,8 @@ Acts::Svg::SurfaceArrayConverter::convert(
   auto binning = surfaceArray.binningValues();
   auto axes = surfaceArray.getAxes();
 
-  enum ViewType { cylinder, polar, planar, none };
+  enum class ViewType { cylinder, polar, planar, none };
+  using enum ViewType;
   ViewType vType = none;
 
   if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
@@ -40,8 +42,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
     std::vector<double> edges0;
     std::vector<double> edges1;
     // Helper method to convert from ACTS to Grid edges
-    auto convertGridEdges = [](const std::vector<double>& actsEdges)
-        -> std::vector<actsvg::scalar> {
+    auto convertGridEdges = [](const std::vector<double>& actsEdges) {
       std::vector<actsvg::scalar> svgEdges;
       svgEdges.reserve(actsEdges.size());
       for (const auto ae : actsEdges) {
@@ -85,13 +86,21 @@ Acts::Svg::SurfaceArrayConverter::convert(
     pGrid._edges_1 = convertGridEdges(edges1);
   }
 
+  auto [fill, stroke] = cOptions.gridOptions.style.fillAndStroke();
+  pGrid._fill = fill;
+  pGrid._stroke = stroke;
+
   // Find the template surfaces & prepare template objects to be assigned
   std::vector<actsvg::svg::object> templateObjects;
   std::vector<const SurfaceBounds*> templateBounds;
 
+  // Estimate a reference radius
+  double radius = 0.;
   for (const auto& sf : surfaces) {
     // Get bounds and check them
     const SurfaceBounds& sBounds = sf->bounds();
+    radius += VectorHelpers::perp(sf->center(gctx));
+
     // Helper to find bounds
     auto sameBounds = [&](const SurfaceBounds* test) {
       return ((*test) == sBounds);
@@ -117,14 +126,15 @@ Acts::Svg::SurfaceArrayConverter::convert(
       templateObjects.push_back(referenceObject);
     }
   }
+  radius /= static_cast<double>(surfaces.size());
 
-  // Estimate a reference radius
-  double radius = 0.;
+  // scale the grid edges
+  if (pGrid._type == actsvg::proto::grid::e_z_phi) {
+    pGrid._reference_r = static_cast<float>(radius);
+  }
 
   // Now draw the surfaces from the correct template
   for (const auto& sf : surfaces) {
-    radius += Acts::VectorHelpers::perp(sf->center(gctx));
-
     // Let's get the right style
     SurfaceConverter::Options sOptions;
     sOptions.templateSurface = vType != cylinder;
@@ -133,34 +143,19 @@ Acts::Svg::SurfaceArrayConverter::convert(
     if (sfStyle != cOptions.surfaceStyles.end()) {
       sOptions.style = *sfStyle;
     }
-
     // Convert the surface from ACTS to actsvg
-    auto cSurface = Acts::Svg::SurfaceConverter::convert(gctx, *sf, sOptions);
+    auto cSurface =
+        ActsPlugins::Svg::SurfaceConverter::convert(gctx, *sf, sOptions);
     cSurface._name = "Module_n_" + std::to_string(pSurfaces.size());
 
     cSurface._aux_info["grid_info"] = {
         "* module " + std::to_string(pSurfaces.size()) +
         ", surface = " + std::to_string(sf->geometryId().sensitive())};
-    // Assign the template for cylinder layers
-    if (vType == cylinder) {
-      const SurfaceBounds& sBounds = sf->bounds();
-      // Helper to find bounds
-      auto sameBounds = [&](const SurfaceBounds* test) {
-        return ((*test) == sBounds);
-      };
-      // Check if you have this template object already
-      auto tBounds = std::ranges::find_if(templateBounds, sameBounds);
-      // New reference bounds and new reference object
-      if (tBounds != templateBounds.end()) {
-        std::size_t tObject = std::distance(templateBounds.begin(), tBounds);
-        cSurface._template_object = templateObjects[tObject];
-      }
-    }
     // Correct view transform for disc/planar layers
     if (vType == planar || vType == polar) {
       // Get the transform and estimate the rotation of phi
       // Assumes x/y view
-      const auto& sTransform = sf->transform(gctx);
+      const auto& sTransform = sf->localToGlobalTransform(gctx);
       Vector3 localA = sTransform.rotation().col(0);
       Vector3 localZ = sTransform.rotation().col(2);
       // Find out orientation w.r.t. global transform
@@ -175,10 +170,9 @@ Acts::Svg::SurfaceArrayConverter::convert(
                                  static_cast<actsvg::scalar>(surfaceCenter[1])};
       cSurface._transform._rot = {static_cast<actsvg::scalar>(alpha), 0., 0.};
     }
-
+    cSurface._radii[0u] = static_cast<float>(radius);
     pSurfaces.push_back(cSurface);
   }
-  radius /= surfaces.size();
 
   // Create the bin associations
   for (unsigned int il0 = 1; il0 < pGrid._edges_0.size(); ++il0) {
@@ -187,13 +181,14 @@ Acts::Svg::SurfaceArrayConverter::convert(
       double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
       // Create the fitting bin center estimates
       Vector3 bCenter;
+      Vector3 bDirection = Vector3(std::sin(p1), -std::cos(p1), 0.);
       if (vType == polar) {
         bCenter = Vector3(p0 * std::cos(p1), p0 * std::sin(p1), 0.);
       } else if (vType == cylinder) {
         bCenter = Vector3(radius * std::cos(p1), radius * std::sin(p1), p0);
       }
       // Get all the bin entries and members
-      auto bSurfaces = surfaceArray.neighbors(bCenter);
+      auto bSurfaces = surfaceArray.neighbors(bCenter, bDirection);
       std::vector<std::size_t> binnAssoc;
       for (const auto& bs : bSurfaces) {
         auto candidate = std::ranges::find(surfaces, bs);
@@ -202,10 +197,16 @@ Acts::Svg::SurfaceArrayConverter::convert(
         }
       }
       pAssociations.push_back(binnAssoc);
+      // Register the bin naming
+      std::string binInfo = std::string("- bin : [") + std::to_string(il0) +
+                            std::string(", ") + std::to_string(il1) +
+                            std::string("]") + '\n';
+      binInfo += " - center : (" + std::to_string(p0) + ", " +
+                 std::to_string(p1) + ")";
+
+      pGrid._bin_ids.push_back(binInfo);
     }
   }
   // Return the surfaces and the grid
-  std::vector<ProtoSurfaces> pSurfaceBatches = {pSurfaces};
-  std::vector<ProtoAssociations> pAssociationBatchs = {pAssociations};
-  return {pSurfaceBatches, pGrid, pAssociationBatchs};
+  return {pSurfaces, pGrid, pAssociations};
 }

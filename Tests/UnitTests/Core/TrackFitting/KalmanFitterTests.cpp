@@ -31,12 +31,11 @@
 
 #include "FitterTestsCommon.hpp"
 
-namespace {
-
 using namespace Acts;
-using namespace Acts::Test;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
+
+namespace ActsTests {
 
 using StraightPropagator =
     Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
@@ -64,7 +63,7 @@ Acts::BoundTrackParameters makeParameters() {
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
   return Acts::BoundTrackParameters::createCurvilinear(
@@ -99,9 +98,7 @@ auto makeDefaultKalmanFitterOptions() {
       PropagatorPlainOptions(tester.geoCtx, tester.magCtx));
 }
 
-}  // namespace
-
-BOOST_AUTO_TEST_SUITE(TrackFittingKalmanFitter)
+BOOST_AUTO_TEST_SUITE(TrackFittingSuite)
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();
@@ -119,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
   // regular smoothing
-  kfOptions.reversedFiltering = false;
+  kfOptions.reverseFiltering = false;
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
@@ -127,8 +124,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
                                           true);
 
   // reverse filtering instead of smoothing
-  kfOptions.reversedFiltering = true;
-  kfOptions.reversedFilteringCovarianceScaling = 100.0;
+  kfOptions.reverseFiltering = true;
+  kfOptions.reverseFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
@@ -141,7 +138,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
   // regular smoothing
-  kfOptions.reversedFiltering = false;
+  kfOptions.reverseFiltering = false;
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
@@ -149,8 +146,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
                                            true);
 
   // reverse filtering instead of smoothing
-  kfOptions.reversedFiltering = true;
-  kfOptions.reversedFilteringCovarianceScaling = 100.0;
+  kfOptions.reverseFiltering = true;
+  kfOptions.reverseFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
@@ -218,8 +215,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
         .connect<&TestReverseFilteringLogic::operator()<VectorMultiTrajectory>>(
             &trfl);
 
-    kfOptions.reversedFiltering = reverse;
-    kfOptions.reversedFilteringCovarianceScaling = 100.0;
+    kfOptions.reverseFiltering = reverse;
+    kfOptions.reverseFilteringCovarianceScaling = 100.0;
 
     tester.test_ZeroFieldWithReverseFiltering(kfZero, kfOptions, start, rng,
                                               expected_reversed,
@@ -249,3 +246,5 @@ BOOST_AUTO_TEST_CASE(GlobalCovariance) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+}  // namespace ActsTests

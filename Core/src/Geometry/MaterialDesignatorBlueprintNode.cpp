@@ -19,7 +19,7 @@
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-#include "./detail/MaterialDesignator.hpp"
+#include "./MaterialDesignator.hpp"
 
 namespace Acts::Experimental {
 

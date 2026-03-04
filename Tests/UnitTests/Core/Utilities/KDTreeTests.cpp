@@ -74,14 +74,16 @@ std::vector<std::pair<std::array<double, 3>, int>> test_vector{
     {{-6.0, 3.5, -7.4}, 7},    {{3.2, -6.2, 3.9}, -25}};
 }
 
-namespace Acts::Test {
+using namespace Acts;
+
+namespace ActsTests {
 
 struct TreeFixture1DDoubleInt1 {
   TreeFixture1DDoubleInt1()
       : tree(std::vector<std::pair<std::array<double, 1>, int>>{
             {{1.0}, 5}, {{2.0}, 6}, {{-1.2}, 2}, {{0.9}, 10}}) {}
 
-  Acts::KDTree<1, int, double> tree;
+  KDTree<1, int, double> tree;
 };
 
 struct TreeFixture1DDoubleInt2 {
@@ -95,7 +97,7 @@ struct TreeFixture1DDoubleInt2 {
             {{110.0}, 1},
             {{-1000.0}, 3}}) {}
 
-  Acts::KDTree<1, int, double> tree;
+  KDTree<1, int, double> tree;
 };
 
 struct TreeFixture2DDoubleInt1 {
@@ -103,7 +105,7 @@ struct TreeFixture2DDoubleInt1 {
       : tree(std::vector<std::pair<std::array<double, 2>, int>>{
             {{1.0, 5.0}, 5}, {{2.0, -2.5}, 6}}) {}
 
-  Acts::KDTree<2, int, double> tree;
+  KDTree<2, int, double> tree;
 };
 
 struct TreeFixture3DDoubleInt1 {
@@ -120,14 +122,14 @@ struct TreeFixture3DDoubleInt1 {
             {{-2.8, 8.8, -7.2}, 62},  {{-0.1, 3.5, 5.5}, -95},
             {{-1.3, 6.9, 5.3}, -23},  {{6.2, 6.6, 7.1}, -84}}) {}
 
-  Acts::KDTree<3, int, double> tree;
+  KDTree<3, int, double> tree;
 };
 
 struct TreeFixture3DDoubleInt2 {
   TreeFixture3DDoubleInt2()
       : tree(std::vector<std::pair<std::array<double, 3>, int>>(test_vector)) {}
 
-  Acts::KDTree<3, int, double> tree;
+  KDTree<3, int, double> tree;
 };
 
 struct TreeFixture3DDoubleInt3 {
@@ -142,7 +144,7 @@ struct TreeFixture3DDoubleInt3 {
             {{-100.0, -1.0, -0.2}, 3},
             {{100.0, 1.9, 8.8}, 7}}) {}
 
-  Acts::KDTree<3, int, double> tree;
+  KDTree<3, int, double> tree;
 };
 
 struct TreeFixture10DDoubleInt1 {
@@ -159,7 +161,7 @@ struct TreeFixture10DDoubleInt1 {
             {{8.4, -4.0, 6.3, 1.1, -5.7, 8.1, -8.0, -2.5, -0.5, 3.2}, -56},
             {{2.3, 5.8, 1.4, 4.0, 9.0, -6.4, 1.0, -7.8, 4.3, -5.3}, -83}}) {}
 
-  Acts::KDTree<10, int, double> tree;
+  KDTree<10, int, double> tree;
 };
 
 struct TreeFixture3DDoubleString1 {
@@ -176,7 +178,7 @@ struct TreeFixture3DDoubleString1 {
             {{-2.7, -5.9, -7.3}, "string8"},
             {{3.1, -9.4, -2.5}, "string9"}}) {}
 
-  Acts::KDTree<3, std::string, double> tree;
+  KDTree<3, std::string, double> tree;
 };
 
 struct TreeFixture1DIntInt1 {
@@ -184,7 +186,7 @@ struct TreeFixture1DIntInt1 {
       : tree(std::vector<std::pair<std::array<int, 1>, int>>{
             {{1}, 5}, {{2}, 6}, {{-1}, 2}, {{5}, 10}}) {}
 
-  Acts::KDTree<1, int, int> tree;
+  KDTree<1, int, int> tree;
 };
 
 struct TreeFixture2DIntInt1 {
@@ -192,12 +194,12 @@ struct TreeFixture2DIntInt1 {
       : tree(std::vector<std::pair<std::array<int, 2>, int>>{
             {{1, 7}, 5}, {{2, 1}, 6}, {{-1, -11}, 2}, {{5, -2}, 10}}) {}
 
-  Acts::KDTree<2, int, int> tree;
+  KDTree<2, int, int> tree;
 };
 
-BOOST_AUTO_TEST_SUITE(Utilities)
+BOOST_AUTO_TEST_SUITE(UtilitiesSuite)
 
-BOOST_AUTO_TEST_SUITE(KDTree)
+BOOST_AUTO_TEST_SUITE(KDTreeSuite)
 
 BOOST_FIXTURE_TEST_CASE(size_1, TreeFixture1DDoubleInt1) {
   BOOST_CHECK_EQUAL(tree.size(), 4);
@@ -543,7 +545,7 @@ BOOST_AUTO_TEST_CASE(range_search_very_big) {
 
   std::vector<std::pair<std::array<double, 3>, int>> copy(points);
 
-  Acts::KDTree<3, int, double> tree(std::move(copy));
+  KDTree<3, int, double> tree(std::move(copy));
 
   for (double xmin = -10.0; xmin <= 10.0; xmin += 1.0) {
     for (double ymin = -10.0; ymin <= 10.0; ymin += 1.0) {
@@ -593,7 +595,7 @@ BOOST_AUTO_TEST_CASE(range_search_many_same) {
     points.push_back({{-64.0, -64.0, -64.0}, q++});
   }
 
-  Acts::KDTree<3, int, double> tree(std::move(points));
+  KDTree<3, int, double> tree(std::move(points));
 
   RangeXD<3, double> range1;
   range1[0].shrink(50.0, 70.0);
@@ -623,4 +625,4 @@ BOOST_AUTO_TEST_CASE(range_search_many_same) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Acts::Test
+}  // namespace ActsTests

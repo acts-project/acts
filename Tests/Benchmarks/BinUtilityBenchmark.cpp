@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsTests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -17,6 +17,7 @@
 
 namespace po = boost::program_options;
 using namespace Acts;
+using namespace ActsTests;
 
 int main(int argc, char* argv[]) {
   unsigned int lvl = Acts::Logging::INFO;
@@ -73,7 +74,7 @@ int main(int argc, char* argv[]) {
   std::size_t st = 0;
   std::size_t gt = 0;
   std::size_t num_iters = 0;
-  const auto bin_utility_benchmark_small = Acts::Test::microBenchmark(
+  const auto bin_utility_benchmark_small = microBenchmark(
       [&] {
         auto bin = (num_iters % 2) != 0u ? small.bin(low) : small.bin(high);
         if (bin < 3) {
@@ -91,7 +92,7 @@ int main(int argc, char* argv[]) {
   st = 0;
   gt = 0;
   num_iters = 0;
-  const auto bin_utility_benchmark_medium = Acts::Test::microBenchmark(
+  const auto bin_utility_benchmark_medium = microBenchmark(
       [&] {
         auto bin = (num_iters % 2) != 0u ? medium.bin(low) : medium.bin(high);
         if (bin < 10) {
@@ -109,7 +110,7 @@ int main(int argc, char* argv[]) {
   st = 0;
   gt = 0;
   num_iters = 0;
-  const auto bin_utility_benchmark_many = Acts::Test::microBenchmark(
+  const auto bin_utility_benchmark_many = microBenchmark(
       [&] {
         auto bin = (num_iters % 2) != 0u ? many.bin(low) : many.bin(high);
         if (bin < 49) {
@@ -129,7 +130,7 @@ int main(int argc, char* argv[]) {
   st = 0;
   gt = 0;
   num_iters = 0;
-  const auto bin_utility_benchmark_eq = Acts::Test::microBenchmark(
+  const auto bin_utility_benchmark_eq = microBenchmark(
       [&] {
         auto bin = (num_iters % 2) != 0u ? equidistant.bin(low)
                                          : equidistant.bin(high);

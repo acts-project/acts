@@ -13,7 +13,7 @@
 namespace Acts {
 
 /// @brief A description of a triplet candidate.
-/// @tparam external_space_point_t  The external spacepoint type.
+/// @tparam external_space_point_t  The external space point type.
 template <typename external_space_point_t>
 struct TripletCandidate {
   /// @brief Default Constructor
@@ -30,20 +30,26 @@ struct TripletCandidate {
                    external_space_point_t& t, float w, float z, bool q)
       : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q) {}
 
+  /// Pointer to bottom space point of the triplet candidate
   external_space_point_t* bottom{nullptr};
+  /// Pointer to middle space point of the triplet candidate
   external_space_point_t* middle{nullptr};
+  /// Pointer to top space point of the triplet candidate
   external_space_point_t* top{nullptr};
+  /// Quality weight of the triplet candidate
   float weight{0.};
+  /// Z-coordinate of the estimated track origin
   float zOrigin{0.};
+  /// Flag indicating whether this is a high-quality candidate
   bool isQuality{false};
 };
 
 /// @class CandidatesForMiddleSp
 /// The CandidatesForMiddleSp collects the triplet candidates given a
-/// fixed middle spacepoint. It internally stores the triplet candidates
+/// fixed middle space point. It internally stores the triplet candidates
 /// keeping only those with the higher quality.
 ///
-/// @tparam external_space_point_t The external spacepoint type.
+/// @tparam external_space_point_t The external space point type.
 
 template <typename external_space_point_t>
 concept SatisfyCandidateConcept = requires(external_space_point_t spacePoint) {
@@ -55,6 +61,7 @@ concept SatisfyCandidateConcept = requires(external_space_point_t spacePoint) {
 template <SatisfyCandidateConcept external_space_point_t>
 class CandidatesForMiddleSp {
  public:
+  /// Type alias for triplet candidate type stored in this container
   using value_type = TripletCandidate<external_space_point_t>;
 
   /// @brief Setting maximum number of candidates to keep

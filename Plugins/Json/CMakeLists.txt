@@ -1,19 +1,13 @@
 acts_add_library(
     PluginJson
-    SHARED
     src/AlgebraJsonConverter.cpp
-    src/DetectorJsonConverter.cpp
-    src/DetectorVolumeJsonConverter.cpp
     src/ExtentJsonConverter.cpp
     src/GridJsonConverter.cpp
-    src/DetectorVolumeFinderJsonConverter.cpp
     src/GeometryIdentifierJsonConverter.cpp
-    src/IndexedSurfacesJsonConverter.cpp
+    src/IndexGridNavigationJsonConverter.cpp
     src/JsonMaterialDecorator.cpp
     src/MaterialMapJsonConverter.cpp
     src/MaterialJsonConverter.cpp
-    src/PortalJsonConverter.cpp
-    src/ProtoDetectorJsonConverter.cpp
     src/ProtoAxisJsonConverter.cpp
     src/SurfaceBoundsJsonConverter.cpp
     src/SurfaceJsonConverter.cpp
@@ -26,7 +20,7 @@ acts_add_library(
     src/JsonSurfacesReader.cpp
     src/DefinitionsJsonConverter.cpp
     src/Seeding2ConfigJsonConverter.cpp
-    ACTS_INCLUDE_FOLDER include/Acts
+    ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
 target_include_directories(
@@ -45,3 +39,5 @@ target_compile_definitions(
     ActsPluginJson
     PRIVATE JSON_DISABLE_ENUM_SERIALIZATION=1
 )
+
+acts_compile_headers(PluginJson GLOB include/**/*.hpp)

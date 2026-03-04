@@ -15,6 +15,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
@@ -39,19 +40,30 @@ class IVolumeMaterial;
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
-class StraightLineStepper {
+class StraightLineStepper final {
  public:
+  /// Type alias for transport jacobian matrix
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSquareMatrix;
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
+  /// Type alias for bound state containing parameters, jacobian, and path
+  /// length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  /// Type alias for magnetic field (null field for straight line propagation)
   using BField = NullBField;
 
   struct Config {};
 
+  /// Configuration options for straight line propagation.
   struct Options : public StepperPlainOptions {
+    /// Constructor from geometry and magnetic field contexts
+    /// @param gctx The geometry context
+    /// @param mctx The magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain stepper options
+    /// @param options The plain options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -67,6 +79,7 @@ class StraightLineStepper {
     /// @note the covariance matrix is copied when needed
     explicit State(const Options& optionsIn) : options(optionsIn) {}
 
+    /// Configuration options for the stepper
     Options options;
 
     /// Jacobian from local to the global frame
@@ -89,10 +102,12 @@ class StraightLineStepper {
 
     /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
+    /// Covariance matrix for track parameter uncertainties
     Covariance cov = Covariance::Zero();
+    /// Additional free parameter covariance matrix
     std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
-    /// accummulated path length state
+    /// accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
@@ -104,23 +119,37 @@ class StraightLineStepper {
     /// adaptive step size of the runge-kutta integration
     ConstrainedStep stepSize;
 
-    // Previous step size for overstep estimation (ignored for SL stepper)
+    /// Previous step size for overstep estimation (ignored for straight line
+    /// stepper)
     double previousStepSize = 0.;
 
     /// Statistics of the stepper
     StepperStatistics statistics;
   };
 
+  /// Create a stepper state from propagation options
+  /// @param options The propagation options
+  /// @return A new stepper state initialized with the provided options
   State makeState(const Options& options) const;
 
+  /// Initialize the stepper state from bound track parameters
+  /// @param state The stepper state to initialize
+  /// @param par The bound track parameters to initialize from
   void initialize(State& state, const BoundTrackParameters& par) const;
 
+  /// Initialize the stepper state from bound parameters and components
+  /// @param state The stepper state to initialize
+  /// @param boundParams The bound parameter vector
+  /// @param cov Optional covariance matrix
+  /// @param particleHypothesis The particle hypothesis (mass, charge, etc.)
+  /// @param surface The reference surface
   void initialize(State& state, const BoundVector& boundParams,
                   const std::optional<BoundMatrix>& cov,
                   ParticleHypothesis particleHypothesis,
                   const Surface& surface) const;
 
   /// Get the field for the stepping, this gives back a zero field
+  /// @return Always returns zero magnetic field vector for straight-line propagation
   Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
     // get the field from the cell
     return Result<Vector3>::success({0., 0., 0.});
@@ -129,6 +158,7 @@ class StraightLineStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Current global position vector
   Vector3 position(const State& state) const {
     return state.pars.template segment<3>(eFreePos0);
   }
@@ -136,6 +166,7 @@ class StraightLineStepper {
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Current normalized direction vector
   Vector3 direction(const State& state) const {
     return state.pars.template segment<3>(eFreeDir0);
   }
@@ -143,11 +174,13 @@ class StraightLineStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Charge over momentum (q/p) value
   double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Absolute momentum magnitude
   double absoluteMomentum(const State& state) const {
     return particleHypothesis(state).extractMomentum(qOverP(state));
   }
@@ -155,6 +188,7 @@ class StraightLineStepper {
   /// Momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Current momentum vector
   Vector3 momentum(const State& state) const {
     return absoluteMomentum(state) * direction(state);
   }
@@ -162,6 +196,7 @@ class StraightLineStepper {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Electric charge of the particle
   double charge(const State& state) const {
     return particleHypothesis(state).extractCharge(qOverP(state));
   }
@@ -169,6 +204,7 @@ class StraightLineStepper {
   /// Particle hypothesis
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return Reference to the particle hypothesis used
   const ParticleHypothesis& particleHypothesis(const State& state) const {
     return state.particleHypothesis;
   }
@@ -176,6 +212,7 @@ class StraightLineStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
+  /// @return The time coordinate from the free parameters vector
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
@@ -193,6 +230,7 @@ class StraightLineStepper {
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
   /// @param [in] logger A logger instance
+  /// @return Status of the intersection indicating whether surface was reached
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
@@ -209,14 +247,13 @@ class StraightLineStepper {
   /// the step size accordingly
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param target [in] The NavigationTarget
   /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
+  void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
-    double stepSize = oIntersection.pathLength();
+    static_cast<void>(direction);
+    double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
 
@@ -235,6 +272,7 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
+  /// @return Current step size for the specified constraint type
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
     return state.stepSize.value(stype);
   }
@@ -250,6 +288,7 @@ class StraightLineStepper {
   /// Output the Step Size - single component
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
+  /// @return String representation of the current step size
   std::string outputStepSize(const State& state) const {
     return state.stepSize.toString();
   }
@@ -369,7 +408,7 @@ class StraightLineStepper {
   ///       backwards track propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
-    (void)material;
+    static_cast<void>(material);
 
     // use the adjusted step size
     const auto h = state.stepSize.value() * propDir;
@@ -386,7 +425,7 @@ class StraightLineStepper {
     if (state.covTransport) {
       // The step transport matrix in global coordinates
       FreeMatrix D = FreeMatrix::Identity();
-      D.block<3, 3>(0, 4) = ActsSquareMatrix<3>::Identity() * h;
+      D.block<3, 3>(0, 4) = SquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
       D(3, 7) = h * m * m * state.pars[eFreeQOverP] / dtds;

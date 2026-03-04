@@ -10,14 +10,13 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Seeding2/ITripletSeedCuts.hpp"
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <numeric>
 
-namespace Acts::Experimental {
+namespace Acts {
 
 namespace {
 
@@ -265,12 +264,12 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < getBestSeedQuality(state().bestSeedQualityMap,
-                                      spB.resolvedIndex()) &&
-          weight < getBestSeedQuality(state().bestSeedQualityMap,
-                                      spM.resolvedIndex()) &&
-          weight < getBestSeedQuality(state().bestSeedQualityMap,
-                                      spT.resolvedIndex())) {
+      if (weight <
+              getBestSeedQuality(state().bestSeedQualityMap, spB.index()) &&
+          weight <
+              getBestSeedQuality(state().bestSeedQualityMap, spM.index()) &&
+          weight <
+              getBestSeedQuality(state().bestSeedQualityMap, spT.index())) {
         continue;
       }
 
@@ -342,9 +341,9 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
       break;
     }
 
-    std::array<SpacePointIndex2, 3> triplet{spacePoints[bottom].resolvedIndex(),
-                                            spacePoints[middle].resolvedIndex(),
-                                            spacePoints[top].resolvedIndex()};
+    std::array<SpacePointIndex2, 3> triplet{spacePoints[bottom].index(),
+                                            spacePoints[middle].index(),
+                                            spacePoints[top].index()};
 
     if (config().seedConfirmation) {
       // continue if higher-quality seeds were found
@@ -382,4 +381,4 @@ void BroadTripletSeedFilter::filterTripletsMiddleFixed(
   ACTS_VERBOSE("Identified " << numTotalSeeds << " seeds");
 }
 
-}  // namespace Acts::Experimental
+}  // namespace Acts
