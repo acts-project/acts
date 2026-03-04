@@ -25,6 +25,12 @@ namespace ActsExamples {
 class OpenDataDetector final : public DD4hepDetectorBase {
  public:
   struct Config : public DD4hepDetectorBase::Config {
+    enum class ConstructionMethod {
+      BarrelEndcap,
+      DirectLayer,
+      DirectLayerGrouped
+    };
+
     using ElementFactory =
         std::function<std::shared_ptr<ActsPlugins::DD4hepDetectorElement>(
             const dd4hep::DetElement& element, ActsPlugins::TGeoAxes axes,
@@ -32,9 +38,8 @@ class OpenDataDetector final : public DD4hepDetectorBase {
 
     ElementFactory detectorElementFactory = defaultDetectorElementFactory;
 
-    /// If true, use the LayerAssembler API directly (barrel/endcap separately)
-    /// instead of the BarrelEndcapAssembler wrapper. For illustration.
-    bool useDirectLayerAssembler = false;
+    /// Select the conversion style used to construct the Gen3 ODD geometry.
+    ConstructionMethod constructionMethod = ConstructionMethod::BarrelEndcap;
 
     /// Envelope for the blueprint root (world volume). Values in mm.
     Acts::ExtentEnvelope blueprintEnvelope =
@@ -61,11 +66,20 @@ class OpenDataDetector final : public DD4hepDetectorBase {
  private:
   void construct(const Acts::GeometryContext& gctx);
 
-  /// Construction path using BarrelEndcapAssembler (wraps LayerAssembler).
+  /// Construction path using BarrelEndcapAssembler (wraps ElementLayerAssembler).
   void constructBarrelEndcap(const Acts::GeometryContext& gctx);
 
-  /// Construction path using LayerAssembler directly. For illustration.
+  /// Construction path using ElementLayerAssembler directly. For illustration.
   void constructDirectLayer(const Acts::GeometryContext& gctx);
+
+  /// Construction path using SensorLayerAssembler with groupBy. For
+  /// illustration: sensors are collected directly and grouped by walking the
+  /// parent chain to find the enclosing layer element.
+  void constructDirectLayerGrouped(const Acts::GeometryContext& gctx);
+
+  /// Shared implementation for direct layer construction variants.
+  void constructDirectLayerImpl(const Acts::GeometryContext& gctx,
+                                bool useGrouping);
 
   Config m_cfg;
 };
