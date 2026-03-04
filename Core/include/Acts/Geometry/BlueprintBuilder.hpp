@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -18,6 +19,7 @@
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -32,7 +34,6 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -70,20 +71,69 @@ concept HasAxisDefinition =
     };
 
 using LayerNodePtr = std::shared_ptr<Acts::Experimental::LayerBlueprintNode>;
+using SurfacePtr = std::shared_ptr<Acts::Surface>;
+using SurfaceVector = std::vector<SurfacePtr>;
 
-/// @brief Concept requiring a backend to provide a `makeLayer` factory method.
+/// @brief Callback type that can replace or wrap a @ref LayerBlueprintNode.
 ///
-/// The method must accept a parent element, a span of sensitive child elements,
-/// and a `LayerSpec`, and return a `LayerBlueprintNode` shared pointer.
+/// Receives the source layer element (or @c std::nullopt when no element
+/// context exists) and the newly created layer node, and returns the
+/// (possibly replaced) node to be added to the container.
+template <typename ElementT>
+using LayerCustomizer =
+    std::function<std::shared_ptr<Acts::Experimental::LayerBlueprintNode>(
+        const std::optional<ElementT>&,
+        std::shared_ptr<Acts::Experimental::LayerBlueprintNode>)>;
+
+/// @brief Simplified callback type that mutates a @ref LayerBlueprintNode
+/// in-place.
+template <typename ElementT>
+using ReplacingLayerCustomizer = std::function<void(
+    const std::optional<ElementT>&, Acts::Experimental::LayerBlueprintNode&)>;
+
+/// @brief Callback type that can replace or wrap a
+/// @ref CylinderContainerBlueprintNode.
+template <typename ElementT>
+using ContainerCustomizer = std::function<
+    std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>(
+        const ElementT&,
+        std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>)>;
+
+/// @brief Simplified callback type that mutates a
+/// @ref CylinderContainerBlueprintNode in-place.
+template <typename ElementT>
+using ReplacingContainerCustomizer = std::function<void(
+    const ElementT&, Acts::Experimental::CylinderContainerBlueprintNode&)>;
+
+/// @brief Concept requiring a backend to provide a surface-construction method.
+///
+/// The method must accept a span of sensitive child elements plus a `LayerSpec`
+/// and return the corresponding ACTS surfaces.
 template <typename BackendT>
-concept HasLayerFactory =
+concept HasSurfaceFactory =
     HasLayerSpec<BackendT> &&
-    requires(const BackendT& backend, const typename BackendT::Element& parent,
+    requires(const BackendT& backend,
              std::span<const typename BackendT::Element> sensitives,
              const typename BackendT::LayerSpec& layerSpec) {
       {
-        backend.makeLayer(parent, sensitives, layerSpec)
-      } -> std::same_as<LayerNodePtr>;
+        backend.makeSurfaces(sensitives, layerSpec)
+      } -> std::same_as<SurfaceVector>;
+    };
+
+/// @brief Optional backend capability to extract a layer transform from one
+/// context element and a layer specification.
+///
+/// Backends that satisfy this concept may provide automatic layer-transform
+/// extraction (for example from detector-element geometry). The interface layer
+/// applies this only when a context element is available.
+template <typename BackendT>
+concept HasLayerTransformLookup =
+    HasLayerSpec<BackendT> &&
+    requires(const BackendT& backend, const typename BackendT::Element& elem,
+             const typename BackendT::LayerSpec& layerSpec) {
+      {
+        backend.lookupLayerTransform(elem, layerSpec)
+      } -> std::same_as<std::optional<Acts::Transform3>>;
     };
 
 /// @brief Concept requiring `LayerSpec` to carry an optional `layerName` field.
@@ -102,7 +152,7 @@ concept HasLayerNameMember =
 /// @ref BlueprintBuilder.
 ///
 /// A conforming backend must:
-/// - satisfy @ref HasLayerFactory and @ref HasLayerNameMember,
+/// - satisfy @ref HasSurfaceFactory and @ref HasLayerNameMember,
 /// - be constructible from a `Config` object and an `Acts::Logger` reference,
 /// - expose the element-hierarchy query interface (`world`, `nameOf`,
 ///   `children`, `parent`),
@@ -111,13 +161,13 @@ concept HasLayerNameMember =
 /// - support equality comparison between `Element` instances.
 template <typename BackendT>
 concept BlueprintBackend =
-    HasLayerFactory<BackendT> && HasLayerNameMember<BackendT> &&
+    HasSurfaceFactory<BackendT> && HasLayerNameMember<BackendT> &&
     requires(const typename BackendT::Config& cfg, const Acts::Logger& logger,
              const BackendT& backend,
              const typename BackendT::Element& element) {
       BackendT{cfg, logger};
       { backend.world() } -> std::same_as<typename BackendT::Element>;
-      { backend.nameOf(element) } -> std::convertible_to<std::string_view>;
+      { backend.nameOf(element) } -> std::same_as<std::string>;
       {
         backend.children(element)
       } -> std::same_as<std::vector<typename BackendT::Element>>;
@@ -137,25 +187,32 @@ concept BlueprintBackend =
 template <detail::BlueprintBackend BackendT>
 class BlueprintBuilder;
 
+template <detail::BlueprintBackend BackendT>
+class SensorLayerAssembler;
+
+template <detail::BlueprintBackend BackendT>
+class SensorLayer;
+
 /// @brief Fluent builder that assembles a flat collection of cylindrical or
-/// disc-like detector layers into a @ref CylinderContainerBlueprintNode.
+/// disc-like detector layers from layer-representative detector elements into a
+/// @ref CylinderContainerBlueprintNode.
 ///
-/// Instances are obtained from @ref BlueprintBuilder::layers() and configured
-/// through a method-chaining API. All setters are rvalue-qualified and return
-/// `LayerAssembler&&` so that calls can be chained without copies:
+/// Each supplied element represents one layer: its hierarchy path is used as
+/// the layer name and (optionally) its geometry drives the layer transform.
+/// Obtained from @ref BlueprintBuilder::layers().
 ///
 /// ```cpp
 /// builder.layers()
 ///   .barrel()
-///   .setAxes(myAxes)
-///   .setFilter(layerPattern)
+///   .setSensorAxes(myAxes)
+///   .setLayerFilter(layerPattern)
 ///   .setContainer(containerElement)
 ///   .addTo(parentNode);
 /// ```
 ///
 /// @tparam BackendT Geometry backend satisfying @ref detail::BlueprintBackend.
 template <detail::BlueprintBackend BackendT>
-class LayerAssembler {
+class ElementLayerAssembler {
  public:
   /// The associated @ref BlueprintBuilder type.
   using Builder = BlueprintBuilder<BackendT>;
@@ -166,37 +223,23 @@ class LayerAssembler {
   /// Backend layer-specification type.
   using LayerSpec = typename BackendT::LayerSpec;
   /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
-  ///
-  /// Receives the source detector element and the newly created layer node,
-  /// and returns the (possibly replaced) node to be added to the container.
-  using LayerCustomizer =
-      std::function<std::shared_ptr<Acts::Experimental::LayerBlueprintNode>(
-          const Element&,
-          std::shared_ptr<Acts::Experimental::LayerBlueprintNode>)>;
+  using LayerCustomizer = detail::LayerCustomizer<Element>;
   /// Simplified callback type that mutates a @ref LayerBlueprintNode in-place.
-  ///
-  /// The return value is ignored; the original node is kept and added to the
-  /// container after the callback returns.
-  using ReplacingLayerCustomizer = std::function<void(
-      const Element&, Acts::Experimental::LayerBlueprintNode&)>;
-
-  /// @brief Construct a @ref LayerAssembler bound to @p builder.
-  /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
-  explicit LayerAssembler(const Builder& builder);
+  using ReplacingLayerCustomizer = detail::ReplacingLayerCustomizer<Element>;
 
   /// @brief Set the layer geometry type explicitly.
   /// @param layerType `LayerType::Cylinder` for barrel, `LayerType::Disc` for
   ///                  endcap.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& setLayerType(LayerType layerType) &&;
+  [[nodiscard]] ElementLayerAssembler&& setLayerType(LayerType layerType) &&;
 
   /// @brief Shorthand for `setLayerType(LayerType::Disc)`.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& endcap() &&;
+  [[nodiscard]] ElementLayerAssembler&& endcap() &&;
 
   /// @brief Shorthand for `setLayerType(LayerType::Cylinder)`.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& barrel() &&;
+  [[nodiscard]] ElementLayerAssembler&& barrel() &&;
 
   /// @brief Set the axis definition used to orient sensitive surfaces.
   ///
@@ -204,7 +247,8 @@ class LayerAssembler {
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-  [[nodiscard]] LayerAssembler&& setAxes(typename B::AxisDefinition axes) &&
+  [[nodiscard]] ElementLayerAssembler&& setSensorAxes(
+      typename B::AxisDefinition axes) &&
     requires(detail::HasAxisDefinition<B>)
   {
     m_layerSpec.axes = std::move(axes);
@@ -220,7 +264,7 @@ class LayerAssembler {
   /// @param layerAxes Axis definition forwarded to `LayerSpec::layerAxes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-  [[nodiscard]] LayerAssembler&& setLayerAxes(
+  [[nodiscard]] ElementLayerAssembler&& setLayerAxes(
       typename B::AxisDefinition layerAxes) &&
     requires(detail::HasAxisDefinition<B>)
   {
@@ -233,33 +277,69 @@ class LayerAssembler {
   /// @param pattern Regular-expression string; converted to `std::regex`
   ///                internally.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& setFilter(const std::string& pattern) &&;
+  [[nodiscard]] ElementLayerAssembler&& setLayerFilter(
+      const std::string& pattern) &&;
 
   /// @brief Set the regex filter used to select layer elements inside the
   /// container.
   /// @param pattern Pre-compiled regular expression matched against each
   ///                child element name.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& setFilter(const std::regex& pattern) &&;
+  [[nodiscard]] ElementLayerAssembler&& setLayerFilter(
+      const std::regex& pattern) &&;
 
   /// @brief Set the detector element that acts as the containing volume for the
   /// layer search.
   /// @param container Element whose subtree is searched for layers matching the
   ///                  filter.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& setContainer(const Element& container) &&;
+  [[nodiscard]] ElementLayerAssembler&& setContainer(
+      const Element& container) &&;
+
+  /// @brief Override the output container node name.
+  ///
+  /// If set, this name is used verbatim for the produced
+  /// @ref CylinderContainerBlueprintNode. Otherwise, the name is taken from the
+  /// configured container element (when @ref setContainer is used).
+  /// @param containerName Explicit container-node name to use.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] ElementLayerAssembler&& setContainerName(
+      std::string containerName) &&;
+
+  /// @brief Set an explicit suffix for produced layer node names.
+  ///
+  /// The final node name is `"<anchor path>|<suffix>"`. Use `std::nullopt` to
+  /// clear a previously configured suffix.
+  /// @param layerNameSuffix Optional suffix appended to each produced layer
+  ///                        name.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] ElementLayerAssembler&& setLayerNameSuffix(
+      std::optional<std::string> layerNameSuffix) &&;
+
+  /// @brief Set an explicit list of layer-representative elements.
+  ///
+  /// When set, the assembler skips subtree discovery via `setContainer()` and
+  /// uses these elements directly as layer representatives. `setLayerFilter()`
+  /// still applies as an optional post-filter on this list. Set either
+  /// @ref setContainerName or @ref setContainer to define the output container
+  /// name.
+  /// @param layerElements Layer-representative elements; one layer per element.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] ElementLayerAssembler&& setLayerElements(
+      std::vector<Element> layerElements) &&;
 
   /// @brief Set the container element by name, searching from the world root.
   ///
   /// @throws std::runtime_error if no element with @p name is found.
   /// @param name Name of the detector element to use as the container.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& setContainer(const std::string& name) &&;
+  [[nodiscard]] ElementLayerAssembler&& setContainer(
+      const std::string& name) &&;
 
   /// @brief Set an envelope to be applied to every layer node produced.
   /// @param envelope Envelope margins added around each layer's extent.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& setEnvelope(
+  [[nodiscard]] ElementLayerAssembler&& setEnvelope(
       const Acts::ExtentEnvelope& envelope) &&;
 
   /// @brief Control whether an empty layer collection is an error.
@@ -269,23 +349,21 @@ class LayerAssembler {
   /// failure to an informational log message.
   /// @param emptyOk If `true`, silently accept an empty result.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& setEmptyOk(bool emptyOk) &&;
+  [[nodiscard]] ElementLayerAssembler&& setEmptyOk(bool emptyOk) &&;
 
   /// @brief Register a customizer callback invoked for each created layer node.
   ///
-  /// The callback receives the source detector element and the newly created
-  /// @ref LayerBlueprintNode. It may return a different (or wrapped) node which
-  /// will then be inserted into the container.
+  /// The callback receives the source layer element and the newly created
+  /// @ref LayerBlueprintNode. It may return a different (or wrapped) node.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& onLayer(LayerCustomizer customizer) &&;
+  [[nodiscard]] ElementLayerAssembler&& onLayer(LayerCustomizer customizer) &&;
 
   /// @brief Register an in-place mutating callback invoked for each layer node.
   ///
-  /// The callback receives the source detector element and a mutable reference
-  /// to the @ref LayerBlueprintNode. The original node is kept regardless of
-  /// what the callback does.
+  /// The callback receives the source layer element and a mutable reference to
+  /// the @ref LayerBlueprintNode. The original node is kept.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& onLayer(
+  [[nodiscard]] ElementLayerAssembler&& onLayer(
       ReplacingLayerCustomizer customizer) &&;
 
   /// @brief Override the attachment strategy for the container node.
@@ -294,21 +372,20 @@ class LayerAssembler {
   /// @param strategy Optional attachment strategy; pass `std::nullopt` to
   ///                 reset to the default.
   /// @return `*this` (rvalue).
-  [[nodiscard]] LayerAssembler&& setAttachmentStrategy(
+  [[nodiscard]] ElementLayerAssembler&& setAttachmentStrategy(
       std::optional<Acts::VolumeAttachmentStrategy> strategy) &&;
 
   /// @brief Build and return the assembled container node.
   ///
-  /// Searches the configured container element for children whose names match
-  /// the filter, creates a @ref LayerBlueprintNode for each, applies optional
-  /// envelope and customizer, then wraps them in a
-  /// @ref CylinderContainerBlueprintNode oriented along the axis appropriate
-  /// for the selected layer type.
+  /// Each resolved layer element becomes exactly one @ref LayerBlueprintNode.
+  /// The layer name is derived from the element's full path in the hierarchy
+  /// (plus an optional suffix). The layer transform is deduced from the element
+  /// when `setLayerAxes()` is configured.
   ///
   /// @throws std::runtime_error if the layer type, filter, or container has not
-  ///         been set, or if the backend requires axes and none were provided,
-  ///         or if the container yields no matching elements and @p emptyOk is
-  ///         `false`.
+  ///         been set, if the backend requires axes and none were provided, if
+  ///         no container name is resolvable, or if the container yields no
+  ///         matching elements and @p emptyOk is `false`.
   /// @return Shared pointer to the fully assembled container node.
   [[nodiscard]] std::shared_ptr<
       Acts::Experimental::CylinderContainerBlueprintNode>
@@ -322,20 +399,277 @@ class LayerAssembler {
   void addTo(Acts::Experimental::BlueprintNode& node) const&&;
 
  private:
+  friend class BlueprintBuilder<BackendT>;
+
+  /// @brief Construct an @ref ElementLayerAssembler bound to @p builder.
+  /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
+  explicit ElementLayerAssembler(const Builder& builder);
+
   const Builder* m_builder;
   std::optional<LayerType> m_layerType;
   LayerSpec m_layerSpec{};
   std::optional<std::regex> m_filter;
   std::optional<Element> m_container;
+  std::optional<std::string> m_containerName;
+  std::optional<std::vector<Element>> m_layerElements;
   std::optional<Acts::ExtentEnvelope> m_envelope;
   std::optional<Acts::VolumeAttachmentStrategy> m_attachmentStrategy;
   bool m_emptyOk = false;
-
   LayerCustomizer m_onLayer;
 };
 
-// compose() and template method definitions live in
-// detail/BlueprintBuilder_impl.hpp (included only for explicit instantiation)
+/// @brief Fluent builder that assembles multiple cylindrical or disc-like
+/// detector layers directly from sensor elements into a
+/// @ref CylinderContainerBlueprintNode.
+///
+/// Unlike @ref ElementLayerAssembler, no layer-representative element is
+/// assumed to exist. Names and transforms are never deduced from the element
+/// hierarchy; they come solely from @ref groupBy keys.
+/// Obtained from @ref BlueprintBuilder::layersFromSensors().
+///
+/// A `groupBy` function is required: sensors mapped to the same key are merged
+/// into one layer, and the key becomes the layer name.
+///
+/// For a single layer (no grouping), use @ref SensorLayer via
+/// @ref BlueprintBuilder::layerFromSensors() instead.
+///
+/// ```cpp
+/// builder.layersFromSensors()
+///   .barrel()
+///   .setSensorAxes(myAxes)
+///   .setSensors(sensorElements)
+///   .groupBy(keyExtractor)
+///   .setContainerName("MyBarrel")
+///   .addTo(parentNode);
+/// ```
+///
+/// @tparam BackendT Geometry backend satisfying @ref detail::BlueprintBackend.
+template <detail::BlueprintBackend BackendT>
+class SensorLayerAssembler {
+ public:
+  /// The associated @ref BlueprintBuilder type.
+  using Builder = BlueprintBuilder<BackendT>;
+  /// Distinguishes barrel (Cylinder) from endcap (Disc) layer geometry.
+  using LayerType = Acts::Experimental::LayerBlueprintNode::LayerType;
+  /// Backend detector element handle type.
+  using Element = typename BackendT::Element;
+  /// Backend layer-specification type.
+  using LayerSpec = typename BackendT::LayerSpec;
+  /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
+  using LayerCustomizer = detail::LayerCustomizer<Element>;
+  /// Simplified in-place mutating callback.
+  using ReplacingLayerCustomizer = detail::ReplacingLayerCustomizer<Element>;
+  /// Callable that maps a sensor element to a string group key.
+  using LayerGrouper = std::function<std::string(const Element&)>;
+
+  /// @brief Set the layer geometry type explicitly.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& setLayerType(LayerType layerType) &&;
+
+  /// @brief Shorthand for `setLayerType(LayerType::Disc)`.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& endcap() &&;
+
+  /// @brief Shorthand for `setLayerType(LayerType::Cylinder)`.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& barrel() &&;
+
+  /// @brief Set the axis definition used to orient sensitive surfaces.
+  ///
+  /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+  /// @param axes Axis definition forwarded to `LayerSpec::axes`.
+  /// @return `*this` (rvalue).
+  template <typename B = BackendT>
+  [[nodiscard]] SensorLayerAssembler&& setSensorAxes(
+      typename B::AxisDefinition axes) &&
+    requires(detail::HasAxisDefinition<B>)
+  {
+    m_layerSpec.axes = std::move(axes);
+    return std::move(*this);
+  }
+
+  /// @brief Set the sensor elements to assemble into layers.
+  /// @param sensors Sensor elements (leaf-level sensitives).
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& setSensors(
+      std::vector<Element> sensors) &&;
+
+  /// @brief Group sensors into layers by key (required).
+  ///
+  /// Sensors mapped to the same key are merged into one layer. The key becomes
+  /// the layer name.
+  /// @param grouper Callable `std::string(const Element& sensor)`.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& groupBy(LayerGrouper grouper) &&;
+
+  /// @brief Set the output container node name (required).
+  /// @param containerName Name of the produced
+  ///                      @ref CylinderContainerBlueprintNode.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& setContainerName(
+      std::string containerName) &&;
+
+  /// @brief Set an envelope applied to every produced layer node.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& setEnvelope(
+      const Acts::ExtentEnvelope& envelope) &&;
+
+  /// @brief Override the attachment strategy for the container node.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& setAttachmentStrategy(
+      std::optional<Acts::VolumeAttachmentStrategy> strategy) &&;
+
+  /// @brief Register a customizer callback invoked for each created layer node.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& onLayer(LayerCustomizer customizer) &&;
+
+  /// @brief Register an in-place mutating callback invoked for each layer node.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& onLayer(
+      ReplacingLayerCustomizer customizer) &&;
+
+  /// @brief Build and return the assembled container node.
+  ///
+  /// @throws std::runtime_error if the layer type is not set, if the backend
+  ///         requires axes and none were provided, if sensors are not set, if
+  ///         the container name is not set, or if @ref groupBy has not been
+  ///         configured.
+  /// @return Shared pointer to the assembled container node.
+  [[nodiscard]] std::shared_ptr<
+      Acts::Experimental::CylinderContainerBlueprintNode>
+  build() const;
+
+  /// @brief Build the container node and attach it as a child of @p node.
+  void addTo(Acts::Experimental::BlueprintNode& node) const&&;
+
+ private:
+  friend class BlueprintBuilder<BackendT>;
+
+  /// @brief Construct a @ref SensorLayerAssembler bound to @p builder.
+  /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
+  explicit SensorLayerAssembler(const Builder& builder);
+
+  const Builder* m_builder;
+  std::optional<LayerType> m_layerType;
+  LayerSpec m_layerSpec{};
+  std::optional<std::vector<Element>> m_sensors;
+  LayerGrouper m_groupBy;
+  std::optional<std::string> m_containerName;
+  std::optional<Acts::ExtentEnvelope> m_envelope;
+  std::optional<Acts::VolumeAttachmentStrategy> m_attachmentStrategy;
+  LayerCustomizer m_onLayer;
+};
+
+/// @brief Fluent builder that assembles a single cylindrical or disc-like
+/// detector layer directly from sensor elements, returning a
+/// @ref LayerBlueprintNode (no container wrapper).
+///
+/// Unlike @ref SensorLayerAssembler, this builder produces exactly one layer.
+/// The layer name must be provided explicitly via @ref setLayerName. No
+/// grouping function is required or supported.
+/// Obtained from @ref BlueprintBuilder::layerFromSensors().
+///
+/// ```cpp
+/// builder.layerFromSensors()
+///   .barrel()
+///   .setSensorAxes(myAxes)
+///   .setSensors(sensorElements)
+///   .setLayerName("MyLayer")
+///   .addTo(parentNode);
+/// ```
+///
+/// @tparam BackendT Geometry backend satisfying @ref detail::BlueprintBackend.
+template <detail::BlueprintBackend BackendT>
+class SensorLayer {
+ public:
+  /// The associated @ref BlueprintBuilder type.
+  using Builder = BlueprintBuilder<BackendT>;
+  /// Distinguishes barrel (Cylinder) from endcap (Disc) layer geometry.
+  using LayerType = Acts::Experimental::LayerBlueprintNode::LayerType;
+  /// Backend detector element handle type.
+  using Element = typename BackendT::Element;
+  /// Backend layer-specification type.
+  using LayerSpec = typename BackendT::LayerSpec;
+  /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
+  using LayerCustomizer = detail::LayerCustomizer<Element>;
+  /// Simplified in-place mutating callback.
+  using ReplacingLayerCustomizer = detail::ReplacingLayerCustomizer<Element>;
+
+  /// @brief Set the layer geometry type explicitly.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& setLayerType(LayerType layerType) &&;
+
+  /// @brief Shorthand for `setLayerType(LayerType::Disc)`.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& endcap() &&;
+
+  /// @brief Shorthand for `setLayerType(LayerType::Cylinder)`.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& barrel() &&;
+
+  /// @brief Set the axis definition used to orient sensitive surfaces.
+  ///
+  /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+  /// @param axes Axis definition forwarded to `LayerSpec::axes`.
+  /// @return `*this` (rvalue).
+  template <typename B = BackendT>
+  [[nodiscard]] SensorLayer&& setSensorAxes(typename B::AxisDefinition axes) &&
+    requires(detail::HasAxisDefinition<B>)
+  {
+    m_layerSpec.axes = std::move(axes);
+    return std::move(*this);
+  }
+
+  /// @brief Set the sensor elements to assemble into the layer.
+  /// @param sensors Sensor elements (leaf-level sensitives).
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& setSensors(std::vector<Element> sensors) &&;
+
+  /// @brief Set the name for the produced layer node (required).
+  /// @param name Layer node name.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& setLayerName(std::string name) &&;
+
+  /// @brief Set an envelope applied to the produced layer node.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& setEnvelope(
+      const Acts::ExtentEnvelope& envelope) &&;
+
+  /// @brief Register a customizer callback invoked for the created layer node.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& onLayer(LayerCustomizer customizer) &&;
+
+  /// @brief Register an in-place mutating callback invoked for the layer node.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& onLayer(ReplacingLayerCustomizer customizer) &&;
+
+  /// @brief Build and return the assembled layer node.
+  ///
+  /// @throws std::runtime_error if the layer type is not set, if the backend
+  ///         requires axes and none were provided, if sensors are not set, or
+  ///         if @ref setLayerName has not been called.
+  /// @return Shared pointer to the assembled @ref LayerBlueprintNode.
+  [[nodiscard]] std::shared_ptr<Acts::Experimental::LayerBlueprintNode> build()
+      const;
+
+  /// @brief Build the layer node and attach it as a child of @p node.
+  void addTo(Acts::Experimental::BlueprintNode& node) const&&;
+
+ private:
+  friend class BlueprintBuilder<BackendT>;
+
+  /// @brief Construct a @ref SensorLayer bound to @p builder.
+  /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
+  explicit SensorLayer(const Builder& builder);
+
+  const Builder* m_builder;
+  std::optional<LayerType> m_layerType;
+  LayerSpec m_layerSpec{};
+  std::optional<std::vector<Element>> m_sensors;
+  std::optional<std::string> m_layerName;
+  std::optional<Acts::ExtentEnvelope> m_envelope;
+  LayerCustomizer m_onLayer;
+};
 
 /// @brief Fluent builder that assembles a combined barrel + endcap subdetector
 /// into a @ref CylinderContainerBlueprintNode arranged along the Z axis.
@@ -350,7 +684,7 @@ class LayerAssembler {
 /// @code
 /// builder.barrelEndcap()
 ///   .setAssembly(innerTrackerElement)
-///   .setAxes(barrelAxes, endcapAxes)
+///   .setSensorAxes(barrelAxes, endcapAxes)
 ///   .setLayerFilter(layerPattern)
 ///   .addTo(rootNode);
 /// @endcode
@@ -368,18 +702,16 @@ class BarrelEndcapAssembler {
   using AxisDefinition =
       std::conditional_t<detail::HasAxisDefinition<BackendT>,
                          typename BackendT::AxisDefinition, std::monostate>;
-  /// The @ref LayerAssembler specialisation for this backend.
-  using LayerAssembler = Acts::Experimental::LayerAssembler<BackendT>;
+  /// The @ref ElementLayerAssembler specialisation for this backend.
+  using ElementLayerAssembler =
+      Acts::Experimental::ElementLayerAssembler<BackendT>;
   /// Callback type that can replace or wrap a
   /// @ref CylinderContainerBlueprintNode.
-  using ContainerCustomizer = std::function<
-      std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>(
-          const Element&,
-          std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>)>;
+  using ContainerCustomizer = detail::ContainerCustomizer<Element>;
   /// Simplified callback type that mutates a
   /// @ref CylinderContainerBlueprintNode in-place.
-  using ReplacingContainerCustomizer = std::function<void(
-      const Element&, Acts::Experimental::CylinderContainerBlueprintNode&)>;
+  using ReplacingContainerCustomizer =
+      detail::ReplacingContainerCustomizer<Element>;
 
   /// @brief Construct a @ref BarrelEndcapAssembler bound to @p builder.
   /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
@@ -409,21 +741,21 @@ class BarrelEndcapAssembler {
   void addTo(Acts::Experimental::BlueprintNode& node) const&&;
 
   /// @brief Register a customizer callback forwarded to each inner
-  /// @ref LayerAssembler.
+  /// @ref ElementLayerAssembler.
   ///
   /// The callback may return a different or wrapped @ref LayerBlueprintNode.
-  /// @param customizer See @ref LayerAssembler::onLayer(LayerCustomizer).
+  /// @param customizer See @ref ElementLayerAssembler::onLayer(LayerCustomizer).
   /// @return `*this` (rvalue).
   [[nodiscard]] BarrelEndcapAssembler&& onLayer(
-      typename LayerAssembler::LayerCustomizer customizer) &&;
+      typename ElementLayerAssembler::LayerCustomizer customizer) &&;
 
   /// @brief Register an in-place mutating layer callback forwarded to each
-  /// inner @ref LayerAssembler.
+  /// inner @ref ElementLayerAssembler.
   /// @param customizer See
-  ///        @ref LayerAssembler::onLayer(ReplacingLayerCustomizer).
+  ///        @ref ElementLayerAssembler::onLayer(ReplacingLayerCustomizer).
   /// @return `*this` (rvalue).
   BarrelEndcapAssembler&& onLayer(
-      typename LayerAssembler::ReplacingLayerCustomizer customizer) &&;
+      typename ElementLayerAssembler::ReplacingLayerCustomizer customizer) &&;
 
   /// @brief Register a customizer callback invoked for each barrel or endcap
   /// container node.
@@ -451,17 +783,20 @@ class BarrelEndcapAssembler {
   /// @brief Set the axis definitions for both barrel and endcap layers at once.
   ///
   /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
-  /// @param barrel Axis definition forwarded to barrel @ref LayerAssembler s.
-  /// @param endcap Axis definition forwarded to endcap @ref LayerAssembler s.
+  /// @param barrel Axis definition forwarded to barrel
+  ///               @ref ElementLayerAssembler s.
+  /// @param endcap Axis definition forwarded to endcap
+  ///               @ref ElementLayerAssembler s.
   /// @return `*this` (rvalue).
-  [[nodiscard]] BarrelEndcapAssembler&& setAxes(AxisDefinition barrel,
-                                                AxisDefinition endcap) &&
+  [[nodiscard]] BarrelEndcapAssembler&& setSensorAxes(AxisDefinition barrel,
+                                                      AxisDefinition endcap) &&
     requires(detail::HasAxisDefinition<BackendT>);
 
   /// @brief Set the axis definition used for endcap layers only.
   ///
   /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
-  /// @param axes Axis definition forwarded to endcap @ref LayerAssembler s.
+  /// @param axes Axis definition forwarded to endcap
+  ///             @ref ElementLayerAssembler s.
   /// @return `*this` (rvalue).
   [[nodiscard]] BarrelEndcapAssembler&& setEndcapAxes(AxisDefinition axes) &&
     requires(detail::HasAxisDefinition<BackendT>);
@@ -474,7 +809,7 @@ class BarrelEndcapAssembler {
       const std::regex& pattern) &&;
 
  private:
-  typename LayerAssembler::LayerCustomizer m_onLayer;
+  typename ElementLayerAssembler::LayerCustomizer m_onLayer;
   ContainerCustomizer m_onContainer =
       [](const Element&,
          std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
@@ -488,11 +823,16 @@ class BarrelEndcapAssembler {
 };
 
 /// @brief High-level builder that converts a backend detector element hierarchy
-/// into an ACTS blueprint node tree.
+/// into a blueprint node tree.
 ///
 /// @ref BlueprintBuilder provides the entry points for blueprint construction:
-/// - @ref BlueprintBuilder::layers() returns a @ref LayerAssembler
-///   for building a flat layer stack,
+/// - @ref BlueprintBuilder::layers() returns an @ref ElementLayerAssembler
+///   for building a layer stack from layer-representative detector elements,
+/// - @ref BlueprintBuilder::layersFromSensors() returns a
+///   @ref SensorLayerAssembler for building multiple layers directly from
+///   sensor elements (`groupBy` required),
+/// - @ref BlueprintBuilder::layerFromSensors() returns a @ref SensorLayer for
+///   building a single layer directly from sensor elements,
 /// - @ref BlueprintBuilder::barrelEndcap() returns a
 ///   @ref BarrelEndcapAssembler for combined barrel+endcap sub-detectors.
 ///
@@ -519,8 +859,14 @@ class BlueprintBuilder {
   using AxisDefinition =
       std::conditional_t<detail::HasAxisDefinition<Backend>,
                          typename Backend::AxisDefinition, std::monostate>;
-  /// The @ref LayerAssembler specialisation for this backend.
-  using LayerAssembler = Acts::Experimental::LayerAssembler<Backend>;
+  /// The @ref ElementLayerAssembler specialisation for this backend.
+  using ElementLayerAssembler =
+      Acts::Experimental::ElementLayerAssembler<Backend>;
+  /// The @ref SensorLayerAssembler specialisation for this backend.
+  using SensorLayerAssembler =
+      Acts::Experimental::SensorLayerAssembler<Backend>;
+  /// The @ref SensorLayer specialisation for this backend.
+  using SensorLayer = Acts::Experimental::SensorLayer<Backend>;
   /// The @ref BarrelEndcapAssembler specialisation for this backend.
   using BarrelEndcapAssembler =
       Acts::Experimental::BarrelEndcapAssembler<Backend>;
@@ -538,22 +884,21 @@ class BlueprintBuilder {
 
   /// @brief Create a @ref LayerBlueprintNode from a single detector element.
   ///
-  /// Recursively collects all sensitive descendants of @p detElement and
+  /// Recursively collects all sensitive descendants of @p layerElement and
   /// delegates to the two-argument overload.
-  /// @param detElement Parent detector element whose subtree is scanned for
+  /// @param layerElement Layer element whose subtree is scanned for
   ///                   sensitive volumes.
   /// @param layerSpec  Specification controlling surface axes and optional
   ///                   name/transform overrides.
   /// @return Shared pointer to the constructed @ref LayerBlueprintNode.
   std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
-      const Element& detElement, const LayerSpec& layerSpec) const;
+      const Element& layerElement, const LayerSpec& layerSpec) const;
 
   /// @brief Create a @ref LayerBlueprintNode from an explicit list of sensitive
   /// elements.
   ///
-  /// The layer node name is derived from the full path to @p parent in the
-  /// element hierarchy (separator `"|"`), with an optional suffix from
-  /// `layerSpec.layerName`.
+  /// This is a low-level forwarding API: @p layerSpec is passed to the backend
+  /// as-is.
   /// @param parent     Detector element that contextualises the layer
   ///                   (used for naming and transform extraction).
   /// @param sensitives Span of sensitive detector elements to be converted to
@@ -565,13 +910,43 @@ class BlueprintBuilder {
       const Element& parent, std::span<const Element> sensitives,
       const LayerSpec& layerSpec) const;
 
-  /// @brief Create a @ref LayerAssembler bound to this builder.
+  /// @brief Create a @ref LayerBlueprintNode from sensitive elements without
+  /// a parent/context element.
   ///
-  /// The returned assembler must be configured (layer type, filter, container)
-  /// and then finalised via @ref LayerAssembler::build() or
-  /// @ref LayerAssembler::addTo().
-  /// @return A new @ref LayerAssembler instance.
-  [[nodiscard]] LayerAssembler layers() const;
+  /// This variant cannot perform parent-based transform extraction.
+  /// `layerSpec.layerName` must be set and is used verbatim.
+  /// @param sensitives Span of sensitive detector elements to be converted to
+  ///                   surfaces and assigned to the node.
+  /// @param layerSpec  Specification controlling surface axes and name.
+  /// @throws std::runtime_error if `layerSpec.layerName` is not set.
+  /// @return Shared pointer to the constructed @ref LayerBlueprintNode.
+  std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
+      std::span<const Element> sensitives, const LayerSpec& layerSpec) const;
+
+  /// @brief Create an @ref ElementLayerAssembler bound to this builder.
+  ///
+  /// Use when layer-representative detector elements exist in the hierarchy.
+  /// Each element becomes one layer; name and transform are deduced from it.
+  /// @return A new @ref ElementLayerAssembler instance.
+  [[nodiscard]] ElementLayerAssembler layers() const;
+
+  /// @brief Create a @ref SensorLayerAssembler bound to this builder.
+  ///
+  /// Use when sensor elements are supplied directly and no layer-representative
+  /// element exists. A @ref SensorLayerAssembler::groupBy function is required;
+  /// sensors sharing the same key are merged into one layer per key. For a
+  /// single layer without grouping, use @ref layerFromSensors() instead.
+  /// @return A new @ref SensorLayerAssembler instance.
+  [[nodiscard]] SensorLayerAssembler layersFromSensors() const;
+
+  /// @brief Create a @ref SensorLayer bound to this builder.
+  ///
+  /// Use when all sensor elements belong to exactly one layer and no grouping
+  /// is needed. The layer name must be set explicitly via
+  /// @ref SensorLayer::setLayerName. The result is a single
+  /// @ref LayerBlueprintNode (no container wrapper).
+  /// @return A new @ref SensorLayer instance.
+  [[nodiscard]] SensorLayer layerFromSensors() const;
 
   /// @brief Create a @ref BarrelEndcapAssembler bound to this builder.
   ///

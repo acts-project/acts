@@ -123,7 +123,7 @@ void BlueprintBuilder<B>::addBarrelEndcapAssembly(
 
   barrelEndcap()
       .setAssembly(desc.assembly)
-      .setAxes(desc.barrelAxes, desc.endcapAxes)
+      .setSensorAxes(desc.barrelAxes, desc.endcapAxes)
       .setLayerFilter(desc.layerFilter)
       .onLayer(std::move(layerCustomizer))
       .onContainer([&desc](const auto&, auto& node) {
