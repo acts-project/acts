@@ -151,8 +151,6 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
   // `q/pT` and `pT * q/pT` residual and pull
   do {
-    const std::string& parName = m_cfg.ptQoverPtName;
-
     const double truthQoverPt = truthParticle.charge() / truthPt;
     const double recoQoverPt =
         trackParameter[eBoundQOverP] / std::sin(trackParameter[eBoundTheta]);
@@ -178,7 +176,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
         covarianceQoverPt * Acts::square(truthQoverPt);
     if (covariancePtQoverPt <= 0.0) {
       ACTS_WARNING("Fitted track parameter :"
-                   << parName
+                   << m_cfg.ptQoverPtName
                    << " has non-positive covariance = " << covariancePtQoverPt);
       continue;
     }
