@@ -63,12 +63,12 @@ GsfComponent makeDefaultComponent(double weight) {
   return cmp;
 }
 
-void testReductionEquivalence(std::vector<GsfComponent> &cmpsRef, std::vector<GsfComponent> &cmpsTest,
-
-                              const Surface &surface) {
+void testReductionEquivalence(std::vector<GsfComponent> &cmpsRef,
+                              std::vector<GsfComponent> &cmpsTest) {
   BOOST_REQUIRE(cmpsRef.size() == cmpsTest.size());
 
-  // sort by weight since the order of components is not guaranteed to be the same after reduction
+  // sort by weight since the order of components is not guaranteed to be the
+  // same after reduction
   std::ranges::sort(cmpsRef, {}, [](const auto &c) { return c.weight; });
   std::ranges::sort(cmpsTest, {}, [](const auto &c) { return c.weight; });
 
@@ -81,8 +81,7 @@ void testReductionEquivalence(std::vector<GsfComponent> &cmpsRef, std::vector<Gs
                       tol);
     BOOST_CHECK_CLOSE(ref.boundPars[eBoundLoc1], test.boundPars[eBoundLoc1],
                       tol);
-    BOOST_CHECK_CLOSE(ref.boundPars[eBoundPhi], test.boundPars[eBoundPhi],
-                      tol);
+    BOOST_CHECK_CLOSE(ref.boundPars[eBoundPhi], test.boundPars[eBoundPhi], tol);
     BOOST_CHECK_CLOSE(ref.boundPars[eBoundTheta], test.boundPars[eBoundTheta],
                       tol);
     BOOST_CHECK_CLOSE(ref.boundPars[eBoundQOverP], test.boundPars[eBoundQOverP],
@@ -191,7 +190,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   cmps[3].boundPars[eBoundQOverP] = 4.5_GeV;
 
   // Check start properties
-  const auto [mean0, sumOfWeights0] = computeMeanAndSumOfWeights(cmps, *surface);
+  const auto [mean0, sumOfWeights0] =
+      computeMeanAndSumOfWeights(cmps, *surface);
 
   BOOST_CHECK_CLOSE(mean0[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
@@ -206,7 +206,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 1.0_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[1].boundPars[eBoundQOverP], 4.0_GeV, 1.e-8);
 
-  const auto [mean1, sumOfWeights1] = computeMeanAndSumOfWeights(cmps, *surface);
+  const auto [mean1, sumOfWeights1] =
+      computeMeanAndSumOfWeights(cmps, *surface);
 
   BOOST_CHECK_CLOSE(mean1[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
@@ -283,7 +284,7 @@ BOOST_AUTO_TEST_CASE(test_naive_vs_optimized) {
     reduceMixtureWithKLDistanceNaive(cmpsNaive, targetSize, *surface);
     BOOST_CHECK_EQUAL(cmpsNaive.size(), targetSize);
 
-    testReductionEquivalence(cmpsNaive, cmpsOptimized, *surface);
+    testReductionEquivalence(cmpsNaive, cmpsOptimized);
   }
 }
 
