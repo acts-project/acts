@@ -10,10 +10,12 @@
 
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
 #include <string>
+
+#include <edm4hep/MCParticleCollection.h>
 
 namespace ActsExamples {
 
@@ -50,7 +52,8 @@ class EDM4hepParticleOutputConverter final : public PodioOutputConverter {
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 
-  CollectionBaseWriteHandle m_outputParticles{this, "OutputParticles"};
+  PodioCollectionWriteHandle<edm4hep::MCParticleCollection> m_outputParticles{
+      this, "OutputParticles"};
 };
 
 }  // namespace ActsExamples

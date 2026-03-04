@@ -113,7 +113,7 @@ class WriteDataHandleBase : public DataHandleBase {
  public:
   void initialize(std::string_view key);
 
-  bool isCompatible(const DataHandleBase& other) const final;
+  bool isCompatible(const DataHandleBase& other) const override;
 
   void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
                const Acts::Logger& logger) const final;
