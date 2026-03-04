@@ -16,7 +16,21 @@
 
 namespace Acts::detail {
 
-template <typename Container, typename Value, typename Index, bool ReadOnly>
+/// Helper class to implement iterators of containers that dereference to the
+/// values in the container corresponding to the indices in the index range. The
+/// iterator can be read-only or mutable, depending on the template parameter.
+///
+/// The user is expected to typedef this class as the iterator type in their
+/// container, and provide the appropriate template parameters. The iterator can
+/// then be used to access the values in the container through the provided
+/// iterator interface.
+///
+/// @tparam Container The type of the underlying container.
+/// @tparam Value The type of the values in the container.
+/// @tparam Index The type of the indices that define the subset.
+/// @tparam ReadOnly A boolean indicating whether the subset is read-only.
+template <typename Container, typename Value, std::integral Index,
+          bool ReadOnly>
 class ContainerIterator {
  public:
   using container_type = const_if_t<ReadOnly, Container>;
@@ -50,6 +64,7 @@ class ContainerIterator {
   }
 
   constexpr container_type &container() const noexcept { return *m_container; }
+
   constexpr index_type index() const noexcept { return m_index; }
 
   constexpr value_type operator*() const {
@@ -64,6 +79,7 @@ class ContainerIterator {
       return m_container->at(m_index);
     }
   }
+
   constexpr value_type operator[](difference_type n) const {
     static_assert(
         ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
@@ -81,15 +97,18 @@ class ContainerIterator {
     ++m_index;
     return *this;
   }
+
   constexpr ContainerIterator operator++(int) noexcept {
     auto tmp = *this;
     ++(*this);
     return tmp;
   }
+
   constexpr ContainerIterator &operator--() noexcept {
     --m_index;
     return *this;
   }
+
   constexpr ContainerIterator operator--(int) noexcept {
     auto tmp = *this;
     --(*this);
@@ -100,6 +119,7 @@ class ContainerIterator {
     m_index += n;
     return *this;
   }
+
   constexpr ContainerIterator &operator-=(difference_type n) noexcept {
     m_index -= n;
     return *this;

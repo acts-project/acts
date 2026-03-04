@@ -13,30 +13,59 @@
 
 #include <compare>
 #include <iterator>
+#include <ranges>
 #include <stdexcept>
 
 namespace Acts::detail {
 
+/// CRTP helper class to represent a subset of a container defined by an index
+/// range. The subset provides an iterator that dereferences to the values in
+/// the container corresponding to the indices in the index range. The subset
+/// can be read-only or mutable, depending on the template parameter.
+///
+/// The user is expected to derive from this class using CRTP and provide the
+/// appropriate template parameters. The derived class can then be used to
+/// create subsets of the container and access the values through the provided
+/// iterator interface.
+///
+/// @tparam Derived The derived class type, used for CRTP.
+/// @tparam DerivedReadOnly The read-only version of the derived class, used for
+///         const-correctness.
+/// @tparam Container The type of the underlying container.
+/// @tparam Value The type of the values in the container.
+/// @tparam IndexRange The type of the index range that defines the subset.
+/// @tparam ReadOnly A boolean indicating whether the subset is read-only.
 template <typename Derived, typename DerivedReadOnly, typename Container,
-          typename Value, typename IndexContainer, bool ReadOnly>
+          typename Value, std::ranges::range IndexRange, bool ReadOnly>
 class ContainerSubset {
  public:
   using container_type = const_if_t<ReadOnly, Container>;
   using value_type = Value;
   static constexpr bool read_only = ReadOnly;
-  using index_container_type = IndexContainer;
-  using index_type = typename index_container_type::value_type;
+  using index_range_type = IndexRange;
+  using index_type = typename index_range_type::value_type;
 
   template <typename subset_iterator>
   class Iterator {
+   private:
+    static_assert(std::input_iterator<subset_iterator>,
+                  "Subset iterator must satisfy input iterator requirements");
+    static constexpr bool IsBidirectional =
+        std::bidirectional_iterator<subset_iterator>;
+    static constexpr bool IsRandomAccess =
+        std::random_access_iterator<subset_iterator>;
+
    public:
     using value_type = Value;
-    using difference_type = std::ptrdiff_t;
+    using difference_type = index_range_type::difference_type;
     using pointer = void;
     using reference = void;
 
-    using iterator_category = std::random_access_iterator_tag;
-    using iterator_concept = std::random_access_iterator_tag;
+    using iterator_category = std::conditional_t<
+        IsRandomAccess, std::random_access_iterator_tag,
+        std::conditional_t<IsBidirectional, std::bidirectional_iterator_tag,
+                           std::input_iterator_tag>>;
+    using iterator_concept = iterator_category;
 
     constexpr Iterator() noexcept = default;
     constexpr Iterator(container_type &container,
@@ -55,7 +84,10 @@ class ContainerSubset {
         return m_container->at(*m_iterator);
       }
     }
-    constexpr value_type operator[](difference_type n) const {
+
+    constexpr value_type operator[](difference_type n) const
+      requires(IsRandomAccess)
+    {
       static_assert(
           ContainerHasAt<Container> || ContainerHasArrayAccess<Container>,
           "Container must support at() or operator[] for indexing");
@@ -72,26 +104,38 @@ class ContainerSubset {
       ++m_iterator;
       return *this;
     }
+
     constexpr Iterator operator++(int) noexcept {
       auto tmp = *this;
       ++(*this);
       return tmp;
     }
-    constexpr Iterator &operator--() noexcept {
+
+    constexpr Iterator &operator--() noexcept
+      requires(IsBidirectional)
+    {
       --m_iterator;
       return *this;
     }
-    constexpr Iterator operator--(int) noexcept {
+
+    constexpr Iterator operator--(int) noexcept
+      requires(IsBidirectional)
+    {
       auto tmp = *this;
       --(*this);
       return tmp;
     }
 
-    constexpr Iterator &operator+=(difference_type n) noexcept {
+    constexpr Iterator &operator+=(difference_type n) noexcept
+      requires(IsRandomAccess)
+    {
       m_iterator += n;
       return *this;
     }
-    constexpr Iterator &operator-=(difference_type n) noexcept {
+
+    constexpr Iterator &operator-=(difference_type n) noexcept
+      requires(IsRandomAccess)
+    {
       m_iterator -= n;
       return *this;
     }
@@ -100,28 +144,35 @@ class ContainerSubset {
     container_type *m_container{};
     subset_iterator m_iterator{};
 
-    friend constexpr Iterator operator+(Iterator it,
-                                        difference_type n) noexcept {
+    friend constexpr Iterator operator+(Iterator it, difference_type n) noexcept
+      requires(IsRandomAccess)
+    {
       return it += n;
     }
 
-    friend constexpr Iterator operator+(difference_type n,
-                                        Iterator it) noexcept {
+    friend constexpr Iterator operator+(difference_type n, Iterator it) noexcept
+      requires(IsRandomAccess)
+    {
       return it += n;
     }
 
-    friend constexpr Iterator operator-(Iterator it,
-                                        difference_type n) noexcept {
+    friend constexpr Iterator operator-(Iterator it, difference_type n) noexcept
+      requires(IsRandomAccess)
+    {
       return it -= n;
     }
 
     friend constexpr difference_type operator-(const Iterator &lhs,
-                                               const Iterator &rhs) noexcept {
+                                               const Iterator &rhs) noexcept
+      requires(IsRandomAccess)
+    {
       return lhs.m_iterator - rhs.m_iterator;
     }
 
     friend constexpr auto operator<=>(const Iterator &a,
-                                      const Iterator &b) noexcept {
+                                      const Iterator &b) noexcept
+      requires(IsRandomAccess)
+    {
       if (a.m_iterator < b.m_iterator) {
         return std::strong_ordering::less;
       }
@@ -137,28 +188,26 @@ class ContainerSubset {
     }
   };
   using iterator =
-      Iterator<decltype(std::declval<const index_container_type>().begin())>;
+      Iterator<decltype(std::declval<const index_range_type>().begin())>;
 
   constexpr ContainerSubset(container_type &container,
-                            index_container_type subset) noexcept
+                            index_range_type subset) noexcept
       : m_container(&container), m_subset(std::move(subset)) {}
   template <bool OtherReadOnly>
   explicit constexpr ContainerSubset(
       const ContainerSubset<Derived, DerivedReadOnly, Container, Value,
-                            IndexContainer, OtherReadOnly> &other) noexcept
-    requires(ReadOnly && !OtherReadOnly)
+                            IndexRange, OtherReadOnly> &other) noexcept
+    requires(read_only && !OtherReadOnly)
       : m_container(&other.container()), m_subset(other.subset()) {}
 
   constexpr DerivedReadOnly asConst() const noexcept
-    requires(!ReadOnly)
+    requires(!read_only)
   {
     return {*m_container, m_subset};
   }
 
   constexpr container_type &container() const noexcept { return *m_container; }
-  constexpr const index_container_type &subset() const noexcept {
-    return m_subset;
-  }
+  constexpr const index_range_type &subset() const noexcept { return m_subset; }
 
   constexpr std::size_t size() const noexcept { return subset().size(); }
   constexpr bool empty() const noexcept { return size() == 0; }
@@ -200,7 +249,7 @@ class ContainerSubset {
 
  private:
   container_type *m_container{};
-  index_container_type m_subset{};
+  index_range_type m_subset{};
 };
 
 }  // namespace Acts::detail
