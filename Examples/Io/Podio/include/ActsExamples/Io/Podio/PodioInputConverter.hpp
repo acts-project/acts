@@ -11,9 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
-namespace podio {
-class Frame;
-}
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 

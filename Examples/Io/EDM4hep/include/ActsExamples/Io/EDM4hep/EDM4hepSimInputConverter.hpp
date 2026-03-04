@@ -20,14 +20,9 @@
 #include <memory>
 #include <string>
 
-namespace edm4hep {
-class MCParticle;
-class SimTrackerHit;
-}  // namespace edm4hep
-
-namespace podio {
-class Frame;
-}
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/SimTrackerHit.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
