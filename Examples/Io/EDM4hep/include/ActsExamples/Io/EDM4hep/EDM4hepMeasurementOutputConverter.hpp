@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
 
 #include <memory>
 #include <string>
@@ -65,8 +65,8 @@ class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
 
-  CollectionBaseWriteHandle m_outputTrackerHitsLocal{this,
-                                                     "OutputTrackerHitsLocal"};
+  PodioCollectionWriteHandle<ActsPodioEdm::TrackerHitLocalCollection>
+      m_outputTrackerHitsLocal{this, "OutputTrackerHitsLocal"};
 };
 
 }  // namespace ActsExamples

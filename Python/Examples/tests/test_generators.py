@@ -27,3 +27,15 @@ def test_uniform_vertex_generator():
     assert vertex_generator.max[1] == 2 * u.um
     assert vertex_generator.max[2] == 3 * u.mm
     assert vertex_generator.max[3] == 4 * u.ns
+
+
+def test_examples_fatras_aliases_present():
+    assert hasattr(acts.examples, "SimBarcode")
+    assert hasattr(acts.examples, "ProcessType")
+    assert hasattr(acts.examples, "ParticleOutcome")
+    assert hasattr(acts.examples, "SimParticleState")
+
+    assert acts.examples.SimBarcode is acts.fatras.Barcode
+    assert acts.examples.ProcessType is acts.fatras.ProcessType
+    assert acts.examples.ParticleOutcome is acts.fatras.ParticleOutcome
+    assert acts.examples.SimParticleState is acts.fatras.Particle

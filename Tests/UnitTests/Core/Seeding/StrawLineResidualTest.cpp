@@ -33,7 +33,7 @@ using Vector_t = Line_t::Vector;
 using Pars_t = Line_t::ParamVector;
 
 constexpr auto logLvl = Logging::Level::INFO;
-constexpr std::size_t nEvents = 100;
+constexpr std::size_t nEvents = 500;
 constexpr double tolerance = 1.e-3;
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineResidualTest", logLvl));
@@ -51,6 +51,34 @@ constexpr T absMax(const T& a, const argsT... args) {
 double angle(const Vector_t& v1, const Vector_t& v2) {
   const double dots = Acts::abs(v1.dot(v2));
   return std::acos(std::clamp(dots, 0., 1.));
+}
+
+template <int N>
+bool isPositiveDefinite(const SquareMatrix<N>& mat) {
+  if (mat.determinant() < Acts::s_epsilon) {
+    return false;
+  }
+  for (int i = 0; i < N; ++i) {
+    for (int j = 0; j <= i; ++j) {
+      if (mat(i, j) != mat(j, i)) {
+        return false;
+      }
+    }
+  }
+  Eigen::EigenSolver<Acts::SquareMatrix<N>> eigenDecomp{mat};
+  for (const auto lambda : eigenDecomp.eigenvalues()) {
+    if (Acts::abs(lambda.imag()) > Acts::s_epsilon ||
+        lambda.real() < Acts::s_epsilon) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::string whiteSpaces(const std::size_t n, const char s = '#') {
+  std::string str{};
+  str.resize(n, s);
+  return str;
 }
 
 #define CHECK_CLOSE(a, b, tol) \
@@ -75,10 +103,9 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
   resCfg.parsToUse = {ParIdx::x0, ParIdx::y0, ParIdx::phi, ParIdx::theta};
   Line_t line{linePars};
 
-  ACTS_INFO(__func__ << "() - " << __LINE__
-                     << ":\n##############################################\n###"
-                        "###########################################\n"
-                     << "Residual test w.r.t. test line: "
+  ACTS_INFO(__func__ << "() - " << __LINE__ << ":\n"
+                     << whiteSpaces(150) << "\n"
+                     << whiteSpaces(150) << "\nResidual test w.r.t. test line: "
                      << toString(line.position()) << ", "
                      << toString(line.direction())
                      << ", theta: " << (theta(line.direction()) / 1._degree)
@@ -86,6 +113,11 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
 
   CompSpacePointAuxiliaries resCalc{resCfg,
                                     Acts::getDefaultLogger("testRes", logLvl)};
+  CompSpacePointAuxiliaries resCalcUp{
+      resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
+  CompSpacePointAuxiliaries resCalcDn{
+      resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
+
   resCalc.updateSpatialResidual(line, testPoint);
   ACTS_INFO(__func__ << "() - " << __LINE__ << ": Test residual w.r.t. "
                      << toString(testPoint));
@@ -173,10 +205,8 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
     const Line_t lineUp{lineParsUp};
     const Line_t lineDn{lineParsDn};
 
-    CompSpacePointAuxiliaries resCalcUp{
-        resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
-    CompSpacePointAuxiliaries resCalcDn{
-        resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
+    resCalcUp.reset();
+    resCalcDn.reset();
 
     resCalcUp.updateSpatialResidual(lineUp, testPoint);
     resCalcDn.updateSpatialResidual(lineDn, testPoint);
@@ -192,9 +222,6 @@ void testResidual(const Pars_t& linePars, const FitTestSpacePoint& testPoint) {
     COMPARE_VECTORS(numDeriv, resCalc.gradient(par), tolerance);
     /// Next attempt to calculate the second derivative
     for (auto par1 : resCfg.parsToUse) {
-      if (par1 > par) {
-        break;
-      }
       const Vector_t numDeriv1{
           (resCalcUp.gradient(par1) - resCalcDn.gradient(par1)) / (2. * h)};
       ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
@@ -328,137 +355,132 @@ void timeStripResidualTest(const Pars_t& linePars, const double timeT0,
     }
   }
 }
-BOOST_AUTO_TEST_CASE(StrawDriftTimeCase) {
-  ACTS_INFO("Calibration straw point test ");
 
-  constexpr double recordedT = 15._ns;
-  constexpr std::array<double, 3> rtCoeffs{0., 75. / 1_ns,
-                                           5000. / Acts::pow(1_ns, 2)};
+BOOST_AUTO_TEST_CASE(CalibratorTest) {
+  constexpr double h = 1.e-7 * 1._ns;
+  for (double t = detailCalib::s_minDriftTime + 1._ns;
+       t < detailCalib::s_maxDriftTime; t += 10._ns) {
+    const double r = detailCalib::driftRadius(t);
+    const double v = detailCalib::driftVelocity(t);
+    const double a = detailCalib::driftAcceleration(t);
+
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - t:" << (t / 1._ns)
+                        << " r: " << r << ", v: " << v << ", a: " << a);
+
+    const double numV =
+        (detailCalib::driftRadius(t + h) - detailCalib::driftRadius(t - h)) /
+        (2. * h);
+    const double numA = (detailCalib::driftVelocity(t + h) -
+                         detailCalib::driftVelocity(t - h)) /
+                        (2. * h);
+
+    CHECK_CLOSE(numV, v, tolerance);
+    CHECK_CLOSE(numA, a, tolerance);
+
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << ": numV: " << numV
+                        << ", numA: " << numA);
+
+    const double backT = detailCalib::driftTime(r);
+    const double backTprime = detailCalib::driftTimePrime(r);
+
+    const double numTprime =
+        (detailCalib::driftTime(r + h) - detailCalib::driftTime(r - h)) /
+        (2. * h);
+    CHECK_CLOSE(numTprime, backTprime, tolerance);
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << " - backT: " << (backT / 1._ns)
+                        << ", back T^{prime}: " << (backTprime / 1._ns));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(StrawsWithT0Constraint) {
+  ACTS_INFO("Calibration straw point test ");
 
   Config_t resCfg{};
   resCfg.useHessian = true;
-  resCfg.calcAlongStrip = true;
+  resCfg.calcAlongStrip = false;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
                       ParIdx::t0};
 
-  auto makeCalculator = [&rtCoeffs, &resCfg](
-                            const std::string& calcName, const Pars_t& linePars,
-                            const Vector_t& pos, const Vector_t& dir,
-                            const double t0) {
-    Line_t line{linePars};
-    ACTS_DEBUG(__func__ << "() " << __LINE__ << ": Calculate residual w.r.t. "
-                        << toString(line.position()) << ", "
-                        << toString(line.direction()));
-    auto isectP = lineIntersect(pos, dir, line.position(), line.direction());
+  CompSpacePointAuxiliaries resCalc{resCfg,
+                                    Acts::getDefaultLogger("testRes", logLvl)};
+  CompSpacePointAuxiliaries resCalcUp{
+      resCfg, Acts::getDefaultLogger("testResUp", logLvl)};
+  CompSpacePointAuxiliaries resCalcDn{
+      resCfg, Acts::getDefaultLogger("testResDn", logLvl)};
 
-    const double driftT = recordedT -
-                          (resCfg.localToGlobal * isectP.position()).norm() /
-                              PhysicalConstants::c -
-                          t0;
+  MeasurementGenerator::Config genCfg{};
+  genCfg.createStraws = true;
+  genCfg.smearRadius = false;
+  genCfg.twinStraw = false;
+  genCfg.createStrips = false;
 
-    const double driftR = polynomialSum(driftT, rtCoeffs);
-    const double driftV = derivativeSum<1>(driftT, rtCoeffs);
-    const double driftA = derivativeSum<2>(driftT, rtCoeffs);
-    ACTS_DEBUG(__func__ << "() " << __LINE__ << ": Create new space point @ "
-                        << toString(pos) << ", " << toString(dir)
-                        << ", using t0: " << t0 / 1._ns << " --> drfitT: "
-                        << driftT / 1._ns << " --> driftR: " << driftR
-                        << ", driftV: " << driftV << ", "
-                        << "driftA: " << driftA);
+  RandomEngine rndEngine{4711};
 
-    CompSpacePointAuxiliaries resCalc{resCfg,
-                                      Acts::getDefaultLogger(calcName, logLvl)};
+  constexpr double h = 5.e-8;
 
-    resCalc.updateFullResidual(
-        line, t0,
-        FitTestSpacePoint{pos, dir, driftR, SpCalibrator::driftUncert(driftR)},
-        driftV, driftA);
-    return resCalc;
-  };
+  const Acts::CalibrationContext cctx{};
+  SpCalibrator calibrator{logLvl};
 
-  auto testTimingResidual = [&makeCalculator, &resCfg](
-                                const Pars_t& linePars, const Vector_t& wPos,
-                                const Vector_t& wDir, const double t0) {
-    auto resCalc = makeCalculator("strawT0Res", linePars, wPos, wDir, t0);
-    ACTS_DEBUG(__func__ << "() - " << __LINE__
-                        << ": Residual: " << toString(resCalc.residual()));
-    for (const auto partial : resCfg.parsToUse) {
-      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": *** partial: "
-                          << CompSpacePointAuxiliaries::parName(partial) << " "
-                          << toString(resCalc.gradient(partial)));
-    }
-    constexpr double h = 1.e-7;
-    for (const auto partial : resCfg.parsToUse) {
-      Pars_t lineParsUp{linePars}, lineParsDn{linePars};
+  for (std::size_t e = 0; e < nEvents; ++e) {
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
+    resCfg.localToGlobal = Acts::Transform3::Identity();
+    Line_t line{generateLine(rndEngine, logger())};
+    const Pars_t linePars = line.parameters();
+    const double t0 = uniform{0_ns, 50._ns}(rndEngine);
+
+    const auto container =
+        MeasurementGenerator::spawn(line, t0, rndEngine, genCfg, logger());
+    BOOST_CHECK_GE(container.size(), 1u);
+    const auto testMeas = container.front();
+
+    resCalc.reset();
+
+    resCalc.updateFullResidual(line, t0, *testMeas,
+                               calibrator.driftVelocity(cctx, *testMeas),
+                               calibrator.driftAcceleration(cctx, *testMeas));
+
+    for (const auto par : resCfg.parsToUse) {
+      Pars_t lineParsUp{linePars};
+      Pars_t lineParsDn{linePars};
+
+      const auto dIdx = toUnderlying(par);
       double t0Up{t0}, t0Dn{t0};
-      if (partial != ParIdx::t0) {
-        lineParsUp[toUnderlying(partial)] += h;
-        lineParsDn[toUnderlying(partial)] -= h;
+      if (par != ParIdx::t0) {
+        lineParsUp[dIdx] += h;
+        lineParsDn[dIdx] -= h;
       } else {
         t0Up += h;
         t0Dn -= h;
       }
-      auto resCalcUp =
-          makeCalculator("strawT0ResUp", lineParsUp, wPos, wDir, t0Up);
-      auto resCalcDn =
-          makeCalculator("strawT0ResDn", lineParsDn, wPos, wDir, t0Dn);
+
+      resCalcUp.reset();
+      line.updateParameters(lineParsUp);
+      const auto testMeasUp = calibrator.calibrate(
+          cctx, line.position(), line.direction(), t0Up, *testMeas);
+      resCalcUp.updateFullResidual(
+          line, t0Up, *testMeasUp, calibrator.driftVelocity(cctx, *testMeasUp),
+          calibrator.driftAcceleration(cctx, *testMeasUp));
+
+      resCalcDn.reset();
+      line.updateParameters(lineParsDn);
+      const auto testMeasDn = calibrator.calibrate(
+          cctx, line.position(), line.direction(), t0Dn, *testMeas);
+
+      resCalcDn.updateFullResidual(
+          line, t0Dn, *testMeasDn, calibrator.driftVelocity(cctx, *testMeasDn),
+          calibrator.driftAcceleration(cctx, *testMeasDn));
 
       const Vector_t numDeriv =
           (resCalcUp.residual() - resCalcDn.residual()) / (2. * h);
-      ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Partial "
-                          << CompSpacePointAuxiliaries::parName(partial)
-                          << " --  numerical: " << toString(numDeriv)
-                          << ", analytical: "
-                          << toString(resCalc.gradient(partial)));
-
-      COMPARE_VECTORS(numDeriv, resCalc.gradient(partial), tolerance);
-      for (const auto partial2 : resCfg.parsToUse) {
-        const Vector_t numDeriv1{
-            (resCalcUp.gradient(partial2) - resCalcDn.gradient(partial2)) /
-            (2. * h)};
-        ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Second deriv ("
-                            << CompSpacePointAuxiliaries::parName(partial)
-                            << ", "
-                            << CompSpacePointAuxiliaries::parName(partial2)
-                            << ") -- numerical: " << toString(numDeriv1)
-                            << ", analytic: "
-                            << toString(resCalc.hessian(partial, partial2)));
-        COMPARE_VECTORS(numDeriv1, resCalc.hessian(partial, partial2),
-                        tolerance);
+      const Vector_t anaDeriv = resCalc.gradient(par);
+      COMPARE_VECTORS(numDeriv, anaDeriv, 1.e-3);
+      for (const auto par1 : resCfg.parsToUse) {
+        const Vector_t numDeriv1 =
+            (resCalcUp.gradient(par1) - resCalcDn.gradient(par1)) / (2. * h);
+        const Vector_t anaDeriv1 = resCalc.hessian(par1, par);
+        COMPARE_VECTORS(numDeriv1, anaDeriv1, 4.e-3);
       }
     }
-  };
-
-  RandomEngine rndEngine{4711};
-
-  const Vector_t wirePos{100._cm, 50._cm, 30._cm};
-  for (std::size_t e = 0; e < nEvents; ++e) {
-    break;
-    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
-    resCfg.localToGlobal = Acts::Transform3::Identity();
-    Line_t line{generateLine(rndEngine, logger())};
-    const double t0 = uniform{0_ns, 50._ns}(rndEngine);
-
-    testTimingResidual(line.parameters(), wirePos, Vector_t::UnitX(), t0);
-    testTimingResidual(line.parameters(), wirePos,
-                       Vector_t{1., 1., 0.}.normalized(), t0);
-    resCfg.localToGlobal.translation() =
-        Vector_t{uniform{-10._cm, 10._cm}(rndEngine),
-                 uniform{-20._cm, 20._cm}(rndEngine),
-                 uniform{-30._cm, 30._cm}(rndEngine)};
-    testTimingResidual(line.parameters(), wirePos, Vector_t::UnitX(), t0);
-    testTimingResidual(line.parameters(), wirePos,
-                       Vector_t{1., 1., 0.}.normalized(), t0);
-
-    //// Next test the displacement
-    resCfg.localToGlobal *=
-        Acts::AngleAxis3{uniform{-30._degree, 30._degree}(rndEngine),
-                         makeDirectionFromPhiTheta(
-                             uniform{-30._degree, 30._degree}(rndEngine),
-                             uniform{-45._degree, -35._degree}(rndEngine))};
-    testTimingResidual(line.parameters(), wirePos, Vector_t::UnitX(), t0);
-    testTimingResidual(line.parameters(), wirePos,
-                       Vector_t{1., 1., 0.}.normalized(), t0);
   }
 }
 BOOST_AUTO_TEST_CASE(WireResidualTest) {
@@ -472,8 +494,8 @@ BOOST_AUTO_TEST_CASE(WireResidualTest) {
     ACTS_DEBUG(__func__ << "() - " << __LINE__ << ": Run test event: " << e);
     const Line_t line{generateLine(rndEngine, logger())};
     // Generate the first test measurement
-    constexpr double R = 10._cm;
-    const double dR = SpCalibrator::driftUncert(R);
+    constexpr double R = 13._mm;
+    const double dR = detailCalib::driftRadUncert(R);
     constexpr double uncertWire = 1._cm;
     testResidual(line.parameters(),
                  FitTestSpacePoint{wirePos, wireDir1, R, dR});
@@ -555,36 +577,79 @@ BOOST_AUTO_TEST_CASE(TimeStripResidual) {
 }
 
 BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
-  Pars_t linePars{};
-  linePars[toUnderlying(ParIdx::phi)] = 30._degree;
-  linePars[toUnderlying(ParIdx::theta)] = 75_degree;
-  linePars[toUnderlying(ParIdx::x0)] = 10._cm;
-  linePars[toUnderlying(ParIdx::y0)] = -10_cm;
-
   Config_t resCfg{};
   resCfg.useHessian = true;
-  resCfg.calcAlongStrip = true;
+  resCfg.calcAlongStrip = false;
   resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta,
                       ParIdx::t0};
 
-  Line_t line{linePars};
+  using ResCalc_t = CompSpacePointAuxiliaries;
+  using ChiSq_t = ResCalc_t::ChiSqWithDerivatives;
 
-  CompSpacePointAuxiliaries resCalc{resCfg,
-                                    Acts::getDefaultLogger("testRes", logLvl)};
+  ResCalc_t resCalc{resCfg, Acts::getDefaultLogger("chiSquareTest", logLvl)};
 
-  const double t0{1._ns};
+  ChiSq_t chi2{};
+  ChiSq_t chi2Up{};
+  ChiSq_t chi2Dn{};
 
-  auto testChi2 = [&line, &t0, &resCalc,
-                   &resCfg](const FitTestSpacePoint& testMe) {
-    using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
-    ChiSq_t chi2{};
-    ACTS_DEBUG(__func__ << "() " << __LINE__ << ": Test space point "
-                        << toString(testMe));
+  Line_t line{};
 
-    resCalc.updateFullResidual(line, t0, testMe);
+  const Acts::CalibrationContext cctx{};
 
-    resCalc.updateChiSq(chi2, testMe.covariance());
-    resCalc.symmetrizeHessian(chi2);
+  const SpCalibrator calibrator{logLvl};
+
+  RandomEngine rndEngine{1789};
+
+  auto runCalculation = [&line, &resCalc, &calibrator, &cctx](
+                            FitTestSpacePoint testMe, const Pars_t& pars,
+                            const double t0, ChiSq_t& chiSq, const bool calib) {
+    line.updateParameters(pars);
+    resCalc.reset();
+    chiSq.reset();
+    if (calib && testMe.isStraw() &&
+        Acts::rangeContainsValue(resCalc.config().parsToUse, ParIdx::t0)) {
+      testMe = *calibrator.calibrate(cctx, line.position(), line.direction(),
+                                     t0, testMe);
+    }
+
+    if (testMe.isStraw()) {
+      const int sign = CompSpacePointAuxiliaries::strawSign(line, testMe);
+      testMe.updateDriftR(std::copysign(testMe.driftRadius(), sign));
+    }
+
+    if (Acts::rangeContainsValue(resCalc.config().parsToUse, ParIdx::t0)) {
+      resCalc.updateFullResidual(line, t0, testMe,
+                                 calibrator.driftVelocity(cctx, testMe),
+                                 calibrator.driftAcceleration(cctx, testMe));
+    } else {
+      resCalc.updateSpatialResidual(line, testMe);
+    }
+    resCalc.updateChiSq(chiSq, testMe.covariance());
+    resCalc.symmetrizeHessian(chiSq);
+  };
+
+  auto testChi2 = [&](const Pars_t& linePars, const double t0,
+                      FitTestSpacePoint testMe) {
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << ":\n"
+                        << whiteSpaces(150, '+') << "\nTest space point "
+                        << toString(testMe) << "\n"
+                        << whiteSpaces(150, '+'));
+    line.updateParameters(linePars);
+    double chi2Term{0.};
+    if (Acts::rangeContainsValue(resCfg.parsToUse, ParIdx::t0)) {
+      chi2Term = CompSpacePointAuxiliaries::chi2Term(line, resCfg.localToGlobal,
+                                                     t0, testMe);
+    } else {
+      chi2Term = CompSpacePointAuxiliaries::chi2Term(line, testMe);
+    }
+    if (testMe.isStraw()) {
+      testMe.updateTime(detailCalib::driftTime(testMe.driftRadius()) + t0 +
+                        calibrator.fastToF(testMe));
+    }
+
+    ACTS_DEBUG(__func__ << "() - " << __LINE__
+                        << " Evaluated chi2 term: " << chi2Term);
+    runCalculation(testMe, linePars, t0, chi2, false);
     constexpr auto N = 5u;
     for (std::size_t i = 1; i < N; ++i) {
       for (std::size_t j = 0; j <= i; ++j) {
@@ -597,14 +662,12 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
                         << toString(chi2.gradient) << ", Hessian: \n"
                         << toString(chi2.hessian)
                         << "\ndeterminant: " << chi2.hessian.determinant());
-    CHECK_CLOSE(CompSpacePointAuxiliaries::chi2Term(line, resCfg.localToGlobal,
-                                                    t0, testMe),
-                chi2.chi2, 1.e-10);
-
-    constexpr double h = 1.e-7;
+    CHECK_CLOSE(chi2Term, chi2.chi2, 1.e-10);
+    runCalculation(testMe, linePars, t0, chi2, true);
+    constexpr double h = 5.e-8;
     for (const auto par : resCfg.parsToUse) {
-      Pars_t lineParsUp{line.parameters()};
-      Pars_t lineParsDn{line.parameters()};
+      Pars_t lineParsUp{linePars};
+      Pars_t lineParsDn{linePars};
 
       const auto dIdx = toUnderlying(par);
       double t0Up{t0}, t0Dn{t0};
@@ -615,15 +678,8 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
         t0Up += h;
         t0Dn -= h;
       }
-      ChiSq_t chi2Up{}, chi2Dn{};
-      /// Calculate the updated chi2
-      line.updateParameters(lineParsUp);
-      resCalc.updateFullResidual(line, t0Up, testMe);
-      resCalc.updateChiSq(chi2Up, testMe.covariance());
-
-      line.updateParameters(lineParsDn);
-      resCalc.updateFullResidual(line, t0Dn, testMe);
-      resCalc.updateChiSq(chi2Dn, testMe.covariance());
+      runCalculation(testMe, lineParsUp, t0Up, chi2Up, true);
+      runCalculation(testMe, lineParsDn, t0Dn, chi2Dn, true);
 
       const double anaDeriv = chi2.gradient[dIdx];
       const double numDeriv = (chi2Up.chi2 - chi2Dn.chi2) / (2. * h);
@@ -634,9 +690,6 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
                           << ", analytical: " << anaDeriv);
       CHECK_CLOSE(numDeriv, anaDeriv, tolerance);
       for (const auto par2 : resCfg.parsToUse) {
-        if (par2 > par) {
-          break;
-        }
         const auto dIdx2 = toUnderlying(par2);
         const double anaHess = chi2.hessian(dIdx, dIdx2);
         const double numHess =
@@ -650,34 +703,281 @@ BOOST_AUTO_TEST_CASE(ChiSqEvaluation) {
         CHECK_CLOSE(anaHess, numHess, tolerance);
       }
     }
+    ACTS_DEBUG(__func__ << "() " << __LINE__ << ":\n"
+                        << whiteSpaces(150, '-') << "\n"
+                        << whiteSpaces(150, '-'));
   };
 
-  /// Test orthogonal strips
-  testChi2(FitTestSpacePoint{
-      line.point(20._cm) + 5._cm * line.direction().cross(Vector_t::UnitX()),
-      makeDirectionFromPhiTheta(0_degree, 90._degree),
-      makeDirectionFromPhiTheta(90._degree, 0._degree),
-      15._ns,
-      {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+  const double t0{2.5_ns};
 
-  /// Test strips with stereo
-  testChi2(FitTestSpacePoint{
-      line.point(20._cm) + 5._cm * line.direction().cross(Vector_t::UnitX()),
-      makeDirectionFromPhiTheta(0_degree, 45._degree),
-      makeDirectionFromPhiTheta(60._degree, 0._degree),
-      15._ns,
-      {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
-  //// Test ordinary straws
-  testChi2(FitTestSpacePoint{
-      line.point(20._cm) + 5._cm * line.direction().cross(Vector_t::UnitX()),
-      Vector_t::UnitX(), 5._cm, 10._mm});
+  for (std::size_t e = 0; e < nEvents; ++e) {
+    line = generateLine(rndEngine, logger());
+    const Pars_t pars = line.parameters();
 
-  /// Test straws with information on the position along the
-  /// tube
-  testChi2(FitTestSpacePoint{
-      line.point(20._cm) + 5._cm * line.direction().cross(Vector_t::UnitX()) +
-          4._cm * Vector_t::UnitX(),
-      Vector_t::UnitX(), 5._cm, 0.5_cm});
+    /// Test orthogonal strips
+    testChi2(
+        pars, t0,
+        FitTestSpacePoint{
+            line.point(20._cm) +
+                5._cm * line.direction().cross(Vector_t::UnitX()),
+            makeDirectionFromPhiTheta(0_degree, 90._degree),
+            makeDirectionFromPhiTheta(90._degree, 0._degree),
+            15._ns,
+            {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+
+    // Test strips with stereo
+    testChi2(
+        pars, t0,
+        FitTestSpacePoint{
+            line.point(20._cm) +
+                5._cm * line.direction().cross(Vector_t::UnitX()),
+            makeDirectionFromPhiTheta(0_degree, 45._degree),
+            makeDirectionFromPhiTheta(60._degree, 0._degree),
+            15._ns,
+            {Acts::pow(5._cm, 2), Acts::pow(10._cm, 2), Acts::pow(1._ns, 2)}});
+    constexpr double R = 12._mm;
+    const double dR = detailCalib::driftRadUncert(R);
+    // Test ordinary straws
+    testChi2(pars, t0,
+             FitTestSpacePoint{line.point(20._cm) + R * line.direction().cross(
+                                                            Vector_t::UnitX()),
+                               Vector3::UnitX(), R, dR});
+
+    testChi2(pars, t0,
+             FitTestSpacePoint{line.point(40._cm) - R * line.direction().cross(
+                                                            Vector_t::UnitX()),
+                               Vector3::UnitX(), R, dR});
+
+    // Test straws with information on the position along the tube
+    constexpr double dZ = 2._cm;
+    testChi2(
+        pars, t0,
+        FitTestSpacePoint{line.point(10._cm) +
+                              R * line.direction().cross(Vector_t::UnitX()) +
+                              dZ * Vector_t::UnitX(),
+                          Vector3::UnitX(), R, dR, dZ});
+    testChi2(
+        pars, t0,
+        FitTestSpacePoint{line.point(10._cm) -
+                              R * line.direction().cross(Vector_t::UnitX()) +
+                              dZ * Vector_t::UnitX(),
+                          Vector3::UnitX(), R, dR, dZ});
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HessianCalc) {
+  // Check that the hessian matrices are positive definite
+  Config_t resCfg{};
+  resCfg.useHessian = false;
+  resCfg.calcAlongStrip = true;
+  resCfg.parsToUse = {ParIdx::y0, ParIdx::theta};
+
+  CompSpacePointAuxiliaries resCalc{
+      resCfg, Acts::getDefaultLogger("ResidualCalcTwin", logLvl)};
+  RandomEngine rndEngine{1167};
+
+  using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
+  ChiSq_t chi2{};
+
+  MeasurementGenerator::Config genCfg{};
+  genCfg.createStraws = true;
+  genCfg.smearRadius = true;
+  genCfg.twinStraw = false;
+  genCfg.createStrips = false;
+
+  for (std::size_t ev = 0; ev < nEvents; ++ev) {
+    break;
+    resCalc.reset();
+    chi2.reset();
+    const Line_t line = generateLine(rndEngine, logger());
+    for (const auto& tube :
+         MeasurementGenerator::spawn(line, 0., rndEngine, genCfg, logger())) {
+      resCalc.updateSpatialResidual(line, *tube);
+      resCalc.updateChiSq(chi2, tube->covariance());
+    }
+    resCalc.symmetrizeHessian(chi2);
+
+    const SquareMatrix<2> miniHessian{chi2.hessian.block<2, 2>(0, 0)};
+    BOOST_CHECK_EQUAL(isPositiveDefinite(miniHessian), true);
+
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ":\n"
+                        << miniHessian << ", determinant: "
+                        << miniHessian.determinant() << ",\n"
+                        << printEigenDecomposition(miniHessian));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HessianCalcT0) {
+  // Check that the hessian matrices are positive definite
+  Config_t resCfg{};
+  resCfg.useHessian = false;
+  resCfg.calcAlongStrip = true;
+  resCfg.parsToUse = {ParIdx::y0, ParIdx::theta, ParIdx::t0};
+
+  CompSpacePointAuxiliaries resCalc{
+      resCfg, Acts::getDefaultLogger("ResidualCalcTwin", logLvl)};
+  RandomEngine rndEngine{1167};
+
+  using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
+  ChiSq_t chi2{};
+
+  MeasurementGenerator::Config genCfg{};
+  genCfg.createStraws = true;
+  genCfg.smearRadius = true;
+  genCfg.twinStraw = false;
+  genCfg.createStrips = false;
+
+  SpCalibrator calibrator{logLvl};
+  CalibrationContext cctx{};
+
+  for (std::size_t ev = 0; ev < nEvents; ++ev) {
+    resCalc.reset();
+    chi2.reset();
+    const Line_t line = generateLine(rndEngine, logger());
+    const double t0 = 0.;
+    for (const auto& tube :
+         MeasurementGenerator::spawn(line, t0, rndEngine, genCfg, logger())) {
+      resCalc.updateFullResidual(line, t0, *tube,
+                                 calibrator.driftVelocity(cctx, *tube));
+      resCalc.updateChiSq(chi2, tube->covariance());
+    }
+    resCalc.symmetrizeHessian(chi2);
+
+    chi2.hessian.col(2).swap(chi2.hessian.col(toUnderlying(ParIdx::t0)));
+    chi2.hessian.row(2).swap(chi2.hessian.row(toUnderlying(ParIdx::t0)));
+
+    const SquareMatrix<3> miniHessian{chi2.hessian.block<3, 3>(0, 0)};
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ":\n"
+                        << miniHessian << ", determinant: "
+                        << miniHessian.determinant() << ",\n"
+                        << printEigenDecomposition(miniHessian));
+    BOOST_CHECK_EQUAL(isPositiveDefinite(miniHessian), true);
+    assert(isPositiveDefinite(miniHessian));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HessianCalcTwin) {
+  // Check that the hessian matrices are positive definite
+  Config_t resCfg{};
+  resCfg.useHessian = false;
+  resCfg.calcAlongStrip = true;
+  resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta};
+
+  CompSpacePointAuxiliaries resCalc{
+      resCfg, Acts::getDefaultLogger("ResidualCalcTwin", logLvl)};
+  RandomEngine rndEngine{1066};
+
+  using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
+  ChiSq_t chi2{};
+
+  MeasurementGenerator::Config genCfg{};
+  genCfg.createStraws = true;
+  genCfg.smearRadius = true;
+  genCfg.twinStraw = true;
+  genCfg.smearTwin = true;
+  genCfg.createStrips = false;
+
+  for (std::size_t ev = 0; ev < nEvents; ++ev) {
+    resCalc.reset();
+    chi2.reset();
+    const Line_t line = generateLine(rndEngine, logger());
+    for (const auto& twinTube :
+         MeasurementGenerator::spawn(line, 0., rndEngine, genCfg, logger())) {
+      resCalc.updateSpatialResidual(line, *twinTube);
+      resCalc.updateChiSq(chi2, twinTube->covariance());
+    }
+    resCalc.symmetrizeHessian(chi2);
+
+    const SquareMatrix<4> miniHessian{chi2.hessian.block<4, 4>(0, 0)};
+    BOOST_CHECK_EQUAL(isPositiveDefinite(miniHessian), true);
+
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ":\n"
+                        << miniHessian << ", determinant: "
+                        << miniHessian.determinant() << ",\n"
+                        << printEigenDecomposition(miniHessian));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HessianCalcStrawStrip) {
+  // Check that the hessian matrices are positive definite
+  Config_t resCfg{};
+  resCfg.useHessian = false;
+  resCfg.calcAlongStrip = true;
+  resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta};
+
+  CompSpacePointAuxiliaries resCalc{
+      resCfg, Acts::getDefaultLogger("ResidualCalcStrawStrip", logLvl)};
+  RandomEngine rndEngine{1905};
+
+  using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
+  ChiSq_t chi2{};
+
+  MeasurementGenerator::Config genCfg{};
+  genCfg.createStraws = true;
+  genCfg.smearRadius = true;
+  genCfg.twinStraw = false;
+  genCfg.createStrips = true;
+
+  for (std::size_t ev = 0; ev < nEvents; ++ev) {
+    resCalc.reset();
+    chi2.reset();
+    const Line_t line = generateLine(rndEngine, logger());
+    for (const auto& meas :
+         MeasurementGenerator::spawn(line, 0., rndEngine, genCfg, logger())) {
+      resCalc.updateSpatialResidual(line, *meas);
+      resCalc.updateChiSq(chi2, meas->covariance());
+    }
+    resCalc.symmetrizeHessian(chi2);
+
+    const SquareMatrix<4> miniHessian{chi2.hessian.block<4, 4>(0, 0)};
+    BOOST_CHECK_EQUAL(isPositiveDefinite(miniHessian), true);
+
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ":\n"
+                        << miniHessian << ", determinant: "
+                        << miniHessian.determinant() << ",\n"
+                        << printEigenDecomposition(miniHessian));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HessianCalcStripOnly) {
+  // Check that the hessian matrices are positive definite
+  Config_t resCfg{};
+  resCfg.useHessian = false;
+  resCfg.calcAlongStrip = true;
+  resCfg.parsToUse = {ParIdx::x0, ParIdx::phi, ParIdx::y0, ParIdx::theta};
+
+  CompSpacePointAuxiliaries resCalc{
+      resCfg, Acts::getDefaultLogger("ResidualCalcStrip", logLvl)};
+  RandomEngine rndEngine{1492};
+
+  using ChiSq_t = CompSpacePointAuxiliaries::ChiSqWithDerivatives;
+  ChiSq_t chi2{};
+
+  MeasurementGenerator::Config genCfg{};
+  genCfg.createStraws = false;
+  genCfg.smearRadius = true;
+  genCfg.twinStraw = false;
+  genCfg.createStrips = true;
+
+  for (std::size_t ev = 0; ev < nEvents; ++ev) {
+    resCalc.reset();
+    chi2.reset();
+    const Line_t line = generateLine(rndEngine, logger());
+    for (const auto& strip :
+         MeasurementGenerator::spawn(line, 0., rndEngine, genCfg, logger())) {
+      resCalc.updateSpatialResidual(line, *strip);
+      resCalc.updateChiSq(chi2, strip->covariance());
+    }
+    resCalc.symmetrizeHessian(chi2);
+
+    const SquareMatrix<4> miniHessian{chi2.hessian.block<4, 4>(0, 0)};
+    BOOST_CHECK_EQUAL(isPositiveDefinite(miniHessian), true);
+
+    ACTS_DEBUG(__func__ << "() - " << __LINE__ << ":\n"
+                        << miniHessian << ", determinant: "
+                        << miniHessian.determinant() << ",\n"
+                        << printEigenDecomposition(miniHessian));
+  }
 }
 
 BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
@@ -712,7 +1012,7 @@ BOOST_AUTO_TEST_CASE(CombinatorialSeedSolverStripsTest) {
     ACTS_DEBUG(__func__ << "() " << __LINE__ << " - Combinatorial Seed test - "
                         << "Processing Event: " << i);
     // update pseudo track parameters with random values
-    Line_t line{generateLine(rndEngine, logger())};
+    const Line_t line{generateLine(rndEngine, logger())};
 
     const Vector3& muonPos = line.position();
     const Vector3& muonDir = line.direction();
