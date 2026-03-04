@@ -188,15 +188,15 @@ class LayerAssembler {
   /// @param layerType `LayerType::Cylinder` for barrel, `LayerType::Disc` for
   ///                  endcap.
   /// @return `*this` (rvalue).
-  LayerAssembler&& setLayerType(LayerType layerType) &&;
+  [[nodiscard]] LayerAssembler&& setLayerType(LayerType layerType) &&;
 
   /// @brief Shorthand for `setLayerType(LayerType::Disc)`.
   /// @return `*this` (rvalue).
-  LayerAssembler&& endcap() &&;
+  [[nodiscard]] LayerAssembler&& endcap() &&;
 
   /// @brief Shorthand for `setLayerType(LayerType::Cylinder)`.
   /// @return `*this` (rvalue).
-  LayerAssembler&& barrel() &&;
+  [[nodiscard]] LayerAssembler&& barrel() &&;
 
   /// @brief Set the axis definition used to orient sensitive surfaces.
   ///
@@ -204,7 +204,7 @@ class LayerAssembler {
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-  LayerAssembler&& setAxes(typename B::AxisDefinition axes) &&
+  [[nodiscard]] LayerAssembler&& setAxes(typename B::AxisDefinition axes) &&
     requires(detail::HasAxisDefinition<B>)
   {
     m_layerSpec.axes = std::move(axes);
@@ -220,7 +220,8 @@ class LayerAssembler {
   /// @param layerAxes Axis definition forwarded to `LayerSpec::layerAxes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-  LayerAssembler&& setLayerAxes(typename B::AxisDefinition layerAxes) &&
+  [[nodiscard]] LayerAssembler&& setLayerAxes(
+      typename B::AxisDefinition layerAxes) &&
     requires(detail::HasAxisDefinition<B>)
   {
     m_layerSpec.layerAxes = std::move(layerAxes);
@@ -232,33 +233,34 @@ class LayerAssembler {
   /// @param pattern Regular-expression string; converted to `std::regex`
   ///                internally.
   /// @return `*this` (rvalue).
-  LayerAssembler&& setFilter(const std::string& pattern) &&;
+  [[nodiscard]] LayerAssembler&& setFilter(const std::string& pattern) &&;
 
   /// @brief Set the regex filter used to select layer elements inside the
   /// container.
   /// @param pattern Pre-compiled regular expression matched against each
   ///                child element name.
   /// @return `*this` (rvalue).
-  LayerAssembler&& setFilter(const std::regex& pattern) &&;
+  [[nodiscard]] LayerAssembler&& setFilter(const std::regex& pattern) &&;
 
   /// @brief Set the detector element that acts as the containing volume for the
   /// layer search.
   /// @param container Element whose subtree is searched for layers matching the
   ///                  filter.
   /// @return `*this` (rvalue).
-  LayerAssembler&& setContainer(const Element& container) &&;
+  [[nodiscard]] LayerAssembler&& setContainer(const Element& container) &&;
 
   /// @brief Set the container element by name, searching from the world root.
   ///
   /// @throws std::runtime_error if no element with @p name is found.
   /// @param name Name of the detector element to use as the container.
   /// @return `*this` (rvalue).
-  LayerAssembler&& setContainer(const std::string& name) &&;
+  [[nodiscard]] LayerAssembler&& setContainer(const std::string& name) &&;
 
   /// @brief Set an envelope to be applied to every layer node produced.
   /// @param envelope Envelope margins added around each layer's extent.
   /// @return `*this` (rvalue).
-  LayerAssembler&& setEnvelope(const Acts::ExtentEnvelope& envelope) &&;
+  [[nodiscard]] LayerAssembler&& setEnvelope(
+      const Acts::ExtentEnvelope& envelope) &&;
 
   /// @brief Control whether an empty layer collection is an error.
   ///
@@ -267,7 +269,7 @@ class LayerAssembler {
   /// failure to an informational log message.
   /// @param emptyOk If `true`, silently accept an empty result.
   /// @return `*this` (rvalue).
-  LayerAssembler&& setEmptyOk(bool emptyOk) &&;
+  [[nodiscard]] LayerAssembler&& setEmptyOk(bool emptyOk) &&;
 
   /// @brief Register a customizer callback invoked for each created layer node.
   ///
@@ -275,7 +277,7 @@ class LayerAssembler {
   /// @ref LayerBlueprintNode. It may return a different (or wrapped) node which
   /// will then be inserted into the container.
   /// @return `*this` (rvalue).
-  LayerAssembler&& onLayer(LayerCustomizer customizer) &&;
+  [[nodiscard]] LayerAssembler&& onLayer(LayerCustomizer customizer) &&;
 
   /// @brief Register an in-place mutating callback invoked for each layer node.
   ///
@@ -283,7 +285,8 @@ class LayerAssembler {
   /// to the @ref LayerBlueprintNode. The original node is kept regardless of
   /// what the callback does.
   /// @return `*this` (rvalue).
-  LayerAssembler&& onLayer(ReplacingLayerCustomizer customizer) &&;
+  [[nodiscard]] LayerAssembler&& onLayer(
+      ReplacingLayerCustomizer customizer) &&;
 
   /// @brief Override the attachment strategy for the container node.
   ///
@@ -291,7 +294,7 @@ class LayerAssembler {
   /// @param strategy Optional attachment strategy; pass `std::nullopt` to
   ///                 reset to the default.
   /// @return `*this` (rvalue).
-  LayerAssembler&& setAttachmentStrategy(
+  [[nodiscard]] LayerAssembler&& setAttachmentStrategy(
       std::optional<Acts::VolumeAttachmentStrategy> strategy) &&;
 
   /// @brief Build and return the assembled container node.
@@ -307,8 +310,9 @@ class LayerAssembler {
   ///         or if the container yields no matching elements and @p emptyOk is
   ///         `false`.
   /// @return Shared pointer to the fully assembled container node.
-  std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> build()
-      const;
+  [[nodiscard]] std::shared_ptr<
+      Acts::Experimental::CylinderContainerBlueprintNode>
+  build() const;
 
   /// @brief Build the container node and attach it as a child of @p node.
   ///
@@ -393,8 +397,9 @@ class BarrelEndcapAssembler {
   ///         filter has not been set, or if more than one barrel element is
   ///         found inside the assembly.
   /// @return Shared pointer to the assembled Z-axis container node.
-  std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode> build()
-      const;
+  [[nodiscard]] std::shared_ptr<
+      Acts::Experimental::CylinderContainerBlueprintNode>
+  build() const;
 
   /// @brief Build the container node and attach it as a child of @p node.
   ///
@@ -409,7 +414,7 @@ class BarrelEndcapAssembler {
   /// The callback may return a different or wrapped @ref LayerBlueprintNode.
   /// @param customizer See @ref LayerAssembler::onLayer(LayerCustomizer).
   /// @return `*this` (rvalue).
-  BarrelEndcapAssembler&& onLayer(
+  [[nodiscard]] BarrelEndcapAssembler&& onLayer(
       typename LayerAssembler::LayerCustomizer customizer) &&;
 
   /// @brief Register an in-place mutating layer callback forwarded to each
@@ -427,20 +432,21 @@ class BarrelEndcapAssembler {
   /// @ref CylinderContainerBlueprintNode.
   /// @param customizer Customizer function for the container
   /// @return `*this` (rvalue).
-  BarrelEndcapAssembler&& onContainer(ContainerCustomizer customizer) &&;
+  [[nodiscard]] BarrelEndcapAssembler&& onContainer(
+      ContainerCustomizer customizer) &&;
 
   /// @brief Register an in-place mutating callback invoked for each barrel or
   /// endcap container node.
   /// @param customizer Customizer function for the container
   /// @return `*this` (rvalue).
-  BarrelEndcapAssembler&& onContainer(
+  [[nodiscard]] BarrelEndcapAssembler&& onContainer(
       ReplacingContainerCustomizer customizer) &&;
 
   /// @brief Set the top-level detector element whose subtree is searched for
   /// barrel and endcap elements.
   /// @param assembly Root element of the barrel+endcap sub-detector.
   /// @return `*this` (rvalue).
-  BarrelEndcapAssembler&& setAssembly(const Element& assembly) &&;
+  [[nodiscard]] BarrelEndcapAssembler&& setAssembly(const Element& assembly) &&;
 
   /// @brief Set the axis definitions for both barrel and endcap layers at once.
   ///
@@ -448,8 +454,8 @@ class BarrelEndcapAssembler {
   /// @param barrel Axis definition forwarded to barrel @ref LayerAssembler s.
   /// @param endcap Axis definition forwarded to endcap @ref LayerAssembler s.
   /// @return `*this` (rvalue).
-  BarrelEndcapAssembler&& setAxes(AxisDefinition barrel,
-                                  AxisDefinition endcap) &&
+  [[nodiscard]] BarrelEndcapAssembler&& setAxes(AxisDefinition barrel,
+                                                AxisDefinition endcap) &&
     requires(detail::HasAxisDefinition<BackendT>);
 
   /// @brief Set the axis definition used for endcap layers only.
@@ -457,14 +463,15 @@ class BarrelEndcapAssembler {
   /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
   /// @param axes Axis definition forwarded to endcap @ref LayerAssembler s.
   /// @return `*this` (rvalue).
-  BarrelEndcapAssembler&& setEndcapAxes(AxisDefinition axes) &&
+  [[nodiscard]] BarrelEndcapAssembler&& setEndcapAxes(AxisDefinition axes) &&
     requires(detail::HasAxisDefinition<BackendT>);
 
   /// @brief Set the regex filter used to select individual layer elements
   /// within each barrel or endcap container.
   /// @param pattern Regular expression matched against child element names.
   /// @return `*this` (rvalue).
-  BarrelEndcapAssembler&& setLayerFilter(const std::regex& pattern) &&;
+  [[nodiscard]] BarrelEndcapAssembler&& setLayerFilter(
+      const std::regex& pattern) &&;
 
  private:
   typename LayerAssembler::LayerCustomizer m_onLayer;
@@ -564,7 +571,7 @@ class BlueprintBuilder {
   /// and then finalised via @ref LayerAssembler::build() or
   /// @ref LayerAssembler::addTo().
   /// @return A new @ref LayerAssembler instance.
-  LayerAssembler layers() const;
+  [[nodiscard]] LayerAssembler layers() const;
 
   /// @brief Create a @ref BarrelEndcapAssembler bound to this builder.
   ///
@@ -572,7 +579,7 @@ class BlueprintBuilder {
   /// filter) and then finalised via @ref BarrelEndcapAssembler::build() or
   /// @ref BarrelEndcapAssembler::addTo().
   /// @return A new @ref BarrelEndcapAssembler instance.
-  BarrelEndcapAssembler barrelEndcap() const;
+  [[nodiscard]] BarrelEndcapAssembler barrelEndcap() const;
 
   /// @brief Search for a detector element by exact name within a subtree.
   ///
