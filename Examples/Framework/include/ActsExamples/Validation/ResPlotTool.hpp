@@ -34,9 +34,12 @@ class ResPlotTool {
 
   /// @brief Nested configuration struct
   struct Config {
-    /// parameter sets to do plots
+    /// Track parameter names
     std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
                                            "theta", "qop", "t"};
+
+    std::string qOverPtName = "qOverPt";
+    std::string ptQoverPtName = "ptQoverPt";
 
     /// Binning info for variables
     std::map<std::string, AxisVariant> varBinning = {
