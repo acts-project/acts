@@ -21,6 +21,12 @@ namespace ActsTests {
 
 class Container {
  public:
+  using Index = std::size_t;
+  using IndexRange = std::pair<std::size_t, std::size_t>;
+  using SubsetIndices = std::span<const std::size_t>;
+  using OwningSubsetIndices = std::vector<std::size_t>;
+  using OwningOrderedSubsetIndices = std::set<std::size_t>;
+
   Container() = default;
 
   Container(std::initializer_list<int> init) : m_data(init) {}
@@ -64,51 +70,45 @@ class Container {
     using Base::Base;
   };
 
-  Range<false> range(std::size_t offset, std::size_t count) {
-    return {*this, {offset, count}};
+  Range<false> range(const IndexRange& indexRange) {
+    return {*this, indexRange};
   }
 
-  Range<true> range(std::size_t offset, std::size_t count) const {
-    return {*this, {offset, count}};
+  Range<true> range(const IndexRange& indexRange) const {
+    return {*this, indexRange};
   }
 
   template <bool ReadOnly>
   class Subset
       : public ContainerSubset<Subset<ReadOnly>, Subset<true>, Container, int,
-                               std::span<const std::size_t>, ReadOnly> {
+                               SubsetIndices, ReadOnly> {
    public:
     using Base = ContainerSubset<Subset<ReadOnly>, Subset<true>, Container, int,
-                                 std::span<const std::size_t>, ReadOnly>;
+                                 SubsetIndices, ReadOnly>;
 
     using Base::Base;
   };
 
-  Subset<false> subset(std::span<const std::size_t> indices) {
-    return {*this, indices};
-  }
+  Subset<false> subset(SubsetIndices indices) { return {*this, indices}; }
 
-  Subset<true> subset(std::span<const std::size_t> indices) const {
-    return {*this, indices};
-  }
+  Subset<true> subset(SubsetIndices indices) const { return {*this, indices}; }
 
   template <bool ReadOnly>
   class OwningSubset
       : public ContainerSubset<OwningSubset<ReadOnly>, OwningSubset<true>,
-                               Container, int, std::vector<std::size_t>,
-                               ReadOnly> {
+                               Container, int, OwningSubsetIndices, ReadOnly> {
    public:
-    using Base =
-        ContainerSubset<OwningSubset<ReadOnly>, OwningSubset<true>, Container,
-                        int, std::vector<std::size_t>, ReadOnly>;
+    using Base = ContainerSubset<OwningSubset<ReadOnly>, OwningSubset<true>,
+                                 Container, int, OwningSubsetIndices, ReadOnly>;
 
     using Base::Base;
   };
 
-  OwningSubset<false> owningSubset(std::vector<std::size_t> indices) {
+  OwningSubset<false> owningSubset(OwningSubsetIndices indices) {
     return {*this, std::move(indices)};
   }
 
-  OwningSubset<true> owningSubset(std::vector<std::size_t> indices) const {
+  OwningSubset<true> owningSubset(OwningSubsetIndices indices) const {
     return {*this, std::move(indices)};
   }
 
@@ -116,22 +116,22 @@ class Container {
   class OwningOrderedSubset
       : public ContainerSubset<OwningOrderedSubset<ReadOnly>,
                                OwningOrderedSubset<true>, Container, int,
-                               std::set<std::size_t>, ReadOnly> {
+                               OwningOrderedSubsetIndices, ReadOnly> {
    public:
     using Base = ContainerSubset<OwningOrderedSubset<ReadOnly>,
                                  OwningOrderedSubset<true>, Container, int,
-                                 std::set<std::size_t>, ReadOnly>;
+                                 OwningOrderedSubsetIndices, ReadOnly>;
 
     using Base::Base;
   };
 
   OwningOrderedSubset<false> owningOrderedSubset(
-      std::set<std::size_t> indices) {
+      OwningOrderedSubsetIndices indices) {
     return {*this, std::move(indices)};
   }
 
   OwningOrderedSubset<true> owningOrderedSubset(
-      std::set<std::size_t> indices) const {
+      OwningOrderedSubsetIndices indices) const {
     return {*this, std::move(indices)};
   }
 
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(All) {
   {
     std::vector<int> expected{20, 30, 40};
     std::vector<int> actual;
-    for (const int i : mutableContainer.range(1, 3)) {
+    for (const int i : mutableContainer.range({1, 4})) {
       actual.push_back(i);
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(All) {
   {
     std::vector<int> expected{20, 30, 40};
     std::vector<int> actual;
-    for (const int i : constContainer.range(1, 3)) {
+    for (const int i : constContainer.range({1, 4})) {
       actual.push_back(i);
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
