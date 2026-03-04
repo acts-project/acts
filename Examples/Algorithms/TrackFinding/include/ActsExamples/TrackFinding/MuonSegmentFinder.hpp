@@ -53,8 +53,6 @@ class MuonSegmentFinder final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  std::unique_ptr<const Acts::Logger> m_logger;
-  const Acts::Logger& logger() const { return *m_logger; }
 
   ReadDataHandle<MuonHoughMaxContainer> m_inputMax{this, "InputMaxima"};
   WriteDataHandle<MuonSegmentContainer> m_outSegments{this, "OutputSegments"};

@@ -23,7 +23,7 @@ namespace ActsExamples {
 ///         list of all hits associated with the maximum.
 class MuonHoughMaximum {
  public:
-  using Param_t = Acts::ActsVector<6>;
+  using Param_t = Acts::Vector<6>;
   using HitVec = std::vector<const MuonSpacePoint*>;
   /// @brief Constructor taking the estimated hough parameters and the associated hits
   /// @param tanBeta: Slope of the estimated line in precision direction

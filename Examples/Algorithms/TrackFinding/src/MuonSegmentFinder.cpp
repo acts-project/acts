@@ -8,8 +8,8 @@
 
 #include "ActsExamples/TrackFinding/MuonSegmentFinder.hpp"
 
-#include "Acts/Seeding/StrawChamberLineSeeder.hpp"
-#include "Acts/Seeding/StrawChamberSegmentLineFitter.hpp"
+#include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
+#include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
 
@@ -18,9 +18,9 @@ namespace ActsExamples {
 MuonSegmentFinder::~MuonSegmentFinder() = default;
 
 MuonSegmentFinder::MuonSegmentFinder(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("MuonSegmentFinder", lvl),
-      m_cfg(std::move(cfg)),
-      m_logger(Acts::getDefaultLogger("MuonSegmentFinder", lvl)) {}
+    : IAlgorithm("MuonSegmentFinder", Acts::getDefaultLogger("MuonSegmentFinder", lvl)),
+      m_cfg(std::move(cfg))
+      {}
 
 ProcessCode MuonSegmentFinder::initialize() {
   if (m_cfg.inHoughSeeds.empty()) {
@@ -37,7 +37,7 @@ ProcessCode MuonSegmentFinder::initialize() {
   MuonSpacePointCalibrator::Config calibCfg{};
 
   m_calibrator = std::make_unique<MuonSpacePointCalibrator>(std::move(calibCfg),
-                                                            m_logger->clone());
+                                                            logger().clone());
 
   return ProcessCode::SUCCESS;
 }
@@ -48,12 +48,12 @@ ProcessCode MuonSegmentFinder::execute(const AlgorithmContext& ctx) const {
   using UnCalibSpCont_t = MuonSpacePointCalibrator::UnCalibSpVec_t;
   using CalibSpCont_t = MuonSpacePointCalibrator::CalibSpCont_t;
   using StrawSeeder_t =
-      Acts::StrawChamberLineSeeder<UnCalibSpCont_t, MuonSPLayerSplitter,
+      Acts::CompositeSpacePointLineSeeder<UnCalibSpCont_t, MuonSPLayerSplitter,
                                    CalibSpCont_t, MuonSpacePointCalibrator>;
   using SeedCandidate_t = StrawSeeder_t::DriftCircleSeed;
 
   using StrawLineFitter_t =
-      Acts::StrawChamberSegmentLineFitter<CalibSpCont_t,
+      Acts::CompositeSpacePointLineFitter<CalibSpCont_t,
                                           MuonSpacePointCalibrator>;
 
   StrawSeeder_t::Config seedCfg{};
