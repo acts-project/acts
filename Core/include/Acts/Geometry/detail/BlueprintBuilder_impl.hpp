@@ -31,94 +31,509 @@ auto compose(F f, G g, Rest... rest) {
   }
 }
 
+template <typename ElementT>
+struct LayerBuildInputs {
+  std::vector<ElementT> layerElements;
+  std::optional<std::string> deducedContainerName;
+};
+
+template <detail::BlueprintBackend BackendT>
+LayerBuildInputs<typename BackendT::Element> resolveLayerBuildInputs(
+    const BlueprintBuilder<BackendT>& builder,
+    const std::optional<typename BackendT::Element>& container,
+    const std::optional<std::vector<typename BackendT::Element>>&
+        explicitLayerElements,
+    const std::optional<std::regex>& filter) {
+  using Element = typename BackendT::Element;
+  LayerBuildInputs<Element> inputs;
+
+  if (container.has_value()) {
+    inputs.deducedContainerName = builder.backend().nameOf(container.value());
+  }
+
+  if (explicitLayerElements.has_value()) {
+    inputs.layerElements = *explicitLayerElements;
+
+    if (filter.has_value()) {
+      std::vector<Element> filteredLayerElements;
+      filteredLayerElements.reserve(inputs.layerElements.size());
+      for (const auto& layerElement : inputs.layerElements) {
+        const std::string layerElementName =
+            builder.backend().nameOf(layerElement);
+        if (std::regex_match(layerElementName, filter.value())) {
+          filteredLayerElements.push_back(layerElement);
+        }
+      }
+      inputs.layerElements = std::move(filteredLayerElements);
+    }
+    return inputs;
+  }
+
+  if (!container.has_value()) {
+    throw std::runtime_error("Container not set in ElementLayerAssembler");
+  }
+  if (!filter.has_value()) {
+    throw std::runtime_error("Pattern not set in ElementLayerAssembler");
+  }
+
+  inputs.layerElements =
+      builder.findDetElementByNamePattern(container.value(), filter.value());
+  return inputs;
+}
+
+// Both ElementLayerAssembler and SensorLayerAssembler use the same underlying
+// LayerCustomizer type (a std::function with identical signature), so a single
+// template deducing CustomizerT covers both.
+template <detail::BlueprintBackend BackendT, typename CustomizerT>
+std::shared_ptr<Acts::Experimental::LayerBlueprintNode> finalizeLayer(
+    const std::optional<typename BackendT::Element>& layerElement,
+    std::shared_ptr<Acts::Experimental::LayerBlueprintNode> layer,
+    const std::optional<Acts::ExtentEnvelope>& envelope,
+    const CustomizerT& onLayer) {
+  if (envelope.has_value()) {
+    layer->setEnvelope(envelope.value());
+  }
+  if (onLayer) {
+    layer = onLayer(layerElement, std::move(layer));
+  }
+  return layer;
+}
+
+template <detail::BlueprintBackend BackendT>
+typename BackendT::LayerSpec resolveLayerSpecForParent(
+    const BlueprintBuilder<BackendT>& builder,
+    const typename BackendT::Element& parent,
+    const typename BackendT::LayerSpec& layerSpec) {
+  typename BackendT::LayerSpec resolvedLayerSpec = layerSpec;
+  std::string fullLayerName = builder.getPathToElementName(parent);
+  if (resolvedLayerSpec.layerName.has_value() &&
+      !resolvedLayerSpec.layerName->empty()) {
+    fullLayerName += "|" + *resolvedLayerSpec.layerName;
+  }
+  resolvedLayerSpec.layerName = std::move(fullLayerName);
+  return resolvedLayerSpec;
+}
+
 }  // namespace detail
 
-// LayerAssembler
+// ElementLayerAssembler
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>::LayerAssembler(const Builder& builder)
+ElementLayerAssembler<BackendT>::ElementLayerAssembler(const Builder& builder)
     : m_builder{&builder} {}
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::setLayerType(
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::setLayerType(
     LayerType layerType) && {
   m_layerType = layerType;
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::endcap() && {
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::endcap() && {
   return std::move(*this).setLayerType(LayerType::Disc);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::barrel() && {
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::barrel() && {
   return std::move(*this).setLayerType(LayerType::Cylinder);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::setFilter(
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::setLayerFilter(
     const std::string& pattern) && {
-  return std::move(*this).setFilter(std::regex{pattern});
+  return std::move(*this).setLayerFilter(std::regex{pattern});
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::setFilter(
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::setLayerFilter(
     const std::regex& pattern) && {
   m_filter = pattern;
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::setContainer(
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::setContainer(
     const Element& container) && {
   m_container = container;
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::setContainer(
+ElementLayerAssembler<BackendT>&&
+ElementLayerAssembler<BackendT>::setContainerName(
+    std::string containerName) && {
+  m_containerName = std::move(containerName);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+ElementLayerAssembler<BackendT>&&
+ElementLayerAssembler<BackendT>::setLayerNameSuffix(
+    std::optional<std::string> layerNameSuffix) && {
+  m_layerSpec.layerName = std::move(layerNameSuffix);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+ElementLayerAssembler<BackendT>&&
+ElementLayerAssembler<BackendT>::setLayerElements(
+    std::vector<Element> layerElements) && {
+  m_layerElements = std::move(layerElements);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::setContainer(
     const std::string& name) && {
   m_container = m_builder->findDetElementByName(name);
   if (!m_container.has_value()) {
     throw std::runtime_error("Could not find DetElement with name " + name +
-                             " in LayerAssembler");
+                             " in ElementLayerAssembler");
   }
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::setEnvelope(
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::setEnvelope(
     const Acts::ExtentEnvelope& envelope) && {
   m_envelope = envelope;
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::setEmptyOk(
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::setEmptyOk(
     bool emptyOk) && {
   m_emptyOk = emptyOk;
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::setAttachmentStrategy(
+ElementLayerAssembler<BackendT>&&
+ElementLayerAssembler<BackendT>::setAttachmentStrategy(
     std::optional<Acts::VolumeAttachmentStrategy> strategy) && {
   m_attachmentStrategy = strategy;
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::onLayer(
-    typename LayerAssembler<BackendT>::LayerCustomizer customizer) && {
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::onLayer(
+    typename ElementLayerAssembler<BackendT>::LayerCustomizer customizer) && {
   m_onLayer = std::move(customizer);
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
-LayerAssembler<BackendT>&& LayerAssembler<BackendT>::onLayer(
-    typename LayerAssembler<BackendT>::ReplacingLayerCustomizer customizer) && {
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::onLayer(
+    typename ElementLayerAssembler<BackendT>::ReplacingLayerCustomizer
+        customizer) && {
+  m_onLayer =
+      [customizer = std::move(customizer)](
+          const std::optional<
+              typename ElementLayerAssembler<BackendT>::Element>& layerElement,
+          std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+              layer) mutable {
+        customizer(layerElement, *layer);
+        return layer;
+      };
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+void ElementLayerAssembler<BackendT>::addTo(
+    Acts::Experimental::BlueprintNode& node) const&& {
+  node.addChild(build());
+}
+
+template <detail::BlueprintBackend BackendT>
+std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+ElementLayerAssembler<BackendT>::build() const {
+  const auto& logger = m_builder->logger();
+
+  if (!m_layerType.has_value()) {
+    throw std::runtime_error("Layer type not set in ElementLayerAssembler");
+  }
+
+  if constexpr (detail::HasAxisDefinition<BackendT>) {
+    if (!m_layerSpec.axes.has_value()) {
+      throw std::runtime_error("Axes not set in ElementLayerAssembler");
+    }
+  }
+
+  if (!m_filter.has_value() && !m_layerElements.has_value()) {
+    throw std::runtime_error(
+        "Neither filter nor layer elements set in ElementLayerAssembler");
+  }
+
+  // Resolve the concrete layer-element set and optional deduced container name.
+  auto inputs = detail::resolveLayerBuildInputs<BackendT>(
+      *m_builder, m_container, m_layerElements, m_filter);
+
+  // Resolve the final output container name (manual override wins).
+  std::string containerName;
+  if (m_containerName.has_value()) {
+    containerName = m_containerName.value();
+  } else if (inputs.deducedContainerName.has_value()) {
+    containerName = inputs.deducedContainerName.value();
+  } else {
+    throw std::runtime_error(
+        "Container name is not set in ElementLayerAssembler. Provide "
+        "setContainerName() or setContainer().");
+  }
+
+  const Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
+                                          ? Acts::AxisDirection::AxisR
+                                          : Acts::AxisDirection::AxisZ;
+  auto node =
+      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+          containerName, axisDir);
+  if (m_attachmentStrategy.has_value()) {
+    node->setAttachmentStrategy(m_attachmentStrategy.value());
+  }
+
+  if (inputs.layerElements.empty()) {
+    ACTS_LOG(m_emptyOk ? Acts::Logging::INFO : Acts::Logging::ERROR,
+             "No layers found in container " << containerName
+                                             << " matching pattern");
+    if (!m_emptyOk) {
+      throw std::runtime_error(std::format(
+          "No layers found in container {} matching pattern", containerName));
+    }
+  }
+
+  for (const auto& layerElement : inputs.layerElements) {
+    LayerSpec resolvedLayerSpec = detail::resolveLayerSpecForParent<BackendT>(
+        *m_builder, layerElement, m_layerSpec);
+    auto layer = m_builder->makeLayer(layerElement, resolvedLayerSpec);
+    layer->setLayerType(m_layerType.value());
+    node->addChild(detail::finalizeLayer<BackendT>(
+        std::optional<Element>{layerElement}, std::move(layer), m_envelope,
+        m_onLayer));
+  }
+
+  return node;
+}
+
+// SensorLayerAssembler
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>::SensorLayerAssembler(const Builder& builder)
+    : m_builder{&builder} {}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::setLayerType(
+    LayerType layerType) && {
+  m_layerType = layerType;
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::endcap() && {
+  return std::move(*this).setLayerType(LayerType::Disc);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::barrel() && {
+  return std::move(*this).setLayerType(LayerType::Cylinder);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::setSensors(
+    std::vector<Element> sensors) && {
+  m_sensors = std::move(sensors);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::groupBy(
+    typename SensorLayerAssembler<BackendT>::LayerGrouper grouper) && {
+  m_groupBy = std::move(grouper);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&&
+SensorLayerAssembler<BackendT>::setContainerName(std::string containerName) && {
+  m_containerName = std::move(containerName);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::setEnvelope(
+    const Acts::ExtentEnvelope& envelope) && {
+  m_envelope = envelope;
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&&
+SensorLayerAssembler<BackendT>::setAttachmentStrategy(
+    std::optional<Acts::VolumeAttachmentStrategy> strategy) && {
+  m_attachmentStrategy = strategy;
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::onLayer(
+    typename SensorLayerAssembler<BackendT>::LayerCustomizer customizer) && {
+  m_onLayer = std::move(customizer);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::onLayer(
+    typename SensorLayerAssembler<BackendT>::ReplacingLayerCustomizer
+        customizer) && {
+  m_onLayer =
+      [customizer = std::move(customizer)](
+          const std::optional<typename SensorLayerAssembler<BackendT>::Element>&
+              elem,
+          std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+              layer) mutable {
+        customizer(elem, *layer);
+        return layer;
+      };
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+void SensorLayerAssembler<BackendT>::addTo(
+    Acts::Experimental::BlueprintNode& node) const&& {
+  node.addChild(build());
+}
+
+template <detail::BlueprintBackend BackendT>
+std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+SensorLayerAssembler<BackendT>::build() const {
+  if (!m_layerType.has_value()) {
+    throw std::runtime_error("Layer type not set in SensorLayerAssembler");
+  }
+
+  if constexpr (detail::HasAxisDefinition<BackendT>) {
+    if (!m_layerSpec.axes.has_value()) {
+      throw std::runtime_error("Axes not set in SensorLayerAssembler");
+    }
+  }
+
+  if (!m_sensors.has_value()) {
+    throw std::runtime_error("Sensors not set in SensorLayerAssembler");
+  }
+  if (!m_containerName.has_value()) {
+    throw std::runtime_error(
+        "Container name not set in SensorLayerAssembler. "
+        "Call setContainerName().");
+  }
+  if (!m_groupBy) {
+    throw std::runtime_error(
+        "SensorLayerAssembler requires groupBy(). For a single layer without "
+        "grouping, use BlueprintBuilder::layerFromSensors() instead.");
+  }
+
+  const Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
+                                          ? Acts::AxisDirection::AxisR
+                                          : Acts::AxisDirection::AxisZ;
+  auto node =
+      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+          m_containerName.value(), axisDir);
+  if (m_attachmentStrategy.has_value()) {
+    node->setAttachmentStrategy(m_attachmentStrategy.value());
+  }
+
+  struct GroupData {
+    std::string key;
+    std::vector<Element> sensors;
+  };
+
+  // Keep first-seen group order deterministic.
+  std::vector<GroupData> groups;
+  for (const auto& sensor : *m_sensors) {
+    const std::string key = m_groupBy(sensor);
+    GroupData* group = nullptr;
+    for (auto& g : groups) {
+      if (g.key == key) {
+        group = &g;
+        break;
+      }
+    }
+    if (group == nullptr) {
+      groups.push_back(GroupData{.key = key});
+      group = &groups.back();
+    }
+    group->sensors.push_back(sensor);
+  }
+
+  for (auto& group : groups) {
+    if (group.key.empty()) {
+      throw std::runtime_error(
+          "groupBy() key must be non-empty for all sensors in "
+          "SensorLayerAssembler");
+    }
+    LayerSpec layerSpec = m_layerSpec;
+    layerSpec.layerName = group.key;
+    auto layer = m_builder->makeLayer(std::span<const Element>{group.sensors},
+                                      layerSpec);
+    layer->setLayerType(m_layerType.value());
+    node->addChild(detail::finalizeLayer<BackendT>(
+        std::nullopt, std::move(layer), m_envelope, m_onLayer));
+  }
+
+  return node;
+}
+
+// SensorLayer
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>::SensorLayer(const Builder& builder)
+    : m_builder{&builder} {}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::setLayerType(
+    LayerType layerType) && {
+  m_layerType = layerType;
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::endcap() && {
+  return std::move(*this).setLayerType(LayerType::Disc);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::barrel() && {
+  return std::move(*this).setLayerType(LayerType::Cylinder);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::setSensors(
+    std::vector<Element> sensors) && {
+  m_sensors = std::move(sensors);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::setLayerName(
+    std::string name) && {
+  m_layerName = std::move(name);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::setEnvelope(
+    const Acts::ExtentEnvelope& envelope) && {
+  m_envelope = envelope;
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::onLayer(
+    typename SensorLayer<BackendT>::LayerCustomizer customizer) && {
+  m_onLayer = std::move(customizer);
+  return std::move(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::onLayer(
+    typename SensorLayer<BackendT>::ReplacingLayerCustomizer customizer) && {
   m_onLayer = [customizer = std::move(customizer)](
-                  const typename LayerAssembler<BackendT>::Element& elem,
+                  const std::optional<typename SensorLayer<BackendT>::Element>&
+                      elem,
                   std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
                       layer) mutable {
     customizer(elem, *layer);
@@ -128,74 +543,39 @@ LayerAssembler<BackendT>&& LayerAssembler<BackendT>::onLayer(
 }
 
 template <detail::BlueprintBackend BackendT>
-void LayerAssembler<BackendT>::addTo(
+void SensorLayer<BackendT>::addTo(
     Acts::Experimental::BlueprintNode& node) const&& {
   node.addChild(build());
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-LayerAssembler<BackendT>::build() const {
-  const auto& logger = m_builder->logger();
-
+std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+SensorLayer<BackendT>::build() const {
   if (!m_layerType.has_value()) {
-    throw std::runtime_error("Layer type not set in LayerAssembler");
+    throw std::runtime_error("Layer type not set in SensorLayer");
   }
 
   if constexpr (detail::HasAxisDefinition<BackendT>) {
     if (!m_layerSpec.axes.has_value()) {
-      throw std::runtime_error("Axes not set in LayerAssembler");
+      throw std::runtime_error("Axes not set in SensorLayer");
     }
   }
 
-  if (!m_filter.has_value()) {
-    throw std::runtime_error("Pattern not set in LayerAssembler");
+  if (!m_sensors.has_value()) {
+    throw std::runtime_error("Sensors not set in SensorLayer");
+  }
+  if (!m_layerName.has_value() || m_layerName->empty()) {
+    throw std::runtime_error(
+        "Layer name not set in SensorLayer. Call setLayerName().");
   }
 
-  if (!m_container.has_value()) {
-    throw std::runtime_error("Container not set in LayerAssembler");
-  }
-
-  Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
-                                    ? Acts::AxisDirection::AxisR
-                                    : Acts::AxisDirection::AxisZ;
-
-  const auto& container = m_container.value();
-  const std::string containerName{m_builder->backend().nameOf(container)};
-  auto node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          containerName, axisDir);
-
-  if (m_attachmentStrategy.has_value()) {
-    node->setAttachmentStrategy(m_attachmentStrategy.value());
-  }
-
-  const auto& layerElements =
-      m_builder->findDetElementByNamePattern(container, m_filter.value());
-
-  if (layerElements.empty()) {
-    ACTS_LOG(m_emptyOk ? Acts::Logging::INFO : Acts::Logging::ERROR,
-             "No layers found in container " << containerName
-                                             << " matching pattern");
-    if (!m_emptyOk) {
-      throw std::runtime_error(std::format(
-          "No layers found in container {} matching pattern", containerName));
-    }
-  }
-  for (const auto& element : layerElements) {
-    auto layer = m_builder->makeLayer(element, m_layerSpec);
-    if (m_envelope.has_value()) {
-      layer->setEnvelope(m_envelope.value());
-    }
-
-    if (m_onLayer) {
-      layer = m_onLayer(element, std::move(layer));
-    }
-
-    node->addChild(layer);
-  }
-
-  return node;
+  LayerSpec layerSpec = m_layerSpec;
+  layerSpec.layerName = m_layerName;
+  auto layer =
+      m_builder->makeLayer(std::span<const Element>{*m_sensors}, layerSpec);
+  layer->setLayerType(m_layerType.value());
+  return detail::finalizeLayer<BackendT>(std::nullopt, std::move(layer),
+                                        m_envelope, m_onLayer);
 }
 
 // BarrelEndcapAssembler
@@ -218,18 +598,19 @@ BarrelEndcapAssembler<BackendT>&& BarrelEndcapAssembler<BackendT>::setAssembly(
 
 template <detail::BlueprintBackend BackendT>
 BarrelEndcapAssembler<BackendT>&& BarrelEndcapAssembler<BackendT>::onLayer(
-    typename BarrelEndcapAssembler<BackendT>::LayerAssembler::LayerCustomizer
-        customizer) && {
+    typename BarrelEndcapAssembler<
+        BackendT>::ElementLayerAssembler::LayerCustomizer customizer) && {
   m_onLayer = std::move(customizer);
   return std::move(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
 BarrelEndcapAssembler<BackendT>&& BarrelEndcapAssembler<BackendT>::onLayer(
-    typename BarrelEndcapAssembler<
-        BackendT>::LayerAssembler::ReplacingLayerCustomizer customizer) && {
+    typename BarrelEndcapAssembler<BackendT>::ElementLayerAssembler::
+        ReplacingLayerCustomizer customizer) && {
   m_onLayer = [customizer = std::move(customizer)](
-                  const typename BarrelEndcapAssembler<BackendT>::Element& elem,
+                  const std::optional<
+                      typename BarrelEndcapAssembler<BackendT>::Element>& elem,
                   std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
                       layer) mutable {
     customizer(elem, *layer);
@@ -262,7 +643,7 @@ BarrelEndcapAssembler<BackendT>&& BarrelEndcapAssembler<BackendT>::onContainer(
 }
 
 template <detail::BlueprintBackend BackendT>
-BarrelEndcapAssembler<BackendT>&& BarrelEndcapAssembler<BackendT>::setAxes(
+BarrelEndcapAssembler<BackendT>&& BarrelEndcapAssembler<BackendT>::setSensorAxes(
     typename BarrelEndcapAssembler<BackendT>::AxisDefinition barrel,
     typename BarrelEndcapAssembler<BackendT>::AxisDefinition endcap) &&
   requires(detail::HasAxisDefinition<BackendT>)
@@ -316,7 +697,7 @@ BarrelEndcapAssembler<BackendT>::build() const {
   }
 
   const auto& assembly = m_assembly.value();
-  const std::string assemblyName{m_builder->backend().nameOf(assembly)};
+  const std::string assemblyName = m_builder->backend().nameOf(assembly);
 
   ACTS_INFO("Converting barrel-endcap assembly from element: " << assemblyName);
   auto barrels = m_builder->findBarrelElements(assembly);
@@ -342,7 +723,7 @@ BarrelEndcapAssembler<BackendT>::build() const {
   auto maybeAddAxes = [](const auto& axes) {
     return [&axes](auto&& assembler) {
       if constexpr (detail::HasAxisDefinition<BackendT>) {
-        return std::move(assembler).setAxes(axes.value());
+        return std::move(assembler).setSensorAxes(axes.value());
       } else {
         return std::move(assembler);
       }
@@ -361,7 +742,7 @@ BarrelEndcapAssembler<BackendT>::build() const {
 
     compose(m_builder->layers()
                 .barrel()
-                .setFilter(m_layerFilter.value())
+                .setLayerFilter(m_layerFilter.value())
                 .setContainer(barrel)
                 .onLayer(m_onLayer));
   }
@@ -373,7 +754,7 @@ BarrelEndcapAssembler<BackendT>::build() const {
 
     compose(m_builder->layers()
                 .endcap()
-                .setFilter(m_layerFilter.value())
+                .setLayerFilter(m_layerFilter.value())
                 .setContainer(endcap)
                 .onLayer(m_onLayer));
   }
@@ -393,16 +774,28 @@ BlueprintBuilder<BackendT>::BlueprintBuilder(
 
 template <detail::BlueprintBackend BackendT>
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-BlueprintBuilder<BackendT>::makeLayer(const Element& detElement,
+BlueprintBuilder<BackendT>::makeLayer(const Element& layerElement,
                                       const LayerSpec& layerSpec) const {
-  auto sensitives = resolveSensitives(detElement);
-  return makeLayer(detElement, sensitives, layerSpec);
+  auto sensitives = resolveSensitives(layerElement);
+  return makeLayer(layerElement, sensitives, layerSpec);
 }
 
 template <detail::BlueprintBackend BackendT>
-typename BlueprintBuilder<BackendT>::LayerAssembler
+typename BlueprintBuilder<BackendT>::ElementLayerAssembler
 BlueprintBuilder<BackendT>::layers() const {
-  return LayerAssembler(*this);
+  return ElementLayerAssembler(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+typename BlueprintBuilder<BackendT>::SensorLayerAssembler
+BlueprintBuilder<BackendT>::layersFromSensors() const {
+  return SensorLayerAssembler(*this);
+}
+
+template <detail::BlueprintBackend BackendT>
+typename BlueprintBuilder<BackendT>::SensorLayer
+BlueprintBuilder<BackendT>::layerFromSensors() const {
+  return SensorLayer(*this);
 }
 
 template <detail::BlueprintBackend BackendT>
@@ -451,7 +844,7 @@ template <detail::BlueprintBackend BackendT>
 std::string BlueprintBuilder<BackendT>::getPathToElementName(
     const Element& elem, const std::string& separator) const {
   std::vector<std::string> names;
-  names.emplace_back(std::string{m_backend.nameOf(elem)});
+  names.emplace_back(m_backend.nameOf(elem));
 
   const auto world = m_backend.world();
   auto current = elem;
@@ -460,7 +853,7 @@ std::string BlueprintBuilder<BackendT>::getPathToElementName(
     if (current == world) {
       break;
     }
-    names.emplace_back(std::string{m_backend.nameOf(current)});
+    names.emplace_back(m_backend.nameOf(current));
   }
 
   std::ranges::reverse(names);
@@ -481,7 +874,7 @@ BlueprintBuilder<BackendT>::findDetElementByNamePattern(
   std::vector<Element> matches;
 
   std::function<void(const Element&)> visit = [&](const Element& elem) {
-    const std::string elemName{m_backend.nameOf(elem)};
+    const std::string elemName = m_backend.nameOf(elem);
     if (std::regex_match(elemName, pattern)) {
       matches.push_back(elem);
     }
@@ -530,17 +923,40 @@ BlueprintBuilder<BackendT>::findEndcapElements(const Element& assembly) const {
 
 template <detail::BlueprintBackend BackendT>
 std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-BlueprintBuilder<BackendT>::makeLayer(
-    const Element& parent, std::span<const Element> sensitives,
-    const LayerSpec& layerSpec) const {
-  std::string fullLayerName = getPathToElementName(parent);
-  LayerSpec resolvedLayerSpec = layerSpec;
-  if (resolvedLayerSpec.layerName.has_value()) {
-    fullLayerName += "|" + *resolvedLayerSpec.layerName;
-  }
-  resolvedLayerSpec.layerName = fullLayerName;
+BlueprintBuilder<BackendT>::makeLayer(const Element& parent,
+                                      std::span<const Element> sensitives,
+                                      const LayerSpec& layerSpec) const {
+  const std::string nodeName =
+      layerSpec.layerName.value_or(m_backend.nameOf(parent));
+  auto node =
+      std::make_shared<Acts::Experimental::LayerBlueprintNode>(nodeName);
+  node->setSurfaces(m_backend.makeSurfaces(sensitives, layerSpec));
 
-  return m_backend.makeLayer(parent, sensitives, resolvedLayerSpec);
+  if constexpr (detail::HasLayerTransformLookup<BackendT>) {
+    if (const auto transform =
+            m_backend.lookupLayerTransform(parent, layerSpec);
+        transform.has_value()) {
+      node->setTransform(transform.value());
+    }
+  }
+
+  return node;
+}
+
+template <detail::BlueprintBackend BackendT>
+std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+BlueprintBuilder<BackendT>::makeLayer(std::span<const Element> sensitives,
+                                      const LayerSpec& layerSpec) const {
+  if (!layerSpec.layerName.has_value() || layerSpec.layerName->empty()) {
+    throw std::runtime_error(
+        "BlueprintBuilder::makeLayer(sensitives, layerSpec): "
+        "layerSpec.layerName must be set");
+  }
+
+  auto node = std::make_shared<Acts::Experimental::LayerBlueprintNode>(
+      layerSpec.layerName.value());
+  node->setSurfaces(m_backend.makeSurfaces(sensitives, layerSpec));
+  return node;
 }
 
 template <detail::BlueprintBackend BackendT>

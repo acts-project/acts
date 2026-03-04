@@ -72,7 +72,7 @@ DD4hepBackend::Element DD4hepBackend::world() const {
   return m_cfg.dd4hepDetector->world();
 }
 
-std::string_view DD4hepBackend::nameOf(const Element& element) const {
+std::string DD4hepBackend::nameOf(const Element& element) const {
   return element.name();
 }
 
@@ -107,23 +107,14 @@ bool DD4hepBackend::isTracker(const Element& element) const {
   return dd4hep::DetType{element.typeFlag()}.is(dd4hep::DetType::TRACKER);
 }
 
-std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-DD4hepBackend::makeLayer(const dd4hep::DetElement& parent,
-                         std::span<const dd4hep::DetElement> sensitives,
-                         const LayerSpec& layerSpec) const {
-  ACTS_DEBUG("Adding layer from element: " << parent.name());
-
+std::vector<std::shared_ptr<Acts::Surface>> DD4hepBackend::makeSurfaces(
+    std::span<const dd4hep::DetElement> sensitives,
+    const LayerSpec& layerSpec) const {
   if (!layerSpec.axes.has_value()) {
-    throw std::runtime_error("DD4hepBackend::makeLayer: axes not set");
+    throw std::runtime_error("DD4hepBackend::makeSurfaces: axes not set");
   }
 
-  const auto nodeName =
-      layerSpec.layerName.value_or(std::string{nameOf(parent)});
-  auto node =
-      std::make_shared<Acts::Experimental::LayerBlueprintNode>(nodeName);
-
   ACTS_DEBUG("Using " << sensitives.size() << " sensitive elements.");
-  ACTS_DEBUG("Adding layer with name: " << node->name());
 
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   surfaces.reserve(sensitives.size());
@@ -133,21 +124,24 @@ DD4hepBackend::makeLayer(const dd4hep::DetElement& parent,
     surfaces.push_back(elem->surface().getSharedPtr());
   }
 
-  node->setSurfaces(std::move(surfaces));
+  return surfaces;
+}
 
+std::optional<Acts::Transform3> DD4hepBackend::lookupLayerTransform(
+    const dd4hep::DetElement& element, const LayerSpec& layerSpec) const {
   if (layerSpec.layerAxes.has_value()) {
     ACTS_DEBUG("Finding layer transform automatically using layer axes: "
                << layerSpec.layerAxes.value());
     Acts::Transform3 layerTransform = TGeoSurfaceConverter::transformFromShape(
-        *parent.placement().ptr()->GetVolume()->GetShape(),
-        parent.nominal().worldTransformation(), layerSpec.layerAxes.value(),
+        *element.placement().ptr()->GetVolume()->GetShape(),
+        element.nominal().worldTransformation(), layerSpec.layerAxes.value(),
         m_cfg.lengthScale);
 
     ACTS_VERBOSE(" -> Layer transform:\n" << layerTransform.matrix());
-    node->setTransform(layerTransform);
+    return layerTransform;
   }
 
-  return node;
+  return std::nullopt;
 }
 
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
@@ -209,6 +203,8 @@ DD4hepBackend::makeBeampipe() const {
 // Must be in ::Acts::Experimental (at global scope) to match the template defs.
 namespace Acts::Experimental {
 template class BlueprintBuilder<ActsPlugins::DD4hep::DD4hepBackend>;
-template class LayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+template class ElementLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+template class SensorLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+template class SensorLayer<ActsPlugins::DD4hep::DD4hepBackend>;
 template class BarrelEndcapAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
 }  // namespace Acts::Experimental

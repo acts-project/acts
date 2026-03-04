@@ -19,7 +19,6 @@
 #include <optional>
 #include <span>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace dd4hep {
@@ -62,14 +61,16 @@ class DD4hepBackend {
   DetectorElementPtr createDetectorElement(const Element& detElement,
                                            AxisDefinition axes) const;
 
-  std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
-      const Element& parent, std::span<const Element> sensitives,
-      const LayerSpec& layerSpec) const;
+  std::vector<std::shared_ptr<Acts::Surface>> makeSurfaces(
+      std::span<const Element> sensitives, const LayerSpec& layerSpec) const;
+
+  std::optional<Acts::Transform3> lookupLayerTransform(
+      const Element& element, const LayerSpec& layerSpec) const;
 
   std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeBeampipe() const;
 
   Element world() const;
-  std::string_view nameOf(const Element& element) const;
+  std::string nameOf(const Element& element) const;
   std::vector<Element> children(const Element& parent) const;
   Element parent(const Element& element) const;
 
@@ -86,7 +87,11 @@ class DD4hepBackend {
 };
 
 using BlueprintBuilder = Acts::Experimental::BlueprintBuilder<DD4hepBackend>;
-using LayerAssembler = Acts::Experimental::LayerAssembler<DD4hepBackend>;
+using ElementLayerAssembler =
+    Acts::Experimental::ElementLayerAssembler<DD4hepBackend>;
+using SensorLayerAssembler =
+    Acts::Experimental::SensorLayerAssembler<DD4hepBackend>;
+using SensorLayer = Acts::Experimental::SensorLayer<DD4hepBackend>;
 using BarrelEndcapAssembler =
     Acts::Experimental::BarrelEndcapAssembler<DD4hepBackend>;
 
@@ -97,6 +102,10 @@ using BarrelEndcapAssembler =
 // Placed at global scope so we open ::Acts::Experimental, not a nested Acts.
 namespace Acts::Experimental {
 extern template class BlueprintBuilder<ActsPlugins::DD4hep::DD4hepBackend>;
-extern template class LayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
-extern template class BarrelEndcapAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+extern template class ElementLayerAssembler<
+    ActsPlugins::DD4hep::DD4hepBackend>;
+extern template class SensorLayerAssembler<ActsPlugins::DD4hep::DD4hepBackend>;
+extern template class SensorLayer<ActsPlugins::DD4hep::DD4hepBackend>;
+extern template class BarrelEndcapAssembler<
+    ActsPlugins::DD4hep::DD4hepBackend>;
 }  // namespace Acts::Experimental

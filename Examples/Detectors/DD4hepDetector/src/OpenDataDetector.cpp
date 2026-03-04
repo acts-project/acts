@@ -25,6 +25,7 @@
 
 #include <format>
 #include <memory>
+#include <optional>
 #include <regex>
 #include <string>
 #include <utility>
@@ -63,10 +64,16 @@ OpenDataDetector::defaultDetectorElementFactory(
 }
 
 void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
-  if (m_cfg.useDirectLayerAssembler) {
-    constructDirectLayer(gctx);
-  } else {
-    constructBarrelEndcap(gctx);
+  switch (m_cfg.constructionMethod) {
+    case Config::ConstructionMethod::BarrelEndcap:
+      constructBarrelEndcap(gctx);
+      break;
+    case Config::ConstructionMethod::DirectLayer:
+      constructDirectLayer(gctx);
+      break;
+    case Config::ConstructionMethod::DirectLayerGrouped:
+      constructDirectLayerGrouped(gctx);
+      break;
   }
 }
 
@@ -102,23 +109,36 @@ void OpenDataDetector::constructBarrelEndcap(
 
   auto makeLayerCustomizer = [&](std::string det, std::regex layerFilter) {
     return [&, det = std::move(det), layerFilter = std::move(layerFilter)](
-               const dd4hep::DetElement& elem,
+               const std::optional<dd4hep::DetElement>& elem,
                Acts::Experimental::LayerBlueprintNode& layer) {
       layer.setEnvelope(m_cfg.layerEnvelope);
 
       int layerIdx = 0;
       std::cmatch match;
-      const std::string elemName{builder.backend().nameOf(elem)};
+      const std::string elemName =
+          elem.has_value() ? std::string{builder.backend().nameOf(*elem)}
+                           : layer.name();
       if (std::regex_search(elemName.c_str(), match, layerFilter) &&
           match.size() > 1) {
         layerIdx = std::stoi(match[1].str());
+      } else {
+        static const std::regex groupedLayerNameFilter{"layer(\\d+)"};
+        if (std::regex_search(elemName.c_str(), match, groupedLayerNameFilter) &&
+            match.size() > 1) {
+          layerIdx = std::stoi(match[1].str());
+        }
       }
 
       using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
       using enum SrfArrayNavPol::LayerType;
 
       SrfArrayNavPol::Config navCfg;
-      if (builder.backend().isBarrel(elem)) {
+      const bool isBarrelLayer =
+          elem.has_value()
+              ? builder.backend().isBarrel(*elem)
+              : layer.layerType() ==
+                    Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
+      if (isBarrelLayer) {
         navCfg.layerType = Cylinder;
         navCfg.bins = {constant("{}_b{}_sf_b_phi", det, layerIdx),
                        constant("{}_b_sf_b_z", det)};
@@ -146,7 +166,7 @@ void OpenDataDetector::constructBarrelEndcap(
 
     builder.barrelEndcap()
         .setAssembly(*assemblyElement)
-        .setAxes("XYZ", "XZY")
+        .setSensorAxes("XYZ", "XZY")
         .setLayerFilter(layerFilter)
         .onLayer(makeLayerCustomizer(std::move(det), layerFilter))
         .onContainer(
@@ -167,6 +187,16 @@ void OpenDataDetector::constructBarrelEndcap(
 }
 
 void OpenDataDetector::constructDirectLayer(const Acts::GeometryContext& gctx) {
+  constructDirectLayerImpl(gctx, false);
+}
+
+void OpenDataDetector::constructDirectLayerGrouped(
+    const Acts::GeometryContext& gctx) {
+  constructDirectLayerImpl(gctx, true);
+}
+
+void OpenDataDetector::constructDirectLayerImpl(
+    const Acts::GeometryContext& gctx, bool useGrouping) {
   using namespace Acts::Experimental;
   using namespace Acts;
   using namespace Acts::UnitLiterals;
@@ -197,23 +227,36 @@ void OpenDataDetector::constructDirectLayer(const Acts::GeometryContext& gctx) {
 
   auto makeLayerCustomizer = [&](std::string det, std::regex layerFilter) {
     return [&, det = std::move(det), layerFilter = std::move(layerFilter)](
-               const dd4hep::DetElement& elem,
+               const std::optional<dd4hep::DetElement>& elem,
                Acts::Experimental::LayerBlueprintNode& layer) {
       layer.setEnvelope(m_cfg.layerEnvelope);
 
       int layerIdx = 0;
       std::cmatch match;
-      const std::string elemName{builder.backend().nameOf(elem)};
+      const std::string elemName =
+          elem.has_value() ? std::string{builder.backend().nameOf(*elem)}
+                           : layer.name();
       if (std::regex_search(elemName.c_str(), match, layerFilter) &&
           match.size() > 1) {
         layerIdx = std::stoi(match[1].str());
+      } else {
+        static const std::regex groupedLayerNameFilter{"layer(\\d+)"};
+        if (std::regex_search(elemName.c_str(), match, groupedLayerNameFilter) &&
+            match.size() > 1) {
+          layerIdx = std::stoi(match[1].str());
+        }
       }
 
       using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
       using enum SrfArrayNavPol::LayerType;
 
       SrfArrayNavPol::Config navCfg;
-      if (builder.backend().isBarrel(elem)) {
+      const bool isBarrelLayer =
+          elem.has_value()
+              ? builder.backend().isBarrel(*elem)
+              : layer.layerType() ==
+                    Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
+      if (isBarrelLayer) {
         navCfg.layerType = Cylinder;
         navCfg.bins = {constant("{}_b{}_sf_b_phi", det, layerIdx),
                        constant("{}_b_sf_b_z", det)};
@@ -249,14 +292,46 @@ void OpenDataDetector::constructDirectLayer(const Acts::GeometryContext& gctx) {
 
     auto layerCustomizer = makeLayerCustomizer(std::move(det), layerFilter);
 
+    // Walks the parent chain of a sensor element and returns the name of the
+    // first ancestor whose name matches layerFilter, formatted as "layerN".
+    // Falls back to the element's own name if no matching ancestor is found.
+    auto sensorToLayerKey = [&](const dd4hep::DetElement& elem) -> std::string {
+      auto current = elem;
+      const auto world = builder.backend().world();
+      while (!(current == world)) {
+        std::cmatch match;
+        const std::string name{builder.backend().nameOf(current)};
+        if (std::regex_search(name.c_str(), match, layerFilter) &&
+            match.size() > 1) {
+          return std::format("layer{}", match[1].str());
+        }
+        current = builder.backend().parent(current);
+      }
+      return std::string{builder.backend().nameOf(elem)};
+    };
+
     for (const auto& barrel : barrels) {
-      auto barrelNode = builder.layers()
-                            .barrel()
-                            .setAxes("XYZ")
-                            .setFilter(layerFilter)
-                            .setContainer(barrel)
-                            .onLayer(layerCustomizer)
-                            .build();
+      std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+          barrelNode;
+      if (useGrouping) {
+        auto sensors = builder.resolveSensitives(barrel);
+        barrelNode = builder.layersFromSensors()
+                         .barrel()
+                         .setSensorAxes("XYZ")
+                         .setSensors(std::move(sensors))
+                         .setContainerName(builder.backend().nameOf(barrel))
+                         .groupBy(sensorToLayerKey)
+                         .onLayer(layerCustomizer)
+                         .build();
+      } else {
+        barrelNode = builder.layers()
+                         .barrel()
+                         .setSensorAxes("XYZ")
+                         .setLayerFilter(layerFilter)
+                         .setContainer(barrel)
+                         .onLayer(layerCustomizer)
+                         .build();
+      }
       barrelNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
       barrelNode->setResizeStrategies(VolumeResizeStrategy::Gap,
                                       VolumeResizeStrategy::Gap);
@@ -264,13 +339,27 @@ void OpenDataDetector::constructDirectLayer(const Acts::GeometryContext& gctx) {
     }
 
     for (const auto& endcap : endcaps) {
-      auto endcapNode = builder.layers()
-                            .endcap()
-                            .setAxes("XZY")
-                            .setFilter(layerFilter)
-                            .setContainer(endcap)
-                            .onLayer(layerCustomizer)
-                            .build();
+      std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+          endcapNode;
+      if (useGrouping) {
+        auto sensors = builder.resolveSensitives(endcap);
+        endcapNode = builder.layersFromSensors()
+                         .endcap()
+                         .setSensorAxes("XZY")
+                         .setSensors(std::move(sensors))
+                         .setContainerName(builder.backend().nameOf(endcap))
+                         .groupBy(sensorToLayerKey)
+                         .onLayer(layerCustomizer)
+                         .build();
+      } else {
+        endcapNode = builder.layers()
+                         .endcap()
+                         .setSensorAxes("XZY")
+                         .setLayerFilter(layerFilter)
+                         .setContainer(endcap)
+                         .onLayer(layerCustomizer)
+                         .build();
+      }
       endcapNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
       endcapNode->setResizeStrategies(VolumeResizeStrategy::Gap,
                                       VolumeResizeStrategy::Gap);
