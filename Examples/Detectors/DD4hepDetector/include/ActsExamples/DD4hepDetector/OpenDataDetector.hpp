@@ -77,10 +77,6 @@ class OpenDataDetector final : public DD4hepDetectorBase {
   /// parent chain to find the enclosing layer element.
   void constructDirectLayerGrouped(const Acts::GeometryContext& gctx);
 
-  /// Shared implementation for direct layer construction variants.
-  void constructDirectLayerImpl(const Acts::GeometryContext& gctx,
-                                bool useGrouping);
-
   Config m_cfg;
 };
 
