@@ -14,6 +14,7 @@
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoAxes.hpp"
 
+#include <format>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -21,9 +22,10 @@
 #include <string>
 #include <vector>
 
+#include <DD4hep/Detector.h>
+
 namespace dd4hep {
 class DetElement;
-class Detector;
 }  // namespace dd4hep
 
 namespace ActsPlugins::DD4hep {
@@ -78,6 +80,14 @@ class DD4hepBackend {
   bool isBarrel(const Element& element) const;
   bool isEndcap(const Element& element) const;
   bool isTracker(const Element& element) const;
+
+  /// Retrieves a named integer constant from the DD4hep detector description.
+  /// The name is constructed by formatting @p fmt with @p args.
+  template <typename... Args>
+  int constant(std::format_string<Args...> fmt, Args&&... args) const {
+    return m_cfg.dd4hepDetector->constant<int>(
+        std::format(fmt, std::forward<Args>(args)...));
+  }
 
   const Acts::Logger& logger() const { return *m_logger; }
 
