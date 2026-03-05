@@ -20,9 +20,9 @@
 using namespace Acts;
 
 #if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
-#define CHECK_ANY_ALLOCATIONS()                 \
-  do {                                          \
-    _AnyAllocationReporter::checkAllocations(); \
+#define CHECK_ANY_ALLOCATIONS()                         \
+  do {                                                  \
+    detail::_AnyAllocationReporter::checkAllocations(); \
   } while (0)
 #else
 #define CHECK_ANY_ALLOCATIONS() \
