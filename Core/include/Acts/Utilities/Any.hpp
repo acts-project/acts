@@ -82,7 +82,7 @@ static std::set<std::pair<std::type_index, void*>> _s_any_allocations;
   } while (0)
 
 // Do not make member functions noexcept in the debug case
-#define _ACTS_ANY_NOEXCEPT /*nothing*/
+static constexpr bool kAnyNoexcept = false;
 
 struct _AnyAllocationReporter {
   static void checkAllocations() {
@@ -107,7 +107,7 @@ static _AnyAllocationReporter s_reporter;
 #define _ACTS_ANY_TRACK_DEALLOCATION(T, heap) \
   do {                                        \
   } while (0)
-#define _ACTS_ANY_NOEXCEPT noexcept
+static constexpr bool kAnyNoexcept = true;
 #endif
 
 /// @addtogroup utilities
@@ -146,7 +146,7 @@ class AnyBaseAll {};
 ///   copies when trivial.
 /// - Heap storage: values are allocated on the heap; moves transfer ownership
 ///   of the pointer; copies allocate and copy-construct the pointee.
-template <std::size_t SIZE, bool Copyable = true>
+template <std::size_t sb_size, bool copyable = true>
 class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= sb_size, "Size is too small for a pointer");
 
@@ -191,7 +191,7 @@ class AnyBase : public AnyBaseAll {
   /// @tparam T Type of the value to store
   /// @param value Value to store in the Any
   template <typename T>
-  explicit AnyBase(T&& value) _ACTS_ANY_NOEXCEPT
+  explicit AnyBase(T&& value) noexcept(kAnyNoexcept)
     requires(isStorable<std::decay_t<T>>())
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
@@ -294,8 +294,8 @@ class AnyBase : public AnyBaseAll {
 
   /// Copy constructor (only when copyable is true)
   /// @param other The AnyBase to copy from
-  AnyBase(const AnyBase& other) _ACTS_ANY_NOEXCEPT
-    requires Copyable
+  AnyBase(const AnyBase& other) noexcept(kAnyNoexcept)
+    requires copyable
   {
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
@@ -317,8 +317,8 @@ class AnyBase : public AnyBaseAll {
   /// Copy assignment operator (only when copyable is true)
   /// @param other The AnyBase to copy from
   /// @return Reference to this object
-  AnyBase& operator=(const AnyBase& other) _ACTS_ANY_NOEXCEPT
-    requires Copyable
+  AnyBase& operator=(const AnyBase& other) noexcept(kAnyNoexcept)
+    requires copyable
   {
     _ACTS_ANY_VERBOSE("Copy assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
@@ -350,7 +350,7 @@ class AnyBase : public AnyBaseAll {
 
   /// Move constructor
   /// @param other The AnyBase to move from
-  AnyBase(AnyBase&& other) _ACTS_ANY_NOEXCEPT {
+  AnyBase(AnyBase&& other) noexcept(kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move construct (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -365,7 +365,7 @@ class AnyBase : public AnyBaseAll {
   /// Move assignment operator
   /// @param other The AnyBase to move from
   /// @return Reference to this object
-  AnyBase& operator=(AnyBase&& other) _ACTS_ANY_NOEXCEPT {
+  AnyBase& operator=(AnyBase&& other) noexcept(kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
