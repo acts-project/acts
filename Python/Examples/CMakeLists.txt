@@ -97,6 +97,7 @@ target_sources(
         src/TrackFinding.cpp
         src/TrackFitting.cpp
         src/TruthTracking.cpp
+        src/HelloWorld.cpp
         src/Vertexing.cpp
         src/Input.cpp
         src/Output.cpp
@@ -141,6 +142,7 @@ target_link_libraries(
         Acts::ExamplesTrackFinding
         Acts::ExamplesTrackFitting
         Acts::ExamplesTruthTracking
+        Acts::ExamplesHelloWorld
         Acts::ExamplesVertexing
         Acts::ExamplesPrinters
         Acts::PythonUtilities

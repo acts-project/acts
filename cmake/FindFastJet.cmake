@@ -33,14 +33,16 @@ find_package_handle_standard_args(
     VERSION_VAR FastJet_VERSION
 )
 
-add_library(FastJet SHARED IMPORTED)
-add_library(FastJet::FastJet ALIAS FastJet)
+if(NOT TARGET FastJet::FastJet)
+    add_library(FastJet SHARED IMPORTED)
+    add_library(FastJet::FastJet ALIAS FastJet)
 
-set_property(TARGET FastJet PROPERTY IMPORTED_LOCATION ${FastJet_LIBRARY})
-set_property(
-    TARGET FastJet
-    PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${FastJet_INCLUDE_DIR}
-)
+    set_property(TARGET FastJet PROPERTY IMPORTED_LOCATION ${FastJet_LIBRARY})
+    set_property(
+        TARGET FastJet
+        PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${FastJet_INCLUDE_DIR}
+    )
+endif()
 
 mark_as_advanced(FastJet_FOUND FastJet_INCLUDE_DIR FastJet_LIBRARY)
 
