@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -187,6 +188,8 @@ std::string getSurfaceBoundsKind() {
     return "Line";
   } else if (std::is_same_v<bounds_t, SurfaceBounds>) {
     return "DefaultBounds";
+  } else if (std::is_same_v<bounds_t, InfiniteBounds>) {
+    return "Infinite";
   } else {
     throw std::invalid_argument("Unknown surface bounds kind");
   }
@@ -204,6 +207,8 @@ std::string getSurfaceKind() {
     return "Cone";
   } else if (std::is_same_v<surface_t, StrawSurface>) {
     return "Straw";
+  } else if (std::is_same_v<surface_t, PerigeeSurface>) {
+    return "Perigee";
   } else {
     throw std::invalid_argument("Unknown surface kind");
   }
@@ -237,35 +242,13 @@ nlohmann::json surfaceToJsonT(const surface_t& surface,
 }
 
 template <typename surface_t, typename bounds_t>
-std::shared_ptr<surface_t> surfaceFromJsonT(const nlohmann::json& j) {
+std::shared_ptr<Surface> surfaceFromJsonT(const nlohmann::json& j) {
   nlohmann::json jTransform = j["transform"];
   Acts::Transform3 sTransform =
       Acts::Transform3JsonConverter::fromJson(jTransform);
   nlohmann::json jBounds = j["bounds"];
   auto sBounds = SurfaceBoundsJsonConverter::fromJson<bounds_t>(jBounds);
-
-  auto mutableSf =
-      Surface::makeShared<surface_t>(sTransform, std::move(sBounds));
-
-  // throw_assert(mutableSf, "Could not create surface from json");
-
-  if (j.find("geo_id") != j.end() && !j["geo_id"].empty()) {
-    GeometryIdentifier geoID = j["geo_id"].get<GeometryIdentifier>();
-    mutableSf->assignGeometryId(geoID);
-  } else {
-    mutableSf->assignGeometryId(GeometryIdentifier(0));
-  }
-  mutableSf->assignIsSensitive(j["sensitive"].get<bool>());
-
-  // Add material
-  if (j.find("material") != j.end() && !j["material"].empty()) {
-    const ISurfaceMaterial* surfaceMaterial = nullptr;
-    from_json(j, surfaceMaterial);
-    std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
-        surfaceMaterial);
-    mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
-  }
-  return mutableSf;
+  return Surface::makeShared<surface_t>(sTransform, std::move(sBounds));
 }
 
 /// @}

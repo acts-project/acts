@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -69,6 +70,7 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<CylinderSurface>);
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<ConeSurface>);
   cfg.surfaceEncoder.registerFunction(surfaceToJsonT<StrawSurface>);
+  cfg.surfaceEncoder.registerFunction(surfaceToJsonT<PerigeeSurface>);
 
   cfg.surfaceBoundsEncoder.registerFunction(
       surfaceBoundsToJsonT<EllipseBounds>);
@@ -85,6 +87,8 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
       surfaceBoundsToJsonT<CylinderBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<ConeBounds>);
   cfg.surfaceBoundsEncoder.registerFunction(surfaceBoundsToJsonT<LineBounds>);
+  cfg.surfaceBoundsEncoder.registerFunction(
+      surfaceBoundsToJsonT<InfiniteBounds>);
 
   // Decoders
   cfg.surfaceDecoder.registerKind(
@@ -127,7 +131,30 @@ Acts::SurfaceJsonConverter::Config Acts::SurfaceJsonConverter::m_cfg =
 
 std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
     const nlohmann::json& j) {
-  return m_cfg.surfaceDecoder(j);
+  std::shared_ptr<Acts::Surface> mutableSf = nullptr;
+  if (j["type"].get<Surface::SurfaceType>() == Surface::SurfaceType::Perigee) {
+    mutableSf = Surface::makeShared<PerigeeSurface>(
+        Transform3JsonConverter::fromJson(j["transform"]));
+  } else {
+    mutableSf = m_cfg.surfaceDecoder(j);
+  }
+
+  if (j.find("geo_id") != j.end() && !j["geo_id"].empty()) {
+    GeometryIdentifier geoID = j["geo_id"].get<GeometryIdentifier>();
+    mutableSf->assignGeometryId(geoID);
+  } else {
+    mutableSf->assignGeometryId(GeometryIdentifier(0));
+  }
+  mutableSf->assignIsSensitive(j["sensitive"].get<bool>());
+
+  if (j.find("material") != j.end() && !j["material"].empty()) {
+    const ISurfaceMaterial* surfaceMaterial = nullptr;
+    from_json(j, surfaceMaterial);
+    std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
+        surfaceMaterial);
+    mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
+  }
+  return mutableSf;
 }
 
 nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
