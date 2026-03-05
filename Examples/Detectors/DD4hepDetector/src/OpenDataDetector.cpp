@@ -31,7 +31,6 @@
 #include <utility>
 
 #include <DD4hep/DetElement.h>
-#include <DD4hep/Detector.h>
 
 namespace {
 
@@ -46,9 +45,8 @@ const std::regex kLongStripLayerFilter{
 /// The callback is invoked once per layer during blueprint construction.
 auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
                          const Acts::ExtentEnvelope& layerEnvelope,
-                         auto constant, std::string det,
-                         std::regex layerFilter) {
-  return [&builder, layerEnvelope, constant, det = std::move(det),
+                         std::string det, std::regex layerFilter) {
+  return [&builder, layerEnvelope, det = std::move(det),
           layerFilter = std::move(layerFilter)](
              const std::optional<dd4hep::DetElement>& elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
@@ -73,20 +71,21 @@ auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     using enum SrfArrayNavPol::LayerType;
 
+    const auto& backend = builder.backend();
     SrfArrayNavPol::Config navCfg;
     const bool isBarrelLayer =
         elem.has_value()
-            ? builder.backend().isBarrel(*elem)
+            ? backend.isBarrel(*elem)
             : layer.layerType() ==
                   Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
     if (isBarrelLayer) {
       navCfg.layerType = Cylinder;
-      navCfg.bins = {constant("{}_b{}_sf_b_phi", det, layerIdx),
-                     constant("{}_b_sf_b_z", det)};
+      navCfg.bins = {backend.constant("{}_b{}_sf_b_phi", det, layerIdx),
+                     backend.constant("{}_b_sf_b_z", det)};
     } else {
       navCfg.layerType = Disc;
-      navCfg.bins = {constant("{}_e_sf_b_r", det),
-                     constant("{}_e_sf_b_phi", det)};
+      navCfg.bins = {backend.constant("{}_e_sf_b_r", det),
+                     backend.constant("{}_e_sf_b_phi", det)};
     }
 
     layer.setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
@@ -156,12 +155,6 @@ void OpenDataDetector::constructBarrelEndcap(
 
   outer.addChild(builder.backend().makeBeampipe());
 
-  auto constant = [this]<typename... Args>(std::format_string<Args...> fmt,
-                                           Args&&... values) -> int {
-    return dd4hepDetector().constant<int>(
-        std::format(fmt, std::forward<Args>(values)...));
-  };
-
   auto addSubsystem = [&](std::string assembly, std::string det,
                           const std::regex& layerFilter) {
     const auto assemblyElement = builder.findDetElementByName(assembly);
@@ -174,7 +167,7 @@ void OpenDataDetector::constructBarrelEndcap(
         .setAssembly(*assemblyElement)
         .setSensorAxes("XYZ", "XZY")
         .setLayerFilter(layerFilter)
-        .onLayer(makeLayerCustomizer(builder, m_cfg.layerEnvelope, constant,
+        .onLayer(makeLayerCustomizer(builder, m_cfg.layerEnvelope,
                                      std::move(det), layerFilter))
         .onContainer(
             [](const auto&,
@@ -216,12 +209,6 @@ void OpenDataDetector::constructDirectLayer(const Acts::GeometryContext& gctx) {
 
   outer.addChild(builder.backend().makeBeampipe());
 
-  auto constant = [this]<typename... Args>(std::format_string<Args...> fmt,
-                                           Args&&... values) -> int {
-    return dd4hepDetector().constant<int>(
-        std::format(fmt, std::forward<Args>(values)...));
-  };
-
   auto addSubsystem = [&](std::string assembly, std::string det,
                           const std::regex& layerFilter) {
     const auto assemblyElement = builder.findDetElementByName(assembly);
@@ -239,7 +226,7 @@ void OpenDataDetector::constructDirectLayer(const Acts::GeometryContext& gctx) {
             assemblyName, Acts::AxisDirection::AxisZ);
 
     auto layerCustomizer = makeLayerCustomizer(
-        builder, m_cfg.layerEnvelope, constant, std::move(det), layerFilter);
+        builder, m_cfg.layerEnvelope, std::move(det), layerFilter);
 
     for (const auto& barrel : barrels) {
       auto barrelNode = builder.layers()
@@ -303,12 +290,6 @@ void OpenDataDetector::constructDirectLayerGrouped(
 
   outer.addChild(builder.backend().makeBeampipe());
 
-  auto constant = [this]<typename... Args>(std::format_string<Args...> fmt,
-                                           Args&&... values) -> int {
-    return dd4hepDetector().constant<int>(
-        std::format(fmt, std::forward<Args>(values)...));
-  };
-
   auto addSubsystem = [&](std::string assembly, std::string det,
                           const std::regex& layerFilter) {
     const auto assemblyElement = builder.findDetElementByName(assembly);
@@ -326,7 +307,7 @@ void OpenDataDetector::constructDirectLayerGrouped(
             assemblyName, Acts::AxisDirection::AxisZ);
 
     auto layerCustomizer = makeLayerCustomizer(
-        builder, m_cfg.layerEnvelope, constant, std::move(det), layerFilter);
+        builder, m_cfg.layerEnvelope, std::move(det), layerFilter);
 
     // Walks the parent chain of a sensor element and returns the name of the
     // first ancestor whose name matches layerFilter, formatted as "layerN".
