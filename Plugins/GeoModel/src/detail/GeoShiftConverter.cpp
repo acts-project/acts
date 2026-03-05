@@ -27,7 +27,7 @@ namespace ActsPlugins::detail {
 namespace {
 
 template <typename ContainedShape, typename Converter>
-Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
+Result<GeoModelSensitiveSurface> impl(const PVConstLink& geoPV,
                                       const GeoShapeShift& geoShift,
                                       const Transform3& absTransform,
                                       SurfaceBoundFactory& boundFactory,

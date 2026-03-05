@@ -116,6 +116,7 @@ class SurfaceArray {
   /// @tparam Axes The axes used for the grid
   template <class Axis1, class Axis2>
   struct SurfaceGridLookup : ISurfaceGridLookup {
+    /// Grid type storing surface vectors with two axes
     using Grid_t = Grid<SurfaceVector, Axis1, Axis2>;
 
     /// Construct a surface grid lookup

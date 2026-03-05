@@ -9,12 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
-#include <type_traits>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -24,6 +22,8 @@ static auto eps = std::numeric_limits<double>::epsilon();
 namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 BOOST_AUTO_TEST_CASE(Neutral) {
   auto p = NeutralParticleHypothesis::pion0();
@@ -71,6 +71,8 @@ BOOST_AUTO_TEST_CASE(NonNeutralChargeMultiple) {
   CHECK_CLOSE_REL(p.extractMomentum(3_e / 128_MeV), 128_MeV, eps);
   CHECK_CLOSE_REL(p.extractMomentum(-3_e / 128_MeV), 128_MeV, eps);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 BOOST_AUTO_TEST_CASE(AnyChargeNeutral) {
   auto p = ParticleHypothesis::pion0();

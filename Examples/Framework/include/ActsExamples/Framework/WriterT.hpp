@@ -8,10 +8,9 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include <Acts/Utilities/Logger.hpp>
 
 #include <limits>
 #include <memory>
@@ -76,12 +75,9 @@ class WriterT : public IWriter {
   ReadDataHandle<write_data_t> m_inputHandle{this, "InputHandle"};
 };
 
-}  // namespace ActsExamples
-
 template <typename write_data_t>
-ActsExamples::WriterT<write_data_t>::WriterT(std::string objectName,
-                                             std::string writerName,
-                                             Acts::Logging::Level level)
+WriterT<write_data_t>::WriterT(std::string objectName, std::string writerName,
+                               Acts::Logging::Level level)
     : m_objectName(std::move(objectName)),
       m_writerName(std::move(writerName)),
       m_logger(Acts::getDefaultLogger(m_writerName, level)) {
@@ -95,18 +91,19 @@ ActsExamples::WriterT<write_data_t>::WriterT(std::string objectName,
 }
 
 template <typename write_data_t>
-inline std::string ActsExamples::WriterT<write_data_t>::name() const {
+inline std::string WriterT<write_data_t>::name() const {
   return m_writerName;
 }
 
 template <typename write_data_t>
-inline ActsExamples::ProcessCode
-ActsExamples::WriterT<write_data_t>::finalize() {
+inline ProcessCode WriterT<write_data_t>::finalize() {
   return ProcessCode::SUCCESS;
 }
 
 template <typename write_data_t>
-inline ActsExamples::ProcessCode ActsExamples::WriterT<write_data_t>::write(
+inline ProcessCode WriterT<write_data_t>::write(
     const AlgorithmContext& context) {
   return writeT(context, m_inputHandle(context));
 }
+
+}  // namespace ActsExamples

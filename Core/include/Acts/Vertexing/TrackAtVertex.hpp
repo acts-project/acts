@@ -18,28 +18,48 @@
 
 namespace Acts {
 
+/// Type-erased wrapper around an input track pointer.
 struct InputTrack {
+  /// Construct from input track pointer
+  /// @param inputTrack Pointer to the input track
   template <typename input_track_t>
   explicit InputTrack(const input_track_t* inputTrack)
       : m_type{typeid(inputTrack)}, m_ptr{inputTrack} {}
 
   InputTrack() = delete;
+  /// Copy constructor
   InputTrack(const InputTrack&) = default;
+  /// Move constructor
   InputTrack(InputTrack&&) = default;
+  /// Copy assignment
+  /// @return Reference to this object
   InputTrack& operator=(const InputTrack&) = default;
+  /// Move assignment
+  /// @return Reference to this object
   InputTrack& operator=(InputTrack&&) = default;
 
+  /// Equality comparison with another InputTrack
+  /// @param other The other InputTrack to compare with
+  /// @return True if equal
   bool operator==(const InputTrack& other) const {
     return m_ptr == other.m_ptr;
   }
 
+  /// Equality comparison with a raw pointer
+  /// @param other The pointer to compare with
+  /// @return True if equal
   template <typename input_track_t>
   bool operator==(const input_track_t* other) const {
     return m_ptr == other;
   }
 
+  /// Comparison operator for ordering
+  /// @param other The other InputTrack to compare with
+  /// @return True if this is less than other
   bool operator<(const InputTrack& other) const { return m_ptr < other.m_ptr; }
 
+  /// Cast to the original pointer type
+  /// @return Pointer to the original track object
   template <typename T>
   const T* as() const {
     using ptr_t = const T*;
@@ -56,10 +76,14 @@ struct InputTrack {
 
   friend struct std::hash<Acts::InputTrack>;
 
+  /// Extract track parameters from an InputTrack
+  /// @param track The input track
+  /// @return The bound track parameters
   static BoundTrackParameters extractParameters(const InputTrack& track) {
     return *track.as<BoundTrackParameters>();
   }
 
+  /// Function type for extracting track parameters
   using Extractor = Acts::Delegate<BoundTrackParameters(const InputTrack&)>;
 
  private:

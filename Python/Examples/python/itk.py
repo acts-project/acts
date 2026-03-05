@@ -32,17 +32,17 @@ def buildITkGeometry(
     logLevel=acts.logging.WARNING,
 ):
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
-    logger = acts.logging.getLogger("buildITkGeometry")
+    logger = acts.getDefaultLogger("buildITkGeometry", acts.logging.INFO)
 
     matDeco = None
     if material:
         file = None
         if customMaterialFile:
             file = customMaterialFile
-            logger.info("Adding custom material from %s", file)
+            logger.info("Adding custom material from {}", file)
         else:
             file = geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
-            logger.info("Adding material from %s", file.absolute())
+            logger.info("Adding material from {}", file.absolute())
         matDeco = acts.IMaterialDecorator.fromFile(
             file,
             level=customLogLevel(maxLevel=acts.logging.INFO),
@@ -52,7 +52,7 @@ def buildITkGeometry(
 
     if jsonconfig:
         jsonFile = geo_dir / "itk-hgtd/tgeo-atlas-itk-hgtd.json"
-        logger.info("Create geometry from %s", jsonFile.absolute())
+        logger.info("Create geometry from {}", jsonFile.absolute())
         return TGeoDetector(
             jsonFile=str(jsonFile),
             fileName=str(tgeo_fileName),

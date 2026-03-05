@@ -21,9 +21,12 @@ namespace Acts {
 template <typename grid_t>
 class BinnedGroup;
 
+/// Iterator over a binned group grid neighborhood.
+/// @tparam grid_t Grid type used by the group.
 template <typename grid_t>
 class BinnedGroupIterator {
  public:
+  /// Grid dimensionality
   static constexpr std::size_t DIM = grid_t::DIM;
 
   /// @brief Constructor

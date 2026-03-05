@@ -61,22 +61,26 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Assignment operator
   ///
   /// @param smproxy The source proxy
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& operator=(
       const ProtoSurfaceMaterialT<BinningType>& smproxy) = default;
 
   /// Assignment move operator
   ///
   /// @param smproxy The source proxy
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& operator=(
       ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept = default;
 
   /// Scale operation - dummy implementation
   ///
+  /// @return Reference to this object
   ProtoSurfaceMaterialT<BinningType>& scale(double /*factor*/) final {
     return (*this);
   }
 
   /// Return the BinUtility
+  /// @return Reference to the binning
   const BinningType& binning() const { return (m_binning); }
 
   /// Return method for full material description of the Surface - from local
@@ -100,6 +104,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream
+  /// @return The output stream
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "Acts::ProtoSurfaceMaterial : " << std::endl;
     sl << m_binning << std::endl;

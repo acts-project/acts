@@ -316,7 +316,6 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_root_hash(fn, fp)
 
     assert_csv_output(tmp_path, "particles_simulated")
-    assert_csv_output(tmp_path, "buckets")
     assert_csv_output(tmp_path, "seed")
 
 
@@ -596,13 +595,6 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     seq = Sequencer(
         events=10,
         numThreads=1,
-        fpeMasks=[
-            (
-                "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:197",
-                acts.examples.FpeType.FLTUND,
-                1,
-            ),
-        ],
     )
 
     root_files = [
@@ -1140,7 +1132,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
                 "--geant4",
                 "--ttbar",
                 "--ttbar-pu",
-                "50",
+                "10",
             ],
             cwd=tmp_path,
             env=env,
@@ -1308,7 +1300,7 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     assert Path(required_files["moduleMapPath"] + ".triplets.root").exists()
     assert Path(required_files["gnnModel"]).exists()
 
-    # Setup ODD detector
+    # Set up ODD detector
     detector = getOpenDataDetector()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     seq = Sequencer(events=5, numThreads=1)
@@ -1340,11 +1332,11 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 
 
 @pytest.mark.odd
-def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
+def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
     if detector_config.name == "generic":
-        pytest.skip("No strip spacepoint formation for the generic detector currently")
+        pytest.skip("No strip space point formation for the generic detector currently")
 
-    from strip_spacepoints import createStripSpacepoints
+    from strip_space_points import createStripSpacePoints
 
     s = Sequencer(events=20, numThreads=-1)
 
@@ -1354,7 +1346,7 @@ def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
     digi_config_file = config_path / "odd-digi-smearing-config.json"
 
     with detector_config.detector:
-        createStripSpacepoints(
+        createStripSpacePoints(
             trackingGeometry=detector_config.trackingGeometry,
             field=field,
             digiConfigFile=digi_config_file,
@@ -1371,6 +1363,7 @@ def test_strip_spacepoints(detector_config, field, tmp_path, assert_root_hash):
 
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
+@pytest.mark.slow
 def test_geomodel_G4(tmp_path):
     script = (
         Path(__file__).parent.parent.parent.parent

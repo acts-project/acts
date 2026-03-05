@@ -31,7 +31,7 @@ constexpr unsigned int dim = 2;
 using grid_t = Grid<Acts::Material::ParametersVector,
                     Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>;
 
-ActsVector<dim> trafoGlobalToLocal(const Vector3& global) {
+Vector<dim> trafoGlobalToLocal(const Vector3& global) {
   return {global.x(), global.y()};
 }
 

@@ -15,19 +15,27 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
+#include "ActsPodioEdm/MutableTrackerHitLocal.h"
+#include "ActsPodioEdm/TrackerHitLocal.h"
 
+#include <span>
 #include <stdexcept>
 
+#include <boost/container/static_vector.hpp>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/Vector4f.h>
+#include <edm4hep/Vertex.h>
 #include <podio/podioVersion.h>
 
 #if podio_VERSION_MAJOR == 0 || \
@@ -54,22 +62,21 @@ static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
 namespace detail {
 struct Parameters {
-  Acts::ActsVector<6> values{};
+  Acts::Vector<6> values{};
   // Dummy default
   Acts::ParticleHypothesis particleHypothesis =
       Acts::ParticleHypothesis::pion();
-  std::optional<Acts::BoundSquareMatrix> covariance;
+  std::optional<Acts::BoundMatrix> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 
-Acts::ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP,
-                                            double Bz);
+Acts::SquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
 
-Acts::ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
-                                              double Bz);
+Acts::SquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
+                                          double Bz);
 
-void unpackCovariance(const float* from, Acts::ActsSquareMatrix<6>& to);
-void packCovariance(const Acts::ActsSquareMatrix<6>& from, float* to);
+void unpackCovariance(const float* from, Acts::SquareMatrix<6>& to);
+void packCovariance(const Acts::SquareMatrix<6>& from, float* to);
 
 Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
@@ -83,12 +90,25 @@ Acts::BoundTrackParameters convertTrackParametersFromEdm4hep(
 /// @addtogroup edm4hep_plugin
 /// @{
 
-// Compatibility with EDM4hep < 0.99 and >= 0.99
+/// Get the particle from a SimTrackerHit (compatibility with EDM4hep < 0.99 and
+/// >= 0.99)
+/// @param hit The SimTrackerHit
+/// @return The associated MCParticle
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
 
+/// Set the particle for a MutableSimTrackerHit (compatibility with EDM4hep <
+/// 0.99 and >= 0.99)
+/// @param hit The MutableSimTrackerHit
+/// @param particle The MCParticle to set
 void setParticle(edm4hep::MutableSimTrackerHit& hit,
                  const edm4hep::MCParticle& particle);
 
+/// Write an Acts track to EDM4hep format
+/// @param gctx The geometry context
+/// @param track The Acts track to convert
+/// @param to The EDM4hep track to write to
+/// @param Bz The magnetic field z-component
+/// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
                 edm4hep::MutableTrack to, double Bz,
@@ -102,12 +122,12 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 
   auto setParameters = [](edm4hep::TrackState& trackState,
                           const detail::Parameters& params) {
-    trackState.D0 = params.values[0];
-    trackState.Z0 = params.values[1];
-    trackState.phi = params.values[2];
-    trackState.tanLambda = params.values[3];
-    trackState.omega = params.values[4];
-    trackState.time = params.values[5];
+    trackState.D0 = static_cast<float>(params.values[0]);
+    trackState.Z0 = static_cast<float>(params.values[1]);
+    trackState.phi = static_cast<float>(params.values[2]);
+    trackState.tanLambda = static_cast<float>(params.values[3]);
+    trackState.omega = static_cast<float>(params.values[4]);
+    trackState.time = static_cast<float>(params.values[5]);
 
     if (params.covariance) {
       detail::packCovariance(params.covariance.value(),
@@ -118,8 +138,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   ACTS_VERBOSE("Converting " << track.nTrackStates() << " track states");
 
   for (const auto& state : track.trackStatesReversed()) {
-    auto typeFlags = state.typeFlags();
-    if (!typeFlags.isMeasurement()) {
+    if (!state.typeFlags().isMeasurement()) {
       continue;
     }
 
@@ -145,9 +164,9 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
     // Converted parameters are relative to an ad-hoc perigee surface created at
     // the hit location
     auto center = converted.surface->center(gctx);
-    trackState.referencePoint.x = center.x();
-    trackState.referencePoint.y = center.y();
-    trackState.referencePoint.z = center.z();
+    trackState.referencePoint.x = static_cast<float>(center.x());
+    trackState.referencePoint.y = static_cast<float>(center.y());
+    trackState.referencePoint.z = static_cast<float>(center.z());
     ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
   }
   outTrackStates.front().location = edm4hep::TrackState::AtLastHit;
@@ -178,17 +197,22 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
   // track itself, but if that's not a perigee surface, another ad-hoc perigee
   // at the position will be created.
   auto center = converted.surface->center(gctx);
-  ipState.referencePoint.x = center.x();
-  ipState.referencePoint.y = center.y();
-  ipState.referencePoint.z = center.z();
+  ipState.referencePoint.x = static_cast<float>(center.x());
+  ipState.referencePoint.y = static_cast<float>(center.y());
+  ipState.referencePoint.z = static_cast<float>(center.z());
 
   ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
 
-  for (auto& trackState : outTrackStates) {
+  for (const auto& trackState : outTrackStates) {
     to.addToTrackStates(trackState);
   }
 }
 
+/// Read an EDM4hep track into Acts format
+/// @param from The EDM4hep track to read
+/// @param track The Acts track proxy to fill
+/// @param Bz The magnetic field z-component
+/// @param logger The logger instance
 template <Acts::TrackProxyConcept track_proxy_t>
 void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
                const Acts::Logger& logger = Acts::getDummyLogger()) {
@@ -198,8 +222,7 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
 
   std::optional<edm4hep::TrackState> ipState;
 
-  auto unpack =
-      [](const edm4hep::TrackState& trackState) -> detail::Parameters {
+  auto unpack = [](const edm4hep::TrackState& trackState) {
     detail::Parameters params;
     params.covariance = BoundMatrix::Zero();
     params.values = BoundVector::Zero();
@@ -269,17 +292,31 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
   track.nMeasurements() = track.nTrackStates();
 }
 
+/// @brief Helper class for associating simulation hits between EDM4hep and internal indices
 class SimHitAssociation {
  public:
+  /// Reserve space for associations
+  /// @param size Number of associations to reserve
   void reserve(std::size_t size);
 
+  /// Get number of associations
+  /// @return Number of associations
   std::size_t size() const;
 
+  /// Add association between internal index and EDM4hep hit
+  /// @param internalIndex Internal hit index
+  /// @param edm4hepHit EDM4hep hit object
   void add(std::size_t internalIndex, const edm4hep::SimTrackerHit& edm4hepHit);
 
+  /// Look up EDM4hep hit by internal index
+  /// @param internalIndex Internal hit index
+  /// @return EDM4hep hit object
   [[nodiscard]]
   edm4hep::SimTrackerHit lookup(std::size_t internalIndex) const;
 
+  /// Look up internal index by EDM4hep hit
+  /// @param hit EDM4hep hit object
+  /// @return Internal hit index
   std::size_t lookup(const edm4hep::SimTrackerHit& hit) const;
 
  private:
@@ -288,5 +325,78 @@ class SimHitAssociation {
 };
 
 /// @}
+
+namespace detail {
+/// Support for both EDM4hep versions where the vertex position is a 3 or 4
+/// vector
+constexpr bool kEdm4hepVertexHasTime =
+    std::is_same_v<edm4hep::Vector4f,
+                   decltype(std::declval<edm4hep::Vertex>().getPosition())> &&
+    std::is_same_v<edm4hep::CovMatrix4f,
+                   decltype(std::declval<edm4hep::Vertex>().getCovMatrix())>;
+
+}  // namespace detail
+
+void writeVertex(const Acts::Vertex& vertex, edm4hep::MutableVertex to);
+
+namespace detail {
+// These functions are exposed here so they can be used from the unit tests
+std::uint32_t encodeIndices(std::span<const std::uint8_t> indices);
+boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
+decodeIndices(std::uint32_t type);
+}  // namespace detail
+
+/// Write a measurement to an EDM4hep tracker hit
+///
+/// This function converts an ACTS measurement into the EDM4hep format. It
+/// handles:
+/// - Position conversion from local to global coordinates (in mm)
+/// - Time storage (in ns)
+/// - Measurement values and covariance matrix storage
+/// - Encoding of measurement indices into a 32-bit integer:
+///   - First 4 bits: number of indices (max 6)
+///   - Next 4 bits per index: which parameter is being measured (0-6)
+///
+/// The function will throw if:
+/// - The number of indices exceeds 6
+/// - Any index is larger than 6
+/// - There's a size mismatch between parameters and covariance matrix
+///
+/// @param gctx The geometry context
+/// @param parameters The parameters of the measurement
+/// @param covariance The covariance of the measurement
+/// @param indices The indices of the measurement
+/// @param cellId The cell ID of the measurement
+/// @param surface The surface of the measurement
+/// @param to The EDM4hep tracker hit to write to
+void writeMeasurement(const Acts::GeometryContext& gctx,
+                      const Eigen::Map<const Acts::DynamicVector>& parameters,
+                      const Eigen::Map<const Acts::DynamicMatrix>& covariance,
+                      std::span<const std::uint8_t> indices,
+                      std::uint64_t cellId, const Acts::Surface& surface,
+                      ActsPodioEdm::MutableTrackerHitLocal& to);
+
+/// Data extracted when reading a measurement from EDM4hep
+struct MeasurementData {
+  /// Measurement parameters (local coordinates, full bound space)
+  Acts::BoundVector parameters{Acts::BoundVector::Zero()};
+  /// Covariance matrix of the measurement (full bound space)
+  Acts::BoundMatrix covariance{Acts::BoundMatrix::Zero()};
+  /// Indices of the measured parameters (subspace)
+  boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
+      indices;
+  /// Cell ID of the measurement
+  std::uint64_t cellId{0};
+};
+
+/// Read a measurement from an EDM4hep tracker hit
+///
+/// This function extracts measurement parameters, covariance, and indices from
+/// an EDM4hep TrackerHitLocal. It is the inverse of writeMeasurement.
+///
+/// @param from The EDM4hep tracker hit to read from
+/// @return The extracted measurement data (parameters, covariance, indices,
+///         cellId)
+MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from);
 
 }  // namespace ActsPlugins::EDM4hepUtil

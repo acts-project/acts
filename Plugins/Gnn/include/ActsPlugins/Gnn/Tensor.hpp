@@ -54,6 +54,8 @@ struct Device {
   /// @return True if device type is CUDA, false otherwise
   bool isCuda() const { return type == Type::eCUDA; }
 
+  /// @brief Compare two device descriptors for equality
+  /// @return True if both devices have same type and index
   bool operator==(const Device &) const = default;
   /// @brief Compare two device descriptors for equality
   /// @param other Device to compare against
@@ -75,8 +77,8 @@ inline std::ostream &operator<<(std::ostream &os, Device device) {
 
 /// Capture the context of the execution
 struct ExecutionContext {
-  Device device{Device::Type::eCPU};
   /// Target device for execution
+  Device device{Device::Type::eCPU};
   /// CUDA stream for asynchronous execution
   std::optional<cudaStream_t> stream;
 };
@@ -145,8 +147,8 @@ class Tensor {
   std::size_t nbytes() const { return size() * sizeof(T); }
 
   /// Get the device of the tensor
-  Device device() const { return m_device; }
   /// @return Device where tensor data is stored
+  Device device() const { return m_device; }
 
  private:
   Tensor(Shape shape, detail::TensorPtr ptr, const ExecutionContext &ctx)

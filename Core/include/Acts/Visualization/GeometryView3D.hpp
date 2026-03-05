@@ -26,6 +26,7 @@ class TrackingVolume;
 struct Polyhedron;
 class IVisualization3D;
 
+/// Helper utilities for drawing geometry in 3D views.
 struct GeometryView3D {
   /// Helper method to draw Polyhedron objects
   ///

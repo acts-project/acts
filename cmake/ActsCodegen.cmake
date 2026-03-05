@@ -229,4 +229,10 @@ function(acts_code_generation)
 
     add_dependencies(${ARGS_ADD_TO_TARGET} ${_internal_target})
     target_include_directories(${ARGS_ADD_TO_TARGET} PRIVATE ${_codegen_root})
+
+    # Add a central copde generation target that depends on all codegen targets, so that we can build only them in one go
+    if(NOT TARGET ActsCodegen)
+        add_custom_target(ActsCodegen)
+    endif()
+    add_dependencies(ActsCodegen ${_internal_target})
 endfunction()

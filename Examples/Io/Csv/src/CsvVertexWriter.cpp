@@ -11,7 +11,6 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Definitions/Units.hpp>
 
 #include <stdexcept>
 
@@ -28,7 +27,7 @@ CsvVertexWriter::CsvVertexWriter(const Config& cfg, Acts::Logging::Level lvl)
 }
 
 ProcessCode CsvVertexWriter::writeT(const AlgorithmContext& ctx,
-                                    const SimVertexContainerV& vertices) {
+                                    const VertexContainer& vertices) {
   auto pathVertices = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
   NamedTupleCsvWriter<VertexData> writer(pathVertices, m_cfg.outputPrecision);

@@ -173,26 +173,26 @@ void addSurfaces(py::module_& m) {
                                &Surface::surfaceMaterialSharedPtr)
         .def("createCylinder",
              [](const Transform3& transform,
-                std::shared_ptr<const CylinderBounds> bounds) {
+                const std::shared_ptr<const CylinderBounds>& bounds) {
                return Surface::makeShared<CylinderSurface>(transform, bounds);
              })
         .def("createDisc",
              [](const Transform3& transform,
-                std::shared_ptr<const DiscBounds> bounds) {
+                const std::shared_ptr<const DiscBounds>& bounds) {
                return Surface::makeShared<DiscSurface>(transform, bounds);
              })
         .def("createDisc",
-             [](std::shared_ptr<const DiscBounds> bounds,
+             [](const std::shared_ptr<const DiscBounds>& bounds,
                 const SurfacePlacementBase& detelement) {
                return Surface::makeShared<DiscSurface>(bounds, detelement);
              })
         .def("createStraw",
              [](const Transform3& transform,
-                std::shared_ptr<const LineBounds> bounds) {
+                const std::shared_ptr<const LineBounds>& bounds) {
                return Surface::makeShared<StrawSurface>(transform, bounds);
              })
         .def("createStraw",
-             [](std::shared_ptr<const LineBounds> bounds,
+             [](const std::shared_ptr<const LineBounds>& bounds,
                 const SurfacePlacementBase& detelement) {
                return Surface::makeShared<StrawSurface>(bounds, detelement);
              })
@@ -202,13 +202,14 @@ void addSurfaces(py::module_& m) {
              })
         .def("createPlane",
              [](const Transform3& transform,
-                std::shared_ptr<const PlanarBounds> bounds) {
+                const std::shared_ptr<const PlanarBounds>& bounds) {
                return Surface::makeShared<PlaneSurface>(transform, bounds);
              })
-        .def("createPlane", [](std::shared_ptr<const PlanarBounds> pbounds,
-                               const SurfacePlacementBase& detelement) {
-          return Surface::makeShared<PlaneSurface>(pbounds, detelement);
-        });
+        .def("createPlane",
+             [](const std::shared_ptr<const PlanarBounds>& pbounds,
+                const SurfacePlacementBase& detelement) {
+               return Surface::makeShared<PlaneSurface>(pbounds, detelement);
+             });
 
     py::class_<CylinderSurface, Surface, std::shared_ptr<CylinderSurface>>(
         m, "CylinderSurface");

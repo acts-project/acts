@@ -176,7 +176,7 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
       double resT = (*m_err_eT_fit)[i];
 
       // Fill vector of track objects with simple covariance matrix
-      Acts::BoundSquareMatrix covMat;
+      Acts::BoundMatrix covMat;
 
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,

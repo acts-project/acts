@@ -27,6 +27,7 @@ namespace ActsPlugins {
 /// @addtogroup dd4hep_plugin
 /// @{
 
+/// Allowed binning directions for DD4hep conversion
 static const std::vector<std::tuple<std::string, Acts::AxisDirection>>
     allowedBinnings = {{"x", Acts::AxisDirection::AxisX},
                        {"y", Acts::AxisDirection::AxisY},

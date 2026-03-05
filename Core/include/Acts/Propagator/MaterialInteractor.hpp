@@ -53,6 +53,7 @@ struct MaterialInteractor {
   /// @param navigator The navigator in use
   /// @param result is the mutable result state object
   /// @param logger a logger instance
+  /// @return Result indicating success or failure of the material interaction
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   Result<void> act(propagator_state_t& state, const stepper_t& stepper,
@@ -79,7 +80,7 @@ struct MaterialInteractor {
                                            << surface->geometryId());
 
       const MaterialSlab slab = detail::evaluateMaterialSlab(
-          state, stepper, navigator,
+          state, stepper, *surface,
           detail::determineMaterialUpdateMode(state, navigator,
                                               MaterialUpdateMode::FullUpdate));
 

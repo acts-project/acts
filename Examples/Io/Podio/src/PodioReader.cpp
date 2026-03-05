@@ -19,11 +19,9 @@
 
 namespace ActsExamples {
 
-namespace detail {
-
-class PodioReaderImpl {
+class PodioReader::Impl {
  public:
-  explicit PodioReaderImpl(PodioReader::Config cfg, PodioReader& parent)
+  explicit Impl(PodioReader::Config cfg, PodioReader& parent)
       : m_frameWriteHandle(&parent, "EDM4hepFrameOutput"),
         m_cfg(std::move(cfg)) {
     m_eventsRange = std::make_pair(0, reader().getEntries("events"));
@@ -57,10 +55,8 @@ class PodioReaderImpl {
   PodioReader::Config m_cfg;
 };
 
-}  // namespace detail
-
 PodioReader::PodioReader(const Config& config, Acts::Logging::Level level)
-    : m_impl(std::make_unique<detail::PodioReaderImpl>(config, *this)),
+    : m_impl(std::make_unique<Impl>(config, *this)),
       m_logger(Acts::getDefaultLogger("PodioReader", level)) {}
 
 PodioReader::~PodioReader() = default;

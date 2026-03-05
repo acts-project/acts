@@ -20,6 +20,7 @@
 
 namespace Acts {
 
+/// Configuration for the index-grid based navigation policy.
 class IndexGridNavigationConfig {
  public:
   /// The binning expansion for grid neighbor lookups
@@ -43,6 +44,7 @@ class IndexGridNavigationConfig {
 template <typename GridType>
 class IndexGridNavigationPolicy : public INavigationPolicy {
  public:
+  /// Index grid type
   using IndexGridType = IndexGrid<GridType>;
 
   /// Main constructor, which expects the grid and will fill it with the
@@ -78,12 +80,15 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
   /// Update the navigation state from the surface array
   /// @param gctx the geometry context
   /// @param args The navigation arguments
+  /// @param state The navigation policy state
   /// @param stream The navigation stream to update
   /// @param logger The logger
   void initializeCandidates(const GeometryContext& gctx,
                             const NavigationArguments& args,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const {
+    static_cast<void>(state);  // unused
     ACTS_VERBOSE(
         "IndexGridNavigationPolicy: candidates initialization for volume '"
         << m_volume.volumeName() << "'");
@@ -126,39 +131,43 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
   IndexGridType m_indexGrid;
 };
 
-// Regular cylinder is in phi and z
+/// Regular cylinder grid in phi and z
 using RegularCylinderIndexGrid =
     Grid<std::vector<std::size_t>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
+/// Navigation policy for regular cylinder grids
 using RegularCylinderIndexGridNavigationPolicy =
     IndexGridNavigationPolicy<RegularCylinderIndexGrid>;
 
 static_assert(
     NavigationPolicyConcept<RegularCylinderIndexGridNavigationPolicy>);
 
-// Regular ring in phi
+/// Regular ring grid in phi
 using RegularRingIndexGrid =
     Grid<std::vector<std::size_t>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>;
+/// Navigation policy for regular ring grids
 using RegularRingIndexGridNavigationPolicy =
     IndexGridNavigationPolicy<RegularRingIndexGrid>;
 
-// Regular disc is in r and phi
+/// Regular disc grid in r and phi
 using RegularDiscIndexGrid =
     Grid<std::vector<std::size_t>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Closed>>;
+/// Navigation policy for regular disc grids
 using RegularDiscIndexGridNavigationPolicy =
     IndexGridNavigationPolicy<RegularDiscIndexGrid>;
 
 static_assert(NavigationPolicyConcept<RegularDiscIndexGridNavigationPolicy>);
 
-// Regular planar grid is in x and y
+/// Regular planar grid in x and y
 using RegularPlaneIndexGrid =
     Grid<std::vector<std::size_t>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
          Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
+/// Navigation policy for regular planar grids
 using RegularPlaneIndexGridNavigationPolicy =
     IndexGridNavigationPolicy<RegularPlaneIndexGrid>;
 static_assert(NavigationPolicyConcept<RegularPlaneIndexGridNavigationPolicy>);

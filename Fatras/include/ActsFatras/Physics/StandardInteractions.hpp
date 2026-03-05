@@ -74,6 +74,7 @@ using StandardChargedElectroMagneticInteractions =
 /// Construct the standard electro-magnetic interactions for charged particles.
 ///
 /// @param minimumAbsMomentum lower p cut on output particles
+/// @return Configured interaction list for charged particles
 StandardChargedElectroMagneticInteractions
 makeStandardChargedElectroMagneticInteractions(double minimumAbsMomentum);
 
@@ -88,6 +89,7 @@ using StandardNeutralElectroMagneticInteractions =
 ///          before application.
 ///
 /// @param minimumAbsMomentum lower p cut on output particles
+/// @return Configured interaction list for neutral particles
 StandardNeutralElectroMagneticInteractions
 makeStandardNeutralElectroMagneticInteractions(double minimumAbsMomentum);
 

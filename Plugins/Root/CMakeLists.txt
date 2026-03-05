@@ -33,7 +33,10 @@ target_include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
 target_link_libraries(
     ActsPluginRoot
     PUBLIC Acts::Core ROOT::Core ROOT::Tree ROOT::Geom
 )
+
+acts_compile_headers(PluginRoot GLOB include/**/*.hpp)

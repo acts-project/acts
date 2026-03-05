@@ -17,9 +17,11 @@
 #include <ostream>
 #include <stdexcept>
 
-ActsExamples::ParticlesPrinter::ParticlesPrinter(const Config& cfg,
-                                                 Acts::Logging::Level lvl)
-    : IAlgorithm("ParticlesPrinter", lvl), m_cfg(cfg) {
+namespace ActsExamples {
+
+ParticlesPrinter::ParticlesPrinter(const Config& cfg,
+                                   std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("ParticlesPrinter", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Input particles collection is not configured");
   }
@@ -27,8 +29,7 @@ ActsExamples::ParticlesPrinter::ParticlesPrinter(const Config& cfg,
   m_inputParticles.initialize(m_cfg.inputParticles);
 }
 
-ActsExamples::ProcessCode ActsExamples::ParticlesPrinter::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode ParticlesPrinter::execute(const AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 
   const auto& particles = m_inputParticles(ctx);
@@ -48,3 +49,5 @@ ActsExamples::ProcessCode ActsExamples::ParticlesPrinter::execute(
   }
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

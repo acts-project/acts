@@ -44,7 +44,7 @@ class LayerCreator {
   friend ActsTests::LayerCreatorFixture;
   ///  @struct Config
   ///  Configuration for the LayerCreator
-  ///  This is the nexted configuration struct for the LayerCreator class
+  ///  This is the nested configuration struct for the LayerCreator class
   struct Config {
     /// surface array helper
     std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
@@ -197,7 +197,7 @@ class LayerCreator {
   /// @param lcConfig is the configuration struct
   void setConfiguration(const Config& lcConfig);
 
-  /// Access th configuration object
+  /// Access the configuration object
   /// @return Copy of the current configuration object
   Config getConfiguration() const;
 

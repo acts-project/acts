@@ -11,7 +11,6 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
-#include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
@@ -74,13 +73,6 @@ void addTrackFitting(py::module& mex) {
             []() -> std::shared_ptr<MeasurementCalibrator> {
               return std::make_shared<PassThroughCalibrator>();
             });
-
-    mex.def(
-        "makeScalingCalibrator",
-        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
-          return std::make_shared<ScalingCalibrator>(path);
-        },
-        py::arg("path"));
 
     py::enum_<ComponentMergeMethod>(mex, "ComponentMergeMethod")
         .value("mean", ComponentMergeMethod::eMean)
