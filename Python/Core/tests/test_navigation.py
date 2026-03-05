@@ -2,8 +2,6 @@ import pytest
 
 import acts
 
-import acts.examples
-
 
 def test_navigation_policy_factory():
 

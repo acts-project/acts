@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 
-#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
