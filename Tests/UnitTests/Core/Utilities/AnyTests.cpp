@@ -13,15 +13,16 @@
 #include <any>
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <type_traits>
 #include <utility>
 
 using namespace Acts;
 
 #if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
-#define CHECK_ANY_ALLOCATIONS()                 \
-  do {                                          \
-    _AnyAllocationReporter::checkAllocations(); \
+#define CHECK_ANY_ALLOCATIONS()                         \
+  do {                                                  \
+    detail::_AnyAllocationReporter::checkAllocations(); \
   } while (0)
 #else
 #define CHECK_ANY_ALLOCATIONS() \
@@ -655,6 +656,76 @@ BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
   checkCounters();
 
   CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnyMoveOnlyMoveOnlyTypes) {
+  using MoveOnlyAny = Acts::AnyMoveOnly;
+
+  using Ptr = std::unique_ptr<int>;
+
+  // AnyMoveOnly can store move-only types
+  {
+    auto ptr = std::make_unique<int>(42);
+    MoveOnlyAny a{std::move(ptr)};
+    BOOST_CHECK(!!a);
+    Ptr const* storedPtr = a.asPtr<Ptr>();
+    BOOST_REQUIRE_NE(storedPtr, nullptr);
+    BOOST_CHECK_NE(storedPtr->get(), nullptr);
+    BOOST_CHECK_EQUAL(**storedPtr, 42);
+  }
+
+  // AnyMoveOnly is moveable
+  {
+    auto ptr = std::make_unique<int>(7);
+    MoveOnlyAny a{std::move(ptr)};
+    MoveOnlyAny b = std::move(a);
+    // Note: moved-from Any may still report non-empty for local storage
+    BOOST_CHECK(!!b);
+    Ptr const* bPtr = b.asPtr<Ptr>();
+    BOOST_REQUIRE_NE(bPtr, nullptr);
+    int val = **bPtr;
+    BOOST_CHECK_EQUAL(val, 7);
+  }
+
+  // AnyMoveOnly is not copyable
+  static_assert(!std::is_copy_constructible_v<MoveOnlyAny>);
+  static_assert(!std::is_copy_assignable_v<MoveOnlyAny>);
+}
+
+BOOST_AUTO_TEST_CASE(AnyTake) {
+  // take() moves value out and leaves Any empty
+  {
+    Any a{42};
+    BOOST_CHECK(!!a);
+    int val = a.take<int>();
+    BOOST_CHECK_EQUAL(val, 42);
+    BOOST_CHECK(!a);
+  }
+
+  // take() with move-only type
+  {
+    auto ptr = std::make_unique<int>(99);
+    Acts::AnyMoveOnly a{std::move(ptr)};
+    BOOST_CHECK(!!a);
+    auto taken = a.take<std::unique_ptr<int>>();
+    BOOST_REQUIRE_NE(taken.get(), nullptr);
+    BOOST_CHECK_EQUAL(*taken, 99);
+    BOOST_CHECK(!a);
+  }
+
+  // take() throws on wrong type
+  {
+    Any a{42};
+    BOOST_CHECK_THROW(a.take<float>(), std::bad_any_cast);
+    BOOST_CHECK(!!a);
+    BOOST_CHECK_EQUAL(a.as<int>(), 42);
+  }
+
+  // take() throws on empty
+  {
+    Any a;
+    BOOST_CHECK_THROW(a.take<int>(), std::bad_any_cast);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
