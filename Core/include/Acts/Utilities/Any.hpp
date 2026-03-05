@@ -58,27 +58,28 @@
 
 namespace Acts {
 
+namespace detail {
 #if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
 static std::mutex _s_any_mutex;
 static std::set<std::pair<std::type_index, void*>> _s_any_allocations;
 
 #define _ACTS_ANY_TRACK_ALLOCATION(T, heap)                                  \
   do {                                                                       \
-    std::lock_guard guard{_s_any_mutex};                                     \
-    _s_any_allocations.emplace(std::type_index(typeid(T)), heap);            \
+    std::lock_guard guard{detail::_s_any_mutex};                             \
+    detail::_s_any_allocations.emplace(std::type_index(typeid(T)), heap);    \
     _ACTS_ANY_DEBUG("Allocate type: " << typeid(T).name() << " at " << heap) \
   } while (0)
 
-#define _ACTS_ANY_TRACK_DEALLOCATION(T, heap)                                 \
-  do {                                                                        \
-    std::lock_guard guard{_s_any_mutex};                                      \
-    auto it =                                                                 \
-        _s_any_allocations.find(std::pair{std::type_index(typeid(T)), heap}); \
-    if (it == _s_any_allocations.end()) {                                     \
-      throw std::runtime_error{                                               \
-          "Trying to deallocate heap address that we didn't allocate"};       \
-    }                                                                         \
-    _s_any_allocations.erase(it);                                             \
+#define _ACTS_ANY_TRACK_DEALLOCATION(T, heap)                           \
+  do {                                                                  \
+    std::lock_guard guard{detail::_s_any_mutex};                        \
+    auto it = detail::_s_any_allocations.find(                          \
+        std::pair{std::type_index(typeid(T)), heap});                   \
+    if (it == detail::_s_any_allocations.end()) {                       \
+      throw std::runtime_error{                                         \
+          "Trying to deallocate heap address that we didn't allocate"}; \
+    }                                                                   \
+    detail::_s_any_allocations.erase(it);                               \
   } while (0)
 
 // Do not make member functions noexcept in the debug case
@@ -86,11 +87,11 @@ static constexpr bool kAnyNoexcept = false;
 
 struct _AnyAllocationReporter {
   static void checkAllocations() {
-    std::lock_guard guard{_s_any_mutex};
+    std::lock_guard guard{detail::_s_any_mutex};
 
-    if (!_s_any_allocations.empty()) {
+    if (!detail::_s_any_allocations.empty()) {
       std::cout << "Not all allocations have been released" << std::endl;
-      for (const auto& [idx, addr] : _s_any_allocations) {
+      for (const auto& [idx, addr] : detail::_s_any_allocations) {
         std::cout << "- " << idx.name() << ": " << addr << std::endl;
       }
       throw std::runtime_error{"AnyCheckAllocations failed"};
@@ -109,6 +110,7 @@ static _AnyAllocationReporter s_reporter;
   } while (0)
 static constexpr bool kAnyNoexcept = true;
 #endif
+}  // namespace detail
 
 /// @addtogroup utilities
 /// @{
@@ -191,7 +193,7 @@ class AnyBase : public AnyBaseAll {
   /// @tparam T Type of the value to store
   /// @param value Value to store in the Any
   template <typename T>
-  explicit AnyBase(T&& value) noexcept(kAnyNoexcept)
+  explicit AnyBase(T&& value) noexcept(detail::kAnyNoexcept)
     requires(isStorable<std::decay_t<T>>())
       : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
@@ -294,7 +296,7 @@ class AnyBase : public AnyBaseAll {
 
   /// Copy constructor (only when copyable is true)
   /// @param other The AnyBase to copy from
-  AnyBase(const AnyBase& other) noexcept(kAnyNoexcept)
+  AnyBase(const AnyBase& other) noexcept(detail::kAnyNoexcept)
     requires copyable
   {
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -317,7 +319,7 @@ class AnyBase : public AnyBaseAll {
   /// Copy assignment operator (only when copyable is true)
   /// @param other The AnyBase to copy from
   /// @return Reference to this object
-  AnyBase& operator=(const AnyBase& other) noexcept(kAnyNoexcept)
+  AnyBase& operator=(const AnyBase& other) noexcept(detail::kAnyNoexcept)
     requires copyable
   {
     _ACTS_ANY_VERBOSE("Copy assign (this="
@@ -350,7 +352,7 @@ class AnyBase : public AnyBaseAll {
 
   /// Move constructor
   /// @param other The AnyBase to move from
-  AnyBase(AnyBase&& other) noexcept(kAnyNoexcept) {
+  AnyBase(AnyBase&& other) noexcept(detail::kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move construct (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {
@@ -365,7 +367,7 @@ class AnyBase : public AnyBaseAll {
   /// Move assignment operator
   /// @param other The AnyBase to move from
   /// @return Reference to this object
-  AnyBase& operator=(AnyBase&& other) noexcept(kAnyNoexcept) {
+  AnyBase& operator=(AnyBase&& other) noexcept(detail::kAnyNoexcept) {
     _ACTS_ANY_VERBOSE("Move assign (this="
                       << this << ") at: " << static_cast<void*>(m_data.data()));
     if (m_handler == nullptr && other.m_handler == nullptr) {

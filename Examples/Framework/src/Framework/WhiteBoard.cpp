@@ -116,12 +116,13 @@ void WhiteBoard::addHolder(const std::string &name,
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
-  ACTS_VERBOSE("Added object '" << name << "' of type '"
-                                << boost::core::demangle(
-                                       storeIt->second.first->typeInfo()
-                                           ? storeIt->second.first->typeInfo()->name()
-                                           : "unknown")
-                                << "'");
+  ACTS_VERBOSE("Added object '"
+               << name << "' of type '"
+               << boost::core::demangle(
+                      storeIt->second.first->typeInfo()
+                          ? storeIt->second.first->typeInfo()->name()
+                          : "unknown")
+               << "'");
 
   if (success) {
     // deal with aliases
