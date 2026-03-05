@@ -150,7 +150,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_resVsEta.at(m_cfg.qOverPtName).fill({truthEta, residualQoverPt});
     m_resVsPt.at(m_cfg.qOverPtName).fill({truthPt, residualQoverPt});
 
-    const double residualPtQoverPt = truthQoverPt * residualQoverPt;
+    const double residualPtQoverPt = truthPt * residualQoverPt;
     m_res.at(m_cfg.ptQoverPtName).fill({residualPtQoverPt});
     m_resVsEta.at(m_cfg.ptQoverPtName).fill({truthEta, residualPtQoverPt});
     m_resVsPt.at(m_cfg.ptQoverPtName).fill({truthPt, residualPtQoverPt});
@@ -164,7 +164,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
       return jacobian.transpose() * covariance * jacobian;
     }();
     const double covariancePtQoverPt =
-        covarianceQoverPt * Acts::square(truthQoverPt);
+        Acts::square(truthPt) * covarianceQoverPt;
 
     const double pullQoverPt =
         covarianceQoverPt > 0 ? residualQoverPt / std::sqrt(covarianceQoverPt)
