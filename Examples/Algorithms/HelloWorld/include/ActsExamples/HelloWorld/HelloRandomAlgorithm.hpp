@@ -11,12 +11,11 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/HelloWorld/HelloData.hpp"
 
 #include <array>
 #include <memory>
 #include <string>
-
-#include "HelloData.hpp"
 
 namespace ActsExamples {
 
@@ -41,10 +40,13 @@ class HelloRandomAlgorithm : public IAlgorithm {
   // Generate random numbers from various distributions.
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
+  /// Get the current algorithm configuration
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
 };
 
 }  // namespace ActsExamples

@@ -10,10 +10,12 @@
 
 #include "Acts/Utilities/HashedString.hpp"
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
