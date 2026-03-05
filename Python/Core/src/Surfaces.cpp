@@ -9,6 +9,7 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -28,6 +29,7 @@
 #include <sstream>
 
 #include <pybind11/eval.h>
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -41,9 +43,21 @@ namespace ActsPython {
 /// @param m is the pybind11 core module
 void addSurfaces(py::module_& m) {
   {
+    py::class_<BoundaryTolerance>(m, "BoundaryTolerance")
+        .def_static("infinite", &BoundaryTolerance::Infinite)
+        .def_static("none", &BoundaryTolerance::None)
+        .def_static("absoluteEuclidean", &BoundaryTolerance::AbsoluteEuclidean)
+        .def("isInfinite", &BoundaryTolerance::isInfinite)
+        .def("isNone", &BoundaryTolerance::isNone)
+        .def("hasAbsoluteEuclidean", &BoundaryTolerance::hasAbsoluteEuclidean)
+        .def("hasChi2Bound", &BoundaryTolerance::hasChi2Bound)
+        .def("hasChi2Cartesian", &BoundaryTolerance::hasChi2Cartesian);
+  }
+
+  {
     py::class_<SurfaceBounds, std::shared_ptr<SurfaceBounds>>(m,
                                                               "SurfaceBounds")
-        .def("type", &SurfaceBounds::type)
+        .def_property_readonly("type", &SurfaceBounds::type)
         .def("isCartesian", &SurfaceBounds::isCartesian)
         .def("boundToCartesianJacobian",
              &SurfaceBounds::boundToCartesianJacobian)
@@ -51,11 +65,13 @@ void addSurfaces(py::module_& m) {
         .def("values", &SurfaceBounds::values)
         .def("inside", py::overload_cast<const Vector2&>(&SurfaceBounds::inside,
                                                          py::const_))
+        .def("inside",
+             py::overload_cast<const Vector2&, const BoundaryTolerance&>(
+                 &SurfaceBounds::inside, py::const_))
         .def("closestPoint", &SurfaceBounds::closestPoint)
         .def("distance", &SurfaceBounds::distance)
         .def("center", &SurfaceBounds::center)
-        .def("__eq__", [](const SurfaceBounds& lhs,
-                          const SurfaceBounds& rhs) { return lhs == rhs; })
+        .def(py::self == py::self)
         .def("__str__", [](const SurfaceBounds& self) {
           std::ostringstream oss;
           oss << self;
@@ -125,6 +141,14 @@ void addSurfaces(py::module_& m) {
           oss << self;
           return oss.str();
         });
+
+    py::enum_<CylinderBounds::BoundValues>(m, "CylinderBoundsValue")
+        .value("eR", CylinderBounds::BoundValues::eR)
+        .value("eHalfLengthZ", CylinderBounds::BoundValues::eHalfLengthZ)
+        .value("eHalfPhiSector", CylinderBounds::BoundValues::eHalfPhiSector)
+        .value("eAveragePhi", CylinderBounds::BoundValues::eAveragePhi)
+        .value("eBevelMinZ", CylinderBounds::BoundValues::eBevelMinZ)
+        .value("eBevelMaxZ", CylinderBounds::BoundValues::eBevelMaxZ);
   }
 
   {
@@ -177,6 +201,14 @@ void addSurfaces(py::module_& m) {
           return oss.str();
         });
 
+    py::enum_<AnnulusBounds::BoundValues>(m, "AnnulusBoundsValue")
+        .value("eMinR", AnnulusBounds::BoundValues::eMinR)
+        .value("eMaxR", AnnulusBounds::BoundValues::eMaxR)
+        .value("eMinPhiRel", AnnulusBounds::BoundValues::eMinPhiRel)
+        .value("eMaxPhiRel", AnnulusBounds::BoundValues::eMaxPhiRel)
+        .value("eOriginX", AnnulusBounds::BoundValues::eOriginX)
+        .value("eOriginY", AnnulusBounds::BoundValues::eOriginY);
+
     py::class_<RadialBounds, DiscBounds, std::shared_ptr<RadialBounds>>(
         m, "RadialBounds")
         .def(py::init<double, double>())
@@ -213,6 +245,12 @@ void addSurfaces(py::module_& m) {
           oss << self;
           return oss.str();
         });
+
+    py::enum_<RadialBounds::BoundValues>(m, "RadialBoundsValue")
+        .value("eMinR", RadialBounds::BoundValues::eMinR)
+        .value("eMaxR", RadialBounds::BoundValues::eMaxR)
+        .value("eAveragePhi", RadialBounds::BoundValues::eAveragePhi)
+        .value("eHalfPhiSector", RadialBounds::BoundValues::eHalfPhiSector);
   }
 
   {
@@ -243,6 +281,10 @@ void addSurfaces(py::module_& m) {
           oss << self;
           return oss.str();
         });
+
+    py::enum_<LineBounds::BoundValues>(m, "LineBoundsValue")
+        .value("eR", LineBounds::BoundValues::eR)
+        .value("eHalfLengthZ", LineBounds::BoundValues::eHalfLengthZ);
   }
 
   {
@@ -289,6 +331,12 @@ void addSurfaces(py::module_& m) {
           return oss.str();
         });
 
+    py::enum_<RectangleBounds::BoundValues>(m, "RectangleBoundsValue")
+        .value("eMinX", RectangleBounds::BoundValues::eMinX)
+        .value("eMinY", RectangleBounds::BoundValues::eMinY)
+        .value("eMaxX", RectangleBounds::BoundValues::eMaxX)
+        .value("eMaxY", RectangleBounds::BoundValues::eMaxY);
+
     py::class_<TrapezoidBounds, PlanarBounds, std::shared_ptr<TrapezoidBounds>>(
         m, "TrapezoidBounds")
         .def(py::init<double, double, double, double>())
@@ -326,6 +374,14 @@ void addSurfaces(py::module_& m) {
           oss << self;
           return oss.str();
         });
+
+    py::enum_<TrapezoidBounds::BoundValues>(m, "TrapezoidBoundsValue")
+        .value("eHalfLengthXnegY",
+               TrapezoidBounds::BoundValues::eHalfLengthXnegY)
+        .value("eHalfLengthXposY",
+               TrapezoidBounds::BoundValues::eHalfLengthXposY)
+        .value("eHalfLengthY", TrapezoidBounds::BoundValues::eHalfLengthY)
+        .value("eRotationAngle", TrapezoidBounds::BoundValues::eRotationAngle);
   }
 
   {
