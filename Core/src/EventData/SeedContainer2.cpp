@@ -16,6 +16,8 @@
 
 namespace Acts {
 
+static_assert(std::ranges::random_access_range<SeedContainer2>);
+
 SeedContainer2::SeedContainer2() noexcept = default;
 
 SeedContainer2::SeedContainer2(const SeedContainer2 &other) noexcept = default;

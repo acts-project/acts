@@ -23,13 +23,15 @@ using tuple_indices =
 
 namespace Acts {
 
-static_assert(std::random_access_iterator<SpacePointContainer2::iterator>);
+static_assert(std::ranges::random_access_range<SpacePointContainer2>);
 static_assert(
-    std::random_access_iterator<SpacePointContainer2::const_iterator>);
+    std::ranges::random_access_range<SpacePointContainer2::MutableRange>);
 static_assert(
-    std::random_access_iterator<SpacePointContainer2::MutableSubset::iterator>);
+    std::ranges::random_access_range<SpacePointContainer2::ConstRange>);
 static_assert(
-    std::random_access_iterator<SpacePointContainer2::ConstSubset::iterator>);
+    std::ranges::random_access_range<SpacePointContainer2::MutableSubset>);
+static_assert(
+    std::ranges::random_access_range<SpacePointContainer2::ConstSubset>);
 
 SpacePointContainer2::SpacePointContainer2(SpacePointColumns columns) noexcept {
   createColumns(columns);

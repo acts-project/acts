@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
@@ -189,11 +190,29 @@ BOOST_AUTO_TEST_CASE(All) {
     std::vector<std::size_t> indices{0, 2, 4};
     std::vector<int> expected{10, 30, 50};
     std::vector<int> actual;
+    for (const int i : mutableContainer.subset(indices)) {
+      actual.push_back(i);
+    }
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
+                                  actual.begin(), actual.end());
+
+    BOOST_CHECK_EQUAL(2, mutableContainer.subset(indices).subrange(1).size());
+    BOOST_CHECK_EQUAL(1,
+                      mutableContainer.subset(indices).subrange(1, 1).size());
+  }
+
+  {
+    std::vector<std::size_t> indices{0, 2, 4};
+    std::vector<int> expected{10, 30, 50};
+    std::vector<int> actual;
     for (const int i : constContainer.subset(indices)) {
       actual.push_back(i);
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
                                   actual.begin(), actual.end());
+
+    BOOST_CHECK_EQUAL(2, constContainer.subset(indices).subrange(1).size());
+    BOOST_CHECK_EQUAL(1, constContainer.subset(indices).subrange(1, 1).size());
   }
 
   {
@@ -205,6 +224,11 @@ BOOST_AUTO_TEST_CASE(All) {
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
                                   actual.begin(), actual.end());
+
+    BOOST_CHECK_EQUAL(
+        2, mutableContainer.owningSubset(indices).subrange(1).size());
+    BOOST_CHECK_EQUAL(
+        1, mutableContainer.owningSubset(indices).subrange(1, 1).size());
   }
 
   {
@@ -216,6 +240,11 @@ BOOST_AUTO_TEST_CASE(All) {
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
                                   actual.begin(), actual.end());
+
+    BOOST_CHECK_EQUAL(2,
+                      constContainer.owningSubset(indices).subrange(1).size());
+    BOOST_CHECK_EQUAL(
+        1, constContainer.owningSubset(indices).subrange(1, 1).size());
   }
 
   {
@@ -227,6 +256,11 @@ BOOST_AUTO_TEST_CASE(All) {
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
                                   actual.begin(), actual.end());
+
+    BOOST_CHECK_EQUAL(
+        2, mutableContainer.owningOrderedSubset(indices).subrange(1).size());
+    BOOST_CHECK_EQUAL(
+        1, mutableContainer.owningOrderedSubset(indices).subrange(1, 1).size());
   }
 
   {
@@ -238,6 +272,11 @@ BOOST_AUTO_TEST_CASE(All) {
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(),
                                   actual.begin(), actual.end());
+
+    BOOST_CHECK_EQUAL(
+        2, constContainer.owningOrderedSubset(indices).subrange(1).size());
+    BOOST_CHECK_EQUAL(
+        1, constContainer.owningOrderedSubset(indices).subrange(1, 1).size());
   }
 }
 
