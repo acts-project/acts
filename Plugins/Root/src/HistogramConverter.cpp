@@ -12,6 +12,7 @@
 
 #include <TEfficiency.h>
 #include <TFitResult.h>
+#include <TGraphAsymmErrors.h>
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TH3F.h>
@@ -230,6 +231,8 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency1& boostEff) {
   auto rootEff = std::make_unique<TEfficiency>(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
+  rootEff->GetPaintedGraph()->GetXaxis()->SetTitle(axis.metadata().c_str());
+  rootEff->GetPaintedGraph()->GetYaxis()->SetTitle("Efficiency");
 
   return rootEff;
 }
@@ -271,6 +274,11 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency2& boostEff) {
   auto rootEff = std::make_unique<TEfficiency>(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
+  rootEff->GetPaintedHistogram()->GetXaxis()->SetTitle(
+      xAxis.metadata().c_str());
+  rootEff->GetPaintedHistogram()->GetYaxis()->SetTitle(
+      yAxis.metadata().c_str());
+  rootEff->GetPaintedHistogram()->GetZaxis()->SetTitle("Efficiency");
 
   return rootEff;
 }
@@ -279,8 +287,9 @@ std::pair<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>>
 ActsPlugins::extractMeanWidth1DProfiles(const TH2F& hist2d,
                                         const std::string& meanName,
                                         const std::string& widthName) {
-  // Create mean and width histograms with same X binning as the 2D histogram
   const int nBinsX = hist2d.GetNbinsX();
+
+  // Create mean and width histograms with same X binning as the 2D histogram
   auto meanHist = std::make_unique<TH1F>(
       meanName.c_str(), (std::string(hist2d.GetTitle()) + " mean").c_str(),
       nBinsX, hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
@@ -315,6 +324,12 @@ ActsPlugins::extractMeanWidth1DProfiles(const TH2F& hist2d,
     widthHist->SetBinContent(i, r->Parameter(2));
     widthHist->SetBinError(i, r->ParError(2));
   }
+
+  meanHist->GetXaxis()->SetTitle(hist2d.GetXaxis()->GetTitle());
+  meanHist->GetYaxis()->SetTitle(hist2d.GetYaxis()->GetTitle());
+
+  widthHist->GetXaxis()->SetTitle(hist2d.GetXaxis()->GetTitle());
+  widthHist->GetYaxis()->SetTitle(hist2d.GetYaxis()->GetTitle());
 
   return {std::move(meanHist), std::move(widthHist)};
 }
@@ -370,6 +385,14 @@ ActsPlugins::extractMeanWidth2DProfiles(const TH3F& hist3d,
       widthHist->SetBinError(i, j, r->ParError(2));
     }
   }
+
+  meanHist->GetXaxis()->SetTitle(hist3d.GetXaxis()->GetTitle());
+  meanHist->GetYaxis()->SetTitle(hist3d.GetYaxis()->GetTitle());
+  meanHist->GetZaxis()->SetTitle(hist3d.GetZaxis()->GetTitle());
+
+  widthHist->GetXaxis()->SetTitle(hist3d.GetXaxis()->GetTitle());
+  widthHist->GetYaxis()->SetTitle(hist3d.GetYaxis()->GetTitle());
+  widthHist->GetZaxis()->SetTitle(hist3d.GetZaxis()->GetTitle());
 
   return {std::move(meanHist), std::move(widthHist)};
 }
