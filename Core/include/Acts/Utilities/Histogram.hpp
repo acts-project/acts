@@ -116,6 +116,8 @@ class Histogram {
 using Histogram1 = Histogram<1>;
 /// 2D histogram
 using Histogram2 = Histogram<2>;
+/// 3D histogram
+using Histogram3 = Histogram<3>;
 
 /// @brief Multi-dimensional profile histogram using boost::histogram
 ///
