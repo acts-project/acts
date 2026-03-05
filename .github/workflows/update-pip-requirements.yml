@@ -34,9 +34,9 @@ jobs:
         run: |
           # Update this list after adding/removing requirements-files
           folder_list=(
-            codegen
             CI/clang_tidy
             CI/fpe_masks
+            codegen
             docs/old
             Python/Examples/tests
             Examples/Scripts
