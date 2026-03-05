@@ -382,9 +382,10 @@ class ElementLayerAssembler {
   /// (plus an optional suffix). The layer transform is deduced from the element
   /// when `setLayerAxes()` is configured.
   ///
-  /// @throws std::runtime_error if the layer type, filter, or container has not
-  ///         been set, if the backend requires axes and none were provided, if
-  ///         no container name is resolvable, or if the container yields no
+  /// @throws std::runtime_error if the layer type has not been set, if the
+  ///         backend requires axes and none were provided, if neither a layer
+  ///         filter nor explicit layer elements have been provided, if no
+  ///         container name is resolvable, or if the container yields no
   ///         matching elements and @p emptyOk is `false`.
   /// @return Shared pointer to the fully assembled container node.
   [[nodiscard]] std::shared_ptr<
@@ -677,8 +678,8 @@ class SensorLayer {
 /// Instances are obtained from @ref BlueprintBuilder::barrelEndcap(). The
 /// builder inspects the subtree of the provided assembly element for barrel and
 /// endcap children (using the backend's `isBarrel` / `isEndcap` / `isTracker`
-/// predicates) and delegates individual layer assembly to @ref LayerAssembler
-/// internally.
+/// predicates) and delegates individual layer assembly to
+/// @ref ElementLayerAssembler internally.
 ///
 /// Typical usage:
 /// @code
@@ -720,7 +721,7 @@ class BarrelEndcapAssembler {
   /// @brief Build and return the assembled barrel+endcap container node.
   ///
   /// Locates barrel and endcap sub-elements inside the assembly, creates one
-  /// @ref LayerAssembler -based barrel container and one or more endcap
+  /// @ref ElementLayerAssembler -based barrel container and one or more endcap
   /// containers, then returns a Z-axis @ref CylinderContainerBlueprintNode
   /// holding them all.
   ///
