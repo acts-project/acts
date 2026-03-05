@@ -14,6 +14,7 @@
 #include <TEfficiency.h>
 #include <TH1F.h>
 #include <TH2F.h>
+#include <TH3F.h>
 #include <TProfile.h>
 #include <boost/histogram/accumulators/weighted_sum.hpp>
 
@@ -80,6 +81,47 @@ std::unique_ptr<TH2F> toRoot(const Histogram2& boostHist) {
   // Set axis titles from axis metadata
   rootHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
   rootHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
+
+  return rootHist;
+}
+
+std::unique_ptr<TH3F> toRoot(const Histogram3& boostHist) {
+  const auto& bh = boostHist.histogram();
+  const auto& xAxis = bh.axis(0);
+  const auto& yAxis = bh.axis(1);
+  const auto& zAxis = bh.axis(2);
+
+  // Extract bin edges from X axis
+  std::vector<double> xEdges = extractBinEdges(xAxis);
+
+  // Extract bin edges from Y axis
+  std::vector<double> yEdges = extractBinEdges(yAxis);
+
+  // Extract bin edges from Z axis
+  std::vector<double> zEdges = extractBinEdges(zAxis);
+
+  // Create ROOT histogram with 3D variable binning
+  auto rootHist = std::make_unique<TH3F>(
+      boostHist.name().c_str(), boostHist.title().c_str(), xAxis.size(),
+      xEdges.data(), yAxis.size(), yEdges.data(), zAxis.size(), zEdges.data());
+
+  // Copy bin contents from boost to ROOT
+  for (auto&& x : boost::histogram::indexed(bh)) {
+    // Dereference to get bin content
+    double content = *x;
+
+    // ROOT bin numbering starts at 1 (bin 0 is underflow)
+    // indexed() gives us 0-based bin indices for each axis
+    int rootXBin = x.index(0) + 1;
+    int rootYBin = x.index(1) + 1;
+    int rootZBin = x.index(2) + 1;
+    rootHist->SetBinContent(rootXBin, rootYBin, rootZBin, content);
+  }
+
+  // Set axis titles from axis metadata
+  rootHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
+  rootHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
+  rootHist->GetZaxis()->SetTitle(zAxis.metadata().c_str());
 
   return rootHist;
 }

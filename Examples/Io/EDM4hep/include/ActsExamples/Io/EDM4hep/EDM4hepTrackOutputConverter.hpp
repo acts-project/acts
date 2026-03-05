@@ -10,14 +10,12 @@
 
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
 #include <string>
 
-namespace podio {
-class CollectionBase;
-}
+#include <edm4hep/TrackCollection.h>
 
 namespace ActsExamples {
 
@@ -56,7 +54,8 @@ class EDM4hepTrackOutputConverter : public PodioOutputConverter {
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 
-  CollectionBaseWriteHandle m_outputTracks{this, "OutputTracks"};
+  PodioCollectionWriteHandle<edm4hep::TrackCollection> m_outputTracks{
+      this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples
