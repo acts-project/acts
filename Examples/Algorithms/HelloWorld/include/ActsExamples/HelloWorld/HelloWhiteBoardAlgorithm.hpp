@@ -11,8 +11,7 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-
-#include "HelloData.hpp"
+#include "ActsExamples/HelloWorld/HelloData.hpp"
 
 namespace ActsExamples {
 
@@ -31,6 +30,9 @@ class HelloWhiteBoardAlgorithm : public IAlgorithm {
 
   /// Read input and copy to the output
   ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  /// Get the current algorithm configuration
+  const Config& config() const { return m_cfg; }
 
   ReadDataHandle<HelloDataCollection> m_readHandle{this, "Input"};
   WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
