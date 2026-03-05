@@ -25,10 +25,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
-#include "ActsPlugins/Json/DetrayJsonHelper.hpp"
 #include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
 
 #include <memory>
