@@ -46,15 +46,15 @@ class ContainerSubset {
   using IndexRange = index_range_t;
   using Index = typename IndexRange::value_type;
 
-  template <typename subset_iterator>
+  template <typename subset_iterator_t>
   class Iterator {
    private:
-    static_assert(std::input_iterator<subset_iterator>,
+    static_assert(std::input_iterator<subset_iterator_t>,
                   "Subset iterator must satisfy input iterator requirements");
     static constexpr bool IsBidirectional =
-        std::bidirectional_iterator<subset_iterator>;
+        std::bidirectional_iterator<subset_iterator_t>;
     static constexpr bool IsRandomAccess =
-        std::random_access_iterator<subset_iterator>;
+        std::random_access_iterator<subset_iterator_t>;
 
    public:
     using value_type = Value;
@@ -69,7 +69,8 @@ class ContainerSubset {
     using iterator_concept = iterator_category;
 
     constexpr Iterator() noexcept = default;
-    constexpr Iterator(Container &container, subset_iterator iterator) noexcept
+    constexpr Iterator(Container &container,
+                       subset_iterator_t iterator) noexcept
         : m_container(&container), m_iterator(iterator) {}
 
     constexpr value_type operator*() const {
@@ -142,7 +143,7 @@ class ContainerSubset {
 
    private:
     Container *m_container{};
-    subset_iterator m_iterator{};
+    subset_iterator_t m_iterator{};
 
     friend constexpr Iterator operator+(Iterator it, difference_type n) noexcept
       requires IsRandomAccess
@@ -227,28 +228,28 @@ class ContainerSubset {
              std::ranges::next(subset().begin(), offset + count)}};
   }
 
-  constexpr auto front() const noexcept {
+  constexpr Value front() const noexcept {
     return container()[subset().front()];
   }
 
-  constexpr auto back() const noexcept { return container()[subset().back()]; }
+  constexpr Value back() const noexcept { return container()[subset().back()]; }
 
-  constexpr auto begin() const noexcept {
-    return Iterator(container(), subset().begin());
+  constexpr iterator begin() const noexcept {
+    return {container(), subset().begin()};
   }
 
-  constexpr auto end() const noexcept {
-    return Iterator(container(), subset().end());
+  constexpr iterator end() const noexcept {
+    return {container(), subset().end()};
   }
 
-  constexpr auto operator[](Index index) const noexcept
+  constexpr Value operator[](Index index) const noexcept
     requires ContainerHasArrayAccess<container_t>
   {
     assert(index < size() && "Index out of bounds");
     return container()[subset()[index]];
   }
 
-  constexpr auto at(Index index) const
+  constexpr Value at(Index index) const
     requires ContainerHasAt<container_t>
   {
     if (index >= size()) {
