@@ -29,6 +29,7 @@
 #include <TFitResultPtr.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TH3.h>
 #include <TProfile.h>
 
 using Acts::VectorHelpers::eta;
@@ -80,9 +81,9 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   m_outputFile->cd();
 
   // Helper lambda to write 2D histogram and extract mean/width profiles
-  const auto writeWithRefinement = [](TH2F& hist2d,
-                                      const std::string& meanPrefix,
-                                      const std::string& widthPrefix) {
+  const auto writeH2DWithRefinement = [](TH2F& hist2d,
+                                         const std::string& meanPrefix,
+                                         const std::string& widthPrefix) {
     hist2d.Write();
 
     // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
@@ -97,9 +98,9 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   };
 
   // Helper lambda to write 3D histogram and extract mean/width profiles
-  const auto writeWithRefinement = [](TH3F& hist3d,
-                                      const std::string& meanPrefix,
-                                      const std::string& widthPrefix) {
+  const auto writeH3DWithRefinement = [](TH3F& hist3d,
+                                         const std::string& meanPrefix,
+                                         const std::string& widthPrefix) {
     hist3d.Write();
 
     // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
@@ -118,16 +119,16 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsEta()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    writeH2DWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsPt()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    writeH2DWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsEtaPhi()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    writeH3DWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsEtaPt()) {
-    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    writeH3DWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
 
   // Write pull histograms
@@ -135,16 +136,16 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsEta()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    writeH2DWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsPt()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    writeH2DWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsEtaPhi()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    writeH3DWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsEtaPt()) {
-    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    writeH3DWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
 
   // Write efficiency histograms

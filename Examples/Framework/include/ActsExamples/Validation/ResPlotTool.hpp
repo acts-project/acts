@@ -55,14 +55,10 @@ class ResPlotTool {
         {"Residual_t", BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
   };
 
-  /// Constructor
-  ///
   /// @param cfg Configuration struct
   /// @param level Message level declaration
   ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief fill the histograms
-  ///
   /// @param gctx the geometry context
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
@@ -70,12 +66,17 @@ class ResPlotTool {
             const SimParticleState& truthParticle,
             const Acts::BoundTrackParameters& fittedParamters);
 
-  /// @brief Accessors for histograms (const reference)
   const std::map<std::string, Histogram1>& res() const { return m_res; }
   const std::map<std::string, Histogram2>& resVsEta() const {
     return m_resVsEta;
   }
   const std::map<std::string, Histogram2>& resVsPt() const { return m_resVsPt; }
+  const std::map<std::string, Histogram3>& resVsEtaPhi() const {
+    return m_resVsEtaPhi;
+  }
+  const std::map<std::string, Histogram3>& resVsEtaPt() const {
+    return m_resVsEtaPt;
+  }
   const std::map<std::string, Histogram1>& pull() const { return m_pull; }
   const std::map<std::string, Histogram2>& pullVsEta() const {
     return m_pullVsEta;
@@ -94,6 +95,7 @@ class ResPlotTool {
   const Acts::Logger& logger() const { return *m_logger; }
 
   Config m_cfg;
+
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Residual distribution
