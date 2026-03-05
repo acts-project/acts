@@ -396,10 +396,10 @@ class AnyBase : public AnyBaseAll {
   /// @return True if a value is stored, false if empty
   explicit operator bool() const { return m_handler != nullptr; }
 
-  /// Type info of the stored value. Returns typeid(void) if empty.
-  /// @return The type info of the stored value
-  const std::type_info& typeInfo() const {
-    return m_handler != nullptr ? *m_handler->typeInfo : typeid(void);
+  /// Type info of the stored value. Returns nullptr if empty.
+  /// @return Pointer to the type info of the stored value, or nullptr if empty
+  const std::type_info* typeInfo() const {
+    return m_handler != nullptr ? m_handler->typeInfo : nullptr;
   }
 
  private:

@@ -118,7 +118,9 @@ void WhiteBoard::addHolder(const std::string &name,
   }
   ACTS_VERBOSE("Added object '" << name << "' of type '"
                                 << boost::core::demangle(
-                                       storeIt->second.first->typeInfo().name())
+                                       storeIt->second.first->typeInfo()
+                                           ? storeIt->second.first->typeInfo()->name()
+                                           : "unknown")
                                 << "'");
 
   if (success) {

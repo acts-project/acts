@@ -140,7 +140,9 @@ class PyReadDataHandle : public ReadDataHandleBase {
 
     if (m_entry->typeHash != storedTypeHash) {
       const auto& expected = boost::core::demangle(m_entry->typeinfo->name());
-      const auto& actual = boost::core::demangle(holder->typeInfo().name());
+      const auto& actual = boost::core::demangle(
+          (holder->typeInfo() != nullptr) ? holder->typeInfo()->name()
+                                          : "unknown");
       throw py::type_error("Type mismatch for key '" + key() + "'. Expected " +
                            expected + " but got " + actual);
     }
