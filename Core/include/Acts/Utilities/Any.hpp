@@ -118,22 +118,23 @@ class AnyBaseAll {};
 
 /// Small opaque type-erased type with configurable small buffer optimization
 ///
-/// @tparam SIZE Size of the internal buffer for small buffer optimization
-/// @tparam Copyable If true, stored types must be copyable and AnyBase is
+/// @tparam sb_size Size of the internal buffer for small buffer optimization
+/// @tparam copyable If true, stored types must be copyable and AnyBase is
 ///         copyable. If false, move-only types are allowed and AnyBase is
 ///         move-only (copy constructor and copy assignment are deleted).
 ///
 /// @note
-/// Type requirements when Copyable is true:
+/// Type requirements when copyable is true:
 /// - All stored types must be copy constructible and copy assignable.
-/// - Types stored locally (`sizeof(T) <= SIZE`) must also be move constructible
+/// - Types stored locally (`sizeof(T) <= sb_size`) must also be move
+/// constructible
 ///   and move assignable because local moves use move operations when not
 ///   trivially movable (trivial moves fall back to buffer copies).
-/// - Types stored on the heap (`sizeof(T) > SIZE`) are moved by stealing the
+/// - Types stored on the heap (`sizeof(T) > sb_size`) are moved by stealing the
 ///   pointer, so no move operations are required in that case.
 ///
 /// @note
-/// Type requirements when Copyable is false:
+/// Type requirements when copyable is false:
 /// - All stored types must be move constructible.
 /// - Types stored locally must also be move assignable.
 /// - Heap-allocated types only need move constructible (pointer steal).
@@ -147,9 +148,9 @@ class AnyBaseAll {};
 ///   of the pointer; copies allocate and copy-construct the pointee.
 template <std::size_t SIZE, bool Copyable = true>
 class AnyBase : public AnyBaseAll {
-  static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
+  static_assert(sizeof(void*) <= sb_size, "Size is too small for a pointer");
 
-  /// Type trait: T is storable when Copyable requires copy+move, else
+  /// Type trait: T is storable when copyable requires copy+move, else
   /// move-only.
   /// @tparam U Type to check
   /// @return True if the type is storable, false otherwise
@@ -157,13 +158,13 @@ class AnyBase : public AnyBaseAll {
   static constexpr bool isStorable() {
     if constexpr (std::is_base_of_v<AnyBaseAll, U>) {
       return false;
-    } else if constexpr (Copyable) {
+    } else if constexpr (copyable) {
       return std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U> &&
-             (sizeof(U) > SIZE || (std::is_move_assignable_v<U> &&
-                                   std::is_move_constructible_v<U>));
+             (sizeof(U) > sb_size || (std::is_move_assignable_v<U> &&
+                                      std::is_move_constructible_v<U>));
     } else {
       return std::is_move_constructible_v<U> &&
-             (sizeof(U) > SIZE || std::is_move_assignable_v<U>);
+             (sizeof(U) > sb_size || std::is_move_assignable_v<U>);
     }
   }
 
@@ -291,7 +292,7 @@ class AnyBase : public AnyBaseAll {
 
   ~AnyBase() { destroy(); }
 
-  /// Copy constructor (only when Copyable is true)
+  /// Copy constructor (only when copyable is true)
   /// @param other The AnyBase to copy from
   AnyBase(const AnyBase& other) _ACTS_ANY_NOEXCEPT
     requires Copyable
@@ -308,12 +309,12 @@ class AnyBase : public AnyBaseAll {
     copyConstruct(other);
   }
 
-  /// Copy constructor deleted when Copyable is false (move-only variant)
+  /// Copy constructor deleted when copyable is false (move-only variant)
   AnyBase(const AnyBase&)
-    requires(!Copyable)
+    requires(!copyable)
   = delete;
 
-  /// Copy assignment operator (only when Copyable is true)
+  /// Copy assignment operator (only when copyable is true)
   /// @param other The AnyBase to copy from
   /// @return Reference to this object
   AnyBase& operator=(const AnyBase& other) _ACTS_ANY_NOEXCEPT
@@ -342,9 +343,9 @@ class AnyBase : public AnyBaseAll {
     return *this;
   }
 
-  /// Copy assignment deleted when Copyable is false (move-only variant)
+  /// Copy assignment deleted when copyable is false (move-only variant)
   AnyBase& operator=(const AnyBase&)
-    requires(!Copyable)
+    requires(!copyable)
   = delete;
 
   /// Move constructor
@@ -481,7 +482,7 @@ class AnyBase : public AnyBaseAll {
 
   template <typename T>
   static constexpr bool heapAllocated() {
-    return sizeof(T) > SIZE;
+    return sizeof(T) > sb_size;
   }
 
   template <typename T, typename... Args>
@@ -683,7 +684,7 @@ class AnyBase : public AnyBaseAll {
 #endif
       );
 
-  alignas(kMaxAlignment) std::array<std::byte, SIZE> m_data{};
+  alignas(kMaxAlignment) std::array<std::byte, sb_size> m_data{};
   const Handler* m_handler{nullptr};
 };
 
