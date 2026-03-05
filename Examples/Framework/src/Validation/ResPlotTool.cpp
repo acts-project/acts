@@ -19,6 +19,8 @@
 
 namespace ActsExamples {
 
+static constexpr double nan = std::numeric_limits<double>::quiet_NaN();
+
 ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {
@@ -122,35 +124,24 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   const double truthPt = truthParticle.transverseMomentum();
 
   // fill the histograms for residual and pull
-  for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
-    const std::string& parName = m_cfg.paramNames.at(parID);
+  for (unsigned int paramId = 0; paramId < Acts::eBoundSize; paramId++) {
+    const std::string& parName = m_cfg.paramNames.at(paramId);
 
-    const double residual = trackParameter[parID] - truthParameter[parID];
+    const double residual = trackParameter[paramId] - truthParameter[paramId];
     m_res.at(parName).fill({residual});
     m_resVsEta.at(parName).fill({truthEta, residual});
     m_resVsPt.at(parName).fill({truthPt, residual});
 
-    if (!fittedParamters.covariance().has_value()) {
-      ACTS_WARNING("Fitted track parameter :" << parName
-                                              << " has no covariance");
-      continue;
-    }
+    const double var = trackCovariance(paramId, paramId);
 
-    if (trackCovariance(parID, parID) <= 0.0) {
-      ACTS_WARNING("Fitted track parameter :"
-                   << parName << " has non-positive covariance = "
-                   << trackCovariance(parID, parID));
-      continue;
-    }
-
-    const double pull = residual / std::sqrt(trackCovariance(parID, parID));
+    const double pull = var > 0 ? residual / std::sqrt(var) : nan;
     m_pull.at(parName).fill({pull});
     m_pullVsEta.at(parName).fill({truthEta, pull});
     m_pullVsPt.at(parName).fill({truthPt, pull});
   }
 
   // `q/pT` and `pT * q/pT` residual and pull
-  do {
+  {
     const double truthQoverPt = truthParticle.charge() / truthPt;
     const double recoQoverPt =
         trackParameter[eBoundQOverP] / std::sin(trackParameter[eBoundTheta]);
@@ -174,24 +165,22 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     }();
     const double covariancePtQoverPt =
         covarianceQoverPt * Acts::square(truthQoverPt);
-    if (covariancePtQoverPt <= 0.0) {
-      ACTS_WARNING("Fitted track parameter :"
-                   << m_cfg.ptQoverPtName
-                   << " has non-positive covariance = " << covariancePtQoverPt);
-      continue;
-    }
 
-    const double pullQoverPt = residualQoverPt / std::sqrt(covarianceQoverPt);
+    const double pullQoverPt =
+        covarianceQoverPt > 0 ? residualQoverPt / std::sqrt(covarianceQoverPt)
+                              : nan;
     m_pull.at(m_cfg.qOverPtName).fill({pullQoverPt});
     m_pullVsEta.at(m_cfg.qOverPtName).fill({truthEta, pullQoverPt});
     m_pullVsPt.at(m_cfg.qOverPtName).fill({truthPt, pullQoverPt});
 
     const double pullPtQoverPt =
-        residualPtQoverPt / std::sqrt(covariancePtQoverPt);
+        covariancePtQoverPt > 0
+            ? residualPtQoverPt / std::sqrt(covariancePtQoverPt)
+            : nan;
     m_pull.at(m_cfg.ptQoverPtName).fill({pullPtQoverPt});
     m_pullVsEta.at(m_cfg.ptQoverPtName).fill({truthEta, pullPtQoverPt});
     m_pullVsPt.at(m_cfg.ptQoverPtName).fill({truthPt, pullPtQoverPt});
-  } while (false);
+  }
 }
 
 }  // namespace ActsExamples
