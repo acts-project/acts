@@ -46,7 +46,7 @@ GsfComponent detail::Gsf::mergeTwoComponents(const GsfComponent &a,
 
 namespace detail::Gsf {
 
-double computeSymmetricKlDivergence(const GsfComponent &a,
+double detail::Gsf::computeSymmetricKlDivergence(const GsfComponent &a,
                                     const GsfComponent &b) {
   const double parsA = a.boundPars[eBoundQOverP];
   const double parsB = b.boundPars[eBoundQOverP];
