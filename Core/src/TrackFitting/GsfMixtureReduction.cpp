@@ -94,7 +94,7 @@ void Acts::reduceMixtureWithKLDistanceNaive(
 
     for (std::size_t i = 0; i < cmpCache.size(); ++i) {
       for (std::size_t j = i + 1; j < cmpCache.size(); ++j) {
-        double distance =
+        const double distance =
             detail::Gsf::computeSymmetricKlDivergence(cmpCache[i], cmpCache[j]);
         if (distance < minDistance) {
           minDistance = distance;
