@@ -106,10 +106,8 @@ class GbtsTrackingFilter final {
     std::uint32_t globalStateCounter{0};
   };
 
-  /// Constructor
   /// @param config Configuration for seed finder
   /// @param geometry GBTS geometry for layer information
-  /// @param sb Edge storage
   GbtsTrackingFilter(const Config& config,
                      const std::shared_ptr<const GbtsGeometry>& geometry);
 

@@ -119,7 +119,6 @@ class GbtsGeometry final {
   /// Constructor
   /// @param layerDescriptions Layer descriptions for the layers
   /// @param layerConnections Layer connections map
-  /// @param etaBinWidth Eta bin width
   GbtsGeometry(const std::vector<GbtsLayerDescription>& layerDescriptions,
                const GbtsLayerConnectionMap& layerConnections);
 

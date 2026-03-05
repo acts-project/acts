@@ -92,6 +92,8 @@ class GraphBasedTrackSeeder {
   /// Derived configuration struct that contains calculated parameters based on
   /// the configuration.
   struct DerivedConfig : public Config {
+    /// Construct derived configuration from base configuration.
+    /// @param config Base configuration to derive from
     explicit DerivedConfig(const Config& config);
 
     /// Phi slice width
