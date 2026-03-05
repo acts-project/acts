@@ -90,7 +90,8 @@ class DataHandleBase {
     return wb.pop<T>(m_key.value());
   }
 
-  WhiteBoard::IHolder* getHolder(const WhiteBoard& wb) const {
+  std::pair<Acts::AnyMoveOnly*, std::uint64_t> getHolder(
+      const WhiteBoard& wb) const {
     return wb.getHolder(m_key.value());
   }
 
