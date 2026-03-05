@@ -79,52 +79,35 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
 
   m_outputFile->cd();
 
-  // Helper lambda to write 2D histogram and extract mean/width histograms
-  auto writeWithRefinement = [](TH2F& hist2d, const std::string& meanPrefix,
-                                const std::string& widthPrefix) {
+  // Helper lambda to write 2D histogram and extract mean/width profiles
+  const auto writeWithRefinement = [](TH2F& hist2d,
+                                      const std::string& meanPrefix,
+                                      const std::string& widthPrefix) {
     hist2d.Write();
 
     // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
-    std::string baseName = hist2d.GetName();
-    std::string suffix = baseName.substr(baseName.find('_'));
+    const std::string baseName = hist2d.GetName();
+    const std::string suffix = baseName.substr(baseName.find('_'));
 
-    // Create mean and width histograms with same X binning as the 2D histogram
-    int nBinsX = hist2d.GetNbinsX();
-    auto meanHist = std::make_unique<TH1F>(
-        (meanPrefix + suffix).c_str(),
-        (std::string(hist2d.GetTitle()) + " mean").c_str(), nBinsX,
-        hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
-    auto widthHist = std::make_unique<TH1F>(
-        (widthPrefix + suffix).c_str(),
-        (std::string(hist2d.GetTitle()) + " width").c_str(), nBinsX,
-        hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
+    auto [meanHist, widthHist] = ActsPlugins::extractMeanWidth1DProfiles(
+        hist2d, meanPrefix + suffix, widthPrefix + suffix);
 
-    // Copy X axis bin edges for variable binning
-    if (hist2d.GetXaxis()->GetXbins()->GetSize() > 0) {
-      meanHist->SetBins(nBinsX, hist2d.GetXaxis()->GetXbins()->GetArray());
-      widthHist->SetBins(nBinsX, hist2d.GetXaxis()->GetXbins()->GetArray());
-    }
+    meanHist->Write();
+    widthHist->Write();
+  };
 
-    // Project each X bin and extract mean/width via Gaussian fit
-    for (int j = 1; j <= nBinsX; j++) {
-      auto proj = std::unique_ptr<TH1D>(hist2d.ProjectionY(
-          Form("%s_projy_bin%d", baseName.c_str(), j), j, j));
-      if (proj->GetEntries() <= 0) {
-        continue;
-      }
+  // Helper lambda to write 3D histogram and extract mean/width profiles
+  const auto writeWithRefinement = [](TH3F& hist3d,
+                                      const std::string& meanPrefix,
+                                      const std::string& widthPrefix) {
+    hist3d.Write();
 
-      TFitResultPtr r = proj->Fit("gaus", "QS0");
-      if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
-        continue;
-      }
+    // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
+    const std::string baseName = hist3d.GetName();
+    const std::string suffix = baseName.substr(baseName.find('_'));
 
-      // fill the mean and width into 'j'th bin of the meanHist and
-      // widthHist, respectively
-      meanHist->SetBinContent(j, r->Parameter(1));
-      meanHist->SetBinError(j, r->ParError(1));
-      widthHist->SetBinContent(j, r->Parameter(2));
-      widthHist->SetBinError(j, r->ParError(2));
-    }
+    auto [meanHist, widthHist] = ActsPlugins::extractMeanWidth2DProfiles(
+        hist3d, meanPrefix + suffix, widthPrefix + suffix);
 
     meanHist->Write();
     widthHist->Write();
@@ -140,6 +123,12 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   for (const auto& [name, hist] : m_resPlotTool.resVsPt()) {
     writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
+  for (const auto& [name, hist] : m_resPlotTool.resVsEtaPhi()) {
+    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+  }
+  for (const auto& [name, hist] : m_resPlotTool.resVsEtaPt()) {
+    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
+  }
 
   // Write pull histograms
   for (const auto& [name, hist] : m_resPlotTool.pull()) {
@@ -149,6 +138,12 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
     writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsPt()) {
+    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+  }
+  for (const auto& [name, hist] : m_resPlotTool.pullVsEtaPhi()) {
+    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+  }
+  for (const auto& [name, hist] : m_resPlotTool.pullVsEtaPt()) {
     writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
 

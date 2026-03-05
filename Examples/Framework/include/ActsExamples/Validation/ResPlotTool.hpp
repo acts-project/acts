@@ -31,6 +31,7 @@ class ResPlotTool {
   using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
   using Histogram1 = Acts::Experimental::Histogram1;
   using Histogram2 = Acts::Experimental::Histogram2;
+  using Histogram3 = Acts::Experimental::Histogram3;
 
   /// @brief Nested configuration struct
   struct Config {
@@ -41,6 +42,8 @@ class ResPlotTool {
     /// Binning info for variables
     std::map<std::string, AxisVariant> varBinning = {
         {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", BoostRegularAxis(40, -std::numbers::pi, std::numbers::pi,
+                                 "#phi [rad]")},
         {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
         {"Pull", BoostRegularAxis(100, -5, 5, "pull")},
         {"Residual_d0", BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
@@ -80,6 +83,12 @@ class ResPlotTool {
   const std::map<std::string, Histogram2>& pullVsPt() const {
     return m_pullVsPt;
   }
+  const std::map<std::string, Histogram3>& pullVsEtaPhi() const {
+    return m_pullVsEtaPhi;
+  }
+  const std::map<std::string, Histogram3>& pullVsEtaPt() const {
+    return m_pullVsEtaPt;
+  }
 
  private:
   const Acts::Logger& logger() const { return *m_logger; }
@@ -93,6 +102,10 @@ class ResPlotTool {
   std::map<std::string, Histogram2> m_resVsEta;
   /// Residual vs pT scatter plot
   std::map<std::string, Histogram2> m_resVsPt;
+  /// Residual vs eta-phi scatter plot
+  std::map<std::string, Histogram3> m_resVsEtaPhi;
+  /// Residual vs eta-pT scatter plot
+  std::map<std::string, Histogram3> m_resVsEtaPt;
 
   /// Pull distribution
   std::map<std::string, Histogram1> m_pull;
@@ -100,6 +113,10 @@ class ResPlotTool {
   std::map<std::string, Histogram2> m_pullVsEta;
   /// Pull vs pT scatter plot
   std::map<std::string, Histogram2> m_pullVsPt;
+  /// Pull vs eta-phi scatter plot
+  std::map<std::string, Histogram3> m_pullVsEtaPhi;
+  /// Pull vs eta-pT scatter plot
+  std::map<std::string, Histogram3> m_pullVsEtaPt;
 };
 
 }  // namespace ActsExamples

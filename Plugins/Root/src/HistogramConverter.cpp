@@ -8,10 +8,10 @@
 
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
-#include <cmath>
 #include <vector>
 
 #include <TEfficiency.h>
+#include <TFitResult.h>
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TH3F.h>
@@ -20,9 +20,7 @@
 
 using namespace Acts::Experimental;
 
-namespace ActsPlugins {
-
-std::unique_ptr<TH1F> toRoot(const Histogram1& boostHist) {
+std::unique_ptr<TH1F> ActsPlugins::toRoot(const Histogram1& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& axis = bh.axis(0);
 
@@ -50,7 +48,7 @@ std::unique_ptr<TH1F> toRoot(const Histogram1& boostHist) {
   return rootHist;
 }
 
-std::unique_ptr<TH2F> toRoot(const Histogram2& boostHist) {
+std::unique_ptr<TH2F> ActsPlugins::toRoot(const Histogram2& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& xAxis = bh.axis(0);
   const auto& yAxis = bh.axis(1);
@@ -85,7 +83,7 @@ std::unique_ptr<TH2F> toRoot(const Histogram2& boostHist) {
   return rootHist;
 }
 
-std::unique_ptr<TH3F> toRoot(const Histogram3& boostHist) {
+std::unique_ptr<TH3F> ActsPlugins::toRoot(const Histogram3& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& xAxis = bh.axis(0);
   const auto& yAxis = bh.axis(1);
@@ -126,7 +124,8 @@ std::unique_ptr<TH3F> toRoot(const Histogram3& boostHist) {
   return rootHist;
 }
 
-std::unique_ptr<TProfile> toRoot(const ProfileHistogram1& boostProfile) {
+std::unique_ptr<TProfile> ActsPlugins::toRoot(
+    const ProfileHistogram1& boostProfile) {
   const auto& bh = boostProfile.histogram();
   const auto& axis = bh.axis(0);
 
@@ -201,7 +200,7 @@ std::unique_ptr<TProfile> toRoot(const ProfileHistogram1& boostProfile) {
   return rootProfile;
 }
 
-std::unique_ptr<TEfficiency> toRoot(const Efficiency1& boostEff) {
+std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency1& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& axis = accepted.axis(0);
@@ -235,7 +234,7 @@ std::unique_ptr<TEfficiency> toRoot(const Efficiency1& boostEff) {
   return rootEff;
 }
 
-std::unique_ptr<TEfficiency> toRoot(const Efficiency2& boostEff) {
+std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency2& boostEff) {
   const auto& accepted = boostEff.acceptedHistogram();
   const auto& total = boostEff.totalHistogram();
   const auto& xAxis = accepted.axis(0);
@@ -276,4 +275,101 @@ std::unique_ptr<TEfficiency> toRoot(const Efficiency2& boostEff) {
   return rootEff;
 }
 
-}  // namespace ActsPlugins
+std::pair<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>>
+ActsPlugins::extractMeanWidth1DProfiles(const TH2F& hist2d,
+                                        const std::string& meanName,
+                                        const std::string& widthName) {
+  // Create mean and width histograms with same X binning as the 2D histogram
+  const int nBinsX = hist2d.GetNbinsX();
+  auto meanHist = std::make_unique<TH1F>(
+      meanName.c_str(), (std::string(hist2d.GetTitle()) + " mean").c_str(),
+      nBinsX, hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
+  auto widthHist = std::make_unique<TH1F>(
+      widthName.c_str(), (std::string(hist2d.GetTitle()) + " width").c_str(),
+      nBinsX, hist2d.GetXaxis()->GetXmin(), hist2d.GetXaxis()->GetXmax());
+
+  // Copy X axis bin edges for variable binning
+  if (hist2d.GetXaxis()->GetXbins()->GetSize() > 0) {
+    meanHist->SetBins(nBinsX, hist2d.GetXaxis()->GetXbins()->GetArray());
+    widthHist->SetBins(nBinsX, hist2d.GetXaxis()->GetXbins()->GetArray());
+  }
+
+  // Project each X bin and extract mean/width via Gaussian fit
+  for (int i = 1; i <= nBinsX; ++i) {
+    const auto proj = std::unique_ptr<TH1D>(
+        hist2d.ProjectionY(Form("%s_projy_bin%d", hist2d.GetName(), i), i, i));
+    if (proj->GetEntries() <= 0) {
+      continue;
+    }
+
+    TFitResultPtr r = proj->Fit("gaus", "QS0");
+    if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
+      continue;
+    }
+
+    // Fill mean
+    meanHist->SetBinContent(i, r->Parameter(1));
+    meanHist->SetBinError(i, r->ParError(1));
+
+    // Fill width (sigma)
+    widthHist->SetBinContent(i, r->Parameter(2));
+    widthHist->SetBinError(i, r->ParError(2));
+  }
+
+  return {std::move(meanHist), std::move(widthHist)};
+}
+
+std::pair<std::unique_ptr<TH2F>, std::unique_ptr<TH2F>>
+ActsPlugins::extractMeanWidth2DProfiles(const TH3F& hist3d,
+                                        const std::string& meanName,
+                                        const std::string& widthName) {
+  const int nBinsX = hist3d.GetNbinsX();
+  const int nBinsY = hist3d.GetNbinsY();
+
+  // Create output histograms with same XY binning as input
+  auto meanHist = std::make_unique<TH2F>(
+      meanName.c_str(), (std::string(hist3d.GetTitle()) + " mean").c_str(),
+      nBinsX, hist3d.GetXaxis()->GetXmin(), hist3d.GetXaxis()->GetXmax(),
+      nBinsY, hist3d.GetYaxis()->GetXmin(), hist3d.GetYaxis()->GetXmax());
+
+  auto widthHist = std::make_unique<TH2F>(
+      widthName.c_str(), (std::string(hist3d.GetTitle()) + " width").c_str(),
+      nBinsX, hist3d.GetXaxis()->GetXmin(), hist3d.GetXaxis()->GetXmax(),
+      nBinsY, hist3d.GetYaxis()->GetXmin(), hist3d.GetYaxis()->GetXmax());
+
+  // Copy X and Y axis bin edges for variable binning
+  if (hist3d.GetXaxis()->GetXbins()->GetSize() > 0 ||
+      hist3d.GetYaxis()->GetXbins()->GetSize() > 0) {
+    meanHist->SetBins(nBinsX, hist3d.GetXaxis()->GetXbins()->GetArray(), nBinsY,
+                      hist3d.GetYaxis()->GetXbins()->GetArray());
+    widthHist->SetBins(nBinsX, hist3d.GetXaxis()->GetXbins()->GetArray(),
+                       nBinsY, hist3d.GetYaxis()->GetXbins()->GetArray());
+  }
+
+  // Loop over all (X,Y) bins
+  for (int i = 1; i <= nBinsX; ++i) {
+    for (int j = 1; j <= nBinsY; ++j) {
+      const auto proj = std::unique_ptr<TH1D>(hist3d.ProjectionZ(
+          Form("%s_projz_bin%d_%d", hist3d.GetName(), i, j), i, i, j, j));
+
+      if (proj->GetEntries() <= 0) {
+        continue;
+      }
+
+      TFitResultPtr r = proj->Fit("gaus", "QS0");
+      if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
+        continue;
+      }
+
+      // Fill mean
+      meanHist->SetBinContent(i, j, r->Parameter(1));
+      meanHist->SetBinError(i, j, r->ParError(1));
+
+      // Fill width (sigma)
+      widthHist->SetBinContent(i, j, r->Parameter(2));
+      widthHist->SetBinError(i, j, r->ParError(2));
+    }
+  }
+
+  return {std::move(meanHist), std::move(widthHist)};
+}

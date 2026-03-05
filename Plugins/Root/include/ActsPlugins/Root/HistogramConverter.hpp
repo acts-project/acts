@@ -75,4 +75,24 @@ std::unique_ptr<TEfficiency> toRoot(
 std::unique_ptr<TEfficiency> toRoot(
     const Acts::Experimental::Efficiency2& boostEff);
 
+/// Helper function to extract 1D mean/width profiles from a 2D histogram
+///
+/// @param hist2d The input 2D histogram to analyze
+/// @param meanName The name for the output mean profile histogram
+/// @param widthName The name for the output width profile histogram
+/// @return pair of unique pointers to the mean and width TH1F histograms
+std::pair<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>>
+extractMeanWidth1DProfiles(const TH2F& hist2d, const std::string& meanName,
+                           const std::string& widthName);
+
+/// Helper function to extract 2D mean/width profiles from a 3D histogram
+///
+/// @param hist3d The input 3D histogram to analyze
+/// @param meanName The name for the output mean profile histogram
+/// @param widthName The name for the output width profile histogram
+/// @return pair of unique pointers to the mean and width TH1F histograms
+std::pair<std::unique_ptr<TH2F>, std::unique_ptr<TH2F>>
+extractMeanWidth2DProfiles(const TH3F& hist3d, const std::string& meanName,
+                           const std::string& widthName);
+
 }  // namespace ActsPlugins
