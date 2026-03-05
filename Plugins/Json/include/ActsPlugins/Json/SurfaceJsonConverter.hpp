@@ -241,6 +241,14 @@ nlohmann::json surfaceToJsonT(const surface_t& surface,
   return jSurface;
 }
 
+template <typename surface_t>
+std::shared_ptr<Surface> surfaceFromJsonT(const nlohmann::json& j) {
+  nlohmann::json jTransform = j["transform"];
+  Acts::Transform3 sTransform =
+      Acts::Transform3JsonConverter::fromJson(jTransform);
+  return Surface::makeShared<surface_t>(sTransform);
+}
+
 template <typename surface_t, typename bounds_t>
 std::shared_ptr<Surface> surfaceFromJsonT(const nlohmann::json& j) {
   nlohmann::json jTransform = j["transform"];

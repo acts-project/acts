@@ -97,6 +97,9 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
   cfg.surfaceDecoder.registerKind(
       getSurfaceKind<PlaneSurface>() + getSurfaceBoundsKind<TrapezoidBounds>(),
       surfaceFromJsonT<PlaneSurface, TrapezoidBounds>);
+  cfg.surfaceDecoder.registerKind(
+      getSurfaceKind<PlaneSurface>() + getSurfaceBoundsKind<InfiniteBounds>(),
+      surfaceFromJsonT<PlaneSurface>);
 
   cfg.surfaceDecoder.registerKind(
       getSurfaceKind<DiscSurface>() + getSurfaceBoundsKind<AnnulusBounds>(),
@@ -120,6 +123,9 @@ Acts::SurfaceJsonConverter::Config::defaultConfig() {
       getSurfaceKind<StrawSurface>() + getSurfaceBoundsKind<LineBounds>(),
       surfaceFromJsonT<StrawSurface, LineBounds>);
 
+  cfg.surfaceDecoder.registerKind(
+      getSurfaceKind<PerigeeSurface>() + getSurfaceBoundsKind<InfiniteBounds>(),
+      surfaceFromJsonT<PerigeeSurface>);
   return cfg;
 }
 
@@ -129,12 +135,7 @@ Acts::SurfaceJsonConverter::Config Acts::SurfaceJsonConverter::m_cfg =
 std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
     const nlohmann::json& j) {
   std::shared_ptr<Acts::Surface> mutableSf = nullptr;
-  if (j["type"].get<Surface::SurfaceType>() == Surface::SurfaceType::Perigee) {
-    mutableSf = Surface::makeShared<PerigeeSurface>(
-        Transform3JsonConverter::fromJson(j["transform"]));
-  } else {
-    mutableSf = m_cfg.surfaceDecoder(j);
-  }
+  mutableSf = m_cfg.surfaceDecoder(j);
 
   if (j.find("geo_id") != j.end() && !j["geo_id"].empty()) {
     GeometryIdentifier geoID = j["geo_id"].get<GeometryIdentifier>();
