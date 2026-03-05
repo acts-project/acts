@@ -12,6 +12,7 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Seeding2/GbtsGeometry.hpp"
 #include "Acts/Seeding2/GbtsLayerConnection.hpp"
 #include "Acts/Seeding2/GbtsTrackingFilter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -45,8 +46,8 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
       m_cfg.seedFinderConfig.lrtMode);
 
   // option that allows for adding custom eta binning (default is at 0.2)
-  if (m_cfg.seedFinderConfig.etaBinOverride != 0.0f) {
-    layerConnectionMap.etaBin = m_cfg.seedFinderConfig.etaBinOverride;
+  if (m_cfg.seedFinderConfig.etaBinWidthOverride != 0.0f) {
+    layerConnectionMap.etaBinWidth = m_cfg.seedFinderConfig.etaBinWidthOverride;
   }
 
   // initialise the object that holds all the geometry information needed for
@@ -237,10 +238,10 @@ Acts::SpacePointContainer2 GraphBasedSeedingAlgorithm::makeSpContainer(
   return coreSpacePoints;
 }
 
-std::vector<Acts::Experimental::TrigInDetSiLayer>
+std::vector<Acts::Experimental::GbtsLayerDescription>
 GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
-  std::vector<Acts::Experimental::TrigInDetSiLayer> inputVector{};
-  std::vector<std::size_t> countVector{};
+  std::vector<Acts::Experimental::GbtsLayerDescription> inputVector;
+  std::vector<std::size_t> countVector;
 
   m_cfg.trackingGeometry->visitSurfaces([this, &inputVector, &countVector,
                                          &gctx](const Acts::Surface *surface) {
@@ -287,19 +288,21 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
       gbtsId = std::get<0>(find->second);
     }
 
-    std::int16_t barrelEc = 0;  // a variable that says if barrrel, 0 = barrel
+    Acts::Experimental::GbtsLayerType barrelEc =
+        Acts::Experimental::GbtsLayerType::Barrel;  // a variable that says if
+                                                    // barrrel, 0 = barrel
     std::uint32_t etaMod = std::get<1>(find->second);
 
     // assign barrelEc depending on Gbts_layer
     if (79 < gbtsId && gbtsId < 85) {  // 80s, barrel
-      barrelEc = 0;
+      barrelEc = Acts::Experimental::GbtsLayerType::Barrel;
     } else if (89 < gbtsId && gbtsId < 99) {  // 90s positive
-      barrelEc = 2;
+      barrelEc = Acts::Experimental::GbtsLayerType::Endcap;
     } else {  // 70s negative
-      barrelEc = -2;
+      barrelEc = Acts::Experimental::GbtsLayerType::Endcap;
     }
 
-    if (barrelEc == 0) {
+    if (barrelEc == Acts::Experimental::GbtsLayerType::Barrel) {
       rc = std::sqrt(center(0) * center(0) +
                      center(1) * center(1));  // barrel center in r
       // bounds of z
@@ -309,7 +312,7 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
       if (max_bound_global(2) > maxBound) {
         maxBound = max_bound_global(2);
       }
-    } else {
+    } else if (barrelEc == Acts::Experimental::GbtsLayerType::Endcap) {
       rc = center(2);  // not barrel center in Z
       // bounds of r
       float min = std::sqrt(min_bound_global(0) * min_bound_global(0) +
@@ -322,13 +325,16 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
       if (max > maxBound) {
         maxBound = max;
       }
+    } else {
+      throw std::runtime_error(
+          "Invalid barrel/endcap assignment for GbtsLayer");
     }
 
     std::int32_t combinedId = gbtsId * 1000 + etaMod;
 
     const auto currentIndex =
         find_if(inputVector.begin(), inputVector.end(),
-                [combinedId](auto n) { return n.subdet == combinedId; });
+                [combinedId](auto n) { return n.id == combinedId; });
     if (currentIndex != inputVector.end()) {  // not end so does exist
       std::size_t index = std::distance(inputVector.begin(), currentIndex);
       inputVector[index].refCoord += rc;
@@ -340,13 +346,13 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
 
     } else {  // end so doesn't exists
       // make new if one with Gbts ID doesn't exist:
-      Acts::Experimental::TrigInDetSiLayer newGbtsId(combinedId, barrelEc, rc,
-                                                     minBound, maxBound);
+      Acts::Experimental::GbtsLayerDescription newGbtsId(
+          combinedId, barrelEc, rc, minBound, maxBound);
       inputVector.push_back(newGbtsId);
       // so the element exists and not divinding by 0
       countVector.push_back(1);
 
-      // tracking the index of each TrigInDetSiLayer as there added
+      // tracking the index of each GbtsLayerDescription as there added
 
       // so layer ID refers to actual index and not size of vector
       std::uint32_t layerId = countVector.size() - 1;
@@ -397,7 +403,7 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("useOldTunings: " << cfg1.useOldTunings);
   ACTS_DEBUG("tauRatioCut: " << cfg1.tauRatioCut);
   ACTS_DEBUG("tauRatioPrecut: " << cfg1.tauRatioPrecut);
-  ACTS_DEBUG("etaBinOverride: " << cfg1.etaBinOverride);
+  ACTS_DEBUG("etaBinWidthOverride: " << cfg1.etaBinWidthOverride);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("minPt: " << cfg1.minPt);
   ACTS_DEBUG("ptCoeff: " << cfg1.ptCoeff);

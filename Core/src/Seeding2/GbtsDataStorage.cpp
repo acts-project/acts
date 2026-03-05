@@ -109,7 +109,7 @@ std::uint32_t GbtsNodeStorage::loadPixelGraphNodes(
 
   const GbtsLayer& pL = m_geometry->layerByIndex(layerIndex);
 
-  const bool isBarrel = pL.getLayer().type == 0;
+  const bool isBarrel = pL.layerDescription().type == GbtsLayerType::Barrel;
 
   for (const GbtsNode& node : coll) {
     const std::int32_t binIndex = pL.getEtaBin(node.z, node.r);
@@ -175,7 +175,7 @@ void GbtsNodeStorage::initializeNodes(const bool useMl) {
   for (GbtsEtaBin& b : m_etaBins) {
     b.initializeNodes();
     if (!b.vn.empty()) {
-      b.layerKey = m_geometry->layerKeyByIndex((b.vn.front())->layer);
+      b.layerId = m_geometry->layerIdByIndex((b.vn.front())->layer);
     }
   }
 
@@ -186,14 +186,15 @@ void GbtsNodeStorage::initializeNodes(const bool useMl) {
   const std::uint32_t nL = m_geometry->numLayers();
 
   for (std::uint32_t layerIdx = 0; layerIdx < nL; ++layerIdx) {
-    const GbtsLayer& pL = m_geometry->layerByIndex(layerIdx);
+    const GbtsLayer& layer = m_geometry->layerByIndex(layerIdx);
 
     // skip strips volumes: layers in range [1200X-1400X]
-    if (pL.getLayer().subdet < 20000) {
+    if (layer.layerDescription().id < 20000) {
       continue;
     }
 
-    const bool isBarrel = pL.getLayer().type == 0;
+    const bool isBarrel =
+        layer.layerDescription().type == GbtsLayerType::Barrel;
     if (!isBarrel) {
       continue;
     }
@@ -202,11 +203,11 @@ void GbtsNodeStorage::initializeNodes(const bool useMl) {
 
     const auto lutSize = static_cast<std::uint32_t>(m_mlLut.size());
 
-    const std::uint32_t nBins = pL.numOfBins();
+    const std::uint32_t nBins = layer.numOfBins();
 
     // loop over eta-bins in Layer
     for (std::uint32_t b = 0; b < nBins; ++b) {
-      GbtsEtaBin& B = m_etaBins.at(pL.getBins().at(b));
+      GbtsEtaBin& B = m_etaBins.at(layer.bins().at(b));
 
       if (B.empty()) {
         continue;

@@ -62,6 +62,7 @@ class GbtsTrackingFilter final {
   /// Maximum number of edge states
   static constexpr std::uint32_t GbtsMaxEdgeState = 2500;
 
+  /// Configuration for the tracking filter.
   struct Config {
     /// Multiple scattering sigma (for 900 MeV track at eta=0).
     float sigmaMS = 0.016;
@@ -92,6 +93,8 @@ class GbtsTrackingFilter final {
     float maxZ0 = 170.0;
   };
 
+  /// State for the tracking filter, containing edge states and a global
+  /// counter.
   struct State {
     /// State vector
     std::vector<GbtsEdgeState*> stateVec;
@@ -126,6 +129,8 @@ class GbtsTrackingFilter final {
   std::shared_ptr<const GbtsGeometry> m_geometry;
 
   /// Propagate edge state
+  /// @param state Tracking filter state
+  /// @param sb Edge storage
   /// @param pS Edge to propagate from
   /// @param ts Edge state to update
   void propagate(State& state, std::vector<GbtsEdge>& sb, GbtsEdge& pS,
@@ -138,9 +143,9 @@ class GbtsTrackingFilter final {
   bool update(const GbtsEdge& pS, GbtsEdgeState& ts) const;
 
   /// Get layer type from layer index
-  /// @param l Layer index
+  /// @param layerIndex Layer index
   /// @return Layer type
-  std::uint32_t getLayerType(std::uint32_t l) const;
+  GbtsLayerType getLayerType(std::uint32_t layerIndex) const;
 };
 
 }  // namespace Acts::Experimental

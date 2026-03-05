@@ -58,7 +58,7 @@ class GraphBasedTrackSeeder {
     /// Eta bin width override (0 uses default from connection file).
     // specify non-zero to override eta bin width from connection file (default
     // 0.2 in createLinkingScheme.py)
-    float etaBinOverride = 0.0f;
+    float etaBinWidthOverride = 0.0f;
 
     /// Maximum number of phi slices.
     float nMaxPhiSlice = 53;  // used to calculate phi slices

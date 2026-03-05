@@ -12,6 +12,7 @@
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Seeding2/GbtsGeometry.hpp"
 #include "Acts/Seeding2/GbtsTrackingFilter.hpp"
 #include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -112,7 +113,7 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
 
   /// makes the geometry objects used by GBTS that correspond to the objects in
   /// the connection table for ease these are sometimes called "logical layers"
-  std::vector<Acts::Experimental::TrigInDetSiLayer> layerNumbering(
+  std::vector<Acts::Experimental::GbtsLayerDescription> layerNumbering(
       const Acts::GeometryContext &gctx);
 
   void printConfig() const;

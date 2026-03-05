@@ -29,7 +29,7 @@ GbtsLayerConnectionMap::GbtsLayerConnectionMap(std::string& inFile,
     throw std::runtime_error("connection file not found");
   }
 
-  input_ifstream >> nLinks >> etaBin;
+  input_ifstream >> nLinks >> etaBinWidth;
 
   for (std::uint32_t l = 0; l < nLinks; l++) {
     std::uint32_t stage{};

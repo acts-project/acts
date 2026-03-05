@@ -56,8 +56,8 @@ struct GbtsLayerConnectionMap {
   /// @param lrtMode Enable LRT (Large Radius Tracking) mode
   GbtsLayerConnectionMap(std::string& inFile, bool lrtMode);
 
-  /// Eta bin size
-  float etaBin{};
+  /// Eta bin width
+  float etaBinWidth{};
 
   /// Map of layer groups indexed by layer
   std::map<std::int32_t, std::vector<LayerGroup>> layerGroups;

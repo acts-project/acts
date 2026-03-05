@@ -257,7 +257,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
     const float rb1 = B1.minRadius;
 
-    const std::uint32_t lk1 = B1.layerKey;
+    const std::uint32_t layerId1 = B1.layerId;
 
     // prepare a sliding window for each bin2 in the group
 
@@ -354,7 +354,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const std::uint16_t nodeInfo = B2.vIsConnected[n2Idx];
 
           // skip isolated nodes as their incoming edges lead to nowhere
-          if ((lk1 == 80000) && (nodeInfo == 0)) {
+          if ((layerId1 == 80000) && (nodeInfo == 0)) {
             continue;
           }
 
@@ -397,7 +397,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
           const float z0 = z1 - r1 * tau;
 
-          if (lk1 == 80000) {  // check against non-empty z0 histogram
+          if (layerId1 == 80000) {  // check against non-empty z0 histogram
 
             if (!checkZ0BitMask(nodeInfo, z0, minZ0, z0HistoCoeff)) {
               continue;
@@ -432,7 +432,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float expEta = std::sqrt(1.f + tau * tau) - tau;
 
           // match edge candidate against edges incoming to n2
-          if (m_cfg.matchBeforeCreate && (lk1 == 80000 || lk1 == 81000)) {
+          if (m_cfg.matchBeforeCreate &&
+              (layerId1 == 80000 || layerId1 == 81000)) {
             // we must have enough incoming edges to decide
             bool isGood = n2NumEdges <= 2;
 

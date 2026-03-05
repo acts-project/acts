@@ -8,6 +8,8 @@
 
 #include "Acts/Seeding2/GbtsTrackingFilter.hpp"
 
+#include "Acts/Seeding2/GbtsGeometry.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -181,9 +183,10 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   const float tau2 = ts.y[1] * ts.y[1];
   const float invSin2 = 1 + tau2;
 
-  const std::int32_t type1 = getLayerType(pS.n2->layer);  // 0 - barrel
+  const GbtsLayerType layerType1 = getLayerType(pS.n2->layer);
 
-  const float lenCorr = type1 == 0 ? invSin2 : invSin2 / tau2;
+  const float lenCorr =
+      layerType1 == GbtsLayerType::Barrel ? invSin2 : invSin2 / tau2;
 
   const float minPtFrac = std::abs(ts.x[2]) / m_cfg.maxCurvature;
 
@@ -250,14 +253,16 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
 
   float sigma_rz = 0;
 
-  const std::int32_t type = getLayerType(pS.n1->layer);
+  const GbtsLayerType type = getLayerType(pS.n1->layer);
 
-  if (type == 0) {
+  if (type == GbtsLayerType::Barrel) {
     // barrel TODO: split into barrel Pixel and barrel SCT
     sigma_rz = m_cfg.sigmaY * m_cfg.sigmaY;
-  } else {
+  } else if (type == GbtsLayerType::Endcap) {
     sigma_rz = m_cfg.sigmaY * ts.y[1];
     sigma_rz = sigma_rz * sigma_rz;
+  } else {
+    throw std::runtime_error("invalid layer type");
   }
 
   const float Dx = 1.0 / (Cx[0][0] + m_cfg.sigmaX * m_cfg.sigmaX);
@@ -312,8 +317,9 @@ bool GbtsTrackingFilter::update(const GbtsEdge& pS, GbtsEdgeState& ts) const {
   return true;
 }
 
-std::uint32_t GbtsTrackingFilter::getLayerType(const std::uint32_t l) const {
-  return m_geometry->layerGeometry().at(l).type;
+GbtsLayerType GbtsTrackingFilter::getLayerType(
+    const std::uint32_t layerIndex) const {
+  return m_geometry->layerByIndex(layerIndex).layerDescription().type;
 }
 
 }  // namespace Acts::Experimental

@@ -87,8 +87,8 @@ struct GbtsEtaBin final {
   /// Maximum radius in bin
   float maxRadius{};
 
-  /// Layer key for this bin
-  std::uint32_t layerKey{0};
+  /// Layer ID for this bin
+  std::uint32_t layerId{0};
 };
 
 /// Storage container for GBTS nodes

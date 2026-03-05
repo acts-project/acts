@@ -12,32 +12,20 @@
 
 #include <cstdint>
 #include <map>
-#include <memory>
 #include <unordered_map>
 #include <vector>
 
 namespace Acts::Experimental {
 
-/// Lightweight silicon layer description for GBTS geometry.
-struct TrigInDetSiLayer final {
-  /// Constructor.
-  /// @param subdet_ Subdetector identifier
-  /// @param type_ Layer type (0: barrel, +/-n: endcap)
-  /// @param center_ Reference coordinate
-  /// @param min_ Minimum boundary
-  /// @param max_ Maximum boundary
-  TrigInDetSiLayer(std::int32_t subdet_, std::int16_t type_, float center_,
-                   float min_, float max_)
-      : subdet(subdet_),
-        type(type_),
-        refCoord(center_),
-        minBound(min_),
-        maxBound(max_) {}
+/// GBTS layer types
+enum class GbtsLayerType { Barrel = 0, Endcap = 1 };
 
+/// Lightweight layer description for GBTS geometry.
+struct GbtsLayerDescription final {
   /// Combined subdetector ID.
-  std::int32_t subdet{};  // combined ID
-  /// Layer type (0: barrel, +/-n: endcap).
-  std::int32_t type{};  // 0: barrel, +/-n : endcap
+  std::int32_t id{};
+  /// Layer type (barrel or endcap).
+  GbtsLayerType type{};
   /// Reference coordinate (z for barrel, r for endcap).
   float refCoord{};
   /// Minimum boundary coordinate.
@@ -49,27 +37,17 @@ struct TrigInDetSiLayer final {
 /// Layer helper with eta-bin access for GBTS seeding.
 class GbtsLayer final {
  public:
-  /// Constructor
-  /// @param ls Silicon layer descriptor
-  /// @param ew Eta bin width
+  /// @param layerDescription Layer description for the layer
+  /// @param etaBinWidth Eta bin width
   /// @param bin0 Starting bin index
-  GbtsLayer(const TrigInDetSiLayer& ls, float ew, std::int32_t bin0);
+  GbtsLayer(const GbtsLayerDescription& layerDescription, float etaBinWidth,
+            std::int32_t bin0);
 
-  // accessors
   /// Get eta bin for given z and r coordinates
   /// @param zh Z coordinate
   /// @param rh Radius coordinate
   /// @return Eta bin index
   std::int32_t getEtaBin(float zh, float rh) const;
-
-  /// Get minimum radius for bin index
-  /// @param idx Bin index
-  /// @return Minimum radius for the bin
-  float getMinBinRadius(std::int32_t idx) const;
-  /// Get maximum radius for bin index
-  /// @param idx Bin index
-  /// @return Maximum radius for the bin
-  float getMaxBinRadius(std::int32_t idx) const;
 
   /// Get number of bins
   /// @return Number of bins
@@ -77,25 +55,28 @@ class GbtsLayer final {
 
   /// Get bins
   /// @return Vector of bin indices
-  const std::vector<std::int32_t>& getBins() const { return m_bins; }
+  const std::vector<std::int32_t>& bins() const { return m_bins; }
 
-  /// Get layer
-  /// @return Reference to the silicon layer
-  const TrigInDetSiLayer& getLayer() const { return *m_layer; }
+  /// Get the layer description
+  /// @return Reference to the layer description
+  const GbtsLayerDescription& layerDescription() const {
+    return m_layerDescription;
+  }
 
   /// Verify bin compatibility
-  /// @param pL Other layer to compare with
+  /// @param otherLayer Other layer to compare with
   /// @param b1 First bin index
   /// @param b2 Second bin index
   /// @param minZ0 Minimum z0 coordinate
   /// @param maxZ0 Maximum z0 coordinate
   /// @return True if bins are compatible
-  bool verifyBin(const GbtsLayer& pL, std::uint32_t b1, std::uint32_t b2,
-                 float minZ0, float maxZ0) const;
+  bool checkCompatibility(const GbtsLayer& otherLayer, std::uint32_t b1,
+                          std::uint32_t b2, float minZ0, float maxZ0) const;
 
  private:
-  /// Layer
-  const TrigInDetSiLayer* m_layer{};
+  /// Layer description
+  GbtsLayerDescription m_layerDescription;
+
   /// Eta-bin indices
   std::vector<std::int32_t> m_bins;
   /// Minimum radius per bin
@@ -113,8 +94,6 @@ class GbtsLayer final {
   float m_maxEta{};
   /// Eta bin
   float m_etaBin{};
-  /// Eta bin width
-  float m_etaBinWidth{};
   /// First radius coordinate
   float m_r1{};
   /// First z coordinate
@@ -127,7 +106,7 @@ class GbtsLayer final {
   std::uint32_t m_nBins{};
 };
 
-/// Geometry helper built from silicon layers and connectors.
+/// Geometry helper built from layers and connectors.
 class GbtsGeometry final {
   // map key is a bin
   // pair corresponds to outgoing and incoming bins that the current bin can
@@ -138,15 +117,11 @@ class GbtsGeometry final {
 
  public:
   /// Constructor
-  /// @param layerGeometry Silicon layers for geometry
+  /// @param layerDescriptions Layer descriptions for the layers
   /// @param layerConnections Layer connections map
-  GbtsGeometry(const std::vector<TrigInDetSiLayer>& layerGeometry,
+  /// @param etaBinWidth Eta bin width
+  GbtsGeometry(const std::vector<GbtsLayerDescription>& layerDescriptions,
                const GbtsLayerConnectionMap& layerConnections);
-
-  /// Get the layer geometry
-  const std::vector<TrigInDetSiLayer>& layerGeometry() const {
-    return m_layerGeometry;
-  }
 
   /// Get number of eta bins
   /// @return Number of eta bins
@@ -154,7 +129,7 @@ class GbtsGeometry final {
 
   /// Get number of layers
   /// @return Number of layers
-  std::uint32_t numLayers() const { return m_layArray.size(); }
+  std::uint32_t numLayers() const { return m_layers.size(); }
 
   /// Get bin groups
   /// @return Bin groups vector
@@ -163,41 +138,37 @@ class GbtsGeometry final {
     return m_binGroups;
   }
 
-  /// Get layer by key
-  /// @param key Layer key
+  /// Get layer by ID
+  /// @param id Layer ID
   /// @return Pointer to layer or nullptr
-  const GbtsLayer* layerByKey(std::uint32_t key) const;
+  const GbtsLayer* layerById(std::uint32_t id) const;
 
   /// Get layer by index
   /// @param idx Layer index
   /// @return Reference to layer
   const GbtsLayer& layerByIndex(std::int32_t idx) const;
 
-  /// Get layer key by index
+  /// Get layer ID by index
   /// @param idx Layer index
-  /// @return Layer key
-  inline std::uint32_t layerKeyByIndex(std::uint32_t idx) const {
-    return m_layerKeys.at(idx);
+  /// @return Layer ID
+  inline std::uint32_t layerIdByIndex(std::uint32_t idx) const {
+    return m_layers.at(idx).layerDescription().id;
   }
 
  private:
-  /// Add new layer
-  /// @param l Silicon layer to add
+  /// @param layerDescription Layer description for the layer
   /// @param bin0 Starting bin index
   /// @return Reference to the newly added layer
-  const GbtsLayer& addNewLayer(const TrigInDetSiLayer& l, std::uint32_t bin0);
+  const GbtsLayer& createLayer(const GbtsLayerDescription& layerDescription,
+                               std::uint32_t bin0);
 
   /// Eta bin width
   float m_etaBinWidth{};
 
-  /// Layer geometry
-  std::vector<TrigInDetSiLayer> m_layerGeometry;
-  /// Layer map
-  std::map<std::uint32_t, GbtsLayer*> m_layMap;
   /// Layer array
-  std::vector<std::unique_ptr<GbtsLayer>> m_layArray;
-  /// Layer keys
-  std::vector<std::uint32_t> m_layerKeys;
+  std::vector<GbtsLayer> m_layers;
+  /// Layer per user ID map
+  std::map<std::uint32_t, std::uint32_t> m_layerFromUserIdMap;
   /// Number of eta bins
   std::uint32_t m_nEtaBins{};
 
