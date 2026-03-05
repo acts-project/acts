@@ -85,7 +85,7 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
                                                          Acts::Logging::INFO));
 
 /// Available algorithms for the mixture reduction
-enum class MixtureReductionAlgorithm { weightCut, KLDistance, naive };
+enum class MixtureReductionAlgorithm { weightCut, KLDistance, KLDistanceNaive };
 
 /// Makes a fitter function object for the GSF
 ///

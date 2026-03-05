@@ -44,8 +44,6 @@ GsfComponent detail::Gsf::mergeTwoComponents(const GsfComponent &a,
   return ret;
 }
 
-namespace detail::Gsf {
-
 double detail::Gsf::computeSymmetricKlDivergence(const GsfComponent &a,
                                     const GsfComponent &b) {
   const double parsA = a.boundPars[eBoundQOverP];
@@ -65,6 +63,8 @@ double detail::Gsf::computeSymmetricKlDivergence(const GsfComponent &a,
 
   return kl;
 }
+
+namespace detail::Gsf {
 
 SymmetricKLDistanceMatrix::SymmetricKLDistanceMatrix(
     std::span<const GsfComponent> cmps)

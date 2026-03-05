@@ -119,7 +119,7 @@ struct GsfFitterFunctionImpl final : public TrackFitterFunction {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistance>();
       } break;
-      case MixtureReductionAlgorithm::naive: {
+      case MixtureReductionAlgorithm::KLDistanceNaive: {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistanceNaive>();
       } break;
