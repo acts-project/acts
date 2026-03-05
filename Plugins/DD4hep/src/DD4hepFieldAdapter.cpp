@@ -49,4 +49,6 @@ Result<Vector3> DD4hepFieldAdapter::getField(
   return Result<Vector3>::success(result);
 }
 
+DD4hepFieldAdapter::~DD4hepFieldAdapter() = default;
+
 }  // namespace ActsPlugins
