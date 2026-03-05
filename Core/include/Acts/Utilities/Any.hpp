@@ -10,10 +10,12 @@
 
 #include "Acts/Utilities/HashedString.hpp"
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
@@ -362,12 +364,6 @@ class AnyBase : public AnyBaseAll {
     } else {
       return std::bit_cast<const void*>(m_data.data());
     }
-  }
-
-  template <typename T>
-  static std::uint64_t typeHash() {
-    const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
-    return value;
   }
 
   struct Handler {

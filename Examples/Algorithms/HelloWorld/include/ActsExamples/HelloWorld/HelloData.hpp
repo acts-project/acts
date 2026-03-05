@@ -19,12 +19,12 @@ struct HelloData {
   double a;
   double b;
   double t;
-};
 
-inline std::ostream& operator<<(std::ostream& os, const HelloData& data) {
-  os << data.x << ", " << data.a << ", " << data.b << ", " << data.t;
-  return os;
-}
+  friend std::ostream& operator<<(std::ostream& os, const HelloData& data) {
+    os << data.x << ", " << data.a << ", " << data.b << ", " << data.t;
+    return os;
+  }
+};
 
 using HelloDataCollection = std::vector<HelloData>;
 

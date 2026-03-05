@@ -136,4 +136,12 @@ std::vector<std::string> WhiteBoard::getKeys() const {
   return keys;
 }
 
+WhiteBoard::IHolder *WhiteBoard::getHolder(const std::string &name) const {
+  auto it = m_store.find(name);
+  if (it == m_store.end()) {
+    throw std::out_of_range("Object '" + name + "' does not exists");
+  }
+  return it->second.get();
+}
+
 }  // namespace ActsExamples

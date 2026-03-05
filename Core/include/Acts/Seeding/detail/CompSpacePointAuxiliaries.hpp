@@ -276,6 +276,8 @@ class CompSpacePointAuxiliaries {
   template <CompositeSpacePointContainer StrawCont_t>
   static std::vector<int> strawSigns(const Vector& pos, const Vector& dir,
                                      const StrawCont_t& measurements);
+  /// @brief Resets the residual and all partial derivatives to zero.
+  void reset();
 
  private:
   /// @brief Reference to the logging object
@@ -343,8 +345,6 @@ class CompSpacePointAuxiliaries {
   void updateTimeStrawRes(const Line_t& line, const Vector& hitMinSeg,
                           const Vector& wireDir, const double driftR,
                           const double driftV, const double driftA);
-  /// @brief Resets the residual and all partial derivatives to zero.
-  void reset();
   /// @brief Resets the time residual and the partial derivatives
   void resetTime();
   Config m_cfg{};

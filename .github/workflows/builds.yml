@@ -95,7 +95,7 @@ jobs:
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: acts-linux-ubuntu
           path: build.tar.gz
@@ -134,7 +134,7 @@ jobs:
           full_install: true
           env_file: .env
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: acts-linux-ubuntu
 
@@ -175,7 +175,7 @@ jobs:
           full_install: true
           env_file: .env
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: acts-linux-ubuntu
 
@@ -196,7 +196,7 @@ jobs:
           mkdir -p physmon
           cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: physmon
@@ -210,7 +210,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.2
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: physmon
           path: physmon
@@ -381,7 +381,7 @@ jobs:
       - name: Install
         run: cmake --build build --target install
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
@@ -487,7 +487,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: comment-50-external-failure.md
           path: comment-50-external-failure.md
@@ -571,7 +571,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: comment-51-key4hep-external-failure.md
           path: comment-51-key4hep-external-failure.md
@@ -621,7 +621,7 @@ jobs:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-ubuntu-wheel
           path: "*.whl"

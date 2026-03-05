@@ -10,11 +10,13 @@
 
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>
+
+#include <edm4hep/TrackCollection.h>
 
 namespace ActsExamples {
 
@@ -72,7 +74,8 @@ class EDM4hepMultiTrajectoryOutputConverter : public PodioOutputConverter {
   ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
       this, "InputTrajectories"};
 
-  CollectionBaseWriteHandle m_outputTracks{this, "OutputTracks"};
+  PodioCollectionWriteHandle<edm4hep::TrackCollection> m_outputTracks{
+      this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples
