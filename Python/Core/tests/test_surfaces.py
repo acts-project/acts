@@ -70,46 +70,64 @@ def test_surface_bounds_indexing(bounds, expected_size):
         _ = bounds[-1]
 
 
-def test_surface_bounds_named_accessors():
+def test_surface_bounds_get_method():
     cylinder = acts.CylinderBounds(10.0, 20.0)
-    assert cylinder.r() == pytest.approx(10.0)
-    assert cylinder.halflengthZ() == pytest.approx(20.0)
-    assert cylinder.halfPhiSector() == pytest.approx(cylinder.values()[2])
-    assert cylinder.averagePhi() == pytest.approx(cylinder.values()[3])
-    assert cylinder.bevelMinZ() == pytest.approx(cylinder.values()[4])
-    assert cylinder.bevelMaxZ() == pytest.approx(cylinder.values()[5])
+    assert cylinder.get(acts.CylinderBoundsValue.eR) == pytest.approx(10.0)
+    assert cylinder.get(acts.CylinderBoundsValue.eHalfLengthZ) == pytest.approx(20.0)
+    assert cylinder.get(acts.CylinderBoundsValue.eHalfPhiSector) == pytest.approx(
+        cylinder.values()[2]
+    )
+    assert cylinder.get(acts.CylinderBoundsValue.eAveragePhi) == pytest.approx(
+        cylinder.values()[3]
+    )
+    assert cylinder.get(acts.CylinderBoundsValue.eBevelMinZ) == pytest.approx(
+        cylinder.values()[4]
+    )
+    assert cylinder.get(acts.CylinderBoundsValue.eBevelMaxZ) == pytest.approx(
+        cylinder.values()[5]
+    )
 
     annulus = acts.AnnulusBounds(10.0, 20.0, -0.2, 0.2)
-    assert annulus.minR() == pytest.approx(10.0)
-    assert annulus.maxR() == pytest.approx(20.0)
-    assert annulus.minPhiRel() == pytest.approx(-0.2)
-    assert annulus.maxPhiRel() == pytest.approx(0.2)
-    assert annulus.originX() == pytest.approx(annulus.values()[4])
-    assert annulus.originY() == pytest.approx(annulus.values()[5])
+    assert annulus.get(acts.AnnulusBoundsValue.eMinR) == pytest.approx(10.0)
+    assert annulus.get(acts.AnnulusBoundsValue.eMaxR) == pytest.approx(20.0)
+    assert annulus.get(acts.AnnulusBoundsValue.eMinPhiRel) == pytest.approx(-0.2)
+    assert annulus.get(acts.AnnulusBoundsValue.eMaxPhiRel) == pytest.approx(0.2)
+    assert annulus.get(acts.AnnulusBoundsValue.eOriginX) == pytest.approx(
+        annulus.values()[4]
+    )
+    assert annulus.get(acts.AnnulusBoundsValue.eOriginY) == pytest.approx(
+        annulus.values()[5]
+    )
 
     radial = acts.RadialBounds(11.0, 21.0)
-    assert radial.minR() == pytest.approx(11.0)
-    assert radial.maxR() == pytest.approx(21.0)
-    assert radial.halfPhiSector() == pytest.approx(radial.values()[2])
-    assert radial.averagePhi() == pytest.approx(radial.values()[3])
+    assert radial.get(acts.RadialBoundsValue.eMinR) == pytest.approx(11.0)
+    assert radial.get(acts.RadialBoundsValue.eMaxR) == pytest.approx(21.0)
+    assert radial.get(acts.RadialBoundsValue.eHalfPhiSector) == pytest.approx(
+        radial.values()[2]
+    )
+    assert radial.get(acts.RadialBoundsValue.eAveragePhi) == pytest.approx(
+        radial.values()[3]
+    )
 
     line = acts.LineBounds(1.0, 100.0)
-    assert line.r() == pytest.approx(1.0)
-    assert line.halflengthZ() == pytest.approx(100.0)
+    assert line.get(acts.LineBoundsValue.eR) == pytest.approx(1.0)
+    assert line.get(acts.LineBoundsValue.eHalfLengthZ) == pytest.approx(100.0)
 
     rectangle = acts.RectangleBounds(10.0, 20.0)
-    assert rectangle.minX() == pytest.approx(-10.0)
-    assert rectangle.minY() == pytest.approx(-20.0)
-    assert rectangle.maxX() == pytest.approx(10.0)
-    assert rectangle.maxY() == pytest.approx(20.0)
-    assert rectangle.halflengthX() == pytest.approx(10.0)
-    assert rectangle.halflengthY() == pytest.approx(20.0)
+    assert rectangle.get(acts.RectangleBoundsValue.eMinX) == pytest.approx(-10.0)
+    assert rectangle.get(acts.RectangleBoundsValue.eMinY) == pytest.approx(-20.0)
+    assert rectangle.get(acts.RectangleBoundsValue.eMaxX) == pytest.approx(10.0)
+    assert rectangle.get(acts.RectangleBoundsValue.eMaxY) == pytest.approx(20.0)
 
     trapezoid = acts.TrapezoidBounds(8.0, 12.0, 20.0, 0.1)
-    assert trapezoid.halflengthXnegY() == pytest.approx(8.0)
-    assert trapezoid.halflengthXposY() == pytest.approx(12.0)
-    assert trapezoid.halflengthY() == pytest.approx(20.0)
-    assert trapezoid.rotationAngle() == pytest.approx(0.1)
+    assert trapezoid.get(acts.TrapezoidBoundsValue.eHalfLengthXnegY) == pytest.approx(
+        8.0
+    )
+    assert trapezoid.get(acts.TrapezoidBoundsValue.eHalfLengthXposY) == pytest.approx(
+        12.0
+    )
+    assert trapezoid.get(acts.TrapezoidBoundsValue.eHalfLengthY) == pytest.approx(20.0)
+    assert trapezoid.get(acts.TrapezoidBoundsValue.eRotationAngle) == pytest.approx(0.1)
 
 
 def test_surface_factory_and_surface_api():

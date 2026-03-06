@@ -112,30 +112,11 @@ void addSurfaces(py::module_& m) {
                }
                return self.get(CylinderBounds::BoundValues(index));
              })
-        .def("r",
-             [](const CylinderBounds& self) {
-               return self.values()[CylinderBounds::eR];
-             })
-        .def("halflengthZ",
-             [](const CylinderBounds& self) {
-               return self.values()[CylinderBounds::eHalfLengthZ];
-             })
-        .def("halfPhiSector",
-             [](const CylinderBounds& self) {
-               return self.values()[CylinderBounds::eHalfPhiSector];
-             })
-        .def("averagePhi",
-             [](const CylinderBounds& self) {
-               return self.values()[CylinderBounds::eAveragePhi];
-             })
-        .def("bevelMinZ",
-             [](const CylinderBounds& self) {
-               return self.values()[CylinderBounds::eBevelMinZ];
-             })
-        .def("bevelMaxZ",
-             [](const CylinderBounds& self) {
-               return self.values()[CylinderBounds::eBevelMaxZ];
-             })
+        .def(
+            "get",
+            [](const CylinderBounds& self, CylinderBounds::BoundValues bValue) {
+              return self.get(bValue);
+            })
         .def("__str__", [](const CylinderBounds& self) {
           std::ostringstream oss;
           oss << self;
@@ -171,29 +152,9 @@ void addSurfaces(py::module_& m) {
                }
                return self.get(AnnulusBounds::BoundValues(index));
              })
-        .def("minR",
-             [](const AnnulusBounds& self) {
-               return self.values()[AnnulusBounds::eMinR];
-             })
-        .def("maxR",
-             [](const AnnulusBounds& self) {
-               return self.values()[AnnulusBounds::eMaxR];
-             })
-        .def("minPhiRel",
-             [](const AnnulusBounds& self) {
-               return self.values()[AnnulusBounds::eMinPhiRel];
-             })
-        .def("maxPhiRel",
-             [](const AnnulusBounds& self) {
-               return self.values()[AnnulusBounds::eMaxPhiRel];
-             })
-        .def("originX",
-             [](const AnnulusBounds& self) {
-               return self.values()[AnnulusBounds::eOriginX];
-             })
-        .def("originY",
-             [](const AnnulusBounds& self) {
-               return self.values()[AnnulusBounds::eOriginY];
+        .def("get",
+             [](const AnnulusBounds& self, AnnulusBounds::BoundValues bValue) {
+               return self.get(bValue);
              })
         .def("__str__", [](const AnnulusBounds& self) {
           std::ostringstream oss;
@@ -224,21 +185,9 @@ void addSurfaces(py::module_& m) {
                }
                return self.get(RadialBounds::BoundValues(index));
              })
-        .def("minR",
-             [](const RadialBounds& self) {
-               return self.values()[RadialBounds::eMinR];
-             })
-        .def("maxR",
-             [](const RadialBounds& self) {
-               return self.values()[RadialBounds::eMaxR];
-             })
-        .def("averagePhi",
-             [](const RadialBounds& self) {
-               return self.values()[RadialBounds::eAveragePhi];
-             })
-        .def("halfPhiSector",
-             [](const RadialBounds& self) {
-               return self.values()[RadialBounds::eHalfPhiSector];
+        .def("get",
+             [](const RadialBounds& self, RadialBounds::BoundValues bValue) {
+               return self.get(bValue);
              })
         .def("__str__", [](const RadialBounds& self) {
           std::ostringstream oss;
@@ -268,13 +217,9 @@ void addSurfaces(py::module_& m) {
                }
                return self.get(LineBounds::BoundValues(index));
              })
-        .def("r",
-             [](const LineBounds& self) {
-               return self.values()[LineBounds::eR];
-             })
-        .def("halflengthZ",
-             [](const LineBounds& self) {
-               return self.values()[LineBounds::eHalfLengthZ];
+        .def("get",
+             [](const LineBounds& self, LineBounds::BoundValues bValue) {
+               return self.get(bValue);
              })
         .def("__str__", [](const LineBounds& self) {
           std::ostringstream oss;
@@ -307,24 +252,11 @@ void addSurfaces(py::module_& m) {
                }
                return self.get(RectangleBounds::BoundValues(index));
              })
-        .def("minX",
-             [](const RectangleBounds& self) {
-               return self.values()[RectangleBounds::eMinX];
+        .def("get",
+             [](const RectangleBounds& self,
+                RectangleBounds::BoundValues bValue) {
+               return self.get(bValue);
              })
-        .def("minY",
-             [](const RectangleBounds& self) {
-               return self.values()[RectangleBounds::eMinY];
-             })
-        .def("maxX",
-             [](const RectangleBounds& self) {
-               return self.values()[RectangleBounds::eMaxX];
-             })
-        .def("maxY",
-             [](const RectangleBounds& self) {
-               return self.values()[RectangleBounds::eMaxY];
-             })
-        .def("halflengthX", &RectangleBounds::halfLengthX)
-        .def("halflengthY", &RectangleBounds::halfLengthY)
         .def("__str__", [](const RectangleBounds& self) {
           std::ostringstream oss;
           oss << self;
@@ -353,21 +285,10 @@ void addSurfaces(py::module_& m) {
                }
                return self.get(TrapezoidBounds::BoundValues(index));
              })
-        .def("halflengthXnegY",
-             [](const TrapezoidBounds& self) {
-               return self.values()[TrapezoidBounds::eHalfLengthXnegY];
-             })
-        .def("halflengthXposY",
-             [](const TrapezoidBounds& self) {
-               return self.values()[TrapezoidBounds::eHalfLengthXposY];
-             })
-        .def("halflengthY",
-             [](const TrapezoidBounds& self) {
-               return self.values()[TrapezoidBounds::eHalfLengthY];
-             })
-        .def("rotationAngle",
-             [](const TrapezoidBounds& self) {
-               return self.values()[TrapezoidBounds::eRotationAngle];
+        .def("get",
+             [](const TrapezoidBounds& self,
+                TrapezoidBounds::BoundValues bValue) {
+               return self.get(bValue);
              })
         .def("__str__", [](const TrapezoidBounds& self) {
           std::ostringstream oss;
