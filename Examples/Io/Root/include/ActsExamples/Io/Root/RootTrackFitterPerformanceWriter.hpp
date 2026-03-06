@@ -59,7 +59,7 @@ class RootTrackFitterPerformanceWriter final
     /// mean/width extraction.
     std::string fitOption = "QS0";
     /// Threshold for warning about fit failure fraction in profile extraction.
-    double warningThresholdFitFailureFraction = 0.5;
+    double warningThresholdFitFailureFraction = 0.55;
   };
 
   /// Construct from configuration and log level.
