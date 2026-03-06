@@ -87,7 +87,7 @@ void addMaterialMapping(py::module& mex) {
         mex, "MaterialValidation");
     mv.def("execute", &MaterialValidation::execute);
     ACTS_PYTHON_STRUCT(c, ntracks, startPosition, phiRange, etaRange,
-                       randomNumberSvc, materialValidater,
+                       randomNumberSvc, materialValidator,
                        outputMaterialTracks);
   }
 }
