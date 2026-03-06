@@ -10,6 +10,7 @@ ect
 estimater
 exprot
 gaus
+hep
 interprete
 iself
 lastr
@@ -24,6 +25,7 @@ rin
 sortings
 strack
 te
+tge
 transformin
 vart
 writet
