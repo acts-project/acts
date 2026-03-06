@@ -212,6 +212,7 @@ def test_python_track_state_access(generic_detector_config, tmp_path):
             digiConfigFile=generic_detector_config.digiConfigFile,
             outputDir=tmp_path,
             numParticles=10,
+            linkForward=True,
             s=seq,
         )
 
@@ -277,24 +278,21 @@ def test_python_track_state_access(generic_detector_config, tmp_path):
                     assert n_meas_counted == n_meas_from_summary
                     assert n_holes_counted == track.nHoles
 
-                    # trackStates (forward) requires the track to be
-                    # forward-linked; skip if not
-                    if track.isForwardLinked:
-                        rev_predicted = [
-                            state.predicted
-                            for state in track.trackStatesReversed
-                            if state.hasPredicted
-                        ]
-                        fwd_predicted = [
-                            state.predicted
-                            for state in track.trackStates
-                            if state.hasPredicted
-                        ]
-                        assert len(fwd_predicted) == len(rev_predicted)
-                        for fwd, rev in zip(
-                            fwd_predicted, reversed(rev_predicted)
-                        ):
-                            assert np.allclose(fwd, rev)
+                    assert track.isForwardLinked
+
+                    rev_predicted = [
+                        state.predicted
+                        for state in track.trackStatesReversed
+                        if state.hasPredicted
+                    ]
+                    fwd_predicted = [
+                        state.predicted
+                        for state in track.trackStates
+                        if state.hasPredicted
+                    ]
+                    assert len(fwd_predicted) == len(rev_predicted)
+                    for fwd, rev in zip(fwd_predicted, reversed(rev_predicted)):
+                        assert np.allclose(fwd, rev)
 
                 return acts.examples.ProcessCode.SUCCESS
 
