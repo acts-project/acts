@@ -52,7 +52,7 @@ class ResPlotTool {
         {"Residual_theta",
          BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},
         {"Residual_qop", BoostRegularAxis(100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
-        {"Residual_t", BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
+        {"Residual_t", BoostRegularAxis(100, -100, 100, "r_{t} [mm/c]")}};
   };
 
   /// @param cfg Configuration struct
