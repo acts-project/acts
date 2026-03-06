@@ -226,13 +226,19 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency1& boostEff) {
     totalHist->SetBinContent(i + 1, totalCount);
   }
 
+  // Set X axis title from axis metadata
+  acceptedHist->GetXaxis()->SetTitle(axis.metadata().c_str());
+  totalHist->GetXaxis()->SetTitle(axis.metadata().c_str());
+
+  // Set Y axis titles; use "Efficiency" for total histogram since TEfficiency
+  // will inherit this title for the efficiency graph
+  totalHist->GetYaxis()->SetTitle("Efficiency");
+
   // Create TEfficiency from the two histograms
   // TEfficiency takes ownership of the histograms
   auto rootEff = std::make_unique<TEfficiency>(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
-  rootEff->GetPaintedGraph()->GetXaxis()->SetTitle(axis.metadata().c_str());
-  rootEff->GetPaintedGraph()->GetYaxis()->SetTitle("Efficiency");
 
   return rootEff;
 }
@@ -269,16 +275,23 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency2& boostEff) {
     }
   }
 
+  // Set X axis title from axis metadata
+  acceptedHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
+  totalHist->GetXaxis()->SetTitle(xAxis.metadata().c_str());
+
+  // Set Y axis title from axis metadata
+  acceptedHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
+  totalHist->GetYaxis()->SetTitle(yAxis.metadata().c_str());
+
+  // Set Z axis titles; use "Efficiency" for total histogram since TEfficiency
+  // will inherit this title for the efficiency graph
+  totalHist->GetZaxis()->SetTitle("Efficiency");
+
   // Create TEfficiency from the two histograms
   // TEfficiency takes ownership of the histograms
   auto rootEff = std::make_unique<TEfficiency>(*acceptedHist, *totalHist);
   rootEff->SetName(boostEff.name().c_str());
   rootEff->SetTitle(boostEff.title().c_str());
-  rootEff->GetPaintedHistogram()->GetXaxis()->SetTitle(
-      xAxis.metadata().c_str());
-  rootEff->GetPaintedHistogram()->GetYaxis()->SetTitle(
-      yAxis.metadata().c_str());
-  rootEff->GetPaintedHistogram()->GetZaxis()->SetTitle("Efficiency");
 
   return rootEff;
 }
