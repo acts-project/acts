@@ -36,7 +36,7 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
 }
 
 SeedContainer2 GraphBasedTrackSeeder::createSeeds(
-    const SpacePointContainer2& spacePoints, const RoiDescriptor& roi,
+    const SpacePointContainer2& spacePoints, const GbtsRoiDescriptor& roi,
     const std::uint32_t maxLayers, const GbtsTrackingFilter& filter) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
@@ -189,7 +189,7 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
 }
 
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
-    const RoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
+    const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
     std::vector<GbtsEdge>& edgeStorage) const {
   // phi cut for triplets
   const float cutDPhiMax = m_cfg.lrtMode ? 0.07f : 0.012f;
@@ -197,19 +197,17 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   const float cutDCurvMax = m_cfg.lrtMode ? 0.015f : 0.001f;
   // tau cut for doublets and triplets
   const float cutTauRatioMax = m_cfg.lrtMode ? 0.015f : m_cfg.tauRatioCut;
-  const float minZ0 =
-      m_cfg.lrtMode ? -600.0f : static_cast<float>(roi.zedMinus());
-  const float maxZ0 =
-      m_cfg.lrtMode ? 600.0f : static_cast<float>(roi.zedPlus());
+  const float minZ0 = m_cfg.lrtMode ? -600.0f : static_cast<float>(roi.zMin());
+  const float maxZ0 = m_cfg.lrtMode ? 600.0f : static_cast<float>(roi.zMax());
   const float minDeltaPhi = m_cfg.lrtMode ? 0.01f : 0.001f;
 
   // used to calculate Z cut on doublets
   const float maxOuterRadius = m_cfg.lrtMode ? 1050.0f : 550.0f;
 
   const float cutZMinU =
-      minZ0 + maxOuterRadius * static_cast<float>(roi.dzdrMinus());
+      minZ0 + maxOuterRadius * static_cast<float>(roi.dzdrMin());
   const float cutZMaxU =
-      maxZ0 + maxOuterRadius * static_cast<float>(roi.dzdrPlus());
+      maxZ0 + maxOuterRadius * static_cast<float>(roi.dzdrMax());
 
   // correction due to limited pT resolution
   const float tripletPtMin = 0.8f * m_cfg.minPt;

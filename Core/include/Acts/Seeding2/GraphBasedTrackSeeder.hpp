@@ -13,8 +13,8 @@
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/Seeding2/GbtsDataStorage.hpp"
 #include "Acts/Seeding2/GbtsGeometry.hpp"
+#include "Acts/Seeding2/GbtsRoiDescriptor.hpp"
 #include "Acts/Seeding2/GbtsTrackingFilter.hpp"
-#include "Acts/Seeding2/RoiDescriptor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstdint>
@@ -152,7 +152,8 @@ class GraphBasedTrackSeeder {
   /// @param filter Tracking filter to be applied
   /// @return Container with generated seeds
   SeedContainer2 createSeeds(const SpacePointContainer2& spacePoints,
-                             const RoiDescriptor& roi, std::uint32_t maxLayers,
+                             const GbtsRoiDescriptor& roi,
+                             std::uint32_t maxLayers,
                              const GbtsTrackingFilter& filter) const;
 
  private:
@@ -185,7 +186,7 @@ class GraphBasedTrackSeeder {
   /// @param edgeStorage Storage for generated edges
   /// @return Pair of edge count and maximum level
   std::pair<std::int32_t, std::int32_t> buildTheGraph(
-      const RoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
+      const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
       std::vector<GbtsEdge>& edgeStorage) const;
 
   /// Run connected component analysis on the graph.

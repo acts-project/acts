@@ -13,5 +13,5 @@ target_sources(
         GbtsTrackingFilter.cpp
         GraphBasedTrackSeeder.cpp
         GbtsLayerConnection.cpp
-        RoiDescriptor.cpp
+        GbtsRoiDescriptor.cpp
 )

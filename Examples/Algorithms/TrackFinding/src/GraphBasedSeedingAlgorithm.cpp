@@ -85,7 +85,7 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
-  Acts::Experimental::RoiDescriptor internalRoi(
+  Acts::Experimental::GbtsRoiDescriptor internalRoi(
       0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
 
   // create the seeds
