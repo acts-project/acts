@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <concepts>
 #include <stdexcept>
 #include <type_traits>
 
@@ -92,6 +93,25 @@ constexpr auto hypotSquare(T... args) {
 template <typename... T>
 constexpr auto fastHypot(T... args) {
   return std::sqrt(hypotSquare(args...));
+}
+
+/// Calculates the squared cathetus of arguments, i.e. the difference between
+/// the square of the hypotenuse and the square of the given arguments
+/// @param hypotenuse The hypotenuse value
+/// @param args Variable number of arguments to calculate the cathetus for
+/// @return Difference between the square of the hypotenuse and the square of the given arguments
+template <typename T, typename... Args>
+constexpr auto cathetusSquare(T hypotenuse, Args... args) {
+  return square(hypotenuse) - (square(args) + ...);
+}
+
+/// Fast cathetus calculation for multiple arguments
+/// @param hypotenuse The hypotenuse value
+/// @param args Variable number of arguments to calculate the cathetus for
+/// @return Square root of difference between the square of the hypotenuse and the square of the given arguments
+template <typename T, typename... Args>
+constexpr auto fastCathetus(T hypotenuse, Args... args) {
+  return std::sqrt(cathetusSquare(hypotenuse, args...));
 }
 
 /// @brief Calculates the sum of 1 + 2 + 3+ ... + N using the
