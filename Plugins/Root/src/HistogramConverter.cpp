@@ -9,6 +9,7 @@
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cstddef>
+#include <format>
 #include <vector>
 
 #include <TEfficiency.h>
