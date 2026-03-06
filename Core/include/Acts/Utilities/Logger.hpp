@@ -55,9 +55,7 @@
     explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger) \
         : m_logger(std::move(logger)) {}                                       \
                                                                                \
-    const ::Acts::Logger& operator()() const {                                 \
-      return *m_logger;                                                        \
-    }                                                                          \
+    const ::Acts::Logger& operator()() const { return *m_logger; }             \
                                                                                \
     std::unique_ptr<const ::Acts::Logger> m_logger;                            \
   };                                                                           \
