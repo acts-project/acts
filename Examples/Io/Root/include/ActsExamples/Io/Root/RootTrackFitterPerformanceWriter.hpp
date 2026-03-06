@@ -57,8 +57,7 @@ class RootTrackFitterPerformanceWriter final
     int minEntriesForFit = 10;
     /// Fit option string to pass to ROOT when performing Gaussian fits for
     /// mean/width extraction.
-    std::string fitOption =
-        "QS0";  // Quiet mode, no output, and use SumW2 for errors
+    std::string fitOption = "QS0";
     /// Threshold for warning about fit failure fraction in profile extraction.
     double warningThresholdFitFailureFraction = 0.5;
   };

@@ -82,6 +82,7 @@ std::unique_ptr<TEfficiency> toRoot(
 /// @param meanName The name for the output mean profile histogram
 /// @param widthName The name for the output width profile histogram
 /// @param minEntriesForFit Minimum number of entries in a projection to attempt a fit
+/// @param fitOption The option string to use for the fit
 /// @param logger Logger for debug messages
 /// @return pair of unique pointers to the mean and width TH1F histograms and a fit failure fraction
 std::tuple<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>, double>
@@ -96,6 +97,7 @@ extractMeanWidthProfiles(const TH2F& hist2d, const std::string& meanName,
 /// @param meanName The name for the output mean profile histogram
 /// @param widthName The name for the output width profile histogram
 /// @param minEntriesForFit Minimum number of entries in a projection to attempt a fit
+/// @param fitOption The option string to use for the fit
 /// @param logger Logger for debug messages
 /// @return pair of unique pointers to the mean and width TH2F histograms and a fit failure fraction
 std::tuple<std::unique_ptr<TH2F>, std::unique_ptr<TH2F>, double>
