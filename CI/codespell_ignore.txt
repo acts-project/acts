@@ -3,6 +3,7 @@ ans
 boxs
 bu
 coner
+countin
 dependees
 dthe
 ect
@@ -14,12 +15,16 @@ iself
 lastr
 localy
 millepede
+parin
 parm
+patchin
 pixelx
 pring
+rin
 sortings
 strack
 te
+transformin
 vart
 writet
 optiona
