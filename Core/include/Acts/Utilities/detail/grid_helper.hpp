@@ -623,9 +623,8 @@ struct grid_helper {
       const std::array<std::size_t, sizeof...(Axes)>& localIndices,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> llEdge{};
-    grid_helper_impl<sizeof...(Axes) - 1>::getLowerLeftBinEdge(llEdge,
-                                                                localIndices,
-                                                                axes);
+    grid_helper_impl<sizeof...(Axes) - 1>::getLowerLeftBinEdge(
+        llEdge, localIndices, axes);
 
     return llEdge;
   }
@@ -649,7 +648,7 @@ struct grid_helper {
       const std::tuple<Axes...>& axes) {
     auto llIndices = localIndices;
     grid_helper_impl<sizeof...(Axes) - 1>::getLowerLeftBinIndices(llIndices,
-                                                                   axes);
+                                                                  axes);
 
     return llIndices;
   }
@@ -698,9 +697,8 @@ struct grid_helper {
       const std::array<std::size_t, sizeof...(Axes)>& localIndices,
       const std::tuple<Axes...>& axes) {
     std::array<double, sizeof...(Axes)> urEdge{};
-    grid_helper_impl<sizeof...(Axes) - 1>::getUpperRightBinEdge(urEdge,
-                                                                 localIndices,
-                                                                 axes);
+    grid_helper_impl<sizeof...(Axes) - 1>::getUpperRightBinEdge(
+        urEdge, localIndices, axes);
 
     return urEdge;
   }
@@ -724,7 +722,7 @@ struct grid_helper {
       const std::tuple<Axes...>& axes) {
     auto urIndices = localIndices;
     grid_helper_impl<sizeof...(Axes) - 1>::getUpperRightBinIndices(urIndices,
-                                                                    axes);
+                                                                   axes);
 
     return urIndices;
   }
