@@ -95,14 +95,62 @@ constexpr auto fastHypot(T... args) {
   return std::sqrt(hypotSquare(args...));
 }
 
+/// Slow hypotenuse calculation for multiple arguments
+/// @param args Variable number of arguments
+/// @return Square root of sum of squares of arguments
+template <typename... T>
+constexpr auto slowHypot(T... args) {
+  decltype((args + ...)) r = 0;
+  ((r = std::hypot(r, args)), ...);
+  return r;
+}
+/// @copydoc slowHypot(T... args)
+template <typename T>
+constexpr auto slowHypot(T arg) {
+  return arg;
+}
+/// @copydoc slowHypot(T... args)
+template <typename T>
+constexpr auto slowHypot(T x, T y) {
+  return std::hypot(x, y);
+}
+/// @copydoc slowHypot(T... args)
+template <typename T>
+constexpr auto slowHypot(T x, T y, T z) {
+  return std::hypot(x, y, z);
+}
+
 /// Calculates the squared cathetus of arguments, i.e. the difference between
-/// the square of the hypotenuse and the square of the given arguments
+/// the square of the hypotenuse and the square of the given arguments without
+/// checking for domain errors.
 /// @param hypotenuse The hypotenuse value
 /// @param args Variable number of arguments to calculate the cathetus for
 /// @return Difference between the square of the hypotenuse and the square of the given arguments
 template <typename T, typename... Args>
+constexpr auto cathetusSquareUnchecked(T hypotenuse, Args... args) {
+  return square(hypotenuse) - hypotSquare(args...);
+}
+
+/// Calculates the squared cathetus of arguments, i.e. the difference between
+/// the square of the hypotenuse and the square of the given arguments.
+/// @param hypotenuse The hypotenuse value
+/// @param args Variable number of arguments to calculate the cathetus for
+/// @return Difference between the square of the hypotenuse and the square of the
+///   given arguments. Returns NaN for floating point types if the hypotenuse is
+///   smaller than the cathetus.
+/// @throws std::domain_error if hypotenuse is smaller than the cathetus for
+///   integral types
+template <typename T, typename... Args>
 constexpr auto cathetusSquare(T hypotenuse, Args... args) {
-  return square(hypotenuse) - (square(args) + ...);
+  const auto hypotenuseSquare = square(hypotenuse);
+  const auto argsSquareSum = hypotSquare(args...);
+  if (std::floating_point<T> && hypotenuseSquare < argsSquareSum) {
+    return std::numeric_limits<T>::quiet_NaN();
+  } else if (std::integral<T> && hypotenuseSquare < argsSquareSum) {
+    throw std::domain_error(
+        "hypotenuse must be greater than or equal to the cathetus");
+  }
+  return hypotenuseSquare - argsSquareSum;
 }
 
 /// Fast cathetus calculation for multiple arguments
@@ -111,7 +159,17 @@ constexpr auto cathetusSquare(T hypotenuse, Args... args) {
 /// @return Square root of difference between the square of the hypotenuse and the square of the given arguments
 template <typename T, typename... Args>
 constexpr auto fastCathetus(T hypotenuse, Args... args) {
-  return std::sqrt(cathetusSquare(hypotenuse, args...));
+  return std::sqrt(cathetusSquareUnchecked(hypotenuse, args...));
+}
+
+/// Slow cathetus calculation for multiple arguments
+/// @param hypotenuse The hypotenuse value
+/// @param args Variable number of arguments to calculate the cathetus for
+/// @return Square root of difference between the square of the hypotenuse and the square of the given arguments
+template <typename T, typename... Args>
+constexpr auto slowCathetus(T hypotenuse, Args... args) {
+  const auto hypotArgs = slowHypot(args...);
+  return std::sqrt((hypotenuse - hypotArgs) * (hypotenuse + hypotArgs));
 }
 
 /// @brief Calculates the sum of 1 + 2 + 3+ ... + N using the
