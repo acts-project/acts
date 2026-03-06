@@ -53,13 +53,13 @@ struct SimulationStateAccessor;
 
 template <typename, bool>
 class ParticleStateProxy2;
-using MutableGeneratorParticleProxy =
+using MutableGeneratorParticleProxy2 =
     ParticleStateProxy2<detail::GenerationStateAccessor, false>;
-using ConstGeneratorParticleProxy =
+using ConstGeneratorParticleProxy2 =
     ParticleStateProxy2<detail::GenerationStateAccessor, true>;
-using MutableSimulationParticleProxy =
+using MutableSimulationParticleProxy2 =
     ParticleStateProxy2<detail::SimulationStateAccessor, false>;
-using ConstSimulationParticleProxy =
+using ConstSimulationParticleProxy2 =
     ParticleStateProxy2<detail::SimulationStateAccessor, true>;
 
 template <typename T, bool>
@@ -370,9 +370,9 @@ class ParticleContainer2 final {
   using ColumnHolder = detail::ColumnHolder<T>;
 
   template <bool>
-  friend class ParticleProxy;
+  friend class ParticleProxy2;
   template <typename, bool>
-  friend class ParticleStateProxy;
+  friend class ParticleStateProxy2;
 
   std::size_t m_size{0};
 
@@ -509,7 +509,7 @@ using MutableParticleSubset = ParticleContainer2::MutableSubset;
 
 /// A proxy class for accessing individual particles.
 template <bool read_only>
-class ParticleProxy final {
+class ParticleProxy2 final {
  public:
   /// Indicates whether this particle proxy is read-only or data can be
   /// modified
@@ -524,28 +524,28 @@ class ParticleProxy final {
   /// Constructs a particle proxy for the given container and index.
   /// @param container The container holding the particle.
   /// @param index The index of the particle in the container.
-  ParticleProxy(Container &container, Index index) noexcept
+  ParticleProxy2(Container &container, Index index) noexcept
       : m_container(&container), m_index(index) {}
 
   /// Copy construct a particle proxy.
   /// @param other The particle proxy to copy.
-  ParticleProxy(const ParticleProxy &other) noexcept = default;
+  ParticleProxy2(const ParticleProxy2 &other) noexcept = default;
 
   /// Copy construct a mutable particle proxy.
   /// @param other The mutable particle proxy to copy.
-  explicit ParticleProxy(const ParticleProxy<false> &other) noexcept
+  explicit ParticleProxy2(const ParticleProxy2<false> &other) noexcept
     requires ReadOnly
       : m_container(&other.container()), m_index(other.index()) {}
 
   /// Copy assign a particle proxy.
   /// @param other The particle proxy to copy.
   /// @return Reference to this particle proxy after assignment.
-  ParticleProxy &operator=(const ParticleProxy &other) noexcept = default;
+  ParticleProxy2 &operator=(const ParticleProxy2 &other) noexcept = default;
 
   /// Copy assign a mutable particle proxy.
   /// @param other The mutable particle proxy to copy.
   /// @return Reference to this particle proxy after assignment.
-  ParticleProxy &operator=(const ParticleProxy<false> &other) noexcept
+  ParticleProxy2 &operator=(const ParticleProxy2<false> &other) noexcept
     requires ReadOnly
   {
     m_container = &other.container();
@@ -556,12 +556,12 @@ class ParticleProxy final {
   /// Move assign a particle proxy.
   /// @param other The particle proxy to move.
   /// @return Reference to this particle proxy after assignment.
-  ParticleProxy &operator=(ParticleProxy &&other) noexcept = default;
+  ParticleProxy2 &operator=(ParticleProxy2 &&other) noexcept = default;
 
   /// Move assign a mutable particle proxy.
   /// @param other The mutable particle proxy to move.
   /// @return Reference to this particle proxy after assignment.
-  ParticleProxy &operator=(ParticleProxy<false> &&other) noexcept
+  ParticleProxy2 &operator=(ParticleProxy2<false> &&other) noexcept
     requires ReadOnly
   {
     m_container = &other.container();
@@ -571,7 +571,7 @@ class ParticleProxy final {
 
   /// Returns a const proxy of the particle.
   /// @return A const proxy of the particle.
-  ParticleProxy<true> asConst() const noexcept
+  ParticleProxy2<true> asConst() const noexcept
     requires(!ReadOnly)
   {
     return {*m_container, m_index};
@@ -591,13 +591,13 @@ class ParticleProxy final {
   /// @return The index of the particle in the container.
   Index index() const noexcept { return m_index; }
 
-  MutableGeneratorParticleProxy generationState() noexcept
+  MutableGeneratorParticleProxy2 generationState() noexcept
     requires(!ReadOnly);
-  MutableSimulationParticleProxy simulationState() noexcept
+  MutableSimulationParticleProxy2 simulationState() noexcept
     requires(!ReadOnly);
 
-  ConstGeneratorParticleProxy generationState() const noexcept;
-  ConstSimulationParticleProxy simulationState() const noexcept;
+  ConstGeneratorParticleProxy2 generationState() const noexcept;
+  ConstSimulationParticleProxy2 simulationState() const noexcept;
 
   void assignParentIndices(std::span<const ParticleIndex2> parentIndices)
     requires(!ReadOnly)
@@ -845,7 +845,7 @@ class ParticleProxy final {
 };
 
 template <typename state_accessor, bool read_only>
-class ParticleStateProxy final {
+class ParticleStateProxy2 final {
  public:
   ///
   using Index = ParticleIndex2;
@@ -857,42 +857,42 @@ class ParticleStateProxy final {
   /// modified
   static constexpr bool ReadOnly = read_only;
 
-  using Particle = ParticleProxy<ReadOnly>;
+  using Particle = ParticleProxy2<ReadOnly>;
 
   /// Type alias for container type (const if read-only)
   using Container = Acts::const_if_t<ReadOnly, ParticleContainer2>;
 
   ///
-  explicit ParticleStateProxy(Particle particle) noexcept
+  explicit ParticleStateProxy2(Particle particle) noexcept
       : m_particle(std::move(particle)) {}
 
   ///
-  explicit ParticleStateProxy(ParticleProxy<false> particle) noexcept
+  explicit ParticleStateProxy2(ParticleProxy2<false> particle) noexcept
     requires(ReadOnly)
       : m_particle(std::move(particle)) {}
 
   /// Copy construct a particle proxy.
   /// @param other The particle proxy to copy.
-  ParticleStateProxy(const ParticleStateProxy &other) noexcept = default;
+  ParticleStateProxy2(const ParticleStateProxy2 &other) noexcept = default;
 
   /// Copy construct a mutable particle proxy.
   /// @param other The mutable particle proxy to copy.
-  explicit ParticleStateProxy(
-      const ParticleStateProxy<StateAccessor, false> &other) noexcept
+  explicit ParticleStateProxy2(
+      const ParticleStateProxy2<StateAccessor, false> &other) noexcept
     requires ReadOnly
       : m_particle(other.m_particle) {}
 
   /// Copy assign a particle proxy.
   /// @param other The particle proxy to copy.
   /// @return Reference to this particle proxy after assignment.
-  ParticleStateProxy &operator=(const ParticleStateProxy &other) noexcept =
+  ParticleStateProxy2 &operator=(const ParticleStateProxy2 &other) noexcept =
       default;
 
   /// Copy assign a mutable particle proxy.
   /// @param other The mutable particle proxy to copy.
   /// @return Reference to this particle proxy after assignment.
-  ParticleStateProxy &operator=(
-      const ParticleStateProxy<StateAccessor, false> &other) noexcept
+  ParticleStateProxy2 &operator=(
+      const ParticleStateProxy2<StateAccessor, false> &other) noexcept
     requires ReadOnly
   {
     m_particle = other.m_particle;
@@ -902,13 +902,14 @@ class ParticleStateProxy final {
   /// Move assign a particle proxy.
   /// @param other The particle proxy to move.
   /// @return Reference to this particle proxy after assignment.
-  ParticleStateProxy &operator=(ParticleStateProxy &&other) noexcept = default;
+  ParticleStateProxy2 &operator=(ParticleStateProxy2 &&other) noexcept =
+      default;
 
   /// Move assign a mutable particle proxy.
   /// @param other The mutable particle proxy to move.
   /// @return Reference to this particle proxy after assignment.
-  ParticleStateProxy &operator=(
-      ParticleStateProxy<StateAccessor, false> &&other) noexcept
+  ParticleStateProxy2 &operator=(
+      ParticleStateProxy2<StateAccessor, false> &&other) noexcept
     requires ReadOnly
   {
     m_particle = other.m_particle;
@@ -917,10 +918,10 @@ class ParticleStateProxy final {
 
   /// Returns a const proxy of the particle.
   /// @return A const proxy of the particle.
-  ParticleStateProxy<StateAccessor, true> asConst() const noexcept
+  ParticleStateProxy2<StateAccessor, true> asConst() const noexcept
     requires(!ReadOnly)
   {
-    return ParticleStateProxy<StateAccessor, true>(m_particle.asConst());
+    return ParticleStateProxy2<StateAccessor, true>(m_particle.asConst());
   }
 
   ///
@@ -1153,35 +1154,35 @@ struct SimulationStateAccessor final {
 /// Additional column of data that can be added to the space point container.
 /// The column is indexed by the space point index.
 template <typename T, bool read_only>
-class ParticleColumnProxy final {
+class ParticleColumnProxy2 final {
  public:
   /// Flag indicating whether this particle column proxy is read-only
   constexpr static bool ReadOnly = read_only;
   /// Type alias for particle index type
-  using Index = ParticleIndex;
+  using Index = ParticleIndex2;
   /// Type alias for particle index subset type
-  using IndexSubset = ParticleIndexSubset;
+  using IndexSubset = ParticleIndexSubset2;
   /// Type alias for column value type
   using Value = T;
   /// Type alias for container type (const if read-only)
-  using Container = Acts::const_if_t<ReadOnly, ParticleContainer>;
+  using Container = Acts::const_if_t<ReadOnly, ParticleContainer2>;
   /// Type alias for column container type (const if read-only)
   using Column = Acts::const_if_t<ReadOnly, std::vector<Value>>;
 
   /// Constructs a particle column proxy for the given container and column.
   /// @param container The container holding the particle.
   /// @param column The column of data to access.
-  ParticleColumnProxy(Container &container, Column &column)
+  ParticleColumnProxy2(Container &container, Column &column)
       : m_container{&container}, m_column(&column) {}
 
   /// Copy construct a particle column proxy.
   /// @param other The particle column proxy to copy.
-  ParticleColumnProxy(const ParticleColumnProxy &other) noexcept = default;
+  ParticleColumnProxy2(const ParticleColumnProxy2 &other) noexcept = default;
 
   /// Copy construct a mutable particle column proxy.
   /// @param other The mutable particle column proxy to copy.
-  explicit ParticleColumnProxy(
-      const ParticleColumnProxy<T, false> &other) noexcept
+  explicit ParticleColumnProxy2(
+      const ParticleColumnProxy2<T, false> &other) noexcept
     requires ReadOnly
       : m_container(&other.container()), m_column(&other.column()) {}
 
@@ -1191,7 +1192,7 @@ class ParticleColumnProxy final {
 
   /// Returns a const proxy of the particle column.
   /// @return A const proxy of the particle column.
-  ParticleColumnProxy<T, true> asConst() const noexcept
+  ParticleColumnProxy2<T, true> asConst() const noexcept
     requires(!ReadOnly)
   {
     return {*m_container, *m_column};
@@ -1199,14 +1200,14 @@ class ParticleColumnProxy final {
 
   /// Gets the container holding the particle.
   /// @return A reference to the container holding the particle.
-  ParticleContainer &container() noexcept
+  ParticleContainer2 &container() noexcept
     requires(!ReadOnly)
   {
     return *m_container;
   }
   /// Gets the container holding the particle.
   /// @return A const reference to the container holding the particle.
-  const ParticleContainer &container() const noexcept { return *m_container; }
+  const ParticleContainer2 &container() const noexcept { return *m_container; }
 
   /// Returns a const reference to the column container.
   /// @return A const reference to the column container.
@@ -1314,37 +1315,65 @@ class ParticleColumnProxy final {
 };
 
 template <bool read_only>
-MutableGeneratorParticleProxy
-ParticleProxy<read_only>::generationState() noexcept
+MutableGeneratorParticleProxy2
+ParticleProxy2<read_only>::generationState() noexcept
   requires(!ReadOnly)
 {
-  return MutableGeneratorParticleProxy(*this);
+  return MutableGeneratorParticleProxy2(*this);
 }
 
 template <bool read_only>
-MutableSimulationParticleProxy
-ParticleProxy<read_only>::simulationState() noexcept
+MutableSimulationParticleProxy2
+ParticleProxy2<read_only>::simulationState() noexcept
   requires(!ReadOnly)
 {
-  return MutableSimulationParticleProxy(*this);
+  return MutableSimulationParticleProxy2(*this);
 }
 
 template <bool read_only>
-ConstGeneratorParticleProxy ParticleProxy<read_only>::generationState()
+ConstGeneratorParticleProxy2 ParticleProxy2<read_only>::generationState()
     const noexcept {
-  return ConstGeneratorParticleProxy(*this);
+  return ConstGeneratorParticleProxy2(*this);
 }
 
 template <bool read_only>
-ConstSimulationParticleProxy ParticleProxy<read_only>::simulationState()
+ConstSimulationParticleProxy2 ParticleProxy2<read_only>::simulationState()
     const noexcept {
-  return ConstSimulationParticleProxy(*this);
+  return ConstSimulationParticleProxy2(*this);
+}
+
+inline MutableParticleProxy2 ParticleContainer2::at(Index index) {
+  if (index >= size()) {
+    throw std::out_of_range(
+        "Index out of range in ParticleContainer: " + std::to_string(index) +
+        " >= " + std::to_string(size()));
+  }
+  return MutableProxy(*this, index);
+}
+
+inline ConstParticleProxy2 ParticleContainer2::at(Index index) const {
+  if (index >= size()) {
+    throw std::out_of_range(
+        "Index out of range in ParticleContainer: " + std::to_string(index) +
+        " >= " + std::to_string(size()));
+  }
+  return ConstProxy(*this, index);
+}
+
+inline MutableParticleProxy2 ParticleContainer2::operator[](
+    Index index) noexcept {
+  return MutableProxy(*this, index);
+}
+
+inline ConstParticleProxy2 ParticleContainer2::operator[](
+    Index index) const noexcept {
+  return ConstProxy(*this, index);
 }
 
 }  // namespace ActsFatras
 
 inline std::ostream &operator<<(std::ostream &os,
-                                ActsFatras::ConstParticleProxy particle) {
+                                ActsFatras::ConstParticleProxy2 particle) {
   // compact format w/ only identity information but no kinematics
   os << "id=" << particle.index();
   os << "|barcode=" << "(" << particle.barcode() << ")";
@@ -1356,8 +1385,6 @@ inline std::ostream &operator<<(std::ostream &os,
 }
 
 inline std::ostream &operator<<(std::ostream &os,
-                                ActsFatras::MutableParticleProxy particle) {
+                                ActsFatras::MutableParticleProxy2 particle) {
   return os << particle.asConst();
 }
-
-#include "ActsFatras/EventData/ParticleContainer.ipp"

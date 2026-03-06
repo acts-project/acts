@@ -44,6 +44,29 @@ class Hit {
   /// users responsibility to ensure that the position correspond to a
   /// position on the given surface.
   Hit(Acts::GeometryIdentifier geometryId, Barcode particleBarcode,
+      const Acts::Vector4& pos4, const Acts::Vector4& before4,
+      const Acts::Vector4& after4, std::int32_t particleHitIndex = -1)
+      : m_geometryId(geometryId),
+        m_particleBarcode(particleBarcode),
+        m_particleHitIndex(particleHitIndex),
+        m_pos4(pos4),
+        m_before4(before4),
+        m_after4(after4) {}
+
+  /// Construct from four-position and four-momenta.
+  ///
+  /// @param geometryId Geometry identifier of the surface
+  /// @param particleBarcode Barcode of the particle that created the hit
+  /// @param particleId Particle index of the particle that created the hit
+  /// @param pos4 Particle space-time four-vector on the surface
+  /// @param before4 Particle four-momentum before the interaction
+  /// @param after4 Particle four-momentum after the interaction
+  /// @param particleHitIndex Hit index along the particle trajectory
+  ///
+  /// All quantities are given in the global coordinate system. It is the
+  /// users responsibility to ensure that the position correspond to a
+  /// position on the given surface.
+  Hit(Acts::GeometryIdentifier geometryId, Barcode particleBarcode,
       ParticleIndex2 particleId2, const Acts::Vector4& pos4,
       const Acts::Vector4& before4, const Acts::Vector4& after4,
       std::int32_t particleHitIndex = -1)
@@ -59,11 +82,15 @@ class Hit {
   /// @return GeometryIdentifier of the surface where the hit occurred
   constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
 
+  constexpr Barcode particleId() const { return m_particleBarcode; }
+
   constexpr Barcode particleBarcode() const { return m_particleBarcode; }
 
   /// Particle index of the particle that generated the hit.
   /// @return Particle index of the particle that created this hit
   constexpr ParticleIndex2 particleId2() const { return m_particleId2; }
+
+  constexpr std::int32_t index() const { return m_particleHitIndex; }
 
   /// Hit index along the particle trajectory.
   ///

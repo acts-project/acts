@@ -8,11 +8,10 @@
 
 #include "ActsExamples/Geant4/ParticleKillAction.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Geant4/AlgebraConverters.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <ostream>
 #include <utility>
@@ -63,16 +62,16 @@ void ParticleKillAction::UserSteppingAction(const G4Step* step) {
     const ActsFatras::Barcode particleId = trackIt->second;
     if (outOfVolume) {
       eventStore().particleOutcome[particleId] =
-          ActsFatras::ParticleOutcome::KilledVolumeExit;
+          ActsFatras::SimulationOutcome::KilledVolumeExit;
     } else if (outOfTime) {
       eventStore().particleOutcome[particleId] =
-          ActsFatras::ParticleOutcome::KilledTime;
+          ActsFatras::SimulationOutcome::KilledTime;
     } else if (invalidSecondary) {
       eventStore().particleOutcome[particleId] =
-          ActsFatras::ParticleOutcome::KilledSecondaryParticle;
+          ActsFatras::SimulationOutcome::KilledSecondaryParticle;
     } else if (track->GetTrackStatus() == fStopAndKill) {
       eventStore().particleOutcome[particleId] =
-          ActsFatras::ParticleOutcome::KilledInteraction;
+          ActsFatras::SimulationOutcome::KilledInteraction;
     }
   }
 }
