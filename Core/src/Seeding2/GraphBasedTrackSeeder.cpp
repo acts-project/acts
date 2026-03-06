@@ -396,7 +396,6 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
           const float z0 = z1 - r1 * tau;
 
           if (layerId1 == 80000) {  // check against non-empty z0 histogram
-
             if (!checkZ0BitMask(nodeInfo, z0, minZ0, z0HistoCoeff)) {
               continue;
             }
@@ -799,7 +798,7 @@ bool GraphBasedTrackSeeder::checkZ0BitMask(const std::uint16_t z0BitMask,
 
   const float dzp = dz + z0Resolution;
 
-  nextBin = static_cast<std::uint32_t>(z0HistoCoeff * dzp);
+  nextBin = static_cast<std::int32_t>(z0HistoCoeff * dzp);
 
   if (nextBin < 16 && nextBin != z0BinIndex) {
     if (((z0BitMask >> nextBin) & 1) != 0) {
