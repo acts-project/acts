@@ -10,18 +10,18 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
-#include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
-/// @brief The binned surface material accumulater
+/// @brief The binned surface material accumulator
 ///
 /// It consumes the assigned material interactions and then accumulates
 /// the material on the surfaces in prepared binned containers for averaging
 
-class BinnedSurfaceMaterialAccumulater final
-    : public ISurfaceMaterialAccumulater {
+class BinnedSurfaceMaterialAccumulator final
+    : public ISurfaceMaterialAccumulator {
  public:
   /// @brief Nested config struct
   struct Config {
@@ -36,7 +36,7 @@ class BinnedSurfaceMaterialAccumulater final
   };
 
   /// @brief Nested state struct
-  struct State final : public ISurfaceMaterialAccumulater::State {
+  struct State final : public ISurfaceMaterialAccumulator::State {
     /// The accumulated material per geometry ID
     std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
         accumulatedMaterial;
@@ -46,24 +46,24 @@ class BinnedSurfaceMaterialAccumulater final
   ///
   /// @param cfg the configuration struct
   /// @param mlogger the logger
-  explicit BinnedSurfaceMaterialAccumulater(
+  explicit BinnedSurfaceMaterialAccumulator(
       const Config& cfg,
       std::unique_ptr<const Logger> mlogger =
-          getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
+          getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::INFO));
 
   /// Factory for creating the state
   /// @return Unique pointer to newly created accumulator state
-  std::unique_ptr<ISurfaceMaterialAccumulater::State> createState()
+  std::unique_ptr<ISurfaceMaterialAccumulator::State> createState()
       const override;
 
   /// @brief Accumulate the material interaction on the surface
   ///
-  /// @param state is the state of the accumulater
+  /// @param state is the state of the accumulator
   /// @param interactions is the material interactions, with assigned surfaces
   /// @param surfacesWithoutAssignment are the surfaces without assignment
   ///
   /// @note this the track average over the binned material
-  void accumulate(ISurfaceMaterialAccumulater::State& state,
+  void accumulate(ISurfaceMaterialAccumulator::State& state,
                   const std::vector<MaterialInteraction>& interactions,
                   const std::vector<IAssignmentFinder::SurfaceAssignment>&
                       surfacesWithoutAssignment) const override;
@@ -75,7 +75,7 @@ class BinnedSurfaceMaterialAccumulater final
   /// @note this does the run average over the (binned) material
   /// @return Map of surface materials indexed by geometry identifiers
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-  finalizeMaterial(ISurfaceMaterialAccumulater::State& state) const override;
+  finalizeMaterial(ISurfaceMaterialAccumulator::State& state) const override;
 
  private:
   /// Access method to the logger

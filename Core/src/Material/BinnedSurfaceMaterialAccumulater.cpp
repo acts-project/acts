@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
@@ -15,12 +15,12 @@
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
-Acts::BinnedSurfaceMaterialAccumulater::BinnedSurfaceMaterialAccumulater(
+Acts::BinnedSurfaceMaterialAccumulator::BinnedSurfaceMaterialAccumulator(
     const Config& cfg, std::unique_ptr<const Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
-std::unique_ptr<Acts::ISurfaceMaterialAccumulater::State>
-Acts::BinnedSurfaceMaterialAccumulater::createState() const {
+std::unique_ptr<Acts::ISurfaceMaterialAccumulator::State>
+Acts::BinnedSurfaceMaterialAccumulator::createState() const {
   auto state = std::make_unique<State>();
 
   /// Create the surface accumulation
@@ -84,8 +84,8 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
   return state;
 }
 
-void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
-    ISurfaceMaterialAccumulater::State& state,
+void Acts::BinnedSurfaceMaterialAccumulator::accumulate(
+    ISurfaceMaterialAccumulator::State& state,
     const std::vector<MaterialInteraction>& interactions,
     const std::vector<IAssignmentFinder::SurfaceAssignment>&
         surfacesWithoutAssignment) const {
@@ -143,8 +143,8 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
 
 std::map<Acts::GeometryIdentifier,
          std::shared_ptr<const Acts::ISurfaceMaterial>>
-Acts::BinnedSurfaceMaterialAccumulater::finalizeMaterial(
-    ISurfaceMaterialAccumulater::State& state) const {
+Acts::BinnedSurfaceMaterialAccumulator::finalizeMaterial(
+    ISurfaceMaterialAccumulator::State& state) const {
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
       sMaterials;
 

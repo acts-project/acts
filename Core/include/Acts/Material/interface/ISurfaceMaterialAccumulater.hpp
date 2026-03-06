@@ -23,9 +23,9 @@ namespace Acts {
 class Surface;
 
 /// @brief Interface for the material mapping, this is the accumulation step
-class ISurfaceMaterialAccumulater {
+class ISurfaceMaterialAccumulator {
  public:
-  /// The state of the material accumulater, this is used
+  /// The state of the material accumulator, this is used
   /// to cache information across tracks/events
   class State {
    public:
@@ -33,7 +33,7 @@ class ISurfaceMaterialAccumulater {
   };
 
   /// Virtual destructor
-  virtual ~ISurfaceMaterialAccumulater() = default;
+  virtual ~ISurfaceMaterialAccumulator() = default;
 
   /// Factory for creating the state
   /// @return Unique pointer to a new state object for material accumulation
@@ -41,7 +41,7 @@ class ISurfaceMaterialAccumulater {
 
   /// @brief Accumulate the material interaction on the surface
   ///
-  /// @param state is the state of the accumulater
+  /// @param state is the state of the accumulator
   /// @param interactions is the material interactions, with assigned surfaces
   /// @param surfacesWithoutAssignment are the surfaces without assignment
   ///
