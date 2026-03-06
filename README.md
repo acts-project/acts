@@ -12,7 +12,7 @@ or *A Common Tracking Software* if you do not like recursive acronyms
 ACTS is an experiment-independent toolkit for (charged) particle track
 reconstruction in (high energy) physics experiments implemented in modern C++.
 
-More information can be found in the [ACTS documentation](https://acts.readthedocs.io/).
+More information can be found in the [ACTS documentation](https://acts-project.github.io/).
 
 ## Quick start
 
@@ -40,7 +40,7 @@ Release versions follow [semantic versioning](https://semver.org/spec/v2.0.0.htm
 to indicate whether a new version contains breaking changes within the public API.
 Currently, only a limited part of the visible API is considered the public API
 and subject to the semantic versioning rules. The details are outlined in the
-[versioning and public API documentation](docs/versioning.rst).
+[versioning and public API documentation](docs/pages/versioning.md).
 
 ## Repository organization
 
