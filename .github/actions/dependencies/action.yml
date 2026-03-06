@@ -26,6 +26,10 @@ inputs:
     description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
     required: false
     default: 'false'
+  cxx_std:
+    description: 'C++ standard for lockfile selection (e.g. 20, 23). Defaults to 20.'
+    required: false
+    default: '20'
   env_file:
     description: 'Where to generate the environment file'
     required: true
@@ -89,6 +93,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         SPACK_REPO_VERSION: ${{ inputs.spack_repo_version }}
         DEPENDENCY_TAG: ${{ inputs.DEPENDENCY_TAG }}
+        CXXSTD: ${{ inputs.cxx_std }}
       run: |
         args="-e ${{ inputs.env_file }}"
         if [ "${{ inputs.full_install }}" == "true" ]; then

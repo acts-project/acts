@@ -23,7 +23,7 @@ function end_section() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:e:fh" opt; do
+while getopts "c:t:d:e:s:fh" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
@@ -37,6 +37,9 @@ while getopts "c:t:d:e:fh" opt; do
     e )
       env_file=$OPTARG
       ;;
+    s )
+      cxx_std=$OPTARG
+      ;;
     f )
       full_install=true
       ;;
@@ -47,6 +50,7 @@ while getopts "c:t:d:e:fh" opt; do
       echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
       echo "  -e <env_file>    Specify environment file to output environments to"
+      echo "  -s <cxx_std>     C++ standard for lockfile selection (e.g. 20, 23). Defaults to CXXSTD env var or 20."
       echo "  -f               Full dependency installation. Includes Geant4 datasets and Python packages."
       echo "  -h               Show this help message"
       exit 0
@@ -102,6 +106,10 @@ fi
 if [ -z "${env_file:-}" ]; then
   echo "No environment file specified via -e"
   exit 1
+fi
+
+if [ -z "${cxx_std:-}" ]; then
+  cxx_std="${CXXSTD:-20}"
 fi
 
 checkpoint "Create environment file $(realpath "$env_file")"
@@ -193,6 +201,7 @@ cmd=(
     "${SCRIPT_DIR}/select_lockfile.py"
     "--tag" "${tag}"
     "--arch" "${arch}"
+    "--cxx" "${cxx_std}"
     "--output" "${lock_file_path}"
 )
 

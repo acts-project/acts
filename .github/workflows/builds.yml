@@ -252,6 +252,7 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: ${{ matrix.cxx }}
+          cxx_std: ${{ matrix.std }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
