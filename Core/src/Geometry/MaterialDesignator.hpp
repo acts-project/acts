@@ -25,33 +25,51 @@
 
 namespace Acts::Experimental::detail {
 
-class CylinderProtoDesignator {
+template <typename face_enum_t, typename shell_type_t>
+class ProtoDesignator {
  public:
-  using Face = CylinderVolumeBounds::Face;
+  using Face = face_enum_t;
+  using ShellType = shell_type_t;
 
-  CylinderProtoDesignator(Face face, const DirectedProtoAxis& loc0,
-                          const DirectedProtoAxis& loc1,
-                          const std::string& prefix) {
-    validate(face, loc0, loc1, prefix);
+  ProtoDesignator(Face face, const DirectedProtoAxis& loc0,
+                  const DirectedProtoAxis& loc1, const std::string& prefix) {
+    validateAxes(face, loc0, loc1, prefix);
+    validateDuplicate(face, prefix);
     m_binning.emplace_back(face, loc0, loc1);
+  }
+
+  static constexpr std::string_view shellTypeName() {
+    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
+      return "Cylinder";
+    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
+      return "Cuboid";
+    } else {
+      static_assert(std::is_same_v<ShellType, void>, "Unknown shell type");
+    }
   }
 
   static constexpr std::string_view label() {
-    return "CylinderProtoDesignator";
+    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
+      return "CylinderProtoDesignator";
+    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
+      return "CuboidProtoDesignator";
+    } else {
+      static_assert(std::is_same_v<ShellType, void>, "Unknown shell type");
+    }
   }
 
   void apply(PortalShellBase& shell, const Logger& logger,
              const std::string& prefix) const {
-    auto* cylShell = dynamic_cast<CylinderPortalShell*>(&shell);
-    if (cylShell == nullptr) {
-      throw std::invalid_argument(prefix +
-                                  "Cylinder faces must use a valid face");
+    auto* concreteShell = dynamic_cast<ShellType*>(&shell);
+    if (concreteShell == nullptr) {
+      throw std::invalid_argument(prefix + std::string{shellTypeName()} +
+                                  " faces must use a valid face");
     }
 
     ACTS_DEBUG(prefix << "Binning is set to compatible type");
 
     for (const auto& [face, loc0, loc1] : m_binning) {
-      auto* portal = cylShell->portal(face).get();
+      auto* portal = concreteShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
@@ -66,7 +84,7 @@ class CylinderProtoDesignator {
   }
 
   void graphvizLabel(std::ostream& os) const {
-    os << "<br/><i>Cylinder Binning</i>";
+    os << "<br/><i>" << shellTypeName() << " Binning</i>";
     for (const auto& [face, loc0, loc1] : m_binning) {
       os << "<br/> at: " << face;
       os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
@@ -74,124 +92,68 @@ class CylinderProtoDesignator {
     }
   }
 
-  CylinderProtoDesignator merged(const CylinderProtoDesignator& other) const {
-    CylinderProtoDesignator result = *this;
+  ProtoDesignator merged(const ProtoDesignator& other) const {
+    ProtoDesignator result = *this;
     std::ranges::copy(other.m_binning, std::back_inserter(result.m_binning));
     return result;
   }
 
  private:
-  void validate(Face face, const DirectedProtoAxis& loc0,
-                const DirectedProtoAxis& loc1, const std::string& prefix) {
-    using enum CylinderVolumeBounds::Face;
+  void validateAxes(Face face, const DirectedProtoAxis& loc0,
+                    const DirectedProtoAxis& loc1, const std::string& prefix) {
     using enum AxisDirection;
 
-    switch (face) {
-      case NegativeDisc:
-      case PositiveDisc:
-        if (loc0.getAxisDirection() != AxisR ||
-            loc1.getAxisDirection() != AxisPhi) {
+    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
+      using enum CylinderVolumeBounds::Face;
+      switch (face) {
+        case NegativeDisc:
+        case PositiveDisc:
+          if (loc0.getAxisDirection() != AxisR ||
+              loc1.getAxisDirection() != AxisPhi) {
+            throw std::invalid_argument(
+                prefix + "Disc faces must use (r, phi) binning");
+          }
+          break;
+        case OuterCylinder:
+        case InnerCylinder:
+          if (loc0.getAxisDirection() != AxisRPhi ||
+              loc1.getAxisDirection() != AxisZ) {
+            throw std::invalid_argument(
+                prefix + "Cylinder faces must use (rphi, z) binning");
+          }
+          break;
+        case NegativePhiPlane:
+        case PositivePhiPlane:
           throw std::invalid_argument(prefix +
-                                      "Disc faces must use (r, phi) binning");
-        }
-        break;
-      case OuterCylinder:
-      case InnerCylinder:
-        if (loc0.getAxisDirection() != AxisRPhi ||
-            loc1.getAxisDirection() != AxisZ) {
-          throw std::invalid_argument(
-              prefix + "Cylinder faces must use (rphi, z) binning");
-        }
-        break;
-      case NegativePhiPlane:
-      case PositivePhiPlane:
-        throw std::invalid_argument(prefix +
-                                    "Phi plane faces are not supported");
-    }
-
-    if (std::ranges::find_if(m_binning, [&](const auto& bin) {
-          return std::get<0>(bin) == face;
-        }) != m_binning.end()) {
-      throw std::invalid_argument(prefix + "Cylinder face already configured");
-    }
-  }
-
-  std::vector<std::tuple<Face, DirectedProtoAxis, DirectedProtoAxis>> m_binning;
-};
-
-class CuboidProtoDesignator {
- public:
-  using Face = CuboidVolumeBounds::Face;
-
-  CuboidProtoDesignator(Face face, const DirectedProtoAxis& loc0,
-                        const DirectedProtoAxis& loc1,
-                        const std::string& prefix) {
-    validate(face, loc0, loc1, prefix);
-    m_binning.emplace_back(face, loc0, loc1);
-  }
-
-  static constexpr std::string_view label() { return "CuboidProtoDesignator"; }
-
-  void apply(PortalShellBase& shell, const Logger& logger,
-             const std::string& prefix) const {
-    auto* cuboidShell = dynamic_cast<CuboidPortalShell*>(&shell);
-    if (cuboidShell == nullptr) {
-      throw std::invalid_argument(prefix +
-                                  "Cuboid faces must use a valid face");
-    }
-
-    ACTS_DEBUG(prefix << "Binning is set to compatible type");
-
-    for (const auto& [face, loc0, loc1] : m_binning) {
-      auto* portal = cuboidShell->portal(face).get();
-      if (portal == nullptr) {
-        ACTS_ERROR(prefix << "Portal is nullptr");
-        throw std::runtime_error("Portal is nullptr");
+                                      "Phi plane faces are not supported");
       }
-
-      ACTS_DEBUG(prefix << "Assigning material with binning: " << loc0 << ", "
-                        << loc1 << " to face " << face);
-
-      portal->surface().assignSurfaceMaterial(
-          std::make_shared<ProtoGridSurfaceMaterial>(std::vector{loc0, loc1}));
+    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
+      if (loc0.getAxisDirection() != AxisX ||
+          loc1.getAxisDirection() != AxisY) {
+        throw std::invalid_argument(prefix +
+                                    "Cuboid faces must use (x, y) binning");
+      }
+    } else {
+      static_assert(std::is_same_v<ShellType, void>, "Unknown shell type");
     }
   }
 
-  void graphvizLabel(std::ostream& os) const {
-    os << "<br/><i>Cuboid Binning</i>";
-    for (const auto& [face, loc0, loc1] : m_binning) {
-      os << "<br/> at: " << face;
-      os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
-      os << ", " << loc1.getAxisDirection() << "=" << loc1.getAxis().getNBins();
-    }
-  }
-
-  CuboidProtoDesignator merged(const CuboidProtoDesignator& other) const {
-    CuboidProtoDesignator result = *this;
-    std::ranges::copy(other.m_binning, std::back_inserter(result.m_binning));
-    return result;
-  }
-
- private:
-  void validate(Face face, const DirectedProtoAxis& loc0,
-                const DirectedProtoAxis& loc1, const std::string& prefix) {
-    using enum CuboidVolumeBounds::Face;
-    using enum AxisDirection;
-
-    if (loc0.getAxisDirection() != AxisX || loc1.getAxisDirection() != AxisY) {
-      throw std::invalid_argument(prefix +
-                                  "Cuboid faces must use (x, y) binning");
-    }
-
+  void validateDuplicate(Face face, const std::string& prefix) {
     if (std::ranges::find_if(m_binning, [&](const auto& bin) {
           return std::get<0>(bin) == face;
         }) != m_binning.end()) {
-      throw std::invalid_argument(prefix + "Cuboid face already configured");
+      throw std::invalid_argument(prefix + std::string{shellTypeName()} +
+                                  " face already configured");
     }
   }
 
   std::vector<std::tuple<Face, DirectedProtoAxis, DirectedProtoAxis>> m_binning;
 };
+
+using CylinderProtoDesignator =
+    ProtoDesignator<CylinderVolumeBounds::Face, CylinderPortalShell>;
+using CuboidProtoDesignator =
+    ProtoDesignator<CuboidVolumeBounds::Face, CuboidPortalShell>;
 
 template <typename face_enum_t, typename shell_type_t>
 class ISurfaceMaterialDesignator {
