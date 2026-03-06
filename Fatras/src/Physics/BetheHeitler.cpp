@@ -12,16 +12,15 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <numbers>
-#include <utility>
 
-ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
-    const Particle &particle, double gammaE, double rndPsi, double rndTheta1,
-    double rndTheta2, double rndTheta3) const {
+namespace ActsFatras {
+
+Particle BetheHeitler::bremPhoton(const Particle &particle, double gammaE,
+                                  double rndPsi, double rndTheta1,
+                                  double rndTheta2, double rndTheta3) const {
   // ------------------------------------------------------
   // simple approach
   // (a) simulate theta uniform within the opening angle of the relativistic
@@ -60,10 +59,12 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
 
   Particle photon(particle.particleId().makeDescendant(0),
                   Acts::PdgParticle::eGamma);
-  photon.setProcess(ActsFatras::ProcessType::eBremsstrahlung)
+  photon.setProcess(GenerationProcess::eBremsstrahlung)
       .setPosition4(particle.fourPosition())
       .setDirection(photonDirection)
       .setAbsoluteMomentum(gammaE)
       .setReferenceSurface(particle.referenceSurface());
   return photon;
 }
+
+}  // namespace ActsFatras
