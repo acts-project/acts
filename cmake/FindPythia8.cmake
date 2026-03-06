@@ -37,13 +37,15 @@ find_package_handle_standard_args(
     VERSION_VAR Pythia8_VERSION
 )
 
-add_library(Pythia8 SHARED IMPORTED)
-set_property(TARGET Pythia8 PROPERTY IMPORTED_LOCATION ${Pythia8_LIBRARY})
-set_property(
-    TARGET Pythia8
-    PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Pythia8_INCLUDE_DIR}
-)
+if(NOT TARGET Pythia8::Pythia8)
+    add_library(Pythia8 SHARED IMPORTED)
+    set_property(TARGET Pythia8 PROPERTY IMPORTED_LOCATION ${Pythia8_LIBRARY})
+    set_property(
+        TARGET Pythia8
+        PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Pythia8_INCLUDE_DIR}
+    )
 
-add_library(Pythia8::Pythia8 ALIAS Pythia8)
+    add_library(Pythia8::Pythia8 ALIAS Pythia8)
+endif()
 
 mark_as_advanced(Pythia8_FOUND Pythia8_INCLUDE_DIR Pythia8_LIBRARY)

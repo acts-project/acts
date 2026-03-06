@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/HashedString.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -51,6 +52,7 @@ class DataHandleBase {
   const std::string& key() const { return m_key.value(); }
 
   virtual const std::type_info& typeInfo() const = 0;
+  virtual std::uint64_t typeHash() const = 0;
 
   bool isInitialized() const { return m_key.has_value(); }
 
@@ -88,6 +90,11 @@ class DataHandleBase {
     return wb.pop<T>(m_key.value());
   }
 
+  std::pair<Acts::AnyMoveOnly*, std::uint64_t> getHolder(
+      const WhiteBoard& wb) const {
+    return wb.getHolder(m_key.value());
+  }
+
   SequenceElement* m_parent{nullptr};
   std::string m_name;
   std::optional<std::string> m_key{};
@@ -107,7 +114,7 @@ class WriteDataHandleBase : public DataHandleBase {
  public:
   void initialize(std::string_view key);
 
-  bool isCompatible(const DataHandleBase& other) const final;
+  bool isCompatible(const DataHandleBase& other) const override;
 
   void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
                const Acts::Logger& logger) const final;
@@ -180,6 +187,7 @@ class WriteDataHandle final : public WriteDataHandleBase {
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
+  std::uint64_t typeHash() const override { return Acts::typeHash<T>(); };
 };
 
 /// A read handle for accessing data from the WhiteBoard.
@@ -213,6 +221,7 @@ class ReadDataHandle final : public ReadDataHandleBase {
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
+  std::uint64_t typeHash() const override { return Acts::typeHash<T>(); };
 };
 
 /// A consume handle for taking ownership of data from the WhiteBoard.
@@ -247,6 +256,7 @@ class ConsumeDataHandle final : public ConsumeDataHandleBase {
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
+  std::uint64_t typeHash() const override { return Acts::typeHash<T>(); };
 };
 
 }  // namespace ActsExamples
