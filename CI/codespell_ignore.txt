@@ -6,6 +6,7 @@ coner
 dependees
 dthe
 ect
+estimater
 exprot
 gaus
 interprete

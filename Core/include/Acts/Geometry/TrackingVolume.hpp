@@ -459,7 +459,7 @@ class TrackingVolume : public Volume {
   /// to the last navigation volume
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param bsfMine is the boundary face indicator where to glue
   /// @param neighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boundary surface of the neighbor
   void glueTrackingVolume(const GeometryContext& gctx,
@@ -471,7 +471,7 @@ class TrackingVolume : public Volume {
   /// to the last navigation volume
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bsfMine is the boundary face indicater where to glue
+  /// @param bsfMine is the boundary face indicator where to glue
   /// @param neighbors are the TrackingVolumes to be glued
   /// @param bsfNeighbor are the boundary surface of the neighbors
   void glueTrackingVolumes(
@@ -481,7 +481,7 @@ class TrackingVolume : public Volume {
 
   /// Provide a new BoundarySurface from the glueing
   ///
-  /// @param bsf is the boundary face indicater where to glue
+  /// @param bsf is the boundary face indicator where to glue
   /// @param bs is the new boundary surface
   /// @param checkmaterial is a flag how to deal with material, if true:
   /// - if the old boundary surface had a material description

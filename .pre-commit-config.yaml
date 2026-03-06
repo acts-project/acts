@@ -31,7 +31,7 @@ repos:
       args: ["-i", "--no-warn-about-unknown-commands"]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.5
+    rev: v2.2.6
     hooks:
     - id: codespell
       args: [
@@ -39,7 +39,7 @@ repos:
         "-I", "./CI/codespell_ignore.txt",
         "-w"
       ]
-      exclude: ^CI/.*|docs/tex-mml-chtml.js$
+      exclude: ^CI/.*|^docs/old|docs/tex-mml-chtml.js$
 
   - repo: local
     hooks:
