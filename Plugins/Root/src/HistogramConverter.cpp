@@ -8,6 +8,7 @@
 
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
+#include <cstddef>
 #include <vector>
 
 #include <TEfficiency.h>
@@ -296,10 +297,13 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency2& boostEff) {
   return rootEff;
 }
 
-std::pair<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>>
-ActsPlugins::extractMeanWidth1DProfiles(const TH2F& hist2d,
-                                        const std::string& meanName,
-                                        const std::string& widthName) {
+std::tuple<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>, double>
+ActsPlugins::extractMeanWidthProfiles(const TH2F& hist2d,
+                                      const std::string& meanName,
+                                      const std::string& widthName,
+                                      const int minEntriesForFit,
+                                      const std::string& fitOption,
+                                      const Acts::Logger& logger) {
   const int nBinsX = hist2d.GetNbinsX();
 
   // Create mean and width histograms with same X binning as the 2D histogram
@@ -317,15 +321,21 @@ ActsPlugins::extractMeanWidth1DProfiles(const TH2F& hist2d,
   }
 
   // Project each X bin and extract mean/width via Gaussian fit
+  int fitFailures = 0;
   for (int i = 1; i <= nBinsX; ++i) {
-    const auto proj = std::unique_ptr<TH1D>(
-        hist2d.ProjectionY(Form("%s_projy_bin%d", hist2d.GetName(), i), i, i));
-    if (proj->GetEntries() <= 0) {
+    const auto proj = std::unique_ptr<TH1D>(hist2d.ProjectionY(
+        std::format("{}_projy_bin_{}", hist2d.GetName(), i).c_str(), i, i));
+
+    if (proj->GetEntries() < minEntriesForFit) {
       continue;
     }
 
-    TFitResultPtr r = proj->Fit("gaus", "QS0");
+    const TFitResultPtr r = proj->Fit("gaus", fitOption.c_str());
     if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
+      ++fitFailures;
+      ACTS_DEBUG("Failed to fit Gaussian for bin "
+                 << i << ": status "
+                 << (r.Get() != nullptr ? r->Status() : -1));
       continue;
     }
 
@@ -337,6 +347,8 @@ ActsPlugins::extractMeanWidth1DProfiles(const TH2F& hist2d,
     widthHist->SetBinContent(i, r->Parameter(2));
     widthHist->SetBinError(i, r->ParError(2));
   }
+  const double fitFailureFraction =
+      (nBinsX > 0) ? static_cast<double>(fitFailures) / nBinsX : 0;
 
   meanHist->GetXaxis()->SetTitle(hist2d.GetXaxis()->GetTitle());
   meanHist->GetYaxis()->SetTitle(hist2d.GetYaxis()->GetTitle());
@@ -344,13 +356,16 @@ ActsPlugins::extractMeanWidth1DProfiles(const TH2F& hist2d,
   widthHist->GetXaxis()->SetTitle(hist2d.GetXaxis()->GetTitle());
   widthHist->GetYaxis()->SetTitle(hist2d.GetYaxis()->GetTitle());
 
-  return {std::move(meanHist), std::move(widthHist)};
+  return {std::move(meanHist), std::move(widthHist), fitFailureFraction};
 }
 
-std::pair<std::unique_ptr<TH2F>, std::unique_ptr<TH2F>>
-ActsPlugins::extractMeanWidth2DProfiles(const TH3F& hist3d,
-                                        const std::string& meanName,
-                                        const std::string& widthName) {
+std::tuple<std::unique_ptr<TH2F>, std::unique_ptr<TH2F>, double>
+ActsPlugins::extractMeanWidthProfiles(const TH3F& hist3d,
+                                      const std::string& meanName,
+                                      const std::string& widthName,
+                                      const int minEntriesForFit,
+                                      const std::string& fitOption,
+                                      const Acts::Logger& logger) {
   const int nBinsX = hist3d.GetNbinsX();
   const int nBinsY = hist3d.GetNbinsY();
 
@@ -375,17 +390,23 @@ ActsPlugins::extractMeanWidth2DProfiles(const TH3F& hist3d,
   }
 
   // Loop over all (X,Y) bins
+  int fitFailures = 0;
   for (int i = 1; i <= nBinsX; ++i) {
     for (int j = 1; j <= nBinsY; ++j) {
       const auto proj = std::unique_ptr<TH1D>(hist3d.ProjectionZ(
-          Form("%s_projz_bin%d_%d", hist3d.GetName(), i, j), i, i, j, j));
+          std::format("{}_projz_bin_{}_{}", hist3d.GetName(), i, j).c_str(), i,
+          i, j, j));
 
-      if (proj->GetEntries() <= 0) {
+      if (proj->GetEntries() < minEntriesForFit) {
         continue;
       }
 
-      TFitResultPtr r = proj->Fit("gaus", "QS0");
+      const TFitResultPtr r = proj->Fit("gaus", fitOption.c_str());
       if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
+        ++fitFailures;
+        ACTS_DEBUG("Failed to fit Gaussian for bin "
+                   << i << ", " << j << ": status "
+                   << (r.Get() != nullptr ? r->Status() : -1));
         continue;
       }
 
@@ -398,6 +419,10 @@ ActsPlugins::extractMeanWidth2DProfiles(const TH3F& hist3d,
       widthHist->SetBinError(i, j, r->ParError(2));
     }
   }
+  const double fitFailureFraction =
+      (nBinsX * nBinsY > 0)
+          ? static_cast<double>(fitFailures) / (nBinsX * nBinsY)
+          : 0;
 
   meanHist->GetXaxis()->SetTitle(hist3d.GetXaxis()->GetTitle());
   meanHist->GetYaxis()->SetTitle(hist3d.GetYaxis()->GetTitle());
@@ -407,5 +432,5 @@ ActsPlugins::extractMeanWidth2DProfiles(const TH3F& hist3d,
   widthHist->GetYaxis()->SetTitle(hist3d.GetYaxis()->GetTitle());
   widthHist->GetZaxis()->SetTitle(hist3d.GetZaxis()->GetTitle());
 
-  return {std::move(meanHist), std::move(widthHist)};
+  return {std::move(meanHist), std::move(widthHist), fitFailureFraction};
 }

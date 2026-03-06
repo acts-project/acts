@@ -51,6 +51,16 @@ class RootTrackFitterPerformanceWriter final
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+
+    /// Minimum number of entries in a bin for it to be included in the
+    /// mean/width fit.
+    int minEntriesForFit = 10;
+    /// Fit option string to pass to ROOT when performing Gaussian fits for
+    /// mean/width extraction.
+    std::string fitOption =
+        "QS0";  // Quiet mode, no output, and use SumW2 for errors
+    /// Threshold for warning about fit failure fraction in profile extraction.
+    double warningThresholdFitFailureFraction = 0.5;
   };
 
   /// Construct from configuration and log level.

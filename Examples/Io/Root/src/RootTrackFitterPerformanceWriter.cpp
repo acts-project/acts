@@ -81,34 +81,23 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
   m_outputFile->cd();
 
   // Helper lambda to write 2D histogram and extract mean/width profiles
-  const auto writeH2DWithRefinement = [](TH2F& hist2d,
-                                         const std::string& meanPrefix,
-                                         const std::string& widthPrefix) {
-    hist2d.Write();
+  const auto writeWithRefinement = [this](auto& hist,
+                                          const std::string& meanPrefix,
+                                          const std::string& widthPrefix) {
+    hist.Write();
 
     // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
-    const std::string baseName = hist2d.GetName();
+    const std::string baseName = hist.GetName();
     const std::string suffix = baseName.substr(baseName.find('_'));
 
-    auto [meanHist, widthHist] = ActsPlugins::extractMeanWidth1DProfiles(
-        hist2d, meanPrefix + suffix, widthPrefix + suffix);
-
-    meanHist->Write();
-    widthHist->Write();
-  };
-
-  // Helper lambda to write 3D histogram and extract mean/width profiles
-  const auto writeH3DWithRefinement = [](TH3F& hist3d,
-                                         const std::string& meanPrefix,
-                                         const std::string& widthPrefix) {
-    hist3d.Write();
-
-    // Get the histogram name and extract the suffix (e.g., "_d0_vs_eta")
-    const std::string baseName = hist3d.GetName();
-    const std::string suffix = baseName.substr(baseName.find('_'));
-
-    auto [meanHist, widthHist] = ActsPlugins::extractMeanWidth2DProfiles(
-        hist3d, meanPrefix + suffix, widthPrefix + suffix);
+    auto [meanHist, widthHist, fitFailureFraction] =
+        ActsPlugins::extractMeanWidthProfiles(
+            hist, meanPrefix + suffix, widthPrefix + suffix,
+            m_cfg.minEntriesForFit, m_cfg.fitOption, logger());
+    if (fitFailureFraction >= m_cfg.warningThresholdFitFailureFraction) {
+      ACTS_WARNING("Fit failures for " << baseName << ": "
+                                       << fitFailureFraction * 100 << "%");
+    }
 
     meanHist->Write();
     widthHist->Write();
@@ -119,16 +108,16 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsEta()) {
-    writeH2DWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsPt()) {
-    writeH2DWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsEtaPhi()) {
-    writeH3DWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.resVsEtaPt()) {
-    writeH3DWithRefinement(*toRoot(hist), "resmean", "reswidth");
+    writeWithRefinement(*toRoot(hist), "resmean", "reswidth");
   }
 
   // Write pull histograms
@@ -136,16 +125,16 @@ ProcessCode RootTrackFitterPerformanceWriter::finalize() {
     toRoot(hist)->Write();
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsEta()) {
-    writeH2DWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsPt()) {
-    writeH2DWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsEtaPhi()) {
-    writeH3DWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
   for (const auto& [name, hist] : m_resPlotTool.pullVsEtaPt()) {
-    writeH3DWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
+    writeWithRefinement(*toRoot(hist), "pullmean", "pullwidth");
   }
 
   // Write efficiency histograms
