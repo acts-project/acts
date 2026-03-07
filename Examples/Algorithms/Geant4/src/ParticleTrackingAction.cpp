@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <cassert>
 #include <ostream>
@@ -130,8 +130,8 @@ SimParticleState ParticleTrackingAction::convert(const G4Track& aTrack,
     numberOfHits = it->second;
   }
 
-  ActsFatras::ParticleOutcome particleOutcome =
-      ActsFatras::ParticleOutcome::Alive;
+  ActsFatras::SimulationOutcome particleOutcome =
+      ActsFatras::SimulationOutcome::Alive;
   if (auto it = eventStore().particleOutcome.find(particleId);
       it != eventStore().particleOutcome.end()) {
     particleOutcome = it->second;
