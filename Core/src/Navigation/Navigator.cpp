@@ -229,6 +229,23 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     return NavigationTarget::None();
   }
 
+  if (m_geometryVersion == GeometryVersion::Gen3) {
+    // If we re-navigated, we need to recreate the navigation policy state for
+    // the new volume if it exists
+    const auto* policy = state.currentVolume->navigationPolicy();
+    if (policy == nullptr) {
+      ACTS_ERROR(volInfo(state) << "No navigation policy for new volume, this "
+                                   "should not happen. Stop navigation.");
+      return NavigationTarget::None();
+    }
+
+    ACTS_VERBOSE(volInfo(state) << "Creating navigation policy state for new "
+                                   "volume after renavigation.");
+    policy->createState(state.options.geoContext,
+                        {.position = position, .direction = direction},
+                        state.policyStateManager, logger());
+  }
+
   state.currentLayer =
       state.currentVolume->associatedLayer(state.options.geoContext, position);
 
@@ -315,15 +332,21 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
       if (state.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Volume updated.");
 
-        if (const auto* policy = state.currentVolume->navigationPolicy();
-            policy != nullptr) {
-          ACTS_VERBOSE(
+        const auto* policy = state.currentVolume->navigationPolicy();
+
+        if (policy == nullptr) {
+          ACTS_ERROR(
               volInfo(state)
-              << "Creating navigation policy state for updated volume");
-          policy->createState(state.options.geoContext,
-                              {.position = position, .direction = direction},
-                              state.policyStateManager, logger());
+              << "No navigation policy for new volume, this should not happen");
+          return;
         }
+
+        ACTS_VERBOSE(volInfo(state)
+                     << "Creating navigation policy state for new "
+                        "volume after portal transition.");
+        policy->createState(state.options.geoContext,
+                            {.position = position, .direction = direction},
+                            state.policyStateManager, logger());
 
         // this is set only for the check target validity since gen3 does not
         // care

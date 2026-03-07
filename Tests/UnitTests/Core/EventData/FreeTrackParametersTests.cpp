@@ -32,7 +32,7 @@ using namespace Acts::UnitLiterals;
 namespace {
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
-const FreeSquareMatrix cov = FreeSquareMatrix::Identity();
+const FreeMatrix cov = FreeMatrix::Identity();
 
 void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
                      const Vector3& unitDir, double p, double q) {

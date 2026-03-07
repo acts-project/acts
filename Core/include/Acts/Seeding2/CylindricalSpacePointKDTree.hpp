@@ -36,7 +36,7 @@ class CylindricalSpacePointKDTree {
   enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
 
   /// @brief The k-d tree type used by this seeder internally, which is
-  /// three-dimensional, contains internal spacepoint pointers, uses the Acts
+  /// three-dimensional, contains internal space point pointers, uses the Acts
   /// scalar type for coordinates, stores its coordinates in std::arrays, and
   /// has leaf size 4.
   using Tree = KDTree<NDims, SpacePointIndex, float, std::array, 4>;
@@ -166,7 +166,7 @@ class CylindricalSpacePointKDTree {
 /// Builder for cylindrical space point KD-trees.
 class CylindricalSpacePointKDTreeBuilder {
  public:
-  /// Space point index type used in the grid.
+  /// space point index type used in the grid.
   using SpacePointIndex = CylindricalSpacePointKDTree::SpacePointIndex;
 
   /// @brief Set the number of dimensions in which to embed points. This is just
@@ -178,7 +178,7 @@ class CylindricalSpacePointKDTreeBuilder {
   using Dim = CylindricalSpacePointKDTree::Dim;
 
   /// @brief The k-d tree type used by this seeder internally, which is
-  /// three-dimensional, contains internal spacepoint pointers, uses the Acts
+  /// three-dimensional, contains internal space point pointers, uses the Acts
   /// scalar type for coordinates, stores its coordinates in std::arrays, and
   /// has leaf size 4.
   using Tree = CylindricalSpacePointKDTree::Tree;

@@ -60,7 +60,7 @@ concept CompositeSpacePoint = requires(const SpacePointType sp) {
   { sp.measuresLoc1() } -> std::same_as<bool>;
 };
 
-/// @brief Define the Space Point pointer concept as an ordinary / smart pointer
+/// @brief Define the space point pointer concept as an ordinary / smart pointer
 ///        over space points
 template <typename SpacePoint_t>
 concept CompositeSpacePointPtr =

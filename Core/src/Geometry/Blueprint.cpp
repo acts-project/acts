@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/detail/AlignablePortalVisitor.hpp"
 #include "Acts/Geometry/detail/BoundDeduplicator.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
@@ -192,7 +193,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
                                          std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
-    SingleCylinderPortalShell worldShell{*world};
+    SingleCylinderPortalShell worldShell{gctx, *world};
     worldShell.applyToVolume();
 
   } else if (const auto *box =
@@ -248,7 +249,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
                                          std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
-    SingleCuboidPortalShell worldShell{*world};
+    SingleCuboidPortalShell worldShell{gctx, *world};
     worldShell.applyToVolume();
 
   } else {
@@ -308,6 +309,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   BlueprintVisitor visitor{logger, volumesById};
   world->apply(visitor);
+
+  Acts::detail::AlignablePortalVisitor alignPortals{gctx, logger};
+  world->apply(alignPortals);
 
   return std::make_unique<TrackingGeometry>(
       std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);

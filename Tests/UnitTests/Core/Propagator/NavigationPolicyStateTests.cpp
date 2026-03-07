@@ -96,7 +96,8 @@ class AlternatingInvalidPolicy final : public INavigationPolicy {
   }
 
   bool isValid(const GeometryContext& /*gctx*/,
-               const NavigationArguments /*args*/, NavigationPolicyState& state,
+               const NavigationArguments& /*args*/,
+               NavigationPolicyState& state,
                const Logger& logger) const override {
     auto& s = state.as<State>();
     s.counter++;
@@ -107,7 +108,7 @@ class AlternatingInvalidPolicy final : public INavigationPolicy {
   }
 
   void createState(const GeometryContext& /*gctx*/,
-                   const NavigationArguments /*args*/,
+                   const NavigationArguments& /*args*/,
                    NavigationPolicyStateManager& stateManager,
                    const Logger& logger) const override {
     ACTS_VERBOSE("AlternatingInvalidPolicy createState");
@@ -160,7 +161,7 @@ class ConeValidityPolicy final : public INavigationPolicy {
     connectDefault<ConeValidityPolicy>(delegate);
   }
 
-  bool isValid(const GeometryContext& /*gctx*/, const NavigationArguments args,
+  bool isValid(const GeometryContext& /*gctx*/, const NavigationArguments& args,
                NavigationPolicyState& state,
                const Logger& logger) const override {
     auto& s = state.as<State>();
@@ -178,7 +179,7 @@ class ConeValidityPolicy final : public INavigationPolicy {
   }
 
   void createState(const GeometryContext& /*gctx*/,
-                   const NavigationArguments args,
+                   const NavigationArguments& args,
                    NavigationPolicyStateManager& stateManager,
                    const Logger& logger) const override {
     ACTS_VERBOSE("ConeValidityPolicy createState: direction="

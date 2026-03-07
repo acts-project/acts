@@ -43,50 +43,50 @@ struct LinCircle {
   float y{0.};
 };
 
-/// Transform a single spacepoint to u-v space coordinates
-/// @tparam external_spacepoint_t The external spacepoint type
+/// Transform a single space point to u-v space coordinates
+/// @tparam external_space_point_t The external space point type
 /// @tparam callable_t The callable type for coordinate extraction
 /// @param mutableData Container for mutable variables used in seeding
-/// @param sp The spacepoint to transform
-/// @param spM The middle reference spacepoint
-/// @param bottom Whether this is a bottom spacepoint
-/// @param extractFunction Function to extract coordinates from spacepoints
+/// @param sp The space point to transform
+/// @param spM The middle reference space point
+/// @param bottom Whether this is a bottom space point
+/// @param extractFunction Function to extract coordinates from space points
 /// @return LinCircle representing the transformed coordinates
-template <typename external_spacepoint_t, typename callable_t>
+template <typename external_space_point_t, typename callable_t>
 LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
-                               const external_spacepoint_t& sp,
-                               const external_spacepoint_t& spM, bool bottom,
+                               const external_space_point_t& sp,
+                               const external_space_point_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
-/// @brief Transform a vector of spacepoints to u-v space circles with respect
-/// to a given middle spacepoint.
+/// @brief Transform a vector of space points to u-v space circles with respect
+/// to a given middle space point.
 ///
-/// @tparam external_spacepoint_t The external spacepoint type.
+/// @tparam external_space_point_t The external space point type.
 ///
 /// @param mutableData Container for mutable variables used in the seeding
-/// @param[in] vec The list of bottom or top spacepoints
-/// @param[in] spM The middle spacepoint.
-/// @param[in] bottom Should be true if vec are bottom spacepoints.
+/// @param[in] vec The list of bottom or top space points
+/// @param[in] spM The middle space point.
+/// @param[in] bottom Should be true if vec are bottom space points.
 /// @param[out] linCircleVec The output vector to write to.
-template <typename external_spacepoint_t>
+template <typename external_space_point_t>
 void transformCoordinates(Acts::SpacePointMutableData& mutableData,
-                          const std::vector<const external_spacepoint_t*>& vec,
-                          const external_spacepoint_t& spM, bool bottom,
+                          const std::vector<const external_space_point_t*>& vec,
+                          const external_space_point_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec);
 
-/// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
+/// @brief Check the compatibility of space point coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
-/// @tparam external_spacepoint_t The external spacepoint type.
+/// @tparam external_space_point_t The external space point type.
 ///
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
-/// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
+/// @param[in] spacePointPosition Space point coordinates in xyz plane.
 /// @param[out] outputCoordinates The output vector to write to.
-/// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
-template <typename external_spacepoint_t>
+/// @returns Boolean that says if space point is compatible with being inside the detector element.
+template <typename external_space_point_t>
 bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const external_spacepoint_t& sp, const double* spacepointPosition,
+    const Acts::SeedFinderConfig<external_space_point_t>& config,
+    const external_space_point_t& sp, const double* spacePointPosition,
     double* outputCoordinates);
 
 }  // namespace Acts

@@ -10,11 +10,10 @@
 
 #include "Acts/Utilities/Histogram.hpp"
 
-#include <vector>
-
 class TEfficiency;
 class TH1F;
 class TH2F;
+class TH3F;
 class TProfile;
 
 namespace ActsPlugins {
@@ -25,7 +24,7 @@ namespace ActsPlugins {
 /// errors as the input boost histogram.
 ///
 /// @param boostHist The boost 1D histogram to convert
-/// @return Raw pointer to new TH1F (caller owns and must delete)
+/// @return unique pointer to new TH1F
 std::unique_ptr<TH1F> toRoot(const Acts::Experimental::Histogram1& boostHist);
 
 /// Convert Histogram2 to ROOT TH2F
@@ -34,8 +33,17 @@ std::unique_ptr<TH1F> toRoot(const Acts::Experimental::Histogram1& boostHist);
 /// errors as the input boost histogram.
 ///
 /// @param boostHist The boost 2D histogram to convert
-/// @return Raw pointer to new TH2F (caller owns and must delete)
+/// @return unique pointer to new TH2F
 std::unique_ptr<TH2F> toRoot(const Acts::Experimental::Histogram2& boostHist);
+
+/// Convert Histogram3 to ROOT TH3F
+///
+/// Creates a new ROOT TH3F histogram with the same binning, content, and
+/// errors as the input boost histogram.
+///
+/// @param boostHist The boost 3D histogram to convert
+/// @return unique pointer to new TH3F
+std::unique_ptr<TH3F> toRoot(const Acts::Experimental::Histogram3& boostHist);
 
 /// Convert ProfileHistogram1 to ROOT TProfile
 ///
@@ -43,7 +51,7 @@ std::unique_ptr<TH2F> toRoot(const Acts::Experimental::Histogram2& boostHist);
 /// as the input boost profile histogram.
 ///
 /// @param boostProfile The boost profile histogram to convert
-/// @return Raw pointer to new TProfile (caller owns and must delete)
+/// @return unique pointer to new TProfile
 std::unique_ptr<TProfile> toRoot(
     const Acts::Experimental::ProfileHistogram1& boostProfile);
 
@@ -53,7 +61,7 @@ std::unique_ptr<TProfile> toRoot(
 /// and total counts as the input boost efficiency histogram.
 ///
 /// @param boostEff The boost 1D efficiency histogram to convert
-/// @return Raw pointer to new TEfficiency (caller owns and must delete)
+/// @return unique pointer to new TEfficiency
 std::unique_ptr<TEfficiency> toRoot(
     const Acts::Experimental::Efficiency1& boostEff);
 
@@ -63,7 +71,7 @@ std::unique_ptr<TEfficiency> toRoot(
 /// counts, and total counts as the input boost efficiency histogram.
 ///
 /// @param boostEff The boost 2D efficiency histogram to convert
-/// @return Raw pointer to new TEfficiency (caller owns and must delete)
+/// @return unique pointer to new TEfficiency
 std::unique_ptr<TEfficiency> toRoot(
     const Acts::Experimental::Efficiency2& boostEff);
 

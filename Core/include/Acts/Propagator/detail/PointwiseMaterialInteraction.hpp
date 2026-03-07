@@ -100,35 +100,6 @@ MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
                               position, direction, updateMode);
 }
 
-/// Evaluate the material slab at the current surface given the propagation
-/// state
-/// @tparam propagator_state_t The type of the propagator state
-/// @tparam stepper_t The type of the stepper
-/// @tparam navigator_t The type of the navigator
-/// @param state The current propagator state
-/// @param stepper The stepper used for the propagation
-/// @param navigator The navigator used for the propagation
-/// @param updateMode The material update mode
-/// @return The evaluated material slab
-template <typename propagator_state_t, typename stepper_t, typename navigator_t>
-MaterialSlab evaluateMaterialSlab(const propagator_state_t& state,
-                                  const stepper_t& stepper,
-                                  const navigator_t& navigator,
-                                  MaterialUpdateMode updateMode) {
-  const Surface* surface = navigator.currentSurface(state.navigation);
-  if (surface == nullptr) {
-    return MaterialSlab::Nothing();
-  }
-
-  const GeometryContext& geoContext = state.options.geoContext;
-  const Direction propDir = state.options.direction;
-  const Vector3 pos = stepper.position(state.stepping);
-  const Vector3 dir = stepper.direction(state.stepping);
-
-  return evaluateMaterialSlab(geoContext, *surface, propDir, pos, dir,
-                              updateMode);
-}
-
 /// Struct to hold the material effects computed at a pointwise interaction
 struct PointwiseMaterialEffects {
   double eLoss = 0;
@@ -255,32 +226,24 @@ PointwiseMaterialEffects performMaterialInteraction(
 /// propagation state
 /// @tparam propagator_state_t The type of the propagator state
 /// @tparam stepper_t The type of the stepper
-/// @tparam navigator_t The type of the navigator
 /// @param state The current propagator state
 /// @param stepper The stepper used for the propagation
-/// @param navigator The navigator used for the propagation
+/// @param surface The surface at which to perform the material interaction
 /// @param updateMode The material update mode
 /// @param noiseUpdateMode The noise update mode
 /// @param multipleScattering Whether to compute multiple scattering effects
 /// @param energyLoss Whether to compute energy loss effects
 /// @param logger The logger to use for verbose output
 /// @return The computed material effects
-template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+template <typename propagator_state_t, typename stepper_t>
 PointwiseMaterialEffects performMaterialInteraction(
-    propagator_state_t& state, const stepper_t& stepper,
-    const navigator_t& navigator, MaterialUpdateMode updateMode,
-    NoiseUpdateMode noiseUpdateMode, bool multipleScattering, bool energyLoss,
-    const Logger& logger) {
-  const Surface* surface = navigator.currentSurface(state.navigation);
-  if (surface == nullptr) {
-    ACTS_VERBOSE("No current surface, skip material interaction");
-    return {};
-  }
-
+    propagator_state_t& state, const stepper_t& stepper, const Surface& surface,
+    MaterialUpdateMode updateMode, NoiseUpdateMode noiseUpdateMode,
+    bool multipleScattering, bool energyLoss, const Logger& logger) {
   const MaterialSlab slab =
-      evaluateMaterialSlab(state, stepper, navigator, updateMode);
+      evaluateMaterialSlab(state, stepper, surface, updateMode);
   if (slab.isVacuum()) {
-    ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
+    ACTS_VERBOSE("No material effects on surface: " << surface.geometryId()
                                                     << " with update mode: "
                                                     << updateMode);
   }
@@ -291,7 +254,7 @@ PointwiseMaterialEffects performMaterialInteraction(
   const Direction propDir = state.options.direction;
 
   ACTS_VERBOSE("Material effects on surface: "
-               << surface->geometryId() << " with update mode: " << updateMode
+               << surface.geometryId() << " with update mode: " << updateMode
                << " are :");
   ACTS_VERBOSE("eLoss = " << effects.eLoss * propDir << ", "
                           << "variancePhi = " << effects.variancePhi << ", "

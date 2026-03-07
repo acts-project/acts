@@ -50,8 +50,10 @@ std::ostream& operator<<(std::ostream& os, DiamondPortalShell::Face face);
 class SingleDiamondPortalShell : public DiamondPortalShell {
  public:
   /// Constructor of a convex polygon shape portal shell for the given volume
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The tracking volume this portal shell is associated with
-  explicit SingleDiamondPortalShell(TrackingVolume& volume);
+  explicit SingleDiamondPortalShell(const GeometryContext& gctx,
+                                    TrackingVolume& volume);
 
   /// @copydoc DiamondPortalShell::portalPtr
   std::shared_ptr<Portal> portalPtr(Face face) override;

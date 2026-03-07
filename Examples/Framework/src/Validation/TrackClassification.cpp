@@ -15,12 +15,13 @@
 
 #include <algorithm>
 
+namespace ActsExamples {
+
 namespace {
 
 /// Increase the hit count for the given particle id by one.
-inline void increaseHitCount(
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts,
-    ActsFatras::Barcode particleId) {
+inline void increaseHitCount(std::vector<ParticleHitCount>& particleHitCounts,
+                             ActsFatras::Barcode particleId) {
   // linear search since there is no ordering
   auto it = std::ranges::find_if(particleHitCounts, [=](const auto& phc) {
     return (phc.particleId == particleId);
@@ -34,18 +35,17 @@ inline void increaseHitCount(
 }
 
 /// Sort hit counts by decreasing values, i.e. majority particle comes first.
-inline void sortHitCount(
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
+inline void sortHitCount(std::vector<ParticleHitCount>& particleHitCounts) {
   std::ranges::sort(particleHitCounts, std::greater{},
                     [](const auto& p) { return p.hitCount; });
 }
 
 }  // namespace
 
-void ActsExamples::identifyContributingParticles(
+void identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const ProtoTrack& protoTrack,
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
+    std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
 
   for (auto hitIndex : protoTrack) {
@@ -58,7 +58,7 @@ void ActsExamples::identifyContributingParticles(
   sortHitCount(particleHitCounts);
 }
 
-void ActsExamples::identifyContributingParticles(
+void identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const Trajectories& trajectories, std::size_t tip,
     std::vector<ParticleHitCount>& particleHitCounts) {
@@ -90,7 +90,7 @@ void ActsExamples::identifyContributingParticles(
   sortHitCount(particleHitCounts);
 }
 
-void ActsExamples::identifyContributingParticles(
+void identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const ConstTrackContainer::ConstTrackProxy& track,
     std::vector<ParticleHitCount>& particleHitCounts) {
@@ -116,3 +116,5 @@ void ActsExamples::identifyContributingParticles(
   }
   sortHitCount(particleHitCounts);
 }
+
+}  // namespace ActsExamples

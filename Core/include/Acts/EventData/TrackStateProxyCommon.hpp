@@ -104,6 +104,12 @@ class TrackStateProxyCommon {
   /// @return True if projector indices are stored.
   bool hasProjector() const { return derived().has(detail_tsp::kProjectorKey); }
 
+  /// Check for presence of an uncalibrated source link.
+  /// @return True if an uncalibrated source link is stored.
+  bool hasUncalibratedSourceLink() const {
+    return derived().has(detail_tsp::kUncalibratedKey);
+  }
+
   /// Check for presence of calibrated measurement data.
   /// @return True if calibrated measurements exist.
   bool hasCalibrated() const {

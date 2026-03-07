@@ -375,7 +375,7 @@ BOOST_DATA_TEST_CASE(
   double q = -1 + 2 * charge;
 
   // define start parameters
-  BoundSquareMatrix cov;
+  BoundMatrix cov;
   // take some major correlations (off-diagonals)
   // clang-format off
     cov <<

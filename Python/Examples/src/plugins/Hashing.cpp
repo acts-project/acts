@@ -6,11 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFinding/SeedingAlgorithmHashing.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
+#include "ActsExamples/TrackFinding/HashingPrototypeSeedingAlgorithm.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-
-#include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -18,15 +15,22 @@
 namespace py = pybind11;
 
 using namespace Acts;
-using namespace ActsPlugins;
 using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsHashing, hashing) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      SeedingAlgorithmHashing, hashing, "SeedingAlgorithmHashing",
-      inputSpacePoints, outputSeeds, outputBuckets, seedFilterConfig,
-      seedFinderConfig, seedFinderOptions, gridConfig, gridOptions,
-      allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors,
-      hashingConfig, hashingTrainingConfig);
+      HashingPrototypeSeedingAlgorithm, hashing,
+      "HashingPrototypeSeedingAlgorithm", inputSpacePoints, outputSeeds,
+      outputBuckets, bFieldInZ, minPt, cotThetaMax, impactMax, deltaRMin,
+      deltaRMax, deltaRMinTop, deltaRMaxTop, deltaRMinBottom, deltaRMaxBottom,
+      deltaZMin, deltaZMax, interactionPointCut, collisionRegionMin,
+      collisionRegionMax, helixCutTolerance, sigmaScattering, radLengthPerSeed,
+      toleranceParam, deltaInvHelixDiameter, compatSeedWeight,
+      impactWeightFactor, zOriginWeightFactor, maxSeedsPerSpM, compatSeedLimit,
+      seedWeightIncrement, numSeedIncrement, seedConfirmation,
+      centralSeedConfirmationRange, forwardSeedConfirmationRange,
+      maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf,
+      useDeltaRinsteadOfTopRadius, useExtraCuts, annoySeed, f, bucketSize,
+      zBins, phiBins, layerRMin, layerRMax, layerZMin, layerZMax);
 }

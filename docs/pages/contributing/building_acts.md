@@ -31,19 +31,19 @@ The following dependencies are required to build the ACTS core library:
 The following dependencies are optional and are needed to build additional
 components:
 
-- [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the GNN plugin and its examples
+- [CUDA](https://developer.nvidia.com/cuda) for the CUDA plugin and the GNN plugin and its examples
 - [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 - [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 - [Geant4](https://geant4.org/) for some examples
 - [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
-- [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
+- [Intel Threading Building Blocks](https://github.com/uxlfoundation/oneTBB) >= 2020.1 for the examples
 - [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the GNN plugin and some examples
 - [Pythia8](https://pythia.org) for some examples
 - [ROOT](https://root.cern.ch) >= 6.20 for the ROOT plugin and the examples
-- [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
-- [libtorch](https://pytorch.org/cppdocs/installing.html) for the GNN plugin
+- [Graphviz](https://www.graphviz.org/) for class diagrams and other graphs in the documentation
+- [libtorch](https://docs.pytorch.org/cppdocs/installing.html) for the GNN plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
-- [FastJet](http://fastjet.fr/) >= 3.4.0 for the FastJet plugin
+- [FastJet](https://fastjet.fr/) >= 3.4.0 for the FastJet plugin
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -105,6 +105,13 @@ provided by the machine. It is suggested to select a recent `<lcg_release>`
 and `<lcg_platform>` combination. (Have a look at the CI jobs to get an
 overview on what we are currently testing):
 
+Current LCG/compiler combinations covered in CI are:
+
+- `LCG_107`: `gcc13`, `clang16`
+- `LCG_107a`: `gcc14`
+- `LCG_108`: `gcc15`
+- `LCG_109`: `gcc15`, `clang19`
+
 ```console
 source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
 ```
@@ -124,7 +131,7 @@ and they contain all the dependencies required to build ACTS.
 
 Furthermore, we are also testing on, but do not provide the corresponding containers:
 
-- `alma9` (HEP-specific software from LCG 106 or 107 and various clang versions)
+- `alma9` (HEP-specific software from LCG 107/107a/108/109 and compilers `gcc13`, `gcc14`, `gcc15`, `clang16`, `clang19`)
 - `macOS-10.15`
 
 > [!warning]
@@ -186,51 +193,44 @@ more information.
 
 # Building the documentation
 
-The documentation uses [Doxygen][doxygen] to extract the source code
-documentation and [Sphinx][sphinx] with the [Breathe][breathe] extension to
-generate the documentation website. To build the documentation locally, you
-need to have [Doxygen][doxygen] version `1.9.5` or newer installed.
-[Sphinx][sphinx] and a few other dependencies can be installed using the Python
-package manager `pip`:
+The documentation is built using [Doxygen][doxygen], which extracts the source
+code documentation and generates the HTML website. The build uses the
+[doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme for
+styling.
 
-```console
-cd <source>
-pip install -r docs/requirements.txt
-```
+To build the documentation locally, you need:
 
-> [!tip]
-> It is **strongly recommended** to use a [virtual
->environment](https://realpython.com/python-virtual-environments-a-primer/) for
->this purpose! For example, run
->
-> ```console
-> python -m venv docvenv
-> source docvenv/bin/activate
-> ```
->
-> to create a local virtual environment, and then run the `pip` command above.
+- [Doxygen][doxygen] version 1.9.4 or newer
+- [Graphviz](https://www.graphviz.org/) for class diagrams and other graphs
 
-To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
+Configure the build with the `ACTS_BUILD_DOCS` option enabled:
 
 ```console
 cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
 ```
 
-Then the documentation can be build with this target
+Then build the documentation:
 
 ```console
 cmake --build <build> --target docs
 ```
 
-The default option includes the Doxygen, Sphinx, and the Breathe extension,
-i.e. the source code information can be used in the manually written
-documentation. An attempt is made to pull in symbols that are cross-referenced from
-other parts of the documentation. This is not guaranteed to work: in case
-of errors you will need to manually pull in symbols to be documented.
+The generated HTML documentation will be in `<build>/docs/html/`. Open
+`<build>/docs/html/index.html` in a browser to view it.
+
+For a live preview with automatic rebuilds when files change, you can use the
+`serve.py` script (requires Python 3.11+ with [uv](https://docs.astral.sh/uv/) or
+the typer, rich, and livereload packages):
+
+```console
+uv run docs/serve.py --build-dir <build>
+```
+
+If your build directory is `build`, you can omit the `--build-dir` option. This
+serves the documentation at http://localhost:8000 and rebuilds when you edit
+source files or documentation.
 
 [doxygen]: https://doxygen.nl/
-[sphinx]: https://www.sphinx-doc.org
-[breathe]: https://breathe.readthedocs.io
 
 # Build options {#build-options}
 
@@ -267,11 +267,11 @@ components.
 | ACTS_USE_SYSTEM_PYBIND11            | Use a system installation of pybind11<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                     |
 | ACTS_USE_SYSTEM_MODULEMAPGRAPH      | Use a system installation of<br>ModuleMapGraph<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                            |
 | ACTS_USE_SYSTEM_EIGEN3              | Use a system-provided eigen3<br> type: `bool`, default: `ON`                                                                                                                                                                       |
+| ACTS_USE_SYSTEM_MILLE               | Use a system-provided Mille<br> type: `bool`, default: `ON`                                                                                                                                                                        |
 | ACTS_BUILD_PLUGIN_ACTSVG            | Build SVG display plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                          |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_FPEMON            | Build FPE monitoring plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
-| ACTS_BUILD_PLUGIN_FASTJET           | Build FastJet plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PLUGIN_GEOMODEL          | Build GeoModel plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                             |
 | ACTS_BUILD_PLUGIN_TRACCC            | Build Traccc plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
@@ -282,10 +282,10 @@ components.
 | ACTS_GNN_ENABLE_MODULEMAP           | Enable Module-Map-based graph<br>construction<br> type: `bool`, default: `OFF`                                                                                                                                                     |
 | ACTS_GNN_ENABLE_TENSORRT            | Enable the native TensorRT inference<br>modules<br> type: `bool`, default: `OFF`                                                                                                                                                   |
 | ACTS_BUILD_PLUGIN_JSON              | Build json plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_BUILD_PLUGIN_MILLE             | Build Mille plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_ROOT              | Build ROOT plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_SETUP_ANNOY                    | Explicitly set up Annoy for the project<br> type: `bool`, default: `OFF`                                                                                                                                                           |
-| ACTS_BUILD_PLUGIN_HASHING           | Build Hashing plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_PYTHON_WHEEL             | Settings to build for python deployment<br>with scikit-build-core<br> type: `bool`, default: `OFF`                                                                                                                                 |
 | ACTS_BUILD_PYTHON_BINDINGS          | Build python bindings for all enabled<br>components<br> type: `bool`, default: `OFF`                                                                                                                                               |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
@@ -294,13 +294,14 @@ components.
 | ACTS_BUILD_EXAMPLES                 | Build basic examples components<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_BUILD_EXAMPLES_FASTJET         | Build FastJet plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
 | ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_EXAMPLES_GNN             | Build the GNN example code<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | [Deprecated] Build python bindings and<br>enables the examples<br> type: `bool`, default: `OFF`                                                                                                                                    |
-| ACTS_BUILD_EXAMPLES_ROOT            | Build modules based on ROOT I/O<br> type: `bool`, default: `ON`                                                                                                                                                                    |
+| ACTS_BUILD_EXAMPLES_ROOT            | Build modules based on ROOT I/O<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |

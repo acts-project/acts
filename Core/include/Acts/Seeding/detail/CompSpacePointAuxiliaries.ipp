@@ -30,11 +30,17 @@ std::string toString(const SpacePoint_t& measurement) {
         Experimental::detail::CompSpacePointAuxiliaries::ResidualIdx;
     if (measurement.isStraw()) {
       return std::format(
-          "straw SP @ {:} with r: {:.3f}+-{:.3f} & wire : {:} ",
+          "{:}straw SP @ {:} with r: {:.3f}+-{:.3f} & wire : {:}{:} ",
+          measurement.measuresLoc0() ? "twin-" : "",
           toString(measurement.localPosition()), measurement.driftRadius(),
           std::sqrt(
               measurement.covariance()[toUnderlying(ResidualIdx::bending)]),
-          toString(measurement.sensorDirection()));
+          toString(measurement.sensorDirection()),
+          measurement.measuresLoc0()
+              ? std::format(", dZ: {:.3f}",
+                            std::sqrt(measurement.covariance()[toUnderlying(
+                                ResidualIdx::nonBending)]))
+              : "");
     } else {
       return std::format(
           "strip SP @ {:} with normal: {:}, strip dir: {:}, to next {:}, "
@@ -101,8 +107,7 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
       const double stripAngle = b1.dot(b2);
       if (stripAngle > tolerance) {
         const double invDist = 1. / (1. - square(stripAngle));
-        ActsSquareMatrix<2> stereoDecomp{invDist *
-                                         ActsSquareMatrix<2>::Identity()};
+        SquareMatrix<2> stereoDecomp{invDist * SquareMatrix<2>::Identity()};
         stereoDecomp(1, 0) = stereoDecomp(0, 1) = -stripAngle * invDist;
         dist = stereoDecomp * dist;
       }
@@ -131,7 +136,6 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
                                            const Transform3& localToGlobal,
                                            const double t0,
                                            const SpacePoint_t& hit) {
-  using namespace Acts::UnitLiterals;
   return chi2Term(
       pos, dir,
       t0 + (localToGlobal * extrapolateToPlane(pos, dir, hit)).norm() /

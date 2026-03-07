@@ -81,8 +81,8 @@ Result<void> GainMatrixSmoother::calculate(AnyMutableTrackStateProxy ts,
     // If not, make one (could do more) attempt to replace it with the
     // nearest semi-positive def matrix,
     // but it could still be non semi-positive
-    BoundSquareMatrix smoothedCov = smoothedCovariance;
-    if (!detail::CovarianceHelper<BoundSquareMatrix>::validate(smoothedCov)) {
+    BoundMatrix smoothedCov = smoothedCovariance;
+    if (!detail::CovarianceHelper<BoundMatrix>::validate(smoothedCov)) {
       ACTS_DEBUG(
           "Smoothed covariance is not positive definite. Could result in "
           "negative covariance!");

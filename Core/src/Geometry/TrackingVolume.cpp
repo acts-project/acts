@@ -59,17 +59,22 @@ TrackingVolume::TrackingVolume(
 TrackingVolume::TrackingVolume(const Volume& volume,
                                const std::string& volumeName)
     : Volume{volume}, m_name{volumeName} {
-  createBoundarySurfaces();
-  interlinkLayers();
-
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
 TrackingVolume::TrackingVolume(const Transform3& transform,
                                std::shared_ptr<VolumeBounds> volbounds,
                                const std::string& volumeName)
-    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr, nullptr,
-                     {}, volumeName) {}
+    : Volume{transform, std::move(volbounds)}, m_name{volumeName} {
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
+}
+
+TrackingVolume::TrackingVolume(VolumePlacementBase& placement,
+                               std::shared_ptr<VolumeBounds> volbounds,
+                               const std::string& volumeName)
+    : Volume{placement, std::move(volbounds)}, m_name{volumeName} {
+  m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
+}
 
 TrackingVolume::~TrackingVolume() = default;
 TrackingVolume::TrackingVolume(TrackingVolume&&) noexcept = default;
@@ -160,7 +165,14 @@ void TrackingVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<TrackingVolume>;
 
   // Transform Surfaces To BoundarySurfaces
-  auto orientedSurfaces = Volume::volumeBounds().orientedSurfaces(m_transform);
+  if (isAlignable()) {
+    throw std::runtime_error(
+        "createBoundarySurfaces() - Alignable volumes cannot have boundary "
+        "surfaces");
+  }
+  const GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
+  auto orientedSurfaces =
+      volumeBounds().orientedSurfaces(localToGlobalTransform(gctx));
 
   m_boundarySurfaces.reserve(orientedSurfaces.size());
   for (auto& osf : orientedSurfaces) {
@@ -312,32 +324,33 @@ void TrackingVolume::synchronizeLayers(double envelope) const {
 }
 
 void TrackingVolume::interlinkLayers() {
-  if (m_confinedLayers) {
-    auto& layers = m_confinedLayers->arrayObjects();
+  if (!m_confinedLayers) {
+    return;
+  }
+  auto& layers = m_confinedLayers->arrayObjects();
 
-    // forward register the last one as the previous one
-    //  first <- | -> second, first <- | -> second, first <- | -> second
-    const Layer* lastLayer = nullptr;
-    for (auto& layerPtr : layers) {
-      // we'll need to mutate our confined layers to perform this operation
-      Layer& mutableLayer = *(std::const_pointer_cast<Layer>(layerPtr));
-      // register the layers
-      mutableLayer.m_nextLayerUtility = m_confinedLayers->binUtility();
-      mutableLayer.m_nextLayers.first = lastLayer;
-      // register the volume
-      mutableLayer.encloseTrackingVolume(*this);
-      // remember the last layer
-      lastLayer = &mutableLayer;
-    }
-    // backward loop
-    lastLayer = nullptr;
-    for (auto layerIter = layers.rbegin(); layerIter != layers.rend();
-         ++layerIter) {
-      // set the other next volume
-      Layer& mutableLayer = *(std::const_pointer_cast<Layer>(*layerIter));
-      mutableLayer.m_nextLayers.second = lastLayer;
-      lastLayer = &mutableLayer;
-    }
+  // forward register the last one as the previous one
+  //  first <- | -> second, first <- | -> second, first <- | -> second
+  const Layer* lastLayer = nullptr;
+  for (auto& layerPtr : layers) {
+    // we'll need to mutate our confined layers to perform this operation
+    Layer& mutableLayer = *(std::const_pointer_cast<Layer>(layerPtr));
+    // register the layers
+    mutableLayer.m_nextLayerUtility = m_confinedLayers->binUtility();
+    mutableLayer.m_nextLayers.first = lastLayer;
+    // register the volume
+    mutableLayer.encloseTrackingVolume(*this);
+    // remember the last layer
+    lastLayer = &mutableLayer;
+  }
+  // backward loop
+  lastLayer = nullptr;
+  for (auto layerIter = layers.rbegin(); layerIter != layers.rend();
+       ++layerIter) {
+    // set the other next volume
+    Layer& mutableLayer = *(std::const_pointer_cast<Layer>(*layerIter));
+    mutableLayer.m_nextLayers.second = lastLayer;
+    lastLayer = &mutableLayer;
   }
 }
 

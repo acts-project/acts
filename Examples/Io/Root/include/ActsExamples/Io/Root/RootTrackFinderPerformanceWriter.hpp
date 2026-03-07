@@ -23,16 +23,11 @@
 #include <cstddef>
 #include <mutex>
 #include <string>
-#include <vector>
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out the performance of CombinatorialKalmanFilter (CKF), e.g. track
 /// efficiency, fake rate/ratio etc.

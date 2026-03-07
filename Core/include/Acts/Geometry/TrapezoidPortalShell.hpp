@@ -53,8 +53,10 @@ std::ostream& operator<<(std::ostream& os, TrapezoidPortalShell::Face face);
 class SingleTrapezoidPortalShell : public TrapezoidPortalShell {
  public:
   /// Construct a single trapezoid shell for the given tracking volume.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to create the shell for
-  explicit SingleTrapezoidPortalShell(TrackingVolume& volume);
+  explicit SingleTrapezoidPortalShell(const GeometryContext& gctx,
+                                      TrackingVolume& volume);
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const override;

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
@@ -47,5 +48,27 @@ struct ParticleMatchEntry {
 
 using TrackParticleMatching = std::map<TrackIndexType, TrackMatchEntry>;
 using ParticleTrackMatching = std::map<SimBarcode, ParticleMatchEntry>;
+
+enum class RecoVertexClassification {
+  Unknown = 0,
+  Clean,
+  Merged,
+  Split,
+};
+
+struct VertexToTruthMatching {
+  std::optional<SimVertexBarcode> vertexId;
+  double totalTrackWeight{};
+  double truthMajorityTrackWeights{};
+  double matchFraction{};
+
+  RecoVertexClassification classification{RecoVertexClassification::Unknown};
+};
+
+struct VertexToRecoMatching {
+  std::size_t recoIndex{};
+
+  double recoSumPt2{};
+};
 
 }  // namespace ActsExamples

@@ -40,7 +40,7 @@ class AtlasStepper {
   /// Type alias for Jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
-  using Covariance = BoundSquareMatrix;
+  using Covariance = BoundMatrix;
   /// Type alias for bound state (parameters, jacobian, path length)
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
@@ -245,7 +245,7 @@ class AtlasStepper {
     state.covTransport = cov.has_value();
     if (state.covTransport) {
       // copy the covariance matrix
-      state.covariance = new BoundSquareMatrix(*cov);
+      state.covariance = new BoundMatrix(*cov);
       state.useJacobian = true;
       const auto transform =
           surface.referenceFrame(state.options.geoContext, pos, dir);
@@ -803,7 +803,7 @@ class AtlasStepper {
       state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
     }
 
-    state.covariance = new BoundSquareMatrix(covariance);
+    state.covariance = new BoundMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 
