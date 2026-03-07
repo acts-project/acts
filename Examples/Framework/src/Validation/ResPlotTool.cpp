@@ -32,7 +32,7 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
 
   std::vector<std::string> allParamNames = m_cfg.paramNames;
   allParamNames.push_back(m_cfg.qOverPtName);
-  allParamNames.push_back(m_cfg.ptQoverPtName);
+  allParamNames.push_back(m_cfg.relQoverPtName);
 
   for (const std::string& parName : allParamNames) {
     const std::string parResidual = "Residual_" + parName;
@@ -151,10 +151,10 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_resVsEta.at(m_cfg.qOverPtName).fill({truthEta, residualQoverPt});
     m_resVsPt.at(m_cfg.qOverPtName).fill({truthPt, residualQoverPt});
 
-    const double residualPtQoverPt = truthPtOverQ * residualQoverPt;
-    m_res.at(m_cfg.ptQoverPtName).fill({residualPtQoverPt});
-    m_resVsEta.at(m_cfg.ptQoverPtName).fill({truthEta, residualPtQoverPt});
-    m_resVsPt.at(m_cfg.ptQoverPtName).fill({truthPt, residualPtQoverPt});
+    const double residualRelQoverPt = truthPtOverQ * residualQoverPt;
+    m_res.at(m_cfg.relQoverPtName).fill({residualRelQoverPt});
+    m_resVsEta.at(m_cfg.relQoverPtName).fill({truthEta, residualRelQoverPt});
+    m_resVsPt.at(m_cfg.relQoverPtName).fill({truthPt, residualRelQoverPt});
 
     const double covarianceQoverPt = [&]() {
       const Acts::Vector2 jacobian{
@@ -164,7 +164,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
           {eBoundTheta, eBoundQOverP}, {eBoundTheta, eBoundQOverP});
       return jacobian.transpose() * covariance * jacobian;
     }();
-    const double covariancePtQoverPt =
+    const double covarianceRelQoverPt =
         Acts::square(truthPtOverQ) * covarianceQoverPt;
 
     const double pullQoverPt =
@@ -174,13 +174,13 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_pullVsEta.at(m_cfg.qOverPtName).fill({truthEta, pullQoverPt});
     m_pullVsPt.at(m_cfg.qOverPtName).fill({truthPt, pullQoverPt});
 
-    const double pullPtQoverPt =
-        covariancePtQoverPt > 0
-            ? residualPtQoverPt / std::sqrt(covariancePtQoverPt)
+    const double pullRelQoverPt =
+        covarianceRelQoverPt > 0
+            ? residualRelQoverPt / std::sqrt(covarianceRelQoverPt)
             : nan;
-    m_pull.at(m_cfg.ptQoverPtName).fill({pullPtQoverPt});
-    m_pullVsEta.at(m_cfg.ptQoverPtName).fill({truthEta, pullPtQoverPt});
-    m_pullVsPt.at(m_cfg.ptQoverPtName).fill({truthPt, pullPtQoverPt});
+    m_pull.at(m_cfg.relQoverPtName).fill({pullRelQoverPt});
+    m_pullVsEta.at(m_cfg.relQoverPtName).fill({truthEta, pullRelQoverPt});
+    m_pullVsPt.at(m_cfg.relQoverPtName).fill({truthPt, pullRelQoverPt});
   }
 }
 

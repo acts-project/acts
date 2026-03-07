@@ -39,7 +39,7 @@ class ResPlotTool {
                                            "theta", "qop", "t"};
 
     std::string qOverPtName = "qOverPt";
-    std::string ptQoverPtName = "ptQoverPt";
+    std::string relQoverPtName = "relQoverPt";
 
     /// Binning info for variables
     std::map<std::string, AxisVariant> varBinning = {
@@ -55,8 +55,8 @@ class ResPlotTool {
         {"Residual_t", BoostRegularAxis(100, -1000, 1000, "r_{t} [mm/c]")},
         {"Residual_qOverPt",
          BoostRegularAxis(100, -0.1, 0.1, "r_{q/pT} [c/GeV]")},
-        {"Residual_ptQoverPt",
-         BoostRegularAxis(100, -0.1, 0.1, "r_{pT*q/pT} [%]")}};
+        {"Residual_relQoverPt",
+         BoostRegularAxis(100, -0.1, 0.1, "r_{rel q/pT} [%]")}};
   };
 
   /// Constructor
