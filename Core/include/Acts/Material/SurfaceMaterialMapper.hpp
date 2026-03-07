@@ -174,7 +174,8 @@ class SurfaceMaterialMapper {
   ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  Result<void> mapMaterialTrack(State& mState,
+                                RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
@@ -182,7 +183,8 @@ class SurfaceMaterialMapper {
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
   ///
-  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+  Result<void> mapInteraction(State& mState,
+                              RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
