@@ -100,7 +100,7 @@ void applyReferenceExpansion(
 /// bin in between the extra points are filled, and a possible expansion
 /// of the bin window can be chosen
 ///
-/// @tparam grid_type the type of the grid that determines locall binning
+/// @tparam grid_type the type of the grid that determines local binning
 ///
 /// @param grid the grid used for this
 /// @param queries the grid positions for the bin queries
