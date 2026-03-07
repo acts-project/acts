@@ -67,13 +67,19 @@ void addPropagation(py::module& mex) {
       mex, "PropagatorInterface");
 
   // Eigen stepper based propagator
-  { addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen"); }
+  {
+    addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen");
+  }
 
   // ATLAS stepper based propagator
-  { addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas"); }
+  {
+    addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas");
+  }
 
   // Sympy stepper based propagator
-  { addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy"); }
+  {
+    addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy");
+  }
 
   // Straight line stepper
   {
