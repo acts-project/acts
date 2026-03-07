@@ -11,7 +11,6 @@ from acts.examples import (
     RootMuonSpacePointReader,
 )
 
-
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
 
