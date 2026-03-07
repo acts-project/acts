@@ -16,6 +16,8 @@
 
 namespace Acts {
 
+static_assert(std::ranges::random_access_range<SeedContainer2>);
+
 SeedContainer2::SeedContainer2() noexcept = default;
 
 SeedContainer2::SeedContainer2(const SeedContainer2 &other) noexcept = default;
@@ -28,8 +30,7 @@ SeedContainer2 &SeedContainer2::operator=(
 SeedContainer2 &SeedContainer2::operator=(SeedContainer2 &&other) noexcept =
     default;
 
-void SeedContainer2::reserve(std::size_t size,
-                             float averageSpacePoints) noexcept {
+void SeedContainer2::reserve(Index size, float averageSpacePoints) noexcept {
   m_spacePointOffsets.reserve(size);
   m_spacePointCounts.reserve(size);
   m_qualities.reserve(size);
