@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
@@ -25,7 +26,7 @@ DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR, double halfXmaxR,
                                          double stereo) noexcept(false)
     : m_values({halfXminR, halfXmaxR, minR, maxR, avgPhi, stereo}) {
   checkConsistency();
-  m_ymax = fastHypot(get(eMaxR), get(eHalfLengthXmaxR));
+  m_ymax = fastCathetus(get(eMaxR), get(eHalfLengthXmaxR));
 }
 
 std::vector<double> DiscTrapezoidBounds::values() const {
