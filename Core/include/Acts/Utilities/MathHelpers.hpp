@@ -94,10 +94,12 @@ template <typename... T>
 constexpr auto fastHypot(T... args) {
   return std::sqrt(hypotSquare(args...));
 }
-/// @copydoc fastHypot
+/// Overload for single argument
+/// @param arg Single argument for which the hypotenuse is calculated
+/// @return Absolute value of the argument
 template <typename T>
 constexpr auto fastHypot(T arg) {
-  return arg;
+  return std::abs(arg);
 }
 
 /// Slow but more accurate hypotenuse calculation for multiple arguments
@@ -109,17 +111,26 @@ constexpr auto slowHypot(T... args) {
   ((r = std::hypot(r, args)), ...);
   return r;
 }
-/// @copydoc slowHypot
+/// Overload for single argument
+/// @param arg Single argument for which the hypotenuse is calculated
+/// @return Absolute value of the argument
 template <typename T>
 constexpr auto slowHypot(T arg) {
-  return arg;
+  return std::abs(arg);
 }
-/// @copydoc slowHypot
+/// Overload for two arguments
+/// @param x First argument
+/// @param y Second argument
+/// @return Square root of sum of squares of x and y
 template <typename T>
 constexpr auto slowHypot(T x, T y) {
   return std::hypot(x, y);
 }
-/// @copydoc slowHypot
+/// Overload for three arguments
+/// @param x First argument
+/// @param y Second argument
+/// @param z Third argument
+/// @return Square root of sum of squares of x, y and z
 template <typename T>
 constexpr auto slowHypot(T x, T y, T z) {
   return std::hypot(x, y, z);
