@@ -140,9 +140,10 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_pullVsPt.at(parName).fill({truthPt, pull});
   }
 
-  // `q/pT` and `pT * q/pT` residual and pull
+  // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
   {
     const double truthQoverPt = truthParticle.charge() / truthPt;
+    const double truthPtOverQ = truthPt / truthParticle.charge();
     const double recoQoverPt =
         trackParameter[eBoundQOverP] / std::sin(trackParameter[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
@@ -150,7 +151,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_resVsEta.at(m_cfg.qOverPtName).fill({truthEta, residualQoverPt});
     m_resVsPt.at(m_cfg.qOverPtName).fill({truthPt, residualQoverPt});
 
-    const double residualPtQoverPt = truthPt * residualQoverPt;
+    const double residualPtQoverPt = truthPtOverQ * residualQoverPt;
     m_res.at(m_cfg.ptQoverPtName).fill({residualPtQoverPt});
     m_resVsEta.at(m_cfg.ptQoverPtName).fill({truthEta, residualPtQoverPt});
     m_resVsPt.at(m_cfg.ptQoverPtName).fill({truthPt, residualPtQoverPt});
@@ -164,7 +165,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
       return jacobian.transpose() * covariance * jacobian;
     }();
     const double covariancePtQoverPt =
-        Acts::square(truthPt) * covarianceQoverPt;
+        Acts::square(truthPtOverQ) * covarianceQoverPt;
 
     const double pullQoverPt =
         covarianceQoverPt > 0 ? residualQoverPt / std::sqrt(covarianceQoverPt)
