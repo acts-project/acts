@@ -8,6 +8,8 @@
 
 #include "Acts/Seeding2/CylindricalSpacePointGrid2.hpp"
 
+#include "Acts/Utilities/MathHelpers.hpp"
+
 namespace Acts {
 
 CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
@@ -53,9 +55,8 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
           "check the m_cfguration of bFieldInZ and minPt");
     }
 
-    const float maxR2 = m_cfg.rMax * m_cfg.rMax;
-    const float xOuter = maxR2 / (2 * minHelixRadius);
-    const float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
+    const float xOuter = square(m_cfg.rMax) / (2 * minHelixRadius);
+    const float yOuter = fastCathetus(m_cfg.rMax, xOuter);
     const float outerAngle = std::atan(xOuter / yOuter);
     // intersection of helix and max detector radius minus maximum R distance
     // from middle SP to top SP
@@ -63,10 +64,9 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     float rMin = m_cfg.rMax;
     if (m_cfg.rMax > m_cfg.deltaRMax) {
       rMin = m_cfg.rMax - m_cfg.deltaRMax;
-      const float innerCircleR2 =
-          (m_cfg.rMax - m_cfg.deltaRMax) * (m_cfg.rMax - m_cfg.deltaRMax);
-      const float xInner = innerCircleR2 / (2 * minHelixRadius);
-      const float yInner = std::sqrt(innerCircleR2 - xInner * xInner);
+      const float innerCircleR = m_cfg.rMax - m_cfg.deltaRMax;
+      const float xInner = square(innerCircleR) / (2 * minHelixRadius);
+      const float yInner = fastCathetus(innerCircleR, xInner);
       innerAngle = std::atan(xInner / yInner);
     }
 
