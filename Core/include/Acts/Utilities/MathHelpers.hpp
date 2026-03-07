@@ -94,6 +94,7 @@ template <typename... T>
 constexpr auto fastHypot(T... args) {
   return std::sqrt(hypotSquare(args...));
 }
+/// @overload
 template <typename T>
 constexpr auto fastHypot(T arg) {
   return arg;
@@ -108,14 +109,17 @@ constexpr auto slowHypot(T... args) {
   ((r = std::hypot(r, args)), ...);
   return r;
 }
+/// @overload
 template <typename T>
 constexpr auto slowHypot(T arg) {
   return arg;
 }
+/// @overload
 template <typename T>
 constexpr auto slowHypot(T x, T y) {
   return std::hypot(x, y);
 }
+/// @overload
 template <typename T>
 constexpr auto slowHypot(T x, T y, T z) {
   return std::hypot(x, y, z);
