@@ -20,12 +20,12 @@ repos:
 
   # Using this mirror lets us use mypyc-compiled black, which is about 2x faster
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.4.2
+    rev: 26.1.0
     hooks:
     - id: black-jupyter
 
   - repo: https://github.com/BlankSpruce/gersemi
-    rev: 0.15.0
+    rev: 0.26.0
     hooks:
     - id: gersemi
       args: ["-i", "--no-warn-about-unknown-commands"]
