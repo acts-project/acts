@@ -56,10 +56,19 @@ def runGeometry(
             writer.write(context)
 
         if outputObj:
-            writer = ObjTrackingGeometryWriter(
-                level=acts.logging.INFO, outputDir=outputDir / "obj"
+            vis = acts.ObjVisualization3D()
+            trackingGeometry.visualize(
+                vis,
+                context.geoContext,
+                portalViewConfig=acts.ViewConfig(visible=False),
+                sensitiveViewConfig=acts.ViewConfig(visible=True),
+                viewConfig=acts.ViewConfig(visible=False),
             )
-            writer.write(context, trackingGeometry)
+            vis.write(outputDir / "obj" / "geometry.obj")
+            # writer = ObjTrackingGeometryWriter(
+            #     level=acts.logging.INFO, outputDir=outputDir / "obj"
+            # )
+            # writer.write(context, trackingGeometry)
 
         if outputJson:
             # if not os.path.isdir(outputDir / "json"):
@@ -95,7 +104,7 @@ def runGeometry(
 
 if "__main__" == __name__:
     # detector = acts.examples.GenericDetector()
-    detector = getOpenDataDetector()
+    detector = getOpenDataDetector(gen3=True, logLevel=acts.logging.VERBOSE)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
