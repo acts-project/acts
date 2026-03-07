@@ -141,7 +141,7 @@ void addGenerators(py::module& mex) {
   // Aliases for Fatras types mirroring C++
   auto fatras = py::module_::import("acts.fatras");
   mex.attr("SimBarcode") = fatras.attr("Barcode");
-  mex.attr("ProcessType") = fatras.attr("ProcessType");
+  mex.attr("GenerationProcess") = fatras.attr("GenerationProcess");
   mex.attr("ParticleOutcome") = fatras.attr("ParticleOutcome");
   mex.attr("SimParticleState") = fatras.attr("Particle");
 
