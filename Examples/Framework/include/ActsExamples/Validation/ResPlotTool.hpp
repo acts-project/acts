@@ -34,9 +34,12 @@ class ResPlotTool {
 
   /// @brief Nested configuration struct
   struct Config {
-    /// parameter sets to do plots
+    /// Track parameter names
     std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
                                            "theta", "qop", "t"};
+
+    std::string qOverPtName = "qOverPt";
+    std::string relQoverPtName = "relQoverPt";
 
     /// Binning info for variables
     std::map<std::string, AxisVariant> varBinning = {
@@ -49,7 +52,11 @@ class ResPlotTool {
         {"Residual_theta",
          BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},
         {"Residual_qop", BoostRegularAxis(100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
-        {"Residual_t", BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
+        {"Residual_t", BoostRegularAxis(100, -1000, 1000, "r_{t} [mm/c]")},
+        {"Residual_qOverPt",
+         BoostRegularAxis(100, -0.1, 0.1, "r_{q/pT} [c/GeV]")},
+        {"Residual_relQoverPt",
+         BoostRegularAxis(100, -0.1, 0.1, "r_{rel q/pT} [%]")}};
   };
 
   /// Constructor
