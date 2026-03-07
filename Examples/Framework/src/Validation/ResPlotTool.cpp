@@ -74,7 +74,6 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
 void ResPlotTool::fill(const Acts::GeometryContext& gctx,
                        const SimParticleState& truthParticle,
                        const Acts::BoundTrackParameters& fittedParamters) {
-  using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;
@@ -87,7 +86,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   const Acts::Surface& pSurface = fittedParamters.referenceSurface();
 
   // get the truth position and momentum
-  ParametersVector truthParameter = ParametersVector::Zero();
+  Acts::BoundVector truthParameter = Acts::BoundVector::Zero();
 
   // get the truth perigee parameter
   Acts::Intersection3D intersection =

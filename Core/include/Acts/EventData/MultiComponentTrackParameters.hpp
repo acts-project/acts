@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -36,8 +35,6 @@ class MultiComponentBoundTrackParameters {
  public:
   /// Type alias for bound track parameters
   using Parameters = BoundTrackParameters;
-  /// Type alias for particle hypothesis
-  using ParticleHypothesis = Parameters::ParticleHypothesis;
   /// Type alias for bound parameters vector
   using ParametersVector = typename Parameters::ParametersVector;
   /// Type alias for covariance matrix
@@ -75,8 +72,8 @@ class MultiComponentBoundTrackParameters {
  public:
   /// Type alias for construction tuple containing weight, position, direction,
   /// q/p, and covariance
-  using ConstructionTuple = std::tuple<double, Acts::Vector4, Acts::Vector3,
-                                       double, CovarianceMatrix>;
+  using ConstructionTuple =
+      std::tuple<double, Vector4, Vector3, double, BoundMatrix>;
 
   /// We need this helper function in order to construct the base class properly
   /// @param geoCtx Geometry context for construction
@@ -88,8 +85,8 @@ class MultiComponentBoundTrackParameters {
       const std::vector<ConstructionTuple>& curvi,
       ParticleHypothesis particleHypothesis) {
     // Construct and average surface
-    Acts::Vector3 avgPos = Acts::Vector3::Zero();
-    Acts::Vector3 avgDir = Acts::Vector3::Zero();
+    Vector3 avgPos = Vector3::Zero();
+    Vector3 avgDir = Vector3::Zero();
     for (const auto& [w, pos4, dir, qop, cov] : curvi) {
       avgPos += w * pos4.template segment<3>(0);
       avgDir += w * dir;
@@ -98,7 +95,7 @@ class MultiComponentBoundTrackParameters {
     std::shared_ptr<PlaneSurface> s =
         CurvilinearSurface(avgPos, avgDir).planeSurface();
 
-    std::vector<std::tuple<double, ParametersVector, CovarianceMatrix>> bound;
+    std::vector<std::tuple<double, BoundVector, BoundMatrix>> bound;
     bound.reserve(curvi.size());
 
     // Project the position onto the surface, keep everything else as is
@@ -109,7 +106,7 @@ class MultiComponentBoundTrackParameters {
               .closest();
       const Vector3& newPos = closestIntersection.position();
 
-      ParametersVector bv =
+      BoundVector bv =
           transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);
 
       // Because of the projection this should never fail
@@ -129,8 +126,7 @@ class MultiComponentBoundTrackParameters {
   template <typename covariance_t>
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
-      const std::vector<std::tuple<double, ParametersVector, covariance_t>>&
-          cmps,
+      const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps,
       ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
@@ -159,7 +155,7 @@ class MultiComponentBoundTrackParameters {
   /// only used in debug builds to check for consistency with the q/p
   /// parameter.
   MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                                     const ParametersVector& params,
+                                     const BoundVector& params,
                                      std::optional<BoundMatrix> cov,
                                      ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
@@ -204,11 +200,10 @@ class MultiComponentBoundTrackParameters {
   /// @param i Index of the component to access
   /// @return Pair of weight and bound track parameters for the component
   std::pair<double, Parameters> operator[](std::size_t i) const {
-    return {
-        std::get<double>(m_components[i]),
-        Parameters(m_surface, std::get<ParametersVector>(m_components[i]),
-                   std::get<std::optional<CovarianceMatrix>>(m_components[i]),
-                   m_particleHypothesis)};
+    return {std::get<double>(m_components[i]),
+            Parameters(m_surface, std::get<BoundVector>(m_components[i]),
+                       std::get<std::optional<BoundMatrix>>(m_components[i]),
+                       m_particleHypothesis)};
   }
 
   /// Merge component mixture into a single set of parameters using the
@@ -219,18 +214,18 @@ class MultiComponentBoundTrackParameters {
 
   /// Parameters vector.
   /// @return Weighted average of parameters from all components
-  ParametersVector parameters() const {
+  BoundVector parameters() const {
     return reduce([](const Parameters& p) { return p.parameters(); });
   }
 
   /// Optional covariance matrix.
   /// @return Optional weighted average covariance matrix, nullopt if all components have zero covariance
-  std::optional<CovarianceMatrix> covariance() const {
+  std::optional<BoundMatrix> covariance() const {
     const auto ret = reduce([](const Parameters& p) {
-      return p.covariance() ? *p.covariance() : CovarianceMatrix::Zero();
+      return p.covariance() ? *p.covariance() : BoundMatrix::Zero();
     });
 
-    if (ret == CovarianceMatrix::Zero()) {
+    if (ret == BoundMatrix::Zero()) {
       return std::nullopt;
     } else {
       return ret;
