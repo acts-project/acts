@@ -15,6 +15,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <Pythia8/Pythia.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
@@ -24,27 +26,76 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsPythia8, p8) {
-  using Gen = Pythia8Generator;
-  auto gen = py::class_<Gen, ParticlesGenerator, std::shared_ptr<Gen>>(
-                 p8, "Pythia8Generator")
-                 .def(py::init<const Gen::Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"));
+  // Pythia8 generator bindings
+  {
+    // Particle definition from Pythia8 with basic accessors, mother and
+    // daughter info
+    auto pythia8Particle =
+        py::class_<Pythia8::Particle>(p8, "Pythia8Particle")
+            .def("id", [](const Pythia8::Particle& self) { return self.id(); })
+            .def("status",
+                 [](const Pythia8::Particle& self) { return self.status(); })
+            .def("px", [](const Pythia8::Particle& self) { return self.px(); })
+            .def("py", [](const Pythia8::Particle& self) { return self.py(); })
+            .def("pz", [](const Pythia8::Particle& self) { return self.pz(); })
+            .def("pt",
+                 [](const Pythia8::Particle& self) {
+                   return std::sqrt(self.px() * self.px() +
+                                    self.py() * self.py());
+                 })
+            .def("e", [](const Pythia8::Particle& self) { return self.e(); })
+            .def("m", [](const Pythia8::Particle& self) { return self.m(); })
+            .def("eta",
+                 [](const Pythia8::Particle& self) { return self.eta(); })
+            .def("mother1",
+                 [](const Pythia8::Particle& self) { return self.mother1(); })
+            .def("mother2",
+                 [](const Pythia8::Particle& self) { return self.mother2(); })
+            .def("daughter1",
+                 [](const Pythia8::Particle& self) { return self.daughter1(); })
+            .def("daughter2",
+                 [](const Pythia8::Particle& self) { return self.daughter2(); })
+            .def(
+                "motherList",
+                [](const Pythia8::Particle& self) { return self.motherList(); })
+            .def("daughterList", [](const Pythia8::Particle& self) {
+              return self.daughterList();
+            });
 
-  py::class_<Gen::Config>(gen, "Config")
-      .def(py::init<>())
-      .def_readwrite("pdgBeam0", &Gen::Config::pdgBeam0)
-      .def_readwrite("pdgBeam1", &Gen::Config::pdgBeam1)
-      .def_readwrite("cmsEnergy", &Gen::Config::cmsEnergy)
-      .def_readwrite("settings", &Gen::Config::settings)
-      .def_readwrite("printShortEventListing",
-                     &Gen::Config::printShortEventListing)
-      .def_readwrite("printLongEventListing",
-                     &Gen::Config::printLongEventListing)
-      .def_readwrite("labelSecondaries", &Gen::Config::labelSecondaries)
-      .def_readwrite("spatialVertexThreshold",
-                     &Gen::Config::spatialVertexThreshold)
-      .def_readwrite("initializationSeed", &Gen::Config::initializationSeed)
-      .def_readwrite("writeHepMC3", &Gen::Config::writeHepMC3);
+    auto pythia8Event =
+        py::class_<Pythia8::Event>(p8, "Pythia8Event")
+            .def("size", [](const Pythia8::Event& self) { return self.size(); })
+            .def("particles", [](const Pythia8::Event& self) {
+              std::vector<Pythia8::Particle> particles;
+              particles.reserve(self.size());
+              for (int i = 0; i < self.size(); ++i) {
+                particles.push_back(self[i]);
+              }
+              return particles;
+            });
 
-  patchClassesWithConfig(p8);
+    auto pythia8 =
+        py::class_<Pythia8::Pythia, std::shared_ptr<Pythia8::Pythia>>(p8,
+                                                                      "Pythia8")
+            .def(py::init<>())
+            .def("event", [](Pythia8::Pythia& self) -> Pythia8::Event& {
+              return self.event;
+            });
+  }
+
+  // ACTS integrated Pythia8 generator
+  {
+    using Gen = Pythia8Generator;
+    auto gen = py::class_<Gen, ParticlesGenerator, std::shared_ptr<Gen>>(
+                   p8, "Pythia8Generator")
+                   .def(py::init<const Gen::Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"));
+
+    auto config = py::class_<Gen::Config>(gen, "Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT(config, pdgBeam0, pdgBeam1, cmsEnergy, settings,
+                       printShortEventListing, printLongEventListing,
+                       labelSecondaries, spatialVertexThreshold,
+                       initializationSeed, writeHepMC3, eventSelectors);
+  }
 }
