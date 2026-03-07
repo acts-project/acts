@@ -100,7 +100,7 @@ constexpr auto fastHypot(T arg) {
   return arg;
 }
 
-/// Slow hypotenuse calculation for multiple arguments
+/// Slow but more accurate hypotenuse calculation for multiple arguments
 /// @param args Variable number of arguments
 /// @return Square root of sum of squares of arguments
 template <typename... T>
@@ -168,7 +168,7 @@ constexpr auto fastCathetus(T hypotenuse, Args... args) {
   return std::sqrt((hypotenuse - hypotArgs) * (hypotenuse + hypotArgs));
 }
 
-/// Slow cathetus calculation for multiple arguments
+/// Slow but more accurate cathetus calculation for multiple arguments
 /// @note For 2 arguments, the fast and slow cathetus are identical as they both use the same formula.
 /// @param hypotenuse The hypotenuse value
 /// @param args Variable number of arguments to calculate the cathetus for
