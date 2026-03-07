@@ -161,8 +161,7 @@ void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
 
 void FpeMonitor::Result::deduplicate() {
   std::vector<FpeInfo> copy{};
-  copy = std::move(m_stackTraces);
-  m_stackTraces.clear();
+  copy.swap(m_stackTraces);
 
   for (auto &info : copy) {
     auto it = std::ranges::find_if(m_stackTraces, [&info](const FpeInfo &el) {

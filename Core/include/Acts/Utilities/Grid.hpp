@@ -267,8 +267,7 @@ class Grid final : public IGrid {
 
   /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) const override {
-    const_reference cref = atLocalBins(toIndexType(indices));
-    return &cref;
+    return &atLocalBins(toIndexType(indices));
   }
 
   /// @brief access value stored in bin with given local bin numbers
@@ -285,8 +284,7 @@ class Grid final : public IGrid {
 
   /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) override {
-    reference ref = atLocalBins(toIndexType(indices));
-    return &ref;
+    return &atLocalBins(toIndexType(indices));
   }
 
   /// @brief get global bin indices for closest points on grid
