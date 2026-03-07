@@ -32,7 +32,6 @@ from acts.examples import (
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
-
 u = acts.UnitConstants
 
 

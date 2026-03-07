@@ -6,8 +6,7 @@ import sys, os, argparse, pathlib
 def parse_args():
     from acts.examples.reconstruction import SeedingAlgorithm
 
-    parser = argparse.ArgumentParser(
-        description="""
+    parser = argparse.ArgumentParser(description="""
 Script to test the full chain ACTS simulation and reconstruction.
 
 This script is provided for interactive developer testing only.
@@ -17,8 +16,7 @@ proper way to access the ActsExamples from scripts. The other Examples/Scripts
 are much better examples of how to do that. physmon in the CI is the proper
 way to do automated integration tests. This script is only for the case of
 interactive testing with one-off configuration specified by command-line options.
-"""
-    )
+""")
     parser.add_argument(
         "-G",
         "--generic-detector",
