@@ -25,7 +25,7 @@ repos:
     - id: black-jupyter
 
   - repo: https://github.com/BlankSpruce/gersemi
-    rev: 0.15.0
+    rev: 0.26.0
     hooks:
     - id: gersemi
       args: ["-i", "--no-warn-about-unknown-commands"]
