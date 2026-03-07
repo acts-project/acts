@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <cmath>
 #include <iosfwd>
@@ -34,6 +34,7 @@ class Particle {
  public:
   /// Construct a default particle with invalid identity.
   Particle() = default;
+
   /// Construct a particle at rest with explicit mass and charge.
   ///
   /// @param particleId Particle identifier within an event
@@ -46,6 +47,7 @@ class Particle {
   Particle(Barcode particleId, Acts::PdgParticle pdg, double charge,
            double mass)
       : m_particleId(particleId), m_pdg(pdg), m_charge(charge), m_mass(mass) {}
+
   /// Construct a particle at rest from a PDG particle number.
   ///
   /// @param particleId Particle identifier within an event
@@ -53,13 +55,17 @@ class Particle {
   ///
   /// Charge and mass are retrieved from the particle data table.
   Particle(Barcode particleId, Acts::PdgParticle pdg);
+
   /// Copy constructor
   Particle(const Particle &) = default;
+
   /// Move constructor
   Particle(Particle &&) = default;
+
   /// Copy assignment operator
   /// @return Reference to this particle after copying
   Particle &operator=(const Particle &) = default;
+
   /// Move assignment operator
   /// @return Reference to this particle after moving
   Particle &operator=(Particle &&) = default;
@@ -80,10 +86,11 @@ class Particle {
   /// Set the process type that generated this particle.
   /// @param proc Process type that generated this particle
   /// @return Reference to this particle for method chaining
-  Particle &setProcess(ProcessType proc) {
+  Particle &setProcess(GenerationProcess proc) {
     m_process = proc;
     return *this;
   }
+
   /// Set the pdg.
   /// @param pdg PDG particle identifier
   /// @return Particle instance with updated PDG identifier
@@ -91,6 +98,7 @@ class Particle {
     m_pdg = pdg;
     return *this;
   }
+
   /// Set the charge.
   /// @param charge Particle charge in native units
   /// @return Particle instance with updated charge
@@ -98,6 +106,7 @@ class Particle {
     m_charge = charge;
     return *this;
   }
+
   /// Set the mass.
   /// @param mass Particle mass in native units
   /// @return Particle instance with updated mass
@@ -105,6 +114,7 @@ class Particle {
     m_mass = mass;
     return *this;
   }
+
   /// Set the particle ID.
   /// @param barcode New particle identifier barcode
   /// @return Reference to this particle for method chaining
@@ -112,6 +122,7 @@ class Particle {
     m_particleId = barcode;
     return *this;
   }
+
   /// Set the space-time position four-vector.
   /// @param pos4 Four-vector containing spatial position and time
   /// @return Reference to this particle for method chaining
@@ -119,6 +130,7 @@ class Particle {
     m_position4 = pos4;
     return *this;
   }
+
   /// Set the space-time position four-vector from three-position and time.
   /// @param position Three-dimensional spatial position vector
   /// @param time Time coordinate
@@ -128,6 +140,7 @@ class Particle {
     m_position4[Acts::eTime] = time;
     return *this;
   }
+
   /// Set the space-time position four-vector from scalar components.
   /// @param x X coordinate
   /// @param y Y coordinate
@@ -141,6 +154,7 @@ class Particle {
     m_position4[Acts::eTime] = time;
     return *this;
   }
+
   /// Set the direction three-vector
   /// @param direction Three-dimensional direction vector (will be normalized)
   /// @return Reference to this particle for method chaining
@@ -149,6 +163,7 @@ class Particle {
     m_direction.normalize();
     return *this;
   }
+
   /// Set the direction three-vector from scalar components.
   /// @param dx X component of direction
   /// @param dy Y component of direction
@@ -161,6 +176,7 @@ class Particle {
     m_direction.normalize();
     return *this;
   }
+
   /// Set the absolute momentum.
   /// @param absMomentum Absolute momentum magnitude
   /// @return Reference to this particle for method chaining
@@ -189,23 +205,29 @@ class Particle {
   /// Particle identifier within an event.
   /// @return The unique particle identifier barcode
   Barcode particleId() const { return m_particleId; }
+
   /// Which type of process generated this particle.
   /// @return The process type that generated this particle
-  ProcessType process() const { return m_process; }
+  GenerationProcess process() const { return m_process; }
+
   /// PDG particle number that identifies the type.
   /// @return The PDG particle identifier
   Acts::PdgParticle pdg() const { return m_pdg; }
+
   /// Absolute PDG particle number that identifies the type.
   /// @return The absolute PDG particle identifier (positive value)
   Acts::PdgParticle absolutePdg() const {
     return Acts::makeAbsolutePdgParticle(pdg());
   }
+
   /// Particle charge.
   /// @return The particle charge in native units
   double charge() const { return m_charge; }
+
   /// Particle absolute charge.
   /// @return The absolute particle charge (positive value)
   double absoluteCharge() const { return std::abs(m_charge); }
+
   /// Particle mass.
   /// @return The particle mass in native units
   double mass() const { return m_mass; }
@@ -217,6 +239,7 @@ class Particle {
         absolutePdg(), static_cast<float>(mass()),
         Acts::AnyCharge{static_cast<float>(absoluteCharge())});
   }
+
   /// Particl qOverP.
   /// @return The charge over momentum ratio
   double qOverP() const {
@@ -226,12 +249,15 @@ class Particle {
   /// Space-time position four-vector.
   /// @return Reference to the four-dimensional position vector (x, y, z, t)
   const Acts::Vector4 &fourPosition() const { return m_position4; }
+
   /// Three-position, i.e. spatial coordinates without the time.
   /// @return Three-dimensional position vector (x, y, z)
   auto position() const { return m_position4.segment<3>(Acts::ePos0); }
+
   /// Time coordinate.
   /// @return The time coordinate value
   double time() const { return m_position4[Acts::eTime]; }
+
   /// Energy-momentum four-vector.
   /// @return Four-dimensional momentum vector (px, py, pz, E)
   Acts::Vector4 fourMomentum() const {
@@ -243,26 +269,33 @@ class Particle {
     mom4[Acts::eEnergy] = energy();
     return mom4;
   }
+
   /// Unit three-direction, i.e. the normalized momentum three-vector.
   /// @return Reference to the normalized direction vector
   const Acts::Vector3 &direction() const { return m_direction; }
+
   /// Polar angle.
   /// @return The polar angle (theta) in radians
   double theta() const { return Acts::VectorHelpers::theta(direction()); }
+
   /// Azimuthal angle.
   /// @return The azimuthal angle (phi) in radians
   double phi() const { return Acts::VectorHelpers::phi(direction()); }
+
   /// Absolute momentum in the x-y plane.
   /// @return The transverse momentum magnitude
   double transverseMomentum() const {
     return m_absMomentum * m_direction.segment<2>(Acts::eMom0).norm();
   }
+
   /// Absolute momentum.
   /// @return The absolute momentum magnitude
   double absoluteMomentum() const { return m_absMomentum; }
+
   /// Absolute momentum.
   /// @return Three-dimensional momentum vector
   Acts::Vector3 momentum() const { return absoluteMomentum() * direction(); }
+
   /// Total energy, i.e. norm of the four-momentum.
   /// @return The total energy calculated from mass and momentum
   double energy() const { return std::hypot(m_mass, m_absMomentum); }
@@ -288,6 +321,7 @@ class Particle {
     m_properTime = properTime;
     return *this;
   }
+
   /// Proper time in the particle rest frame.
   /// @return The proper time in the rest frame
   double properTime() const { return m_properTime; }
@@ -302,9 +336,11 @@ class Particle {
     m_pathInL0 = pathInL0;
     return *this;
   }
+
   /// Accumulated path within material measured in radiation lengths.
   /// @return The accumulated path in radiation lengths
   double pathInX0() const { return m_pathInX0; }
+
   /// Accumulated path within material measured in interaction lengths.
   /// @return The accumulated path in interaction lengths
   double pathInL0() const { return m_pathInL0; }
@@ -369,21 +405,21 @@ class Particle {
   ///
   /// @param outcome outcome code
   /// @return Reference to this particle for method chaining
-  Particle &setOutcome(ParticleOutcome outcome) {
+  Particle &setOutcome(SimulationOutcome outcome) {
     m_outcome = outcome;
     return *this;
   }
 
   /// Particle outcome.
   /// @return The outcome status of this particle
-  ParticleOutcome outcome() const { return m_outcome; }
+  SimulationOutcome outcome() const { return m_outcome; }
 
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
   Barcode m_particleId;
   /// Process type specifier.
-  ProcessType m_process = ProcessType::eUndefined;
+  GenerationProcess m_process = GenerationProcess::eUndefined;
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
@@ -403,7 +439,7 @@ class Particle {
   /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
   /// outcome
-  ParticleOutcome m_outcome = ParticleOutcome::Alive;
+  SimulationOutcome m_outcome = SimulationOutcome::Alive;
 };
 
 /// Print particle to output stream

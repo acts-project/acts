@@ -12,9 +12,8 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 
-#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 
@@ -153,7 +152,7 @@ ProcessCode RootVertexReader::read(const AlgorithmContext& context) {
                .withVertexSecondary((*m_vertexSecondary)[i])
                .withGeneration((*m_generation)[i]);
 
-    v.process = static_cast<ActsFatras::ProcessType>((*m_process)[i]);
+    v.process = static_cast<ActsFatras::GenerationProcess>((*m_process)[i]);
     v.position4 = Acts::Vector4((*m_vx)[i] * Acts::UnitConstants::mm,
                                 (*m_vy)[i] * Acts::UnitConstants::mm,
                                 (*m_vz)[i] * Acts::UnitConstants::mm,

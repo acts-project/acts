@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Geant4/AlgebraConverters.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
@@ -286,8 +285,9 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
 
     assert(std::ranges::all_of(
         buffer, [&](const auto& h) { return h.geometryId() == geoId; }));
-    assert(std::ranges::all_of(
-        buffer, [&](const auto& h) { return h.particleId() == particleId; }));
+    assert(std::ranges::all_of(buffer, [&](const auto& h) {
+      return h.particleBarcode() == particleId;
+    }));
 
     eventStore().numberGeantSteps += buffer.size();
     eventStore().maxStepsForHit =

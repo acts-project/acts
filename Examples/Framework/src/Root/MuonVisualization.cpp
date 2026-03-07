@@ -225,7 +225,7 @@ void visualizeMuonSpacePoints(const std::string& outputPath,
     if (chambId != toChamberId(simHit.geometryId())) {
       continue;
     }
-    const auto simPartItr = simParticles.find(simHit.particleId());
+    const auto simPartItr = simParticles.find(simHit.particleBarcode());
     if (simPartItr == simParticles.end() ||
         (*simPartItr).hypothesis() != ParticleHypothesis::muon()) {
       continue;
