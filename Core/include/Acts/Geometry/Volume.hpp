@@ -55,14 +55,6 @@ class Volume : public GeometryObject {
   /// @param vol is the source volume for the copy
   Volume(const Volume& vol) noexcept = default;
 
-  /// Copy Constructor with optional shift
-  ///
-  /// @param vol is the source volume for the copy
-  /// @param shift is the optional shift applied as : shift * vol.transform()
-  /// @deprecated: Constructor deprecated in favour of shifted(const Transform3& shift) const
-  [[deprecated("Use Volume::shifted(const Transform3& shift) const instead.")]]
-  Volume(const Volume& vol, const Transform3& shift);
-
   /// Shift the volume by a transform
   ///
   /// @param shift is the transform to shift the volume by
@@ -96,20 +88,6 @@ class Volume : public GeometryObject {
   /// @return The global to local transformation matrix
   const Transform3& globalToLocalTransform(const GeometryContext& gctx) const;
 
-  /// Get the transform matrix that positions the volume in 3D space
-  /// @deprecated: Function deprecated in favour of localToGlobalTransform
-  /// @return Const reference to the transform matrix
-  [[deprecated(
-      "Use localToGlobalTransform(const GeometryContext& gctx) instead.")]]
-  const Transform3& transform() const;
-
-  /// Get the inverse transform matrix of the volume
-  /// @deprecated: Function deprecated in favour of globalToLocalTransform
-  /// @return Const reference to the inverse transform matrix
-  [[deprecated(
-      "Use globalToLocalTransform(const GeometryContext& gctx) instead.")]]
-  const Transform3& itransform() const;
-
   /// Set the transform matrix for the volume and update internal state
   /// @param transform The new transform matrix to be applied
   void setTransform(const Transform3& transform);
@@ -118,13 +96,6 @@ class Volume : public GeometryObject {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return Const reference to the center position vector
   Vector3 center(const GeometryContext& gctx) const;
-
-  /// Get the center position of the volume
-  /// @deprecated: Function deprecated in favour of
-  ///               center(const GeometryContext& gctx)
-  /// @return Const reference to the center position vector
-  [[deprecated("Use center(const GeometryContext& gctx) instead.")]]
-  const Vector3& center() const;
 
   /// Get the volume bounds that define the shape of the volume
   /// @return Const reference to the volume bounds object
@@ -177,19 +148,6 @@ class Volume : public GeometryObject {
   bool inside(const GeometryContext& gctx, const Vector3& gpos,
               double tol = 0.) const;
 
-  /// Inside() method for checks
-  ///
-  /// @param gpos is the position to be checked
-  /// @param tol is the tolerance parameter
-  /// @deprecated: Function deprecated in favour of
-  ///               inside(const GeometryContext& gctx, const Vector3& gpos,
-  ///               double tol = 0.)
-  ///
-  /// @return boolean indicator if the position is inside
-  [[deprecated(
-      "Use inside(const GeometryContext& gctx, const Vector3& gpos, double tol "
-      "= 0.) instead.")]]
-  bool inside(const Vector3& gpos, double tol = 0.) const;
   /// The binning position method
   /// - as default the center is given, but may be overloaded
   ///
@@ -230,9 +188,6 @@ class Volume : public GeometryObject {
 
   /// Inverse of the transform matrix for efficient calculations
   CloneablePtr<const Transform3> m_itransform{};
-
-  /// Center position of the volume in global coordinates
-  Vector3 m_center{Vector3::Zero()};
 
   /// Volume bounds that define the shape and extent of the volume
   std::shared_ptr<VolumeBounds> m_volumeBounds;
