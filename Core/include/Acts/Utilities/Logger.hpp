@@ -55,9 +55,7 @@
     explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger) \
         : m_logger(std::move(logger)) {}                                       \
                                                                                \
-    const ::Acts::Logger& operator()() const {                                 \
-      return *m_logger;                                                        \
-    }                                                                          \
+    const ::Acts::Logger& operator()() const { return *m_logger; }             \
                                                                                \
     std::unique_ptr<const ::Acts::Logger> m_logger;                            \
   };                                                                           \
@@ -534,7 +532,7 @@ class TimedOutputDecorator final : public OutputDecorator {
     char buffer[20];
     time_t t{};
     std::time(&t);
-    struct tm tbuf {};
+    struct tm tbuf{};
     std::strftime(buffer, sizeof(buffer), m_format.c_str(),
                   localtime_r(&t, &tbuf));
     return buffer;
