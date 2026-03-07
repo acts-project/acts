@@ -14,7 +14,7 @@
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 #include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
-#include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -31,8 +31,8 @@ class MaterialMapper {
     /// The assignment finder for material interaction assignments
     std::shared_ptr<const IAssignmentFinder> assignmentFinder = nullptr;
     /// The material accumulator for surfaces
-    std::shared_ptr<const ISurfaceMaterialAccumulater>
-        surfaceMaterialAccumulater = nullptr;
+    std::shared_ptr<const ISurfaceMaterialAccumulator>
+        surfaceMaterialAccumulator = nullptr;
   };
 
   /// @brief nested state struct
@@ -40,8 +40,8 @@ class MaterialMapper {
   /// It holds the states of the sub structs
   struct State {
     /// State of the surface material accumulator
-    std::unique_ptr<ISurfaceMaterialAccumulater::State>
-        surfaceMaterialAccumulaterState;
+    std::unique_ptr<ISurfaceMaterialAccumulator::State>
+        surfaceMaterialAccumulatorState;
   };
 
   /// @brief nested options struct
@@ -58,7 +58,7 @@ class MaterialMapper {
   explicit MaterialMapper(
       const Config& cfg,
       std::unique_ptr<const Logger> mlogger =
-          getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
+          getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::INFO));
 
   /// @brief Factory for creating the state
   /// @return Unique pointer to a new material mapping state object

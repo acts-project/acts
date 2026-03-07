@@ -8,7 +8,7 @@ import acts
 from acts import (
     MaterialMapper,
     IntersectionMaterialAssigner,
-    BinnedSurfaceMaterialAccumulater,
+    BinnedSurfaceMaterialAccumulator,
     logging,
     GeometryContext,
     DetectorBuilder,
@@ -62,17 +62,17 @@ def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
     materialAssingerConfig.surfaces = surfaces
     materialAssinger = IntersectionMaterialAssigner(materialAssingerConfig, loglevel)
 
-    # Accumulation setup : Binned surface material accumulater
-    materialAccumulaterConfig = BinnedSurfaceMaterialAccumulater.Config()
-    materialAccumulaterConfig.materialSurfaces = surfaces
-    materialAccumulater = BinnedSurfaceMaterialAccumulater(
-        materialAccumulaterConfig, loglevel
+    # Accumulation setup : Binned surface material accumulator
+    materialAccumulatorConfig = BinnedSurfaceMaterialAccumulator.Config()
+    materialAccumulatorConfig.materialSurfaces = surfaces
+    materialAccumulator = BinnedSurfaceMaterialAccumulator(
+        materialAccumulatorConfig, loglevel
     )
 
     # Mapper setup
     materialMapperConfig = MaterialMapper.Config()
     materialMapperConfig.assignmentFinder = materialAssinger
-    materialMapperConfig.surfaceMaterialAccumulater = materialAccumulater
+    materialMapperConfig.surfaceMaterialAccumulator = materialAccumulator
     materialMapper = MaterialMapper(materialMapperConfig, loglevel)
 
     # Add the map writer(s)

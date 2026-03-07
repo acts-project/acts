@@ -14,8 +14,8 @@ Acts::MaterialMapper::MaterialMapper(const Config& cfg,
   if (m_cfg.assignmentFinder == nullptr) {
     throw std::invalid_argument("The assignment finder is not set");
   }
-  if (m_cfg.surfaceMaterialAccumulater == nullptr) {
-    throw std::invalid_argument("The surface material accumulater is not set");
+  if (m_cfg.surfaceMaterialAccumulator == nullptr) {
+    throw std::invalid_argument("The surface material accumulator is not set");
   }
 }
 
@@ -23,9 +23,9 @@ std::unique_ptr<Acts::MaterialMapper::State> Acts::MaterialMapper::createState()
     const {
   // Create the state
   auto state = std::make_unique<State>();
-  // Create the surface material accumulater state
-  state->surfaceMaterialAccumulaterState =
-      m_cfg.surfaceMaterialAccumulater->createState();
+  // Create the surface material accumulator state
+  state->surfaceMaterialAccumulatorState =
+      m_cfg.surfaceMaterialAccumulator->createState();
   // Return the state object
   return state;
 }
@@ -62,8 +62,8 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
       unassigned.end());
 
   // The material interactions
-  m_cfg.surfaceMaterialAccumulater->accumulate(
-      *state.surfaceMaterialAccumulaterState, assigned, emptyBinSurfaces);
+  m_cfg.surfaceMaterialAccumulator->accumulate(
+      *state.surfaceMaterialAccumulatorState, assigned, emptyBinSurfaces);
 
   // The function to calculate the total material before returning
   auto calculateTotalMaterial = [](RecordedMaterialTrack& rTrack) -> void {
@@ -85,8 +85,8 @@ Acts::TrackingGeometryMaterial Acts::MaterialMapper::finalizeMaps(
   TrackingGeometryMaterial detectorMaterialMaps;
   // The surface maps
   detectorMaterialMaps.first =
-      m_cfg.surfaceMaterialAccumulater->finalizeMaterial(
-          *state.surfaceMaterialAccumulaterState);
+      m_cfg.surfaceMaterialAccumulator->finalizeMaterial(
+          *state.surfaceMaterialAccumulatorState);
 
   return detectorMaterialMaps;
 }
