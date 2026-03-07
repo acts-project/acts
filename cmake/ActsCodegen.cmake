@@ -110,8 +110,7 @@ else()
     # Finally, we write the path found in the outside virtual env into the
     # new virtual env as described in the StackOverflow answer.
     file(
-        WRITE
-        "${_python_nested_package_dir}/_base_packages.pth"
+        WRITE "${_python_nested_package_dir}/_base_packages.pth"
         ${_python_package_dir}
     )
 
@@ -126,8 +125,7 @@ function(acts_code_generation)
     set(oneValueArgs ADD_TO_TARGET PYTHON PYTHON_VERSION OUTPUT)
     set(multiValueArgs DEPENDS WITH_REQUIREMENTS WITH)
     cmake_parse_arguments(
-        PARSE_ARGV
-        0
+        PARSE_ARGV 0
         ARGS
         "${options}"
         "${oneValueArgs}"

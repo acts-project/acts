@@ -56,54 +56,46 @@ set(TensorRT_INCLUDE_DIRS ${TensorRT_INCLUDE_DIR})
 # Extract version of tensorrt
 if(EXISTS "${TensorRT_INCLUDE_DIR}/NvInferVersion.h")
     file(
-        STRINGS
-        "${TensorRT_INCLUDE_DIR}/NvInferVersion.h"
+        STRINGS "${TensorRT_INCLUDE_DIR}/NvInferVersion.h"
         TensorRT_MAJOR
         REGEX "^#define NV_TENSORRT_MAJOR [0-9]+.*$"
     )
     file(
-        STRINGS
-        "${TensorRT_INCLUDE_DIR}/NvInferVersion.h"
+        STRINGS "${TensorRT_INCLUDE_DIR}/NvInferVersion.h"
         TensorRT_MINOR
         REGEX "^#define NV_TENSORRT_MINOR [0-9]+.*$"
     )
     file(
-        STRINGS
-        "${TensorRT_INCLUDE_DIR}/NvInferVersion.h"
+        STRINGS "${TensorRT_INCLUDE_DIR}/NvInferVersion.h"
         TensorRT_PATCH
         REGEX "^#define NV_TENSORRT_PATCH [0-9]+.*$"
     )
     file(
-        STRINGS
-        "${TensorRT_INCLUDE_DIR}/NvInferVersion.h"
+        STRINGS "${TensorRT_INCLUDE_DIR}/NvInferVersion.h"
         TensorRT_TWEAK
         REGEX "^#define NV_TENSORRT_BUILD [0-9]+.*$"
     )
 
     string(
-        REGEX REPLACE
-        "^#define NV_TENSORRT_MAJOR ([0-9]+).*$"
+        REGEX REPLACE "^#define NV_TENSORRT_MAJOR ([0-9]+).*$"
         "\\1"
         TensorRT_VERSION_MAJOR
         "${TensorRT_MAJOR}"
     )
     string(
-        REGEX REPLACE
-        "^#define NV_TENSORRT_MINOR ([0-9]+).*$"
+        REGEX REPLACE "^#define NV_TENSORRT_MINOR ([0-9]+).*$"
         "\\1"
         TensorRT_VERSION_MINOR
         "${TensorRT_MINOR}"
     )
     string(
-        REGEX REPLACE
-        "^#define NV_TENSORRT_PATCH ([0-9]+).*$"
+        REGEX REPLACE "^#define NV_TENSORRT_PATCH ([0-9]+).*$"
         "\\1"
         TensorRT_VERSION_PATCH
         "${TensorRT_PATCH}"
     )
     string(
-        REGEX REPLACE
-        "^#define NV_TENSORRT_BUILD ([0-9]+).*$"
+        REGEX REPLACE "^#define NV_TENSORRT_BUILD ([0-9]+).*$"
         "\\1"
         TensorRT_VERSION_TWEAK
         "${TensorRT_TWEAK}"
