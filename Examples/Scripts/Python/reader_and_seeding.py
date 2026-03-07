@@ -14,7 +14,6 @@ from acts.examples.reconstruction import (
 
 from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
-
 s = acts.examples.Sequencer(events=1, numThreads=1, outputDir="output")
 
 # loggingLevel = acts.logging.INFO
