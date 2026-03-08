@@ -95,6 +95,11 @@ class DataHandleBase {
     return wb.getHolder(m_key.value());
   }
 
+  void addHolder(WhiteBoard& wb, std::unique_ptr<Acts::AnyMoveOnly> holder,
+                 std::uint64_t typeHash) const {
+    wb.addHolder(m_key.value(), std::move(holder), typeHash);
+  }
+
   SequenceElement* m_parent{nullptr};
   std::string m_name;
   std::optional<std::string> m_key{};
