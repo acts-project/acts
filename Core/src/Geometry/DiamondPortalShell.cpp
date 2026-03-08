@@ -28,7 +28,7 @@ void DiamondPortalShell::fill(TrackingVolume& volume) {
                           Face::NegativeXFaceYZ12, Face::PositiveXFaceYZ12,
                           Face::NegativeXFaceYZ23, Face::PositiveXFaceYZ23,
                           Face::NegativeYFaceZX, Face::PositiveYFaceZX}) {
-    const auto& portalAtFace = portalPtr(face);
+    const auto& portalAtFace = portal(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
       volume.addPortal(portalAtFace);
@@ -61,7 +61,7 @@ SingleDiamondPortalShell::SingleDiamondPortalShell(const GeometryContext& gctx,
   }
 }
 
-std::shared_ptr<Portal> SingleDiamondPortalShell::portalPtr(Face face) {
+std::shared_ptr<Portal> SingleDiamondPortalShell::portal(Face face) {
   return m_portals.at(toUnderlying(face));
 }
 
