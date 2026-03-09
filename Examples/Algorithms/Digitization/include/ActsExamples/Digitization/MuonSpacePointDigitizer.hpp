@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -65,6 +66,16 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     double strawDeadTime{1. * Acts::UnitConstants::ms};
     /// @brief Applied dead time between two consecutive rpc hits
     double rpcDeadTime{50. * Acts::UnitConstants::ns};
+
+    /// @brief Maximum longitudinal extent of a bucket in the common sector frame
+    double bucketMaxWindow{800. * Acts::UnitConstants::mm};
+    /// @brief Maximum gap between neighboring primary space points before splitting
+    double bucketNeighborWindow{200. * Acts::UnitConstants::mm};
+    /// @brief Overlap copied from the previous bucket into the next one
+    double bucketOverlapWindow{100. * Acts::UnitConstants::mm};
+    /// @brief Reject buckets smaller than this
+    std::size_t minBucketSize{2u};
+
   };
   /// @brief Constructor
   explicit MuonSpacePointDigitizer(
@@ -82,13 +93,13 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   const MuonSpacePointCalibrator& calibrator() const;
   /// @brief Returns the reference to the passed tracking geometry
   const Acts::TrackingGeometry& trackingGeometry() const;
-  /// @brief  Returns the transformation from the local hit frame into the
-  ///         chamber's surface frame
-  /// @param gctx Geometry context to access the local -> global transform of the surface
-  /// @param hitId Geometry identifier of the hit of interest
-  Acts::Transform3 toSpacePointFrame(
-      const Acts::GeometryContext& gctx,
-      const Acts::GeometryIdentifier& hitId) const;
+  /// @brief Returns the transformation from the global frame into the
+  /// common sector frame chosen from a representative sector-layer volume
+  /// @param gctx Geometry context
+  /// @param sectorLayerId Geometry identifier with volume+layer set
+  Acts::Transform3 toSectorFrame(
+       const Acts::GeometryContext& gctx,
+       const Acts::GeometryIdentifier& sectorLayerId) const;
   /// @brief Configuration of the digitizer
   Config m_cfg;
   /// @brief Data handle for the input simulated hits

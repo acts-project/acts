@@ -66,7 +66,8 @@ void addDigitization(py::module& mex) {
         outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
         outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
         randomNumbers, trackingGeometry, digitizeTime, dumpVisualization,
-        visualizationFunction, strawDeadTime, rpcDeadTime);
+      visualizationFunction, strawDeadTime, rpcDeadTime, bucketMaxWindow,
+      bucketNeighborWindow);
 
     ActsPython::patchKwargsConstructor(c);
   }

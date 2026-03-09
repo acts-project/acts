@@ -22,8 +22,11 @@
 
 #include <algorithm>
 #include <format>
+#include <iterator>
 #include <map>
 #include <ranges>
+#include <stdexcept>
+#include <vector>
 
 using namespace Acts;
 using namespace detail::LineHelper;
@@ -31,6 +34,9 @@ using namespace PlanarHelper;
 using namespace UnitLiterals;
 
 namespace {
+
+using ActsExamples::MuonSpacePoint;
+using ActsExamples::MuonSpacePointBucket;
 
 /// @brief Quanitze the hit position to a strip
 /// @param x: Actual traversing of the particle
@@ -42,9 +48,45 @@ constexpr double quantize(const double x, const double pitch) {
   return -quantize(-x, pitch);
 }
 
-constexpr GeometryIdentifier toChamberId(const GeometryIdentifier& id) {
+constexpr GeometryIdentifier toSectorId(const GeometryIdentifier& id) {
+  return GeometryIdentifier{}.withVolume(id.volume());
+}
+
+constexpr GeometryIdentifier toSectorLayerId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume()).withLayer(id.layer());
 }
+
+inline bool splitBucket(const MuonSpacePoint& sp, const double firstZ,
+                        const MuonSpacePointBucket& currentBucket,
+                        const double maxBucketWindow,
+                        const double neighborWindow) {
+  const double z = sp.localPosition().z();
+  if (z - firstZ > maxBucketWindow) {
+    return true;
+  }
+  if (!currentBucket.empty() &&
+      (z - currentBucket.back().localPosition().z()) > neighborWindow) {
+    return true;
+  }
+  return false;
+}
+
+inline void startNewBucketWithOverlap(const MuonSpacePoint& refSp,
+                                      std::vector<MuonSpacePointBucket>& buckets,
+                                      const double overlapWindow) {
+  buckets.emplace_back();
+  MuonSpacePointBucket& newBucket = buckets.back();
+  const MuonSpacePointBucket& prevBucket = buckets[buckets.size() - 2];
+  const double refZ = refSp.localPosition().z();
+
+  for (auto it = prevBucket.rbegin(); it != prevBucket.rend(); ++it) {
+    if (refZ - it->localPosition().z() < overlapWindow) {
+      newBucket.insert(newBucket.begin(), *it);
+    } else {
+      break;
+    }
+  }
+ }
 
 }  // namespace
 
@@ -126,25 +168,20 @@ const TrackingGeometry& MuonSpacePointDigitizer::trackingGeometry() const {
   assert(m_cfg.trackingGeometry != nullptr);
   return *m_cfg.trackingGeometry;
 }
-Transform3 MuonSpacePointDigitizer::toSpacePointFrame(
-    const GeometryContext& gctx, const GeometryIdentifier& hitId) const {
-  const Surface* hitSurf = trackingGeometry().findSurface(hitId);
-  assert(hitSurf != nullptr);
 
-  /// Fetch the parent volume to express all points in the same coordinate
-  /// system
-  const TrackingVolume* volume =
-      trackingGeometry().findVolume(toChamberId(hitId));
-  assert(volume != nullptr);
-  /// Transformation to the common coordinate system of all space points
-  const Transform3 parentTrf{AngleAxis3{90._degree, Vector3::UnitZ()} *
-                             volume->globalToLocalTransform(gctx) *
-                             hitSurf->localToGlobalTransform(gctx)};
-  ACTS_VERBOSE("Transform into space point frame for surface "
-               << hitId << " is \n"
-               << toString(parentTrf));
-  return parentTrf;
+Transform3 MuonSpacePointDigitizer::toSectorFrame(
+    const GeometryContext& gctx,
+    const GeometryIdentifier& sectorLayerId) const {
+  const TrackingVolume* volume = trackingGeometry().findVolume(sectorLayerId);
+  if (volume == nullptr) {
+    throw std::runtime_error(
+        std::format("Failed to resolve tracking volume for sector-layer id {}",
+                    sectorLayerId));
+  }
+  return AngleAxis3{90._degree, Vector3::UnitZ()} *
+         volume->globalToLocalTransform(gctx);
 }
+
 ProcessCode MuonSpacePointDigitizer::execute(
     const AlgorithmContext& ctx) const {
   const SimHitContainer& gotSimHits = m_inputSimHits(ctx);
@@ -168,17 +205,68 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   using MuonId_t = MuonSpacePoint::MuonId;
   auto rndEngine = m_cfg.randomNumbers->spawnGenerator(ctx);
-  /// temporary output container to group the hits per chamber volume
-  std::map<GeometryIdentifier, MuonSpacePointBucket> spacePointsPerChamber{};
+  /// temporary output container to group the hits per sector volume
+  std::map<GeometryIdentifier, MuonSpacePointBucket> spacePointsPerSector{};
   std::unordered_map<GeometryIdentifier, double> strawTimes{};
   std::multimap<GeometryIdentifier, std::array<double, 3>> stripTimes{};
 
+  /// Determine a deterministic representative layer per sector
+  std::unordered_map<GeometryIdentifier, GeometryIdentifier> firstLayerPerSector{};
+  for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
+    const GeometryIdentifier moduleGeoId = simHitsGroup.first;
+    const GeometryIdentifier sectorId = toSectorId(moduleGeoId);
+    const GeometryIdentifier sectorLayerId = toSectorLayerId(moduleGeoId);
+
+    auto [it, inserted] =
+        firstLayerPerSector.emplace(sectorId, sectorLayerId);
+    if (!inserted && sectorLayerId.layer() < it->second.layer()) {
+      it->second = sectorLayerId;
+    }
+  }
+
+  std::unordered_map<GeometryIdentifier, Transform3> sectorFrameCache{};
+  sectorFrameCache.reserve(firstLayerPerSector.size());
+  for (const auto& [sectorId, sectorLayerId] : firstLayerPerSector) {
+    sectorFrameCache.emplace(sectorId, toSectorFrame(gctx, sectorLayerId));
+  }
+
+  auto sectorGlobalToLocal = [&](const GeometryIdentifier& moduleGeoId)
+      -> const Transform3& {
+    const GeometryIdentifier sectorId = toSectorId(moduleGeoId);
+    if (const auto cacheItr = sectorFrameCache.find(sectorId);
+        cacheItr != sectorFrameCache.end()) {
+      return cacheItr->second;
+    }
+
+    const TrackingVolume* sectorVolume = trackingGeometry().findVolume(sectorId);
+    if (sectorVolume == nullptr) {
+      // Some geometries do not expose a pure volume id for sectors. In this
+      // case, pick the first available layer volume and reuse it for all hits
+      // in this sector.
+      for (unsigned layer = 0; layer < 256 && sectorVolume == nullptr; ++layer) {
+        const GeometryIdentifier candidate =
+            GeometryIdentifier{}.withVolume(moduleGeoId.volume()).withLayer(
+                layer);
+        sectorVolume = trackingGeometry().findVolume(candidate);
+      }
+    }
+    if (sectorVolume == nullptr) {
+      sectorVolume = trackingGeometry().findVolume(toSectorLayerId(moduleGeoId));
+    }
+    if (sectorVolume == nullptr) {
+      throw std::runtime_error(std::format(
+          "Unable to resolve a sector frame for geometry id {}", moduleGeoId));
+    }
+
+    auto [insertItr, inserted] =
+        sectorFrameCache.emplace(sectorId,
+                                 sectorVolume->globalToLocalTransform(gctx));
+    (void)inserted;
+    return insertItr->second;
+  };
+
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
-    // Manual pair unpacking instead of using
-    //   auto [moduleGeoId, moduleSimHits] : ...
-    // otherwise clang on macos complains that it is unable to capture the local
-    // binding in the lambda used for visiting the smearer below.
     Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
     const auto& moduleSimHits = simHitsGroup.second;
 
@@ -187,8 +275,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     const Transform3& surfLocToGlob{hitSurf->localToGlobalTransform(gctx)};
 
-    /// Transformation to the common coordinate system of all space points
-    const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
+    /// Transformation to the common sector frame for all space points
+    const Transform3& sectorFrame = sectorFrameCache.at(toSectorId(moduleGeoId));
+    const Transform3 parentTrf =
+        sectorFrame * hitSurf->localToGlobalTransform(gctx);
     /// Retrieve the bounds
     const auto& bounds = hitSurf->bounds();
 
@@ -409,36 +499,98 @@ ProcessCode MuonSpacePointDigitizer::execute(
       }
 
       if (convertSp) {
-        spacePointsPerChamber[toChamberId(moduleGeoId)].push_back(
+        spacePointsPerSector[toSectorId(moduleGeoId)].push_back(
             std::move(newSp));
       }
     }
+  }
 
-    for (auto& [volId, bucket] : spacePointsPerChamber) {
-      std::ranges::sort(bucket,
-                        [](const MuonSpacePoint& a, const MuonSpacePoint& b) {
-                          return a.localPosition().z() < b.localPosition().z();
-                        });
-      if (logger().doPrint(Logging::Level::VERBOSE)) {
-        std::stringstream sstr{};
-        for (const auto& spacePoint : bucket) {
-          sstr << " *** " << spacePoint << std::endl;
+  for (auto& [sectorId, sectorHits] : spacePointsPerSector) {
+    std::ranges::sort(sectorHits, [](const MuonSpacePoint& a,
+                                     const MuonSpacePoint& b) {
+      const auto aLayerId = toSectorLayerId(a.geometryId());
+      const auto bLayerId = toSectorLayerId(b.geometryId());
+      if (aLayerId != bLayerId) {
+        return aLayerId.value() < bLayerId.value();
+      }
+      return a.localPosition().z() < b.localPosition().z();
+    });
+
+    std::vector<MuonSpacePointBucket> splitBuckets{};
+    splitBuckets.emplace_back();
+
+    double firstPointZ = sectorHits.front().localPosition().z();
+    GeometryIdentifier currentLayer =
+        toSectorLayerId(sectorHits.front().geometryId());
+
+    for (MuonSpacePoint& sp : sectorHits) {
+      const GeometryIdentifier spLayer = toSectorLayerId(sp.geometryId());
+      const double z = sp.localPosition().z();
+
+      const bool layerChanged = (spLayer != currentLayer);
+      if (layerChanged ||
+          splitBucket(sp, firstPointZ, splitBuckets.back(),
+                      m_cfg.bucketMaxWindow,
+                      m_cfg.bucketNeighborWindow)) {
+        if (!splitBuckets.back().empty()) {
+          startNewBucketWithOverlap(sp, splitBuckets,
+                                    m_cfg.bucketOverlapWindow);
+        } else {
+          splitBuckets.emplace_back();
         }
-        ACTS_VERBOSE("Safe " << bucket.size() << " space points for chamber "
-                             << volId << "\n"
-                             << sstr.str());
+        currentLayer = spLayer;
+        firstPointZ = splitBuckets.back().empty()
+                          ? z
+                          : splitBuckets.back().front().localPosition().z();
       }
-      if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
-        const TrackingVolume* chambVolume =
-            trackingGeometry().findVolume(volId);
-        assert(chambVolume != nullptr);
-        const std::string outputPath = std::format(
-            "Event_{}_{}.pdf", ctx.eventNumber, chambVolume->volumeName());
-        m_cfg.visualizationFunction(outputPath, gctx, bucket,
-                                    m_inputSimHits(ctx), m_inputParticles(ctx),
-                                    trackingGeometry(), logger());
+
+      splitBuckets.back().push_back(std::move(sp));
+    }
+
+    splitBuckets.erase(
+        std::remove_if(splitBuckets.begin(), splitBuckets.end(),
+                       [&](const MuonSpacePointBucket& bucket) {
+                         return bucket.size() < m_cfg.minBucketSize;
+                       }),
+        splitBuckets.end());
+
+    if (logger().doPrint(Logging::Level::VERBOSE)) {
+      std::stringstream sstr{};
+      for (const auto& bucket : splitBuckets) {
+        if (bucket.empty()) {
+          continue;
+        }
+        sstr << " Bucket starts at layer "
+             << toSectorLayerId(bucket.front().geometryId()) << " with "
+             << bucket.size() << " points" << std::endl;
       }
-      outSpacePoints.push_back(std::move(bucket));
+      ACTS_VERBOSE("Built " << splitBuckets.size() << " bucket(s) for sector "
+                            << sectorId << "\n" << sstr.str());
+      ACTS_VERBOSE("Representative sector frame for sector " << sectorId
+                   << " taken from volume "
+                   << firstLayerPerSector.at(sectorId));
+    }
+
+    if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
+      const GeometryIdentifier refVolumeId = firstLayerPerSector.at(sectorId);
+      const TrackingVolume* sectorVolume =
+          trackingGeometry().findVolume(refVolumeId);
+      assert(sectorVolume != nullptr);
+      for (std::size_t bucketIdx = 0; bucketIdx < splitBuckets.size();
+           ++bucketIdx) {
+        const std::string outputPath =
+            std::format("Event_{}_{}_bucket{}.pdf", ctx.eventNumber,
+                        sectorVolume->volumeName(), bucketIdx);
+        m_cfg.visualizationFunction(
+            outputPath, gctx, splitBuckets[bucketIdx], m_inputSimHits(ctx),
+            m_inputParticles(ctx), trackingGeometry(), logger());
+      }
+    }
+
+    for (auto& bucket : splitBuckets) {
+      if (!bucket.empty()) {
+        outSpacePoints.push_back(std::move(bucket));
+      }
     }
   }
 
