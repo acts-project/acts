@@ -47,7 +47,7 @@ else()
 
                 file(
                     WRITE
-                    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                     "
         #include <boost/stacktrace.hpp>
         int main() {}
@@ -91,7 +91,7 @@ else()
 
                         file(
                             WRITE
-                            "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                                "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                             "
             #include <boost/stacktrace.hpp>
             int main() {}
@@ -127,7 +127,7 @@ else()
 
                 file(
                     WRITE
-                    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                     "#include <boost/stacktrace.hpp>\n"
                     "#include <iostream>\n"
                     "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
@@ -155,7 +155,7 @@ else()
 
                     file(
                         WRITE
-                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                            "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                         "#include <boost/stacktrace.hpp>\n"
                         "#include <iostream>\n"
                         "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
@@ -178,8 +178,7 @@ else()
                     if(_backtrace_link)
                         message(CHECK_PASS "yes")
                         list(
-                            APPEND
-                            _fpe_options
+                            APPEND _fpe_options
                             -DBOOST_STACKTRACE_USE_BACKTRACE
                         )
                         target_link_libraries(

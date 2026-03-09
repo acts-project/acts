@@ -45,10 +45,12 @@ std::vector<double> detail::VerticesHelper::phiSegments(
     double phiExt =
         -std::numbers::pi + i * 2 * std::numbers::pi / (4 * quarterSegments);
     if (phiExt > phiMin && phiExt < phiMax &&
-        std::ranges::none_of(phiSegments, [&phiExt](double phi) {
-          return std::abs(phi - phiExt) <
-                 std::numeric_limits<double>::epsilon();
-        })) {
+        std::ranges::none_of(
+            phiSegments,
+            [&phiExt](double phi) {
+              return std::abs(phi - phiExt) <
+                     std::numeric_limits<double>::epsilon();
+            })) {
       phiSegments.push_back(phiExt);
     }
   }

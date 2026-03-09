@@ -455,7 +455,9 @@ BOOST_AUTO_TEST_CASE(NonVoidDelegateTest) {
     static_cast<void>(c);
   }
 
-  { OwningDelegate<std::string(), DelegateInterface> d; }
+  {
+    OwningDelegate<std::string(), DelegateInterface> d;
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

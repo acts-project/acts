@@ -322,6 +322,11 @@ BoundVector mergeGaussianMixtureParams(const component_range_t &cmps,
   });
 }
 
+/// Computes the Kullback-Leibler distance between two components as shown in
+/// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
+double computeSymmetricKlDivergence(const GsfComponent &a,
+                                    const GsfComponent &b);
+
 /// Reduce Gaussian mixture into a single parameter vector and covariance, using
 /// the specified method to reduce the mixture.
 ///
@@ -362,11 +367,6 @@ class SymmetricKLDistanceMatrix {
       array[(i - 1) * i / 2 + n] = setter(n, i);
     }
   }
-
-  /// Computes the Kullback-Leibler distance between two components as shown in
-  /// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
-  static double computeSymmetricKlDivergence(const GsfComponent &a,
-                                             const GsfComponent &b);
 
  public:
   explicit SymmetricKLDistanceMatrix(std::span<const GsfComponent> cmps);

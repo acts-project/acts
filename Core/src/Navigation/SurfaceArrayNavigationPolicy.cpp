@@ -94,4 +94,6 @@ void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {
   connectDefault<SurfaceArrayNavigationPolicy>(delegate);
 }
 
+SurfaceArrayNavigationPolicy::~SurfaceArrayNavigationPolicy() = default;
+
 }  // namespace Acts

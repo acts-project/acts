@@ -298,8 +298,8 @@ class GridLocalIterator {
 /// @param grid Grid to iterate over
 /// @param idx Starting index
 template <typename T, class... Axes>
-GridGlobalIterator(const Grid<T, Axes...>& grid,
-                   std::size_t idx) -> GridGlobalIterator<T, Axes...>;
+GridGlobalIterator(const Grid<T, Axes...>& grid, std::size_t idx)
+    -> GridGlobalIterator<T, Axes...>;
 
 }  // namespace Acts
 

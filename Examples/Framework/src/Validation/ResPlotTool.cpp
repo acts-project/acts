@@ -25,6 +25,7 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {
   const auto& etaAxis = m_cfg.varBinning.at("Eta");
+  const auto& phiAxis = m_cfg.varBinning.at("Phi");
   const auto& ptAxis = m_cfg.varBinning.at("Pt");
   const auto& pullAxis = m_cfg.varBinning.at("Pull");
 
@@ -57,6 +58,20 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                                    std::format("Residual of {} vs pT", parName),
                                    std::array{ptAxis, residualAxis}));
 
+    // residual vs eta-phi scatter plots
+    m_resVsEtaPhi.emplace(parName,
+                          Acts::Experimental::Histogram3(
+                              std::format("res_{}_vs_eta_phi", parName),
+                              std::format("Residual of {} vs eta-phi", parName),
+                              std::array{etaAxis, phiAxis, residualAxis}));
+
+    // residual vs eta-pT scatter plots
+    m_resVsEtaPt.emplace(parName,
+                         Acts::Experimental::Histogram3(
+                             std::format("res_{}_vs_eta_pT", parName),
+                             std::format("Residual of {} vs eta-pT", parName),
+                             std::array{etaAxis, ptAxis, residualAxis}));
+
     // pull distributions
     m_pull.emplace(
         parName, Acts::Experimental::Histogram1(
@@ -74,6 +89,20 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                                     std::format("pull_{}_vs_pT", parName),
                                     std::format("Pull of {} vs pT", parName),
                                     std::array{ptAxis, pullAxis}));
+
+    // pull vs eta-phi scatter plots
+    m_pullVsEtaPhi.emplace(parName,
+                           Acts::Experimental::Histogram3(
+                               std::format("pull_{}_vs_eta_phi", parName),
+                               std::format("Pull of {} vs eta-phi", parName),
+                               std::array{etaAxis, phiAxis, pullAxis}));
+
+    // pull vs eta-pT scatter plots
+    m_pullVsEtaPt.emplace(parName,
+                          Acts::Experimental::Histogram3(
+                              std::format("pull_{}_vs_eta_pT", parName),
+                              std::format("Pull of {} vs eta-pT", parName),
+                              std::array{etaAxis, ptAxis, pullAxis}));
   }
 }
 
@@ -91,7 +120,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   using enum Acts::BoundIndices;
 
   // get the fitted parameter (at perigee surface) and its error
-  const ParametersVector& trackParameter = fittedParamters.parameters();
+  const ParametersVector& trackParameters = fittedParamters.parameters();
   const CovarianceMatrix& trackCovariance =
       fittedParamters.covariance().value_or(CovarianceMatrix::Zero());
 
@@ -99,7 +128,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   const Acts::Surface& pSurface = fittedParamters.referenceSurface();
 
   // get the truth parameter at the perigee surface
-  ParametersVector truthParameter = ParametersVector::Zero();
+  ParametersVector truthParameters = ParametersVector::Zero();
   const Acts::Intersection3D intersection =
       pSurface
           .intersect(gctx, truthParticle.position(), truthParticle.direction())
@@ -109,28 +138,31 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
         gctx, intersection.position(), truthParticle.direction());
     assert(lpResult.ok());
 
-    truthParameter[eBoundLoc0] = lpResult.value()[eBoundLoc0];
-    truthParameter[eBoundLoc1] = lpResult.value()[eBoundLoc1];
+    truthParameters[eBoundLoc0] = lpResult.value()[eBoundLoc0];
+    truthParameters[eBoundLoc1] = lpResult.value()[eBoundLoc1];
   } else {
     ACTS_ERROR("Cannot get the truth perigee parameter");
   }
-  truthParameter[eBoundPhi] = phi(truthParticle.direction());
-  truthParameter[eBoundTheta] = theta(truthParticle.direction());
-  truthParameter[eBoundQOverP] = truthParticle.qOverP();
-  truthParameter[eBoundTime] = truthParticle.time();
+  truthParameters[eBoundPhi] = phi(truthParticle.direction());
+  truthParameters[eBoundTheta] = theta(truthParticle.direction());
+  truthParameters[eBoundQOverP] = truthParticle.qOverP();
+  truthParameters[eBoundTime] = truthParticle.time();
 
   // get the truth eta and pT
   const double truthEta = eta(truthParticle.direction());
+  const double truthPhi = phi(truthParticle.direction());
   const double truthPt = truthParticle.transverseMomentum();
 
   // fill the histograms for residual and pull
   for (unsigned int paramId = 0; paramId < Acts::eBoundSize; paramId++) {
     const std::string& parName = m_cfg.paramNames.at(paramId);
 
-    const double residual = trackParameter[paramId] - truthParameter[paramId];
+    const double residual = trackParameters[paramId] - truthParameters[paramId];
     m_res.at(parName).fill({residual});
     m_resVsEta.at(parName).fill({truthEta, residual});
     m_resVsPt.at(parName).fill({truthPt, residual});
+    m_resVsEtaPhi.at(parName).fill({truthEta, truthPhi, residual});
+    m_resVsEtaPt.at(parName).fill({truthEta, truthPt, residual});
 
     const double var = trackCovariance(paramId, paramId);
 
@@ -138,6 +170,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_pull.at(parName).fill({pull});
     m_pullVsEta.at(parName).fill({truthEta, pull});
     m_pullVsPt.at(parName).fill({truthPt, pull});
+    m_pullVsEtaPhi.at(parName).fill({truthEta, truthPhi, pull});
+    m_pullVsEtaPt.at(parName).fill({truthEta, truthPt, pull});
   }
 
   // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
@@ -145,7 +179,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     const double truthQoverPt = truthParticle.charge() / truthPt;
     const double truthPtOverQ = truthPt / truthParticle.charge();
     const double recoQoverPt =
-        trackParameter[eBoundQOverP] / std::sin(trackParameter[eBoundTheta]);
+        trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
     m_res.at(m_cfg.qOverPtName).fill({residualQoverPt});
     m_resVsEta.at(m_cfg.qOverPtName).fill({truthEta, residualQoverPt});
@@ -158,8 +192,8 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
 
     const double covarianceQoverPt = [&]() {
       const Acts::Vector2 jacobian{
-          -recoQoverPt / std::tan(trackParameter[eBoundTheta]),
-          1 / std::sin(trackParameter[eBoundTheta])};
+          -recoQoverPt / std::tan(trackParameters[eBoundTheta]),
+          1 / std::sin(trackParameters[eBoundTheta])};
       const Acts::SquareMatrix2 covariance = trackCovariance(
           {eBoundTheta, eBoundQOverP}, {eBoundTheta, eBoundQOverP});
       return jacobian.transpose() * covariance * jacobian;
