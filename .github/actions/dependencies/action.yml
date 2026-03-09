@@ -13,11 +13,11 @@ inputs:
   spack_version:
     description: 'Version of Spack to use'
     required: false
-    default: 'v1.0.2'
+    default: 'v1.1.1'
   spack_repo_version:
     description: 'Version of Spack builtin repo to use'
     required: false
-    default: 'v2025.07.0'
+    default: 'v2025.11.0'
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
