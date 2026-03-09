@@ -24,7 +24,7 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -117,7 +117,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -156,7 +156,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -235,10 +235,10 @@ jobs:
     strategy:
       matrix:
         include:
-    container: ghcr.io/acts-project/${{ matrix.image }}:83
           - image: ubuntu2404_clang22
             std: 23
             cxx: clang++-22
+    container: ghcr.io/acts-project/${{ matrix.image }}:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -582,7 +582,7 @@ jobs:
   linux_ubuntu_python_wheel:
     runs-on: ubuntu-latest
     needs: [linux_ubuntu]
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
 
     steps:
       - uses: actions/checkout@v6

@@ -45,7 +45,7 @@ variables:
 
 build_gnn_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
   tags:
     - large
 
@@ -78,7 +78,7 @@ build_gnn_cpu:
 
 build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
   tags:
     - large
 
@@ -120,7 +120,7 @@ test_gnn_unittests:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
   tags:
     - docker-gpu-nvidia
 
@@ -144,7 +144,7 @@ test_gnn_python:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
   tags:
     - docker-gpu-nvidia
 
@@ -175,7 +175,7 @@ test_gnn_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:83
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:85
 
   cache:
     - !reference [.spack_cache, cache]
@@ -200,7 +200,7 @@ build_gnn_tensorrt:
 
 build_linux_ubuntu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
 
   cache:
    - !reference [.ccache_base, cache]
@@ -261,7 +261,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
   needs: [build_linux_ubuntu]
 
   cache:
@@ -287,7 +287,7 @@ linux_test_examples:
 linux_physmon:
   stage: test
   needs: [build_linux_ubuntu]
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
 
   artifacts:
     when: always
@@ -378,9 +378,9 @@ linux_physmon:
 linux_ubuntu_2404_clang22:
   extends: .linux_ubuntu_extra
   variables:
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:83
     CXX: clang++-22
     CXXSTD: 23
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang22:85
 
 
 ######################
@@ -388,7 +388,7 @@ linux_ubuntu_2404_clang22:
 ######################
 
 .lcg_base_job:
-  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:83
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:85
   stage: build
   tags:
     - cvmfs

@@ -29,7 +29,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     steps:
 
       - uses: actions/checkout@v6
@@ -114,7 +114,7 @@ jobs:
 
   clang_tidy:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404_clang19:83
+    container: ghcr.io/acts-project/ubuntu2404_clang19:85
 
     steps:
       - uses: actions/checkout@v6
