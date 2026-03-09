@@ -375,12 +375,12 @@ linux_physmon:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-linux_ubuntu_2404_clang19:
+linux_ubuntu_2404_clang22:
   extends: .linux_ubuntu_extra
   variables:
-    CXX: clang++-19
-    CXXSTD: 20
   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:83
+    CXX: clang++-22
+    CXXSTD: 23
 
 
 ######################

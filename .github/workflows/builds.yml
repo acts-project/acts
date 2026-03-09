@@ -235,10 +235,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2404_clang19
-            std: 20
-            cxx: clang++-19
     container: ghcr.io/acts-project/${{ matrix.image }}:83
+          - image: ubuntu2404_clang22
+            std: 23
+            cxx: clang++-22
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
