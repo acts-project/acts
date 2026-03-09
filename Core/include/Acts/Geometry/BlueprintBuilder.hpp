@@ -241,6 +241,10 @@ class ElementLayerAssembler {
   /// @return `*this` (rvalue).
   [[nodiscard]] ElementLayerAssembler&& barrel() &&;
 
+  /// @brief Shorthand for `setLayerType(LayerType::Plane)`.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] ElementLayerAssembler&& planar() &&;
+
   /// @brief Set the axis definition used to orient sensitive surfaces.
   ///
   /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
@@ -474,6 +478,10 @@ class SensorLayerAssembler {
   /// @return `*this` (rvalue).
   [[nodiscard]] SensorLayerAssembler&& barrel() &&;
 
+  /// @brief Shorthand for `setLayerType(LayerType::Plane)`.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& planar() &&;
+
   /// @brief Set the axis definition used to orient sensitive surfaces.
   ///
   /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
@@ -605,6 +613,10 @@ class SensorLayer {
   /// @brief Shorthand for `setLayerType(LayerType::Cylinder)`.
   /// @return `*this` (rvalue).
   [[nodiscard]] SensorLayer&& barrel() &&;
+
+  /// @brief Shorthand for `setLayerType(LayerType::Plane)`.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& planar() &&;
 
   /// @brief Set the axis definition used to orient sensitive surfaces.
   ///
