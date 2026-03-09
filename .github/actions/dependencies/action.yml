@@ -76,8 +76,8 @@ runs:
         spack/bin/spack list > /dev/null
         rm -rf spack/.git
         mkdir spack_cache
-        cp -r spack spack_cache/
-        cp -r ~/.spack spack_cache/
+        cp -RP spack spack_cache/
+        cp -RP ~/.spack spack_cache/
 
     - name: Save cache
       if: steps.cache-restore.outputs.cache-hit != 'true'
