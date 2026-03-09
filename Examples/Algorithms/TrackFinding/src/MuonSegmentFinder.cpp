@@ -11,7 +11,11 @@
 #include "Acts/Seeding/CompositeSpacePointLineSeeder.hpp"
 #include "Acts/Seeding/CompositeSpacePointLineFitter.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/EventData/MuonSPLayerSplitter.hpp"
 #include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
+
+using namespace Acts;
+using namespace Acts::Experimental;
 
 namespace ActsExamples {
 
@@ -48,16 +52,13 @@ ProcessCode MuonSegmentFinder::execute(const AlgorithmContext& ctx) const {
   using UnCalibSpCont_t = MuonSpacePointCalibrator::UnCalibSpVec_t;
   using CalibSpCont_t = MuonSpacePointCalibrator::CalibSpCont_t;
   using StrawSeeder_t =
-      Acts::CompositeSpacePointLineSeeder<UnCalibSpCont_t, MuonSPLayerSplitter,
-                                   CalibSpCont_t, MuonSpacePointCalibrator>;
-  using SeedCandidate_t = StrawSeeder_t::DriftCircleSeed;
+      CompositeSpacePointLineSeeder;
+  // using SeedCandidate_t = StrawSeeder_t::DriftCircleSeed;
 
   using StrawLineFitter_t =
-      Acts::CompositeSpacePointLineFitter<CalibSpCont_t,
-                                          MuonSpacePointCalibrator>;
+      CompositeSpacePointLineFitter;
 
   StrawSeeder_t::Config seedCfg{};
-  seedCfg.calibrator = m_calibrator.get();
   Acts::CalibrationContext calibCtx{ctx};
   for (const MuonHoughMaximum& max : gotMaxima) {
     if (logger().doPrint(Acts::Logging::VERBOSE)) {
@@ -72,13 +73,15 @@ ProcessCode MuonSegmentFinder::execute(const AlgorithmContext& ctx) const {
       }
       ACTS_VERBOSE(__func__ << "() " << __LINE__ << std::endl << sstr.str());
     }
-
+#ifdef STONJEK
     StrawSeeder_t seeder{max.trackParameters(), max.hits(), seedCfg,
-                         m_logger->clone()};
+                         logger().clone()};
     while (std::optional<SeedCandidate_t> cand =
                seeder.generateSeed(calibCtx)) {
     }
+  #endif
   }
+
   MuonSegmentContainer outSegments{};
 
   m_outSegments(ctx, std::move(outSegments));
