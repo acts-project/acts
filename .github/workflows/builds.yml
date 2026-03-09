@@ -315,7 +315,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
