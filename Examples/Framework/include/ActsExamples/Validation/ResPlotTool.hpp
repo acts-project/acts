@@ -98,8 +98,6 @@ class ResPlotTool {
   }
 
  private:
-  const Acts::Logger& logger() const { return *m_logger; }
-
   Config m_cfg;
 
   std::unique_ptr<const Acts::Logger> m_logger;
@@ -125,6 +123,13 @@ class ResPlotTool {
   std::map<std::string, Histogram3> m_pullVsEtaPhi;
   /// Pull vs eta-pT scatter plot
   std::map<std::string, Histogram3> m_pullVsEtaPt;
+
+  void fillResidual(const std::string& paramName, double residual,
+                    double truthEta, double truthPhi, double truthPt);
+  void fillPull(const std::string& paramName, double pull, double truthEta,
+                double truthPhi, double truthPt);
+
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

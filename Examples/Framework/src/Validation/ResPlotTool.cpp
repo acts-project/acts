@@ -158,20 +158,12 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     const std::string& parName = m_cfg.paramNames.at(paramId);
 
     const double residual = trackParameters[paramId] - truthParameters[paramId];
-    m_res.at(parName).fill({residual});
-    m_resVsEta.at(parName).fill({truthEta, residual});
-    m_resVsPt.at(parName).fill({truthPt, residual});
-    m_resVsEtaPhi.at(parName).fill({truthEta, truthPhi, residual});
-    m_resVsEtaPt.at(parName).fill({truthEta, truthPt, residual});
+    fillResidual(parName, residual, truthEta, truthPhi, truthPt);
 
     const double var = trackCovariance(paramId, paramId);
 
     const double pull = var > 0 ? residual / std::sqrt(var) : nan;
-    m_pull.at(parName).fill({pull});
-    m_pullVsEta.at(parName).fill({truthEta, pull});
-    m_pullVsPt.at(parName).fill({truthPt, pull});
-    m_pullVsEtaPhi.at(parName).fill({truthEta, truthPhi, pull});
-    m_pullVsEtaPt.at(parName).fill({truthEta, truthPt, pull});
+    fillPull(parName, pull, truthEta, truthPhi, truthPt);
   }
 
   // `reco(q/pT)` and `true(pT/q) * reco(q/pT)` residual and pull
@@ -181,22 +173,12 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     const double recoQoverPt =
         trackParameters[eBoundQOverP] / std::sin(trackParameters[eBoundTheta]);
     const double residualQoverPt = recoQoverPt - truthQoverPt;
-    m_res.at(m_cfg.qOverPtName).fill({residualQoverPt});
-    m_resVsEta.at(m_cfg.qOverPtName).fill({truthEta, residualQoverPt});
-    m_resVsPt.at(m_cfg.qOverPtName).fill({truthPt, residualQoverPt});
-    m_resVsEtaPhi.at(m_cfg.qOverPtName)
-        .fill({truthEta, truthPhi, residualQoverPt});
-    m_resVsEtaPt.at(m_cfg.qOverPtName)
-        .fill({truthEta, truthPt, residualQoverPt});
+    fillResidual(m_cfg.qOverPtName, residualQoverPt, truthEta, truthPhi,
+                 truthPt);
 
     const double residualRelQoverPt = truthPtOverQ * residualQoverPt;
-    m_res.at(m_cfg.relQoverPtName).fill({residualRelQoverPt});
-    m_resVsEta.at(m_cfg.relQoverPtName).fill({truthEta, residualRelQoverPt});
-    m_resVsPt.at(m_cfg.relQoverPtName).fill({truthPt, residualRelQoverPt});
-    m_resVsEtaPhi.at(m_cfg.relQoverPtName)
-        .fill({truthEta, truthPhi, residualRelQoverPt});
-    m_resVsEtaPt.at(m_cfg.relQoverPtName)
-        .fill({truthEta, truthPt, residualRelQoverPt});
+    fillResidual(m_cfg.relQoverPtName, residualRelQoverPt, truthEta, truthPhi,
+                 truthPt);
 
     const double covarianceQoverPt = [&]() {
       const Acts::Vector2 jacobian{
@@ -212,25 +194,33 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     const double pullQoverPt =
         covarianceQoverPt > 0 ? residualQoverPt / std::sqrt(covarianceQoverPt)
                               : nan;
-    m_pull.at(m_cfg.qOverPtName).fill({pullQoverPt});
-    m_pullVsEta.at(m_cfg.qOverPtName).fill({truthEta, pullQoverPt});
-    m_pullVsPt.at(m_cfg.qOverPtName).fill({truthPt, pullQoverPt});
-    m_pullVsEtaPhi.at(m_cfg.qOverPtName)
-        .fill({truthEta, truthPhi, pullQoverPt});
-    m_pullVsEtaPt.at(m_cfg.qOverPtName).fill({truthEta, truthPt, pullQoverPt});
+    fillPull(m_cfg.qOverPtName, pullQoverPt, truthEta, truthPhi, truthPt);
 
     const double pullRelQoverPt =
         covarianceRelQoverPt > 0
             ? residualRelQoverPt / std::sqrt(covarianceRelQoverPt)
             : nan;
-    m_pull.at(m_cfg.relQoverPtName).fill({pullRelQoverPt});
-    m_pullVsEta.at(m_cfg.relQoverPtName).fill({truthEta, pullRelQoverPt});
-    m_pullVsPt.at(m_cfg.relQoverPtName).fill({truthPt, pullRelQoverPt});
-    m_pullVsEtaPhi.at(m_cfg.relQoverPtName)
-        .fill({truthEta, truthPhi, pullRelQoverPt});
-    m_pullVsEtaPt.at(m_cfg.relQoverPtName)
-        .fill({truthEta, truthPt, pullRelQoverPt});
+    fillPull(m_cfg.relQoverPtName, pullRelQoverPt, truthEta, truthPhi, truthPt);
   }
+}
+
+void ResPlotTool::fillResidual(const std::string& paramName, double residual,
+                               double truthEta, double truthPhi,
+                               double truthPt) {
+  m_res.at(paramName).fill({residual});
+  m_resVsEta.at(paramName).fill({truthEta, residual});
+  m_resVsPt.at(paramName).fill({truthPt, residual});
+  m_resVsEtaPhi.at(paramName).fill({truthEta, truthPhi, residual});
+  m_resVsEtaPt.at(paramName).fill({truthEta, truthPt, residual});
+}
+
+void ResPlotTool::fillPull(const std::string& paramName, double pull,
+                           double truthEta, double truthPhi, double truthPt) {
+  m_pull.at(paramName).fill({pull});
+  m_pullVsEta.at(paramName).fill({truthEta, pull});
+  m_pullVsPt.at(paramName).fill({truthPt, pull});
+  m_pullVsEtaPhi.at(paramName).fill({truthEta, truthPhi, pull});
+  m_pullVsEtaPt.at(paramName).fill({truthEta, truthPt, pull});
 }
 
 }  // namespace ActsExamples
