@@ -27,36 +27,39 @@ using TimePoint_t = std::chrono::system_clock::time_point;
 using Fitter_t = CompositeSpacePointLineFitter;
 
 constexpr auto logLvl = Acts::Logging::Level::INFO;
-constexpr std::size_t nEvents = 1;
-constexpr long int nThreads = 1;
+constexpr std::size_t nEvents = 50;
+const unsigned nThreads = std::min(logLvl != Acts::Logging::Level::INFO
+                                       ? 1u
+                                       : std::thread::hardware_concurrency(),
+                                   1u);
 std::mutex writeMutex{};
 
 ACTS_LOCAL_LOGGER(getDefaultLogger("StrawLineFitterTest", logLvl));
 
 namespace ActsTests {
 
-void runCalibratorTest(const SpCalibrator* calibrator, TFile& outFile) {
+void runCalibratorTest(TFile& outFile) {
   const int Nbin = 1000;
-  const double tMin = SpCalibrator::s_minDriftTime / 1._ns;
-  const double tMax = SpCalibrator::s_maxDriftTime / 1._ns;
+  const double tMin = detailCalib::s_minDriftTime / 1._ns;
+  const double tMax = detailCalib::s_maxDriftTime / 1._ns;
   TH1D h_rt("h_rt", "R-T relation; t [ns]; r [mm]", Nbin, tMin, tMax);
   TH1D h_vt("h_vt", "V-T relation; t [ns]; v [mm/ns]", Nbin, tMin, tMax);
   TH1D h_at("h_at", "A-T relation; t [ns]; a [mm/ns^2]", Nbin, tMin, tMax);
-  const double rMin = SpCalibrator::s_minDriftRadius;
-  const double rMax = SpCalibrator::s_maxDriftRadius;
+  const double rMin = detailCalib::s_minDriftRadius;
+  const double rMax = detailCalib::s_maxDriftRadius;
   TH1D h_tr("h_tr", "T-R relation; r [mm]; t [ns]", Nbin, rMin, rMax);
   TH1D h_sr("h_sr", "Sigma-R relation; r [mm]; sigma [mm]", Nbin, rMin, rMax);
 
   for (int i = 0; i < Nbin; ++i) {
     const double t = tMin + (i + 0.5) * (tMax - tMin) / Nbin;
-    h_rt.SetBinContent(i, calibrator->driftRadius(t * 1._ns));
-    h_vt.SetBinContent(i, calibrator->driftVelocity(t * 1._ns) * 1._ns);
+    h_rt.SetBinContent(i, detailCalib::driftRadius(t * 1._ns));
+    h_vt.SetBinContent(i, detailCalib::driftVelocity(t * 1._ns) * 1._ns);
     h_at.SetBinContent(
-        i, calibrator->driftAcceleration(t * 1._ns) * Acts::square(1._ns));
+        i, detailCalib::driftAcceleration(t * 1._ns) * Acts::square(1._ns));
 
     const double r = rMin + (i + 0.5) * (rMax - rMin) / Nbin;
-    h_tr.SetBinContent(i, calibrator->driftTime(r) / 1._ns);
-    h_sr.SetBinContent(i, calibrator->driftUncert(r));
+    h_tr.SetBinContent(i, detailCalib::driftTime(r) / 1._ns);
+    h_sr.SetBinContent(i, detailCalib::driftRadUncert(r));
   }
 
   outFile.WriteObject(&h_rt, h_rt.GetName());
@@ -225,10 +228,7 @@ BOOST_AUTO_TEST_CASE(SimpleLineFit) {
       std::make_unique<TFile>("StrawLineFitterTest.root", "RECREATE");
 
   // Run calibrator test first
-  {
-    auto calibrator = std::make_unique<SpCalibrator>();
-    runCalibratorTest(calibrator.get(), *outFile);
-  }
+  runCalibratorTest(*outFile);
 
   // Base configuration for the fit
   Fitter_t::Config fitCfg{};

@@ -667,14 +667,12 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         if (ipar == ePredicted) {
           // local hit residual info
-          const Acts::ActsDynamicMatrix H =
+          const Acts::DynamicMatrix H =
               state.projectorSubspaceHelper().fullProjector().topLeftCorner(
                   state.calibratedSize(), Acts::eBoundSize);
-          const Acts::ActsDynamicMatrix V =
-              state.effectiveCalibratedCovariance();
-          const Acts::ActsDynamicMatrix resCov =
-              V + H * covariance * H.transpose();
-          const Acts::ActsDynamicVector res =
+          const Acts::DynamicMatrix V = state.effectiveCalibratedCovariance();
+          const Acts::DynamicMatrix resCov = V + H * covariance * H.transpose();
+          const Acts::DynamicVector res =
               state.effectiveCalibrated() - H * parameters;
 
           const double resX = res[Acts::eBoundLoc0];

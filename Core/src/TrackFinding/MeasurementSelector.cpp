@@ -97,7 +97,7 @@ double MeasurementSelector::calculateChi2(
         typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
             calibratedCovariance{fullCalibratedCovariance};
 
-        using ParametersVector = ActsVector<kMeasurementSize>;
+        using ParametersVector = Vector<kMeasurementSize>;
 
         std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
             projector.begin(), projector.begin() + kMeasurementSize);

@@ -86,7 +86,7 @@ void NeuralCalibrator::calibrate(
     MultiTrajectory<VectorMultiTrajectory>::TrackStateProxy& trackState) const {
   trackState.setUncalibratedSourceLink(SourceLink{sourceLink});
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
-  assert((idxSourceLink.index() < measurements.size()) and
+  assert((idxSourceLink.index() < measurements.size()) &&
          "Source link index is outside the container bounds");
 
   if (!rangeContainsValue(m_volumeIds, idxSourceLink.geometryId().volume())) {
@@ -181,9 +181,9 @@ void NeuralCalibrator::calibrate(
         static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
             measurement);
 
-    ActsVector<kMeasurementSize> calibratedParameters =
+    Vector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
-    ActsSquareMatrix<kMeasurementSize> calibratedCovariance =
+    SquareMatrix<kMeasurementSize> calibratedCovariance =
         fixedMeasurement.covariance();
 
     calibratedParameters[boundLoc0] = output[iLoc0];

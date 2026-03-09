@@ -32,7 +32,9 @@ class TrackSelectorAlgorithm final : public IAlgorithm {
     Acts::TrackSelector::Config selectorConfig;
   };
 
-  TrackSelectorAlgorithm(const Config& config, Acts::Logging::Level level);
+  explicit TrackSelectorAlgorithm(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

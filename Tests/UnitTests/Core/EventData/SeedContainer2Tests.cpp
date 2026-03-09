@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/SeedColumns.hpp"
 #include "Acts/EventData/SeedContainer2.hpp"
 
 using namespace Acts;
@@ -108,6 +109,45 @@ BOOST_AUTO_TEST_CASE(Clear) {
   BOOST_CHECK_EQUAL(container.size(), 0u);
   for ([[maybe_unused]] auto _ : container) {
     BOOST_FAIL("Container should be empty, no space points should be iterated");
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CopyFrom) {
+  SeedContainer2 container;
+  container.reserve(1);
+
+  {
+    auto seed = container.createSeed();
+    seed.assignSpacePointIndices(std::array<SpacePointIndex2, 3>{0, 1, 2});
+    seed.quality() = 1.0f;
+    seed.vertexZ() = 3.0f;
+  }
+
+  {
+    SeedContainer2 copyTo;
+    MutableSeedProxy2 seed = copyTo.createSeed();
+    seed.copyFrom(container.at(0), SeedColumns::SpacePointIndices |
+                                       SeedColumns::Quality |
+                                       SeedColumns::VertexZ);
+
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[0], 0u);
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[1], 1u);
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[2], 2u);
+    BOOST_CHECK_EQUAL(seed.quality(), 1.0f);
+    BOOST_CHECK_EQUAL(seed.vertexZ(), 3.0f);
+  }
+
+  {
+    SeedContainer2 copyTo;
+    MutableSeedProxy2 seed = copyTo.createSeed();
+    seed.copyFrom(container.at(0),
+                  SeedColumns::SpacePointIndices | SeedColumns::Quality);
+
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[0], 0u);
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[1], 1u);
+    BOOST_CHECK_EQUAL(seed.spacePointIndices()[2], 2u);
+    BOOST_CHECK_EQUAL(seed.quality(), 1.0f);
+    BOOST_CHECK_EQUAL(seed.vertexZ(), 0.0f);  // default value since not copied
   }
 }
 

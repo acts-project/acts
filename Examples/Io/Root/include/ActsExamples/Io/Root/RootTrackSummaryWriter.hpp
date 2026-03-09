@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Jets.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -53,6 +54,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
     std::string inputParticles;
     /// Input track-particle matching (optional).
     std::string inputTrackParticleMatching;
+    /// Input jet collection (optional).
+    std::string inputJets;
     /// Output filename.
     std::string filePath = "tracksummary.root";
     /// Name of the output tree.
@@ -65,6 +68,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
     bool writeGsfSpecific = false;
     /// Write GX2F specific things
     bool writeGx2fSpecific = false;
+    /// Write jet information
+    bool writeJets = false;
   };
 
   /// Constructor
@@ -80,6 +85,8 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
+  using TruthJetContainer = std::vector<ActsExamples::TruthJet>;
+
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
@@ -94,6 +101,7 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
+  ReadDataHandle<TruthJetContainer> m_inputJets{this, "InputJets"};
 
   /// Mutex used to protect multi-threaded writes
   std::mutex m_writeMutex;
@@ -281,6 +289,14 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
 
   /// The number of updates (gx2f)
   std::vector<int> m_nUpdatesGx2f;
+
+  /// The jet information
+  std::vector<int> m_nJets;
+  std::vector<float> m_jet_pt;
+  std::vector<float> m_jet_eta;
+  std::vector<float> m_jet_phi;
+  std::vector<int> m_jet_label;
+  std::vector<std::size_t> m_ntracks_per_jets;
 };
 
 }  // namespace ActsExamples

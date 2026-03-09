@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
                     converted.values.template head<2>());
   BOOST_CHECK_EQUAL(
       (converted.covariance.value().template topLeftCorner<4, 4>()),
-      ActsSquareMatrix<4>::Identity());
+      SquareMatrix<4>::Identity());
   BOOST_CHECK_GT(converted.covariance.value()(4, 4), 0);
   BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
 

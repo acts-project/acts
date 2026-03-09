@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(trackparm_estimate_aligined) {
   Vector3 sp2{-98.175, -0.325, -835.6};
   Vector3 bField{0, 0, 0.000899377};
 
-  FreeVector params = estimateTrackParamsFromSeed(sp0, sp1, sp2, bField);
+  FreeVector params = estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
   BOOST_CHECK_EQUAL(params[eFreeQOverP], 0);
 }
 

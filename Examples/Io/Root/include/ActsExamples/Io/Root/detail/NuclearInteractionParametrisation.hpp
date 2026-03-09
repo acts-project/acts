@@ -59,8 +59,8 @@ using EventCollection = std::vector<EventFraction>;
 using EventProperties = std::vector<std::vector<float>>;
 using ProbabilityDistributions = std::vector<TH1F*>;
 using CumulativeDistribution = TH1F*;
-using Vector = Acts::ActsDynamicVector;
-using Matrix = Acts::ActsDynamicMatrix;
+using Vector = Acts::DynamicVector;
+using Matrix = Acts::DynamicMatrix;
 using EigenspaceComponents = std::tuple<Vector, Matrix, Vector>;
 using Parametrisation =
     std::pair<EigenspaceComponents, std::vector<CumulativeDistribution>>;

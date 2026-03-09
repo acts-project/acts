@@ -7,7 +7,6 @@ from fnmatch import fnmatch
 import re
 import sys
 
-
 type_list = [
     "size_t",
     "ptrdiff_t",

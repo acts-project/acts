@@ -14,7 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -41,7 +41,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
-    /// Input prototracks (optional).
+    /// Input proto tracks (optional).
     std::optional<std::string> inputProtoTracks;
     /// Input particle hypothesis (optional). If not given, the static particle
     /// hypothesis from the config is used.
@@ -51,7 +51,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// Output seed collection - only seeds with successful parameter estimation
     /// are propagated (optional)
     std::optional<std::string> outputSeeds;
-    /// Output prototrack collection - only tracks with successful parameter
+    /// Output proto track collection - only tracks with successful parameter
     /// estimation are propagated (optional)
     std::optional<std::string> outputProtoTracks;
 
@@ -92,7 +92,8 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrackParamsEstimationAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  explicit TrackParamsEstimationAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the track parameters making algorithm.
   ///
@@ -106,14 +107,14 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
   ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};
   ReadDataHandle<std::vector<Acts::ParticleHypothesis>>
       m_inputParticleHypotheses{this, "InputParticleHypotheses"};
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
-  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<SeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<ProtoTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 

@@ -353,8 +353,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   // Check the projection matrix
   BOOST_CHECK_EQUAL(alignState.projectionMatrix.rows(), 12);
   BOOST_CHECK_EQUAL(alignState.projectionMatrix.cols(), 36);
-  const ActsMatrix<2, 6> proj = alignState.projectionMatrix.block<2, 6>(0, 0);
-  const ActsMatrix<2, 6> refProj = ActsMatrix<2, 6>::Identity();
+  const Matrix<2, 6> proj = alignState.projectionMatrix.block<2, 6>(0, 0);
+  const Matrix<2, 6> refProj = Matrix<2, 6>::Identity();
   CHECK_CLOSE_ABS(proj, refProj, 1e-10);
   // Check the residual
   BOOST_CHECK_EQUAL(alignState.residual.size(), 12);

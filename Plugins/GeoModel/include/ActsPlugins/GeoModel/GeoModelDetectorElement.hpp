@@ -56,7 +56,8 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   /// @return a shared pointer to an instance of the detector element
   template <typename SurfaceType, typename BoundsType>
   static std::shared_ptr<GeoModelDetectorElement> createDetectorElement(
-      const PVConstLink& geoPhysVol, const std::shared_ptr<BoundsType> bounds,
+      const PVConstLink& geoPhysVol,
+      const std::shared_ptr<const BoundsType>& bounds,
       const Acts::Transform3& sfTransform, double thickness) {
     // First create the detector element with a nullptr
     auto detElement = std::make_shared<GeoModelDetectorElement>(

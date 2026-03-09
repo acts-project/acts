@@ -82,7 +82,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::optional<double> maxMergeVertexSignificance;
 
     /// Enum member determining the choice of the vertex seed finder
-    SeedFinder seedFinder;
+    SeedFinder seedFinder = SeedFinder::GaussianSeeder;
     /// Bin extent in z-direction which is only used with `AdaptiveGridSeeder`
     double spatialBinExtent = 15. * Acts::UnitConstants::um;
     /// Bin extent in t-direction which is only used with `AdaptiveGridSeeder`
@@ -92,8 +92,9 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::size_t simultaneousSeeds = 1;
   };
 
-  AdaptiveMultiVertexFinderAlgorithm(const Config& config,
-                                     Acts::Logging::Level level);
+  explicit AdaptiveMultiVertexFinderAlgorithm(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Find vertices using the adaptive multi vertex finder algorithm.
   ///

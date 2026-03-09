@@ -23,8 +23,8 @@ template <std::size_t N>
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
     AnyMutableTrackStateProxy trackState, const Logger& logger) const {
   constexpr std::size_t kMeasurementSize = N;
-  using ProjectedVector = ActsVector<kMeasurementSize>;
-  using ProjectedMatrix = ActsSquareMatrix<kMeasurementSize>;
+  using ProjectedVector = Vector<kMeasurementSize>;
+  using ProjectedMatrix = SquareMatrix<kMeasurementSize>;
 
   const auto calibrated = trackState.calibrated<kMeasurementSize>();
   const auto calibratedCovariance =

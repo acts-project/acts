@@ -83,7 +83,8 @@ class MuonHoughSeeder final : public IAlgorithm {
         visualizationFunction{};
   };
 
-  MuonHoughSeeder(const Config& cfg, Acts::Logging::Level lvl);
+  explicit MuonHoughSeeder(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
   ~MuonHoughSeeder() override;
 
   /// Run the seeding algorithm.
@@ -99,7 +100,7 @@ class MuonHoughSeeder final : public IAlgorithm {
   /// @brief Find eta maxima from the space point bucket and fills them into a new
   ///        maximum container
   /// @param ctx: Algorithm context needed for the display of the truth-parameters
-  /// @param bucket: Spacepoint bucket of interest
+  /// @param bucket: Space point bucket of interest
   /// @param plane: Allocated hough plane to be recycled for all hough searches in the event
   MuonHoughMaxContainer constructEtaMaxima(const AlgorithmContext& ctx,
                                            const MuonSpacePointBucket& bucket,
@@ -122,8 +123,6 @@ class MuonHoughSeeder final : public IAlgorithm {
                      const AxisRange_t& axis) const;
 
   Config m_cfg;
-  std::unique_ptr<const Acts::Logger> m_logger;
-  const Acts::Logger& logger() const { return *m_logger; }
 
   ReadDataHandle<MuonSegmentContainer> m_inputTruthSegs{this,
                                                         "InputTruthSegments"};

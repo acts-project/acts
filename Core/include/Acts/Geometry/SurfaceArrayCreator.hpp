@@ -395,8 +395,8 @@ class SurfaceArrayCreator {
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
-                          double layerTolerance, ProtoAxis pAxisA,
-                          ProtoAxis pAxisB) {
+                          double layerTolerance, const ProtoAxis& pAxisA,
+                          const ProtoAxis& pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 

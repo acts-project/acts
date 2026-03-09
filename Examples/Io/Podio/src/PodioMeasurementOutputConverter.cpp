@@ -19,8 +19,9 @@
 namespace ActsExamples {
 
 PodioMeasurementOutputConverter::PodioMeasurementOutputConverter(
-    const Config& config, Acts::Logging::Level level)
-    : PodioOutputConverter{"PodioMeasurementOutputConverter", level},
+    const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : PodioOutputConverter{"PodioMeasurementOutputConverter",
+                           std::move(logger)},
       m_cfg{config} {
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);

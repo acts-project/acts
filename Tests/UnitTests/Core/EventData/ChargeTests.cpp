@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
@@ -20,14 +21,18 @@ using namespace Acts::UnitLiterals;
 
 static auto eps = std::numeric_limits<double>::epsilon();
 
+ACTS_PUSH_IGNORE_DEPRECATED()
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Neutral)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(SinglyCharged)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(NonNeutralCharge)
+ACTS_POP_IGNORE_DEPRECATED()
 BOOST_TEST_DONT_PRINT_LOG_VALUE(AnyCharge)
 
 namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 BOOST_AUTO_TEST_CASE(Constructibility) {
   BOOST_CHECK(std::is_trivially_default_constructible_v<Neutral>);
@@ -115,6 +120,8 @@ BOOST_AUTO_TEST_CASE(NonNeutralChargeMultiple) {
   BOOST_CHECK(q == NonNeutralCharge(3_e));
   BOOST_CHECK(NonNeutralCharge(3_e) == q);
 }
+
+ACTS_POP_IGNORE_DEPRECATED()
 
 BOOST_AUTO_TEST_CASE(AnyChargeNeutral) {
   AnyCharge q(0_e);

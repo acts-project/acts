@@ -2,11 +2,11 @@
 # dependencies in the component list.
 # independent plugins
 add_component_if(ActSVG PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
-add_component_if(FastJet PluginFastJet ACTS_BUILD_PLUGIN_FASTJET)
 add_component_if(FpeMonitoring PluginFpeMonitoring ACTS_BUILD_PLUGIN_FPEMON)
 add_component_if(Geant4 PluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
 add_component_if(GeoModel PluginGeoModel ACTS_BUILD_PLUGIN_GEOMODEL)
 add_component_if(Json PluginJson ACTS_BUILD_PLUGIN_JSON)
+add_component_if(Mille PluginMille ACTS_BUILD_PLUGIN_MILLE)
 add_component_if(Onnx PluginOnnx ACTS_BUILD_PLUGIN_ONNX)
 add_component_if(Gnn PluginGnn ACTS_BUILD_PLUGIN_GNN)
 add_component_if(Detray PluginDetray ACTS_BUILD_PLUGIN_TRACCC)

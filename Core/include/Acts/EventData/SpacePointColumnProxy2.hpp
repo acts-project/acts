@@ -142,12 +142,13 @@ class SpacePointColumnProxy {
   }
 
   /// Subset view over selected column entries.
-  class Subset : public detail::ContainerSubset<Subset, Subset, Column, Value,
-                                                Index, ReadOnly> {
+  class Subset
+      : public detail::ContainerSubset<Subset, Subset, Column, Value,
+                                       std::span<const Index>, ReadOnly> {
    public:
     /// Base class type
-    using Base =
-        detail::ContainerSubset<Subset, Subset, Column, Value, Index, ReadOnly>;
+    using Base = detail::ContainerSubset<Subset, Subset, Column, Value,
+                                         std::span<const Index>, ReadOnly>;
 
     using Base::Base;
   };
