@@ -60,10 +60,10 @@ ProcessCode CsvMeasurementWriter::writeT(
   std::string pathMeasurementSimHitMap = perEventFilepath(
       m_cfg.outputDir, "measurement-simhit-map.csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<MeasurementData> writerMeasurements(
+  BoostDescribeCsvWriter<MeasurementData> writerMeasurements(
       pathMeasurements, m_cfg.outputPrecision);
 
-  std::optional<NamedTupleCsvWriter<CellData>> writerCells{std::nullopt};
+  std::optional<BoostDescribeCsvWriter<CellData>> writerCells{std::nullopt};
   if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE(
         "Set up writing of clusters from collection: " << m_cfg.inputClusters);
@@ -71,10 +71,10 @@ ProcessCode CsvMeasurementWriter::writeT(
     std::string pathCells =
         perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
     writerCells =
-        NamedTupleCsvWriter<CellData>{pathCells, m_cfg.outputPrecision};
+        BoostDescribeCsvWriter<CellData>{pathCells, m_cfg.outputPrecision};
   }
 
-  NamedTupleCsvWriter<MeasurementSimHitLink> writerMeasurementSimHitMap(
+  BoostDescribeCsvWriter<MeasurementSimHitLink> writerMeasurementSimHitMap(
       pathMeasurementSimHitMap, m_cfg.outputPrecision);
 
   MeasurementData meas;
