@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding2/GbtsGeometry.hpp"
 
-#include "Acts/Seeding2/GbtsLayerConnection.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -35,10 +35,10 @@ GbtsLayer::GbtsLayer(const GbtsLayerDescription& layerDescription,
   }
 
   const float t1 = m_z1 / m_r1;
-  const float eta1 = -std::log(std::sqrt(1 + t1 * t1) - t1);
+  const float eta1 = -std::log(fastHypot(1, t1) - t1);
 
   const float t2 = m_z2 / m_r2;
-  const float eta2 = -std::log(std::sqrt(1 + t2 * t2) - t2);
+  const float eta2 = -std::log(fastHypot(1, t2) - t2);
 
   m_minEta = eta1;
   m_maxEta = eta2;
@@ -297,7 +297,7 @@ std::int32_t GbtsLayer::getEtaBin(const float zh, const float rh) const {
   }
 
   const float t1 = zh / rh;
-  const float eta = -std::log(std::sqrt(1 + t1 * t1) - t1);
+  const float eta = -std::log(fastHypot(1, t1) - t1);
 
   std::int32_t idx = static_cast<std::int32_t>((eta - m_minEta) / m_etaBin);
   if (idx < 0) {

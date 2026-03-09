@@ -9,6 +9,7 @@
 #include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
 
 #include "Acts/Seeding2/GbtsTrackingFilter.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -426,7 +427,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
             }
           }
 
-          const float expEta = std::sqrt(1.f + tau * tau) - tau;
+          const float expEta = fastHypot(1, tau) - tau;
 
           // match edge candidate against edges incoming to n2
           if (m_cfg.matchBeforeCreate &&
