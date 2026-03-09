@@ -245,7 +245,7 @@ void ElementLayerAssembler<BackendT>::addTo(
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
 ElementLayerAssembler<BackendT>::build() const {
   const auto& logger = m_builder->logger();
 
@@ -401,7 +401,7 @@ void SensorLayerAssembler<BackendT>::addTo(
 }
 
 template <detail::BlueprintBackend BackendT>
-std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
 SensorLayerAssembler<BackendT>::build() const {
   if (!m_layerType.has_value()) {
     throw std::runtime_error("Layer type not set in SensorLayerAssembler");
@@ -634,7 +634,7 @@ BarrelEndcapAssembler<BackendT>&& BarrelEndcapAssembler<BackendT>::onContainer(
   m_onContainer =
       [customizer = std::move(customizer)](
           const typename BarrelEndcapAssembler<BackendT>::Element& elem,
-          std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
+          std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
               node) mutable {
         customizer(elem, *node);
         return node;
