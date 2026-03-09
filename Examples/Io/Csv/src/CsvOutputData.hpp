@@ -391,8 +391,9 @@ struct SpacePointData2 {
   float var_r, var_z;
 };
 
-BOOST_DESCRIBE_STRUCT(SpacePointData2, (), (measurement_id_1, measurement_id_2, geometry_id_1, geometry_id_2,
-                      x, y, z, t, var_r, var_z));
+BOOST_DESCRIBE_STRUCT(SpacePointData2, (),
+                      (measurement_id_1, measurement_id_2, geometry_id_1,
+                       geometry_id_2, x, y, z, t, var_r, var_z));
 
 struct SurfaceGridData {
   /// Surface identifier. Not available in the TrackML datasets.

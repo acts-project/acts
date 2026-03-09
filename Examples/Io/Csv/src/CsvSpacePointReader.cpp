@@ -79,7 +79,8 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
 
     if (m_cfg.extendCollection) {
       const Acts::Vector3 topStripVector =
-          Acts::Vector3(data.sp_topStripDirection_0, data.sp_topStripDirection_1,
+          Acts::Vector3(data.sp_topStripDirection_0,
+                        data.sp_topStripDirection_1,
                         data.sp_topStripDirection_2) *
           2 * data.sp_topHalfStripLength;
       const Acts::Vector3 bottomStripVector =
