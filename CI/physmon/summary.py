@@ -34,8 +34,7 @@ with open(args.results) as f:
 
 if args.html:
     with open(args.html, mode="w", encoding="utf-8") as f:
-        f.write(
-            """<!DOCTYPE html>
+        f.write("""<!DOCTYPE html>
 <html>
 <head>
   <title>physmon summary</title>
@@ -44,28 +43,23 @@ if args.html:
 <body>
   <h1>physmon summary</h1>
   <ul>
-            """
-        )
+            """)
 
         for s in summary:
             if s["title"].startswith("Comparison"):
-                f.write(
-                    f"""
-        <li>🔵 <a href="{s["path"]}">{s["title"]}</a></li>"""
-                )
+                f.write(f"""
+        <li>🔵 <a href="{s["path"]}">{s["title"]}</a></li>""")
             else:
                 f.write(
                     f"""
         <li>{"✅" if s["total"] else "🔴"} <a href="{s["path"]}">{s["title"]}</a></li>"""
                 )
 
-        f.write(
-            """
+        f.write("""
       </ul>
     </body>
     </html>
-            """
-        )
+            """)
 
 if args.md:
     with open(args.md, mode="w", encoding="utf-8") as f:

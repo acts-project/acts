@@ -7,7 +7,6 @@ from fnmatch import fnmatch
 import re
 import sys
 
-
 math_constants = [
     ("M_PI", "std::numbers::pi"),
     ("M_PI_2", "std::numbers::pi / 2."),
