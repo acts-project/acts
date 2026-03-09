@@ -17,6 +17,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -185,7 +186,7 @@ PointwiseMaterialEffects performMaterialInteraction(
   // variances increase(decrease)
   const double nextE = fastHypot(mass, momentum) - effects.eLoss * propDir;
   // put particle at rest if energy loss is too large
-  double nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
+  double nextP = (mass < nextE) ? fastCathetus(nextE, mass) : 0;
 
   // minimum momentum below which we will not push particles via material
   // update
