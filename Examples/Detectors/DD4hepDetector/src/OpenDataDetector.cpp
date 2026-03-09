@@ -170,8 +170,7 @@ void OpenDataDetector::constructBarrelEndcap(
         .onLayer(makeLayerCustomizer(builder, m_cfg.layerEnvelope,
                                      std::move(det), layerFilter))
         .onContainer(
-            [](const auto&,
-               Acts::Experimental::CylinderContainerBlueprintNode& node) {
+            [](const auto&, Acts::Experimental::ContainerBlueprintNode& node) {
               node.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
               node.setResizeStrategies(VolumeResizeStrategy::Gap,
                                        VolumeResizeStrategy::Gap);
@@ -225,8 +224,8 @@ void OpenDataDetector::constructDirectLayer(const Acts::GeometryContext& gctx) {
         std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
             assemblyName, Acts::AxisDirection::AxisZ);
 
-    auto layerCustomizer = makeLayerCustomizer(
-        builder, m_cfg.layerEnvelope, std::move(det), layerFilter);
+    auto layerCustomizer = makeLayerCustomizer(builder, m_cfg.layerEnvelope,
+                                               std::move(det), layerFilter);
 
     for (const auto& barrel : barrels) {
       auto barrelNode = builder.layers()
@@ -306,8 +305,8 @@ void OpenDataDetector::constructDirectLayerGrouped(
         std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
             assemblyName, Acts::AxisDirection::AxisZ);
 
-    auto layerCustomizer = makeLayerCustomizer(
-        builder, m_cfg.layerEnvelope, std::move(det), layerFilter);
+    auto layerCustomizer = makeLayerCustomizer(builder, m_cfg.layerEnvelope,
+                                               std::move(det), layerFilter);
 
     // Walks the parent chain of a sensor element and returns the name of the
     // first ancestor whose name matches layerFilter, formatted as "layerN".
