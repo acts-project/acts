@@ -94,16 +94,16 @@ using ReplacingLayerCustomizer = std::function<void(
 /// @brief Callback type that can replace or wrap a
 /// @ref CylinderContainerBlueprintNode.
 template <typename ElementT>
-using ContainerCustomizer = std::function<
-    std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>(
+using ContainerCustomizer =
+    std::function<std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>(
         const ElementT&,
-        std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>)>;
+        std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>)>;
 
 /// @brief Simplified callback type that mutates a
 /// @ref CylinderContainerBlueprintNode in-place.
 template <typename ElementT>
 using ReplacingContainerCustomizer = std::function<void(
-    const ElementT&, Acts::Experimental::CylinderContainerBlueprintNode&)>;
+    const ElementT&, Acts::Experimental::ContainerBlueprintNode&)>;
 
 /// @brief Concept requiring a backend to provide a surface-construction method.
 ///
@@ -388,8 +388,7 @@ class ElementLayerAssembler {
   ///         container name is resolvable, or if the container yields no
   ///         matching elements and @p emptyOk is `false`.
   /// @return Shared pointer to the fully assembled container node.
-  [[nodiscard]] std::shared_ptr<
-      Acts::Experimental::CylinderContainerBlueprintNode>
+  [[nodiscard]] std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
   build() const;
 
   /// @brief Build the container node and attach it as a child of @p node.
@@ -536,8 +535,7 @@ class SensorLayerAssembler {
   ///         the container name is not set, or if @ref groupBy has not been
   ///         configured.
   /// @return Shared pointer to the assembled container node.
-  [[nodiscard]] std::shared_ptr<
-      Acts::Experimental::CylinderContainerBlueprintNode>
+  [[nodiscard]] std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
   build() const;
 
   /// @brief Build the container node and attach it as a child of @p node.
@@ -813,8 +811,9 @@ class BarrelEndcapAssembler {
   typename ElementLayerAssembler::LayerCustomizer m_onLayer;
   ContainerCustomizer m_onContainer =
       [](const Element&,
-         std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-             node) { return node; };
+         std::shared_ptr<Acts::Experimental::ContainerBlueprintNode> node) {
+        return node;
+      };
 
   std::optional<Element> m_assembly;
   std::optional<AxisDefinition> m_barrelAxes;
