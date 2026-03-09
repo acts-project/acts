@@ -136,9 +136,9 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
-  impl().m_designator = detail::merge(
-      impl().m_designator,
-      detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));
+  impl().m_designator =
+      detail::merge(impl().m_designator,
+                    detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));
   return *this;
 }
 
@@ -160,10 +160,9 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   if (material == nullptr) {
     throw std::invalid_argument(prefix() + "Material is nullptr");
   }
-  impl().m_designator = impl().m_designator->merged(
-      detail::ISurfaceMaterialDesignator<TrapezoidVolumeBounds::Face,
-                                         TrapezoidPortalShell>(
-          face, std::move(material)));
+  impl().m_designator = detail::merge(
+      impl().m_designator, detail::TrapezoidHomogeneousMaterialDesignator(
+                               face, std::move(material)));
   return *this;
 }
 
@@ -173,10 +172,9 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   if (material == nullptr) {
     throw std::invalid_argument(prefix() + "Material is nullptr");
   }
-  impl().m_designator = impl().m_designator->merged(
-      detail::ISurfaceMaterialDesignator<DiamondVolumeBounds::Face,
-                                         DiamondPortalShell>(
-          face, std::move(material)));
+  impl().m_designator = detail::merge(
+      impl().m_designator,
+      detail::DiamondHomogeneousMaterialDesignator(face, std::move(material)));
   return *this;
 }
 
