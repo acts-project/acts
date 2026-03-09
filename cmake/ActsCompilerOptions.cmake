@@ -51,6 +51,8 @@ if(DEFINED CMAKE_CXX_STANDARD)
     endif()
 endif()
 
+message(STATUS "C++ standard: ${ACTS_CXX_STANDARD}")
+
 if(ACTS_ENABLE_CPU_PROFILING OR ACTS_ENABLE_MEMORY_PROFILING)
     message(STATUS "Added debug symbol compile flag")
     set(cxx_flags "${cxx_flags} ${CMAKE_CXX_FLAGS_DEBUG_INIT}")
