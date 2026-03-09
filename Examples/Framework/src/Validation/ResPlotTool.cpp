@@ -22,6 +22,7 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                          Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {
   const auto& etaAxis = m_cfg.varBinning.at("Eta");
+  const auto& phiAxis = m_cfg.varBinning.at("Phi");
   const auto& ptAxis = m_cfg.varBinning.at("Pt");
   const auto& pullAxis = m_cfg.varBinning.at("Pull");
 
@@ -51,6 +52,20 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                                    std::format("Residual of {} vs pT", parName),
                                    std::array{ptAxis, residualAxis}));
 
+    // residual vs eta-phi scatter plots
+    m_resVsEtaPhi.emplace(parName,
+                          Acts::Experimental::Histogram3(
+                              std::format("res_{}_vs_eta_phi", parName),
+                              std::format("Residual of {} vs eta-phi", parName),
+                              std::array{etaAxis, phiAxis, residualAxis}));
+
+    // residual vs eta-pT scatter plots
+    m_resVsEtaPt.emplace(parName,
+                         Acts::Experimental::Histogram3(
+                             std::format("res_{}_vs_eta_pT", parName),
+                             std::format("Residual of {} vs eta-pT", parName),
+                             std::array{etaAxis, ptAxis, residualAxis}));
+
     // pull distributions
     m_pull.emplace(
         parName, Acts::Experimental::Histogram1(
@@ -68,6 +83,20 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
                                     std::format("pull_{}_vs_pT", parName),
                                     std::format("Pull of {} vs pT", parName),
                                     std::array{ptAxis, pullAxis}));
+
+    // pull vs eta-phi scatter plots
+    m_pullVsEtaPhi.emplace(parName,
+                           Acts::Experimental::Histogram3(
+                               std::format("pull_{}_vs_eta_phi", parName),
+                               std::format("Pull of {} vs eta-phi", parName),
+                               std::array{etaAxis, phiAxis, pullAxis}));
+
+    // pull vs eta-pT scatter plots
+    m_pullVsEtaPt.emplace(parName,
+                          Acts::Experimental::Histogram3(
+                              std::format("pull_{}_vs_eta_pT", parName),
+                              std::format("Pull of {} vs eta-pT", parName),
+                              std::array{etaAxis, ptAxis, pullAxis}));
   }
 }
 
@@ -114,16 +143,19 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   truthParameter[Acts::BoundIndices::eBoundTime] = truthParticle.time();
 
   // get the truth eta and pT
-  const auto truthEta = eta(truthParticle.direction());
-  const auto truthPt = truthParticle.transverseMomentum();
+  const double truthEta = eta(truthParticle.direction());
+  const double truthPhi = phi(truthParticle.direction());
+  const double truthPt = truthParticle.transverseMomentum();
 
   // fill the histograms for residual and pull
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
-    std::string parName = m_cfg.paramNames.at(parID);
-    double residual = trackParameter[parID] - truthParameter[parID];
+    const std::string parName = m_cfg.paramNames.at(parID);
+    const double residual = trackParameter[parID] - truthParameter[parID];
     m_res.at(parName).fill({residual});
     m_resVsEta.at(parName).fill({truthEta, residual});
     m_resVsPt.at(parName).fill({truthPt, residual});
+    m_resVsEtaPhi.at(parName).fill({truthEta, truthPhi, residual});
+    m_resVsEtaPt.at(parName).fill({truthEta, truthPt, residual});
 
     if (!fittedParamters.covariance().has_value()) {
       ACTS_WARNING("Fitted track parameter :" << parName
@@ -131,7 +163,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
       continue;
     }
 
-    auto covariance = *fittedParamters.covariance();
+    const auto covariance = *fittedParamters.covariance();
     if (covariance(parID, parID) <= 0.0) {
       ACTS_WARNING("Fitted track parameter :"
                    << parName << " has non-positive covariance = "
@@ -139,10 +171,12 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
       continue;
     }
 
-    double pull = residual / std::sqrt(covariance(parID, parID));
+    const double pull = residual / std::sqrt(covariance(parID, parID));
     m_pull.at(parName).fill({pull});
     m_pullVsEta.at(parName).fill({truthEta, pull});
     m_pullVsPt.at(parName).fill({truthPt, pull});
+    m_pullVsEtaPhi.at(parName).fill({truthEta, truthPhi, pull});
+    m_pullVsEtaPt.at(parName).fill({truthEta, truthPt, pull});
   }
 }
 
