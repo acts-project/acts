@@ -180,7 +180,7 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     fillResidual(m_cfg.relQoverPtName, residualRelQoverPt, truthEta, truthPhi,
                  truthPt);
 
-    const double covarianceQoverPt = [&]() {
+    const double covarianceQoverPt = [&]() -> double {
       const Acts::Vector2 jacobian{
           -recoQoverPt / std::tan(trackParameters[eBoundTheta]),
           1 / std::sin(trackParameters[eBoundTheta])};
