@@ -19,11 +19,27 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 
+#include <format>
+#include <regex>
+#include <string>
 #include <variant>
 
 #include <boost/core/demangle.hpp>
 
 namespace Acts::Experimental::detail {
+
+/// Extract the shape name from a portal shell type name, e.g.
+/// "Acts::CuboidPortalShell" -> "Cuboid". Falls back to full demangled name if
+/// the "PortalShell" suffix is not found.
+inline std::string portalShellShapeName(const std::type_info& type) {
+  std::string full = boost::core::demangle(type.name());
+  std::smatch match;
+  static const std::regex regex{R"((\w+)PortalShell$)"};
+  if (std::regex_search(full, match, regex)) {
+    return match[1].str();
+  }
+  return full;
+}
 
 template <typename face_enum_t, typename shell_type_t>
 class ProtoDesignator {
@@ -38,31 +54,17 @@ class ProtoDesignator {
     m_binning.emplace_back(face, loc0, loc1);
   }
 
-  static constexpr std::string_view shellTypeName() {
-    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
-      return "Cylinder";
-    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
-      return "Cuboid";
-    } else {
-      static_assert(std::is_same_v<ShellType, void>, "Unknown shell type");
-    }
-  }
-
-  static constexpr std::string_view label() {
-    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
-      return "CylinderProtoDesignator";
-    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
-      return "CuboidProtoDesignator";
-    } else {
-      static_assert(std::is_same_v<ShellType, void>, "Unknown shell type");
-    }
+  std::string label() const {
+    return std::format("{}ProtoDesignator",
+                       portalShellShapeName(typeid(ShellType)));
   }
 
   void apply(PortalShellBase& shell, const Logger& logger,
              const std::string& prefix) const {
     auto* concreteShell = dynamic_cast<ShellType*>(&shell);
     if (concreteShell == nullptr) {
-      throw std::invalid_argument(prefix + std::string{shellTypeName()} +
+      throw std::invalid_argument(prefix +
+                                  portalShellShapeName(typeid(ShellType)) +
                                   " faces must use a valid face");
     }
 
@@ -84,7 +86,8 @@ class ProtoDesignator {
   }
 
   void graphvizLabel(std::ostream& os) const {
-    os << "<br/><i>" << shellTypeName() << " Binning</i>";
+    os << "<br/><i>" << portalShellShapeName(typeid(ShellType))
+       << " Binning</i>";
     for (const auto& [face, loc0, loc1] : m_binning) {
       os << "<br/> at: " << face;
       os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
@@ -110,8 +113,8 @@ class ProtoDesignator {
         case PositiveDisc:
           if (loc0.getAxisDirection() != AxisR ||
               loc1.getAxisDirection() != AxisPhi) {
-            throw std::invalid_argument(
-                prefix + "Disc faces must use (r, phi) binning");
+            throw std::invalid_argument(prefix +
+                                        "Disc faces must use (r, phi) binning");
           }
           break;
         case OuterCylinder:
@@ -142,7 +145,8 @@ class ProtoDesignator {
     if (std::ranges::find_if(m_binning, [&](const auto& bin) {
           return std::get<0>(bin) == face;
         }) != m_binning.end()) {
-      throw std::invalid_argument(prefix + std::string{shellTypeName()} +
+      throw std::invalid_argument(prefix +
+                                  portalShellShapeName(typeid(ShellType)) +
                                   " face already configured");
     }
   }
@@ -166,22 +170,9 @@ class ISurfaceMaterialDesignator {
     m_materials.emplace_back(face, std::move(material));
   }
 
-  static constexpr std::string_view shellTypeName() {
-    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
-      return "Cylinder";
-    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
-      return "Cuboid";
-    } else if constexpr (std::is_same_v<ShellType, TrapezoidPortalShell>) {
-      return "Trapezoid";
-    } else if constexpr (std::is_same_v<ShellType, DiamondPortalShell>) {
-      return "Diamond";
-    } else {
-      static_assert(std::is_same_v<ShellType, void>, "Unknown shell type");
-    }
-  }
-
   std::string label() const {
-    return std::string{shellTypeName()} + " ISurfaceMaterialDesignator";
+    return std::format("{} ISurfaceMaterialDesignator",
+                       portalShellShapeName(typeid(ShellType)));
   }
 
   void apply(PortalShellBase& shell, const Logger& logger,
@@ -189,9 +180,9 @@ class ISurfaceMaterialDesignator {
     auto* concreteShell = dynamic_cast<ShellType*>(&shell);
     if (concreteShell == nullptr) {
       ACTS_ERROR(prefix << "Concrete shell type mismatch: configured for "
-                        << boost::core::demangle(typeid(ShellType).name())
+                        << portalShellShapeName(typeid(ShellType))
                         << " but received "
-                        << boost::core::demangle(typeid(shell).name()));
+                        << portalShellShapeName(typeid(shell)));
 
       throw std::invalid_argument(prefix + "Concrete shell type mismatch");
     }
@@ -208,7 +199,8 @@ class ISurfaceMaterialDesignator {
   }
 
   void graphvizLabel(std::ostream& os) const {
-    os << "<br/><i>Homog. " << shellTypeName() << " material</i>";
+    os << "<br/><i>Homog. " << portalShellShapeName(typeid(ShellType))
+       << " material</i>";
     for (const auto& [face, material] : m_materials) {
       os << "<br/> at: " << face;
     }
@@ -266,11 +258,11 @@ inline Designator merge(const Designator& a, const Designator& b) {
           return x.merged(y);
         } else {
           throw std::runtime_error(
-              "MaterialDesignator: Merging of " + std::string{x.label()} +
-              " with " + std::string{y.label()} +
-              " is not supported. This means you are trying to configure the "
-              "same face with different binning or materials. Please check "
-              "your configuration.");
+              std::format("MaterialDesignator: Merging of {} with {} is not "
+                          "supported. This means you are trying to configure "
+                          "the same face with different binning or materials. "
+                          "Please check your configuration.",
+                          x.label(), y.label()));
         }
       },
       a, b);
