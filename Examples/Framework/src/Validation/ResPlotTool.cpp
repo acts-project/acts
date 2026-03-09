@@ -184,11 +184,19 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_res.at(m_cfg.qOverPtName).fill({residualQoverPt});
     m_resVsEta.at(m_cfg.qOverPtName).fill({truthEta, residualQoverPt});
     m_resVsPt.at(m_cfg.qOverPtName).fill({truthPt, residualQoverPt});
+    m_resVsEtaPhi.at(m_cfg.qOverPtName)
+        .fill({truthEta, truthPhi, residualQoverPt});
+    m_resVsEtaPt.at(m_cfg.qOverPtName)
+        .fill({truthEta, truthPt, residualQoverPt});
 
     const double residualRelQoverPt = truthPtOverQ * residualQoverPt;
     m_res.at(m_cfg.relQoverPtName).fill({residualRelQoverPt});
     m_resVsEta.at(m_cfg.relQoverPtName).fill({truthEta, residualRelQoverPt});
     m_resVsPt.at(m_cfg.relQoverPtName).fill({truthPt, residualRelQoverPt});
+    m_resVsEtaPhi.at(m_cfg.relQoverPtName)
+        .fill({truthEta, truthPhi, residualRelQoverPt});
+    m_resVsEtaPt.at(m_cfg.relQoverPtName)
+        .fill({truthEta, truthPt, residualRelQoverPt});
 
     const double covarianceQoverPt = [&]() {
       const Acts::Vector2 jacobian{
@@ -207,6 +215,9 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_pull.at(m_cfg.qOverPtName).fill({pullQoverPt});
     m_pullVsEta.at(m_cfg.qOverPtName).fill({truthEta, pullQoverPt});
     m_pullVsPt.at(m_cfg.qOverPtName).fill({truthPt, pullQoverPt});
+    m_pullVsEtaPhi.at(m_cfg.qOverPtName)
+        .fill({truthEta, truthPhi, pullQoverPt});
+    m_pullVsEtaPt.at(m_cfg.qOverPtName).fill({truthEta, truthPt, pullQoverPt});
 
     const double pullRelQoverPt =
         covarianceRelQoverPt > 0
@@ -215,6 +226,10 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
     m_pull.at(m_cfg.relQoverPtName).fill({pullRelQoverPt});
     m_pullVsEta.at(m_cfg.relQoverPtName).fill({truthEta, pullRelQoverPt});
     m_pullVsPt.at(m_cfg.relQoverPtName).fill({truthPt, pullRelQoverPt});
+    m_pullVsEtaPhi.at(m_cfg.relQoverPtName)
+        .fill({truthEta, truthPhi, pullRelQoverPt});
+    m_pullVsEtaPt.at(m_cfg.relQoverPtName)
+        .fill({truthEta, truthPt, pullRelQoverPt});
   }
 }
 

@@ -39,8 +39,8 @@ class ResPlotTool {
     std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
                                            "theta", "qop", "t"};
 
-    std::string qOverPtName = "qOverPt";
-    std::string relQoverPtName = "relQoverPt";
+    std::string qOverPtName = "qopt";
+    std::string relQoverPtName = "qopt_rel";
 
     /// Binning info for variables
     std::map<std::string, AxisVariant> varBinning = {
@@ -56,9 +56,8 @@ class ResPlotTool {
          BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},
         {"Residual_qop", BoostRegularAxis(100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
         {"Residual_t", BoostRegularAxis(100, -100, 100, "r_{t} [mm/c]")},
-        {"Residual_qOverPt",
-         BoostRegularAxis(100, -0.1, 0.1, "r_{q/pT} [c/GeV]")},
-        {"Residual_relQoverPt",
+        {"Residual_qopt", BoostRegularAxis(100, -0.1, 0.1, "r_{q/pT} [c/GeV]")},
+        {"Residual_qopt_rel",
          BoostRegularAxis(100, -0.1, 0.1, "r_{rel q/pT} [%]")}};
   };
 
