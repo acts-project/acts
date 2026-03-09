@@ -35,9 +35,12 @@ class ResPlotTool {
 
   /// @brief Nested configuration struct
   struct Config {
-    /// parameter sets to do plots
+    /// Track parameter names
     std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
                                            "theta", "qop", "t"};
+
+    std::string qOverPtName = "qopt";
+    std::string relQoverPtName = "qopt_rel";
 
     /// Binning info for variables
     std::map<std::string, AxisVariant> varBinning = {
@@ -52,7 +55,10 @@ class ResPlotTool {
         {"Residual_theta",
          BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},
         {"Residual_qop", BoostRegularAxis(100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
-        {"Residual_t", BoostRegularAxis(100, -100, 100, "r_{t} [mm/c]")}};
+        {"Residual_t", BoostRegularAxis(100, -100, 100, "r_{t} [mm/c]")},
+        {"Residual_qopt", BoostRegularAxis(100, -0.1, 0.1, "r_{q/pT} [c/GeV]")},
+        {"Residual_qopt_rel",
+         BoostRegularAxis(100, -0.1, 0.1, "r_{rel q/pT} [%]")}};
   };
 
   /// @param cfg Configuration struct
@@ -92,8 +98,6 @@ class ResPlotTool {
   }
 
  private:
-  const Acts::Logger& logger() const { return *m_logger; }
-
   Config m_cfg;
 
   std::unique_ptr<const Acts::Logger> m_logger;
@@ -119,6 +123,13 @@ class ResPlotTool {
   std::map<std::string, Histogram3> m_pullVsEtaPhi;
   /// Pull vs eta-pT scatter plot
   std::map<std::string, Histogram3> m_pullVsEtaPt;
+
+  void fillResidual(const std::string& paramName, double residual,
+                    double truthEta, double truthPhi, double truthPt);
+  void fillPull(const std::string& paramName, double pull, double truthEta,
+                double truthPhi, double truthPt);
+
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples
