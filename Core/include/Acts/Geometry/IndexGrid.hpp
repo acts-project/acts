@@ -235,15 +235,15 @@ class IndexGrid {
   std::array<AxisDirection, grid_type::DIM> casts{};
 
 
-
+  /// Abrivation of the delegate to transform the
+  /// external point into the grid's coordinate system
   using Delegate_t = std::function<const Transform3&(const GeometryContext& gctx)>;
   
-  
+  /// Delegate to transform the external points into the grid's 
+  /// coordinate system
   Delegate_t toLocalFrame = nullptr;
-  /// A transform to be applied to the position
-  // Transform3 transform = Transform3::Identity();
-
-  /// @brief  Constructor for a grid based surface attacher
+  
+  /// Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
@@ -253,8 +253,16 @@ class IndexGrid {
       : grid{std::move(igrid)}, casts{icasts},
         toLocalFrame {[itr](const GeometryContext& /*gctx*/) -> const Transform3& {
             return itr;
-        }}{
-  }
+        }}{}
+ /// Constructor for a grid based surface attacher with alignable delegate
+  /// @param igrid the grid that is moved into this attacher
+  /// @param icasts is the cast values array
+  /// @param trfFunc a transform applied to the global position
+  IndexGrid(grid_type&& igrid,
+            const std::array<AxisDirection, grid_type::DIM>& icasts,
+            Delegate_t trfFunc)
+      : grid{std::move(igrid)}, casts{icasts},
+        toLocalFrame{trfFunc}{}
 
   IndexGrid() = delete;
 };
