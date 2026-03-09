@@ -109,6 +109,30 @@ def main():
         action="store_true",
         help="Dump the tracking geometry in an obj format",
     )
+    parser.add_argument(
+        "--dumpGeoModelDb",
+        default=False,
+        action="store_true",
+        help="Persist the mockup GeoModel tree to SQLite (can be slow on repeated runs)",
+    )
+    parser.add_argument(
+        "--nSectors",
+        default=16,
+        type=int,
+        help="Number of muon sectors in mockup geometry (smaller is faster)",
+    )
+    parser.add_argument(
+        "--nEtaStations",
+        default=8,
+        type=int,
+        help="Number of eta stations in mockup geometry (smaller is faster)",
+    )
+    parser.add_argument(
+        "--disableEndcaps",
+        default=False,
+        action="store_true",
+        help="Disable endcap construction for faster mockup runs",
+    )
 
     args = parser.parse_args()
 
@@ -127,11 +151,11 @@ def main():
 
     elif args.mockupDetector == "Muon":
         mockUpCfg = gm_ex.GeoMuonMockupExperiment.Config()
-        mockUpCfg.dumpTree = True
+        mockUpCfg.dumpTree = args.dumpGeoModelDb
         mockUpCfg.dbName = "ActsGeoMS.db"
-        mockUpCfg.nSectors = 12
-        mockUpCfg.nEtaStations = 8
-        mockUpCfg.buildEndcaps = True
+        mockUpCfg.nSectors = args.nSectors
+        mockUpCfg.nEtaStations = args.nEtaStations
+        mockUpCfg.buildEndcaps = not args.disableEndcaps
         mockUpBuilder = gm_ex.GeoMuonMockupExperiment(
             mockUpCfg, "GeoMockUpMS", logLevel
         )

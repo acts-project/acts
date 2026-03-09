@@ -14,6 +14,7 @@
 
 #include <format>
 #include <iostream>
+#include <variant>
 
 #include <GeoModelWrite/WriteGeoModel.h>
 
@@ -168,14 +169,14 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   VolumeMap_t publishedVol{};
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
     try {
-      const auto key = std::any_cast<std::string>(pubKey);
+      const auto key = std::get<std::string>(pubKey);
       if (!publishedVol
                .insert(std::make_pair(key, static_cast<GeoFullPhysVol*>(fpV)))
                .second) {
         throw std::invalid_argument("GeoMuonMockupExperiment() - Key " + key +
                                     " is no longer unique");
       }
-    } catch (const std::bad_any_cast& e) {
+    } catch (const std::bad_variant_access& e) {
       throw std::domain_error(
           "GeoMuonMockupExperiment() - Failed to cast the key to string " +
           std::string{e.what()});
