@@ -114,7 +114,7 @@ jobs:
 
   clang_tidy:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404_clang19:85
+    container: ghcr.io/acts-project/ubuntu2404_clang22:85
 
     steps:
       - uses: actions/checkout@v6
@@ -132,10 +132,10 @@ jobs:
 
       - name: Install clang-tidy
         run: |
-          apt-get update && apt-get install -y clang-tidy-19
-          ln -sf /usr/bin/clang-tidy-19 /usr/bin/clang-tidy
-          ln -sf /usr/bin/clang++-19 /usr/bin/clang++
-          ln -sf /usr/bin/clang-19 /usr/bin/clang
+          apt-get update && apt-get install -y clang-tidy-22
+          ln -sf /usr/bin/clang-tidy-22 /usr/bin/clang-tidy
+          ln -sf /usr/bin/clang++-22 /usr/bin/clang++
+          ln -sf /usr/bin/clang-22 /usr/bin/clang
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
