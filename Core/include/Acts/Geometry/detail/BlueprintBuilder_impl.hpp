@@ -139,8 +139,13 @@ ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::barrel() && {
 }
 
 template <detail::BlueprintBackend BackendT>
-ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::setLayerFilter(
-    const std::string& pattern) && {
+ElementLayerAssembler<BackendT>&& ElementLayerAssembler<BackendT>::planar() && {
+  return std::move(*this).setLayerType(LayerType::Plane);
+}
+
+template <detail::BlueprintBackend BackendT>
+ElementLayerAssembler<BackendT>&&
+ElementLayerAssembler<BackendT>::setLayerFilter(const std::string& pattern) && {
   return std::move(*this).setLayerFilter(std::regex{pattern});
 }
 
@@ -280,16 +285,6 @@ ElementLayerAssembler<BackendT>::build() const {
         "setContainerName() or setContainer().");
   }
 
-  const Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
-                                          ? Acts::AxisDirection::AxisR
-                                          : Acts::AxisDirection::AxisZ;
-  auto node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-          containerName, axisDir);
-  if (m_attachmentStrategy.has_value()) {
-    node->setAttachmentStrategy(m_attachmentStrategy.value());
-  }
-
   if (inputs.layerElements.empty()) {
     ACTS_LOG(m_emptyOk ? Acts::Logging::INFO : Acts::Logging::ERROR,
              "No layers found in container " << containerName
@@ -298,6 +293,25 @@ ElementLayerAssembler<BackendT>::build() const {
       throw std::runtime_error(std::format(
           "No layers found in container {} matching pattern", containerName));
     }
+  }
+
+  auto node =
+      [&]() -> std::shared_ptr<Acts::Experimental::ContainerBlueprintNode> {
+    if (m_layerType != LayerType::Plane) {
+      const Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
+                                              ? Acts::AxisDirection::AxisR
+                                              : Acts::AxisDirection::AxisZ;
+      return std::make_shared<
+          Acts::Experimental::CylinderContainerBlueprintNode>(containerName,
+                                                              axisDir);
+    } else {
+      return std::make_shared<Acts::Experimental::CuboidContainerBlueprintNode>(
+          containerName, Acts::AxisDirection::AxisZ);
+    }
+  }();
+
+  if (m_attachmentStrategy.has_value()) {
+    node->setAttachmentStrategy(m_attachmentStrategy.value());
   }
 
   for (const auto& layerElement : inputs.layerElements) {
@@ -333,6 +347,11 @@ SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::endcap() && {
 template <detail::BlueprintBackend BackendT>
 SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::barrel() && {
   return std::move(*this).setLayerType(LayerType::Cylinder);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayerAssembler<BackendT>&& SensorLayerAssembler<BackendT>::planar() && {
+  return std::move(*this).setLayerType(LayerType::Plane);
 }
 
 template <detail::BlueprintBackend BackendT>
@@ -427,12 +446,21 @@ SensorLayerAssembler<BackendT>::build() const {
         "grouping, use BlueprintBuilder::layerFromSensors() instead.");
   }
 
-  const Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
-                                          ? Acts::AxisDirection::AxisR
-                                          : Acts::AxisDirection::AxisZ;
   auto node =
-      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+      [&]() -> std::shared_ptr<Acts::Experimental::ContainerBlueprintNode> {
+    if (m_layerType != LayerType::Plane) {
+      const Acts::AxisDirection axisDir = m_layerType == LayerType::Cylinder
+                                              ? Acts::AxisDirection::AxisR
+                                              : Acts::AxisDirection::AxisZ;
+      return std::make_shared<
+          Acts::Experimental::CylinderContainerBlueprintNode>(
           m_containerName.value(), axisDir);
+    } else {
+      return std::make_shared<Acts::Experimental::CuboidContainerBlueprintNode>(
+          m_containerName.value(), Acts::AxisDirection::AxisZ);
+    }
+  }();
+
   if (m_attachmentStrategy.has_value()) {
     node->setAttachmentStrategy(m_attachmentStrategy.value());
   }
@@ -498,6 +526,11 @@ SensorLayer<BackendT>&& SensorLayer<BackendT>::endcap() && {
 template <detail::BlueprintBackend BackendT>
 SensorLayer<BackendT>&& SensorLayer<BackendT>::barrel() && {
   return std::move(*this).setLayerType(LayerType::Cylinder);
+}
+
+template <detail::BlueprintBackend BackendT>
+SensorLayer<BackendT>&& SensorLayer<BackendT>::planar() && {
+  return std::move(*this).setLayerType(LayerType::Plane);
 }
 
 template <detail::BlueprintBackend BackendT>
