@@ -33,8 +33,8 @@ ProcessCode CsvParticleWriter::writeT(const AlgorithmContext& ctx,
                                       const SimParticleContainer& particles) {
   auto pathParticles = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
-  NamedTupleCsvWriter<ParticleData> writer(pathParticles,
-                                           m_cfg.outputPrecision);
+  BoostDescribeCsvWriter<ParticleData> writer(pathParticles,
+                                              m_cfg.outputPrecision);
 
   ParticleData data;
   for (const auto& particle : particles) {
