@@ -55,7 +55,11 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
           "check the m_cfguration of bFieldInZ and minPt");
     }
 
-    // TODO: explain
+    // x = rMax^2 / (2 * minHelixRadius)
+    // y = cathetus(rMax, x)
+    // R / x = 2 * minHelixRadius / R
+    // outerAngle = x / y = x / sqrt(rMax^2 - x^2) = 1 / cath(rMax / x, 1)
+    //            = 1 / cath(2 * minHelixRadius / rMax, 1)
     const float outerAngle =
         std::atan(1.f / fastCathetus(2 * minHelixRadius / m_cfg.rMax, 1));
     // intersection of helix and max detector radius minus maximum R distance
@@ -65,7 +69,6 @@ CylindricalSpacePointGrid2::CylindricalSpacePointGrid2(
     if (m_cfg.rMax > m_cfg.deltaRMax) {
       const float innerCircleR = m_cfg.rMax - m_cfg.deltaRMax;
       rMin = innerCircleR;
-      // TODO: explain
       innerAngle =
           std::atan(1.f / fastCathetus(2 * minHelixRadius / innerCircleR, 1));
     }
