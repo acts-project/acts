@@ -58,8 +58,7 @@ class MultiWireVolumeBuilder {
   /// @brief Creates a multilayer navigation policy factory that can be used for the trackingVolume
   /// or attached to a blueprint node
   /// @return Unique pointer to the created navigation policy factory
-  std::unique_ptr<NavigationPolicyFactory> createNavigationPolicyFactory()
-      const;
+  std::unique_ptr<NavigationPolicyFactory> createNavigationPolicyFactory() const;
 
  private:
   Config m_config;
