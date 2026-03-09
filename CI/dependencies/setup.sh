@@ -182,6 +182,15 @@ if [ -n "${CI:-}" ]; then
   fi
   end_section
 
+  start_section "Add ACTS package repository"
+  if ! spack repo list | grep -q "acts"; then
+    echo "Adding ACTS package repository from ci-dependencies"
+    spack repo add https://github.com/acts-project/ci-dependencies.git --path spack_repo/acts
+  fi
+  echo "Updating ACTS package repository to tag ${tag}"
+  spack repo update acts --tag "${tag}"
+  end_section
+
   start_section "Locate OpenGL"
   "${SCRIPT_DIR}/opengl.sh"
   checkpoint "OpenGL location complete"
