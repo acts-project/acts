@@ -15,41 +15,15 @@
 
 namespace Acts {
 
+class TrackingGeometry;
+
 /// Returns the host ABI tag expected by the runtime module loader.
 const char* geometryModuleHostAbiTag() noexcept;
 
-/// Opaque runtime module build handle.
-class GeometryModuleHandle {
- public:
-  GeometryModuleHandle() = default;
-  ~GeometryModuleHandle();
-
-  GeometryModuleHandle(const GeometryModuleHandle&) = delete;
-  GeometryModuleHandle& operator=(const GeometryModuleHandle&) = delete;
-  GeometryModuleHandle(GeometryModuleHandle&& other) noexcept;
-  GeometryModuleHandle& operator=(GeometryModuleHandle&& other) noexcept;
-
-  void* get() const noexcept { return m_handle; }
-  explicit operator bool() const noexcept { return m_handle != nullptr; }
-
- private:
-  using DestroyFn = void (*)(void*);
-
-  GeometryModuleHandle(void* handle, DestroyFn destroy,
-                       std::shared_ptr<void> library) noexcept;
-  void reset() noexcept;
-
-  void* m_handle{nullptr};
-  DestroyFn m_destroy{nullptr};
-  std::shared_ptr<void> m_library;
-
-  friend GeometryModuleHandle loadGeometryModule(
-      const std::filesystem::path& modulePath);
-};
-
 /// Load a module shared library, validate ABI compatibility, build and return
-/// an opaque handle.
-GeometryModuleHandle loadGeometryModule(
+/// the tracking geometry. The returned deleter keeps the module loaded until
+/// the geometry is destroyed.
+std::shared_ptr<TrackingGeometry> loadGeometryModule(
     const std::filesystem::path& modulePath);
 
 }  // namespace Acts
