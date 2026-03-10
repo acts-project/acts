@@ -25,5 +25,6 @@ int main() {
     return EXIT_FAILURE;
   }
 
+  std::cout << "Geometry module loaded successfully" << std::endl;
   return EXIT_SUCCESS;
 }

@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryModuleLoader.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
@@ -15,8 +16,6 @@
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
-#include <string_view>
-#include <utility>
 
 #ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
 #error "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided by CMake when building ActsCore."
@@ -75,39 +74,7 @@ const char* geometryModuleHostAbiTag() noexcept {
   return ACTS_GEOMETRY_MODULE_ABI_TAG;
 }
 
-GeometryModuleHandle::GeometryModuleHandle(
-    void* handle, DestroyFn destroy, std::shared_ptr<void> library) noexcept
-    : m_handle(handle), m_destroy(destroy), m_library(std::move(library)) {}
-
-GeometryModuleHandle::~GeometryModuleHandle() { reset(); }
-
-GeometryModuleHandle::GeometryModuleHandle(GeometryModuleHandle&& other) noexcept
-    : m_handle(std::exchange(other.m_handle, nullptr)),
-      m_destroy(std::exchange(other.m_destroy, nullptr)),
-      m_library(std::move(other.m_library)) {}
-
-GeometryModuleHandle& GeometryModuleHandle::operator=(
-    GeometryModuleHandle&& other) noexcept {
-  if (this == &other) {
-    return *this;
-  }
-  reset();
-  m_handle = std::exchange(other.m_handle, nullptr);
-  m_destroy = std::exchange(other.m_destroy, nullptr);
-  m_library = std::move(other.m_library);
-  return *this;
-}
-
-void GeometryModuleHandle::reset() noexcept {
-  if (m_handle != nullptr && m_destroy != nullptr) {
-    m_destroy(m_handle);
-  }
-  m_handle = nullptr;
-  m_destroy = nullptr;
-  m_library.reset();
-}
-
-GeometryModuleHandle loadGeometryModule(
+std::shared_ptr<TrackingGeometry> loadGeometryModule(
     const std::filesystem::path& modulePath) {
 #if !(defined(__unix__) || defined(__APPLE__))
   (void)modulePath;
@@ -136,7 +103,13 @@ GeometryModuleHandle loadGeometryModule(
   if (rawHandle == nullptr) {
     throw std::runtime_error("Geometry module build returned null handle");
   }
-  return GeometryModuleHandle(rawHandle, descriptor->destroy, library);
+
+  auto destroyFn = descriptor->destroy;
+  return std::shared_ptr<TrackingGeometry>(
+      static_cast<TrackingGeometry*>(rawHandle),
+      [destroyFn, library = std::move(library)](TrackingGeometry* geometry) {
+        destroyFn(static_cast<void*>(geometry));
+      });
 #endif
 }
 
