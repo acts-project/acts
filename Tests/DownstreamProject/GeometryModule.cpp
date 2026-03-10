@@ -6,11 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryModuleHelpers.hpp"
-
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryModuleHelpers.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -23,6 +22,8 @@ namespace {
 std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule(
     const Acts::Logger& logger) {
   using namespace Acts;
+
+  ACTS_INFO("Building geometry module");
 
   const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
@@ -42,10 +43,8 @@ std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule(
       std::make_shared<Experimental::StaticBlueprintNode>(std::move(outerVol));
   root.addChild(outerNode);
 
-  auto trackingGeometry = root.construct({}, gctx, logger);
-  if (trackingGeometry == nullptr ||
-      trackingGeometry->geometryVersion() !=
-          TrackingGeometry::GeometryVersion::Gen3) {
+  auto trackingGeometry = root.construct({}, gctx, *logger.clone("Geometry"));
+  if (trackingGeometry == nullptr) {
     throw std::runtime_error(
         "Failed to build Gen3 tracking geometry in downstream module");
   }

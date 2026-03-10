@@ -10,7 +10,7 @@
 
 struct ActsGeometryModuleV1 {
   const char* module_abi_tag;
-  void* (*build)(void* user_data, void* logger);
+  void* (*build)(const void* user_data, const void* logger);
   void (*destroy)(void* handle);
 };
 

@@ -19,8 +19,11 @@ int main(int argc, char* argv[]) {
   }
 
   try {
-    auto handle = Acts::loadGeometryModule(argv[1]);
-    if (!handle) {
+    auto logger =
+        Acts::getDefaultLogger("LoadGeometryModule", Acts::Logging::VERBOSE);
+    auto trackingGeometry = Acts::loadGeometryModule(argv[1], *logger);
+    std::cout << "Geometry module loaded successfully" << std::endl;
+    if (!trackingGeometry) {
       std::cerr << "Geometry module returned an invalid handle" << std::endl;
       return EXIT_FAILURE;
     }
@@ -30,6 +33,5 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  std::cout << "Geometry module loaded successfully" << std::endl;
   return EXIT_SUCCESS;
 }

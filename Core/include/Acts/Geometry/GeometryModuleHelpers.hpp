@@ -17,16 +17,13 @@
 
 #ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
 #error \
-    "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided via CMake (link Acts::Core or use acts_add_geometry_module)."
+    "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided via CMake (use acts_add_geometry_module)."
 #endif
 
 namespace Acts::detail {
-
 using BuildFunction = std::unique_ptr<TrackingGeometry> (*)(const Logger&);
-
 const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
                                               BuildFunction buildFunc);
-
 }  // namespace Acts::detail
 
 #define ACTS_DEFINE_GEOMETRY_MODULE(build_function)                      \
