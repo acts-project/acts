@@ -8,17 +8,10 @@
 
 #pragma once
 
-struct ActsGeometryModuleRequestV1 {
-  const char* abi_tag;
-  void* context;
-  void* user_data;
-};
-
 struct ActsGeometryModuleV1 {
   const char* module_abi_tag;
-  void* (*build)(const ActsGeometryModuleRequestV1* request);
+  void* (*build)(void* user_data);
   void (*destroy)(void* handle);
-  const char* (*last_error)(void);
 };
 
 extern "C" const ActsGeometryModuleV1* acts_geometry_module_v1(void);

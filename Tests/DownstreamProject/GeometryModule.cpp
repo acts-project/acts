@@ -12,8 +12,8 @@
 
 namespace {
 
-void* buildGeometryModule(const ActsGeometryModuleRequestV1* request) {
-  (void)request;
+void* buildGeometryModule(void* userData) {
+  (void)userData;
   return ActsDownstream::buildTinyTrackingGeometryHandle().release();
 }
 
@@ -24,4 +24,3 @@ void destroyGeometryModule(void* handle) {
 }  // namespace
 
 ACTS_GEOMETRY_MODULE_DEFINE_V1(buildGeometryModule, destroyGeometryModule)
-

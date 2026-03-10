@@ -18,10 +18,6 @@ namespace Acts {
 /// Returns the host ABI tag expected by the runtime module loader.
 const char* geometryModuleHostAbiTag() noexcept;
 
-/// Convenience request builder with host ABI tag pre-filled.
-ActsGeometryModuleRequestV1 makeGeometryModuleRequest(
-    void* context = nullptr, void* userData = nullptr) noexcept;
-
 /// Opaque runtime module build handle.
 class GeometryModuleHandle {
  public:
@@ -48,14 +44,12 @@ class GeometryModuleHandle {
   std::shared_ptr<void> m_library;
 
   friend GeometryModuleHandle loadGeometryModule(
-      const std::filesystem::path& modulePath,
-      const ActsGeometryModuleRequestV1& request);
+      const std::filesystem::path& modulePath);
 };
 
 /// Load a module shared library, validate ABI compatibility, build and return
 /// an opaque handle.
 GeometryModuleHandle loadGeometryModule(
-    const std::filesystem::path& modulePath,
-    const ActsGeometryModuleRequestV1& request);
+    const std::filesystem::path& modulePath);
 
 }  // namespace Acts
