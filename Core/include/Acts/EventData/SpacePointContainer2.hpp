@@ -110,11 +110,11 @@ class SpacePointContainer2 {
   /// @return A mutable proxy to the newly created space point.
   MutableProxy createSpacePoint() noexcept;
 
-  /// Copies the specified columns from another spacepoint to this spacepoint
-  /// @param index The index of the spacepoint to copy to in this container.
+  /// Copies the specified columns from another space point to this space point
+  /// @param index The index of the space point to copy to in this container.
   /// @param otherContainer The space point container to copy from.
-  /// @param otherIndex The index of the spacepoint to copy from in the other container.
-  /// @param columnsToCopy The columns to copy from the other spacepoint.
+  /// @param otherIndex The index of the space point to copy from in the other container.
+  /// @param columnsToCopy The columns to copy from the other space point.
   void copyFrom(Index index, const SpacePointContainer2 &otherContainer,
                 Index otherIndex, SpacePointColumns columnsToCopy);
 
@@ -454,17 +454,17 @@ class SpacePointContainer2 {
 
   /// @brief Returns mutable iterator to the beginning of the container
   /// @return Mutable iterator pointing to the first space point
-  iterator begin() noexcept { return iterator(*this, 0); }
+  iterator begin() noexcept { return {*this, 0}; }
   /// @brief Returns mutable iterator to the end of the container
   /// @return Mutable iterator pointing past the last space point
-  iterator end() noexcept { return iterator(*this, size()); }
+  iterator end() noexcept { return {*this, size()}; }
 
   /// @brief Returns const iterator to the beginning of the container
   /// @return Const iterator pointing to the first space point
-  const_iterator begin() const noexcept { return const_iterator(*this, 0); }
+  const_iterator begin() const noexcept { return {*this, 0}; }
   /// @brief Returns const iterator to the end of the container
   /// @return Const iterator pointing past the last space point
-  const_iterator end() const noexcept { return const_iterator(*this, size()); }
+  const_iterator end() const noexcept { return {*this, size()}; }
 
   /// Range facade over contiguous index spans.
   template <bool read_only>
@@ -497,13 +497,13 @@ class SpacePointContainer2 {
   /// @param range The index range to create the range from.
   /// @return A mutable range of space points.
   MutableRange range(const IndexRange &range) noexcept {
-    return MutableRange(*this, range);
+    return {*this, range};
   }
   /// Creates a range of space points from the given index range.
   /// @param range The index range to create the range from.
   /// @return A const range of space points.
   ConstRange range(const IndexRange &range) const noexcept {
-    return ConstRange(*this, range);
+    return {*this, range};
   }
 
   /// Subset facade over arbitrary index sets.
@@ -511,13 +511,13 @@ class SpacePointContainer2 {
   class Subset : public Acts::detail::ContainerSubset<
                      Subset<read_only>, Subset<true>, SpacePointContainer2,
                      std::conditional_t<read_only, ConstProxy, MutableProxy>,
-                     SpacePointIndex2, read_only> {
+                     std::span<const Index>, read_only> {
    public:
     /// Base class type
     using Base = Acts::detail::ContainerSubset<
         Subset<read_only>, Subset<true>, SpacePointContainer2,
         std::conditional_t<read_only, ConstProxy, MutableProxy>,
-        SpacePointIndex2, read_only>;
+        std::span<const Index>, read_only>;
 
     using Base::Base;
 
@@ -538,13 +538,13 @@ class SpacePointContainer2 {
   /// @param subset The index subset to create the subset from.
   /// @return A mutable subset of space points.
   MutableSubset subset(const IndexSubset &subset) noexcept {
-    return MutableSubset(*this, subset);
+    return {*this, subset};
   }
   /// Creates a const subset of space points from the given index subset.
   /// @param subset The index subset to create the subset from.
   /// @return A const subset of space points.
   ConstSubset subset(const IndexSubset &subset) const noexcept {
-    return ConstSubset(*this, subset);
+    return {*this, subset};
   }
 
   /// Creates a zipped mutable range of space point data from the given columns.

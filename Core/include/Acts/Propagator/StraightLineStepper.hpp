@@ -40,7 +40,7 @@ class IVolumeMaterial;
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
-class StraightLineStepper {
+class StraightLineStepper final {
  public:
   /// Type alias for transport jacobian matrix
   using Jacobian = BoundMatrix;
