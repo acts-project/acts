@@ -6,19 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryModuleHelpers.hpp"
+#include "Acts/Geometry/GeometryModuleHelper.hpp"
 
 #include "Acts/Geometry/GeometryModule.h"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <exception>
-#include <functional>
 #include <memory>
 
 namespace Acts::detail {
-
-namespace {}  // namespace
 
 const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
                                               BuildFunction buildFunc) {
