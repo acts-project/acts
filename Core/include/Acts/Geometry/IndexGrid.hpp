@@ -263,7 +263,9 @@ class IndexGrid {
   IndexGrid(grid_type&& igrid,
             const std::array<AxisDirection, grid_type::DIM>& icasts,
             Delegate_t trfFunc)
-      : grid{std::move(igrid)}, casts{icasts}, toLocalFrame{trfFunc} {}
+      : grid{std::move(igrid)},
+        casts{icasts},
+        toLocalFrame{std::move(trfFunc)} {}
 
   IndexGrid() = delete;
 };
