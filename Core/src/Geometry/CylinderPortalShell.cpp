@@ -224,6 +224,9 @@ CylinderStackPortalShell::CylinderStackPortalShell(
   };
 
   if (direction == AxisDirection::AxisR) {
+    m_hasInnerCylinder =
+        (m_shells.front()->portal(InnerCylinder) != nullptr);
+
     ACTS_VERBOSE("Merging portals at positive and negative discs");
     merge(PositiveDisc);
     merge(NegativeDisc);
