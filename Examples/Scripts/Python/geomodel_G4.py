@@ -205,8 +205,8 @@ def main():
     trackingGeometryBuilder = gm_ex.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
-    
-    print("Building tracking geometry with converted GeoModel bounding boxes")    
+
+    print("Building tracking geometry with converted GeoModel bounding boxes")
     trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
 
     algSequence = runGeant4(

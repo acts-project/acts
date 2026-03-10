@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <cstdint>
-#include <tuple>
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
@@ -17,6 +15,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TransformRange.hpp"
 #include "ActsPlugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
+
+#include <cstdint>
+#include <tuple>
 
 namespace ActsExamples {
 
@@ -101,7 +102,7 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
                            const StationIdx stationIdx,
                            Acts::VolumeBoundFactory& boundFactory,
                            GeometryIdAllocator& idAlloc) const;
-                           
+
   /// @brief Build a child chamber volume from the provided converted volume box
   std::unique_ptr<Acts::TrackingVolume> buildChildChamber(
       const Acts::GeometryContext& gctx, const Box_t& box,

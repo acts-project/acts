@@ -45,8 +45,8 @@ std::string pubKeyToString(const std::any& pubKey) {
   if (const auto* s = std::any_cast<std::string>(&pubKey); s != nullptr) {
     return *s;
   }
-  if (const auto* s = std::any_cast<const char*>(&pubKey); s != nullptr &&
-      *s != nullptr) {
+  if (const auto* s = std::any_cast<const char*>(&pubKey);
+      s != nullptr && *s != nullptr) {
     return std::string{*s};
   }
   if (const auto* s = std::any_cast<std::string_view>(&pubKey); s != nullptr) {
@@ -68,9 +68,10 @@ std::string pubKeyToString(const std::any& pubKey) {
         *v);
   }
 
-  throw std::domain_error(std::format(
-      "GeoMuonMockupExperiment() - Published key is not a supported type; got '{}'",
-      pubKey.type().name()));
+  throw std::domain_error(
+      std::format("GeoMuonMockupExperiment() - Published key is not a "
+                  "supported type; got '{}'",
+                  pubKey.type().name()));
 }
 }  // namespace
 
@@ -216,7 +217,8 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
       }
     } catch (const std::exception& e) {
       throw std::domain_error(
-          "GeoMuonMockupExperiment() - Failed to convert published key to string: " +
+          "GeoMuonMockupExperiment() - Failed to convert published key to "
+          "string: " +
           std::string{e.what()});
     }
   }

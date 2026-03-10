@@ -21,12 +21,12 @@
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
 #include <algorithm>
-#include <limits>
+#include <cmath>
 #include <format>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <ranges>
-#include <cmath>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -52,8 +52,9 @@ constexpr double quantize(const double x, const double pitch) {
 }
 
 /// @brief Build a *grouping key* for bucketization.
-///        derived from the full id and used only as a coarse key to group hits into
-///        "sectors" for bucketing and for caching the common sector frame transform.
+///        derived from the full id and used only as a coarse key to group hits
+///        into "sectors" for bucketing and for caching the common sector frame
+///        transform.
 constexpr GeometryIdentifier toSectorId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume());
 }
@@ -79,16 +80,16 @@ inline double bucketUpperEdgeZ(const MuonSpacePoint& sp,
 }
 
 inline void sortBucketPerLayer(MuonSpacePointBucket& bucket) {
-  std::ranges::sort(bucket, [](const MuonSpacePoint& a,
-                               const MuonSpacePoint& b) {
-    if (a.geometryId().layer() != b.geometryId().layer()) {
-      return a.geometryId().layer() < b.geometryId().layer();
-    }
-    if (a.localPosition().z() != b.localPosition().z()) {
-      return a.localPosition().z() < b.localPosition().z();
-    }
-    return a.geometryId().value() < b.geometryId().value();
-  });
+  std::ranges::sort(bucket,
+                    [](const MuonSpacePoint& a, const MuonSpacePoint& b) {
+                      if (a.geometryId().layer() != b.geometryId().layer()) {
+                        return a.geometryId().layer() < b.geometryId().layer();
+                      }
+                      if (a.localPosition().z() != b.localPosition().z()) {
+                        return a.localPosition().z() < b.localPosition().z();
+                      }
+                      return a.geometryId().value() < b.geometryId().value();
+                    });
 }
 
 inline bool splitBucket(const MuonSpacePoint& sp, const double firstZ,
@@ -117,14 +118,15 @@ inline GeometryIdentifier findRepresentativeVolumeId(
   }
 
   std::vector<GeometryIdentifier> sortedIds = sectorLayerIds;
-  std::ranges::sort(sortedIds, [](const GeometryIdentifier& a,
-                                  const GeometryIdentifier& b) {
-    if (a.layer() != b.layer()) {
-      return a.layer() < b.layer();
-    }
-    return a.value() < b.value();
-  });
-  sortedIds.erase(std::unique(sortedIds.begin(), sortedIds.end()), sortedIds.end());
+  std::ranges::sort(
+      sortedIds, [](const GeometryIdentifier& a, const GeometryIdentifier& b) {
+        if (a.layer() != b.layer()) {
+          return a.layer() < b.layer();
+        }
+        return a.value() < b.value();
+      });
+  sortedIds.erase(std::unique(sortedIds.begin(), sortedIds.end()),
+                  sortedIds.end());
 
   for (const GeometryIdentifier& volId : sortedIds) {
     if (trackingGeometry.findVolume(volId) != nullptr) {
@@ -132,16 +134,14 @@ inline GeometryIdentifier findRepresentativeVolumeId(
     }
   }
 
-  throw std::runtime_error(
-      std::format(
-          "Failed to resolve representative tracking volume for sector volume {}", 
-          sortedIds.front().volume()));
+  throw std::runtime_error(std::format(
+      "Failed to resolve representative tracking volume for sector volume {}",
+      sortedIds.front().volume()));
 }
 
-inline void startNewBucketWithOverlap(const MuonSpacePoint& refSp,
-                                      std::vector<MuonSpacePointBucket>& buckets,
-                                      const double overlapWindow,
-                                      const double overlapSigmaScale) {
+inline void startNewBucketWithOverlap(
+    const MuonSpacePoint& refSp, std::vector<MuonSpacePointBucket>& buckets,
+    const double overlapWindow, const double overlapSigmaScale) {
   buckets.emplace_back();
   MuonSpacePointBucket& newBucket = buckets.back();
   const MuonSpacePointBucket& prevBucket = buckets[buckets.size() - 2];
@@ -222,7 +222,8 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
     return ABORT;
   }
   MuonSpacePointCalibrator::Config calibCfg{};
-  m_cfg.calibrator = std::make_shared<MuonSpacePointCalibrator>(calibCfg, logger().clone());
+  m_cfg.calibrator =
+      std::make_shared<MuonSpacePointCalibrator>(calibCfg, logger().clone());
 
   return SUCCESS;
 }
@@ -239,15 +240,16 @@ const TrackingGeometry& MuonSpacePointDigitizer::trackingGeometry() const {
 Transform3 MuonSpacePointDigitizer::toSectorFrame(
     const GeometryContext& gctx,
     const GeometryIdentifier& representativeVolumeId) const {
-
   const TrackingVolume* volume =
       trackingGeometry().findVolume(representativeVolumeId);
   if (volume == nullptr) {
-    throw std::runtime_error(
-        std::format("Failed to resolve tracking volume for representative id {}",
-                    representativeVolumeId));
+    throw std::runtime_error(std::format(
+        "Failed to resolve tracking volume for representative id {}",
+        representativeVolumeId));
   }
-  return AngleAxis3{90._degree, Vector3::UnitZ()} * volume->globalToLocalTransform(gctx);}
+  return AngleAxis3{90._degree, Vector3::UnitZ()} *
+         volume->globalToLocalTransform(gctx);
+}
 
 ProcessCode MuonSpacePointDigitizer::execute(
     const AlgorithmContext& ctx) const {
@@ -277,7 +279,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
   std::unordered_map<GeometryIdentifier, double> strawTimes{};
   std::multimap<GeometryIdentifier, std::array<double, 3>> stripTimes{};
 
-  /// Determine candidate tracking-volume ids per sector from actually seen module ids
+  /// Determine candidate tracking-volume ids per sector from actually seen
+  /// module ids
   std::unordered_map<GeometryIdentifier, std::vector<GeometryIdentifier>>
       volumeLayerIdsPerSector{};
   for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
@@ -289,7 +292,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
   std::unordered_map<GeometryIdentifier, Transform3> sectorFrameCache{};
 
   sectorFrameCache.reserve(volumeLayerIdsPerSector.size());
-  std::unordered_map<GeometryIdentifier, GeometryIdentifier> representativeVolumePerSector{};
+  std::unordered_map<GeometryIdentifier, GeometryIdentifier>
+      representativeVolumePerSector{};
   representativeVolumePerSector.reserve(volumeLayerIdsPerSector.size());
 
   for (const auto& [sectorId, candidateIds] : volumeLayerIdsPerSector) {
@@ -309,8 +313,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     const Transform3& surfLocToGlob{hitSurf->localToGlobalTransform(gctx)};
 
-    /// Transformation to the common sector frame for all space points in this sector
-    const Transform3& sectorFrame = sectorFrameCache.at(toSectorId(moduleGeoId));
+    /// Transformation to the common sector frame for all space points in this
+    /// sector
+    const Transform3& sectorFrame =
+        sectorFrameCache.at(toSectorId(moduleGeoId));
     const Transform3 parentTrf = sectorFrame * surfLocToGlob;
     const auto& bounds = hitSurf->bounds();
 
@@ -542,9 +548,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
       continue;
     }
 
-    std::ranges::sort(sectorHits, [](const MuonSpacePoint& a, const MuonSpacePoint& b) {
-      return a.localPosition().z() < b.localPosition().z();
-    });
+    std::ranges::sort(sectorHits,
+                      [](const MuonSpacePoint& a, const MuonSpacePoint& b) {
+                        return a.localPosition().z() < b.localPosition().z();
+                      });
 
     std::vector<MuonSpacePointBucket> splitBuckets{};
     splitBuckets.emplace_back();
@@ -555,11 +562,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
       const double z = sp.localPosition().z();
 
       if (splitBucket(sp, firstPointZ, splitBuckets.back(),
-                      m_cfg.bucketMaxWindow,
-                      m_cfg.bucketNeighborWindow)) {
+                      m_cfg.bucketMaxWindow, m_cfg.bucketNeighborWindow)) {
         if (!splitBuckets.back().empty()) {
-          startNewBucketWithOverlap(sp, splitBuckets,
-                                    m_cfg.bucketOverlapWindow,
+          startNewBucketWithOverlap(sp, splitBuckets, m_cfg.bucketOverlapWindow,
                                     m_cfg.bucketOverlapSigmaScale);
         } else {
           splitBuckets.emplace_back();
@@ -572,12 +577,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
       splitBuckets.back().push_back(std::move(sp));
     }
 
-    splitBuckets.erase(
-        std::remove_if(splitBuckets.begin(), splitBuckets.end(),
-                       [&](const MuonSpacePointBucket& bucket) {
-                         return bucket.size() < m_cfg.minBucketSize;
-                       }),
-        splitBuckets.end());
+    splitBuckets.erase(std::remove_if(splitBuckets.begin(), splitBuckets.end(),
+                                      [&](const MuonSpacePointBucket& bucket) {
+                                        return bucket.size() <
+                                               m_cfg.minBucketSize;
+                                      }),
+                       splitBuckets.end());
 
     if (logger().doPrint(Logging::Level::VERBOSE)) {
       std::stringstream sstr{};
@@ -585,18 +590,20 @@ ProcessCode MuonSpacePointDigitizer::execute(
         if (bucket.empty()) {
           continue;
         }
-        sstr << " Bucket starts at z = "
-             << bucket.front().localPosition().z() << " with "
-             << bucket.size() << " points\n";
+        sstr << " Bucket starts at z = " << bucket.front().localPosition().z()
+             << " with " << bucket.size() << " points\n";
       }
       ACTS_VERBOSE("Built " << splitBuckets.size() << " bucket(s) for sector "
-                            << sectorId << "\n" << sstr.str());
-      ACTS_VERBOSE("Representative sector frame for sector " << sectorId
-                   << " taken from volume " << representativeVolumePerSector.at(sectorId));
+                            << sectorId << "\n"
+                            << sstr.str());
+      ACTS_VERBOSE("Representative sector frame for sector "
+                   << sectorId << " taken from volume "
+                   << representativeVolumePerSector.at(sectorId));
     }
 
     if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
-      const GeometryIdentifier refVolumeId = representativeVolumePerSector.at(sectorId);
+      const GeometryIdentifier refVolumeId =
+          representativeVolumePerSector.at(sectorId);
       const TrackingVolume* sectorVolume =
           trackingGeometry().findVolume(refVolumeId);
       assert(sectorVolume != nullptr);
@@ -605,9 +612,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
         const std::string outputPath =
             std::format("Event_{}_{}_bucket{}.pdf", ctx.eventNumber,
                         sectorVolume->volumeName(), bucketIdx);
-        m_cfg.visualizationFunction(
-            outputPath, gctx, splitBuckets[bucketIdx], m_inputSimHits(ctx),
-            m_inputParticles(ctx), trackingGeometry(), logger());
+        m_cfg.visualizationFunction(outputPath, gctx, splitBuckets[bucketIdx],
+                                    m_inputSimHits(ctx), m_inputParticles(ctx),
+                                    trackingGeometry(), logger());
       }
     }
 
