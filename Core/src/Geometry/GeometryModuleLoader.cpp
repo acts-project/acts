@@ -75,15 +75,6 @@ const char* geometryModuleHostAbiTag() noexcept {
   return ACTS_GEOMETRY_MODULE_ABI_TAG;
 }
 
-ActsGeometryModuleRequestV1 makeGeometryModuleRequest(void* context,
-                                                      void* userData) noexcept {
-  return ActsGeometryModuleRequestV1{
-      .abi_tag = geometryModuleHostAbiTag(),
-      .context = context,
-      .user_data = userData,
-  };
-}
-
 GeometryModuleHandle::GeometryModuleHandle(
     void* handle, DestroyFn destroy, std::shared_ptr<void> library) noexcept
     : m_handle(handle), m_destroy(destroy), m_library(std::move(library)) {}
@@ -117,24 +108,12 @@ void GeometryModuleHandle::reset() noexcept {
 }
 
 GeometryModuleHandle loadGeometryModule(
-    const std::filesystem::path& modulePath,
-    const ActsGeometryModuleRequestV1& request) {
+    const std::filesystem::path& modulePath) {
 #if !(defined(__unix__) || defined(__APPLE__))
   (void)modulePath;
-  (void)request;
   throw std::runtime_error(
       "Runtime geometry modules are only supported on Unix-like systems");
 #else
-  if (request.abi_tag == nullptr) {
-    throw std::invalid_argument("Geometry module request ABI tag is null");
-  }
-  if (std::strcmp(request.abi_tag, geometryModuleHostAbiTag()) != 0) {
-    std::ostringstream msg;
-    msg << "Geometry module host ABI tag mismatch: request='" << request.abi_tag
-        << "' host='" << geometryModuleHostAbiTag() << "'";
-    throw std::runtime_error(msg.str());
-  }
-
   auto library = openSharedLibrary(modulePath);
   auto entryPoint = resolveEntrypointV1(modulePath, library);
   const ActsGeometryModuleV1* descriptor = entryPoint();
@@ -142,26 +121,20 @@ GeometryModuleHandle loadGeometryModule(
     throw std::runtime_error("Geometry module descriptor is null");
   }
   if (descriptor->module_abi_tag == nullptr || descriptor->build == nullptr ||
-      descriptor->destroy == nullptr || descriptor->last_error == nullptr) {
+      descriptor->destroy == nullptr) {
     throw std::runtime_error("Geometry module descriptor is incomplete");
   }
-  if (std::strcmp(descriptor->module_abi_tag, request.abi_tag) != 0) {
+  if (std::strcmp(descriptor->module_abi_tag, geometryModuleHostAbiTag()) != 0) {
     std::ostringstream msg;
     msg << "Geometry module ABI mismatch: module='"
-        << descriptor->module_abi_tag << "' host='" << request.abi_tag
+        << descriptor->module_abi_tag << "' host='" << geometryModuleHostAbiTag()
         << "' path='" << modulePath.string() << "'";
     throw std::runtime_error(msg.str());
   }
 
-  void* rawHandle = descriptor->build(&request);
+  void* rawHandle = descriptor->build(nullptr);
   if (rawHandle == nullptr) {
-    const char* moduleError = descriptor->last_error();
-    std::ostringstream msg;
-    msg << "Geometry module build returned null handle";
-    if (moduleError != nullptr && moduleError[0] != '\0') {
-      msg << ": " << moduleError;
-    }
-    throw std::runtime_error(msg.str());
+    throw std::runtime_error("Geometry module build returned null handle");
   }
   return GeometryModuleHandle(rawHandle, descriptor->destroy, library);
 #endif

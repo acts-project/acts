@@ -11,14 +11,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
-#include <string_view>
 
 int main() {
-  auto request = Acts::makeGeometryModuleRequest();
-
   try {
-    auto handle = Acts::loadGeometryModule(ACTS_TEST_GEOMETRY_MODULE_PATH,
-                                           request);
+    auto handle = Acts::loadGeometryModule(ACTS_TEST_GEOMETRY_MODULE_PATH);
     if (!handle) {
       std::cerr << "Geometry module returned an invalid handle" << std::endl;
       return EXIT_FAILURE;
@@ -27,23 +23,6 @@ int main() {
     std::cerr << "Unexpected failure while loading good module: " << e.what()
               << std::endl;
     return EXIT_FAILURE;
-  }
-
-  try {
-    auto mismatchedRequest = request;
-    mismatchedRequest.abi_tag = "intentionally-mismatched-abi-tag";
-    auto mismatchHandle = Acts::loadGeometryModule(ACTS_TEST_GEOMETRY_MODULE_PATH,
-                                                   mismatchedRequest);
-    (void)mismatchHandle;
-    std::cerr << "Expected ABI mismatch for mismatched request" << std::endl;
-    return EXIT_FAILURE;
-  } catch (const std::exception& e) {
-    std::string_view message(e.what());
-    if (message.find("ABI mismatch") == std::string_view::npos) {
-      std::cerr << "Mismatch module failed for unexpected reason: " << e.what()
-                << std::endl;
-      return EXIT_FAILURE;
-    }
   }
 
   return EXIT_SUCCESS;
