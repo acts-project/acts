@@ -51,7 +51,7 @@ void MultiLayerNavigationPolicy::initializeCandidates(
     const Logger& logger) const {
   ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates initialization for volume"
                << m_volume.volumeName() << " @ "
-               << m_volume.localToGlobalTransform(gctx));
+               << toString(m_volume.localToGlobalTransform(gctx)));
 
   const Transform3& itransform = m_volume.globalToLocalTransform(gctx);
   const Vector3 locPosition = itransform * args.position;
