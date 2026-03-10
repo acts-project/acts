@@ -31,6 +31,7 @@ namespace detail {
 class MaterialDesignatorBlueprintNodeImpl {
  public:
   std::string m_name{};
+  // Monostate is the null state, where no designator is configured.
   Designator m_designator{std::monostate{}};
 };
 
