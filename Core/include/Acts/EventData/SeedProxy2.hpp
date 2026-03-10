@@ -96,9 +96,11 @@ class SeedProxy2 {
   {
     return *m_container;
   }
+
   /// Gets the container holding the seed.
   /// @return A const reference to the container holding the seed.
   const SeedContainer2 &container() const noexcept { return *m_container; }
+
   /// Gets the index of the seed in the container.
   /// @return The index of the seed in the container.
   IndexType index() const noexcept { return m_index; }
@@ -133,6 +135,7 @@ class SeedProxy2 {
   [[nodiscard]] std::size_t size() const noexcept {
     return spacePointIndices().size();
   }
+
   /// Checks if the seed is empty, i.e., has no space points associated with it.
   /// @return True if the seed is empty, false otherwise.
   [[nodiscard]]
@@ -150,6 +153,7 @@ class SeedProxy2 {
     return std::span<SpacePointIndex2>(
         m_container->m_spacePoints.data() + offset, count);
   }
+
   /// Mutable access to the quality of the seed.
   /// @return A mutable reference to the quality of the seed.
   float &quality() noexcept
@@ -157,6 +161,7 @@ class SeedProxy2 {
   {
     return accessImpl(m_container->m_qualities);
   }
+
   /// Mutable access to the vertex Z coordinate of the seed.
   /// @return A mutable reference to the vertex Z coordinate of the seed.
   float &vertexZ() noexcept
@@ -174,11 +179,13 @@ class SeedProxy2 {
     return std::span<const SpacePointIndex2>(
         m_container->m_spacePoints.data() + offset, count);
   }
+
   /// Const access to the quality of the seed.
   /// @return The quality of the seed.
   float quality() const noexcept {
     return accessImpl(m_container->m_qualities);
   }
+
   /// Const access to the vertex Z coordinate of the seed.
   /// @return The vertex Z coordinate of the seed.
   float vertexZ() const noexcept { return accessImpl(m_container->m_vertexZs); }
@@ -350,8 +357,7 @@ class SeedProxy2 {
   /// is taken from the seed container.
   /// @return Range of space points for this seed
   SpacePointRange spacePoints() const {
-    return {m_container->spacePointContainer(),
-            m_container->spacePointIndices(m_index)};
+    return {m_container->spacePointContainer(), spacePointIndices()};
   }
 
   /// Get the space points associated with this seed using an external space
@@ -360,7 +366,7 @@ class SeedProxy2 {
   /// @return Range of space points for this seed
   SpacePointRange spacePoints(
       const SpacePointContainer2 &spacePointContainer) const noexcept {
-    return {spacePointContainer, m_container->spacePointIndices(m_index)};
+    return {spacePointContainer, spacePointIndices()};
   }
 
   /// Copies the specified columns from another seed to this seed.
