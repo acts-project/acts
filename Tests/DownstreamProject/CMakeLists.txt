@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 project(ActsDownstreamProject)
+enable_testing()
 
 # find all optional components that are build
 find_package(
@@ -57,8 +58,9 @@ acts_add_geometry_module(SimpleGeometryModule GeometryModule.cpp)
 
 add_executable(LoadGeometryModule LoadGeometryModule.cpp)
 target_link_libraries(LoadGeometryModule PRIVATE Acts::Core)
-target_compile_definitions(
-    LoadGeometryModule
-    PRIVATE
-        ACTS_TEST_GEOMETRY_MODULE_PATH="$<TARGET_FILE:SimpleGeometryModule>"
+
+add_test(NAME DownstreamShowActsVersion COMMAND ShowActsVersion)
+add_test(
+    NAME DownstreamLoadGeometryModule
+    COMMAND LoadGeometryModule $<TARGET_FILE:SimpleGeometryModule>
 )

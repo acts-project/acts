@@ -253,9 +253,8 @@ build_linux_ubuntu:
     # Downstream build
     - cmake --build build-downstream
 
-    # Downstream run
-    - ./build-downstream/bin/ShowActsVersion
-    - ./build-downstream/bin/LoadGeometryModule
+    # Downstream tests
+    - ctest --test-dir build-downstream --output-on-failure
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -370,9 +369,8 @@ linux_physmon:
     # Downstream build
     - cmake --build build-downstream
 
-    # Downstream run
-    - ./build-downstream/bin/ShowActsVersion
-    - ./build-downstream/bin/LoadGeometryModule
+    # Downstream tests
+    - ctest --test-dir build-downstream --output-on-failure
 
   after_script:
    - !reference [.spack_cleanup, after_script]
