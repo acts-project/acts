@@ -1,5 +1,6 @@
 acts_add_library(
     PluginDD4hep
+    src/GeometryModuleHelper.cpp
     src/ConvertDD4hepDetector.cpp
     src/DD4hepBinningHelpers.cpp
     src/DD4hepMaterialHelpers.cpp
