@@ -49,7 +49,8 @@ ProcessCode CsvTrackParameterWriter::write(const AlgorithmContext& ctx) {
   std::string path = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-  NamedTupleCsvWriter<TrackParameterData> writer(path, m_cfg.outputPrecision);
+  BoostDescribeCsvWriter<TrackParameterData> writer(path,
+                                                    m_cfg.outputPrecision);
 
   TrackParameterData data{};
   for (const auto& track : inputTracks) {
