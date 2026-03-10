@@ -28,14 +28,17 @@
 
 namespace Acts::Experimental::detail {
 
+namespace {
+const std::regex kPortalShellRegex{R"((\w+)PortalShell$)"};
+}
+
 /// Extract the shape name from a portal shell type name, e.g.
 /// "Acts::CuboidPortalShell" -> "Cuboid". Falls back to full demangled name if
 /// the "PortalShell" suffix is not found.
 inline std::string portalShellShapeName(const std::type_info& type) {
   std::string full = boost::core::demangle(type.name());
   std::smatch match;
-  static const std::regex regex{R"((\w+)PortalShell$)"};
-  if (std::regex_search(full, match, regex)) {
+  if (std::regex_search(full, match, kPortalShellRegex)) {
     return match[1].str();
   }
   return full;
