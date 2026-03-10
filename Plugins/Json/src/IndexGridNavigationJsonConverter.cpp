@@ -50,7 +50,8 @@ void writeSurfacesAndProjections(
             std::array<Acts::AxisDirection, 2u> rphi = {
                 Acts::AxisDirection::AxisR, Acts::AxisDirection::AxisPhi};
             auto pVertex = Acts::GridAccessHelpers::castPosition<
-                Acts::RegularDiscIndexGrid>(indexGrid.toLocalFrame(gctx) * vertex, rphi);
+                Acts::RegularDiscIndexGrid>(
+                indexGrid.toLocalFrame(gctx) * vertex, rphi);
             // Update reference range
             referenceRange[0] = std::min(referenceRange[0], pVertex[0]);
             referenceRange[1] = std::max(referenceRange[1], pVertex[0]);

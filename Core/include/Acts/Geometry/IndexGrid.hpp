@@ -20,10 +20,10 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <set>
 #include <string>
 #include <vector>
-#include <functional>
 
 namespace Acts {
 
@@ -234,15 +234,15 @@ class IndexGrid {
   /// These are the cast parameters - copied from constructor
   std::array<AxisDirection, grid_type::DIM> casts{};
 
-
   /// Abrivation of the delegate to transform the
   /// external point into the grid's coordinate system
-  using Delegate_t = std::function<const Transform3&(const GeometryContext& gctx)>;
-  
-  /// Delegate to transform the external points into the grid's 
+  using Delegate_t =
+      std::function<const Transform3&(const GeometryContext& gctx)>;
+
+  /// Delegate to transform the external points into the grid's
   /// coordinate system
   Delegate_t toLocalFrame = nullptr;
-  
+
   /// Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
@@ -250,19 +250,20 @@ class IndexGrid {
   IndexGrid(grid_type&& igrid,
             const std::array<AxisDirection, grid_type::DIM>& icasts,
             const Transform3& itr = Transform3::Identity())
-      : grid{std::move(igrid)}, casts{icasts},
-        toLocalFrame {[itr](const GeometryContext& /*gctx*/) -> const Transform3& {
-            return itr;
-        }}{}
- /// Constructor for a grid based surface attacher with alignable delegate
+      : grid{std::move(igrid)},
+        casts{icasts},
+        toLocalFrame{
+            [itr](const GeometryContext& /*gctx*/) -> const Transform3& {
+              return itr;
+            }} {}
+  /// Constructor for a grid based surface attacher with alignable delegate
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param trfFunc a transform applied to the global position
   IndexGrid(grid_type&& igrid,
             const std::array<AxisDirection, grid_type::DIM>& icasts,
             Delegate_t trfFunc)
-      : grid{std::move(igrid)}, casts{icasts},
-        toLocalFrame{trfFunc}{}
+      : grid{std::move(igrid)}, casts{icasts}, toLocalFrame{trfFunc} {}
 
   IndexGrid() = delete;
 };

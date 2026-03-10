@@ -95,15 +95,15 @@ void AlignablePortalVisitor::visitVolume(TrackingVolume& volume) {
   // Ensure that the portal remain where they were supposed to be
   for (std::size_t p = 0; p < alignable.size(); ++p) {
     if (!alignable[p]->isAlignable()) {
-        ACTS_ERROR("AlignablePortalVisitor() - the "
+      ACTS_ERROR("AlignablePortalVisitor() - the "
                  << p << "-the portal remains not alignable");
-        throw std::runtime_error(
+      throw std::runtime_error(
           "AlignablePortalVisitor() - The portal alignment failed");
     }
     if (alignable[p]->isSensitive()) {
-        ACTS_ERROR("AlignablePortalVisitor() - the "
+      ACTS_ERROR("AlignablePortalVisitor() - the "
                  << p << "-the portal became sensitive");
-        throw std::runtime_error(
+      throw std::runtime_error(
           "AlignablePortalVisitor() - The portal alignment failed");
     }
     if (!isSame(alignable[p]->localToGlobalTransform(m_gctx),

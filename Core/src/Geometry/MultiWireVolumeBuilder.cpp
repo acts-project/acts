@@ -98,18 +98,18 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
 
   // The indexed grid to be filled from the navigation policy
   const auto* placement = m_config.alignablePlacement;
-  auto indexedGrid =  placement  == nullptr ? 
-    IndexGrid<decltype(grid)>{
-      std::move(grid),
-      {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
-      m_config.transform.inverse()} :
-      IndexGrid<decltype(grid)>{
-      std::move(grid),
-      {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
-      [placement](const GeometryContext& gctx) -> const Transform3& {
-        return placement->localToGlobalTransform(gctx);
-      } };
-      
+  auto indexedGrid =
+      placement == nullptr
+          ? IndexGrid<decltype(grid)>{std::move(grid),
+                                      {protoAxisA.getAxisDirection(),
+                                       protoAxisB.getAxisDirection()},
+                                      m_config.transform.inverse()}
+          : IndexGrid<decltype(grid)>{
+                std::move(grid),
+                {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
+                [placement](const GeometryContext& gctx) -> const Transform3& {
+                  return placement->localToGlobalTransform(gctx);
+                }};
 
   TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;
