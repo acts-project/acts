@@ -12,9 +12,12 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <any>
 #include <format>
 #include <iostream>
-#include <any>
+#include <string>
+#include <string_view>
+#include <typeinfo>
 
 #include <GeoModelWrite/WriteGeoModel.h>
 
@@ -35,6 +38,25 @@ constexpr double rot90deg = 90. * GeoModelKernelUnits::deg;
 }
 
 namespace ActsExamples {
+
+namespace {
+std::string pubKeyToString(const std::any& pubKey) {
+  if (const auto* s = std::any_cast<std::string>(&pubKey); s != nullptr) {
+    return *s;
+  }
+  if (const auto* s = std::any_cast<const char*>(&pubKey); s != nullptr &&
+      *s != nullptr) {
+    return std::string{*s};
+  }
+  if (const auto* s = std::any_cast<std::string_view>(&pubKey); s != nullptr) {
+    return std::string{*s};
+  }
+
+  throw std::domain_error(std::format(
+      "GeoMuonMockupExperiment() - Published key is not a supported type; got '{}'",
+      pubKey.type().name()));
+}
+}  // namespace
 
 std::string to_string(GeoMuonMockupExperiment::MuonLayer layer) {
   switch (layer) {
@@ -169,16 +191,16 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   VolumeMap_t publishedVol{};
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
     try {
-      const auto key = std::any_cast<std::string>(pubKey);
+      const auto key = pubKeyToString(pubKey);
       if (!publishedVol
                .insert(std::make_pair(key, static_cast<GeoFullPhysVol*>(fpV)))
                .second) {
         throw std::invalid_argument("GeoMuonMockupExperiment() - Key " + key +
                                     " is no longer unique");
       }
-    } catch (const std::bad_any_cast& e) {
+    } catch (const std::exception& e) {
       throw std::domain_error(
-          "GeoMuonMockupExperiment() - Failed to cast the key to string " +
+          "GeoMuonMockupExperiment() - Failed to convert published key to string: " +
           std::string{e.what()});
     }
   }
