@@ -23,7 +23,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <map>
 #include <optional>
 #include <string>
 
@@ -35,7 +34,7 @@ namespace Acts {
 ///
 /// @tparam object_t Type of the object for navigation to check against
 template <typename object_t>
-struct NavigationOptions {
+struct NavigationOptions final {
   /// The boundary check directive
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
@@ -78,7 +77,7 @@ struct NavigationOptions {
 /// `state.currentSurface` pointer is set. This actors to observe
 /// that we are on a surface.
 ///
-class Navigator {
+class Navigator final {
  public:
   /// Type alias for navigation surface candidates container
   using NavigationSurfaces =

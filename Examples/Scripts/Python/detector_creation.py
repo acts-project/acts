@@ -10,7 +10,6 @@ from acts.examples.dd4hep import (
 )
 from acts.examples.odd import getOpenDataDetectorDirectory
 
-
 if "__main__" == __name__:
     odd_xml = getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
 

@@ -36,20 +36,9 @@ void addExampleAlgorithms(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(TrackParametersPrinter, mex,
                                 "TrackParametersPrinter", inputTrackParameters);
 
-  {
-    using Alg = TrackSelectorAlgorithm;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackSelectorAlgorithm")
-                   .def(py::init<const Alg::Config&, Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT(c, inputTracks, outputTracks, selectorConfig);
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(TrackSelectorAlgorithm, mex,
+                                "TrackSelectorAlgorithm", inputTracks,
+                                outputTracks, selectorConfig);
 }
 
 }  // namespace ActsPython

@@ -158,7 +158,9 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsSvg, svg) {
     py::class_<Svg::ProtoIndexedSurfaceGrid>(svg, "ProtoIndexedSurfaceGrid");
   }
 
-  { svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays); }
+  {
+    svg.def("drawSurfaceArrays", &Svg::drawSurfaceArrays);
+  }
 
   // Legacy geometry drawing
   {

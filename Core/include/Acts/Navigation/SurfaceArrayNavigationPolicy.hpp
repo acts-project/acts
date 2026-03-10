@@ -42,6 +42,9 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
                                         const TrackingVolume& volume,
                                         const Logger& logger, Config config);
 
+  /// Destructor
+  ~SurfaceArrayNavigationPolicy() override;
+
   /// Update the navigation state from the surface array
   /// @param gctx The geometry context
   /// @param args The navigation arguments

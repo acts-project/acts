@@ -122,7 +122,9 @@ class ParticleSelector final : public IAlgorithm {
     MeasurementCounter measurementCounter;
   };
 
-  ParticleSelector(const Config& config, Acts::Logging::Level level);
+  explicit ParticleSelector(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
@@ -130,6 +132,8 @@ class ParticleSelector final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  void logSelectionConfig() const;
+
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};

@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -30,7 +30,8 @@ class SeedsToProtoTracks final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedsToProtoTracks(Config cfg, Acts::Logging::Level lvl);
+  explicit SeedsToProtoTracks(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the algorithm.
   ///
@@ -44,7 +45,7 @@ class SeedsToProtoTracks final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
 };

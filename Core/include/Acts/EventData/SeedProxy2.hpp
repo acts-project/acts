@@ -291,6 +291,7 @@ class SeedProxy2 {
                                       const SpacePointIterator &b) noexcept {
       return a.m_indexPointer <=> b.m_indexPointer;
     }
+
     friend constexpr bool operator==(const SpacePointIterator &a,
                                      const SpacePointIterator &b) noexcept {
       return a.m_indexPointer == b.m_indexPointer;
@@ -331,15 +332,13 @@ class SeedProxy2 {
     /// Get iterator to the beginning
     /// @return Iterator to the first space point
     SpacePointIterator begin() const noexcept {
-      return SpacePointIterator(*m_spacePointContainer,
-                                m_spacePointIndices.data());
+      return {*m_spacePointContainer, m_spacePointIndices.data()};
     }
     /// Get iterator to the end
     /// @return Iterator past the last space point
     SpacePointIterator end() const noexcept {
-      return SpacePointIterator(
-          *m_spacePointContainer,
-          m_spacePointIndices.data() + m_spacePointIndices.size());
+      return {*m_spacePointContainer,
+              m_spacePointIndices.data() + m_spacePointIndices.size()};
     }
 
    private:
@@ -351,8 +350,8 @@ class SeedProxy2 {
   /// is taken from the seed container.
   /// @return Range of space points for this seed
   SpacePointRange spacePoints() const {
-    return SpacePointRange(m_container->spacePointContainer(),
-                           m_container->spacePointIndices(m_index));
+    return {m_container->spacePointContainer(),
+            m_container->spacePointIndices(m_index)};
   }
 
   /// Get the space points associated with this seed using an external space
@@ -361,8 +360,7 @@ class SeedProxy2 {
   /// @return Range of space points for this seed
   SpacePointRange spacePoints(
       const SpacePointContainer2 &spacePointContainer) const noexcept {
-    return SpacePointRange(spacePointContainer,
-                           m_container->spacePointIndices(m_index));
+    return {spacePointContainer, m_container->spacePointIndices(m_index)};
   }
 
   /// Copies the specified columns from another seed to this seed.
