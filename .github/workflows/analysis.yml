@@ -79,7 +79,9 @@ jobs:
       - name: ccache stats
         run: ccache -s
       - name: Unit tests
-        run: ctest --test-dir build -j$(nproc)
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build -j$(nproc)
 
       - name: Remove .o files
         run: >
