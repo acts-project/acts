@@ -52,3 +52,13 @@ if(GEOMODEL)
     find_package(Acts CONFIG REQUIRED COMPONENTS PluginGeoModel)
     target_link_libraries(ShowActsVersion PRIVATE Acts::PluginGeoModel)
 endif()
+
+acts_add_geometry_module(SimpleGeometryModule GeometryModule.cpp)
+
+add_executable(LoadGeometryModule LoadGeometryModule.cpp)
+target_link_libraries(LoadGeometryModule PRIVATE Acts::Core)
+target_compile_definitions(
+    LoadGeometryModule
+    PRIVATE
+        ACTS_TEST_GEOMETRY_MODULE_PATH="$<TARGET_FILE:SimpleGeometryModule>"
+)
