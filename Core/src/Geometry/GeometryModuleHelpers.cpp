@@ -18,51 +18,49 @@
 
 namespace Acts::detail {
 
-namespace {
-
-BuildFunction& getBuildFunction() {
-  static BuildFunction s_buildFunc;
-  return s_buildFunc;
-}
-
-}  // namespace
+namespace {}  // namespace
 
 const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
                                               BuildFunction buildFunc) {
-  getBuildFunction() = buildFunc;
+  static const auto s_module = [module_abi_tag,
+                                buildFunc]() -> ActsGeometryModuleV1 {
+    static BuildFunction s_buildFunc = buildFunc;
 
-  static const ActsGeometryModuleV1 s_module = {
-      .module_abi_tag = module_abi_tag,
-      .build = [](void* userData, void* loggerPtr) noexcept -> void* {
-        if (loggerPtr == nullptr) {
-          // Logger can't be null!
-          return nullptr;
-        }
+    return {
+        .module_abi_tag = module_abi_tag,
+        .build = [](const void* userData,
+                    const void* loggerPtr) noexcept -> void* {
+          if (loggerPtr == nullptr) {
+            // Logger can't be null!
+            return nullptr;
+          }
 
-        const auto& logger = *static_cast<const Logger*>(loggerPtr);
+          const auto& logger = *static_cast<const Logger*>(loggerPtr);
 
-        try {
-          static_cast<void>(userData);
-          return getBuildFunction()(logger).release();
-        } catch (const std::exception&) {
-          ACTS_ERROR("Failed to build geometry module");
-          return nullptr;
-        } catch (...) {
-          ACTS_ERROR("Failed to build geometry module");
-          return nullptr;
-        }
-      },
-      .destroy =
-          [](void* handle) noexcept {
-            if (handle == nullptr) {
-              return;
-            }
-            try {
-              delete static_cast<TrackingGeometry*>(handle);
-            } catch (...) {
-            }
-          },
-  };
+          try {
+            static_cast<void>(userData);
+            return s_buildFunc(logger).release();
+          } catch (const std::exception&) {
+            ACTS_ERROR("Failed to build geometry module");
+            return nullptr;
+          } catch (...) {
+            ACTS_ERROR("Failed to build geometry module");
+            return nullptr;
+          }
+        },
+        .destroy =
+            [](void* handle) noexcept {
+              if (handle == nullptr) {
+                return;
+              }
+              try {
+                std::cout << "Destroying geometry module" << std::endl;
+                delete static_cast<TrackingGeometry*>(handle);
+              } catch (...) {
+              }
+            },
+    };
+  }();
 
   return &s_module;
 }

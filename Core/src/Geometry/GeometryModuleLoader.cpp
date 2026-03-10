@@ -15,6 +15,7 @@
 #endif
 
 #include <cstring>
+#include <format>
 #include <sstream>
 #include <stdexcept>
 
@@ -29,15 +30,16 @@ namespace {
 using GeometryModuleEntryPointV1 = const ActsGeometryModuleV1* (*)(void);
 
 std::shared_ptr<void> openSharedLibrary(const std::filesystem::path& path) {
+  if (!std::filesystem::exists(path)) {
+    throw std::runtime_error(
+        std::format("Geometry module file does not exist: {}", path.string()));
+  }
+
   void* rawHandle = ::dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
   if (rawHandle == nullptr) {
     const char* error = ::dlerror();
-    std::ostringstream msg;
-    msg << "Failed to load geometry module '" << path.string() << "'";
-    if (error != nullptr) {
-      msg << ": " << error;
-    }
-    throw std::runtime_error(msg.str());
+    throw std::runtime_error(std::format(
+        "Failed to load geometry module '{}': {}", path.string(), error));
   }
   return std::shared_ptr<void>(rawHandle, [](void* handle) {
     if (handle != nullptr) {
@@ -52,32 +54,30 @@ GeometryModuleEntryPointV1 resolveEntrypointV1(
   void* symbol = ::dlsym(library.get(), "acts_geometry_module_v1");
   const char* error = ::dlerror();
   if (error != nullptr) {
-    std::ostringstream msg;
-    msg << "Failed to resolve acts_geometry_module_v1 in '" << path.string()
-        << "': " << error;
-    throw std::runtime_error(msg.str());
+    throw std::runtime_error(
+        std::format("Failed to resolve acts_geometry_module_v1 in '{}': {}",
+                    path.string(), error));
   }
   if (symbol == nullptr) {
-    std::ostringstream msg;
-    msg << "Entry point acts_geometry_module_v1 resolved to nullptr in '"
-        << path.string() << "'";
-    throw std::runtime_error(msg.str());
+    throw std::runtime_error(std::format(
+        "Entry point acts_geometry_module_v1 resolved to nullptr in '{}'",
+        path.string()));
   }
   return reinterpret_cast<GeometryModuleEntryPointV1>(symbol);
 }
 
 #endif
 
-}  // namespace
-
-namespace Acts {
-
 const char* geometryModuleHostAbiTag() noexcept {
   return ACTS_GEOMETRY_MODULE_ABI_TAG;
 }
 
+}  // namespace
+
+namespace Acts {
+
 std::shared_ptr<TrackingGeometry> loadGeometryModule(
-    const std::filesystem::path& modulePath) {
+    const std::filesystem::path& modulePath, const Logger& logger) {
 #if !(defined(__unix__) || defined(__APPLE__))
   static_cast<void>(modulePath);
   throw std::runtime_error(
@@ -95,15 +95,13 @@ std::shared_ptr<TrackingGeometry> loadGeometryModule(
   }
   if (std::strcmp(descriptor->module_abi_tag, geometryModuleHostAbiTag()) !=
       0) {
-    std::ostringstream msg;
-    msg << "Geometry module ABI mismatch: module='"
-        << descriptor->module_abi_tag << "' host='"
-        << geometryModuleHostAbiTag() << "' path='" << modulePath.string()
-        << "'";
-    throw std::runtime_error(msg.str());
+    throw std::runtime_error(std::format(
+        "Geometry module ABI mismatch: module='{}' host='{}' path='{}'",
+        descriptor->module_abi_tag, geometryModuleHostAbiTag(),
+        modulePath.string()));
   }
 
-  void* rawHandle = descriptor->build(nullptr, nullptr);
+  void* rawHandle = descriptor->build(nullptr, &logger);
   if (rawHandle == nullptr) {
     throw std::runtime_error("Geometry module build returned null handle");
   }

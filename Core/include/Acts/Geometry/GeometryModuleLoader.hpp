@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryModule.h"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -17,13 +18,11 @@ namespace Acts {
 
 class TrackingGeometry;
 
-/// Returns the host ABI tag expected by the runtime module loader.
-const char* geometryModuleHostAbiTag() noexcept;
-
 /// Load a module shared library, validate ABI compatibility, build and return
 /// the tracking geometry. The returned deleter keeps the module loaded until
 /// the geometry is destroyed.
 std::shared_ptr<TrackingGeometry> loadGeometryModule(
-    const std::filesystem::path& modulePath);
+    const std::filesystem::path& modulePath,
+    const Logger& logger = getDummyLogger());
 
 }  // namespace Acts
