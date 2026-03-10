@@ -115,6 +115,7 @@ std::vector<std::shared_ptr<Acts::Surface>> DD4hepBackend::makeSurfaces(
   }
 
   ACTS_DEBUG("Using " << sensitives.size() << " sensitive elements.");
+
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   surfaces.reserve(sensitives.size());
 

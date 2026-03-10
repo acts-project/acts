@@ -30,8 +30,6 @@ class DetElement;
 
 namespace ActsPlugins::DD4hep {
 
-// class PlaneLayerHelper;
-
 // @TODO: Flip this
 using GeometryAxes = ActsPlugins::TGeoAxes;
 
