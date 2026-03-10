@@ -92,8 +92,9 @@ std::shared_ptr<Portal> SingleCylinderPortalShell::portal(Face face) {
 void SingleCylinderPortalShell::setPortal(std::shared_ptr<Portal> portal,
                                           Face face) {
   if (portal == nullptr) {
-    throw std::invalid_argument("SingleCylinderPortalShell::setPortal: portal "
-                                "cannot be null");
+    throw std::invalid_argument(
+        "SingleCylinderPortalShell::setPortal: portal "
+        "cannot be null");
   }
   if (!portal->isValid()) {
     throw std::invalid_argument(
@@ -224,8 +225,7 @@ CylinderStackPortalShell::CylinderStackPortalShell(
   };
 
   if (direction == AxisDirection::AxisR) {
-    m_hasInnerCylinder =
-        (m_shells.front()->portal(InnerCylinder) != nullptr);
+    m_hasInnerCylinder = (m_shells.front()->portal(InnerCylinder) != nullptr);
 
     ACTS_VERBOSE("Merging portals at positive and negative discs");
     merge(PositiveDisc);
