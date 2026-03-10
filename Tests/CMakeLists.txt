@@ -4,7 +4,8 @@ add_subdirectory(CommonHelpers)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag(
-        "-Wno-c2y-extensions" ACTS_TESTS_HAS_WNO_C2Y_EXTENSIONS
+        "-Wno-c2y-extensions"
+        ACTS_TESTS_HAS_WNO_C2Y_EXTENSIONS
     )
 endif()
 
