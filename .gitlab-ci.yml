@@ -255,6 +255,7 @@ build_linux_ubuntu:
 
     # Downstream run
     - ./build-downstream/bin/ShowActsVersion
+    - ./build-downstream/bin/LoadGeometryModule
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -371,6 +372,7 @@ linux_physmon:
 
     # Downstream run
     - ./build-downstream/bin/ShowActsVersion
+    - ./build-downstream/bin/LoadGeometryModule
 
   after_script:
    - !reference [.spack_cleanup, after_script]

@@ -118,7 +118,9 @@ jobs:
         run: cmake --build build-downstream
 
       - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+        run: |
+          ./build-downstream/bin/ShowActsVersion
+          ./build-downstream/bin/LoadGeometryModule
 
   linux_examples_test:
     runs-on: ubuntu-latest
@@ -319,7 +321,9 @@ jobs:
         run: cmake --build build-downstream
 
       - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+        run: |
+          ./build-downstream/bin/ShowActsVersion
+          ./build-downstream/bin/LoadGeometryModule
 
   macos:
     runs-on: macos-26
@@ -407,7 +411,9 @@ jobs:
         run: cmake --build build-downstream
 
       - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+        run: |
+          ./build-downstream/bin/ShowActsVersion
+          ./build-downstream/bin/LoadGeometryModule
 
   external_eic-shell:
     runs-on: ubuntu-latest
