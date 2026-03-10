@@ -12,9 +12,14 @@
 #include <iostream>
 #include <stdexcept>
 
-int main() {
+int main(int argc, char* argv[]) {
+  if (argc != 2) {
+    std::cerr << "Usage: " << argv[0] << " <module-path>" << std::endl;
+    return EXIT_FAILURE;
+  }
+
   try {
-    auto handle = Acts::loadGeometryModule(ACTS_TEST_GEOMETRY_MODULE_PATH);
+    auto handle = Acts::loadGeometryModule(argv[1]);
     if (!handle) {
       std::cerr << "Geometry module returned an invalid handle" << std::endl;
       return EXIT_FAILURE;
