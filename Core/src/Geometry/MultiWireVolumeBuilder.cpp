@@ -106,10 +106,10 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
       IndexGrid<decltype(grid)>{
       std::move(grid),
       {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
-      [placement](const GeometryContext& gctx) -> const Transform3&{
+      [placement](const GeometryContext& gctx) -> const Transform3& {
         return placement->localToGlobalTransform(gctx);
       } };
-      ;
+      
 
   TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;
