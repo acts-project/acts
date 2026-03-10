@@ -252,6 +252,108 @@ void maskTrapsInSignalContext(void *ctx, FpeType type) {
   static_cast<void>(excepts);
 #endif
 }
+
+std::size_t captureStackFromSignalContext(void *ctx, void *buffer,
+                                          std::size_t bufferBytes) {
+  using NativeFramePtr = boost::stacktrace::frame::native_frame_ptr_t;
+  auto *frames = static_cast<NativeFramePtr *>(buffer);
+  const std::size_t maxFrames = bufferBytes / sizeof(NativeFramePtr);
+  std::size_t count = 0;
+
+  if (ctx == nullptr || maxFrames == 0) {
+    return 0;
+  }
+
+#if defined(__APPLE__) && defined(__arm64__)
+  auto *uc = static_cast<ucontext_t *>(ctx);
+  const std::uintptr_t sp =
+      __darwin_arm_thread_state64_get_sp(uc->uc_mcontext->__ss);
+  std::uintptr_t fp = __darwin_arm_thread_state64_get_fp(uc->uc_mcontext->__ss);
+  const std::uintptr_t pc =
+      __darwin_arm_thread_state64_get_pc(uc->uc_mcontext->__ss);
+
+  auto push = [&](std::uintptr_t address) {
+    if (address == 0 || count >= maxFrames) {
+      return;
+    }
+    frames[count++] = reinterpret_cast<NativeFramePtr>(address);
+  };
+
+  push(pc);
+
+  constexpr std::uintptr_t kMaxStackWindow = 16 * 1024 * 1024;
+  auto inStackWindow = [&](std::uintptr_t address) {
+    if (address < sp || address > sp + kMaxStackWindow) {
+      return false;
+    }
+    return (address % alignof(std::uintptr_t)) == 0;
+  };
+
+  struct FrameRecord {
+    std::uintptr_t prevFp;
+    std::uintptr_t returnAddress;
+  };
+
+  while (count < maxFrames && inStackWindow(fp) &&
+         fp + sizeof(FrameRecord) <= sp + kMaxStackWindow) {
+    const auto *record = reinterpret_cast<const FrameRecord *>(fp);
+    const std::uintptr_t prevFp = record->prevFp;
+    const std::uintptr_t lr = record->returnAddress;
+    push(lr);
+
+    if (prevFp <= fp || !inStackWindow(prevFp)) {
+      break;
+    }
+    fp = prevFp;
+  }
+#elif defined(__APPLE__) && defined(__x86_64__)
+  auto *uc = static_cast<ucontext_t *>(ctx);
+  const std::uintptr_t sp = uc->uc_mcontext->__ss.__rsp;
+  std::uintptr_t fp = uc->uc_mcontext->__ss.__rbp;
+  const std::uintptr_t pc = uc->uc_mcontext->__ss.__rip;
+
+  auto push = [&](std::uintptr_t address) {
+    if (address == 0 || count >= maxFrames) {
+      return;
+    }
+    frames[count++] = reinterpret_cast<NativeFramePtr>(address);
+  };
+
+  push(pc);
+
+  constexpr std::uintptr_t kMaxStackWindow = 16 * 1024 * 1024;
+  auto inStackWindow = [&](std::uintptr_t address) {
+    if (address < sp || address > sp + kMaxStackWindow) {
+      return false;
+    }
+    return (address % alignof(std::uintptr_t)) == 0;
+  };
+
+  struct FrameRecord {
+    std::uintptr_t prevFp;
+    std::uintptr_t returnAddress;
+  };
+
+  while (count < maxFrames && inStackWindow(fp) &&
+         fp + sizeof(FrameRecord) <= sp + kMaxStackWindow) {
+    const auto *record = reinterpret_cast<const FrameRecord *>(fp);
+    const std::uintptr_t prevFp = record->prevFp;
+    const std::uintptr_t ra = record->returnAddress;
+    push(ra);
+
+    if (prevFp <= fp || !inStackWindow(prevFp)) {
+      break;
+    }
+    fp = prevFp;
+  }
+#else
+  static_cast<void>(ctx);
+  static_cast<void>(frames);
+  static_cast<void>(maxFrames);
+#endif
+
+  return count * sizeof(NativeFramePtr);
+}
 }  // namespace
 
 FpeMonitor::Result::FpeInfo::~FpeInfo() = default;
@@ -461,37 +563,27 @@ void FpeMonitor::signalHandler(int signal, siginfo_t *si, void *ctx) {
       si != nullptr ? reinterpret_cast<std::uintptr_t>(si->si_addr) : 0;
 
   try {
-    // collect stack trace skipping signal-handler frames. The required skip
-    // count is platform dependent.
-    std::size_t skipFrames = 2;
-#if defined(__APPLE__) && defined(__arm64__)
-    // Darwin arm64 has one less signal trampoline frame in this path.
-    skipFrames = 1;
-#endif
     auto [buffer, remaining] = fpe.m_buffer.next();
     using NativeFramePtr = boost::stacktrace::frame::native_frame_ptr_t;
-    std::size_t prefixFrames = 0;
-#if defined(__APPLE__) && defined(__arm64__)
-    // Prepend the faulting PC so deduplication can distinguish trap sites even
-    // when unwinding stops at sigtramp under optimization.
-    if (si != nullptr && si->si_addr != nullptr &&
-        remaining >= sizeof(NativeFramePtr)) {
-      auto *frames = static_cast<NativeFramePtr *>(buffer);
-      frames[0] =
-          reinterpret_cast<NativeFramePtr>(reinterpret_cast<std::uintptr_t>(
-              si->si_addr));
-      prefixFrames = 1;
-      buffer = frames + 1;
-      remaining -= sizeof(NativeFramePtr);
+    std::size_t stored = 0;
+#if defined(__APPLE__) && (defined(__arm64__) || defined(__x86_64__))
+    // On Darwin, unwind from the interrupted context so masks can match frames
+    // between the fault site and callers.
+    stored = captureStackFromSignalContext(ctx, buffer, remaining);
+    if (stored == 0) {
+      std::size_t depth = boost::stacktrace::safe_dump_to(1, buffer, remaining);
+      stored = depth * sizeof(NativeFramePtr);
     }
+#else
+    std::size_t depth = boost::stacktrace::safe_dump_to(2, buffer, remaining);
+    stored = depth * sizeof(NativeFramePtr);
 #endif
-    std::size_t depth = boost::stacktrace::safe_dump_to(skipFrames, buffer, remaining);
-    depth += prefixFrames;
-    std::size_t stored = depth * sizeof(NativeFramePtr);
-    fpe.m_buffer.pushOffset(stored);  // record how much storage was consumed
-    fpe.m_recorded.emplace_back(
-        *type, buffer,
-        stored, location);  // record consumed stack dump and trap location
+    if (stored > 0) {
+      fpe.m_buffer.pushOffset(stored);  // record how much storage was consumed
+      fpe.m_recorded.emplace_back(
+          *type, buffer,
+          stored, location);  // record consumed stack dump and trap location
+    }
 
   } catch (const std::bad_alloc &e) {
     std::cout << "Unable to collect stack trace due to memory limit"
