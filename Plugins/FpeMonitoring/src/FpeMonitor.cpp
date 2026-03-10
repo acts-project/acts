@@ -11,7 +11,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
-#include <bitset>
 #include <cfenv>
 #include <csignal>
 #include <cstddef>
@@ -31,23 +30,11 @@
 #include <boost/stacktrace/stacktrace.hpp>
 #include <boost/stacktrace/stacktrace_fwd.hpp>
 
-#define FPU_EXCEPTION_MASK 0x3f
-#define FPU_STATUS_FLAGS 0xff
-#define SSE_STATUS_FLAGS FPU_EXCEPTION_MASK
-#define SSE_EXCEPTION_MASK (FPU_EXCEPTION_MASK << 7)
+#include "FpeMonitorPlatform.hpp"
 
 namespace ActsPlugins {
 
 namespace {
-
-#if (defined(__linux__) && defined(__x86_64__)) || \
-    (defined(__APPLE__) && (defined(__x86_64__) || defined(__arm64__)))
-constexpr bool kFpeRuntimeSupported = true;
-#else
-// Keep helper boundaries architecture-oriented so Linux aarch64 can be added
-// by implementing decode + context masking paths, without touching call sites.
-constexpr bool kFpeRuntimeSupported = false;
-#endif
 
 bool areFpesEquivalent(
     std::pair<FpeType, const boost::stacktrace::stacktrace &> lhs,
@@ -56,303 +43,6 @@ bool areFpesEquivalent(
   const auto &fr = *rhs.second.begin();
   return lhs.first == rhs.first && (boost::stacktrace::hash_value(fl) ==
                                     boost::stacktrace::hash_value(fr));
-}
-
-std::optional<FpeType> fpeTypeFromSiCode(int siCode) {
-  switch (siCode) {
-    case FPE_INTDIV:
-      return FpeType::INTDIV;
-    case FPE_INTOVF:
-      return FpeType::INTOVF;
-    case FPE_FLTDIV:
-      return FpeType::FLTDIV;
-    case FPE_FLTOVF:
-      return FpeType::FLTOVF;
-    case FPE_FLTUND:
-      return FpeType::FLTUND;
-    case FPE_FLTRES:
-      return FpeType::FLTRES;
-    case FPE_FLTINV:
-      return FpeType::FLTINV;
-    case FPE_FLTSUB:
-      return FpeType::FLTSUB;
-    default:
-      return std::nullopt;
-  }
-}
-
-#if defined(__APPLE__) && defined(__arm64__)
-
-std::uint32_t darwinArm64TrapMask(int excepts) {
-  std::uint32_t mask = 0;
-  if ((excepts & FE_INVALID) != 0) {
-    mask |= __fpcr_trap_invalid;
-  }
-  if ((excepts & FE_DIVBYZERO) != 0) {
-    mask |= __fpcr_trap_divbyzero;
-  }
-  if ((excepts & FE_OVERFLOW) != 0) {
-    mask |= __fpcr_trap_overflow;
-  }
-  if ((excepts & FE_UNDERFLOW) != 0) {
-    mask |= __fpcr_trap_underflow;
-  }
-  if ((excepts & FE_INEXACT) != 0) {
-    mask |= __fpcr_trap_inexact;
-  }
-  return mask;
-}
-
-std::optional<FpeType> fpeTypeFromDarwinArm64Esr(std::uint32_t esr) {
-  constexpr std::uint32_t kEsrExceptionClassShift = 26u;
-  constexpr std::uint32_t kEsrExceptionClassMask = 0x3fu;
-  constexpr std::uint32_t kFpExceptionClass = 0x2cu;
-  const std::uint32_t exceptionClass =
-      (esr >> kEsrExceptionClassShift) & kEsrExceptionClassMask;
-  if (exceptionClass != kFpExceptionClass) {
-    return std::nullopt;
-  }
-
-  // The low ESR bits encode IEEE FP exception classes on Darwin arm64.
-  const std::uint32_t flags = esr & static_cast<std::uint32_t>(FE_ALL_EXCEPT);
-  if ((flags & FE_INVALID) != 0) {
-    return FpeType::FLTINV;
-  }
-  if ((flags & FE_DIVBYZERO) != 0) {
-    return FpeType::FLTDIV;
-  }
-  if ((flags & FE_OVERFLOW) != 0) {
-    return FpeType::FLTOVF;
-  }
-  if ((flags & FE_UNDERFLOW) != 0) {
-    return FpeType::FLTUND;
-  }
-  if ((flags & FE_INEXACT) != 0) {
-    return FpeType::FLTRES;
-  }
-  return std::nullopt;
-}
-
-#endif
-
-std::optional<FpeType> decodeFpeType(int signal, siginfo_t *si, void *ctx) {
-  if (signal == SIGFPE && si != nullptr) {
-    return fpeTypeFromSiCode(si->si_code);
-  }
-
-#if defined(__APPLE__) && defined(__arm64__)
-  if (signal == SIGILL && ctx != nullptr) {
-    auto *uc = static_cast<ucontext_t *>(ctx);
-    return fpeTypeFromDarwinArm64Esr(uc->uc_mcontext->__es.__esr);
-  }
-#endif
-
-  return std::nullopt;
-}
-
-int exceptMaskForType(FpeType type) {
-  switch (type) {
-    case FpeType::INTDIV:
-    case FpeType::FLTDIV:
-      return FE_DIVBYZERO;
-    case FpeType::INTOVF:
-    case FpeType::FLTOVF:
-      return FE_OVERFLOW;
-    case FpeType::FLTUND:
-      return FE_UNDERFLOW;
-    case FpeType::FLTRES:
-      return FE_INEXACT;
-    case FpeType::FLTINV:
-    case FpeType::FLTSUB:
-      return FE_INVALID;
-    default:
-      return 0;
-  }
-}
-
-void clearPendingExceptions(int excepts) { std::feclearexcept(excepts); }
-
-void enableExceptions(int excepts) {
-#if defined(__linux__) && defined(__x86_64__)
-  feenableexcept(excepts);
-#elif defined(__APPLE__) && defined(__x86_64__)
-  fenv_t env{};
-  if (fegetenv(&env) != 0) {
-    return;
-  }
-  env.__control &= ~static_cast<unsigned short>(excepts);
-  env.__mxcsr &= ~(static_cast<unsigned int>(excepts) << 7u);
-  env.__status &= ~static_cast<unsigned short>(FE_ALL_EXCEPT);
-  env.__mxcsr &= ~static_cast<unsigned int>(FE_ALL_EXCEPT);
-  fesetenv(&env);
-#elif defined(__APPLE__) && defined(__arm64__)
-  fenv_t env{};
-  if (fegetenv(&env) != 0) {
-    return;
-  }
-  env.__fpcr |= static_cast<unsigned long long>(darwinArm64TrapMask(excepts));
-  env.__fpsr &= ~static_cast<unsigned long long>(FE_ALL_EXCEPT);
-  fesetenv(&env);
-#else
-  static_cast<void>(excepts);
-#endif
-}
-
-void disableExceptions(int excepts) {
-#if defined(__linux__) && defined(__x86_64__)
-  fedisableexcept(excepts);
-#elif defined(__APPLE__) && defined(__x86_64__)
-  fenv_t env{};
-  if (fegetenv(&env) != 0) {
-    return;
-  }
-  env.__control |= static_cast<unsigned short>(excepts);
-  env.__mxcsr |= (static_cast<unsigned int>(excepts) << 7u);
-  fesetenv(&env);
-#elif defined(__APPLE__) && defined(__arm64__)
-  fenv_t env{};
-  if (fegetenv(&env) != 0) {
-    return;
-  }
-  env.__fpcr &= ~static_cast<unsigned long long>(darwinArm64TrapMask(excepts));
-  fesetenv(&env);
-#else
-  static_cast<void>(excepts);
-#endif
-}
-
-void maskTrapsInSignalContext(void *ctx, FpeType type) {
-  const int excepts = exceptMaskForType(type);
-#if defined(__linux__) && defined(__x86_64__)
-  auto *uc = static_cast<ucontext_t *>(ctx);
-  __uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
-  *cw |= FPU_EXCEPTION_MASK;
-
-  __uint16_t *sw = &uc->uc_mcontext.fpregs->swd;
-  *sw &= ~FPU_STATUS_FLAGS;
-
-  __uint32_t *mxcsr = &uc->uc_mcontext.fpregs->mxcsr;
-  *mxcsr |= ((*mxcsr & SSE_STATUS_FLAGS) << 7);
-  *mxcsr &= ~SSE_STATUS_FLAGS;
-#elif defined(__APPLE__) && defined(__x86_64__)
-  auto *uc = static_cast<ucontext_t *>(ctx);
-  uc->uc_mcontext->__fs.__fpu_fcw |=
-      static_cast<unsigned short>(excepts);
-  uc->uc_mcontext->__fs.__fpu_fsw &= ~static_cast<unsigned short>(FE_ALL_EXCEPT);
-  uc->uc_mcontext->__fs.__fpu_mxcsr |=
-      (static_cast<unsigned int>(excepts) << 7u);
-  uc->uc_mcontext->__fs.__fpu_mxcsr &= ~static_cast<unsigned int>(FE_ALL_EXCEPT);
-#elif defined(__APPLE__) && defined(__arm64__)
-  auto *uc = static_cast<ucontext_t *>(ctx);
-  uc->uc_mcontext->__ns.__fpcr &=
-      ~static_cast<std::uint32_t>(darwinArm64TrapMask(excepts));
-  uc->uc_mcontext->__ns.__fpsr &= ~static_cast<std::uint32_t>(FE_ALL_EXCEPT);
-#else
-  static_cast<void>(ctx);
-  static_cast<void>(excepts);
-#endif
-}
-
-std::size_t captureStackFromSignalContext(void *ctx, void *buffer,
-                                          std::size_t bufferBytes) {
-  using NativeFramePtr = boost::stacktrace::frame::native_frame_ptr_t;
-  auto *frames = static_cast<NativeFramePtr *>(buffer);
-  const std::size_t maxFrames = bufferBytes / sizeof(NativeFramePtr);
-  std::size_t count = 0;
-
-  if (ctx == nullptr || maxFrames == 0) {
-    return 0;
-  }
-
-#if defined(__APPLE__) && defined(__arm64__)
-  auto *uc = static_cast<ucontext_t *>(ctx);
-  const std::uintptr_t sp =
-      __darwin_arm_thread_state64_get_sp(uc->uc_mcontext->__ss);
-  std::uintptr_t fp = __darwin_arm_thread_state64_get_fp(uc->uc_mcontext->__ss);
-  const std::uintptr_t pc =
-      __darwin_arm_thread_state64_get_pc(uc->uc_mcontext->__ss);
-
-  auto push = [&](std::uintptr_t address) {
-    if (address == 0 || count >= maxFrames) {
-      return;
-    }
-    frames[count++] = reinterpret_cast<NativeFramePtr>(address);
-  };
-
-  push(pc);
-
-  constexpr std::uintptr_t kMaxStackWindow = 16 * 1024 * 1024;
-  auto inStackWindow = [&](std::uintptr_t address) {
-    if (address < sp || address > sp + kMaxStackWindow) {
-      return false;
-    }
-    return (address % alignof(std::uintptr_t)) == 0;
-  };
-
-  struct FrameRecord {
-    std::uintptr_t prevFp;
-    std::uintptr_t returnAddress;
-  };
-
-  while (count < maxFrames && inStackWindow(fp) &&
-         fp + sizeof(FrameRecord) <= sp + kMaxStackWindow) {
-    const auto *record = reinterpret_cast<const FrameRecord *>(fp);
-    const std::uintptr_t prevFp = record->prevFp;
-    const std::uintptr_t lr = record->returnAddress;
-    push(lr);
-
-    if (prevFp <= fp || !inStackWindow(prevFp)) {
-      break;
-    }
-    fp = prevFp;
-  }
-#elif defined(__APPLE__) && defined(__x86_64__)
-  auto *uc = static_cast<ucontext_t *>(ctx);
-  const std::uintptr_t sp = uc->uc_mcontext->__ss.__rsp;
-  std::uintptr_t fp = uc->uc_mcontext->__ss.__rbp;
-  const std::uintptr_t pc = uc->uc_mcontext->__ss.__rip;
-
-  auto push = [&](std::uintptr_t address) {
-    if (address == 0 || count >= maxFrames) {
-      return;
-    }
-    frames[count++] = reinterpret_cast<NativeFramePtr>(address);
-  };
-
-  push(pc);
-
-  constexpr std::uintptr_t kMaxStackWindow = 16 * 1024 * 1024;
-  auto inStackWindow = [&](std::uintptr_t address) {
-    if (address < sp || address > sp + kMaxStackWindow) {
-      return false;
-    }
-    return (address % alignof(std::uintptr_t)) == 0;
-  };
-
-  struct FrameRecord {
-    std::uintptr_t prevFp;
-    std::uintptr_t returnAddress;
-  };
-
-  while (count < maxFrames && inStackWindow(fp) &&
-         fp + sizeof(FrameRecord) <= sp + kMaxStackWindow) {
-    const auto *record = reinterpret_cast<const FrameRecord *>(fp);
-    const std::uintptr_t prevFp = record->prevFp;
-    const std::uintptr_t ra = record->returnAddress;
-    push(ra);
-
-    if (prevFp <= fp || !inStackWindow(prevFp)) {
-      break;
-    }
-    fp = prevFp;
-  }
-#else
-  static_cast<void>(ctx);
-  static_cast<void>(frames);
-  static_cast<void>(maxFrames);
-#endif
-
-  return count * sizeof(NativeFramePtr);
 }
 }  // namespace
 
@@ -548,15 +238,12 @@ void FpeMonitor::signalHandler(int signal, siginfo_t *si, void *ctx) {
   }
 
   FpeMonitor &fpe = *stack().top();
-  auto type = decodeFpeType(signal, si, ctx);
+  auto type = detail::decodeFpeType(signal, si, ctx);
   if (!type.has_value()) {
-    // For unknown SIGILL causes on Darwin arm64, returning without changing the
-    // context can re-trigger the signal forever. Fail fast instead.
-#if defined(__APPLE__) && defined(__arm64__)
-    std::_Exit(EXIT_FAILURE);
-#else
+    if (detail::shouldFailFastOnUnknownSignal()) {
+      std::_Exit(EXIT_FAILURE);
+    }
     return;
-#endif
   }
   fpe.m_result.m_counts.at(static_cast<std::uint32_t>(*type))++;
   std::uintptr_t location =
@@ -565,24 +252,18 @@ void FpeMonitor::signalHandler(int signal, siginfo_t *si, void *ctx) {
   try {
     auto [buffer, remaining] = fpe.m_buffer.next();
     using NativeFramePtr = boost::stacktrace::frame::native_frame_ptr_t;
-    std::size_t stored = 0;
-#if defined(__APPLE__) && (defined(__arm64__) || defined(__x86_64__))
-    // On Darwin, unwind from the interrupted context so masks can match frames
-    // between the fault site and callers.
-    stored = captureStackFromSignalContext(ctx, buffer, remaining);
+    std::size_t stored =
+        detail::captureStackFromSignalContext(ctx, buffer, remaining);
     if (stored == 0) {
-      std::size_t depth = boost::stacktrace::safe_dump_to(1, buffer, remaining);
+      std::size_t depth = boost::stacktrace::safe_dump_to(
+          detail::safeDumpSkipFrames(), buffer, remaining);
       stored = depth * sizeof(NativeFramePtr);
     }
-#else
-    std::size_t depth = boost::stacktrace::safe_dump_to(2, buffer, remaining);
-    stored = depth * sizeof(NativeFramePtr);
-#endif
     if (stored > 0) {
       fpe.m_buffer.pushOffset(stored);  // record how much storage was consumed
       fpe.m_recorded.emplace_back(
-          *type, buffer,
-          stored, location);  // record consumed stack dump and trap location
+          *type, buffer, stored,
+          location);  // record consumed stack dump and trap location
     }
 
   } catch (const std::bad_alloc &e) {
@@ -590,37 +271,35 @@ void FpeMonitor::signalHandler(int signal, siginfo_t *si, void *ctx) {
               << std::endl;
   }
 
-  maskTrapsInSignalContext(ctx, *type);
+  detail::maskTrapsInSignalContext(ctx, *type);
 }
 
 void FpeMonitor::enable() {
-#if (defined(__linux__) && defined(__x86_64__)) || \
-    (defined(__APPLE__) && (defined(__x86_64__) || defined(__arm64__)))
+  if (!detail::isRuntimeSupported()) {
+    return;
+  }
   ensureSignalHandlerInstalled();
 
   // clear pending exceptions so they don't immediately fire
-  clearPendingExceptions(m_excepts);
+  detail::clearPendingExceptions(m_excepts);
 
   if (!stack().empty()) {
     // unset previous except state
-    disableExceptions(stack().top()->m_excepts);
+    detail::disableExceptions(stack().top()->m_excepts);
   }
   // apply this stack
-  enableExceptions(m_excepts);
+  detail::enableExceptions(m_excepts);
 
   stack().push(this);
-#else
-  static_cast<void>(m_excepts);
-#endif
 }
 
 void FpeMonitor::rearm() {
   consumeRecorded();
-#if (defined(__linux__) && defined(__x86_64__)) || \
-    (defined(__APPLE__) && (defined(__x86_64__) || defined(__arm64__)))
-  clearPendingExceptions(m_excepts);
-  enableExceptions(m_excepts);
-#endif
+  if (!detail::isRuntimeSupported()) {
+    return;
+  }
+  detail::clearPendingExceptions(m_excepts);
+  detail::enableExceptions(m_excepts);
 }
 
 void FpeMonitor::ensureSignalHandlerInstalled() {
@@ -630,32 +309,29 @@ void FpeMonitor::ensureSignalHandlerInstalled() {
   }
 
   std::lock_guard lock{state.mutex};
+  if (state.isSignalHandlerInstalled) {
+    return;
+  }
 
-  struct sigaction action{};
-  action.sa_sigaction = &signalHandler;
-  action.sa_flags = SA_SIGINFO;
-  sigaction(SIGFPE, &action, nullptr);
-#if defined(__APPLE__) && defined(__arm64__)
-  sigaction(SIGILL, &action, nullptr);
-#endif
+  detail::installSignalHandlers(&signalHandler);
 
   state.isSignalHandlerInstalled = true;
 }
 
 void FpeMonitor::disable() {
-#if (defined(__linux__) && defined(__x86_64__)) || \
-    (defined(__APPLE__) && (defined(__x86_64__) || defined(__arm64__)))
-  clearPendingExceptions(m_excepts);
+  if (!detail::isRuntimeSupported()) {
+    return;
+  }
+  detail::clearPendingExceptions(m_excepts);
   assert(!stack().empty() && "FPE stack shouldn't be empty at this point");
   stack().pop();
   // disable excepts we enabled here
-  disableExceptions(m_excepts);
+  detail::disableExceptions(m_excepts);
   if (!stack().empty()) {
     // restore excepts from next stack element
-    clearPendingExceptions(stack().top()->m_excepts);
-    enableExceptions(stack().top()->m_excepts);
+    detail::clearPendingExceptions(stack().top()->m_excepts);
+    detail::enableExceptions(stack().top()->m_excepts);
   }
-#endif
 }
 
 std::stack<FpeMonitor *> &FpeMonitor::stack() {
@@ -708,6 +384,8 @@ bool FpeMonitor::canSymbolize() {
 #endif
 }
 
-bool FpeMonitor::isSupported() { return kFpeRuntimeSupported; }
+bool FpeMonitor::isSupported() {
+  return detail::isRuntimeSupported();
+}
 
 }  // namespace ActsPlugins
