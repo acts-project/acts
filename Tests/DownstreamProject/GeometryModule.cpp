@@ -6,21 +6,76 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryModuleHelpers.hpp"
+#include "Acts/Geometry/GeometryModule.h"
 
-#include "GeometryModuleCommon.hpp"
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <memory>
+#include <stdexcept>
 
 namespace {
 
-void* buildGeometryModule(void* userData) {
-  (void)userData;
-  return ActsDownstream::buildTinyTrackingGeometryHandle().release();
+std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule() {
+  using namespace Acts;
+
+  const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+  auto logger = getDefaultLogger("DownstreamGeometryModule", Logging::WARNING);
+
+  Experimental::Blueprint::Config cfg;
+  cfg.envelope = ExtentEnvelope{{
+      .x = {10., 10.},
+      .y = {10., 10.},
+      .z = {10., 10.},
+  }};
+
+  Experimental::Blueprint root{cfg};
+
+  auto outerBounds = std::make_shared<CuboidVolumeBounds>(1000., 1000., 1000.);
+  auto outerVol = std::make_unique<TrackingVolume>(Transform3::Identity(),
+                                                   outerBounds, "Outer");
+  auto outerNode =
+      std::make_shared<Experimental::StaticBlueprintNode>(std::move(outerVol));
+  root.addChild(outerNode);
+
+  auto trackingGeometry = root.construct({}, gctx, *logger);
+  if (trackingGeometry == nullptr ||
+      trackingGeometry->geometryVersion() !=
+          TrackingGeometry::GeometryVersion::Gen3) {
+    throw std::runtime_error(
+        "Failed to build Gen3 tracking geometry in downstream module");
+  }
+
+  return trackingGeometry;
 }
 
-void destroyGeometryModule(void* handle) {
-  ActsDownstream::destroyTinyTrackingGeometryHandle(handle);
+void* buildGeometryModuleHandle(void* userData) noexcept {
+  (void)userData;
+  try {
+    auto trackingGeometry = buildGeometryModule();
+    return trackingGeometry.release();
+  } catch (...) {
+    return nullptr;
+  }
 }
+
+void destroyGeometryModuleHandle(void* handle) noexcept {
+  delete static_cast<Acts::TrackingGeometry*>(handle);
+}
+
+const ActsGeometryModuleV1 kGeometryModuleV1 = {
+    ACTS_GEOMETRY_MODULE_ABI_TAG,
+    &buildGeometryModuleHandle,
+    &destroyGeometryModuleHandle,
+};
 
 }  // namespace
 
-ACTS_GEOMETRY_MODULE_DEFINE_V1(buildGeometryModule, destroyGeometryModule)
+extern "C" const ActsGeometryModuleV1* acts_geometry_module_v1(void) {
+  return &kGeometryModuleV1;
+}
