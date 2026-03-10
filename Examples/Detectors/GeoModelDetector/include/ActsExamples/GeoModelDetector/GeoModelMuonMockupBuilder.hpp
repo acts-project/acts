@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <cstdint>
+#include <tuple>
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
@@ -91,8 +93,9 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   NodePtr_t processStation(const Acts::GeometryContext& gctx,
                            const std::span<Box_t> boundingBoxes,
                            const std::string& station, const bool isBarrel,
+                           const StationIdx stationIdx,
                            Acts::VolumeBoundFactory& boundFactory,
-                           const Acts::GeometryIdentifier& geoId) const;
+                           std::uint32_t& nextVolumeId) const;
 
   /// @brief Build a child chamber volume from the provided converted volume box
   std::unique_ptr<Acts::TrackingVolume> buildChildChamber(
@@ -128,6 +131,20 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   static std::string stationIdxToString(const StationIdx idx);
   // Helper function converting the first-level container idx to string
   static std::string firstContainerIdxToString(const FirstContainerIdx idx);
+
+  using SectorKey = std::tuple<std::uint32_t, std::uint32_t, std::int32_t>;
+
+  /// Extract all integer tokens separated by underscores from a chamber name
+  static std::vector<int> extractUnderscoreIntegers(std::string_view name);
+
+  /// Return the logical sector number from the chamber name
+  static std::uint32_t sectorNumberFromName(std::string_view name);
+
+  /// Return the sign of the first integer token in the name (-1 or +1)
+  static std::int32_t etaSignFromName(std::string_view name);
+
+  /// Return the sector grouping key used to assign geometry volume ids
+  static SectorKey sectorKey(const StationIdx stationIdx, const Box_t& box);
 
   /// Private access method to the logger
   const Acts::Logger& logger() const { return *m_logger; }

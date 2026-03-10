@@ -21,11 +21,13 @@
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <format>
 #include <iterator>
 #include <map>
 #include <ranges>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 using namespace Acts;
@@ -52,7 +54,7 @@ constexpr GeometryIdentifier toSectorId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume());
 }
 
-constexpr GeometryIdentifier toSectorLayerId(const GeometryIdentifier& id) {
+constexpr GeometryIdentifier toVolumeLayerId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume()).withLayer(id.layer());
 }
 
@@ -60,15 +62,47 @@ inline bool splitBucket(const MuonSpacePoint& sp, const double firstZ,
                         const MuonSpacePointBucket& currentBucket,
                         const double maxBucketWindow,
                         const double neighborWindow) {
+  if (currentBucket.empty()) {
+    return false;
+  }
   const double z = sp.localPosition().z();
   if (z - firstZ > maxBucketWindow) {
     return true;
   }
-  if (!currentBucket.empty() &&
-      (z - currentBucket.back().localPosition().z()) > neighborWindow) {
+  if ((z - currentBucket.back().localPosition().z()) > neighborWindow) {
     return true;
   }
   return false;
+}
+
+inline GeometryIdentifier findRepresentativeVolumeId(
+    const TrackingGeometry& trackingGeometry,
+    const std::vector<GeometryIdentifier>& sectorLayerIds) {
+  if (sectorLayerIds.empty()) {
+    throw std::runtime_error(
+        "Cannot resolve representative volume from empty sector-layer id list");
+  }
+
+  std::vector<GeometryIdentifier> sortedIds = sectorLayerIds;
+  std::ranges::sort(sortedIds, [](const GeometryIdentifier& a,
+                                  const GeometryIdentifier& b) {
+    if (a.layer() != b.layer()) {
+      return a.layer() < b.layer();
+    }
+    return a.value() < b.value();
+  });
+  sortedIds.erase(std::unique(sortedIds.begin(), sortedIds.end()), sortedIds.end());
+
+  for (const GeometryIdentifier& volId : sortedIds) {
+    if (trackingGeometry.findVolume(volId) != nullptr) {
+      return volId;
+    }
+  }
+
+  throw std::runtime_error(
+      std::format(
+          "Failed to resolve representative tracking volume for sector volume {}", 
+          sortedIds.front().volume()));
 }
 
 inline void startNewBucketWithOverlap(const MuonSpacePoint& refSp,
@@ -86,7 +120,7 @@ inline void startNewBucketWithOverlap(const MuonSpacePoint& refSp,
       break;
     }
   }
- }
+}
 
 }  // namespace
 
@@ -154,8 +188,7 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
     return ABORT;
   }
   MuonSpacePointCalibrator::Config calibCfg{};
-  m_cfg.calibrator =
-      std::make_unique<MuonSpacePointCalibrator>(calibCfg, logger().clone());
+  m_cfg.calibrator = std::make_shared<MuonSpacePointCalibrator>(calibCfg, logger().clone());
 
   return SUCCESS;
 }
@@ -171,16 +204,16 @@ const TrackingGeometry& MuonSpacePointDigitizer::trackingGeometry() const {
 
 Transform3 MuonSpacePointDigitizer::toSectorFrame(
     const GeometryContext& gctx,
-    const GeometryIdentifier& sectorLayerId) const {
-  const TrackingVolume* volume = trackingGeometry().findVolume(sectorLayerId);
+    const GeometryIdentifier& representativeVolumeId) const {
+
+  const TrackingVolume* volume =
+      trackingGeometry().findVolume(representativeVolumeId);
   if (volume == nullptr) {
     throw std::runtime_error(
-        std::format("Failed to resolve tracking volume for sector-layer id {}",
-                    sectorLayerId));
+        std::format("Failed to resolve tracking volume for representative id {}",
+                    representativeVolumeId));
   }
-  return AngleAxis3{90._degree, Vector3::UnitZ()} *
-         volume->globalToLocalTransform(gctx);
-}
+  return AngleAxis3{90._degree, Vector3::UnitZ()} * volume->globalToLocalTransform(gctx);}
 
 ProcessCode MuonSpacePointDigitizer::execute(
     const AlgorithmContext& ctx) const {
@@ -210,60 +243,27 @@ ProcessCode MuonSpacePointDigitizer::execute(
   std::unordered_map<GeometryIdentifier, double> strawTimes{};
   std::multimap<GeometryIdentifier, std::array<double, 3>> stripTimes{};
 
-  /// Determine a deterministic representative layer per sector
-  std::unordered_map<GeometryIdentifier, GeometryIdentifier> firstLayerPerSector{};
+  /// Determine candidate tracking-volume ids per sector from actually seen module ids
+  std::unordered_map<GeometryIdentifier, std::vector<GeometryIdentifier>>
+      volumeLayerIdsPerSector{};
   for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
     const GeometryIdentifier moduleGeoId = simHitsGroup.first;
     const GeometryIdentifier sectorId = toSectorId(moduleGeoId);
-    const GeometryIdentifier sectorLayerId = toSectorLayerId(moduleGeoId);
-
-    auto [it, inserted] =
-        firstLayerPerSector.emplace(sectorId, sectorLayerId);
-    if (!inserted && sectorLayerId.layer() < it->second.layer()) {
-      it->second = sectorLayerId;
-    }
+    volumeLayerIdsPerSector[sectorId].push_back(toVolumeLayerId(moduleGeoId));
   }
 
   std::unordered_map<GeometryIdentifier, Transform3> sectorFrameCache{};
-  sectorFrameCache.reserve(firstLayerPerSector.size());
-  for (const auto& [sectorId, sectorLayerId] : firstLayerPerSector) {
-    sectorFrameCache.emplace(sectorId, toSectorFrame(gctx, sectorLayerId));
+
+  sectorFrameCache.reserve(volumeLayerIdsPerSector.size());
+  std::unordered_map<GeometryIdentifier, GeometryIdentifier> representativeVolumePerSector{};
+  representativeVolumePerSector.reserve(volumeLayerIdsPerSector.size());
+
+  for (const auto& [sectorId, candidateIds] : volumeLayerIdsPerSector) {
+    const GeometryIdentifier representativeId =
+        findRepresentativeVolumeId(trackingGeometry(), candidateIds);
+    representativeVolumePerSector.emplace(sectorId, representativeId);
+    sectorFrameCache.emplace(sectorId, toSectorFrame(gctx, representativeId));
   }
-
-  auto sectorGlobalToLocal = [&](const GeometryIdentifier& moduleGeoId)
-      -> const Transform3& {
-    const GeometryIdentifier sectorId = toSectorId(moduleGeoId);
-    if (const auto cacheItr = sectorFrameCache.find(sectorId);
-        cacheItr != sectorFrameCache.end()) {
-      return cacheItr->second;
-    }
-
-    const TrackingVolume* sectorVolume = trackingGeometry().findVolume(sectorId);
-    if (sectorVolume == nullptr) {
-      // Some geometries do not expose a pure volume id for sectors. In this
-      // case, pick the first available layer volume and reuse it for all hits
-      // in this sector.
-      for (unsigned layer = 0; layer < 256 && sectorVolume == nullptr; ++layer) {
-        const GeometryIdentifier candidate =
-            GeometryIdentifier{}.withVolume(moduleGeoId.volume()).withLayer(
-                layer);
-        sectorVolume = trackingGeometry().findVolume(candidate);
-      }
-    }
-    if (sectorVolume == nullptr) {
-      sectorVolume = trackingGeometry().findVolume(toSectorLayerId(moduleGeoId));
-    }
-    if (sectorVolume == nullptr) {
-      throw std::runtime_error(std::format(
-          "Unable to resolve a sector frame for geometry id {}", moduleGeoId));
-    }
-
-    auto [insertItr, inserted] =
-        sectorFrameCache.emplace(sectorId,
-                                 sectorVolume->globalToLocalTransform(gctx));
-    (void)inserted;
-    return insertItr->second;
-  };
 
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
@@ -275,11 +275,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     const Transform3& surfLocToGlob{hitSurf->localToGlobalTransform(gctx)};
 
-    /// Transformation to the common sector frame for all space points
+    /// Transformation to the common sector frame for all space points in this sector
     const Transform3& sectorFrame = sectorFrameCache.at(toSectorId(moduleGeoId));
-    const Transform3 parentTrf =
-        sectorFrame * hitSurf->localToGlobalTransform(gctx);
-    /// Retrieve the bounds
+    const Transform3 parentTrf = sectorFrame * surfLocToGlob;
     const auto& bounds = hitSurf->bounds();
 
     // Iterate over all simHits in a single module
@@ -506,13 +504,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
   }
 
   for (auto& [sectorId, sectorHits] : spacePointsPerSector) {
-    std::ranges::sort(sectorHits, [](const MuonSpacePoint& a,
-                                     const MuonSpacePoint& b) {
-      const auto aLayerId = toSectorLayerId(a.geometryId());
-      const auto bLayerId = toSectorLayerId(b.geometryId());
-      if (aLayerId != bLayerId) {
-        return aLayerId.value() < bLayerId.value();
-      }
+    if (sectorHits.empty()) {
+      continue;
+    }
+
+    std::ranges::sort(sectorHits, [](const MuonSpacePoint& a, const MuonSpacePoint& b) {
       return a.localPosition().z() < b.localPosition().z();
     });
 
@@ -520,16 +516,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
     splitBuckets.emplace_back();
 
     double firstPointZ = sectorHits.front().localPosition().z();
-    GeometryIdentifier currentLayer =
-        toSectorLayerId(sectorHits.front().geometryId());
 
     for (MuonSpacePoint& sp : sectorHits) {
-      const GeometryIdentifier spLayer = toSectorLayerId(sp.geometryId());
       const double z = sp.localPosition().z();
 
-      const bool layerChanged = (spLayer != currentLayer);
-      if (layerChanged ||
-          splitBucket(sp, firstPointZ, splitBuckets.back(),
+      if (splitBucket(sp, firstPointZ, splitBuckets.back(),
                       m_cfg.bucketMaxWindow,
                       m_cfg.bucketNeighborWindow)) {
         if (!splitBuckets.back().empty()) {
@@ -538,7 +529,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
         } else {
           splitBuckets.emplace_back();
         }
-        currentLayer = spLayer;
         firstPointZ = splitBuckets.back().empty()
                           ? z
                           : splitBuckets.back().front().localPosition().z();
@@ -560,19 +550,18 @@ ProcessCode MuonSpacePointDigitizer::execute(
         if (bucket.empty()) {
           continue;
         }
-        sstr << " Bucket starts at layer "
-             << toSectorLayerId(bucket.front().geometryId()) << " with "
-             << bucket.size() << " points" << std::endl;
+        sstr << " Bucket starts at z = "
+             << bucket.front().localPosition().z() << " with "
+             << bucket.size() << " points\n";
       }
       ACTS_VERBOSE("Built " << splitBuckets.size() << " bucket(s) for sector "
                             << sectorId << "\n" << sstr.str());
       ACTS_VERBOSE("Representative sector frame for sector " << sectorId
-                   << " taken from volume "
-                   << firstLayerPerSector.at(sectorId));
+                   << " taken from volume " << representativeVolumePerSector.at(sectorId));
     }
 
     if (m_cfg.dumpVisualization && m_cfg.visualizationFunction) {
-      const GeometryIdentifier refVolumeId = firstLayerPerSector.at(sectorId);
+      const GeometryIdentifier refVolumeId = representativeVolumePerSector.at(sectorId);
       const TrackingVolume* sectorVolume =
           trackingGeometry().findVolume(refVolumeId);
       assert(sectorVolume != nullptr);

@@ -137,7 +137,7 @@ def main():
     args = parser.parse_args()
 
     gContext = acts.GeometryContext.dangerouslyDefaultConstruct()
-    logLevel = logging.INFO
+    logLevel = logging.VERBOSE
 
     # Create the tracking geometry builder for the muon system
     gmBuilderConfig = gm_ex.GeoModelMuonMockupBuilder.Config()
@@ -205,7 +205,8 @@ def main():
     trackingGeometryBuilder = gm_ex.GeoModelMuonMockupBuilder(
         gmBuilderConfig, "GeoModelMuonMockupBuilder", logLevel
     )
-
+    
+    print("Building tracking geometry with converted GeoModel bounding boxes")    
     trackingGeometry = detector.buildTrackingGeometry(gContext, trackingGeometryBuilder)
 
     algSequence = runGeant4(

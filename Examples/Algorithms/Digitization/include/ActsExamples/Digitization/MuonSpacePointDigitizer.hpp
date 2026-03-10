@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -69,14 +69,14 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
 
     /// @brief Maximum longitudinal extent of a bucket in the common sector frame
     double bucketMaxWindow{800. * Acts::UnitConstants::mm};
-    /// @brief Maximum gap between neighboring primary space points before splitting
+    /// @brief Maximum gap between neighboring space points before splitting
     double bucketNeighborWindow{200. * Acts::UnitConstants::mm};
-    /// @brief Overlap copied from the previous bucket into the next one
+    /// @brief Tail overlap copied from the previous bucket into the next one
     double bucketOverlapWindow{100. * Acts::UnitConstants::mm};
     /// @brief Reject buckets smaller than this
     std::size_t minBucketSize{2u};
-
   };
+
   /// @brief Constructor
   explicit MuonSpacePointDigitizer(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
@@ -94,12 +94,12 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   /// @brief Returns the reference to the passed tracking geometry
   const Acts::TrackingGeometry& trackingGeometry() const;
   /// @brief Returns the transformation from the global frame into the
-  /// common sector frame chosen from a representative sector-layer volume
+  /// common sector frame chosen from a representative tracking volume
   /// @param gctx Geometry context
-  /// @param sectorLayerId Geometry identifier with volume+layer set
+  /// @param representativeVolumeId Geometry identifier that resolves to a tracking volume
   Acts::Transform3 toSectorFrame(
-       const Acts::GeometryContext& gctx,
-       const Acts::GeometryIdentifier& sectorLayerId) const;
+      const Acts::GeometryContext& gctx,
+      const Acts::GeometryIdentifier& representativeVolumeId) const;
   /// @brief Configuration of the digitizer
   Config m_cfg;
   /// @brief Data handle for the input simulated hits

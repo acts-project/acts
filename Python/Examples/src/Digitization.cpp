@@ -15,11 +15,6 @@
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
-#include <array>
-#include <memory>
-#include <tuple>
-#include <utility>
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -66,8 +61,8 @@ void addDigitization(py::module& mex) {
         outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
         outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
         randomNumbers, trackingGeometry, digitizeTime, dumpVisualization,
-      visualizationFunction, strawDeadTime, rpcDeadTime, bucketMaxWindow,
-      bucketNeighborWindow);
+        visualizationFunction, strawDeadTime, rpcDeadTime, bucketMaxWindow,
+        bucketNeighborWindow);
 
     ActsPython::patchKwargsConstructor(c);
   }
