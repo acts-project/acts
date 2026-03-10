@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryModule.h"
+#include "Acts/Geometry/GeometryModuleHelpers.hpp"
 
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -14,18 +14,17 @@
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <stdexcept>
 
 namespace {
 
-std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule() {
+std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule(
+    const Acts::Logger& logger) {
   using namespace Acts;
 
   const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-  auto logger = getDefaultLogger("DownstreamGeometryModule", Logging::WARNING);
 
   Experimental::Blueprint::Config cfg;
   cfg.envelope = ExtentEnvelope{{
@@ -43,7 +42,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule() {
       std::make_shared<Experimental::StaticBlueprintNode>(std::move(outerVol));
   root.addChild(outerNode);
 
-  auto trackingGeometry = root.construct({}, gctx, *logger);
+  auto trackingGeometry = root.construct({}, gctx, logger);
   if (trackingGeometry == nullptr ||
       trackingGeometry->geometryVersion() !=
           TrackingGeometry::GeometryVersion::Gen3) {
@@ -54,28 +53,6 @@ std::unique_ptr<Acts::TrackingGeometry> buildGeometryModule() {
   return trackingGeometry;
 }
 
-void* buildGeometryModuleHandle(void* userData) noexcept {
-  (void)userData;
-  try {
-    auto trackingGeometry = buildGeometryModule();
-    return trackingGeometry.release();
-  } catch (...) {
-    return nullptr;
-  }
-}
-
-void destroyGeometryModuleHandle(void* handle) noexcept {
-  delete static_cast<Acts::TrackingGeometry*>(handle);
-}
-
-const ActsGeometryModuleV1 kGeometryModuleV1 = {
-    ACTS_GEOMETRY_MODULE_ABI_TAG,
-    &buildGeometryModuleHandle,
-    &destroyGeometryModuleHandle,
-};
-
 }  // namespace
 
-extern "C" const ActsGeometryModuleV1* acts_geometry_module_v1(void) {
-  return &kGeometryModuleV1;
-}
+ACTS_DEFINE_GEOMETRY_MODULE(buildGeometryModule)
