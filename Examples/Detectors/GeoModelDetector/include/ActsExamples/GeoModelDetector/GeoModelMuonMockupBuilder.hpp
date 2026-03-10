@@ -89,14 +89,19 @@ class GeoModelMuonMockupBuilder : public Acts::ITrackingGeometryBuilder {
   using Node_t = Acts::Experimental::StaticBlueprintNode;
   using NodePtr_t = std::shared_ptr<Node_t>;
 
+  /// @brief Allocator wrapper for GeometryIdentifier fields.
+  struct GeometryIdAllocator {
+    std::uint32_t nextVolumeId{1u};
+  };
+
   /// @brief Produce a station node from the provided converted volume boxes
   NodePtr_t processStation(const Acts::GeometryContext& gctx,
                            const std::span<Box_t> boundingBoxes,
                            const std::string& station, const bool isBarrel,
                            const StationIdx stationIdx,
                            Acts::VolumeBoundFactory& boundFactory,
-                           std::uint32_t& nextVolumeId) const;
-
+                           GeometryIdAllocator& idAlloc) const;
+                           
   /// @brief Build a child chamber volume from the provided converted volume box
   std::unique_ptr<Acts::TrackingVolume> buildChildChamber(
       const Acts::GeometryContext& gctx, const Box_t& box,

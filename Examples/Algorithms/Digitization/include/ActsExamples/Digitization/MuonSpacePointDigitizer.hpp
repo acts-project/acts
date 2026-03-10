@@ -73,6 +73,8 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     double bucketNeighborWindow{200. * Acts::UnitConstants::mm};
     /// @brief Tail overlap copied from the previous bucket into the next one
     double bucketOverlapWindow{100. * Acts::UnitConstants::mm};
+    /// @brief Scale factor for the covariance-aware overlap margin.
+    double bucketOverlapSigmaScale{1.};
     /// @brief Reject buckets smaller than this
     std::size_t minBucketSize{2u};
   };

@@ -26,6 +26,7 @@
 #include <iterator>
 #include <map>
 #include <ranges>
+#include <cmath>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -50,12 +51,44 @@ constexpr double quantize(const double x, const double pitch) {
   return -quantize(-x, pitch);
 }
 
+/// @brief Build a *grouping key* for bucketization.
+///        derived from the full id and used only as a coarse key to group hits into
+///        "sectors" for bucketing and for caching the common sector frame transform.
 constexpr GeometryIdentifier toSectorId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume());
 }
 
+/// @brief Build a *candidate key* used to resolve a representative tracking volume
+///        within a sector (volume+layer).
 constexpr GeometryIdentifier toVolumeLayerId(const GeometryIdentifier& id) {
   return GeometryIdentifier{}.withVolume(id.volume()).withLayer(id.layer());
+}
+
+inline double bucketSigmaZ(const MuonSpacePoint& sp,
+                           const double sigmaScale = 1.) {
+  const auto cov = sp.covariance();
+  const double var0 = cov[0];
+  const double var1 = cov[1];
+  const double maxVar = std::max({0., var0, var1});
+  return sigmaScale * std::sqrt(maxVar);
+}
+
+inline double bucketUpperEdgeZ(const MuonSpacePoint& sp,
+                               const double sigmaScale = 1.) {
+  return sp.localPosition().z() + bucketSigmaZ(sp, sigmaScale);
+}
+
+inline void sortBucketPerLayer(MuonSpacePointBucket& bucket) {
+  std::ranges::sort(bucket, [](const MuonSpacePoint& a,
+                               const MuonSpacePoint& b) {
+    if (a.geometryId().layer() != b.geometryId().layer()) {
+      return a.geometryId().layer() < b.geometryId().layer();
+    }
+    if (a.localPosition().z() != b.localPosition().z()) {
+      return a.localPosition().z() < b.localPosition().z();
+    }
+    return a.geometryId().value() < b.geometryId().value();
+  });
 }
 
 inline bool splitBucket(const MuonSpacePoint& sp, const double firstZ,
@@ -107,14 +140,15 @@ inline GeometryIdentifier findRepresentativeVolumeId(
 
 inline void startNewBucketWithOverlap(const MuonSpacePoint& refSp,
                                       std::vector<MuonSpacePointBucket>& buckets,
-                                      const double overlapWindow) {
+                                      const double overlapWindow,
+                                      const double overlapSigmaScale) {
   buckets.emplace_back();
   MuonSpacePointBucket& newBucket = buckets.back();
   const MuonSpacePointBucket& prevBucket = buckets[buckets.size() - 2];
   const double refZ = refSp.localPosition().z();
 
   for (auto it = prevBucket.rbegin(); it != prevBucket.rend(); ++it) {
-    if (refZ - it->localPosition().z() < overlapWindow) {
+    if (refZ - bucketUpperEdgeZ(*it, overlapSigmaScale) < overlapWindow) {
       newBucket.insert(newBucket.begin(), *it);
     } else {
       break;
@@ -525,7 +559,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
                       m_cfg.bucketNeighborWindow)) {
         if (!splitBuckets.back().empty()) {
           startNewBucketWithOverlap(sp, splitBuckets,
-                                    m_cfg.bucketOverlapWindow);
+                                    m_cfg.bucketOverlapWindow,
+                                    m_cfg.bucketOverlapSigmaScale);
         } else {
           splitBuckets.emplace_back();
         }
@@ -578,6 +613,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     for (auto& bucket : splitBuckets) {
       if (!bucket.empty()) {
+        sortBucketPerLayer(bucket);
         outSpacePoints.push_back(std::move(bucket));
       }
     }
