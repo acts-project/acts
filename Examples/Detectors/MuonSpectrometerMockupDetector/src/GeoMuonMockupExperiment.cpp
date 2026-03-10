@@ -18,6 +18,7 @@
 #include <string>
 #include <string_view>
 #include <typeinfo>
+#include <variant>
 
 #include <GeoModelWrite/WriteGeoModel.h>
 
@@ -50,6 +51,21 @@ std::string pubKeyToString(const std::any& pubKey) {
   }
   if (const auto* s = std::any_cast<std::string_view>(&pubKey); s != nullptr) {
     return std::string{*s};
+  }
+
+  // GeoModel publisher keys may be stored as a variant inside std::any
+  using KeyVariant = std::variant<int, long, float, double, std::string>;
+  if (const auto* v = std::any_cast<KeyVariant>(&pubKey); v != nullptr) {
+    return std::visit(
+        [](const auto& val) -> std::string {
+          using T = std::decay_t<decltype(val)>;
+          if constexpr (std::is_same_v<T, std::string>) {
+            return val;
+          } else {
+            return std::to_string(val);
+          }
+        },
+        *v);
   }
 
   throw std::domain_error(std::format(
