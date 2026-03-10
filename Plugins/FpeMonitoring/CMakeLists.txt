@@ -213,7 +213,6 @@ else()
                     endif()
                 endif()
             endif()
-        endif()
 
         if(NOT _backtrace_setup_complete)
             if(NOT ${dl_LIBRARY} STREQUAL "dl_LIBRARY-NOTFOUND")
