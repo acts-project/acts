@@ -12,6 +12,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 #include <exception>
+#include <functional>
 #include <memory>
 
 #ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
@@ -19,35 +20,17 @@
     "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided via CMake (link Acts::Core or use acts_add_geometry_module)."
 #endif
 
-#define ACTS_GEOMETRY_MODULE_DEFINE_V1(BuildFunction)                    \
-  namespace {                                                            \
-  void* acts_geometry_module_build_v1(void* user_data) noexcept {        \
-    (void)user_data;                                                     \
-    try {                                                                \
-      auto trackingGeometry = BuildFunction();                           \
-      return trackingGeometry.release();                                 \
-    } catch (const std::exception&) {                                    \
-      return nullptr;                                                    \
-    } catch (...) {                                                      \
-      return nullptr;                                                    \
-    }                                                                    \
-  }                                                                      \
-                                                                         \
-  void acts_geometry_module_destroy_v1(void* handle) noexcept {          \
-    if (handle == nullptr) {                                             \
-      return;                                                            \
-    }                                                                    \
-    try {                                                                \
-      delete static_cast<Acts::TrackingGeometry*>(handle);               \
-    } catch (...) {                                                      \
-    }                                                                    \
-  }                                                                      \
-                                                                         \
-  const ActsGeometryModuleV1 g_actsGeometryModuleV1 = {                  \
-      ACTS_GEOMETRY_MODULE_ABI_TAG, &acts_geometry_module_build_v1,      \
-      &acts_geometry_module_destroy_v1};                                 \
-  }                                                                      \
-                                                                         \
+namespace Acts::detail {
+
+using BuildFunction = std::unique_ptr<TrackingGeometry> (*)(const Logger&);
+
+const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
+                                              BuildFunction buildFunc);
+
+}  // namespace Acts::detail
+
+#define ACTS_DEFINE_GEOMETRY_MODULE(build_function)                      \
   extern "C" const ActsGeometryModuleV1* acts_geometry_module_v1(void) { \
-    return &g_actsGeometryModuleV1;                                      \
+    return Acts::detail::getGeometryModule(ACTS_GEOMETRY_MODULE_ABI_TAG, \
+                                           build_function);              \
   }

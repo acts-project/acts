@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryModuleLoader.hpp"
+
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 #if defined(__unix__) || defined(__APPLE__)
@@ -18,7 +19,8 @@
 #include <stdexcept>
 
 #ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
-#error "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided by CMake when building ActsCore."
+#error \
+    "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided by CMake when building ActsCore."
 #endif
 
 namespace {
@@ -77,7 +79,7 @@ const char* geometryModuleHostAbiTag() noexcept {
 std::shared_ptr<TrackingGeometry> loadGeometryModule(
     const std::filesystem::path& modulePath) {
 #if !(defined(__unix__) || defined(__APPLE__))
-  (void)modulePath;
+  static_cast<void>(modulePath);
   throw std::runtime_error(
       "Runtime geometry modules are only supported on Unix-like systems");
 #else
@@ -91,15 +93,17 @@ std::shared_ptr<TrackingGeometry> loadGeometryModule(
       descriptor->destroy == nullptr) {
     throw std::runtime_error("Geometry module descriptor is incomplete");
   }
-  if (std::strcmp(descriptor->module_abi_tag, geometryModuleHostAbiTag()) != 0) {
+  if (std::strcmp(descriptor->module_abi_tag, geometryModuleHostAbiTag()) !=
+      0) {
     std::ostringstream msg;
     msg << "Geometry module ABI mismatch: module='"
-        << descriptor->module_abi_tag << "' host='" << geometryModuleHostAbiTag()
-        << "' path='" << modulePath.string() << "'";
+        << descriptor->module_abi_tag << "' host='"
+        << geometryModuleHostAbiTag() << "' path='" << modulePath.string()
+        << "'";
     throw std::runtime_error(msg.str());
   }
 
-  void* rawHandle = descriptor->build(nullptr);
+  void* rawHandle = descriptor->build(nullptr, nullptr);
   if (rawHandle == nullptr) {
     throw std::runtime_error("Geometry module build returned null handle");
   }
