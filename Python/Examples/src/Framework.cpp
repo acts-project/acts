@@ -348,6 +348,11 @@ void addFramework(py::module& mex) {
                  .def_static("_trigger_divbyzero", &trigger_divbyzero)
                  .def_static("_trigger_overflow", &trigger_overflow)
                  .def_static("_trigger_invalid", &trigger_invalid)
+                 .def_property_readonly_static(
+                     "supported",
+                     [](const py::object& /*self*/) {
+                       return FpeMonitor::isSupported();
+                     })
                  .def_static("context", []() { return FpeMonitorContext(); });
 
   fpe.def_property_readonly("result", py::overload_cast<>(&FpeMonitor::result),

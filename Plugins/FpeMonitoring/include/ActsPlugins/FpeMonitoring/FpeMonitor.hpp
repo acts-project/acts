@@ -12,6 +12,7 @@
 #include <atomic>
 #include <csignal>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -75,7 +76,7 @@ class FpeMonitor {
     /// @param offset Number of bytes to advance
     void pushOffset(std::size_t offset) {
       assert(m_offset + offset < m_size);
-      m_offset = offset;
+      m_offset += offset;
     }
 
     /// Reset buffer offset to beginning
@@ -168,10 +169,13 @@ class FpeMonitor {
     /// @param type Exception type
     /// @param stackPtr Pointer to stack data
     /// @param bufferSize Size of stack buffer
-    void add(FpeType type, void *stackPtr, std::size_t bufferSize);
+    /// @param location Faulting instruction address if available
+    void add(FpeType type, void *stackPtr, std::size_t bufferSize,
+             std::uintptr_t location = 0);
 
    private:
     std::vector<FpeInfo> m_stackTraces;
+    std::vector<std::uintptr_t> m_locations;
     std::array<unsigned int, 32> m_counts{};
 
     friend FpeMonitor;
@@ -210,6 +214,9 @@ class FpeMonitor {
   /// Check if stack trace symbolization is available
   /// @return True if symbolization is available
   static bool canSymbolize();
+  /// Check if trapping-based FPE monitoring is supported on this platform
+  /// @return True if runtime support is available
+  static bool isSupported();
 
  private:
   void enable();
@@ -232,7 +239,8 @@ class FpeMonitor {
 
   Buffer m_buffer{65536};
 
-  boost::container::static_vector<std::tuple<FpeType, void *, std::size_t>, 128>
+  boost::container::static_vector<
+      std::tuple<FpeType, void *, std::size_t, std::uintptr_t>, 128>
       m_recorded;
 };
 

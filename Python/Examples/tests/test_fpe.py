@@ -1,6 +1,6 @@
-import sys
 import os
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -10,14 +10,18 @@ import acts.examples
 
 pytestmark = [
     pytest.mark.skipif(
-        sys.platform != "linux",
-        reason="FPE monitoring currently only supported on Linux",
+        not acts.examples.FpeMonitor.supported,
+        reason="FPE monitoring not supported on this platform",
     ),
     pytest.mark.skipif(
         "ACTS_SEQUENCER_DISABLE_FPEMON" in os.environ,
         reason="Sequencer is configured to disable FPE monitoring",
     ),
 ]
+
+_fail_fast_exception = (
+    acts.examples.FpeFailure if sys.platform == "linux" else RuntimeError
+)
 
 
 _names = {
@@ -138,7 +142,7 @@ def test_fpe_single_fail_immediately(fpe_type):
         )
     )
 
-    with pytest.raises(acts.examples.FpeFailure):
+    with pytest.raises(_fail_fast_exception):
         s.run()
 
     res = s.fpeResult
@@ -192,6 +196,10 @@ def test_fpe_rearm(fpe_type):
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
 
 
+@pytest.mark.skipif(
+    sys.platform == "darwin",
+    reason="Source-location FPE masking is not stable on macOS backtraces",
+)
 def test_fpe_masking_single(fpe_type):
     trigger = getattr(acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
