@@ -23,7 +23,6 @@ import aiohttp
 from gidgethub.aiohttp import GitHubAPI
 from fsspec.implementations.zip import ZipFileSystem
 
-
 app = typer.Typer()
 
 

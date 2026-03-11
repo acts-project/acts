@@ -12,6 +12,10 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondPortalShell.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
+#include "Acts/Geometry/TrapezoidPortalShell.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 
@@ -30,6 +34,13 @@ using CylinderHomogeneousMaterialDesignator =
 
 using CuboidHomogeneousMaterialDesignator =
     ISurfaceMaterialDesignator<CuboidVolumeBounds::Face, CuboidPortalShell>;
+
+using TrapezoidHomogeneousMaterialDesignator =
+    ISurfaceMaterialDesignator<TrapezoidVolumeBounds::Face,
+                               TrapezoidPortalShell>;
+
+using DiamondHomogeneousMaterialDesignator =
+    ISurfaceMaterialDesignator<DiamondVolumeBounds::Face, DiamondPortalShell>;
 
 class DesignatorBase {
  public:
@@ -60,6 +71,12 @@ class DesignatorBase {
 
   virtual std::unique_ptr<DesignatorBase> merged(
       const CuboidHomogeneousMaterialDesignator& other) const;
+
+  virtual std::unique_ptr<DesignatorBase> merged(
+      const TrapezoidHomogeneousMaterialDesignator& other) const;
+
+  virtual std::unique_ptr<DesignatorBase> merged(
+      const DiamondHomogeneousMaterialDesignator& other) const;
 
   virtual void graphvizLabel(std::ostream& os) const = 0;
 };
@@ -383,6 +400,16 @@ class NullDesignator : public DesignatorBase {
     return other.merged(*this);
   }
 
+  std::unique_ptr<DesignatorBase> merged(
+      const TrapezoidHomogeneousMaterialDesignator& other) const override {
+    return other.merged(*this);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const DiamondHomogeneousMaterialDesignator& other) const override {
+    return other.merged(*this);
+  }
+
   using DesignatorBase::merged;
 
   void graphvizLabel(std::ostream& os) const override {
@@ -421,6 +448,16 @@ inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
 
 inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
     const CuboidHomogeneousMaterialDesignator& other) const {
+  throw std::runtime_error(mergingError(*this, other));
+}
+
+inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
+    const TrapezoidHomogeneousMaterialDesignator& other) const {
+  throw std::runtime_error(mergingError(*this, other));
+}
+
+inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
+    const DiamondHomogeneousMaterialDesignator& other) const {
   throw std::runtime_error(mergingError(*this, other));
 }
 

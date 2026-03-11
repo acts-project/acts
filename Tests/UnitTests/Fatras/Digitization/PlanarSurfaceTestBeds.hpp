@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -19,9 +18,8 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
-#include <array>
 #include <numbers>
 #include <tuple>
 #include <vector>
@@ -79,7 +77,7 @@ struct PlanarSurfaceTestBeds {
     double rmax = 7.5;
     double xmin = 2.;
     double xmax = 3.5;
-    double ymax = std::sqrt(rmax * rmax - xmax * xmax);
+    double ymax = Acts::fastCathetus(rmax, xmax);
     double alpha = std::max(std::atan2(xmin, rmin), std::atan2(xmax, ymax));
 
     auto discTrapezoid =

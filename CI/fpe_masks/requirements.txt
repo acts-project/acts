@@ -52,5 +52,5 @@ typer==0.24.1
     # via -r CI/fpe_masks/requirements.in
 uritemplate==4.2.0
     # via gidgethub
-yarl==1.22.0
+yarl==1.23.0
     # via aiohttp

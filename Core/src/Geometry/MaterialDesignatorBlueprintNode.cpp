@@ -12,8 +12,12 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondPortalShell.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/TrapezoidPortalShell.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
@@ -186,6 +190,32 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
                                          CuboidPortalShell>(
           face, std::move(material)));
 
+  return *this;
+}
+
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    TrapezoidVolumeBounds::Face face,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    throw std::invalid_argument(prefix() + "Material is nullptr");
+  }
+  impl().m_designator = impl().m_designator->merged(
+      detail::ISurfaceMaterialDesignator<TrapezoidVolumeBounds::Face,
+                                         TrapezoidPortalShell>(
+          face, std::move(material)));
+  return *this;
+}
+
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    DiamondVolumeBounds::Face face,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    throw std::invalid_argument(prefix() + "Material is nullptr");
+  }
+  impl().m_designator = impl().m_designator->merged(
+      detail::ISurfaceMaterialDesignator<DiamondVolumeBounds::Face,
+                                         DiamondPortalShell>(
+          face, std::move(material)));
   return *this;
 }
 
