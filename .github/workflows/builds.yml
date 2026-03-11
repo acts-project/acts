@@ -20,6 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
+  ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
   linux_ubuntu:

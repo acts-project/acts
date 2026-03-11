@@ -108,6 +108,7 @@ def test_fpe_single_fail_at_end(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         failOnFirstFpe=False,
+        failOnUnmaskedFpe=True,
     )
 
     s.addAlgorithm(
@@ -126,10 +127,33 @@ def test_fpe_single_fail_at_end(fpe_type):
         assert res.count(x) == (s.config.events if x == fpe_type else 0)
 
 
+def test_fpe_single_no_fail_at_end(fpe_type):
+    s = acts.examples.Sequencer(
+        events=10,
+        failOnFirstFpe=False,
+        failOnUnmaskedFpe=False,
+    )
+
+    s.addAlgorithm(
+        FuncAlg(
+            _names[fpe_type],
+            lambda _: getattr(
+                acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}"
+            )(),
+        )
+    )
+    s.run()
+
+    res = s.fpeResult
+    for x in acts.examples.FpeType.values:
+        assert res.count(x) == (s.config.events if x == fpe_type else 0)
+
+
 def test_fpe_single_fail_immediately(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         failOnFirstFpe=True,
+        failOnUnmaskedFpe=True,
         numThreads=1,
     )
 
@@ -185,6 +209,7 @@ def test_fpe_rearm(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         failOnFirstFpe=False,
+        failOnUnmaskedFpe=True,
         numThreads=-1,
     )
     s.addAlgorithm(Alg())
@@ -215,6 +240,7 @@ def test_fpe_masking_single(fpe_type):
         events=10,
         numThreads=-1,
         failOnFirstFpe=True,
+        failOnUnmaskedFpe=True,
         fpeMasks=[
             acts.examples.Sequencer.FpeMask(*_locs[fpe_type], fpe_type, 1),
         ],
@@ -231,6 +257,7 @@ def test_fpe_masking_single(fpe_type):
         events=10,
         numThreads=-1,
         failOnFirstFpe=True,
+        failOnUnmaskedFpe=True,
         fpeMasks=[
             acts.examples.Sequencer.FpeMask(*_locs[fpe_type], fpe_type, 3),
         ],
@@ -284,6 +311,7 @@ def test_buffer_sufficient():
     s = acts.examples.Sequencer(
         events=10000,
         failOnFirstFpe=False,
+        failOnUnmaskedFpe=True,
     )
 
     s.addAlgorithm(

@@ -325,7 +325,7 @@ void addFramework(py::module& mex) {
 
   ACTS_PYTHON_STRUCT(c, skip, events, logLevel, numThreads, outputDir,
                      outputTimingFile, trackFpes, fpeMasks, failOnFirstFpe,
-                     fpeStackTraceLength);
+                     failOnUnmaskedFpe, fpeStackTraceLength);
 
   auto fpem =
       py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
