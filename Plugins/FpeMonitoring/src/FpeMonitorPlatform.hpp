@@ -16,6 +16,30 @@
 
 namespace ActsPlugins::detail {
 
+inline std::optional<FpeType> fpeTypeFromSiCode(int siCode) {
+  using enum FpeType;
+  switch (siCode) {
+    case FPE_INTDIV:
+      return INTDIV;
+    case FPE_INTOVF:
+      return INTOVF;
+    case FPE_FLTDIV:
+      return FLTDIV;
+    case FPE_FLTOVF:
+      return FLTOVF;
+    case FPE_FLTUND:
+      return FLTUND;
+    case FPE_FLTRES:
+      return FLTRES;
+    case FPE_FLTINV:
+      return FLTINV;
+    case FPE_FLTSUB:
+      return FLTSUB;
+    default:
+      return std::nullopt;
+  }
+}
+
 bool isRuntimeSupported();
 
 std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx);

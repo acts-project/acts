@@ -33,7 +33,7 @@ std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx) {
   if (signal != SIGFPE || si == nullptr) {
     return std::nullopt;
   }
-  return darwin::fpeTypeFromSiCode(si->si_code);
+  return fpeTypeFromSiCode(si->si_code);
 }
 
 void clearPendingExceptions(int excepts) {

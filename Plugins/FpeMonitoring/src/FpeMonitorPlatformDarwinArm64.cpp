@@ -86,7 +86,7 @@ bool isRuntimeSupported() {
 std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx) {
   // Prefer SIGFPE si_code mapping when available.
   if (signal == SIGFPE && si != nullptr) {
-    return darwin::fpeTypeFromSiCode(si->si_code);
+    return fpeTypeFromSiCode(si->si_code);
   }
 
   // Some arm64 floating-point traps surface as SIGILL; decode from ESR in the

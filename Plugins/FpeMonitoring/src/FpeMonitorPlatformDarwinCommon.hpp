@@ -11,7 +11,6 @@
 #include <cfenv>
 #include <cstddef>
 #include <cstdint>
-#include <optional>
 
 #include <boost/stacktrace/frame.hpp>
 
@@ -46,30 +45,6 @@ inline int exceptMaskForType(FpeType type) {
   }
 }
 
-inline std::optional<FpeType> fpeTypeFromSiCode(int siCode) {
-  using enum FpeType;
-  switch (siCode) {
-    case FPE_INTDIV:
-      return INTDIV;
-    case FPE_INTOVF:
-      return INTOVF;
-    case FPE_FLTDIV:
-      return FLTDIV;
-    case FPE_FLTOVF:
-      return FLTOVF;
-    case FPE_FLTUND:
-      return FLTUND;
-    case FPE_FLTRES:
-      return FLTRES;
-    case FPE_FLTINV:
-      return FLTINV;
-    case FPE_FLTSUB:
-      return FLTSUB;
-    default:
-      return std::nullopt;
-  }
-}
-
 inline void clearPendingExceptions(int excepts) {
   std::feclearexcept(excepts);
 }
@@ -78,6 +53,13 @@ template <typename RegisterStateExtractor>
 std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
                                           std::size_t bufferBytes,
                                           RegisterStateExtractor&& extractor) {
+  // Why this helper exists:
+  // In a signal handler we need the stack of the interrupted faulting context
+  // (PC/SP/FP from ucontext), not the stack of the handler itself.
+  // Generic signal-safe dumps start at the current handler frame and cannot be
+  // seeded with those saved registers, so they may miss the real fault site or
+  // include mostly signal trampoline frames. Walking from saved FP/PC gives a
+  // deterministic trace rooted at the trapping instruction on Darwin.
   using NativeFramePtr = boost::stacktrace::frame::native_frame_ptr_t;
   auto* frames = static_cast<NativeFramePtr*>(buffer);
   const std::size_t maxFrames = bufferBytes / sizeof(NativeFramePtr);
@@ -87,6 +69,8 @@ std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
     return 0;
   }
 
+  // The platform TU provides arch-specific extraction of SP/FP/PC from the raw
+  // signal context while this helper keeps the frame-walk logic shared.
   const RegisterState state = extractor(ctx);
   const std::uintptr_t sp = state.sp;
   std::uintptr_t pc = state.pc;
@@ -101,6 +85,8 @@ std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
 
   push(pc);
 
+  // Keep unwinding constrained to a finite stack window above SP to avoid
+  // dereferencing arbitrary memory if the frame chain is corrupted.
   constexpr std::uintptr_t kMaxStackWindow = 16 * 1024 * 1024;
   auto inStackWindow = [&](std::uintptr_t address) {
     if (address < sp || address > sp + kMaxStackWindow) {
@@ -114,6 +100,10 @@ std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
     std::uintptr_t returnAddress;
   };
 
+  // Standard frame-pointer chain walk:
+  //   fp -> {prev_fp, return_address}
+  // Stops when the chain is non-monotonic, leaves the allowed stack window,
+  // or we exhaust caller-provided buffer capacity.
   while (count < maxFrames && inStackWindow(fp) &&
          fp + sizeof(FrameRecord) <= sp + kMaxStackWindow) {
     const auto* record = reinterpret_cast<const FrameRecord*>(fp);
