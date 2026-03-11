@@ -158,11 +158,12 @@ class VolumeMaterialMapper {
 
   /// Process/map a single track
   ///
-  /// @param mState The current state map
-  /// @param mTrack The material track to be mapped
-  ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
+  ///
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  /// @return Result of the mapping process
   Result<void> mapMaterialTrack(State& mState,
                                 RecordedMaterialTrack& mTrack) const;
 
