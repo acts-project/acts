@@ -8,6 +8,10 @@
 
 #pragma once
 
+#if !defined(__unix__) && !defined(__APPLE__)
+#error "Runtime geometry modules are only supported on Unix-like systems (Linux, macOS)."
+#endif
+
 #include "Acts/Utilities/Logger.hpp"
 
 #include <filesystem>
