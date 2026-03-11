@@ -42,7 +42,7 @@ class HitContainer2 {
 
   const std::vector<Hit>& hits() const noexcept { return m_hits; }
 
-  const std::unordered_map<ParticleIndex, std::vector<HitIndex>>&
+  const std::unordered_map<ParticleIndex2, std::vector<HitIndex>>&
   hitsByParticles() const noexcept {
     return m_hitsByParticles;
   }
@@ -55,9 +55,9 @@ class HitContainer2 {
   Hit& push_back(const Hit& hit);
 
   Hit& emplace_back(Acts::GeometryIdentifier geometryId,
-                    ParticleIndex particleId, const Acts::Vector4& pos4,
-                    const Acts::Vector4& before4, const Acts::Vector4& after4,
-                    std::int32_t index = -1);
+                    Barcode particleBarcode, ParticleIndex2 particleId,
+                    const Acts::Vector4& pos4, const Acts::Vector4& before4,
+                    const Acts::Vector4& after4, std::int32_t index = -1);
 
   Hit& operator[](std::size_t index) { return m_hits[index]; }
   const Hit& operator[](std::size_t index) const { return m_hits[index]; }
@@ -71,7 +71,7 @@ class HitContainer2 {
   auto end() const noexcept { return m_hits.end(); }
 
   std::span<const HitIndex> hitIndicesByParticle(
-      ParticleIndex particleId) const;
+      ParticleIndex2 particleId) const;
   std::span<const HitIndex> hitIndicesBySurface(
       Acts::GeometryIdentifier geometryId) const;
 
@@ -109,7 +109,7 @@ class HitContainer2 {
     return ConstSubset(*this, subset);
   }
 
-  ConstSubset hitsByParticle(ParticleIndex particleId) const {
+  ConstSubset hitsByParticle(ParticleIndex2 particleId) const {
     return subset(hitIndicesByParticle(particleId));
   }
   ConstSubset hitsBySurface(Acts::GeometryIdentifier geometryId) const {
@@ -118,7 +118,7 @@ class HitContainer2 {
 
  private:
   std::vector<Hit> m_hits;
-  std::unordered_map<ParticleIndex, std::vector<HitIndex>> m_hitsByParticles;
+  std::unordered_map<ParticleIndex2, std::vector<HitIndex>> m_hitsByParticles;
   std::unordered_map<Acts::GeometryIdentifier, std::vector<HitIndex>>
       m_hitsBySurfaces;
 };
