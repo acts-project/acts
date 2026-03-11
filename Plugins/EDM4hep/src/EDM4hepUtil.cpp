@@ -367,7 +367,7 @@ MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from) {
   for (std::size_t i = 0; i < dim; ++i) {
     for (std::size_t j = 0; j < dim; ++j) {
       result.covariance(result.indices[i], result.indices[j]) =
-          cov[i * dim + j];  // row-major
+          from.getCov(i, j);
     }
   }
 

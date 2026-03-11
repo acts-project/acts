@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(WriteMeasurement) {
   auto cov = to.getCovariance();
   BOOST_CHECK_EQUAL(cov.size(), 4);
   CHECK_CLOSE_REL(cov[0], measCov(0, 0), 1e-6);
-  CHECK_CLOSE_REL(cov[1], measCov(0, 1), 1e-6);
-  CHECK_CLOSE_REL(cov[2], measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(cov[1], measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(cov[2], measCov(0, 1), 1e-6);
   CHECK_CLOSE_REL(cov[3], measCov(1, 1), 1e-6);
 
   auto unpackedIndices =
@@ -133,8 +133,8 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementNoPosition) {
   auto cov = to.getCovariance();
   BOOST_CHECK_EQUAL(cov.size(), 4);
   CHECK_CLOSE_REL(cov[0], measCov(0, 0), 1e-6);
-  CHECK_CLOSE_REL(cov[1], measCov(0, 1), 1e-6);
-  CHECK_CLOSE_REL(cov[2], measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(cov[1], measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(cov[2], measCov(0, 1), 1e-6);
   CHECK_CLOSE_REL(cov[3], measCov(1, 1), 1e-6);
 
   auto unpackedIndices =
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementWithTime) {
   BOOST_CHECK_EQUAL(cov.size(), 9);
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
-      CHECK_CLOSE_REL(cov[i * 3 + j], measCov(i, j), 1e-6);
+      CHECK_CLOSE_REL(cov[j * 3 + i], measCov(i, j), 1e-6);
     }
   }
 

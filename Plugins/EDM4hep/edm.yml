@@ -139,7 +139,7 @@ datatypes:
 
     VectorMembers:
       - float measurement // Entries in the measurement value vector
-      - float covariance // Entries in the measurement covariance vector. Order is row major
+      - float covariance // Entries in the measurement covariance vector. Order is column major
 
     ExtraCode:
       includes: "#include <ActsPodioEdm/detail/SubspaceIndexHelpers.hpp>"
@@ -180,7 +180,7 @@ datatypes:
           if (cov.size() != dim * dim) {
             throw std::runtime_error("Covariance matrix size mismatch");
           }
-          const auto offset = indexI * dim + indexJ;
+          const auto offset = indexJ * dim + indexI;
           return cov[offset];
         }
 
@@ -220,7 +220,7 @@ datatypes:
           if (indexI >= dim || indexJ >= dim) {
             throw std::runtime_error("Covariance index out of range");
           }
-          const auto offset = indexI * dim + indexJ;
+          const auto offset = indexJ * dim + indexI;
           (*m_obj->m_covariance)[offset] = val;
         }
 
