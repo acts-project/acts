@@ -12,9 +12,8 @@
 #include <cstdint>
 #include <optional>
 
-#include <boost/stacktrace/frame.hpp>
-
 #include "FpeMonitorPlatform.hpp"
+#include "FpeMonitorPlatformDarwinCommon.hpp"
 
 #if !defined(__APPLE__) || !defined(__arm64__)
 #error "This translation unit is only valid for macOS arm64"
@@ -41,51 +40,6 @@ std::uint32_t darwinArm64TrapMask(int excepts) {
     mask |= __fpcr_trap_inexact;
   }
   return mask;
-}
-
-int exceptMaskForType(FpeType type) {
-  using enum FpeType;
-  switch (type) {
-    case INTDIV:
-    case FLTDIV:
-      return FE_DIVBYZERO;
-    case INTOVF:
-    case FLTOVF:
-      return FE_OVERFLOW;
-    case FLTUND:
-      return FE_UNDERFLOW;
-    case FLTRES:
-      return FE_INEXACT;
-    case FLTINV:
-    case FLTSUB:
-      return FE_INVALID;
-    default:
-      return 0;
-  }
-}
-
-std::optional<FpeType> fpeTypeFromSiCode(int siCode) {
-  using enum FpeType;
-  switch (siCode) {
-    case FPE_INTDIV:
-      return INTDIV;
-    case FPE_INTOVF:
-      return INTOVF;
-    case FPE_FLTDIV:
-      return FLTDIV;
-    case FPE_FLTOVF:
-      return FLTOVF;
-    case FPE_FLTUND:
-      return FLTUND;
-    case FPE_FLTRES:
-      return FLTRES;
-    case FPE_FLTINV:
-      return FLTINV;
-    case FPE_FLTSUB:
-      return FLTSUB;
-    default:
-      return std::nullopt;
-  }
 }
 
 std::optional<FpeType> fpeTypeFromDarwinArm64Esr(std::uint32_t esr) {
@@ -125,7 +79,7 @@ bool isRuntimeSupported() {
 
 std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx) {
   if (signal == SIGFPE && si != nullptr) {
-    return fpeTypeFromSiCode(si->si_code);
+    return darwin::fpeTypeFromSiCode(si->si_code);
   }
 
   if (signal == SIGILL && ctx != nullptr) {
@@ -137,7 +91,7 @@ std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx) {
 }
 
 void clearPendingExceptions(int excepts) {
-  std::feclearexcept(excepts);
+  darwin::clearPendingExceptions(excepts);
 }
 
 void enableExceptions(int excepts) {
@@ -160,7 +114,7 @@ void disableExceptions(int excepts) {
 }
 
 void maskTrapsInSignalContext(void* ctx, FpeType type) {
-  const int excepts = exceptMaskForType(type);
+  const int excepts = darwin::exceptMaskForType(type);
   auto* uc = static_cast<ucontext_t*>(ctx);
   uc->uc_mcontext->__ns.__fpcr &=
       ~static_cast<std::uint32_t>(darwinArm64TrapMask(excepts));
@@ -169,58 +123,15 @@ void maskTrapsInSignalContext(void* ctx, FpeType type) {
 
 std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
                                           std::size_t bufferBytes) {
-  using NativeFramePtr = boost::stacktrace::frame::native_frame_ptr_t;
-  auto* frames = static_cast<NativeFramePtr*>(buffer);
-  const std::size_t maxFrames = bufferBytes / sizeof(NativeFramePtr);
-  std::size_t count = 0;
-
-  if (ctx == nullptr || maxFrames == 0) {
-    return 0;
-  }
-
-  auto* uc = static_cast<ucontext_t*>(ctx);
-  const std::uintptr_t sp =
-      __darwin_arm_thread_state64_get_sp(uc->uc_mcontext->__ss);
-  std::uintptr_t fp = __darwin_arm_thread_state64_get_fp(uc->uc_mcontext->__ss);
-  const std::uintptr_t pc =
-      __darwin_arm_thread_state64_get_pc(uc->uc_mcontext->__ss);
-
-  auto push = [&](std::uintptr_t address) {
-    if (address == 0 || count >= maxFrames) {
-      return;
-    }
-    frames[count++] = reinterpret_cast<NativeFramePtr>(address);
-  };
-
-  push(pc);
-
-  constexpr std::uintptr_t kMaxStackWindow = 16 * 1024 * 1024;
-  auto inStackWindow = [&](std::uintptr_t address) {
-    if (address < sp || address > sp + kMaxStackWindow) {
-      return false;
-    }
-    return (address % alignof(std::uintptr_t)) == 0;
-  };
-
-  struct FrameRecord {
-    std::uintptr_t prevFp;
-    std::uintptr_t returnAddress;
-  };
-
-  while (count < maxFrames && inStackWindow(fp) &&
-         fp + sizeof(FrameRecord) <= sp + kMaxStackWindow) {
-    const auto* record = reinterpret_cast<const FrameRecord*>(fp);
-    const std::uintptr_t prevFp = record->prevFp;
-    const std::uintptr_t lr = record->returnAddress;
-    push(lr);
-
-    if (prevFp <= fp || !inStackWindow(prevFp)) {
-      break;
-    }
-    fp = prevFp;
-  }
-
-  return count * sizeof(NativeFramePtr);
+  return darwin::captureStackFromSignalContext(
+      ctx, buffer, bufferBytes, [](void* rawCtx) {
+        const auto& uc = *static_cast<ucontext_t*>(rawCtx);
+        return darwin::RegisterState{
+            .sp = __darwin_arm_thread_state64_get_sp(uc.uc_mcontext->__ss),
+            .fp = __darwin_arm_thread_state64_get_fp(uc.uc_mcontext->__ss),
+            .pc = __darwin_arm_thread_state64_get_pc(uc.uc_mcontext->__ss),
+        };
+      });
 }
 
 std::size_t safeDumpSkipFrames() {
