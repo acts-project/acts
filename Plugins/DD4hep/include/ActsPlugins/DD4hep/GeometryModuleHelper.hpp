@@ -25,7 +25,14 @@ const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
                                               BuildFunction buildFunc);
 }  // namespace ActsPlugins::DD4hep::detail
 
-#define ACTS_DEFINE_DD4HEP_GEOMETRY_MODULE(build_function)      \
-  ACTS_IMPL_GEOMETRY_MODULE_ENTRY(                             \
-      ActsPlugins::DD4hep::detail::getGeometryModule(          \
+#ifdef ACTS_GEOMETRY_MODULE_ABI_TAG
+#define ACTS_DEFINE_DD4HEP_GEOMETRY_MODULE(build_function)           \
+  ACTS_IMPL_GEOMETRY_MODULE_ENTRY(                                   \
+      ActsPlugins::DD4hep::detail::getGeometryModule(               \
           ACTS_GEOMETRY_MODULE_ABI_TAG, (build_function)))
+#else
+#define ACTS_DEFINE_DD4HEP_GEOMETRY_MODULE(build_function)                \
+  static_assert(false,                                                     \
+                "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided via "       \
+                "CMake (use acts_add_dd4hep_geometry_module).")
+#endif

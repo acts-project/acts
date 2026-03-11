@@ -13,11 +13,6 @@
 
 #include <memory>
 
-#ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
-#error \
-    "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided via CMake (use acts_add_geometry_module)."
-#endif
-
 namespace Acts::detail {
 using BuildFunction = std::unique_ptr<TrackingGeometry> (*)(const Logger&);
 const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
@@ -35,6 +30,15 @@ const ActsGeometryModuleV1* getGeometryModuleFromRaw(
     return (get_module_expr);                                             \
   }
 
-#define ACTS_DEFINE_GEOMETRY_MODULE(build_function)    \
+// Emit a clear error only when the macro is actually expanded without the tag,
+// rather than at include time — Acts internal code includes this header too.
+#ifdef ACTS_GEOMETRY_MODULE_ABI_TAG
+#define ACTS_DEFINE_GEOMETRY_MODULE(build_function)         \
   ACTS_IMPL_GEOMETRY_MODULE_ENTRY(Acts::detail::getGeometryModule( \
       ACTS_GEOMETRY_MODULE_ABI_TAG, (build_function)))
+#else
+#define ACTS_DEFINE_GEOMETRY_MODULE(build_function)                    \
+  static_assert(false,                                                 \
+                "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided via "   \
+                "CMake (use acts_add_geometry_module).")
+#endif

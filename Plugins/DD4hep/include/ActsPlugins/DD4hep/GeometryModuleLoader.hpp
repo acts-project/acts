@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryModule.h"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <filesystem>

@@ -9,6 +9,8 @@
 #include "Acts/Geometry/GeometryModuleLoader.hpp"
 
 #ifdef ACTS_HAVE_DD4HEP
+#include "ActsPlugins/DD4hep/GeometryModuleLoader.hpp"
+
 #include <DD4hep/Detector.h>
 #endif
 
@@ -70,7 +72,7 @@ int main(int argc, char* argv[]) {
       detector->volumeManager();
       detector->apply("DD4hepVolumeManager", 0, nullptr);
       trackingGeometry =
-          Acts::loadGeometryModule(modulePath, &*detector, *logger);
+          Acts::loadDD4hepGeometryModule(modulePath, *detector, *logger);
     } else
 #endif
     {
