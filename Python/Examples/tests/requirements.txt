@@ -10,7 +10,7 @@ cramjam==2.11.0
     # via uproot
 execnet==2.1.2
     # via pytest-xdist
-filelock==3.24.3
+filelock==3.25.0
     # via -r Python/Examples/tests/requirements.in
 fsspec==2026.2.0
     # via
@@ -44,7 +44,7 @@ pytest==9.0.2
     #   pytest-repeat
     #   pytest-timeout
     #   pytest-xdist
-pytest-check==2.7.2
+pytest-check==2.7.6
     # via -r Python/Examples/tests/requirements.in
 pytest-repeat==0.9.4
     # via -r Python/Examples/tests/requirements.in
