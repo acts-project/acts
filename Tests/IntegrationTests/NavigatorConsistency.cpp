@@ -311,12 +311,13 @@ using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 using TestEigenStepper = EigenStepper<>;
 using EigenPropagator = Propagator<TestEigenStepper, Navigator>;
 using Reference1StraightLinePropagator =
-    Propagator<StraightLineStepper, TryAllNavigator>;
-using Reference1EigenPropagator = Propagator<TestEigenStepper, TryAllNavigator>;
+    Propagator<StraightLineStepper, Experimental::TryAllNavigator>;
+using Reference1EigenPropagator =
+    Propagator<TestEigenStepper, Experimental::TryAllNavigator>;
 using Reference2StraightLinePropagator =
-    Propagator<StraightLineStepper, TryAllOverstepNavigator>;
+    Propagator<StraightLineStepper, Experimental::TryAllOverstepNavigator>;
 using Reference2EigenPropagator =
-    Propagator<TestEigenStepper, TryAllOverstepNavigator>;
+    Propagator<TestEigenStepper, Experimental::TryAllOverstepNavigator>;
 
 StraightLineStepper slstepper;
 TestEigenStepper estepper(bField);
@@ -333,26 +334,28 @@ EigenPropagator epropagator(estepper,
 
 Reference1StraightLinePropagator refslpropagator1(
     slstepper,
-    TryAllNavigator({tGeometry, true, true, false},
-                    getDefaultLogger("ref1_sl_nav", Logging::INFO)),
+    Experimental::TryAllNavigator({tGeometry, true, true, false},
+                                  getDefaultLogger("ref1_sl_nav",
+                                                   Logging::INFO)),
     getDefaultLogger("ref1_sl_prop", Logging::INFO));
 Reference1EigenPropagator refepropagator1(
     estepper,
-    TryAllNavigator({tGeometry, true, true, false,
-                     BoundaryTolerance::Infinite()},
-                    getDefaultLogger("ref1_e_nav", Logging::INFO)),
+    Experimental::TryAllNavigator(
+        {tGeometry, true, true, false, BoundaryTolerance::Infinite()},
+        getDefaultLogger("ref1_e_nav", Logging::INFO)),
     getDefaultLogger("ref1_e_prop", Logging::INFO));
 
 Reference2EigenPropagator refepropagator2(
     estepper,
-    TryAllOverstepNavigator({tGeometry, true, true, false,
-                             BoundaryTolerance::Infinite()},
-                            getDefaultLogger("ref2_e_nav", Logging::INFO)),
+    Experimental::TryAllOverstepNavigator(
+        {tGeometry, true, true, false, BoundaryTolerance::Infinite()},
+        getDefaultLogger("ref2_e_nav", Logging::INFO)),
     getDefaultLogger("ref2_e_prop", Logging::INFO));
 Reference2StraightLinePropagator refslpropagator2(
     slstepper,
-    TryAllOverstepNavigator({tGeometry, true, true, false},
-                            getDefaultLogger("ref2_sl_nav", Logging::INFO)),
+    Experimental::TryAllOverstepNavigator({tGeometry, true, true, false},
+                                          getDefaultLogger("ref2_sl_nav",
+                                                           Logging::INFO)),
     getDefaultLogger("ref2_sl_prop", Logging::INFO));
 
 auto eventGen =
