@@ -19,7 +19,7 @@ const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
   static BuildFunction s_buildFunc = buildFunc;
 
   return Acts::detail::getGeometryModuleFromRaw(
-      module_abi_tag,
+      module_abi_tag, "dd4hep::Detector",
       [](const void* userData, const void* loggerPtr) noexcept -> void* {
         if (loggerPtr == nullptr) {
           return nullptr;

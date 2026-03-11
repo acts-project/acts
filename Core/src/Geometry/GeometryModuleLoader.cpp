@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/GeometryModuleLoader.hpp"
 
+#include "Acts/Geometry/GeometryModule.h"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 #if defined(__unix__) || defined(__APPLE__)
@@ -16,7 +17,6 @@
 
 #include <cstring>
 #include <format>
-#include <sstream>
 #include <stdexcept>
 
 #ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
@@ -74,13 +74,14 @@ const char* geometryModuleHostAbiTag() noexcept {
 
 }  // namespace
 
-namespace Acts {
+namespace Acts::detail {
 
-std::shared_ptr<TrackingGeometry> loadGeometryModule(
-    const std::filesystem::path& modulePath, const void* userData,
-    const Logger& logger) {
+std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
+    const std::filesystem::path& modulePath, const char* expectedUserDataType,
+    const void* userData, const Logger& logger) {
 #if !(defined(__unix__) || defined(__APPLE__))
   static_cast<void>(modulePath);
+  static_cast<void>(expectedUserDataType);
   static_cast<void>(userData);
   throw std::runtime_error(
       "Runtime geometry modules are only supported on Unix-like systems");
@@ -103,6 +104,32 @@ std::shared_ptr<TrackingGeometry> loadGeometryModule(
         modulePath.string()));
   }
 
+  // Validate user_data_type: both sides must agree on whether userData is
+  // needed and what type it is.
+  const char* actualType = descriptor->user_data_type;
+  bool typesMatch =
+      (expectedUserDataType == nullptr && actualType == nullptr) ||
+      (expectedUserDataType != nullptr && actualType != nullptr &&
+       std::strcmp(actualType, expectedUserDataType) == 0);
+  if (!typesMatch) {
+    if (actualType == nullptr) {
+      throw std::runtime_error(std::format(
+          "Geometry module '{}' does not require user data; "
+          "use loadGeometryModule(path, logger) without extra context",
+          modulePath.string()));
+    } else if (expectedUserDataType == nullptr) {
+      throw std::runtime_error(std::format(
+          "Geometry module '{}' requires user data of type '{}'; "
+          "use the appropriate typed loader (e.g. loadDD4hepGeometryModule)",
+          modulePath.string(), actualType));
+    } else {
+      throw std::runtime_error(std::format(
+          "Geometry module '{}' user_data_type mismatch: "
+          "expected '{}', module declares '{}'",
+          modulePath.string(), expectedUserDataType, actualType));
+    }
+  }
+
   void* rawHandle = descriptor->build(userData, &logger);
   if (rawHandle == nullptr) {
     throw std::runtime_error("Geometry module build returned null handle");
@@ -117,9 +144,13 @@ std::shared_ptr<TrackingGeometry> loadGeometryModule(
 #endif
 }
 
+}  // namespace Acts::detail
+
+namespace Acts {
+
 std::shared_ptr<TrackingGeometry> loadGeometryModule(
     const std::filesystem::path& modulePath, const Logger& logger) {
-  return loadGeometryModule(modulePath, nullptr, logger);
+  return detail::loadGeometryModuleImpl(modulePath, nullptr, nullptr, logger);
 }
 
 }  // namespace Acts

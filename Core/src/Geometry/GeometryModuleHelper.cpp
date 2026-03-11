@@ -18,11 +18,13 @@
 namespace Acts::detail {
 
 const ActsGeometryModuleV1* getGeometryModuleFromRaw(
-    const char* module_abi_tag, void* (*buildFunc)(const void*, const void*)) {
-  static const auto s_module = [module_abi_tag,
+    const char* module_abi_tag, const char* user_data_type,
+    void* (*buildFunc)(const void*, const void*)) {
+  static const auto s_module = [module_abi_tag, user_data_type,
                                 buildFunc]() -> ActsGeometryModuleV1 {
     return {
         .module_abi_tag = module_abi_tag,
+        .user_data_type = user_data_type,
         .build = buildFunc,
         .destroy =
             [](void* handle) noexcept {
@@ -41,11 +43,12 @@ const ActsGeometryModuleV1* getGeometryModuleFromRaw(
 }
 
 const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
+                                              const char* user_data_type,
                                               BuildFunction buildFunc) {
   static BuildFunction s_buildFunc = buildFunc;
 
   return getGeometryModuleFromRaw(
-      module_abi_tag,
+      module_abi_tag, user_data_type,
       [](const void* /*userData*/, const void* loggerPtr) noexcept -> void* {
         if (loggerPtr == nullptr) {
           return nullptr;

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryModule.h"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <filesystem>
@@ -20,16 +19,20 @@ class TrackingGeometry;
 
 /// Load a module shared library, validate ABI compatibility, build and return
 /// the tracking geometry. The returned deleter keeps the module loaded until
-/// the geometry is destroyed.
+/// the geometry is destroyed. Throws if the module requires user data (e.g.
+/// a DD4hep module) — use the appropriate typed loader instead.
 std::shared_ptr<TrackingGeometry> loadGeometryModule(
     const std::filesystem::path& modulePath,
     const Logger& logger = getDummyLogger());
 
-/// Overload that passes \a userData to the module's build function.
-/// Use for modules that require extra context (e.g. DD4hep detector pointer).
-std::shared_ptr<TrackingGeometry> loadGeometryModule(
+namespace detail {
+/// Low-level loader used by typed wrappers (e.g. loadDD4hepGeometryModule).
+/// Validates that the module's user_data_type matches \a expectedUserDataType
+/// (nullptr means the module must declare no user data requirement).
+std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
     const std::filesystem::path& modulePath,
-    const void* userData,
-    const Logger& logger = getDummyLogger());
+    const char* expectedUserDataType, const void* userData,
+    const Logger& logger);
+}  // namespace detail
 
 }  // namespace Acts
