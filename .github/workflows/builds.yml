@@ -120,6 +120,8 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:83
     needs: [linux_ubuntu]
+    env:
+      ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 1
 
     steps:
       - uses: actions/checkout@v6
