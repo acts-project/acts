@@ -71,3 +71,4 @@ add_unittest(TypeDispatcher TypeDispatcherTests.cpp)
 
 add_unittest(Histogram HistogramTests.cpp)
 add_unittest(ProfileEfficiency ProfileEfficiencyTests.cpp)
+add_unittest(ContainerHelpers ContainerHelpersTests.cpp)

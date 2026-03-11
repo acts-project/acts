@@ -18,7 +18,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-#include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
+#include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <stdexcept>
 
@@ -147,8 +147,29 @@ class PyReadDataHandle : public ReadDataHandleBase {
                            expected + " but got " + actual);
     }
 
-    return m_entry->fn(*holder, wbPy);
+    return m_entry->toPython(*holder, wbPy);
   }
+
+ private:
+  const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
+};
+
+class PyWriteDataHandle : public WriteDataHandleBase {
+ public:
+  PyWriteDataHandle(SequenceElement* parent, const py::object& pytype,
+                    const std::string& name)
+      : WriteDataHandleBase(parent, name) {
+    m_entry = WhiteBoardRegistry::find(pytype);
+  }
+
+  void call(const AlgorithmContext& ctx, const py::object& obj) const {
+    auto any = m_entry->fromPython(obj);
+    addHolder(ctx.eventStore, std::move(any), m_entry->typeHash);
+  }
+
+  const std::type_info& typeInfo() const override { return *m_entry->typeinfo; }
+
+  std::uint64_t typeHash() const override { return m_entry->typeHash; }
 
  private:
   const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
@@ -215,6 +236,24 @@ void addFramework(py::module& mex) {
           },
           py::arg("key"))
       .def("__call__", &PyReadDataHandle::call, py::arg("whiteboard"));
+
+  py::class_<PyWriteDataHandle>(mex, "WriteDataHandle")
+      .def(py::init([](const py::object& parent_py, py::object pytype,
+                       const std::string& name) {
+             auto* parent = parent_py.cast<SequenceElement*>();
+             return std::make_unique<PyWriteDataHandle>(
+                 parent, std::move(pytype), name);
+           }),
+           py::arg("parent"), py::arg("type"), py::arg("name"),
+           py::keep_alive<1, 2>())
+      .def(
+          "initialize",
+          [](PyWriteDataHandle& self, std::string_view key) {
+            self.initialize(key);
+          },
+          py::arg("key"))
+      .def("__call__", &PyWriteDataHandle::call, py::arg("context"),
+           py::arg("obj"));
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<std::size_t, std::size_t, WhiteBoard&, std::size_t>(),

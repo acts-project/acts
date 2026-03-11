@@ -193,7 +193,7 @@ void computePosteriorWeights(const traj_t &mt,
       continue;
     }
 
-    const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
+    const double factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
     if (!std::isfinite(factor)) {
       // If something is not finite here, just leave the weight as it is
