@@ -14,22 +14,21 @@
 #include <filesystem>
 #include <memory>
 
+namespace dd4hep {
+class Detector;
+}
+
 namespace Acts {
 
 class TrackingGeometry;
 
-/// Load a module shared library, validate ABI compatibility, build and return
-/// the tracking geometry. The returned deleter keeps the module loaded until
-/// the geometry is destroyed.
-std::shared_ptr<TrackingGeometry> loadGeometryModule(
+/// Load a DD4hep geometry module shared library with the given detector,
+/// validate ABI compatibility, build and return the tracking geometry.
+/// The returned deleter keeps the module loaded until the geometry is
+/// destroyed.
+std::shared_ptr<TrackingGeometry> loadDD4hepGeometryModule(
     const std::filesystem::path& modulePath,
-    const Logger& logger = getDummyLogger());
-
-/// Overload that passes \a userData to the module's build function.
-/// Use for modules that require extra context (e.g. DD4hep detector pointer).
-std::shared_ptr<TrackingGeometry> loadGeometryModule(
-    const std::filesystem::path& modulePath,
-    const void* userData,
+    const dd4hep::Detector& detector,
     const Logger& logger = getDummyLogger());
 
 }  // namespace Acts

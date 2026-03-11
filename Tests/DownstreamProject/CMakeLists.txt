@@ -64,3 +64,15 @@ add_test(
     NAME DownstreamLoadGeometryModule
     COMMAND LoadGeometryModule $<TARGET_FILE:SimpleGeometryModule>
 )
+
+if(DD4HEP)
+    acts_add_dd4hep_geometry_module(DD4hepGeometryModule
+                                    DD4hepGeometryModule.cpp)
+    target_compile_definitions(
+        DD4hepGeometryModule
+        PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${Acts_GEOMETRY_MODULE_ABI_TAG}"
+    )
+
+    add_executable(LoadDD4hepGeometryModule LoadDD4hepGeometryModule.cpp)
+    target_link_libraries(LoadDD4hepGeometryModule PRIVATE Acts::PluginDD4hep)
+endif()

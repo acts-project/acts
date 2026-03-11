@@ -8,8 +8,6 @@
 
 #include "ActsPlugins/DD4hep/GeometryModuleHelper.hpp"
 
-#include "Acts/Geometry/GeometryModuleHelper.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -18,52 +16,30 @@ namespace ActsPlugins::DD4hep::detail {
 
 const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
                                               BuildFunction buildFunc) {
-  static const auto s_module = [module_abi_tag,
-                                buildFunc]() -> ActsGeometryModuleV1 {
-    static BuildFunction s_buildFunc = buildFunc;
+  static BuildFunction s_buildFunc = buildFunc;
 
-    return {
-        .module_abi_tag = module_abi_tag,
-        .build = [](const void* userData,
-                    const void* loggerPtr) noexcept -> void* {
-          if (loggerPtr == nullptr) {
-            // Logger can't be null!
-            return nullptr;
+  return Acts::detail::getGeometryModuleFromRaw(
+      module_abi_tag,
+      [](const void* userData, const void* loggerPtr) noexcept -> void* {
+        if (loggerPtr == nullptr) {
+          return nullptr;
+        }
+        const auto& logger = *static_cast<const Acts::Logger*>(loggerPtr);
+        try {
+          if (userData == nullptr) {
+            throw std::invalid_argument("DD4hep detector is null");
           }
-
-          const auto& logger = *static_cast<const Acts::Logger*>(loggerPtr);
-
-          try {
-            if (userData == nullptr) {
-              throw std::invalid_argument("DD4hep detector is null");
-            }
-
-            const auto& detector =
-                *static_cast<const dd4hep::Detector*>(userData);
-            return s_buildFunc(detector, logger).release();
-          } catch (const std::exception&) {
-            ACTS_ERROR("Failed to build geometry module");
-            return nullptr;
-          } catch (...) {
-            ACTS_ERROR("Failed to build geometry module");
-            return nullptr;
-          }
-        },
-        .destroy =
-            [](void* handle) noexcept {
-              if (handle == nullptr) {
-                return;
-              }
-              try {
-                std::cout << "Destroying geometry module" << std::endl;
-                delete static_cast<Acts::TrackingGeometry*>(handle);
-              } catch (...) {
-              }
-            },
-    };
-  }();
-
-  return &s_module;
+          const auto& detector =
+              *static_cast<const dd4hep::Detector*>(userData);
+          return s_buildFunc(detector, logger).release();
+        } catch (const std::exception&) {
+          ACTS_ERROR("Failed to build geometry module");
+          return nullptr;
+        } catch (...) {
+          ACTS_ERROR("Failed to build geometry module");
+          return nullptr;
+        }
+      });
 }
 
 }  // namespace ActsPlugins::DD4hep::detail
