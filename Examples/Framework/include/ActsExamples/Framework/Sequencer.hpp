@@ -180,6 +180,7 @@ class Sequencer {
 
   DataHandleBase::StateMapType m_whiteBoardState;
 
+  std::atomic<std::size_t> m_nSkippedEvents = 0;
   std::atomic<std::size_t> m_nUnmaskedFpe = 0;
 
   const Acts::Logger &logger() const { return *m_logger; }

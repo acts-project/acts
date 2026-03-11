@@ -26,11 +26,11 @@ namespace Acts {
 class IVolumeMaterial;
 
 /// Stepper implementation using sympy-generated expressions.
-class SympyStepper {
+class SympyStepper final {
  public:
-  /// Jacobian, Covariance and State definitions
+  /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
-  /// Covariance matrix type
+  /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
   /// Bound state tuple containing parameters, Jacobian, and path length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;

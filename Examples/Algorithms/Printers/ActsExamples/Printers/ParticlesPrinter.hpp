@@ -26,7 +26,8 @@ class ParticlesPrinter : public IAlgorithm {
     std::string inputParticles;
   };
 
-  ParticlesPrinter(const Config& cfg, Acts::Logging::Level lvl);
+  explicit ParticlesPrinter(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 

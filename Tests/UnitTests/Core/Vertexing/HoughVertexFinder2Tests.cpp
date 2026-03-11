@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_small_test) {
   BOOST_CHECK(vtxFound);
 }
 
-/// @brief Unit test for HoughVertexFinder2. Generates real-looking sets of the spacepoints, then finds a vertex, and then verifies the reconstructed vertex is actually near the original one
+/// @brief Unit test for HoughVertexFinder2. Generates real-looking sets of the space points, then finds a vertex, and then verifies the reconstructed vertex is actually near the original one
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
   HoughVertexFinder2::Config houghVtxCfg;
   houghVtxCfg.targetSPs = 1000;
@@ -179,12 +179,12 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
   BOOST_CHECK_EQUAL(vtxFound, nEvents);
 }
 
-/// @brief Unit test for HoughVertexFinder2. Provides no input spacepoints
+/// @brief Unit test for HoughVertexFinder2. Provides no input space points
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_empty_test) {
   HoughVertexFinder2::Config houghVtxCfg;
   HoughVertexFinder2 houghVertexFinder(std::move(houghVtxCfg));
 
-  // no input spacepoints
+  // no input space points
   SpacePointContainer2 inputSpacePoints(
       SpacePointColumns::X | SpacePointColumns::Y | SpacePointColumns::Z);
 
@@ -198,13 +198,13 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_empty_test) {
   BOOST_CHECK(!vtxFound);
 }
 
-/// @brief Unit test for HoughVertexFinder2. Does not provides enough spacepoints
+/// @brief Unit test for HoughVertexFinder2. Does not provides enough space points
 BOOST_AUTO_TEST_CASE(hough_vertex_finder_insufficient_test) {
   HoughVertexFinder2::Config houghVtxCfg;
   houghVtxCfg.targetSPs = 1000;
   houghVtxCfg.minAbsEta = 0.3;
   houghVtxCfg.maxAbsEta = 3.0;
-  houghVtxCfg.minHits = 3;  // requires 3 spacepoints per track
+  houghVtxCfg.minHits = 3;  // requires 3 space points per track
   houghVtxCfg.fillNeighbours = 0;
   houghVtxCfg.absEtaRanges = std::vector<double>({3.0});
   houghVtxCfg.absEtaFractions = std::vector<double>({1.0});
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_insufficient_test) {
 
   HoughVertexFinder2 houghVertexFinder(std::move(houghVtxCfg));
 
-  // only 2 spacepoints per track provided
+  // only 2 space points per track provided
   std::vector<std::vector<double>> positions = {
       {10., 0., 25.},   {20., 0., 30.},     // track 1
       {0., 5., 19.},    {0., 10., 18.},     // track 2

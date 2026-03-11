@@ -11,9 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
-namespace podio {
-class Frame;
-}
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -25,10 +23,10 @@ class PodioInputConverter : public IAlgorithm {
   /// Constructor for the PODIO input converter.
   ///
   /// @param name The name of the algorithm
-  /// @param level The logging level
   /// @param inputFrame The input frame to convert
-  PodioInputConverter(const std::string& name, Acts::Logging::Level level,
-                      const std::string& inputFrame);
+  /// @param logger The logger instance
+  PodioInputConverter(const std::string& name, const std::string& inputFrame,
+                      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Destructor for the PODIO input converter.
   ~PodioInputConverter() override;

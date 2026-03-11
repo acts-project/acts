@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/ParticleHypothesis.hpp"
-
 namespace {
 [[deprecated(
     "This header is deprecated. Please include the particle hypothesis header "

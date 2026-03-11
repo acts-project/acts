@@ -518,7 +518,7 @@ void SeedFinderOrthogonal<external_space_point_t>::processFromMiddleSP(
   range_t top_r = validTupleOrthoRangeLH(middle);
 
   /*
-   * Calculate the value of cot(θ) for this middle spacepoint.
+   * Calculate the value of cot(θ) for this middle space point.
    */
   float myCotTheta =
       std::max(std::abs(middle.z() / middle.radius()), m_config.cotThetaMax);
@@ -722,7 +722,7 @@ void SeedFinderOrthogonal<external_space_point_t>::createSeeds(
                 "Output iterator container type must accept seeds.");
   static_assert(std::is_same_v<typename input_container_t::value_type,
                                external_space_point_t>,
-                "Input container must contain external spacepoints.");
+                "Input container must contain external space points.");
 
   /*
    * Sadly, for the time being, we will need to construct our internal space

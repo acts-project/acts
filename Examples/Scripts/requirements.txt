@@ -42,7 +42,7 @@ matplotlib==3.10.8
     #   mplhep
 mdurl==0.1.2
     # via markdown-it-py
-mplhep==1.1.0
+mplhep==1.1.2
     # via -r Examples/Scripts/requirements.in
 mplhep-data==0.0.5
     # via mplhep
@@ -89,7 +89,7 @@ rich==14.3.3
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
-scipy==1.17.0
+scipy==1.17.1
     # via -r Examples/Scripts/requirements.in
 shellingham==1.5.4
     # via typer

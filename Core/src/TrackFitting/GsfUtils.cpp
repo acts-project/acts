@@ -71,8 +71,8 @@ double detail::Gsf::applyBetheHeitler(
     double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
     double weightCutoff, std::vector<GsfComponent> &componentCache,
-    Updatable<std::size_t> &nInvalidBetheHeitler,
-    Updatable<double> &maxPathXOverX0, const Logger &logger) {
+    std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
+    const Logger &logger) {
   const double initialMomentum = initialParameters.absoluteMomentum();
   const ParticleHypothesis &particleHypothesis =
       initialParameters.particleHypothesis();
@@ -88,11 +88,11 @@ double detail::Gsf::applyBetheHeitler(
   slab.scaleThickness(pathCorrection);
 
   const double pathXOverX0 = slab.thicknessInX0();
-  maxPathXOverX0.tmp() = std::max(maxPathXOverX0.tmp(), pathXOverX0);
+  maxPathXOverX0 = std::max(maxPathXOverX0, pathXOverX0);
 
   // Emit a warning if the approximation is not valid for this x/x0
   if (!betheHeitlerApprox.validXOverX0(pathXOverX0)) {
-    ++nInvalidBetheHeitler.tmp();
+    ++nInvalidBetheHeitler;
     ACTS_DEBUG("Bethe-Heitler approximation encountered invalid value for x/x0="
                << pathXOverX0 << " at surface " << surface.geometryId());
   }

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <limits>
 #include <memory>
@@ -66,7 +67,8 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     m_sinCosThetaDist =
         [=](RandomEngine& rng) mutable -> std::pair<double, double> {
       const double cosTheta = cosThetaDist(rng);
-      return {std::sqrt(1 - cosTheta * cosTheta), cosTheta};
+      const double sinTheta = Acts::fastCathetus(1, cosTheta);
+      return {sinTheta, cosTheta};
     };
   }
 

@@ -148,13 +148,13 @@ CylindricalSpacePointGridCreator::createGrid(
 }
 
 template <typename external_space_point_t,
-          typename external_spacepoint_iterator_t>
+          typename external_space_point_iterator_t>
 void CylindricalSpacePointGridCreator::fillGrid(
     const SeedFinderConfig<external_space_point_t>& config,
     const SeedFinderOptions& options,
     CylindricalSpacePointGrid<external_space_point_t>& grid,
-    external_spacepoint_iterator_t spBegin,
-    external_spacepoint_iterator_t spEnd, const Logger& logger) {
+    external_space_point_iterator_t spBegin,
+    external_space_point_iterator_t spEnd, const Logger& logger) {
   static_cast<void>(options);
 
   if (config.seedFilter == nullptr) {
@@ -179,7 +179,7 @@ void CylindricalSpacePointGridCreator::fillGrid(
   ACTS_VERBOSE("Fetching " << std::distance(spBegin, spEnd)
                            << " space points to the grid");
   std::size_t counter = 0ul;
-  for (external_spacepoint_iterator_t it = spBegin; it != spEnd; ++it) {
+  for (external_space_point_iterator_t it = spBegin; it != spEnd; ++it) {
     const external_space_point_t& sp = *it;
 
     // remove SPs according to experiment specific cuts

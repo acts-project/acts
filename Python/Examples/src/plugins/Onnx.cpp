@@ -38,7 +38,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsOnnx, onnx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(SeedFilterMLAlgorithm, onnx,
                                 "SeedFilterMLAlgorithm", inputTrackParameters,
-                                inputSimSeeds, inputSeedFilterNN,
-                                outputTrackParameters, outputSimSeeds,
+                                inputSeeds, inputSeedFilterNN,
+                                outputTrackParameters, outputSeeds,
                                 epsilonDBScan, minPointsDBScan, minSeedScore);
 }

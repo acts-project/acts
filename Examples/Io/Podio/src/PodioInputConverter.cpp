@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 
 #include <podio/Frame.h>
@@ -24,10 +25,10 @@ class PodioInputConverter::Impl {
   ReadDataHandle<podio::Frame> m_inputFrame;
 };
 
-PodioInputConverter::PodioInputConverter(const std::string& name,
-                                         Acts::Logging::Level level,
-                                         const std::string& inputFrame)
-    : IAlgorithm(name, level),
+PodioInputConverter::PodioInputConverter(
+    const std::string& name, const std::string& inputFrame,
+    std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm(name, std::move(logger)),
       m_impl(std::make_unique<Impl>(*this, inputFrame)) {}
 
 ProcessCode PodioInputConverter::execute(const AlgorithmContext& ctx) const {

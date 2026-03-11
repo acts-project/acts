@@ -13,6 +13,7 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
+#include "ActsExamples/Io/Root/RootMeasurementPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
@@ -232,6 +233,21 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
       ACTS_PYTHON_STRUCT(c, inputMeasurements, inputClusters, inputSimHits,
                          inputMeasurementSimHitsMap, filePath, fileMode,
                          surfaceByIdentifier);
+    }
+
+    {
+      using Writer = RootMeasurementPerformanceWriter;
+      auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                   root, "RootMeasurementPerformanceWriter")
+                   .def(py::init<const Writer::Config&, Logging::Level>(),
+                        py::arg("config"), py::arg("level"));
+
+      auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
+
+      ACTS_PYTHON_STRUCT(
+          c, inputMeasurements, inputSimHits, inputMeasurementSimHitsMap,
+          inputMeasurementParticlesMap, inputSimHitMeasurementsMap, filePath,
+          fileMode, countAxis, purityAxis, zAxis, rAxis, etaAxis, phiAxis);
     }
 
     {

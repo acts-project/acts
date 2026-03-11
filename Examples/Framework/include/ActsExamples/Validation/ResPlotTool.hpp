@@ -30,16 +30,22 @@ class ResPlotTool {
   using BoostRegularAxis = Acts::Experimental::BoostRegularAxis;
   using Histogram1 = Acts::Experimental::Histogram1;
   using Histogram2 = Acts::Experimental::Histogram2;
+  using Histogram3 = Acts::Experimental::Histogram3;
 
   /// @brief Nested configuration struct
   struct Config {
-    /// parameter sets to do plots
+    /// Track parameter names
     std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
                                            "theta", "qop", "t"};
+
+    std::string qOverPtName = "qopt";
+    std::string relQoverPtName = "qopt_rel";
 
     /// Binning info for variables
     std::map<std::string, AxisVariant> varBinning = {
         {"Eta", BoostRegularAxis(40, -4, 4, "#eta")},
+        {"Phi", BoostRegularAxis(40, -std::numbers::pi, std::numbers::pi,
+                                 "#phi [rad]")},
         {"Pt", BoostRegularAxis(40, 0, 100, "pT [GeV/c]")},
         {"Pull", BoostRegularAxis(100, -5, 5, "pull")},
         {"Residual_d0", BoostRegularAxis(100, -0.5, 0.5, "r_{d0} [mm]")},
@@ -48,17 +54,16 @@ class ResPlotTool {
         {"Residual_theta",
          BoostRegularAxis(100, -0.01, 0.01, "r_{#theta} [rad]")},
         {"Residual_qop", BoostRegularAxis(100, -0.1, 0.1, "r_{q/p} [c/GeV]")},
-        {"Residual_t", BoostRegularAxis(100, -1000, 1000, "r_{t} [s]")}};
+        {"Residual_t", BoostRegularAxis(100, -100, 100, "r_{t} [mm/c]")},
+        {"Residual_qopt", BoostRegularAxis(100, -0.1, 0.1, "r_{q/pT} [c/GeV]")},
+        {"Residual_qopt_rel",
+         BoostRegularAxis(100, -0.1, 0.1, "r_{rel q/pT} [%]")}};
   };
 
-  /// Constructor
-  ///
   /// @param cfg Configuration struct
   /// @param level Message level declaration
   ResPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief fill the histograms
-  ///
   /// @param gctx the geometry context
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
@@ -66,12 +71,17 @@ class ResPlotTool {
             const SimParticleState& truthParticle,
             const Acts::BoundTrackParameters& fittedParamters);
 
-  /// @brief Accessors for histograms (const reference)
   const std::map<std::string, Histogram1>& res() const { return m_res; }
   const std::map<std::string, Histogram2>& resVsEta() const {
     return m_resVsEta;
   }
   const std::map<std::string, Histogram2>& resVsPt() const { return m_resVsPt; }
+  const std::map<std::string, Histogram3>& resVsEtaPhi() const {
+    return m_resVsEtaPhi;
+  }
+  const std::map<std::string, Histogram3>& resVsEtaPt() const {
+    return m_resVsEtaPt;
+  }
   const std::map<std::string, Histogram1>& pull() const { return m_pull; }
   const std::map<std::string, Histogram2>& pullVsEta() const {
     return m_pullVsEta;
@@ -79,11 +89,16 @@ class ResPlotTool {
   const std::map<std::string, Histogram2>& pullVsPt() const {
     return m_pullVsPt;
   }
+  const std::map<std::string, Histogram3>& pullVsEtaPhi() const {
+    return m_pullVsEtaPhi;
+  }
+  const std::map<std::string, Histogram3>& pullVsEtaPt() const {
+    return m_pullVsEtaPt;
+  }
 
  private:
-  const Acts::Logger& logger() const { return *m_logger; }
-
   Config m_cfg;
+
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Residual distribution
@@ -92,6 +107,10 @@ class ResPlotTool {
   std::map<std::string, Histogram2> m_resVsEta;
   /// Residual vs pT scatter plot
   std::map<std::string, Histogram2> m_resVsPt;
+  /// Residual vs eta-phi scatter plot
+  std::map<std::string, Histogram3> m_resVsEtaPhi;
+  /// Residual vs eta-pT scatter plot
+  std::map<std::string, Histogram3> m_resVsEtaPt;
 
   /// Pull distribution
   std::map<std::string, Histogram1> m_pull;
@@ -99,6 +118,17 @@ class ResPlotTool {
   std::map<std::string, Histogram2> m_pullVsEta;
   /// Pull vs pT scatter plot
   std::map<std::string, Histogram2> m_pullVsPt;
+  /// Pull vs eta-phi scatter plot
+  std::map<std::string, Histogram3> m_pullVsEtaPhi;
+  /// Pull vs eta-pT scatter plot
+  std::map<std::string, Histogram3> m_pullVsEtaPt;
+
+  void fillResidual(const std::string& paramName, double residual,
+                    double truthEta, double truthPhi, double truthPt);
+  void fillPull(const std::string& paramName, double pull, double truthEta,
+                double truthPhi, double truthPt);
+
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

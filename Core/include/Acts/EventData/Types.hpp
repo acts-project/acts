@@ -60,6 +60,14 @@ using SpacePointIndexSubset2 = std::span<const SpacePointIndex2>;
 /// Index type for seeds
 using SeedIndex2 = std::uint32_t;
 
+/// Sentinel value for an invalid / unset space point EDM related index
+static constexpr SpacePointIndex2 kSpacePointIndex2Invalid =
+    std::numeric_limits<SpacePointIndex2>::max();
+
+/// Sentinel value for an invalid / unset seed EDM related index
+static constexpr SeedIndex2 kSeedIndex2Invalid =
+    std::numeric_limits<SeedIndex2>::max();
+
 namespace detail_tsp {
 
 template <std::size_t Size, bool ReadOnlyMaps = true>

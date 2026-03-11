@@ -10,5 +10,5 @@ target_sources(
         TrackParameterHelpers.cpp
         SeedContainer2.cpp
         SpacePointContainer2.cpp
-        Charge.cpp
+        MultiComponentTrackParameters.cpp
 )
