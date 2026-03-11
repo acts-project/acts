@@ -170,6 +170,10 @@ if [ -n "${CI:-}" ]; then
   start_section "Add buildcache mirror"
   mirror_name="acts-spack-buildcache"
   mirror_url="oci://ghcr.io/acts-project/spack-buildcache"
+  if [ -n "${GITLAB_CI:-}" ]; then
+  # Use CERN mirror for non-Github Actions
+    mirror_url="oci://registry.cern.ch/ghcr.io/acts-project/spack-buildcache"
+  fi
 
   # Check if this buildcache is already configured
   if ! spack mirror list | grep -q ${mirror_name}; then
