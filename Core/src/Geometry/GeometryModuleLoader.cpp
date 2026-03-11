@@ -11,9 +11,7 @@
 #include "Acts/Geometry/GeometryModule.h"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
-#if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
-#endif
 
 #include <cstring>
 #include <format>
@@ -26,7 +24,6 @@
 
 namespace {
 
-#if defined(__unix__) || defined(__APPLE__)
 using GeometryModuleEntryPointV1 = const ActsGeometryModuleV1* (*)(void);
 
 std::shared_ptr<void> openSharedLibrary(const std::filesystem::path& path) {
@@ -66,8 +63,6 @@ GeometryModuleEntryPointV1 resolveEntrypointV1(
   return reinterpret_cast<GeometryModuleEntryPointV1>(symbol);
 }
 
-#endif
-
 const char* geometryModuleHostAbiTag() noexcept {
   return ACTS_GEOMETRY_MODULE_ABI_TAG;
 }
@@ -79,13 +74,6 @@ namespace Acts::detail {
 std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
     const std::filesystem::path& modulePath, const char* expectedUserDataType,
     const void* userData, const Logger& logger) {
-#if !(defined(__unix__) || defined(__APPLE__))
-  static_cast<void>(modulePath);
-  static_cast<void>(expectedUserDataType);
-  static_cast<void>(userData);
-  throw std::runtime_error(
-      "Runtime geometry modules are only supported on Unix-like systems");
-#else
   auto library = openSharedLibrary(modulePath);
   auto entryPoint = resolveEntrypointV1(modulePath, library);
   const ActsGeometryModuleV1* descriptor = entryPoint();
@@ -141,7 +129,6 @@ std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
       [destroyFn, library = std::move(library)](TrackingGeometry* geometry) {
         destroyFn(static_cast<void*>(geometry));
       });
-#endif
 }
 
 }  // namespace Acts::detail
