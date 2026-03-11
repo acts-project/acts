@@ -119,8 +119,6 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:83
     needs: [linux_ubuntu]
-    env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
       - uses: actions/checkout@v6
@@ -158,8 +156,6 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:83
     needs: [linux_ubuntu]
-    env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
       - uses: actions/checkout@v6
@@ -353,7 +349,6 @@ jobs:
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
-          -DACTS_BUILD_PLUGIN_FPEMON=ON
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
 
       - name: Build
