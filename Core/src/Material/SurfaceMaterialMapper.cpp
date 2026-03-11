@@ -239,7 +239,7 @@ Result<void> SurfaceMaterialMapper::mapInteraction(
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options);
   if (!result.ok()) {
-    ACTS_DEBUG("Encountered a propagator error for initial parameters : ");
+    ACTS_DEBUG("Encountered a propagator error for initial parameters:");
     ACTS_DEBUG(" - Position: " << mTrack.first.first.transpose());
     ACTS_DEBUG(" - Momentum: " << mTrack.first.second.transpose());
     return result.error();

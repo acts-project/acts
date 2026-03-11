@@ -373,7 +373,7 @@ Result<void> VolumeMaterialMapper::mapMaterialTrack(
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options);
   if (!result.ok()) {
-    ACTS_INFO("Encountered a propagator error for initial parameters : ");
+    ACTS_INFO("Encountered a propagator error for initial parameters:");
     ACTS_INFO(" - Position: " << mTrack.first.first.transpose());
     ACTS_INFO(" - Momentum: " << mTrack.first.second.transpose());
     return result.error();
