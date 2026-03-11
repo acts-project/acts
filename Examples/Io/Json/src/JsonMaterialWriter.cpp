@@ -17,28 +17,29 @@
 
 #include <nlohmann/json.hpp>
 
-ActsExamples::JsonMaterialWriter::JsonMaterialWriter(
-    const ActsExamples::JsonMaterialWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+JsonMaterialWriter::JsonMaterialWriter(const JsonMaterialWriter::Config& config,
+                                       Acts::Logging::Level level)
     : m_logger{Acts::getDefaultLogger("JsonMaterialWriter", level)},
       m_cfg(config),
       m_converter{std::make_unique<Acts::MaterialMapJsonConverter>(
           m_cfg.converterCfg, level)} {}
 
-ActsExamples::JsonMaterialWriter::~JsonMaterialWriter() = default;
+JsonMaterialWriter::~JsonMaterialWriter() = default;
 
-void ActsExamples::JsonMaterialWriter::writeMaterial(
+void JsonMaterialWriter::writeMaterial(
     const Acts::TrackingGeometryMaterial& detMaterial) {
   // Evoke the converter
   auto jOut = m_converter->materialMapsToJson(detMaterial);
   // And write the file(s)
-  if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Json)) {
+  if (ACTS_CHECK_BIT(m_cfg.writeFormat, JsonFormat::Json)) {
     std::string fileName = m_cfg.fileName + ".json";
     ACTS_VERBOSE("Writing to file: " << fileName);
     std::ofstream ofj(fileName);
     ofj << std::setw(4) << jOut << std::endl;
   }
-  if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Cbor)) {
+  if (ACTS_CHECK_BIT(m_cfg.writeFormat, JsonFormat::Cbor)) {
     std::vector<std::uint8_t> cborOut = nlohmann::json::to_cbor(jOut);
     std::string fileName = m_cfg.fileName + ".cbor";
     ACTS_VERBOSE("Writing to file: " << fileName);
@@ -47,19 +48,20 @@ void ActsExamples::JsonMaterialWriter::writeMaterial(
   }
 }
 
-void ActsExamples::JsonMaterialWriter::write(
-    const Acts::TrackingGeometry& tGeometry) {
+void JsonMaterialWriter::write(const Acts::TrackingGeometry& tGeometry) {
   // Evoke the converter
   auto jOut = m_converter->trackingGeometryToJson(tGeometry);
   // And write the file(s)
-  if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Json)) {
+  if (ACTS_CHECK_BIT(m_cfg.writeFormat, JsonFormat::Json)) {
     std::ofstream ofj(m_cfg.fileName + ".json");
     ofj << std::setw(4) << jOut << std::endl;
   }
-  if (ACTS_CHECK_BIT(m_cfg.writeFormat, ActsExamples::JsonFormat::Cbor)) {
+  if (ACTS_CHECK_BIT(m_cfg.writeFormat, JsonFormat::Cbor)) {
     std::vector<std::uint8_t> cborOut = nlohmann::json::to_cbor(jOut);
     std::ofstream ofj(m_cfg.fileName + ".cbor",
                       std::ios::out | std::ios::binary);
     ofj.write(reinterpret_cast<char*>(cborOut.data()), cborOut.size());
   }
 }
+
+}  // namespace ActsExamples

@@ -141,11 +141,14 @@ class SpacePointColumnProxy {
     return data()[index];
   }
 
-  class Subset : public detail::ContainerSubset<Subset, Subset, Column, Value,
-                                                Index, ReadOnly> {
+  /// Subset view over selected column entries.
+  class Subset
+      : public detail::ContainerSubset<Subset, Subset, Column, Value,
+                                       std::span<const Index>, ReadOnly> {
    public:
-    using Base =
-        detail::ContainerSubset<Subset, Subset, Column, Value, Index, ReadOnly>;
+    /// Base class type
+    using Base = detail::ContainerSubset<Subset, Subset, Column, Value,
+                                         std::span<const Index>, ReadOnly>;
 
     using Base::Base;
   };
@@ -184,8 +187,10 @@ class SpacePointColumnProxy {
   friend class SpacePointContainer2;
 };
 
+/// Const proxy to a space point column for read-only access
 template <typename T>
 using ConstSpacePointColumnProxy = SpacePointColumnProxy<T, true>;
+/// Mutable proxy to a space point column allowing modification
 template <typename T>
 using MutableSpacePointColumnProxy = SpacePointColumnProxy<T, false>;
 

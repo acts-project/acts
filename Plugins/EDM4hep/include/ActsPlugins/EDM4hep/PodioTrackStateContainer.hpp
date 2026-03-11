@@ -16,6 +16,7 @@
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
 #include "ActsPlugins/EDM4hep/PodioTrackContainer.hpp"
 #include "ActsPlugins/EDM4hep/PodioUtil.hpp"
@@ -41,40 +42,90 @@ namespace ActsPlugins {
 /// @addtogroup edm4hep_plugin
 /// @{
 
+namespace detail {
+
+template <template <typename...> class holder_t>
+concept PodioMutableTrackStateHolder =
+    Acts::HolderFor<holder_t, ActsPodioEdm::TrackStateCollection> &&
+    Acts::HolderFor<holder_t, ActsPodioEdm::BoundParametersCollection> &&
+    Acts::HolderFor<holder_t, ActsPodioEdm::JacobianCollection>;
+
+template <template <typename...> class holder_t>
+concept PodioConstTrackStateHolder =
+    Acts::HolderFor<holder_t, const ActsPodioEdm::TrackStateCollection> &&
+    Acts::HolderFor<holder_t, const ActsPodioEdm::BoundParametersCollection> &&
+    Acts::HolderFor<holder_t, const ActsPodioEdm::JacobianCollection>;
+
+}  // namespace detail
+
+template <template <typename...> class holder_t = std::unique_ptr>
 class MutablePodioTrackStateContainer;
+
+template <template <typename...> class holder_t = Acts::ConstRefHolder>
 class ConstPodioTrackStateContainer;
 
 }  // namespace ActsPlugins
 
 namespace Acts {
-template <>
-struct IsReadOnlyMultiTrajectory<ActsPlugins::ConstPodioTrackStateContainer>
-    : std::true_type {};
+template <template <typename...> class holder_t>
+struct IsReadOnlyMultiTrajectory<
+    ActsPlugins::ConstPodioTrackStateContainer<holder_t>> : std::true_type {};
 
-template <>
-struct IsReadOnlyMultiTrajectory<ActsPlugins::MutablePodioTrackStateContainer>
-    : std::false_type {};
+template <template <typename...> class holder_t>
+struct IsReadOnlyMultiTrajectory<
+    ActsPlugins::MutablePodioTrackStateContainer<holder_t>> : std::false_type {
+};
 }  // namespace Acts
 
 namespace ActsPlugins {
 
+/// Base class for PODIO track state containers
 class PodioTrackStateContainerBase {
  public:
+  /// Mutable parameters map type
   using Parameters =
       typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
                                                 false>::CoefficientsMap;
+  /// Mutable covariance map type
   using Covariance =
       typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
                                                 false>::CovarianceMap;
 
+  /// Const parameters map type
   using ConstParameters =
       typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
                                                 true>::CoefficientsMap;
+  /// Const covariance map type
   using ConstCovariance =
       typename Acts::detail_tsp::FixedSizeTypes<Acts::eBoundSize,
                                                 true>::CovarianceMap;
 
+  /// Calibrated measurement vector type
+  template <std::size_t M>
+  using Calibrated =
+      typename Acts::detail_tsp::FixedSizeTypes<M, false>::CoefficientsMap;
+
+  /// Const calibrated measurement vector type
+  template <std::size_t M>
+  using ConstCalibrated =
+      typename Acts::detail_tsp::FixedSizeTypes<M, true>::CoefficientsMap;
+
+  /// Calibrated measurement covariance matrix type
+  template <std::size_t M>
+  using CalibratedCovariance =
+      typename Acts::detail_tsp::FixedSizeTypes<M, false>::CovarianceMap;
+
+  /// Const calibrated measurement covariance matrix type
+  template <std::size_t M>
+  using ConstCalibratedCovariance =
+      typename Acts::detail_tsp::FixedSizeTypes<M, true>::CovarianceMap;
+
  protected:
+  /// Check if a component exists for a track state
+  /// @param instance Container instance
+  /// @param key Component key
+  /// @param istate Track state index
+  /// @return True if component exists
   template <typename T>
   static constexpr bool has_impl(T& instance, Acts::HashedString key,
                                  Acts::TrackIndexType istate) {
@@ -114,6 +165,11 @@ class PodioTrackStateContainerBase {
     return false;
   }
 
+  /// Get a component from a track state
+  /// @param instance Container instance
+  /// @param key Component key
+  /// @param istate Track state index
+  /// @return Component value as std::any
   template <bool EnsureConst, typename T>
   static std::any component_impl(T& instance, Acts::HashedString key,
                                  Acts::TrackIndexType istate) {
@@ -167,6 +223,10 @@ class PodioTrackStateContainerBase {
     }
   }
 
+  /// Check if a column exists
+  /// @param instance Container instance
+  /// @param key Column key
+  /// @return True if column exists
   template <typename T>
   static constexpr bool hasColumn_impl(T& instance, Acts::HashedString key) {
     using namespace Acts::HashedStringLiteral;
@@ -190,6 +250,10 @@ class PodioTrackStateContainerBase {
     }
   }
 
+  /// Populate surface buffer from track state collection
+  /// @param helper Conversion helper
+  /// @param collection Track state collection
+  /// @param surfaces Output surface buffer
   static void populateSurfaceBuffer(
       const PodioUtil::ConversionHelper& helper,
       const ActsPodioEdm::TrackStateCollection& collection,
@@ -202,143 +266,177 @@ class PodioTrackStateContainerBase {
   }
 };
 
+/// Read-only track state container backend using podio for storage
+template <template <typename...> class holder_t>
 class ConstPodioTrackStateContainer final
     : public PodioTrackStateContainerBase,
-      public Acts::MultiTrajectory<ConstPodioTrackStateContainer> {
+      public Acts::MultiTrajectory<ConstPodioTrackStateContainer<holder_t>> {
+  /// Track index type
+  using IndexType = Acts::TrackIndexType;
+  static_assert(detail::PodioConstTrackStateHolder<holder_t>,
+                "holder_t does not satisfy const PODIO track-state holder "
+                "requirements");
+
  public:
+  /// Constructor from collections
+  /// @param helper Conversion helper
+  /// @param trackStates Track state collection
+  /// @param params Parameters collection
+  /// @param jacs Jacobian collection
   ConstPodioTrackStateContainer(
       const PodioUtil::ConversionHelper& helper,
-      const ActsPodioEdm::TrackStateCollection& trackStates,
-      const ActsPodioEdm::BoundParametersCollection& params,
-      const ActsPodioEdm::JacobianCollection& jacs)
+      holder_t<const ActsPodioEdm::TrackStateCollection> trackStates,
+      holder_t<const ActsPodioEdm::BoundParametersCollection> params,
+      holder_t<const ActsPodioEdm::JacobianCollection> jacs)
       : m_helper{helper},
-        m_collection{&trackStates},
-        m_params{&params},
-        m_jacs{&jacs} {
+        m_collection{std::move(trackStates)},
+        m_params{std::move(params)},
+        m_jacs{std::move(jacs)} {
     // Not much we can do to recover dynamic columns here
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
-  /// Construct a const track state container from a mutable
-  /// @warning If the source mutable container is modified, this container
-  ///          will be corrupted, as surface buffer and dynamic column state can
-  ///          not be synchronized!
+  /// Construct a const track state container from a mutable (copy)
+  /// @param other The mutable container to construct from
+  template <template <typename...> class other_holder_t>
   explicit ConstPodioTrackStateContainer(
-      const MutablePodioTrackStateContainer& other);
+      const MutablePodioTrackStateContainer<other_holder_t>& other)
+    requires std::is_constructible_v<
+        holder_t<const ActsPodioEdm::TrackStateCollection>,
+        const ActsPodioEdm::TrackStateCollection&>;
 
+  /// Construct a const track state container from a mutable (move)
+  /// @param other The mutable container to move from
+  template <template <typename...> class other_holder_t>
+  explicit ConstPodioTrackStateContainer(
+      MutablePodioTrackStateContainer<other_holder_t>&& other)
+    requires std::is_same_v<holder_t<const ActsPodioEdm::TrackStateCollection>,
+                            other_holder_t<ActsPodioEdm::TrackStateCollection>>;
+
+  /// Constructor from frame
+  /// @param helper Conversion helper
+  /// @param frame Frame containing track state data
+  /// @param suffix Optional collection name suffix
   ConstPodioTrackStateContainer(const PodioUtil::ConversionHelper& helper,
                                 const podio::Frame& frame,
                                 const std::string& suffix = "")
+    requires std::is_same_v<
+                 holder_t<const ActsPodioEdm::TrackStateCollection>,
+                 Acts::ConstRefHolder<const ActsPodioEdm::TrackStateCollection>>
       : m_helper{helper},
-        m_collection{nullptr},
-        m_params{nullptr},
-        m_jacs{nullptr} {
+        m_collection{frame.get<ActsPodioEdm::TrackStateCollection>(
+            "trackStates" + (suffix.empty() ? suffix : "_" + suffix))},
+        m_params{frame.get<ActsPodioEdm::BoundParametersCollection>(
+            "trackStateParameters" + (suffix.empty() ? suffix : "_" + suffix))},
+        m_jacs{frame.get<ActsPodioEdm::JacobianCollection>(
+            "trackStateJacobians" + (suffix.empty() ? suffix : "_" + suffix))} {
     std::string s = suffix.empty() ? suffix : "_" + suffix;
-
-    std::vector<std::string> available = frame.getAvailableCollections();
-
     std::string trackStatesKey = "trackStates" + s;
-    std::string paramsKey = "trackStateParameters" + s;
-    std::string jacsKey = "trackStateJacobians" + s;
-
-    if (!Acts::rangeContainsValue(available, trackStatesKey)) {
-      throw std::runtime_error{"Track state collection '" + trackStatesKey +
-                               "' not found in frame"};
-    }
-
-    if (!Acts::rangeContainsValue(available, paramsKey)) {
-      throw std::runtime_error{"Track state parameters collection '" +
-                               paramsKey + "' not found in frame"};
-    }
-
-    if (!Acts::rangeContainsValue(available, jacsKey)) {
-      throw std::runtime_error{"Track state jacobian collection '" + jacsKey +
-                               "' not found in frame"};
-    }
-
-    loadCollection<ActsPodioEdm::TrackStateCollection>(m_collection, frame,
-                                                       trackStatesKey);
-    loadCollection<ActsPodioEdm::BoundParametersCollection>(m_params, frame,
-                                                            paramsKey);
-    loadCollection<ActsPodioEdm::JacobianCollection>(m_jacs, frame, jacsKey);
 
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
-
     podio_detail::recoverDynamicColumns(frame, trackStatesKey, m_dynamic);
   }
 
+  /// @copydoc Acts::MultiTrajectory::parameters(IndexType) const
+  using Acts::MultiTrajectory<ConstPodioTrackStateContainer>::parameters;
+  /// @copydoc Acts::MultiTrajectory::covariance(IndexType) const
+  using Acts::MultiTrajectory<ConstPodioTrackStateContainer>::covariance;
+
+  /// Get dynamic column keys
+  /// @return Range of dynamic column keys
   Acts::detail::DynamicKeyRange<podio_detail::ConstDynamicColumnBase>
   dynamicKeys_impl() const {
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
- private:
-  template <typename collection_t>
-  static void loadCollection(collection_t const*& dest,
-                             const podio::Frame& frame,
-                             const std::string& key) {
-    const auto* collection = frame.get(key);
-
-    if (const auto* d = dynamic_cast<const collection_t*>(collection);
-        d != nullptr) {
-      dest = d;
-    } else {
-      throw std::runtime_error{"Unable to get collection " + key};
-    }
-  }
-
  public:
+  /// Get parameters for a track state
+  /// @param istate Track state index
+  /// @return Track parameters
   ConstParameters parameters_impl(IndexType istate) const {
     return ConstParameters{m_params->at(istate).getData().values.data()};
   }
 
+  /// Get covariance for a track state
+  /// @param istate Track state index
+  /// @return Track covariance matrix
   ConstCovariance covariance_impl(IndexType istate) const {
     return ConstCovariance{m_params->at(istate).getData().covariance.data()};
   }
 
+  /// Get jacobian for a track state
+  /// @param istate Track state index
+  /// @return Jacobian matrix
   ConstCovariance jacobian_impl(IndexType istate) const {
     IndexType ijacobian = m_collection->at(istate).getData().ijacobian;
     return ConstCovariance{m_jacs->at(ijacobian).getData().values.data()};
   }
 
+  /// Get calibrated measurement
+  /// @param index Track state index
+  /// @return Calibrated measurement
   template <std::size_t measdim>
-  ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
-      IndexType index) const {
-    return ConstTrackStateProxy::ConstCalibrated<measdim>{
+  ConstCalibrated<measdim> calibrated_impl(IndexType index) const {
+    return ConstCalibrated<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
+  /// Get calibrated measurement covariance
+  /// @param index Track state index
+  /// @return Calibrated measurement covariance
   template <std::size_t measdim>
-  ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
-  calibratedCovariance_impl(IndexType index) const {
-    return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
+  ConstCalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType index) const {
+    return ConstCalibratedCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
 
+  /// Get number of track states
+  /// @return Number of track states
   IndexType size_impl() const { return m_collection->size(); }
 
+  /// Get a component from a track state
+  /// @param key Component key
+  /// @param istate Track state index
+  /// @return Component value
   std::any component_impl(Acts::HashedString key, IndexType istate) const {
     return PodioTrackStateContainerBase::component_impl<true>(*this, key,
                                                               istate);
   }
 
+  /// Check if a column exists
+  /// @param key Column key
+  /// @return True if column exists
   constexpr bool hasColumn_impl(Acts::HashedString key) const {
     return PodioTrackStateContainerBase::hasColumn_impl(*this, key);
   }
 
+  /// Check if a component exists for a track state
+  /// @param key Component key
+  /// @param istate Track state index
+  /// @return True if component exists
   constexpr bool has_impl(Acts::HashedString key, IndexType istate) const {
     return PodioTrackStateContainerBase::has_impl(*this, key, istate);
   }
 
+  /// Get calibrated measurement size
+  /// @param istate Track state index
+  /// @return Measurement size
   Acts::TrackIndexType calibratedSize_impl(IndexType istate) const {
     return m_collection->at(istate).getData().measdim;
   }
 
+  /// Get uncalibrated source link for a track state
+  /// @param istate Track state index
+  /// @return Uncalibrated source link
   Acts::SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
     return m_helper.get().identifierToSourceLink(
         m_collection->at(istate).getData().uncalibratedIdentifier);
   }
 
+  /// Get reference surface for a track state
+  /// @param istate Track state index
+  /// @return Reference surface pointer
   const Acts::Surface* referenceSurface_impl(IndexType istate) const {
     return m_surfaces.at(istate).get();
   }
@@ -347,9 +445,9 @@ class ConstPodioTrackStateContainer final
   friend class PodioTrackStateContainerBase;
 
   std::reference_wrapper<const PodioUtil::ConversionHelper> m_helper;
-  const ActsPodioEdm::TrackStateCollection* m_collection;
-  const ActsPodioEdm::BoundParametersCollection* m_params;
-  const ActsPodioEdm::JacobianCollection* m_jacs;
+  holder_t<const ActsPodioEdm::TrackStateCollection> m_collection;
+  holder_t<const ActsPodioEdm::BoundParametersCollection> m_params;
+  holder_t<const ActsPodioEdm::JacobianCollection> m_jacs;
   std::vector<std::shared_ptr<const Acts::Surface>> m_surfaces;
 
   std::unordered_map<Acts::HashedString,
@@ -358,104 +456,196 @@ class ConstPodioTrackStateContainer final
   std::vector<Acts::HashedString> m_dynamicKeys;
 };
 
-static_assert(
-    Acts::IsReadOnlyMultiTrajectory<ConstPodioTrackStateContainer>::value,
-    "MutablePodioTrackStateContainer should not be read-only");
+static_assert(Acts::IsReadOnlyMultiTrajectory<
+                  ConstPodioTrackStateContainer<Acts::ConstRefHolder>>::value,
+              "ConstPodioTrackStateContainer should be read-only");
 
 static_assert(
-    Acts::ConstMultiTrajectoryBackend<ConstPodioTrackStateContainer>,
+    Acts::ConstMultiTrajectoryBackend<
+        ConstPodioTrackStateContainer<Acts::ConstRefHolder>>,
     "ConstPodioTrackStateContainer does not fulfill TrackContainerBackend");
 
+/// Mutable Podio-based track state container implementation
+template <template <typename...> class holder_t>
 class MutablePodioTrackStateContainer final
     : public PodioTrackStateContainerBase,
-      public Acts::MultiTrajectory<MutablePodioTrackStateContainer> {
- public:
-  explicit MutablePodioTrackStateContainer(PodioUtil::ConversionHelper& helper)
-      : m_helper{helper} {
-    m_collection = std::make_unique<ActsPodioEdm::TrackStateCollection>();
-    m_jacs = std::make_unique<ActsPodioEdm::JacobianCollection>();
-    m_params = std::make_unique<ActsPodioEdm::BoundParametersCollection>();
+      public Acts::MultiTrajectory<MutablePodioTrackStateContainer<holder_t>> {
+  /// Track index type
+  using IndexType = Acts::TrackIndexType;
+  static_assert(detail::PodioMutableTrackStateHolder<holder_t>,
+                "holder_t does not satisfy mutable PODIO track-state holder "
+                "requirements");
 
+  /// Sentinel value that indicates an invalid index
+  static constexpr IndexType kInvalid = Acts::kTrackIndexInvalid;
+
+ public:
+  /// Constructor
+  /// @param helper Conversion helper
+  /// @param trackStates Track states collection
+  /// @param params Parameters collection
+  /// @param jacs Jacobians collection
+  explicit MutablePodioTrackStateContainer(
+      PodioUtil::ConversionHelper& helper,
+      holder_t<ActsPodioEdm::TrackStateCollection> trackStates,
+      holder_t<ActsPodioEdm::BoundParametersCollection> params,
+      holder_t<ActsPodioEdm::JacobianCollection> jacs)
+      : m_helper{helper},
+        m_collection{std::move(trackStates)},
+        m_params{std::move(params)},
+        m_jacs{std::move(jacs)} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
   }
 
-  ConstParameters parameters_impl(IndexType istate) const {
+  /// Constructor from references (for RefHolder)
+  /// @param helper Conversion helper
+  /// @param trackStates Track states collection reference
+  /// @param params Parameters collection reference
+  /// @param jacs Jacobians collection reference
+  explicit MutablePodioTrackStateContainer(
+      PodioUtil::ConversionHelper& helper,
+      ActsPodioEdm::TrackStateCollection& trackStates,
+      ActsPodioEdm::BoundParametersCollection& params,
+      ActsPodioEdm::JacobianCollection& jacs)
+    requires std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
+                            Acts::RefHolder<ActsPodioEdm::TrackStateCollection>>
+      : m_helper{helper},
+        m_collection{trackStates},
+        m_params{params},
+        m_jacs{jacs} {
+    populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
+  }
+
+  /// Get const track parameters for a track state
+  /// @param istate Track state index
+  /// @return Const parameters
+  ConstParameters parameters_impl(Acts::TrackIndexType istate) const {
     return ConstParameters{m_params->at(istate).getData().values.data()};
   }
 
+  /// Get mutable track parameters for a track state
+  /// @param istate Track state index
+  /// @return Mutable parameters
   Parameters parameters_impl(IndexType istate) {
     return Parameters{
         PodioUtil::getDataMutable(m_params->at(istate)).values.data()};
   }
 
+  /// Get const covariance matrix for a track state
+  /// @param istate Track state index
+  /// @return Const covariance matrix
   ConstCovariance covariance_impl(IndexType istate) const {
     return ConstCovariance{m_params->at(istate).getData().covariance.data()};
   }
 
+  /// Get mutable covariance matrix for a track state
+  /// @param istate Track state index
+  /// @return Mutable covariance matrix
   Covariance covariance_impl(IndexType istate) {
     return Covariance{
         PodioUtil::getDataMutable(m_params->at(istate)).covariance.data()};
   }
 
+  /// Get the jacobian matrix for a track state (const version)
+  /// @param istate Track state index
+  /// @return Const jacobian matrix
   ConstCovariance jacobian_impl(IndexType istate) const {
     IndexType ijacobian = m_collection->at(istate).getData().ijacobian;
     return ConstCovariance{m_jacs->at(ijacobian).getData().values.data()};
   }
 
+  /// Get the jacobian matrix for a track state (mutable version)
+  /// @param istate Track state index
+  /// @return Mutable jacobian matrix
   Covariance jacobian_impl(IndexType istate) {
     IndexType ijacobian = m_collection->at(istate).getData().ijacobian;
     return Covariance{
         PodioUtil::getDataMutable(m_jacs->at(ijacobian)).values.data()};
   }
 
+  /// Get calibrated measurement vector (const version)
+  /// @tparam measdim Dimension of the measurement
+  /// @param index Track state index
+  /// @return Const calibrated measurement vector
   template <std::size_t measdim>
-  ConstTrackStateProxy::ConstCalibrated<measdim> calibrated_impl(
-      IndexType index) const {
-    return ConstTrackStateProxy::ConstCalibrated<measdim>{
+  ConstCalibrated<measdim> calibrated_impl(IndexType index) const {
+    return ConstCalibrated<measdim>{
         m_collection->at(index).getData().measurement.data()};
   }
 
+  /// Get calibrated measurement vector (mutable version)
+  /// @tparam measdim Dimension of the measurement
+  /// @param index Track state index
+  /// @return Mutable calibrated measurement vector
   template <std::size_t measdim>
-  TrackStateProxy::Calibrated<measdim> calibrated_impl(IndexType index) {
-    return TrackStateProxy::Calibrated<measdim>{
+  Calibrated<measdim> calibrated_impl(IndexType index) {
+    return Calibrated<measdim>{
         PodioUtil::getDataMutable(m_collection->at(index)).measurement.data()};
   }
 
+  /// Get calibrated measurement covariance (const version)
+  /// @tparam measdim Dimension of the measurement
+  /// @param index Track state index
+  /// @return Const calibrated covariance matrix
   template <std::size_t measdim>
-  ConstTrackStateProxy::ConstCalibratedCovariance<measdim>
-  calibratedCovariance_impl(IndexType index) const {
-    return ConstTrackStateProxy::ConstCalibratedCovariance<measdim>{
+  ConstCalibratedCovariance<measdim> calibratedCovariance_impl(
+      IndexType index) const {
+    return ConstCalibratedCovariance<measdim>{
         m_collection->at(index).getData().measurementCovariance.data()};
   }
 
+  /// Get calibrated measurement covariance (mutable version)
+  /// @tparam measdim Dimension of the measurement
+  /// @param index Track state index
+  /// @return Mutable calibrated covariance matrix
   template <std::size_t measdim>
-  TrackStateProxy::CalibratedCovariance<measdim> calibratedCovariance_impl(
-      IndexType index) {
-    return TrackStateProxy::CalibratedCovariance<measdim>{
+  CalibratedCovariance<measdim> calibratedCovariance_impl(IndexType index) {
+    return CalibratedCovariance<measdim>{
         PodioUtil::getDataMutable(m_collection->at(index))
             .measurementCovariance.data()};
   }
 
+  /// Get the number of track states
+  /// @return Number of track states in the container
   IndexType size_impl() const { return m_collection->size(); }
 
+  /// Get a component by key from the track state (const version)
+  /// @param key Component key
+  /// @param istate Track state index
+  /// @return Component value
   std::any component_impl(Acts::HashedString key, IndexType istate) const {
     return PodioTrackStateContainerBase::component_impl<true>(*this, key,
                                                               istate);
   }
 
+  /// Get a component by key from the track state (mutable version)
+  /// @param key Component key
+  /// @param istate Track state index
+  /// @return Component value
   std::any component_impl(Acts::HashedString key, IndexType istate) {
     return PodioTrackStateContainerBase::component_impl<false>(*this, key,
                                                                istate);
   }
 
+  /// Check if a dynamic column exists
+  /// @param key Column key
+  /// @return True if column exists
   constexpr bool hasColumn_impl(Acts::HashedString key) const {
     return PodioTrackStateContainerBase::hasColumn_impl(*this, key);
   }
 
+  /// Check if a track state component is present
+  /// @param key Component key
+  /// @param istate Track state index
+  /// @return True if component is present
   constexpr bool has_impl(Acts::HashedString key, IndexType istate) const {
     return PodioTrackStateContainerBase::has_impl(*this, key, istate);
   }
 
+  /// Add a new track state and return its index
+  /// @param mask Track state component mask
+  /// @param iprevious Index of previous track state
+  /// @return Index of the new track state
   IndexType addTrackState_impl(
       Acts::TrackStatePropMask mask = Acts::TrackStatePropMask::All,
       Acts::TrackIndexType iprevious = Acts::kTrackIndexInvalid) {
@@ -506,6 +696,9 @@ class MutablePodioTrackStateContainer final
     return m_collection->size() - 1;
   }
 
+  /// Add track state components based on mask
+  /// @param istate Track state index
+  /// @param mask Track state component mask
   void addTrackStateComponents_impl(IndexType istate,
                                     Acts::TrackStatePropMask mask) {
     auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
@@ -537,13 +730,18 @@ class MutablePodioTrackStateContainer final
     }
   }
 
+  /// Share data from another track state
+  /// @param iself Index of the destination track state
+  /// @param iother Index of the source track state
+  /// @param shareSource Component to share from source
+  /// @param shareTarget Target component to share to
   void shareFrom_impl(Acts::TrackIndexType iself, Acts::TrackIndexType iother,
                       Acts::TrackStatePropMask shareSource,
                       Acts::TrackStatePropMask shareTarget) {
     auto& self = PodioUtil::getDataMutable(m_collection->at(iself));
     auto& other = PodioUtil::getDataMutable(m_collection->at(iother));
 
-    assert(ACTS_CHECK_BIT(getTrackState(iother).getMask(), shareSource) &&
+    assert(ACTS_CHECK_BIT(this->getTrackState(iother).getMask(), shareSource) &&
            "Source has incompatible allocation");
 
     using enum Acts::TrackStatePropMask;
@@ -590,6 +788,9 @@ class MutablePodioTrackStateContainer final
     }
   }
 
+  /// Unset a track state component
+  /// @param target Component to unset
+  /// @param istate Track state index
   void unset_impl(Acts::TrackStatePropMask target,
                   Acts::TrackIndexType istate) {
     auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
@@ -617,6 +818,7 @@ class MutablePodioTrackStateContainer final
     }
   }
 
+  /// Clear all track states
   void clear_impl() {
     m_collection->clear();
     m_params->clear();
@@ -626,6 +828,9 @@ class MutablePodioTrackStateContainer final
     }
   }
 
+  /// Add a dynamic column
+  /// @tparam T Column value type
+  /// @param key Column key
   template <typename T>
   constexpr void addColumn_impl(std::string_view key) {
     Acts::HashedString hashedKey = Acts::hashStringDynamic(key);
@@ -633,6 +838,12 @@ class MutablePodioTrackStateContainer final
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
 
+  /// Allocate calibrated measurement and covariance
+  /// @tparam val_t Type of the measurement vector
+  /// @tparam cov_t Type of the covariance matrix
+  /// @param istate Track state index
+  /// @param val Measurement vector to store
+  /// @param cov Covariance matrix to store
   template <typename val_t, typename cov_t>
   void allocateCalibrated_impl(IndexType istate,
                                const Eigen::DenseBase<val_t>& val,
@@ -654,14 +865,17 @@ class MutablePodioTrackStateContainer final
 
     data.measdim = measdim;
 
-    Eigen::Map<Acts::ActsVector<measdim>> valMap(data.measurement.data());
+    Eigen::Map<Acts::Vector<measdim>> valMap(data.measurement.data());
     valMap = val;
 
-    Eigen::Map<Acts::ActsSquareMatrix<measdim>> covMap(
+    Eigen::Map<Acts::SquareMatrix<measdim>> covMap(
         data.measurementCovariance.data());
     covMap = cov;
   }
 
+  /// Set the uncalibrated source link for a track state
+  /// @param istate Track state index
+  /// @param sourceLink Source link to set
   void setUncalibratedSourceLink_impl(IndexType istate,
                                       const Acts::SourceLink& sourceLink) {
     PodioUtil::Identifier id =
@@ -670,6 +884,9 @@ class MutablePodioTrackStateContainer final
     data.uncalibratedIdentifier = id;
   }
 
+  /// Set the reference surface for a track state
+  /// @param istate Track state index
+  /// @param surface Reference surface to set
   void setReferenceSurface_impl(IndexType istate,
                                 std::shared_ptr<const Acts::Surface> surface) {
     auto trackState = m_collection->at(istate);
@@ -678,27 +895,77 @@ class MutablePodioTrackStateContainer final
     m_surfaces.at(istate) = std::move(surface);
   }
 
+  /// Get the size of the calibrated measurement
+  /// @param istate Track state index
+  /// @return Size of the calibrated measurement
   Acts::TrackIndexType calibratedSize_impl(IndexType istate) const {
     return m_collection->at(istate).getData().measdim;
   }
 
+  /// Get the uncalibrated source link for a track state
+  /// @param istate Track state index
+  /// @return Uncalibrated source link
   Acts::SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
     return m_helper.get().identifierToSourceLink(
         m_collection->at(istate).getData().uncalibratedIdentifier);
   }
 
+  /// Get the reference surface for a track state
+  /// @param istate Track state index
+  /// @return Pointer to the reference surface
   const Acts::Surface* referenceSurface_impl(IndexType istate) const {
     return m_surfaces.at(istate).get();
   }
 
-  void releaseInto(podio::Frame& frame, const std::string& suffix = "") {
+  /// Release collections into a podio frame
+  /// @param frame The podio frame to release into
+  /// @param suffix Optional suffix for collection names
+  void releaseInto(podio::Frame& frame, const std::string& suffix = "")
+    requires(
+        std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
+                       Acts::ValueHolder<ActsPodioEdm::TrackStateCollection>> ||
+        std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
+                       std::unique_ptr<ActsPodioEdm::TrackStateCollection>> ||
+        std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
+                       std::shared_ptr<ActsPodioEdm::TrackStateCollection>>)
+  {
     std::string s = suffix;
     if (!s.empty()) {
       s = "_" + s;
     }
-    frame.put(std::move(m_collection), "trackStates" + s);
-    frame.put(std::move(m_params), "trackStateParameters" + s);
-    frame.put(std::move(m_jacs), "trackStateJacobians" + s);
+
+    if constexpr (std::is_same_v<
+                      holder_t<ActsPodioEdm::TrackStateCollection>,
+                      std::unique_ptr<ActsPodioEdm::TrackStateCollection>>) {
+      frame.put(std::move(m_collection), "trackStates" + s);
+      frame.put(std::move(m_params), "trackStateParameters" + s);
+      frame.put(std::move(m_jacs), "trackStateJacobians" + s);
+    } else if constexpr (std::is_same_v<
+                             holder_t<ActsPodioEdm::TrackStateCollection>,
+                             std::shared_ptr<
+                                 ActsPodioEdm::TrackStateCollection>>) {
+      frame.put(std::unique_ptr<ActsPodioEdm::TrackStateCollection>(
+                    m_collection.get()),
+                "trackStates" + s);
+      frame.put(std::unique_ptr<ActsPodioEdm::BoundParametersCollection>(
+                    m_params.get()),
+                "trackStateParameters" + s);
+      frame.put(std::unique_ptr<ActsPodioEdm::JacobianCollection>(m_jacs.get()),
+                "trackStateJacobians" + s);
+      m_collection.reset();
+      m_params.reset();
+      m_jacs.reset();
+    } else {
+      frame.put(std::make_unique<ActsPodioEdm::TrackStateCollection>(
+                    std::move(*m_collection)),
+                "trackStates" + s);
+      frame.put(std::make_unique<ActsPodioEdm::BoundParametersCollection>(
+                    std::move(*m_params)),
+                "trackStateParameters" + s);
+      frame.put(std::make_unique<ActsPodioEdm::JacobianCollection>(
+                    std::move(*m_jacs)),
+                "trackStateJacobians" + s);
+    }
     m_surfaces.clear();
 
     for (const auto& [key, col] : m_dynamic) {
@@ -708,11 +975,17 @@ class MutablePodioTrackStateContainer final
     m_dynamic.clear();
   }
 
+  /// Get dynamic column keys
+  /// @return Range of dynamic column keys
   Acts::detail::DynamicKeyRange<podio_detail::DynamicColumnBase>
   dynamicKeys_impl() const {
     return {m_dynamic.begin(), m_dynamic.end()};
   }
 
+  /// Copy dynamic column data from another track state
+  /// @param dstIdx Destination track state index
+  /// @param key Column key
+  /// @param srcPtr Source pointer
   void copyDynamicFrom_impl(IndexType dstIdx, Acts::HashedString key,
                             const std::any& srcPtr) {
     auto it = m_dynamic.find(key);
@@ -725,13 +998,14 @@ class MutablePodioTrackStateContainer final
   }
 
  private:
-  friend class PodioTrackStateContainerBase;
+  template <template <typename...> class other_holder_t>
   friend class ConstPodioTrackStateContainer;
+  friend class PodioTrackStateContainerBase;
 
   std::reference_wrapper<PodioUtil::ConversionHelper> m_helper;
-  std::unique_ptr<ActsPodioEdm::TrackStateCollection> m_collection;
-  std::unique_ptr<ActsPodioEdm::BoundParametersCollection> m_params;
-  std::unique_ptr<ActsPodioEdm::JacobianCollection> m_jacs;
+  holder_t<ActsPodioEdm::TrackStateCollection> m_collection;
+  holder_t<ActsPodioEdm::BoundParametersCollection> m_params;
+  holder_t<ActsPodioEdm::JacobianCollection> m_jacs;
   std::vector<std::shared_ptr<const Acts::Surface>> m_surfaces;
 
   std::unordered_map<Acts::HashedString,
@@ -740,24 +1014,52 @@ class MutablePodioTrackStateContainer final
   std::vector<Acts::HashedString> m_dynamicKeys;
 };
 
-static_assert(
-    !Acts::IsReadOnlyMultiTrajectory<MutablePodioTrackStateContainer>::value,
-    "MutablePodioTrackStateContainer should not be read-only");
+static_assert(!Acts::IsReadOnlyMultiTrajectory<
+                  MutablePodioTrackStateContainer<std::unique_ptr>>::value,
+              "MutablePodioTrackStateContainer should not be read-only");
 
-static_assert(
-    Acts::MutableMultiTrajectoryBackend<MutablePodioTrackStateContainer>,
-    "MutablePodioTrackStateContainer does not fulfill "
-    "TrackStateContainerBackend");
+static_assert(Acts::MutableMultiTrajectoryBackend<
+                  MutablePodioTrackStateContainer<std::unique_ptr>>,
+              "MutablePodioTrackStateContainer does not fulfill "
+              "TrackStateContainerBackend");
 
-inline ConstPodioTrackStateContainer::ConstPodioTrackStateContainer(
-    const MutablePodioTrackStateContainer& other)
+/// Deduction guide: when passing collection references, deduce RefHolder
+MutablePodioTrackStateContainer(PodioUtil::ConversionHelper&,
+                                ActsPodioEdm::TrackStateCollection&,
+                                ActsPodioEdm::BoundParametersCollection&,
+                                ActsPodioEdm::JacobianCollection&)
+    -> MutablePodioTrackStateContainer<Acts::RefHolder>;
+
+template <template <typename...> class holder_t>
+template <template <typename...> class other_holder_t>
+inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
+    const MutablePodioTrackStateContainer<other_holder_t>& other)
+  requires std::is_constructible_v<
+               holder_t<const ActsPodioEdm::TrackStateCollection>,
+               const ActsPodioEdm::TrackStateCollection&>
     : m_helper{other.m_helper},
-      m_collection{other.m_collection.get()},
-      m_params{other.m_params.get()},
-      m_jacs{other.m_jacs.get()},
+      m_collection{*other.m_collection},
+      m_params{*other.m_params},
+      m_jacs{*other.m_jacs},
       m_surfaces{other.m_surfaces} {
   for (const auto& [key, col] : other.m_dynamic) {
     m_dynamic.insert({key, col->asConst()});
+  }
+}
+
+template <template <typename...> class holder_t>
+template <template <typename...> class other_holder_t>
+inline ConstPodioTrackStateContainer<holder_t>::ConstPodioTrackStateContainer(
+    MutablePodioTrackStateContainer<other_holder_t>&& other)
+  requires std::is_same_v<holder_t<const ActsPodioEdm::TrackStateCollection>,
+                          other_holder_t<ActsPodioEdm::TrackStateCollection>>
+    : m_helper{other.m_helper},
+      m_collection{std::move(other.m_collection)},
+      m_params{std::move(other.m_params)},
+      m_jacs{std::move(other.m_jacs)},
+      m_surfaces{std::move(other.m_surfaces)} {
+  for (auto& [key, col] : other.m_dynamic) {
+    m_dynamic.insert({key, std::move(col)});
   }
 }
 

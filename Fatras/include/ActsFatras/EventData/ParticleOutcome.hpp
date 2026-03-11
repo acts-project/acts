@@ -24,6 +24,10 @@ enum class ParticleOutcome : std::uint32_t {
   KilledSecondaryParticle = 4,
 };
 
+/// Print particle outcome to output stream
+/// @param os Output stream
+/// @param outcome Particle outcome to print
+/// @return Output stream
 std::ostream &operator<<(std::ostream &os, ParticleOutcome outcome);
 
 }  // namespace ActsFatras

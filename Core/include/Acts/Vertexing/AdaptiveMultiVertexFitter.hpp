@@ -75,7 +75,7 @@ class AdaptiveMultiVertexFitter {
 
     /// Removes a vertex from trackToVerticesMultiMap
     /// @param vtx Vertex to remove from the multimap along with its track associations
-    void removeVertexFromMultiMap(Vertex& vtx) {
+    void removeVertexFromMultiMap(const Vertex& vtx) {
       for (auto iter = trackToVerticesMultiMap.begin();
            iter != trackToVerticesMultiMap.end();) {
         if (iter->second == &vtx) {
@@ -104,13 +104,14 @@ class AdaptiveMultiVertexFitter {
     }
   };
 
+  /// @brief Configuration options for the adaptive multi-vertex fit.
   struct Config {
     /// @brief Config constructor
     ///
     /// @param est ImpactPointEstimator
     explicit Config(ImpactPointEstimator est) : ipEst(std::move(est)) {}
 
-    // ImpactPointEstimator
+    /// ImpactPointEstimator
     ImpactPointEstimator ipEst;
 
     /// Annealing tool used for a thermodynamic annealing scheme for the
@@ -124,28 +125,29 @@ class AdaptiveMultiVertexFitter {
     ///   of a Higgs boson in the WH−−>lvbb¯ channel with the ATLAS experiment`
     AnnealingUtility annealingTool;
 
-    // Number of max iterations
+    /// Number of max iterations
     unsigned int maxIterations{30};
 
-    // Max distance to linearization point allowed
-    // without relinearization
+    /// Max distance to linearization point allowed
+    /// without relinearization
     double maxDistToLinPoint{0.5};
 
-    // Minimum track weight needed for track to be considered
+    /// Minimum track weight needed for track to be considered
     double minWeight{0.0001};
 
-    // Max relative shift of vertex during one iteration
+    /// Max relative shift of vertex during one iteration
     double maxRelativeShift{0.01};
 
-    // Do smoothing after multivertex fit
+    /// Do smoothing after multivertex fit
     bool doSmoothing{false};
 
-    // Use time information when calculating the vertex compatibility
+    /// Use time information when calculating the vertex compatibility
     bool useTime{false};
 
-    // Function to extract parameters from InputTrack
+    /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
 
+    /// TrackLinearizer
     TrackLinearizer trackLinearizer;
   };
 

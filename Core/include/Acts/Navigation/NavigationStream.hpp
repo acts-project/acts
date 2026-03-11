@@ -152,11 +152,19 @@ class NavigationStream {
   std::size_t m_currentIndex = 0u;
 };
 
+/// Append-only helper to add candidates to a navigation stream.
 class AppendOnlyNavigationStream {
  public:
+  /// Constructor from navigation stream reference
+  /// @param stream Navigation stream to append to
   explicit AppendOnlyNavigationStream(NavigationStream& stream);
+  /// Add a surface candidate to the stream
+  /// @param surface The surface to add
+  /// @param bTolerance Boundary tolerance for the surface
   void addSurfaceCandidate(const Surface& surface,
                            const BoundaryTolerance& bTolerance);
+  /// Add a portal candidate to the stream
+  /// @param portal The portal to add
   void addPortalCandidate(const Portal& portal);
 
  private:

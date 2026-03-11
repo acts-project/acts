@@ -460,23 +460,35 @@ class MultiTrajectory {
     return self().has_impl(key, istate);
   }
 
+  /// Get parameters for a track state
+  /// @param parIdx The parameter index
+  /// @return Parameters vector
   typename TrackStateProxy::Parameters parameters(IndexType parIdx)
     requires(!ReadOnly)
   {
     return self().parameters_impl(parIdx);
   }
 
+  /// Get parameters for a track state (const)
+  /// @param parIdx The parameter index
+  /// @return Const parameters vector
   typename ConstTrackStateProxy::ConstParameters parameters(
       IndexType parIdx) const {
     return self().parameters_impl(parIdx);
   }
 
+  /// Get covariance for a track state
+  /// @param covIdx The covariance index
+  /// @return Covariance matrix
   typename TrackStateProxy::Covariance covariance(IndexType covIdx)
     requires(!ReadOnly)
   {
     return self().covariance_impl(covIdx);
   }
 
+  /// Get covariance for a track state (const)
+  /// @param covIdx The covariance index
+  /// @return Const covariance matrix
   typename ConstTrackStateProxy::ConstCovariance covariance(
       IndexType covIdx) const {
     return self().covariance_impl(covIdx);
@@ -707,8 +719,8 @@ class MultiTrajectory {
     visit_measurement(measdim, [this, istate]<std::size_t DIM>(
                                    std::integral_constant<std::size_t, DIM>) {
       self().allocateCalibrated_impl(
-          istate, ActsVector<DIM>{ActsVector<DIM>::Zero()},
-          ActsSquareMatrix<DIM>{ActsSquareMatrix<DIM>::Zero()});
+          istate, Vector<DIM>{Vector<DIM>::Zero()},
+          SquareMatrix<DIM>{SquareMatrix<DIM>::Zero()});
     });
   }
 

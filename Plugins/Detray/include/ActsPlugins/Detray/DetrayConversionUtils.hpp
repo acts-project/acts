@@ -26,8 +26,10 @@
 
 namespace ActsPlugins {
 
+/// Detray metadata type
 using DetrayMetaData = detray::default_metadata<detray::array<double>>;
 
+/// Detray host detector type
 using DetrayHostDetector = detray::detector<DetrayMetaData>;
 
 /// @ingroup detray_plugin

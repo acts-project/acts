@@ -71,8 +71,8 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 
 void SurfaceArrayNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
+    const NavigationArguments& args, NavigationPolicyState& /*state*/,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
@@ -93,5 +93,7 @@ const Acts::SurfaceArray& SurfaceArrayNavigationPolicy::surfaceArray() const {
 void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {
   connectDefault<SurfaceArrayNavigationPolicy>(delegate);
 }
+
+SurfaceArrayNavigationPolicy::~SurfaceArrayNavigationPolicy() = default;
 
 }  // namespace Acts

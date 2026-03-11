@@ -27,6 +27,7 @@ enum class MaterialUpdateMode : std::uint8_t {
   FullUpdate = PreUpdate | PostUpdate,
 };
 
+/// Enable bitwise operators for MaterialUpdateMode enum
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(MaterialUpdateMode);
 
 /// Stream operator for MaterialUpdateMode

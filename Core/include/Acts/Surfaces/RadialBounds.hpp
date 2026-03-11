@@ -148,7 +148,7 @@ class RadialBounds : public DiscBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note that the extremas are given, which may slightly alter the
+  /// @note that the extrema are given, which may slightly alter the
   /// number of segments returned
   ///
   /// @return vector for vertices in 2D

@@ -32,7 +32,7 @@ using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
-const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
+const BoundMatrix cov = BoundMatrix::Identity();
 
 void checkParameters(const BoundTrackParameters& params, double phi,
                      double theta, double p, double q, const Vector4& pos4,
@@ -85,10 +85,10 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
-BOOST_DATA_TEST_CASE(
-    NeutralConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
-    time, phiInput, theta, p) {
+BOOST_DATA_TEST_CASE(NeutralConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps,
+                     x, y, z, time, phiInput, theta, p) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
@@ -106,10 +106,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    ChargedConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    x, y, z, time, phiInput, theta, p, q) {
+BOOST_DATA_TEST_CASE(ChargedConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);
@@ -128,10 +128,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    AnyConstruct,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsAny, x, y,
-    z, time, phiInput, theta, p, q) {
+BOOST_DATA_TEST_CASE(AnyConstruct,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsAny,
+                     x, y, z, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const Vector4 pos4(x, y, z, time);

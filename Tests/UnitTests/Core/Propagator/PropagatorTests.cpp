@@ -56,7 +56,7 @@ namespace ActsTests {
 GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 /// An observer that measures the perpendicular distance
 struct PerpendicularMeasure {

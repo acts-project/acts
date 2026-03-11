@@ -13,6 +13,7 @@
 
 namespace ActsFatras {
 
+/// Error codes for digitization operations
 /// @ingroup errors
 enum class DigitizationError {
   // ensure all values are non-zero
@@ -28,6 +29,9 @@ enum class DigitizationError {
   MaximumRetriesExceeded,
 };
 
+/// Create error code from DigitizationError
+/// @param e Digitization error enum value
+/// @return Error code corresponding to the error
 std::error_code make_error_code(DigitizationError e);
 
 }  // namespace ActsFatras

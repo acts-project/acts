@@ -12,31 +12,62 @@
 
 namespace Acts {
 
+/// Proxy giving read access to space point data in a container.
 template <typename container_t>
 class SpacePointProxy {
  public:
+  /// Container type
   using ContainerType = container_t;
+  /// Value type of the container
   using ValueType = typename ContainerType::ValueType;
 
   // Never take the ownership of the container
   SpacePointProxy(container_t&& container, std::size_t index) = delete;
-  // Only get the reference
+  /// Construct from container reference and index
+  /// @param container Reference to the space point container
+  /// @param index Index of the space point in the container
   SpacePointProxy(const container_t& container, std::size_t index);
 
+  /// Access the external space point
+  /// @return Const reference to the external space point
   const ValueType& externalSpacePoint() const;
+  /// Get the index of this space point
+  /// @return Index of this space point
   std::size_t index() const;
 
+  /// Get the x coordinate
+  /// @return x coordinate
   float x() const;
+  /// Get the y coordinate
+  /// @return y coordinate
   float y() const;
+  /// Get the z coordinate
+  /// @return z coordinate
   float z() const;
+  /// Get the azimuthal angle
+  /// @return Azimuthal angle phi
   float phi() const;
+  /// Get the radius
+  /// @return Radius in the transverse plane
   float radius() const;
+  /// Get the variance in r
+  /// @return Variance in r
   float varianceR() const;
+  /// Get the variance in z
+  /// @return Variance in z
   float varianceZ() const;
 
+  /// Get the top strip vector
+  /// @return Top strip vector
   const Acts::Vector3& topStripVector() const;
+  /// Get the bottom strip vector
+  /// @return Bottom strip vector
   const Acts::Vector3& bottomStripVector() const;
+  /// Get the strip center distance
+  /// @return Strip center distance vector
   const Acts::Vector3& stripCenterDistance() const;
+  /// Get the top strip center position
+  /// @return Top strip center position vector
   const Acts::Vector3& topStripCenterPosition() const;
 
  private:

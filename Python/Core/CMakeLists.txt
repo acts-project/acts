@@ -25,33 +25,11 @@ target_sources(
         src/Visualization.cpp
 )
 
-# Add ToroidalField Python binding as a separate module if Examples are enabled
-if(ACTS_BUILD_EXAMPLES)
-    pybind11_add_module(acts_toroidal_field
-        ${CMAKE_SOURCE_DIR}/Examples/Detectors/MagneticField/src/ToroidalFieldBindings.cpp
-    )
-    target_link_libraries(
-        acts_toroidal_field
-        PUBLIC ActsExamplesMagneticField Acts::Core
-    )
-    target_include_directories(
-        acts_toroidal_field
-        PRIVATE ${CMAKE_SOURCE_DIR}/Examples/Detectors/MagneticField/include
-    )
-    set_target_properties(
-        acts_toroidal_field
-        PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
-            INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
-    )
-    install(TARGETS acts_toroidal_field DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
-endif()
-
-install(TARGETS ActsPythonBindings DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
+install(TARGETS ActsPythonBindings DESTINATION ${_acts_python_install_dir})
 
 set_target_properties(
     ActsPythonBindings
-    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+    PROPERTIES INSTALL_RPATH "${_acts_python_modules_rpath}"
 )
 set_target_properties(
     ActsPythonBindings
@@ -64,7 +42,7 @@ target_link_libraries(
 )
 
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
-install(FILES ${_python_dir}/setup.sh DESTINATION ${ACTS_PYTHON_INSTALL_DIR})
+install(FILES ${_python_dir}/setup.sh DESTINATION python)
 
 foreach(f ${py_files})
     set(_target ${_python_dir}/acts/${f})
@@ -80,6 +58,6 @@ foreach(f ${py_files})
 
     install(
         FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/${f}
-        DESTINATION ${ACTS_PYTHON_INSTALL_DIR}/${_rel}
+        DESTINATION ${_acts_python_install_dir}/${_rel}
     )
 endforeach()

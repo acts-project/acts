@@ -13,7 +13,6 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>
@@ -34,13 +33,13 @@ class MeasurementMapSelector final : public IAlgorithm {
     /// Input measurements
     std::string inputMeasurements;
 
-    /// Input spacepoints collection.
+    /// Input space points collection.
     std::string inputMeasurementParticleMap;
 
-    /// Output protoTracks collection.
+    /// Output proto tracks collection.
     std::string outputMeasurementParticleMap;
 
-    /// What spacepoints to keep
+    /// What space points to keep
     std::vector<Acts::GeometryIdentifier> geometrySelection;
   };
 
@@ -48,8 +47,10 @@ class MeasurementMapSelector final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  MeasurementMapSelector(Config cfg, Acts::Logging::Level lvl)
-      : IAlgorithm("MeasurementMapSelector", lvl), m_cfg(std::move(cfg)) {
+  explicit MeasurementMapSelector(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr)
+      : IAlgorithm("MeasurementMapSelector", std::move(logger)),
+        m_cfg(std::move(cfg)) {
     m_inputMeasurements.initialize(m_cfg.inputMeasurements);
     m_inputMap.initialize(m_cfg.inputMeasurementParticleMap);
     m_outputMap.initialize(m_cfg.outputMeasurementParticleMap);
@@ -59,8 +60,7 @@ class MeasurementMapSelector final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final {
+  ProcessCode execute(const AlgorithmContext& ctx) const final {
     const auto& inputMeasurements = m_inputMeasurements(ctx);
     const auto& inputMap = m_inputMap(ctx);
 

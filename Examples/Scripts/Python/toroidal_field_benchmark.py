@@ -9,7 +9,6 @@ import time
 from pathlib import Path
 
 import acts
-import acts.acts_toroidal_field as toroidal_field
 import matplotlib.pyplot as plt
 import numpy as np
 from acts import MagneticFieldContext
@@ -19,8 +18,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def create_toroidal_field():
     """Create a toroidal field with default configuration"""
-    config = toroidal_field.Config()
-    return toroidal_field.ToroidalField(config)
+    config = acts.ToroidField.Config()
+    return acts.ToroidField(config)
 
 
 def benchmark_single_evaluations(field, num_evaluations=10000):
@@ -575,13 +574,13 @@ def main():
 
     args = parser.parse_args()
 
-    print("=== Toroidal Magnetic Field Benchmark ===")
+    print("=== Toroid Magnetic Field Benchmark ===")
     print(f"ACTS version: {acts.version}")
 
     # Create toroidal field
     print("\nCreating toroidal field...")
     field = create_toroidal_field()
-    print("✓ Toroidal field created successfully")
+    print("✓ Toroid field created successfully")
 
     # Run benchmarks
     try:

@@ -17,10 +17,11 @@
 
 namespace Acts {
 
+/// Lightweight particle properties description.
 struct ParticleData {
-  float charge{};
-  float mass{};
-  std::string_view name;
+  float charge{};         ///< Particle electric charge
+  float mass{};           ///< Particle mass
+  std::string_view name;  ///< Particle name
 };
 
 /// Find the charge for a given PDG particle number.
@@ -47,7 +48,8 @@ std::optional<float> findMass(PdgParticle pdg);
 float findMassOfNucleus(PdgParticle pdg);
 
 /// Calculate the mass of a nucleus using Bethe-Weizsacker formula
-/// Parameters obtained from https://www.actaphys.uj.edu.pl/R/37/6/1833
+/// Parameters obtained from
+/// https://www.actaphys.uj.edu.pl/index_n.php?I=R&V=37&N=6#1833
 ///
 /// @param pdg PDG particle number for the nucleus
 /// @return Mass in native units
@@ -123,6 +125,9 @@ bool isQuark(PdgParticle pdg);
 /// @return True if the particle is interacting, false otherwise
 bool isInteracting(PdgParticle pdg);
 
+/// @brief Get hadron type classification
+/// @param pdg PDG particle number
+/// @return Hadron type
 HadronType hadronType(PdgParticle pdg);
 
 }  // namespace ParticleIdHelper

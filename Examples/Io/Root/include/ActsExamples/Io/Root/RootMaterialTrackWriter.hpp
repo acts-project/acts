@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include <Acts/Propagator/MaterialInteractor.hpp>
-#include <Acts/Utilities/Logger.hpp>
-#include <ActsPlugins/Root/RootMaterialTrackIo.hpp>
+#include "ActsPlugins/Root/RootMaterialTrackIo.hpp"
 
 #include <mutex>
 #include <string>
@@ -21,10 +21,6 @@
 
 class TFile;
 class TTree;
-
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
 namespace Acts {
 // Using some short hands for Recorded Material
@@ -82,7 +78,7 @@ class RootMaterialTrackWriter
   ~RootMaterialTrackWriter() override;
 
   /// Framework initialize method
-  ActsExamples::ProcessCode finalize() override;
+  ProcessCode finalize() override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

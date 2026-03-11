@@ -33,6 +33,8 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     return m_fullMaterial;
   }
 
+  using ISurfaceMaterial::materialSlab;
+
   std::ostream& toStream(std::ostream& sl) const override {
     sl << "SurfaceMaterialStub";
     return sl;

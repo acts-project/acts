@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
@@ -38,7 +39,6 @@ class G4VUserPhysicsList;
 class G4FieldManager;
 
 namespace Acts {
-class MagneticFieldProvider;
 class Volume;
 }  // namespace Acts
 
@@ -46,7 +46,6 @@ namespace ActsExamples {
 struct Geant4Handle;
 
 namespace Geant4 {
-class SensitiveSurfaceMapper;
 struct EventStore;
 }  // namespace Geant4
 
@@ -71,8 +70,8 @@ class Geant4SimulationBase : public IAlgorithm {
     std::shared_ptr<Geant4Handle> geant4Handle;
   };
 
-  Geant4SimulationBase(const Config& cfg, std::string name,
-                       Acts::Logging::Level level);
+  Geant4SimulationBase(const Config& cfg, const std::string& name,
+                       std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~Geant4SimulationBase() override;
 
@@ -82,7 +81,7 @@ class Geant4SimulationBase : public IAlgorithm {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
@@ -95,8 +94,6 @@ class Geant4SimulationBase : public IAlgorithm {
   G4RunManager& runManager() const;
 
   Geant4::EventStore& eventStore() const;
-
-  std::unique_ptr<const Acts::Logger> m_logger;
 
   std::shared_ptr<Geant4::EventStore> m_eventStore;
 
@@ -158,15 +155,15 @@ class Geant4Simulation final : public Geant4SimulationBase {
   ///
   /// @param config is the configuration struct
   /// @param level is the logging level to be used
-  explicit Geant4Simulation(const Config& cfg,
-                            Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit Geant4Simulation(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~Geant4Simulation() override;
 
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }
@@ -201,14 +198,14 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
   /// @param config is the configuration struct
   /// @param level is the logging level to be used
   explicit Geant4MaterialRecording(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~Geant4MaterialRecording() override;
 
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }

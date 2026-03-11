@@ -23,13 +23,20 @@ namespace ActsPlugins {
 /// @addtogroup gnn_plugin
 /// @{
 
+/// ONNX-based edge classifier for GNN pipeline
 class OnnxEdgeClassifier final : public EdgeClassificationBase {
  public:
+  /// Configuration for OnnxEdgeClassifier
   struct Config {
+    /// Path to the ONNX model file
     std::string modelPath;
+    /// Classification threshold cut
     float cut = 0.5;
   };
 
+  /// Constructor
+  /// @param cfg Configuration parameters
+  /// @param logger Logger instance
   OnnxEdgeClassifier(const Config &cfg,
                      std::unique_ptr<const Acts::Logger> logger);
   ~OnnxEdgeClassifier();
@@ -37,6 +44,8 @@ class OnnxEdgeClassifier final : public EdgeClassificationBase {
   PipelineTensors operator()(PipelineTensors tensors,
                              const ExecutionContext &execContext = {}) override;
 
+  /// Get configuration
+  /// @return Configuration parameters
   Config config() const { return m_cfg; }
 
  private:

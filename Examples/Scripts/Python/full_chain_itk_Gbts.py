@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import pathlib, acts, acts.examples, acts.examples.itk
+import pathlib, acts, acts.root, acts.examples, acts.examples.itk
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -30,7 +30,7 @@ trackingGeometry = detector.trackingGeometry()
 field = acts.root.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=2, numThreads=2, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=16, numThreads=16, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(

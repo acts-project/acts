@@ -110,8 +110,7 @@ else()
     # Finally, we write the path found in the outside virtual env into the
     # new virtual env as described in the StackOverflow answer.
     file(
-        WRITE
-        "${_python_nested_package_dir}/_base_packages.pth"
+        WRITE "${_python_nested_package_dir}/_base_packages.pth"
         ${_python_package_dir}
     )
 
@@ -126,8 +125,7 @@ function(acts_code_generation)
     set(oneValueArgs ADD_TO_TARGET PYTHON PYTHON_VERSION OUTPUT)
     set(multiValueArgs DEPENDS WITH_REQUIREMENTS WITH)
     cmake_parse_arguments(
-        PARSE_ARGV
-        0
+        PARSE_ARGV 0
         ARGS
         "${options}"
         "${oneValueArgs}"
@@ -203,9 +201,11 @@ function(acts_code_generation)
         add_custom_command(
             OUTPUT ${_output_file}
             COMMAND
-                env -i UV_NO_CACHE=1 ${uv_exe} run --quiet --python
-                ${ARGS_PYTHON_VERSION} --no-project ${_arg_isolated}
-                ${_with_args} ${ARGS_PYTHON} ${_output_file}
+                env -i UV_NO_CACHE=1
+                UV_PYTHON_INSTALL_DIR=${CMAKE_BINARY_DIR}/uv/python_install_dir
+                ${uv_exe} run --quiet --python ${ARGS_PYTHON_VERSION}
+                --no-project ${_arg_isolated} ${_with_args} ${ARGS_PYTHON}
+                ${_output_file}
             DEPENDS ${_depends}
             COMMENT "Generating ${ARGS_OUTPUT}"
             VERBATIM
@@ -229,4 +229,10 @@ function(acts_code_generation)
 
     add_dependencies(${ARGS_ADD_TO_TARGET} ${_internal_target})
     target_include_directories(${ARGS_ADD_TO_TARGET} PRIVATE ${_codegen_root})
+
+    # Add a central copde generation target that depends on all codegen targets, so that we can build only them in one go
+    if(NOT TARGET ActsCodegen)
+        add_custom_target(ActsCodegen)
+    endif()
+    add_dependencies(ActsCodegen ${_internal_target})
 endfunction()

@@ -27,33 +27,52 @@ namespace Acts {
 // discarding duplicates, without paying the price of duplicate removal
 // and dynamic memory allocation in hot magnetic field interpolation code.
 //
+/// Iterable indices for neighborhood lookups with optional wrap-around.
 class NeighborHoodIndices {
  public:
   NeighborHoodIndices() = default;
 
+  /// Constructor for continuous range
+  /// @param begin Start index
+  /// @param end End index (exclusive)
   NeighborHoodIndices(std::size_t begin, std::size_t end)
       : m_begin1(begin), m_end1(end), m_begin2(end), m_end2(end) {}
 
+  /// Constructor for wrapped range (two segments)
+  /// @param begin1 Start of first segment
+  /// @param end1 End of first segment (exclusive)
+  /// @param begin2 Start of second segment
+  /// @param end2 End of second segment (exclusive)
   NeighborHoodIndices(std::size_t begin1, std::size_t end1, std::size_t begin2,
                       std::size_t end2)
       : m_begin1(begin1), m_end1(end1), m_begin2(begin2), m_end2(end2) {}
 
+  /// Iterator over the neighborhood index sequence.
   class iterator {
    public:
     iterator() = default;
 
-    // Specialized constructor for end() iterator
+    /// Constructor for end iterator
+    /// @param current End position
     explicit iterator(std::size_t current)
         : m_current(current), m_wrapped(true) {}
 
+    /// Constructor for begin iterator
+    /// @param begin1 Start of first segment
+    /// @param end1 End of first segment
+    /// @param begin2 Start of second segment
     iterator(std::size_t begin1, std::size_t end1, std::size_t begin2)
         : m_current(begin1),
           m_end1(end1),
           m_begin2(begin2),
           m_wrapped(begin1 == begin2) {}
 
+    /// Dereference operator
+    /// @return Current index
     std::size_t operator*() const { return m_current; }
 
+    /// Pre-increment operator
+    /// @return Reference to this iterator
     iterator& operator++() {
       ++m_current;
       if (m_current == m_end1) {
@@ -63,6 +82,9 @@ class NeighborHoodIndices {
       return *this;
     }
 
+    /// Equality comparison operator
+    /// @param it Other iterator
+    /// @return True if iterators are equal
     bool operator==(const iterator& it) const {
       return (m_current == it.m_current) && (m_wrapped == it.m_wrapped);
     }
@@ -72,14 +94,20 @@ class NeighborHoodIndices {
     bool m_wrapped = false;
   };
 
+  /// Get begin iterator
+  /// @return Iterator to first index
   iterator begin() const { return iterator(m_begin1, m_end1, m_begin2); }
 
+  /// Get end iterator
+  /// @return Iterator past last index
   iterator end() const { return iterator(m_end2); }
 
-  // Number of indices that will be produced if this sequence is iterated
+  /// Get total number of indices in the sequence
+  /// @return Number of indices
   std::size_t size() const { return (m_end1 - m_begin1) + (m_end2 - m_begin2); }
 
-  // Collect the sequence of indices into an std::vector
+  /// Collect all indices into a vector
+  /// @return Vector containing all indices
   std::vector<std::size_t> collect() const {
     std::vector<std::size_t> result;
     result.reserve(this->size());
@@ -135,21 +163,21 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// @brief returns whether the axis is equidistant
   ///
   /// @return bool is equidistant
-  bool isEquidistant() const override { return true; }
+  bool isEquidistant() const final { return true; }
 
   /// @brief returns whether the axis is variable
   ///
   /// @return bool is variable
-  bool isVariable() const override { return false; }
+  bool isVariable() const final { return false; }
 
   /// @brief returns the type of the axis
   /// @return @c AxisType of this axis
-  AxisType getType() const override { return type; }
+  AxisType getType() const final { return type; }
 
   /// @brief returns the boundary type set in the template param
   ///
   /// @return @c AxisBoundaryType of this axis
-  AxisBoundaryType getBoundaryType() const override { return bdt; }
+  AxisBoundaryType getBoundaryType() const final { return bdt; }
 
   /// @brief Get #size bins which neighbor the one given
   ///
@@ -308,7 +336,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const {
+  std::size_t getBin(double x) const final {
     return wrapBin(
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
@@ -360,17 +388,17 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  double getMax() const override { return m_max; }
+  double getMax() const final { return m_max; }
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  double getMin() const override { return m_min; }
+  double getMin() const final { return m_min; }
 
   /// @brief get total number of bins
   ///
   /// @return total number of bins (excluding under-/overflow bins)
-  std::size_t getNBins() const override { return m_bins; }
+  std::size_t getNBins() const final { return m_bins; }
 
   /// @brief check whether value is inside axis limits
   /// @param x The value to check
@@ -384,7 +412,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<double> getBinEdges() const override {
+  std::vector<double> getBinEdges() const final {
     std::vector<double> binEdges;
     for (std::size_t i = 1; i <= m_bins; i++) {
       binEdges.push_back(getBinLowerBound(i));
@@ -402,7 +430,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   }
 
  protected:
-  void toStream(std::ostream& os) const override { os << *this; }
+  void toStream(std::ostream& os) const final { os << *this; }
 
  private:
   /// minimum of binning range
@@ -451,21 +479,21 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// @brief returns whether the axis is equidistante
   ///
   /// @return bool is equidistant
-  bool isEquidistant() const override { return false; }
+  bool isEquidistant() const final { return false; }
 
   /// @brief returns whether the axis is variable
   ///
   /// @return bool is variable
-  bool isVariable() const override { return true; }
+  bool isVariable() const final { return true; }
 
   /// @brief returns the type of the axis
   /// @return @c AxisType of this axis
-  AxisType getType() const override { return type; }
+  AxisType getType() const final { return type; }
 
   /// @brief returns the boundary type set in the template param
   ///
   /// @return @c AxisBoundaryType of this axis
-  AxisBoundaryType getBoundaryType() const override { return bdt; }
+  AxisBoundaryType getBoundaryType() const final { return bdt; }
 
   /// @brief Get #size bins which neighbor the one given
   ///
@@ -622,7 +650,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const {
+  std::size_t getBin(double x) const final {
     const auto it =
         std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
     return wrapBin(std::distance(std::begin(m_binEdges), it));
@@ -679,17 +707,17 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  double getMax() const override { return m_binEdges.back(); }
+  double getMax() const final { return m_binEdges.back(); }
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  double getMin() const override { return m_binEdges.front(); }
+  double getMin() const final { return m_binEdges.front(); }
 
   /// @brief get total number of bins
   ///
   /// @return total number of bins (excluding under-/overflow bins)
-  std::size_t getNBins() const override { return m_binEdges.size() - 1; }
+  std::size_t getNBins() const final { return m_binEdges.size() - 1; }
 
   /// @brief check whether value is inside axis limits
   /// @param x The value to check
@@ -705,7 +733,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<double> getBinEdges() const override { return m_binEdges; }
+  std::vector<double> getBinEdges() const final { return m_binEdges; }
 
   friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
     os << "Axis<Variable, " << bdt << ">(";
@@ -718,7 +746,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   }
 
  protected:
-  void toStream(std::ostream& os) const override { os << *this; }
+  void toStream(std::ostream& os) const final { os << *this; }
 
  private:
   /// vector of bin edges (sorted in ascending order)

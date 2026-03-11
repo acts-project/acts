@@ -11,16 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
 #include <limits>
-#include <memory>
 #include <stdexcept>
 #include <tuple>
-#include <unordered_map>
 #include <utility>
 
 #include <TAxis.h>
@@ -30,8 +27,6 @@
 #include <TVectorT.h>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
 namespace {
 
@@ -40,17 +35,15 @@ namespace {
 ///
 /// @param [in] events The events that will be labeled
 void labelEvents(
-    std::vector<
-        ActsExamples::detail::NuclearInteractionParametrisation::EventFraction>&
+    std::vector<detail::NuclearInteractionParametrisation::EventFraction>&
         events) {
-  namespace Parametrisation =
-      ActsExamples::detail::NuclearInteractionParametrisation;
+  namespace Parametrisation = detail::NuclearInteractionParametrisation;
   // Search for the highest momentum particles per event
   for (Parametrisation::EventFraction& event : events) {
     double maxMom = 0.;
     double maxMomOthers = 0.;
     // Walk over all final state particles
-    for (const ActsExamples::SimParticle& p : event.finalParticles) {
+    for (const SimParticle& p : event.finalParticles) {
       // Search for the maximum in particles with the same PDG ID as the
       // interacting one
       if (p.pdg() == event.initialParticle.pdg()) {
@@ -71,7 +64,7 @@ void labelEvents(
     // Get the final state p_T
     double pt = 0.;
     Acts::Vector2 ptVec(0., 0.);
-    for (const ActsExamples::SimParticle& p : event.finalParticles) {
+    for (const SimParticle& p : event.finalParticles) {
       Acts::Vector2 particlePt =
           p.fourMomentum().template segment<2>(Acts::eMom0);
       ptVec[0] += particlePt[0];
@@ -249,13 +242,11 @@ buildMaps(const std::vector<TH1F*>& histos) {
 /// @param [in] interactionType The interaction type that will be parametrised
 /// @param [in] cfg Configuration that steers the binning of histograms
 inline void recordKinematicParametrisation(
-    const std::vector<
-        ActsExamples::detail::NuclearInteractionParametrisation::EventFraction>&
+    const std::vector<detail::NuclearInteractionParametrisation::EventFraction>&
         eventFractionCollection,
     bool interactionType, unsigned int multiplicity,
-    const ActsExamples::RootNuclearInteractionParametersWriter::Config& cfg) {
-  namespace Parametrisation =
-      ActsExamples::detail::NuclearInteractionParametrisation;
+    const RootNuclearInteractionParametersWriter::Config& cfg) {
+  namespace Parametrisation = detail::NuclearInteractionParametrisation;
   gDirectory->mkdir(std::to_string(multiplicity).c_str());
   gDirectory->cd(std::to_string(multiplicity).c_str());
 
@@ -349,11 +340,9 @@ inline void recordKinematicParametrisation(
 }
 }  // namespace
 
-ActsExamples::RootNuclearInteractionParametersWriter::
-    RootNuclearInteractionParametersWriter(
-        const ActsExamples::RootNuclearInteractionParametersWriter::Config&
-            config,
-        Acts::Logging::Level level)
+RootNuclearInteractionParametersWriter::RootNuclearInteractionParametersWriter(
+    const RootNuclearInteractionParametersWriter::Config& config,
+    Acts::Logging::Level level)
     : WriterT(config.inputSimulationProcesses,
               "RootNuclearInteractionParametersWriter", level),
       m_cfg(config) {
@@ -365,11 +354,10 @@ ActsExamples::RootNuclearInteractionParametersWriter::
   }
 }
 
-ActsExamples::RootNuclearInteractionParametersWriter::
+RootNuclearInteractionParametersWriter::
     ~RootNuclearInteractionParametersWriter() = default;
 
-ActsExamples::ProcessCode
-ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
+ProcessCode RootNuclearInteractionParametersWriter::finalize() {
   namespace Parametrisation = detail::NuclearInteractionParametrisation;
   if (m_eventFractionCollection.empty()) {
     return ProcessCode::ABORT;
@@ -481,8 +469,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode
-ActsExamples::RootNuclearInteractionParametersWriter::writeT(
+ProcessCode RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
     const ExtractedSimulationProcessContainer& event) {
   // Convert the tuple to use additional categorisation variables
@@ -501,3 +488,5 @@ ActsExamples::RootNuclearInteractionParametersWriter::writeT(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

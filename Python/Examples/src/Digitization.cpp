@@ -32,17 +32,8 @@ namespace ActsPython {
 
 void addDigitization(py::module& mex) {
   {
-    using Config = DigitizationAlgorithm::Config;
-
-    auto a =
-        py::class_<DigitizationAlgorithm, IAlgorithm,
-                   std::shared_ptr<DigitizationAlgorithm>>(
-            mex, "DigitizationAlgorithm")
-            .def(py::init<Config&, Logging::Level>(), py::arg("config"),
-                 py::arg("level"))
-            .def_property_readonly("config", &DigitizationAlgorithm::config);
-
-    auto c = py::class_<Config>(a, "Config").def(py::init<>());
+    auto [a, c] = declareAlgorithm<DigitizationAlgorithm, IAlgorithm>(
+        mex, "DigitizationAlgorithm");
 
     ACTS_PYTHON_STRUCT(
         c, inputSimHits, outputMeasurements, outputClusters,
@@ -52,7 +43,7 @@ void addDigitization(py::module& mex) {
         doMerge, mergeCommonCorner, minEnergyDeposit, digitizationConfigs,
         minMaxRetries);
 
-    c.def_readonly("mergeNsigma", &Config::mergeNsigma);
+    c.def_readonly("mergeNsigma", &DigitizationAlgorithm::Config::mergeNsigma);
 
     patchKwargsConstructor(c);
 
@@ -66,13 +57,19 @@ void addDigitization(py::module& mex) {
                  std::pair<GeometryIdentifier, DigiComponentsConfig>>>());
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      MuonSpacePointDigitizer, mex, "MuonSpacePointDigitizer", inputSimHits,
-      inputParticles, outputSpacePoints, randomNumbers,
-      /// @todo: Expose <calibrator> to python bindings
-      trackingGeometry, digitizeTime, dumpVisualization, strawDeadTime
+  {
+    auto [alg, c] = declareAlgorithm<MuonSpacePointDigitizer, IAlgorithm>(
+        mex, "MuonSpacePointDigitizer");
 
-  );
+    ACTS_PYTHON_STRUCT(
+        c, inputSimHits, inputParticles, outputSpacePoints, outputMeasurements,
+        outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
+        outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
+        randomNumbers, trackingGeometry, digitizeTime, dumpVisualization,
+        visualizationFunction, strawDeadTime, rpcDeadTime);
+
+    ActsPython::patchKwargsConstructor(c);
+  }
 
   {
     using DC = DigitizationConfigurator;

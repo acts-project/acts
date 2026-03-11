@@ -13,6 +13,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
@@ -22,7 +23,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <map>
 #include <optional>
 #include <string>
 
@@ -34,7 +34,7 @@ namespace Acts {
 ///
 /// @tparam object_t Type of the object for navigation to check against
 template <typename object_t>
-struct NavigationOptions {
+struct NavigationOptions final {
   /// The boundary check directive
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
@@ -77,7 +77,7 @@ struct NavigationOptions {
 /// `state.currentSurface` pointer is set. This actors to observe
 /// that we are on a surface.
 ///
-class Navigator {
+class Navigator final {
  public:
   /// Type alias for navigation surface candidates container
   using NavigationSurfaces =
@@ -94,6 +94,7 @@ class Navigator {
   using NavigationCandidates =
       boost::container::small_vector<NavigationTarget, 10>;
 
+  /// Type alias for external surfaces container
   using ExternalSurfaces = std::vector<GeometryIdentifier>;
 
   /// Type alias for geometry version enumeration
@@ -127,15 +128,6 @@ class Navigator {
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
 
-    /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
-
-    /// The near limit to resolve surfaces
-    double nearLimit = s_onSurfaceTolerance;
-
-    /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
-
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};
     /// Surfaces that are not part of the tracking geometry
@@ -150,19 +142,7 @@ class Navigator {
         freeSurfaces.push_back(&surface);
       }
     }
-    /// @brief Delegate to decide whether free surfaces are appended to the navigation
-    ///        stream given the current volume and the track coordinates. If the
-    ///        delegate is set, it is called in each candidate resolution step
-    ///        for each surface that has not been marked as reached yet.
-    /// @param gctx: Current geometry context carrying the alignment information
-    /// @param currentVol: The current tracking volume in which the propagator resides
-    /// @param pos: Position of the track in global coordinates
-    /// @param dir: Direction vector of the track
-    /// @param surface: Free surface candidate to test
-    using FreeSurfaceSelctor_t = Delegate<bool(
-        const GeometryContext& gctx, const TrackingVolume& currentVol,
-        const Vector3& pos, const Vector3& dir, const Surface& candidate)>;
-    FreeSurfaceSelctor_t freeSurfaceSelector{};
+
     /// Set the plain navigation options
     /// @param options The plain navigator options to set
     void setPlainOptions(const NavigatorPlainOptions& options) {
@@ -181,6 +161,9 @@ class Navigator {
 
     /// Navigation options configuration
     Options options;
+
+    /// Management of policy state allocation and deallocation
+    NavigationPolicyStateManager policyStateManager;
 
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
@@ -212,6 +195,8 @@ class Navigator {
     /// reached during propagation
     std::vector<std::pair<const Surface*, bool>> freeCandidates{};
 
+    /// Get reference to current navigation surface
+    /// @return Reference to current navigation target
     NavigationTarget& navSurface() {
       return navSurfaces.at(navSurfaceIndex.value());
     }
@@ -232,6 +217,7 @@ class Navigator {
       return navCandidates.at(navCandidateIndex.value());
     }
 
+    /// Volume where the navigation started
     const TrackingVolume* startVolume = nullptr;
     /// Layer where the navigation started
     const Layer* startLayer = nullptr;
@@ -275,6 +261,8 @@ class Navigator {
       navCandidateIndex.reset();
 
       currentLayer = nullptr;
+
+      policyStateManager.reset();
     }
 
     /// Completely reset navigation state to initial conditions
@@ -377,7 +365,7 @@ class Navigator {
   /// @param direction The current direction
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& state, const Vector3& position,
+  bool checkTargetValid(State& state, const Vector3& position,
                         const Vector3& direction) const;
 
   /// @brief Handle the surface reached

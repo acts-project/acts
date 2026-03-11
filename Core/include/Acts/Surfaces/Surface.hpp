@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
+#include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -89,7 +90,7 @@ class Surface : public virtual GeometryObject,
   /// to detector element and layer
   ///
   /// @param other Source surface for copy.
-  Surface(const Surface& other) noexcept;
+  Surface(const Surface& other) noexcept = default;
 
   /// Constructor from SurfacePlacement: Element proxy
   ///
@@ -153,7 +154,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param other Source surface for the assignment
   /// @return Reference to this surface after assignment
-  Surface& operator=(const Surface& other);
+  Surface& operator=(const Surface& other) noexcept = default;
 
   /// Comparison (equality) operator
   /// The strategy for comparison is
@@ -223,6 +224,7 @@ class Surface : public virtual GeometryObject,
   const DetectorElementBase* associatedDetectorElement() const;
 
   /// @brief Return the associated surface placement if there is any
+  /// @return Pointer to the surface placement, can be nullptr
   const SurfacePlacementBase* surfacePlacement() const;
 
   /// Return method for the associated Layer in which the surface is embedded
@@ -230,6 +232,7 @@ class Surface : public virtual GeometryObject,
   const Layer* associatedLayer() const;
 
   /// @brief Return the thickness of the surface in the normal direction
+  /// @return The surface thickness
   double thickness() const;
 
   /// Set Associated Layer
@@ -474,8 +477,10 @@ class Surface : public virtual GeometryObject,
   virtual std::string name() const = 0;
 
   /// @brief Returns whether the Surface is sensitive
+  /// @return True if the surface is sensitive
   bool isSensitive() const;
   /// @brief Returns whether the Surface is alignable
+  /// @return True if the surface is alignable
   bool isAlignable() const;
 
   /// Return a Polyhedron for surface objects
@@ -538,7 +543,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  virtual ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  virtual Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const = 0;
 
   /// Visualize the surface for debugging and inspection
@@ -559,7 +564,7 @@ class Surface : public virtual GeometryObject,
 
   /// Transform3 definition that positions
   /// (translation, rotation) the surface in global space
-  std::unique_ptr<const Transform3> m_transform{};
+  CloneablePtr<const Transform3> m_transform{};
 
  private:
   /// Pointer to the a SurfacePlacement

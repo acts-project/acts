@@ -27,17 +27,20 @@ class Surface;
 class VolumeBounds;
 class Direction;
 
+/// Helper bundle of a surface and its orientation.
 struct OrientedSurface {
-  std::shared_ptr<RegularSurface> surface;
-  Direction direction = Direction::AlongNormal();
+  std::shared_ptr<RegularSurface> surface;         ///< The surface
+  Direction direction = Direction::AlongNormal();  ///< Surface orientation
 };
 
-// Planar definitions to help construct the boundary surfaces
+/// XY plane transformation (identity)
 static const Transform3 s_planeXY = Transform3::Identity();
+/// YZ plane transformation
 static const Transform3 s_planeYZ =
     AngleAxis3(std::numbers::pi / 2., Vector3::UnitY()) *
     AngleAxis3(std::numbers::pi / 2., Vector3::UnitZ()) *
     Transform3::Identity();
+/// ZX plane transformation
 static const Transform3 s_planeZX =
     AngleAxis3(-std::numbers::pi / 2., Vector3::UnitX()) *
     AngleAxis3(-std::numbers::pi / 2., Vector3::UnitZ()) *

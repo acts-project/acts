@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 
 namespace Acts {
 
@@ -19,7 +19,7 @@ namespace Acts {
 /// @param maxCmpsAfterMerge the number of components we want to reach
 /// @param surface the surface type on which the components are (unused here)
 /// @ingroup track_fitting
-void reduceMixtureLargestWeights(std::vector<Acts::GsfComponent> &cmpCache,
+void reduceMixtureLargestWeights(std::vector<GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
                                  const Surface &surface);
 
@@ -33,5 +33,15 @@ void reduceMixtureLargestWeights(std::vector<Acts::GsfComponent> &cmpCache,
 void reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
                                  std::size_t maxCmpsAfterMerge,
                                  const Surface &surface);
+
+/// Naive implementation of component reduction with KL-distance. Recomputes all
+/// distances in every iteration without any caching or optimization. This
+/// serves as a baseline for testing and benchmarking the optimized version.
+/// @param cmpCache the component collection
+/// @param maxCmpsAfterMerge the number of components we want to reach
+/// @param surface the surface type on which the components are
+void reduceMixtureWithKLDistanceNaive(std::vector<GsfComponent> &cmpCache,
+                                      std::size_t maxCmpsAfterMerge,
+                                      const Surface &surface);
 
 }  // namespace Acts

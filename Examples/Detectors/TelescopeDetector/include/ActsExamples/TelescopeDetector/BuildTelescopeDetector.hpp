@@ -15,10 +15,6 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-class TrackingGeometry;
-}  // namespace Acts
-
 namespace ActsExamples {
 
 /// The telescope detector surface type

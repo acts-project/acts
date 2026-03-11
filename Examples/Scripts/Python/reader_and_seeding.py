@@ -14,7 +14,6 @@ from acts.examples.reconstruction import (
 
 from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
-
 s = acts.examples.Sequencer(events=1, numThreads=1, outputDir="output")
 
 # loggingLevel = acts.logging.INFO
@@ -25,7 +24,7 @@ s.addReader(
         level=loggingLevel,
         treename="GNN4ITk",
         inputfile="Dump_GNN4Itk.root",
-        onlySpacepoints=True,
+        onlySpacePoints=True,
         outputPixelSpacePoints="pixel_spacepoints",
         outputStripSpacePoints="strip_spacepoints",
         outputSpacePoints="spacepoints",

@@ -8,16 +8,13 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Utilities/Logger.hpp>
-#include <Acts/Visualization/ViewConfig.hpp>
 
 #include <cstddef>
-#include <fstream>
-#include <iostream>
 #include <memory>
-#include <mutex>
 #include <string>
 
 namespace Acts {
@@ -26,7 +23,6 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class ObjTrackingGeometryWriter
 ///
@@ -65,8 +61,8 @@ class ObjTrackingGeometryWriter {
   /// @param context the Algorithm/Event context of this call
   /// @param tGeometry is the geometry to be written out
   /// @return ProcessCode to indicate success/failure
-  ActsExamples::ProcessCode write(const AlgorithmContext& context,
-                                  const Acts::TrackingGeometry& tGeometry);
+  ProcessCode write(const AlgorithmContext& context,
+                    const Acts::TrackingGeometry& tGeometry);
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;  ///< the logger instance

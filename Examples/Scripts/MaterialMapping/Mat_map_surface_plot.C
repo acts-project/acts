@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
@@ -166,17 +167,7 @@ void Fill(std::map<std::uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<st
 
   int nentries = tree->GetEntries();
   if(nentries > nbprocess && nbprocess != -1) nentries = nbprocess;
-  json geom;
-  {
-    std::ifstream gj(geometry_file);
-    if (!gj.good()) {
-      std::cerr << "WARNING: " << geometry_file << " not found." << std::endl;
-    } else {
-      try { gj >> geom; } catch (...) {
-        std::cerr << "WARNING: Failed to parse " << geometry_file << "." << std::endl;
-      }
-    }
-  }
+  std::unordered_map<std::uint64_t, json> surface_bounds = load_geometry_file(geometry_file);
 
   // Loop over all the material tracks.
   for (Long64_t i=0;i<nentries; i++) {
@@ -190,29 +181,25 @@ void Fill(std::map<std::uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<st
     // loop over all the material hits to do initialisation and compute weight
     for(int j=0; j<mat_X0->size(); j++ ){
 
-      // If a surface was never encountered initialise the hist, info and weight
+      // If a valid surface id was never encountered initialise the hist, info and weight
       if(surface_hist.find(sur_id->at(j))==surface_hist.end()){
         int type = -1;
         float range_min = 0.;
         float range_max = 0.;
-        const auto &entries = geom["Surfaces"]["entries"];
-        for (const auto &entry : entries) {
-          std::uint64_t gid = entry["value"]["geo_id"].get<std::uint64_t>();
-          if (gid == sur_id->at(j)) {
-            std::string btype = entry["value"]["bounds"]["type"].get<std::string>();
-            const auto &bounds = entry["value"]["bounds"]["values"];
-            if (btype == "CylinderBounds") {
-              type = 1;
-              range_min = -bounds[1].get<float>();
-              range_max = bounds[1].get<float>();
-            } else if (btype == "RadialBounds") {
-              type = 2;
-              range_min = bounds[0].get<float>();
-              range_max = bounds[1].get<float>();
-            } else {
-              type = -1;
-            }
-            break;
+        if (surface_bounds.count(sur_id->at(j))) {
+          json &bounds = surface_bounds[sur_id->at(j)];
+          std::string btype = bounds["type"].get<std::string>();
+          const auto &values = bounds["values"];
+          if (btype == "CylinderBounds") {
+            type = 1;
+            range_min = -values[1].get<float>();
+            range_max = values[1].get<float>();
+          } else if (btype == "RadialBounds") {
+            type = 2;
+            range_min = values[0].get<float>();
+            range_max = values[1].get<float>();
+          } else {
+            type = -1;
           }
         }
 

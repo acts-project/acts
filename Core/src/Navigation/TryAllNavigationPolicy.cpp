@@ -32,8 +32,8 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
 
 void TryAllNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
+    const NavigationArguments& args, NavigationPolicyState& /*state*/,
+    AppendOnlyNavigationStream& stream, const Logger& logger) const {
   ACTS_VERBOSE("TryAllNavigationPolicy");
   assert(m_volume != nullptr);
 

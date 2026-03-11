@@ -49,17 +49,17 @@ class Geant4DetectorElement : public Acts::SurfacePlacementBase {
   /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @return Reference to the local-to-global transformation matrix
   const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
-  /// @return Reference to the local-to-global transformation matrix
 
   /// Return surface associated with this detector element
-  const Acts::Surface& surface() const override;
   /// @return Const reference to the associated surface
+  const Acts::Surface& surface() const override;
 
   /// Non-const access to surface associated with this detector element
-  Acts::Surface& surface() override;
   /// @return Mutable reference to the associated surface
+  Acts::Surface& surface() override;
 
   /// Return the thickness of this detector element
   /// @return The thickness value in length units
@@ -68,6 +68,7 @@ class Geant4DetectorElement : public Acts::SurfacePlacementBase {
   /// @return to the Geant4 physical volume
   const G4VPhysicalVolume& g4PhysicalVolume() const;
   /// Is the detector element a sensitive element
+  /// @return True as this is always sensitive
   bool isSensitive() const final { return true; }
 
  private:

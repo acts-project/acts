@@ -55,23 +55,29 @@
     explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger) \
         : m_logger(std::move(logger)) {}                                       \
                                                                                \
-    const ::Acts::Logger& operator()() const {                                 \
-      return *m_logger;                                                        \
-    }                                                                          \
+    const ::Acts::Logger& operator()() const { return *m_logger; }             \
                                                                                \
     std::unique_ptr<const ::Acts::Logger> m_logger;                            \
   };                                                                           \
   __local_acts_logger logger(log_object);
 
-// Debug level agnostic implementation of the ACTS_XYZ logging macros
-#define ACTS_LOG(level, x)           \
-  do {                               \
-    if (logger().doPrint(level)) {   \
-      std::ostringstream os;         \
-      os << x;                       \
-      logger().log(level, os.str()); \
-    }                                \
+/// Log a message at the specified level with an explicit logger instance
+/// @param lgr The logger instance (must be a Acts::Logger reference)
+/// @param level The logging level
+/// @param x The message to log
+#define ACTS_LOG_WITH_LOGGER(lgr, level, x) \
+  do {                                      \
+    if ((lgr).doPrint(level)) {             \
+      std::ostringstream os;                \
+      os << x;                              \
+      (lgr).log(level, os.str());           \
+    }                                       \
   } while (0)
+
+/// Log a message at the specified level
+/// @param level The logging level
+/// @param x The message to log
+#define ACTS_LOG(level, x) ACTS_LOG_WITH_LOGGER(logger(), level, x)
 
 /// @brief macro for verbose debug output
 ///
@@ -368,8 +374,7 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
           "the ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
           " configuration. See "
-          "https://acts.readthedocs.io/en/latest/core/misc/"
-          "logging.html#logging-thresholds");
+          "https://cern.ch/acts-log-thresh");
     }
   }
 
@@ -527,7 +532,7 @@ class TimedOutputDecorator final : public OutputDecorator {
     char buffer[20];
     time_t t{};
     std::time(&t);
-    struct tm tbuf {};
+    struct tm tbuf{};
     std::strftime(buffer, sizeof(buffer), m_format.c_str(),
                   localtime_r(&t, &tbuf));
     return buffer;

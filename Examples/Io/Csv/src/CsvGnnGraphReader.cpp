@@ -13,7 +13,6 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <ActsExamples/Utilities/Paths.hpp>
 
 #include <stdexcept>
 #include <string>
@@ -45,7 +44,7 @@ ProcessCode CsvGnnGraphReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // vt and m are an optional columns
-  NamedTupleCsvReader<GraphData> reader(path, {"vt", "m"});
+  BoostDescribeCsvReader<GraphData> reader(path, {"vt", "m"});
   GraphData data;
 
   Graph g;

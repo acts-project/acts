@@ -23,8 +23,8 @@
 
 namespace ActsExamples {
 namespace {
-void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
-                                    ActsExamples::RandomEngine>& f) {
+void to_json(nlohmann::json& j,
+             const ActsFatras::SingleParameterSmearFunction<RandomEngine>& f) {
   // Gauss:
   auto gauss = f.target<const Digitization::Gauss>();
   if (gauss != nullptr) {
@@ -77,9 +77,8 @@ void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
   throw std::runtime_error("Unable to serialize smearer");
 }
 
-void from_json(
-    const nlohmann::json& j,
-    ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>& f) {
+void from_json(const nlohmann::json& j,
+               ActsFatras::SingleParameterSmearFunction<RandomEngine>& f) {
   std::string sType = j["type"];
 
   if (sType == "Gauss") {
@@ -111,14 +110,14 @@ void from_json(
 }  // namespace ActsExamples
 
 void ActsExamples::to_json(nlohmann::json& j,
-                           const ActsExamples::ParameterSmearingConfig& psc) {
+                           const ParameterSmearingConfig& psc) {
   j["index"] = psc.index;
   j["forcePositiveValues"] = psc.forcePositiveValues;
   to_json(j, psc.smearFunction);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
-                             ActsExamples::ParameterSmearingConfig& psc) {
+                             ParameterSmearingConfig& psc) {
   psc.index = static_cast<Acts::BoundIndices>(j["index"]);
   if (j.find("forcePositiveValues") != j.end()) {
     psc.forcePositiveValues = j["forcePositiveValues"];
@@ -126,8 +125,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
   from_json(j, psc.smearFunction);
 }
 
-void ActsExamples::to_json(nlohmann::json& j,
-                           const ActsExamples::GeometricConfig& gdc) {
+void ActsExamples::to_json(nlohmann::json& j, const GeometricConfig& gdc) {
   std::vector<std::size_t> indices;
   for (const auto& idx : gdc.indices) {
     indices.push_back(static_cast<std::size_t>(idx));
@@ -142,8 +140,7 @@ void ActsExamples::to_json(nlohmann::json& j,
   }
 }
 
-void ActsExamples::from_json(const nlohmann::json& j,
-                             ActsExamples::GeometricConfig& gdc) {
+void ActsExamples::from_json(const nlohmann::json& j, GeometricConfig& gdc) {
   for (const auto& jidx : j["indices"]) {
     gdc.indices.push_back(static_cast<Acts::BoundIndices>(jidx));
   }
@@ -170,24 +167,21 @@ void ActsExamples::from_json(const nlohmann::json& j,
   }
 }
 
-void ActsExamples::to_json(nlohmann::json& j,
-                           const ActsExamples::SmearingConfig& sdc) {
+void ActsExamples::to_json(nlohmann::json& j, const SmearingConfig& sdc) {
   for (const auto& sc : sdc.params) {
     j.push_back(nlohmann::json(sc));
   }
 }
 
-void ActsExamples::from_json(const nlohmann::json& j,
-                             ActsExamples::SmearingConfig& sdc) {
+void ActsExamples::from_json(const nlohmann::json& j, SmearingConfig& sdc) {
   for (const auto& jpsc : j) {
-    ActsExamples::ParameterSmearingConfig psc;
+    ParameterSmearingConfig psc;
     from_json(jpsc, psc);
     sdc.params.push_back(psc);
   }
 }
 
-void ActsExamples::to_json(nlohmann::json& j,
-                           const ActsExamples::DigiComponentsConfig& dc) {
+void ActsExamples::to_json(nlohmann::json& j, const DigiComponentsConfig& dc) {
   if (!dc.geometricDigiConfig.indices.empty()) {
     j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
   }
@@ -197,7 +191,7 @@ void ActsExamples::to_json(nlohmann::json& j,
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
-                             ActsExamples::DigiComponentsConfig& dc) {
+                             DigiComponentsConfig& dc) {
   if (j.find("geometric") != j.end()) {
     nlohmann::json jgdc = j["geometric"];
     from_json(jgdc, dc.geometricDigiConfig);
@@ -212,7 +206,7 @@ Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>
 ActsExamples::readDigiConfigFromJson(const std::string& path) {
   nlohmann::json djson;
   if (path.empty()) {
-    return Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>();
+    return Acts::GeometryHierarchyMap<DigiComponentsConfig>();
   }
   std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
   // rely on exception for error handling

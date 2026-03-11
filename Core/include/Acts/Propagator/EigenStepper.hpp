@@ -42,24 +42,31 @@ class IVolumeMaterial;
 /// p the momentum magnitude and B the magnetic field
 ///
 template <typename extension_t = EigenStepperDefaultExtension>
-class EigenStepper {
+class EigenStepper final {
  public:
-  /// Jacobian, Covariance and State definitions
+  /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
-  /// Type alias for covariance matrix (bound square matrix)
-  using Covariance = BoundSquareMatrix;
-  /// Type alias for bound state tuple containing parameters, jacobian, and path
-  /// length
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
+  /// Bound state tuple containing parameters, Jacobian, and path length
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
 
+  /// Configuration for the Eigen stepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Stepper options including geometry and magnetic field contexts.
   struct Options : public StepperPlainOptions {
+    /// Constructor from geometry and magnetic field contexts
+    /// @param gctx The geometry context
+    /// @param mctx The magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain options
+    /// @param options The plain options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }

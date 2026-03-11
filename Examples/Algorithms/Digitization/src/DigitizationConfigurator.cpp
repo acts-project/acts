@@ -24,13 +24,14 @@
 #include <algorithm>
 #include <cmath>
 
+namespace ActsExamples {
+
 namespace {
 
 /// @note This does not really compare if the configs are equal, therefore
 /// it is no operator==. The contained std::function types cannot really
 /// be checked for equality.
-bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
-                          ActsExamples::DigiComponentsConfig &b) {
+bool digiConfigMaybeEqual(DigiComponentsConfig &a, DigiComponentsConfig &b) {
   // Check smearing config
   for (const auto &[as, bs] :
        Acts::zip(a.smearingDigiConfig.params, b.smearingDigiConfig.params)) {
@@ -51,8 +52,7 @@ bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
 
 }  // namespace
 
-void ActsExamples::DigitizationConfigurator::operator()(
-    const Acts::Surface *surface) {
+void DigitizationConfigurator::operator()(const Acts::Surface *surface) {
   if (surface->isSensitive()) {
     Acts::GeometryIdentifier geoId = surface->geometryId();
     auto dInputConfig = inputDigiComponents.find((geoId));
@@ -282,3 +282,5 @@ void ActsExamples::DigitizationConfigurator::operator()(
     }
   }
 }
+
+}  // namespace ActsExamples

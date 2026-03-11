@@ -14,99 +14,62 @@
 #include <memory>
 #include <string>
 
-/// @cond
-template <typename T>
-class CUDA_module_map_doublet;
-
-struct CUstream_st;
-using cudaStream_t = CUstream_st *;
-
-template <typename T>
-class CUDA_module_map_triplet;
-/// @endcond
-
 namespace ActsPlugins {
-
-namespace detail {
-
-class GraphCreatorWrapperBase;
-
-template <typename T>
-struct CUDA_hit_data {
-  std::size_t m_size;
-  std::uint64_t *m_cuda_hit_id;
-  T *m_cuda_x;
-  T *m_cuda_y;
-  T *m_cuda_R;
-  T *m_cuda_phi;
-  T *m_cuda_z;
-  T *m_cuda_eta;
-
-  std::size_t size() { return m_size; }
-  T *cuda_x() { return m_cuda_x; }
-  T *cuda_y() { return m_cuda_y; }
-  T *cuda_z() { return m_cuda_z; }
-  T *cuda_R() { return m_cuda_R; }
-  T *cuda_phi() { return m_cuda_phi; }
-  T *cuda_eta() { return m_cuda_eta; }
-  std::uint64_t *cuda_hit_id() { return m_cuda_hit_id; }
-};
-
-template <typename T>
-struct CUDA_edge_data {
-  std::size_t nEdges;
-  int *cudaEdgePtr;
-};
-
-}  // namespace detail
 
 /// @addtogroup gnn_plugin
 /// @{
 
+/// CUDA-based module map for graph construction
 class ModuleMapCuda : public GraphConstructionBase {
  public:
+  /// Configuration for ModuleMapCuda
   struct Config {
+    /// Path to module map file
     std::string moduleMapPath;
+    /// Radial coordinate scaling factor
     float rScale = 1.0;
+    /// Azimuthal coordinate scaling factor
     float phiScale = 1.0;
+    /// Z-coordinate scaling factor
     float zScale = 1.0;
+    /// Pseudorapidity scaling factor
     float etaScale = 1.0;
 
+    /// Enable more parallel execution
     bool moreParallel = true;
+    /// CUDA device ID
     int gpuDevice = 0;
+    /// Number of GPU blocks
     int gpuBlocks = 512;
 
+    /// Small numerical constant for stability
     float epsilon = 1e-8f;
   };
 
- private:
-  detail::CUDA_edge_data<float> makeEdges(
-      detail::CUDA_hit_data<float> cuda_TThits, int *cuda_hit_indice,
-      cudaStream_t &stream) const;
-
-  Config m_cfg;
-  std::unique_ptr<const Acts::Logger> m_logger;
-
-  std::unique_ptr<CUDA_module_map_doublet<float>> m_cudaModuleMapDoublet;
-  std::unique_ptr<CUDA_module_map_triplet<float>> m_cudaModuleMapTriplet;
-
-  // TODO make this a managed storage soon
-  std::uint64_t *m_cudaModuleMapKeys{};
-  int *m_cudaModuleMapVals{};
-  std::size_t m_cudaModuleMapSize{};
-
-  const auto &logger() const { return *m_logger; }
-
- public:
+  /// Constructor
+  /// @param cfg Configuration parameters
+  /// @param logger Logger instance
   ModuleMapCuda(const Config &cfg, std::unique_ptr<const Acts::Logger> logger);
+
   ~ModuleMapCuda() override;
 
+  /// Access configuration
+  /// @return Configuration reference
   const auto &config() const { return m_cfg; }
 
   PipelineTensors operator()(std::vector<float> &inputValues,
                              std::size_t numNodes,
                              const std::vector<std::uint64_t> &moduleIds,
                              const ExecutionContext &execContext = {}) override;
+
+ private:
+  class Impl;
+  std::unique_ptr<Impl> m_impl;
+
+  Config m_cfg;
+  std::unique_ptr<const Acts::Logger> m_logger;
+
+  const auto &logger() const { return *m_logger; }
 };
 
 /// @}

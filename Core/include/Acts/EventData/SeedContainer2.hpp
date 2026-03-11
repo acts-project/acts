@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SeedColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
@@ -21,7 +22,9 @@ namespace Acts {
 template <bool read_only>
 class SeedProxy2;
 
+/// Mutable proxy to a seed allowing modification
 using MutableSeedProxy2 = SeedProxy2<false>;
+/// Const proxy to a seed for read-only access
 using ConstSeedProxy2 = SeedProxy2<true>;
 
 /// A container of seeds. Individual seeds are modeled as a sequence of N space
@@ -64,7 +67,7 @@ class SeedContainer2 {
   /// Returns the size of the seed container, i.e., the number of seeds
   /// contained in it.
   /// @return The number of seeds in the container.
-  std::size_t size() const noexcept { return m_size; }
+  Index size() const noexcept { return m_size; }
 
   /// Checks if the seed container is empty.
   /// @return True if the container is empty, false otherwise.
@@ -73,7 +76,7 @@ class SeedContainer2 {
   /// Reserves space for the given number of seeds.
   /// @param size The number of seeds to reserve space for.
   /// @param averageSpacePoints The average number of space points per seed.
-  void reserve(std::size_t size, float averageSpacePoints = 3) noexcept;
+  void reserve(Index size, float averageSpacePoints = 3) noexcept;
 
   /// Clears the seed container, removing all seeds and space points.
   void clear() noexcept;
@@ -84,7 +87,7 @@ class SeedContainer2 {
   /// this seed container.
   /// @param spacePointContainer The space point container to assign.
   void assignSpacePointContainer(
-      SpacePointContainer2 spacePointContainer) noexcept;
+      SpacePointContainer2 &&spacePointContainer) noexcept;
 
   /// Assigns the mutable space point container to be used by this seed
   /// container by reference. Note that the ownership of the space point
@@ -140,6 +143,14 @@ class SeedContainer2 {
   /// Creates a new seed.
   /// @return A mutable proxy to the newly created seed.
   MutableProxy createSeed() noexcept;
+
+  /// Copies the specified columns from another seed to this seed
+  /// @param index The index of the seed to copy to in this container.
+  /// @param otherContainer The seed container to copy from.
+  /// @param otherIndex The index of the seed to copy from in the other container.
+  /// @param columnsToCopy The columns to copy from the other seed.
+  void copyFrom(Index index, const SeedContainer2 &otherContainer,
+                Index otherIndex, SeedColumns columnsToCopy);
 
   /// Returns a mutable proxy to the seed at the given index.
   /// If the index is out of range, an exception is thrown.
@@ -247,21 +258,21 @@ class SeedContainer2 {
 
   /// Get mutable iterator to the beginning of seeds
   /// @return Mutable iterator to the first seed
-  iterator begin() noexcept { return iterator(*this, 0); }
+  iterator begin() noexcept { return {*this, 0}; }
   /// Get mutable iterator to the end of seeds
   /// @return Mutable iterator past the last seed
-  iterator end() noexcept { return iterator(*this, size()); }
+  iterator end() noexcept { return {*this, size()}; }
 
   /// Get const iterator to the beginning of seeds
   /// @return Const iterator to the first seed
-  const_iterator begin() const noexcept { return const_iterator(*this, 0); }
+  const_iterator begin() const noexcept { return {*this, 0}; }
   /// Get const iterator to the end of seeds
   /// @return Const iterator past the last seed
-  const_iterator end() const noexcept { return const_iterator(*this, size()); }
+  const_iterator end() const noexcept { return {*this, size()}; }
 
  private:
   std::uint32_t m_size{0};
-  std::vector<std::size_t> m_spacePointOffsets;
+  std::vector<std::uint32_t> m_spacePointOffsets;
   std::vector<std::uint8_t> m_spacePointCounts;
   std::vector<float> m_qualities;
   std::vector<float> m_vertexZs;
@@ -270,20 +281,6 @@ class SeedContainer2 {
   std::shared_ptr<const SpacePointContainer2> m_sharedConstSpacePointContainer;
   SpacePointContainer2 *m_mutableSpacePointContainer{nullptr};
   const SpacePointContainer2 *m_constSpacePointContainer{nullptr};
-
-  auto knownColumns() & noexcept {
-    return std::tie(m_spacePointOffsets, m_spacePointCounts, m_qualities,
-                    m_vertexZs, m_spacePoints);
-  }
-  auto knownColumns() const & noexcept {
-    return std::tie(m_spacePointOffsets, m_spacePointCounts, m_qualities,
-                    m_vertexZs, m_spacePoints);
-  }
-  auto knownColumns() && noexcept {
-    return std::tuple(std::move(m_spacePointOffsets),
-                      std::move(m_spacePointCounts), std::move(m_qualities),
-                      std::move(m_vertexZs), std::move(m_spacePoints));
-  }
 };
 
 }  // namespace Acts

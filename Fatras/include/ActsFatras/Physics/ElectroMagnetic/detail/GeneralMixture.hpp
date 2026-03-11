@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Interactions.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <numbers>
 #include <random>

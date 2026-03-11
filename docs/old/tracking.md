@@ -10,7 +10,7 @@ to the majority of higher-level reconstruction procedures in many cases.
 :::{figure} /figures/tracking/tracking.svg
 :width: 400px
 :align: center
-Illustration of a track reconstruction chain starting from spacepoints to fully
+Illustration of a track reconstruction chain starting from space points to fully
 formed tracks.
 :::
 
@@ -565,7 +565,7 @@ which manifests itself since it negatively affects the final fit of the
 track.
 
 (tracking_sp_formation)=
-## Spacepoint formation
+## Space point formation
 
 The basic input to most forms of pattern recognition algorithms for tracking
 are space points, which need to be assembled from the raw measurements. To this
@@ -573,8 +573,8 @@ end, the raw measurements are combined with information provided by the
 geometry description, such as the location and rotation of the sensors. In this
 way, the locations, which are restricted to be local to the sensor surfaces
 intrinsically, can be converted into three dimensional points in space.  See
-[](spacepoint_formation_core) for a description of the implementation of
-spacepoint formation in the core library.
+[](space_point_formation_core) for a description of the implementation of
+space point formation in the core library.
 
 {numref}`sensor` shows an illustration of the information that is consumed for
 a pixel measurement. Shown are three clusters on a sensor, which are caused by

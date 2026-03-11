@@ -9,7 +9,6 @@ import os
 from pathlib import Path
 
 import acts
-import acts.acts_toroidal_field as toroidal_field
 from acts import GeometryContext, logging
 
 # Import GeoModel if available
@@ -34,9 +33,9 @@ except ImportError:
 
 # Create configuration for toroidal field
 def create_toroidal_field():
-    config = toroidal_field.Config()
+    config = acts.ToroidField.Config()
 
-    print(f"Creating ToroidalField with:")
+    print(f"Creating ToroidField with:")
     print(f"  Barrel:")
     print(f"    Inner radius:  {config.barrel.R_in / 1000:.2f} m")
     print(f"    Outer radius:  {config.barrel.R_out / 1000:.2f} m")
@@ -50,7 +49,7 @@ def create_toroidal_field():
     print(f"  Layout:")
     print(f"    Number of coils: {config.layout.nCoils}")
 
-    return toroidal_field.ToroidalField(config)
+    return acts.ToroidField(config)
 
 
 def runGeant4(
@@ -81,8 +80,7 @@ def runGeant4(
             addParticleGun,
         )
 
-        logger = acts.logging.getLogger("Geant4Simulation")
-        logger.setLevel(acts.logging.INFO)
+        logger = acts.getDefaultLogger("Geant4Simulation", acts.logging.INFO)
 
         rnd = acts.examples.RandomNumbers(seed=seed or 42)
 
@@ -130,10 +128,10 @@ def main():
 
     # Check if we have the required dependencies
     if not HAS_GEOMODEL:
-        print("❌ GeoModel not available. Testing just the ToroidalField...")
+        print("❌ GeoModel not available. Testing just the ToroidField...")
         # Just test the toroidal field functionality
         field = create_toroidal_field()
-        print("✅ ToroidalField created successfully!")
+        print("✅ ToroidField created successfully!")
         return
 
     # Import GeoModel if available
@@ -173,12 +171,12 @@ def main():
     gContext = acts.GeometryContext()
     logLevel = logging.INFO
 
-    print("🧲 Starting GeoModel Toroidal Field Simulation")
+    print("🧲 Starting GeoModel Toroid Field Simulation")
     print("=" * 50)
 
     # Create the toroidal field
     field = create_toroidal_field()
-    print("✅ Toroidal field created successfully")
+    print("✅ Toroid field created successfully")
 
     # Test the field at key positions to verify it's working
     print(f"\n🎯 Testing toroidal field:")
@@ -407,7 +405,7 @@ def main():
     # Run the simulation
     print(f"\n🚀 Running simulation with:")
     print(f"   📄 GeoModel database: ActsGeoMS.db (✅ loaded and processed)")
-    print(f"   🧲 Toroidal field implementation (✅ active)")
+    print(f"   🧲 Toroid field implementation (✅ active)")
     print(f"   � Compatible detector geometry for Geant4")
     print(f"   �📊 {args.nEvents} events")
     print(f"   🎯 Output directory: {args.outDir}")
@@ -417,11 +415,11 @@ def main():
         print("✅ Simulation completed successfully!")
         print(f"\n🎉 SUCCESS! Complete toroidal field simulation!")
         print(f"   ✅ GeoModel database loaded and processed (ActsGeoMS.db)")
-        print(f"   ✅ Toroidal field integration working")
+        print(f"   ✅ Toroid field integration working")
         print(f"   ✅ Geant4 simulation with compatible geometry completed")
         print(f"   ✅ Output written to: {args.outDir}")
         print(f"\n📝 Note: Simulation successfully demonstrates:")
-        print(f"   • Toroidal field implementation with ACTS")
+        print(f"   • Toroid field implementation with ACTS")
         print(f"   • GeoModel database loading and processing")
         print(f"   • Full Geant4 simulation pipeline")
         print(f"   • Space point generation (if digitization available)")

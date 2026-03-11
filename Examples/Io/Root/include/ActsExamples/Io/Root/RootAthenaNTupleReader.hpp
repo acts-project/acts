@@ -9,8 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -18,7 +16,6 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <mutex>
@@ -29,9 +26,8 @@
 class TChain;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
-class RootAthenaNTupleReader : public ActsExamples::IReader {
+class RootAthenaNTupleReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
@@ -191,8 +187,7 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ActsExamples::ProcessCode read(
-      const ActsExamples::AlgorithmContext &context) final;
+  ProcessCode read(const AlgorithmContext &context) final;
 
   /// Readonly access to the config
   const Config &config() const { return m_cfg; }

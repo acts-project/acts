@@ -405,12 +405,12 @@ BOOST_AUTO_TEST_CASE(find_bounds) {
   cudaStream_t stream{};
   BOOST_REQUIRE_EQUAL(cudaStreamCreate(&stream), cudaSuccess);
 
-  // Copy spacepoint IDs to device
-  int *cudaSpacepointIDs{};
+  // Copy space point IDs to device
+  int *cudaSpacePointIDs{};
   BOOST_REQUIRE_EQUAL(
-      cudaMallocAsync(&cudaSpacepointIDs, spids.size() * sizeof(int), stream),
+      cudaMallocAsync(&cudaSpacePointIDs, spids.size() * sizeof(int), stream),
       cudaSuccess);
-  BOOST_REQUIRE_EQUAL(cudaMemcpyAsync(cudaSpacepointIDs, spids.data(),
+  BOOST_REQUIRE_EQUAL(cudaMemcpyAsync(cudaSpacePointIDs, spids.data(),
                                       spids.size() * sizeof(int),
                                       cudaMemcpyHostToDevice, stream),
                       cudaSuccess);
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(find_bounds) {
       cudaMallocAsync(&cudaBounds, numberLabels * sizeof(int), stream),
       cudaSuccess);
 
-  ActsPlugins::detail::findTrackCandidateBounds(cudaLabels, cudaSpacepointIDs,
+  ActsPlugins::detail::findTrackCandidateBounds(cudaLabels, cudaSpacePointIDs,
                                                 cudaBounds, spids.size(),
                                                 numberLabels, stream);
   BOOST_REQUIRE_EQUAL(cudaGetLastError(), cudaSuccess);
@@ -443,8 +443,8 @@ BOOST_AUTO_TEST_CASE(find_bounds) {
                       cudaMemcpyDeviceToHost, stream),
       cudaSuccess);
 
-  // Copy back sorted spacepoint IDs
-  BOOST_REQUIRE_EQUAL(cudaMemcpyAsync(spids.data(), cudaSpacepointIDs,
+  // Copy back sorted space point IDs
+  BOOST_REQUIRE_EQUAL(cudaMemcpyAsync(spids.data(), cudaSpacePointIDs,
                                       spids.size() * sizeof(int),
                                       cudaMemcpyDeviceToHost, stream),
                       cudaSuccess);
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(find_bounds) {
 
   // Free resources
   BOOST_REQUIRE_EQUAL(cudaStreamDestroy(stream), cudaSuccess);
-  BOOST_REQUIRE_EQUAL(cudaFree(cudaSpacepointIDs), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaFree(cudaSpacePointIDs), cudaSuccess);
   BOOST_REQUIRE_EQUAL(cudaFree(cudaLabels), cudaSuccess);
   BOOST_REQUIRE_EQUAL(cudaFree(cudaBounds), cudaSuccess);
 

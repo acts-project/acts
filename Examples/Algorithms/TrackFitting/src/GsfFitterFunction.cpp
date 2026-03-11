@@ -52,7 +52,7 @@ using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
 
-struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
+struct GsfFitterFunctionImpl final : public TrackFitterFunction {
   Fitter fitter;
   DirectFitter directFitter;
 
@@ -118,6 +118,10 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       case MixtureReductionAlgorithm::KLDistance: {
         gsfOptions.extensions.mixtureReducer
             .connect<&Acts::reduceMixtureWithKLDistance>();
+      } break;
+      case MixtureReductionAlgorithm::KLDistanceNaive: {
+        gsfOptions.extensions.mixtureReducer
+            .connect<&Acts::reduceMixtureWithKLDistanceNaive>();
       } break;
     }
 

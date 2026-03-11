@@ -8,9 +8,9 @@
 
 #include "ActsExamples/DD4hepDetector/OpenDataDetector.hpp"
 
+#include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include <Acts/Geometry/Blueprint.hpp>
-#include <Acts/Geometry/BlueprintOptions.hpp>
 
 namespace ActsExamples {
 
