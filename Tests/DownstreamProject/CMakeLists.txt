@@ -56,6 +56,8 @@ endif()
 
 find_package(Boost REQUIRED COMPONENTS program_options)
 
+include(ActsGeometryModuleHelpers)
+
 acts_add_geometry_module(SimpleGeometryModule GeometryModule.cpp)
 
 add_executable(LoadGeometryModule LoadGeometryModule.cpp)
@@ -68,12 +70,10 @@ add_test(
 )
 
 if(DD4HEP)
+    include(ActsDD4hepGeometryModuleHelpers)
+
     acts_add_dd4hep_geometry_module(DD4hepGeometryModule
                                     DD4hepGeometryModule.cpp)
-    target_compile_definitions(
-        DD4hepGeometryModule
-        PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${Acts_GEOMETRY_MODULE_ABI_TAG}"
-    )
 
     target_link_libraries(LoadGeometryModule PRIVATE Acts::PluginDD4hep)
     target_compile_definitions(LoadGeometryModule PRIVATE ACTS_HAVE_DD4HEP)

@@ -8,114 +8,16 @@
 
 #include "ActsPlugins/DD4hep/GeometryModuleLoader.hpp"
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/GeometryModuleLoader.hpp"
 
 #include <DD4hep/Detector.h>
-
-#if defined(__unix__) || defined(__APPLE__)
-#include <dlfcn.h>
-#endif
-
-#include <cstring>
-#include <format>
-#include <stdexcept>
-
-#ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
-#error \
-    "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided by CMake when building ActsPluginDD4hep."
-#endif
-
-namespace {
-
-#if defined(__unix__) || defined(__APPLE__)
-using GeometryModuleEntryPointV1 = const ActsGeometryModuleV1* (*)(void);
-
-std::shared_ptr<void> openSharedLibrary(const std::filesystem::path& path) {
-  if (!std::filesystem::exists(path)) {
-    throw std::runtime_error(
-        std::format("Geometry module file does not exist: {}", path.string()));
-  }
-
-  void* rawHandle = ::dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
-  if (rawHandle == nullptr) {
-    const char* error = ::dlerror();
-    throw std::runtime_error(std::format(
-        "Failed to load geometry module '{}': {}", path.string(), error));
-  }
-  return std::shared_ptr<void>(rawHandle, [](void* handle) {
-    if (handle != nullptr) {
-      ::dlclose(handle);
-    }
-  });
-}
-
-GeometryModuleEntryPointV1 resolveEntrypointV1(
-    const std::filesystem::path& path, const std::shared_ptr<void>& library) {
-  ::dlerror();
-  void* symbol = ::dlsym(library.get(), "acts_geometry_module_v1");
-  const char* error = ::dlerror();
-  if (error != nullptr) {
-    throw std::runtime_error(
-        std::format("Failed to resolve acts_geometry_module_v1 in '{}': {}",
-                    path.string(), error));
-  }
-  if (symbol == nullptr) {
-    throw std::runtime_error(std::format(
-        "Entry point acts_geometry_module_v1 resolved to nullptr in '{}'",
-        path.string()));
-  }
-  return reinterpret_cast<GeometryModuleEntryPointV1>(symbol);
-}
-
-#endif
-
-const char* geometryModuleHostAbiTag() noexcept {
-  return ACTS_GEOMETRY_MODULE_ABI_TAG;
-}
-
-}  // namespace
 
 namespace Acts {
 
 std::shared_ptr<TrackingGeometry> loadDD4hepGeometryModule(
-    const std::filesystem::path& modulePath,
-    const dd4hep::Detector& detector, const Logger& logger) {
-#if !(defined(__unix__) || defined(__APPLE__))
-  static_cast<void>(modulePath);
-  static_cast<void>(detector);
-  throw std::runtime_error(
-      "Runtime geometry modules are only supported on Unix-like systems");
-#else
-  auto library = openSharedLibrary(modulePath);
-  auto entryPoint = resolveEntrypointV1(modulePath, library);
-  const ActsGeometryModuleV1* descriptor = entryPoint();
-  if (descriptor == nullptr) {
-    throw std::runtime_error("Geometry module descriptor is null");
-  }
-  if (descriptor->module_abi_tag == nullptr || descriptor->build == nullptr ||
-      descriptor->destroy == nullptr) {
-    throw std::runtime_error("Geometry module descriptor is incomplete");
-  }
-  if (std::strcmp(descriptor->module_abi_tag, geometryModuleHostAbiTag()) !=
-      0) {
-    throw std::runtime_error(std::format(
-        "Geometry module ABI mismatch: module='{}' host='{}' path='{}'",
-        descriptor->module_abi_tag, geometryModuleHostAbiTag(),
-        modulePath.string()));
-  }
-
-  void* rawHandle = descriptor->build(&detector, &logger);
-  if (rawHandle == nullptr) {
-    throw std::runtime_error("Geometry module build returned null handle");
-  }
-
-  auto destroyFn = descriptor->destroy;
-  return std::shared_ptr<TrackingGeometry>(
-      static_cast<TrackingGeometry*>(rawHandle),
-      [destroyFn, library = std::move(library)](TrackingGeometry* geometry) {
-        destroyFn(static_cast<void*>(geometry));
-      });
-#endif
+    const std::filesystem::path& modulePath, const dd4hep::Detector& detector,
+    const Logger& logger) {
+  return loadGeometryModule(modulePath, &detector, logger);
 }
 
 }  // namespace Acts

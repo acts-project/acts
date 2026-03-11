@@ -32,8 +32,8 @@ const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
           const auto& detector =
               *static_cast<const dd4hep::Detector*>(userData);
           return s_buildFunc(detector, logger).release();
-        } catch (const std::exception&) {
-          ACTS_ERROR("Failed to build geometry module");
+        } catch (const std::exception& e) {
+          ACTS_ERROR("Failed to build geometry module: " << e.what());
           return nullptr;
         } catch (...) {
           ACTS_ERROR("Failed to build geometry module");

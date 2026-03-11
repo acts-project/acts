@@ -22,6 +22,11 @@ configure_file(
     ${PROJECT_BINARY_DIR}/ActsGeometryModuleHelpers.cmake
     COPYONLY
 )
+configure_file(
+    ${CMAKE_CURRENT_LIST_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
+    ${PROJECT_BINARY_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
+    COPYONLY
+)
 
 # install cmake package configs
 install(
@@ -91,7 +96,9 @@ install(
 )
 
 install(
-    FILES ${CMAKE_CURRENT_LIST_DIR}/ActsGeometryModuleHelpers.cmake
+    FILES
+        ${CMAKE_CURRENT_LIST_DIR}/ActsGeometryModuleHelpers.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/ActsDD4hepGeometryModuleHelpers.cmake
     DESTINATION ${install_package_config_dir}
 )
 

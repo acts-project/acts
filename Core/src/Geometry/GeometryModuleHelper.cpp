@@ -18,10 +18,9 @@
 namespace Acts::detail {
 
 const ActsGeometryModuleV1* getGeometryModuleFromRaw(
-    const char* module_abi_tag,
-    void* (*buildFunc)(const void*, const void*)) {
-  static const auto s_module =
-      [module_abi_tag, buildFunc]() -> ActsGeometryModuleV1 {
+    const char* module_abi_tag, void* (*buildFunc)(const void*, const void*)) {
+  static const auto s_module = [module_abi_tag,
+                                buildFunc]() -> ActsGeometryModuleV1 {
     return {
         .module_abi_tag = module_abi_tag,
         .build = buildFunc,
@@ -54,8 +53,8 @@ const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
         const auto& logger = *static_cast<const Logger*>(loggerPtr);
         try {
           return s_buildFunc(logger).release();
-        } catch (const std::exception&) {
-          ACTS_ERROR("Failed to build geometry module");
+        } catch (const std::exception& e) {
+          ACTS_ERROR("Failed to build geometry module: " << e.what());
           return nullptr;
         } catch (...) {
           ACTS_ERROR("Failed to build geometry module");
