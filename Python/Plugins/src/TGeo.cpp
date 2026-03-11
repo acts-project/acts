@@ -69,7 +69,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsTGeo, tgeo) {
         "convertToElements",
         [](const std::string& rootFileName,
            const std::vector<std::string>& sensitiveMatches,
-           const std::string& localAxes, double scaleConversion) {
+           const TGeoAxes& localAxes, double scaleConversion) {
           // Return vector
           std::vector<std::shared_ptr<const TGeoDetectorElement>> tgElements;
           // TGeo import
@@ -93,8 +93,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsTGeo, tgeo) {
               for (const auto& snode : tgpState.selectedNodes) {
                 auto identifier = TGeoDetectorElement::Identifier();
                 auto tgElement = TGeoLayerBuilder::defaultElementFactory(
-                    identifier, *snode.node, *snode.transform,
-                    TGeoAxes::parse(localAxes), scaleConversion, nullptr);
+                    identifier, *snode.node, *snode.transform, localAxes,
+                    scaleConversion, nullptr);
                 tgElements.emplace_back(tgElement);
               }
             }
