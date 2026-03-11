@@ -353,6 +353,7 @@ jobs:
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
+          -DACTS_BUILD_PLUGIN_FPEMON=ON
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
 
       - name: Build
