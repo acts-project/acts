@@ -241,6 +241,8 @@ void FpeMonitor::signalHandler(int signal, siginfo_t *si, void *ctx) {
   auto type = detail::decodeFpeType(signal, si, ctx);
   if (!type.has_value()) {
     if (detail::shouldFailFastOnUnknownSignal()) {
+      // Must use _Exit: async-signal-safe. std::terminate is not (calls
+      // terminate handler). std::abort raises SIGABRT from within a handler.
       std::_Exit(EXIT_FAILURE);
     }
     return;
