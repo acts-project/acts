@@ -333,12 +333,14 @@ void writeMeasurement(const GeometryContext& gctx,
         static_cast<float>(parameters[timeOffset] / Acts::UnitConstants::ns));
   }
 
-  for (double value : std::span{parameters.data(), dim}) {
-    to.addToMeasurement(static_cast<float>(value));
+  for (std::size_t i = 0; i < dim; ++i) {
+    to.setValue(static_cast<float>(parameters[i]), i);
   }
 
-  for (double value : std::span{covariance.data(), dim * dim}) {
-    to.addToCovariance(static_cast<float>(value));
+  for (std::size_t i = 0; i < dim; ++i) {
+    for (std::size_t j = 0; j < dim; ++j) {
+      to.setCov(static_cast<float>(covariance(i, j)), i, j);
+    }
   }
 }
 
