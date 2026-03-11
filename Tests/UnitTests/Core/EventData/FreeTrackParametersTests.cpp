@@ -83,10 +83,10 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
-BOOST_DATA_TEST_CASE(
-    NeutralConstructFromAngles,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
-    time, phi, theta, p) {
+BOOST_DATA_TEST_CASE(NeutralConstructFromAngles,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps,
+                     x, y, z, time, phi, theta, p) {
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
@@ -102,10 +102,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    ChargedConstructFromAngles,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    x, y, z, time, phi, theta, p, q) {
+BOOST_DATA_TEST_CASE(ChargedConstructFromAngles,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     x, y, z, time, phi, theta, p, q) {
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
@@ -121,10 +121,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    AnyConstructFromAngles,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    x, y, z, time, phi, theta, p, q) {
+BOOST_DATA_TEST_CASE(AnyConstructFromAngles,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     x, y, z, time, phi, theta, p, q) {
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
