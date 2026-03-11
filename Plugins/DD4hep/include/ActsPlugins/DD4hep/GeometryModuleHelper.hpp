@@ -25,8 +25,7 @@ const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
                                               BuildFunction buildFunc);
 }  // namespace ActsPlugins::DD4hep::detail
 
-#define ACTS_DEFINE_DD4HEP_GEOMETRY_MODULE(build_function)               \
-  extern "C" const ActsGeometryModuleV1* acts_geometry_module_v1(void) { \
-    return ActsPlugins::DD4hep::detail::getGeometryModule(               \
-        ACTS_GEOMETRY_MODULE_ABI_TAG, build_function);                   \
-  }
+#define ACTS_DEFINE_DD4HEP_GEOMETRY_MODULE(build_function)      \
+  ACTS_IMPL_GEOMETRY_MODULE_ENTRY(                             \
+      ActsPlugins::DD4hep::detail::getGeometryModule(          \
+          ACTS_GEOMETRY_MODULE_ABI_TAG, (build_function)))

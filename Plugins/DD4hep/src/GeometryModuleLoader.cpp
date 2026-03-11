@@ -6,9 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryModuleLoader.hpp"
+#include "ActsPlugins/DD4hep/GeometryModuleLoader.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
+
+#include <DD4hep/Detector.h>
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <dlfcn.h>
@@ -16,12 +18,11 @@
 
 #include <cstring>
 #include <format>
-#include <sstream>
 #include <stdexcept>
 
 #ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
 #error \
-    "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided by CMake when building ActsCore."
+    "ACTS_GEOMETRY_MODULE_ABI_TAG must be provided by CMake when building ActsPluginDD4hep."
 #endif
 
 namespace {
@@ -76,12 +77,12 @@ const char* geometryModuleHostAbiTag() noexcept {
 
 namespace Acts {
 
-std::shared_ptr<TrackingGeometry> loadGeometryModule(
-    const std::filesystem::path& modulePath, const void* userData,
-    const Logger& logger) {
+std::shared_ptr<TrackingGeometry> loadDD4hepGeometryModule(
+    const std::filesystem::path& modulePath,
+    const dd4hep::Detector& detector, const Logger& logger) {
 #if !(defined(__unix__) || defined(__APPLE__))
   static_cast<void>(modulePath);
-  static_cast<void>(userData);
+  static_cast<void>(detector);
   throw std::runtime_error(
       "Runtime geometry modules are only supported on Unix-like systems");
 #else
@@ -103,7 +104,7 @@ std::shared_ptr<TrackingGeometry> loadGeometryModule(
         modulePath.string()));
   }
 
-  void* rawHandle = descriptor->build(userData, &logger);
+  void* rawHandle = descriptor->build(&detector, &logger);
   if (rawHandle == nullptr) {
     throw std::runtime_error("Geometry module build returned null handle");
   }
@@ -115,11 +116,6 @@ std::shared_ptr<TrackingGeometry> loadGeometryModule(
         destroyFn(static_cast<void*>(geometry));
       });
 #endif
-}
-
-std::shared_ptr<TrackingGeometry> loadGeometryModule(
-    const std::filesystem::path& modulePath, const Logger& logger) {
-  return loadGeometryModule(modulePath, nullptr, logger);
 }
 
 }  // namespace Acts

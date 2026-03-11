@@ -11,8 +11,6 @@
 #include "Acts/Geometry/GeometryModule.h"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
-#include <exception>
-#include <functional>
 #include <memory>
 
 #ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
@@ -24,10 +22,19 @@ namespace Acts::detail {
 using BuildFunction = std::unique_ptr<TrackingGeometry> (*)(const Logger&);
 const ActsGeometryModuleV1* getGeometryModule(const char* module_abi_tag,
                                               BuildFunction buildFunc);
+// Low-level shared helper: accepts a raw build function pointer matching the
+// C ABI struct's .build field. Handles static struct init and destroy.
+const ActsGeometryModuleV1* getGeometryModuleFromRaw(
+    const char* module_abi_tag,
+    void* (*buildFunc)(const void*, const void*));
 }  // namespace Acts::detail
 
-#define ACTS_DEFINE_GEOMETRY_MODULE(build_function)                      \
+// Internal — do not use directly.
+#define ACTS_IMPL_GEOMETRY_MODULE_ENTRY(get_module_expr)                  \
   extern "C" const ActsGeometryModuleV1* acts_geometry_module_v1(void) { \
-    return Acts::detail::getGeometryModule(ACTS_GEOMETRY_MODULE_ABI_TAG, \
-                                           build_function);              \
+    return (get_module_expr);                                             \
   }
+
+#define ACTS_DEFINE_GEOMETRY_MODULE(build_function)    \
+  ACTS_IMPL_GEOMETRY_MODULE_ENTRY(Acts::detail::getGeometryModule( \
+      ACTS_GEOMETRY_MODULE_ABI_TAG, (build_function)))
