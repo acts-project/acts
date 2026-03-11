@@ -54,10 +54,12 @@ if(GEOMODEL)
     target_link_libraries(ShowActsVersion PRIVATE Acts::PluginGeoModel)
 endif()
 
+find_package(Boost REQUIRED COMPONENTS program_options)
+
 acts_add_geometry_module(SimpleGeometryModule GeometryModule.cpp)
 
 add_executable(LoadGeometryModule LoadGeometryModule.cpp)
-target_link_libraries(LoadGeometryModule PRIVATE Acts::Core)
+target_link_libraries(LoadGeometryModule PRIVATE Acts::Core Boost::program_options)
 
 add_test(NAME DownstreamShowActsVersion COMMAND ShowActsVersion)
 add_test(
@@ -73,6 +75,7 @@ if(DD4HEP)
         PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${Acts_GEOMETRY_MODULE_ABI_TAG}"
     )
 
-    add_executable(LoadDD4hepGeometryModule LoadDD4hepGeometryModule.cpp)
-    target_link_libraries(LoadDD4hepGeometryModule PRIVATE Acts::PluginDD4hep)
+    target_link_libraries(LoadGeometryModule PRIVATE Acts::PluginDD4hep)
+    target_compile_definitions(LoadGeometryModule PRIVATE ACTS_HAVE_DD4HEP)
+
 endif()
