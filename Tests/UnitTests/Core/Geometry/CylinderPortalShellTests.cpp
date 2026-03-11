@@ -511,7 +511,8 @@ BOOST_AUTO_TEST_CASE(RDirection) {
 
     CylinderStackPortalShell stack{
         gctx, {&shell1, &shell2}, AxisDirection::AxisR};
-    BOOST_CHECK_EQUAL(stack.size(), 4);
+    // rMin==0 on the innermost shell means no inner cylinder for the stack
+    BOOST_CHECK_EQUAL(stack.size(), 3);
 
     // Internal cylinder portals have been fused
     BOOST_CHECK_EQUAL(shell1.portal(OuterCylinder),
