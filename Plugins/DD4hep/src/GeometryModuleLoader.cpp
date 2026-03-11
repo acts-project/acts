@@ -17,7 +17,8 @@ namespace Acts {
 std::shared_ptr<TrackingGeometry> loadDD4hepGeometryModule(
     const std::filesystem::path& modulePath, const dd4hep::Detector& detector,
     const Logger& logger) {
-  return loadGeometryModule(modulePath, &detector, logger);
+  return ::Acts::detail::loadGeometryModuleImpl(
+      modulePath, "dd4hep::Detector", &detector, logger);
 }
 
 }  // namespace Acts
