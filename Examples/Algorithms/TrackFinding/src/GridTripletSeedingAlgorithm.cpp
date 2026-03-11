@@ -200,7 +200,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   Acts::DoubletSeedFinder::Config bottomDoubletFinderConfig;
   bottomDoubletFinderConfig.spacePointsSortedByRadius = true;
   bottomDoubletFinderConfig.candidateDirection = Acts::Direction::Backward();
-  bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMaxBottom)
+  bottomDoubletFinderConfig.deltaRMin = std::isnan(m_cfg.deltaRMinBottom)
                                             ? m_cfg.deltaRMin
                                             : m_cfg.deltaRMinBottom;
   bottomDoubletFinderConfig.deltaRMax = std::isnan(m_cfg.deltaRMaxBottom)
