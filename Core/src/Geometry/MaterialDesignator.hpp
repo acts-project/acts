@@ -28,17 +28,15 @@
 
 namespace Acts::Experimental::detail {
 
-namespace {
 const std::regex kPortalShellRegex{R"((\w+)PortalShell$)"};
-}
 
 /// Extract the shape name from a portal shell type name, e.g.
 /// "Acts::CuboidPortalShell" -> "Cuboid". Falls back to full demangled name if
 /// the "PortalShell" suffix is not found.
 inline std::string portalShellShapeName(const std::type_info& type) {
   std::string full = boost::core::demangle(type.name());
-  std::smatch match;
-  if (std::regex_search(full, match, kPortalShellRegex)) {
+
+  if (std::smatch match; std::regex_search(full, match, kPortalShellRegex)) {
     return match[1].str();
   }
   return full;
@@ -106,7 +104,8 @@ class ProtoDesignator {
 
  private:
   void validateAxes(Face face, const DirectedProtoAxis& loc0,
-                    const DirectedProtoAxis& loc1, const std::string& prefix) {
+                    const DirectedProtoAxis& loc1,
+                    const std::string& prefix) const {
     using enum AxisDirection;
 
     if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
@@ -132,6 +131,8 @@ class ProtoDesignator {
         case PositivePhiPlane:
           throw std::invalid_argument(prefix +
                                       "Phi plane faces are not supported");
+        default:
+          throw std::invalid_argument(prefix + "Unknown face type");
       }
     } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
       if (loc0.getAxisDirection() != AxisX ||
@@ -249,10 +250,7 @@ using Designator =
 /// proto vs cuboid proto, or proto vs homogeneous).
 inline Designator merge(const Designator& a, const Designator& b) {
   return std::visit(
-      [](const auto& x, const auto& y) -> Designator {
-        using X = std::decay_t<decltype(x)>;
-        using Y = std::decay_t<decltype(y)>;
-
+      []<typename X, typename Y>(const X& x, const Y& y) -> Designator {
         if constexpr (std::is_same_v<X, std::monostate>) {
           return y;
         } else if constexpr (std::is_same_v<Y, std::monostate>) {
@@ -275,8 +273,7 @@ inline Designator merge(const Designator& a, const Designator& b) {
 inline void apply(const Designator& d, PortalShellBase& shell,
                   const Logger& logger, const std::string& prefix) {
   std::visit(
-      [&](const auto& des) {
-        using T = std::decay_t<decltype(des)>;
+      [&]<typename T>(const T& des) {
         if constexpr (std::is_same_v<T, std::monostate>) {
           ACTS_WARNING(prefix << "MaterialDesignator was not configured with "
                               << "any material designation! Check your "
@@ -291,8 +288,7 @@ inline void apply(const Designator& d, PortalShellBase& shell,
 /// Write a Graphviz label for a designator to an output stream.
 inline void graphvizLabel(const Designator& d, std::ostream& os) {
   std::visit(
-      [&](const auto& des) {
-        using T = std::decay_t<decltype(des)>;
+      [&]<typename T>(const T& des) {
         if constexpr (std::is_same_v<T, std::monostate>) {
           os << "<br/><i>NullDesignator</i>";
         } else {
