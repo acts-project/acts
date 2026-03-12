@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(WriteMeasurement) {
   CHECK_CLOSE_REL(cov[2], measCov(0, 1), 1e-6);
   CHECK_CLOSE_REL(cov[3], measCov(1, 1), 1e-6);
 
-  auto unpackedIndices =
-      ActsPodioEdm::detail::decodeIndices(static_cast<std::uint32_t>(to.getType()));
+  auto unpackedIndices = ActsPodioEdm::detail::decodeIndices(
+      static_cast<std::uint32_t>(to.getType()));
   BOOST_CHECK_EQUAL(unpackedIndices.size(), 2);
   BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundLoc0);
   BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundLoc1);
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementNoPosition) {
   CHECK_CLOSE_REL(cov[2], measCov(0, 1), 1e-6);
   CHECK_CLOSE_REL(cov[3], measCov(1, 1), 1e-6);
 
-  auto unpackedIndices =
-      ActsPodioEdm::detail::decodeIndices(static_cast<std::uint32_t>(to.getType()));
+  auto unpackedIndices = ActsPodioEdm::detail::decodeIndices(
+      static_cast<std::uint32_t>(to.getType()));
   BOOST_CHECK_EQUAL(unpackedIndices.size(), 2);
   BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundPhi);
   BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundTheta);
@@ -191,8 +191,8 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementWithTime) {
     }
   }
 
-  auto unpackedIndices =
-      ActsPodioEdm::detail::decodeIndices(static_cast<std::uint32_t>(to.getType()));
+  auto unpackedIndices = ActsPodioEdm::detail::decodeIndices(
+      static_cast<std::uint32_t>(to.getType()));
   BOOST_CHECK_EQUAL(unpackedIndices.size(), 3);
   BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundLoc0);
   BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundLoc1);
