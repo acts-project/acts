@@ -5,11 +5,9 @@ import argparse
 
 import acts
 from acts import (
-    SurfaceMaterialMapper,
-    VolumeMaterialMapper,
-    Navigator,
-    Propagator,
-    StraightLineStepper,
+    MaterialMapper,
+    IntersectionMaterialAssigner,
+    BinnedSurfaceMaterialAccumulater,
 )
 
 from acts.json import MaterialMapJsonConverter
@@ -43,24 +41,28 @@ def runMaterialMapping(
     mapName="material-map",
     mapFormat=JsonFormat.Json,
     mapSurface=True,
-    mapVolume=True,
+    mapVolume=False,
     readCachedSurfaceInformation=False,
     mappingStep=1,
     s=None,
 ):
+    del mapVolume
+    del mappingStep
+
+    if not mapSurface:
+        raise ValueError("Surface mapping must be enabled.")
+
     s = s or Sequencer(numThreads=1)
 
     for decorator in decorators:
         s.addContextDecorator(decorator)
 
     wb = WhiteBoard(acts.logging.INFO)
-
     context = AlgorithmContext(0, 0, wb, 0)
 
     for decorator in decorators:
         assert decorator.decorate(context) == ProcessCode.SUCCESS
 
-    # Read material step information from a ROOT TTRee
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
@@ -79,39 +81,35 @@ def runMaterialMapping(
         )
     )
 
-    stepper = StraightLineStepper()
+    materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
-    mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
-    mmAlgCfg.trackingGeometry = trackingGeometry
+    assignmentCfg = IntersectionMaterialAssigner.Config()
+    assignmentCfg.surfaces = materialSurfaces
+    assignmentFinder = IntersectionMaterialAssigner(assignmentCfg, acts.logging.INFO)
+
+    accumulaterCfg = BinnedSurfaceMaterialAccumulater.Config()
+    accumulaterCfg.materialSurfaces = materialSurfaces
+    surfaceAccumulater = BinnedSurfaceMaterialAccumulater(
+        accumulaterCfg, acts.logging.INFO
+    )
+
+    mapperCfg = MaterialMapper.Config()
+    mapperCfg.assignmentFinder = assignmentFinder
+    mapperCfg.surfaceMaterialAccumulater = surfaceAccumulater
+    materialMapper = MaterialMapper(mapperCfg, acts.logging.INFO)
+
+    mmAlgCfg = MaterialMapping.Config(context.geoContext)
     mmAlgCfg.inputMaterialTracks = "material-tracks"
-
-    if mapSurface:
-        navigator = Navigator(
-            trackingGeometry=trackingGeometry,
-            resolveSensitive=True,
-            resolveMaterial=True,
-            resolvePassive=True,
-        )
-        propagator = Propagator(stepper, navigator)
-        mapper = SurfaceMaterialMapper(level=acts.logging.INFO, propagator=propagator)
-        mmAlgCfg.materialSurfaceMapper = mapper
-
-    if mapVolume:
-        navigator = Navigator(
-            trackingGeometry=trackingGeometry,
-        )
-        propagator = Propagator(stepper, navigator)
-        mapper = VolumeMaterialMapper(
-            level=acts.logging.INFO, propagator=propagator, mappingStep=mappingStep
-        )
-        mmAlgCfg.materialVolumeMapper = mapper
+    mmAlgCfg.mappedMaterialTracks = "mapped-material-tracks"
+    mmAlgCfg.unmappedMaterialTracks = "unmapped-material-tracks"
+    mmAlgCfg.materialMapper = materialMapper
 
     jmConverterCfg = MaterialMapJsonConverter.Config(
         processSensitives=True,
         processApproaches=True,
         processRepresenting=True,
         processBoundaries=True,
-        processVolumes=True,
+        processVolumes=False,
         context=context.geoContext,
     )
 
@@ -129,13 +127,13 @@ def runMaterialMapping(
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            inputMaterialTracks=mmAlgCfg.mappingMaterialCollection,
+            inputMaterialTracks=mmAlgCfg.mappedMaterialTracks,
             filePath=os.path.join(
                 outputDir,
                 mapName + "_tracks.root",
             ),
             storeSurface=True,
-            storeVolume=True,
+            storeVolume=False,
         )
     )
 

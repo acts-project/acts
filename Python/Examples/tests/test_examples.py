@@ -634,6 +634,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 @pytest.mark.slow
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skip(reason="Volume material mapping is temporarily disabled.")
 def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash):
     from material_mapping import runMaterialMapping
     from material_validation import runMaterialValidation

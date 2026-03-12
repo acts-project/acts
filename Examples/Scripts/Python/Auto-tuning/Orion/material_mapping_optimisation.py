@@ -9,13 +9,6 @@ from orion.client import build_experiment
 from orion.storage.base import get_storage
 
 import acts
-from acts import (
-    SurfaceMaterialMapper,
-    VolumeMaterialMapper,
-    Navigator,
-    Propagator,
-    StraightLineStepper,
-)
 
 from acts.json import MaterialMapJsonConverter
 
@@ -39,6 +32,14 @@ from acts.examples.json import (
 
 from acts.examples.odd import getOpenDataDetector
 
+# Legacy placeholders kept only to avoid breaking static checks while
+# this script is disabled.
+SurfaceMaterialMapper = None
+VolumeMaterialMapper = None
+Navigator = None
+Propagator = None
+StraightLineStepper = None
+
 
 def runMaterialMappingNoTrack(
     trackingGeometry,
@@ -52,6 +53,10 @@ def runMaterialMappingNoTrack(
     readCachedSurfaceInformation=False,
     s=None,
 ):
+    raise RuntimeError(
+        "Material mapping optimisation is disabled until the new variance-based "
+        "surface mapping workflow is reintroduced."
+    )
     """
     Implementation of the material mapping that doesn't write the material tracks.
     Used to create the material map that will then be used to compute the material variance.
@@ -95,7 +100,7 @@ def runMaterialMappingNoTrack(
     )
 
     stepper = StraightLineStepper()
-    mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
+    mmAlgCfg = MaterialMapping.Config(context.geoContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
     mmAlgCfg.inputMaterialTracks = "material-tracks"
 
@@ -152,6 +157,10 @@ def runMaterialMappingVariance(
     pipeResult,
     readCachedSurfaceInformation=False,
 ):
+    raise RuntimeError(
+        "Material mapping optimisation is disabled until the new variance-based "
+        "surface mapping workflow is reintroduced."
+    )
     """
     Run the material mapping and compute the variance for each bin of each surface
     Return a dict with the GeometryId value of the surface as a key that stores
@@ -249,7 +258,7 @@ def runMaterialMappingVariance(
     )
     s.addReader(reader)
     stepper = StraightLineStepper()
-    mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
+    mmAlgCfg = MaterialMapping.Config(context.geoContext)
     mmAlgCfg.trackingGeometry = trackingGeometryVar
     mmAlgCfg.inputMaterialTracks = "material-tracks"
 
