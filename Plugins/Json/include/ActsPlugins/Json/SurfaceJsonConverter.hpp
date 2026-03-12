@@ -30,9 +30,7 @@
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
-#include "ActsPlugins/Json/ActsJson.hpp"
 #include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
-#include "ActsPlugins/Json/GeometryIdentifierJsonConverter.hpp"
 #include "ActsPlugins/Json/JsonKindDispatcher.hpp"
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
@@ -83,6 +81,7 @@ void to_json(nlohmann::json& j, const std::shared_ptr<const Surface>& surface);
 void toJson(nlohmann::json& j, const std::shared_ptr<const Surface>& surface,
             const Acts::GeometryContext& gctx);
 
+/// Static class performing JSON conversion of the surfaces
 class SurfaceJsonConverter {
  public:
   using SurfaceBoundsEncoder = TypeDispatcher<SurfaceBounds, nlohmann::json()>;
@@ -90,6 +89,7 @@ class SurfaceJsonConverter {
       TypeDispatcher<PlanarBounds, nlohmann::json()>;
   using SurfaceDiscBoundsEncoder = TypeDispatcher<DiscBounds, nlohmann::json()>;
 
+  /// Options for surface conversion
   struct Options {
     /// Transform serialization options
     Transform3JsonConverter::Options transformOptions =
@@ -105,10 +105,14 @@ class SurfaceJsonConverter {
                      nlohmann::json(const GeometryContext&, const Options&)>;
   using SurfaceDecoder = JsonKindDispatcher<std::shared_ptr<Surface>>;
 
+  /// Configuration struct
   struct Config {
+    /// Encoder for the surfaces
     SurfaceEncoder surfaceEncoder{};
+    /// Encoder for the surface bounds
     SurfaceBoundsEncoder surfaceBoundsEncoder{};
 
+    /// Decoder for the surfaces
     SurfaceDecoder surfaceDecoder{};
 
     static Config defaultConfig();
@@ -166,6 +170,9 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
      {Surface::SurfaceType::Other, "Other"}})
 
+/// @brief Get string representation of the surface bounds kind
+///
+/// @return string representation of the surface bounds kind
 template <typename bounds_t>
 std::string getSurfaceBoundsKind() {
   if (std::is_same_v<bounds_t, EllipseBounds>) {
@@ -195,6 +202,9 @@ std::string getSurfaceBoundsKind() {
   }
 }
 
+/// @brief Get string representation of the surface kind
+///
+/// @return string representation of the surface kind
 template <typename surface_t>
 std::string getSurfaceKind() {
   if (std::is_same_v<surface_t, PlaneSurface>) {
@@ -214,6 +224,13 @@ std::string getSurfaceKind() {
   }
 }
 
+/// @brief Type-based surface bounds json encoding
+///
+/// @tparam bounds_t surface bounds type
+///
+/// @param bounds surface bounds to be converted
+///
+/// @return json representation of the surface bounds
 template <typename bounds_t>
 nlohmann::json surfaceBoundsToJsonT(const bounds_t& bounds) {
   nlohmann::json jBounds = SurfaceBoundsJsonConverter::toJson(bounds);
@@ -221,6 +238,15 @@ nlohmann::json surfaceBoundsToJsonT(const bounds_t& bounds) {
   return jBounds;
 }
 
+/// @brief Type-based surface json encoding
+///
+/// @tparam surface_t surface type
+///
+/// @param bounds surface to be converted
+/// @param gctx geometry context
+/// @param opt surface json conversion options
+///
+/// @return json representation of the surface bounds
 template <typename surface_t>
 nlohmann::json surfaceToJsonT(const surface_t& surface,
                               const GeometryContext& gctx,
@@ -241,6 +267,13 @@ nlohmann::json surfaceToJsonT(const surface_t& surface,
   return jSurface;
 }
 
+/// @brief Type-based surface json decoding
+///
+/// @tparam surface_t surface type
+///
+/// @param j json encoding of the surface
+///
+/// @return shared pointer to the decoded surface
 template <typename surface_t>
 std::shared_ptr<Surface> surfaceFromJsonT(const nlohmann::json& j) {
   nlohmann::json jTransform = j["transform"];
@@ -249,6 +282,14 @@ std::shared_ptr<Surface> surfaceFromJsonT(const nlohmann::json& j) {
   return Surface::makeShared<surface_t>(sTransform);
 }
 
+/// @brief Type-based surface json decoding
+///
+/// @tparam surface_t surface type
+/// @tparam bounds_t surface bounds type
+///
+/// @param j json encoding of the surface
+///
+/// @return shared pointer to the decoded surface
 template <typename surface_t, typename bounds_t>
 std::shared_ptr<Surface> surfaceFromJsonT(const nlohmann::json& j) {
   nlohmann::json jTransform = j["transform"];

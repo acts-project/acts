@@ -26,14 +26,16 @@ namespace Acts {
 template <typename return_t, typename... args_t>
 class JsonKindDispatcher {
  public:
-  using decoder_type = std::function<return_t(const nlohmann::json&, args_t...)>;
+  using decoder_type =
+      std::function<return_t(const nlohmann::json&, args_t...)>;
   using self_type = JsonKindDispatcher<return_t, args_t...>;
 
   explicit JsonKindDispatcher(std::string kindKey = "kind",
                               std::string context = "JSON payload")
       : m_kindKey(std::move(kindKey)), m_context(std::move(context)) {
     if (m_kindKey.empty()) {
-      throw std::invalid_argument("JsonKindDispatcher kind key must be non-empty");
+      throw std::invalid_argument(
+          "JsonKindDispatcher kind key must be non-empty");
     }
     if (m_context.empty()) {
       m_context = "JSON payload";
@@ -47,16 +49,19 @@ class JsonKindDispatcher {
     if (!decoder) {
       throw std::invalid_argument("JsonKindDispatcher decoder must be valid");
     }
-    auto [_, inserted] = m_decoders.emplace(std::move(kind), std::move(decoder));
+    auto [_, inserted] =
+        m_decoders.emplace(std::move(kind), std::move(decoder));
     if (!inserted) {
-      throw std::invalid_argument("JsonKindDispatcher duplicate kind registration");
+      throw std::invalid_argument(
+          "JsonKindDispatcher duplicate kind registration");
     }
     return *this;
   }
 
   return_t operator()(const nlohmann::json& encoded, args_t... args) const {
     if (!encoded.contains(m_kindKey)) {
-      throw std::invalid_argument("Missing '" + m_kindKey + "' in " + m_context);
+      throw std::invalid_argument("Missing '" + m_kindKey + "' in " +
+                                  m_context);
     }
 
     const auto& kindValue = encoded.at(m_kindKey);
@@ -68,8 +73,8 @@ class JsonKindDispatcher {
     const auto kind = kindValue.template get<std::string>();
     auto decoder = m_decoders.find(kind);
     if (decoder == m_decoders.end()) {
-      throw std::invalid_argument("Unsupported " + m_context + " kind: " +
-                                  kind);
+      throw std::invalid_argument("Unsupported " + m_context +
+                                  " kind: " + kind);
     }
 
     if constexpr (std::is_void_v<return_t>) {
