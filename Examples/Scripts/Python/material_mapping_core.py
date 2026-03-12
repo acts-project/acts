@@ -21,7 +21,7 @@ from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
-    CoreMaterialMapping,
+    MaterialMapping,
 )
 
 from acts.examples.root import (
@@ -84,7 +84,7 @@ def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
         processApproaches=True,
         processRepresenting=True,
         processBoundaries=True,
-        processVolumes=True,
+        processVolumes=False,
         context=context.geoContext,
     )
     mapWriters.append(
@@ -98,15 +98,15 @@ def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
     mapWriters.append(RootMaterialWriter(level=loglevel, filePath=outputMap + ".root"))
 
     # Mapping Algorithm
-    coreMaterialMappingConfig = CoreMaterialMapping.Config()
-    coreMaterialMappingConfig.materialMapper = materialMapper
-    coreMaterialMappingConfig.geoContext = context.geoContext
-    coreMaterialMappingConfig.inputMaterialTracks = "material-tracks"
-    coreMaterialMappingConfig.mappedMaterialTracks = "mapped-material-tracks"
-    coreMaterialMappingConfig.unmappedMaterialTracks = "unmapped-material-tracks"
-    coreMaterialMappingConfig.materiaMaplWriters = mapWriters
-    coreMaterialMapping = CoreMaterialMapping(coreMaterialMappingConfig, loglevel)
-    s.addAlgorithm(coreMaterialMapping)
+    materialMappingConfig = MaterialMapping.Config(context.geoContext)
+    materialMappingConfig.materialMapper = materialMapper
+    materialMappingConfig.geoContext = context.geoContext
+    materialMappingConfig.inputMaterialTracks = "material-tracks"
+    materialMappingConfig.mappedMaterialTracks = "mapped-material-tracks"
+    materialMappingConfig.unmappedMaterialTracks = "unmapped-material-tracks"
+    materialMappingConfig.materialWriters = mapWriters
+    materialMapping = MaterialMapping(materialMappingConfig, loglevel)
+    s.addAlgorithm(materialMapping)
 
     # Add the mapped material tracks writer
     s.addWriter(
@@ -115,7 +115,7 @@ def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
             inputMaterialTracks="mapped-material-tracks",
             filePath=outputFile + "_mapped.root",
             storeSurface=True,
-            storeVolume=True,
+            storeVolume=False,
         )
     )
 
@@ -126,7 +126,7 @@ def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
             inputMaterialTracks="unmapped-material-tracks",
             filePath=outputFile + "_unmapped.root",
             storeSurface=True,
-            storeVolume=True,
+            storeVolume=False,
         )
     )
 

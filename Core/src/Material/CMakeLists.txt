@@ -21,6 +21,4 @@ target_sources(
         MaterialSlab.cpp
         MaterialValidater.cpp
         ProtoVolumeMaterial.cpp
-        SurfaceMaterialMapper.cpp
-        VolumeMaterialMapper.cpp
 )

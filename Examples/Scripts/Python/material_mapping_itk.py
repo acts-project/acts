@@ -6,10 +6,9 @@ from pathlib import Path
 
 import acts
 from acts import (
-    SurfaceMaterialMapper,
-    Navigator,
-    Propagator,
-    StraightLineStepper,
+    MaterialMapper,
+    IntersectionMaterialAssigner,
+    BinnedSurfaceMaterialAccumulater,
     MaterialMapJsonConverter,
 )
 from acts.examples import (
@@ -70,22 +69,27 @@ def runMaterialMapping(
         )
     )
 
-    stepper = StraightLineStepper()
-
-    mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
-    mmAlgCfg.trackingGeometry = trackingGeometry
+    mmAlgCfg = MaterialMapping.Config(context.geoContext)
     mmAlgCfg.inputMaterialTracks = "material-tracks"
 
     if mapSurface:
-        navigator = Navigator(
-            trackingGeometry=trackingGeometry,
-            resolveSensitive=False,
-            resolveMaterial=True,
-            resolvePassive=True,
+        materialSurfaces = trackingGeometry.extractMaterialSurfaces()
+        assignmentCfg = IntersectionMaterialAssigner.Config()
+        assignmentCfg.surfaces = materialSurfaces
+        assignmentFinder = IntersectionMaterialAssigner(
+            assignmentCfg, acts.logging.INFO
         )
-        propagator = Propagator(stepper, navigator)
-        mapper = SurfaceMaterialMapper(level=acts.logging.INFO, propagator=propagator)
-        mmAlgCfg.materialSurfaceMapper = mapper
+
+        accumulaterCfg = BinnedSurfaceMaterialAccumulater.Config()
+        accumulaterCfg.materialSurfaces = materialSurfaces
+        surfaceAccumulater = BinnedSurfaceMaterialAccumulater(
+            accumulaterCfg, acts.logging.INFO
+        )
+
+        mapperCfg = MaterialMapper.Config()
+        mapperCfg.assignmentFinder = assignmentFinder
+        mapperCfg.surfaceMaterialAccumulater = surfaceAccumulater
+        mmAlgCfg.materialMapper = MaterialMapper(mapperCfg, acts.logging.INFO)
 
     jmConverterCfg = MaterialMapJsonConverter.Config(
         processSensitives=False,
@@ -93,7 +97,7 @@ def runMaterialMapping(
         processApproaches=True,
         processRepresenting=True,
         processBoundaries=True,
-        processVolumes=True,
+        processVolumes=False,
         context=context.geoContext,
     )
 
@@ -108,13 +112,13 @@ def runMaterialMapping(
         s.addWriter(
             RootMaterialTrackWriter(
                 level=acts.logging.INFO,
-                inputMaterialTracks=mmAlgCfg.collection,
+                inputMaterialTracks=mmAlgCfg.mappedMaterialTracks,
                 filePath=os.path.join(
                     outputDir,
                     mapName + "_tracks.root",
                 ),
                 storeSurface=True,
-                storeVolume=True,
+                storeVolume=False,
             )
         )
 
