@@ -10,7 +10,6 @@
 
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
-#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <stdexcept>
 #include <unordered_map>
@@ -105,27 +104,37 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
 
   if (m_cfg.materialSurfaceMapper) {
     // To make it work with the framework needs a lock guard
-    auto mappingState =
-        const_cast<Acts::SurfaceMaterialMapper::State*>(&m_mappingState);
+    auto& mappingState =
+        const_cast<Acts::SurfaceMaterialMapper::State&>(m_mappingState);
     // Set the geometry and magnetic field context
-    (*mappingState).geoContext = context.geoContext;
-    (*mappingState).magFieldContext = context.magFieldContext;
+    mappingState.geoContext = context.geoContext;
+    mappingState.magFieldContext = context.magFieldContext;
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
-      m_cfg.materialSurfaceMapper->mapMaterialTrack(*mappingState, mTrack);
+      Acts::Result<void> result =
+          m_cfg.materialSurfaceMapper->mapMaterialTrack(mappingState, mTrack);
+      if (!result.ok()) {
+        ACTS_ERROR("Failed to map material track ID "
+                   << idTrack << ": " << result.error().message());
+      }
     }
   }
   if (m_cfg.materialVolumeMapper) {
     // To make it work with the framework needs a lock guard
-    auto mappingState =
-        const_cast<Acts::VolumeMaterialMapper::State*>(&m_mappingStateVol);
+    auto& mappingState =
+        const_cast<Acts::VolumeMaterialMapper::State&>(m_mappingStateVol);
     // Set the geometry and magnetic field context
-    (*mappingState).geoContext = context.geoContext;
-    (*mappingState).magFieldContext = context.magFieldContext;
+    mappingState.geoContext = context.geoContext;
+    mappingState.magFieldContext = context.magFieldContext;
 
     for (auto& [idTrack, mTrack] : mtrackCollection) {
       // Map this one onto the geometry
-      m_cfg.materialVolumeMapper->mapMaterialTrack(*mappingState, mTrack);
+      Acts::Result<void> result =
+          m_cfg.materialVolumeMapper->mapMaterialTrack(mappingState, mTrack);
+      if (!result.ok()) {
+        ACTS_ERROR("Failed to map material track ID "
+                   << idTrack << ": " << result.error().message());
+      }
     }
   }
   // Write take the collection to the EventStore
@@ -143,11 +152,11 @@ std::vector<std::pair<double, int>> MaterialMapping::scoringParameters(
 
     if (surfaceAccumulatedMaterial !=
         m_mappingState.accumulatedMaterial.end()) {
-      auto matrixMaterial =
+      const auto& matrixMaterial =
           surfaceAccumulatedMaterial->second.accumulatedMaterial();
       for (const auto& vectorMaterial : matrixMaterial) {
-        for (const auto& AccumulatedMaterial : vectorMaterial) {
-          auto totalVariance = AccumulatedMaterial.totalVariance();
+        for (const auto& accumulatedMaterial : vectorMaterial) {
+          auto totalVariance = accumulatedMaterial.totalVariance();
           scoringParameters.push_back(
               {totalVariance.first, totalVariance.second});
         }

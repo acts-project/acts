@@ -34,6 +34,10 @@ class CoreMaterialMapping : public IAlgorithm {
   /// @class nested Config class
   /// of the MaterialMapping algorithm
   struct Config {
+    /// Geometry context to use for final material map finalization
+    Acts::GeometryContext geoContext =
+        Acts::GeometryContext::dangerouslyDefaultConstruct();
+
     /// Input collection
     std::string inputMaterialTracks = "material_tracks";
 
