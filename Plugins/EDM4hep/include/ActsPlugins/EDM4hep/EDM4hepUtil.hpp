@@ -377,8 +377,7 @@ struct MeasurementData {
   /// Covariance matrix of the measurement (full bound space)
   Acts::BoundMatrix covariance{Acts::BoundMatrix::Zero()};
   /// Indices of the measured parameters (subspace)
-  std::vector<Acts::SubspaceIndex>
-      indices;
+  std::vector<Acts::SubspaceIndex> indices;
   /// Cell ID of the measurement
   std::uint64_t cellId{0};
 };

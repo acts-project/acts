@@ -166,7 +166,7 @@ datatypes:
           }
           return values[valueIndex];
         }
-        
+
         /// Get covariance value for the two passed matrix indices
         /// @param indexI The first index
         /// @param indexJ The second index
@@ -243,5 +243,3 @@ datatypes:
           m_obj->data.covariance_begin = 0u;
           m_obj->data.covariance_end = indices.size() * indices.size();
         }
-
-
