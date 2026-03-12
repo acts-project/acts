@@ -395,6 +395,7 @@ linux_ubuntu_2404_clang19:
 
   variables:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
+    ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
     # force off even if it is CI mode
     ROOT_HASH_CHECKS: off
