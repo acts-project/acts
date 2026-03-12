@@ -3,7 +3,8 @@
 file(READ ${INPUT_FILE} content)
 
 string(
-    REGEX REPLACE "ACTS_DOES_NOT_COMPILE_BEGIN\\(([A-Za-z0-9]+)\\)"
+    REGEX REPLACE
+    "ACTS_DOES_NOT_COMPILE_BEGIN\\(([A-Za-z0-9]+)\\)"
     "#if defined(\\1)"
     processed
     "${content}"

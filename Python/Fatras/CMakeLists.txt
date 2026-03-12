@@ -4,8 +4,7 @@ file(MAKE_DIRECTORY ${_python_dir}/acts)
 
 pybind11_add_module(ActsFatrasPythonBindings src/Fatras.cpp)
 install(
-    TARGETS ActsFatrasPythonBindings
-    DESTINATION ${_acts_python_install_dir}
+    TARGETS ActsFatrasPythonBindings DESTINATION ${_acts_python_install_dir}
 )
 
 set_target_properties(

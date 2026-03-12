@@ -7,7 +7,8 @@ function(acts_add_library library_name)
     set(oneValueArgs ACTS_INCLUDE_FOLDER)
     set(multiValueArgs "")
     cmake_parse_arguments(
-        PARSE_ARGV 1
+        PARSE_ARGV
+        1
         lib_args
         "${options}"
         "${oneValueArgs}"
@@ -53,7 +54,8 @@ function(acts_compile_headers target)
     set(oneValueArgs "")
     set(multiValueArgs GLOB)
     cmake_parse_arguments(
-        PARSE_ARGV 0
+        PARSE_ARGV
+        0
         ARGS
         "${options}"
         "${oneValueArgs}"
