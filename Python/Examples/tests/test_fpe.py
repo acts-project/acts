@@ -24,6 +24,29 @@ _fail_fast_exception = (
 )
 
 
+def _parse_bool_env(name):
+    raw = os.getenv(name)
+    if raw is None:
+        return None
+    value = raw.strip().lower()
+    if value in ("1", "true", "yes", "on"):
+        return True
+    if value in ("0", "false", "no", "off"):
+        return False
+    return None
+
+
+_fail_on_unmasked_env = _parse_bool_env("ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE")
+_requires_fail_on_unmasked = pytest.mark.skipif(
+    _fail_on_unmasked_env is False,
+    reason="requires failOnUnmaskedFpe=true, but env override disables it",
+)
+_requires_no_fail_on_unmasked = pytest.mark.skipif(
+    _fail_on_unmasked_env is True,
+    reason="requires failOnUnmaskedFpe=false, but env override enables it",
+)
+
+
 _names = {
     acts.examples.FpeType.FLTDIV: "DivByZero",
     acts.examples.FpeType.FLTOVF: "Overflow",
@@ -84,13 +107,6 @@ def disable_log_threshold():
     acts.logging.setFailureThreshold(prev)
 
 
-@pytest.fixture(autouse=True)
-def force_fail_on_unmasked_fpe(monkeypatch):
-    # These tests assert raise/no-raise behavior based on unmasked FPE policy.
-    # Keep them deterministic even when CI sets a global override.
-    monkeypatch.setenv("ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE", "1")
-
-
 def test_notrackfpe():
     s = acts.examples.Sequencer(
         events=3 * 100,
@@ -111,6 +127,7 @@ def fpe_type(request):
     yield request.param
 
 
+@_requires_fail_on_unmasked
 def test_fpe_single_fail_at_end(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
@@ -134,6 +151,7 @@ def test_fpe_single_fail_at_end(fpe_type):
         assert res.count(x) == (s.config.events if x == fpe_type else 0)
 
 
+@_requires_no_fail_on_unmasked
 def test_fpe_single_no_fail_at_end(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
@@ -156,6 +174,7 @@ def test_fpe_single_no_fail_at_end(fpe_type):
         assert res.count(x) == (s.config.events if x == fpe_type else 0)
 
 
+@_requires_fail_on_unmasked
 def test_fpe_single_fail_immediately(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
@@ -199,6 +218,7 @@ def test_fpe_nocontext():
     s.run()
 
 
+@_requires_fail_on_unmasked
 def test_fpe_rearm(fpe_type):
     trigger = getattr(acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
@@ -232,6 +252,7 @@ def test_fpe_rearm(fpe_type):
     sys.platform == "darwin",
     reason="Source-location FPE masking is not stable on macOS backtraces",
 )
+@_requires_fail_on_unmasked
 def test_fpe_masking_single(fpe_type):
     trigger = getattr(acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
@@ -314,6 +335,7 @@ def test_fpe_context(fpe_type):
         print(fpe.result)
 
 
+@_requires_fail_on_unmasked
 def test_buffer_sufficient():
     s = acts.examples.Sequencer(
         events=10000,
