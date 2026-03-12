@@ -84,6 +84,13 @@ def disable_log_threshold():
     acts.logging.setFailureThreshold(prev)
 
 
+@pytest.fixture(autouse=True)
+def force_fail_on_unmasked_fpe(monkeypatch):
+    # These tests assert raise/no-raise behavior based on unmasked FPE policy.
+    # Keep them deterministic even when CI sets a global override.
+    monkeypatch.setenv("ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE", "1")
+
+
 def test_notrackfpe():
     s = acts.examples.Sequencer(
         events=3 * 100,
