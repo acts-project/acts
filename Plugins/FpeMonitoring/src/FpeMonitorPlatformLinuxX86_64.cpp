@@ -38,7 +38,8 @@ bool isRuntimeSupported() {
   return true;
 }
 
-std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx) {
+std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
+                                     void* ctx) {
   // This backend only installs SIGFPE handlers. si_code carries the exception
   // category we expose in FpeType.
   static_cast<void>(ctx);

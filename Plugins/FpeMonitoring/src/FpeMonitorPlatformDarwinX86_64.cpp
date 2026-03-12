@@ -26,7 +26,8 @@ bool isRuntimeSupported() {
   return true;
 }
 
-std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx) {
+std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
+                                     void* ctx) {
   // On this platform we only install a SIGFPE handler; si_code is enough to
   // classify all FPE kinds we track.
   static_cast<void>(ctx);

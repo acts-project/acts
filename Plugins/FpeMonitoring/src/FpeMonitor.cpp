@@ -8,8 +8,6 @@
 
 #include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
-
 #include <algorithm>
 #include <cfenv>
 #include <csignal>
@@ -20,9 +18,6 @@
 #include <iterator>
 #include <memory>
 #include <mutex>
-#include <optional>
-#include <stdexcept>
-#include <string_view>
 #include <vector>
 
 #include <boost/stacktrace/frame.hpp>
@@ -36,13 +31,21 @@ namespace ActsPlugins {
 
 namespace {
 
-bool areFpesEquivalent(
-    std::pair<FpeType, const boost::stacktrace::stacktrace &> lhs,
-    std::pair<FpeType, const boost::stacktrace::stacktrace &> rhs) {
-  const auto &fl = *lhs.second.begin();
-  const auto &fr = *rhs.second.begin();
-  return lhs.first == rhs.first && (boost::stacktrace::hash_value(fl) ==
-                                    boost::stacktrace::hash_value(fr));
+bool canMergeFpeInfo(const FpeMonitor::Result::FpeInfo &existing, FpeType type,
+                     std::uintptr_t location,
+                     const boost::stacktrace::stacktrace &st) {
+  if (existing.type != type) {
+    return false;
+  }
+
+  if (location != 0 && existing.location != 0) {
+    return location == existing.location;
+  }
+
+  const auto &existingFrame = *existing.st->begin();
+  const auto &candidateFrame = *st.begin();
+  return boost::stacktrace::hash_value(existingFrame) ==
+         boost::stacktrace::hash_value(candidateFrame);
 }
 }  // namespace
 
@@ -50,8 +53,12 @@ FpeMonitor::Result::FpeInfo::~FpeInfo() = default;
 
 FpeMonitor::Result::FpeInfo::FpeInfo(
     std::size_t countIn, FpeType typeIn,
-    std::shared_ptr<const boost::stacktrace::stacktrace> stIn)
-    : count{countIn}, type{typeIn}, st{std::move(stIn)} {}
+    std::shared_ptr<const boost::stacktrace::stacktrace> stIn,
+    std::uintptr_t locationIn)
+    : count{countIn},
+      type{typeIn},
+      st{std::move(stIn)},
+      location{locationIn} {}
 
 FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
   Result result{};
@@ -60,14 +67,9 @@ FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
     result.m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(with.m_stackTraces.begin(), with.m_stackTraces.end(),
-            std::back_inserter(result.m_stackTraces));
-  std::copy(with.m_locations.begin(), with.m_locations.end(),
-            std::back_inserter(result.m_locations));
-  std::copy(m_stackTraces.begin(), m_stackTraces.end(),
-            std::back_inserter(result.m_stackTraces));
-  std::copy(m_locations.begin(), m_locations.end(),
-            std::back_inserter(result.m_locations));
+  std::ranges::copy(with.m_stackTraces,
+                    std::back_inserter(result.m_stackTraces));
+  std::ranges::copy(m_stackTraces, std::back_inserter(result.m_stackTraces));
 
   result.deduplicate();
 
@@ -79,10 +81,7 @@ void FpeMonitor::Result::merge(const Result &with) {
     m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(with.m_stackTraces.begin(), with.m_stackTraces.end(),
-            std::back_inserter(m_stackTraces));
-  std::copy(with.m_locations.begin(), with.m_locations.end(),
-            std::back_inserter(m_locations));
+  std::ranges::copy(with.m_stackTraces, std::back_inserter(m_stackTraces));
 
   deduplicate();
 }
@@ -94,32 +93,18 @@ void FpeMonitor::Result::add(FpeType type, void *stackPtr,
 
   for (std::size_t i = 0; i < m_stackTraces.size(); ++i) {
     auto &el = m_stackTraces[i];
-    if (el.type != type) {
-      continue;
-    }
-
-    if (location != 0 && m_locations[i] != 0) {
-      if (location == m_locations[i]) {
-        el.count += 1;
-        return;
-      }
-      continue;
-    }
-
-    if (areFpesEquivalent({el.type, *el.st}, {type, *st})) {
+    if (canMergeFpeInfo(el, type, location, *st)) {
       el.count += 1;
       return;
     }
   }
 
-  m_stackTraces.push_back({1, type, std::move(st)});
-  m_locations.push_back(location);
+  m_stackTraces.push_back({1, type, std::move(st), location});
 }
 
-bool FpeMonitor::Result::contains(
-    FpeType type, const boost::stacktrace::stacktrace &st) const {
+bool FpeMonitor::Result::contains(const FpeInfo &info) const {
   return std::ranges::any_of(m_stackTraces, [&](const FpeInfo &el) {
-    return areFpesEquivalent({el.type, *el.st}, {type, st});
+    return canMergeFpeInfo(el, info.type, info.location, *info.st);
   });
 }
 
@@ -169,53 +154,30 @@ void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
   }
 
   os << "\nStack traces:\n";
-  for (const auto &[count, type, st] : stackTraces()) {
-    os << "- " << type << ": (" << count << " times)\n";
+  for (const auto &info : stackTraces()) {
+    os << "- " << info.type << ": (" << info.count << " times)\n";
 
-    os << stackTraceToString(*st, depth);
+    os << stackTraceToString(*info.st, depth);
   }
   os << std::endl;
 }
 
 void FpeMonitor::Result::deduplicate() {
   std::vector<FpeInfo> copy = std::move(m_stackTraces);
-  std::vector<std::uintptr_t> copyLocations = std::move(m_locations);
   m_stackTraces.clear();
-  m_locations.clear();
+  m_stackTraces.reserve(copy.size());
 
-  for (std::size_t i = 0; i < copy.size(); ++i) {
-    auto &info = copy[i];
-    const std::uintptr_t location = copyLocations[i];
+  for (auto &info : copy) {
+    const auto mergeTarget = std::ranges::find_if(
+        m_stackTraces, [&](const FpeInfo &existing) {
+          return canMergeFpeInfo(existing, info.type, info.location, *info.st);
+        });
 
-    bool merged = false;
-    for (std::size_t j = 0; j < m_stackTraces.size(); ++j) {
-      auto &existing = m_stackTraces[j];
-      if (existing.type != info.type) {
-        continue;
-      }
-
-      if (location != 0 && m_locations[j] != 0) {
-        if (location == m_locations[j]) {
-          existing.count += info.count;
-          merged = true;
-          break;
-        }
-        continue;
-      }
-
-      if (areFpesEquivalent({existing.type, *existing.st},
-                            {info.type, *info.st})) {
-        existing.count += info.count;
-        merged = true;
-        break;
-      }
+    if (mergeTarget != m_stackTraces.end()) {
+      mergeTarget->count += info.count;
+    } else {
+      m_stackTraces.push_back(std::move(info));
     }
-
-    if (merged) {
-      continue;
-    }
-    m_stackTraces.push_back({info.count, info.type, std::move(info.st)});
-    m_locations.push_back(location);
   }
 }
 

@@ -543,9 +543,11 @@ int Sequencer::run() {
               if (mon) {
                 auto& local = fpe->local();
 
-                for (const auto& [count, type, st] :
-                     mon->result().stackTraces()) {
-                  auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+                for (const auto& info : mon->result().stackTraces()) {
+                  const auto count = info.count;
+                  const auto type = info.type;
+                  const auto& st = *info.st;
+                  auto [maskLoc, nMasked] = fpeMaskCount(st, type);
                   if (nMasked < count) {
                     std::stringstream ss;
                     ss << "FPE of type " << type
@@ -553,7 +555,7 @@ int Sequencer::run() {
                        << nMasked << " (mask: " << maskLoc
                        << ") (seen: " << count << " FPEs)\n"
                        << ActsPlugins::FpeMonitor::stackTraceToString(
-                              *st, m_cfg.fpeStackTraceLength);
+                              st, m_cfg.fpeStackTraceLength);
 
                     m_nUnmaskedFpe += (count - nMasked);
 
@@ -563,7 +565,7 @@ int Sequencer::run() {
                                                    // results after throwing
                       throw FpeFailure{ss.str()};
                     } else if (m_cfg.failOnUnmaskedFpe &&
-                               !local.contains(type, *st)) {
+                               !local.contains(info)) {
                       ACTS_INFO(ss.str());
                     }
                   }
@@ -676,15 +678,18 @@ void Sequencer::fpeReport() const {
         remaining;
 
     for (const auto& el : sorted) {
-      const auto& [count, type, st] = el.get();
-      auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+      const auto& info = el.get();
+      const auto count = info.count;
+      const auto type = info.type;
+      const auto& st = *info.st;
+      auto [maskLoc, nMasked] = fpeMaskCount(st, type);
       ACTS_INFO("- " << type << ": (" << count << " times) "
                      << (nMasked > 0 ? "[MASKED: " + std::to_string(nMasked) +
                                            " per event by " + maskLoc + "]"
                                      : "")
                      << "\n"
                      << ActsPlugins::FpeMonitor::stackTraceToString(
-                            *st, m_cfg.fpeStackTraceLength));
+                            st, m_cfg.fpeStackTraceLength));
     }
   }
 

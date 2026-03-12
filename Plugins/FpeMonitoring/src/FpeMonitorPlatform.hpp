@@ -10,8 +10,8 @@
 
 #include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
-#include <cstddef>
 #include <csignal>
+#include <cstddef>
 #include <optional>
 
 namespace ActsPlugins::detail {
@@ -42,7 +42,8 @@ inline std::optional<FpeType> fpeTypeFromSiCode(int siCode) {
 
 bool isRuntimeSupported();
 
-std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx);
+std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
+                                     void* ctx);
 
 void clearPendingExceptions(int excepts);
 void enableExceptions(int excepts);

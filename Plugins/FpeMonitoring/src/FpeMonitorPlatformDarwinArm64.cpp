@@ -83,7 +83,8 @@ bool isRuntimeSupported() {
   return true;
 }
 
-std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx) {
+std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
+                                     void* ctx) {
   // Prefer SIGFPE si_code mapping when available.
   if (signal == SIGFPE && si != nullptr) {
     return fpeTypeFromSiCode(si->si_code);

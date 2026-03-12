@@ -109,13 +109,17 @@ class FpeMonitor {
       FpeType type;
       /// Stack trace where the exception occurred
       std::shared_ptr<const boost::stacktrace::stacktrace> st;
+      /// Faulting instruction address if available from signal context
+      std::uintptr_t location;
 
       /// Constructor
       /// @param countIn Number of occurrences
       /// @param typeIn Exception type
       /// @param stIn Stack trace
+      /// @param locationIn Faulting instruction address if available
       FpeInfo(std::size_t countIn, FpeType typeIn,
-              std::shared_ptr<const boost::stacktrace::stacktrace> stIn);
+              std::shared_ptr<const boost::stacktrace::stacktrace> stIn,
+              std::uintptr_t locationIn = 0);
       ~FpeInfo();
     };
 
@@ -146,11 +150,10 @@ class FpeMonitor {
     /// Remove duplicate stack traces
     void deduplicate();
 
-    /// Check if result contains a specific exception type and stack trace
-    /// @param type Exception type
-    /// @param st Stack trace to check
+    /// Check if result contains an exception info entry under merge semantics
+    /// @param info Exception info to check
     /// @return True if contained
-    bool contains(FpeType type, const boost::stacktrace::stacktrace &st) const;
+    bool contains(const FpeInfo &info) const;
 
     /// Print summary of exceptions
     /// @param os Output stream
@@ -175,7 +178,6 @@ class FpeMonitor {
 
    private:
     std::vector<FpeInfo> m_stackTraces;
-    std::vector<std::uintptr_t> m_locations;
     std::array<unsigned int, 32> m_counts{};
 
     friend FpeMonitor;
