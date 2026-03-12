@@ -8,7 +8,6 @@
 
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 
 namespace Acts {
