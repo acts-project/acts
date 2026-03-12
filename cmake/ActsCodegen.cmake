@@ -6,8 +6,9 @@ if(NOT ACTS_USE_SYSTEM_LIBS)
     find_program(uv_exe uv)
 
     if(NOT DEFINED ACTS_CODEGEN_TMPDIR OR ACTS_CODEGEN_TMPDIR STREQUAL "")
+        find_program(MKTEMP_EXE NAMES mktemp REQUIRED)
         execute_process(
-            COMMAND mktemp -d
+            COMMAND ${MKTEMP_EXE} -d
             OUTPUT_VARIABLE _acts_codegen_tmpdir
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
