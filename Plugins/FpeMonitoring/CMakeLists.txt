@@ -31,263 +31,194 @@ target_link_libraries(ActsPluginFpeMonitoring PUBLIC Acts::Core)
 
 acts_compile_headers(PluginFpeMonitoring GLOB include/**/*.hpp)
 
-# FPE compile definitions
-set(_fpe_definitions "")
+# Fpe flags
+set(_fpe_options "")
 
 # In case we're going to run clang-tidy, let's unconditionally turn off backtrace
 if(ACTS_RUN_CLANG_TIDY)
-    list(APPEND _fpe_definitions BOOST_STACKTRACE_USE_NOOP=1)
+    list(APPEND _fpe_options "-DBOOST_STACKTRACE_USE_NOOP=1")
 else()
+    include(CheckCXXSourceCompiles)
+
+    find_library(dl_LIBRARY dl)
     find_package(Backtrace)
     find_program(addr2line_EXECUTABLE addr2line)
     if(APPLE)
-        list(APPEND _fpe_definitions _GNU_SOURCE)
-    elseif(CMAKE_DL_LIBS)
-        target_link_libraries(ActsPluginFpeMonitoring PUBLIC ${CMAKE_DL_LIBS})
+        list(APPEND _fpe_options -D_GNU_SOURCE)
+    else()
+        if(dl_LIBRARY)
+            target_link_libraries(ActsPluginFpeMonitoring PUBLIC ${dl_LIBRARY})
 
-        set(_backtrace_setup_complete FALSE)
-        set(_backtrace_src
-            "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/CMakeTmp/backtrace.cpp"
-        )
-        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/CMakeTmp")
+            set(_backtrace_setup_complete FALSE)
 
-        find_path(
-            boost_stacktrace_include
-            NAMES "boost/stacktrace.hpp"
-            REQUIRED
-            PATHS ${Boost_INCLUDE_DIRS}
-        )
-
-        file(
-            WRITE "${_backtrace_src}"
-            "#include <boost/stacktrace.hpp>\n"
-            "#include <iostream>\n"
-            "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
-        )
-
-        message(
-            CHECK_START
-            "Does backtrace work without libbacktrace linker flag"
-        )
-        try_compile(
-            _backtrace_nolink
-            "${CMAKE_CURRENT_BINARY_DIR}"
-            "${_backtrace_src}"
-            LINK_LIBRARIES ${CMAKE_DL_LIBS}
-            CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
-            COMPILE_DEFINITIONS BOOST_STACKTRACE_USE_BACKTRACE
-            OUTPUT_VARIABLE __OUTPUT
-        )
-
-        if(_backtrace_nolink)
-            message(CHECK_PASS "yes")
-            list(APPEND _fpe_definitions BOOST_STACKTRACE_USE_BACKTRACE)
-            set(_backtrace_setup_complete TRUE)
-        else()
-            message(CHECK_FAIL "no")
-
-            message(CHECK_START "Does backtrace work with linker flag")
-            try_compile(
-                _backtrace_link_default
-                "${CMAKE_CURRENT_BINARY_DIR}"
-                "${_backtrace_src}"
-                LINK_LIBRARIES backtrace ${CMAKE_DL_LIBS}
-                CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
-                COMPILE_DEFINITIONS BOOST_STACKTRACE_USE_BACKTRACE
-                OUTPUT_VARIABLE __OUTPUT
+            find_path(
+                boost_stacktrace_include
+                NAMES "boost/stacktrace.hpp"
+                REQUIRED
+                PATHS ${Boost_INCLUDE_DIRS}
             )
+            if(Backtrace_FOUND)
+                # check if we need to link against bracktrace or not
+                set(backtrace_include "")
 
-            if(_backtrace_link_default)
-                message(CHECK_PASS "yes")
-                list(APPEND _fpe_definitions BOOST_STACKTRACE_USE_BACKTRACE)
-                target_link_libraries(ActsPluginFpeMonitoring PUBLIC backtrace)
-                set(_backtrace_setup_complete TRUE)
-            else()
-                message(CHECK_FAIL "no")
-            endif()
+                file(
+                    WRITE
+                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                    "
+        #include <boost/stacktrace.hpp>
+        int main() {}
+        "
+                )
 
-            if(NOT _backtrace_setup_complete)
-                file(GLOB hints "/usr/lib/gcc/*/*/include")
-                find_file(backtrace_header NAMES "backtrace.h" HINTS ${hints})
+                message(
+                    CHECK_START
+                    "Does backtrace work with the default include"
+                )
 
-                if(backtrace_header STREQUAL "backtrace_header-NOTFOUND")
-                    message(STATUS "Could not find backtrace header file")
+                try_compile(
+                    _backtrace_default_header
+                    "${CMAKE_BINARY_DIR}"
+                    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                    LINK_LIBRARIES ${dl_LIBRARY}
+                    CMAKE_FLAGS
+                        "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
+                    COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
+                    OUTPUT_VARIABLE __OUTPUT
+                )
+
+                if(_backtrace_default_header)
+                    message(CHECK_PASS "yes")
                 else()
-                    message(
-                        CHECK_START
-                        "Does backtrace work with explicit include"
-                    )
-                    file(
-                        WRITE "${_backtrace_src}"
-                        "#include <boost/stacktrace.hpp>\n"
-                        "#include <iostream>\n"
-                        "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
-                    )
-                    try_compile(
-                        _backtrace_explicit
-                        "${CMAKE_CURRENT_BINARY_DIR}"
-                        "${_backtrace_src}"
-                        LINK_LIBRARIES ${CMAKE_DL_LIBS}
-                        CMAKE_FLAGS
-                            "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
-                        COMPILE_DEFINITIONS BOOST_STACKTRACE_USE_BACKTRACE
-                        OUTPUT_VARIABLE __OUTPUT
+                    message(CHECK_FAIL "no")
+
+                    file(GLOB hints "/usr/lib/gcc/*/*/include")
+                    find_file(
+                        backtrace_header
+                        NAMES "backtrace.h"
+                        HINTS ${hints}
                     )
 
-                    if(_backtrace_explicit)
-                        message(CHECK_PASS "yes")
-                        list(
-                            APPEND _fpe_definitions
-                            BOOST_STACKTRACE_USE_BACKTRACE
-                        )
-                        set(_backtrace_setup_complete TRUE)
+                    if(${backtrace_header} STREQUAL "backtrace_header-NOTFOUND")
+                        message(STATUS "Could not find backtrace header file")
                     else()
-                        message(CHECK_FAIL "no")
-
-                        set(_backtrace_include_def
-                            "BOOST_STACKTRACE_BACKTRACE_INCLUDE_FILE=\"${backtrace_header}\""
+                        set(backtrace_include
+                            "-DBOOST_STACKTRACE_BACKTRACE_INCLUDE_FILE=\"${backtrace_header}\""
                         )
 
                         file(
-                            WRITE "${_backtrace_src}"
-                            "#include <boost/stacktrace.hpp>\n"
-                            "int main() {}\n"
+                            WRITE
+                                "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                            "
+            #include <boost/stacktrace.hpp>
+            int main() {}
+            "
                         )
 
                         message(
                             CHECK_START
                             "Does backtrace work with explicit include"
                         )
+
                         try_compile(
                             _backtrace_explicit_header
-                            "${CMAKE_CURRENT_BINARY_DIR}"
-                            "${_backtrace_src}"
-                            LINK_LIBRARIES ${CMAKE_DL_LIBS}
+                            "${CMAKE_BINARY_DIR}"
+                            "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                            LINK_LIBRARIES ${dl_LIBRARY}
                             CMAKE_FLAGS
                                 "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
                             COMPILE_DEFINITIONS
-                                BOOST_STACKTRACE_USE_BACKTRACE
-                                ${_backtrace_include_def}
+                                -DBOOST_STACKTRACE_USE_BACKTRACE
+                                ${backtrace_include}
                             OUTPUT_VARIABLE __OUTPUT
                         )
 
                         if(_backtrace_explicit_header)
                             message(CHECK_PASS "yes")
-                            list(
-                                APPEND _fpe_definitions
-                                BOOST_STACKTRACE_USE_BACKTRACE
-                                ${_backtrace_include_def}
-                            )
-                            set(_backtrace_setup_complete TRUE)
+                            list(APPEND _fpe_options "${backtrace_include}")
                         else()
                             message(CHECK_FAIL "no")
-
-                            file(
-                                WRITE "${_backtrace_src}"
-                                "#include <boost/stacktrace.hpp>\n"
-                                "#include <iostream>\n"
-                                "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
-                            )
-
-                            message(
-                                CHECK_START
-                                "Does backtrace work without linker flag"
-                            )
-                            try_compile(
-                                _backtrace_nolink
-                                "${CMAKE_CURRENT_BINARY_DIR}"
-                                "${_backtrace_src}"
-                                LINK_LIBRARIES ${CMAKE_DL_LIBS}
-                                CMAKE_FLAGS
-                                    "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
-                                COMPILE_DEFINITIONS
-                                    BOOST_STACKTRACE_USE_BACKTRACE
-                                    ${_backtrace_include_def}
-                                OUTPUT_VARIABLE __OUTPUT
-                            )
-
-                            if(_backtrace_nolink)
-                                message(CHECK_PASS "yes")
-                                list(
-                                    APPEND _fpe_definitions
-                                    BOOST_STACKTRACE_USE_BACKTRACE
-                                    ${_backtrace_include_def}
-                                )
-                                set(_backtrace_setup_complete TRUE)
-                            else()
-                                message(CHECK_FAIL "no")
-
-                                file(
-                                    WRITE "${_backtrace_src}"
-                                    "#include <boost/stacktrace.hpp>\n"
-                                    "#include <iostream>\n"
-                                    "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
-                                )
-
-                                message(
-                                    CHECK_START
-                                    "Does backtrace work with linker flag"
-                                )
-                                try_compile(
-                                    _backtrace_link
-                                    "${CMAKE_CURRENT_BINARY_DIR}"
-                                    "${_backtrace_src}"
-                                    LINK_LIBRARIES backtrace ${CMAKE_DL_LIBS}
-                                    CMAKE_FLAGS
-                                        "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
-                                    COMPILE_DEFINITIONS
-                                        BOOST_STACKTRACE_USE_BACKTRACE
-                                        ${_backtrace_include_def}
-                                    OUTPUT_VARIABLE __OUTPUT
-                                )
-
-                                if(_backtrace_link)
-                                    message(CHECK_PASS "yes")
-                                    list(
-                                        APPEND _fpe_definitions
-                                        BOOST_STACKTRACE_USE_BACKTRACE
-                                        ${_backtrace_include_def}
-                                    )
-                                    target_link_libraries(
-                                        ActsPluginFpeMonitoring
-                                        PUBLIC backtrace
-                                    )
-
-                                    set(_backtrace_setup_complete TRUE)
-                                else()
-                                    message(CHECK_FAIL "no")
-                                endif()
-                            endif()
                         endif()
+                    endif()
+                endif()
+
+                file(
+                    WRITE
+                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                    "#include <boost/stacktrace.hpp>\n"
+                    "#include <iostream>\n"
+                    "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
+                )
+
+                message(CHECK_START "Does backtrace work without linker flag")
+                try_compile(
+                    _backtrace_nolink
+                    "${CMAKE_BINARY_DIR}"
+                    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                    LINK_LIBRARIES ${dl_LIBRARY}
+                    CMAKE_FLAGS
+                        "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
+                    COMPILE_DEFINITIONS
+                        -DBOOST_STACKTRACE_USE_BACKTRACE
+                        ${backtrace_include}
+                    OUTPUT_VARIABLE __OUTPUT
+                )
+
+                if(_backtrace_nolink)
+                    message(CHECK_PASS "yes")
+                    set(_backtrace_setup_complete TRUE)
+                else()
+                    message(CHECK_FAIL "no")
+
+                    file(
+                        WRITE
+                            "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                        "#include <boost/stacktrace.hpp>\n"
+                        "#include <iostream>\n"
+                        "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
+                    )
+
+                    message(CHECK_START "Does backtrace work with linker flag")
+                    try_compile(
+                        _backtrace_link
+                        "${CMAKE_BINARY_DIR}"
+                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                        LINK_LIBRARIES backtrace ${dl_LIBRARY}
+                        CMAKE_FLAGS
+                            "-DINCLUDE_DIRECTORIES=${boost_stacktrace_include}"
+                        COMPILE_DEFINITIONS
+                            -DBOOST_STACKTRACE_USE_BACKTRACE
+                            ${backtrace_include}
+                        OUTPUT_VARIABLE __OUTPUT
+                    )
+
+                    if(_backtrace_link)
+                        message(CHECK_PASS "yes")
+                        list(
+                            APPEND _fpe_options
+                            -DBOOST_STACKTRACE_USE_BACKTRACE
+                        )
+                        target_link_libraries(
+                            ActsPluginFpeMonitoring
+                            PUBLIC backtrace
+                        )
+
+                        set(_backtrace_setup_complete TRUE)
+                    else()
+                        message(CHECK_FAIL "no")
                     endif()
                 endif()
             endif()
         endif()
 
         if(NOT _backtrace_setup_complete)
-            if(addr2line_EXECUTABLE)
-                message(
-                    STATUS
-                    "Backtrace backend probe failed; using boost::stacktrace addr2line backend"
-                )
-                list(
-                    APPEND _fpe_definitions
-                    BOOST_STACKTRACE_USE_ADDR2LINE
-                    "BOOST_STACKTRACE_ADDR2LINE_LOCATION=\"${addr2line_EXECUTABLE}\""
-                )
+            if(NOT ${dl_LIBRARY} STREQUAL "dl_LIBRARY-NOTFOUND")
+                message(STATUS "ld lib available: use boost basic fallback")
             else()
-                message(
-                    STATUS
-                    "libdl available but backtrace backend probe failed: use boost basic fallback"
-                )
+                message(STATUS "Unable to set up stacktraces: use noop")
+                list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_NOOP)
             endif()
         endif()
     endif()
 endif()
 
-if(_fpe_definitions)
-    target_compile_definitions(
-        ActsPluginFpeMonitoring
-        PUBLIC ${_fpe_definitions}
-    )
-endif()
+target_compile_options(ActsPluginFpeMonitoring PUBLIC "${_fpe_options}")
