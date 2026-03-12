@@ -6,8 +6,9 @@ function(acts_add_geometry_module target)
             "Cannot configure geometry module target '${target}' on this platform."
         )
     endif()
-    if(NOT DEFINED Acts_GEOMETRY_MODULE_ABI_TAG
-       OR Acts_GEOMETRY_MODULE_ABI_TAG STREQUAL ""
+    if(
+        NOT DEFINED Acts_GEOMETRY_MODULE_ABI_TAG
+        OR Acts_GEOMETRY_MODULE_ABI_TAG STREQUAL ""
     )
         message(
             FATAL_ERROR
@@ -23,4 +24,3 @@ function(acts_add_geometry_module target)
         PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${Acts_GEOMETRY_MODULE_ABI_TAG}"
     )
 endfunction()
-
