@@ -6,8 +6,9 @@ function(acts_add_dd4hep_geometry_module target)
             "Cannot configure DD4hep geometry module target '${target}' on this platform."
         )
     endif()
-    if(NOT DEFINED Acts_GEOMETRY_MODULE_ABI_TAG
-       OR Acts_GEOMETRY_MODULE_ABI_TAG STREQUAL ""
+    if(
+        NOT DEFINED Acts_GEOMETRY_MODULE_ABI_TAG
+        OR Acts_GEOMETRY_MODULE_ABI_TAG STREQUAL ""
     )
         message(
             FATAL_ERROR
