@@ -55,10 +55,7 @@ FpeMonitor::Result::FpeInfo::FpeInfo(
     std::size_t countIn, FpeType typeIn,
     std::shared_ptr<const boost::stacktrace::stacktrace> stIn,
     std::uintptr_t locationIn)
-    : count{countIn},
-      type{typeIn},
-      st{std::move(stIn)},
-      location{locationIn} {}
+    : count{countIn}, type{typeIn}, st{std::move(stIn)}, location{locationIn} {}
 
 FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
   Result result{};
@@ -168,8 +165,8 @@ void FpeMonitor::Result::deduplicate() {
   m_stackTraces.reserve(copy.size());
 
   for (auto &info : copy) {
-    const auto mergeTarget = std::ranges::find_if(
-        m_stackTraces, [&](const FpeInfo &existing) {
+    const auto mergeTarget =
+        std::ranges::find_if(m_stackTraces, [&](const FpeInfo &existing) {
           return canMergeFpeInfo(existing, info.type, info.location, *info.st);
         });
 

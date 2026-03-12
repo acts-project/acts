@@ -164,7 +164,7 @@ bool shouldFailFastOnUnknownSignal() {
 
 void installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
   // Install both SIGFPE and SIGILL handlers to cover Darwin arm64 behavior.
-  struct sigaction action {};
+  struct sigaction action{};
   action.sa_sigaction = handler;
   action.sa_flags = SA_SIGINFO;
   sigaction(SIGFPE, &action, nullptr);

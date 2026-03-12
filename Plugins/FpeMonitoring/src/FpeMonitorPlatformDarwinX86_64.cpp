@@ -111,7 +111,7 @@ bool shouldFailFastOnUnknownSignal() {
 
 void installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
   // A single SIGFPE handler is sufficient on Darwin x86_64.
-  struct sigaction action {};
+  struct sigaction action{};
   action.sa_sigaction = handler;
   action.sa_flags = SA_SIGINFO;
   sigaction(SIGFPE, &action, nullptr);
