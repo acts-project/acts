@@ -24,6 +24,9 @@ from acts.examples import (
     TrackParametersPrinter,
     PropagationAlgorithm,
     DigitizationAlgorithm,
+    HelloLoggerAlgorithm,
+    HelloRandomAlgorithm,
+    HelloWhiteBoardAlgorithm,
 )
 
 
@@ -54,6 +57,8 @@ from helpers import geant4Enabled, hepmc3Enabled
         ParticlesPrinter,
         TrackParametersPrinter,
         PropagationAlgorithm,
+        HelloRandomAlgorithm,
+        HelloWhiteBoardAlgorithm,
         # GeantinoRecording,
         # EventRecording,
     ],
@@ -72,6 +77,7 @@ def test_g4_algorithms():
 def test_special_algorithm_interfaces():
     # just assert they exists
     assert DigitizationAlgorithm
+    assert HelloLoggerAlgorithm
 
 
 def test_ialgorithm_init_with_log_level():

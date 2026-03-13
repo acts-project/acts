@@ -429,6 +429,9 @@ CompositeSpacePointLineFitter::fit(
       if (fitOpts.selector.connected() && !fitOpts.selector(*spacePoint)) {
         continue;
       }
+      ACTS_VERBOSE(__func__ << "() " << __LINE__
+                            << ": Calculate residual w.r.t."
+                            << toString(*spacePoint));
       // Calculate the residual & derivatives
       if (pullCalculator.config().parsToUse.back() == FitParIndex::t0) {
         double driftV{fitOpts.calibrator->driftVelocity(fitOpts.calibContext,
@@ -553,21 +556,16 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
   // Take out the filled block from the hessian
   Acts::SquareMatrix<N> miniHessian{
       cache.hessian.block<N, N>(firstIdx, firstIdx)};
+
   ACTS_VERBOSE(__func__ << "<" << N << ">() - " << __LINE__
                         << ": Projected parameters: " << toString(miniPars)
                         << " gradient: " << toString(miniGradient)
                         << ", hessian: \n"
-                        << toString(miniHessian)
-                        << ", determinant: " << miniHessian.determinant());
-  std::optional<SquareMatrix<N>> inverseH{std::nullopt};
-  if (miniHessian.trace() > Acts::s_epsilon &&
-      miniHessian.determinant() > Acts::s_epsilon) {
-    inverseH = safeInverse(miniHessian);
-  } else {
-    ACTS_DEBUG(__func__ << "<" << N << ">() - " << __LINE__
-                        << ": Hessian is singular or not positive definite. "
-                           "Fallback to gradient decent.");
-  }
+                        << toString(miniHessian) << "\n"
+                        << printEigenDecomposition(miniHessian)
+                        << "\n, determinant: " << miniHessian.determinant());
+  std::optional<SquareMatrix<N>> inverseH{safeInverse(miniHessian)};
+
   if (inverseH) {
     const Vector<N> update{(*inverseH) * miniGradient};
     // We compute also the normalized update, defined as the parameter

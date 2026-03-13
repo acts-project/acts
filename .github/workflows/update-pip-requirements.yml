@@ -11,6 +11,10 @@ jobs:
     # This action checks all monitored (specified in `folder_list` below) requirements.in
     # files and generates a new requirements.txt file with pip-compile. If any
     # requirements changed, a PR is created with the changes.
+
+    # Abort scheduled workflows dispatched by forks
+    if: github.event_name != 'schedule' || github.repository == 'acts-project/acts'
+
     runs-on: ubuntu-slim
     env:
       # This branch will receive updates each time the workflow runs
@@ -36,13 +40,26 @@ jobs:
           folder_list=(
             CI/clang_tidy
             CI/fpe_masks
+            codegen
             docs/old
             Python/Examples/tests
             Examples/Scripts
           )
           for folder in "${folder_list[@]}"; do
-            rm "${folder}/requirements.txt"
-            uv pip compile --python-version "$PYTHON_VERSION" "${folder}/requirements.in" -o "${folder}/requirements.txt"
+            output_txt="${folder}/requirements.txt"
+            input_in="${folder}/requirements.in"
+            input_toml="${folder}/pyproject.toml"
+
+            rm "$output_txt"
+
+            if [[ -f "$input_toml" ]]; then
+              uv pip compile --python-version "$PYTHON_VERSION" "$input_toml" -o "$output_txt"
+            elif [[ -f "$input_in" ]]; then
+              uv pip compile --python-version "$PYTHON_VERSION" "$input_in" -o "$output_txt"
+            else
+              echo "No requirements.in or pyproject.toml in $folder."
+            fi
+
           done
 
       - name: Detect changes

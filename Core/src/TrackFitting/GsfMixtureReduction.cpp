@@ -11,6 +11,10 @@
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 
 #include <algorithm>
+#include <format>
+#include <iostream>
+
+using namespace Acts;
 
 namespace Acts::detail::Gsf {
 
@@ -73,4 +77,40 @@ void Acts::reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
     return;
   }
   detail::Gsf::reduceWithKLDistanceImpl(cmpCache, maxCmpsAfterMerge, surface);
+}
+
+void Acts::reduceMixtureWithKLDistanceNaive(
+    std::vector<Acts::GsfComponent> &cmpCache, std::size_t maxCmpsAfterMerge,
+    const Surface &surface) {
+  if (cmpCache.size() <= maxCmpsAfterMerge) {
+    return;
+  }
+
+  while (cmpCache.size() > maxCmpsAfterMerge) {
+    // Recompute ALL distances every iteration (naive approach)
+    double minDistance = std::numeric_limits<double>::max();
+    std::size_t minI = 0;
+    std::size_t minJ = 0;
+
+    for (std::size_t i = 0; i < cmpCache.size(); ++i) {
+      for (std::size_t j = i + 1; j < cmpCache.size(); ++j) {
+        const double distance =
+            detail::Gsf::computeSymmetricKlDivergence(cmpCache[i], cmpCache[j]);
+        if (distance < minDistance) {
+          minDistance = distance;
+          minI = i;
+          minJ = j;
+        }
+      }
+    }
+
+    // Merge the two closest components
+    cmpCache[minI] = detail::Gsf::mergeTwoComponents(cmpCache[minI],
+                                                     cmpCache[minJ], surface);
+
+    // Remove the merged component immediately
+    cmpCache.erase(cmpCache.begin() + minJ);
+  }
+
+  assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
 }

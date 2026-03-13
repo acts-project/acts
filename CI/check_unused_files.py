@@ -70,6 +70,7 @@ def main():
         "deprecated.md",
         "acts-version-manager.js",
         "tex-mml-chtml.js",
+        "Python/conftest.py",
     )
 
     suffix_header = (
@@ -111,6 +112,7 @@ def main():
         ".txt",
         ".yml",
         ".xml",
+        ".sh",
     )
     suffix_allowed = (
         suffix_header
@@ -180,8 +182,12 @@ def main():
                     os.system(remove_cmd)
 
             elif filepath.suffix in suffix_python:
-                # Skip the python tests folder
-                if str(root).find("Python/Examples") != -1:
+                # Skip the python tests folders
+                if (
+                    str(root).find("Python/Examples") != -1
+                    or str(root).find("Python/Fatras/tests") != -1
+                    or str(root).find("Python/Core/tests") != -1
+                ):
                     continue
 
                 if not file_can_be_removed("import .*" + filepath.stem, dirs_base):

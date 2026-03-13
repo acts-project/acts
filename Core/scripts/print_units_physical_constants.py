@@ -4,7 +4,6 @@
 
 from decimal import Decimal
 
-
 # circle constant beyond double precision floating point
 # from https://oeis.org/A000796
 pi_digits = (
