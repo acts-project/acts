@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
@@ -36,29 +37,34 @@ class ISurfaceMaterialAccumulater {
   virtual ~ISurfaceMaterialAccumulater() = default;
 
   /// Factory for creating the state
+  /// @param gctx the geometry context
   /// @return Unique pointer to a new state object for material accumulation
-  virtual std::unique_ptr<State> createState() const = 0;
+  virtual std::unique_ptr<State> createState(
+      const GeometryContext& gctx) const = 0;
 
   /// @brief Accumulate the material interaction on the surface
   ///
   /// @param state is the state of the accumulater
+  /// @param gctx the geometry context
   /// @param interactions is the material interactions, with assigned surfaces
   /// @param surfacesWithoutAssignment are the surfaces without assignment
   ///
   /// @note this the track average over the binned material
   virtual void accumulate(
-      State& state, const std::vector<MaterialInteraction>& interactions,
+      State& state, const GeometryContext& gctx,
+      const std::vector<MaterialInteraction>& interactions,
       const std::vector<IAssignmentFinder::SurfaceAssignment>&
           surfacesWithoutAssignment) const = 0;
 
   /// Finalize the surface material maps
   ///
   /// @param state the state of the accumulator
+  /// @param gctx the geometry context
   ///
   /// @note this does the run average over the (binned) material
   /// @return Map of geometry IDs to finalized surface material objects
   virtual std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-  finalizeMaterial(State& state) const = 0;
+  finalizeMaterial(State& state, const GeometryContext& gctx) const = 0;
 };
 
 }  // namespace Acts

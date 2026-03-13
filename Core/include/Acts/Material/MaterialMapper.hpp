@@ -61,8 +61,9 @@ class MaterialMapper {
           getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::INFO));
 
   /// @brief Factory for creating the state
+  /// @param gctx the geometry context
   /// @return Unique pointer to a new material mapping state object
-  std::unique_ptr<State> createState() const;
+  std::unique_ptr<State> createState(const GeometryContext& gctx) const;
 
   /// @brief Map the material interactions to the surfaces
   ///
@@ -80,8 +81,10 @@ class MaterialMapper {
 
   /// Finalize the maps
   /// @param state Material mapping state containing collected data
+  /// @param gctx Geometry context for finalization
   /// @return Tracking geometry material map with finalized surface and volume materials
-  TrackingGeometryMaterial finalizeMaps(const State& state) const;
+  TrackingGeometryMaterial finalizeMaps(const State& state,
+                                        const GeometryContext& gctx) const;
 
  private:
   /// Access method to the logger

@@ -350,7 +350,7 @@ void VolumeMaterialMapper::finalizeMaps(State& mState) const {
   }
 }
 
-void VolumeMaterialMapper::mapMaterialTrack(
+Result<void> VolumeMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   using VectorHelpers::makeVector4;
 
@@ -372,10 +372,10 @@ void VolumeMaterialMapper::mapMaterialTrack(
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options);
   if (!result.ok()) {
-    ACTS_ERROR("Encountered a propagator error for initial parameters : ");
-    ACTS_ERROR(" - Position: " << mTrack.first.first.transpose());
-    ACTS_ERROR(" - Momentum: " << mTrack.first.second.transpose());
-    return;  // Skip track
+    ACTS_DEBUG("Encountered a propagator error for initial parameters:");
+    ACTS_DEBUG(" - Position: " << mTrack.first.first.transpose());
+    ACTS_DEBUG(" - Momentum: " << mTrack.first.second.transpose());
+    return result.error();
   }
 
   auto mcResult = result.value().get<BoundSurfaceCollector::result_type>();
@@ -503,6 +503,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
     }
     ++rmIter;
   }
+
+  return Result<void>::success();
 }
 
 }  // namespace Acts
