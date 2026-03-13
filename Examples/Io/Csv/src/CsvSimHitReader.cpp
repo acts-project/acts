@@ -52,7 +52,7 @@ ProcessCode CsvSimHitReader::read(const AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
-  NamedTupleCsvReader<SimHitData> reader(path);
+  BoostDescribeCsvReader<SimHitData> reader(path);
 
   SimHitContainer::sequence_type unordered;
   SimHitData data;
