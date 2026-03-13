@@ -100,6 +100,7 @@ def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
     # Mapping Algorithm
     coreMaterialMappingConfig = CoreMaterialMapping.Config()
     coreMaterialMappingConfig.materialMapper = materialMapper
+    coreMaterialMappingConfig.geoContext = context.geoContext
     coreMaterialMappingConfig.inputMaterialTracks = "material-tracks"
     coreMaterialMappingConfig.mappedMaterialTracks = "mapped-material-tracks"
     coreMaterialMappingConfig.unmappedMaterialTracks = "unmapped-material-tracks"

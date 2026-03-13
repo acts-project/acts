@@ -272,7 +272,8 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
 BOOST_DATA_TEST_CASE(ConeSurface,
-                     cones* posAngle* posPositiveNonzero* ts* phis* thetas* ps,
+                     cones * posAngle * posPositiveNonzero * ts * phis *
+                         thetas * ps,
                      surface, lphi, lz, time, phi, theta, p) {
   // TODO extend lz to zero after fixing the transform implementation
   // local parameter r*phi has limits that depend on the z position
@@ -281,38 +282,39 @@ BOOST_DATA_TEST_CASE(ConeSurface,
   runTest(surface, (0 < lz) ? (r * lphi) : 0.0, lz, time, phi, theta, p);
 }
 
-BOOST_DATA_TEST_CASE(
-    CylinderSurface,
-    cylinders* posSymmetric* posSymmetric* ts* phis* thetas* ps, surface, lrphi,
-    lz, time, phi, theta, p) {
+BOOST_DATA_TEST_CASE(CylinderSurface,
+                     cylinders * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps,
+                     surface, lrphi, lz, time, phi, theta, p) {
   runTest(surface, lrphi, lz, time, phi, theta, p);
 }
 
 BOOST_DATA_TEST_CASE(DiscSurface,
-                     discs* posPositive* posAngle* ts* phis* thetas* ps,
+                     discs * posPositive * posAngle * ts * phis * thetas * ps,
                      surface, lr, lphi, time, phi, theta, p) {
   // local coordinates are singular at r = 0 -> normalize local phi
   runTest(surface, lr, (0 < lr) ? lphi : 0.0, time, phi, theta, p);
 }
 
-BOOST_DATA_TEST_CASE(
-    PerigeeSurface,
-    perigees* posSymmetric* posSymmetric* ts* phis* thetasNoForwardBackward* ps,
-    surface, d0, z0, time, phi, theta, p) {
+BOOST_DATA_TEST_CASE(PerigeeSurface,
+                     perigees * posSymmetric * posSymmetric * ts * phis *
+                         thetasNoForwardBackward * ps,
+                     surface, d0, z0, time, phi, theta, p) {
   // TODO extend theta to forward/back extreme cases fixing the transform
   runTest(surface, d0, z0, time, phi, theta, p);
 }
 
 BOOST_DATA_TEST_CASE(PlaneSurface,
-                     planes* posSymmetric* posSymmetric* ts* phis* thetas* ps,
+                     planes * posSymmetric * posSymmetric * ts * phis * thetas *
+                         ps,
                      surface, l0, l1, time, phi, theta, p) {
   runTest(surface, l0, l1, time, phi, theta, p);
 }
 
-BOOST_DATA_TEST_CASE(
-    StrawSurface,
-    straws* posPositive* posSymmetric* ts* phis* thetasNoForwardBackward* ps,
-    surface, lr, lz, time, phi, theta, p) {
+BOOST_DATA_TEST_CASE(StrawSurface,
+                     straws * posPositive * posSymmetric * ts * phis *
+                         thetasNoForwardBackward * ps,
+                     surface, lr, lz, time, phi, theta, p) {
   // TODO extend theta to forward/back extreme cases fixing the transform
   runTest(surface, lr, lz, time, phi, theta, p);
 }

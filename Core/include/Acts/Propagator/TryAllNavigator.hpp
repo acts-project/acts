@@ -30,7 +30,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// @brief Captures the common functionality of the try-all navigators
 ///
@@ -939,4 +939,4 @@ class TryAllOverstepNavigator final : public TryAllNavigatorBase {
   }
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

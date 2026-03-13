@@ -20,7 +20,8 @@ Acts::BinnedSurfaceMaterialAccumulater::BinnedSurfaceMaterialAccumulater(
     : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
 std::unique_ptr<Acts::ISurfaceMaterialAccumulater::State>
-Acts::BinnedSurfaceMaterialAccumulater::createState() const {
+Acts::BinnedSurfaceMaterialAccumulater::createState(
+    const GeometryContext& gctx) const {
   auto state = std::make_unique<State>();
 
   /// Create the surface accumulation
@@ -42,7 +43,7 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
       ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMateria is "
                  << binUtility);
       // Now adjust to surface type
-      binUtility = adjustBinUtility(binUtility, *surface, m_cfg.geoContext);
+      binUtility = adjustBinUtility(binUtility, *surface, gctx);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
       state->accumulatedMaterial[geoID] =
@@ -58,7 +59,7 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
       ACTS_DEBUG("       - (proto) binning from ProtoGridSurfaceMaterial is "
                  << binUtility);
       // Now adjust to surface type
-      binUtility = adjustBinUtility(binUtility, *surface, m_cfg.geoContext);
+      binUtility = adjustBinUtility(binUtility, *surface, gctx);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << binUtility);
       state->accumulatedMaterial[geoID] =
@@ -85,7 +86,7 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
 }
 
 void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
-    ISurfaceMaterialAccumulater::State& state,
+    ISurfaceMaterialAccumulater::State& state, const GeometryContext& /*gctx*/,
     const std::vector<MaterialInteraction>& interactions,
     const std::vector<IAssignmentFinder::SurfaceAssignment>&
         surfacesWithoutAssignment) const {
@@ -144,7 +145,8 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
 std::map<Acts::GeometryIdentifier,
          std::shared_ptr<const Acts::ISurfaceMaterial>>
 Acts::BinnedSurfaceMaterialAccumulater::finalizeMaterial(
-    ISurfaceMaterialAccumulater::State& state) const {
+    ISurfaceMaterialAccumulater::State& state,
+    const GeometryContext& /*gctx*/) const {
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
       sMaterials;
 
