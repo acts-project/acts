@@ -8,21 +8,25 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
+
 struct LinearizedTrack;
 class Surface;
 
 /// @typedef TrackLinearizer
 /// A delegate for linearizing a track at a given point in time and surface.
 /// @note Used for track fitting and vertexing.
-using TrackLinearizer = Acts::Delegate<Result<LinearizedTrack>(
+using TrackLinearizer = Delegate<Result<LinearizedTrack>(
     const BoundTrackParameters& params, double linPointTime,
-    const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
-    const Acts::MagneticFieldContext& mctx,
+    const Surface& perigeeSurface, const GeometryContext& gctx,
+    const MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& fieldCache)>;
+
 }  // namespace Acts
