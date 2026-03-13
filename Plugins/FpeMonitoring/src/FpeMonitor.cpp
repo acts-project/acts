@@ -88,15 +88,14 @@ void FpeMonitor::Result::add(FpeType type, void *stackPtr,
   auto st = std::make_unique<boost::stacktrace::stacktrace>(
       boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize));
 
-  for (std::size_t i = 0; i < m_stackTraces.size(); ++i) {
-    auto &el = m_stackTraces[i];
+  for (auto &el : m_stackTraces) {
     if (canMergeFpeInfo(el, type, location, *st)) {
       el.count += 1;
       return;
     }
   }
 
-  m_stackTraces.push_back({1, type, std::move(st), location});
+  m_stackTraces.emplace_back(1, type, std::move(st), location);
 }
 
 bool FpeMonitor::Result::contains(const FpeInfo &info) const {
@@ -173,7 +172,7 @@ void FpeMonitor::Result::deduplicate() {
     if (mergeTarget != m_stackTraces.end()) {
       mergeTarget->count += info.count;
     } else {
-      m_stackTraces.push_back(std::move(info));
+      m_stackTraces.push_back(info);
     }
   }
 }
