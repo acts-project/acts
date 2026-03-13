@@ -23,11 +23,11 @@ namespace Acts {
 namespace {
 
 /// Precomputed strip geometry data for a space point whose strip vectors
-/// are accessed repeatedly (i.e. the loop-invariant middle and bottom SPs).
+/// are accessed repeatedly (i.e. middle and bottom SPs).
 ///
 /// The scalar triple product identity a dot (b cross c) = c dot (a cross b)
 /// allows the cross products of the strip vectors to be precomputed once and reused
-/// across iterations, reducing each check to 3 dot products.
+/// saves a lot of cpu time for free in strip seeding 
 struct StripData {
   std::array<float, 3> bsvCrossTsv;
   std::array<float, 3> scdCrossTsv;
@@ -54,8 +54,8 @@ struct StripData {
   }
 };
 
-/// Check strip coordinate compatibility using precomputed cross products
-/// (StripData). Best for space points checked many times (middle, bottom).
+/// Check strip coordinate compatibility using StripData struct
+/// Best for sps checked many times (middle, bottom).
 inline bool stripCoordinateCheck(
     float tolerance, const StripData& strip,
     const std::array<float, 3>& pm,
@@ -93,8 +93,7 @@ inline bool stripCoordinateCheck(
 /// Check strip coordinate compatibility directly from a space point proxy.
 /// Best for space points checked only once (top SP), because the intermediate
 /// cross product d1 = tsv cross pm is reused for both bd1 and s1, and the
-/// second cross product d0 = bsv cross pm is skipped entirely on the common
-/// early-exit path.
+/// second cross product d0 = bsv cross pm is skipped entirely when we exit early
 inline bool stripCoordinateCheck(
     float tolerance, const ConstSpacePointProxy2& sp,
     const std::array<float, 3>& pm,
