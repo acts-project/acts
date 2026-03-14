@@ -18,7 +18,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
-#include "Acts/Propagator/detail/ParameterTraits.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -84,28 +83,16 @@ class BasePropagatorHelper : public BasePropagator {
 /// - a type mapping for: (initial track parameter type and destination
 ///   surface type) -> type of internal state object
 ///
-template <typename stepper_t, typename navigator_t = VoidNavigator>
+template <StepperConcept stepper_t, typename navigator_t = VoidNavigator>
 class Propagator final
     : public std::conditional_t<
           SupportsBoundParameters_v<stepper_t>,
           detail::BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
           detail::PropagatorStub> {
-  /// Re-define bound track parameters dependent on the stepper
-  using StepperBoundTrackParameters =
-      detail::stepper_bound_parameters_type_t<stepper_t>;
-  static_assert(BoundTrackParametersConcept<StepperBoundTrackParameters>,
-                "Stepper bound track parameters do not fulfill bound "
-                "parameters concept.");
-  static_assert(std::copy_constructible<StepperBoundTrackParameters>,
-                "return track parameter type must be copy-constructible");
+  using StepperBoundTrackParameters = stepper_t::BoundParameters;
 
   using Jacobian = BoundMatrix;
   using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
-
-  static_assert(StepperStateConcept<typename stepper_t::State>,
-                "Stepper does not fulfill stepper concept.");
-  static_assert(StepperConcept<stepper_t>,
-                "Stepper does not fulfill stepper concept.");
 
   /// @brief Helper struct determining the state's type
   ///
@@ -343,33 +330,15 @@ class Propagator final
   /// @param [in] result Result of the propagation
   /// @param [in] options Propagation options
   /// @param [in] createFinalParameters Whether to produce parameters at the end of the propagation
+  /// @param [in] target Surface to be used for the final parameters, if createFinalParameters is true
+  ///             If nullptr, the current surface of the navigator will be used
   ///
   /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
   Result<ResultType<propagator_options_t>> makeResult(
       propagator_state_t state, Result<void> result,
-      const propagator_options_t& options, bool createFinalParameters) const;
-
-  /// @brief Builds the propagator result object
-  ///
-  /// This function creates the propagator result object from the propagator
-  /// state object. The `result` is passed to pipe a potential error from the
-  /// propagation call. The `options` are used to determine the type of the
-  /// result object.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state object
-  /// @tparam propagator_options_t Type of the propagator options
-  ///
-  /// @param [in] state Propagator state object
-  /// @param [in] result Result of the propagation
-  /// @param [in] target Target surface of to propagate to
-  /// @param [in] options Propagation options
-  ///
-  /// @return Propagation result
-  template <typename propagator_state_t, typename propagator_options_t>
-  Result<ResultType<propagator_options_t>> makeResult(
-      propagator_state_t state, Result<void> result, const Surface& target,
-      const propagator_options_t& options) const;
+      const propagator_options_t& options, bool createFinalParameters,
+      const Surface* target = nullptr) const;
 
  private:
   /// Implementation of propagation algorithm

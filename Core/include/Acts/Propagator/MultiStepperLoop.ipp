@@ -12,6 +12,8 @@
 
 #include "Acts/Propagator/MultiStepperError.hpp"
 
+#include <vector>
+
 namespace Acts {
 
 template <Concepts::SingleStepper S, typename R>

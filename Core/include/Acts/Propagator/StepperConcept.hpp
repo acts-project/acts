@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -24,10 +24,13 @@ namespace Concepts {
 /// @brief Concept that is satisfied by both single- and multi-steppers.
 template <typename Stepper, typename State = typename Stepper::State>
 concept CommonStepper = requires {
+  typename Stepper::BoundParameters;
   typename Stepper::State;
   typename Stepper::Jacobian;
   typename Stepper::Covariance;
   typename Stepper::BoundState;
+
+  requires BoundTrackParametersConcept<typename Stepper::BoundParameters>;
 
   requires requires(const Stepper& s, State& t) {
     { s.transportCovarianceToCurvilinear(t) } -> std::same_as<void>;
