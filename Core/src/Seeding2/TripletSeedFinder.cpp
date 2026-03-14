@@ -27,32 +27,34 @@ namespace {
 ///
 /// The scalar triple product identity a dot (b cross c) = c dot (a cross b)
 /// allows the cross products of the strip vectors to be precomputed once and reused
-/// saves a lot of cpu time for free in strip seeding 
+/// saves a lot of cpu time for free in strip seeding
 struct StripData {
-  std::array<float, 3> bsvCrossTsv;
-  std::array<float, 3> scdCrossTsv;
-  std::array<float, 3> scdCrossBsv;
-  std::array<float, 3> topStripVector;
-  std::array<float, 3> topStripCenter;
-
-  explicit StripData(const ConstSpacePointProxy2& sp) {
-    const auto& tsv = sp.topStripVector();
-    const auto& bsv = sp.bottomStripVector();
-    const auto& scd = sp.stripCenterDistance();
-    topStripVector = tsv;
-    topStripCenter = sp.topStripCenter();
-
-    bsvCrossTsv = {bsv[1] * tsv[2] - bsv[2] * tsv[1],
-                   bsv[2] * tsv[0] - bsv[0] * tsv[2],
-                   bsv[0] * tsv[1] - bsv[1] * tsv[0]};
-    scdCrossTsv = {scd[1] * tsv[2] - scd[2] * tsv[1],
-                   scd[2] * tsv[0] - scd[0] * tsv[2],
-                   scd[0] * tsv[1] - scd[1] * tsv[0]};
-    scdCrossBsv = {scd[1] * bsv[2] - scd[2] * bsv[1],
-                   scd[2] * bsv[0] - scd[0] * bsv[2],
-                   scd[0] * bsv[1] - scd[1] * bsv[0]};
-  }
+  std::array<float, 3> bsvCrossTsv{};
+  std::array<float, 3> scdCrossTsv{};
+  std::array<float, 3> scdCrossBsv{};
+  std::array<float, 3> topStripVector{};
+  std::array<float, 3> topStripCenter{};
 };
+
+inline StripData calculateStripData(const ConstSpacePointProxy2& sp) {
+  const auto& tsv = sp.topStripVector();
+  const auto& bsv = sp.bottomStripVector();
+  const auto& scd = sp.stripCenterDistance();
+
+  return StripData{
+      .bsvCrossTsv = {bsv[1] * tsv[2] - bsv[2] * tsv[1],
+                      bsv[2] * tsv[0] - bsv[0] * tsv[2],
+                      bsv[0] * tsv[1] - bsv[1] * tsv[0]},
+      .scdCrossTsv = {scd[1] * tsv[2] - scd[2] * tsv[1],
+                      scd[2] * tsv[0] - scd[0] * tsv[2],
+                      scd[0] * tsv[1] - scd[1] * tsv[0]},
+      .scdCrossBsv = {scd[1] * bsv[2] - scd[2] * bsv[1],
+                      scd[2] * bsv[0] - scd[0] * bsv[2],
+                      scd[0] * bsv[1] - scd[1] * bsv[0]},
+      .topStripVector = tsv,
+      .topStripCenter = sp.topStripCenter(),
+  };
+}
 
 /// Check strip coordinate compatibility using StripData struct
 /// Best for sps checked many times (middle, bottom).
@@ -319,10 +321,10 @@ class Impl final : public TripletSeedFinder {
                                                       sinPhiM * sinTheta};
 
     // Pre-cache strip data for the loop-invariant middle and bottom SPs
-    const StripData stripM(spM);
+    const StripData stripM = calculateStripData(spM);
     const ConstSpacePointProxy2 spB =
         spacePoints[bottomDoublet.spacePointIndex()];
-    const StripData stripB(spB);
+    const StripData stripB = calculateStripData(spB);
 
     for (auto topDoublet : topDoublets) {
       // protects against division by 0
