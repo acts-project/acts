@@ -6,28 +6,30 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <ostream>
 #include <stdexcept>
 
 namespace ActsFatras {
 
-std::ostream &operator<<(std::ostream &os, ParticleOutcome outcome) {
+std::ostream &operator<<(std::ostream &os, SimulationOutcome outcome) {
+  using enum SimulationOutcome;
+
   switch (outcome) {
-    case ActsFatras::ParticleOutcome::Alive:
+    case Alive:
       return (os << "Alive");
-    case ActsFatras::ParticleOutcome::KilledInteraction:
+    case KilledInteraction:
       return (os << "KilledInteraction");
-    case ActsFatras::ParticleOutcome::KilledVolumeExit:
+    case KilledVolumeExit:
       return (os << "KilledVolumeExit");
-    case ActsFatras::ParticleOutcome::KilledTime:
+    case KilledTime:
       return (os << "KilledTime");
-    case ActsFatras::ParticleOutcome::KilledSecondaryParticle:
+    case KilledSecondaryParticle:
       return (os << "KilledSecondaryParticle");
   }
 
-  throw std::runtime_error("Unknown ParticleOutcome");
+  throw std::runtime_error("Unknown SimulationOutcome");
 }
 
 }  // namespace ActsFatras
