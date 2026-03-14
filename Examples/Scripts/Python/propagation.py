@@ -31,7 +31,7 @@ def runPropagation(
     addParticleGun(
         s,
         ParticleConfig(num=1000, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
-        EtaConfig(-4.0, 4.0),
+        EtaConfig(-4, 4),
         MomentumConfig(1 * u.GeV, 100 * u.GeV, transverse=True),
         rnd=rnd,
     )
@@ -43,13 +43,15 @@ def runPropagation(
     )
     s.addAlgorithm(trkParamExtractor)
 
-    nav = acts.Navigator(trackingGeometry=trackingGeometry)
+    nav = acts.Navigator(trackingGeometry=trackingGeometry, level=acts.logging.INFO)
 
     stepper = acts.EigenStepper(field)
     # stepper = acts.AtlasStepper(field)
     # stepper = acts.StraightLineStepper()
 
-    propagator = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
+    propagator = acts.examples.ConcretePropagator(
+        acts.Propagator(stepper, nav, level=acts.logging.INFO)
+    )
 
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
@@ -87,15 +89,15 @@ if "__main__" == __name__:
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    detector = GenericDetector(materialDecorator=matDeco)
-    trackingGeometry = detector.trackingGeometry()
+    # detector = GenericDetector(materialDecorator=matDeco)
+    # trackingGeometry = detector.trackingGeometry()
 
     ## Alternative: Aligned Generic detector
     # detector = AlignedGenericDetector(materialDecorator=matDeco)
 
     ## Alternative: DD4hep detector
-    # detector = getOpenDataDetector()
-    # trackingGeometry = detector.trackingGeometry()
+    detector = getOpenDataDetector(gen3=True, logLevel=acts.logging.DEBUG)
+    trackingGeometry = detector.trackingGeometry()
 
     ## Alternative: Misaligned DD4hep detector
     # detector = getOpenDataDetector(misaligned=True)
@@ -153,5 +155,5 @@ if "__main__" == __name__:
         outputDir=os.getcwd() + "/propagation",
         s=None,
         decorators=contextDecorators,
-        sterileLogger=True,
+        sterileLogger=False,
     ).run()
