@@ -44,12 +44,14 @@ class IVolumeMaterial;
 template <typename extension_t = EigenStepperDefaultExtension>
 class EigenStepper final {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
   /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
   /// Bound state tuple containing parameters, Jacobian, and path length
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// Configuration for the Eigen stepper.
   struct Config {
@@ -167,7 +169,7 @@ class EigenStepper final {
   /// Initialize the stepper state from bound track parameters
   /// @param state Stepper state to initialize
   /// @param par Bound track parameters to initialize from
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  void initialize(State& state, const BoundParameters& par) const;
 
   /// Initialize the stepper state from bound parameters and surface
   /// @param state Stepper state to initialize
