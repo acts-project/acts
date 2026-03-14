@@ -114,8 +114,9 @@ void FpeMonitor::consumeRecorded() {
     return;
   }
 
-  for (auto [type, stackPtr, remaining, location] : m_recorded) {
-    m_result.add(type, stackPtr, remaining, location);
+  for (const auto &recorded : m_recorded) {
+    m_result.add(recorded.type, recorded.stackPtr, recorded.bufferSize,
+                 recorded.location);
   }
 
   m_buffer.reset();
@@ -163,7 +164,7 @@ void FpeMonitor::Result::deduplicate() {
   m_stackTraces.clear();
   m_stackTraces.reserve(copy.size());
 
-  for (auto &info : copy) {
+  for (const auto &info : copy) {
     const auto mergeTarget =
         std::ranges::find_if(m_stackTraces, [&](const FpeInfo &existing) {
           return canMergeFpeInfo(existing, info.type, info.location, *info.st);

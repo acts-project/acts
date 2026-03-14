@@ -241,9 +241,14 @@ class FpeMonitor {
 
   Buffer m_buffer{65536};
 
-  boost::container::static_vector<
-      std::tuple<FpeType, void *, std::size_t, std::uintptr_t>, 128>
-      m_recorded;
+  struct Recorded {
+    FpeType type;
+    void *stackPtr;
+    std::size_t bufferSize;
+    std::uintptr_t location;
+  };
+
+  boost::container::static_vector<Recorded, 128> m_recorded;
 };
 
 /// @}
