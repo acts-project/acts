@@ -12,12 +12,10 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <numbers>
-#include <utility>
 
 ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
     const Particle &particle, double gammaE, double rndPsi, double rndTheta1,
@@ -60,7 +58,7 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
 
   Particle photon(particle.particleId().makeDescendant(0),
                   Acts::PdgParticle::eGamma);
-  photon.setProcess(ActsFatras::ProcessType::eBremsstrahlung)
+  photon.setProcess(ActsFatras::GenerationProcess::eBremsstrahlung)
       .setPosition4(particle.fourPosition())
       .setDirection(photonDirection)
       .setAbsoluteMomentum(gammaE)
