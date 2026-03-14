@@ -1361,7 +1361,6 @@ def test_strip_space_points(detector_config, field, tmp_path, assert_root_hash):
 
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not geomodelEnabled, reason="Geomodel not set up")
-@pytest.mark.slow
 def test_geomodel_G4(tmp_path):
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1371,18 +1370,29 @@ def test_geomodel_G4(tmp_path):
         / "geomodel_G4.py"
     )
     assert script.exists()
-    # Prepare arguments for the script
+    # Keep the CI smoke test lightweight while still exercising the full chain.
     mockup_det = "Muon"
     out_dir = tmp_path / "geomodel_g4_out"
     out_dir.mkdir()
     args = [
-        "python3",
+        sys.executable,
         str(script),
         "--mockupDetector",
         str(mockup_det),
         "--outDir",
         str(out_dir),
+        "--nEvents",
+        "2",
+        "--nSectors",
+        "4",
+        "--nEtaStations",
+        "2",
+        "--disableEndcaps",
     ]
     subprocess.check_call(args)
 
     assert (out_dir / "obj").exists()
+    assert (out_dir / "particles_simulation.root").exists()
+    assert (out_dir / "hits.root").exists()
+    assert (out_dir / "PG").exists()
+    assert (out_dir / "MS_SpacePoints.root").exists()
