@@ -19,7 +19,7 @@ target_sources(
         MaterialMapUtils.cpp
         MaterialMapper.cpp
         MaterialSlab.cpp
-        MaterialValidater.cpp
+        MaterialValidator.cpp
         ProtoVolumeMaterial.cpp
         SurfaceMaterialMapper.cpp
         VolumeMaterialMapper.cpp

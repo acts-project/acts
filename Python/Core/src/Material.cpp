@@ -14,7 +14,7 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/IntersectionMaterialAssigner.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
-#include "Acts/Material/MaterialValidater.hpp"
+#include "Acts/Material/MaterialValidator.hpp"
 #include "Acts/Material/PropagatorMaterialAssigner.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
@@ -187,18 +187,18 @@ void addMaterial(py::module_& m) {
 
   {
     auto mvc =
-        py::class_<MaterialValidater, std::shared_ptr<MaterialValidater>>(
-            m, "MaterialValidater")
-            .def(py::init([](const MaterialValidater::Config& config,
+        py::class_<MaterialValidator, std::shared_ptr<MaterialValidator>>(
+            m, "MaterialValidator")
+            .def(py::init([](const MaterialValidator::Config& config,
                              Logging::Level level) {
-                   return std::make_shared<MaterialValidater>(
-                       config, getDefaultLogger("MaterialValidater", level));
+                   return std::make_shared<MaterialValidator>(
+                       config, getDefaultLogger("MaterialValidator", level));
                  }),
                  py::arg("config"), py::arg("level"))
-            .def("recordMaterial", &MaterialValidater::recordMaterial);
+            .def("recordMaterial", &MaterialValidator::recordMaterial);
 
     auto c =
-        py::class_<MaterialValidater::Config>(mvc, "Config").def(py::init<>());
+        py::class_<MaterialValidator::Config>(mvc, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, materialAssigner);
   }
 }
