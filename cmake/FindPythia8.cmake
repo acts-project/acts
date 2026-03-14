@@ -24,8 +24,7 @@ find_path(
 
 file(READ "${Pythia8_INCLUDE_DIR}/Pythia8/Pythia.h" Pythia8_VERSION_FILE)
 string(
-    REGEX MATCH
-    "#define PYTHIA_VERSION (8\.[0-9]+)"
+    REGEX MATCH "#define PYTHIA_VERSION (8\.[0-9]+)"
     _
     ${Pythia8_VERSION_FILE}
 )

@@ -54,8 +54,8 @@ namespace Acts {
 ACTS_PUSH_IGNORE_DEPRECATED()
 
 /// Charge and momentum interpretation for neutral particles.
-struct [[deprecated(
-    "Use AnyCharge with zero charge magnitude instead")]] Neutral {
+struct [[deprecated("Use AnyCharge with zero charge magnitude instead")]]
+Neutral {
   constexpr Neutral() = default;
 
   // TODO remove this method after grad refactor; currently track parameters
@@ -105,8 +105,8 @@ struct [[deprecated(
 };
 
 /// Charge and momentum interpretation for particles with +-e charge.
-struct [[deprecated(
-    "Use AnyCharge with one charge magnitude instead")]] SinglyCharged {
+struct [[deprecated("Use AnyCharge with one charge magnitude instead")]]
+SinglyCharged {
   constexpr SinglyCharged() = default;
 
   // TODO remove this method after grad refactor; currently track parameters
@@ -157,8 +157,8 @@ struct [[deprecated(
 
 /// Charge and momentum interpretation for arbitrarily charged but not neutral
 /// particles.
-class [[deprecated(
-    "Use AnyCharge with any charge magnitude instead")]] NonNeutralCharge {
+class [[deprecated("Use AnyCharge with any charge magnitude instead")]]
+NonNeutralCharge {
  public:
   /// Construct with the magnitude of the input charge.
   /// @param absQ Absolute charge magnitude (must be positive for non-neutral particles)

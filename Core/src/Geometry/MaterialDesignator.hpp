@@ -12,85 +12,67 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondPortalShell.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
+#include "Acts/Geometry/TrapezoidPortalShell.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+
+#include <format>
+#include <regex>
+#include <string>
+#include <variant>
 
 #include <boost/core/demangle.hpp>
 
 namespace Acts::Experimental::detail {
 
-class CylinderProtoDesignator;
-class CuboidProtoDesignator;
-class NullDesignator;
+const std::regex kPortalShellRegex{R"((\w+)PortalShell$)"};
+
+/// Extract the shape name from a portal shell type name, e.g.
+/// "Acts::CuboidPortalShell" -> "Cuboid". Falls back to full demangled name if
+/// the "PortalShell" suffix is not found.
+inline std::string portalShellShapeName(const std::type_info& type) {
+  std::string full = boost::core::demangle(type.name());
+
+  if (std::smatch match; std::regex_search(full, match, kPortalShellRegex)) {
+    return match[1].str();
+  }
+  return full;
+}
+
 template <typename face_enum_t, typename shell_type_t>
-class ISurfaceMaterialDesignator;
-
-using CylinderHomogeneousMaterialDesignator =
-    ISurfaceMaterialDesignator<CylinderVolumeBounds::Face, CylinderPortalShell>;
-
-using CuboidHomogeneousMaterialDesignator =
-    ISurfaceMaterialDesignator<CuboidVolumeBounds::Face, CuboidPortalShell>;
-
-class DesignatorBase {
+class ProtoDesignator {
  public:
-  virtual ~DesignatorBase() = default;
+  using Face = face_enum_t;
+  using ShellType = shell_type_t;
 
-  virtual void apply(PortalShellBase& shell, const Logger& logger,
-                     const std::string& prefix) = 0;
-
-  virtual std::string label() const = 0;
-
-  using FaceVariant =
-      std::variant<CylinderVolumeBounds::Face, CuboidVolumeBounds::Face>;
-
-  virtual std::unique_ptr<DesignatorBase> merged(
-      const DesignatorBase& other) const = 0;
-
-  virtual std::unique_ptr<DesignatorBase> merged(
-      const CylinderProtoDesignator& other) const;
-
-  virtual std::unique_ptr<DesignatorBase> merged(
-      const CuboidProtoDesignator& other) const;
-
-  virtual std::unique_ptr<DesignatorBase> merged(
-      const NullDesignator& other) const;
-
-  virtual std::unique_ptr<DesignatorBase> merged(
-      const CylinderHomogeneousMaterialDesignator& other) const;
-
-  virtual std::unique_ptr<DesignatorBase> merged(
-      const CuboidHomogeneousMaterialDesignator& other) const;
-
-  virtual void graphvizLabel(std::ostream& os) const = 0;
-};
-
-class CylinderProtoDesignator : public DesignatorBase {
- public:
-  using Face = CylinderVolumeBounds::Face;
-
-  CylinderProtoDesignator(Face face, const DirectedProtoAxis& loc0,
-                          const DirectedProtoAxis& loc1,
-                          const std::string& prefix) {
-    validate(face, loc0, loc1, prefix);
-
+  ProtoDesignator(Face face, const DirectedProtoAxis& loc0,
+                  const DirectedProtoAxis& loc1, const std::string& prefix) {
+    validateAxes(face, loc0, loc1, prefix);
+    validateDuplicate(face, prefix);
     m_binning.emplace_back(face, loc0, loc1);
   }
 
-  std::string label() const override { return "CylinderProtoDesignator"; }
+  std::string label() const {
+    return std::format("{}ProtoDesignator",
+                       portalShellShapeName(typeid(ShellType)));
+  }
 
   void apply(PortalShellBase& shell, const Logger& logger,
-             const std::string& prefix) override {
-    auto* cylShell = dynamic_cast<CylinderPortalShell*>(&shell);
-    if (cylShell == nullptr) {
+             const std::string& prefix) const {
+    auto* concreteShell = dynamic_cast<ShellType*>(&shell);
+    if (concreteShell == nullptr) {
       throw std::invalid_argument(prefix +
-                                  "Cylinder faces must use a valid face");
+                                  portalShellShapeName(typeid(ShellType)) +
+                                  " faces must use a valid face");
     }
 
     ACTS_DEBUG(prefix << "Binning is set to compatible type");
-    using enum CylinderVolumeBounds::Face;
 
     for (const auto& [face, loc0, loc1] : m_binning) {
-      auto* portal = cylShell->portal(face).get();
+      auto* portal = concreteShell->portal(face).get();
       if (portal == nullptr) {
         ACTS_ERROR(prefix << "Portal is nullptr");
         throw std::runtime_error("Portal is nullptr");
@@ -104,8 +86,9 @@ class CylinderProtoDesignator : public DesignatorBase {
     }
   }
 
-  void graphvizLabel(std::ostream& os) const override {
-    os << "<br/><i>Cylinder Binning</i>";
+  void graphvizLabel(std::ostream& os) const {
+    os << "<br/><i>" << portalShellShapeName(typeid(ShellType))
+       << " Binning</i>";
     for (const auto& [face, loc0, loc1] : m_binning) {
       os << "<br/> at: " << face;
       os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
@@ -113,158 +96,75 @@ class CylinderProtoDesignator : public DesignatorBase {
     }
   }
 
-  std::unique_ptr<DesignatorBase> merged(
-      const DesignatorBase& other) const override {
-    return other.merged(*this);
+  ProtoDesignator merged(const ProtoDesignator& other) const {
+    ProtoDesignator result = *this;
+    std::ranges::copy(other.m_binning, std::back_inserter(result.m_binning));
+    return result;
   }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const CylinderProtoDesignator& other) const override {
-    auto merged = std::make_unique<CylinderProtoDesignator>(*this);
-    std::ranges::copy(other.m_binning, std::back_inserter(merged->m_binning));
-    return merged;
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const NullDesignator& /*other*/) const override {
-    return std::make_unique<CylinderProtoDesignator>(*this);
-  }
-
-  using DesignatorBase::merged;
 
  private:
-  void validate(Face face, const DirectedProtoAxis& loc0,
-                const DirectedProtoAxis& loc1, const std::string& prefix) {
-    using enum CylinderVolumeBounds::Face;
+  void validateAxes(Face face, const DirectedProtoAxis& loc0,
+                    const DirectedProtoAxis& loc1,
+                    const std::string& prefix) const {
     using enum AxisDirection;
 
-    // Validate axis directions based on face type
-    switch (face) {
-      case NegativeDisc:
-      case PositiveDisc:
-        if (loc0.getAxisDirection() != AxisR ||
-            loc1.getAxisDirection() != AxisPhi) {
+    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
+      using enum CylinderVolumeBounds::Face;
+      switch (face) {
+        case NegativeDisc:
+        case PositiveDisc:
+          if (loc0.getAxisDirection() != AxisR ||
+              loc1.getAxisDirection() != AxisPhi) {
+            throw std::invalid_argument(prefix +
+                                        "Disc faces must use (r, phi) binning");
+          }
+          break;
+        case OuterCylinder:
+        case InnerCylinder:
+          if (loc0.getAxisDirection() != AxisRPhi ||
+              loc1.getAxisDirection() != AxisZ) {
+            throw std::invalid_argument(
+                prefix + "Cylinder faces must use (rphi, z) binning");
+          }
+          break;
+        case NegativePhiPlane:
+        case PositivePhiPlane:
           throw std::invalid_argument(prefix +
-                                      "Disc faces must use (r, phi) binning");
-        }
-        break;
-      case OuterCylinder:
-      case InnerCylinder:
-        if (loc0.getAxisDirection() != AxisRPhi ||
-            loc1.getAxisDirection() != AxisZ) {
-          throw std::invalid_argument(
-              prefix + "Cylinder faces must use (rphi, z) binning");
-        }
-        break;
-      case NegativePhiPlane:
-      case PositivePhiPlane:
-        throw std::invalid_argument(prefix +
-                                    "Phi plane faces are not supported");
-        break;
-    }
-
-    if (std::ranges::find_if(m_binning, [&](const auto& bin) {
-          return std::get<0>(bin) == face;
-        }) != m_binning.end()) {
-      throw std::invalid_argument(prefix + "Cylinder face already configured");
-    }
-  }
-
-  std::vector<std::tuple<Face, DirectedProtoAxis, DirectedProtoAxis>> m_binning;
-};
-
-class CuboidProtoDesignator : public DesignatorBase {
- public:
-  using Face = CuboidVolumeBounds::Face;
-
-  CuboidProtoDesignator(Face face, const DirectedProtoAxis& loc0,
-                        const DirectedProtoAxis& loc1,
-                        const std::string& prefix) {
-    validate(face, loc0, loc1, prefix);
-
-    m_binning.emplace_back(face, loc0, loc1);
-  }
-
-  std::string label() const override { return "CuboidProtoDesignator"; }
-
-  void apply(PortalShellBase& shell, const Logger& logger,
-             const std::string& prefix) override {
-    auto* cuboidShell = dynamic_cast<CuboidPortalShell*>(&shell);
-    if (cuboidShell == nullptr) {
-      throw std::invalid_argument(prefix +
-                                  "Cuboid faces must use a valid face");
-    }
-
-    ACTS_DEBUG(prefix << "Binning is set to compatible type");
-    using enum CuboidVolumeBounds::Face;
-
-    for (const auto& [face, loc0, loc1] : m_binning) {
-      auto* portal = cuboidShell->portal(face).get();
-      if (portal == nullptr) {
-        ACTS_ERROR(prefix << "Portal is nullptr");
-        throw std::runtime_error("Portal is nullptr");
+                                      "Phi plane faces are not supported");
+        default:
+          throw std::invalid_argument(prefix + "Unknown face type");
       }
-
-      ACTS_DEBUG(prefix << "Assigning material with binning: " << loc0 << ", "
-                        << loc1 << " to face " << face);
-
-      portal->surface().assignSurfaceMaterial(
-          std::make_shared<ProtoGridSurfaceMaterial>(std::vector{loc0, loc1}));
+    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
+      if (loc0.getAxisDirection() != AxisX ||
+          loc1.getAxisDirection() != AxisY) {
+        throw std::invalid_argument(prefix +
+                                    "Cuboid faces must use (x, y) binning");
+      }
+    } else {
+      static_assert(std::is_same_v<ShellType, void>, "Unknown shell type");
     }
   }
 
-  void graphvizLabel(std::ostream& os) const override {
-    os << "<br/><i>Cuboid Binning</i>";
-    for (const auto& [face, loc0, loc1] : m_binning) {
-      os << "<br/> at: " << face;
-      os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
-      os << ", " << loc1.getAxisDirection() << "=" << loc1.getAxis().getNBins();
-    }
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const DesignatorBase& other) const override {
-    return other.merged(*this);
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const CuboidProtoDesignator& other) const override {
-    auto merged = std::make_unique<CuboidProtoDesignator>(*this);
-    std::ranges::copy(other.m_binning, std::back_inserter(merged->m_binning));
-    return merged;
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const NullDesignator& /*other*/) const override {
-    return std::make_unique<CuboidProtoDesignator>(*this);
-  }
-
-  using DesignatorBase::merged;
-
- private:
-  void validate(Face face, const DirectedProtoAxis& loc0,
-                const DirectedProtoAxis& loc1, const std::string& prefix) {
-    using enum CuboidVolumeBounds::Face;
-    using enum AxisDirection;
-
-    // For cuboid faces, the valid axes are always X and Y
-    if (loc0.getAxisDirection() != AxisX || loc1.getAxisDirection() != AxisY) {
-      throw std::invalid_argument(prefix +
-                                  "Cuboid faces must use (x, y) binning");
-    }
-
+  void validateDuplicate(Face face, const std::string& prefix) {
     if (std::ranges::find_if(m_binning, [&](const auto& bin) {
           return std::get<0>(bin) == face;
         }) != m_binning.end()) {
-      throw std::invalid_argument(prefix + "Cuboid face already configured");
+      throw std::invalid_argument(prefix +
+                                  portalShellShapeName(typeid(ShellType)) +
+                                  " face already configured");
     }
   }
 
   std::vector<std::tuple<Face, DirectedProtoAxis, DirectedProtoAxis>> m_binning;
 };
+
+using CylinderProtoDesignator =
+    ProtoDesignator<CylinderVolumeBounds::Face, CylinderPortalShell>;
+using CuboidProtoDesignator =
+    ProtoDesignator<CuboidVolumeBounds::Face, CuboidPortalShell>;
 
 template <typename face_enum_t, typename shell_type_t>
-class ISurfaceMaterialDesignator : public DesignatorBase {
+class ISurfaceMaterialDesignator {
  public:
   using FaceType = face_enum_t;
   using ShellType = shell_type_t;
@@ -274,18 +174,19 @@ class ISurfaceMaterialDesignator : public DesignatorBase {
     m_materials.emplace_back(face, std::move(material));
   }
 
-  std::string label() const override {
-    return std::string{shellTypeName()} + " ISurfaceMaterialDesignator";
+  std::string label() const {
+    return std::format("{} ISurfaceMaterialDesignator",
+                       portalShellShapeName(typeid(ShellType)));
   }
 
   void apply(PortalShellBase& shell, const Logger& logger,
-             const std::string& prefix) override {
+             const std::string& prefix) const {
     auto* concreteShell = dynamic_cast<ShellType*>(&shell);
     if (concreteShell == nullptr) {
       ACTS_ERROR(prefix << "Concrete shell type mismatch: configured for "
-                        << boost::core::demangle(typeid(ShellType).name())
+                        << portalShellShapeName(typeid(ShellType))
                         << " but received "
-                        << boost::core::demangle(typeid(shell).name()));
+                        << portalShellShapeName(typeid(shell)));
 
       throw std::invalid_argument(prefix + "Concrete shell type mismatch");
     }
@@ -301,127 +202,100 @@ class ISurfaceMaterialDesignator : public DesignatorBase {
     }
   }
 
-  constexpr std::string_view shellTypeName() const {
-    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
-      return "Cylinder";
-    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
-      return "Cuboid";
-    } else {
-      throw std::runtime_error("Unknown shell type");
-    }
-  }
-
-  void graphvizLabel(std::ostream& os) const override {
-    os << "<br/><i>Homog. " << shellTypeName() << " material</i>";
+  void graphvizLabel(std::ostream& os) const {
+    os << "<br/><i>Homog. " << portalShellShapeName(typeid(ShellType))
+       << " material</i>";
     for (const auto& [face, material] : m_materials) {
       os << "<br/> at: " << face;
     }
   }
 
-  std::unique_ptr<DesignatorBase> merged(
-      const DesignatorBase& other) const override {
-    return other.merged(*this);
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const ISurfaceMaterialDesignator& other) const override {
-    auto merged = std::make_unique<ISurfaceMaterialDesignator>(*this);
+  ISurfaceMaterialDesignator merged(
+      const ISurfaceMaterialDesignator& other) const {
+    ISurfaceMaterialDesignator result = *this;
     std::ranges::copy(other.m_materials,
-                      std::back_inserter(merged->m_materials));
-    return merged;
+                      std::back_inserter(result.m_materials));
+    return result;
   }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const NullDesignator& /*other*/) const override {
-    return std::make_unique<ISurfaceMaterialDesignator>(*this);
-  }
-
-  using DesignatorBase::merged;
 
  private:
   std::vector<std::pair<FaceType, std::shared_ptr<const ISurfaceMaterial>>>
       m_materials;
 };
 
-class NullDesignator : public DesignatorBase {
- public:
-  void apply(PortalShellBase& /*shell*/, const Logger& logger,
-             const std::string& prefix) override {
-    ACTS_WARNING(prefix << "MaterialDesignator was not configured with any "
-                        << "material designation! Check your configuration.");
-  }
+using CylinderHomogeneousMaterialDesignator =
+    ISurfaceMaterialDesignator<CylinderVolumeBounds::Face, CylinderPortalShell>;
 
-  std::string label() const override { return "NullDesignator"; }
+using CuboidHomogeneousMaterialDesignator =
+    ISurfaceMaterialDesignator<CuboidVolumeBounds::Face, CuboidPortalShell>;
 
-  std::unique_ptr<DesignatorBase> merged(
-      const DesignatorBase& other) const override {
-    return other.merged(*this);
-  }
+using TrapezoidHomogeneousMaterialDesignator =
+    ISurfaceMaterialDesignator<TrapezoidVolumeBounds::Face,
+                               TrapezoidPortalShell>;
 
-  std::unique_ptr<DesignatorBase> merged(
-      const CylinderProtoDesignator& other) const override {
-    return std::make_unique<CylinderProtoDesignator>(other);
-  }
+using DiamondHomogeneousMaterialDesignator =
+    ISurfaceMaterialDesignator<DiamondVolumeBounds::Face, DiamondPortalShell>;
 
-  std::unique_ptr<DesignatorBase> merged(
-      const CuboidProtoDesignator& other) const override {
-    return std::make_unique<CuboidProtoDesignator>(other);
-  }
+/// Type-erased material designator. std::monostate represents the unconfigured
+/// (null) state.
+using Designator =
+    std::variant<std::monostate, CylinderProtoDesignator, CuboidProtoDesignator,
+                 CylinderHomogeneousMaterialDesignator,
+                 CuboidHomogeneousMaterialDesignator,
+                 TrapezoidHomogeneousMaterialDesignator,
+                 DiamondHomogeneousMaterialDesignator>;
 
-  std::unique_ptr<DesignatorBase> merged(
-      const NullDesignator& /*other*/) const override {
-    return std::make_unique<NullDesignator>();
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const CylinderHomogeneousMaterialDesignator& other) const override {
-    return other.merged(*this);
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const CuboidHomogeneousMaterialDesignator& other) const override {
-    return other.merged(*this);
-  }
-
-  using DesignatorBase::merged;
-
-  void graphvizLabel(std::ostream& os) const override {
-    os << "<br/><i>NullDesignator</i>";
-  }
-};
-
-inline std::string mergingError(const DesignatorBase& lhs,
-                                const DesignatorBase& rhs) {
-  return "MaterialDesignator: Merging of " + lhs.label() + " with " +
-         rhs.label() +
-         " is not supported. This means you are trying to "
-         "configure the same face with different binning or "
-         "materials. Please check your configuration.";
+/// Merge two designators. std::monostate acts as the identity element.
+/// Throws if the two active designator types are incompatible (e.g. cylinder
+/// proto vs cuboid proto, or proto vs homogeneous).
+inline Designator merge(const Designator& a, const Designator& b) {
+  return std::visit(
+      []<typename X, typename Y>(const X& x, const Y& y) -> Designator {
+        if constexpr (std::is_same_v<X, std::monostate>) {
+          return y;
+        } else if constexpr (std::is_same_v<Y, std::monostate>) {
+          return x;
+        } else if constexpr (std::is_same_v<X, Y>) {
+          return x.merged(y);
+        } else {
+          throw std::runtime_error(
+              std::format("MaterialDesignator: Merging of {} with {} is not "
+                          "supported. This means you are trying to configure "
+                          "the same face with different binning or materials. "
+                          "Please check your configuration.",
+                          x.label(), y.label()));
+        }
+      },
+      a, b);
 }
 
-inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
-    const CylinderProtoDesignator& other) const {
-  throw std::runtime_error(mergingError(*this, other));
+/// Apply a designator to a portal shell.
+inline void apply(const Designator& d, PortalShellBase& shell,
+                  const Logger& logger, const std::string& prefix) {
+  std::visit(
+      [&]<typename T>(const T& des) {
+        if constexpr (std::is_same_v<T, std::monostate>) {
+          ACTS_WARNING(prefix << "MaterialDesignator was not configured with "
+                              << "any material designation! Check your "
+                              << "configuration.");
+        } else {
+          des.apply(shell, logger, prefix);
+        }
+      },
+      d);
 }
 
-inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
-    const CuboidProtoDesignator& other) const {
-  throw std::runtime_error(mergingError(*this, other));
-}
-
-inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
-    const NullDesignator& other) const {
-  throw std::runtime_error(mergingError(*this, other));
-}
-
-inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
-    const CylinderHomogeneousMaterialDesignator& other) const {
-  throw std::runtime_error(mergingError(*this, other));
-}
-
-inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
-    const CuboidHomogeneousMaterialDesignator& other) const {
-  throw std::runtime_error(mergingError(*this, other));
+/// Write a Graphviz label for a designator to an output stream.
+inline void graphvizLabel(const Designator& d, std::ostream& os) {
+  std::visit(
+      [&]<typename T>(const T& des) {
+        if constexpr (std::is_same_v<T, std::monostate>) {
+          os << "<br/><i>NullDesignator</i>";
+        } else {
+          des.graphvizLabel(os);
+        }
+      },
+      d);
 }
 
 }  // namespace Acts::Experimental::detail

@@ -78,7 +78,7 @@ void addMaterialMapping(py::module& mex) {
     auto [mmca, c] = declareAlgorithm<CoreMaterialMapping, IAlgorithm>(
         mex, "CoreMaterialMapping");
     ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
-                       unmappedMaterialTracks, materialMapper,
+                       unmappedMaterialTracks, geoContext, materialMapper,
                        materiaMaplWriters);
   }
 
@@ -87,7 +87,7 @@ void addMaterialMapping(py::module& mex) {
         mex, "MaterialValidation");
     mv.def("execute", &MaterialValidation::execute);
     ACTS_PYTHON_STRUCT(c, ntracks, startPosition, phiRange, etaRange,
-                       randomNumberSvc, materialValidater,
+                       randomNumberSvc, materialValidator,
                        outputMaterialTracks);
   }
 }
