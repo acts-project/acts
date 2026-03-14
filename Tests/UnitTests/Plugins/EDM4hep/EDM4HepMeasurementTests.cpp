@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPodioEdm/detail/SubspaceIndexHelpers.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include <ActsPodioEdm/TrackerHitLocalCollection.h>
 
@@ -71,11 +72,12 @@ BOOST_AUTO_TEST_CASE(WriteMeasurement) {
   auto cov = to.getCovariance();
   BOOST_CHECK_EQUAL(cov.size(), 4);
   CHECK_CLOSE_REL(cov[0], measCov(0, 0), 1e-6);
-  CHECK_CLOSE_REL(cov[1], measCov(0, 1), 1e-6);
-  CHECK_CLOSE_REL(cov[2], measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(cov[1], measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(cov[2], measCov(0, 1), 1e-6);
   CHECK_CLOSE_REL(cov[3], measCov(1, 1), 1e-6);
 
-  auto unpackedIndices = EDM4hepUtil::detail::decodeIndices(to.getType());
+  auto unpackedIndices = ActsPodioEdm::detail::decodeIndices(
+      static_cast<std::uint32_t>(to.getType()));
   BOOST_CHECK_EQUAL(unpackedIndices.size(), 2);
   BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundLoc0);
   BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundLoc1);
@@ -131,11 +133,12 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementNoPosition) {
   auto cov = to.getCovariance();
   BOOST_CHECK_EQUAL(cov.size(), 4);
   CHECK_CLOSE_REL(cov[0], measCov(0, 0), 1e-6);
-  CHECK_CLOSE_REL(cov[1], measCov(0, 1), 1e-6);
-  CHECK_CLOSE_REL(cov[2], measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(cov[1], measCov(1, 0), 1e-6);
+  CHECK_CLOSE_REL(cov[2], measCov(0, 1), 1e-6);
   CHECK_CLOSE_REL(cov[3], measCov(1, 1), 1e-6);
 
-  auto unpackedIndices = EDM4hepUtil::detail::decodeIndices(to.getType());
+  auto unpackedIndices = ActsPodioEdm::detail::decodeIndices(
+      static_cast<std::uint32_t>(to.getType()));
   BOOST_CHECK_EQUAL(unpackedIndices.size(), 2);
   BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundPhi);
   BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundTheta);
@@ -184,11 +187,12 @@ BOOST_AUTO_TEST_CASE(WriteMeasurementWithTime) {
   BOOST_CHECK_EQUAL(cov.size(), 9);
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
-      CHECK_CLOSE_REL(cov[i * 3 + j], measCov(i, j), 1e-6);
+      CHECK_CLOSE_REL(cov[j * 3 + i], measCov(i, j), 1e-6);
     }
   }
 
-  auto unpackedIndices = EDM4hepUtil::detail::decodeIndices(to.getType());
+  auto unpackedIndices = ActsPodioEdm::detail::decodeIndices(
+      static_cast<std::uint32_t>(to.getType()));
   BOOST_CHECK_EQUAL(unpackedIndices.size(), 3);
   BOOST_CHECK_EQUAL(unpackedIndices[0], eBoundLoc0);
   BOOST_CHECK_EQUAL(unpackedIndices[1], eBoundLoc1);
@@ -199,16 +203,16 @@ BOOST_AUTO_TEST_CASE(EncodeDecodeIndices) {
   // Test empty span
   {
     std::vector<std::uint8_t> indices = {};
-    std::uint32_t encoded = EDM4hepUtil::detail::encodeIndices(indices);
-    auto decoded = EDM4hepUtil::detail::decodeIndices(encoded);
+    std::uint32_t encoded = ActsPodioEdm::detail::encodeIndices(indices);
+    auto decoded = ActsPodioEdm::detail::decodeIndices(encoded);
     BOOST_CHECK_EQUAL(decoded.size(), 0);
   }
 
   // Test single value
   {
     std::vector<std::uint8_t> indices = {3};
-    std::uint32_t encoded = EDM4hepUtil::detail::encodeIndices(indices);
-    auto decoded = EDM4hepUtil::detail::decodeIndices(encoded);
+    std::uint32_t encoded = ActsPodioEdm::detail::encodeIndices(indices);
+    auto decoded = ActsPodioEdm::detail::decodeIndices(encoded);
     BOOST_CHECK_EQUAL(decoded.size(), 1);
     BOOST_CHECK_EQUAL(decoded.at(0), 3);
   }
@@ -216,8 +220,8 @@ BOOST_AUTO_TEST_CASE(EncodeDecodeIndices) {
   // Test maximum length (6)
   {
     std::vector<std::uint8_t> indices = {0, 1, 2, 3, 4, 5};
-    auto encoded = EDM4hepUtil::detail::encodeIndices(indices);
-    auto decoded = EDM4hepUtil::detail::decodeIndices(encoded);
+    auto encoded = ActsPodioEdm::detail::encodeIndices(indices);
+    auto decoded = ActsPodioEdm::detail::decodeIndices(encoded);
     BOOST_CHECK_EQUAL(decoded.size(), 6);
     for (std::size_t i = 0; i < 6; ++i) {
       BOOST_CHECK_EQUAL(decoded.at(i), i);
@@ -227,8 +231,8 @@ BOOST_AUTO_TEST_CASE(EncodeDecodeIndices) {
   // Test maximum value (6)
   {
     std::vector<std::uint8_t> indices = {6, 6, 6};
-    auto encoded = EDM4hepUtil::detail::encodeIndices(indices);
-    auto decoded = EDM4hepUtil::detail::decodeIndices(encoded);
+    auto encoded = ActsPodioEdm::detail::encodeIndices(indices);
+    auto decoded = ActsPodioEdm::detail::decodeIndices(encoded);
     BOOST_CHECK_EQUAL(decoded.size(), 3);
     for (std::size_t i = 0; i < 3; ++i) {
       BOOST_CHECK_EQUAL(decoded.at(i), 6);
@@ -238,8 +242,8 @@ BOOST_AUTO_TEST_CASE(EncodeDecodeIndices) {
   // Test mixed values
   {
     std::vector<std::uint8_t> indices = {2, 5, 1, 4};
-    auto encoded = EDM4hepUtil::detail::encodeIndices(indices);
-    auto decoded = EDM4hepUtil::detail::decodeIndices(encoded);
+    auto encoded = ActsPodioEdm::detail::encodeIndices(indices);
+    auto decoded = ActsPodioEdm::detail::decodeIndices(encoded);
     BOOST_CHECK_EQUAL(decoded.size(), 4);
     BOOST_CHECK_EQUAL(decoded.at(0), 2);
     BOOST_CHECK_EQUAL(decoded.at(1), 5);
@@ -252,23 +256,56 @@ BOOST_AUTO_TEST_CASE(EncodeDecodeIndicesErrors) {
   // Test exceeding maximum length (7 values)
   {
     std::vector<std::uint8_t> indices = {0, 1, 2, 3, 4, 5, 6};
-    BOOST_CHECK_THROW(EDM4hepUtil::detail::encodeIndices(indices),
+    BOOST_CHECK_THROW(ActsPodioEdm::detail::encodeIndices(indices),
                       std::runtime_error);
   }
 
   // Test exceeding maximum value (7)
   {
     std::vector<std::uint8_t> indices = {7};
-    BOOST_CHECK_THROW(EDM4hepUtil::detail::encodeIndices(indices),
+    BOOST_CHECK_THROW(ActsPodioEdm::detail::encodeIndices(indices),
                       std::runtime_error);
   }
 
   // Test mixed valid/invalid values
   {
     std::vector<std::uint8_t> indices = {2, 7, 1};
-    BOOST_CHECK_THROW(EDM4hepUtil::detail::encodeIndices(indices),
+    BOOST_CHECK_THROW(ActsPodioEdm::detail::encodeIndices(indices),
                       std::runtime_error);
   }
+}
+
+BOOST_AUTO_TEST_CASE(TrackerHitLocalIndexApi) {
+  ActsPodioEdm::TrackerHitLocalCollection hits;
+  auto hit = hits.create();
+
+  // Initialize dimensionality via subspace indices (also sizes vectors)
+  const std::array<std::uint8_t, 2> subspace{eBoundLoc0, eBoundLoc1};
+  hit.setSubspaceIndices(subspace);
+  BOOST_CHECK_EQUAL(hit.getSubspaceIndices().size(), 2u);
+  BOOST_CHECK_EQUAL(hit.getSize(), 2u);
+  hit.setValue(1.5f, 0);
+  hit.setValue(-2.0f, 1);
+  hit.setCov(4.0f, 0, 0);
+  hit.setCov(0.25f, 0, 1);
+  hit.setCov(0.25f, 1, 0);
+  hit.setCov(9.0f, 1, 1);
+
+  CHECK_CLOSE_REL(hit.getValue(0), 1.5f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getValue(1), -2.0f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(0, 0), 4.0f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(0, 1), 0.25f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(1, 0), 0.25f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(1, 1), 9.0f, 1e-6f);
+  BOOST_CHECK_THROW(hit.getCov(2, 0), std::runtime_error);
+  BOOST_CHECK_THROW(hit.getCov(0, 2), std::runtime_error);
+  BOOST_CHECK_THROW(hit.setCov(1.0f, 2, 0), std::runtime_error);
+  BOOST_CHECK_THROW(hit.setCov(1.0f, 0, 2), std::runtime_error);
+
+  auto dims = hit.getSubspaceIndices();
+  BOOST_REQUIRE_EQUAL(dims.size(), 2);
+  BOOST_CHECK_EQUAL(dims[0], eBoundLoc0);
+  BOOST_CHECK_EQUAL(dims[1], eBoundLoc1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

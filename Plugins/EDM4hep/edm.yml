@@ -140,3 +140,106 @@ datatypes:
     VectorMembers:
       - float measurement // Entries in the measurement value vector
       - float covariance // Entries in the measurement covariance vector. Order is column major
+
+    ExtraCode:
+      includes: "#include <ActsPodioEdm/detail/SubspaceIndexHelpers.hpp>"
+      declaration: |
+        /// Number of active subspace dimensions
+        /// @return The number of active subspace dimensions
+        std::size_t getSize() const {
+          return getSubspaceIndices().size();
+        }
+
+
+        /// Get the value for the passed subspace index
+        /// @param valueIndex The index of the value
+        /// @return The value
+        float getValue(std::size_t valueIndex) const {
+          const auto dim = getSize();
+          auto values = getMeasurement();
+          if (values.size() != dim) {
+            throw std::runtime_error("Measurement vector size mismatch");
+          }
+
+          if (valueIndex >= dim) {
+            throw std::runtime_error("Measurement index out of range");
+          }
+          return values[valueIndex];
+        }
+
+        /// Get covariance value for the two passed matrix indices
+        /// @param indexI The first index
+        /// @param indexJ The second index
+        /// @return The covariance value
+        float getCov(std::size_t indexI, std::size_t indexJ) const {
+          auto cov = getCovariance();
+          const auto dim = getSize();
+          if (indexI >= dim || indexJ >= dim) {
+            throw std::runtime_error("Covariance index out of range");
+          }
+          if (cov.size() != dim * dim) {
+            throw std::runtime_error("Covariance matrix size mismatch");
+          }
+          const auto offset = indexJ * dim + indexI;
+          return cov[offset];
+        }
+
+        /// Decode and return the subspace indices stored in the type field
+        /// @return The subspace indices
+        std::vector<std::uint8_t> getSubspaceIndices() const {
+          return ActsPodioEdm::detail::decodeIndices(
+              static_cast<std::uint32_t>(getType()));
+        }
+
+    MutableExtraCode:
+      includes: "#include <ActsPodioEdm/detail/SubspaceIndexHelpers.hpp>"
+      declaration: |
+        /// Set the value for the passed measurement-vector index
+        /// @param val The value to set
+        /// @param valueIndex The index of the value
+        void setValue(float val, std::size_t valueIndex) {
+          const auto dim = getSize();
+          if (m_obj->m_measurement == nullptr || m_obj->m_measurement->size() != dim) {
+            throw std::runtime_error("Measurement vector not initialized - call setSubspaceIndices first");
+          }
+          if (valueIndex >= dim) {
+            throw std::runtime_error("Measurement index out of range");
+          }
+          (*m_obj->m_measurement)[valueIndex] = val;
+        }
+
+        /// Set the covariance value for the two passed matrix indices
+        /// @param val The value to set
+        /// @param indexI The first index
+        /// @param indexJ The second index
+        void setCov(float val, std::size_t indexI, std::size_t indexJ) {
+          const auto dim = getSize();
+          if (m_obj->m_covariance == nullptr || m_obj->m_covariance->size() != dim * dim) {
+            throw std::runtime_error("Covariance vector not initialized - call setSubspaceIndices first");
+          }
+          if (indexI >= dim || indexJ >= dim) {
+            throw std::runtime_error("Covariance index out of range");
+          }
+          const auto offset = indexJ * dim + indexI;
+          (*m_obj->m_covariance)[offset] = val;
+        }
+
+        /// Encode and store subspace indices into the type field
+        /// @param indices The subspace indices
+        /// @note This will initialize the measurement and covariance vectors if they are not already initialized
+        void setSubspaceIndices(std::span<const std::uint8_t> indices) {
+          setType(static_cast<std::int32_t>(
+              ActsPodioEdm::detail::encodeIndices(indices)));
+          if (m_obj->m_measurement == nullptr) {
+            m_obj->m_measurement = new std::vector<float>{};
+          }
+          if (m_obj->m_covariance == nullptr) {
+            m_obj->m_covariance = new std::vector<float>{};
+          }
+          m_obj->m_measurement->assign(indices.size(), 0.f);
+          m_obj->m_covariance->assign(indices.size() * indices.size(), 0.f);
+          m_obj->data.measurement_begin = 0u;
+          m_obj->data.measurement_end = indices.size();
+          m_obj->data.covariance_begin = 0u;
+          m_obj->data.covariance_end = indices.size() * indices.size();
+        }
