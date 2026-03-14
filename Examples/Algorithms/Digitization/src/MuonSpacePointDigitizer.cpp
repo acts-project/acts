@@ -81,6 +81,9 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(
     throw std::invalid_argument(
         "Missing particle-to-simulated-hits map output collection");
   }
+  if (m_cfg.outputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing output track parameters collection");
+  }
 
   ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
                        "Retrieve sim hits and particles from "
@@ -99,6 +102,7 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(
   m_outputParticleMeasurementsMap.initialize(
       m_cfg.outputParticleMeasurementsMap);
   m_outputSimHitMeasurementsMap.initialize(m_cfg.outputSimHitMeasurementsMap);
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
@@ -173,6 +177,14 @@ ProcessCode MuonSpacePointDigitizer::execute(
   std::unordered_map<GeometryIdentifier, double> strawTimes{};
   std::multimap<GeometryIdentifier, std::array<double, 3>> stripTimes{};
 
+  // vector of global positions of the simhit
+  std::vector<std::tuple<Acts::Vector3, double, double,
+                         std::shared_ptr<const Acts::Surface>>>
+      globalPositions;
+
+  int straw_count = 0;
+  int plane_count = 0;
+
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
     // Manual pair unpacking instead of using
@@ -197,6 +209,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
       const auto& simHit = *h;
       const auto simHitIdx = gotSimHits.index_of(h);
 
+      if (simHit.position()[0] < 6000 || simHit.position()[0] > 7000) {
+        continue;
+      }
+
       // Convert the hit trajectory into local coordinates
       const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
       const Vector3 locDir =
@@ -217,6 +233,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
         /// Strip measurements
         using enum Surface::SurfaceType;
         case Plane: {
+          // only keep 2 plane surfaces
+          if (plane_count >= 2) {
+            break;
+          }
+
           ACTS_VERBOSE("Hit is recorded in a strip detector ");
           auto planeCross =
               intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.);
@@ -254,6 +275,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   break;
                 }
               }
+
               /// Mark that a new hit has been recorded at this position & time
               /// Subsequent hits are rejected if they remain within the dead
               /// time
@@ -274,7 +296,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   calibCfg.rpcPhiStripPitch, calibCfg.rpcEtaStripPitch,
                   m_cfg.digitizeTime ? calibCfg.rpcTimeResolution : 0.);
 
-              // Set measurement
+              globalPositions.push_back(
+                  std::make_tuple(simHit.position(), smearedHit[ePos0],
+                                  smearedHit[ePos1], hitSurf->getSharedPtr()));
+
+              // Set measurement and maps
               DigitizedParameters dParameters;
 
               auto cov = newSp.covariance();
@@ -294,6 +320,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
                   gotSimHits.nth(simHitIdx)->particleId());
               measurementSimHitsMap.emplace_hint(
                   measurementSimHitsMap.end(), measurement.index(), simHitIdx);
+
+              std::cout << moduleGeoId << std::endl;
+              plane_count++;
 
               break;
             }
@@ -322,6 +351,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
           break;
         }
         case Straw: {
+          // only keep 8 straw surfaces
+          if (straw_count >= 8) {
+            break;
+          }
           auto closeApproach = lineIntersect<3>(
               Vector3::Zero(), Vector3::UnitZ(), locPos, locDir);
           const auto nominalPos = closeApproach.position();
@@ -359,11 +392,29 @@ ProcessCode MuonSpacePointDigitizer::execute(
             }
           }
 
-          const double sigmaZ = 0.5 * maxZ;
+          // scale to have it similar to the drift radius sigma
+          const double sigmaZ = 0.5 * maxZ / 20000.;
 
           const double smearedZ =
               (*Digitization::Gauss{sigmaZ}(nominalPos.z(), rndEngine)).first;
 
+          // dump hitpositon in vector
+          //          globalPositions.push_back(std::make_tuple(
+          //              simHit.position(), smearedZ, smearedDriftR,
+          //              hitSurf->getSharedPtr()));
+
+          //                    globalPositions.push_back(std::make_tuple(
+          //                        simHit.position(), smearedDriftR, smearedZ,
+          //                        hitSurf->getSharedPtr()));
+
+          std::cout << "positionSimhitGlobal " << simHit.position().transpose()
+                    << std::endl;
+          std::cout << "directionSimHitGlobal "
+                    << simHit.direction().transpose() << std::endl;
+          if (nominalPos.x() > 0) {
+            smearedDriftR *= -1;
+            std::cout << "switched sign" << std::endl;
+          }
           newSp.setRadius(smearedDriftR);
           newSp.setCovariance(square(uncert), square(sigmaZ), 0.);
 
@@ -400,8 +451,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
               gotSimHits.nth(simHitIdx)->particleId());
           measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                              measurement.index(), simHitIdx);
+
+          std::cout << moduleGeoId << std::endl;
+          straw_count++;
           break;
         }
+
         default:
           ACTS_DEBUG(
               "Unsupported detector case in muon space point digitizer.");
@@ -440,6 +495,64 @@ ProcessCode MuonSpacePointDigitizer::execute(
       }
       outSpacePoints.push_back(std::move(bucket));
     }
+  }
+
+  // estimated trackparameters
+  {
+    std::sort(globalPositions.begin(), globalPositions.end(),
+              [](const auto& a, const auto& b) {
+                const auto& va = std::get<0>(a);
+                const auto& vb = std::get<0>(b);
+                double ha = std::hypot(va[0], va[1]);
+                double hb = std::hypot(vb[0], vb[1]);
+                return ha < hb;
+              });
+
+    TrackParametersContainer trackParameters;
+    trackParameters.reserve(1);
+
+    //    Acts::Vector3 bField = Acts::Vector3::Zero();
+
+    //    for (const auto& gp : globalPositions) {
+    //        std::cout << std::get<0>(gp) << std::endl;
+    //        std::cout << std::get<1>(gp) << std::endl;
+    //        std::cout << std::get<2>(gp) << std::endl;
+    //        std::cout << std::get<3>(gp) << std::endl;std::cout << "\n" << std::endl;
+    //    }
+
+    //    Acts::FreeVector freeParams = Acts::estimateTrackParamsFromSeed(
+    //        std::get<0>(globalPositions[0]), std::get<0>(globalPositions[1]),
+    //        std::get<0>(globalPositions[3]), bField); // use 3 instead of 2
+    //        for debugging because 1 and 2 have same surface
+
+    //    freeParams[Acts::eFreeTime] = 0;
+
+    // Acts::Vector3 origin = std::get<0>(globalPositions[0]);
+    //    Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
+    int sp1 = 0;
+    int sp2 = 1;
+    Acts::Vector3 direction =
+        std::get<0>(globalPositions[sp2]) - std::get<0>(globalPositions[sp1]);
+
+    Acts::BoundVector params = Acts::BoundVector::Zero();
+    params[Acts::eBoundPhi] = Acts::VectorHelpers::phi(direction);
+    params[Acts::eBoundTheta] = Acts::VectorHelpers::theta(direction);
+    //    params[Acts::eBoundQOverP] = freeParams[Acts::eFreeQOverP];
+    params[Acts::eBoundQOverP] =
+        -1. / 63249.3;  // hardcoded from first particle instead of using 0
+
+    params[Acts::eBoundLoc0] = std::get<1>(globalPositions[sp1]);
+    params[Acts::eBoundLoc1] = std::get<2>(globalPositions[sp1]);
+    params[Acts::eBoundTime] = 0.;
+    Acts::BoundMatrix cov = Acts::BoundMatrix::Identity();
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::muon();
+    trackParameters.emplace_back(std::get<3>(globalPositions[sp1]), params, cov,
+                                 particleHypothesis);
+
+    std::cout << "starting at space point "
+              << std::get<0>(globalPositions[sp1]).transpose() << std::endl;
+    m_outputTrackParameters(ctx, std::move(trackParameters));
   }
 
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
