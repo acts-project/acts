@@ -7,7 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -139,34 +139,34 @@ void addMaterial(py::module_& m) {
   }
 
   {
-    py::class_<ISurfaceMaterialAccumulater,
-               std::shared_ptr<ISurfaceMaterialAccumulater>>(
-        m, "ISurfaceMaterialAccumulater");
+    py::class_<ISurfaceMaterialAccumulator,
+               std::shared_ptr<ISurfaceMaterialAccumulator>>(
+        m, "ISurfaceMaterialAccumulator");
   }
 
   {
     auto bsma =
-        py::class_<BinnedSurfaceMaterialAccumulater,
-                   ISurfaceMaterialAccumulater,
-                   std::shared_ptr<BinnedSurfaceMaterialAccumulater>>(
-            m, "BinnedSurfaceMaterialAccumulater")
+        py::class_<BinnedSurfaceMaterialAccumulator,
+                   ISurfaceMaterialAccumulator,
+                   std::shared_ptr<BinnedSurfaceMaterialAccumulator>>(
+            m, "BinnedSurfaceMaterialAccumulator")
             .def(
                 py::init(
-                    [](const BinnedSurfaceMaterialAccumulater::Config& config,
+                    [](const BinnedSurfaceMaterialAccumulator::Config& config,
                        Logging::Level level) {
-                      return std::make_shared<BinnedSurfaceMaterialAccumulater>(
+                      return std::make_shared<BinnedSurfaceMaterialAccumulator>(
                           config,
-                          getDefaultLogger("BinnedSurfaceMaterialAccumulater",
+                          getDefaultLogger("BinnedSurfaceMaterialAccumulator",
                                            level));
                     }),
                 py::arg("config"), py::arg("level"))
-            .def("createState", &BinnedSurfaceMaterialAccumulater::createState)
-            .def("accumulate", &BinnedSurfaceMaterialAccumulater::accumulate)
+            .def("createState", &BinnedSurfaceMaterialAccumulator::createState)
+            .def("accumulate", &BinnedSurfaceMaterialAccumulator::accumulate)
             .def("finalizeMaterial",
-                 &BinnedSurfaceMaterialAccumulater::finalizeMaterial);
+                 &BinnedSurfaceMaterialAccumulator::finalizeMaterial);
 
     auto c =
-        py::class_<BinnedSurfaceMaterialAccumulater::Config>(bsma, "Config")
+        py::class_<BinnedSurfaceMaterialAccumulator::Config>(bsma, "Config")
             .def(py::init<>());
     ACTS_PYTHON_STRUCT(c, emptyBinCorrection, materialSurfaces);
   }
@@ -182,7 +182,7 @@ void addMaterial(py::module_& m) {
                        py::arg("config"), py::arg("level"));
 
     auto c = py::class_<MaterialMapper::Config>(mm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulater);
+    ACTS_PYTHON_STRUCT(c, assignmentFinder, surfaceMaterialAccumulator);
   }
 
   {

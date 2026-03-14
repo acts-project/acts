@@ -78,7 +78,7 @@ void addMaterialMapping(py::module& mex) {
     auto [mmca, c] = declareAlgorithm<CoreMaterialMapping, IAlgorithm>(
         mex, "CoreMaterialMapping");
     ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
-                       unmappedMaterialTracks, materialMapper,
+                       unmappedMaterialTracks, geoContext, materialMapper,
                        materiaMaplWriters);
   }
 
