@@ -132,8 +132,9 @@ auto MultiStepperLoop<S, R>::multiBoundState(
 }
 
 template <Concepts::SingleStepper S, typename R>
-auto MultiStepperLoop<S, R>::curvilinearState(
-    State& state, bool transportCov) const -> BoundState {
+auto MultiStepperLoop<S, R>::curvilinearState(State& state,
+                                              bool transportCov) const
+    -> BoundState {
   MultiBoundState result = multiCurvilinearState(state, transportCov);
   const auto& [multiBoundParams, jacobian, pathLength] = result;
   return BoundState{multiBoundParams.merge(state.options.componentMergeMethod),
@@ -141,8 +142,9 @@ auto MultiStepperLoop<S, R>::curvilinearState(
 }
 
 template <Concepts::SingleStepper S, typename R>
-auto MultiStepperLoop<S, R>::multiCurvilinearState(
-    State& state, bool transportCov) const -> MultiBoundState {
+auto MultiStepperLoop<S, R>::multiCurvilinearState(State& state,
+                                                   bool transportCov) const
+    -> MultiBoundState {
   assert(!state.components.empty());
 
   std::vector<std::tuple<double, Vector4, Vector3, double, BoundMatrix>> cmps;

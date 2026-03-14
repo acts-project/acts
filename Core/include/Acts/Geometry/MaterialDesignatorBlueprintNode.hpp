@@ -10,6 +10,8 @@
 
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 namespace Acts {
@@ -119,6 +121,26 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(
       CuboidVolumeBounds::Face face,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material);
+
+  /// Configure the designator with a trapezoidal face and a homogeneous surface
+  /// material.
+  /// @param face The face of the trapezoid to configure
+  /// @param material The material to use
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume shape, this will throw an exception.
+  MaterialDesignatorBlueprintNode& configureFace(
+      TrapezoidVolumeBounds::Face face,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material);
+
+  /// Configure the designator with a diamond face and a homogeneous surface
+  /// material.
+  /// @param face The face of the diamond to configure
+  /// @param material The material to use
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume shape, this will throw an exception.
+  MaterialDesignatorBlueprintNode& configureFace(
+      DiamondVolumeBounds::Face face,
       std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
  private:

@@ -56,7 +56,7 @@ jobs:
 
       - name: Persist PR metadata
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: PR_metadata
           path: PR_metadata.json
@@ -87,15 +87,30 @@ jobs:
           && find build -name *.o -delete
           && du -sh build
       - name: Coverage
-        run: >
-          CI/dependencies/run.sh .env pip3 install gcovr==7.2
-          && cd build
-          && ../CI/dependencies/run.sh ../.env /usr/bin/python3 ../CI/test_coverage.py
+        run: |
+          uv run --no-project CI/test_coverage.py build --filter
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: coverage-build
-          path: build
+          path: |
+            build/compile_commands.json
+            build/coverage/cov.xml
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        id: artifact-upload-step
+        with:
+          name: coverage-html
+          path: build/coverage/html
+
+      - name: Coverage display
+        run: |
+          base_link='https://acts-herald.app.cern.ch/view/${{ github.repository }}/${{ steps.artifact-upload-step.outputs.artifact-id }}'
+          link="$base_link/index.html"
+          echo "🛡️ Code coverage available at: $link"
+          echo "**🛡️ Code coverage available [here]($link)**" >> $GITHUB_STEP_SUMMARY
 
   clang_tidy:
     runs-on: ubuntu-latest
@@ -153,7 +168,7 @@ jobs:
 
       - name: Upload fixes
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: clang-tidy-fixes
           path: fixes.yml

@@ -163,7 +163,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGnn, gnn) {
       outputGraph, graphConstructor, edgeClassifiers, trackBuilder,
       nodeFeatures, featureScales, minMeasurementsPerTrack, geometryIdMap);
 
-  { auto cls = py::class_<GnnHook, std::shared_ptr<GnnHook>>(gnn, "GnnHook"); }
+  {
+    auto cls = py::class_<GnnHook, std::shared_ptr<GnnHook>>(gnn, "GnnHook");
+  }
 
   {
     using Class = TruthGraphMetricsHook;
