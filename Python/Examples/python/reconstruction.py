@@ -1817,6 +1817,7 @@ def addTrackWriters(
     writeStates: bool = False,
     writeFitterPerformance: bool = False,
     writeFinderPerformance: bool = False,
+    writeFinderNTuple: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
 ):
@@ -1876,6 +1877,17 @@ def addTrackWriters(
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
             s.addWriter(trackFinderPerfWriter)
+
+        if writeFinderNTuple:
+            trackFinderNTupleWriter = acts.examples.root.RootTrackFinderNTupleWriter(
+                level=customLogLevel(),
+                inputTracks=tracks,
+                inputParticles="particles_selected",
+                inputParticleMeasurementsMap="particle_measurements_map",
+                inputTrackParticleMatching="track_particle_matching",
+                filePath=str(Path(outputDirRoot) / f"track_finding_ntuple_{name}.root"),
+            )
+            s.addWriter(trackFinderNTupleWriter)
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -2024,21 +2036,15 @@ def addGnn(
         "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
-    # Optional performance writer
-    if outputDirRoot is not None:
-        assert (
-            ACTS_EXAMPLES_ROOT_AVAILABLE
-        ), "ROOT output requested but ROOT is not available"
-        s.addWriter(
-            RootTrackFinderNTupleWriter(
-                level=customLogLevel(),
-                inputTracks="tracks",
-                inputParticles="particles",
-                inputParticleMeasurementsMap="particle_measurements_map",
-                inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
-                filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
-            )
-        )
+    addTrackWriters(
+        s,
+        name="gnn",
+        tracks="tracks",
+        outputDirRoot=outputDirRoot,
+        writeFinderPerformance=True,
+        writeFinderNTuple=True,
+        logLevel=logLevel,
+    )
 
     return s
 
