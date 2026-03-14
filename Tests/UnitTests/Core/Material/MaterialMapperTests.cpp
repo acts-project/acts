@@ -94,8 +94,8 @@ class MaterialBlender : public ISurfaceMaterialAccumulator {
   };
 
   /// Factory for creating the state
-  std::unique_ptr<ISurfaceMaterialAccumulator::State> createState()
-      const override {
+  std::unique_ptr<ISurfaceMaterialAccumulator::State> createState(
+      const GeometryContext& /*gctx*/) const override {
     auto state = std::make_unique<State>();
     for (auto& surface : m_surfaces) {
       state->accumulatedMaterial[surface.get()] = AccumulatedMaterialSlab();
@@ -111,6 +111,7 @@ class MaterialBlender : public ISurfaceMaterialAccumulator {
   ///
   /// @note this the track average over the binned material
   void accumulate(ISurfaceMaterialAccumulator::State& state,
+                  const GeometryContext& /*gctx*/,
                   const std::vector<MaterialInteraction>& interactions,
                   const std::vector<IAssignmentFinder::SurfaceAssignment>&
                   /*surfacesWithoutAssignment*/) const override {
@@ -139,7 +140,8 @@ class MaterialBlender : public ISurfaceMaterialAccumulator {
   ///
   /// @note this does the run average over the (binned) material
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-  finalizeMaterial(ISurfaceMaterialAccumulator::State& state) const override {
+  finalizeMaterial(ISurfaceMaterialAccumulator::State& state,
+                   const GeometryContext& /*gctx*/) const override {
     auto cState = static_cast<State*>(&state);
 
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
@@ -190,7 +192,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
 
   MaterialMapper mapper(mmConfig);
 
-  auto state = mapper.createState();
+  auto state = mapper.createState(tContext);
   BOOST_CHECK(state.get() != nullptr);
   BOOST_CHECK(state->surfaceMaterialAccumulatorState.get() != nullptr);
 
@@ -218,7 +220,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
   }
 
   // Get the maps
-  auto [surfaceMaps, volumeMaps] = mapper.finalizeMaps(*state);
+  auto [surfaceMaps, volumeMaps] = mapper.finalizeMaps(*state, tContext);
 
   BOOST_CHECK(surfaceMaps.size() == 3);
   BOOST_CHECK(volumeMaps.empty());
