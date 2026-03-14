@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
@@ -49,13 +49,13 @@ BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
 
   // Second is empty - invalid
 
-  BinnedSurfaceMaterialAccumulater::Config bsmaConfig;
+  BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
   bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get()};
   bsmaConfig.emptyBinCorrection = true;
 
-  BinnedSurfaceMaterialAccumulater bsma(
+  BinnedSurfaceMaterialAccumulator bsma(
       bsmaConfig,
-      getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::VERBOSE));
+      getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
 
   // Generate the state - this throws because the second surface has no
   // material assigned.
@@ -96,20 +96,20 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   surfaces[2u]->assignSurfaceMaterial(
       std::make_shared<BinnedSurfaceMaterial>(sb2, mps));
 
-  BinnedSurfaceMaterialAccumulater::Config bsmaConfig;
+  BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
   bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get(),
                                  surfaces[2].get()};
   bsmaConfig.emptyBinCorrection = true;
 
-  BinnedSurfaceMaterialAccumulater bsma(
+  BinnedSurfaceMaterialAccumulator bsma(
       bsmaConfig,
-      getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::VERBOSE));
+      getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
 
   // Generate the state
   auto state = bsma.createState(tContext);
 
   auto cState =
-      static_cast<const BinnedSurfaceMaterialAccumulater::State*>(state.get());
+      static_cast<const BinnedSurfaceMaterialAccumulator::State*>(state.get());
 
   BOOST_CHECK_EQUAL(cState->accumulatedMaterial.size(), 3u);
 
