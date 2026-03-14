@@ -63,7 +63,7 @@ void AlignablePortalVisitor::visitVolume(TrackingVolume& volume) {
     assert(alignable.back() != nullptr);
   }
   ACTS_DEBUG("AlignablePortalVisitor() - Associate "
-             << alignable.size() << " porttals with the volume.");
+             << alignable.size() << " portals with the volume.");
   std::vector<Transform3> portalTrfBefore{};
   // If the visitor is in inspection mode, cache the transforms of the
   // unaligned portals
@@ -94,6 +94,18 @@ void AlignablePortalVisitor::visitVolume(TrackingVolume& volume) {
   }
   // Ensure that the portal remain where they were supposed to be
   for (std::size_t p = 0; p < alignable.size(); ++p) {
+    if (!alignable[p]->isAlignable()) {
+      ACTS_ERROR("AlignablePortalVisitor() - the "
+                 << p << "-the portal remains not alignable");
+      throw std::runtime_error(
+          "AlignablePortalVisitor() - The portal alignment failed");
+    }
+    if (alignable[p]->isSensitive()) {
+      ACTS_ERROR("AlignablePortalVisitor() - the "
+                 << p << "-the portal became sensitive");
+      throw std::runtime_error(
+          "AlignablePortalVisitor() - The portal alignment failed");
+    }
     if (!isSame(alignable[p]->localToGlobalTransform(m_gctx),
                 portalTrfBefore[p])) {
       ACTS_ERROR("AlignablePortalVisitor() - the "

@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Material/MaterialValidater.hpp"
+#include "Acts/Material/MaterialValidator.hpp"
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-Acts::MaterialValidater::MaterialValidater(
-    const Acts::MaterialValidater::Config& cfg,
+Acts::MaterialValidator::MaterialValidator(
+    const Acts::MaterialValidator::Config& cfg,
     std::unique_ptr<const Acts::Logger> mlogger)
     : m_cfg(cfg), m_logger(std::move(mlogger)) {
   if (m_cfg.materialAssigner == nullptr) {
@@ -21,10 +21,10 @@ Acts::MaterialValidater::MaterialValidater(
   }
 }
 
-Acts::RecordedMaterialTrack Acts::MaterialValidater::recordMaterial(
+Acts::RecordedMaterialTrack Acts::MaterialValidator::recordMaterial(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const Vector3& position, const Vector3& direction) const {
-  ACTS_DEBUG("MaterialValidater::recordMaterial with position "
+  ACTS_DEBUG("MaterialValidator::recordMaterial with position "
              << toString(position) << " and direction " << toString(direction));
 
   // Prepare the material track
