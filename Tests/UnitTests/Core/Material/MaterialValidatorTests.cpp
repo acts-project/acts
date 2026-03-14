@@ -15,7 +15,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Material/MaterialValidater.hpp"
+#include "Acts/Material/MaterialValidator.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -82,7 +82,7 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
 
 BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
-BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
+BOOST_AUTO_TEST_CASE(MaterialValidatorFlowTest) {
   auto cylinder0 =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 20, 100);
   auto cylinder1 =
@@ -105,14 +105,14 @@ BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
   materialAssinger->surfaces = {cylinder0.get(), cylinder1.get(),
                                 cylinder2.get()};
 
-  MaterialValidater::Config mvConfig;
+  MaterialValidator::Config mvConfig;
   mvConfig.materialAssigner = materialAssinger;
 
-  auto materialValidater = MaterialValidater(
-      mvConfig, getDefaultLogger("MaterialValidater", Logging::VERBOSE));
+  auto materialValidator = MaterialValidator(
+      mvConfig, getDefaultLogger("MaterialValidator", Logging::VERBOSE));
 
   // Test one central ray
-  auto [posDir, rMaterial] = materialValidater.recordMaterial(
+  auto [posDir, rMaterial] = materialValidator.recordMaterial(
       tContext, MagneticFieldContext(), Vector3(0, 0, 0), Vector3(1, 0, 0));
 
   BOOST_CHECK(posDir.first == Vector3(0, 0, 0));
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(MaterialValidaterFlowTest) {
   BOOST_CHECK_EQUAL(rMaterial.materialInteractions.size(), 3u);
 
   // Test a ray at 45 degrees
-  auto [posDir2, rMaterial2] = materialValidater.recordMaterial(
+  auto [posDir2, rMaterial2] = materialValidator.recordMaterial(
       tContext, MagneticFieldContext(), Vector3(0, 0, 0),
       Vector3(1, 0, 1).normalized());
 
