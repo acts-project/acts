@@ -167,18 +167,12 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   using VolumeMap_t = ActsPlugins::GeoModelTree::VolumePublisher::VolumeMap_t;
   VolumeMap_t publishedVol{};
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
-    try {
-      const auto key = std::any_cast<std::string>(pubKey);
-      if (!publishedVol
-               .insert(std::make_pair(key, static_cast<GeoFullPhysVol*>(fpV)))
-               .second) {
-        throw std::invalid_argument("GeoMuonMockupExperiment() - Key " + key +
-                                    " is no longer unique");
-      }
-    } catch (const std::bad_any_cast& e) {
-      throw std::domain_error(
-          "GeoMuonMockupExperiment() - Failed to cast the key to string " +
-          std::string{e.what()});
+    const auto key = std::get<std::string>(pubKey);
+    if (!publishedVol
+             .insert(std::make_pair(key, static_cast<GeoFullPhysVol*>(fpV)))
+             .second) {
+      throw std::invalid_argument("GeoMuonMockupExperiment() - Key " + key +
+                                  " is no longer unique");
     }
   }
   outTree.publisher->publishVolumes(m_publisher->getName(),
