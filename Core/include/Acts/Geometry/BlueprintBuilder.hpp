@@ -34,6 +34,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -71,6 +72,8 @@ concept HasAxisDefinition =
     };
 
 using LayerNodePtr = std::shared_ptr<Acts::Experimental::LayerBlueprintNode>;
+using ContainerNodePtr =
+    std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>;
 using SurfacePtr = std::shared_ptr<Acts::Surface>;
 using SurfaceVector = std::vector<SurfacePtr>;
 
@@ -85,12 +88,6 @@ using LayerCustomizer =
         const std::optional<ElementT>&,
         std::shared_ptr<Acts::Experimental::LayerBlueprintNode>)>;
 
-/// @brief Simplified callback type that mutates a @ref LayerBlueprintNode
-/// in-place.
-template <typename ElementT>
-using ReplacingLayerCustomizer = std::function<void(
-    const std::optional<ElementT>&, Acts::Experimental::LayerBlueprintNode&)>;
-
 /// @brief Callback type that can replace or wrap a
 /// @ref CylinderContainerBlueprintNode.
 template <typename ElementT>
@@ -99,11 +96,37 @@ using ContainerCustomizer =
         const ElementT&,
         std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>)>;
 
-/// @brief Simplified callback type that mutates a
-/// @ref CylinderContainerBlueprintNode in-place.
-template <typename ElementT>
-using ReplacingContainerCustomizer = std::function<void(
-    const ElementT&, Acts::Experimental::ContainerBlueprintNode&)>;
+template <typename ElementT, typename CallableT>
+concept LayerNodeReturningCallable =
+    std::invocable<CallableT&, const std::optional<ElementT>&, LayerNodePtr> &&
+    std::same_as<std::invoke_result_t<CallableT&,
+                                      const std::optional<ElementT>&,
+                                      LayerNodePtr>,
+                 LayerNodePtr>;
+
+template <typename ElementT, typename CallableT>
+concept LayerNodeReplacingCallable =
+    std::invocable<CallableT&, const std::optional<ElementT>&,
+                   Acts::Experimental::LayerBlueprintNode&> &&
+    std::same_as<std::invoke_result_t<CallableT&,
+                                      const std::optional<ElementT>&,
+                                      Acts::Experimental::LayerBlueprintNode&>,
+                 void>;
+
+template <typename ElementT, typename CallableT>
+concept ContainerNodeReturningCallable =
+    std::invocable<CallableT&, const ElementT&, ContainerNodePtr> &&
+    std::same_as<std::invoke_result_t<CallableT&, const ElementT&,
+                                      ContainerNodePtr>,
+                 ContainerNodePtr>;
+
+template <typename ElementT, typename CallableT>
+concept ContainerNodeReplacingCallable =
+    std::invocable<CallableT&, const ElementT&,
+                   Acts::Experimental::ContainerBlueprintNode&> &&
+    std::same_as<std::invoke_result_t<CallableT&, const ElementT&,
+                                      Acts::Experimental::ContainerBlueprintNode&>,
+                 void>;
 
 /// @brief Concept requiring a backend to provide a surface-construction method.
 ///
@@ -158,7 +181,8 @@ concept HasLayerNameMember =
 ///   `children`, `parent`),
 /// - expose element-classification predicates (`isSensitive`, `isBarrel`,
 ///   `isEndcap`, `isTracker`), and
-/// - support equality comparison between `Element` instances.
+/// - support equality comparison between `Element` instances, and
+/// - define `static constexpr std::string_view kIdentifier`.
 template <typename BackendT>
 concept BlueprintBackend =
     HasSurfaceFactory<BackendT> && HasLayerNameMember<BackendT> &&
@@ -166,6 +190,7 @@ concept BlueprintBackend =
              const BackendT& backend,
              const typename BackendT::Element& element) {
       BackendT{cfg, logger};
+      { BackendT::kIdentifier } -> std::convertible_to<std::string_view>;
       { backend.world() } -> std::same_as<typename BackendT::Element>;
       { backend.nameOf(element) } -> std::same_as<std::string>;
       {
@@ -224,8 +249,6 @@ class ElementLayerAssembler {
   using LayerSpec = typename BackendT::LayerSpec;
   /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
   using LayerCustomizer = detail::LayerCustomizer<Element>;
-  /// Simplified callback type that mutates a @ref LayerBlueprintNode in-place.
-  using ReplacingLayerCustomizer = detail::ReplacingLayerCustomizer<Element>;
 
   /// @brief Set the layer geometry type explicitly.
   /// @param layerType `LayerType::Cylinder` for barrel, `LayerType::Disc` for
@@ -355,20 +378,34 @@ class ElementLayerAssembler {
   /// @return `*this` (rvalue).
   [[nodiscard]] ElementLayerAssembler&& setEmptyOk(bool emptyOk) &&;
 
-  /// @brief Register a customizer callback invoked for each created layer node.
+  /// @brief Register a callback invoked for each created layer node.
   ///
-  /// The callback receives the source layer element and the newly created
-  /// @ref LayerBlueprintNode. It may return a different (or wrapped) node.
-  /// @return `*this` (rvalue).
-  [[nodiscard]] ElementLayerAssembler&& onLayer(LayerCustomizer customizer) &&;
-
-  /// @brief Register an in-place mutating callback invoked for each layer node.
+  /// The callback may either:
+  /// - return a (possibly replaced/wrapped) @ref LayerBlueprintNode, or
+  /// - mutate a @ref LayerBlueprintNode in-place and return `void`.
   ///
-  /// The callback receives the source layer element and a mutable reference to
-  /// the @ref LayerBlueprintNode. The original node is kept.
+  /// In both cases, the first argument is the source layer element.
   /// @return `*this` (rvalue).
-  [[nodiscard]] ElementLayerAssembler&& onLayer(
-      ReplacingLayerCustomizer customizer) &&;
+  template <typename CustomizerT>
+  [[nodiscard]] ElementLayerAssembler&& onLayer(CustomizerT customizer) &&
+    requires(
+        detail::LayerNodeReturningCallable<Element, std::decay_t<CustomizerT>> ||
+        detail::LayerNodeReplacingCallable<Element, std::decay_t<CustomizerT>>)
+  {
+    if constexpr (detail::LayerNodeReturningCallable<Element,
+                                                     std::decay_t<CustomizerT>>) {
+      m_onLayer = std::move(customizer);
+    } else {
+      m_onLayer = [customizer = std::move(customizer)](
+                      const std::optional<Element>& layerElement,
+                      std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+                          layer) mutable {
+        customizer(layerElement, *layer);
+        return layer;
+      };
+    }
+    return std::move(*this);
+  }
 
   /// @brief Override the attachment strategy for the container node.
   ///
@@ -461,8 +498,6 @@ class SensorLayerAssembler {
   using LayerSpec = typename BackendT::LayerSpec;
   /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
   using LayerCustomizer = detail::LayerCustomizer<Element>;
-  /// Simplified in-place mutating callback.
-  using ReplacingLayerCustomizer = detail::ReplacingLayerCustomizer<Element>;
   /// Callable that maps a sensor element to a string group key.
   using LayerGrouper = std::function<std::string(const Element&)>;
 
@@ -527,14 +562,31 @@ class SensorLayerAssembler {
   [[nodiscard]] SensorLayerAssembler&& setAttachmentStrategy(
       std::optional<Acts::VolumeAttachmentStrategy> strategy) &&;
 
-  /// @brief Register a customizer callback invoked for each created layer node.
+  /// @brief Register a callback invoked for each created layer node.
+  ///
+  /// The callback may either return a (possibly replaced/wrapped) layer node,
+  /// or mutate a layer node in-place and return `void`.
   /// @return `*this` (rvalue).
-  [[nodiscard]] SensorLayerAssembler&& onLayer(LayerCustomizer customizer) &&;
-
-  /// @brief Register an in-place mutating callback invoked for each layer node.
-  /// @return `*this` (rvalue).
-  [[nodiscard]] SensorLayerAssembler&& onLayer(
-      ReplacingLayerCustomizer customizer) &&;
+  template <typename CustomizerT>
+  [[nodiscard]] SensorLayerAssembler&& onLayer(CustomizerT customizer) &&
+    requires(
+        detail::LayerNodeReturningCallable<Element, std::decay_t<CustomizerT>> ||
+        detail::LayerNodeReplacingCallable<Element, std::decay_t<CustomizerT>>)
+  {
+    if constexpr (detail::LayerNodeReturningCallable<Element,
+                                                     std::decay_t<CustomizerT>>) {
+      m_onLayer = std::move(customizer);
+    } else {
+      m_onLayer = [customizer = std::move(customizer)](
+                      const std::optional<Element>& elem,
+                      std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+                          layer) mutable {
+        customizer(elem, *layer);
+        return layer;
+      };
+    }
+    return std::move(*this);
+  }
 
   /// @brief Build and return the assembled container node.
   ///
@@ -599,8 +651,6 @@ class SensorLayer {
   using LayerSpec = typename BackendT::LayerSpec;
   /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
   using LayerCustomizer = detail::LayerCustomizer<Element>;
-  /// Simplified in-place mutating callback.
-  using ReplacingLayerCustomizer = detail::ReplacingLayerCustomizer<Element>;
 
   /// @brief Set the layer geometry type explicitly.
   /// @return `*this` (rvalue).
@@ -646,13 +696,31 @@ class SensorLayer {
   [[nodiscard]] SensorLayer&& setEnvelope(
       const Acts::ExtentEnvelope& envelope) &&;
 
-  /// @brief Register a customizer callback invoked for the created layer node.
+  /// @brief Register a callback invoked for the created layer node.
+  ///
+  /// The callback may either return a (possibly replaced/wrapped) layer node,
+  /// or mutate a layer node in-place and return `void`.
   /// @return `*this` (rvalue).
-  [[nodiscard]] SensorLayer&& onLayer(LayerCustomizer customizer) &&;
-
-  /// @brief Register an in-place mutating callback invoked for the layer node.
-  /// @return `*this` (rvalue).
-  [[nodiscard]] SensorLayer&& onLayer(ReplacingLayerCustomizer customizer) &&;
+  template <typename CustomizerT>
+  [[nodiscard]] SensorLayer&& onLayer(CustomizerT customizer) &&
+    requires(
+        detail::LayerNodeReturningCallable<Element, std::decay_t<CustomizerT>> ||
+        detail::LayerNodeReplacingCallable<Element, std::decay_t<CustomizerT>>)
+  {
+    if constexpr (detail::LayerNodeReturningCallable<Element,
+                                                     std::decay_t<CustomizerT>>) {
+      m_onLayer = std::move(customizer);
+    } else {
+      m_onLayer = [customizer = std::move(customizer)](
+                      const std::optional<Element>& elem,
+                      std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+                          layer) mutable {
+        customizer(elem, *layer);
+        return layer;
+      };
+    }
+    return std::move(*this);
+  }
 
   /// @brief Build and return the assembled layer node.
   ///
@@ -719,10 +787,6 @@ class BarrelEndcapAssembler {
   /// Callback type that can replace or wrap a
   /// @ref CylinderContainerBlueprintNode.
   using ContainerCustomizer = detail::ContainerCustomizer<Element>;
-  /// Simplified callback type that mutates a
-  /// @ref CylinderContainerBlueprintNode in-place.
-  using ReplacingContainerCustomizer =
-      detail::ReplacingContainerCustomizer<Element>;
 
   /// @brief Construct a @ref BarrelEndcapAssembler bound to @p builder.
   /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
@@ -751,39 +815,61 @@ class BarrelEndcapAssembler {
   ///             child.
   void addTo(Acts::Experimental::BlueprintNode& node) const&&;
 
-  /// @brief Register a customizer callback forwarded to each inner
+  /// @brief Register a layer callback forwarded to each inner
   /// @ref ElementLayerAssembler.
   ///
-  /// The callback may return a different or wrapped @ref LayerBlueprintNode.
-  /// @param customizer See @ref ElementLayerAssembler::onLayer(LayerCustomizer).
+  /// The callback may either return a (possibly replaced/wrapped) layer node,
+  /// or mutate a layer node in-place and return `void`.
   /// @return `*this` (rvalue).
-  [[nodiscard]] BarrelEndcapAssembler&& onLayer(
-      typename ElementLayerAssembler::LayerCustomizer customizer) &&;
+  template <typename CustomizerT>
+  [[nodiscard]] BarrelEndcapAssembler&& onLayer(CustomizerT customizer) &&
+    requires(
+        detail::LayerNodeReturningCallable<Element, std::decay_t<CustomizerT>> ||
+        detail::LayerNodeReplacingCallable<Element, std::decay_t<CustomizerT>>)
+  {
+    if constexpr (detail::LayerNodeReturningCallable<Element,
+                                                     std::decay_t<CustomizerT>>) {
+      m_onLayer = std::move(customizer);
+    } else {
+      m_onLayer = [customizer = std::move(customizer)](
+                      const std::optional<Element>& elem,
+                      std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
+                          layer) mutable {
+        customizer(elem, *layer);
+        return layer;
+      };
+    }
+    return std::move(*this);
+  }
 
-  /// @brief Register an in-place mutating layer callback forwarded to each
-  /// inner @ref ElementLayerAssembler.
-  /// @param customizer See
-  ///        @ref ElementLayerAssembler::onLayer(ReplacingLayerCustomizer).
-  /// @return `*this` (rvalue).
-  BarrelEndcapAssembler&& onLayer(
-      typename ElementLayerAssembler::ReplacingLayerCustomizer customizer) &&;
-
-  /// @brief Register a customizer callback invoked for each barrel or endcap
-  /// container node.
+  /// @brief Register a callback invoked for each barrel or endcap container
+  /// node.
   ///
-  /// The callback may return a different or wrapped
-  /// @ref CylinderContainerBlueprintNode.
-  /// @param customizer Customizer function for the container
+  /// The callback may either return a (possibly replaced/wrapped) container
+  /// node, or mutate a container node in-place and return `void`.
   /// @return `*this` (rvalue).
-  [[nodiscard]] BarrelEndcapAssembler&& onContainer(
-      ContainerCustomizer customizer) &&;
-
-  /// @brief Register an in-place mutating callback invoked for each barrel or
-  /// endcap container node.
-  /// @param customizer Customizer function for the container
-  /// @return `*this` (rvalue).
-  [[nodiscard]] BarrelEndcapAssembler&& onContainer(
-      ReplacingContainerCustomizer customizer) &&;
+  template <typename CustomizerT>
+  [[nodiscard]] BarrelEndcapAssembler&& onContainer(CustomizerT customizer) &&
+    requires(detail::ContainerNodeReturningCallable<Element,
+                                                    std::decay_t<CustomizerT>> ||
+             detail::ContainerNodeReplacingCallable<Element,
+                                                    std::decay_t<CustomizerT>>)
+  {
+    if constexpr (detail::ContainerNodeReturningCallable<
+                      Element, std::decay_t<CustomizerT>>) {
+      m_onContainer = std::move(customizer);
+    } else {
+      m_onContainer = [customizer = std::move(customizer)](
+                          const Element& elem,
+                          std::shared_ptr<
+                              Acts::Experimental::ContainerBlueprintNode>
+                              node) mutable {
+        customizer(elem, *node);
+        return node;
+      };
+    }
+    return std::move(*this);
+  }
 
   /// @brief Set the top-level detector element whose subtree is searched for
   /// barrel and endcap elements.
