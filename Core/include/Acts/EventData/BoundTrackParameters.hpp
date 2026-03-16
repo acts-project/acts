@@ -344,11 +344,7 @@ class BoundTrackParameters {
   ///   this operator. Users should think really hard if this is what they
   ///   want and we might decided that we will remove this in the future.
   friend bool operator==(const BoundTrackParameters& lhs,
-                         const BoundTrackParameters& rhs) {
-    return (lhs.m_params == rhs.m_params) && (lhs.m_cov == rhs.m_cov) &&
-           (lhs.m_surface == rhs.m_surface) &&
-           (lhs.m_particleHypothesis == rhs.m_particleHypothesis);
-  }
+                         const BoundTrackParameters& rhs) = default;
 
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,

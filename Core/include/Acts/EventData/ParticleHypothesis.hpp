@@ -155,8 +155,7 @@ class ParticleHypothesis final {
   ///
   /// @param qOverP the `q over p` track parameter.
   /// @return The extracted signed charge
-  template <typename T>
-  constexpr auto extractCharge(T qOverP) const noexcept {
+  constexpr float extractCharge(double qOverP) const noexcept {
     return m_charge.extractCharge(qOverP);
   }
 
@@ -165,8 +164,7 @@ class ParticleHypothesis final {
   ///
   /// @param qOverP the `q over p` track parameter.
   /// @return The extracted absolute momentum
-  template <typename T>
-  constexpr auto extractMomentum(T qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     return m_charge.extractMomentum(qOverP);
   }
 
@@ -176,8 +174,7 @@ class ParticleHypothesis final {
   /// @param momentum the absolute momentum.
   /// @param signedQ the signed charge.
   /// @return The calculated charge over momentum ratio
-  template <typename P, typename Q>
-  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
+  constexpr double qOverP(double momentum, float signedQ) const noexcept {
     return m_charge.qOverP(momentum, signedQ);
   }
 
@@ -214,10 +211,7 @@ class ParticleHypothesis final {
   ChargeHypothesis m_charge;
 
   friend bool operator==(const ParticleHypothesis& lhs,
-                         const ParticleHypothesis& rhs) {
-    return (lhs.m_absPdg == rhs.m_absPdg) && (lhs.m_mass == rhs.m_mass) &&
-           (lhs.m_charge == rhs.m_charge);
-  }
+                         const ParticleHypothesis& rhs) = default;
 };
 
 /// @}
