@@ -16,6 +16,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <memory>
+#include <ranges>
 #include <utility>
 
 namespace Acts {
@@ -145,7 +146,7 @@ class MultiComponentBoundTrackParameters {
   /// @param cmps Vector of weight, parameters vector, and covariance components
   /// @param proj Projector to use for the parameters
   /// @param particleHypothesis Particle hypothesis for the parameters
-  template <typename component_range_t, typename projector_t>
+  template <std::ranges::range component_range_t, typename projector_t>
   MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
                                      const component_range_t& cmps,
                                      const projector_t& proj,
@@ -172,7 +173,7 @@ class MultiComponentBoundTrackParameters {
   /// @param cmps Vector of weight, parameters vector, and covariance components
   /// @param proj Projector to use for the parameters
   /// @param particleHypothesis Particle hypothesis for the parameters
-  template <typename component_range_t, typename projector_t>
+  template <std::ranges::range component_range_t, typename projector_t>
   MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
                                      const component_range_t& cmps,
                                      const projector_t& proj,
