@@ -26,8 +26,8 @@ namespace {
 /// are accessed repeatedly (i.e. middle and bottom SPs).
 ///
 /// The scalar triple product identity a dot (b cross c) = c dot (a cross b)
-/// allows the cross products of the strip vectors to be precomputed once and reused
-/// saves a lot of cpu time for free in strip seeding
+/// allows the cross products of the strip vectors to be precomputed once and
+/// reused saves a lot of cpu time for free in strip seeding
 struct StripData {
   std::array<float, 3> bsvCrossTsv{};
   std::array<float, 3> scdCrossTsv{};
@@ -58,19 +58,16 @@ inline StripData calculateStripData(const ConstSpacePointProxy2& sp) {
 
 /// Check strip coordinate compatibility using StripData struct
 /// Best for sps checked many times (middle, bottom).
-inline bool stripCoordinateCheck(
-    float tolerance, const StripData& strip,
-    const std::array<float, 3>& pm,
-    std::array<float, 3>& outputCoordinates) {
+inline bool stripCoordinateCheck(float tolerance, const StripData& strip,
+                                 const std::array<float, 3>& pm,
+                                 std::array<float, 3>& outputCoordinates) {
   // bd1 = bottomStripVector dot (topStripVector cross pm)
   const float bd1 = pm[0] * strip.bsvCrossTsv[0] +
-                    pm[1] * strip.bsvCrossTsv[1] +
-                    pm[2] * strip.bsvCrossTsv[2];
+                    pm[1] * strip.bsvCrossTsv[1] + pm[2] * strip.bsvCrossTsv[2];
 
   // s1 = stripCenterDistance dot (topStripVector cross pm)
   // Check if pm is inside the bottom detector element
-  const float s1 = pm[0] * strip.scdCrossTsv[0] +
-                   pm[1] * strip.scdCrossTsv[1] +
+  const float s1 = pm[0] * strip.scdCrossTsv[0] + pm[1] * strip.scdCrossTsv[1] +
                    pm[2] * strip.scdCrossTsv[2];
   if (std::abs(s1) > std::abs(bd1) * tolerance) {
     return false;
@@ -95,19 +92,20 @@ inline bool stripCoordinateCheck(
 /// Check strip coordinate compatibility directly from a space point proxy.
 /// Best for space points checked only once (top SP), because the intermediate
 /// cross product d1 = tsv cross pm is reused for both bd1 and s1, and the
-/// second cross product d0 = bsv cross pm is skipped entirely when we exit early
-inline bool stripCoordinateCheck(
-    float tolerance, const ConstSpacePointProxy2& sp,
-    const std::array<float, 3>& pm,
-    std::array<float, 3>& outputCoordinates) {
+/// second cross product d0 = bsv cross pm is skipped entirely when we exit
+/// early
+inline bool stripCoordinateCheck(float tolerance,
+                                 const ConstSpacePointProxy2& sp,
+                                 const std::array<float, 3>& pm,
+                                 std::array<float, 3>& outputCoordinates) {
   const auto& tsv = sp.topStripVector();
   const auto& bsv = sp.bottomStripVector();
   const auto& scd = sp.stripCenterDistance();
 
   // d1 = topStripVector cross pm (reused for both bd1 and s1)
-  const std::array<float, 3> d1 = {
-      tsv[1] * pm[2] - tsv[2] * pm[1], tsv[2] * pm[0] - tsv[0] * pm[2],
-      tsv[0] * pm[1] - tsv[1] * pm[0]};
+  const std::array<float, 3> d1 = {tsv[1] * pm[2] - tsv[2] * pm[1],
+                                   tsv[2] * pm[0] - tsv[0] * pm[2],
+                                   tsv[0] * pm[1] - tsv[1] * pm[0]};
 
   // bd1 = bottomStripVector dot d1
   const float bd1 = bsv[0] * d1[0] + bsv[1] * d1[1] + bsv[2] * d1[2];
@@ -119,9 +117,9 @@ inline bool stripCoordinateCheck(
   }
 
   // d0 = bottomStripVector cross pm (only computed if check 1 passed)
-  const std::array<float, 3> d0 = {
-      bsv[1] * pm[2] - bsv[2] * pm[1], bsv[2] * pm[0] - bsv[0] * pm[2],
-      bsv[0] * pm[1] - bsv[1] * pm[0]};
+  const std::array<float, 3> d0 = {bsv[1] * pm[2] - bsv[2] * pm[1],
+                                   bsv[2] * pm[0] - bsv[0] * pm[2],
+                                   bsv[0] * pm[1] - bsv[1] * pm[0]};
 
   // s0 = stripCenterDistance dot d0
   // Check if pm is inside the top detector element
@@ -341,8 +339,7 @@ class Impl final : public TripletSeedFinder {
       // z-component instead of cosTheta * sqrt(1 + A0^2), deferring the sqrt.
       const std::array<float, 3> positionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
-          rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
-          cosTheta};
+          rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
       std::array<float, 3> rMTransf{};
       if (!stripCoordinateCheck(m_cfg.toleranceParam, stripM, positionMiddle,
