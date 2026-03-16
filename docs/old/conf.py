@@ -9,6 +9,7 @@ import datetime
 import urllib.request
 import urllib.error
 import json
+import html
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -183,4 +184,39 @@ if on_readthedocs or tags.has("white_papers"):
 
 
 def setup(app):
-    pass
+    legacy_redirects = {
+        "index": "https://acts-project.github.io/",
+        "getting_started": "https://acts-project.github.io/building_acts.html",
+        "tracking": "https://acts-project.github.io/tracking.html",
+        "versioning": "https://acts-project.github.io/versioning.html",
+        "examples/python_bindings": "https://acts-project.github.io/python_bindings.html",
+        "contribution/clang_tidy": "https://acts-project.github.io/contribution_clang_tidy.html",
+        "contribution/profiling": "https://acts-project.github.io/howto_profiling.html",
+        "contribution/release": "https://acts-project.github.io/howto_release.html",
+        "contribution/run_formatting": "https://acts-project.github.io/formatting.html",
+        "contribution/physmon": "https://acts-project.github.io/physmon.html",
+        "contribution/root_hash_checks": "https://acts-project.github.io/python_bindings.html#root_file_hashes",
+        "contribution/documentation_build": "https://acts-project.github.io/building_acts.html",
+        "misc/spack": "https://acts-project.github.io/howto_spack.html",
+    }
+
+    def add_legacy_redirect(app, pagename, templatename, context, doctree):
+        target = legacy_redirects.get(pagename)
+        if target is None:
+            return
+
+        escaped_target = html.escape(target, quote=True)
+        redirect_snippet = f"""
+<meta http-equiv="refresh" content="0; url={escaped_target}" />
+<link rel="canonical" href="{escaped_target}" />
+<script>
+(function() {{
+  var target = "{escaped_target}";
+  var destination = target.indexOf("#") === -1 ? target + window.location.hash : target;
+  window.location.replace(destination);
+}})();
+</script>
+"""
+        context["metatags"] = context.get("metatags", "") + redirect_snippet
+
+    app.connect("html-page-context", add_legacy_redirect)

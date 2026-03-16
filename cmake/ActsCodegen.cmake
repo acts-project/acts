@@ -5,6 +5,25 @@ if(NOT ACTS_USE_SYSTEM_LIBS)
 
     find_program(uv_exe uv)
 
+    if(NOT DEFINED ACTS_CODEGEN_TMPDIR OR ACTS_CODEGEN_TMPDIR STREQUAL "")
+        find_program(MKTEMP_EXE NAMES mktemp REQUIRED)
+        execute_process(
+            COMMAND ${MKTEMP_EXE} -d
+            OUTPUT_VARIABLE _acts_codegen_tmpdir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        set(ACTS_CODEGEN_TMPDIR
+            "${_acts_codegen_tmpdir}"
+            CACHE PATH
+            "Codegen temporary directory for ACTS code generation"
+        )
+    endif()
+
+    set(_acts_codegen_tmpdir "${ACTS_CODEGEN_TMPDIR}")
+    file(MAKE_DIRECTORY "${_acts_codegen_tmpdir}")
+    message(STATUS "Codegen temporary directory: ${_acts_codegen_tmpdir}")
+
     set(_uv_version "0.7.19")
     set(_base_url
         "https://github.com/astral-sh/uv/releases/download/${_uv_version}"
@@ -202,7 +221,7 @@ function(acts_code_generation)
             OUTPUT ${_output_file}
             COMMAND
                 env -i UV_NO_CACHE=1
-                UV_PYTHON_INSTALL_DIR=${CMAKE_BINARY_DIR}/uv/python_install_dir
+                UV_PYTHON_INSTALL_DIR=${ACTS_CODEGEN_TMPDIR}/python_install_dir
                 ${uv_exe} run --quiet --python ${ARGS_PYTHON_VERSION}
                 --no-project ${_arg_isolated} ${_with_args} ${ARGS_PYTHON}
                 ${_output_file}
