@@ -25,8 +25,6 @@ namespace Acts {
 
 /// Track parameters not bound to a surface for a single track.
 ///
-/// @tparam particle_hypothesis_t Helper type to interpret the particle charge/momentum
-///
 /// Parameters and covariance matrix are stored using the free parametrization
 /// defined in `enum FreeIndices`.
 class FreeTrackParameters {

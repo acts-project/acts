@@ -26,8 +26,6 @@ namespace Acts {
 
 /// Track parameters bound to a reference surface for a single track.
 ///
-/// @tparam particle_hypothesis_t Helper type to interpret the particle charge/momentum
-///
 /// This is intended as a user-facing data class that adds additional accessors
 /// and charge/momentum interpretation on top of the pure parameters vector. All
 /// parameters and their corresponding covariance matrix are stored in bound
@@ -140,7 +138,9 @@ class BoundTrackParameters {
 
   /// Convert this track parameter object to the general type-erased one
   /// @return Type-erased bound track parameters
-  [[deprecated("You already have a bound track parameter at hand")]]
+  [[deprecated(
+      "You already have a universal bound track parameter at hand. You can "
+      "drop `toBound()`.")]]
   BoundTrackParameters toBound() const {
     return BoundTrackParameters{*this};
   }
