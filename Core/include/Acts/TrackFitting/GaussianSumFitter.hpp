@@ -305,7 +305,7 @@ struct GaussianSumFitter {
       if constexpr (!IsMultiParameters::value) {
         params = MultiComponentBoundTrackParameters(
             sParameters.referenceSurface().getSharedPtr(),
-            sParameters.parameters(), *sParameters.covariance(),
+            sParameters.parameters(), sParameters.covariance(),
             sParameters.particleHypothesis());
       } else {
         params = sParameters;
@@ -377,18 +377,19 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
-          inflatedParamVector;
       assert(!fwdGsfResult.lastMeasurementComponents.empty());
       assert(fwdGsfResult.lastMeasurementSurface != nullptr);
-      for (auto& [w, p, cov] : fwdGsfResult.lastMeasurementComponents) {
-        inflatedParamVector.emplace_back(
-            w, p, cov * options.reverseFilteringCovarianceScaling);
-      }
 
       MultiComponentBoundTrackParameters inflatedParams(
           fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
-          std::move(inflatedParamVector), sParameters.particleHypothesis());
+          fwdGsfResult.lastMeasurementComponents,
+          [&options](const auto& cmp)
+              -> std::tuple<double, const BoundVector&, BoundMatrix> {
+            return {
+                std::get<0>(cmp), std::get<1>(cmp),
+                std::get<2>(cmp) * options.reverseFilteringCovarianceScaling};
+          },
+          sParameters.particleHypothesis());
 
       auto state = m_propagator.template makeState<decltype(bwdPropOptions),
                                                    MultiStepperSurfaceReached>(

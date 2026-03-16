@@ -137,7 +137,11 @@ auto makeParameters() {
       {0.2, cp.parameters() - deltaLOC0 - deltaLOC1 - deltaQOP, cov}};
 
   return MultiCmpsParsInterface(MultiComponentBoundTrackParameters(
-      cp.referenceSurface().getSharedPtr(), cmps, electron));
+      cp.referenceSurface().getSharedPtr(), cmps,
+      [](const auto &cmp) {
+        return std::tie(std::get<0>(cmp), std::get<1>(cmp), std::get<2>(cmp));
+      },
+      electron));
 }
 
 BOOST_AUTO_TEST_SUITE(TrackFittingSuite)

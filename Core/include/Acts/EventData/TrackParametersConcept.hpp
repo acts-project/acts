@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 
 #include <optional>
+#include <tuple>
 
 namespace Acts {
 

@@ -10,12 +10,12 @@
 
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/MultiComponentTrackParametersConcept.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <memory>
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
@@ -52,6 +52,7 @@ class MultiComponentBoundTrackParameters {
   std::vector<CovarianceMatrix> m_covariances;
   std::shared_ptr<const Surface> m_surface;
   ParticleHypothesis m_particleHypothesis;
+  bool m_hasCovariance{false};
 
  public:
   /// Type alias for construction tuple containing weight, position, direction,
@@ -84,7 +85,7 @@ class MultiComponentBoundTrackParameters {
 
     // Project the position onto the surface, keep everything else as is
     for (const auto& [w, pos4, dir, qop, cov] : curvi) {
-      Intersection3D closestIntersection =
+      const Intersection3D closestIntersection =
           s->intersect(geoCtx, pos4.template segment<3>(eFreePos0), dir,
                        BoundaryTolerance::Infinite())
               .closest();
@@ -100,61 +101,34 @@ class MultiComponentBoundTrackParameters {
       bound.emplace_back(w, bv, cov);
     }
 
-    return MultiComponentBoundTrackParameters(s, bound, particleHypothesis);
+    return MultiComponentBoundTrackParameters(
+        s, bound,
+        [](const Component& cmp) {
+          return std::tie(std::get<0>(cmp), std::get<1>(cmp),
+                          *std::get<2>(cmp));
+        },
+        particleHypothesis);
   }
 
-  /// Construct from multiple components
-  /// @param surface Surface on which the parameters are bound
-  /// @param cmps Vector of weight, parameters vector, and covariance components
+  /// Construct from a surface and particle hypothesis, without components
+  /// @param surface Reference surface the parameters are defined on
+  /// @param hasCovariance Flag indicating if covariance matrices will be provided for the
   /// @param particleHypothesis Particle hypothesis for the parameters
-  template <typename covariance_t>
-  MultiComponentBoundTrackParameters(
-      std::shared_ptr<const Surface> surface,
-      const std::vector<std::tuple<double, ParametersVector, covariance_t>>&
-          cmps,
-      ParticleHypothesis particleHypothesis)
+  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                                     bool hasCovariance,
+                                     ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
-        m_particleHypothesis(particleHypothesis) {
-    static_assert(
-        std::is_same_v<CovarianceMatrix, covariance_t> ||
-        std::is_same_v<std::optional<CovarianceMatrix>, covariance_t>);
+        m_particleHypothesis(particleHypothesis),
+        m_hasCovariance(hasCovariance) {}
 
-    if (cmps.empty()) {
-      throw std::invalid_argument(
-          "Cannot construct MultiComponentBoundTrackParameters with empty "
-          "components");
-    }
-
-    for (const auto& [weight, params, cov] : cmps) {
-      m_weights.push_back(weight);
-      m_parameters.push_back(params);
-      if constexpr (std::is_same_v<CovarianceMatrix, covariance_t>) {
-        m_covariances.push_back(cov);
-      } else if (std::is_same_v<std::optional<CovarianceMatrix>,
-                                covariance_t>) {
-        if (cov.has_value()) {
-          m_covariances.push_back(*cov);
-        }
-      }
-    }
-  }
-
-  /// Construct from a parameters vector on the surface and particle charge.
-  ///
+  /// Construct from a single component
   /// @param surface Reference surface the parameters are defined on
   /// @param params Bound parameters vector
-  /// @param particleHypothesis Particle hypothesis for these parameters
   /// @param cov Bound parameters covariance matrix
-  ///
-  /// In principle, only the charge magnitude is needed her to allow
-  /// unambiguous extraction of the absolute momentum. The particle charge is
-  /// required as an input here to be consistent with the other constructors
-  /// below that that also take the charge as an input. The charge sign is
-  /// only used in debug builds to check for consistency with the q/p
-  /// parameter.
+  /// @param particleHypothesis Particle hypothesis for these parameters
   MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
                                      const ParametersVector& params,
-                                     std::optional<CovarianceMatrix> cov,
+                                     const std::optional<CovarianceMatrix>& cov,
                                      ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
@@ -163,9 +137,67 @@ class MultiComponentBoundTrackParameters {
     if (cov) {
       m_covariances.push_back(*cov);
     }
+    m_hasCovariance = cov.has_value();
   }
 
-  /// Parameters are not default constructible due to the charge type.
+  /// Construct from multiple components without covariance
+  /// @param surface Surface on which the parameters are bound
+  /// @param cmps Vector of weight, parameters vector, and covariance components
+  /// @param proj Projector to use for the parameters
+  /// @param particleHypothesis Particle hypothesis for the parameters
+  template <typename component_range_t, typename projector_t>
+  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                                     const component_range_t& cmps,
+                                     const projector_t& proj,
+                                     ParticleHypothesis particleHypothesis)
+    requires detail::ComponentRangeAndProjectorWithoutCovarianceConcept<
+                 component_range_t, projector_t>
+      : m_surface(std::move(surface)),
+        m_particleHypothesis(particleHypothesis) {
+    if (cmps.empty()) {
+      throw std::invalid_argument(
+          "Cannot construct MultiComponentBoundTrackParameters without "
+          "components");
+    }
+
+    for (const auto& cmp : cmps) {
+      const auto& projected = proj(cmp);
+      m_weights.push_back(std::get<0>(projected));
+      m_parameters.push_back(std::get<1>(projected));
+    }
+  }
+
+  /// Construct from multiple components with covariance
+  /// @param surface Surface on which the parameters are bound
+  /// @param cmps Vector of weight, parameters vector, and covariance components
+  /// @param proj Projector to use for the parameters
+  /// @param particleHypothesis Particle hypothesis for the parameters
+  template <typename component_range_t, typename projector_t>
+  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                                     const component_range_t& cmps,
+                                     const projector_t& proj,
+                                     ParticleHypothesis particleHypothesis)
+    requires detail::ComponentRangeAndProjectorWithCovarianceConcept<
+                 component_range_t, projector_t>
+      : m_surface(std::move(surface)),
+        m_particleHypothesis(particleHypothesis),
+        m_hasCovariance(true) {
+    if (cmps.empty()) {
+      throw std::invalid_argument(
+          "Cannot construct MultiComponentBoundTrackParameters without "
+          "components");
+    }
+
+    for (const auto& cmp : cmps) {
+      const auto& projected = proj(cmp);
+      m_weights.push_back(std::get<0>(projected));
+      m_parameters.push_back(std::get<1>(projected));
+      m_covariances.push_back(std::get<2>(projected));
+    }
+  }
+
+  /// No default constructor, because we always need at least a surface and
+  /// particle hypothesis
   MultiComponentBoundTrackParameters() = delete;
   /// Copy constructor
   MultiComponentBoundTrackParameters(
@@ -187,17 +219,23 @@ class MultiComponentBoundTrackParameters {
   /// @return Number of components in the multi-component parameters
   std::size_t size() const { return m_weights.size(); }
 
+  /// Check if the multi-component parameters are empty
+  /// @return True if there are no components, false otherwise
+  bool empty() const { return m_weights.empty(); }
+
   /// Access to the weights of the components
   /// @return Span of the weights for all components
-  std::span<const double> weights() const { return m_weights; }
+  const std::vector<double>& weights() const { return m_weights; }
 
   /// Access to the parameters of the components
   /// @return Span of the parameters vectors for all components
-  std::span<const ParametersVector> parameters() const { return m_parameters; }
+  const std::vector<ParametersVector>& parameters() const {
+    return m_parameters;
+  }
 
   /// Access to the covariances of the components
   /// @return Span of the covariance matrices for all components
-  std::span<const CovarianceMatrix> covariances() const {
+  const std::vector<CovarianceMatrix>& covariances() const {
     return m_covariances;
   }
 
@@ -213,7 +251,7 @@ class MultiComponentBoundTrackParameters {
 
   /// Check if covariance matrices are available for the components
   /// @return True if covariance matrices are available, false otherwise
-  bool hasCovariance() const { return !m_covariances.empty(); }
+  bool hasCovariance() const { return m_hasCovariance; }
 
   /// Convert the multi-component parameters to a vector of components
   /// @return Vector of components, where each component is a tuple of weight, parameters vector, and optional covariance matrix
@@ -244,6 +282,35 @@ class MultiComponentBoundTrackParameters {
   /// @param method Method to use for merging the components into a single set of parameters
   /// @return Single component bound track parameters representing the mixture
   BoundTrackParameters merge(ComponentMergeMethod method) const;
+
+  /// Clear all components from the multi-component parameters
+  void clear();
+
+  /// Reserve space for a number of components in the multi-component parameters
+  /// @param n Number of components to reserve space for
+  void reserve(std::size_t n);
+
+  /// Add a component to the multi-component parameters
+  /// @param weight Weight of the new component
+  /// @param params Parameters vector of the new component
+  void pushComponent(double weight, const ParametersVector& params);
+
+  /// Add a component with covariance to the multi-component parameters
+  /// @param weight Weight of the new component
+  /// @param params Parameters vector of the new component
+  /// @param cov Covariance matrix of the new component
+  void pushComponent(double weight, const ParametersVector& params,
+                     const CovarianceMatrix& cov);
+
+  /// Add a component with optional covariance to the multi-component parameters
+  /// @param weight Weight of the new component
+  /// @param params Parameters vector of the new component
+  /// @param cov Optional covariance matrix of the new component
+  void pushComponent(double weight, const ParametersVector& params,
+                     const std::optional<CovarianceMatrix>& cov);
+
+  /// Normalize the weights of the components so that they sum up to 1
+  void normalizeWeights();
 };
 
 }  // namespace Acts

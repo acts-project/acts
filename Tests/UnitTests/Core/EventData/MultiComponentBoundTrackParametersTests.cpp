@@ -43,10 +43,18 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
       CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
           .planeSurface();
 
-  const auto ap =
-      MultiComponentBoundTrackParameters(surface, a, particleHypothesis);
-  const auto bp =
-      MultiComponentBoundTrackParameters(surface, b, particleHypothesis);
+  const auto ap = MultiComponentBoundTrackParameters(
+      surface, a,
+      [](const auto &cmp) {
+        return std::tie(std::get<0>(cmp), std::get<1>(cmp), std::get<2>(cmp));
+      },
+      particleHypothesis);
+  const auto bp = MultiComponentBoundTrackParameters(
+      surface, b,
+      [](const auto &cmp) {
+        return std::tie(std::get<0>(cmp), std::get<1>(cmp), *std::get<2>(cmp));
+      },
+      particleHypothesis);
   const auto aps = MultiComponentBoundTrackParameters(
       surface, std::get<1>(a.front()), std::get<2>(a.front()),
       particleHypothesis);
@@ -62,6 +70,10 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
   BOOST_CHECK_THROW(
       MultiComponentBoundTrackParameters(
           surface, std::vector<std::tuple<double, BoundVector, BoundMatrix>>{},
+          [](const auto &cmp) {
+            return std::tie(std::get<0>(cmp), std::get<1>(cmp),
+                            std::get<2>(cmp));
+          },
           particleHypothesis),
       std::invalid_argument);
 }
@@ -84,7 +96,13 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
         a.emplace_back(0.25, single_pars.parameters(),
                        single_pars.covariance());
       }
-      return MultiComponentBoundTrackParameters(surface, a, particleHypothesis);
+      return MultiComponentBoundTrackParameters(
+          surface, a,
+          [](const auto &cmp) {
+            return std::tie(std::get<0>(cmp), std::get<1>(cmp),
+                            *std::get<2>(cmp));
+          },
+          particleHypothesis);
     }();
     const auto multi_pars_as_single =
         multi_pars.merge(ComponentMergeMethod::eMean);
