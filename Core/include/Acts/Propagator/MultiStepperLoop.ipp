@@ -65,8 +65,9 @@ auto MultiStepperLoop<S, R>::boundState(
 }
 
 template <Concepts::SingleStepper S, typename R>
-auto MultiStepperLoop<S, R>::curvilinearState(
-    State& state, bool transportCov) const -> BoundState {
+auto MultiStepperLoop<S, R>::curvilinearState(State& state,
+                                              bool transportCov) const
+    -> BoundState {
   assert(!state.components.empty());
 
   std::vector<std::tuple<double, Vector4, Vector3, double, BoundMatrix>> cmps;

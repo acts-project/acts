@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v18.1.8'
+    rev: 'v22.1.0'
     hooks:
       - id: clang-format
         types_or: [file]
@@ -31,7 +31,7 @@ repos:
       args: ["-i", "--no-warn-about-unknown-commands"]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
+    rev: v2.4.2
     hooks:
     - id: codespell
       args: [
@@ -39,7 +39,7 @@ repos:
         "-I", "./CI/codespell_ignore.txt",
         "-w"
       ]
-      exclude: ^CI/.*|docs/tex-mml-chtml.js$
+      exclude: ^CI/.*|^docs/old|docs/tex-mml-chtml.js$
 
   - repo: local
     hooks:

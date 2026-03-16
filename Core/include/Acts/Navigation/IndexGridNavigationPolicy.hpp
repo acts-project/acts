@@ -105,7 +105,7 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
     const auto& surfaces = m_volume.surfaces();
     const auto& indices =
         m_indexGrid.grid.atPosition(GridAccessHelpers::castPosition<GridType>(
-            m_indexGrid.transform * position, m_indexGrid.casts));
+            m_indexGrid.toLocalFrame(gctx) * position, m_indexGrid.casts));
     // Fill the navigation stream with the container
     for (const auto& idx : indices) {
       stream.addSurfaceCandidate(surfaces[idx], args.tolerance);
