@@ -84,7 +84,7 @@ struct Style {
     fnt._size = fontSize;
     fnt._fc._rgb = fontColor;
 
-    return std::make_tuple(fll, str, fnt);
+    return {fll, str, fnt};
   }
 };
 
