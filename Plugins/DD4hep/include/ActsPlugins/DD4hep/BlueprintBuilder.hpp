@@ -20,6 +20,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <DD4hep/Detector.h>
@@ -35,6 +36,8 @@ using GeometryAxes = ActsPlugins::TGeoAxes;
 
 class DD4hepBackend {
  public:
+  static constexpr std::string_view kIdentifier = "DD4hepBackend";
+
   using Element = dd4hep::DetElement;
   using AxisDefinition = TGeoAxes;
   struct LayerSpec {
