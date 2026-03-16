@@ -96,6 +96,12 @@ using ContainerCustomizer =
         const ElementT&,
         std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>)>;
 
+/// @brief Concept satisfied when @p CallableT can be called with an optional
+/// element and a @ref LayerBlueprintNode shared pointer and returns a (possibly
+/// different) @ref LayerBlueprintNode shared pointer.
+///
+/// Used to constrain the returning form of the `onLayer` callback accepted by
+/// the assembler builders.
 template <typename ElementT, typename CallableT>
 concept LayerNodeReturningCallable =
     std::invocable<CallableT&, const std::optional<ElementT>&, LayerNodePtr> &&
@@ -104,6 +110,10 @@ concept LayerNodeReturningCallable =
                                       LayerNodePtr>,
                  LayerNodePtr>;
 
+/// @brief Concept satisfied when @p CallableT can be called with an optional
+/// element and a mutable @ref LayerBlueprintNode reference and returns `void`.
+///
+/// Used to constrain the in-place (mutating) form of the `onLayer` callback.
 template <typename ElementT, typename CallableT>
 concept LayerNodeReplacingCallable =
     std::invocable<CallableT&, const std::optional<ElementT>&,
@@ -113,6 +123,11 @@ concept LayerNodeReplacingCallable =
                                       Acts::Experimental::LayerBlueprintNode&>,
                  void>;
 
+/// @brief Concept satisfied when @p CallableT can be called with an element and
+/// a @ref ContainerBlueprintNode shared pointer and returns a (possibly
+/// different) @ref ContainerBlueprintNode shared pointer.
+///
+/// Used to constrain the returning form of the `onContainer` callback.
 template <typename ElementT, typename CallableT>
 concept ContainerNodeReturningCallable =
     std::invocable<CallableT&, const ElementT&, ContainerNodePtr> &&
@@ -120,6 +135,11 @@ concept ContainerNodeReturningCallable =
                                       ContainerNodePtr>,
                  ContainerNodePtr>;
 
+/// @brief Concept satisfied when @p CallableT can be called with an element and
+/// a mutable @ref ContainerBlueprintNode reference and returns `void`.
+///
+/// Used to constrain the in-place (mutating) form of the `onContainer`
+/// callback.
 template <typename ElementT, typename CallableT>
 concept ContainerNodeReplacingCallable =
     std::invocable<CallableT&, const ElementT&,
@@ -502,6 +522,8 @@ class SensorLayerAssembler {
   using LayerGrouper = std::function<std::string(const Element&)>;
 
   /// @brief Set the layer geometry type explicitly.
+  /// @param layerType `LayerType::Cylinder` for barrel, `LayerType::Disc` for
+  ///                  endcap.
   /// @return `*this` (rvalue).
   [[nodiscard]] SensorLayerAssembler&& setLayerType(LayerType layerType) &&;
 
@@ -553,11 +575,16 @@ class SensorLayerAssembler {
       std::string containerName) &&;
 
   /// @brief Set an envelope applied to every produced layer node.
+  /// @param envelope Envelope margins added around each layer's extent.
   /// @return `*this` (rvalue).
   [[nodiscard]] SensorLayerAssembler&& setEnvelope(
       const Acts::ExtentEnvelope& envelope) &&;
 
   /// @brief Override the attachment strategy for the container node.
+  ///
+  /// When unset the backend's default strategy is used.
+  /// @param strategy Optional attachment strategy; pass `std::nullopt` to
+  ///                 reset to the default.
   /// @return `*this` (rvalue).
   [[nodiscard]] SensorLayerAssembler&& setAttachmentStrategy(
       std::optional<Acts::VolumeAttachmentStrategy> strategy) &&;
@@ -599,6 +626,10 @@ class SensorLayerAssembler {
   build() const;
 
   /// @brief Build the container node and attach it as a child of @p node.
+  ///
+  /// Equivalent to `node.addChild(build())`.
+  /// @param node Blueprint node that will receive the built container as a
+  ///             child.
   void addTo(Acts::Experimental::BlueprintNode& node) const&&;
 
  private:
@@ -653,6 +684,8 @@ class SensorLayer {
   using LayerCustomizer = detail::LayerCustomizer<Element>;
 
   /// @brief Set the layer geometry type explicitly.
+  /// @param layerType `LayerType::Cylinder` for barrel, `LayerType::Disc` for
+  ///                  endcap.
   /// @return `*this` (rvalue).
   [[nodiscard]] SensorLayer&& setLayerType(LayerType layerType) &&;
 
@@ -692,6 +725,7 @@ class SensorLayer {
   [[nodiscard]] SensorLayer&& setLayerName(std::string name) &&;
 
   /// @brief Set an envelope applied to the produced layer node.
+  /// @param envelope Envelope margins added around the layer's extent.
   /// @return `*this` (rvalue).
   [[nodiscard]] SensorLayer&& setEnvelope(
       const Acts::ExtentEnvelope& envelope) &&;
@@ -732,6 +766,9 @@ class SensorLayer {
       const;
 
   /// @brief Build the layer node and attach it as a child of @p node.
+  ///
+  /// Equivalent to `node.addChild(build())`.
+  /// @param node Blueprint node that will receive the built layer as a child.
   void addTo(Acts::Experimental::BlueprintNode& node) const&&;
 
  private:
