@@ -90,19 +90,14 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
                                            particleHypothesis);
 
     const auto multi_pars = [&]() {
-      std::vector<std::tuple<double, BoundVector, std::optional<BoundMatrix>>>
-          a;
+      MultiComponentBoundTrackParameters result(
+          surface, single_pars.covariance().has_value(),
+          single_pars.particleHypothesis());
       for (int i = 0; i < 4; ++i) {
-        a.emplace_back(0.25, single_pars.parameters(),
-                       single_pars.covariance());
+        result.pushComponent(0.25, single_pars.parameters(),
+                             single_pars.covariance());
       }
-      return MultiComponentBoundTrackParameters(
-          surface, a,
-          [](const auto &cmp) {
-            return std::tie(std::get<0>(cmp), std::get<1>(cmp),
-                            *std::get<2>(cmp));
-          },
-          particleHypothesis);
+      return result;
     }();
     const auto multi_pars_as_single =
         multi_pars.merge(ComponentMergeMethod::eMean);
@@ -127,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
                       single_pars.direction());
 
     // Check the behaviour for std::nullopt or zero covariance
-    if (cov && *cov != BoundMatrix::Zero()) {
+    if (cov.has_value()) {
       BOOST_CHECK_EQUAL(*multi_pars_as_single.covariance(),
                         *single_pars.covariance());
     } else {
