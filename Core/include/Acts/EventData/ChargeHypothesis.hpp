@@ -14,7 +14,7 @@
 namespace Acts {
 
 /// @ingroup eventdata
-/// @defgroup eventdata-charge Charge interpretation for track parameters
+/// @defgroup eventdata-charge Charge hypothesis for track reconstruction
 ///
 /// Track parameters store a single coefficient that describes charge and
 /// momentum. This is either charge/momentum or 1/momentum, but the
@@ -29,7 +29,7 @@ namespace Acts {
 /// constructed with the input charge magnitude
 ///
 /// ```cpp
-/// Charge c(1_e);
+/// ChargeHypothesis c(1_e);
 /// ```
 ///
 /// and can then be used to extract the charge value

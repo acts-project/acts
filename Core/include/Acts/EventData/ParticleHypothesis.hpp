@@ -22,6 +22,9 @@ namespace Acts {
 // instance which would avoid copying the particle hypothesis and potentially
 // save some memory. But constexpr+static seems to require C++2b extension.
 
+/// @ingroup eventdata
+/// @defgroup eventdata-particlehypothesis Particle hypothesis for track reconstruction
+
 /// @brief Particle hypothesis used in reconstruction
 ///
 /// The reconstruction hypothesis consists of absolute PDG code, mass and
