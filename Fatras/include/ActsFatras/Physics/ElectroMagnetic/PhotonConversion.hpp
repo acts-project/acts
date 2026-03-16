@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -261,8 +262,7 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
 
   // Calculate the child momentum
   const double massChild = electronMass();
-  const double momentum1 =
-      std::sqrt(childEnergy * childEnergy - massChild * massChild);
+  const double momentum1 = Acts::fastCathetus(childEnergy, massChild);
 
   // Use energy-momentum conservation for the other child
   const Acts::Vector3 vtmp =

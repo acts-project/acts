@@ -8,15 +8,23 @@
 
 #pragma once
 
+#include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/TypeTag.hpp"
 
+#include <concepts>
 #include <functional>
 #include <unordered_map>
 
 #include <pybind11/pybind11.h>
 
 namespace ActsPython {
+
+/// Concept: pybind11 class must use smart_holder for WhiteBoard ownership.
+template <typename... Ts>
+concept PyClassWithSmartHolder =
+    std::same_as<typename pybind11::class_<Ts...>::holder_type,
+                 pybind11::smart_holder>;
 
 /// The WhiteBoard is an event-store container that holds arbitrary C++ objects
 /// by name. Python algorithms need to read these objects through pybind11, but
@@ -34,22 +42,26 @@ namespace ActsPython {
 ///    registry is consulted to find the type info and downcast function for
 ///    safe retrieval from the `WhiteBoard`.
 class WhiteBoardRegistry {
- public:
+ private:
   /// Function that converts a type-erased pointer from the WhiteBoard into a
   /// pybind11 object. The wbPy argument is used for reference_internal
   /// lifetime.
-  using DowncastFunction = std::function<pybind11::object(
-      const void* data, const pybind11::object& wbPy)>;
+  using ToPythonFunction = std::function<pybind11::object(
+      const Acts::AnyMoveOnly& any, const pybind11::object& wbPy)>;
 
-  /// Register a pybind11-bound type T for WhiteBoard read access.
-  /// Call this after the `py::class_<T>` definition.
-  /// @tparam Ts The types to register.
-  /// @param pyClass The pybind11 class object to register.
-  template <typename... Ts>
-  static void registerClass(const pybind11::class_<Ts...>& pyClass) {
+  /// Function that converts a pybind11 object into a type-erased pointer for
+  /// the WhiteBoard.
+  using FromPythonFunction = std::function<std::unique_ptr<Acts::AnyMoveOnly>(
+      const pybind11::object& obj)>;
+
+  /// Register a C++ type T with its pybind11 Python type for WhiteBoard
+  /// access. Use when the `py::class_<T>` type cannot be deduced (e.g. for
+  /// template types).
+  /// @tparam T The C++ type to register.
+  template <typename T>
+  static void registerType() {
     namespace py = pybind11;
-    using type = pybind11::class_<Ts...>::type;
-    registerType<type>(pyClass);
+    return registerType<T>(py::type::of<T>());
   }
 
   /// Register a C++ type `~T` with its pybind11 Python type for WhiteBoard
@@ -64,20 +76,44 @@ class WhiteBoardRegistry {
     using type = T;
 
     instance()[pyType.ptr()] = {
-        .fn = [](const void* ptr, const py::object& wbPy) -> py::object {
+        .toPython = [](const Acts::AnyMoveOnly& any,
+                       const py::object& wbPy) -> py::object {
           // wb needed to ensure correct lifetime
-          return py::cast(*static_cast<const type*>(ptr),
+          return py::cast(any.as<type>(),
                           py::return_value_policy::reference_internal, wbPy);
         },
+        .fromPython =
+            [](const py::object& obj) {
+              // This communicates to pybind11's smart_holder that the object is
+              // consumed in C++
+              auto up = py::cast<std::unique_ptr<T>>(obj);
+              return std::make_unique<Acts::AnyMoveOnly>(std::move(*up));
+            },
         .typeinfo = &typeid(type),
         .typeHash = Acts::typeHash<type>(),
     };
   }
 
+ public:
+  /// Register a pybind11-bound type T for WhiteBoard read access.
+  /// Call this after the `py::class_<T>` definition.
+  /// @tparam Ts The types to register.
+  /// @param pyClass The pybind11 class object to register.
+  template <typename... Ts>
+  static void registerClass(const pybind11::class_<Ts...>& pyClass)
+    requires PyClassWithSmartHolder<Ts...>
+  {
+    namespace py = pybind11;
+    using type = pybind11::class_<Ts...>::type;
+    registerType<type>(pyClass);
+  }
+
   /// Per-type registry entry: downcast function and type metadata for lookups.
   struct RegistryEntry {
-    DowncastFunction fn{
+    ToPythonFunction toPython{
         nullptr};  ///< Converts `void*` + `WhiteBoard` -> `py::object`
+
+    FromPythonFunction fromPython{nullptr};
     const std::type_info* typeinfo{nullptr};  ///< C++ type for type checking
     std::uint64_t typeHash{0};  ///< Hash for runtime type verification
   };

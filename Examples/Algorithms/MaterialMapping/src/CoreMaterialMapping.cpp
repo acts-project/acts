@@ -34,12 +34,12 @@ CoreMaterialMapping::CoreMaterialMapping(
     throw std::invalid_argument("Missing material mapper");
   }
   // Create the state object
-  m_mappingState = m_cfg.materialMapper->createState();
+  m_mappingState = m_cfg.materialMapper->createState(m_cfg.geoContext);
 }
 
 CoreMaterialMapping::~CoreMaterialMapping() {
   Acts::TrackingGeometryMaterial detectorMaterial =
-      m_cfg.materialMapper->finalizeMaps(*m_mappingState);
+      m_cfg.materialMapper->finalizeMaps(*m_mappingState, m_cfg.geoContext);
   // Loop over the available writers and write the maps
   for (auto& imw : m_cfg.materiaMaplWriters) {
     imw->writeMaterial(detectorMaterial);
