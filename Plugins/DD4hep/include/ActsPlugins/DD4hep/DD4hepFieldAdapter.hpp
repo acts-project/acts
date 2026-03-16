@@ -41,6 +41,9 @@ class DD4hepFieldAdapter : public Acts::MagneticFieldProvider {
       const Acts::Vector3& position,
       Acts::MagneticFieldProvider::Cache& cache) const override;
 
+  /// Destructor
+  ~DD4hepFieldAdapter() override;
+
  private:
   double m_fieldConversionFactor;
   double m_lengthConversionFactor;

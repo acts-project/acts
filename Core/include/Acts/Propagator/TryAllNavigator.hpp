@@ -30,7 +30,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// @brief Captures the common functionality of the try-all navigators
 ///
@@ -287,7 +287,7 @@ class TryAllNavigatorBase {
 /// optimize the search. It is therefore very slow, but can be used as a
 /// reference implementation.
 ///
-class TryAllNavigator : public TryAllNavigatorBase {
+class TryAllNavigator final : public TryAllNavigatorBase {
  public:
   /// Type alias for navigator configuration
   using Config = TryAllNavigatorBase::Config;
@@ -600,7 +600,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 /// surfaces in the current volume. This is slower, but more robust against
 /// bent tracks.
 ///
-class TryAllOverstepNavigator : public TryAllNavigatorBase {
+class TryAllOverstepNavigator final : public TryAllNavigatorBase {
  public:
   /// Type alias for navigator configuration
   using Config = TryAllNavigatorBase::Config;
@@ -939,4 +939,4 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   }
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

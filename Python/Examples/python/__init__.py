@@ -4,6 +4,7 @@ from typing import Optional, Protocol, Union, List, Dict, Tuple
 import os
 import re
 import acts
+import acts.fatras
 
 from .ActsExamplesPythonBindings import *
 

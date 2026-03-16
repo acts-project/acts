@@ -22,23 +22,23 @@ namespace Acts {
 
 /// @class HoughVertexFinder
 ///
-/// @brief Implements the vertex finder based on the spacepoints using Hough transform
+/// @brief Implements the vertex finder based on the space points using Hough transform
 /// For more information, see arXiv:2410.14494
 /// 0. Assumes there is only 1 vertex and that it has a high multiplicity
 /// 1. Estimates what eta range is really necessary
-/// 2. Creates Hough space (z_vtx - cot(theta)) from spacepoints within that eta
-/// range
+/// 2. Creates Hough space (z_vtx - cot(theta)) from space points within that
+/// eta range
 /// 3. Subtracts the coincidentally crossed lines in the Hough space
 /// 4. Makes a projection to the Z axis and finds a peak - that is the vertex
 /// position
 /// 5. Repeats 2-4 if necessary
 ///
-template <typename spacepoint_t>
+template <typename space_point_t>
 class HoughVertexFinder {
  public:
   /// Configuration struct
   struct Config {
-    /// Ideal amount of spacepoints; |eta| range will be limited to
+    /// Ideal amount of space points; |eta| range will be limited to
     /// contain approximately this amount of SPs
     std::uint32_t targetSPs = 10000;
 
@@ -115,29 +115,30 @@ class HoughVertexFinder {
   /// Type alias for 2D histogram used in Hough transform
   using HoughHist = Grid<HoughCount_t, HoughAxis, HoughAxis>;
 
-  /// @brief Finds the vertex based on the provided spacepoints
-  /// @param spacepoints Vector of the input spacepoints; they do not need to be sorted anyhow
+  /// @brief Finds the vertex based on the provided space points
+  /// @param spacePoints Vector of the input space points; they do not need to be sorted anyhow
   /// @return Position of the vertex
   Acts::Result<Acts::Vector3> find(
-      const std::vector<spacepoint_t>& spacepoints) const;
+      const std::vector<space_point_t>& spacePoints) const;
 
  private:
   /// Configuration instance
   const Config m_cfg;
 
   /// @brief Returns the positions of the peak along Z axis in the projection of the Hough plane
-  /// @param spacepoints Set of all spacepoints within the event
+  /// @param spacePoints Set of all space points within the event
   /// @param vtxOld Previous position of the vertex
   /// @param rangeZ Range in along Z around vtxOld_z to consider when looking for the new vertex
   /// @param numZBins Number of bins along Z axis
-  /// @param minCotTheta Minimum theta to consider for the spacepoint
-  /// @param maxCotTheta Maximum theta to consider for the spacepoint
+  /// @param minCotTheta Minimum theta to consider for the space point
+  /// @param maxCotTheta Maximum theta to consider for the space point
   /// @param numCotThetaBins Number of bins along cot(theta) axis
   /// @return Position of the vertex in (X,Y,Z)
   Acts::Result<Acts::Vector3> findHoughVertex(
-      const std::vector<spacepoint_t>& spacepoints, const Acts::Vector3& vtxOld,
-      double rangeZ, std::uint32_t numZBins, double minCotTheta,
-      double maxCotTheta, std::uint32_t numCotThetaBins) const;
+      const std::vector<space_point_t>& spacePoints,
+      const Acts::Vector3& vtxOld, double rangeZ, std::uint32_t numZBins,
+      double minCotTheta, double maxCotTheta,
+      std::uint32_t numCotThetaBins) const;
 
   /// @brief Finds the peak in the Z axis projection of the Hough space
   /// @param houghZProjection Hough space projection after the cleaning procedure

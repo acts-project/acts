@@ -204,7 +204,7 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
                              sensorID);
       auto &params = DD4hepTestsHelper::ensureExtension<rec::VariantParameters>(
           trapElement);
-      params.set<std::string>("axis_definitions", "YZ");
+      params.set<std::string>("axis_definitions", "YZX");
 
       Volume trapVolume(layerName + "_vol", trapShape,
                         dd.material(x_layer_trap.materialStr()));

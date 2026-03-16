@@ -15,7 +15,7 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/TrackFindingGnn/TruthGraphBuilder.hpp"
@@ -91,13 +91,13 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
   };
 
   struct Config {
-    /// Input spacepoints collection.
+    /// Input space points collection.
     std::string inputSpacePoints;
     /// Input cluster information (Optional).
     std::string inputClusters;
     /// Input truth graph (Optional).
     std::string inputTruthGraph;
-    /// Output prototracks
+    /// Output proto tracks
     std::string outputProtoTracks;
     /// Output graph (optional)
     std::string outputGraph;
@@ -130,7 +130,8 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingAlgorithmGnn(Config cfg, Acts::Logging::Level lvl);
+  explicit TrackFindingAlgorithmGnn(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ~TrackFindingAlgorithmGnn() override = default;
 
@@ -166,8 +167,8 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
     Accumulator fullTime;
   } m_timing;
 
-  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
-                                                            "InputSpacePoints"};
+  ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
+                                                         "InputSpacePoints"};
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   ReadDataHandle<Graph> m_inputTruthGraph{this, "InputTruthGraph"};

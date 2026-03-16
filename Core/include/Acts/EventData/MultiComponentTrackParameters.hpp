@@ -20,6 +20,8 @@
 
 namespace Acts {
 
+enum class ComponentMergeMethod;
+
 /// This class is only a light wrapper around a surface and a vector of
 /// parameters. Its main purpose is to provide many constructors for the
 /// underlying vector. Most accessors are generated from the
@@ -185,7 +187,10 @@ class MultiComponentBoundTrackParameters {
 
   /// Comply with bound convertible, in this case return a copy
   /// @return Copy of this multi-component track parameters
-  MultiComponentBoundTrackParameters toBound() const { return *this; }
+  [[deprecated("You already have a bound track parameter at hand")]]
+  MultiComponentBoundTrackParameters toBound() const {
+    return *this;
+  }
 
   /// Access the parameters
   /// @return Reference to the vector of parameter components
@@ -205,6 +210,12 @@ class MultiComponentBoundTrackParameters {
                    std::get<std::optional<CovarianceMatrix>>(m_components[i]),
                    m_particleHypothesis)};
   }
+
+  /// Merge component mixture into a single set of parameters using the
+  /// specified method.
+  /// @param method Method to use for merging the components into a single set of parameters
+  /// @return Single component bound track parameters representing the mixture
+  BoundTrackParameters merge(ComponentMergeMethod method) const;
 
   /// Parameters vector.
   /// @return Weighted average of parameters from all components

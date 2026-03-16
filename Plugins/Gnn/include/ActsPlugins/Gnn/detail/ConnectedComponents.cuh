@@ -291,24 +291,24 @@ __global__ void setBounds(const TLabel *labels, TLabel *bounds,
 }
 
 /// Function to find the bounds for each label in the labels array.
-/// @param labels The array of labels (size: numSpacepoints)
-/// @param spacepointIds The array of spacepoint IDs (size: numSpacepoints)
+/// @param labels The array of labels (size: numSpacePoints)
+/// @param spacePointIds The array of space point IDs (size: numSpacePoints)
 /// @param bounds The array to store the bounds for each label (size: numLabels)
-/// @param numSpacepoints The number of spacepoints
+/// @param numSpacePoints The number of space points
 /// @param numLabels The number of unique labels
 /// @param stream The CUDA stream to use for the operation
-template <typename TLabel, typename TSpacepointId>
-void findTrackCandidateBounds(TLabel *labels, TSpacepointId *spacepointIds,
-                              TLabel *bounds, std::size_t numSpacepoints,
+template <typename TLabel, typename TSpacePointId>
+void findTrackCandidateBounds(TLabel *labels, TSpacePointId *spacePointIds,
+                              TLabel *bounds, std::size_t numSpacePoints,
                               std::size_t numLabels, cudaStream_t stream) {
-  // Sort the labels and spacepoint IDs by labels
+  // Sort the labels and space point IDs by labels
   thrust::sort_by_key(thrust::device.on(stream), labels,
-                      labels + numSpacepoints, spacepointIds);
+                      labels + numSpacePoints, spacePointIds);
 
   // Set the bounds for each label
   dim3 blockSize = 1024;
-  dim3 gridSize = (numSpacepoints + blockSize.x - 1) / blockSize.x;
-  setBounds<<<gridSize, blockSize, 0, stream>>>(labels, bounds, numSpacepoints,
+  dim3 gridSize = (numSpacePoints + blockSize.x - 1) / blockSize.x;
+  setBounds<<<gridSize, blockSize, 0, stream>>>(labels, bounds, numSpacePoints,
                                                 numLabels);
   ACTS_CUDA_CHECK(cudaGetLastError());
 }

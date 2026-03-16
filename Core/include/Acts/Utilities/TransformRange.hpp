@@ -170,7 +170,8 @@ struct TransformRangeIterator {
   using iterator_category = std::forward_iterator_tag;
 
   /// Construct an iterator from an underlying iterator
-  explicit TransformRangeIterator(iterator_t iterator) : m_iterator(iterator) {}
+  explicit TransformRangeIterator(const iterator_t& iterator)
+      : m_iterator(iterator) {}
 
   TransformRangeIterator() = default;
 

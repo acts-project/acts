@@ -68,7 +68,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   // -) (x, y, z, t) is the global 4D position of the PCA
   // -) phi and theta are the global angles of the momentum at the PCA
   // -) q/p is the charge divided by the total momentum at the PCA
-  Acts::ActsVector<eLinSize> paramVec;
+  Acts::Vector<eLinSize> paramVec;
 
   // 4D PCA and the momentum of the track at the PCA
   // These quantities will be used in the computation of the constant term in
@@ -90,8 +90,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   }
 
   // Complete Jacobian (consists of positionJacobian and momentumJacobian)
-  ActsMatrix<eBoundSize, eLinSize> completeJacobian =
-      ActsMatrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
+  Matrix<eBoundSize, eLinSize> completeJacobian =
+      Matrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
 
   // Perigee parameters wrt the reference point after wiggling
   BoundVector newPerigeeParams;
@@ -107,7 +107,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   // parametrization of the resulting new track. This allows us to approximate
   // the numerical derivatives.
   for (unsigned int i = 0; i < eLinSize; i++) {
-    Acts::ActsVector<eLinSize> paramVecCopy = paramVec;
+    Acts::Vector<eLinSize> paramVecCopy = paramVec;
     // Wiggle
     paramVecCopy(i) += m_cfg.delta;
 
@@ -151,9 +151,9 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   }
 
   // Extracting positionJacobian and momentumJacobian from the complete Jacobian
-  ActsMatrix<eBoundSize, eLinPosSize> positionJacobian =
+  Matrix<eBoundSize, eLinPosSize> positionJacobian =
       completeJacobian.block<eBoundSize, eLinPosSize>(0, 0);
-  ActsMatrix<eBoundSize, eLinMomSize> momentumJacobian =
+  Matrix<eBoundSize, eLinMomSize> momentumJacobian =
       completeJacobian.block<eBoundSize, eLinMomSize>(0, eLinPosSize);
 
   // Constant term of Taylor expansion (Eq. 5.38 in Ref. (1))

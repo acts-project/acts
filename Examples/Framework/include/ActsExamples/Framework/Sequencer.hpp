@@ -54,8 +54,8 @@ class Sequencer {
   struct FpeMask {
     std::string file;
     std::pair<std::size_t, std::size_t> lines;
-    ActsPlugins::FpeType type;
-    std::size_t count;
+    ActsPlugins::FpeType type{};
+    std::size_t count = 0;
   };
 
   struct Config {
@@ -180,6 +180,7 @@ class Sequencer {
 
   DataHandleBase::StateMapType m_whiteBoardState;
 
+  std::atomic<std::size_t> m_nSkippedEvents = 0;
   std::atomic<std::size_t> m_nUnmaskedFpe = 0;
 
   const Acts::Logger &logger() const { return *m_logger; }

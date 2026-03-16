@@ -78,11 +78,10 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   alignResult.alignmentDof =
       alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
   // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
-  Acts::ActsDynamicVector sumChi2Derivative =
-      Acts::ActsDynamicVector::Zero(alignResult.alignmentDof);
-  Acts::ActsDynamicMatrix sumChi2SecondDerivative =
-      Acts::ActsDynamicMatrix::Zero(alignResult.alignmentDof,
-                                    alignResult.alignmentDof);
+  Acts::DynamicVector sumChi2Derivative =
+      Acts::DynamicVector::Zero(alignResult.alignmentDof);
+  Acts::DynamicMatrix sumChi2SecondDerivative = Acts::DynamicMatrix::Zero(
+      alignResult.alignmentDof, alignResult.alignmentDof);
   // Copy the fit options
   fit_options_t fitOptionsWithRefSurface = fitOptions;
   // Calculate contribution to chi2 derivatives from all input trajectories
@@ -134,18 +133,17 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   // calculate the covariance of the alignment parameters)
   // @TODO: use more stable method for solving the inverse
   std::size_t alignDof = alignResult.alignmentDof;
-  Acts::ActsDynamicMatrix sumChi2SecondDerivativeInverse =
-      Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
+  Acts::DynamicMatrix sumChi2SecondDerivativeInverse =
+      Acts::DynamicMatrix::Zero(alignDof, alignDof);
   sumChi2SecondDerivativeInverse = sumChi2SecondDerivative.inverse();
   if (sumChi2SecondDerivativeInverse.hasNaN()) {
     ACTS_DEBUG("Chi2 second derivative inverse has NaN");
   }
 
   // Initialize the alignment results
-  alignResult.deltaAlignmentParameters =
-      Acts::ActsDynamicVector::Zero(alignDof);
+  alignResult.deltaAlignmentParameters = Acts::DynamicVector::Zero(alignDof);
   alignResult.alignmentCovariance =
-      Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
+      Acts::DynamicMatrix::Zero(alignDof, alignDof);
   // Solve the linear equation to get alignment parameters change
   alignResult.deltaAlignmentParameters =
       -sumChi2SecondDerivative.fullPivLu().solve(sumChi2Derivative);

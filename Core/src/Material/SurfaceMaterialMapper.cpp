@@ -192,7 +192,7 @@ void SurfaceMaterialMapper::finalizeMaps(State& mState) const {
   }
 }
 
-void SurfaceMaterialMapper::mapMaterialTrack(
+Result<void> SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
@@ -206,28 +206,26 @@ void SurfaceMaterialMapper::mapMaterialTrack(
         "Material surfaces are associated with the material interaction. The "
         "association interaction/surfaces won't be performed again.");
     mapSurfaceInteraction(mState, rMaterial);
-    return;
+    return Result<void>::success();
   } else {
     ACTS_VERBOSE(
         "Material interactions need to be associated with surfaces. Collecting "
         "all surfaces on the trajectory.");
-    mapInteraction(mState, mTrack);
-    return;
+    return mapInteraction(mState, mTrack);
   }
 }
 
-void SurfaceMaterialMapper::mapInteraction(
+Result<void> SurfaceMaterialMapper::mapInteraction(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   std::map<GeometryIdentifier, unsigned int> assignedMaterial;
   using VectorHelpers::makeVector4;
   // Neutral curvilinear parameters
-  NeutralBoundTrackParameters start =
-      NeutralBoundTrackParameters::createCurvilinear(
-          makeVector4(mTrack.first.first, 0), mTrack.first.second,
-          1 / mTrack.first.second.norm(), std::nullopt,
-          NeutralParticleHypothesis::geantino());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      makeVector4(mTrack.first.first, 0), mTrack.first.second,
+      1 / mTrack.first.second.norm(), std::nullopt,
+      ParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
@@ -241,10 +239,10 @@ void SurfaceMaterialMapper::mapInteraction(
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options);
   if (!result.ok()) {
-    ACTS_ERROR("Encountered a propagator error for initial parameters : ");
-    ACTS_ERROR(" - Position: " << mTrack.first.first.transpose());
-    ACTS_ERROR(" - Momentum: " << mTrack.first.second.transpose());
-    return;  // Skip track
+    ACTS_DEBUG("Encountered a propagator error for initial parameters:");
+    ACTS_DEBUG(" - Position: " << mTrack.first.first.transpose());
+    ACTS_DEBUG(" - Momentum: " << mTrack.first.second.transpose());
+    return result.error();
   }
 
   auto mcResult = result.value().get<MaterialSurfaceCollector::result_type>();
@@ -462,6 +460,8 @@ void SurfaceMaterialMapper::mapInteraction(
       }
     }
   }
+
+  return Result<void>::success();
 }
 
 void SurfaceMaterialMapper::mapSurfaceInteraction(

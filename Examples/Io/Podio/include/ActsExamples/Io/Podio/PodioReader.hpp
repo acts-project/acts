@@ -16,10 +16,6 @@
 
 namespace ActsExamples {
 
-namespace detail {
-class PodioReaderImpl;
-}
-
 /// This reader reads events from a PODIO file in the form of frame.
 /// On it's own, it does not do anything with the frame, but is used to
 /// trigger the reading of the frame from the file.
@@ -74,7 +70,9 @@ class PodioReader : public IReader {
   const Config& config() const;
 
  private:
-  std::unique_ptr<detail::PodioReaderImpl> m_impl;
+  class Impl;
+
+  std::unique_ptr<Impl> m_impl;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Get the logger instance.

@@ -379,8 +379,7 @@ def addSeeding(
     """
 
     logLevel = acts.examples.defaultLogging(s, logLevel)()
-    logger = acts.logging.getLogger("addSeeding")
-    logger.setLevel(logLevel)
+    logger = acts.getDefaultLogger("addSeeding", logLevel)
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
@@ -423,14 +422,14 @@ def addSeeding(
             logger.info("Using Hough Transform seeding")
             houghTransformConfig.inputSpacePoints = [spacePoints]
             houghTransformConfig.inputMeasurements = "measurements"
-            houghTransformConfig.outputProtoTracks = "prototracks"
+            houghTransformConfig.outputProtoTracks = "protoTracks"
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
         elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
             logger.info("Using Adaptive Hough Transform seeding")
             adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
-            adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
+            adaptiveHoughTransformConfig.outputProtoTracks = "protoTracks"
             adaptiveHoughTransformConfig.outputSeeds = "seeds"
             adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
             adaptiveHoughTransformConfig.threshold = 4
@@ -496,7 +495,7 @@ def addSeeding(
                 logLevel,
             )
         else:
-            logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
+            logger.fatal("unknown seedingAlgorithm {}", seedingAlgorithm)
 
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
             level=logLevel,
@@ -516,20 +515,20 @@ def addSeeding(
         )
         s.addAlgorithm(parEstimateAlg)
 
-        prototracks = "seed-prototracks"
+        protoTracks = "seed-protoTracks"
         s.addAlgorithm(
-            acts.examples.SeedsToPrototracks(
+            acts.examples.SeedsToProtoTracks(
                 level=logLevel,
                 inputSeeds="estimatedseeds",
-                outputProtoTracks=prototracks,
+                outputProtoTracks=protoTracks,
             )
         )
 
         tracks = "seed-tracks"
         s.addAlgorithm(
-            acts.examples.PrototracksToTracks(
+            acts.examples.ProtoTracksToTracks(
                 level=logLevel,
-                inputProtoTracks=prototracks,
+                inputProtoTracks=protoTracks,
                 inputTrackParameters="estimatedparameters",
                 inputMeasurements="measurements",
                 outputTracks=tracks,
@@ -554,7 +553,7 @@ def addSeeding(
                 s,
                 outputDirRoot,
                 tracks,
-                prototracks,
+                protoTracks,
                 selectedParticles,
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
@@ -570,7 +569,7 @@ def addSeeding(
             csvSeedWriter = acts.examples.CsvSeedWriter(
                 level=logLevel,
                 inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
-                inputSimSeeds=seeds,
+                inputSeeds=seeds,
                 inputSimHits="simhits",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -578,15 +577,6 @@ def addSeeding(
                 fileName=str(f"seed.csv"),
             )
             s.addWriter(csvSeedWriter)
-
-            if seedingAlgorithm == SeedingAlgorithm.HashingPrototype:
-                s.addWriter(
-                    acts.examples.CsvSpacePointsBucketWriter(
-                        level=logLevel,
-                        inputBuckets=buckets,
-                        outputDir=str(outputDirCsv),
-                    )
-                )
 
     return s
 
@@ -672,7 +662,7 @@ def addTruthEstimatedSeeding(
         level=logLevel,
         inputParticles=inputParticles,
         inputParticleMeasurementsMap="particle_measurements_map",
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         inputSimHits="simhits",
         inputMeasurementSimHitsMap="measurement_simhits_map",
         outputParticles="truth_seeded_particles",
@@ -854,7 +844,7 @@ def addStandardSeeding(
 
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         outputSeeds=outputSeeds,
         **acts.examples.defaultKWArgs(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
@@ -1153,7 +1143,7 @@ def addOrthogonalSeeding(
     )
     seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
         level=logLevel,
-        inputSpacePoints=[spacePoints],
+        inputSpacePoints=spacePoints,
         outputSeeds="seeds",
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
@@ -1303,7 +1293,7 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.SeedFinderGbtsConfig(
+    seedFinderConfig = acts.examples.GbtsConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
             connectorInputFile=connectorInputFileStr,
@@ -1311,7 +1301,7 @@ def addGbtsSeeding(
         ),
     )
 
-    seedingAlg = acts.examples.GbtsSeedingAlgorithm(
+    seedingAlg = acts.examples.GraphBasedSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=spacePoints,
         outputSeeds="seeds",
@@ -1330,7 +1320,7 @@ def addSeedPerformanceWriters(
     sequence: acts.examples.Sequencer,
     outputDirRoot: Union[Path, str],
     tracks: str,
-    prototracks: str,
+    protoTracks: str,
     selectedParticles: str,
     inputParticles: str,
     outputTrackParameters: str,
@@ -1361,7 +1351,7 @@ def addSeedPerformanceWriters(
         RootTrackParameterWriter(
             level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
-            inputProtoTracks=prototracks,
+            inputProtoTracks=protoTracks,
             inputParticles=inputParticles,
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -1392,16 +1382,16 @@ def addSeedFilterML(
     selectedParticles = "particles_selected"
     seeds = "seeds"
     estParams = "estimatedparameters"
-    prototracks = "seed-prototracks-ML"
+    protoTracks = "seed-protoTracks-ML"
     tracks = "seed-tracks-ML"
 
     filterML = SeedFilterMLAlgorithm(
         level=customLogLevel,
         inputTrackParameters="estimatedparameters",
-        inputSimSeeds="seeds",
+        inputSeeds="seeds",
         inputSeedFilterNN=onnxModelFile,
         outputTrackParameters="filtered-parameters",
-        outputSimSeeds="filtered-seeds",
+        outputSeeds="filtered-seeds",
         **acts.examples.defaultKWArgs(
             epsilonDBScan=config.epsilonDBScan,
             minPointsDBScan=config.minPointsDBScan,
@@ -1413,17 +1403,17 @@ def addSeedFilterML(
     s.addWhiteboardAlias("estimatedparameters", "filtered-parameters")
 
     s.addAlgorithm(
-        acts.examples.SeedsToPrototracks(
+        acts.examples.SeedsToProtoTracks(
             level=customLogLevel,
             inputSeeds=seeds,
-            outputProtoTracks=prototracks,
+            outputProtoTracks=protoTracks,
         )
     )
 
     s.addAlgorithm(
-        acts.examples.PrototracksToTracks(
+        acts.examples.ProtoTracksToTracks(
             level=customLogLevel,
-            inputProtoTracks=prototracks,
+            inputProtoTracks=protoTracks,
             inputTrackParameters="estimatedparameters",
             outputTracks=tracks,
         )
@@ -1462,7 +1452,7 @@ def addSeedFilterML(
         csvSeedWriter = acts.examples.CsvSeedWriter(
             level=customLogLevel,
             inputTrackParameters=estParams,
-            inputSimSeeds=seeds,
+            inputSeeds=seeds,
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
             inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -1966,21 +1956,21 @@ def addGnn(
         graphConstructor: Graph construction stage (TorchMetricLearning, ModuleMapCuda, etc.)
         edgeClassifiers: List of edge classification stages (run sequentially)
         trackBuilder: Track building stage (BoostTrackBuilding, CudaTrackBuilding, etc.)
-        nodeFeatures: List of node features to extract from spacepoints/clusters
+        nodeFeatures: List of node features to extract from space points/clusters
         featureScales: Scaling factors for each feature
-        trackingGeometry: Optional tracking geometry for creating spacepoints
-        geometrySelection: Optional geometry selection file for spacepoint creation
-        inputSpacePoints: Name of input spacepoint collection (default: "spacepoints")
+        trackingGeometry: Optional tracking geometry for creating space points
+        geometrySelection: Optional geometry selection file for space point creation
+        inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
         logLevel: Logging level
 
     Note:
         The trackingGeometry parameter serves two distinct purposes depending on the workflow:
-        1. Spacepoint creation: When provided along with geometrySelection, creates spacepoints
+        1. Space point creation: When provided along with geometrySelection, creates space points
            from measurements using SpacePointMaker (typical for simulation workflows)
         2. Module map usage: Some graph constructors (e.g., ModuleMapCuda) require
-           trackingGeometry to map module IDs even when using pre-existing spacepoints
+           trackingGeometry to map module IDs even when using pre-existing space points
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1996,7 +1986,7 @@ def addGnn(
         level=customLogLevel(),
         inputSpacePoints=inputSpacePoints,
         inputClusters=inputClusters,
-        outputProtoTracks="gnn_prototracks",
+        outputProtoTracks="gnn-protoTracks",
         graphConstructor=graphConstructor,
         edgeClassifiers=edgeClassifiers,
         trackBuilder=trackBuilder,
@@ -2004,13 +1994,13 @@ def addGnn(
         featureScales=featureScales,
     )
     s.addAlgorithm(findingAlg)
-    s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
+    s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)
 
-    # Convert prototracks to tracks
+    # Convert proto tracks to tracks
     s.addAlgorithm(
-        acts.examples.PrototracksToTracks(
+        acts.examples.ProtoTracksToTracks(
             level=customLogLevel(),
-            inputProtoTracks="prototracks",
+            inputProtoTracks="protoTracks",
             inputMeasurements="measurements",
             outputTracks="tracks",
         )
@@ -2478,7 +2468,7 @@ def addHoughVertexFinding(
 
     findHoughVertex = HoughVertexFinderAlgorithm(
         level=customLogLevel(),
-        inputSpacepoints=inputSpacePoints,
+        inputSpacePoints=inputSpacePoints,
         outputVertices=outputVertices,
     )
     s.addAlgorithm(findHoughVertex)

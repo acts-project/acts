@@ -54,10 +54,9 @@ auto phiHoughWidth_strip = [](double, const MuonSpacePoint& strip) {
   return std::sqrt(strip.covariance()[Acts::eX]) * 3.;
 };
 
-MuonHoughSeeder::MuonHoughSeeder(const Config& cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("MuonHoughSeeder", lvl),
-      m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger(name(), lvl)) {
+MuonHoughSeeder::MuonHoughSeeder(const Config& cfg,
+                                 std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("MuonHoughSeeder", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inSpacePoints.empty()) {
     throw std::invalid_argument(
         "MuonHoughSeeder: Missing drift circle collection");
