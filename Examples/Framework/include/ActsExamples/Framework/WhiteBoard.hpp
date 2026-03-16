@@ -8,13 +8,14 @@
 
 #pragma once
 
-#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -32,24 +33,7 @@ namespace ActsExamples {
 /// be modified. Trying to replace an existing object is considered an error.
 /// Its lifetime is bound to the lifetime of the white board.
 class WhiteBoard {
- private:
-  // type-erased value holder for move-constructible types
-  struct IHolder {
-    virtual ~IHolder() = default;
-    virtual const std::type_info& type() const = 0;
-    virtual const void* data() const = 0;
-    virtual std::uint64_t typeHash() const = 0;
-  };
-  template <Acts::Concepts::nothrow_move_constructible T>
-  struct HolderT : public IHolder {
-    T value;
-
-    explicit HolderT(T&& v) : value(std::move(v)) {}
-    const std::type_info& type() const override { return typeid(T); }
-    std::uint64_t typeHash() const override { return Acts::typeHash<T>(); }
-    const void* data() const override { return std::addressof(value); }
-  };
-
+ public:
   struct StringHash {
     using is_transparent = void;  // Enables heterogeneous operations.
 
@@ -59,9 +43,10 @@ class WhiteBoard {
     }
   };
 
- public:
-  using StoreMapType = std::unordered_map<std::string, std::shared_ptr<IHolder>,
-                                          StringHash, std::equal_to<>>;
+  using StoreValue =
+      std::pair<std::shared_ptr<Acts::AnyMoveOnly>, std::uint64_t>;
+  using StoreMapType =
+      std::unordered_map<std::string, StoreValue, StringHash, std::equal_to<>>;
   using AliasMapType = std::unordered_multimap<std::string, std::string,
                                                StringHash, std::equal_to<>>;
 
@@ -93,13 +78,20 @@ class WhiteBoard {
                                              int distThreshold,
                                              std::size_t maxNumber) const;
 
-  /// Store a holder on the white board.
+  /// Store a value on the white board.
   ///
   /// @param name Non-empty identifier to store it under
-  /// @param holder The holder to store
+  /// @param holder The value to store (shared ownership for copyFrom)
+  /// @param typeHash Hash of the stored type for runtime verification
   /// @throws std::invalid_argument on empty or duplicate name
   void addHolder(const std::string& name,
-                 const std::shared_ptr<IHolder>& holder);
+                 const std::shared_ptr<Acts::AnyMoveOnly>& holder,
+                 std::uint64_t typeHash);
+
+  /// Store a value on the white board (from unique ownership).
+  void addHolder(const std::string& name,
+                 std::unique_ptr<Acts::AnyMoveOnly> holder,
+                 std::uint64_t typeHash);
 
   /// Store an object on the white board and transfer ownership.
   ///
@@ -107,7 +99,9 @@ class WhiteBoard {
   /// @param object Movable reference to the transferable object
   template <typename T>
   void add(const std::string& name, T&& object) {
-    addHolder(name, std::make_shared<HolderT<T>>(std::forward<T>(object)));
+    addHolder(name,
+              std::make_shared<Acts::AnyMoveOnly>(std::forward<T>(object)),
+              Acts::typeHash<T>());
   }
 
   /// Get access to a stored object.
@@ -119,9 +113,11 @@ class WhiteBoard {
   const T& get(const std::string& name) const;
 
   template <typename T>
-  HolderT<T>* getHolder(const std::string& name) const;
+  Acts::AnyMoveOnly* getHolder(const std::string& name) const;
 
-  IHolder* getHolder(const std::string& name) const;
+  /// Returns (pointer to stored value, type hash). Throws if not found.
+  std::pair<Acts::AnyMoveOnly*, std::uint64_t> getHolder(
+      const std::string& name) const;
 
   template <typename T>
   T pop(const std::string& name);
@@ -145,7 +141,7 @@ inline WhiteBoard::WhiteBoard(std::unique_ptr<const Acts::Logger> logger,
     : m_logger(std::move(logger)), m_objectAliases(std::move(objectAliases)) {}
 
 template <typename T>
-WhiteBoard::HolderT<T>* WhiteBoard::getHolder(const std::string& name) const {
+Acts::AnyMoveOnly* WhiteBoard::getHolder(const std::string& name) const {
   auto it = m_store.find(name);
   if (it == m_store.end()) {
     const auto names = similarNames(name, 10, 3);
@@ -162,16 +158,16 @@ WhiteBoard::HolderT<T>* WhiteBoard::getHolder(const std::string& name) const {
     throw std::out_of_range("Object '" + name + "' does not exists" + ss.str());
   }
 
-  IHolder* holder = it->second.get();
-
-  auto* castedHolder = dynamic_cast<HolderT<T>*>(holder);
-  if (castedHolder == nullptr) {
+  auto& [holder, storedTypeHash] = it->second;
+  if (storedTypeHash != Acts::typeHash<T>()) {
+    const char* holderTypeName =
+        holder->typeInfo() ? holder->typeInfo()->name() : "unknown";
     std::string msg =
-        typeMismatchMessage(name, typeid(T).name(), holder->type().name());
+        typeMismatchMessage(name, typeid(T).name(), holderTypeName);
     throw std::out_of_range(msg.c_str());
   }
 
-  return castedHolder;
+  return holder.get();
 }
 
 template <typename T>
@@ -180,19 +176,15 @@ inline const T& WhiteBoard::get(const std::string& name) const {
                                          << typeid(T).name());
   ACTS_VERBOSE("Retrieved object '" << name << "'");
   auto* holder = getHolder<T>(name);
-  return holder->value;
+  return holder->template as<T>();
 }
 
 template <typename T>
 T WhiteBoard::pop(const std::string& name) {
   ACTS_VERBOSE("Pop object '" << name << "'");
-  // This will throw if the object is not of the requested type or does not
-  // exist
-  auto* holder = getHolder<T>(name);
-  // Remove the holder from the store, will go out of scope after return
-  auto owned = m_store.extract(name);
-  // Return the value by moving it out of the holder
-  return std::move(holder->value);
+  (void)getHolder<T>(name);  // validates type and existence
+  auto node = m_store.extract(name);
+  return node.mapped().first->template take<T>();
 }
 
 inline bool WhiteBoard::exists(const std::string& name) const {

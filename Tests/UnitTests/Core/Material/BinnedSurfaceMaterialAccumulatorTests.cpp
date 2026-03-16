@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/BinnedSurfaceMaterialAccumulator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
@@ -49,18 +49,17 @@ BOOST_AUTO_TEST_CASE(InvalidSetupTest) {
 
   // Second is empty - invalid
 
-  BinnedSurfaceMaterialAccumulater::Config bsmaConfig;
+  BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
   bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get()};
   bsmaConfig.emptyBinCorrection = true;
-  bsmaConfig.geoContext = tContext;
 
-  BinnedSurfaceMaterialAccumulater bsma(
+  BinnedSurfaceMaterialAccumulator bsma(
       bsmaConfig,
-      getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::VERBOSE));
+      getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
 
-  // Generate the state - will throw and exception as the second surface is
-  // invalid (w/o material)
-  BOOST_CHECK_THROW(bsma.createState(), std::invalid_argument);
+  // Generate the state - this throws because the second surface has no
+  // material assigned.
+  BOOST_CHECK_THROW(bsma.createState(tContext), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(AccumulationTest) {
@@ -97,21 +96,20 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   surfaces[2u]->assignSurfaceMaterial(
       std::make_shared<BinnedSurfaceMaterial>(sb2, mps));
 
-  BinnedSurfaceMaterialAccumulater::Config bsmaConfig;
+  BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
   bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get(),
                                  surfaces[2].get()};
   bsmaConfig.emptyBinCorrection = true;
-  bsmaConfig.geoContext = tContext;
 
-  BinnedSurfaceMaterialAccumulater bsma(
+  BinnedSurfaceMaterialAccumulator bsma(
       bsmaConfig,
-      getDefaultLogger("BinnedSurfaceMaterialAccumulater", Logging::VERBOSE));
+      getDefaultLogger("BinnedSurfaceMaterialAccumulator", Logging::VERBOSE));
 
   // Generate the state
-  auto state = bsma.createState();
+  auto state = bsma.createState(tContext);
 
   auto cState =
-      static_cast<const BinnedSurfaceMaterialAccumulater::State*>(state.get());
+      static_cast<const BinnedSurfaceMaterialAccumulator::State*>(state.get());
 
   BOOST_CHECK_EQUAL(cState->accumulatedMaterial.size(), 3u);
 
@@ -142,7 +140,7 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   std::vector<IAssignmentFinder::SurfaceAssignment> emptyHits = {
       {surfaces[2u].get(), 50 * d0, d0}};
 
-  bsma.accumulate(*state, mInteractions, emptyHits);
+  bsma.accumulate(*state, tContext, mInteractions, emptyHits);
 
   // Track 1:
   // - Surface 0 empty hit
@@ -161,10 +159,10 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
 
   mInteractions = {m11, m12};
   emptyHits = {{surfaces[0u].get(), 50 * d1, d1}};
-  bsma.accumulate(*state, mInteractions, emptyHits);
+  bsma.accumulate(*state, tContext, mInteractions, emptyHits);
 
   // Get the maps
-  auto maps = bsma.finalizeMaterial(*state);
+  auto maps = bsma.finalizeMaterial(*state, tContext);
 
   BOOST_CHECK_EQUAL(maps.size(), 3u);
 
@@ -209,12 +207,13 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   mXX.surface = invalidSurface.get();
   mXX.position = 50 * d1;
   mXX.direction = d1;
-  BOOST_CHECK_THROW(bsma.accumulate(*state, {mXX}, {}), std::invalid_argument);
+  BOOST_CHECK_THROW(bsma.accumulate(*state, tContext, {mXX}, {}),
+                    std::invalid_argument);
 
   // Invalid surface amongst empty hits
-  BOOST_CHECK_THROW(
-      bsma.accumulate(*state, {}, {{invalidSurface.get(), 50 * d1, d1}}),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(bsma.accumulate(*state, tContext, {},
+                                    {{invalidSurface.get(), 50 * d1, d1}}),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

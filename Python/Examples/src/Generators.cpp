@@ -15,7 +15,7 @@
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-#include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
+#include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -197,7 +197,7 @@ void addGenerators(py::module& mex) {
       });
 
   auto simParticleContainer =
-      py::class_<SimParticleContainer>(mex, "SimParticleContainer")
+      py::classh<SimParticleContainer>(mex, "SimParticleContainer")
           .def(py::init<>())
           .def("__len__",
                [](const SimParticleContainer& c) { return c.size(); })
