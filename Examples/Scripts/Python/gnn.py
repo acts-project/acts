@@ -99,6 +99,8 @@ def runGnnMetricLearning(
             )
         )
     elif gnnModelPath.suffix == ".onnx":
+        from acts.examples.gnn import OnnxEdgeClassifier
+
         edgeClassifiers.append(
             OnnxEdgeClassifier(**gnnConfig),
         )
