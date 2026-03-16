@@ -134,7 +134,7 @@ class SeedFinderOrthogonal {
   enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
 
   /**
-   * @brief Return the AABB rearch range for a given space point, searching
+   * @brief Return the AABB search range for a given space point, searching
    * upwards.
    *
    * This function calculates an axis-aligned bounding box around the volume of
@@ -151,7 +151,7 @@ class SeedFinderOrthogonal {
       const external_space_point_t &low) const;
 
   /**
-   * @brief Return the AABB rearch range for a given space point, searching
+   * @brief Return the AABB search range for a given space point, searching
    * downward.
    *
    * This function calculates an axis-aligned bounding box around the volume of
