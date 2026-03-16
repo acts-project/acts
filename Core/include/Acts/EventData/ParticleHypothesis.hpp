@@ -24,6 +24,7 @@ namespace Acts {
 
 /// @ingroup eventdata
 /// @defgroup eventdata-particlehypothesis Particle hypothesis for track reconstruction
+/// @{
 
 /// @brief Particle hypothesis used in reconstruction
 ///
