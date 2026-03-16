@@ -154,16 +154,16 @@ class MultiComponentBoundTrackParameters {
                  component_range_t, projector_t>
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
-    if (cmps.empty()) {
+    if (cmps.begin() == cmps.end()) {
       throw std::invalid_argument(
           "Cannot construct MultiComponentBoundTrackParameters without "
           "components");
     }
 
     for (const auto& cmp : cmps) {
-      const auto& projected = proj(cmp);
-      m_weights.push_back(std::get<0>(projected));
-      m_parameters.push_back(std::get<1>(projected));
+      const auto& [weight, parameters] = proj(cmp);
+      m_weights.push_back(weight);
+      m_parameters.push_back(parameters);
     }
   }
 
@@ -182,17 +182,17 @@ class MultiComponentBoundTrackParameters {
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis),
         m_hasCovariance(true) {
-    if (cmps.empty()) {
+    if (cmps.begin() == cmps.end()) {
       throw std::invalid_argument(
           "Cannot construct MultiComponentBoundTrackParameters without "
           "components");
     }
 
     for (const auto& cmp : cmps) {
-      const auto& projected = proj(cmp);
-      m_weights.push_back(std::get<0>(projected));
-      m_parameters.push_back(std::get<1>(projected));
-      m_covariances.push_back(std::get<2>(projected));
+      const auto& [weight, parameters, covariance] = proj(cmp);
+      m_weights.push_back(weight);
+      m_parameters.push_back(parameters);
+      m_covariances.push_back(covariance);
     }
   }
 
@@ -224,18 +224,24 @@ class MultiComponentBoundTrackParameters {
   bool empty() const { return m_weights.empty(); }
 
   /// Access to the weights of the components
-  /// @return Span of the weights for all components
+  /// @return The weights for all components
   const std::vector<double>& weights() const { return m_weights; }
 
   /// Access to the parameters of the components
-  /// @return Span of the parameters vectors for all components
+  /// @return The parameters vectors for all components
   const std::vector<ParametersVector>& parameters() const {
     return m_parameters;
   }
 
   /// Access to the covariances of the components
-  /// @return Span of the covariance matrices for all components
+  /// @return The covariance matrices for all components
+  /// @throws std::runtime_error if covariance matrices are not available for this multi-component parameters
   const std::vector<CovarianceMatrix>& covariances() const {
+    if (!hasCovariance()) {
+      throw std::runtime_error(
+          "Covariance matrices are not available for this "
+          "MultiComponentBoundTrackParameters");
+    }
     return m_covariances;
   }
 
