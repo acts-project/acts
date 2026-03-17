@@ -116,7 +116,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = sSequence;
+      propOptions.navigation.externalSurfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
@@ -132,7 +132,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = sSequence;
+      propOptions.navigation.externalSurfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
@@ -170,7 +170,7 @@ struct GaussianSumFitter {
 
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.insertExternalSurface(
+          propOptions.navigation.appendExternalSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }
@@ -192,7 +192,7 @@ struct GaussianSumFitter {
 
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.insertExternalSurface(
+          propOptions.navigation.appendExternalSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }

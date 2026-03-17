@@ -1265,7 +1265,7 @@ class Gx2Fitter {
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(*surface);
+        propagatorOptions.navigation.appendExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1431,7 +1431,7 @@ class Gx2Fitter {
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(*surface);
+        propagatorOptions.navigation.appendExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
