@@ -1,6 +1,22 @@
+set(_fpe_platform_source src/FpeMonitorPlatformUnsupported.cpp)
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _acts_fpe_arch)
+
+if(APPLE)
+    if(_acts_fpe_arch MATCHES "^(x86_64|amd64)$")
+        set(_fpe_platform_source src/FpeMonitorPlatformDarwinX86_64.cpp)
+    elseif(_acts_fpe_arch MATCHES "^(arm64|aarch64)$")
+        set(_fpe_platform_source src/FpeMonitorPlatformDarwinArm64.cpp)
+    endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(_acts_fpe_arch MATCHES "^(x86_64|amd64)$")
+        set(_fpe_platform_source src/FpeMonitorPlatformLinuxX86_64.cpp)
+    endif()
+endif()
+
 acts_add_library(
     PluginFpeMonitoring
     src/FpeMonitor.cpp
+    ${_fpe_platform_source}
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
