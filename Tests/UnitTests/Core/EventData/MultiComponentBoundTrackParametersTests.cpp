@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
 
 #include <initializer_list>
 #include <memory>
