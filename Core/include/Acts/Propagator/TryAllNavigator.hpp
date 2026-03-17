@@ -38,10 +38,10 @@ namespace Acts::Experimental {
 ///
 /// This Navigator tries all possible intersections with all surfaces in the
 /// current volume. It does not use any information about the geometry to
-/// optimize the search. It is therefore very slow, but can be used as a
+/// optimise the search. It is therefore very slow, but can be used as a
 /// reference implementation.
 ///
-/// Additionally, this implementation tries to discovers additional
+/// Additionally, this implementation tries to discover additional
 /// intersections after stepping forward and then checking for intersections
 /// based on the previous and current positions. This is slower, but more robust
 /// against bent tracks.
@@ -87,7 +87,7 @@ class TryAllNavigator final {
 
   /// Nested state struct
   struct State final {
-    /// @param options_ Navigator options to initialize state with
+    /// @param options_ Navigator options to initialise state with
     explicit State(const Options& options_) : options(options_) {}
 
     /// Navigation options containing configuration for this propagation
@@ -558,8 +558,8 @@ class TryAllNavigator final {
     initializeVolumeCandidates(state);
   }
 
-  /// Helper method to initialize navigation candidates for the current volume.
-  /// @param state Navigation state to initialize candidates for
+  /// Helper method to initialise navigation candidates for the current volume.
+  /// @param state Navigation state to initialise candidates for
   void initializeVolumeCandidates(State& state) const {
     const TrackingVolume* volume = state.currentVolume;
     ACTS_VERBOSE(volInfo(state) << "Initialize volume");
