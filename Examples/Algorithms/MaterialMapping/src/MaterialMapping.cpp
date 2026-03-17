@@ -57,18 +57,14 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
       unmappedTrackCollection;
 
-  // To make it work with the framework needs a lock guard
-  auto mappingState =
-      const_cast<Acts::MaterialMapper::State*>(m_mappingState.get());
-
-  for (auto& [idTrack, mTrack] : mtrackCollection) {
+  for (const auto& [idTrack, mTrack] : mtrackCollection) {
     auto [mapped, unmapped] = m_cfg.materialMapper->mapMaterial(
-        *mappingState, context.geoContext, context.magFieldContext, mTrack);
+        *m_mappingState, context.geoContext, context.magFieldContext, mTrack);
 
-    mappedTrackCollection.emplace_hint(mappedTrackCollection.end(), idTrack,
-                                       mapped);
-    unmappedTrackCollection.emplace_hint(unmappedTrackCollection.end(), idTrack,
-                                         unmapped);
+    mappedTrackCollection.try_emplace(mappedTrackCollection.end(), idTrack,
+                                      mapped);
+    unmappedTrackCollection.try_emplace(unmappedTrackCollection.end(), idTrack,
+                                        unmapped);
   }
 
   // Write the mapped and unmapped material tracks to the output
