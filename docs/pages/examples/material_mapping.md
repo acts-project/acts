@@ -10,16 +10,16 @@ define current behavior.
 
 Material mapping in the Examples pipeline is a three-step process:
 
-1. **Record material in detailed simulation (Geant4)**  
+1. **Record material in detailed simulation (Geant4)**
    Shoot particles through the detector's full simulation geometry and store
    material interactions per track.
 
-2. **Map recorded material onto ACTS tracking surfaces**  
+2. **Map recorded material onto ACTS tracking surfaces**
    Collect surfaces configured to carry material (via `ProtoSurfaceMaterial` in
    geometry/material configuration), assign recorded interactions to these
    surfaces, and average into a compact material map.
 
-3. **Validate mapped material**  
+3. **Validate mapped material**
    Propagate particles through the detector decorated with the produced map and
    record material tracks again for comparison against Geant4-based recording.
 
@@ -93,4 +93,3 @@ Primary tests live in `Python/Examples/tests`:
 
 These tests are the executable reference for expected output structure and
 regression tracking.
-

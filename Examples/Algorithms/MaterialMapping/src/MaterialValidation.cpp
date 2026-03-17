@@ -40,7 +40,8 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
   for (const auto& [it, parameters] : Acts::enumerate(inputTrackParameters)) {
     // Record the material
     auto rMaterial = m_cfg.materialValidator->recordMaterial(
-        context.geoContext, context.magFieldContext, m_cfg.startPosition,
+        context.geoContext, context.magFieldContext,
+        parameters.position(context.geoContext),
         parameters.momentum().normalized());
 
     recordedMaterialTracks.emplace_hint(recordedMaterialTracks.end(), it,

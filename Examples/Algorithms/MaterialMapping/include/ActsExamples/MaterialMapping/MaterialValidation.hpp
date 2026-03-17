@@ -36,9 +36,6 @@ class MaterialValidation : public IAlgorithm {
 
     // The validator
     std::shared_ptr<Acts::MaterialValidator> materialValidator = nullptr;
-
-    /// Output collection name
-    std::string outputMaterialTracks = "material_tracks";
   };
 
   /// Constructor
