@@ -82,9 +82,7 @@ class TrackProxyCommon {
   /// has a valid next-state index. Forward-linking is required to use the
   /// inside-out @c trackStates() range.
   /// @return True if the track is forward-linked
-  bool isForwardLinked() const {
-    return stemIndex() != kTrackIndexInvalid;
-  }
+  bool isForwardLinked() const { return stemIndex() != kTrackIndexInvalid; }
 
   /// Return the number of measurements assigned to this track.
   /// @return The number of measurements
