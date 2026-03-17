@@ -43,17 +43,6 @@ concept PyClassWithSmartHolder =
 ///    safe retrieval from the `WhiteBoard`.
 class WhiteBoardRegistry {
  private:
-  /// Function that converts a type-erased pointer from the WhiteBoard into a
-  /// pybind11 object. The wbPy argument is used for reference_internal
-  /// lifetime.
-  using ToPythonFunction = std::function<pybind11::object(
-      const Acts::AnyMoveOnly& any, const pybind11::object& wbPy)>;
-
-  /// Function that converts a pybind11 object into a type-erased pointer for
-  /// the WhiteBoard.
-  using FromPythonFunction = std::function<std::unique_ptr<Acts::AnyMoveOnly>(
-      const pybind11::object& obj)>;
-
   /// Register a C++ type T with its pybind11 Python type for WhiteBoard
   /// access. Use when the `py::class_<T>` type cannot be deduced (e.g. for
   /// template types).
@@ -107,6 +96,17 @@ class WhiteBoardRegistry {
     using type = pybind11::class_<Ts...>::type;
     registerType<type>(pyClass);
   }
+
+  /// Function that converts a type-erased pointer from the WhiteBoard into a
+  /// pybind11 object. The wbPy argument is used for reference_internal
+  /// lifetime.
+  using ToPythonFunction = std::function<pybind11::object(
+      const Acts::AnyMoveOnly& any, const pybind11::object& wbPy)>;
+
+  /// Function that converts a pybind11 object into a type-erased pointer for
+  /// the WhiteBoard.
+  using FromPythonFunction = std::function<std::unique_ptr<Acts::AnyMoveOnly>(
+      const pybind11::object& obj)>;
 
   /// Per-type registry entry: downcast function and type metadata for lookups.
   struct RegistryEntry {
