@@ -330,9 +330,8 @@ class TryAllNavigator final {
       ACTS_VERBOSE("- distance: " << stepDistance);
 
       if (stepDistance < std::numeric_limits<double>::epsilon()) {
-        ACTS_DEBUG(volInfo(state)
-                   << "Step distance is zero: " << stepDistance
-                   << ". Try another to resolve the target again.");
+        ACTS_DEBUG(volInfo(state) << "Step distance is zero: " << stepDistance
+                                  << ". Retry to resolve the next target.");
         return nextTarget(state, position, direction);
       }
 
