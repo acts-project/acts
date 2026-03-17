@@ -580,8 +580,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
     const GeometryIdentifier geoId = surface->geometryId();
     // Don't add any surface which is not in the same volume (volume bits)
     // or sub volume (extra bits)
-    if (geoId.volume() != state.currentVolume->geometryId().volume() ||
-        geoId.extra() != state.currentVolume->geometryId().extra()) {
+    if (geoId.withSensitive(0) != state.currentVolume->geometryId()) {
       continue;
     }
     ACTS_VERBOSE(volInfo(state) << "Try to navigate to " << surface->type()
