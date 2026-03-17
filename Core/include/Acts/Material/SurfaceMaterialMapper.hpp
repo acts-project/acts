@@ -169,28 +169,31 @@ class SurfaceMaterialMapper {
 
   /// Process/map a single track
   ///
-  /// @param mState The current state map
-  /// @param mTrack The material track to be mapped
-  ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  ///
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  /// @return Result of the mapping process
+  Result<void> mapMaterialTrack(State& mState,
+                                RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
   ///
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
-  ///
-  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+  /// @return Result of the mapping process
+  Result<void> mapInteraction(State& mState,
+                              RecordedMaterialTrack& mTrack) const;
 
   /// Loop through all the material interactions and add them to the
   /// associated surface
+  ///
+  /// @note The material interactions are assumed to have an associated surface ID
   ///
   /// @param mState The current state map
   /// @param rMaterial Vector of all the material interactions that will be mapped
-  ///
-  /// @note The material interactions are assumed to have an associated surface ID
   void mapSurfaceInteraction(State& mState,
                              std::vector<MaterialInteraction>& rMaterial) const;
 

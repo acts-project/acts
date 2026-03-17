@@ -8,20 +8,16 @@
 
 #include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
-
 #include <algorithm>
-#include <bitset>
 #include <cfenv>
 #include <csignal>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <mutex>
-#include <stdexcept>
-#include <string_view>
 #include <vector>
 
 #include <boost/stacktrace/frame.hpp>
@@ -29,21 +25,27 @@
 #include <boost/stacktrace/stacktrace.hpp>
 #include <boost/stacktrace/stacktrace_fwd.hpp>
 
-#define FPU_EXCEPTION_MASK 0x3f
-#define FPU_STATUS_FLAGS 0xff
-#define SSE_STATUS_FLAGS FPU_EXCEPTION_MASK
-#define SSE_EXCEPTION_MASK (FPU_EXCEPTION_MASK << 7)
+#include "FpeMonitorPlatform.hpp"
 
 namespace ActsPlugins {
 
 namespace {
-bool areFpesEquivalent(
-    std::pair<FpeType, const boost::stacktrace::stacktrace &> lhs,
-    std::pair<FpeType, const boost::stacktrace::stacktrace &> rhs) {
-  const auto &fl = *lhs.second.begin();
-  const auto &fr = *rhs.second.begin();
-  return lhs.first == rhs.first && (boost::stacktrace::hash_value(fl) ==
-                                    boost::stacktrace::hash_value(fr));
+
+bool canMergeFpeInfo(const FpeMonitor::Result::FpeInfo &existing, FpeType type,
+                     std::uintptr_t location,
+                     const boost::stacktrace::stacktrace &st) {
+  if (existing.type != type) {
+    return false;
+  }
+
+  if (location != 0 && existing.location != 0) {
+    return location == existing.location;
+  }
+
+  const auto &existingFrame = *existing.st->begin();
+  const auto &candidateFrame = *st.begin();
+  return boost::stacktrace::hash_value(existingFrame) ==
+         boost::stacktrace::hash_value(candidateFrame);
 }
 }  // namespace
 
@@ -51,8 +53,9 @@ FpeMonitor::Result::FpeInfo::~FpeInfo() = default;
 
 FpeMonitor::Result::FpeInfo::FpeInfo(
     std::size_t countIn, FpeType typeIn,
-    std::shared_ptr<const boost::stacktrace::stacktrace> stIn)
-    : count{countIn}, type{typeIn}, st{std::move(stIn)} {}
+    std::shared_ptr<const boost::stacktrace::stacktrace> stIn,
+    std::uintptr_t locationIn)
+    : count{countIn}, type{typeIn}, st{std::move(stIn)}, location{locationIn} {}
 
 FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
   Result result{};
@@ -61,10 +64,9 @@ FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
     result.m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(with.m_stackTraces.begin(), with.m_stackTraces.end(),
-            std::back_inserter(result.m_stackTraces));
-  std::copy(m_stackTraces.begin(), m_stackTraces.end(),
-            std::back_inserter(result.m_stackTraces));
+  std::ranges::copy(with.m_stackTraces,
+                    std::back_inserter(result.m_stackTraces));
+  std::ranges::copy(m_stackTraces, std::back_inserter(result.m_stackTraces));
 
   result.deduplicate();
 
@@ -76,32 +78,29 @@ void FpeMonitor::Result::merge(const Result &with) {
     m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(with.m_stackTraces.begin(), with.m_stackTraces.end(),
-            std::back_inserter(m_stackTraces));
+  std::ranges::copy(with.m_stackTraces, std::back_inserter(m_stackTraces));
 
   deduplicate();
 }
 
 void FpeMonitor::Result::add(FpeType type, void *stackPtr,
-                             std::size_t bufferSize) {
+                             std::size_t bufferSize, std::uintptr_t location) {
   auto st = std::make_unique<boost::stacktrace::stacktrace>(
       boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize));
 
-  auto it = std::ranges::find_if(m_stackTraces, [&](const FpeInfo &el) {
-    return areFpesEquivalent({el.type, *el.st}, {type, *st});
-  });
-
-  if (it != m_stackTraces.end()) {
-    it->count += 1;
-  } else {
-    m_stackTraces.push_back({1, type, std::move(st)});
+  for (auto &el : m_stackTraces) {
+    if (canMergeFpeInfo(el, type, location, *st)) {
+      el.count += 1;
+      return;
+    }
   }
+
+  m_stackTraces.emplace_back(1, type, std::move(st), location);
 }
 
-bool FpeMonitor::Result::contains(
-    FpeType type, const boost::stacktrace::stacktrace &st) const {
+bool FpeMonitor::Result::contains(const FpeInfo &info) const {
   return std::ranges::any_of(m_stackTraces, [&](const FpeInfo &el) {
-    return areFpesEquivalent({el.type, *el.st}, {type, st});
+    return canMergeFpeInfo(el, info.type, info.location, *info.st);
   });
 }
 
@@ -115,8 +114,9 @@ void FpeMonitor::consumeRecorded() {
     return;
   }
 
-  for (auto [type, stackPtr, remaining] : m_recorded) {
-    m_result.add(type, stackPtr, remaining);
+  for (const auto &recorded : m_recorded) {
+    m_result.add(recorded.type, recorded.stackPtr, recorded.bufferSize,
+                 recorded.location);
   }
 
   m_buffer.reset();
@@ -151,27 +151,30 @@ void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
   }
 
   os << "\nStack traces:\n";
-  for (const auto &[count, type, st] : stackTraces()) {
-    os << "- " << type << ": (" << count << " times)\n";
+  for (const auto &info : stackTraces()) {
+    os << "- " << info.type << ": (" << info.count << " times)\n";
 
-    os << stackTraceToString(*st, depth);
+    os << stackTraceToString(*info.st, depth);
   }
   os << std::endl;
 }
 
 void FpeMonitor::Result::deduplicate() {
-  std::vector<FpeInfo> copy{};
-  copy.swap(m_stackTraces);
+  std::vector<FpeInfo> copy = std::move(m_stackTraces);
+  m_stackTraces.clear();
+  m_stackTraces.reserve(copy.size());
 
-  for (auto &info : copy) {
-    auto it = std::ranges::find_if(m_stackTraces, [&info](const FpeInfo &el) {
-      return areFpesEquivalent({el.type, *el.st}, {info.type, *info.st});
-    });
-    if (it != m_stackTraces.end()) {
-      it->count += info.count;
-      continue;
+  for (const auto &info : copy) {
+    const auto mergeTarget =
+        std::ranges::find_if(m_stackTraces, [&](const FpeInfo &existing) {
+          return canMergeFpeInfo(existing, info.type, info.location, *info.st);
+        });
+
+    if (mergeTarget != m_stackTraces.end()) {
+      mergeTarget->count += info.count;
+    } else {
+      m_stackTraces.push_back(info);
     }
-    m_stackTraces.push_back({info.count, info.type, std::move(info.st)});
   }
 }
 
@@ -188,74 +191,76 @@ FpeMonitor::~FpeMonitor() {
   disable();
 }
 
-void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
+void FpeMonitor::signalHandler(int signal, siginfo_t *si, void *ctx) {
   if (stack().empty()) {
     return;
   }
 
   FpeMonitor &fpe = *stack().top();
-  fpe.m_result.m_counts.at(si->si_code)++;
+  auto type = detail::decodeFpeType(signal, si, ctx);
+  if (!type.has_value()) {
+    if (detail::shouldFailFastOnUnknownSignal()) {
+      // Must use _Exit: async-signal-safe. std::terminate is not (calls
+      // terminate handler). std::abort raises SIGABRT from within a handler.
+      std::_Exit(EXIT_FAILURE);
+    }
+    return;
+  }
+  fpe.m_result.m_counts.at(static_cast<std::uint32_t>(*type))++;
+  std::uintptr_t location =
+      si != nullptr ? reinterpret_cast<std::uintptr_t>(si->si_addr) : 0;
 
   try {
-    // collect stack trace skipping 2 frames, which should be the signal handler
-    // and the calling facility. This might be platform specific, not sure
     auto [buffer, remaining] = fpe.m_buffer.next();
-    std::size_t depth = boost::stacktrace::safe_dump_to(2, buffer, remaining);
+    using NativeFramePtr = boost::stacktrace::frame::native_frame_ptr_t;
     std::size_t stored =
-        depth * sizeof(boost::stacktrace::frame::native_frame_ptr_t);
-    fpe.m_buffer.pushOffset(stored);  // record how much storage was consumed
-    fpe.m_recorded.emplace_back(
-        static_cast<FpeType>(si->si_code), buffer,
-        remaining);  // record buffer offset and fpe type
+        detail::captureStackFromSignalContext(ctx, buffer, remaining);
+    if (stored == 0) {
+      std::size_t depth = boost::stacktrace::safe_dump_to(
+          detail::safeDumpSkipFrames(), buffer, remaining);
+      stored = depth * sizeof(NativeFramePtr);
+    }
+    if (stored > 0) {
+      fpe.m_buffer.pushOffset(stored);  // record how much storage was consumed
+      fpe.m_recorded.emplace_back(
+          *type, buffer, stored,
+          location);  // record consumed stack dump and trap location
+    }
 
   } catch (const std::bad_alloc &e) {
     std::cout << "Unable to collect stack trace due to memory limit"
               << std::endl;
   }
 
-#if defined(__linux__) && defined(__x86_64__)
-  __uint16_t *cw = &(static_cast<ucontext_t *>(ctx))->uc_mcontext.fpregs->cwd;
-  *cw |= FPU_EXCEPTION_MASK;
-
-  __uint16_t *sw = &(static_cast<ucontext_t *>(ctx))->uc_mcontext.fpregs->swd;
-  *sw &= ~FPU_STATUS_FLAGS;
-
-  __uint32_t *mxcsr =
-      &(static_cast<ucontext_t *>(ctx))->uc_mcontext.fpregs->mxcsr;
-  // *mxcsr |= SSE_EXCEPTION_MASK;  // disable all SSE exceptions
-  *mxcsr |= ((*mxcsr & SSE_STATUS_FLAGS) << 7);
-  *mxcsr &= ~SSE_STATUS_FLAGS;  // clear all pending SSE exceptions
-#else
-  static_cast<void>(ctx);
-#endif
+  detail::maskTrapsInSignalContext(ctx, *type);
 }
 
 void FpeMonitor::enable() {
-#if defined(__linux__) && defined(__x86_64__)
+  if (!detail::isRuntimeSupported()) {
+    return;
+  }
   ensureSignalHandlerInstalled();
 
   // clear pending exceptions so they don't immediately fire
-  std::feclearexcept(m_excepts);
+  detail::clearPendingExceptions(m_excepts);
 
   if (!stack().empty()) {
     // unset previous except state
-    fedisableexcept(stack().top()->m_excepts);
+    detail::disableExceptions(stack().top()->m_excepts);
   }
   // apply this stack
-  feenableexcept(m_excepts);
+  detail::enableExceptions(m_excepts);
 
   stack().push(this);
-#else
-  static_cast<void>(m_excepts);
-#endif
 }
 
 void FpeMonitor::rearm() {
   consumeRecorded();
-#if defined(__linux__) && defined(__x86_64__)
-  std::feclearexcept(m_excepts);
-  feenableexcept(m_excepts);
-#endif
+  if (!detail::isRuntimeSupported()) {
+    return;
+  }
+  detail::clearPendingExceptions(m_excepts);
+  detail::enableExceptions(m_excepts);
 }
 
 void FpeMonitor::ensureSignalHandlerInstalled() {
@@ -265,28 +270,29 @@ void FpeMonitor::ensureSignalHandlerInstalled() {
   }
 
   std::lock_guard lock{state.mutex};
+  if (state.isSignalHandlerInstalled) {
+    return;
+  }
 
-  struct sigaction action{};
-  action.sa_sigaction = &signalHandler;
-  action.sa_flags = SA_SIGINFO;
-  sigaction(SIGFPE, &action, nullptr);
+  detail::installSignalHandlers(&signalHandler);
 
   state.isSignalHandlerInstalled = true;
 }
 
 void FpeMonitor::disable() {
-#if defined(__linux__) && defined(__x86_64__)
-  std::feclearexcept(m_excepts);
+  if (!detail::isRuntimeSupported()) {
+    return;
+  }
+  detail::clearPendingExceptions(m_excepts);
   assert(!stack().empty() && "FPE stack shouldn't be empty at this point");
   stack().pop();
   // disable excepts we enabled here
-  fedisableexcept(m_excepts);
+  detail::disableExceptions(m_excepts);
   if (!stack().empty()) {
     // restore excepts from next stack element
-    std::feclearexcept(stack().top()->m_excepts);
-    feenableexcept(stack().top()->m_excepts);
+    detail::clearPendingExceptions(stack().top()->m_excepts);
+    detail::enableExceptions(stack().top()->m_excepts);
   }
-#endif
 }
 
 std::stack<FpeMonitor *> &FpeMonitor::stack() {
@@ -337,6 +343,10 @@ bool FpeMonitor::canSymbolize() {
 #else
   return true;
 #endif
+}
+
+bool FpeMonitor::isSupported() {
+  return detail::isRuntimeSupported();
 }
 
 }  // namespace ActsPlugins
