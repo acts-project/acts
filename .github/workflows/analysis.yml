@@ -177,3 +177,61 @@ jobs:
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml
+
+  cppcheck:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404:83
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Mark workspace as safe
+        run: git config --global --add safe.directory /__w/acts/acts
+
+      - name: Fetch base branch
+        if: github.event_name == 'pull_request'
+        run: git fetch origin "${{ github.base_ref }}"
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Install cppcheck
+        run: apt-get update && apt-get install -y cppcheck
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Configure
+        run: >
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci-cppcheck
+
+      - name: Analyze (PR - changed files only)
+        if: github.event_name == 'pull_request'
+        run: >
+          uv run CI/cppcheck/run_cppcheck_pr.py
+          analyze build results.xml --base-ref "origin/${{ github.base_ref }}"
+
+      - name: Analyze (push - all files)
+        if: github.event_name == 'push'
+        run: >
+          uv run CI/cppcheck/run_cppcheck_pr.py
+          analyze build results.xml --all
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cppcheck-results
+          path: results.xml
+
+      - name: Annotate
+        run: >
+          uv run CI/cppcheck/run_cppcheck_pr.py
+          annotate results.xml

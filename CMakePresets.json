@@ -126,6 +126,15 @@
             }
         },
         {
+            "name": "github-ci-cppcheck",
+            "displayName": "GitHub-CI cppcheck",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "ACTS_BUILD_ODD": "OFF",
+                "ACTS_BUILD_PYTHON_BINDINGS": "OFF"
+            }
+        },
+        {
             "name": "gitlab-ci-lcg",
             "displayName": "GitLab-CI LCG",
             "inherits": "ci-common",
