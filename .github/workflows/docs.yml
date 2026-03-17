@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
+      DOXYGEN_WARN_LOGFILE: ${{ github.workspace }}/build/doxygen-warnings.log
       DOXYGEN_VERSION: "1.15.0"
       DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
       LINKCHECK_IGNORE_URL: "https://github.com/acts-project/linkcheck-ignore/raw/refs/heads/main/data.json"
@@ -40,8 +41,19 @@ jobs:
           cmake -B build -S . -DACTS_BUILD_DOCS=ON
 
       - name: Build documentation
-        run: >
+        id: build_docs
+        continue-on-error: true
+        run: |
+          : > "${DOXYGEN_WARN_LOGFILE}"
           cmake --build build --target docs
+
+      - name: Annotate Doxygen diagnostics
+        if: always()
+        run: python3 CI/parse_doxygen_warnings.py "${DOXYGEN_WARN_LOGFILE}"
+
+      - name: Fail if documentation build failed
+        if: steps.build_docs.outcome == 'failure'
+        run: exit 1
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
