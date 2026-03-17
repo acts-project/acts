@@ -156,7 +156,7 @@ if "__main__" == __name__:
     ci_models = Path(model_storage)
     embedModelPath = ci_models / "torchscript_models/embed.pt"
     filterModelPath = ci_models / "torchscript_models/filter.pt"
-    gnnModelPath = ci_models / "torchscript_models/gnn.pt"
+    gnnModelPath = ci_models / "onnx_models/gnn.onnx"
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
