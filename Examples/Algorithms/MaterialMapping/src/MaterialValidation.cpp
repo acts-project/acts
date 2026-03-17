@@ -19,46 +19,31 @@ MaterialValidation::MaterialValidation(
     std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("MaterialValidation", std::move(logger)), m_cfg(cfg) {
   // Prepare the I/O collections
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
   m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
   // Check the configuration - material validator
   if (m_cfg.materialValidator == nullptr) {
     throw std::invalid_argument("Missing material validator.");
   }
-  // Check the configuration - random number service
-  if (m_cfg.randomNumberSvc == nullptr) {
-    throw std::invalid_argument("Missing random number service.");
-  }
 }
 
 ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
-  // Create a random number generator
-  RandomEngine rng = m_cfg.randomNumberSvc->spawnGenerator(context);
+  const auto& inputTrackParameters = m_inputTrackParameters(context);
 
-  // Setup random number distributions for some quantities
-  std::uniform_real_distribution<double> phiDist(m_cfg.phiRange.first,
-                                                 m_cfg.phiRange.second);
-  std::uniform_real_distribution<double> etaDist(m_cfg.etaRange.first,
-                                                 m_cfg.etaRange.second);
+  ACTS_DEBUG("Validation with " << inputTrackParameters.size()
+                                << " input trackparameters");
 
-  // The output recorded material track collection
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
       recordedMaterialTracks;
+  recordedMaterialTracks.reserve(inputTrackParameters.size());
 
-  // Loop over the number of tracks
-  for (std::size_t iTrack = 0; iTrack < m_cfg.ntracks; ++iTrack) {
-    // Generate a random phi and eta
-    double phi = phiDist(rng);
-    double eta = etaDist(rng);
-    double theta = 2 * std::atan(std::exp(-eta));
-    Acts::Vector3 direction(std::cos(phi) * std::sin(theta),
-                            std::sin(phi) * std::sin(theta), std::cos(theta));
-
+  for (const auto& [it, parameters] : Acts::enumerate(inputTrackParameters)) {
     // Record the material
     auto rMaterial = m_cfg.materialValidator->recordMaterial(
         context.geoContext, context.magFieldContext, m_cfg.startPosition,
-        direction);
+        parameters.momentum().normalized());
 
-    recordedMaterialTracks.emplace_hint(recordedMaterialTracks.end(), iTrack,
+    recordedMaterialTracks.emplace_hint(recordedMaterialTracks.end(), it,
                                         rMaterial);
   }
 

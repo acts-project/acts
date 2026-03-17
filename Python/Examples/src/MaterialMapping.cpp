@@ -73,9 +73,8 @@ void addMaterialMapping(py::module& mex) {
     auto [mv, c] = declareAlgorithm<MaterialValidation, IAlgorithm>(
         mex, "MaterialValidation");
     mv.def("execute", &MaterialValidation::execute);
-    ACTS_PYTHON_STRUCT(c, ntracks, startPosition, phiRange, etaRange,
-                       randomNumberSvc, materialValidator,
-                       outputMaterialTracks);
+    ACTS_PYTHON_STRUCT(c, inputTrackParameters, outputMaterialTracks,
+                       materialValidator);
   }
 }
 

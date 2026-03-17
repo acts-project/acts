@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
-
+from pathlib import Path
 import acts
+
 from acts import (
+    Surface,
     MaterialMapper,
     IntersectionMaterialAssigner,
     BinnedSurfaceMaterialAccumulater,
+    logging,
+    GeometryContext,
 )
 
 from acts.json import MaterialMapJsonConverter
@@ -16,13 +19,13 @@ from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
-    ProcessCode,
     MaterialMapping,
 )
 
 from acts.examples.root import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
+    RootMaterialWriter,
 )
 
 from acts.examples.json import (
@@ -30,108 +33,111 @@ from acts.examples.json import (
     JsonFormat,
 )
 
-from acts.examples.odd import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 def runMaterialMapping(
-    trackingGeometry,
-    decorators,
-    outputDir,
-    inputDir,
-    mapName="material-map",
-    mapFormat=JsonFormat.Json,
-    mapSurface=True,
-    mapVolume=False,
-    readCachedSurfaceInformation=False,
-    mappingStep=1,
-    s=None,
+    surfaces: list[Surface],
+    inputFile: Path,
+    outputFileBase: str,
+    outputMapFormats: list[str] = ["json", "root"],
+    loglevel: acts.logging.Level = acts.logging.INFO,
+    outputMaterialTracks: str = "material_tracks",
+    treeName: str = "material_tracks",
+    readCachedSurfaceInformation: bool = False,
 ):
-    del mapVolume
-    del mappingStep
+    # Create a sequencer
+    print("Creating the sequencer with 1 thread (inter event information needed)")
 
-    if not mapSurface:
-        raise ValueError("Surface mapping must be enabled.")
+    s = Sequencer(numThreads=1)
 
-    s = s or Sequencer(numThreads=1)
-
-    for decorator in decorators:
-        s.addContextDecorator(decorator)
-
+    # IO for material tracks reading
     wb = WhiteBoard(acts.logging.INFO)
-    context = AlgorithmContext(0, 0, wb, 0)
 
-    for decorator in decorators:
-        assert decorator.decorate(context) == ProcessCode.SUCCESS
-
+    # Read material step information from a ROOT TTRee
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            outputMaterialTracks="material-tracks",
-            fileList=[
-                os.path.join(
-                    inputDir,
-                    (
-                        mapName + "_tracks.root"
-                        if readCachedSurfaceInformation
-                        else "geant4_material_tracks.root"
-                    ),
-                )
-            ],
-            readCachedSurfaceInformation=readCachedSurfaceInformation,
+            outputMaterialTracks=outputMaterialTracks,
+            treeName=treeName,
+            fileList=[str(inputFile)],
+            readCachedSurfaceInformation=False,
         )
     )
 
-    materialSurfaces = trackingGeometry.extractMaterialSurfaces()
+    # Assignment setup : Intersection assigner
+    materialAssingerConfig = IntersectionMaterialAssigner.Config()
+    materialAssingerConfig.surfaces = surfaces
+    materialAssinger = IntersectionMaterialAssigner(materialAssingerConfig, loglevel)
 
-    assignmentCfg = IntersectionMaterialAssigner.Config()
-    assignmentCfg.surfaces = materialSurfaces
-    assignmentFinder = IntersectionMaterialAssigner(assignmentCfg, acts.logging.INFO)
-
-    accumulaterCfg = BinnedSurfaceMaterialAccumulater.Config()
-    accumulaterCfg.materialSurfaces = materialSurfaces
-    surfaceAccumulater = BinnedSurfaceMaterialAccumulater(
-        accumulaterCfg, acts.logging.INFO
+    # Accumulation setup : Binned surface material accumulater
+    materialAccumulaterConfig = BinnedSurfaceMaterialAccumulater.Config()
+    materialAccumulaterConfig.materialSurfaces = surfaces
+    materialAccumulater = BinnedSurfaceMaterialAccumulater(
+        materialAccumulaterConfig, loglevel
     )
 
-    mapperCfg = MaterialMapper.Config()
-    mapperCfg.assignmentFinder = assignmentFinder
-    mapperCfg.surfaceMaterialAccumulater = surfaceAccumulater
-    materialMapper = MaterialMapper(mapperCfg, acts.logging.INFO)
+    # Mapper setup
+    materialMapperConfig = MaterialMapper.Config()
+    materialMapperConfig.assignmentFinder = materialAssinger
+    materialMapperConfig.surfaceMaterialAccumulater = materialAccumulater
+    materialMapper = MaterialMapper(materialMapperConfig, loglevel)
 
-    mmAlgCfg = MaterialMapping.Config(context.geoContext)
-    mmAlgCfg.inputMaterialTracks = "material-tracks"
-    mmAlgCfg.mappedMaterialTracks = "mapped-material-tracks"
-    mmAlgCfg.unmappedMaterialTracks = "unmapped-material-tracks"
-    mmAlgCfg.materialMapper = materialMapper
+    # Add the map writer(s)
+    materialMapWriters = []
+    # json map writer
+    if "json" in outputMapFormats:
+        jmConverterCfg = MaterialMapJsonConverter.Config(
+            processSensitives=True,
+            processApproaches=True,
+            processRepresenting=True,
+            processBoundaries=True,
+            processVolumes=False,
+        )
+        # Suffix for the map file is added in the writer depending on the format
+        materialMapWriters.append(
+            JsonMaterialWriter(
+                level=loglevel,
+                converterCfg=jmConverterCfg,
+                fileName=outputFileBase + "_map",
+                writeFormat=JsonFormat.Json,
+            )
+        )
+    if "root" in outputMapFormats:
+        materialMapWriters.append(
+            RootMaterialWriter(
+                level=loglevel,
+                filePath=outputFileBase + "_map.root",
+            )
+        )
 
-    jmConverterCfg = MaterialMapJsonConverter.Config(
-        processSensitives=True,
-        processApproaches=True,
-        processRepresenting=True,
-        processBoundaries=True,
-        processVolumes=False,
-        context=context.geoContext,
-    )
+    # Mapping Algorithm
+    materialMappingConfig = MaterialMapping.Config()
+    materialMappingConfig.materialMapper = materialMapper
+    materialMappingConfig.inputMaterialTracks = outputMaterialTracks
+    materialMappingConfig.mappedMaterialTracks = outputMaterialTracks + "_mapped"
+    materialMappingConfig.unmappedMaterialTracks = outputMaterialTracks + "_unmapped"
+    materialMappingConfig.materialWriters = materialMapWriters
+    materialMapping = MaterialMapping(materialMappingConfig, loglevel)
+    s.addAlgorithm(materialMapping)
 
-    jmw = JsonMaterialWriter(
-        level=acts.logging.VERBOSE,
-        converterCfg=jmConverterCfg,
-        fileName=os.path.join(outputDir, mapName),
-        writeFormat=mapFormat,
-    )
-
-    mmAlgCfg.materialWriters = [jmw]
-
-    s.addAlgorithm(MaterialMapping(level=acts.logging.INFO, config=mmAlgCfg))
-
+    # Add the mapped material tracks writer
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            inputMaterialTracks=mmAlgCfg.mappedMaterialTracks,
-            filePath=os.path.join(
-                outputDir,
-                mapName + "_tracks.root",
-            ),
+            inputMaterialTracks=materialMappingConfig.mappedMaterialTracks,
+            filePath=outputFileBase + "_mapped.root",
+            storeSurface=True,
+            storeVolume=False,
+        )
+    )
+
+    # Add the unmapped material tracks writer
+    s.addWriter(
+        RootMaterialTrackWriter(
+            level=acts.logging.INFO,
+            inputMaterialTracks=materialMappingConfig.unmappedMaterialTracks,
+            filePath=outputFileBase + "_unmapped.root",
             storeSurface=True,
             storeVolume=False,
         )
@@ -141,37 +147,40 @@ def runMaterialMapping(
 
 
 if "__main__" == __name__:
-    p = argparse.ArgumentParser(description="Script to generate ACTS material map")
+    p = argparse.ArgumentParser()
+
     p.add_argument(
-        "-o",
-        "--outFile",
-        type=str,
-        default="material-map.json",
-        help="Output filename for the generated material map. Supported formats: JSON, CBOR.",
+        "-n", "--events", type=int, default=1000, help="Number of events to process"
     )
+    p.add_argument(
+        "-i", "--input", type=str, default="", help="Input file with material tracks"
+    )
+
+    p.add_argument(
+        "-o", "--output", type=str, default="", help="Output file (core) name"
+    )
+
+    p.add_argument(
+        "--matconfig", type=str, default="", help="Material configuration file"
+    )
+
     args = p.parse_args()
-    if ".json" in args.outFile:
-        mapFormat = JsonFormat.Json
-    elif ".cbor" in args.outFile:
-        mapFormat = JsonFormat.Cbor
-    else:
-        print(
-            "ERROR(material_mapping.py): please provide an output name ending with .json or .cbor"
-        )
-        exit()
+    gContext = GeometryContext()
+    logLevel = logging.INFO
 
-    mapName = args.outFile.split(".")[0]
+    matDeco = None
+    if args.matconfig != "":
+        matDeco = acts.IMaterialDecorator.fromFile(args.matconfig)
 
-    detector = getOpenDataDetector(None)
+    detector = getOpenDataDetector(matDeco)
     trackingGeometry = detector.trackingGeometry()
-    decorators = detector.contextDecorators()
+
+    materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
     runMaterialMapping(
-        trackingGeometry,
-        decorators,
-        outputDir=os.getcwd(),
-        inputDir=os.getcwd(),
-        readCachedSurfaceInformation=False,
-        mapName=mapName,
-        mapFormat=mapFormat,
+        materialSurfaces,
+        inputFile=Path(args.input),
+        outputFileBase=args.output,
+        outputMapFormats=["json", "root"],
+        loglevel=logLevel,
     ).run()

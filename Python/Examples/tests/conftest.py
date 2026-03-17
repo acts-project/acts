@@ -391,7 +391,12 @@ def _do_material_recording(d: Path):
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
     with getOpenDataDetector() as detector:
-        runMaterialRecording(detector, str(d), tracksPerEvent=100, s=s)
+        runMaterialRecording(
+            detector=detector,
+            s=s,
+            tracksPerEvent=100,
+            outputFile=d / "geant4_material_tracks",
+        )
 
         s.run()
 

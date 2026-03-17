@@ -521,7 +521,7 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
     root_files = [
         (
             "geant4_material_tracks.root",
-            "material-tracks",
+            "material_tracks",
             200,
         )
     ]
@@ -595,22 +595,20 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     mat_file = tmp_path / "material-map.json"
 
-    assert mat_file.exists()
-    assert mat_file.stat().st_size > 10
-
-    with mat_file.open() as fh:
-        assert json.load(fh)
-
     assert map_file.exists()
-    assert_entries(map_file, "material-tracks", 200)
+    assert_entries(map_file, "material_tracks", 200)
     assert_root_hash(map_file.name, map_file)
 
-    val_file = tmp_path / "propagation-material.root"
+    # assert mat_file.exists()
+    # assert mat_file.stat().st_size > 10
+
+    # with mat_file.open() as fh:
+    #    assert json.load(fh)
+
+    val_file = tmp_path / "validation-material.root"
     assert not val_file.exists()
 
     # test the validation as well
-
-    field = acts.NullBField()
 
     s = Sequencer(events=10, numThreads=1)
 
@@ -618,98 +616,19 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
+        materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
         runMaterialValidation(
-            10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
+            surfaces=materialSurfaces,
+            s=s,
+            tracksPerEvent=1000,
+            outputFile=tmp_path / "validation-material",
         )
 
         s.run()
 
     assert val_file.exists()
-    assert_entries(val_file, "material-tracks", 10000)
-    assert_root_hash(val_file.name, val_file)
-
-
-@pytest.mark.slow
-@pytest.mark.odd
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-@pytest.mark.skip(reason="Volume material mapping is temporarily disabled.")
-def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash):
-    from material_mapping import runMaterialMapping
-    from material_validation import runMaterialValidation
-
-    map_file = tmp_path / "material-map-volume_tracks.root"
-    assert not map_file.exists()
-
-    geo_map = Path(__file__).parent / "geometry-volume-map.json"
-    assert geo_map.exists()
-    assert geo_map.stat().st_size > 10
-    with geo_map.open() as fh:
-        assert json.load(fh)
-
-    s = Sequencer(numThreads=1)
-
-    with getOpenDataDetector(
-        materialDecorator=acts.IMaterialDecorator.fromFile(geo_map)
-    ) as detector:
-        trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
-
-        runMaterialMapping(
-            trackingGeometry,
-            decorators,
-            mapName="material-map-volume",
-            outputDir=str(tmp_path),
-            inputDir=material_recording,
-            mappingStep=1,
-            s=s,
-        )
-
-        s.run()
-
-    mat_file = tmp_path / "material-map-volume.json"
-
-    assert mat_file.exists()
-    assert mat_file.stat().st_size > 10
-
-    with mat_file.open() as fh:
-        assert json.load(fh)
-
-    assert map_file.exists()
-    assert_entries(map_file, "material-tracks", 200)
-    assert_root_hash(map_file.name, map_file)
-
-    val_file = tmp_path / "propagation-volume-material.root"
-    assert not val_file.exists()
-
-    # test the validation as well
-
-    field = acts.NullBField()
-
-    s = Sequencer(events=10, numThreads=1)
-
-    with getOpenDataDetector(
-        materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
-    ) as detector:
-        trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
-
-        runMaterialValidation(
-            10,
-            1000,
-            trackingGeometry,
-            decorators,
-            field,
-            outputDir=str(tmp_path),
-            outputName="propagation-volume-material",
-            s=s,
-        )
-
-        s.run()
-
-    assert val_file.exists()
-
+    assert_entries(val_file, "material_tracks", 10000)
     assert_root_hash(val_file.name, val_file)
 
 

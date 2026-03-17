@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import os
-import warnings
 import argparse
+from pathlib import Path
 
 import acts
 from acts.examples import (
@@ -15,32 +14,23 @@ from acts.examples import (
 
 import acts.examples.dd4hep
 import acts.examples.geant4
+import acts.examples.geomodel
 import acts.examples.hepmc3
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.root import RootMaterialTrackWriter
 
-try:
-    import acts.examples.geant4.geomodel
-except ImportError:
-    # geomodel is optional for this script
-    pass
-
 u = acts.UnitConstants
-
-_material_recording_executed = False
 
 
 def runMaterialRecording(
     detector,
-    outputDir,
+    s,
     tracksPerEvent=10000,
-    s=None,
-    etaRange=(-4, 4),
+    etaRange=(-4.0, 4.0),
+    phiRange=(0.0, 360.0 * u.degree),
+    materialTrackCollectionName="material_tracks",
+    outputFile="geant4_material_tracks",
 ):
-    global _material_recording_executed
-    if _material_recording_executed:
-        warnings.warn("Material recording already ran in this process. Expect crashes")
-    _material_recording_executed = True
 
     rnd = RandomNumbers(seed=228)
 
@@ -60,6 +50,7 @@ def runMaterialRecording(
                     mass=0,
                     p=(1 * u.GeV, 10 * u.GeV),
                     eta=etaRange,
+                    phi=phiRange,
                     numParticles=tracksPerEvent,
                     etaUniform=True,
                 ),
@@ -84,7 +75,7 @@ def runMaterialRecording(
         detector=detector,
         randomNumbers=rnd,
         inputParticles=hepmc3Converter.config.outputParticles,
-        outputMaterialTracks="material-tracks",
+        outputMaterialTracks=materialTrackCollectionName,
     )
 
     s.addAlgorithm(g4Alg)
@@ -93,8 +84,8 @@ def runMaterialRecording(
         RootMaterialTrackWriter(
             prePostStep=True,
             recalculateTotals=True,
-            inputMaterialTracks="material-tracks",
-            filePath=os.path.join(outputDir, "geant4_material_tracks.root"),
+            inputMaterialTracks=materialTrackCollectionName,
+            filePath=str(outputFile) + ".root",
             level=acts.logging.INFO,
         )
     )
@@ -113,6 +104,35 @@ def main():
     p.add_argument(
         "-i", "--input", type=str, default="", help="input (GDML/SQL) file (optional)"
     )
+    p.add_argument(
+        "--eta-range",
+        nargs=2,
+        type=float,
+        metavar=("MIN", "MAX"),
+        default=(-4.0, 4.0),
+        help="Eta range for generated particles",
+    )
+    p.add_argument(
+        "--phi-range",
+        nargs=2,
+        type=float,
+        metavar=("MIN_DEG", "MAX_DEG"),
+        default=(0.0, 360.0),
+        help="Phi range in degree for generated particles",
+    )
+    p.add_argument(
+        "--material-track-collection",
+        type=str,
+        default="material_tracks",
+        help="Output material track collection name",
+    )
+    p.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default="material_geant4",
+        help="Output file stem (without extension)",
+    )
 
     args = p.parse_args()
 
@@ -127,9 +147,12 @@ def main():
 
     runMaterialRecording(
         detector=detector,
-        tracksPerEvent=args.tracks,
-        outputDir=os.getcwd(),
         s=acts.examples.Sequencer(events=args.events, numThreads=1),
+        tracksPerEvent=args.tracks,
+        etaRange=tuple(args.eta_range),
+        phiRange=(args.phi_range[0] * u.degree, args.phi_range[1] * u.degree),
+        materialTrackCollectionName=args.material_track_collection,
+        outputFile=Path(args.output),
     ).run()
 
 
