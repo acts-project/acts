@@ -191,6 +191,44 @@ datatypes:
               static_cast<std::uint32_t>(getType()));
         }
 
+        /// Find the measurement-vector index for an enum-coded subspace coordinate
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param enumVal The enum value to look up
+        /// @return The position in the measurement/covariance vector
+        /// @throws std::runtime_error if enumVal is not in the active subspace
+        template <typename E> requires std::is_enum_v<E>
+        std::size_t findSubspaceIndex(E enumVal) const {
+          const auto indices = getSubspaceIndices();
+          return ActsPodioEdm::detail::findSubspaceIndex(
+              std::span<const std::uint8_t>{indices}, enumVal);
+        }
+
+        /// Get measurement value for an enum-coded subspace coordinate
+        ///
+        /// Equivalent to getValue(findSubspaceIndex(enumVal)).
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param enumVal The enum value identifying the coordinate
+        /// @return The measurement value
+        template <typename E> requires std::is_enum_v<E>
+        float getValue(E enumVal) const {
+          return getValue(findSubspaceIndex(enumVal));
+        }
+
+        /// Get covariance value for two enum-coded subspace coordinates
+        ///
+        /// Equivalent to getCov(findSubspaceIndex(enumI), findSubspaceIndex(enumJ)).
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param enumI The first coordinate's enum value
+        /// @param enumJ The second coordinate's enum value
+        /// @return The covariance value at (enumI, enumJ)
+        template <typename E> requires std::is_enum_v<E>
+        float getCov(E enumI, E enumJ) const {
+          return getCov(findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
+        }
+
     MutableExtraCode:
       includes: "#include <ActsPodioEdm/detail/SubspaceIndexHelpers.hpp>"
       declaration: |
@@ -243,3 +281,44 @@ datatypes:
           m_obj->data.covariance_begin = 0u;
           m_obj->data.covariance_end = indices.size() * indices.size();
         }
+
+        /// Set measurement value for an enum-coded subspace coordinate
+        ///
+        /// Equivalent to setValue(val, findSubspaceIndex(enumVal)).
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param val The value to set
+        /// @param enumVal The enum value identifying the coordinate
+        template <typename E> requires std::is_enum_v<E>
+        void setValue(float val, E enumVal) {
+          setValue(val, findSubspaceIndex(enumVal));
+        }
+
+        /// Set covariance value for two enum-coded subspace coordinates
+        ///
+        /// Equivalent to setCov(val, findSubspaceIndex(enumI), findSubspaceIndex(enumJ)).
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param val The value to set
+        /// @param enumI The first coordinate's enum value
+        /// @param enumJ The second coordinate's enum value
+        template <typename E> requires std::is_enum_v<E>
+        void setCov(float val, E enumI, E enumJ) {
+          setCov(val, findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
+        }
+
+
+links:
+  ActsPodioEdm::TrackStateHitLink:
+    Description: "A link between a TrackState and a TrackerHit"
+    Author: "Paul Gessinger, CERN"
+    From: ActsPodioEdm::TrackState
+    To: ActsPodioEdm::TrackerHitLocal
+
+
+  # @TODO: Remove this once TrackerHitLocal is upstreamed to edm4hep
+  ActsPodioEdm::TrackerHitLocalSimTrackerHitLink:
+    Description: "Link between ActsPodioEdm::TrackerHitLocal and edm4hep::SimTrackerHit. Interim replacement for edm4hep::TrackerHitSimTrackerHitLink until TrackerHitLocal is upstreamed to edm4hep."
+    Author: "Paul Gessinger, CERN"
+    From: ActsPodioEdm::TrackerHitLocal
+    To: edm4hep::SimTrackerHit

@@ -13,6 +13,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace ActsPodioEdm::detail {
@@ -86,6 +87,32 @@ inline std::vector<SubspaceIndex> decodeIndices(std::uint32_t type) {
     }
   }
   return result;
+}
+
+/// Find the measurement-vector position of an enum-coded subspace coordinate.
+///
+/// Searches @p indices for the given enum value (cast to SubspaceIndex) and
+/// returns its position. This position is the index into the measurement and
+/// covariance vectors stored in a TrackerHitLocal.
+///
+/// @tparam E  Enum type whose underlying value encodes a subspace index
+/// @param indices  Active subspace indices (e.g. from decodeIndices())
+/// @param enumVal  The enum value to look up
+/// @return  Position of @p enumVal in @p indices
+/// @throws std::runtime_error if @p enumVal is not present in @p indices
+template <typename E>
+  requires std::is_enum_v<E>
+inline std::size_t findSubspaceIndex(std::span<const SubspaceIndex> indices,
+                                     E enumVal) {
+  const auto target = static_cast<SubspaceIndex>(enumVal);
+  for (std::size_t i = 0; i < indices.size(); ++i) {
+    if (indices[i] == target) {
+      return i;
+    }
+  }
+  throw std::runtime_error("Enum value " +
+                            std::to_string(static_cast<int>(enumVal)) +
+                            " not found in subspace indices");
 }
 
 }  // namespace ActsPodioEdm::detail

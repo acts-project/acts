@@ -308,4 +308,50 @@ BOOST_AUTO_TEST_CASE(TrackerHitLocalIndexApi) {
   BOOST_CHECK_EQUAL(dims[1], eBoundLoc1);
 }
 
+BOOST_AUTO_TEST_CASE(TrackerHitLocalEnumApi) {
+  ActsPodioEdm::TrackerHitLocalCollection hits;
+  auto hit = hits.create();
+
+  const std::array<std::uint8_t, 2> subspace{eBoundLoc0, eBoundLoc1};
+  hit.setSubspaceIndices(subspace);
+
+  // findSubspaceIndex: maps enum value to position in measurement vector
+  BOOST_CHECK_EQUAL(hit.findSubspaceIndex(eBoundLoc0), 0u);
+  BOOST_CHECK_EQUAL(hit.findSubspaceIndex(eBoundLoc1), 1u);
+  BOOST_CHECK_THROW(hit.findSubspaceIndex(eBoundPhi), std::runtime_error);
+
+  // setValue/getCov via enum should round-trip identically to index-based API
+  hit.setValue(1.5f, eBoundLoc0);
+  hit.setValue(-2.0f, eBoundLoc1);
+  hit.setCov(4.0f, eBoundLoc0, eBoundLoc0);
+  hit.setCov(0.25f, eBoundLoc0, eBoundLoc1);
+  hit.setCov(0.25f, eBoundLoc1, eBoundLoc0);
+  hit.setCov(9.0f, eBoundLoc1, eBoundLoc1);
+
+  CHECK_CLOSE_REL(hit.getValue(eBoundLoc0), 1.5f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getValue(eBoundLoc1), -2.0f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(eBoundLoc0, eBoundLoc0), 4.0f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(eBoundLoc0, eBoundLoc1), 0.25f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(eBoundLoc1, eBoundLoc0), 0.25f, 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(eBoundLoc1, eBoundLoc1), 9.0f, 1e-6f);
+
+  // Enum access and index access return the same values
+  CHECK_CLOSE_REL(hit.getValue(eBoundLoc0), hit.getValue(0u), 1e-6f);
+  CHECK_CLOSE_REL(hit.getValue(eBoundLoc1), hit.getValue(1u), 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(eBoundLoc0, eBoundLoc1),
+                  hit.getCov(0u, 1u), 1e-6f);
+
+  // Out-of-subspace enum values throw
+  BOOST_CHECK_THROW(hit.getValue(eBoundPhi), std::runtime_error);
+  BOOST_CHECK_THROW(hit.getCov(eBoundLoc0, eBoundPhi), std::runtime_error);
+  BOOST_CHECK_THROW(hit.setValue(0.f, eBoundPhi), std::runtime_error);
+  BOOST_CHECK_THROW(hit.setCov(0.f, eBoundLoc0, eBoundPhi), std::runtime_error);
+
+  // Read-only view has the same enum API
+  ActsPodioEdm::TrackerHitLocal roHit = hit;
+  CHECK_CLOSE_REL(roHit.getValue(eBoundLoc0), 1.5f, 1e-6f);
+  CHECK_CLOSE_REL(roHit.getCov(eBoundLoc1, eBoundLoc1), 9.0f, 1e-6f);
+  BOOST_CHECK_THROW(roHit.getValue(eBoundPhi), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
