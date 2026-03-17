@@ -217,14 +217,28 @@ function(acts_code_generation)
     file(MAKE_DIRECTORY ${_output_dir})
 
     if(NOT ACTS_USE_SYSTEM_LIBS)
+        # If using uv, run it in a clean environment but include the variables
+        # that specify a proxy.
+        set(_propagate
+            HTTP_PROXY
+            HTTPS_PROXY
+            ALL_PROXY
+            NO_PROXY
+            SSL_CERT_FILE
+        )
+        foreach(_var IN LISTS _propagate)
+            if(DEFINED ENV{${_var}})
+                list(APPEND _uv_environment "${_var}=$ENV{${_var}}")
+            endif()
+        endforeach()
         add_custom_command(
             OUTPUT ${_output_file}
             COMMAND
                 env -i UV_NO_CACHE=1
                 UV_PYTHON_INSTALL_DIR=${ACTS_CODEGEN_TMPDIR}/python_install_dir
-                ${uv_exe} run --quiet --python ${ARGS_PYTHON_VERSION}
-                --no-project ${_arg_isolated} ${_with_args} ${ARGS_PYTHON}
-                ${_output_file}
+                ${_uv_environment} ${uv_exe} run --quiet --python
+                ${ARGS_PYTHON_VERSION} --no-project ${_arg_isolated}
+                ${_with_args} ${ARGS_PYTHON} ${_output_file}
             DEPENDS ${_depends}
             COMMENT "Generating ${ARGS_OUTPUT}"
             VERBATIM
