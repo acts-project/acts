@@ -63,9 +63,10 @@ struct NavigatorPlainOptions {
   /// Surfaces that are not part of the tracking geometry
   std::vector<const Surface*> externalSurfaces;
 
-  /// Append an external surface to be considered during navigation. Note that
-  /// the surface must outlive the propagation and that surfaces have to be
-  /// added in the order they should be considered during navigation.
+  /// Append an external surface to be considered during navigation. The surface
+  /// will be intersected without bounds check to force the propagation to
+  /// resolve it. Note the surface must outlive the propagation and surfaces
+  /// have to be added in the order they should be considered during navigation.
   /// @param surface The surface to add to the list
   void appendExternalSurface(const Surface& surface) {
     externalSurfaces.push_back(&surface);
