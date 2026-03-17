@@ -39,15 +39,19 @@ def annotation_message(message: str) -> str:
     return escape_annotation(SEVERITY_PREFIX_RE.sub("", message, count=1))
 
 
-def emit_annotation(raw_line: str) -> bool:
-    line = raw_line.strip()
-    if not line:
+def emit_annotation(raw_entry: str) -> bool:
+    entry = raw_entry.strip()
+    if not entry:
         return False
+
+    lines = entry.splitlines()
+    line = lines[0].strip()
+    continuation = [continuation_line.strip() for continuation_line in lines[1:]]
 
     match = LOCATION_RE.match(line)
     if match is None:
         severity = annotation_severity(line)
-        message = annotation_message(line)
+        message = annotation_message("\n".join([line, *continuation]))
         print(f"::{severity} title=doxygen::{message}")
         return True
 
@@ -60,7 +64,8 @@ def emit_annotation(raw_line: str) -> bool:
             path = path.resolve()
     line_no = match.group("line")
     col_no = match.group("col")
-    message = annotation_message(match.group("message"))
+    message_lines = [match.group("message"), *continuation]
+    message = annotation_message("\n".join(message_lines))
 
     location = f"file={escape_annotation_property(str(path))},line={line_no}"
     if col_no is not None:
@@ -80,9 +85,26 @@ def main() -> int:
         return 0
 
     count = 0
+    current_entry: list[str] = []
     with args.logfile.open(encoding="utf-8", errors="replace") as handle:
         for raw_line in handle:
-            count += int(emit_annotation(raw_line))
+            stripped = raw_line.strip()
+            if not stripped:
+                continue
+
+            if LOCATION_RE.match(stripped):
+                if current_entry:
+                    count += int(emit_annotation("\n".join(current_entry)))
+                current_entry = [stripped]
+                continue
+
+            if current_entry:
+                current_entry.append(stripped)
+            else:
+                current_entry = [stripped]
+
+    if current_entry:
+        count += int(emit_annotation("\n".join(current_entry)))
 
     print(f"Emitted {count} Doxygen annotation(s).", file=sys.stderr)
     return 0
