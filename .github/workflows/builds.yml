@@ -20,6 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
+  ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
   linux_ubuntu:
@@ -95,7 +96,7 @@ jobs:
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: acts-linux-ubuntu
           path: build.tar.gz
@@ -120,7 +121,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:83
     needs: [linux_ubuntu]
     env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
+      ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
     steps:
       - uses: actions/checkout@v6
@@ -134,7 +135,7 @@ jobs:
           full_install: true
           env_file: .env
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: acts-linux-ubuntu
 
@@ -158,8 +159,6 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:83
     needs: [linux_ubuntu]
-    env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
       - uses: actions/checkout@v6
@@ -175,7 +174,7 @@ jobs:
           full_install: true
           env_file: .env
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: acts-linux-ubuntu
 
@@ -196,7 +195,7 @@ jobs:
           mkdir -p physmon
           cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: physmon
@@ -210,7 +209,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.2
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: physmon
           path: physmon
@@ -381,7 +380,7 @@ jobs:
       - name: Install
         run: cmake --build build --target install
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
@@ -487,7 +486,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: comment-50-external-failure.md
           path: comment-50-external-failure.md
@@ -571,7 +570,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: comment-51-key4hep-external-failure.md
           path: comment-51-key4hep-external-failure.md
@@ -621,7 +620,7 @@ jobs:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-ubuntu-wheel
           path: "*.whl"

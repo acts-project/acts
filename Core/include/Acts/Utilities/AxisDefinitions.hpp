@@ -150,16 +150,16 @@ class Axis;
 /// @param min Minimum value
 /// @param max Maximum value
 /// @param bins Number of bins
-Axis(double min, double max,
-     std::size_t bins) -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+Axis(double min, double max, std::size_t bins)
+    -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 
 /// Deduction guide for equidistant axis with specified boundary type
 /// @param min Minimum value
 /// @param max Maximum value
 /// @param bins Number of bins
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, double min, double max,
-     std::size_t bins) -> Axis<AxisType::Equidistant, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, double min, double max, std::size_t bins)
+    -> Axis<AxisType::Equidistant, bdt>;
 
 /// Deduction guide for variable axis with open boundaries
 /// @param bins Vector of bin edges
@@ -169,7 +169,7 @@ Axis(std::vector<double> bins)
 /// Deduction guide for variable axis with specified boundary type
 /// @param bins Vector of bin edges
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/,
-     std::vector<double> bins) -> Axis<AxisType::Variable, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<double> bins)
+    -> Axis<AxisType::Variable, bdt>;
 
 }  // namespace Acts
