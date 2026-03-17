@@ -376,7 +376,7 @@ void TGeoDetector::Config::readJson(const std::string& jsonFile) {
 }
 std::shared_ptr<const TrackingGeometry> buildTGeoDetectorWrapper(
     const TGeoDetector::Config& config, const GeometryContext& context,
-    std::vector<std::shared_ptr<const DetectorElementBase>>& detElementStore,
+    std::vector<std::shared_ptr<const SurfacePlacementBase>>& detElementStore,
     std::shared_ptr<const IMaterialDecorator> materialDecorator,
     const Logger& logger) {
   std::vector<std::shared_ptr<const SurfacePlacementBase>> tmpStore{};
