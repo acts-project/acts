@@ -11,8 +11,15 @@
 #include <ranges>
 
 namespace Acts::Ranges {
+
+/// Adaptor for converting a range to a container
+/// @tparam Container the container type to convert to
 template <template <typename...> class Container>
 struct to_adaptor {
+  /// Convert a range to a container
+  /// @tparam Range the range type to convert
+  /// @param range the range to convert
+  /// @return the converted container
   template <typename Range>
   auto operator()(Range&& range) const {
     using ValueType = std::ranges::range_value_t<Range>;
@@ -21,13 +28,20 @@ struct to_adaptor {
   }
 };
 
-// Overload operator| for piping
+/// Overload operator| for piping
+/// @tparam Range the range type to convert
+/// @tparam Container the container type to convert to
+/// @param range the range to convert
+/// @param adaptor the adaptor to use
+/// @return the converted container
 template <typename Range, template <typename...> class Container>
 auto operator|(Range&& range, to_adaptor<Container> adaptor) {
   return adaptor(std::forward<Range>(range));
 }
 
-// Create the adaptor objects
+/// Create the adaptor objects
+/// @tparam Container the container type to convert to
+/// @return the adaptor object
 template <template <typename...> class Container>
 inline constexpr to_adaptor<Container> to{};
 
