@@ -371,7 +371,11 @@ def select_lockfile(
     }
     if cxx_matches:
         exact_family = next(
-            (v for comp, v in cxx_matches.items() if comp.split("@")[0] == compiler_family),
+            (
+                v
+                for comp, v in cxx_matches.items()
+                if comp.split("@")[0] == compiler_family
+            ),
             None,
         )
         _, lockfile = exact_family or next(iter(cxx_matches.values()))
