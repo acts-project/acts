@@ -12,6 +12,7 @@ LOCATION_RE = re.compile(
     r"^(?P<path>.+?):(?P<line>\d+):(?:(?P<col>\d+):)?\s*(?P<message>.+)$"
 )
 SEVERITY_PREFIX_RE = re.compile(r"^(?P<severity>warning|error):\s*", re.IGNORECASE)
+MENTION_RE = re.compile(r"(?<![A-Za-z0-9_])@([A-Za-z0-9_-]+)")
 
 
 def escape_annotation(value: str) -> str:
@@ -35,8 +36,14 @@ def annotation_severity(message: str) -> str:
     return "warning"
 
 
+def neutralize_mentions(message: str) -> str:
+    return MENTION_RE.sub(lambda match: "@\u200B" + match.group(1), message)
+
+
 def annotation_message(message: str) -> str:
-    return escape_annotation(SEVERITY_PREFIX_RE.sub("", message, count=1))
+    return escape_annotation(
+        neutralize_mentions(SEVERITY_PREFIX_RE.sub("", message, count=1))
+    )
 
 
 def emit_annotation(raw_entry: str) -> bool:
