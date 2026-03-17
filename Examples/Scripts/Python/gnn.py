@@ -154,6 +154,8 @@ if "__main__" == __name__:
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models = Path(model_storage)
+
+    # These models are chosen as they work without the torch-scatter dependency
     embedModelPath = ci_models / "torchscript_models/embed.pt"
     filterModelPath = ci_models / "torchscript_models/filter.pt"
     gnnModelPath = ci_models / "onnx_models/gnn.onnx"
