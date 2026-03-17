@@ -58,6 +58,26 @@ std::size_t saturatedAdd(std::size_t a, std::size_t b) {
   return res;
 }
 
+std::optional<bool> parseBoolEnv(const char* envName) {
+  const char* rawValue = std::getenv(envName);
+  if (rawValue == nullptr) {
+    return std::nullopt;
+  }
+
+  std::string value = rawValue;
+  boost::algorithm::trim(value);
+  boost::algorithm::to_lower(value);
+  if (value == "1" || value == "true" || value == "yes" || value == "on") {
+    return true;
+  }
+  if (value == "0" || value == "false" || value == "no" || value == "off") {
+    return false;
+  }
+  throw SequenceConfigurationException(
+      std::string{"Unable to parse "} + envName + " value '" + rawValue +
+      "'. Supported values are: 0/1/false/true/no/yes/off/on");
+}
+
 }  // namespace
 
 Sequencer::Sequencer(const Sequencer::Config& cfg)
@@ -80,12 +100,23 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
     ACTS_INFO("Create Sequencer with " << m_cfg.numThreads << " threads");
   }
 
-  const char* envvar = std::getenv("ACTS_SEQUENCER_DISABLE_FPEMON");
-  if (envvar != nullptr) {
+  if (auto disableFpeEnv = parseBoolEnv("ACTS_SEQUENCER_DISABLE_FPEMON");
+      disableFpeEnv.has_value()) {
+    m_cfg.trackFpes = !disableFpeEnv.value();
     ACTS_INFO(
-        "Overriding FPE tracking Sequencer based on environment variable "
-        "ACTS_SEQUENCER_DISABLE_FPEMON");
-    m_cfg.trackFpes = false;
+        "FPE tracking is "
+        << (m_cfg.trackFpes ? "enabled" : "disabled")
+        << " based on environment variable ACTS_SEQUENCER_DISABLE_FPEMON");
+  }
+
+  if (auto failUnmaskedEnv =
+          parseBoolEnv("ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE");
+      failUnmaskedEnv.has_value()) {
+    m_cfg.failOnUnmaskedFpe = failUnmaskedEnv.value();
+    ACTS_INFO("Sequencer failOnUnmaskedFpe is "
+              << (m_cfg.failOnUnmaskedFpe ? "enabled" : "disabled")
+              << " based on environment variable "
+                 "ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE");
   }
 
   if (m_cfg.trackFpes && !m_cfg.fpeMasks.empty() &&
@@ -512,9 +543,11 @@ int Sequencer::run() {
               if (mon) {
                 auto& local = fpe->local();
 
-                for (const auto& [count, type, st] :
-                     mon->result().stackTraces()) {
-                  auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+                for (const auto& info : mon->result().stackTraces()) {
+                  const auto count = info.count;
+                  const auto type = info.type;
+                  const auto& st = *info.st;
+                  auto [maskLoc, nMasked] = fpeMaskCount(st, type);
                   if (nMasked < count) {
                     std::stringstream ss;
                     ss << "FPE of type " << type
@@ -522,16 +555,17 @@ int Sequencer::run() {
                        << nMasked << " (mask: " << maskLoc
                        << ") (seen: " << count << " FPEs)\n"
                        << ActsPlugins::FpeMonitor::stackTraceToString(
-                              *st, m_cfg.fpeStackTraceLength);
+                              st, m_cfg.fpeStackTraceLength);
 
                     m_nUnmaskedFpe += (count - nMasked);
 
-                    if (m_cfg.failOnFirstFpe) {
+                    if (m_cfg.failOnFirstFpe && m_cfg.failOnUnmaskedFpe) {
                       ACTS_ERROR(ss.str());
                       local.merge(mon->result());  // merge so we get correct
                                                    // results after throwing
                       throw FpeFailure{ss.str()};
-                    } else if (!local.contains(type, *st)) {
+                    } else if (m_cfg.failOnUnmaskedFpe &&
+                               !local.contains(info)) {
                       ACTS_INFO(ss.str());
                     }
                   }
@@ -607,7 +641,7 @@ int Sequencer::run() {
                 joinPaths(m_cfg.outputDir, m_cfg.outputTimingFile));
   }
 
-  if (m_nUnmaskedFpe > 0) {
+  if (m_cfg.failOnUnmaskedFpe && m_nUnmaskedFpe > 0) {
     return EXIT_FAILURE;
   }
 
@@ -644,20 +678,25 @@ void Sequencer::fpeReport() const {
         remaining;
 
     for (const auto& el : sorted) {
-      const auto& [count, type, st] = el.get();
-      auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+      const auto& info = el.get();
+      const auto count = info.count;
+      const auto type = info.type;
+      const auto& st = *info.st;
+      auto [maskLoc, nMasked] = fpeMaskCount(st, type);
       ACTS_INFO("- " << type << ": (" << count << " times) "
                      << (nMasked > 0 ? "[MASKED: " + std::to_string(nMasked) +
                                            " per event by " + maskLoc + "]"
                                      : "")
                      << "\n"
                      << ActsPlugins::FpeMonitor::stackTraceToString(
-                            *st, m_cfg.fpeStackTraceLength));
+                            st, m_cfg.fpeStackTraceLength));
     }
   }
 
   if (m_nUnmaskedFpe > 0) {
-    ACTS_ERROR("Encountered " << m_nUnmaskedFpe << " unmasked FPEs");
+    Acts::Logging::Level level =
+        m_cfg.failOnUnmaskedFpe ? Acts::Logging::ERROR : Acts::Logging::INFO;
+    ACTS_LOG(level, "Encountered " << m_nUnmaskedFpe << " unmasked FPEs");
   } else {
     ACTS_INFO("No unmasked FPEs encountered");
   }
