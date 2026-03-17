@@ -128,13 +128,12 @@ datatypes:
     Members:
     # These are chosen to be compatible with the `edm4hep::TrackerHit` interface
     # (https://github.com/key4hep/EDM4hep/blob/c877c7fadf412db3c1126e7b410d8074a78014f2/edm4hep.yaml#L652-L666V)
-    # to allow for potential upstreaming
+    # to allow for potential upstreaming.
+    # Members not used by ACTS (quality, eDep, eDepError) are omitted and
+    # fulfilled by throwing ExtraCode stubs to satisfy the interface.
     - uint64_t cellID                    // ID of the sensor that created this hit
     - int32_t type                       // type of raw data hit, use depends on writer
-    - int32_t quality                    // quality bit flag of the hit
     - float time [ns]                    // time of the hit (depends on measurement type)
-    - float eDep [GeV]                   // energy deposited on the hit (optional)
-    - float eDepError [GeV]              // error measured on EDep (optional)
     - edm4hep::Vector3d position [mm]    // global hit position (depends on measurement type)
 
     VectorMembers:
@@ -229,6 +228,23 @@ datatypes:
           return getCov(findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
         }
 
+        // --- edm4hep::TrackerHit interface stubs (not implemented) ---
+
+        /// @throws std::logic_error always — quality is not used in TrackerHitLocal
+        std::int32_t getQuality() const {
+          throw std::logic_error("getQuality() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — eDep is not used in TrackerHitLocal
+        float getEDep() const {
+          throw std::logic_error("getEDep() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — eDepError is not used in TrackerHitLocal
+        float getEDepError() const {
+          throw std::logic_error("getEDepError() is not implemented in TrackerHitLocal");
+        }
+
     MutableExtraCode:
       includes: "#include <ActsPodioEdm/detail/SubspaceIndexHelpers.hpp>"
       declaration: |
@@ -305,6 +321,38 @@ datatypes:
         template <typename E> requires std::is_enum_v<E>
         void setCov(float val, E enumI, E enumJ) {
           setCov(val, findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
+        }
+
+        // --- edm4hep::TrackerHit interface stubs (not implemented) ---
+
+        /// @throws std::logic_error always — quality is not used in TrackerHitLocal
+        std::int32_t& getQuality() {
+          throw std::logic_error("getQuality() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — quality is not used in TrackerHitLocal
+        void setQuality(std::int32_t) {
+          throw std::logic_error("setQuality() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — eDep is not used in TrackerHitLocal
+        float& getEDep() {
+          throw std::logic_error("getEDep() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — eDep is not used in TrackerHitLocal
+        void setEDep(float) {
+          throw std::logic_error("setEDep() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — eDepError is not used in TrackerHitLocal
+        float& getEDepError() {
+          throw std::logic_error("getEDepError() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — eDepError is not used in TrackerHitLocal
+        void setEDepError(float) {
+          throw std::logic_error("setEDepError() is not implemented in TrackerHitLocal");
         }
 
 
