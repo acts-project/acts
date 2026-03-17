@@ -130,8 +130,7 @@ struct ExtentEnvelope {
 };
 
 /// A class representing the geometric extent of an object in its possible
-/// dimensions, these can be all dimensions that are described as
-/// AxisDirections
+/// dimensions, these can be all dimensions that are described as AxisDirections
 ///
 /// The extent object can have an optional envelope in all of those values
 /// @note that the consistency of the different envelopes is not checked
