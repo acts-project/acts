@@ -244,9 +244,7 @@ def test_python_track_state_access(generic_detector_config, tmp_path):
                     n_holes_counted = 0
 
                     for state in track.trackStatesReversed:
-                        assert isinstance(
-                            state, acts.examples.ConstTrackStateProxy
-                        )
+                        assert isinstance(state, acts.examples.ConstTrackStateProxy)
 
                         flags = state.typeFlags
                         # every state must be at least one of the known types

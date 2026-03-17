@@ -14,6 +14,14 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl_bind.h>
+
+// Prevent stl.h's list_caster-based type_caster<std::vector<T>> from matching
+// ProtoTrackContainer, which would break py::cast<std::unique_ptr<T>> needed
+// by WhiteBoardRegistry. The full specialization takes priority over stl.h's
+// partial specialization regardless of include order.
+PYBIND11_MAKE_OPAQUE(ActsExamples::ProtoTrackContainer)
+
 namespace py = pybind11;
 
 using namespace ActsExamples;
@@ -32,11 +40,11 @@ void addEventData(py::module& mex) {
                              &Acts::TrackStateType::hasParameters);
 
   py::class_<ConstTrackStateProxy>(mex, "ConstTrackStateProxy")
-      .def_property_readonly("typeFlags",
-                             [](const ConstTrackStateProxy& self) {
-                               return Acts::TrackStateType{
-                                   self.typeFlags().raw()};
-                             })
+      .def_property_readonly(
+          "typeFlags",
+          [](const ConstTrackStateProxy& self) {
+            return Acts::TrackStateType{self.typeFlags().raw()};
+          })
       .def_property_readonly("hasPredicted",
                              &ConstTrackStateProxy::hasPredicted)
       .def_property_readonly("hasFiltered", &ConstTrackStateProxy::hasFiltered)
@@ -98,22 +106,22 @@ void addEventData(py::module& mex) {
           .def_property_readonly("nHoles", &ConstTrackProxy::nHoles)
           .def_property_readonly("isForwardLinked",
                                  &ConstTrackProxy::isForwardLinked)
-          .def_property_readonly(
-              "trackStatesReversed",
-              py::cpp_function(
-                  [](const ConstTrackProxy& self) {
-                    auto range = self.trackStatesReversed();
-                    return py::make_iterator(range.begin(), range.end());
-                  },
-                  py::keep_alive<0, 1>()))
-          .def_property_readonly(
-              "trackStates",
-              py::cpp_function(
-                  [](const ConstTrackProxy& self) {
-                    auto range = self.trackStates();
-                    return py::make_iterator(range.begin(), range.end());
-                  },
-                  py::keep_alive<0, 1>()));
+          .def_property_readonly("trackStatesReversed",
+                                 py::cpp_function(
+                                     [](const ConstTrackProxy& self) {
+                                       auto range = self.trackStatesReversed();
+                                       return py::make_iterator(range.begin(),
+                                                                range.end());
+                                     },
+                                     py::keep_alive<0, 1>()))
+          .def_property_readonly("trackStates",
+                                 py::cpp_function(
+                                     [](const ConstTrackProxy& self) {
+                                       auto range = self.trackStates();
+                                       return py::make_iterator(range.begin(),
+                                                                range.end());
+                                     },
+                                     py::keep_alive<0, 1>()));
 
   // Mark a numpy array as non-writeable and return it.
   const auto readOnly = [](auto arr) {
@@ -146,7 +154,8 @@ void addEventData(py::module& mex) {
                [](const ConstTrackContainer& self) {
                  return py::make_iterator(self.begin(), self.end());
                })
-          .def("__getitem__", &ConstTrackContainer::getTrack)
+          .def("__getitem__", py::overload_cast<ConstTrackContainer::IndexType>(
+                                  &ConstTrackContainer::getTrack, py::const_))
 
           // Zero-copy numpy array views of the underlying SoA columns.
           // The returned arrays are read-only and keep the container alive via
@@ -218,16 +227,11 @@ void addEventData(py::module& mex) {
 
   WhiteBoardRegistry::registerClass(constTrackContainer);
 
-  auto protoTrackContainer =
-      py::classh<ProtoTrackContainer>(mex, "ProtoTrackContainer")
-          .def(py::init<>())
-          .def("__len__", &ProtoTrackContainer::size)
-          .def("__getitem__", [](const ProtoTrackContainer& self,
-                                 size_t index) { return self[index]; })
-          .def("__iter__", [](const ProtoTrack& self) {
-            return py::make_iterator(self.begin(), self.end());
-          });
+  py::bind_vector<ProtoTrack>(mex, "ProtoTrack");
 
+  auto protoTrackContainer =
+      py::bind_vector<ProtoTrackContainer, py::smart_holder>(
+          mex, "ProtoTrackContainer");
   WhiteBoardRegistry::registerClass(protoTrackContainer);
 
   mex.attr("kTrackIndexInvalid") = Acts::kTrackIndexInvalid;

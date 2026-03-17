@@ -131,10 +131,7 @@ class WhiteBoardRegistry {
  private:
   WhiteBoardRegistry() = default;
 
-  static inline std::unordered_map<PyObject*, RegistryEntry>& instance() {
-    static std::unordered_map<PyObject*, RegistryEntry> map;
-    return map;
-  }
+  static std::unordered_map<PyObject*, RegistryEntry>& instance();
 };
 
 }  // namespace ActsPython

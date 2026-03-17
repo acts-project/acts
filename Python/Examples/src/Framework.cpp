@@ -160,6 +160,7 @@ class PyWriteDataHandle : public WriteDataHandleBase {
                     const std::string& name)
       : WriteDataHandleBase(parent, name) {
     m_entry = WhiteBoardRegistry::find(pytype);
+    registerAsWriteHandle();
   }
 
   void call(const AlgorithmContext& ctx, const py::object& obj) const {
