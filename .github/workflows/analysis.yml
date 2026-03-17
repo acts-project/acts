@@ -184,15 +184,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Mark workspace as safe
-        run: git config --global --add safe.directory /__w/acts/acts
-
-      - name: Fetch base branch
-        if: github.event_name == 'pull_request'
-        run: git fetch origin "${{ github.base_ref }}"
 
       - uses: astral-sh/setup-uv@v7
 
@@ -212,14 +203,7 @@ jobs:
           cmake -B build -S .
           --preset=github-ci-cppcheck
 
-      - name: Analyze (PR - changed files only)
-        if: github.event_name == 'pull_request'
-        run: >
-          uv run CI/cppcheck/run_cppcheck_pr.py
-          analyze build results.xml --base-ref "origin/${{ github.base_ref }}"
-
-      - name: Analyze (push - all files)
-        if: github.event_name == 'push'
+      - name: Analyze (all files)
         run: >
           uv run CI/cppcheck/run_cppcheck_pr.py
           analyze build results.xml --all
