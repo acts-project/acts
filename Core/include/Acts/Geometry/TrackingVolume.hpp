@@ -147,7 +147,6 @@ class TrackingVolume : public Volume {
   /// @param staticLayerArray is the confined layer array (optional)
   /// @param containedVolumeArray are the sub volumes if the volume is a
   /// container
-  /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
       const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
@@ -165,7 +164,6 @@ class TrackingVolume : public Volume {
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the global position associated with that search
   /// @param tol Search position tolerance for dense volumes
   ///
   /// @return plain pointer to associated with the position
@@ -262,7 +260,7 @@ class TrackingVolume : public Volume {
 
   /// @brief Apply an arbitrary callable as a visitor to the tracking volume
   ///
-  /// @param callable The callable to apply
+  /// @param xcallable The callable to apply
   ///
   /// @note The visitor can be overloaded on any of the arguments that
   ///       the methods in @c TrackingGeometryMutableVisitor receive.
