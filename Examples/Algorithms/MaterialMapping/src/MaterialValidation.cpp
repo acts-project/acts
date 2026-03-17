@@ -20,9 +20,9 @@ MaterialValidation::MaterialValidation(
     : IAlgorithm("MaterialValidation", std::move(logger)), m_cfg(cfg) {
   // Prepare the I/O collections
   m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
-  // Check the configuration - material validater
-  if (m_cfg.materialValidater == nullptr) {
-    throw std::invalid_argument("Missing material validater.");
+  // Check the configuration - material validator
+  if (m_cfg.materialValidator == nullptr) {
+    throw std::invalid_argument("Missing material validator.");
   }
   // Check the configuration - random number service
   if (m_cfg.randomNumberSvc == nullptr) {
@@ -54,7 +54,7 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
                             std::sin(phi) * std::sin(theta), std::cos(theta));
 
     // Record the material
-    auto rMaterial = m_cfg.materialValidater->recordMaterial(
+    auto rMaterial = m_cfg.materialValidator->recordMaterial(
         context.geoContext, context.magFieldContext, m_cfg.startPosition,
         direction);
 
