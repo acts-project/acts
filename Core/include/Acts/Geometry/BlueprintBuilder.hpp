@@ -191,6 +191,15 @@ concept HasLayerNameMember =
       { layerSpec.layerName.has_value() } -> std::convertible_to<bool>;
     };
 
+/// @brief Optional backend capability for barrel/endcap assembly discovery.
+template <typename BackendT>
+concept HasBarrelEndcapClassifier =
+    requires(const BackendT& backend, const typename BackendT::Element& element) {
+      { backend.isBarrel(element) } -> std::same_as<bool>;
+      { backend.isEndcap(element) } -> std::same_as<bool>;
+      { backend.isTracker(element) } -> std::same_as<bool>;
+    };
+
 /// @brief Concept that fully constrains a geometry backend usable with
 /// @ref BlueprintBuilder.
 ///
@@ -199,8 +208,7 @@ concept HasLayerNameMember =
 /// - be constructible from a `Config` object and an `Acts::Logger` reference,
 /// - expose the element-hierarchy query interface (`world`, `nameOf`,
 ///   `children`, `parent`),
-/// - expose element-classification predicates (`isSensitive`, `isBarrel`,
-///   `isEndcap`, `isTracker`), and
+/// - expose `isSensitive()`, and
 /// - support equality comparison between `Element` instances, and
 /// - define `static constexpr std::string_view kIdentifier`.
 template <typename BackendT>
@@ -218,9 +226,6 @@ concept BlueprintBackend =
       } -> std::same_as<std::vector<typename BackendT::Element>>;
       { backend.parent(element) } -> std::same_as<typename BackendT::Element>;
       { backend.isSensitive(element) } -> std::same_as<bool>;
-      { backend.isBarrel(element) } -> std::same_as<bool>;
-      { backend.isEndcap(element) } -> std::same_as<bool>;
-      { backend.isTracker(element) } -> std::same_as<bool>;
       requires requires(const typename BackendT::Element& a,
                         const typename BackendT::Element& b) {
         { a == b } -> std::convertible_to<bool>;
@@ -793,7 +798,7 @@ class SensorLayer {
 /// Instances are obtained from @ref BlueprintBuilder::barrelEndcap(). The
 /// builder inspects the subtree of the provided assembly element for barrel and
 /// endcap children (using the backend's `isBarrel` / `isEndcap` / `isTracker`
-/// predicates) and delegates individual layer assembly to
+/// predicates, when available) and delegates individual layer assembly to
 /// @ref ElementLayerAssembler internally.
 ///
 /// Typical usage:
@@ -843,14 +848,15 @@ class BarrelEndcapAssembler {
   /// @return Shared pointer to the assembled Z-axis container node.
   [[nodiscard]] std::shared_ptr<
       Acts::Experimental::CylinderContainerBlueprintNode>
-  build() const;
+  build() const requires(detail::HasBarrelEndcapClassifier<BackendT>);
 
   /// @brief Build the container node and attach it as a child of @p node.
   ///
   /// Equivalent to `node.addChild(build())`.
   /// @param node Blueprint node that will receive the built container as a
   ///             child.
-  void addTo(Acts::Experimental::BlueprintNode& node) const&&;
+  void addTo(Acts::Experimental::BlueprintNode& node) const&&
+    requires(detail::HasBarrelEndcapClassifier<BackendT>);
 
   /// @brief Register a layer callback forwarded to each inner
   /// @ref ElementLayerAssembler.
@@ -1090,7 +1096,8 @@ class BlueprintBuilder {
   /// filter) and then finalised via @ref BarrelEndcapAssembler::build() or
   /// @ref BarrelEndcapAssembler::addTo().
   /// @return A new @ref BarrelEndcapAssembler instance.
-  [[nodiscard]] BarrelEndcapAssembler barrelEndcap() const;
+  [[nodiscard]] BarrelEndcapAssembler barrelEndcap() const
+    requires(detail::HasBarrelEndcapClassifier<Backend>);
 
   /// @brief Search for a detector element by exact name within a subtree.
   ///
@@ -1137,7 +1144,8 @@ class BlueprintBuilder {
   /// element and a barrel element.
   /// @param assembly Root element of the assembly subtree to search.
   /// @return Vector of barrel elements in depth-first order.
-  std::vector<Element> findBarrelElements(const Element& assembly) const;
+  std::vector<Element> findBarrelElements(const Element& assembly) const
+    requires(detail::HasBarrelEndcapClassifier<Backend>);
 
   /// @brief Collect all endcap tracker elements within an assembly subtree.
   ///
@@ -1145,7 +1153,8 @@ class BlueprintBuilder {
   /// element and an endcap element.
   /// @param assembly Root element of the assembly subtree to search.
   /// @return Vector of endcap elements in depth-first order.
-  std::vector<Element> findEndcapElements(const Element& assembly) const;
+  std::vector<Element> findEndcapElements(const Element& assembly) const
+    requires(detail::HasBarrelEndcapClassifier<Backend>);
 
   /// @brief Return the logger associated with this builder.
   /// @return Reference to the logger instance.

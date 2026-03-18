@@ -37,7 +37,6 @@
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
-#include <DD4hep/DetType.h>
 
 namespace {
 
@@ -46,6 +45,15 @@ const std::regex kShortStripLayerFilter{
     "(?:ShortStripLayer|ShortStripEndcap[NP])(\\d)"};
 const std::regex kLongStripLayerFilter{
     "(?:LongStripLayer|LongStripEndcap[NP])(\\d)"};
+const std::regex kPixelBarrelLayerFilter{"PixelLayer\\d"};
+const std::regex kPixelNegativeEndcapLayerFilter{"PixelEndcapN\\d"};
+const std::regex kPixelPositiveEndcapLayerFilter{"PixelEndcapP\\d"};
+const std::regex kShortStripBarrelLayerFilter{"ShortStripLayer\\d"};
+const std::regex kShortStripNegativeEndcapLayerFilter{"ShortStripEndcapN\\d"};
+const std::regex kShortStripPositiveEndcapLayerFilter{"ShortStripEndcapP\\d"};
+const std::regex kLongStripBarrelLayerFilter{"LongStripLayer\\d"};
+const std::regex kLongStripNegativeEndcapLayerFilter{"LongStripEndcapN\\d"};
+const std::regex kLongStripPositiveEndcapLayerFilter{"LongStripEndcapP\\d"};
 
 static const Acts::ExtentEnvelope kBlueprintEnvelope =
     Acts::ExtentEnvelope::Zero()
@@ -86,21 +94,18 @@ auto makeLayerCustomizer(Builder& builder, std::string det,
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     using enum SrfArrayNavPol::LayerType;
 
-    const auto& backend = builder.backend();
     SrfArrayNavPol::Config navCfg;
     const bool isBarrelLayer =
-        elem.has_value()
-            ? backend.isBarrel(*elem)
-            : layer.layerType() ==
-                  Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
+        layer.layerType() ==
+        Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
     if (isBarrelLayer) {
       navCfg.layerType = Cylinder;
-      navCfg.bins = {backend.constant("{}_b{}_sf_b_phi", det, layerIdx),
-                     backend.constant("{}_b_sf_b_z", det)};
+      navCfg.bins = {builder.backend().constant("{}_b{}_sf_b_phi", det, layerIdx),
+                     builder.backend().constant("{}_b_sf_b_z", det)};
     } else {
       navCfg.layerType = Disc;
-      navCfg.bins = {backend.constant("{}_e_sf_b_r", det),
-                     backend.constant("{}_e_sf_b_phi", det)};
+      navCfg.bins = {builder.backend().constant("{}_e_sf_b_r", det),
+                     builder.backend().constant("{}_e_sf_b_phi", det)};
     }
 
     layer.setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
@@ -143,30 +148,6 @@ std::optional<dd4hep::DetElement> lookupDetElement(
   return std::nullopt;
 }
 
-std::string pathFromElement(const ActsPlugins::TGeoBackend::Element& element) {
-  std::vector<std::string> names;
-  for (const auto* current = element.context.get(); current != nullptr;
-       current = current->parent.get()) {
-    if (current->node == nullptr) {
-      continue;
-    }
-    if (current->node->GetName() != nullptr) {
-      names.emplace_back(current->node->GetName());
-    } else {
-      names.emplace_back(current->node->GetVolume()->GetName());
-    }
-  }
-
-  std::string path;
-  for (auto it = names.rbegin(); it != names.rend(); ++it) {
-    if (!path.empty()) {
-      path += "|";
-    }
-    path += *it;
-  }
-  return path;
-}
-
 ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
     const dd4hep::Detector& detector) {
   auto nodeMap = buildNodeToDetElementMap(detector);
@@ -192,37 +173,6 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
         auto detElement = lookupDetElement(*nodeMap, element);
         return detElement.has_value() && detElement->volume().isSensitive();
       };
-  cfg.barrelPredicate =
-      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
-        auto detElement = lookupDetElement(*nodeMap, element);
-        return detElement.has_value() &&
-               dd4hep::DetType{detElement->typeFlag()}.is(
-                   dd4hep::DetType::BARREL);
-      };
-  cfg.endcapPredicate =
-      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
-        auto detElement = lookupDetElement(*nodeMap, element);
-        return detElement.has_value() &&
-               dd4hep::DetType{detElement->typeFlag()}.is(
-                   dd4hep::DetType::ENDCAP);
-      };
-  cfg.trackerPredicate =
-      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
-        auto detElement = lookupDetElement(*nodeMap, element);
-        return detElement.has_value() &&
-               dd4hep::DetType{detElement->typeFlag()}.is(
-                   dd4hep::DetType::TRACKER);
-      };
-  cfg.identifierProvider =
-      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
-        auto detElement = lookupDetElement(*nodeMap, element);
-        if (detElement.has_value()) {
-          return static_cast<ActsPlugins::TGeoDetectorElement::Identifier>(
-              detElement->volumeID());
-        }
-        return static_cast<ActsPlugins::TGeoDetectorElement::Identifier>(
-            std::hash<std::string>{}(pathFromElement(element)));
-      };
   cfg.constantProvider = [&detector](std::string_view name) {
     return detector.constant<int>(std::string{name});
   };
@@ -237,6 +187,75 @@ makeTemporaryTGeoBeampipeNode() {
       Acts::Transform3::Identity(), volumeBounds, "BeamPipe");
   return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
       std::move(volume));
+}
+
+void configureSubsystemNode(Acts::Experimental::ContainerBlueprintNode& node) {
+  node.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+  node.setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
+                           Acts::VolumeResizeStrategy::Gap);
+}
+
+struct TGeoSubsystemSpec {
+  std::string_view assembly;
+  std::string_view det;
+  std::string_view barrelName;
+  std::string_view negativeEndcapName;
+  std::string_view positiveEndcapName;
+  const std::regex& layerFilter;
+  const std::regex& barrelLayerFilter;
+  const std::regex& negativeEndcapLayerFilter;
+  const std::regex& positiveEndcapLayerFilter;
+};
+
+void addTGeoSubsystem(
+    ActsPlugins::BlueprintBuilder& builder,
+    Acts::Experimental::BlueprintNode& parent,
+    const TGeoSubsystemSpec& spec) {
+  const auto assemblyElement =
+      builder.findDetElementByName(std::string{spec.assembly});
+  if (!assemblyElement.has_value()) {
+    throw std::runtime_error(
+        std::format("Could not find assembly '{}'", spec.assembly));
+  }
+
+  auto subsystemNode =
+      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+          builder.backend().nameOf(*assemblyElement), Acts::AxisDirection::AxisZ);
+
+  auto addLayerContainer = [&](auto&& assembler) {
+    auto node = assembler.build();
+    configureSubsystemNode(*node);
+    subsystemNode->addChild(std::move(node));
+  };
+
+  addLayerContainer(builder.layers()
+                        .barrel()
+                        .setSensorAxes("XYZ")
+                        .setLayerFilter(spec.barrelLayerFilter)
+                        .setContainer(*assemblyElement)
+                        .setContainerName(std::string{spec.barrelName})
+                        .onLayer(makeLayerCustomizer(
+                            builder, std::string{spec.det}, spec.layerFilter)));
+
+  addLayerContainer(builder.layers()
+                        .endcap()
+                        .setSensorAxes("XZY")
+                        .setLayerFilter(spec.negativeEndcapLayerFilter)
+                        .setContainer(*assemblyElement)
+                        .setContainerName(std::string{spec.negativeEndcapName})
+                        .onLayer(makeLayerCustomizer(
+                            builder, std::string{spec.det}, spec.layerFilter)));
+
+  addLayerContainer(builder.layers()
+                        .endcap()
+                        .setSensorAxes("XZY")
+                        .setLayerFilter(spec.positiveEndcapLayerFilter)
+                        .setContainer(*assemblyElement)
+                        .setContainerName(std::string{spec.positiveEndcapName})
+                        .onLayer(makeLayerCustomizer(
+                            builder, std::string{spec.det}, spec.layerFilter)));
+
+  parent.addChild(std::move(subsystemNode));
 }
 
 }  // namespace
@@ -314,32 +333,38 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
   outer.addChild(makeTemporaryTGeoBeampipeNode());
-
-  auto addSubsystem = [&](std::string assembly, std::string det,
-                          const std::regex& layerFilter) {
-    const auto assemblyElement = builder.findDetElementByName(assembly);
-    if (!assemblyElement.has_value()) {
-      throw std::runtime_error(
-          std::format("Could not find assembly '{}'", assembly));
-    }
-
-    builder.barrelEndcap()
-        .setAssembly(*assemblyElement)
-        .setSensorAxes("XYZ", "XZY")
-        .setLayerFilter(layerFilter)
-        .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter))
-        .onContainer(
-            [](const auto&, Acts::Experimental::ContainerBlueprintNode& node) {
-              node.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
-              node.setResizeStrategies(VolumeResizeStrategy::Gap,
-                                       VolumeResizeStrategy::Gap);
-            })
-        .addTo(outer);
-  };
-
-  addSubsystem("Pixels", "pix", kPixelLayerFilter);
-  addSubsystem("ShortStrips", "ss", kShortStripLayerFilter);
-  addSubsystem("LongStrips", "ls", kLongStripLayerFilter);
+  addTGeoSubsystem(builder, outer,
+                   {.assembly = "Pixels",
+                    .det = "pix",
+                    .barrelName = "PixelBarrel",
+                    .negativeEndcapName = "PixelEndcapN",
+                    .positiveEndcapName = "PixelEndcapP",
+                    .layerFilter = kPixelLayerFilter,
+                    .barrelLayerFilter = kPixelBarrelLayerFilter,
+                    .negativeEndcapLayerFilter = kPixelNegativeEndcapLayerFilter,
+                    .positiveEndcapLayerFilter = kPixelPositiveEndcapLayerFilter});
+  addTGeoSubsystem(
+      builder, outer,
+      {.assembly = "ShortStrips",
+       .det = "ss",
+       .barrelName = "ShortStripBarrel",
+       .negativeEndcapName = "ShortStripEndcapN",
+       .positiveEndcapName = "ShortStripEndcapP",
+       .layerFilter = kShortStripLayerFilter,
+       .barrelLayerFilter = kShortStripBarrelLayerFilter,
+       .negativeEndcapLayerFilter = kShortStripNegativeEndcapLayerFilter,
+       .positiveEndcapLayerFilter = kShortStripPositiveEndcapLayerFilter});
+  addTGeoSubsystem(
+      builder, outer,
+      {.assembly = "LongStrips",
+       .det = "ls",
+       .barrelName = "LongStripBarrel",
+       .negativeEndcapName = "LongStripEndcapN",
+       .positiveEndcapName = "LongStripEndcapP",
+       .layerFilter = kLongStripLayerFilter,
+       .barrelLayerFilter = kLongStripBarrelLayerFilter,
+       .negativeEndcapLayerFilter = kLongStripNegativeEndcapLayerFilter,
+       .positiveEndcapLayerFilter = kLongStripPositiveEndcapLayerFilter});
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
