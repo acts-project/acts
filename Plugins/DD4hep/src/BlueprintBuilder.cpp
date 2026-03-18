@@ -60,12 +60,11 @@ void visitSubtree(
     const std::function<void(const dd4hep::DetElement&)>& visitor) {
   visitor(detElement);
 
-  for (auto& [name, child] : detElement.children()) {
+  for (const auto& [name, child] : detElement.children()) {
     (void)name;
     visitSubtree(child, visitor);
   }
 }
-
 }  // namespace
 
 DD4hepBackend::Element DD4hepBackend::world() const {
@@ -149,16 +148,16 @@ DD4hepBackend::makeBeampipe() const {
   std::optional<dd4hep::DetElement> beampipeElement = std::nullopt;
 
   visitSubtree(world(), [&](const dd4hep::DetElement& elem) {
-    dd4hep::DetType subDetType{elem.typeFlag()};
-    if (subDetType.is(dd4hep::DetType::BEAMPIPE)) {
-      if (beampipeElement.has_value()) {
-        ACTS_WARNING("Multiple beampipe elements found, using first: "
-                     << beampipeElement->name()
-                     << ", ignoring: " << elem.name());
-        return;
-      }
-      beampipeElement = elem;
+    if (!dd4hep::DetType{elem.typeFlag()}.is(dd4hep::DetType::BEAMPIPE)) {
+      return;
     }
+    if (beampipeElement.has_value()) {
+      ACTS_WARNING("Multiple beampipe elements found, using first: "
+                   << beampipeElement->name()
+                   << ", ignoring: " << elem.name());
+      return;
+    }
+    beampipeElement = elem;
   });
 
   if (!beampipeElement.has_value()) {
@@ -174,6 +173,7 @@ DD4hepBackend::makeBeampipe() const {
           *beampipeElement->placement().ptr()->GetVolume()->GetShape(),
           tgTransform.GetRotationMatrix(), tgTransform.GetTranslation(), "XYZ",
           m_cfg.lengthScale);
+  (void)thickness;
 
   if (bounds == nullptr) {
     ACTS_ERROR("Beampipe element shape could not be converted to cylinder.");
@@ -181,17 +181,11 @@ DD4hepBackend::makeBeampipe() const {
         "Beampipe element shape could not be converted to cylinder.");
   }
 
-  std::shared_ptr volBounds = std::make_shared<Acts::CylinderVolumeBounds>(
+  auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
       0, bounds->get(Acts::CylinderBounds::eR),
       bounds->get(Acts::CylinderBounds::eHalfLengthZ));
-
   std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
-      transform, volBounds, beampipeElement->name());
-
-  ACTS_INFO("-> Created beampipe volume: "
-            << volume->volumeBounds() << " transform:\n"
-            << volume->localToGlobalTransform(m_cfg.gctx.get()).matrix());
-
+      transform, volumeBounds, beampipeElement->name());
   return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
       std::move(volume));
 }

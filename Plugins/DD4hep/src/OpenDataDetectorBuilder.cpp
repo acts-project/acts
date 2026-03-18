@@ -13,11 +13,14 @@
 #include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 #include "ActsPlugins/Root/BlueprintBuilder.hpp"
@@ -30,6 +33,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
@@ -209,13 +213,6 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
                dd4hep::DetType{detElement->typeFlag()}.is(
                    dd4hep::DetType::TRACKER);
       };
-  cfg.beampipePredicate =
-      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
-        auto detElement = lookupDetElement(*nodeMap, element);
-        return detElement.has_value() &&
-               dd4hep::DetType{detElement->typeFlag()}.is(
-                   dd4hep::DetType::BEAMPIPE);
-      };
   cfg.identifierProvider =
       [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
         auto detElement = lookupDetElement(*nodeMap, element);
@@ -230,6 +227,16 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
     return detector.constant<int>(std::string{name});
   };
   return cfg;
+}
+
+std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
+makeTemporaryTGeoBeampipeNode() {
+  auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
+      0., 19. * Acts::UnitConstants::mm, 3. * Acts::UnitConstants::m);
+  std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
+      Acts::Transform3::Identity(), volumeBounds, "BeamPipe");
+  return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+      std::move(volume));
 }
 
 }  // namespace
@@ -306,7 +313,7 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(builder.backend().makeBeampipe());
+  outer.addChild(makeTemporaryTGeoBeampipeNode());
 
   auto addSubsystem = [&](std::string assembly, std::string det,
                           const std::regex& layerFilter) {
