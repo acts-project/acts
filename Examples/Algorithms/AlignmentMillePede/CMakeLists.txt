@@ -10,5 +10,4 @@ target_link_libraries(
         Acts::ExamplesFramework
         Acts::ExamplesMagneticField
         ActsPluginMille
-    #   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree ROOT::TreePlayer
 )
