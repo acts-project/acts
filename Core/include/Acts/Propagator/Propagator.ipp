@@ -203,16 +203,14 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 }
 
 template <StepperConcept S, typename N>
-template <typename parameters_t, typename propagator_options_t,
-          typename path_aborter_t>
-auto Propagator<S, N>::propagate(const parameters_t& start,
+template <typename propagator_options_t, typename path_aborter_t>
+auto Propagator<S, N>::propagate(const BoundParameters& start,
                                  const propagator_options_t& options,
                                  bool createFinalParameters) const
     -> Result<ResultType<propagator_options_t>> {
   auto state = makeState<propagator_options_t, path_aborter_t>(options);
 
-  auto initRes =
-      initialize<decltype(state), parameters_t, path_aborter_t>(state, start);
+  auto initRes = initialize<decltype(state), path_aborter_t>(state, start);
   if (!initRes.ok()) {
     ACTS_DEBUG("Initialization failed: " << initRes.error() << ": "
                                          << initRes.error().message());
@@ -227,9 +225,9 @@ auto Propagator<S, N>::propagate(const parameters_t& start,
 }
 
 template <StepperConcept S, typename N>
-template <typename parameters_t, typename propagator_options_t,
-          typename target_aborter_t, typename path_aborter_t>
-auto Propagator<S, N>::propagate(const parameters_t& start,
+template <typename propagator_options_t, typename target_aborter_t,
+          typename path_aborter_t>
+auto Propagator<S, N>::propagate(const BoundParameters& start,
                                  const Surface& target,
                                  const propagator_options_t& options) const
     -> Result<ResultType<propagator_options_t>> {
@@ -237,8 +235,7 @@ auto Propagator<S, N>::propagate(const parameters_t& start,
       makeState<propagator_options_t, target_aborter_t, path_aborter_t>(
           target, options);
 
-  auto initRes =
-      initialize<decltype(state), parameters_t, path_aborter_t>(state, start);
+  auto initRes = initialize<decltype(state), path_aborter_t>(state, start);
   if (!initRes.ok()) {
     ACTS_DEBUG("Initialization failed: " << initRes.error() << ": "
                                          << initRes.error().message());
@@ -300,10 +297,9 @@ auto Propagator<S, N>::makeState(const Surface& target,
 }
 
 template <StepperConcept S, typename N>
-template <typename propagator_state_t, typename parameters_t,
-          typename path_aborter_t>
+template <typename propagator_state_t, typename path_aborter_t>
 Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
-                                          const parameters_t& start) const {
+                                          const BoundParameters& start) const {
   m_stepper.initialize(state.stepping, start);
 
   state.position = m_stepper.position(state.stepping);
@@ -415,14 +411,14 @@ detail::BasePropagatorHelper<derived_t>::propagateToSurface(
   // is sometimes not met.
   if (target.type() == Surface::SurfaceType::Perigee) {
     res = static_cast<const derived_t*>(this)
-              ->template propagate<BoundTrackParameters, DerivedOptions,
-                                   ForcedSurfaceReached, PathLimitReached>(
-                  start, target, derivedOptions);
+              ->template propagate<DerivedOptions, ForcedSurfaceReached,
+                                   PathLimitReached>(start, target,
+                                                     derivedOptions);
   } else {
     res = static_cast<const derived_t*>(this)
-              ->template propagate<BoundTrackParameters, DerivedOptions,
-                                   SurfaceReached, PathLimitReached>(
-                  start, target, derivedOptions);
+              ->template propagate<DerivedOptions, SurfaceReached,
+                                   PathLimitReached>(start, target,
+                                                     derivedOptions);
   }
 
   if (!res.ok()) {

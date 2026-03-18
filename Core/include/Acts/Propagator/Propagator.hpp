@@ -89,10 +89,10 @@ class Propagator final
           SupportsBoundParameters_v<stepper_t>,
           detail::BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
           detail::PropagatorStub> {
-  using StepperBoundTrackParameters = stepper_t::BoundParameters;
+  using BoundParameters = stepper_t::BoundParameters;
 
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// @brief Helper struct determining the state's type
   ///
@@ -130,7 +130,6 @@ class Propagator final
   ///
   template <typename propagator_options_t>
   struct result_type_helper {
-    using parameters_t = StepperBoundTrackParameters;
     using actor_list_t = typename propagator_options_t::actor_list_type;
 
     /// @brief Propagation result type for an arbitrary list of additional
@@ -139,7 +138,7 @@ class Propagator final
     /// @tparam args Parameter pack specifying additional propagation results
     ///
     template <typename... args>
-    using this_result_type = PropagatorResult<parameters_t, args...>;
+    using this_result_type = PropagatorResult<BoundParameters, args...>;
 
     /// @brief Propagation result type derived from a given action list
     using type = typename actor_list_t::template result_type<this_result_type>;
@@ -206,7 +205,6 @@ class Propagator final
   /// fulfilled or the maximum number of steps/path length provided in the
   /// propagation options is reached.
   ///
-  /// @tparam parameters_t Type of initial track parameters to propagate
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam path_aborter_t The path aborter type to be added
   ///
@@ -217,10 +215,10 @@ class Propagator final
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename parameters_t, typename propagator_options_t,
+  template <typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
   Result<ResultType<propagator_options_t>> propagate(
-      const parameters_t& start, const propagator_options_t& options,
+      const BoundParameters& start, const propagator_options_t& options,
       bool createFinalParameters = true) const;
 
   /// @brief Propagate track parameters - User method
@@ -230,7 +228,6 @@ class Propagator final
   /// is fulfilled, the destination surface is hit or the maximum number of
   /// steps/path length as given in the propagation options is reached.
   ///
-  /// @tparam parameters_t Type of initial track parameters to propagate
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam target_aborter_t The target aborter type to be added
   /// @tparam path_aborter_t The path aborter type to be added
@@ -241,11 +238,11 @@ class Propagator final
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
-  template <typename parameters_t, typename propagator_options_t,
+  template <typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
   Result<ResultType<propagator_options_t>> propagate(
-      const parameters_t& start, const Surface& target,
+      const BoundParameters& start, const Surface& target,
       const propagator_options_t& options) const;
 
   /// @brief Builds the propagator state object
@@ -293,10 +290,10 @@ class Propagator final
   /// @param [in] start Initial track parameters to propagate
   ///
   /// @return Indication if the initialization was successful
-  template <typename propagator_state_t, typename parameters_t,
+  template <typename propagator_state_t,
             typename path_aborter_t = PathLimitReached>
   [[nodiscard]] Result<void> initialize(propagator_state_t& state,
-                                        const parameters_t& start) const;
+                                        const BoundParameters& start) const;
 
   /// @brief Propagate track parameters
   ///

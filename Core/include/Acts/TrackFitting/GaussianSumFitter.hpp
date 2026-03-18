@@ -293,16 +293,14 @@ struct GaussianSumFitter {
 
       fwdPropOptions.direction = gsfForward;
 
-      // If necessary convert to MultiComponentBoundTrackParameters
-      using IsMultiParameters =
-          detail::IsMultiComponentBoundParameters<start_parameters_t>;
-
-      // dirty optional because parameters are not default constructible
+      // optional because parameters are not default constructible
       std::optional<MultiComponentBoundTrackParameters> params;
 
-      // This allows the initialization with single- and multicomponent start
-      // parameters
-      if constexpr (!IsMultiParameters::value) {
+      // If necessary convert to MultiComponentBoundTrackParameters. This allows
+      // the initialization with single- and multicomponent start parameters.
+      constexpr bool IsMultiParameters =
+          detail::IsMultiComponentBoundParameters<start_parameters_t>::value;
+      if constexpr (!IsMultiParameters) {
         params = MultiComponentBoundTrackParameters(
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), sParameters.covariance(),
