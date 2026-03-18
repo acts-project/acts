@@ -253,7 +253,7 @@ datatypes:
         /// @param valueIndex The index of the value
         void setValue(float val, std::size_t valueIndex) {
           const auto dim = getSize();
-          if (m_obj->m_measurement == nullptr || m_obj->m_measurement->size() != dim) {
+          if (m_obj->m_measurement->size() != dim) {
             throw std::runtime_error("Measurement vector not initialized - call setSubspaceIndices first");
           }
           if (valueIndex >= dim) {
@@ -268,7 +268,7 @@ datatypes:
         /// @param indexJ The second index
         void setCov(float val, std::size_t indexI, std::size_t indexJ) {
           const auto dim = getSize();
-          if (m_obj->m_covariance == nullptr || m_obj->m_covariance->size() != dim * dim) {
+          if (m_obj->m_covariance->size() != dim * dim) {
             throw std::runtime_error("Covariance vector not initialized - call setSubspaceIndices first");
           }
           if (indexI >= dim || indexJ >= dim) {
@@ -284,12 +284,6 @@ datatypes:
         void setSubspaceIndices(std::span<const std::uint8_t> indices) {
           setType(static_cast<std::int32_t>(
               ActsPodioEdm::detail::encodeIndices(indices)));
-          if (m_obj->m_measurement == nullptr) {
-            m_obj->m_measurement = new std::vector<float>{};
-          }
-          if (m_obj->m_covariance == nullptr) {
-            m_obj->m_covariance = new std::vector<float>{};
-          }
           m_obj->m_measurement->assign(indices.size(), 0.f);
           m_obj->m_covariance->assign(indices.size() * indices.size(), 0.f);
           m_obj->data.measurement_begin = 0u;
@@ -321,38 +315,6 @@ datatypes:
         template <typename E> requires std::is_enum_v<E>
         void setCov(float val, E enumI, E enumJ) {
           setCov(val, findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
-        }
-
-        // --- edm4hep::TrackerHit interface stubs (not implemented) ---
-
-        /// @throws std::logic_error always — quality is not used in TrackerHitLocal
-        std::int32_t& getQuality() {
-          throw std::logic_error("getQuality() is not implemented in TrackerHitLocal");
-        }
-
-        /// @throws std::logic_error always — quality is not used in TrackerHitLocal
-        void setQuality(std::int32_t) {
-          throw std::logic_error("setQuality() is not implemented in TrackerHitLocal");
-        }
-
-        /// @throws std::logic_error always — eDep is not used in TrackerHitLocal
-        float& getEDep() {
-          throw std::logic_error("getEDep() is not implemented in TrackerHitLocal");
-        }
-
-        /// @throws std::logic_error always — eDep is not used in TrackerHitLocal
-        void setEDep(float) {
-          throw std::logic_error("setEDep() is not implemented in TrackerHitLocal");
-        }
-
-        /// @throws std::logic_error always — eDepError is not used in TrackerHitLocal
-        float& getEDepError() {
-          throw std::logic_error("getEDepError() is not implemented in TrackerHitLocal");
-        }
-
-        /// @throws std::logic_error always — eDepError is not used in TrackerHitLocal
-        void setEDepError(float) {
-          throw std::logic_error("setEDepError() is not implemented in TrackerHitLocal");
         }
 
 
