@@ -20,9 +20,8 @@ namespace Acts::detail {
 const ActsGeometryModuleV1* getGeometryModuleFromRaw(
     const char* module_abi_tag, const char* user_data_type,
     void* (*buildFunc)(const void*, const void*)) {
-  static const auto s_module = [module_abi_tag, user_data_type,
-                                buildFunc]() -> ActsGeometryModuleV1 {
-    return {
+  static const auto s_module = [module_abi_tag, user_data_type, buildFunc]() {
+    return ActsGeometryModuleV1{
         .module_abi_tag = module_abi_tag,
         .user_data_type = user_data_type,
         .build = buildFunc,
@@ -31,10 +30,8 @@ const ActsGeometryModuleV1* getGeometryModuleFromRaw(
               if (handle == nullptr) {
                 return;
               }
-              try {
-                delete static_cast<TrackingGeometry*>(handle);
-              } catch (...) {
-              }
+
+              delete static_cast<TrackingGeometry*>(handle);
             },
     };
   }();

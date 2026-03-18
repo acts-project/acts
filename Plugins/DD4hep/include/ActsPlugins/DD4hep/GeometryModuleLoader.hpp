@@ -9,7 +9,8 @@
 #pragma once
 
 #if !defined(__unix__) && !defined(__APPLE__)
-#error "Runtime geometry modules are only supported on Unix-like systems (Linux, macOS)."
+#error \
+    "Runtime geometry modules are only supported on Unix-like systems (Linux, macOS)."
 #endif
 
 #include "Acts/Utilities/Logger.hpp"
@@ -30,8 +31,7 @@ class TrackingGeometry;
 /// The returned deleter keeps the module loaded until the geometry is
 /// destroyed.
 std::shared_ptr<TrackingGeometry> loadDD4hepGeometryModule(
-    const std::filesystem::path& modulePath,
-    const dd4hep::Detector& detector,
+    const std::filesystem::path& modulePath, const dd4hep::Detector& detector,
     const Logger& logger = getDummyLogger());
 
 }  // namespace Acts

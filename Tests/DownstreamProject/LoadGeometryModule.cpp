@@ -14,11 +14,11 @@
 #include <DD4hep/Detector.h>
 #endif
 
-#include <boost/program_options.hpp>
-
 #include <cstdlib>
 #include <iostream>
 #include <string>
+
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 

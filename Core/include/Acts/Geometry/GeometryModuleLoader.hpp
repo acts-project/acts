@@ -9,7 +9,8 @@
 #pragma once
 
 #if !defined(__unix__) && !defined(__APPLE__)
-#error "Runtime geometry modules are only supported on Unix-like systems (Linux, macOS)."
+#error \
+    "Runtime geometry modules are only supported on Unix-like systems (Linux, macOS)."
 #endif
 
 #include "Acts/Utilities/Logger.hpp"
@@ -34,9 +35,8 @@ namespace detail {
 /// Validates that the module's user_data_type matches \a expectedUserDataType
 /// (nullptr means the module must declare no user data requirement).
 std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
-    const std::filesystem::path& modulePath,
-    const char* expectedUserDataType, const void* userData,
-    const Logger& logger);
+    const std::filesystem::path& modulePath, const char* expectedUserDataType,
+    const void* userData, const Logger& logger);
 }  // namespace detail
 
 }  // namespace Acts

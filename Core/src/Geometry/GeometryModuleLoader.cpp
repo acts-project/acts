@@ -11,11 +11,11 @@
 #include "Acts/Geometry/GeometryModule.h"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
-#include <dlfcn.h>
-
 #include <cstring>
 #include <format>
 #include <stdexcept>
+
+#include <dlfcn.h>
 
 #ifndef ACTS_GEOMETRY_MODULE_ABI_TAG
 #error \
@@ -49,8 +49,7 @@ GeometryModuleEntryPointV1 resolveEntrypointV1(
     const std::filesystem::path& path, const std::shared_ptr<void>& library) {
   ::dlerror();
   void* symbol = ::dlsym(library.get(), "acts_geometry_module_v1");
-  const char* error = ::dlerror();
-  if (error != nullptr) {
+  if (const char* error = ::dlerror(); error != nullptr) {
     throw std::runtime_error(
         std::format("Failed to resolve acts_geometry_module_v1 in '{}': {}",
                     path.string(), error));
@@ -95,11 +94,9 @@ std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
   // Validate user_data_type: both sides must agree on whether userData is
   // needed and what type it is.
   const char* actualType = descriptor->user_data_type;
-  bool typesMatch =
-      (expectedUserDataType == nullptr && actualType == nullptr) ||
-      (expectedUserDataType != nullptr && actualType != nullptr &&
-       std::strcmp(actualType, expectedUserDataType) == 0);
-  if (!typesMatch) {
+  if (!((expectedUserDataType == nullptr && actualType == nullptr) ||
+        (expectedUserDataType != nullptr && actualType != nullptr &&
+         std::strcmp(actualType, expectedUserDataType) == 0))) {
     if (actualType == nullptr) {
       throw std::runtime_error(std::format(
           "Geometry module '{}' does not require user data; "
@@ -111,10 +108,10 @@ std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
           "use the appropriate typed loader (e.g. loadDD4hepGeometryModule)",
           modulePath.string(), actualType));
     } else {
-      throw std::runtime_error(std::format(
-          "Geometry module '{}' user_data_type mismatch: "
-          "expected '{}', module declares '{}'",
-          modulePath.string(), expectedUserDataType, actualType));
+      throw std::runtime_error(
+          std::format("Geometry module '{}' user_data_type mismatch: "
+                      "expected '{}', module declares '{}'",
+                      modulePath.string(), expectedUserDataType, actualType));
     }
   }
 
