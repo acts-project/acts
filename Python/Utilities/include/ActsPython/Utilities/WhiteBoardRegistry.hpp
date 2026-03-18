@@ -12,10 +12,8 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <concepts>
-#include <cstdint>
 #include <functional>
-#include <memory>
-#include <typeinfo>
+#include <unordered_map>
 
 #include <pybind11/pybind11.h>
 
@@ -45,72 +43,50 @@ concept PyClassWithSmartHolder =
 class WhiteBoardRegistry {
  private:
   /// Function that converts a type-erased pointer from the WhiteBoard into a
-  /// pybind11 object. The wbPy argument is used for reference_internal
-  /// lifetime.
-  using ToPythonFunction = std::function<pybind11::object(
-      const Acts::AnyMoveOnly& any, const pybind11::object& wbPy)>;
+  /// Python object.
+  using ToPythonFunction =
+      std::function<PyObject*(const Acts::AnyMoveOnly& any, PyObject* wbPy)>;
 
-  /// Function that converts a pybind11 object into a type-erased pointer for
-  /// the WhiteBoard.
-  using FromPythonFunction = std::function<std::unique_ptr<Acts::AnyMoveOnly>(
-      const pybind11::object& obj)>;
+  /// Function that converts a Python object into a type-erased holder for the
+  /// WhiteBoard.
+  using FromPythonFunction =
+      std::function<std::unique_ptr<Acts::AnyMoveOnly>(PyObject* obj)>;
 
- public:
-  /// Opaque handle to an internal registry entry.
-  struct EntryHandle {
-   protected:
-    EntryHandle() = default;
-    ~EntryHandle() = default;
-  };
-
- private:
-  static void registerTypeImpl(PyObject* pyType, ToPythonFunction toPython,
-                               FromPythonFunction fromPython,
-                               const std::type_info* typeinfo,
-                               std::uint64_t typeHash);
-
- public:
-  /// Register a C++ type T with its pybind11 Python type for WhiteBoard
-  /// access. Use when the `py::class_<T>` type cannot be deduced (e.g. for
-  /// template types).
-  /// @tparam T The C++ type to register.
   template <typename T>
   static void registerType() {
     namespace py = pybind11;
     return registerType<T>(py::type::of<T>());
   }
 
-  /// Register a C++ type `~T` with its pybind11 Python type for WhiteBoard
-  /// access. Use when the `py::class_<T>` type cannot be deduced (e.g. for
-  /// template types).
-  /// @tparam T The C++ type to register.
-  /// @param pyType The pybind11 Python type object to register.
   template <typename T>
   static void registerType(const pybind11::object& pyType) {
     namespace py = pybind11;
 
     using type = T;
 
-    registerTypeImpl(
-        pyType.ptr(),
-        [](const Acts::AnyMoveOnly& any, const py::object& wbPy) -> py::object {
-          // wb needed to ensure correct lifetime
-          return py::cast(any.as<type>(),
-                          py::return_value_policy::reference_internal, wbPy);
+    instance()[pyType.ptr()] = {
+        .toPython = [](const Acts::AnyMoveOnly& any,
+                       PyObject* wbPy) -> PyObject* {
+          py::object pyWb = py::reinterpret_borrow<py::object>(wbPy);
+          py::object out =
+              py::cast(any.as<type>(),
+                       py::return_value_policy::reference_internal, pyWb);
+          return out.release().ptr();
         },
-        [](const py::object& obj) {
-          // This communicates to pybind11's smart_holder that the object is
-          // consumed in C++
-          auto up = py::cast<std::unique_ptr<T>>(obj);
-          return std::make_unique<Acts::AnyMoveOnly>(std::move(*up));
-        },
-        &typeid(type), Acts::typeHash<type>());
+        .fromPython =
+            [](PyObject* obj) {
+              py::object pyObj = py::reinterpret_borrow<py::object>(obj);
+              // This communicates to pybind11's smart_holder that the object is
+              // consumed in C++
+              auto up = py::cast<std::unique_ptr<T>>(pyObj);
+              return std::make_unique<Acts::AnyMoveOnly>(std::move(*up));
+            },
+        .typeinfo = &typeid(type),
+        .typeHash = Acts::typeHash<type>(),
+    };
   }
 
-  /// Register a pybind11-bound type T for WhiteBoard read access.
-  /// Call this after the `py::class_<T>` definition.
-  /// @tparam Ts The types to register.
-  /// @param pyClass The pybind11 class object to register.
+ public:
   template <typename... Ts>
   static void registerClass(const pybind11::class_<Ts...>& pyClass)
     requires PyClassWithSmartHolder<Ts...>
@@ -119,28 +95,24 @@ class WhiteBoardRegistry {
     registerType<type>(pyClass);
   }
 
-  /// Look up a registered type by Python type object.
-  /// @param pyType The Python type object to look up.
-  /// @return Opaque handle to the internal entry, or nullptr if not registered.
-  static const EntryHandle* find(PyObject* pyType) noexcept;
+  struct RegistryEntry {
+    ToPythonFunction toPython{nullptr};
+    FromPythonFunction fromPython{nullptr};
+    const std::type_info* typeinfo{nullptr};
+    std::uint64_t typeHash{0};
+  };
 
-  /// Access the registered C++ type metadata.
-  static const std::type_info* typeInfo(const EntryHandle* entry) noexcept;
-
-  /// Access the registered hash for runtime type verification.
-  static std::uint64_t typeHash(const EntryHandle* entry) noexcept;
-
-  /// Convert a WhiteBoard object into a Python object.
-  /// @return New reference (`PyObject*`) owned by the caller.
-  static PyObject* toPython(const EntryHandle* entry,
-                            const Acts::AnyMoveOnly& any, PyObject* wbPy);
-
-  /// Convert a Python object into a WhiteBoard-storable holder.
-  static std::unique_ptr<Acts::AnyMoveOnly> fromPython(const EntryHandle* entry,
-                                                       PyObject* obj);
+  static RegistryEntry* find(const pybind11::object& pyType) {
+    if (auto it = instance().find(pyType.ptr()); it != instance().end()) {
+      return &it->second;
+    }
+    return nullptr;
+  }
 
  private:
   WhiteBoardRegistry() = default;
+
+  static std::unordered_map<PyObject*, RegistryEntry>& instance();
 };
 
 }  // namespace ActsPython
