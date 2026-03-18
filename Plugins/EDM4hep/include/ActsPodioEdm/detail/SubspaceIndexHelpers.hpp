@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -40,23 +41,24 @@ constexpr std::size_t kMaxSubspaceSize = 6u;
 /// @param indices Span of parameter indices to encode (max
 /// `kMaxSubspaceSize` elements)
 /// @return Packed 32-bit unsigned integer containing all indices
-inline std::uint32_t encodeIndices(std::span<const std::uint8_t> indices) {
+inline std::int32_t encodeIndices(std::span<const std::uint8_t> indices) {
   if (indices.size() > kMaxSubspaceSize) {
-    throw std::runtime_error("Number of indices exceeds maximum of " +
-                             std::to_string(kMaxSubspaceSize) + " for EDM4hep");
+    throw std::runtime_error(
+        std::format("Number of indices exceeds maximum of {} for EDM4hep",
+                    kMaxSubspaceSize));
   }
 
-  std::uint32_t result = 0;
+  std::int32_t result = 0;
   std::uint8_t shift = 0;
   result |= (indices.size() << 0);
   shift += 4;
 
   for (std::uint8_t index : indices) {
     if (index > kMaxSubspaceIndex) {
-      throw std::runtime_error("Index out of range: maximum allowed is " +
-                               std::to_string(kMaxSubspaceIndex));
+      throw std::runtime_error(std::format(
+          "Index out of range: maximum allowed is {}", kMaxSubspaceIndex));
     }
-    result |= (static_cast<std::uint32_t>(index) << shift);
+    result |= (static_cast<std::int32_t>(index) << shift);
     shift += 4;
   }
   return result;
@@ -71,19 +73,20 @@ inline std::uint32_t encodeIndices(std::span<const std::uint8_t> indices) {
 /// @param type Packed 32-bit unsigned integer containing encoded indices
 /// @return Vector of decoded parameter indices (each in
 /// `[0, kMaxSubspaceIndex]`)
-inline std::vector<SubspaceIndex> decodeIndices(std::uint32_t type) {
+inline std::vector<SubspaceIndex> decodeIndices(std::int32_t type) {
   std::vector<SubspaceIndex> result;
   std::uint8_t size = type & 0xF;
   if (size > kMaxSubspaceSize) {
-    throw std::runtime_error("Number of indices exceeds maximum of " +
-                             std::to_string(kMaxSubspaceSize) + " for EDM4hep");
+    throw std::runtime_error(
+        std::format("Number of indices exceeds maximum of {} for EDM4hep",
+                    kMaxSubspaceSize));
   }
   result.resize(size);
   for (std::size_t i = 0; i < result.size(); ++i) {
     result[i] = (type >> ((i + 1) * 4)) & 0xF;
     if (result[i] > kMaxSubspaceIndex) {
-      throw std::runtime_error("Index out of range: maximum allowed is " +
-                               std::to_string(kMaxSubspaceIndex));
+      throw std::runtime_error(std::format(
+          "Index out of range: maximum allowed is {}", kMaxSubspaceIndex));
     }
   }
   return result;
@@ -110,9 +113,9 @@ inline std::size_t findSubspaceIndex(std::span<const SubspaceIndex> indices,
       return i;
     }
   }
-  throw std::runtime_error("Enum value " +
-                           std::to_string(static_cast<int>(enumVal)) +
-                           " not found in subspace indices");
+  throw std::runtime_error(
+      std::format("Enum value {} not found in subspace indices",
+                  static_cast<int>(enumVal)));
 }
 
 }  // namespace ActsPodioEdm::detail

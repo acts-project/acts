@@ -186,8 +186,7 @@ datatypes:
         /// Decode and return the subspace indices stored in the type field
         /// @return The subspace indices
         std::vector<std::uint8_t> getSubspaceIndices() const {
-          return ActsPodioEdm::detail::decodeIndices(
-              static_cast<std::uint32_t>(getType()));
+          return ActsPodioEdm::detail::decodeIndices(getType());
         }
 
         /// Find the measurement-vector index for an enum-coded subspace coordinate
@@ -282,8 +281,7 @@ datatypes:
         /// @param indices The subspace indices
         /// @note This will initialize the measurement and covariance vectors if they are not already initialized
         void setSubspaceIndices(std::span<const std::uint8_t> indices) {
-          setType(static_cast<std::int32_t>(
-              ActsPodioEdm::detail::encodeIndices(indices)));
+          setType(ActsPodioEdm::detail::encodeIndices(indices));
           m_obj->m_measurement->assign(indices.size(), 0.f);
           m_obj->m_covariance->assign(indices.size() * indices.size(), 0.f);
           m_obj->data.measurement_begin = 0u;
