@@ -20,15 +20,20 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
+#include "ActsPlugins/Root/BlueprintBuilder.hpp"
 
 #include <format>
+#include <memory>
 #include <optional>
 #include <regex>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include <DD4hep/DetElement.h>
+#include <DD4hep/Detector.h>
+#include <DD4hep/DetType.h>
 
 namespace {
 
@@ -48,10 +53,13 @@ static const Acts::ExtentEnvelope kLayerEnvelope =
         .set(Acts::AxisDirection::AxisZ, {2., 2.})
         .set(Acts::AxisDirection::AxisR, {2., 2.});
 
-auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
-                         std::string det, std::regex layerFilter) {
+template <typename Builder>
+auto makeLayerCustomizer(Builder& builder, std::string det,
+                         std::regex layerFilter) {
+  using Element = typename Builder::Element;
+
   return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
-             const std::optional<dd4hep::DetElement>& elem,
+             const std::optional<Element>& elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
     layer.setEnvelope(kLayerEnvelope);
 
@@ -98,6 +106,110 @@ auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
   };
 }
 
+using NodeToDetElementMap =
+    std::unordered_map<const TGeoNode*, dd4hep::DetElement>;
+
+void collectNodeToDetElementMap(const dd4hep::DetElement& detElement,
+                                NodeToDetElementMap& map) {
+  if (detElement.isValid() && detElement.placement().isValid()) {
+    map.try_emplace(detElement.placement().ptr(), detElement);
+  }
+
+  for (const auto& [name, child] : detElement.children()) {
+    (void)name;
+    collectNodeToDetElementMap(child, map);
+  }
+}
+
+std::shared_ptr<const NodeToDetElementMap> buildNodeToDetElementMap(
+    const dd4hep::Detector& detector) {
+  auto map = std::make_shared<NodeToDetElementMap>();
+  collectNodeToDetElementMap(detector.world(), *map);
+  return map;
+}
+
+std::optional<dd4hep::DetElement> lookupDetElement(
+    const NodeToDetElementMap& map, const ActsPlugins::TGeoBackend::Element& e) {
+  if (e.record == nullptr || e.record->node == nullptr) {
+    return std::nullopt;
+  }
+  if (auto it = map.find(e.record->node); it != map.end()) {
+    return it->second;
+  }
+  return std::nullopt;
+}
+
+ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
+    const dd4hep::Detector& detector) {
+  auto nodeMap = buildNodeToDetElementMap(detector);
+
+  ActsPlugins::TGeoBackend::Config cfg;
+  cfg.root = detector.world().placement().ptr();
+  cfg.lengthScale = Acts::UnitConstants::cm;
+  cfg.nameProvider = [nodeMap](const ActsPlugins::TGeoBackend::Element& element)
+      -> std::string {
+    if (auto detElement = lookupDetElement(*nodeMap, element);
+        detElement.has_value()) {
+      return detElement->name();
+    }
+
+    if (element.record != nullptr && element.record->node != nullptr &&
+        element.record->node->GetName() != nullptr) {
+      return element.record->node->GetName();
+    }
+    return {};
+  };
+  cfg.sensitivePredicate =
+      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
+        auto detElement = lookupDetElement(*nodeMap, element);
+        return detElement.has_value() && detElement->volume().isSensitive();
+      };
+  cfg.barrelPredicate =
+      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
+        auto detElement = lookupDetElement(*nodeMap, element);
+        return detElement.has_value() &&
+               dd4hep::DetType{detElement->typeFlag()}.is(
+                   dd4hep::DetType::BARREL);
+      };
+  cfg.endcapPredicate =
+      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
+        auto detElement = lookupDetElement(*nodeMap, element);
+        return detElement.has_value() &&
+               dd4hep::DetType{detElement->typeFlag()}.is(
+                   dd4hep::DetType::ENDCAP);
+      };
+  cfg.trackerPredicate =
+      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
+        auto detElement = lookupDetElement(*nodeMap, element);
+        return detElement.has_value() &&
+               dd4hep::DetType{detElement->typeFlag()}.is(
+                   dd4hep::DetType::TRACKER);
+      };
+  cfg.beampipePredicate =
+      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
+        auto detElement = lookupDetElement(*nodeMap, element);
+        return detElement.has_value() &&
+               dd4hep::DetType{detElement->typeFlag()}.is(
+                   dd4hep::DetType::BEAMPIPE);
+      };
+  cfg.identifierProvider =
+      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
+        auto detElement = lookupDetElement(*nodeMap, element);
+        if (detElement.has_value()) {
+          return static_cast<ActsPlugins::TGeoDetectorElement::Identifier>(
+              detElement->volumeID());
+        }
+        return static_cast<ActsPlugins::TGeoDetectorElement::Identifier>(
+            std::hash<std::string>{}(element.record != nullptr
+                                         ? element.record->path
+                                         : std::string{}));
+      };
+  cfg.constantProvider = [&detector](std::string_view name) {
+    return detector.constant<int>(std::string{name});
+  };
+  return cfg;
+}
+
 }  // namespace
 
 namespace ActsPlugins::DD4hep {
@@ -107,7 +219,6 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
     const Acts::Logger& logger) {
   using namespace Acts::Experimental;
   using namespace Acts;
-  using namespace Acts::UnitLiterals;
   using enum AxisDirection;
 
   BlueprintBuilder builder{{
@@ -155,12 +266,60 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
 
+std::unique_ptr<Acts::TrackingGeometry>
+buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
+                                         const Acts::GeometryContext& gctx,
+                                         const Acts::Logger& logger) {
+  using namespace Acts::Experimental;
+  using namespace Acts;
+  using enum AxisDirection;
+
+  ActsPlugins::BlueprintBuilder builder{makeTGeoConfigFromDD4hep(detector),
+                                        logger.cloneWithSuffix("TGeoBlpBld")};
+
+  Blueprint::Config blueprintCfg;
+  blueprintCfg.envelope = kBlueprintEnvelope;
+  Blueprint root{blueprintCfg};
+
+  auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
+  outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+
+  outer.addChild(builder.backend().makeBeampipe());
+
+  auto addSubsystem = [&](std::string assembly, std::string det,
+                          const std::regex& layerFilter) {
+    const auto assemblyElement = builder.findDetElementByName(assembly);
+    if (!assemblyElement.has_value()) {
+      throw std::runtime_error(
+          std::format("Could not find assembly '{}'", assembly));
+    }
+
+    builder.barrelEndcap()
+        .setAssembly(*assemblyElement)
+        .setSensorAxes("XYZ", "XZY")
+        .setLayerFilter(layerFilter)
+        .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter))
+        .onContainer(
+            [](const auto&, Acts::Experimental::ContainerBlueprintNode& node) {
+              node.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
+              node.setResizeStrategies(VolumeResizeStrategy::Gap,
+                                       VolumeResizeStrategy::Gap);
+            })
+        .addTo(outer);
+  };
+
+  addSubsystem("Pixels", "pix", kPixelLayerFilter);
+  addSubsystem("ShortStrips", "ss", kShortStripLayerFilter);
+  addSubsystem("LongStrips", "ls", kLongStripLayerFilter);
+
+  return root.construct(BlueprintOptions{}, gctx, logger);
+}
+
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
     const dd4hep::Detector& detector, const Acts::GeometryContext& gctx,
     const Acts::Logger& logger) {
   using namespace Acts::Experimental;
   using namespace Acts;
-  using namespace Acts::UnitLiterals;
   using enum AxisDirection;
 
   BlueprintBuilder builder{{
@@ -241,7 +400,6 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
     const Acts::Logger& logger) {
   using namespace Acts::Experimental;
   using namespace Acts;
-  using namespace Acts::UnitLiterals;
   using enum AxisDirection;
 
   BlueprintBuilder builder{{

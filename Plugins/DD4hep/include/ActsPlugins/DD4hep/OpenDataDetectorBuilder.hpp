@@ -28,6 +28,12 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
     const dd4hep::Detector& detector, const Acts::GeometryContext& gctx,
     const Acts::Logger& logger);
 
+/// Build the Open Data Detector tracking geometry using the TGeo backend with
+/// metadata extracted from DD4hep.
+std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcapViaTGeo(
+    const dd4hep::Detector& detector, const Acts::GeometryContext& gctx,
+    const Acts::Logger& logger);
+
 /// Build the Open Data Detector tracking geometry using the DirectLayer
 /// construction path (ElementLayerAssembler directly).
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
