@@ -136,7 +136,7 @@ class PodioTrackStateContainerBase {
   /// @return Frame key for the track state parameters collection
   static std::string trackStateParametersKey(const std::string& prefix) {
     return prefix.empty() ? "trackStateParameters"
-                         : prefix + "_trackStateParameters";
+                          : prefix + "_trackStateParameters";
   }
 
   /// Collection name key for track state Jacobians in a frame
@@ -144,7 +144,7 @@ class PodioTrackStateContainerBase {
   /// @return Frame key for the track state Jacobians collection
   static std::string trackStateJacobiansKey(const std::string& prefix) {
     return prefix.empty() ? "trackStateJacobians"
-                         : prefix + "_trackStateJacobians";
+                          : prefix + "_trackStateJacobians";
   }
 
   /// Collection name key for tracker hits in a frame
@@ -159,7 +159,7 @@ class PodioTrackStateContainerBase {
   /// @return Frame key for the track state hit links collection
   static std::string trackStateHitLinksKey(const std::string& prefix) {
     return prefix.empty() ? "trackStateHitLinks"
-                         : prefix + "_trackStateHitLinks";
+                          : prefix + "_trackStateHitLinks";
   }
 
  protected:
