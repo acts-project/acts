@@ -106,13 +106,13 @@ class PyReadDataHandle : public ReadDataHandleBase {
   PyReadDataHandle(SequenceElement* parent, py::object pytype,
                    const std::string& name)
       : ReadDataHandleBase(parent, name) {
-    m_entry = WhiteBoardRegistry::find(pytype);
+    m_entry = WhiteBoardRegistry::find(pytype.ptr());
     if (m_entry == nullptr) {
       throw py::type_error("Type '" +
                            pytype.attr("__qualname__").cast<std::string>() +
                            "' is not registered for WhiteBoard access");
     }
-    if (m_entry->typeinfo == nullptr) {
+    if (WhiteBoardRegistry::typeInfo(m_entry) == nullptr) {
       throw py::type_error("Type '" +
                            pytype.attr("__qualname__").cast<std::string>() +
                            "' is not registered for WhiteBoard access");
@@ -121,9 +121,13 @@ class PyReadDataHandle : public ReadDataHandleBase {
     registerAsReadHandle();
   }
 
-  const std::type_info& typeInfo() const override { return *m_entry->typeinfo; }
+  const std::type_info& typeInfo() const override {
+    return *WhiteBoardRegistry::typeInfo(m_entry);
+  }
 
-  std::uint64_t typeHash() const override { return m_entry->typeHash; }
+  std::uint64_t typeHash() const override {
+    return WhiteBoardRegistry::typeHash(m_entry);
+  }
 
   py::object call(const py::object& wbPy) const {
     if (!isInitialized()) {
@@ -138,8 +142,9 @@ class PyReadDataHandle : public ReadDataHandleBase {
 
     auto [holder, storedTypeHash] = getHolder(wb);
 
-    if (m_entry->typeHash != storedTypeHash) {
-      const auto& expected = boost::core::demangle(m_entry->typeinfo->name());
+    if (WhiteBoardRegistry::typeHash(m_entry) != storedTypeHash) {
+      const auto& expected =
+          boost::core::demangle(WhiteBoardRegistry::typeInfo(m_entry)->name());
       const auto& actual = boost::core::demangle(
           (holder->typeInfo() != nullptr) ? holder->typeInfo()->name()
                                           : "unknown");
@@ -147,11 +152,12 @@ class PyReadDataHandle : public ReadDataHandleBase {
                            expected + " but got " + actual);
     }
 
-    return m_entry->toPython(*holder, wbPy);
+    PyObject* out = WhiteBoardRegistry::toPython(m_entry, *holder, wbPy.ptr());
+    return py::reinterpret_steal<py::object>(out);
   }
 
  private:
-  const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
+  const WhiteBoardRegistry::EntryHandle* m_entry{nullptr};
 };
 
 class PyWriteDataHandle : public WriteDataHandleBase {
@@ -159,21 +165,31 @@ class PyWriteDataHandle : public WriteDataHandleBase {
   PyWriteDataHandle(SequenceElement* parent, const py::object& pytype,
                     const std::string& name)
       : WriteDataHandleBase(parent, name) {
-    m_entry = WhiteBoardRegistry::find(pytype);
+    m_entry = WhiteBoardRegistry::find(pytype.ptr());
+    if (m_entry == nullptr) {
+      throw py::type_error("Type '" +
+                           pytype.attr("__qualname__").cast<std::string>() +
+                           "' is not registered for WhiteBoard access");
+    }
     registerAsWriteHandle();
   }
 
   void call(const AlgorithmContext& ctx, const py::object& obj) const {
-    auto any = m_entry->fromPython(obj);
-    addHolder(ctx.eventStore, std::move(any), m_entry->typeHash);
+    auto any = WhiteBoardRegistry::fromPython(m_entry, obj.ptr());
+    addHolder(ctx.eventStore, std::move(any),
+              WhiteBoardRegistry::typeHash(m_entry));
   }
 
-  const std::type_info& typeInfo() const override { return *m_entry->typeinfo; }
+  const std::type_info& typeInfo() const override {
+    return *WhiteBoardRegistry::typeInfo(m_entry);
+  }
 
-  std::uint64_t typeHash() const override { return m_entry->typeHash; }
+  std::uint64_t typeHash() const override {
+    return WhiteBoardRegistry::typeHash(m_entry);
+  }
 
  private:
-  const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
+  const WhiteBoardRegistry::EntryHandle* m_entry{nullptr};
 };
 
 void trigger_divbyzero() {
