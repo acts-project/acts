@@ -412,22 +412,20 @@ def test_python_space_point_access(generic_detector_config, tmp_path):
 
             def execute(self, context: acts.examples.AlgorithmContext):
                 self.logger.info("Space point access")
-                # @TODO: Try to have this auto-deduce the type
                 spacePoints: acts.SpacePointContainer2 = self.spacePoints(
                     context.eventStore
                 )
 
                 for sp in spacePoints:
                     self.logger.info("Space point: {}", sp.x)
-
-                spacePoints.x
-
-                # print(spacePoints.x)
-                # print(spacePoints.y)
-                # # print(spacePoints.z)
-                # # print(spacePoints.r)
-                # print(spacePoints.xy)
-                # print(spacePoints.xy[:, 0])
+                    self.logger.info("Space point: {}", sp.y)
+                    self.logger.info("Space point: {}", sp.z)
+                    self.logger.info("Space point: {}", sp.r)
+                    self.logger.info("Space point: {}", sp.xy)
+                    self.logger.info("Space point: {}", sp.xy[:, 0])
+                    self.logger.info("Space point: {}", sp.xy[:, 1])
+                    self.logger.info("Space point: {}", sp.xy[:, 2])
+                    self.logger.info("Space point: {}", sp.xy[:, 3])
 
                 return acts.examples.ProcessCode.SUCCESS
 
