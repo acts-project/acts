@@ -130,13 +130,37 @@ std::shared_ptr<const NodeToDetElementMap> buildNodeToDetElementMap(
 
 std::optional<dd4hep::DetElement> lookupDetElement(
     const NodeToDetElementMap& map, const ActsPlugins::TGeoBackend::Element& e) {
-  if (e.record == nullptr || e.record->node == nullptr) {
+  if (e.context == nullptr || e.context->node == nullptr) {
     return std::nullopt;
   }
-  if (auto it = map.find(e.record->node); it != map.end()) {
+  if (auto it = map.find(e.context->node); it != map.end()) {
     return it->second;
   }
   return std::nullopt;
+}
+
+std::string pathFromElement(const ActsPlugins::TGeoBackend::Element& element) {
+  std::vector<std::string> names;
+  for (const auto* current = element.context.get(); current != nullptr;
+       current = current->parent.get()) {
+    if (current->node == nullptr) {
+      continue;
+    }
+    if (current->node->GetName() != nullptr) {
+      names.emplace_back(current->node->GetName());
+    } else {
+      names.emplace_back(current->node->GetVolume()->GetName());
+    }
+  }
+
+  std::string path;
+  for (auto it = names.rbegin(); it != names.rend(); ++it) {
+    if (!path.empty()) {
+      path += "|";
+    }
+    path += *it;
+  }
+  return path;
 }
 
 ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
@@ -153,9 +177,9 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
       return detElement->name();
     }
 
-    if (element.record != nullptr && element.record->node != nullptr &&
-        element.record->node->GetName() != nullptr) {
-      return element.record->node->GetName();
+    if (element.context != nullptr && element.context->node != nullptr &&
+        element.context->node->GetName() != nullptr) {
+      return element.context->node->GetName();
     }
     return {};
   };
@@ -200,9 +224,7 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
               detElement->volumeID());
         }
         return static_cast<ActsPlugins::TGeoDetectorElement::Identifier>(
-            std::hash<std::string>{}(element.record != nullptr
-                                         ? element.record->path
-                                         : std::string{}));
+            std::hash<std::string>{}(pathFromElement(element)));
       };
   cfg.constantProvider = [&detector](std::string_view name) {
     return detector.constant<int>(std::string{name});
