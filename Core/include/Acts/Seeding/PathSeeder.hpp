@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/GridIterator.hpp"
 
 namespace Acts {
 

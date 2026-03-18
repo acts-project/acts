@@ -20,6 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
+  ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
   linux_ubuntu:
@@ -124,7 +125,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
     env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
+      ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
     steps:
       - uses: actions/checkout@v6
@@ -162,8 +163,6 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
-    env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
       - uses: actions/checkout@v6

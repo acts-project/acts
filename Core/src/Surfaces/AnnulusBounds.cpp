@@ -372,7 +372,6 @@ Vector2 AnnulusBounds::closestPoint(const Vector2& lposition,
     double currentDist =
         squaredNorm(lpositionModulePC - currentClosest, metricModulePC);
     if (currentDist < minDist) {
-      minDist = currentDist;
       closest = m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
     }
   }
