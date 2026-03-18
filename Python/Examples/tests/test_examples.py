@@ -520,9 +520,10 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 def test_material_recording(tmp_path, material_recording, assert_root_hash):
 
     from material_recording import runMaterialRecording
+
     with getOpenDataDetector() as detector:
-    
-        s = acts.examples.Sequencer(events=100, numThreads=1)
+
+        s = acts.examples.Sequencer(events=200, numThreads=1)
         runMaterialRecording(
             detector,
             s,
@@ -530,14 +531,13 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
             etaRange=(-4.0, 4.0),
             phiRange=(0.0, 360.0 * u.degree),
             outputFile=tmp_path / "geant4_material_tracks.root",
-            materialTrackCollectionName="material_tracks",
+            materialTrackCollectionName="material-tracks",
         )
-    
 
     root_files = [
         (
             "geant4_material_tracks.root",
-            "material_tracks",
+            "material-tracks",
             200,
         )
     ]

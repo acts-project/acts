@@ -63,7 +63,7 @@ def runMaterialValidation(
         materialAssingerConfig, acts.logging.INFO
     )
 
-    # Validater setup
+    # Validator setup
     MaterialValidatorConfig = MaterialValidator.Config()
     MaterialValidatorConfig.materialAssigner = materialAssinger
     MaterialValidator = MaterialValidator(MaterialValidatorConfig, acts.logging.INFO)

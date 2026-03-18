@@ -70,17 +70,17 @@ def runMaterialMapping(
     materialAssingerConfig.surfaces = surfaces
     materialAssinger = IntersectionMaterialAssigner(materialAssingerConfig, loglevel)
 
-    # Accumulation setup : Binned surface material accumulater
-    materialAccumulaterConfig = BinnedSurfaceMaterialAccumulator.Config()
-    materialAccumulaterConfig.materialSurfaces = surfaces
-    materialAccumulater = BinnedSurfaceMaterialAccumulator(
-        materialAccumulaterConfig, loglevel
+    # Accumulation setup : Binned surface material accumulator
+    materialAccumulatorConfig = BinnedSurfaceMaterialAccumulator.Config()
+    materialAccumulatorConfig.materialSurfaces = surfaces
+    materialAccumulator = BinnedSurfaceMaterialAccumulator(
+        materialAccumulatorConfig, loglevel
     )
 
     # Mapper setup
     materialMapperConfig = MaterialMapper.Config()
     materialMapperConfig.assignmentFinder = materialAssinger
-    materialMapperConfig.surfaceMaterialAccumulater = materialAccumulater
+    materialMapperConfig.surfaceMaterialAccumulator = materialAccumulator
     materialMapper = MaterialMapper(materialMapperConfig, loglevel)
 
     # Add the map writer(s)
