@@ -332,7 +332,7 @@ void addFramework(py::module& mex) {
 
   ACTS_PYTHON_STRUCT(c, skip, events, logLevel, numThreads, outputDir,
                      outputTimingFile, trackFpes, fpeMasks, failOnFirstFpe,
-                     fpeStackTraceLength);
+                     failOnUnmaskedFpe, fpeStackTraceLength);
 
   auto fpem =
       py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
@@ -351,11 +351,16 @@ void addFramework(py::module& mex) {
     std::optional<FpeMonitor> mon;
   };
 
-  auto fpe = py::class_<FpeMonitor>(mex, "FpeMonitor")
-                 .def_static("_trigger_divbyzero", &trigger_divbyzero)
-                 .def_static("_trigger_overflow", &trigger_overflow)
-                 .def_static("_trigger_invalid", &trigger_invalid)
-                 .def_static("context", []() { return FpeMonitorContext(); });
+  auto fpe =
+      py::class_<FpeMonitor>(mex, "FpeMonitor")
+          .def_static("_trigger_divbyzero", &trigger_divbyzero)
+          .def_static("_trigger_overflow", &trigger_overflow)
+          .def_static("_trigger_invalid", &trigger_invalid)
+          .def_property_readonly_static("supported",
+                                        [](const py::object& /*self*/) {
+                                          return FpeMonitor::isSupported();
+                                        })
+          .def_static("context", []() { return FpeMonitorContext(); });
 
   fpe.def_property_readonly("result", py::overload_cast<>(&FpeMonitor::result),
                             py::return_value_policy::reference_internal)

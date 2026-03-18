@@ -1,6 +1,6 @@
-import sys
 import os
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -10,14 +10,41 @@ import acts.examples
 
 pytestmark = [
     pytest.mark.skipif(
-        sys.platform != "linux",
-        reason="FPE monitoring currently only supported on Linux",
+        not acts.examples.FpeMonitor.supported,
+        reason="FPE monitoring not supported on this platform",
     ),
     pytest.mark.skipif(
         "ACTS_SEQUENCER_DISABLE_FPEMON" in os.environ,
         reason="Sequencer is configured to disable FPE monitoring",
     ),
 ]
+
+_fail_fast_exception = (
+    acts.examples.FpeFailure if sys.platform == "linux" else RuntimeError
+)
+
+
+def _parse_bool_env(name):
+    raw = os.getenv(name)
+    if raw is None:
+        return None
+    value = raw.strip().lower()
+    if value in ("1", "true", "yes", "on"):
+        return True
+    if value in ("0", "false", "no", "off"):
+        return False
+    return None
+
+
+_fail_on_unmasked_env = _parse_bool_env("ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE")
+_requires_fail_on_unmasked = pytest.mark.skipif(
+    _fail_on_unmasked_env is False,
+    reason="requires failOnUnmaskedFpe=true, but env override disables it",
+)
+_requires_no_fail_on_unmasked = pytest.mark.skipif(
+    _fail_on_unmasked_env is True,
+    reason="requires failOnUnmaskedFpe=false, but env override enables it",
+)
 
 
 _names = {
@@ -100,10 +127,12 @@ def fpe_type(request):
     yield request.param
 
 
+@_requires_fail_on_unmasked
 def test_fpe_single_fail_at_end(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         failOnFirstFpe=False,
+        failOnUnmaskedFpe=True,
     )
 
     s.addAlgorithm(
@@ -122,10 +151,35 @@ def test_fpe_single_fail_at_end(fpe_type):
         assert res.count(x) == (s.config.events if x == fpe_type else 0)
 
 
+@_requires_no_fail_on_unmasked
+def test_fpe_single_no_fail_at_end(fpe_type):
+    s = acts.examples.Sequencer(
+        events=10,
+        failOnFirstFpe=False,
+        failOnUnmaskedFpe=False,
+    )
+
+    s.addAlgorithm(
+        FuncAlg(
+            _names[fpe_type],
+            lambda _: getattr(
+                acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}"
+            )(),
+        )
+    )
+    s.run()
+
+    res = s.fpeResult
+    for x in acts.examples.FpeType.values:
+        assert res.count(x) == (s.config.events if x == fpe_type else 0)
+
+
+@_requires_fail_on_unmasked
 def test_fpe_single_fail_immediately(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         failOnFirstFpe=True,
+        failOnUnmaskedFpe=True,
         numThreads=1,
     )
 
@@ -138,7 +192,7 @@ def test_fpe_single_fail_immediately(fpe_type):
         )
     )
 
-    with pytest.raises(acts.examples.FpeFailure):
+    with pytest.raises(_fail_fast_exception):
         s.run()
 
     res = s.fpeResult
@@ -164,6 +218,7 @@ def test_fpe_nocontext():
     s.run()
 
 
+@_requires_fail_on_unmasked
 def test_fpe_rearm(fpe_type):
     trigger = getattr(acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
@@ -181,6 +236,7 @@ def test_fpe_rearm(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         failOnFirstFpe=False,
+        failOnUnmaskedFpe=True,
         numThreads=-1,
     )
     s.addAlgorithm(Alg())
@@ -192,6 +248,11 @@ def test_fpe_rearm(fpe_type):
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
 
 
+@pytest.mark.skipif(
+    sys.platform == "darwin",
+    reason="Source-location FPE masking is not stable on macOS backtraces",
+)
+@_requires_fail_on_unmasked
 def test_fpe_masking_single(fpe_type):
     trigger = getattr(acts.examples.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
@@ -207,6 +268,7 @@ def test_fpe_masking_single(fpe_type):
         events=10,
         numThreads=-1,
         failOnFirstFpe=True,
+        failOnUnmaskedFpe=True,
         fpeMasks=[
             acts.examples.Sequencer.FpeMask(*_locs[fpe_type], fpe_type, 1),
         ],
@@ -223,6 +285,7 @@ def test_fpe_masking_single(fpe_type):
         events=10,
         numThreads=-1,
         failOnFirstFpe=True,
+        failOnUnmaskedFpe=True,
         fpeMasks=[
             acts.examples.Sequencer.FpeMask(*_locs[fpe_type], fpe_type, 3),
         ],
@@ -272,10 +335,12 @@ def test_fpe_context(fpe_type):
         print(fpe.result)
 
 
+@_requires_fail_on_unmasked
 def test_buffer_sufficient():
     s = acts.examples.Sequencer(
         events=10000,
         failOnFirstFpe=False,
+        failOnUnmaskedFpe=True,
     )
 
     s.addAlgorithm(

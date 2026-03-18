@@ -113,7 +113,7 @@ class SensitiveSurfaceMapper {
     std::shared_ptr<SensitiveCandidatesBase> candidateSurfaces;
   };
 
-  /// State object that coutns the assignments and makes
+  /// State object that counts the assignments and makes
   /// a replica save copy association map
   struct State {
     /// The map of G4 physical volumes to the mapped surfaces (can be many as
