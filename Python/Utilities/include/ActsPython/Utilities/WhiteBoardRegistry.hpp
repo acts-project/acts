@@ -87,6 +87,10 @@ class WhiteBoardRegistry {
   }
 
  public:
+  /// Register a pybind11-bound type T for WhiteBoard read access.
+  /// Call this after the `py::class_<T>` definition.
+  /// @tparam Ts The types to register.
+  /// @param pyClass The pybind11 class object to register.
   template <typename... Ts>
   static void registerClass(const pybind11::class_<Ts...>& pyClass)
     requires PyClassWithSmartHolder<Ts...>
@@ -95,13 +99,21 @@ class WhiteBoardRegistry {
     registerType<type>(pyClass);
   }
 
+  /// Per-type registry entry: downcast function and type metadata for lookups.
   struct RegistryEntry {
+    /// Converts `void*` + `WhiteBoard` -> `py::object`
     ToPythonFunction toPython{nullptr};
+    /// Converts `py::object` -> `void*`
     FromPythonFunction fromPython{nullptr};
+    /// C++ type for type checking
     const std::type_info* typeinfo{nullptr};
+    /// Hash for type verification
     std::uint64_t typeHash{0};
   };
 
+  /// Look up a registered type by its pybind11 Python type object.
+  /// @param pyType The pybind11 Python type object to look up.
+  /// @return Pointer to the `RegistryEntry`, or `nullptr` if not registered
   static RegistryEntry* find(const pybind11::object& pyType) {
     if (auto it = instance().find(pyType.ptr()); it != instance().end()) {
       return &it->second;
