@@ -34,12 +34,19 @@ void TryAllNavigationPolicy::initializeCandidates(
     [[maybe_unused]] const GeometryContext& gctx,
     const NavigationArguments& args, NavigationPolicyState& /*state*/,
     AppendOnlyNavigationStream& stream, const Logger& logger) const {
-  ACTS_VERBOSE("TryAllNavigationPolicy");
+  ACTS_VERBOSE("TryAllNavigationPolicy initializing candidates for volume "
+               << m_volume->volumeName());
+  ACTS_VERBOSE("~> Config: portals=" << m_cfg.portals
+                                     << " sensitives=" << m_cfg.sensitives
+                                     << " passives=" << m_cfg.passives);
   assert(m_volume != nullptr);
+
+  std::size_t numCandidates = 0;
 
   if (m_cfg.portals) {
     for (const auto& portal : m_volume->portals()) {
       stream.addPortalCandidate(portal);
+      numCandidates++;
     }
   }
 
@@ -51,8 +58,12 @@ void TryAllNavigationPolicy::initializeCandidates(
     bool isSensitive = surface.isSensitive();
     if ((m_cfg.passives && !isSensitive) || (m_cfg.sensitives && isSensitive)) {
       stream.addSurfaceCandidate(surface, args.tolerance);
+      numCandidates++;
     }
   }
+
+  ACTS_VERBOSE("TryAllNavigationPolicy added " << numCandidates
+                                               << " candidates to the stream");
 }
 
 void TryAllNavigationPolicy::connect(NavigationDelegate& delegate) const {

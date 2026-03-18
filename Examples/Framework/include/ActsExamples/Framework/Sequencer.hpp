@@ -77,9 +77,16 @@ class Sequencer {
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};
 
+    /// If true, FPEs are tracked.
     bool trackFpes = true;
+    /// If true, FPEs are masked and reported.
     std::vector<FpeMask> fpeMasks{};
+    /// If true, the first FPE encountered makes Sequencer::run() fail.
     bool failOnFirstFpe = false;
+    /// If false, unmasked FPEs are reported but do not make Sequencer::run()
+    /// fail.
+    bool failOnUnmaskedFpe = true;
+    /// The number of stack frames to include in the FPE report.
     std::size_t fpeStackTraceLength = 8;
   };
 

@@ -81,7 +81,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   return {chi2, {}};
 }
 
-// Ensure thet the compiler does not implicitly instantiate the template
+// Ensure that the compiler does not implicitly instantiate the template
 
 #define _EXTERN(N)                                    \
   extern template std::tuple<double, std::error_code> \
