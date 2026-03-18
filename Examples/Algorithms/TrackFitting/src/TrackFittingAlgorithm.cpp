@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"

@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/MultiComponentTrackParametersConcept.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -37,8 +36,6 @@ class MultiComponentBoundTrackParameters {
  public:
   /// Type alias for bound track parameters
   using Parameters = BoundTrackParameters;
-  /// Type alias for particle hypothesis
-  using ParticleHypothesis = Parameters::ParticleHypothesis;
   /// Type alias for bound parameters vector
   using ParametersVector = typename Parameters::ParametersVector;
   /// Type alias for covariance matrix
@@ -59,7 +56,7 @@ class MultiComponentBoundTrackParameters {
   /// Type alias for construction tuple containing weight, position, direction,
   /// q/p, and covariance
   using ConstructionTuple =
-      std::tuple<double, Vector4, Vector3, double, CovarianceMatrix>;
+      std::tuple<double, Vector4, Vector3, double, BoundMatrix>;
 
   /// We need this helper function in order to construct the base class properly
   /// @param geoCtx Geometry context for construction
@@ -92,7 +89,7 @@ class MultiComponentBoundTrackParameters {
               .closest();
       const Vector3& newPos = closestIntersection.position();
 
-      ParametersVector bv =
+      BoundVector bv =
           transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);
 
       // Because of the projection this should never fail
@@ -128,8 +125,8 @@ class MultiComponentBoundTrackParameters {
   /// @param cov Bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis for these parameters
   MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                                     const ParametersVector& params,
-                                     const std::optional<CovarianceMatrix>& cov,
+                                     const BoundVector& params,
+                                     std::optional<BoundMatrix> cov,
                                      ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
@@ -215,6 +212,15 @@ class MultiComponentBoundTrackParameters {
   /// @return Reference to this object after moving
   MultiComponentBoundTrackParameters& operator=(
       MultiComponentBoundTrackParameters&&) = default;
+
+  /// Comply with bound convertible, in this case return a copy
+  /// @return Copy of this multi-component track parameters
+  [[deprecated(
+      "You already have a universal bound track parameter at hand. You can "
+      "drop `toBound()`.")]]
+  MultiComponentBoundTrackParameters toBound() const {
+    return *this;
+  }
 
   /// Size of the multi-component parameters
   /// @return Number of components in the multi-component parameters
