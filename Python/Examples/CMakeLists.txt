@@ -94,6 +94,7 @@ target_sources(
         src/MaterialMapping.cpp
         src/Propagation.cpp
         src/TrackFinding.cpp
+        src/TrackFinderPerformanceWriter.cpp
         src/TrackFitting.cpp
         src/TruthTracking.cpp
         src/HelloWorld.cpp
