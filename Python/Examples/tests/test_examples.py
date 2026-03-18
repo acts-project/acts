@@ -518,6 +518,22 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_recording(tmp_path, material_recording, assert_root_hash):
+
+    from material_recording import runMaterialRecording
+    with getOpenDataDetector() as detector:
+    
+        s = acts.examples.Sequencer(events=100, numThreads=1)
+        runMaterialRecording(
+            detector,
+            s,
+            tracksPerEvent=1000,
+            etaRange=(-4.0, 4.0),
+            phiRange=(0.0, 360.0 * u.degree),
+            outputFile=tmp_path / "geant4_material_tracks.root",
+            materialTrackCollectionName="material_tracks",
+        )
+    
+
     root_files = [
         (
             "geant4_material_tracks.root",
@@ -599,11 +615,11 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     assert_entries(map_file, "material_tracks", 200)
     assert_root_hash(map_file.name, map_file)
 
-    # assert mat_file.exists()
-    # assert mat_file.stat().st_size > 10
+    assert mat_file.exists()
+    assert mat_file.stat().st_size > 10
 
-    # with mat_file.open() as fh:
-    #    assert json.load(fh)
+    with mat_file.open() as fh:
+        assert json.load(fh)
 
     val_file = tmp_path / "validation-material.root"
     assert not val_file.exists()

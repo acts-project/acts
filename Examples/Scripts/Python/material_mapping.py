@@ -8,7 +8,7 @@ from acts import (
     Surface,
     MaterialMapper,
     IntersectionMaterialAssigner,
-    BinnedSurfaceMaterialAccumulater,
+    BinnedSurfaceMaterialAccumulator,
     logging,
     GeometryContext,
 )
@@ -71,9 +71,9 @@ def runMaterialMapping(
     materialAssinger = IntersectionMaterialAssigner(materialAssingerConfig, loglevel)
 
     # Accumulation setup : Binned surface material accumulater
-    materialAccumulaterConfig = BinnedSurfaceMaterialAccumulater.Config()
+    materialAccumulaterConfig = BinnedSurfaceMaterialAccumulator.Config()
     materialAccumulaterConfig.materialSurfaces = surfaces
-    materialAccumulater = BinnedSurfaceMaterialAccumulater(
+    materialAccumulater = BinnedSurfaceMaterialAccumulator(
         materialAccumulaterConfig, loglevel
     )
 

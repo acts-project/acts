@@ -44,8 +44,8 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
         parameters.position(context.geoContext),
         parameters.momentum().normalized());
 
-    recordedMaterialTracks.emplace_hint(recordedMaterialTracks.end(), it,
-                                        rMaterial);
+    recordedMaterialTracks.try_emplace(recordedMaterialTracks.end(), it,
+                                       rMaterial);
   }
 
   // Write the mapped and unmapped material tracks to the output

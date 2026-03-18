@@ -4,7 +4,7 @@ import argparse
 
 import acts
 from acts import (
-    MaterialValidater,
+    MaterialValidator,
     IntersectionMaterialAssigner,
 )
 
@@ -64,14 +64,14 @@ def runMaterialValidation(
     )
 
     # Validater setup
-    materialValidaterConfig = MaterialValidater.Config()
-    materialValidaterConfig.materialAssigner = materialAssinger
-    materialValidater = MaterialValidater(materialValidaterConfig, acts.logging.INFO)
+    MaterialValidatorConfig = MaterialValidator.Config()
+    MaterialValidatorConfig.materialAssigner = materialAssinger
+    MaterialValidator = MaterialValidator(MaterialValidatorConfig, acts.logging.INFO)
 
     # Validation Algorithm
     materialValidationConfig = MaterialValidation.Config()
     materialValidationConfig.inputTrackParameters = "params_particles_generated"
-    materialValidationConfig.materialValidater = materialValidater
+    materialValidationConfig.MaterialValidator = MaterialValidator
     materialValidationConfig.outputMaterialTracks = materialTrackCollectionName
     materialValidation = MaterialValidation(materialValidationConfig, acts.logging.INFO)
     s.addAlgorithm(materialValidation)
