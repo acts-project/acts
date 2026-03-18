@@ -105,9 +105,8 @@ using ContainerCustomizer =
 template <typename ElementT, typename CallableT>
 concept LayerNodeReturningCallable =
     std::invocable<CallableT&, const std::optional<ElementT>&, LayerNodePtr> &&
-    std::same_as<std::invoke_result_t<CallableT&,
-                                      const std::optional<ElementT>&,
-                                      LayerNodePtr>,
+    std::same_as<std::invoke_result_t<
+                     CallableT&, const std::optional<ElementT>&, LayerNodePtr>,
                  LayerNodePtr>;
 
 /// @brief Concept satisfied when @p CallableT can be called with an optional
@@ -118,10 +117,10 @@ template <typename ElementT, typename CallableT>
 concept LayerNodeReplacingCallable =
     std::invocable<CallableT&, const std::optional<ElementT>&,
                    Acts::Experimental::LayerBlueprintNode&> &&
-    std::same_as<std::invoke_result_t<CallableT&,
-                                      const std::optional<ElementT>&,
-                                      Acts::Experimental::LayerBlueprintNode&>,
-                 void>;
+    std::same_as<
+        std::invoke_result_t<CallableT&, const std::optional<ElementT>&,
+                             Acts::Experimental::LayerBlueprintNode&>,
+        void>;
 
 /// @brief Concept satisfied when @p CallableT can be called with an element and
 /// a @ref ContainerBlueprintNode shared pointer and returns a (possibly
@@ -131,9 +130,9 @@ concept LayerNodeReplacingCallable =
 template <typename ElementT, typename CallableT>
 concept ContainerNodeReturningCallable =
     std::invocable<CallableT&, const ElementT&, ContainerNodePtr> &&
-    std::same_as<std::invoke_result_t<CallableT&, const ElementT&,
-                                      ContainerNodePtr>,
-                 ContainerNodePtr>;
+    std::same_as<
+        std::invoke_result_t<CallableT&, const ElementT&, ContainerNodePtr>,
+        ContainerNodePtr>;
 
 /// @brief Concept satisfied when @p CallableT can be called with an element and
 /// a mutable @ref ContainerBlueprintNode reference and returns `void`.
@@ -144,9 +143,10 @@ template <typename ElementT, typename CallableT>
 concept ContainerNodeReplacingCallable =
     std::invocable<CallableT&, const ElementT&,
                    Acts::Experimental::ContainerBlueprintNode&> &&
-    std::same_as<std::invoke_result_t<CallableT&, const ElementT&,
-                                      Acts::Experimental::ContainerBlueprintNode&>,
-                 void>;
+    std::same_as<
+        std::invoke_result_t<CallableT&, const ElementT&,
+                             Acts::Experimental::ContainerBlueprintNode&>,
+        void>;
 
 /// @brief Concept requiring a backend to provide a surface-construction method.
 ///
@@ -294,38 +294,36 @@ class ElementLayerAssembler {
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-  [[nodiscard]] ElementLayerAssembler&& setSensorAxes(
-      typename B::AxisDefinition axes) &&
-    requires(detail::HasAxisDefinition<B>)
-  {
-    m_layerSpec.axes = std::move(axes);
-    return std::move(*this);
-  }
+      [[nodiscard]] ElementLayerAssembler&& setSensorAxes(
+          typename B::AxisDefinition axes) &&
+      requires(detail::HasAxisDefinition<B>) {
+        m_layerSpec.axes = std::move(axes);
+        return std::move(*this);
+      }
 
-  /// @brief Set the axis definition used to derive the layer transform from the
-  /// parent element shape.
-  ///
-  /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
-  /// When set, the layer transform is extracted automatically from the geometry
-  /// of the enclosing detector element.
-  /// @param layerAxes Axis definition forwarded to `LayerSpec::layerAxes`.
-  /// @return `*this` (rvalue).
-  template <typename B = BackendT>
-  [[nodiscard]] ElementLayerAssembler&& setLayerAxes(
-      typename B::AxisDefinition layerAxes) &&
-    requires(detail::HasAxisDefinition<B>)
-  {
-    m_layerSpec.layerAxes = std::move(layerAxes);
-    return std::move(*this);
-  }
+      /// @brief Set the axis definition used to derive the layer transform from the
+      /// parent element shape.
+      ///
+      /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+      /// When set, the layer transform is extracted automatically from the
+      /// geometry of the enclosing detector element.
+      /// @param layerAxes Axis definition forwarded to `LayerSpec::layerAxes`.
+      /// @return `*this` (rvalue).
+      template <typename B = BackendT>
+      [[nodiscard]] ElementLayerAssembler&& setLayerAxes(
+          typename B::AxisDefinition layerAxes) &&
+      requires(detail::HasAxisDefinition<B>) {
+        m_layerSpec.layerAxes = std::move(layerAxes);
+        return std::move(*this);
+      }
 
-  /// @brief Set the regex filter used to select layer elements inside the
-  /// container by name string.
-  /// @param pattern Regular-expression string; converted to `std::regex`
-  ///                internally.
-  /// @return `*this` (rvalue).
-  [[nodiscard]] ElementLayerAssembler&& setLayerFilter(
-      const std::string& pattern) &&;
+      /// @brief Set the regex filter used to select layer elements inside the
+      /// container by name string.
+      /// @param pattern Regular-expression string; converted to `std::regex`
+      ///                internally.
+      /// @return `*this` (rvalue).
+      [[nodiscard]] ElementLayerAssembler&& setLayerFilter(
+          const std::string& pattern) &&;
 
   /// @brief Set the regex filter used to select layer elements inside the
   /// container.
@@ -409,11 +407,12 @@ class ElementLayerAssembler {
   template <typename CustomizerT>
   [[nodiscard]] ElementLayerAssembler&& onLayer(CustomizerT customizer) &&
     requires(
-        detail::LayerNodeReturningCallable<Element, std::decay_t<CustomizerT>> ||
+        detail::LayerNodeReturningCallable<Element,
+                                           std::decay_t<CustomizerT>> ||
         detail::LayerNodeReplacingCallable<Element, std::decay_t<CustomizerT>>)
   {
-    if constexpr (detail::LayerNodeReturningCallable<Element,
-                                                     std::decay_t<CustomizerT>>) {
+    if constexpr (detail::LayerNodeReturningCallable<
+                      Element, std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
       m_onLayer = [customizer = std::move(customizer)](
@@ -545,19 +544,18 @@ class SensorLayerAssembler {
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-  [[nodiscard]] SensorLayerAssembler&& setSensorAxes(
-      typename B::AxisDefinition axes) &&
-    requires(detail::HasAxisDefinition<B>)
-  {
-    m_layerSpec.axes = std::move(axes);
-    return std::move(*this);
-  }
+      [[nodiscard]] SensorLayerAssembler&& setSensorAxes(
+          typename B::AxisDefinition axes) &&
+      requires(detail::HasAxisDefinition<B>) {
+        m_layerSpec.axes = std::move(axes);
+        return std::move(*this);
+      }
 
-  /// @brief Set the sensor elements to assemble into layers.
-  /// @param sensors Sensor elements (leaf-level sensitives).
-  /// @return `*this` (rvalue).
-  [[nodiscard]] SensorLayerAssembler&& setSensors(
-      std::vector<Element> sensors) &&;
+      /// @brief Set the sensor elements to assemble into layers.
+      /// @param sensors Sensor elements (leaf-level sensitives).
+      /// @return `*this` (rvalue).
+      [[nodiscard]] SensorLayerAssembler&& setSensors(
+          std::vector<Element> sensors) &&;
 
   /// @brief Group sensors into layers by key (required).
   ///
@@ -597,11 +595,12 @@ class SensorLayerAssembler {
   template <typename CustomizerT>
   [[nodiscard]] SensorLayerAssembler&& onLayer(CustomizerT customizer) &&
     requires(
-        detail::LayerNodeReturningCallable<Element, std::decay_t<CustomizerT>> ||
+        detail::LayerNodeReturningCallable<Element,
+                                           std::decay_t<CustomizerT>> ||
         detail::LayerNodeReplacingCallable<Element, std::decay_t<CustomizerT>>)
   {
-    if constexpr (detail::LayerNodeReturningCallable<Element,
-                                                     std::decay_t<CustomizerT>>) {
+    if constexpr (detail::LayerNodeReturningCallable<
+                      Element, std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
       m_onLayer = [customizer = std::move(customizer)](
@@ -707,17 +706,17 @@ class SensorLayer {
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-  [[nodiscard]] SensorLayer&& setSensorAxes(typename B::AxisDefinition axes) &&
-    requires(detail::HasAxisDefinition<B>)
-  {
-    m_layerSpec.axes = std::move(axes);
-    return std::move(*this);
-  }
+      [[nodiscard]] SensorLayer&& setSensorAxes(
+          typename B::AxisDefinition axes) &&
+      requires(detail::HasAxisDefinition<B>) {
+        m_layerSpec.axes = std::move(axes);
+        return std::move(*this);
+      }
 
-  /// @brief Set the sensor elements to assemble into the layer.
-  /// @param sensors Sensor elements (leaf-level sensitives).
-  /// @return `*this` (rvalue).
-  [[nodiscard]] SensorLayer&& setSensors(std::vector<Element> sensors) &&;
+      /// @brief Set the sensor elements to assemble into the layer.
+      /// @param sensors Sensor elements (leaf-level sensitives).
+      /// @return `*this` (rvalue).
+      [[nodiscard]] SensorLayer&& setSensors(std::vector<Element> sensors) &&;
 
   /// @brief Set the name for the produced layer node (required).
   /// @param name Layer node name.
@@ -738,11 +737,12 @@ class SensorLayer {
   template <typename CustomizerT>
   [[nodiscard]] SensorLayer&& onLayer(CustomizerT customizer) &&
     requires(
-        detail::LayerNodeReturningCallable<Element, std::decay_t<CustomizerT>> ||
+        detail::LayerNodeReturningCallable<Element,
+                                           std::decay_t<CustomizerT>> ||
         detail::LayerNodeReplacingCallable<Element, std::decay_t<CustomizerT>>)
   {
-    if constexpr (detail::LayerNodeReturningCallable<Element,
-                                                     std::decay_t<CustomizerT>>) {
+    if constexpr (detail::LayerNodeReturningCallable<
+                      Element, std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
       m_onLayer = [customizer = std::move(customizer)](
@@ -861,11 +861,12 @@ class BarrelEndcapAssembler {
   template <typename CustomizerT>
   [[nodiscard]] BarrelEndcapAssembler&& onLayer(CustomizerT customizer) &&
     requires(
-        detail::LayerNodeReturningCallable<Element, std::decay_t<CustomizerT>> ||
+        detail::LayerNodeReturningCallable<Element,
+                                           std::decay_t<CustomizerT>> ||
         detail::LayerNodeReplacingCallable<Element, std::decay_t<CustomizerT>>)
   {
-    if constexpr (detail::LayerNodeReturningCallable<Element,
-                                                     std::decay_t<CustomizerT>>) {
+    if constexpr (detail::LayerNodeReturningCallable<
+                      Element, std::decay_t<CustomizerT>>) {
       m_onLayer = std::move(customizer);
     } else {
       m_onLayer = [customizer = std::move(customizer)](
@@ -887,8 +888,8 @@ class BarrelEndcapAssembler {
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] BarrelEndcapAssembler&& onContainer(CustomizerT customizer) &&
-    requires(detail::ContainerNodeReturningCallable<Element,
-                                                    std::decay_t<CustomizerT>> ||
+    requires(detail::ContainerNodeReturningCallable<
+                 Element, std::decay_t<CustomizerT>> ||
              detail::ContainerNodeReplacingCallable<Element,
                                                     std::decay_t<CustomizerT>>)
   {
@@ -896,14 +897,14 @@ class BarrelEndcapAssembler {
                       Element, std::decay_t<CustomizerT>>) {
       m_onContainer = std::move(customizer);
     } else {
-      m_onContainer = [customizer = std::move(customizer)](
-                          const Element& elem,
-                          std::shared_ptr<
-                              Acts::Experimental::ContainerBlueprintNode>
-                              node) mutable {
-        customizer(elem, *node);
-        return node;
-      };
+      m_onContainer =
+          [customizer = std::move(customizer)](
+              const Element& elem,
+              std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
+                  node) mutable {
+            customizer(elem, *node);
+            return node;
+          };
     }
     return std::move(*this);
   }

@@ -80,8 +80,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDD4hep, m) {
                OpenDataDetector::Config::ConstructionMethod::BarrelEndcap)
         .value("DirectLayer",
                OpenDataDetector::Config::ConstructionMethod::DirectLayer)
-        .value("DirectLayerGrouped",
-               OpenDataDetector::Config::ConstructionMethod::DirectLayerGrouped);
+        .value(
+            "DirectLayerGrouped",
+            OpenDataDetector::Config::ConstructionMethod::DirectLayerGrouped);
     ACTS_PYTHON_STRUCT(c, detectorElementFactory, blueprintEnvelope,
                        layerEnvelope, constructionMethod);
 
