@@ -50,8 +50,7 @@ static const Acts::ExtentEnvelope kLayerEnvelope =
 
 auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
                          std::string det, std::regex layerFilter) {
-  return [&builder, det = std::move(det),
-          layerFilter = std::move(layerFilter)](
+  return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
              const std::optional<dd4hep::DetElement>& elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
     layer.setEnvelope(kLayerEnvelope);
@@ -111,13 +110,12 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
   using namespace Acts::UnitLiterals;
   using enum AxisDirection;
 
-  BlueprintBuilder builder{
-      {
-          .dd4hepDetector = &detector,
-          .lengthScale = Acts::UnitConstants::cm,
-          .gctx = gctx,
-      },
-      logger.cloneWithSuffix("BlpBld")};
+  BlueprintBuilder builder{{
+                               .dd4hepDetector = &detector,
+                               .lengthScale = Acts::UnitConstants::cm,
+                               .gctx = gctx,
+                           },
+                           logger.cloneWithSuffix("BlpBld")};
 
   Blueprint::Config blueprintCfg;
   blueprintCfg.envelope = kBlueprintEnvelope;
@@ -165,13 +163,12 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
   using namespace Acts::UnitLiterals;
   using enum AxisDirection;
 
-  BlueprintBuilder builder{
-      {
-          .dd4hepDetector = &detector,
-          .lengthScale = Acts::UnitConstants::cm,
-          .gctx = gctx,
-      },
-      logger.cloneWithSuffix("BlpBld")};
+  BlueprintBuilder builder{{
+                               .dd4hepDetector = &detector,
+                               .lengthScale = Acts::UnitConstants::cm,
+                               .gctx = gctx,
+                           },
+                           logger.cloneWithSuffix("BlpBld")};
 
   Blueprint::Config blueprintCfg;
   blueprintCfg.envelope = kBlueprintEnvelope;
@@ -247,13 +244,12 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
   using namespace Acts::UnitLiterals;
   using enum AxisDirection;
 
-  BlueprintBuilder builder{
-      {
-          .dd4hepDetector = &detector,
-          .lengthScale = Acts::UnitConstants::cm,
-          .gctx = gctx,
-      },
-      logger.cloneWithSuffix("BlpBld")};
+  BlueprintBuilder builder{{
+                               .dd4hepDetector = &detector,
+                               .lengthScale = Acts::UnitConstants::cm,
+                               .gctx = gctx,
+                           },
+                           logger.cloneWithSuffix("BlpBld")};
 
   Blueprint::Config blueprintCfg;
   blueprintCfg.envelope = kBlueprintEnvelope;
