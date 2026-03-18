@@ -533,7 +533,9 @@ BarrelEndcapAssembler<BackendT>::BarrelEndcapAssembler(const Builder& builder)
 
 template <detail::BlueprintBackend BackendT>
 void BarrelEndcapAssembler<BackendT>::addTo(
-    Acts::Experimental::BlueprintNode& node) const&& {
+    Acts::Experimental::BlueprintNode& node) const&&
+  requires(detail::HasBarrelEndcapClassifier<BackendT>)
+{
   node.addChild(build());
 }
 
@@ -575,7 +577,9 @@ BarrelEndcapAssembler<BackendT>::setLayerFilter(const std::regex& pattern) && {
 
 template <detail::BlueprintBackend BackendT>
 std::shared_ptr<Acts::Experimental::CylinderContainerBlueprintNode>
-BarrelEndcapAssembler<BackendT>::build() const {
+BarrelEndcapAssembler<BackendT>::build() const
+  requires(detail::HasBarrelEndcapClassifier<BackendT>)
+{
   using enum Acts::AxisDirection;
 
   const auto& logger = m_builder->logger();
@@ -703,7 +707,9 @@ BlueprintBuilder<BackendT>::layerFromSensors() const {
 
 template <detail::BlueprintBackend BackendT>
 typename BlueprintBuilder<BackendT>::BarrelEndcapAssembler
-BlueprintBuilder<BackendT>::barrelEndcap() const {
+BlueprintBuilder<BackendT>::barrelEndcap() const
+  requires(detail::HasBarrelEndcapClassifier<BackendT>)
+{
   return BarrelEndcapAssembler(*this);
 }
 
@@ -792,7 +798,9 @@ BlueprintBuilder<BackendT>::findDetElementByNamePattern(
 
 template <detail::BlueprintBackend BackendT>
 std::vector<typename BlueprintBuilder<BackendT>::Element>
-BlueprintBuilder<BackendT>::findBarrelElements(const Element& assembly) const {
+BlueprintBuilder<BackendT>::findBarrelElements(const Element& assembly) const
+  requires(detail::HasBarrelEndcapClassifier<BackendT>)
+{
   std::vector<Element> barrels;
 
   std::function<void(const Element&)> visit = [&](const Element& elem) {
@@ -809,7 +817,9 @@ BlueprintBuilder<BackendT>::findBarrelElements(const Element& assembly) const {
 
 template <detail::BlueprintBackend BackendT>
 std::vector<typename BlueprintBuilder<BackendT>::Element>
-BlueprintBuilder<BackendT>::findEndcapElements(const Element& assembly) const {
+BlueprintBuilder<BackendT>::findEndcapElements(const Element& assembly) const
+  requires(detail::HasBarrelEndcapClassifier<BackendT>)
+{
   std::vector<Element> endcaps;
 
   std::function<void(const Element&)> visit = [&](const Element& elem) {
