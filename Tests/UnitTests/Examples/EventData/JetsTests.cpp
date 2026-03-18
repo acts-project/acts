@@ -21,10 +21,10 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(FastJetSuite)
 
 BOOST_AUTO_TEST_CASE(TruthParticleOneJet) {
-  ActsFatras::Barcode barcode;
+  ActsExamples::SimBarcode barcode;
   ActsExamples::TruthJet jet(Acts::Vector4(100, 0, 0, 100),
                              ActsExamples::JetLabel::Unknown);
-  jet.setConstituents(std::vector<ActsFatras::Barcode>{barcode});
+  jet.setConstituents(std::vector<ActsExamples::SimBarcode>{barcode});
   BOOST_CHECK_EQUAL(jet.constituents().size(), 1);
   BOOST_CHECK_EQUAL(jet.constituents()[0], barcode);
 }
