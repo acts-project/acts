@@ -30,8 +30,6 @@ concept CommonStepper = requires {
   typename Stepper::Covariance;
   typename Stepper::BoundState;
 
-  requires BoundTrackParametersConcept<typename Stepper::BoundParameters>;
-
   requires requires(const Stepper& s, State& t) {
     { s.transportCovarianceToCurvilinear(t) } -> std::same_as<void>;
 
@@ -89,6 +87,8 @@ concept CommonStepper = requires {
 template <typename Stepper, typename State = typename Stepper::State>
 concept SingleStepper =
     CommonStepper<Stepper, State> && requires(const Stepper& s, State& t) {
+      requires BoundTrackParametersConcept<typename Stepper::BoundParameters>;
+
       requires requires(const FreeVector& fv, const BoundVector& bv,
                         const BoundMatrix& bm, const Surface& sf) {
         { s.update(t, fv, bv, bm, sf) } -> std::same_as<void>;

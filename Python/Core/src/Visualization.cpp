@@ -7,12 +7,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Visualization/IVisualization3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace Acts;
@@ -42,5 +44,20 @@ void addVisualization(py::module& m) {
   py::class_<IVisualization3D>(m, "IVisualization3D")
       .def("write", py::overload_cast<const std::filesystem::path&>(
                         &IVisualization3D::write, py::const_));
+
+  py::class_<ObjVisualization3D, IVisualization3D>(m, "ObjVisualization3D")
+      .def(py::init<unsigned int, double>(), py::arg("prec") = 4u,
+           py::arg("scale") = 1.)
+      .def("write",
+           py::overload_cast<const std::filesystem::path&>(
+               &ObjVisualization3D::write, py::const_),
+           py::arg("path"))
+      .def("clear", &ObjVisualization3D::clear)
+      .def(
+          "object",
+          [](ObjVisualization3D& self, const std::string& name) {
+            self.object(name);
+          },
+          py::arg("name"));
 }
 }  // namespace ActsPython

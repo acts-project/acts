@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -273,7 +272,7 @@ class MultiStepperLoop final {
   /// @param state The stepper state to initialize
   /// @param par The multi-component bound track parameters
   void initialize(State& state, const BoundParameters& par) const {
-    if (par.components().empty()) {
+    if (par.empty()) {
       throw std::invalid_argument(
           "Cannot construct MultiEigenStepperLoop::State with empty "
           "multi-component parameters");
@@ -283,7 +282,7 @@ class MultiStepperLoop final {
 
     const auto surface = par.referenceSurface().getSharedPtr();
 
-    for (auto i = 0ul; i < par.components().size(); ++i) {
+    for (std::size_t i = 0; i < par.size(); ++i) {
       const auto& [weight, singlePars] = par[i];
       auto& cmp = state.components.emplace_back(
           m_singleStepper.makeState(state.options), weight,
@@ -291,9 +290,7 @@ class MultiStepperLoop final {
       m_singleStepper.initialize(cmp.state, singlePars);
     }
 
-    if (std::get<2>(par.components().front())) {
-      state.covTransport = true;
-    }
+    state.covTransport = par.hasCovariance();
   }
 
   /// A proxy struct which allows access to a single component of the
