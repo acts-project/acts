@@ -35,7 +35,7 @@ namespace {
 
 /// A ROOT-free writer that collects track-finder performance histograms and
 /// exposes them to Python via histograms() after s.run().
-class TrackFinderPerformanceWriter final
+class PythonTrackFinderPerformanceWriter final
     : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
@@ -49,14 +49,27 @@ class TrackFinderPerformanceWriter final
     std::string inputParticleTrackMatching;
     /// Input particle measurements map.
     std::string inputParticleMeasurementsMap;
-    /// Plot tool and sub-detector configuration.
-    TrackFinderPerformanceCollector::Config collectorConfig;
+    /// Plot tool configurations (inlined from TrackFinderPerformanceCollector).
+    EffPlotTool::Config effPlotToolConfig;
+    FakePlotTool::Config fakePlotToolConfig;
+    DuplicationPlotTool::Config duplicationPlotToolConfig;
+    TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+    TrackQualityPlotTool::Config trackQualityPlotToolConfig;
+    /// Optional per-subdetector track summary plots.
+    std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
   };
 
-  TrackFinderPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
-      : WriterT(cfg.inputTracks, "TrackFinderPerformanceWriter", lvl),
+  PythonTrackFinderPerformanceWriter(Config cfg, Acts::Logging::Level lvl)
+      : WriterT(cfg.inputTracks, "PythonTrackFinderPerformanceWriter", lvl),
         m_cfg(std::move(cfg)),
-        m_collector(m_cfg.collectorConfig, lvl) {
+        m_collector(
+            TrackFinderPerformanceCollector::Config{
+                m_cfg.effPlotToolConfig, m_cfg.fakePlotToolConfig,
+                m_cfg.duplicationPlotToolConfig,
+                m_cfg.trackSummaryPlotToolConfig,
+                m_cfg.trackQualityPlotToolConfig,
+                m_cfg.subDetectorTrackSummaryVolumes},
+            lvl) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
     }
@@ -164,14 +177,13 @@ class TrackFinderPerformanceWriter final
 
 namespace ActsPython {
 
-void addTrackFinderPerformanceWriter(py::module_& mex) {
-  using Writer = TrackFinderPerformanceWriter;
+void addPythonSpecific(py::module_& mex) {
+  using Writer = PythonTrackFinderPerformanceWriter;
   using Config = Writer::Config;
-  using CC = TrackFinderPerformanceCollector::Config;
 
   auto w =
       py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-          mex, "TrackFinderPerformanceWriter")
+          mex, "PythonTrackFinderPerformanceWriter")
           .def(py::init<const Config&, Acts::Logging::Level>(),
                py::arg("config"), py::arg("level"))
           .def_property_readonly("config", &Writer::config)
@@ -180,10 +192,7 @@ void addTrackFinderPerformanceWriter(py::module_& mex) {
   auto c = py::class_<Config>(w, "Config").def(py::init<>());
   ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles, inputTrackParticleMatching,
                     inputParticleTrackMatching, inputParticleMeasurementsMap,
-                    collectorConfig);
-
-  auto cc = py::class_<CC>(c, "CollectorConfig").def(py::init<>());
-  ACTS_PYTHON_STRUCT(cc, effPlotToolConfig, fakePlotToolConfig,
+                    effPlotToolConfig, fakePlotToolConfig,
                     duplicationPlotToolConfig, trackSummaryPlotToolConfig,
                     trackQualityPlotToolConfig, subDetectorTrackSummaryVolumes);
 }

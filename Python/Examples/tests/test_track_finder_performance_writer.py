@@ -24,12 +24,12 @@ u = acts.UnitConstants
 
 
 def test_class_and_config_exist():
-    assert hasattr(acts.examples, "TrackFinderPerformanceWriter")
-    assert hasattr(acts.examples.TrackFinderPerformanceWriter, "Config")
+    assert hasattr(acts.examples, "PythonTrackFinderPerformanceWriter")
+    assert hasattr(acts.examples.PythonTrackFinderPerformanceWriter, "Config")
 
 
 def test_config_fields():
-    cfg = acts.examples.TrackFinderPerformanceWriter.Config()
+    cfg = acts.examples.PythonTrackFinderPerformanceWriter.Config()
     cfg.inputTracks = "tracks"
     cfg.inputParticles = "particles"
     cfg.inputTrackParticleMatching = "track_particle_matching"
@@ -41,21 +41,21 @@ def test_config_fields():
 
 def test_instantiation_raises_on_empty_config():
     """Writer should raise on empty required string fields."""
-    cfg = acts.examples.TrackFinderPerformanceWriter.Config()
+    cfg = acts.examples.PythonTrackFinderPerformanceWriter.Config()
     cfg.inputTracks = "tracks"
     # Missing all other required fields — should raise
     with pytest.raises(Exception):
-        acts.examples.TrackFinderPerformanceWriter(cfg, acts.logging.WARNING)
+        acts.examples.PythonTrackFinderPerformanceWriter(cfg, acts.logging.WARNING)
 
 
 def test_instantiation_with_valid_config():
-    cfg = acts.examples.TrackFinderPerformanceWriter.Config()
+    cfg = acts.examples.PythonTrackFinderPerformanceWriter.Config()
     cfg.inputTracks = "tracks"
     cfg.inputParticles = "particles"
     cfg.inputTrackParticleMatching = "track_particle_matching"
     cfg.inputParticleTrackMatching = "particle_track_matching"
     cfg.inputParticleMeasurementsMap = "particle_measurements_map"
-    writer = acts.examples.TrackFinderPerformanceWriter(cfg, acts.logging.WARNING)
+    writer = acts.examples.PythonTrackFinderPerformanceWriter(cfg, acts.logging.WARNING)
     assert writer is not None
     assert writer.config.inputTracks == "tracks"
 
@@ -145,14 +145,14 @@ def test_histograms_after_truth_kalman_run(tmp_path):
     )
 
     # Configure the writer under test
-    cfg = acts.examples.TrackFinderPerformanceWriter.Config()
+    cfg = acts.examples.PythonTrackFinderPerformanceWriter.Config()
     cfg.inputTracks = "tracks"
     cfg.inputParticles = "particles"
     cfg.inputTrackParticleMatching = "track_particle_matching"
     cfg.inputParticleTrackMatching = "particle_track_matching"
     cfg.inputParticleMeasurementsMap = "particle_measurements_map"
 
-    writer = acts.examples.TrackFinderPerformanceWriter(cfg, acts.logging.WARNING)
+    writer = acts.examples.PythonTrackFinderPerformanceWriter(cfg, acts.logging.WARNING)
     s.addWriter(writer)
 
     s.run()
