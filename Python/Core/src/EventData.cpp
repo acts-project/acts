@@ -6,18 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericFreeTrackParameters.hpp"
-#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/SeedContainer2.hpp"
 #include "Acts/EventData/SeedProxy2.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/SpacePointProxy2.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
@@ -26,7 +22,6 @@
 #include <memory>
 #include <optional>
 #include <span>
-#include <string>
 #include <vector>
 
 #include <pybind11/numpy.h>
