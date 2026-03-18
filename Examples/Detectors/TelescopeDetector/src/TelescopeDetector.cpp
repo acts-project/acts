@@ -61,7 +61,7 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
       static_cast<Acts::AxisDirection>(m_cfg.binValue));
 }
 
-TelescopeDetector::TelescopeDetector(const Config& cfg, NoBuildTag)
+TelescopeDetector::TelescopeDetector(const Config& cfg, NoBuildTag /*unused*/)
     : Detector(Acts::getDefaultLogger("TelescopeDetector", cfg.logLevel)),
       m_cfg(cfg) {
   if (m_cfg.surfaceType > 1) {

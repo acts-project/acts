@@ -44,8 +44,8 @@ class TelescopeDetector : public Detector {
 
  protected:
   struct NoBuildTag {};
-  explicit TelescopeDetector(const Config& cfg,
-                             NoBuildTag);  // used for aligned version
+  explicit TelescopeDetector(
+      const Config& cfg, NoBuildTag /*unused*/);  // used for aligned version
 
  private:
   Config m_cfg;
