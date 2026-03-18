@@ -14,6 +14,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
@@ -26,8 +27,8 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
-#include <format>
-#include <typeinfo>
+#include <charconv>
+
 using namespace Acts::UnitLiterals;
 using namespace Acts::Experimental;
 
@@ -118,8 +119,10 @@ GeoModelMuonMockupBuilder::trackingGeometry(
     return getStationIdx(a) < getStationIdx(b);
   });
 
+  /// Global volume allocator for chamber tracking volumes.
+  GeometryIdAllocator idAlloc{};
+
   auto it = boundingBoxes.begin();
-  std::size_t layerId = 1;
   while (it != boundingBoxes.end()) {
     // Current station index
     StationIdx currentIdx = getStationIdx(*it);
@@ -141,14 +144,13 @@ GeoModelMuonMockupBuilder::trackingGeometry(
       it = rangeEnd;
       continue;
     }
-    // Build GeometryIdentifier for this station
-    auto geoIdNode = Acts::GeometryIdentifier().withLayer(layerId++);
 
-    ACTS_DEBUG("Building nodes for station " << station << " with geoId "
-                                             << geoIdNode);
+    ACTS_DEBUG("Building nodes for station "
+               << station << " [idx=" << Acts::toUnderlying(currentIdx) << "]");
+
     auto stationNode = processStation(
         gctx, std::span(std::to_address(it), std::distance(it, rangeEnd)),
-        station, isBarrel, *m_cfg.volumeBoundFactory, geoIdNode);
+        station, isBarrel, currentIdx, *m_cfg.volumeBoundFactory, idAlloc);
 
     // Attach station node to the proper container
     const FirstContainerIdx firstContIdx = getFirstContainerIdx(currentIdx);
@@ -171,8 +173,8 @@ GeoModelMuonMockupBuilder::trackingGeometry(
 GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
     const Acts::GeometryContext& gctx, const std::span<Box_t> boundingBoxes,
     const std::string& station, const bool isBarrel,
-    Acts::VolumeBoundFactory& boundFactory,
-    const Acts::GeometryIdentifier& geoId) const {
+    const StationIdx stationIdx, Acts::VolumeBoundFactory& boundFactory,
+    GeometryIdAllocator& idAlloc) const {
   if (boundingBoxes.empty()) {
     ACTS_DEBUG("No chambers could be found for station" << station);
     return {};
@@ -182,10 +184,17 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
    * chamber envelope. The passed boxes are grouped under their parent.
    * We create a map mapping the logical volume of each parent to its
    * StaticBlueprintNode, which contains all its children*/
-  std::map<const GeoVPhysVol*, std::pair<NodePtr_t, std::size_t>>
+  std::map<const GeoVPhysVol*,
+           std::tuple<NodePtr_t, std::size_t, Acts::GeometryIdentifier>>
       chamberVolumes{};
   cylBounds bounds{};
-  std::size_t volNum{1};
+  std::size_t chamberNum{0};
+
+  std::map<SectorKey, std::uint32_t> sectorVolumeIds{};
+  std::map<SectorKey, std::size_t> nextLayerBasePerSector{};
+
+  constexpr std::size_t kLayerBlockSize = 16u;
+
   for (const auto& box : boundingBoxes) {
     const GeoVPhysVol* parent = box.fullPhysVol->getParent();
     if (parent == nullptr) {
@@ -202,9 +211,29 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
               ActsPlugins::GeoModel::volumePosInSpace(parent),
               parent->getLogVol()->getShape(), boundFactory);
 
+      const SectorKey key = sectorKey(stationIdx, box);
+      auto volIt = sectorVolumeIds.find(key);
+      if (volIt == sectorVolumeIds.end()) {
+        if (idAlloc.nextVolumeId > Acts::GeometryIdentifier::getMaxVolume()) {
+          throw std::runtime_error(
+              "GeoModelMuonMockupBuilder: exhausted 8-bit geometry volume "
+              "field "
+              "while assigning sector ids");
+        }
+        volIt = sectorVolumeIds.emplace(key, idAlloc.nextVolumeId++).first;
+      }
+
+      auto& nextLayerBase = nextLayerBasePerSector[key];
+      const std::size_t chamberLayerBase = nextLayerBase;
+      nextLayerBase += kLayerBlockSize;
+
       auto chamberVolume = std::make_unique<Acts::TrackingVolume>(
-          *parentVolume, std::format("{:}_Chamber_{:d}", station, volNum));
-      chamberVolume->assignGeometryId(geoId.withVolume(volNum));
+          *parentVolume,
+          std::format("{:}_Chamber_{:d}", station, chamberNum++));
+      auto chamberGeoId = Acts::GeometryIdentifier{}
+                              .withVolume(volIt->second)
+                              .withLayer(chamberLayerBase);
+      chamberVolume->assignGeometryId(chamberGeoId);
 
       ACTS_VERBOSE("New parent: "
                    << chamberVolume->volumeName() << " from box: " << box.name
@@ -236,23 +265,34 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
                                                      bounds);
       }
 
-      it =
-          chamberVolumes
-              .try_emplace(parent, std::make_pair(std::make_shared<Node_t>(
-                                                      std::move(chamberVolume)),
-                                                  volNum++))
-              .first;
+      it = chamberVolumes
+               .try_emplace(parent,
+                            std::make_tuple(std::make_shared<Node_t>(
+                                                std::move(chamberVolume)),
+                                            0, chamberGeoId))
+               .first;
     }
     // We add the box to the parent node
-    NodePtr_t& chamberNode = it->second.first;
+    NodePtr_t& chamberNode = std::get<0>(it->second);
     if (!chamberNode) {
       throw std::logic_error(std::format(
           "processStation() -- Found null chamber node for parent {}",
           parent->getLogVol()->getName()));
     }
     auto trVol = buildChildChamber(gctx, box, boundFactory);
-    trVol->assignGeometryId(geoId.withVolume(it->second.second)
-                                .withExtra(chamberNode->children().size() + 1));
+    // Keep the chamber volume id and assign a unique layer per child volume
+    Acts::GeometryIdentifier chamberGeoId = std::get<2>(it->second);
+    std::size_t& childCounter = std::get<1>(it->second);
+    const auto baseLayer = chamberGeoId.layer();
+    const auto childLayer = baseLayer + (++childCounter);
+    if (childLayer > Acts::GeometryIdentifier::getMaxLayer()) {
+      throw std::runtime_error(
+          std::format("GeoModelMuonMockupBuilder: child layer {} exceeds field "
+                      "capacity for chamber {}",
+                      childLayer, chamberNode->name()));
+    }
+    auto childGeoId = chamberGeoId.withLayer(childLayer);
+    trVol->assignGeometryId(childGeoId);
 
     ACTS_VERBOSE("\t\t Added child: " << trVol->volumeName() << ", "
                                       << trVol->geometryId()
@@ -280,8 +320,8 @@ GeoModelMuonMockupBuilder::NodePtr_t GeoModelMuonMockupBuilder::processStation(
 
   // create bluprint nodes for the chambers and add them as children to the
   // cylinder station node
-  for (auto& [_, entry] : chamberVolumes) {
-    stationNode->addChild(std::move(entry.first));
+  for (auto& [_, entryTuple] : chamberVolumes) {
+    stationNode->addChild(std::move(std::get<0>(entryTuple)));
   }
 
   return stationNode;
@@ -497,4 +537,59 @@ std::string GeoModelMuonMockupBuilder::firstContainerIdxToString(
           "firstContainerIdxToString() -- Unexpected FirstContainerIdx value");
   }
 }
+
+std::vector<int> GeoModelMuonMockupBuilder::extractUnderscoreIntegers(
+    std::string_view name) {
+  std::vector<int> out{};
+  std::size_t start = 0;
+  while (start <= name.size()) {
+    const std::size_t end = name.find('_', start);
+    const std::string_view tok =
+        name.substr(start, end == std::string_view::npos ? name.size() - start
+                                                         : end - start);
+    if (!tok.empty()) {
+      int value = 0;
+      const auto* begin = tok.data();
+      const auto* finish = tok.data() + tok.size();
+      auto [ptr, ec] = std::from_chars(begin, finish, value);
+      if (ec == std::errc{} && ptr == finish) {
+        out.push_back(value);
+      }
+    }
+    if (end == std::string_view::npos) {
+      break;
+    }
+    start = end + 1;
+  }
+  return out;
+}
+
+std::uint32_t GeoModelMuonMockupBuilder::sectorNumberFromName(
+    std::string_view name) {
+  const auto ints = extractUnderscoreIntegers(name);
+  if (ints.size() < 2u) {
+    throw std::runtime_error(
+        std::string("Could not extract sector number from chamber name: ") +
+        std::string(name));
+  }
+  return static_cast<std::uint32_t>(std::abs(ints[1]));
+}
+
+std::int32_t GeoModelMuonMockupBuilder::etaSignFromName(std::string_view name) {
+  const auto ints = extractUnderscoreIntegers(name);
+  if (ints.empty()) {
+    return 1;
+  }
+  return ints.front() < 0 ? -1 : 1;
+}
+
+GeoModelMuonMockupBuilder::SectorKey GeoModelMuonMockupBuilder::sectorKey(
+    const StationIdx stationIdx, const Box_t& box) {
+  const std::uint32_t station =
+      static_cast<std::uint32_t>(Acts::toUnderlying(stationIdx));
+  const std::uint32_t sector = sectorNumberFromName(box.name);
+  const std::int32_t etaSide = etaSignFromName(box.name);
+  return {station, sector, etaSide};
+}
+
 }  // namespace ActsExamples

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
@@ -65,7 +66,19 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     double strawDeadTime{1. * Acts::UnitConstants::ms};
     /// @brief Applied dead time between two consecutive rpc hits
     double rpcDeadTime{50. * Acts::UnitConstants::ns};
+
+    /// @brief Maximum longitudinal extent of a bucket in the common sector frame
+    double bucketMaxWindow{800. * Acts::UnitConstants::mm};
+    /// @brief Maximum gap between neighboring space points before splitting
+    double bucketNeighborWindow{200. * Acts::UnitConstants::mm};
+    /// @brief Tail overlap copied from the previous bucket into the next one
+    double bucketOverlapWindow{100. * Acts::UnitConstants::mm};
+    /// @brief Scale factor for the covariance-aware overlap margin.
+    double bucketOverlapSigmaScale{1.};
+    /// @brief Reject buckets smaller than this
+    std::size_t minBucketSize{2u};
   };
+
   /// @brief Constructor
   explicit MuonSpacePointDigitizer(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
@@ -82,13 +95,13 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   const MuonSpacePointCalibrator& calibrator() const;
   /// @brief Returns the reference to the passed tracking geometry
   const Acts::TrackingGeometry& trackingGeometry() const;
-  /// @brief  Returns the transformation from the local hit frame into the
-  ///         chamber's surface frame
-  /// @param gctx Geometry context to access the local -> global transform of the surface
-  /// @param hitId Geometry identifier of the hit of interest
-  Acts::Transform3 toSpacePointFrame(
+  /// @brief Returns the transformation from the global frame into the
+  /// common sector frame chosen from a representative tracking volume
+  /// @param gctx Geometry context
+  /// @param representativeVolumeId Geometry identifier that resolves to a tracking volume
+  Acts::Transform3 toSectorFrame(
       const Acts::GeometryContext& gctx,
-      const Acts::GeometryIdentifier& hitId) const;
+      const Acts::GeometryIdentifier& representativeVolumeId) const;
   /// @brief Configuration of the digitizer
   Config m_cfg;
   /// @brief Data handle for the input simulated hits
