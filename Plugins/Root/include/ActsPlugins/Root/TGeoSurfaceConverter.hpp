@@ -107,10 +107,9 @@ struct TGeoSurfaceConverter {
   /// @param scalor The unit scalor between TGeo and Acts
   /// @return The Acts transform
   /// @throws std::runtime_error if the shape cannot be converted
-  static Acts::Transform3 transformFromShape(const TGeoShape& tgShape,
-                                             const TGeoMatrix& tgMatrix,
-                                             TGeoAxes axes,
-                                             double scalor = 10.) noexcept(false);
+  static Acts::Transform3 transformFromShape(
+      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
+      double scalor = 10.) noexcept(false);
 
   /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)

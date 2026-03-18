@@ -66,7 +66,8 @@ class OpenDataDetector final : public DD4hepDetectorBase {
  private:
   void construct(const Acts::GeometryContext& gctx);
 
-  /// Construction path using BarrelEndcapAssembler (wraps ElementLayerAssembler).
+  /// Construction path using BarrelEndcapAssembler (wraps
+  /// ElementLayerAssembler).
   void constructBarrelEndcap(const Acts::GeometryContext& gctx);
 
   /// Construction path using ElementLayerAssembler directly. For illustration.
