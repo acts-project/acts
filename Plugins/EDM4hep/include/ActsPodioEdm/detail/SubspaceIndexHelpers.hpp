@@ -111,8 +111,8 @@ inline std::size_t findSubspaceIndex(std::span<const SubspaceIndex> indices,
     }
   }
   throw std::runtime_error("Enum value " +
-                            std::to_string(static_cast<int>(enumVal)) +
-                            " not found in subspace indices");
+                           std::to_string(static_cast<int>(enumVal)) +
+                           " not found in subspace indices");
 }
 
 }  // namespace ActsPodioEdm::detail
