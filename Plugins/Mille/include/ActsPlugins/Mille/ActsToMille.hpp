@@ -14,15 +14,20 @@
 
 namespace ActsPlugins::ActsToMille {
 
-/// The MilleRecord is the primary interface for
-/// writing out alignment fit inputs
+/// The MilleRecord is Millepede's interface for
+/// writing out alignment fit inputs. It can be instantiated
+/// using Mille::spawnMilleRecord(desired_file_name),
+/// provided by Mille/MilleFactory.h
 using Mille::MilleRecord;
 
-/// Placeholder method to test header
-/// discovery and linkage.
-/// Using TrackAlignmentState as a potential
-/// candidate for a future (internal) interface.
-void dumpToMille(const ActsAlignment::detail::TrackAlignmentState&,
+/// @brief Dump a Kalman track encoded as a TrackAlignmentState into
+/// a Mille record.
+/// @param state: Alignment state to dump.
+/// @param record: Mille record to write to - should be valid pointer
+/// Note: Not very efficient - we have to "un-fit" the kalman track.
+/// Used for R&D, recommending the GBL track model (under development)
+//  for production use.
+void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
                  MilleRecord* record);
 
 }  // namespace ActsPlugins::ActsToMille
