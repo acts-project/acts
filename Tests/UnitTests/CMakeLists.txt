@@ -24,6 +24,9 @@ macro(add_unittest _name _source)
             Boost::unit_test_framework
             ${unittest_extra_libraries}
     )
+    if(ACTS_TESTS_HAS_WNO_C2Y_EXTENSIONS)
+        target_compile_options(${_target} PRIVATE -Wno-c2y-extensions)
+    endif()
     # register as unittest executable
     add_test(NAME ${_name} COMMAND ${_target})
     add_dependencies(unit_tests ${_target})

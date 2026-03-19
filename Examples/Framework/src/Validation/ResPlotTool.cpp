@@ -109,9 +109,6 @@ ResPlotTool::ResPlotTool(const ResPlotTool::Config& cfg,
 void ResPlotTool::fill(const Acts::GeometryContext& gctx,
                        const SimParticleState& truthParticle,
                        const Acts::BoundTrackParameters& fittedParamters) {
-  using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
-  using CovarianceMatrix = Acts::BoundTrackParameters::CovarianceMatrix;
-
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;
@@ -120,15 +117,15 @@ void ResPlotTool::fill(const Acts::GeometryContext& gctx,
   using enum Acts::BoundIndices;
 
   // get the fitted parameter (at perigee surface) and its error
-  const ParametersVector& trackParameters = fittedParamters.parameters();
-  const CovarianceMatrix& trackCovariance =
-      fittedParamters.covariance().value_or(CovarianceMatrix::Zero());
+  const Acts::BoundVector& trackParameters = fittedParamters.parameters();
+  const Acts::BoundMatrix& trackCovariance =
+      fittedParamters.covariance().value_or(Acts::BoundMatrix::Zero());
 
   // get the perigee surface
   const Acts::Surface& pSurface = fittedParamters.referenceSurface();
 
   // get the truth parameter at the perigee surface
-  ParametersVector truthParameters = ParametersVector::Zero();
+  Acts::BoundVector truthParameters = Acts::BoundVector::Zero();
   const Acts::Intersection3D intersection =
       pSurface
           .intersect(gctx, truthParticle.position(), truthParticle.direction())
