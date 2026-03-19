@@ -20,7 +20,6 @@ target_sources(
         src/GeometryGen3.cpp
         src/Navigation.cpp
         src/Propagation.cpp
-        src/Seeding.cpp
         src/TrackFinding.cpp
         src/Visualization.cpp
 )
