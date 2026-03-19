@@ -1158,13 +1158,13 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     # Map backend to file extension
     model_ext = ".pt" if backend == "torch" else ".onnx"
 
+    repo_root = Path(__file__).parent.parent.parent.parent
+
     # Dict of required files - used for checking and as kwargs
     required_files = {
-        "moduleMapPath": str(ci_models / "module_map_odd_2k_events.1e-03.float"),
+        "moduleMapPath": str(repo_root / "new_module_map" / "mm_odd_test"),
         "gnnModel": str(ci_models / f"gnn_odd_module_map{model_ext}"),
     }
-
-    repo_root = Path(__file__).parent.parent.parent.parent
 
     # Check if all required files exist
     assert Path(required_files["moduleMapPath"] + ".doublets.root").exists()
