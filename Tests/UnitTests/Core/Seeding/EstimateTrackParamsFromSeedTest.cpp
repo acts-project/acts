@@ -114,22 +114,24 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                                                  start, resolutions, rng);
 
           // Create space points from different detector layers
-          std::map<GeometryIdentifier::Value, Vector3> spacePoints;
+          std::vector<Vector3> spacePoints;
+          std::set<GeometryIdentifier::Value> usedLayers;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
             const auto geoId = sl.m_geometryId;
             const auto& layer = geoId.layer();
-            auto it = spacePoints.find(layer);
             // Avoid to use space point from the same layers
-            if (it != spacePoints.end()) {
+            if (const auto it = usedLayers.find(layer);
+                it != usedLayers.end()) {
               continue;
             }
             const auto surface = geometry->findSurface(geoId);
             const auto& localPos = sl.parameters;
-            Vector3 globalFakeMom(1, 1, 1);
-            Vector3 globalPos =
+            const Vector3 globalFakeMom(1, 1, 1);
+            const Vector3 globalPos =
                 surface->localToGlobal(geoCtx, localPos, globalFakeMom);
-            spacePoints.emplace(layer, globalPos);
+            spacePoints.push_back(globalPos);
+            usedLayers.insert(layer);
             if (spacePoints.size() == 1) {
               bottomSurface = surface;
             }
@@ -142,10 +144,10 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           }
 
           // The truth track parameters at the bottom space point
-          const auto& expParams = measurements.truthParameters[0];
+          const auto& expBoundParams = measurements.truthParameters[0];
           BOOST_TEST_INFO(
               "The truth track parameters at the bottom space point: \n"
-              << expParams.transpose());
+              << expBoundParams.transpose());
 
           // Test the free track parameters estimator
           FreeVector estFreeParams = estimateTrackParamsFromSeed(
@@ -153,28 +155,29 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           BOOST_CHECK(!estFreeParams.hasNaN());
 
           // Test the bound track parameters estimator
-          auto estFullParamsResult = estimateTrackParamsFromSeed(
+          auto estBoundParamsResult = estimateTrackParamsFromSeed(
               geoCtx, *bottomSurface, spacePoints[0], 0, spacePoints[1],
               spacePoints[2], bField);
-          BOOST_CHECK(estFullParamsResult.ok());
-          const auto& estFullParams = estFullParamsResult.value();
+          BOOST_CHECK(estBoundParamsResult.ok());
+          const auto& estBoundParams = estBoundParamsResult.value();
           BOOST_TEST_INFO(
               "The estimated full track parameters at the bottom space point: "
               "\n"
-              << estFullParams.transpose());
+              << estBoundParams.transpose());
 
-          CHECK_CLOSE_ABS(estFullParams[eBoundLoc0], expParams[eBoundLoc0],
-                          1e-5);
-          CHECK_CLOSE_ABS(estFullParams[eBoundLoc1], expParams[eBoundLoc1],
-                          1e-5);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundLoc0],
+                          expBoundParams[eBoundLoc0], 1e-5);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundLoc1],
+                          expBoundParams[eBoundLoc1], 1e-5);
           // @todo Understand why the estimated phi has a limited precision
-          CHECK_CLOSE_ABS(estFullParams[eBoundPhi], expParams[eBoundPhi], 1e-1);
-          CHECK_CLOSE_ABS(estFullParams[eBoundTheta], expParams[eBoundTheta],
-                          1e-2);
-          CHECK_CLOSE_ABS(estFullParams[eBoundQOverP], expParams[eBoundQOverP],
-                          1e-2);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundPhi], expBoundParams[eBoundPhi],
+                          1e-1);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundTheta],
+                          expBoundParams[eBoundTheta], 1e-2);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundQOverP],
+                          expBoundParams[eBoundQOverP], 1e-2);
           // time is not estimated so we check if it is default zero
-          CHECK_CLOSE_ABS(estFullParams[eBoundTime], 0, 1e-6);
+          CHECK_CLOSE_ABS(estBoundParams[eBoundTime], 0, 1e-6);
         }
       }
     }
