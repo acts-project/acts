@@ -26,7 +26,9 @@ namespace Acts {
 /// class takes the SouceLinks and provides the corresponding space points.
 ///
 template <typename space_point_t>
-class SpacePointBuilder {
+class [[deprecated(
+    "Will be dropped soon and is replaced by PixelSpacePointBuilder / "
+    "StripSpacePointBuilder")]] SpacePointBuilder {
  public:
   /// Type alias for space point builder function
   using BuilderFunction = std::function<space_point_t(

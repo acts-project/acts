@@ -15,7 +15,9 @@ namespace Acts {
 
 /// Seed built from N external space points.
 template <typename external_space_point_t, std::size_t N = 3ul>
-class Seed {
+class [[deprecated(
+    "Will be dropped soon and is replaced by the new SeedContainer and "
+    "proxies")]] Seed {
   static_assert(N >= 3ul);
 
  public:

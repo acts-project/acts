@@ -14,7 +14,9 @@ namespace Acts {
 
 /// Proxy giving read access to space point data in a container.
 template <typename container_t>
-class SpacePointProxy {
+class [[deprecated(
+    "Will be dropped soon and is replaced by the new "
+    "space point proxies")]] SpacePointProxy {
  public:
   /// Container type
   using ContainerType = container_t;

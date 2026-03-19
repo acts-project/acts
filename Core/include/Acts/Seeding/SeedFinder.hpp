@@ -47,7 +47,8 @@ enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
 /// Seed finder operating on grid-based space points.
 template <typename external_space_point_t, typename grid_t,
           typename platform_t = void*>
-class SeedFinder {
+class [[deprecated("Will be dropped soon and is replaced by TripletSeeder")]]
+SeedFinder {
  public:
   /// Scratch buffers used during seeding for a middle space point.
   struct SeedingState {

@@ -29,18 +29,14 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/MeasurementsCreator.hpp"
 
-#include <algorithm>
 #include <array>
 #include <cmath>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <optional>
 #include <random>
 #include <utility>
 #include <vector>
-
-#include "SpacePoint.hpp"
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -118,7 +114,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                                                  start, resolutions, rng);
 
           // Create space points from different detector layers
-          std::map<GeometryIdentifier::Value, SpacePoint> spacePoints;
+          std::map<GeometryIdentifier::Value, Vector3> spacePoints;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
             const auto geoId = sl.m_geometryId;
@@ -133,15 +129,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
             Vector3 globalFakeMom(1, 1, 1);
             Vector3 globalPos =
                 surface->localToGlobal(geoCtx, localPos, globalFakeMom);
-            // Create a space point (varianceR and varianceZ are lazily set to
-            // zero since they are not important for the test)
-            float r = std::hypot(globalPos.x(), globalPos.y());
-            spacePoints.emplace(
-                layer, SpacePoint{static_cast<float>(globalPos.x()),
-                                  static_cast<float>(globalPos.y()),
-                                  static_cast<float>(globalPos.z()), r,
-                                  static_cast<int>(geoId.layer()), 0., 0.,
-                                  std::nullopt, std::nullopt});
+            spacePoints.emplace(layer, globalPos);
             if (spacePoints.size() == 1) {
               bottomSurface = surface;
             }
@@ -159,20 +147,15 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
               "The truth track parameters at the bottom space point: \n"
               << expParams.transpose());
 
-          // The space point pointers
-          std::array<const SpacePoint*, 3> spacePointPtrs{};
-          std::transform(spacePoints.begin(), std::next(spacePoints.begin(), 3),
-                         spacePointPtrs.begin(),
-                         [](const auto& sp) { return &sp.second; });
-
           // Test the free track parameters estimator
-          FreeVector estFreeParams =
-              estimateTrackParamsFromSeed(spacePointPtrs, bField);
+          FreeVector estFreeParams = estimateTrackParamsFromSeed(
+              spacePoints[0], 0, spacePoints[1], spacePoints[2], bField);
           BOOST_CHECK(!estFreeParams.hasNaN());
 
           // Test the bound track parameters estimator
           auto estFullParamsResult = estimateTrackParamsFromSeed(
-              geoCtx, spacePointPtrs, *bottomSurface, bField);
+              geoCtx, *bottomSurface, spacePoints[0], 0, spacePoints[1],
+              spacePoints[2], bField);
           BOOST_CHECK(estFullParamsResult.ok());
           const auto& estFullParams = estFullParamsResult.value();
           BOOST_TEST_INFO(

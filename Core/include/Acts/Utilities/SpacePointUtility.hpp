@@ -18,16 +18,12 @@
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <array>
 #include <cstddef>
-#include <functional>
-#include <iostream>
-#include <memory>
 #include <system_error>
 #include <utility>
-#include <vector>
 
 namespace Acts {
+
 class SourceLink;
 
 /// @brief Storage container for variables related to the calculation of space
@@ -61,7 +57,9 @@ struct SpacePointParameters {
 
 /// @class SpacePointUtility
 /// Utility helper for space point calculations.
-class SpacePointUtility {
+class [[deprecated(
+    "Will be dropped soon and is replaced by PixelSpacePointBuilder / "
+    "StripSpacePointBuilder")]] SpacePointUtility {
  public:
   /// Constructor
   /// @param cfg Configuration for the space point builder

@@ -41,7 +41,9 @@ struct SpacePointContainerOptions {
 
 /// Container wrapper providing space point proxy access.
 template <typename container_t, template <typename> class holder_t>
-class SpacePointContainer {
+class [[deprecated(
+    "Will be dropped soon and is replaced by the new "
+    "SpacePointContainer")]] SpacePointContainer {
  public:
   friend class Acts::SpacePointProxy<
       Acts::SpacePointContainer<container_t, holder_t>>;
