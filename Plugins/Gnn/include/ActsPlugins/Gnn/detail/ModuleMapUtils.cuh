@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <CUDA_graph_creator>
+#include <MMG/CUDA_graph_creator>
 #include <algorithm>
 #include <iostream>
 #include <vector>
