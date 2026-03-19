@@ -16,11 +16,14 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
 #include <system_error>
 #include <utility>
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 
@@ -171,3 +174,5 @@ class [[deprecated(
 };
 
 }  // namespace Acts
+
+ACTS_POP_IGNORE_DEPRECATED()
