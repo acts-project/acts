@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 
 #include <pybind11/pybind11.h>
 
@@ -30,7 +29,6 @@ void addGeometryGen1(py::module_& m);
 void addGeometryGen3(py::module_& m);
 void addNavigation(py::module_& m);
 void addPropagation(py::module_& m);
-void addSeeding(py::module_& mt);
 void addTrackFinding(py::module_& m);
 
 }  // namespace ActsPython
@@ -68,6 +66,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addGeometryGen3(m);
   addNavigation(m);
   addPropagation(m);
-  addSeeding(m);
   addTrackFinding(m);
 }
