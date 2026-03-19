@@ -11,9 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -38,6 +40,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
 #include <functional>
 #include <memory>
@@ -66,6 +69,49 @@ struct std::hash<std::array<T, N>> {
 namespace ActsExamples {
 
 namespace {
+
+struct TrackStateCreator final
+    : public Acts::Experimental::TrackStateCreatorBase<TrackStateCreator> {
+  const MeasurementContainer* measurements = nullptr;
+
+  auto measurementRange(const Acts::Surface& surface,
+                        const Acts::BoundTrackParameters& boundParams) const {
+    static_cast<void>(boundParams);
+
+    const auto rangePair =
+        measurements->orderedIndices().equal_range(surface.geometryId());
+
+    return std::ranges::subrange(rangePair.first, rangePair.second);
+  }
+
+  Acts::SourceLink measurementSourceLink(
+      const Acts::Surface& surface, const IndexSourceLink& measurement) const {
+    static_cast<void>(surface);
+
+    return Acts::SourceLink{measurement};
+  }
+
+  Acts::VariableBoundSubspaceHelper measurementSubspace(
+      const Acts::Surface& surface, const IndexSourceLink& measurement) const {
+    static_cast<void>(surface);
+
+    return measurements->at(measurement.index()).subspaceHelper();
+  }
+
+  auto measuredParameters(const Acts::Surface& surface,
+                          const IndexSourceLink& measurement) const {
+    static_cast<void>(surface);
+
+    return measurements->at(measurement.index()).parameters();
+  }
+
+  auto measurementCovariance(const Acts::Surface& surface,
+                             const IndexSourceLink& measurement) const {
+    static_cast<void>(surface);
+
+    return measurements->at(measurement.index()).covariance();
+  }
+};
 
 class MeasurementSelector {
  public:
@@ -338,13 +384,21 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   trackStateCreator.measurementSelector
       .template connect<&MeasurementSelector::select>(&measSel);
 
+  TrackStateCreator trackStateCreator2;
+  trackStateCreator2.measurements = &measurements;
+
   Extensions extensions;
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
   extensions.createTrackStates
-      .template connect<&TrackStateCreatorType ::createTrackStates>(
+      .template connect<&TrackStateCreatorType::createTrackStates>(
           &trackStateCreator);
+  extensions.createTrackStates
+      .template connect<&TrackStateCreator::createTrackStates<
+          TrackStateProxy,
+          typename TrackContainer::TrackStateContainerBackend>>(
+          &trackStateCreator2);
 
   Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
                                                 ctx.magFieldContext);
