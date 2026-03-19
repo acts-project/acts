@@ -1197,7 +1197,7 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     output_file = tmp_path / "performance_finding_gnn.root"
     assert output_file.exists()
     assert_root_hash("performance_finding_gnn.root", output_file)
-    
+
     output_file = tmp_path / "ntuple_finding_gnn.root"
     assert output_file.exists()
     assert_root_hash("ntuple_finding_gnn.root", output_file)
