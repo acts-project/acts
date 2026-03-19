@@ -1475,6 +1475,7 @@ def addKalmanTracks(
     energyLoss: bool = True,
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
+    linkForward: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1501,6 +1502,7 @@ def addKalmanTracks(
             trackingGeometry, field, **kalmanOptions
         ),
         calibrator=calibrator,
+        linkForward=linkForward,
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
