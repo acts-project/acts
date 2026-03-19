@@ -338,8 +338,8 @@ BOOST_AUTO_TEST_CASE(TrackerHitLocalEnumApi) {
   // Enum access and index access return the same values
   CHECK_CLOSE_REL(hit.getValue(eBoundLoc0), hit.getValue(0u), 1e-6f);
   CHECK_CLOSE_REL(hit.getValue(eBoundLoc1), hit.getValue(1u), 1e-6f);
-  CHECK_CLOSE_REL(hit.getCov(eBoundLoc0, eBoundLoc1),
-                  hit.getCov(0u, 1u), 1e-6f);
+  CHECK_CLOSE_REL(hit.getCov(eBoundLoc0, eBoundLoc1), hit.getCov(0u, 1u),
+                  1e-6f);
 
   // Out-of-subspace enum values throw
   BOOST_CHECK_THROW(hit.getValue(eBoundPhi), std::runtime_error);
