@@ -80,6 +80,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDD4hep, m) {
                OpenDataDetector::Config::ConstructionMethod::BarrelEndcap)
         .value("DirectLayer",
                OpenDataDetector::Config::ConstructionMethod::DirectLayer)
+        .value("TGeo", OpenDataDetector::Config::ConstructionMethod::TGeo)
         .value(
             "DirectLayerGrouped",
             OpenDataDetector::Config::ConstructionMethod::DirectLayerGrouped);

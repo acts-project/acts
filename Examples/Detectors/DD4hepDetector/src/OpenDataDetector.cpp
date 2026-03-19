@@ -36,6 +36,11 @@ OpenDataDetector::OpenDataDetector(const Config& cfg,
           ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayerGrouped(
               dd4hepDetector(), gctx, logger());
       break;
+    case Config::ConstructionMethod::TGeo:
+      m_trackingGeometry =
+          ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcapViaTGeo(
+              dd4hepDetector(), gctx, logger());
+      break;
   }
 }
 
