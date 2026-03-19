@@ -14,6 +14,7 @@
 
 #include <format>
 #include <iostream>
+#include <type_traits>
 
 #include <GeoModelWrite/WriteGeoModel.h>
 
@@ -168,7 +169,15 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   VolumeMap_t publishedVol{};
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
     try {
-      const auto key = std::any_cast<std::string>(pubKey);
+      const auto key = [pubKey]() {
+        if constexpr (std::is_same_v<std::remove_cvref_t<decltype(pubKey)>,
+                                     std::string>) {
+          return std::any_cast<std::string>(pubKey);
+        } else {
+          return std::get<std::string>(pubKey);
+        }
+      }();
+
       if (!publishedVol
                .insert(std::make_pair(key, static_cast<GeoFullPhysVol*>(fpV)))
                .second) {
