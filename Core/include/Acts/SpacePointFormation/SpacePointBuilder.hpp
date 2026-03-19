@@ -12,10 +12,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/SpacePointUtility.hpp"
 
 #include <boost/container/static_vector.hpp>
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 
@@ -97,3 +100,5 @@ class [[deprecated(
 }  // namespace Acts
 
 #include "Acts/SpacePointFormation/SpacePointBuilder.ipp"
+
+ACTS_POP_IGNORE_DEPRECATED()

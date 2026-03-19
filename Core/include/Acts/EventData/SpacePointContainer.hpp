@@ -13,10 +13,13 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Utils.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <vector>
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 
@@ -186,3 +189,5 @@ class [[deprecated(
 }  // namespace Acts
 
 #include "Acts/EventData/SpacePointContainer.ipp"
+
+ACTS_POP_IGNORE_DEPRECATED()

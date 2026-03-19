@@ -9,6 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 
@@ -82,3 +85,5 @@ class [[deprecated(
 }  // namespace Acts
 
 #include "Acts/EventData/SpacePointProxy.ipp"
+
+ACTS_POP_IGNORE_DEPRECATED()
