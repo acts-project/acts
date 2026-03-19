@@ -23,6 +23,12 @@ jobs:
                repo: context.repo.repo,
                run_id: context.payload.workflow_run.id,
             });
+            // Check if any comment artifacts are available (always, before any early return)
+            let matchCommentArtifacts = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name.startsWith('comment-')
+            });
+            core.setOutput('comment-artifacts-found', matchCommentArtifacts.length >= 1 ? 'true' : 'false');
+
             let matchArtifacts = allArtifacts.data.artifacts.filter((artifact) => {
               return artifact.name == 'physmon'
             });
@@ -42,12 +48,6 @@ jobs:
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/physmon.zip`, Buffer.from(download.data));
             let = url = `https://acts-herald.app.cern.ch/view/${process.env.GITHUB_REPOSITORY}/${matchArtifact.id}`;
 
-            // Check if any other comment artifacts are available
-            let matchCommentArtifacts = allArtifacts.data.artifacts.filter((artifact) => {
-              return artifact.name.startsWith('comment-')
-            });
-            core.setOutput('comment-artifacts-found', matchCommentArtifacts.length >= 1);
-
             core.exportVariable('ARTIFACT_URL', url)
             return true;
 
@@ -58,7 +58,7 @@ jobs:
 
       - name: 'Determine PR number'
         id: get-pr-number
-        if: steps.dl-af.outputs.result != 'false'
+        if: steps.dl-af.outputs.result != 'false' || steps.dl-af.outputs.comment-artifacts-found == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_TARGET_REPO: ${{ github.repository }}
@@ -85,7 +85,7 @@ jobs:
           python-version: '3.14'
 
       - uses: actions/download-artifact@v8
-        if: steps.dl-af.outputs.comment-artifacts-found
+        if: steps.dl-af.outputs.comment-artifacts-found == 'true'
         with:
           pattern: comment-*.md
           merge-multiple: true
@@ -98,13 +98,15 @@ jobs:
         env:
           PR_SHA: ${{ steps.get-pr-number.outputs.PR_SHA }}
         run: |
-          ls -al $GITHUB_WORKSPACE/physmon
-          echo "# 📊: Physics performance monitoring for ${PR_SHA}" >> comment.md
-          echo "[Full contents](${ARTIFACT_URL})" >> comment.md
-          if [ -f "$GITHUB_WORKSPACE/physmon/summary.md" ]; then
-            cat $GITHUB_WORKSPACE/physmon/summary.md >> comment.md
-          else
-            echo "🟥 summary not found!" >> comment.md
+          if [ -d "$GITHUB_WORKSPACE/physmon" ]; then
+            ls -al $GITHUB_WORKSPACE/physmon
+            echo "# 📊: Physics performance monitoring for ${PR_SHA}" >> comment.md
+            echo "[Full contents](${ARTIFACT_URL})" >> comment.md
+            if [ -f "$GITHUB_WORKSPACE/physmon/summary.md" ]; then
+              cat $GITHUB_WORKSPACE/physmon/summary.md >> comment.md
+            else
+              echo "🟥 summary not found!" >> comment.md
+            fi
           fi
           cat comment-*.md >> comment.md || true
           cat comment.md
