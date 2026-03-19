@@ -81,8 +81,12 @@ void addEventData(py::module& mex) {
   auto constTrackProxy =
       py::class_<ConstTrackProxy>(mex, "ConstTrackProxy")
           .def_property_readonly("index", &ConstTrackProxy::index)
-          .def_property_readonly("tipIndex", &ConstTrackProxy::tipIndex)
-          .def_property_readonly("stemIndex", &ConstTrackProxy::stemIndex)
+          .def_property_readonly(
+              "tipIndex",
+              [](const ConstTrackProxy& self) { return self.tipIndex(); })
+          .def_property_readonly(
+              "stemIndex",
+              [](const ConstTrackProxy& self) { return self.stemIndex(); })
           .def_property_readonly("referenceSurface",
                                  &ConstTrackProxy::referenceSurface)
           .def_property_readonly("hasReferenceSurface",
@@ -101,11 +105,16 @@ void addEventData(py::module& mex) {
                                  })
           .def_property_readonly("particleHypothesis",
                                  &ConstTrackProxy::particleHypothesis)
-          .def_property_readonly("nMeasurements",
-                                 &ConstTrackProxy::nMeasurements)
-          .def_property_readonly("nHoles", &ConstTrackProxy::nHoles)
+          .def_property_readonly(
+              "nMeasurements",
+              [](const ConstTrackProxy& self) { return self.nMeasurements(); })
+          .def_property_readonly(
+              "nHoles",
+              [](const ConstTrackProxy& self) { return self.nHoles(); })
           .def_property_readonly("isForwardLinked",
-                                 &ConstTrackProxy::isForwardLinked)
+                                 [](const ConstTrackProxy& self) {
+                                   return self.isForwardLinked();
+                                 })
           .def_property_readonly("trackStatesReversed",
                                  py::cpp_function(
                                      [](const ConstTrackProxy& self) {
