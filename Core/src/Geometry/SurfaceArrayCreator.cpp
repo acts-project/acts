@@ -33,7 +33,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // Check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -60,7 +60,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
+          std::move(surface), layerTolerance, pAxisPhi, pAxisZ,
+          maxNeighborDistance);
 
   sl->fill(gctx, surfacesRaw);
 
@@ -72,7 +73,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -107,7 +108,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
+          std::move(surface), layerTolerance, pAxisPhi, pAxisZ,
+          maxNeighborDistance);
 
   sl->fill(gctx, surfacesRaw);
 
@@ -129,7 +131,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -155,7 +157,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          std::move(surface), layerThickness, pAxisR, pAxisPhi);
+          std::move(surface), layerThickness, pAxisR, pAxisPhi,
+          maxNeighborDistance);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -176,7 +179,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -257,7 +260,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          std::move(surface), layerThickness, pAxisR, pAxisPhi);
+          std::move(surface), layerThickness, pAxisR, pAxisPhi,
+          maxNeighborDistance);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -279,8 +283,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
-    std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    std::optional<ProtoLayer> protoLayerOpt, const Transform3& transform,
+    std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -313,7 +317,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                      protoLayer.max(AxisDirection::AxisZ))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2,
+          maxNeighborDistance);
       break;
     }
     case AxisDirection::AxisY: {
@@ -331,7 +336,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                      protoLayer.max(AxisDirection::AxisY))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2,
+          maxNeighborDistance);
       break;
     }
     case AxisDirection::AxisZ: {
@@ -349,7 +355,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                      protoLayer.max(AxisDirection::AxisY))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2,
+          maxNeighborDistance);
       break;
     }
     default: {
