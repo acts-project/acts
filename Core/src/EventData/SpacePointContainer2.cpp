@@ -23,13 +23,15 @@ using tuple_indices =
 
 namespace Acts {
 
-static_assert(std::random_access_iterator<SpacePointContainer2::iterator>);
+static_assert(std::ranges::random_access_range<SpacePointContainer2>);
 static_assert(
-    std::random_access_iterator<SpacePointContainer2::const_iterator>);
+    std::ranges::random_access_range<SpacePointContainer2::MutableRange>);
 static_assert(
-    std::random_access_iterator<SpacePointContainer2::MutableSubset::Iterator>);
+    std::ranges::random_access_range<SpacePointContainer2::ConstRange>);
 static_assert(
-    std::random_access_iterator<SpacePointContainer2::ConstSubset::Iterator>);
+    std::ranges::random_access_range<SpacePointContainer2::MutableSubset>);
+static_assert(
+    std::ranges::random_access_range<SpacePointContainer2::ConstSubset>);
 
 SpacePointContainer2::SpacePointContainer2(SpacePointColumns columns) noexcept {
   createColumns(columns);
@@ -187,7 +189,7 @@ void SpacePointContainer2::copyFrom(Index index,
   }
 
   if (ACTS_CHECK_BIT(columnsToCopy, SpacePointColumns::SourceLinks)) {
-    assignSourceLinks(index, otherContainer.sourceLinks(otherIndex));
+    at(index).assignSourceLinks(otherContainer[otherIndex].sourceLinks());
   }
 
   const auto copyColumn =
@@ -213,27 +215,6 @@ void SpacePointContainer2::copyFrom(Index index,
                  std::get<Is>(otherContainer.knownColumns()))),
      ...);
   }(tuple_indices<decltype(knownColumns())>{});
-}
-
-void SpacePointContainer2::assignSourceLinks(
-    Index index, std::span<const SourceLink> sourceLinks) {
-  if (index >= size()) {
-    throw std::out_of_range("Index out of range in SpacePointContainer2");
-  }
-  if (!m_sourceLinkOffsetColumn.has_value() ||
-      !m_sourceLinkCountColumn.has_value()) {
-    throw std::logic_error("No source links column available");
-  }
-  if (m_sourceLinkCountColumn->proxy(*this)[index] != 0) {
-    throw std::logic_error("Source links already assigned to the space point");
-  }
-
-  m_sourceLinkOffsetColumn->proxy(*this)[index] =
-      static_cast<SpacePointIndex2>(m_sourceLinks.size());
-  m_sourceLinkCountColumn->proxy(*this)[index] =
-      static_cast<std::uint8_t>(sourceLinks.size());
-  m_sourceLinks.insert(m_sourceLinks.end(), sourceLinks.begin(),
-                       sourceLinks.end());
 }
 
 void SpacePointContainer2::createColumns(SpacePointColumns columns) noexcept {

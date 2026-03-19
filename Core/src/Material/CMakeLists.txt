@@ -6,7 +6,7 @@ target_sources(
         AccumulatedVolumeMaterial.cpp
         AverageMaterials.cpp
         BinnedSurfaceMaterial.cpp
-        BinnedSurfaceMaterialAccumulater.cpp
+        BinnedSurfaceMaterialAccumulator.cpp
         GridSurfaceMaterialFactory.cpp
         HomogeneousSurfaceMaterial.cpp
         HomogeneousVolumeMaterial.cpp
@@ -19,7 +19,7 @@ target_sources(
         MaterialMapUtils.cpp
         MaterialMapper.cpp
         MaterialSlab.cpp
-        MaterialValidater.cpp
+        MaterialValidator.cpp
         ProtoVolumeMaterial.cpp
         SurfaceMaterialMapper.cpp
         VolumeMaterialMapper.cpp

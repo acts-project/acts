@@ -31,19 +31,19 @@ The following dependencies are required to build the ACTS core library:
 The following dependencies are optional and are needed to build additional
 components:
 
-- [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the GNN plugin and its examples
+- [CUDA](https://developer.nvidia.com/cuda) for the CUDA plugin and the GNN plugin and its examples
 - [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 - [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 - [Geant4](https://geant4.org/) for some examples
 - [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
-- [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
+- [Intel Threading Building Blocks](https://github.com/uxlfoundation/oneTBB) >= 2020.1 for the examples
 - [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the GNN plugin and some examples
 - [Pythia8](https://pythia.org) for some examples
 - [ROOT](https://root.cern.ch) >= 6.20 for the ROOT plugin and the examples
-- [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
-- [libtorch](https://pytorch.org/cppdocs/installing.html) for the GNN plugin
+- [Sphinx](https://www.sphinx-doc.org/en/master/) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
+- [libtorch](https://docs.pytorch.org/cppdocs/installing.html) for the GNN plugin
 - [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
-- [FastJet](http://fastjet.fr/) >= 3.4.0 for the FastJet plugin
+- [FastJet](https://fastjet.fr/) >= 3.4.0 for the FastJet plugin
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -240,8 +240,8 @@ other parts of the documentation. This is not guaranteed to work: in case
 of errors you will need to manually pull in symbols to be documented.
 
 [doxygen]: https://doxygen.nl/
-[sphinx]: https://www.sphinx-doc.org
-[breathe]: https://breathe.readthedocs.io
+[sphinx]: https://www.sphinx-doc.org/en/master/
+[breathe]: https://breathe.readthedocs.io/en/latest/
 
 ## Build options
 
@@ -300,14 +300,14 @@ components.
 | ACTS_BUILD_ALIGNMENT                | Build Alignment package<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
-| ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_BUILD_EXAMPLES_FASTJET         | Build FastJet-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
-| ACTS_BUILD_EXAMPLES_GNN             | Build the GNN example code<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
+| ACTS_BUILD_EXAMPLES_FASTJET         | Build FastJet-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
+| ACTS_BUILD_EXAMPLES_GNN             | Build the GNN example code<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_BUILD_EXAMPLES_ROOT            | Build modules based on ROOT I/O<br> type: `bool`, default: `ON`                                                                                                                                                                    |
+| ACTS_BUILD_EXAMPLES_ROOT            | Build modules based on ROOT I/O<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
@@ -372,6 +372,9 @@ When configuring with `ACTS_BUILD_ODD=ON`, the detector is fetched automatically
 
 To use it, build ACTS with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or
 `DYLD_LIBRARY_PATH` and `DD4HEP_LIBRARY_PATH` on macOS to the install path of the ODD factory (for example: `$ODD_BUILD_DIR/factory`). The setup scripts generated by the build do this automatically when present.
+
+> [!tip]
+> If you source `$BUILD/this_acts_withdeps.sh`, these library paths are set automatically and the ODD python components are available as well.
 
 You can now use the ODD in the python binding by using:
 

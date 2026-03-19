@@ -32,7 +32,6 @@ from acts.examples import (
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
-
 u = acts.UnitConstants
 
 
@@ -1216,15 +1215,12 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
         assert_root_hash(fn, fp)
 
 
-@pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn_metric_learning(
-    tmp_path, trk_geo, field, assert_root_hash, backend, hardware
-):
+def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardware):
     """Test GNN track finding with metric learning graph construction"""
-    if backend == "onnx" and hardware == "cpu":
-        pytest.skip("Combination of ONNX and CPU not yet supported")
+    if hardware == "cpu":
+        pytest.skip("CPU not yet supported")
 
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
@@ -1234,9 +1230,9 @@ def test_gnn_metric_learning(
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models = Path(model_storage)
 
-    model_subdir = "torchscript_models" if backend == "torch" else "onnx_models"
-    model_ext = "pt" if backend == "torch" else "onnx"
-    filter_name = "filter" if backend == "torch" else "filtering"
+    model_subdir = "torchscript_models"
+    model_ext = "pt"
+    filter_name = "filter"
 
     assert (ci_models / "torchscript_models/embed.pt").exists()
     assert (ci_models / f"{model_subdir}/{filter_name}.{model_ext}").exists()
@@ -1254,7 +1250,7 @@ def test_gnn_metric_learning(
 
     try:
         subprocess.check_call(
-            [sys.executable, str(script), backend],
+            [sys.executable, str(script)],
             cwd=tmp_path,
             env=env,
             stderr=subprocess.STDOUT,

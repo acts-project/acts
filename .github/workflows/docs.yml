@@ -19,6 +19,7 @@ jobs:
       DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
       DOXYGEN_VERSION: "1.15.0"
       DOXYGEN_HASH: "0ec2e5b2c3cd82b7106d19cb42d8466450730b8cb7a9e85af712be38bf4523a1"
+      LINKCHECK_IGNORE_URL: "https://github.com/acts-project/linkcheck-ignore/raw/refs/heads/main/data.json"
     steps:
       - uses: actions/checkout@v6
 
@@ -41,6 +42,13 @@ jobs:
       - name: Build documentation
         run: >
           cmake --build build --target docs
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Check documentation links
+        run: |
+          docs/check_links.sh
 
       - name: Generate PR metadata
         if: github.event_name == 'pull_request'

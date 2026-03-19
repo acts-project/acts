@@ -90,8 +90,14 @@ class DataHandleBase {
     return wb.pop<T>(m_key.value());
   }
 
-  WhiteBoard::IHolder* getHolder(const WhiteBoard& wb) const {
+  std::pair<Acts::AnyMoveOnly*, std::uint64_t> getHolder(
+      const WhiteBoard& wb) const {
     return wb.getHolder(m_key.value());
+  }
+
+  void addHolder(WhiteBoard& wb, std::unique_ptr<Acts::AnyMoveOnly> holder,
+                 std::uint64_t typeHash) const {
+    wb.addHolder(m_key.value(), std::move(holder), typeHash);
   }
 
   SequenceElement* m_parent{nullptr};
@@ -113,7 +119,7 @@ class WriteDataHandleBase : public DataHandleBase {
  public:
   void initialize(std::string_view key);
 
-  bool isCompatible(const DataHandleBase& other) const final;
+  bool isCompatible(const DataHandleBase& other) const override;
 
   void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
                const Acts::Logger& logger) const final;

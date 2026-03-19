@@ -40,7 +40,7 @@ pycparser==3.0
     # via cffi
 pygments==2.19.2
     # via rich
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via gidgethub
 rich==14.3.3
     # via
@@ -52,5 +52,5 @@ typer==0.24.1
     # via -r CI/fpe_masks/requirements.in
 uritemplate==4.2.0
     # via gidgethub
-yarl==1.22.0
+yarl==1.23.0
     # via aiohttp

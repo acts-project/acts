@@ -1,0 +1,3 @@
+set(unittest_extra_libraries ActsPluginMille)
+
+add_unittest(ActsMilleBasicCalls ActsMilleBasicCalls.cpp)
