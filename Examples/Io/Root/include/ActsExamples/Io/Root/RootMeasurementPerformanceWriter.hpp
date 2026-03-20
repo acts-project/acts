@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Utilities/Histogram.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -99,11 +99,11 @@ class RootMeasurementPerformanceWriter final
 
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
 
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
-  ReadDataHandle<IndexMultimap<SimBarcode>> m_inputMeasurementParticlesMap{
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
-  ReadDataHandle<InverseMultimap<Index>> m_inputSimHitMeasurementsMap{
+  ReadDataHandle<SimHitMeasurementsMap> m_inputSimHitMeasurementsMap{
       this, "InputSimHitMeasurementsMap"};
 
   /// protect multi-threaded writes
