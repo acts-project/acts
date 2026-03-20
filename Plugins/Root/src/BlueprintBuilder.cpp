@@ -115,15 +115,15 @@ TGeoBackend::Element TGeoBackend::world() const {
 }
 
 std::string TGeoBackend::nameOf(const Element& element) const {
-  if (m_cfg.nameProvider != nullptr) {
-    return m_cfg.nameProvider(element);
-  }
-
   const auto& context = contextOf(element);
+  const auto* volume = context.node->GetVolume();
+  if (volume != nullptr && volume->GetName() != nullptr) {
+    return volume->GetName();
+  }
   if (context.node->GetName() != nullptr) {
     return context.node->GetName();
   }
-  return context.node->GetVolume()->GetName();
+  return {};
 }
 
 std::vector<TGeoBackend::Element> TGeoBackend::children(

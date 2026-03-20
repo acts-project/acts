@@ -69,7 +69,6 @@ class TGeoBackend {
       const TGeoDetectorElement::Identifier&, const TGeoNode&,
       const TGeoMatrix&, AxisDefinition, double,
       std::shared_ptr<const Acts::ISurfaceMaterial>)>;
-  using NameProvider = std::function<std::string(const Element&)>;
   using ElementPredicate = std::function<bool(const Element&)>;
   using IdentifierProvider =
       std::function<TGeoDetectorElement::Identifier(const Element&)>;
@@ -84,7 +83,6 @@ class TGeoBackend {
     const TGeoNode* root = nullptr;
     double lengthScale = 1.0;
     DetectorElementFactory elementFactory = defaultElementFactory;
-    NameProvider nameProvider = {};
     ElementPredicate sensitivePredicate = {};
     IdentifierProvider identifierProvider = {};
   };

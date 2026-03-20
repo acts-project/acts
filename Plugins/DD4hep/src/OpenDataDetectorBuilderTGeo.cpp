@@ -130,21 +130,6 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfig(
   ActsPlugins::TGeoBackend::Config cfg;
   cfg.root = detector.world().placement().ptr();
   cfg.lengthScale = Acts::UnitConstants::cm;
-  cfg.nameProvider = [](const ActsPlugins::TGeoBackend::Element& element)
-      -> std::string {
-    if (element.context == nullptr || element.context->node == nullptr) {
-      return {};
-    }
-
-    const auto* volume = element.context->node->GetVolume();
-    if (volume != nullptr && volume->GetName() != nullptr) {
-      return volume->GetName();
-    }
-    if (element.context->node->GetName() != nullptr) {
-      return element.context->node->GetName();
-    }
-    return {};
-  };
   cfg.sensitivePredicate = hasSensitiveMaterial;
   return cfg;
 }
@@ -186,22 +171,20 @@ void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
     throw std::runtime_error(
         std::format("Could not find assembly '{}'", spec.assembly));
   }
-  const auto barrelElement =
-      builder.findDetElementByName(*assemblyElement, std::string{spec.barrelName});
+  const auto barrelElement = builder.findDetElementByName(
+      *assemblyElement, std::string{spec.barrelName});
   if (!barrelElement.has_value()) {
     throw std::runtime_error(
         std::format("Could not find barrel '{}'", spec.barrelName));
   }
-  const auto negativeEndcapElement =
-      builder.findDetElementByName(*assemblyElement,
-                                   std::string{spec.negativeEndcapName});
+  const auto negativeEndcapElement = builder.findDetElementByName(
+      *assemblyElement, std::string{spec.negativeEndcapName});
   if (!negativeEndcapElement.has_value()) {
     throw std::runtime_error(std::format("Could not find negative endcap '{}'",
                                          spec.negativeEndcapName));
   }
-  const auto positiveEndcapElement =
-      builder.findDetElementByName(*assemblyElement,
-                                   std::string{spec.positiveEndcapName});
+  const auto positiveEndcapElement = builder.findDetElementByName(
+      *assemblyElement, std::string{spec.positiveEndcapName});
   if (!positiveEndcapElement.has_value()) {
     throw std::runtime_error(std::format("Could not find positive endcap '{}'",
                                          spec.positiveEndcapName));
