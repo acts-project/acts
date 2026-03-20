@@ -82,7 +82,7 @@ def runGNN4ITk(
         )
     )
 
-    # Select primary particles with minimum 7 hits and 1 GeV pT for efficiency evaluation 
+    # Select primary particles with minimum 7 hits and 1 GeV pT for efficiency evaluation
     s.addWhiteboardAlias("particles_simulated_selected", "particles")
     particleSelectorConfig = ParticleSelectorConfig(
         pt=(1.0 * u.GeV, None),
