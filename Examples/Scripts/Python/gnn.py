@@ -54,7 +54,6 @@ def runGnnMetricLearning(
         ),
     )
 
-
     addSpacePointsMaking(
         s,
         geoSelectionConfigFile=geometrySelection,
