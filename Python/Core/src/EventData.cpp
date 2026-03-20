@@ -222,7 +222,14 @@ void addEventData(py::module_& m) {
           static_cast<FloatGetter>(&ConstSpacePointProxy2::varianceZ))
       .def_property_readonly(
           "varianceR",
-          static_cast<FloatGetter>(&ConstSpacePointProxy2::varianceR));
+          static_cast<FloatGetter>(&ConstSpacePointProxy2::varianceR))
+      .def_property_readonly(
+          "sourceLinks", py::cpp_function(
+                             [](const ConstSpacePointProxy2& self) {
+                               auto sls = self.sourceLinks();
+                               return py::make_iterator(sls.begin(), sls.end());
+                             },
+                             py::keep_alive<0, 1>()));
 
   // SeedContainer2
   auto seedContainer2 =
