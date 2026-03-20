@@ -25,12 +25,14 @@
 #include "ActsPlugins/DD4hep/BlueprintBuilder.hpp"
 #include "ActsPlugins/Root/BlueprintBuilder.hpp"
 
+#include <array>
 #include <format>
 #include <memory>
 #include <optional>
 #include <regex>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -65,31 +67,91 @@ static const Acts::ExtentEnvelope kLayerEnvelope =
         .set(Acts::AxisDirection::AxisZ, {2., 2.})
         .set(Acts::AxisDirection::AxisR, {2., 2.});
 
-template <typename Builder>
-auto makeLayerCustomizer(Builder& builder, std::string det,
-                         std::regex layerFilter) {
-  using Element = typename Builder::Element;
+int oddTGeoConstant(std::string_view name) {
+  static const std::unordered_map<std::string_view, int> kConstants = {
+      {"pix_e_sf_b_r", 2},    {"pix_e_sf_b_phi", 36},
+      {"pix_b_sf_b_z", 14},   {"pix_b0_sf_b_phi", 16},
+      {"pix_b1_sf_b_phi", 32},{"pix_b2_sf_b_phi", 52},
+      {"pix_b3_sf_b_phi", 78},{"ss_e_sf_b_r", 3},
+      {"ss_e_sf_b_phi", 42},  {"ss_b_sf_b_z", 21},
+      {"ss_b0_sf_b_phi", 40}, {"ss_b1_sf_b_phi", 56},
+      {"ss_b2_sf_b_phi", 78}, {"ss_b3_sf_b_phi", 102},
+      {"ls_e_sf_b_r", 2},     {"ls_e_sf_b_phi", 48},
+      {"ls_b_sf_b_z", 21},    {"ls_b0_sf_b_phi", 60},
+      {"ls_b1_sf_b_phi", 80},
+  };
 
+  if (auto it = kConstants.find(name); it != kConstants.end()) {
+    return it->second;
+  }
+
+  throw std::runtime_error(
+      std::format("Unknown hard-coded TGeo ODD constant '{}'", name));
+}
+
+int layerIndexFromName(std::string_view elemName, const std::regex& layerFilter) {
+  std::cmatch match;
+  if (std::regex_search(elemName.begin(), elemName.end(), match, layerFilter) &&
+      match.size() > 1) {
+    return std::stoi(match[1].str());
+  }
+
+  static const std::regex groupedLayerNameFilter{"layer(\\d+)"};
+  if (std::regex_search(elemName.begin(), elemName.end(), match,
+                        groupedLayerNameFilter) &&
+      match.size() > 1) {
+    return std::stoi(match[1].str());
+  }
+
+  return 0;
+}
+
+std::array<std::size_t, 2> oddTGeoBins(std::string_view det, bool isBarrelLayer,
+                                       int layerIdx) {
+  if (isBarrelLayer) {
+    return {static_cast<std::size_t>(
+                oddTGeoConstant(std::format("{}_b{}_sf_b_phi", det, layerIdx))),
+            static_cast<std::size_t>(oddTGeoConstant(
+                std::format("{}_b_sf_b_z", det)))};
+  }
+
+  return {static_cast<std::size_t>(
+              oddTGeoConstant(std::format("{}_e_sf_b_r", det))),
+          static_cast<std::size_t>(
+              oddTGeoConstant(std::format("{}_e_sf_b_phi", det)))};
+}
+
+bool hasSensitiveMaterial(const ActsPlugins::TGeoBackend::Element& element) {
+  if (element.context == nullptr || element.context->node == nullptr) {
+    return false;
+  }
+
+  const auto* volume = element.context->node->GetVolume();
+  if (volume == nullptr) {
+    return false;
+  }
+
+  const auto* medium = volume->GetMedium();
+  if (medium == nullptr || medium->GetMaterial() == nullptr ||
+      medium->GetMaterial()->GetName() == nullptr) {
+    return false;
+  }
+
+  return std::string_view{medium->GetMaterial()->GetName()}.find("Silicon") !=
+         std::string_view::npos;
+}
+
+auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
+                         std::string det, std::regex layerFilter) {
   return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
-             const std::optional<Element>& elem,
+             const std::optional<dd4hep::DetElement>& elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
     layer.setEnvelope(kLayerEnvelope);
 
-    int layerIdx = 0;
-    std::cmatch match;
     const std::string elemName =
         elem.has_value() ? std::string{builder.backend().nameOf(*elem)}
                          : layer.name();
-    if (std::regex_search(elemName.c_str(), match, layerFilter) &&
-        match.size() > 1) {
-      layerIdx = std::stoi(match[1].str());
-    } else {
-      static const std::regex groupedLayerNameFilter{"layer(\\d+)"};
-      if (std::regex_search(elemName.c_str(), match, groupedLayerNameFilter) &&
-          match.size() > 1) {
-        layerIdx = std::stoi(match[1].str());
-      }
-    }
+    const int layerIdx = layerIndexFromName(elemName, layerFilter);
 
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     using enum SrfArrayNavPol::LayerType;
@@ -107,6 +169,37 @@ auto makeLayerCustomizer(Builder& builder, std::string det,
       navCfg.bins = {builder.backend().constant("{}_e_sf_b_r", det),
                      builder.backend().constant("{}_e_sf_b_phi", det)};
     }
+
+    layer.setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
+                                         .add<Acts::CylinderNavigationPolicy>()
+                                         .add<SrfArrayNavPol>(navCfg)
+                                         .asUniquePtr());
+  };
+}
+
+auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
+                             std::string det, std::regex layerFilter) {
+  return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
+             const std::optional<ActsPlugins::TGeoBackend::Element>& elem,
+             Acts::Experimental::LayerBlueprintNode& layer) {
+    layer.setEnvelope(kLayerEnvelope);
+
+    const std::string elemName =
+        elem.has_value() ? std::string{builder.backend().nameOf(*elem)}
+                         : layer.name();
+    const int layerIdx = layerIndexFromName(elemName, layerFilter);
+
+    using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
+    using enum SrfArrayNavPol::LayerType;
+
+    SrfArrayNavPol::Config navCfg;
+    const bool isBarrelLayer =
+        layer.layerType() ==
+        Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
+    navCfg.layerType = isBarrelLayer ? Cylinder : Disc;
+
+    const auto bins = oddTGeoBins(det, isBarrelLayer, layerIdx);
+    navCfg.bins = {bins[0], bins[1]};
 
     layer.setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
                                          .add<Acts::CylinderNavigationPolicy>()
@@ -168,14 +261,7 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
     }
     return {};
   };
-  cfg.sensitivePredicate =
-      [nodeMap](const ActsPlugins::TGeoBackend::Element& element) {
-        auto detElement = lookupDetElement(*nodeMap, element);
-        return detElement.has_value() && detElement->volume().isSensitive();
-      };
-  cfg.constantProvider = [&detector](std::string_view name) {
-    return detector.constant<int>(std::string{name});
-  };
+  cfg.sensitivePredicate = hasSensitiveMaterial;
   return cfg;
 }
 
@@ -246,7 +332,7 @@ void addTGeoSubsystem(
                         .setLayerFilter(spec.barrelLayerFilter)
                         .setContainer(*barrelElement)
                         .setContainerName(std::string{spec.barrelName})
-                        .onLayer(makeLayerCustomizer(
+                        .onLayer(makeTGeoLayerCustomizer(
                             builder, std::string{spec.det}, spec.layerFilter))
                         .build();
   configureSubsystemNode(*barrelNode);
@@ -259,7 +345,7 @@ void addTGeoSubsystem(
                                 .setContainer(*negativeEndcapElement)
                                 .setContainerName(
                                     std::string{spec.negativeEndcapName})
-                                .onLayer(makeLayerCustomizer(
+                                .onLayer(makeTGeoLayerCustomizer(
                                     builder, std::string{spec.det},
                                     spec.layerFilter))
                                 .build();
@@ -273,7 +359,7 @@ void addTGeoSubsystem(
                                 .setContainer(*positiveEndcapElement)
                                 .setContainerName(
                                     std::string{spec.positiveEndcapName})
-                                .onLayer(makeLayerCustomizer(
+                                .onLayer(makeTGeoLayerCustomizer(
                                     builder, std::string{spec.det},
                                     spec.layerFilter))
                                 .build();
