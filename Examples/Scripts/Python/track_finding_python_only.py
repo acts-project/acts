@@ -127,7 +127,7 @@ def runTrackFindingPythonOnly(
         def execute(self, context):
             prototracks = self.prototracks(context.eventStore)
 
-            container = acts.examples.MutableTrackContainer()
+            container = acts.examples.TrackContainer()
             for prototrack in prototracks:
                 track = container.makeTrack()
                 track.setParameters([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])

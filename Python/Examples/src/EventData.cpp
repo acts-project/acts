@@ -252,7 +252,7 @@ void addEventData(py::module& mex) {
       .def("index", &IndexSourceLink::index)
       .def("geometryId", &IndexSourceLink::geometryId);
 
-  py::class_<TrackProxy>(mex, "MutableTrackProxy")
+  py::class_<TrackProxy>(mex, "TrackProxy")
       .def("setReferenceSurface",
            [](TrackProxy& self, std::shared_ptr<const Acts::Surface> srf) {
              self.setReferenceSurface(std::move(srf));
@@ -283,29 +283,21 @@ void addEventData(py::module& mex) {
           "chi2", [](TrackProxy& self) -> float { return self.chi2(); },
           [](TrackProxy& self, float v) { self.chi2() = v; });
 
-  struct PyMutableTrackContainer {
-    std::shared_ptr<Acts::VectorTrackContainer> trackContainer =
-        std::make_shared<Acts::VectorTrackContainer>();
-    std::shared_ptr<Acts::VectorMultiTrajectory> mtj =
-        std::make_shared<Acts::VectorMultiTrajectory>();
-    TrackContainer tracks{trackContainer, mtj};
-
-    TrackProxy makeTrack() { return tracks.makeTrack(); }
-    std::size_t size() const { return tracks.size(); }
-    ConstTrackContainer makeConst() {
-      return ConstTrackContainer{
-          std::make_shared<Acts::ConstVectorTrackContainer>(
-              std::move(*trackContainer)),
-          std::make_shared<Acts::ConstVectorMultiTrajectory>(std::move(*mtj))};
-    }
-  };
-
-  py::class_<PyMutableTrackContainer>(mex, "MutableTrackContainer")
-      .def(py::init<>())
-      .def("__len__", &PyMutableTrackContainer::size)
-      .def("makeTrack", &PyMutableTrackContainer::makeTrack,
-           py::keep_alive<0, 1>())
-      .def("makeConst", &PyMutableTrackContainer::makeConst);
+  py::class_<TrackContainer>(mex, "TrackContainer")
+      .def(py::init([]() {
+        return TrackContainer{
+            std::make_shared<Acts::VectorTrackContainer>(),
+            std::make_shared<Acts::VectorMultiTrajectory>()};
+      }))
+      .def("__len__", &TrackContainer::size)
+      .def("makeTrack", &TrackContainer::makeTrack, py::keep_alive<0, 1>())
+      .def("makeConst", [](TrackContainer& self) {
+        return ConstTrackContainer{
+            std::make_shared<Acts::ConstVectorTrackContainer>(
+                std::move(self.container())),
+            std::make_shared<Acts::ConstVectorMultiTrajectory>(
+                std::move(self.trackStateContainer()))};
+      });
 }
 
 }  // namespace ActsPython
