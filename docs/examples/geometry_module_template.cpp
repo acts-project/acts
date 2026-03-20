@@ -17,7 +17,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildMyGeometry(
     const Acts::Logger& logger) {
   ACTS_INFO("Building my geometry");
   // ... construct and return a TrackingGeometry ...
-  throw std::logic_error("not implemented");
+  return nullptr;
 }
 }  // namespace
 
