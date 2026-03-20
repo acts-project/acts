@@ -11,6 +11,7 @@
 #include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 
 #include <array>
 #include <cmath>
@@ -21,7 +22,7 @@
 
 namespace ActsExamples {
 
-void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
+void ModuleClusters::add(DigitizedParameters params, SimHitIndex simhit) {
   ModuleValue mval;
   mval.paramIndices = std::move(params.indices);
   mval.paramValues = std::move(params.values);
@@ -42,12 +43,12 @@ void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
   }
 }
 
-std::vector<std::pair<DigitizedParameters, std::set<ModuleClusters::simhit_t>>>
+std::vector<std::pair<DigitizedParameters, std::set<SimHitIndex>>>
 ModuleClusters::digitizedParameters() {
   if (m_merge) {  // (re-)build the clusters
     merge();
   }
-  std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>> retv;
+  std::vector<std::pair<DigitizedParameters, std::set<SimHitIndex>>> retv;
   for (ModuleValue& mval : m_moduleValues) {
     if (std::holds_alternative<Cluster::Cell>(mval.value)) {
       // Should never happen! Either the cluster should have
