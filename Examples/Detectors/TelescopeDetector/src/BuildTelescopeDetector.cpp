@@ -92,9 +92,11 @@ ActsExamples::buildTelescopeDetector(
     // Create the detector element
     std::shared_ptr<TelescopeDetectorElement> detElement = nullptr;
     if (surfaceType == TelescopeSurfaceType::Plane) {
-      detElement = factory(trafo, pBounds, 1._um, surfaceMaterial);
+      detElement =
+          factory(trafo, pBounds, 1._um, surfaceMaterial, detectorStore);
     } else {
-      detElement = factory(trafo, rBounds, 1._um, surfaceMaterial);
+      detElement =
+          factory(trafo, rBounds, 1._um, surfaceMaterial, detectorStore);
     }
     // Get the surface
     auto surface = detElement->surface().getSharedPtr();

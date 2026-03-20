@@ -20,14 +20,16 @@ AlignedTelescopeDetector::AlignedTelescopeDetector(const Config& cfg)
 
   // Set the detector element factory
   auto alignedDetectorElementFactory =
-      [&](const Acts::Transform3& transform,
-          std::variant<std::shared_ptr<const Acts::PlanarBounds>,
-                       std::shared_ptr<const Acts::DiscBounds>>
-              bounds,
-          double thickness,
-          std::shared_ptr<const Acts::ISurfaceMaterial> material) {
-        auto ID = static_cast<TelescopeDetectorElement::Identifier>(
-            m_detectorStore.size());
+      [](const Acts::Transform3& transform,
+         std::variant<std::shared_ptr<const Acts::PlanarBounds>,
+                      std::shared_ptr<const Acts::DiscBounds>>
+             bounds,
+         double thickness,
+         std::shared_ptr<const Acts::ISurfaceMaterial> material,
+         std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
+             detStore) {
+        auto ID =
+            static_cast<TelescopeDetectorElement::Identifier>(detStore.size());
         std::shared_ptr<AlignedTelescopeDetectorElement> detElem;
         if (bounds.index() == 0) {
           detElem = std::make_shared<AlignedTelescopeDetectorElement>(
@@ -40,7 +42,7 @@ AlignedTelescopeDetector::AlignedTelescopeDetector(const Config& cfg)
               std::get<std::shared_ptr<const Acts::DiscBounds>>(bounds),
               thickness, std::move(material));
         }
-        m_detectorStore.push_back(detElem);
+        detStore.push_back(detElem);
         return detElem;
       };
   m_trackingGeometry = buildTelescopeDetector(

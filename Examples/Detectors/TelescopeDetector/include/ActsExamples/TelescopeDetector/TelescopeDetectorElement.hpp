@@ -47,7 +47,8 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
           const Acts::Transform3&,
           std::variant<std::shared_ptr<const Acts::PlanarBounds>,
                        std::shared_ptr<const Acts::DiscBounds>>,
-          double, std::shared_ptr<const Acts::ISurfaceMaterial>)>;
+          double, std::shared_ptr<const Acts::ISurfaceMaterial>,
+          std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&)>;
 
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
