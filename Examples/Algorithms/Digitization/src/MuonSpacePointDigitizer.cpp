@@ -160,8 +160,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
   // need list here for stable addresses
   MeasurementContainer measurements;
 
-  IndexMultimap<SimBarcode> measurementParticlesMap;
-  IndexMultimap<Index> measurementSimHitsMap;
+  MeasurementParticlesMap measurementParticlesMap;
+  MeasurementSimHitsMap measurementSimHitsMap;
   measurements.reserve(gotSimHits.size());
   measurementParticlesMap.reserve(gotSimHits.size());
   measurementSimHitsMap.reserve(gotSimHits.size());

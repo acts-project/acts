@@ -198,10 +198,24 @@ def main():
         default=int(os.environ.get("LOCKFILE_CACHE_LIMIT", DEFAULT_CACHE_SIZE_LIMIT)),
         help="Cache size limit in bytes (defaults to LOCKFILE_CACHE_LIMIT env var)",
     )
+    parser.add_argument(
+        "--cxx",
+        type=str,
+        default=os.environ.get("CXXSTD", "20"),
+        help="C++ standard (e.g. 20, 23). Defaults to CXXSTD env var or 20.",
+    )
     args = parser.parse_args()
+
+    # Normalize to cxxNN format used in lockfile names
+    cxx = args.cxx.strip()
+    if not re.match(r"^\d+$", cxx):
+        print(f"Invalid C++ standard: {args.cxx} (expected a number, e.g. 20 or 23)")
+        exit(1)
+    args.cxx = f"cxx{cxx}"
 
     print("Fetching lockfiles for tag:", args.tag)
     print("Architecture:", args.arch)
+    print("C++ standard variant:", args.cxx)
 
     base_url = f"https://api.github.com/repos/acts-project/ci-dependencies/releases/tags/{args.tag}"
 
@@ -231,7 +245,7 @@ def main():
     else:
         compiler = None
 
-    lockfile = select_lockfile(lockfiles, args.arch, compiler)
+    lockfile = select_lockfile(lockfiles, args.arch, compiler, args.cxx)
 
     print("Selected lockfile:", lockfile)
 
@@ -245,53 +259,139 @@ def parse_assets(data: Dict) -> Dict[str, Dict[str, Tuple[str, str]]]:
 
     for asset in data["assets"]:
         url = asset["browser_download_url"]
-
         name = asset["name"]
-        if not name.endswith(".lock") or not name.startswith("spack_"):
+
+        if not name.startswith("spack_"):
             continue
 
-        m = re.match(r"spack_(.*(?:aarch64|x86_64))(?:_(.*))?\.lock", name)
-        if m is None:
+        # New format: spack_<arch>_<compiler>_<cxx>-locks[.ext]
+        # e.g. spack_linux-ubuntu24.04-aarch64_gcc@13.3.0_cxx20-locks
+        # e.g. spack_linux-ubuntu24.04-x86_64_llvm@22.1.1_cxx23-locks.tar.gz
+        m_new = re.match(
+            r"spack_(.*(?:aarch64|x86_64))_(.+)-locks(?:\.[a-zA-Z0-9]+)*$",
+            name,
+        )
+        if m_new:
+            arch, compiler_spec = m_new.groups()
+            lockfiles.setdefault(arch, {})[compiler_spec] = (name, url)
             continue
 
-        arch, compiler = m.groups()
-        compiler = compiler if compiler else "default"
-        lockfiles.setdefault(arch, {})[compiler] = (name, url)
+        # Legacy format: spack_<arch>[_(compiler)].lock
+        # e.g. spack_linux-ubuntu24.04-x86_64.lock
+        # e.g. spack_linux-ubuntu24.04-x86_64_gcc@13.3.0.lock
+        if name.endswith(".lock"):
+            m = re.match(r"spack_(.*(?:aarch64|x86_64))(?:_(.*))?\.lock", name)
+            if m:
+                arch, compiler = m.groups()
+                compiler = compiler if compiler else "default"
+                lockfiles.setdefault(arch, {})[compiler] = (name, url)
 
     return lockfiles
 
 
 def select_lockfile(
-    lockfiles: Dict[str, Dict[str, Tuple[str, str]]], arch: str, compiler: Optional[str]
-):
-    # Default to the default lockfile
-    _, lockfile = lockfiles[arch]["default"]
+    lockfiles: Dict[str, Dict[str, Tuple[str, str]]],
+    arch: str,
+    compiler: Optional[str],
+    cxx: str = "cxx20",
+) -> str:
+    arch_lockfiles = lockfiles[arch]
+
+    # Resolve default lockfile (legacy format has "default", new format may not)
+    if "default" in arch_lockfiles:
+        _, lockfile = arch_lockfiles["default"]
+    else:
+        # New format: no default, use first cxx20 variant when compiler unspecified
+        cxx_defaults = [
+            (comp, url)
+            for comp, (_, url) in arch_lockfiles.items()
+            if comp.endswith(f"_{cxx}")
+        ]
+        if cxx_defaults:
+            _, lockfile = cxx_defaults[0]
+        else:
+            _, lockfile = next(iter(arch_lockfiles.values()))
 
     if compiler is None:
         return lockfile
 
-    # Extract compiler family and version
-    compiler_family = compiler.split("@")[0]
+    def extract_version(spec: str) -> list:
+        """Extract version tuple for comparison (handles gcc@13.3.0 or gcc@13.3.0_cxx20)."""
+        base = spec.split("_")[0]
+        if "@" not in base:
+            return []
+        try:
+            return [int(v) for v in base.split("@")[1].split(".")]
+        except (ValueError, IndexError):
+            return []
 
-    # Find all matching compiler families
-    matching_compilers = {
-        comp: ver
-        for comp, ver in lockfiles[arch].items()
-        if comp != "default" and comp.split("@")[0] == compiler_family
+    # Spack uses "llvm" for clang; treat them as aliases
+    compiler_family = compiler.split("@")[0]
+    llvm_families = ["clang", "llvm"]
+    compiler_families = (
+        llvm_families if compiler_family in llvm_families else [compiler_family]
+    )
+
+    # Find all specs of matching compiler family (clang and llvm are aliases)
+    family_matches = {
+        comp: (name, url)
+        for comp, (name, url) in arch_lockfiles.items()
+        if comp != "default" and comp.split("@")[0] in compiler_families
     }
 
-    if matching_compilers:
-        if compiler in matching_compilers:
-            # Exact match found
-            _, lockfile = matching_compilers[compiler]
-        else:
-            # Find highest version of same compiler family
-            highest_version = max(
-                matching_compilers.keys(),
-                key=lambda x: [int(v) for v in x.split("@")[1].split(".")],
-            )
-            _, lockfile = matching_compilers[highest_version]
+    if not family_matches:
+        print(
+            f"No lockfile found for compiler family '{compiler_family}', "
+            f"falling back to default: {lockfile}"
+        )
+        return lockfile
 
+    # Filter to specs matching our exact compiler version
+    compiler_version = extract_version(compiler)
+    compiler_matches = {
+        comp: v
+        for comp, v in family_matches.items()
+        if compiler_version and extract_version(comp) == compiler_version
+    }
+
+    if not compiler_matches:
+        # No exact version match - use highest version of same family
+        highest = max(family_matches.keys(), key=extract_version)
+        _, lockfile = family_matches[highest]
+        print(
+            f"No lockfile found for compiler '{compiler}', "
+            f"falling back to highest version '{highest}': {lockfile}"
+        )
+        return lockfile
+
+    # Prefer cxx-specific variant; exact family name takes priority over alias
+    # (compiler_matches already contains both clang and llvm aliases)
+    cxx_matches = {
+        comp: v for comp, v in compiler_matches.items() if comp.endswith(f"_{cxx}")
+    }
+    if cxx_matches:
+        exact_family = next(
+            (
+                v
+                for comp, v in cxx_matches.items()
+                if comp.split("@")[0] == compiler_family
+            ),
+            None,
+        )
+        _, lockfile = exact_family or next(iter(cxx_matches.values()))
+        return lockfile
+
+    # Old format (no cxx suffix)
+    if compiler in compiler_matches:
+        _, lockfile = compiler_matches[compiler]
+        return lockfile
+
+    # Fallback: first available (e.g. different cxx variant)
+    first_comp, (_, lockfile) = next(iter(compiler_matches.items()))
+    print(
+        f"No lockfile found for compiler '{compiler}' with {cxx}, "
+        f"falling back to '{first_comp}': {lockfile}"
+    )
     return lockfile
 
 

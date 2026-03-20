@@ -99,6 +99,8 @@ def runGnnMetricLearning(
             )
         )
     elif gnnModelPath.suffix == ".onnx":
+        from acts.examples.gnn import OnnxEdgeClassifier
+
         edgeClassifiers.append(
             OnnxEdgeClassifier(**gnnConfig),
         )
@@ -152,16 +154,11 @@ if "__main__" == __name__:
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models = Path(model_storage)
-    if "onnx" in sys.argv:
-        embedModelPath = ci_models / "torchscript_models/embed.pt"
-        filterModelPath = ci_models / "torchscript_models/filter.pt"
-        gnnModelPath = ci_models / "torchscript_models/gnn.pt"
-    elif "torch" in sys.argv:
-        embedModelPath = ci_models / "torchscript_models/embed.pt"
-        filterModelPath = ci_models / "onnx_models/filtering.onnx"
-        gnnModelPath = ci_models / "onnx_models/gnn.onnx"
-    else:
-        raise ValueError("Please specify backend: 'torch' or 'onnx'")
+
+    # These models are chosen as they work without the torch-scatter dependency
+    embedModelPath = ci_models / "torchscript_models/embed.pt"
+    filterModelPath = ci_models / "torchscript_models/filter.pt"
+    gnnModelPath = ci_models / "onnx_models/gnn.onnx"
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
