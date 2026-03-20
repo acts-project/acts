@@ -25,10 +25,10 @@
 #include <memory>
 #include <optional>
 #include <regex>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 
 #include <DD4hep/Detector.h>
 
@@ -37,41 +37,51 @@
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
 
+namespace ActsPlugins::DD4hep {
+
 namespace {
 
-int oddTGeoConstant(std::string_view name) {
-  static const std::unordered_map<std::string_view, int> kConstants = {
-      {"pix_e_sf_b_r", 2},     {"pix_e_sf_b_phi", 36},  {"pix_b_sf_b_z", 14},
-      {"pix_b0_sf_b_phi", 16}, {"pix_b1_sf_b_phi", 32}, {"pix_b2_sf_b_phi", 52},
-      {"pix_b3_sf_b_phi", 78}, {"ss_e_sf_b_r", 3},      {"ss_e_sf_b_phi", 42},
-      {"ss_b_sf_b_z", 21},     {"ss_b0_sf_b_phi", 40},  {"ss_b1_sf_b_phi", 56},
-      {"ss_b2_sf_b_phi", 78},  {"ss_b3_sf_b_phi", 102}, {"ls_e_sf_b_r", 2},
-      {"ls_e_sf_b_phi", 48},   {"ls_b_sf_b_z", 21},     {"ls_b0_sf_b_phi", 60},
-      {"ls_b1_sf_b_phi", 80},
-  };
+struct TGeoLayerBinning {
+  std::span<const std::size_t> barrelPhiBins = {};
+  std::size_t barrelZBins = 0u;
+  std::array<std::size_t, 2> endcapBins = {0u, 0u};
 
-  if (auto it = kConstants.find(name); it != kConstants.end()) {
-    return it->second;
+  std::array<std::size_t, 2> binsFor(bool isBarrelLayer, int layerIdx) const {
+    if (!isBarrelLayer) {
+      return endcapBins;
+    }
+
+    if (layerIdx < 0 ||
+        static_cast<std::size_t>(layerIdx) >= barrelPhiBins.size()) {
+      throw std::runtime_error(std::format(
+          "No TGeo barrel binning configured for layer {}", layerIdx));
+    }
+
+    return {barrelPhiBins[static_cast<std::size_t>(layerIdx)], barrelZBins};
   }
+};
 
-  throw std::runtime_error(
-      std::format("Unknown hard-coded TGeo ODD constant '{}'", name));
-}
+constexpr std::array<std::size_t, 4> kPixelBarrelPhiBins = {16u, 32u, 52u, 78u};
+constexpr TGeoLayerBinning kPixelLayerBinning{
+    .barrelPhiBins = kPixelBarrelPhiBins,
+    .barrelZBins = 14u,
+    .endcapBins = {2u, 36u},
+};
 
-std::array<std::size_t, 2> oddTGeoBins(std::string_view det, bool isBarrelLayer,
-                                       int layerIdx) {
-  if (isBarrelLayer) {
-    return {static_cast<std::size_t>(
-                oddTGeoConstant(std::format("{}_b{}_sf_b_phi", det, layerIdx))),
-            static_cast<std::size_t>(
-                oddTGeoConstant(std::format("{}_b_sf_b_z", det)))};
-  }
+constexpr std::array<std::size_t, 4> kShortStripBarrelPhiBins = {40u, 56u, 78u,
+                                                                 102u};
+constexpr TGeoLayerBinning kShortStripLayerBinning{
+    .barrelPhiBins = kShortStripBarrelPhiBins,
+    .barrelZBins = 21u,
+    .endcapBins = {3u, 42u},
+};
 
-  return {static_cast<std::size_t>(
-              oddTGeoConstant(std::format("{}_e_sf_b_r", det))),
-          static_cast<std::size_t>(
-              oddTGeoConstant(std::format("{}_e_sf_b_phi", det)))};
-}
+constexpr std::array<std::size_t, 2> kLongStripBarrelPhiBins = {60u, 80u};
+constexpr TGeoLayerBinning kLongStripLayerBinning{
+    .barrelPhiBins = kLongStripBarrelPhiBins,
+    .barrelZBins = 21u,
+    .endcapBins = {2u, 48u},
+};
 
 bool hasSensitiveMaterial(const ActsPlugins::TGeoBackend::Element& element) {
   if (element.context == nullptr || element.context->node == nullptr) {
@@ -94,17 +104,16 @@ bool hasSensitiveMaterial(const ActsPlugins::TGeoBackend::Element& element) {
 }
 
 auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
-                             std::string det, std::regex layerFilter) {
-  return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
+                             TGeoLayerBinning binning, std::regex layerFilter) {
+  return [&builder, binning, layerFilter = std::move(layerFilter)](
              const std::optional<ActsPlugins::TGeoBackend::Element>& elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
-    layer.setEnvelope(ActsPlugins::DD4hep::detail::kLayerEnvelope);
+    layer.setEnvelope(detail::kLayerEnvelope);
 
     const std::string elemName =
         elem.has_value() ? std::string{builder.backend().nameOf(*elem)}
                          : layer.name();
-    const int layerIdx =
-        ActsPlugins::DD4hep::detail::layerIndexFromName(elemName, layerFilter);
+    const int layerIdx = detail::layerIndexFromName(elemName, layerFilter);
 
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     using enum SrfArrayNavPol::LayerType;
@@ -115,7 +124,7 @@ auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
         Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
     navCfg.layerType = isBarrelLayer ? Cylinder : Disc;
 
-    const auto bins = oddTGeoBins(det, isBarrelLayer, layerIdx);
+    const auto bins = binning.binsFor(isBarrelLayer, layerIdx);
     navCfg.bins = {bins[0], bins[1]};
 
     layer.setNavigationPolicyFactory(Acts::NavigationPolicyFactory{}
@@ -125,9 +134,8 @@ auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
   };
 }
 
-ActsPlugins::TGeoBackend::Config makeTGeoConfig(
-    const dd4hep::Detector& detector) {
-  ActsPlugins::TGeoBackend::Config cfg;
+TGeoBackend::Config makeTGeoConfig(const dd4hep::Detector& detector) {
+  TGeoBackend::Config cfg;
   cfg.root = detector.world().placement().ptr();
   cfg.lengthScale = Acts::UnitConstants::cm;
   cfg.sensitivePredicate = hasSensitiveMaterial;
@@ -152,10 +160,10 @@ void configureSubsystemNode(Acts::Experimental::ContainerBlueprintNode& node) {
 
 struct TGeoSubsystemSpec {
   std::string_view assembly;
-  std::string_view det;
   std::string_view barrelName;
   std::string_view negativeEndcapName;
   std::string_view positiveEndcapName;
+  TGeoLayerBinning binning;
   const std::regex& layerFilter;
   const std::regex& barrelLayerFilter;
   const std::regex& negativeEndcapLayerFilter;
@@ -201,8 +209,8 @@ void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
                         .setLayerFilter(spec.barrelLayerFilter)
                         .setContainer(*barrelElement)
                         .setContainerName(std::string{spec.barrelName})
-                        .onLayer(makeTGeoLayerCustomizer(
-                            builder, std::string{spec.det}, spec.layerFilter))
+                        .onLayer(makeTGeoLayerCustomizer(builder, spec.binning,
+                                                         spec.layerFilter))
                         .build();
   configureSubsystemNode(*barrelNode);
   subsystemNode->addChild(std::move(barrelNode));
@@ -214,8 +222,8 @@ void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
           .setLayerFilter(spec.negativeEndcapLayerFilter)
           .setContainer(*negativeEndcapElement)
           .setContainerName(std::string{spec.negativeEndcapName})
-          .onLayer(makeTGeoLayerCustomizer(builder, std::string{spec.det},
-                                           spec.layerFilter))
+          .onLayer(
+              makeTGeoLayerCustomizer(builder, spec.binning, spec.layerFilter))
           .build();
   configureSubsystemNode(*negativeEndcapNode);
   subsystemNode->addChild(std::move(negativeEndcapNode));
@@ -227,8 +235,8 @@ void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
           .setLayerFilter(spec.positiveEndcapLayerFilter)
           .setContainer(*positiveEndcapElement)
           .setContainerName(std::string{spec.positiveEndcapName})
-          .onLayer(makeTGeoLayerCustomizer(builder, std::string{spec.det},
-                                           spec.layerFilter))
+          .onLayer(
+              makeTGeoLayerCustomizer(builder, spec.binning, spec.layerFilter))
           .build();
   configureSubsystemNode(*positiveEndcapNode);
   subsystemNode->addChild(std::move(positiveEndcapNode));
@@ -237,8 +245,6 @@ void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
 }
 
 }  // namespace
-
-namespace ActsPlugins::DD4hep {
 
 std::unique_ptr<Acts::TrackingGeometry>
 buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
@@ -262,45 +268,39 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
   addTGeoSubsystem(
       builder, outer,
       {.assembly = "Pixels",
-       .det = "pix",
        .barrelName = "PixelBarrel",
        .negativeEndcapName = "PixelEndcapN",
        .positiveEndcapName = "PixelEndcapP",
-       .layerFilter = ActsPlugins::DD4hep::detail::kTGeoPixelLayerFilter,
-       .barrelLayerFilter =
-           ActsPlugins::DD4hep::detail::kTGeoPixelBarrelLayerFilter,
-       .negativeEndcapLayerFilter =
-           ActsPlugins::DD4hep::detail::kPixelNegativeEndcapLayerFilter,
-       .positiveEndcapLayerFilter =
-           ActsPlugins::DD4hep::detail::kPixelPositiveEndcapLayerFilter});
+       .binning = kPixelLayerBinning,
+       .layerFilter = detail::kTGeoPixelLayerFilter,
+       .barrelLayerFilter = detail::kTGeoPixelBarrelLayerFilter,
+       .negativeEndcapLayerFilter = detail::kPixelNegativeEndcapLayerFilter,
+       .positiveEndcapLayerFilter = detail::kPixelPositiveEndcapLayerFilter});
   addTGeoSubsystem(
       builder, outer,
       {.assembly = "ShortStrips",
-       .det = "ss",
        .barrelName = "ShortStripBarrel",
        .negativeEndcapName = "ShortStripEndcapN",
        .positiveEndcapName = "ShortStripEndcapP",
-       .layerFilter = ActsPlugins::DD4hep::detail::kTGeoShortStripLayerFilter,
-       .barrelLayerFilter =
-           ActsPlugins::DD4hep::detail::kTGeoShortStripBarrelLayerFilter,
+       .binning = kShortStripLayerBinning,
+       .layerFilter = detail::kTGeoShortStripLayerFilter,
+       .barrelLayerFilter = detail::kTGeoShortStripBarrelLayerFilter,
        .negativeEndcapLayerFilter =
-           ActsPlugins::DD4hep::detail::kShortStripNegativeEndcapLayerFilter,
+           detail::kShortStripNegativeEndcapLayerFilter,
        .positiveEndcapLayerFilter =
-           ActsPlugins::DD4hep::detail::kShortStripPositiveEndcapLayerFilter});
+           detail::kShortStripPositiveEndcapLayerFilter});
   addTGeoSubsystem(
       builder, outer,
       {.assembly = "LongStrips",
-       .det = "ls",
        .barrelName = "LongStripBarrel",
        .negativeEndcapName = "LongStripEndcapN",
        .positiveEndcapName = "LongStripEndcapP",
-       .layerFilter = ActsPlugins::DD4hep::detail::kTGeoLongStripLayerFilter,
-       .barrelLayerFilter =
-           ActsPlugins::DD4hep::detail::kTGeoLongStripBarrelLayerFilter,
-       .negativeEndcapLayerFilter =
-           ActsPlugins::DD4hep::detail::kLongStripNegativeEndcapLayerFilter,
+       .binning = kLongStripLayerBinning,
+       .layerFilter = detail::kTGeoLongStripLayerFilter,
+       .barrelLayerFilter = detail::kTGeoLongStripBarrelLayerFilter,
+       .negativeEndcapLayerFilter = detail::kLongStripNegativeEndcapLayerFilter,
        .positiveEndcapLayerFilter =
-           ActsPlugins::DD4hep::detail::kLongStripPositiveEndcapLayerFilter});
+           detail::kLongStripPositiveEndcapLayerFilter});
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
