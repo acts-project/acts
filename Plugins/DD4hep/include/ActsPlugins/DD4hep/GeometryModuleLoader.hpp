@@ -30,6 +30,10 @@ class TrackingGeometry;
 /// validate ABI compatibility, build and return the tracking geometry.
 /// The returned deleter keeps the module loaded until the geometry is
 /// destroyed.
+/// @param modulePath Path to the geometry module shared library.
+/// @param detector DD4hep detector instance passed to the module.
+/// @param logger Logger instance used by the module loader.
+/// @return Shared pointer to the loaded tracking geometry.
 std::shared_ptr<TrackingGeometry> loadDD4hepGeometryModule(
     const std::filesystem::path& modulePath, const dd4hep::Detector& detector,
     const Logger& logger = getDummyLogger());

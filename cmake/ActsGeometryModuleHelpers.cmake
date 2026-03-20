@@ -7,12 +7,12 @@ function(acts_add_geometry_module target)
         )
     endif()
     if(
-        NOT DEFINED Acts_GEOMETRY_MODULE_ABI_TAG
-        OR Acts_GEOMETRY_MODULE_ABI_TAG STREQUAL ""
+        NOT DEFINED ACTS_GEOMETRY_MODULE_ABI_TAG
+        OR ACTS_GEOMETRY_MODULE_ABI_TAG STREQUAL ""
     )
         message(
             FATAL_ERROR
-            "Acts_GEOMETRY_MODULE_ABI_TAG is not set; cannot configure geometry module target '${target}'."
+            "ACTS_GEOMETRY_MODULE_ABI_TAG is not set; cannot configure geometry module target '${target}'."
         )
     endif()
 
@@ -21,6 +21,6 @@ function(acts_add_geometry_module target)
     target_link_libraries(${target} PRIVATE Acts::Core)
     target_compile_definitions(
         ${target}
-        PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${Acts_GEOMETRY_MODULE_ABI_TAG}"
+        PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${ACTS_GEOMETRY_MODULE_ABI_TAG}"
     )
 endfunction()

@@ -26,6 +26,9 @@ class TrackingGeometry;
 /// the tracking geometry. The returned deleter keeps the module loaded until
 /// the geometry is destroyed. Throws if the module requires user data (e.g.
 /// a DD4hep module) — use the appropriate typed loader instead.
+/// @param modulePath Path to the geometry module shared library.
+/// @param logger Logger instance used by the module loader.
+/// @return Shared pointer to the loaded tracking geometry.
 std::shared_ptr<TrackingGeometry> loadGeometryModule(
     const std::filesystem::path& modulePath,
     const Logger& logger = getDummyLogger());
