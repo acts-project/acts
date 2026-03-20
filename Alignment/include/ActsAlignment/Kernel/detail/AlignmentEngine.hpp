@@ -81,7 +81,7 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 /// Updates in-place the chi2 and the matrix/vector forming the final
 /// equation.
 /// @param [in,out] alignState: TrackAlignmentState to modify (in-place).
-void finaliseTrackAlignState(TrackAlignmentState& alignState) {
+inline void finaliseTrackAlignState(TrackAlignmentState& alignState) {
   // Calculate the chi2 and chi2 derivatives based on the alignment matrixs
   alignState.chi2 = alignState.residual.transpose() *
                     alignState.measurementCovariance.inverse() *
