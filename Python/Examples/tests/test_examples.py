@@ -518,22 +518,6 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_recording(tmp_path, material_recording, assert_root_hash):
-
-    from material_recording import runMaterialRecording
-
-    with getOpenDataDetector() as detector:
-
-        s = acts.examples.Sequencer(events=200, numThreads=1)
-        runMaterialRecording(
-            detector,
-            s,
-            tracksPerEvent=1000,
-            etaRange=(-4.0, 4.0),
-            phiRange=(0.0, 360.0 * u.degree),
-            outputFile=tmp_path / "geant4_material_tracks.root",
-            materialTrackCollectionName="material-tracks",
-        )
-
     root_files = [
         (
             "geant4_material_tracks.root",
@@ -584,35 +568,29 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     map_file = tmp_path / "material-map_tracks.root"
     assert not map_file.exists()
 
-    odd_dir = getOpenDataDetectorDirectory()
-    config = acts.json.MaterialMapJsonConverter.Config()
-    materialDecorator = acts.json.JsonMaterialDecorator(
-        level=acts.logging.INFO,
-        rConfig=config,
-        jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
-    )
+    odd = getOpenDataDetector()
+    trackingGeometry = odd.trackingGeometry()
+    materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(materialDecorator) as detector:
-        trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
+    runMaterialMapping(
+        surfaces=materialSurfaces,
+        inputFile=material_recording / "geant4_material_tracks.root",
+        outputFileBase=str(tmp_path / "material-map"),
+        outputMapFormats=["json", "root"],
+        loglevel=acts.logging.INFO,
+        outputMaterialTracks="material-tracks",
+        treeName="material-tracks",
+        readCachedSurfaceInformation=False,
+    )
 
-        runMaterialMapping(
-            trackingGeometry,
-            decorators,
-            outputDir=str(tmp_path),
-            inputDir=material_recording,
-            mappingStep=1,
-            s=s,
-        )
-
-        s.run()
+    s.run()
 
     mat_file = tmp_path / "material-map.json"
 
     assert map_file.exists()
-    assert_entries(map_file, "material_tracks", 200)
+    assert_entries(map_file, "material-tracks", 200)
     assert_root_hash(map_file.name, map_file)
 
     assert mat_file.exists()
@@ -639,12 +617,13 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
             s=s,
             tracksPerEvent=1000,
             outputFile=tmp_path / "validation-material",
+            materialTrackCollectionName="material-tracks",
         )
 
         s.run()
 
     assert val_file.exists()
-    assert_entries(val_file, "material_tracks", 10000)
+    assert_entries(val_file, "material-tracks", 10000)
     assert_root_hash(val_file.name, val_file)
 
 

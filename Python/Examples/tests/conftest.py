@@ -394,10 +394,10 @@ def _do_material_recording(d: Path):
         runMaterialRecording(
             detector=detector,
             s=s,
-            tracksPerEvent=100,
+            tracksPerEvent=1000,
             outputFile=d / "geant4_material_tracks",
+            materialTrackCollectionName="material-tracks",
         )
-
         s.run()
 
 
