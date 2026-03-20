@@ -7,6 +7,5 @@ updates:
 
   - package-ecosystem: "pre-commit"
     directory: "/"
-    target-branch: "pre-commit-bot"
     schedule:
       interval: "weekly"
