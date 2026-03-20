@@ -21,8 +21,10 @@ Acts::DynamicMatrix regulariseCovariance(const Acts::DynamicMatrix& inputCov,
   Acts::DynamicMatrix out =
       Acts::DynamicMatrix::Zero(inputCov.rows(), inputCov.cols());
 
-  auto eigensolver =
-      Eigen::SelfAdjointEigenSolver<Acts::DynamicMatrix>(inputCov);
+  /// add a tiny diagonal matrix for additional stabilisation
+  auto eigensolver = Eigen::SelfAdjointEigenSolver<Acts::DynamicMatrix>(
+      inputCov +
+      1.e-10 * Acts::DynamicMatrix::Identity(inputCov.rows(), inputCov.cols()));
 
   if (eigensolver.info() != Eigen::Success) {
     std::cout << " FAILED to find eigenvec" << std::endl;
@@ -53,18 +55,12 @@ Acts::DynamicMatrix regulariseCovariance(const Acts::DynamicMatrix& inputCov,
 Acts::DynamicMatrix getInverseComplement(
     const Acts::DynamicMatrix& target,
     const Acts::DynamicMatrix& existing_sol) {
-  Acts::DynamicMatrix solution =
-      Acts::DynamicMatrix::Zero(target.rows(), target.cols());
   Acts::DynamicMatrix Rhs =
       Acts::DynamicMatrix::Identity(target.rows(), target.cols()) -
       target * existing_sol;
   // call decomposition from Eigen (prefer over llt for semi-def. matrices)
   auto LDLT = target.ldlt();
-
-  // incrementally populate the solution matrix
-  for (int c = 0; c < target.cols(); ++c) {
-    solution.col(c) = LDLT.solve(Rhs.col(c));
-  }
+  Acts::DynamicMatrix solution = LDLT.solve(Rhs);
   // finally, symmetrise to correct for floating point effects
   solution = 0.5 * (solution + solution.transpose());
   return solution;
