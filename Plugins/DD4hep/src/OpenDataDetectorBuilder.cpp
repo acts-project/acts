@@ -499,11 +499,11 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
         const std::string name{builder.backend().nameOf(current)};
         if (std::regex_search(name.c_str(), match, layerFilter) &&
             match.size() > 1) {
-          return std::format("layer{}", match[1].str());
+          return builder.getPathToElementName(current);
         }
         current = builder.backend().parent(current);
       }
-      return std::string{builder.backend().nameOf(elem)};
+      return builder.getPathToElementName(elem);
     };
 
     for (const auto& barrel : barrels) {
