@@ -4,8 +4,14 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+      day: "sunday"
+      time: "01:23"
+      timezone: "Europe/Zurich"
 
   - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
+      time: "01:23"
+      timezone: "Europe/Zurich"
