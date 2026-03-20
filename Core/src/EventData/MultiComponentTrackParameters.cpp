@@ -18,7 +18,7 @@ namespace Acts {
 
 BoundTrackParameters MultiComponentBoundTrackParameters::merge(
     const ComponentMergeMethod method) const {
-  if (size() == 0) {
+  if (empty()) {
     throw std::logic_error(
         "Cannot merge MultiComponentBoundTrackParameters with zero components");
   }
