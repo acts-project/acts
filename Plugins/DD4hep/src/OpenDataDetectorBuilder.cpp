@@ -180,9 +180,10 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
 }
 
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
-makeTemporaryTGeoBeampipeNode() {
+makeTemporaryTGeoBeampipeNode(const dd4hep::Detector& detector) {
+  (void)detector;
   auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
-      0., 19. * Acts::UnitConstants::mm, 3. * Acts::UnitConstants::m);
+      0., 19. * Acts::UnitConstants::mm, 4. * Acts::UnitConstants::m);
   std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
       Acts::Transform3::Identity(), volumeBounds, "BeamPipe");
   return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
@@ -211,49 +212,73 @@ void addTGeoSubsystem(
     ActsPlugins::BlueprintBuilder& builder,
     Acts::Experimental::BlueprintNode& parent,
     const TGeoSubsystemSpec& spec) {
-  const auto assemblyElement =
-      builder.findDetElementByName(std::string{spec.assembly});
+  const auto assemblyElement = builder.findDetElementByName(std::string{spec.assembly});
   if (!assemblyElement.has_value()) {
     throw std::runtime_error(
         std::format("Could not find assembly '{}'", spec.assembly));
+  }
+  const auto barrelElement =
+      builder.findDetElementByName(std::string{spec.barrelName});
+  if (!barrelElement.has_value()) {
+    throw std::runtime_error(
+        std::format("Could not find barrel '{}'", spec.barrelName));
+  }
+  const auto negativeEndcapElement =
+      builder.findDetElementByName(std::string{spec.negativeEndcapName});
+  if (!negativeEndcapElement.has_value()) {
+    throw std::runtime_error(std::format("Could not find negative endcap '{}'",
+                                         spec.negativeEndcapName));
+  }
+  const auto positiveEndcapElement =
+      builder.findDetElementByName(std::string{spec.positiveEndcapName});
+  if (!positiveEndcapElement.has_value()) {
+    throw std::runtime_error(std::format("Could not find positive endcap '{}'",
+                                         spec.positiveEndcapName));
   }
 
   auto subsystemNode =
       std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
           builder.backend().nameOf(*assemblyElement), Acts::AxisDirection::AxisZ);
 
-  auto addLayerContainer = [&](auto&& assembler) {
-    auto node = assembler.build();
-    configureSubsystemNode(*node);
-    subsystemNode->addChild(std::move(node));
-  };
-
-  addLayerContainer(builder.layers()
+  auto barrelNode = builder.layers()
                         .barrel()
                         .setSensorAxes("XYZ")
                         .setLayerFilter(spec.barrelLayerFilter)
-                        .setContainer(*assemblyElement)
+                        .setContainer(*barrelElement)
                         .setContainerName(std::string{spec.barrelName})
                         .onLayer(makeLayerCustomizer(
-                            builder, std::string{spec.det}, spec.layerFilter)));
+                            builder, std::string{spec.det}, spec.layerFilter))
+                        .build();
+  configureSubsystemNode(*barrelNode);
+  subsystemNode->addChild(std::move(barrelNode));
 
-  addLayerContainer(builder.layers()
-                        .endcap()
-                        .setSensorAxes("XZY")
-                        .setLayerFilter(spec.negativeEndcapLayerFilter)
-                        .setContainer(*assemblyElement)
-                        .setContainerName(std::string{spec.negativeEndcapName})
-                        .onLayer(makeLayerCustomizer(
-                            builder, std::string{spec.det}, spec.layerFilter)));
+  auto negativeEndcapNode = builder.layers()
+                                .endcap()
+                                .setSensorAxes("XZY")
+                                .setLayerFilter(spec.negativeEndcapLayerFilter)
+                                .setContainer(*negativeEndcapElement)
+                                .setContainerName(
+                                    std::string{spec.negativeEndcapName})
+                                .onLayer(makeLayerCustomizer(
+                                    builder, std::string{spec.det},
+                                    spec.layerFilter))
+                                .build();
+  configureSubsystemNode(*negativeEndcapNode);
+  subsystemNode->addChild(std::move(negativeEndcapNode));
 
-  addLayerContainer(builder.layers()
-                        .endcap()
-                        .setSensorAxes("XZY")
-                        .setLayerFilter(spec.positiveEndcapLayerFilter)
-                        .setContainer(*assemblyElement)
-                        .setContainerName(std::string{spec.positiveEndcapName})
-                        .onLayer(makeLayerCustomizer(
-                            builder, std::string{spec.det}, spec.layerFilter)));
+  auto positiveEndcapNode = builder.layers()
+                                .endcap()
+                                .setSensorAxes("XZY")
+                                .setLayerFilter(spec.positiveEndcapLayerFilter)
+                                .setContainer(*positiveEndcapElement)
+                                .setContainerName(
+                                    std::string{spec.positiveEndcapName})
+                                .onLayer(makeLayerCustomizer(
+                                    builder, std::string{spec.det},
+                                    spec.layerFilter))
+                                .build();
+  configureSubsystemNode(*positiveEndcapNode);
+  subsystemNode->addChild(std::move(positiveEndcapNode));
 
   parent.addChild(std::move(subsystemNode));
 }
@@ -332,7 +357,7 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(makeTemporaryTGeoBeampipeNode());
+  outer.addChild(makeTemporaryTGeoBeampipeNode(detector));
   addTGeoSubsystem(builder, outer,
                    {.assembly = "Pixels",
                     .det = "pix",

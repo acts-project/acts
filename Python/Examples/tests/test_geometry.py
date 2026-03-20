@@ -174,8 +174,6 @@ def test_odd_gen3(constructionMethod):
         assert visitor.num_surfaces > 0
         assert visitor.num_volumes > 0
 
-        # Exact counts for the default BarrelEndcap path
-        # if constructionMethod in (None, "BarrelEndcap"):
         assert visitor.num_surfaces == 19261
         assert visitor.num_volumes == 109
         assert visitor.num_portals == 437
