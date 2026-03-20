@@ -10,6 +10,8 @@
 
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
+#include "Mille/IMilleReader.h"
+#include "Mille/MilleDecoder.h"
 #include "Mille/MilleRecord.h"
 
 namespace ActsPlugins::ActsToMille {
@@ -29,5 +31,18 @@ using Mille::MilleRecord;
 //  for production use.
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
                  MilleRecord* record);
+
+/// @brief read one record (= track or (constrained) track pair) from
+/// a Mille binary into the equivalent matrices of a TrackAlignmentState.
+/// Allows to use Mille to collect tracks across multiple events and
+/// align them with the ACTS solver, and to validate the outputs of dumpToMille.
+/// @param reader: A Mille Reader, connected to a valid input file.
+/// @param targetState: The TrackAlignmentState to populate. The *alignedSurfaces* member
+/// should already be pre-populated by the caller.
+/// @return a ReadResult enum with 3 possible states to indicate the outcome- ok / end-of-file / read-error.
+/// The targetState will only be modified if the result is 'ok'.
+Mille::MilleDecoder::ReadResult unpackMilleRecord(
+    Mille::IMilleReader& reader,
+    ActsAlignment::detail::TrackAlignmentState& targetState);
 
 }  // namespace ActsPlugins::ActsToMille
