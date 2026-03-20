@@ -20,7 +20,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildMyGeometry(
   (void)detector;
   ACTS_INFO("Building DD4hep geometry");
   // ... use detector to build and return a TrackingGeometry ...
-  throw std::logic_error("not implemented");
+  return nullptr;
 }
 }  // namespace
 

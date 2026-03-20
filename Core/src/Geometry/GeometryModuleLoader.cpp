@@ -93,8 +93,8 @@ std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
 
   // Validate user_data_type: both sides must agree on whether userData is
   // needed and what type it is.
-  const char* actualType = descriptor->user_data_type;
-  if (!((expectedUserDataType == nullptr && actualType == nullptr) ||
+  if (const char* actualType = descriptor->user_data_type;
+      !((expectedUserDataType == nullptr && actualType == nullptr) ||
         (expectedUserDataType != nullptr && actualType != nullptr &&
          std::strcmp(actualType, expectedUserDataType) == 0))) {
     if (actualType == nullptr) {
