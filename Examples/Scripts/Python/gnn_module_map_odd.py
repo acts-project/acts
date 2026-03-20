@@ -237,7 +237,9 @@ if __name__ == "__main__":
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models_odd = Path(model_storage)
-    moduleMapPath = str(ci_models_odd / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH")
+    moduleMapPath = str(
+        ci_models_odd / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH"
+    )
     gnnModel = str(ci_models_odd / "gnn_odd_module_map.pt")
     outputDir = Path.cwd()
     events = 100
