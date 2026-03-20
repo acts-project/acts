@@ -75,6 +75,7 @@ def main():
         "Core/include/Acts/EventData/detail/ParameterTraits.hpp",
         "Core/include/Acts/Seeding/PathSeeder.hpp",
         "Tests/CommonHelpers/include/ActsTests/CommonHelpers/TestSpacePoint.hpp",
+        "GeometryModule.h",
     )
 
     suffix_header = (
