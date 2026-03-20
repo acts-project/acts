@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 
 #include <map>
+#include <set>
 #include <vector>
 
 std::uint32_t ActsExamples::getNumberOfReconstructableVertices(
