@@ -143,7 +143,8 @@ TGeoBackend::Config makeTGeoConfig(const dd4hep::Detector& detector) {
 }
 
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
-makeTemporaryTGeoBeampipeNode() {
+makeTGeoBeampipeNode() {
+  // Arbitrary and hard-coded values for the beampipe.
   auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
       0., 19. * Acts::UnitConstants::mm, 4. * Acts::UnitConstants::m);
   std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
@@ -264,7 +265,7 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(makeTemporaryTGeoBeampipeNode());
+  outer.addChild(makeTGeoBeampipeNode());
   addTGeoSubsystem(
       builder, outer,
       {.assembly = "Pixels",
