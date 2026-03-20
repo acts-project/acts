@@ -72,12 +72,15 @@ namespace {
 struct TrackStateCreator final
     : public Acts::Experimental::TrackStateCreatorBase<TrackStateCreator> {
   using Base = Acts::Experimental::TrackStateCreatorBase<TrackStateCreator>;
-  using Traj = Acts::VectorMultiTrajectory;
+  using TrackStateContainer = Acts::VectorMultiTrajectory;
+  using TrackStateProxy = typename TrackStateContainer::TrackStateProxy;
+  using State =
+      typename Base::template State<TrackStateProxy, TrackStateContainer>;
 
   const MeasurementContainer* measurements = nullptr;
   std::optional<ConstSeedProxy> seed;
 
-  bool isSeedCandidate(const Traj::TrackStateProxy& candidate) const {
+  bool isSeedCandidate(const TrackStateProxy& candidate) const {
     assert(candidate.hasUncalibratedSourceLink());
     assert(seed.has_value());
 
@@ -95,11 +98,10 @@ struct TrackStateCreator final
   }
 
   // TODO
-  // void select(std::vector<Traj::TrackStateProxy>& candidates, bool&
-  // isOutlier,
+  // void select(std::vector<TrackStateProxy>& candidates, bool& isOutlier,
   //             const Acts::Logger& logger) const {
   //   if (seed.has_value()) {
-  //     std::vector<Traj::TrackStateProxy> newCandidates;
+  //     std::vector<TrackStateProxy> newCandidates;
 
   //     for (const auto& candidate : candidates) {
   //       if (isSeedCandidate(candidate)) {
@@ -113,40 +115,37 @@ struct TrackStateCreator final
   //   }
   // }
 
-  auto measurementRange(const Acts::Surface& surface,
-                        const Acts::BoundTrackParameters& boundParams) const {
-    static_cast<void>(boundParams);
-
+  auto measurementRange(State& state) const {
     const auto rangePair =
-        measurements->orderedIndices().equal_range(surface.geometryId());
+        measurements->orderedIndices().equal_range(state.surface->geometryId());
 
     return std::ranges::subrange(rangePair.first, rangePair.second);
   }
 
   Acts::SourceLink measurementSourceLink(
-      const Acts::Surface& surface, const IndexSourceLink& measurement) const {
-    static_cast<void>(surface);
+      State& state, const IndexSourceLink& measurement) const {
+    static_cast<void>(state);
 
     return Acts::SourceLink{measurement};
   }
 
   Acts::VariableBoundSubspaceHelper measurementSubspace(
-      const Acts::Surface& surface, const IndexSourceLink& measurement) const {
-    static_cast<void>(surface);
+      State& state, const IndexSourceLink& measurement) const {
+    static_cast<void>(state);
 
     return measurements->at(measurement.index()).subspaceHelper();
   }
 
-  auto measuredParameters(const Acts::Surface& surface,
+  auto measuredParameters(State& state,
                           const IndexSourceLink& measurement) const {
-    static_cast<void>(surface);
+    static_cast<void>(state);
 
     return measurements->at(measurement.index()).parameters();
   }
 
-  auto measurementCovariance(const Acts::Surface& surface,
+  auto measurementCovariance(State& state,
                              const IndexSourceLink& measurement) const {
-    static_cast<void>(surface);
+    static_cast<void>(state);
 
     return measurements->at(measurement.index()).covariance();
   }

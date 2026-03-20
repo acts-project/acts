@@ -44,15 +44,15 @@ class TrackStateCreatorBase {
       track_state_container_backend_t& trajectory, const Logger& logger) const {
     static_cast<void>(trackStateCandidates);
 
+    auto state = derived().makeState(gctx, cctx, surface, boundState, prevTip,
+                                     trackStateCandidates, trajectory, logger);
+
     TrackStatesResult result = TrackStatesResult::success({});
 
     ACTS_VERBOSE("Perform measurement selection for surface "
                  << surface.geometryId());
 
-    const auto& [boundParams, jacobian, pathLength] = boundState;
-
-    const auto measurementRange =
-        derived().measurementRange(surface, boundParams);
+    const auto measurementRange = derived().measurementRange(state);
     ACTS_VERBOSE("Found " << measurementRange.size()
                           << " measurements on surface "
                           << surface.geometryId());
@@ -62,42 +62,109 @@ class TrackStateCreatorBase {
       return result;
     }
 
-    const std::uint32_t maxNumSelectedMeasurements =
-        derived().getMaxNumSelectedMeasurements(surface);
-    const float maxChi2Compatible = derived().getMaxChi2Compatible(surface);
-    const float maxChi2Outlier = derived().getMaxChi2Outlier(surface);
-
-    ACTS_VERBOSE("Max number of selected measurements: "
-                 << maxNumSelectedMeasurements
-                 << ", max chi2 compatible: " << maxChi2Compatible
-                 << ", max chi2 outlier: " << maxChi2Outlier);
-
-    auto selectedMeasurements = derived().selectMeasurements(
-        gctx, cctx, surface, measurementRange, boundParams,
-        maxNumSelectedMeasurements, maxChi2Compatible, maxChi2Outlier);
+    auto selectedMeasurements =
+        derived().selectMeasurements(state, measurementRange);
 
     ACTS_VERBOSE("Selected " << selectedMeasurements.size()
                              << " measurements for surface "
                              << surface.geometryId());
 
-    derived().sortSelectedMeasurements(surface, selectedMeasurements,
-                                       maxNumSelectedMeasurements);
+    derived().sortSelectedMeasurements(state, selectedMeasurements);
 
-    derived().trimSelectedMeasurements(surface, selectedMeasurements,
-                                       maxNumSelectedMeasurements);
+    derived().trimSelectedMeasurements(state, selectedMeasurements);
 
     ACTS_VERBOSE("Trimmed to " << selectedMeasurements.size()
                                << " measurements for surface "
                                << surface.geometryId());
 
-    derived().createTrackStates(gctx, cctx, surface, boundState, prevTip,
-                                trajectory, measurementRange,
-                                selectedMeasurements, logger);
+    derived().createTrackStatesImpl(state, measurementRange,
+                                    selectedMeasurements);
 
     return result;
   }
 
  protected:
+  template <typename track_state_proxy_t,
+            typename track_state_container_backend_t>
+  struct State {
+    using TrackStateProxy =
+        typename track_state_container_backend_t::TrackStateProxy;
+
+    State(const GeometryContext& gctx_, const CalibrationContext& cctx_,
+          const Surface& surface_, const BoundState& boundState_,
+          const TrackIndexType prevTip_,
+          std::vector<track_state_proxy_t>& trackStateCandidates_,
+          track_state_container_backend_t& trajectory_, const Logger& logger_)
+        : gctx(&gctx_),
+          cctx(&cctx_),
+          surface(&surface_),
+          boundState(&boundState_),
+          prevTip(prevTip_),
+          trackStateCandidates(&trackStateCandidates_),
+          trajectory(&trajectory_),
+          logger(&logger_) {}
+
+    const GeometryContext* gctx{};
+    const CalibrationContext* cctx{};
+    const Surface* surface{};
+    const BoundState* boundState{};
+    TrackIndexType prevTip{};
+    std::vector<track_state_proxy_t>* trackStateCandidates{};
+    track_state_container_backend_t* trajectory{};
+    const Logger* logger{};
+
+    std::uint32_t maxNumSelectedMeasurements{};
+    float maxChi2Compatible{};
+    float maxChi2Outlier{};
+
+    std::optional<TrackStateProxy> firstTrackState;
+  };
+
+  template <typename track_state_proxy_t,
+            typename track_state_container_backend_t>
+  auto makeState(const GeometryContext& gctx, const CalibrationContext& cctx,
+                 const Surface& surface, const BoundState& boundState,
+                 const TrackIndexType prevTip,
+                 std::vector<track_state_proxy_t>& trackStateCandidates,
+                 track_state_container_backend_t& trajectory,
+                 const Logger& logger) const {
+    State state(gctx, cctx, surface, boundState, prevTip, trackStateCandidates,
+                trajectory, logger);
+
+    state.maxNumSelectedMeasurements =
+        derived().getMaxNumSelectedMeasurements(state);
+    state.maxChi2Compatible = derived().getMaxChi2Compatible(state);
+    state.maxChi2Outlier = derived().getMaxChi2Outlier(state);
+
+    ACTS_VERBOSE("Max number of selected measurements: "
+                 << state.maxNumSelectedMeasurements
+                 << ", max chi2 compatible: " << state.maxChi2Compatible
+                 << ", max chi2 outlier: " << state.maxChi2Outlier);
+
+    return state;
+  }
+
+  template <typename state_t>
+  std::uint32_t getMaxNumSelectedMeasurements(state_t& state) const {
+    static_cast<void>(state);
+
+    return std::numeric_limits<std::uint32_t>::max();
+  }
+
+  template <typename state_t>
+  float getMaxChi2Compatible(state_t& state) const {
+    static_cast<void>(state);
+
+    return std::numeric_limits<float>::max();
+  }
+
+  template <typename state_t>
+  float getMaxChi2Outlier(state_t& state) const {
+    static_cast<void>(state);
+
+    return std::numeric_limits<float>::max();
+  }
+
   enum class MeasurementClassification : std::uint8_t {
     Incompatible,
     Outlier,
@@ -152,82 +219,45 @@ class TrackStateCreatorBase {
     }
   };
 
-  template <typename measurement_range_t>
+  template <typename state_t, typename measurement_range_t>
   SelectedMeasurements selectMeasurements(
-      const GeometryContext& gctx, const CalibrationContext& cctx,
-      const Surface& surface, const measurement_range_t& range,
-      const BoundTrackParameters& boundParams,
-      std::uint32_t maxNumSelectedMeasurements, float maxChi2Compatible,
-      float maxChi2Outlier) const {
-    static_cast<void>(gctx);
-    static_cast<void>(cctx);
-    static_cast<void>(maxNumSelectedMeasurements);
-
+      state_t& state, const measurement_range_t& range) const {
     SelectedMeasurements result;
 
     for (const auto& [i, measurement] :
          enumerate<const measurement_range_t&, std::uint32_t>(range)) {
-      const float chi2 =
-          derived().computeChi2(surface, measurement, boundParams);
+      const float chi2 = derived().computeChi2(state, measurement);
       const MeasurementClassification classification =
-          derived().classifyMeasurement(surface, measurement, chi2,
-                                        maxChi2Compatible, maxChi2Outlier);
+          derived().classifyMeasurement(state, measurement, chi2);
       result.emplace_back(i, chi2, classification);
     }
 
     return result;
   }
 
+  template <typename state_t>
   void sortSelectedMeasurements(
-      const Surface& surface, SelectedMeasurements& selectedMeasurements,
-      std::uint32_t maxNumSelectedMeasurements) const {
-    static_cast<void>(surface);
-
-    selectedMeasurements.sort(maxNumSelectedMeasurements);
+      state_t& state, SelectedMeasurements& selectedMeasurements) const {
+    selectedMeasurements.sort(state.maxNumSelectedMeasurements);
   }
 
+  template <typename state_t>
   void trimSelectedMeasurements(
-      const Surface& surface, SelectedMeasurements& selectedMeasurements,
-      std::uint32_t maxNumSelectedMeasurements) const {
-    static_cast<void>(surface);
-
-    selectedMeasurements.resize(maxNumSelectedMeasurements);
+      state_t& state, SelectedMeasurements& selectedMeasurements) const {
+    selectedMeasurements.resize(state.maxNumSelectedMeasurements);
   }
 
-  std::uint32_t getMaxNumSelectedMeasurements(const Surface& surface) const {
-    static_cast<void>(surface);
-
-    return std::numeric_limits<std::uint32_t>::max();
-  }
-
-  float getMaxChi2Compatible(const Surface& surface) const {
-    static_cast<void>(surface);
-
-    return std::numeric_limits<float>::max();
-  }
-
-  float getMaxChi2Outlier(const Surface& surface) const {
-    static_cast<void>(surface);
-
-    return std::numeric_limits<float>::max();
-  }
-
-  template <typename measurement_t>
-  float computeChi2(const Surface& surface, const measurement_t& measurement,
-                    const BoundTrackParameters& boundParams) const {
-    static_cast<void>(surface);
-
+  template <typename state_t, typename measurement_t>
+  float computeChi2(state_t& state, const measurement_t& measurement) const {
     const auto& subspaceHelper =
-        derived().measurementSubspace(surface, measurement);
-    return derived().computeChi2(surface, measurement, boundParams,
-                                 subspaceHelper);
+        derived().measurementSubspace(state, measurement);
+    return derived().computeChi2Impl(state, measurement, subspaceHelper);
   }
 
-  template <typename measurement_t, std::size_t Dim>
-  double computeChi2(const Surface& surface, const measurement_t& measurement,
-                     const BoundTrackParameters& boundParams,
-                     FixedBoundSubspaceHelper<Dim> subspaceHelper) const {
-    static_cast<void>(surface);
+  template <typename state_t, typename measurement_t, std::size_t Dim>
+  double computeChi2Impl(state_t& state, const measurement_t& measurement,
+                         FixedBoundSubspaceHelper<Dim> subspaceHelper) const {
+    const auto& [boundParams, jacobian, pathLength] = *state.boundState;
 
     const Vector<Dim> predictedParameters =
         subspaceHelper.projectVector(boundParams.parameters());
@@ -235,9 +265,9 @@ class TrackStateCreatorBase {
         subspaceHelper.projectMatrix(*boundParams.covariance());
 
     const Vector<Dim> measuredParameters =
-        derived().measuredParameters(surface, measurement);
+        derived().measuredParameters(state, measurement);
     const SquareMatrix<Dim> measurementCovariance =
-        derived().measurementCovariance(surface, measurement);
+        derived().measurementCovariance(state, measurement);
 
     const Vector<Dim> residualParameters =
         measuredParameters - predictedParameters;
@@ -250,134 +280,115 @@ class TrackStateCreatorBase {
     return chi2;
   }
 
-  template <typename measurement_t>
-  double computeChi2(const Surface& surface, const measurement_t& measurement,
-                     const BoundTrackParameters& boundParams,
-                     VariableBoundSubspaceHelper subspaceHelper) const {
-    static_cast<void>(surface);
-
+  template <typename state_t, typename measurement_t>
+  double computeChi2Impl(state_t& state, const measurement_t& measurement,
+                         VariableBoundSubspaceHelper subspaceHelper) const {
     return visit_measurement(subspaceHelper.size(), [&](auto N) -> double {
       constexpr std::size_t kDim = decltype(N)::value;
       const FixedBoundSubspaceHelper<kDim> fixedSubspaceHelper(subspaceHelper);
-      return derived().computeChi2(surface, measurement, boundParams,
-                                   fixedSubspaceHelper);
+      return derived().computeChi2Impl(state, measurement, fixedSubspaceHelper);
     });
   }
 
-  template <typename measurement_t>
+  template <typename state_t, typename measurement_t>
   MeasurementClassification classifyMeasurement(
-      const Surface& surface, const measurement_t& measurement,
-      const float chi2, const float maxChi2Compatible,
-      const float maxChi2Outlier) const {
-    static_cast<void>(surface);
+      state_t& state, const measurement_t& measurement,
+      const float chi2) const {
     static_cast<void>(measurement);
 
-    if (chi2 < maxChi2Compatible) {
+    if (chi2 < state.maxChi2Compatible) {
       return MeasurementClassification::Compatible;
     }
-    if (chi2 < maxChi2Outlier) {
+    if (chi2 < state.maxChi2Outlier) {
       return MeasurementClassification::Outlier;
     }
     return MeasurementClassification::Incompatible;
   }
 
-  template <typename measurement_range_t>
+  template <typename state_t, typename measurement_range_t>
   auto selectedMeasurementSourceLink(
-      const Surface& surface, const measurement_range_t& measurements,
+      state_t& state, const measurement_range_t& measurements,
       const MeasurementCandidate& selectedMeasurement) const {
     return derived().measurementSourceLink(
-        surface, measurements[selectedMeasurement.index]);
+        state, measurements[selectedMeasurement.index]);
   }
 
-  template <typename measurement_range_t>
+  template <typename state_t, typename measurement_range_t>
   auto selectedMeasurementSubspace(
-      const Surface& surface, const measurement_range_t& measurements,
+      state_t& state, const measurement_range_t& measurements,
       const MeasurementCandidate& selectedMeasurement) const {
     return derived().measurementSubspace(
-        surface, measurements[selectedMeasurement.index]);
+        state, measurements[selectedMeasurement.index]);
   }
 
-  template <typename measurement_range_t>
+  template <typename state_t, typename measurement_range_t>
   auto selectedMeasurementParameters(
-      const Surface& surface, const measurement_range_t& measurements,
+      state_t& state, const measurement_range_t& measurements,
       const MeasurementCandidate& selectedMeasurement) const {
     return derived().measuredParameters(
-        surface, measurements[selectedMeasurement.index]);
+        state, measurements[selectedMeasurement.index]);
   }
 
-  template <typename measurement_range_t>
+  template <typename state_t, typename measurement_range_t>
   auto selectedMeasurementCovariance(
-      const Surface& surface, const measurement_range_t& measurements,
+      state_t& state, const measurement_range_t& measurements,
       const MeasurementCandidate& selectedMeasurement) const {
     return derived().measurementCovariance(
-        surface, measurements[selectedMeasurement.index]);
+        state, measurements[selectedMeasurement.index]);
   }
 
-  template <typename track_state_container_backend_t,
-            typename measurement_range_t, typename selected_measurement_range_t>
-  void createTrackStates(
-      const GeometryContext& gctx, const CalibrationContext& cctx,
-      const Surface& surface, const BoundState& boundState,
-      const TrackIndexType prevTip, track_state_container_backend_t& trajectory,
-      const measurement_range_t& measurements,
-      const selected_measurement_range_t& selectedMeasurements,
-      const Logger& logger) const {
-    using TrackStateProxy =
-        typename track_state_container_backend_t::TrackStateProxy;
+  template <typename state_t, typename measurement_range_t,
+            typename selected_measurement_range_t>
+  void createTrackStatesImpl(
+      state_t& state, const measurement_range_t& measurements,
+      const selected_measurement_range_t& selectedMeasurements) const {
+    const Logger& logger = *state.logger;
 
-    std::optional<TrackStateProxy> firstTrackState;
-
-    if (derived().hasHole(surface, boundState, selectedMeasurements, logger)) {
+    if (derived().hasHole(state, selectedMeasurements)) {
       ACTS_VERBOSE("No compatible measurements on surface "
-                   << surface.geometryId() << ". No track states created.");
-      derived().createHoleState(surface, boundState, prevTip, trajectory,
-                                firstTrackState, logger);
+                   << state.surface->geometryId()
+                   << ". No track states created.");
+      derived().createHoleState(state);
     }
 
     for (const auto& selectedMeasurement : selectedMeasurements) {
-      derived().createMeasurementState(
-          gctx, cctx, surface, boundState, prevTip, trajectory, firstTrackState,
-          measurements, selectedMeasurement, logger);
+      derived().createMeasurementState(state, measurements,
+                                       selectedMeasurement);
     }
   }
 
-  bool hasHole(const Surface& surface, const BoundState& boundState,
-               const SelectedMeasurements& selectedMeasurements,
-               const Logger& logger) const {
-    static_cast<void>(surface);
-    static_cast<void>(boundState);
-    static_cast<void>(logger);
+  template <typename state_t>
+  bool hasHole(state_t& state,
+               const SelectedMeasurements& selectedMeasurements) const {
+    static_cast<void>(state);
 
     return selectedMeasurements.empty() &&
            (selectedMeasurements.bestCandidate.classification ==
             MeasurementClassification::Incompatible);
   }
 
-  TrackStateType determineTrackStateType(const Surface& surface,
-                                         const Logger& logger) const {
-    static_cast<void>(logger);
-
+  template <typename state_t>
+  TrackStateType determineTrackStateType(state_t& state) const {
     TrackStateType result;
 
     result.setHasParameters();
 
     result.setHasMeasurement();
 
-    if (surface.surfaceMaterial() != nullptr) {
+    if (state.surface->surfaceMaterial() != nullptr) {
       result.setHasMaterial();
     }
 
     return result;
   }
 
-  template <typename measurement_range_t>
+  template <typename state_t, typename measurement_range_t>
   TrackStateType determineTrackStateType(
-      const Surface& surface, const measurement_range_t& measurements,
-      const MeasurementCandidate& selectedMeasurement,
-      const Logger& logger) const {
+      state_t& state, const measurement_range_t& measurements,
+      const MeasurementCandidate& selectedMeasurement) const {
     static_cast<void>(measurements);
 
-    TrackStateType result = derived().determineTrackStateType(surface, logger);
+    TrackStateType result = derived().determineTrackStateType(state);
 
     if (selectedMeasurement.classification ==
         MeasurementClassification::Outlier) {
@@ -387,115 +398,88 @@ class TrackStateCreatorBase {
     return result;
   }
 
-  template <typename track_state_container_backend_t,
-            typename track_state_proxy_t>
-  track_state_proxy_t createTrackState(
-      const Surface& surface, const BoundState& boundState,
-      const TrackIndexType prevTip, track_state_container_backend_t& trajectory,
-      std::optional<track_state_proxy_t>& firstTrackState,
-      const TrackStateType trackStateType, const Logger& logger) const {
-    static_cast<void>(logger);
-
+  template <typename state_t>
+  auto createTrackState(state_t& state,
+                        const TrackStateType trackStateType) const {
     TrackStatePropMask mask = TrackStatePropMask::None;
-    if (!firstTrackState.has_value()) {
+    if (!state.firstTrackState.has_value()) {
       mask |= TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
     }
 
-    track_state_proxy_t trackState = trajectory.makeTrackState(mask, prevTip);
+    auto trackState = state.trajectory->makeTrackState(mask, state.prevTip);
 
-    trackState.setReferenceSurface(surface.getSharedPtr());
+    trackState.setReferenceSurface(state.surface->getSharedPtr());
 
     trackState.typeFlags() = trackStateType;
 
-    if (!firstTrackState.has_value()) {
-      const auto& [boundParams, jacobian, pathLength] = boundState;
+    if (!state.firstTrackState.has_value()) {
+      const auto& [boundParams, jacobian, pathLength] = *state.boundState;
       trackState.predicted() = boundParams.parameters();
       trackState.predictedCovariance() = *boundParams.covariance();
       trackState.jacobian() = jacobian;
       trackState.pathLength() = pathLength;
     } else {
-      trackState.shareFrom(*firstTrackState, TrackStatePropMask::Predicted);
-      trackState.shareFrom(*firstTrackState, TrackStatePropMask::Jacobian);
+      trackState.shareFrom(*state.firstTrackState,
+                           TrackStatePropMask::Predicted);
+      trackState.shareFrom(*state.firstTrackState,
+                           TrackStatePropMask::Jacobian);
     }
 
-    if (!firstTrackState.has_value()) {
-      firstTrackState = trackState;
+    if (!state.firstTrackState.has_value()) {
+      state.firstTrackState = trackState;
     }
     return trackState;
   }
 
-  template <typename track_state_container_backend_t,
-            typename track_state_proxy_t>
-  track_state_proxy_t createHoleState(
-      const Surface& surface, const BoundState& boundState,
-      const TrackIndexType prevTip, track_state_container_backend_t& trajectory,
-      std::optional<track_state_proxy_t>& firstTrackState,
-      const Logger& logger) const {
-    TrackStateType trackStateType =
-        derived().determineTrackStateType(surface, logger);
+  template <typename state_t>
+  auto createHoleState(state_t& state) const {
+    TrackStateType trackStateType = derived().determineTrackStateType(state);
     trackStateType.setIsHole();
 
-    track_state_proxy_t trackState =
-        derived().createTrackState(surface, boundState, prevTip, trajectory,
-                                   firstTrackState, trackStateType, logger);
+    auto trackState = derived().createTrackState(state, trackStateType);
 
     return trackState;
   }
 
-  template <typename track_state_container_backend_t,
-            typename track_state_proxy_t, typename measurement_range_t,
+  template <typename state_t, typename measurement_range_t,
             typename selected_measurement_t>
-  track_state_proxy_t createMeasurementState(
-      const GeometryContext& gctx, const CalibrationContext& cctx,
-      const Surface& surface, const BoundState& boundState,
-      const TrackIndexType prevTip, track_state_container_backend_t& trajectory,
-      std::optional<track_state_proxy_t>& firstTrackState,
-      const measurement_range_t& measurements,
-      const selected_measurement_t& selectedMeasurement,
-      const Logger& logger) const {
+  auto createMeasurementState(
+      state_t& state, const measurement_range_t& measurements,
+      const selected_measurement_t& selectedMeasurement) const {
     const TrackStateType trackStateType = derived().determineTrackStateType(
-        surface, measurements, selectedMeasurement, logger);
+        state, measurements, selectedMeasurement);
 
-    track_state_proxy_t trackState =
-        derived().createTrackState(surface, boundState, prevTip, trajectory,
-                                   firstTrackState, trackStateType, logger);
+    auto trackState = derived().createTrackState(state, trackStateType);
 
     trackState.addComponents(TrackStatePropMask::Calibrated);
 
-    derived().postCalibrateTrackState(gctx, cctx, surface, boundState,
-                                      measurements, selectedMeasurement,
+    derived().postCalibrateTrackState(state, measurements, selectedMeasurement,
                                       trackState);
 
     return trackState;
   }
 
-  template <typename track_state_proxy_t, typename measurement_range_t,
+  template <typename state_t, typename measurement_range_t,
             typename selected_measurement_t>
   void postCalibrateTrackState(
-      const GeometryContext& gctx, const CalibrationContext& cctx,
-      const Surface& surface, const BoundState& boundState,
-      const measurement_range_t& measurements,
+      state_t& state, const measurement_range_t& measurements,
       const selected_measurement_t& selectedMeasurement,
-      track_state_proxy_t& trackState) const {
-    static_cast<void>(gctx);
-    static_cast<void>(cctx);
-    static_cast<void>(boundState);
-
+      typename state_t::TrackStateProxy& trackState) const {
     trackState.setUncalibratedSourceLink(
-        derived().selectedMeasurementSourceLink(surface, measurements,
+        derived().selectedMeasurementSourceLink(state, measurements,
                                                 selectedMeasurement));
 
     const auto& subspaceHelper = derived().selectedMeasurementSubspace(
-        surface, measurements, selectedMeasurement);
+        state, measurements, selectedMeasurement);
 
     visit_measurement(subspaceHelper.size(), [&](auto N) -> void {
       constexpr std::size_t kDim = decltype(N)::value;
       const FixedBoundSubspaceHelper<kDim> fixedSubspaceHelper(subspaceHelper);
       const Vector<kDim> measuredParameters =
-          derived().selectedMeasurementParameters(surface, measurements,
+          derived().selectedMeasurementParameters(state, measurements,
                                                   selectedMeasurement);
       const SquareMatrix<kDim> measurementCovariance =
-          derived().selectedMeasurementCovariance(surface, measurements,
+          derived().selectedMeasurementCovariance(state, measurements,
                                                   selectedMeasurement);
       trackState.allocateCalibrated(measuredParameters, measurementCovariance);
     });
