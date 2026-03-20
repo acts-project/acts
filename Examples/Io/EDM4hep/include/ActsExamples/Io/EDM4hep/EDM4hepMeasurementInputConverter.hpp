@@ -64,7 +64,7 @@ class EDM4hepMeasurementInputConverter final : public PodioInputConverter {
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
 
-  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+  WriteDataHandle<MeasurementSimHitsMap> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
 
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
