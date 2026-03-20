@@ -35,6 +35,12 @@ inline const std::regex kShortStripLayerFilter{
     "(?:ShortStripLayer|ShortStripEndcap[NP])(\\d)"};
 inline const std::regex kLongStripLayerFilter{
     "(?:LongStripLayer|LongStripEndcap[NP])(\\d)"};
+inline const std::regex kTGeoPixelLayerFilter{
+    "(?:PixelBarrel|PixelEndcap[NP])(\\d)"};
+inline const std::regex kTGeoShortStripLayerFilter{
+    "(?:ShortStripBarrel|ShortStripEndcap[NP])(\\d)"};
+inline const std::regex kTGeoLongStripLayerFilter{
+    "(?:LongStripBarrel|LongStripEndcap[NP])(\\d)"};
 inline const std::regex kPixelBarrelLayerFilter{"PixelLayer\\d"};
 inline const std::regex kPixelNegativeEndcapLayerFilter{"PixelEndcapN\\d"};
 inline const std::regex kPixelPositiveEndcapLayerFilter{"PixelEndcapP\\d"};
@@ -48,6 +54,9 @@ inline const std::regex kLongStripNegativeEndcapLayerFilter{
     "LongStripEndcapN\\d"};
 inline const std::regex kLongStripPositiveEndcapLayerFilter{
     "LongStripEndcapP\\d"};
+inline const std::regex kTGeoPixelBarrelLayerFilter{"PixelBarrel\\d"};
+inline const std::regex kTGeoShortStripBarrelLayerFilter{"ShortStripBarrel\\d"};
+inline const std::regex kTGeoLongStripBarrelLayerFilter{"LongStripBarrel\\d"};
 
 inline const Acts::ExtentEnvelope kBlueprintEnvelope =
     Acts::ExtentEnvelope::Zero()
