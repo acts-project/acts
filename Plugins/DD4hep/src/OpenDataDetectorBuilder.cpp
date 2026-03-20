@@ -13,8 +13,8 @@
 #include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
@@ -34,20 +34,21 @@
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
 
+namespace ActsPlugins::DD4hep {
+
 namespace {
 
-auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
-                         std::string det, std::regex layerFilter) {
+auto makeLayerCustomizer(BlueprintBuilder& builder, std::string det,
+                         std::regex layerFilter) {
   return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
              const std::optional<dd4hep::DetElement>& elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
-    layer.setEnvelope(ActsPlugins::DD4hep::detail::kLayerEnvelope);
+    layer.setEnvelope(detail::kLayerEnvelope);
 
     const std::string elemName =
         elem.has_value() ? std::string{builder.backend().nameOf(*elem)}
                          : layer.name();
-    const int layerIdx =
-        ActsPlugins::DD4hep::detail::layerIndexFromName(elemName, layerFilter);
+    const int layerIdx = detail::layerIndexFromName(elemName, layerFilter);
 
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     using enum SrfArrayNavPol::LayerType;
@@ -58,8 +59,9 @@ auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
         Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
     if (isBarrelLayer) {
       navCfg.layerType = Cylinder;
-      navCfg.bins = {builder.backend().constant("{}_b{}_sf_b_phi", det, layerIdx),
-                     builder.backend().constant("{}_b_sf_b_z", det)};
+      navCfg.bins = {
+          builder.backend().constant("{}_b{}_sf_b_phi", det, layerIdx),
+          builder.backend().constant("{}_b_sf_b_z", det)};
     } else {
       navCfg.layerType = Disc;
       navCfg.bins = {builder.backend().constant("{}_e_sf_b_r", det),
@@ -74,8 +76,6 @@ auto makeLayerCustomizer(ActsPlugins::DD4hep::BlueprintBuilder& builder,
 }
 
 }  // namespace
-
-namespace ActsPlugins::DD4hep {
 
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
     const dd4hep::Detector& detector, const Acts::GeometryContext& gctx,
