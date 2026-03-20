@@ -392,6 +392,7 @@ Geant4MaterialRecording::Geant4MaterialRecording(
     Geant4::MaterialSteppingAction::Config steppingCfg;
     steppingCfg.eventStore = m_eventStore;
     steppingCfg.excludeMaterials = m_cfg.excludeMaterials;
+    steppingCfg.DetailedMaterial = m_cfg.DetailedMaterial;
     // G4RunManager will take care of deletion
     auto steppingAction = new Geant4::MaterialSteppingAction(
         steppingCfg, this->logger().cloneWithSuffix("MaterialSteppingAction"));

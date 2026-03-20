@@ -16,18 +16,25 @@
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabVector fullProperties,
-    double splitFactor, Acts::MappingType mappingType)
-    : ISurfaceMaterial(splitFactor, mappingType), m_binUtility(binUtility) {
-  // fill the material with deep copy
+    double splitFactor, Acts::MappingType mappingType,
+    ElementZMatrix elementZ, ElementFracMatrix elementFrac)
+    : ISurfaceMaterial(splitFactor, mappingType), 
+	m_binUtility(binUtility),
+	m_elementZ(std::move(elementZ)),
+	m_elementFrac(std::move(elementFrac)) {
   m_fullMaterial.push_back(std::move(fullProperties));
 }
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabMatrix fullProperties,
-    double splitFactor, Acts::MappingType mappingType)
+    double splitFactor, Acts::MappingType mappingType,
+    ElementZMatrix elementZ, ElementFracMatrix elementFrac)
     : ISurfaceMaterial(splitFactor, mappingType),
       m_binUtility(binUtility),
-      m_fullMaterial(std::move(fullProperties)) {}
+      m_fullMaterial(std::move(fullProperties)),
+      m_elementZ(std::move(elementZ)),
+      m_elementFrac(std::move(elementFrac)) {
+}
 
 Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(double factor) {
   for (auto& materialVector : m_fullMaterial) {

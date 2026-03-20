@@ -92,22 +92,30 @@ class AccumulatedSurfaceMaterial {
   /// @param lp local position for the bin assignment
   /// @param mp material properties to be assigned
   /// @param pathCorrection Correction factor for the effective path length
+  /// @param elementZ to list all elements' Z value present (optional)
+  /// @param elementFrac to list the fraction that each element makes up (optional)
   ///
   /// @return the bin triple to which the material was assigned
   std::array<std::size_t, 3> accumulate(const Vector2& lp,
                                         const MaterialSlab& mp,
-                                        double pathCorrection = 1.);
+                                        double pathCorrection = 1.,
+					const std::vector<unsigned int>& elementZ = {},
+					const std::vector<float>& elementFrac = {});
 
   /// Assign a material properties object
   ///
   /// @param gp global position for the bin assignment
   /// @param mp material properties to be assigned
   /// @param pathCorrection Correction factor for the effective path length
+  /// @param elementZ to list all elements' Z value present (optional)
+  /// @param elementFrac to list the fraction that each element makes up (optional)
   ///
   /// @return the bin triple to which the material was assigned
   std::array<std::size_t, 3> accumulate(const Vector3& gp,
                                         const MaterialSlab& mp,
-                                        double pathCorrection = 1.);
+                                        double pathCorrection = 1.,
+					const std::vector<unsigned int>& elementZ = {},
+                                        const std::vector<float>& elementFrac = {});
 
   /// Use the accumulated material to update the material variance
   ///
@@ -162,6 +170,23 @@ class AccumulatedSurfaceMaterial {
 
   /// The stored accumulated material matrix
   AccumulatedMatrix m_accumulatedMaterial;
+
+  /// The running sum of thickness per bin
+  /// Used to normalize the vector of fractions or element
+  std::vector<std::vector<double>> m_totalThickness;
+
+  /// The list of atomic numbers of elements present during mapping, per bin
+  std::vector<std::vector<std::vector<unsigned int>>> m_elementZ;
+
+  /// The fraction of each element present, normalized
+  /// Weighted by m_totalThickness to get final fraction
+  std::vector<std::vector<std::vector<float>>> m_weightedFrac;
+
+  void accumulateElementData(
+    std::size_t bin0, std::size_t bin1,
+    const MaterialSlab& mp, double pathCorrection,
+    const std::vector<unsigned int>& elementZ,
+    const std::vector<float>& elementFrac);
 };
 
 inline const BinUtility& AccumulatedSurfaceMaterial::binUtility() const {

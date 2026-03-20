@@ -386,6 +386,13 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
   // Next option remaining: BinnedSurface material
   auto bsMaterial = dynamic_cast<const Acts::BinnedSurfaceMaterial*>(material);
   if (bsMaterial != nullptr) {
+    std::cout << "DEBUG: entering BinnedSurfaceMaterial writer" << std::endl;
+    std::cout << "DEBUG: fullMaterial size: " 
+              << bsMaterial->fullMaterial().size() << std::endl;
+    std::cout << "DEBUG: elementZMatrix size: " 
+              << bsMaterial->elementZMatrix().size() << std::endl;
+
+
     // type is binned
     jMaterial[Acts::jsonKey().typekey] = "binned";
     // Set mapping type
@@ -396,16 +403,36 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     bUtility = &(bsMaterial->binUtility());
     // convert the data
     // get the material matrix
+    // include the list of elements and their fractions
     nlohmann::json mmat = nlohmann::json::array();
+    std::size_t ib1 = 0;
     for (const auto& mpVector : bsMaterial->fullMaterial()) {
       nlohmann::json mvec = nlohmann::json::array();
+      std::size_t ib0 = 0; 
       for (const auto& mp : mpVector) {
         nlohmann::json jmat(mp);
+        if (!bsMaterial->elementZMatrix().empty() &&
+            ib1 < bsMaterial->elementZMatrix().size() &&
+            ib0 < bsMaterial->elementZMatrix()[ib1].size()) {
+            const auto& zVec = bsMaterial->elementZAt(ib1, ib0);
+            const auto& fVec = bsMaterial->elementFracAt(ib1, ib0);
+            if (!zVec.empty()) {
+                nlohmann::json composition = nlohmann::json::array();
+                for (std::size_t i = 0; i < zVec.size(); ++i) {
+                    composition.push_back(
+                        nlohmann::json::array({zVec[i], fVec[i]}));
+                }
+                jmat["composition"] = std::move(composition);
+            }
+        }
         mvec.push_back(jmat);
+        ++ib0;
       }
       mmat.push_back(std::move(mvec));
+      ++ib1;
     }
     jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
+
     // write the bin utility
     nlohmann::json jBin(*bUtility);
     jMaterial[Acts::jsonKey().binkey] = jBin;
@@ -477,12 +504,30 @@ void Acts::from_json(const nlohmann::json& j,
   Acts::BinUtility bUtility;
   Acts::MaterialSlabMatrix mpMatrix;
   Acts::MappingType mapType = Acts::MappingType::Default;
+  Acts::BinnedSurfaceMaterial::ElementZMatrix elementZMatrix;
+  Acts::BinnedSurfaceMaterial::ElementFracMatrix elementFracMatrix;
   for (auto& [key, value] : jMaterial.items()) {
     if (key == Acts::jsonKey().binkey && !value.empty()) {
       from_json(value, bUtility);
     }
     if (key == Acts::jsonKey().datakey && !value.empty()) {
       from_json(value, mpMatrix);
+      elementZMatrix.resize(value.size());
+      elementFracMatrix.resize(value.size());
+      for (std::size_t ib1 = 0; ib1 < value.size(); ++ib1) {
+	  elementZMatrix[ib1].resize(value[ib1].size());
+	  elementFracMatrix[ib1].resize(value[ib1].size());
+	  for (std::size_t ib0 = 0; ib0 < value[ib1].size(); ++ib0) {
+	      if (value[ib1][ib0].contains("composition")) {
+		  for (const auto& pair : value[ib1][ib0]["composition"]) {
+			  elementZMatrix[ib1][ib0].push_back(
+				pair[0].get<unsigned int>());
+			  elementFracMatrix[ib1][ib0].push_back( 
+				pair[1].get<float>());
+		  }
+	       }
+	  }
+      }
     }
     if (key == Acts::jsonKey().maptype && !value.empty()) {
       from_json(value, mapType);
@@ -494,7 +539,9 @@ void Acts::from_json(const nlohmann::json& j,
   } else if (bUtility.bins() == 1) {
     material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], 1, mapType);
   } else {
-    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, 1, mapType);
+    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, 1, mapType, 
+		    std::move(elementZMatrix),
+		    std::move(elementFracMatrix));
   }
 }
 

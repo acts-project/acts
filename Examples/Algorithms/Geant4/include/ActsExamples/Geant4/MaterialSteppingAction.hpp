@@ -35,6 +35,7 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
     std::shared_ptr<EventStore> eventStore;
 
     std::vector<std::string> excludeMaterials = {};
+    bool DetailedMaterial = false;
   };
 
   /// Construct the action

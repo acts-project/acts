@@ -27,6 +27,17 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// Default Constructor - deleted
   BinnedSurfaceMaterial() = delete;
 
+
+  ///Alias for Grid Level values of elementZ vector
+  /// [bin0][bin1] -> Z values per bin
+  using ElementZMatrix = 
+      std::vector<std::vector<std::vector<unsigned int>>>;
+
+  ///Alias for Grid Level values of ElementFrac vetcor
+  using ElementFracMatrix = 
+      std::vector<std::vector<std::vector<float>>>;
+
+
   /// Explicit constructor with only full MaterialSlab,
   /// for one-dimensional binning.
   ///
@@ -42,7 +53,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabVector fullProperties,
                         double splitFactor = 0.,
-                        MappingType mappingType = MappingType::Default);
+                        MappingType mappingType = MappingType::Default,
+			ElementZMatrix elementZ = {},
+			ElementFracMatrix elementFrac = {});
 
   /// Explicit constructor with only full MaterialSlab,
   /// for two-dimensional binning.
@@ -59,7 +72,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabMatrix fullProperties,
                         double splitFactor = 0.,
-                        MappingType mappingType = MappingType::Default);
+                        MappingType mappingType = MappingType::Default,
+			ElementZMatrix elementZ = {},
+			ElementFracMatrix elementFrac = {});
 
   /// Copy Move Constructor
   ///
@@ -106,6 +121,25 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
 
   using ISurfaceMaterial::materialSlab;
 
+  ///Return 3D Grid of element Z values
+  ///@return Reference to the ElementZMatrix
+  const ElementZMatrix& elementZMatrix() const;
+
+  ///Return 3D Grid of fractions for each element Z
+  ///@return Reference to the ElementFracMatrix
+  const ElementFracMatrix& elementFracMatrix() const;
+
+  ///Return elementZ for a specific bin
+  ///@return Reference to the elementZ vector for that bin
+  const std::vector<unsigned int>& elementZAt(std::size_t bin0,
+		 std::size_t bin1) const;
+
+  ///Return elementFrac for a specific bin
+  ///@return Reference to the elementFrac vector for that bin
+  const std::vector<float>& elementFracAt(std::size_t bin0,
+		std::size_t bin1) const; 
+
+
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param sl The output stream to write to
   /// @return Reference to the output stream after writing
@@ -117,6 +151,14 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
 
   /// The five different MaterialSlab
   MaterialSlabMatrix m_fullMaterial;
+
+  ///The Per-bin element list - indexed[bin1][bin0]
+  ///empty if using older material recording (element list was not recorded)
+  ElementZMatrix m_elementZ;
+
+  ///The Per-bin list of fractions weighted by thickness- sum to 1 per bin
+  /// Empty if using older material recording (fraction was not recorded)
+  ElementFracMatrix m_elementFrac;
 };
 
 inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
@@ -125,6 +167,26 @@ inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
 
 inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial() const {
   return m_fullMaterial;
+}
+
+inline const BinnedSurfaceMaterial::ElementZMatrix&
+BinnedSurfaceMaterial::elementZMatrix() const {
+  return m_elementZ;
+}
+
+inline const BinnedSurfaceMaterial::ElementFracMatrix&
+BinnedSurfaceMaterial::elementFracMatrix() const {
+  return m_elementFrac;
+}
+
+inline const std::vector<unsigned int>& BinnedSurfaceMaterial::elementZAt(
+    std::size_t bin0, std::size_t bin1) const{
+  return m_elementZ[bin0][bin1];
+}
+
+inline const std::vector<float>& BinnedSurfaceMaterial::elementFracAt(
+    std::size_t bin0, std::size_t bin1) const{
+  return m_elementFrac[bin0][bin1];
 }
 
 }  // namespace Acts
