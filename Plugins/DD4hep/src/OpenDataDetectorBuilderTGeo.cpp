@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsPlugins/DD4hep/OpenDataDetectorBuilder.hpp"
-
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
@@ -19,7 +17,7 @@
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "ActsPlugins/DD4hep/OpenDataDetectorBuilder.hpp"
 #include "ActsPlugins/Root/BlueprintBuilder.hpp"
 
 #include <array>
@@ -32,7 +30,6 @@
 #include <string_view>
 #include <unordered_map>
 
-#include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
 
 #include "TGeoMaterial.h"
@@ -44,15 +41,12 @@ namespace {
 
 int oddTGeoConstant(std::string_view name) {
   static const std::unordered_map<std::string_view, int> kConstants = {
-      {"pix_e_sf_b_r", 2},    {"pix_e_sf_b_phi", 36},
-      {"pix_b_sf_b_z", 14},   {"pix_b0_sf_b_phi", 16},
-      {"pix_b1_sf_b_phi", 32},{"pix_b2_sf_b_phi", 52},
-      {"pix_b3_sf_b_phi", 78},{"ss_e_sf_b_r", 3},
-      {"ss_e_sf_b_phi", 42},  {"ss_b_sf_b_z", 21},
-      {"ss_b0_sf_b_phi", 40}, {"ss_b1_sf_b_phi", 56},
-      {"ss_b2_sf_b_phi", 78}, {"ss_b3_sf_b_phi", 102},
-      {"ls_e_sf_b_r", 2},     {"ls_e_sf_b_phi", 48},
-      {"ls_b_sf_b_z", 21},    {"ls_b0_sf_b_phi", 60},
+      {"pix_e_sf_b_r", 2},     {"pix_e_sf_b_phi", 36},  {"pix_b_sf_b_z", 14},
+      {"pix_b0_sf_b_phi", 16}, {"pix_b1_sf_b_phi", 32}, {"pix_b2_sf_b_phi", 52},
+      {"pix_b3_sf_b_phi", 78}, {"ss_e_sf_b_r", 3},      {"ss_e_sf_b_phi", 42},
+      {"ss_b_sf_b_z", 21},     {"ss_b0_sf_b_phi", 40},  {"ss_b1_sf_b_phi", 56},
+      {"ss_b2_sf_b_phi", 78},  {"ss_b3_sf_b_phi", 102}, {"ls_e_sf_b_r", 2},
+      {"ls_e_sf_b_phi", 48},   {"ls_b_sf_b_z", 21},     {"ls_b0_sf_b_phi", 60},
       {"ls_b1_sf_b_phi", 80},
   };
 
@@ -109,8 +103,8 @@ auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
     const std::string elemName =
         elem.has_value() ? std::string{builder.backend().nameOf(*elem)}
                          : layer.name();
-    const int layerIdx = ActsPlugins::DD4hep::detail::layerIndexFromName(
-        elemName, layerFilter);
+    const int layerIdx =
+        ActsPlugins::DD4hep::detail::layerIndexFromName(elemName, layerFilter);
 
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     using enum SrfArrayNavPol::LayerType;
@@ -131,55 +125,22 @@ auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
   };
 }
 
-using NodeToDetElementMap =
-    std::unordered_map<const TGeoNode*, dd4hep::DetElement>;
-
-void collectNodeToDetElementMap(const dd4hep::DetElement& detElement,
-                                NodeToDetElementMap& map) {
-  if (detElement.isValid() && detElement.placement().isValid()) {
-    map.try_emplace(detElement.placement().ptr(), detElement);
-  }
-
-  for (const auto& [name, child] : detElement.children()) {
-    (void)name;
-    collectNodeToDetElementMap(child, map);
-  }
-}
-
-std::shared_ptr<const NodeToDetElementMap> buildNodeToDetElementMap(
+ActsPlugins::TGeoBackend::Config makeTGeoConfig(
     const dd4hep::Detector& detector) {
-  auto map = std::make_shared<NodeToDetElementMap>();
-  collectNodeToDetElementMap(detector.world(), *map);
-  return map;
-}
-
-std::optional<dd4hep::DetElement> lookupDetElement(
-    const NodeToDetElementMap& map, const ActsPlugins::TGeoBackend::Element& e) {
-  if (e.context == nullptr || e.context->node == nullptr) {
-    return std::nullopt;
-  }
-  if (auto it = map.find(e.context->node); it != map.end()) {
-    return it->second;
-  }
-  return std::nullopt;
-}
-
-ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
-    const dd4hep::Detector& detector) {
-  auto nodeMap = buildNodeToDetElementMap(detector);
-
   ActsPlugins::TGeoBackend::Config cfg;
   cfg.root = detector.world().placement().ptr();
   cfg.lengthScale = Acts::UnitConstants::cm;
-  cfg.nameProvider = [nodeMap](const ActsPlugins::TGeoBackend::Element& element)
+  cfg.nameProvider = [](const ActsPlugins::TGeoBackend::Element& element)
       -> std::string {
-    if (auto detElement = lookupDetElement(*nodeMap, element);
-        detElement.has_value()) {
-      return detElement->name();
+    if (element.context == nullptr || element.context->node == nullptr) {
+      return {};
     }
 
-    if (element.context != nullptr && element.context->node != nullptr &&
-        element.context->node->GetName() != nullptr) {
+    const auto* volume = element.context->node->GetVolume();
+    if (volume != nullptr && volume->GetName() != nullptr) {
+      return volume->GetName();
+    }
+    if (element.context->node->GetName() != nullptr) {
       return element.context->node->GetName();
     }
     return {};
@@ -189,8 +150,7 @@ ActsPlugins::TGeoBackend::Config makeTGeoConfigFromDD4hep(
 }
 
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
-makeTemporaryTGeoBeampipeNode(const dd4hep::Detector& detector) {
-  (void)detector;
+makeTemporaryTGeoBeampipeNode() {
   auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
       0., 19. * Acts::UnitConstants::mm, 4. * Acts::UnitConstants::m);
   std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
@@ -227,19 +187,21 @@ void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
         std::format("Could not find assembly '{}'", spec.assembly));
   }
   const auto barrelElement =
-      builder.findDetElementByName(std::string{spec.barrelName});
+      builder.findDetElementByName(*assemblyElement, std::string{spec.barrelName});
   if (!barrelElement.has_value()) {
     throw std::runtime_error(
         std::format("Could not find barrel '{}'", spec.barrelName));
   }
   const auto negativeEndcapElement =
-      builder.findDetElementByName(std::string{spec.negativeEndcapName});
+      builder.findDetElementByName(*assemblyElement,
+                                   std::string{spec.negativeEndcapName});
   if (!negativeEndcapElement.has_value()) {
     throw std::runtime_error(std::format("Could not find negative endcap '{}'",
                                          spec.negativeEndcapName));
   }
   const auto positiveEndcapElement =
-      builder.findDetElementByName(std::string{spec.positiveEndcapName});
+      builder.findDetElementByName(*assemblyElement,
+                                   std::string{spec.positiveEndcapName});
   if (!positiveEndcapElement.has_value()) {
     throw std::runtime_error(std::format("Could not find positive endcap '{}'",
                                          spec.positiveEndcapName));
@@ -262,31 +224,29 @@ void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
   configureSubsystemNode(*barrelNode);
   subsystemNode->addChild(std::move(barrelNode));
 
-  auto negativeEndcapNode = builder.layers()
-                                .endcap()
-                                .setSensorAxes("XZY")
-                                .setLayerFilter(spec.negativeEndcapLayerFilter)
-                                .setContainer(*negativeEndcapElement)
-                                .setContainerName(
-                                    std::string{spec.negativeEndcapName})
-                                .onLayer(makeTGeoLayerCustomizer(
-                                    builder, std::string{spec.det},
-                                    spec.layerFilter))
-                                .build();
+  auto negativeEndcapNode =
+      builder.layers()
+          .endcap()
+          .setSensorAxes("XZY")
+          .setLayerFilter(spec.negativeEndcapLayerFilter)
+          .setContainer(*negativeEndcapElement)
+          .setContainerName(std::string{spec.negativeEndcapName})
+          .onLayer(makeTGeoLayerCustomizer(builder, std::string{spec.det},
+                                           spec.layerFilter))
+          .build();
   configureSubsystemNode(*negativeEndcapNode);
   subsystemNode->addChild(std::move(negativeEndcapNode));
 
-  auto positiveEndcapNode = builder.layers()
-                                .endcap()
-                                .setSensorAxes("XZY")
-                                .setLayerFilter(spec.positiveEndcapLayerFilter)
-                                .setContainer(*positiveEndcapElement)
-                                .setContainerName(
-                                    std::string{spec.positiveEndcapName})
-                                .onLayer(makeTGeoLayerCustomizer(
-                                    builder, std::string{spec.det},
-                                    spec.layerFilter))
-                                .build();
+  auto positiveEndcapNode =
+      builder.layers()
+          .endcap()
+          .setSensorAxes("XZY")
+          .setLayerFilter(spec.positiveEndcapLayerFilter)
+          .setContainer(*positiveEndcapElement)
+          .setContainerName(std::string{spec.positiveEndcapName})
+          .onLayer(makeTGeoLayerCustomizer(builder, std::string{spec.det},
+                                           spec.layerFilter))
+          .build();
   configureSubsystemNode(*positiveEndcapNode);
   subsystemNode->addChild(std::move(positiveEndcapNode));
 
@@ -305,7 +265,7 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
   using namespace Acts;
   using enum AxisDirection;
 
-  ActsPlugins::BlueprintBuilder builder{makeTGeoConfigFromDD4hep(detector),
+  ActsPlugins::BlueprintBuilder builder{makeTGeoConfig(detector),
                                         logger.cloneWithSuffix("TGeoBlpBld")};
 
   Blueprint::Config blueprintCfg;
@@ -315,7 +275,7 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(makeTemporaryTGeoBeampipeNode(detector));
+  outer.addChild(makeTemporaryTGeoBeampipeNode());
   addTGeoSubsystem(
       builder, outer,
       {.assembly = "Pixels",
@@ -323,8 +283,9 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
        .barrelName = "PixelBarrel",
        .negativeEndcapName = "PixelEndcapN",
        .positiveEndcapName = "PixelEndcapP",
-       .layerFilter = ActsPlugins::DD4hep::detail::kPixelLayerFilter,
-       .barrelLayerFilter = ActsPlugins::DD4hep::detail::kPixelBarrelLayerFilter,
+       .layerFilter = ActsPlugins::DD4hep::detail::kTGeoPixelLayerFilter,
+       .barrelLayerFilter =
+           ActsPlugins::DD4hep::detail::kTGeoPixelBarrelLayerFilter,
        .negativeEndcapLayerFilter =
            ActsPlugins::DD4hep::detail::kPixelNegativeEndcapLayerFilter,
        .positiveEndcapLayerFilter =
@@ -336,9 +297,9 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
        .barrelName = "ShortStripBarrel",
        .negativeEndcapName = "ShortStripEndcapN",
        .positiveEndcapName = "ShortStripEndcapP",
-       .layerFilter = ActsPlugins::DD4hep::detail::kShortStripLayerFilter,
+       .layerFilter = ActsPlugins::DD4hep::detail::kTGeoShortStripLayerFilter,
        .barrelLayerFilter =
-           ActsPlugins::DD4hep::detail::kShortStripBarrelLayerFilter,
+           ActsPlugins::DD4hep::detail::kTGeoShortStripBarrelLayerFilter,
        .negativeEndcapLayerFilter =
            ActsPlugins::DD4hep::detail::kShortStripNegativeEndcapLayerFilter,
        .positiveEndcapLayerFilter =
@@ -350,9 +311,9 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
        .barrelName = "LongStripBarrel",
        .negativeEndcapName = "LongStripEndcapN",
        .positiveEndcapName = "LongStripEndcapP",
-       .layerFilter = ActsPlugins::DD4hep::detail::kLongStripLayerFilter,
+       .layerFilter = ActsPlugins::DD4hep::detail::kTGeoLongStripLayerFilter,
        .barrelLayerFilter =
-           ActsPlugins::DD4hep::detail::kLongStripBarrelLayerFilter,
+           ActsPlugins::DD4hep::detail::kTGeoLongStripBarrelLayerFilter,
        .negativeEndcapLayerFilter =
            ActsPlugins::DD4hep::detail::kLongStripNegativeEndcapLayerFilter,
        .positiveEndcapLayerFilter =
