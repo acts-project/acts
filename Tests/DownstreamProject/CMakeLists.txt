@@ -61,7 +61,10 @@ include(ActsGeometryModuleHelpers)
 acts_add_geometry_module(SimpleGeometryModule GeometryModule.cpp)
 
 add_executable(LoadGeometryModule LoadGeometryModule.cpp)
-target_link_libraries(LoadGeometryModule PRIVATE Acts::Core Boost::program_options)
+target_link_libraries(
+    LoadGeometryModule
+    PRIVATE Acts::Core Boost::program_options
+)
 
 add_test(NAME DownstreamShowActsVersion COMMAND ShowActsVersion)
 add_test(
@@ -72,10 +75,11 @@ add_test(
 if(DD4HEP)
     include(ActsDD4hepGeometryModuleHelpers)
 
-    acts_add_dd4hep_geometry_module(DD4hepGeometryModule
-                                    DD4hepGeometryModule.cpp)
+    acts_add_dd4hep_geometry_module(
+        DD4hepGeometryModule
+        DD4hepGeometryModule.cpp
+    )
 
     target_link_libraries(LoadGeometryModule PRIVATE Acts::PluginDD4hep)
     target_compile_definitions(LoadGeometryModule PRIVATE ACTS_HAVE_DD4HEP)
-
 endif()
