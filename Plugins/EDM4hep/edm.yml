@@ -314,19 +314,3 @@ datatypes:
         void setCov(float val, E enumI, E enumJ) {
           setCov(val, findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
         }
-
-
-links:
-  ActsPodioEdm::TrackStateHitLink:
-    Description: "A link between a TrackState and a TrackerHit"
-    Author: "Paul Gessinger, CERN"
-    From: ActsPodioEdm::TrackState
-    To: ActsPodioEdm::TrackerHitLocal
-
-
-  # @TODO: Remove this once TrackerHitLocal is upstreamed to edm4hep
-  ActsPodioEdm::TrackerHitLocalSimTrackerHitLink:
-    Description: "Link between ActsPodioEdm::TrackerHitLocal and edm4hep::SimTrackerHit. Interim replacement for edm4hep::TrackerHitSimTrackerHitLink until TrackerHitLocal is upstreamed to edm4hep."
-    Author: "Paul Gessinger, CERN"
-    From: ActsPodioEdm::TrackerHitLocal
-    To: edm4hep::SimTrackerHit
