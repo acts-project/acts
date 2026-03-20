@@ -16,7 +16,7 @@
 set(Acts_COMPONENTS @_components@)
 set(Acts_COMMIT_HASH "@_acts_commit_hash@")
 set(Acts_COMMIT_HASH_SHORT "@_acts_commit_hash_short@")
-set(Acts_GEOMETRY_MODULE_ABI_TAG "@ACTS_GEOMETRY_MODULE_ABI_TAG_VALUE@")
+set(ACTS_GEOMETRY_MODULE_ABI_TAG "@ACTS_GEOMETRY_MODULE_ABI_TAG@")
 
 # print version and components information
 if(NOT Acts_FIND_QUIETLY)

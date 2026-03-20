@@ -14,7 +14,7 @@ set(ACTS_GEOMETRY_MODULE_CAPI 1)
 set(_acts_geometry_module_abi_tag
     "acts-${Acts_VERSION}|sys-${CMAKE_SYSTEM_NAME}|arch-${CMAKE_SYSTEM_PROCESSOR}|cxx-${CMAKE_CXX_COMPILER_ID}-${CMAKE_CXX_COMPILER_VERSION}|capi-${ACTS_GEOMETRY_MODULE_CAPI}"
 )
-set(ACTS_GEOMETRY_MODULE_ABI_TAG_VALUE
+set(ACTS_GEOMETRY_MODULE_ABI_TAG
     "${_acts_geometry_module_abi_tag}"
     CACHE INTERNAL
     "ACTS geometry module ABI tag"
