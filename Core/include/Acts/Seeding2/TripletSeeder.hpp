@@ -21,11 +21,11 @@ namespace Acts {
 
 /// Full triplet seeder which depends on a doublet and triplet seed finder, and
 /// a triplet seed filter.
-class TripletSeeder final {
+class TripletSeeder {
  public:
   /// Cache for storing intermediate results during triplet seeding to avoid
   /// reallocation.
-  struct Cache final {
+  struct Cache {
     /// Cache for bottom doublets associated with middle space points
     DoubletsForMiddleSp bottomDoublets;
     /// Cache for top doublets associated with middle space points

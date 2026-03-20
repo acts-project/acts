@@ -64,7 +64,7 @@ class ITripletSeedCuts {
 class BroadTripletSeedFilter final : public ITripletSeedFilter {
  public:
   /// @brief Structure that holds configuration parameters for the seed filter algorithm
-  struct Config final {
+  struct Config {
     /// Allowed difference in curvature (inverted seed radii) between two
     /// compatible seeds
     float deltaInvHelixDiameter = 0.00003 * (1 / UnitConstants::mm);
@@ -136,7 +136,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   };
 
   /// State of the filter that is communicated between different stages
-  struct State final {
+  struct State {
     /// Collector for triplet candidates associated with middle space points
     CandidatesForMiddleSp2 candidatesCollector;
 
@@ -155,7 +155,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
 
   /// Cache for intermediate results to avoid reallocations. No information is
   /// carried over between different stages.
-  struct Cache final {
+  struct Cache {
     /// Cache for top space point indices during compatibility search
     std::vector<std::uint32_t> topSpIndexVec;
     /// Cache for compatible seed radii during score calculation

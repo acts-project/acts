@@ -170,12 +170,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
     try {
       const auto key = [pubKey]() {
-        if constexpr (std::is_same_v<std::remove_cvref_t<decltype(pubKey)>,
-                                     std::string>) {
-          return std::any_cast<std::string>(pubKey);
-        } else {
-          return std::get<std::string>(pubKey);
-        }
+        return std::any_cast<std::string>(pubKey);
       }();
 
       if (!publishedVol

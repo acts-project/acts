@@ -14,6 +14,9 @@
 namespace Acts {
 
 /// Seed built from N external space points.
+/// @deprecated This EDM will be removed in one of the next major
+/// releases and is replaced by the new SeedContainer and proxies.
+/// See @ref SeedContainer2 and @ref SeedProxy2 for details.
 template <typename external_space_point_t, std::size_t N = 3ul>
 class [[deprecated(
     "Will be dropped soon and is replaced by the new SeedContainer and "
