@@ -32,8 +32,7 @@ void exampleLoadDD4hepModule(const dd4hep::Detector& detector,
                              const Acts::Logger& logger,
                              const std::filesystem::path& modulePath) {
   //! [Load DD4hep Module]
-  auto geometry =
-      Acts::loadDD4hepGeometryModule(modulePath, detector, logger);
+  auto geometry = Acts::loadDD4hepGeometryModule(modulePath, detector, logger);
   // 'geometry' is a std::shared_ptr<Acts::TrackingGeometry>.
   // The shared library stays loaded until 'geometry' is destroyed.
   //! [Load DD4hep Module]

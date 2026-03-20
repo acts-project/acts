@@ -7,11 +7,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 //! [Write DD4hep Module]
-#include "ActsPlugins/DD4hep/GeometryModuleHelper.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "ActsPlugins/DD4hep/GeometryModuleHelper.hpp"
+
+#include <stdexcept>
 
 #include <DD4hep/Detector.h>
-#include <stdexcept>
 
 namespace {
 std::unique_ptr<Acts::TrackingGeometry> buildMyGeometry(
