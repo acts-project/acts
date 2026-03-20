@@ -69,8 +69,6 @@ class TrackStateCreatorBase {
                              << " measurements for surface "
                              << surface.geometryId());
 
-    derived().sortSelectedMeasurements(state, selectedMeasurements);
-
     derived().trimSelectedMeasurements(state, selectedMeasurements);
 
     ACTS_VERBOSE("Trimmed to " << selectedMeasurements.size()
@@ -236,14 +234,10 @@ class TrackStateCreatorBase {
   }
 
   template <typename state_t>
-  void sortSelectedMeasurements(
-      state_t& state, SelectedMeasurements& selectedMeasurements) const {
-    selectedMeasurements.sort(state.maxNumSelectedMeasurements);
-  }
-
-  template <typename state_t>
   void trimSelectedMeasurements(
       state_t& state, SelectedMeasurements& selectedMeasurements) const {
+    selectedMeasurements.sort(state.maxNumSelectedMeasurements);
+
     selectedMeasurements.resize(state.maxNumSelectedMeasurements);
   }
 
