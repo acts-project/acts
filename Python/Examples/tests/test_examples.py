@@ -1095,9 +1095,8 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardwar
     if hardware == "cpu":
         pytest.skip("CPU not yet supported")
 
-    root_files = ["performance_finding_gnn.root", "ntuple_finding_gnn.root"]
-    for f in root_files:
-        assert not (tmp_path / f).exists()
+    root_file = "performance_track_finding.root"
+    assert not (tmp_path / root_file).exists()
 
     # Check if models exist using MODEL_STORAGE environment variable
     model_storage = os.environ.get("MODEL_STORAGE")
@@ -1134,11 +1133,10 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardwar
             print(e.output.decode("utf-8"))
         raise
 
-    for f in root_files:
-        rfp = tmp_path / f
-        assert rfp.exists()
+    rfp = tmp_path / root_file
+    assert rfp.exists()
 
-        assert_root_hash(f, rfp)
+    assert_root_hash(root_file, rfp)
 
 
 @pytest.mark.odd
@@ -1158,13 +1156,13 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
     # Map backend to file extension
     model_ext = ".pt" if backend == "torch" else ".onnx"
 
-    repo_root = Path(__file__).parent.parent.parent.parent
-
     # Dict of required files - used for checking and as kwargs
     required_files = {
-        "moduleMapPath": str(repo_root / "new_module_map" / "mm_odd_test"),
+        "moduleMapPath": str(ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH"),
         "gnnModel": str(ci_models / f"gnn_odd_module_map{model_ext}"),
     }
+
+    repo_root = Path(__file__).parent.parent.parent.parent
 
     # Check if all required files exist
     assert Path(required_files["moduleMapPath"] + ".doublets.root").exists()
@@ -1196,13 +1194,9 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
         )
 
     # Verify output
-    output_file = tmp_path / "performance_finding_gnn.root"
+    output_file = tmp_path / "performance_track_finding.root"
     assert output_file.exists()
-    assert_root_hash("performance_finding_gnn.root", output_file)
-
-    output_file = tmp_path / "ntuple_finding_gnn.root"
-    assert output_file.exists()
-    assert_root_hash("ntuple_finding_gnn.root", output_file)
+    assert_root_hash("performance_track_finding.root", output_file)
 
 
 @pytest.mark.odd

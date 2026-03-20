@@ -1819,7 +1819,6 @@ def addTrackWriters(
     writeStates: bool = False,
     writeFitterPerformance: bool = False,
     writeFinderPerformance: bool = False,
-    writeFinderNTuple: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
     writeCovMat=False,
 ):
@@ -1879,17 +1878,6 @@ def addTrackWriters(
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
             s.addWriter(trackFinderPerfWriter)
-
-        if writeFinderNTuple:
-            nTupleWriter = RootTrackFinderNTupleWriter(
-                level=customLogLevel(),
-                inputTracks="tracks",
-                inputParticles="particles_selected",
-                inputParticleMeasurementsMap="particle_measurements_map",
-                inputTrackParticleMatching="track_particle_matching",
-                filePath=str(Path(outputDirRoot) / f"ntuple_finding_{name}.root"),
-            )
-            s.addWriter(nTupleWriter)
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -2011,24 +1999,24 @@ def addGnn(
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)
 
     # Convert proto tracks to tracks
-    convAlg = acts.examples.ProtoTracksToTracks(
-        level=customLogLevel(),
-        inputProtoTracks=findingAlg.config.outputProtoTracks,
-        inputMeasurements="measurements",
-        outputTracks="gnn-tracks",
+    s.addAlgorithm(
+        acts.examples.ProtoTracksToTracks(
+            level=customLogLevel(),
+            inputProtoTracks="protoTracks",
+            inputMeasurements="measurements",
+            outputTracks="tracks",
+        )
     )
-    s.addAlgorithm(convAlg)
-    s.addWhiteboardAlias("tracks", convAlg.config.outputTracks)
 
     # Truth matching
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
-        inputTracks=convAlg.config.outputTracks,
-        inputParticles="particles_selected",
+        inputTracks="tracks",
+        inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="gnn_track_particle_matching",
         outputParticleTrackMatching="gnn_particle_track_matching",
-        doubleMatching=False,
+        doubleMatching=True,
     )
     s.addAlgorithm(matchAlg)
     s.addWhiteboardAlias(
@@ -2038,16 +2026,21 @@ def addGnn(
         "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
-    addTrackWriters(
-        s,
-        name="gnn",
-        tracks=convAlg.config.outputTracks,
-        outputDirRoot=outputDirRoot,
-        outputDirCsv=None,
-        writeFinderPerformance=True,
-        writeSummary=False,
-        writeFinderNTuple=True,
-    )
+    # Optional performance writer
+    if outputDirRoot is not None:
+        assert (
+            ACTS_EXAMPLES_ROOT_AVAILABLE
+        ), "ROOT output requested but ROOT is not available"
+        s.addWriter(
+            RootTrackFinderNTupleWriter(
+                level=customLogLevel(),
+                inputTracks="tracks",
+                inputParticles="particles",
+                inputParticleMeasurementsMap="particle_measurements_map",
+                inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
+                filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
+            )
+        )
 
     return s
 
