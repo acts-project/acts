@@ -71,6 +71,7 @@ namespace {
 
 struct TrackStateCreator final
     : public Acts::Experimental::TrackStateCreatorBase<TrackStateCreator> {
+  using Base = Acts::Experimental::TrackStateCreatorBase<TrackStateCreator>;
   using Traj = Acts::VectorMultiTrajectory;
 
   const MeasurementContainer* measurements = nullptr;
@@ -94,22 +95,23 @@ struct TrackStateCreator final
   }
 
   // TODO
-  void select(std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
-              const Acts::Logger& logger) const {
-    if (seed.has_value()) {
-      std::vector<Traj::TrackStateProxy> newCandidates;
+  // void select(std::vector<Traj::TrackStateProxy>& candidates, bool&
+  // isOutlier,
+  //             const Acts::Logger& logger) const {
+  //   if (seed.has_value()) {
+  //     std::vector<Traj::TrackStateProxy> newCandidates;
 
-      for (const auto& candidate : candidates) {
-        if (isSeedCandidate(candidate)) {
-          newCandidates.push_back(candidate);
-        }
-      }
+  //     for (const auto& candidate : candidates) {
+  //       if (isSeedCandidate(candidate)) {
+  //         newCandidates.push_back(candidate);
+  //       }
+  //     }
 
-      if (!newCandidates.empty()) {
-        candidates = std::move(newCandidates);
-      }
-    }
-  }
+  //     if (!newCandidates.empty()) {
+  //       candidates = std::move(newCandidates);
+  //     }
+  //   }
+  // }
 
   auto measurementRange(const Acts::Surface& surface,
                         const Acts::BoundTrackParameters& boundParams) const {

@@ -16,6 +16,7 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilterExtensions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
