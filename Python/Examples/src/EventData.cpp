@@ -253,41 +253,51 @@ void addEventData(py::module& mex) {
       .def("geometryId", &IndexSourceLink::geometryId);
 
   py::class_<TrackProxy>(mex, "TrackProxy")
+      .def_property_readonly("referenceSurface", &TrackProxy::referenceSurface)
       .def("setReferenceSurface",
            [](TrackProxy& self, std::shared_ptr<const Acts::Surface> srf) {
              self.setReferenceSurface(std::move(srf));
            })
-      .def("setParameters",
-           [](TrackProxy& self, const Acts::BoundVector& params) {
-             self.parameters() = params;
-           })
-      .def("setCovariance",
-           [](TrackProxy& self, const Acts::BoundMatrix& cov) {
-             self.covariance() = cov;
-           })
+      .def_property(
+          "parameters",
+          [](const TrackProxy& self) {
+            return Acts::BoundVector{self.parameters()};
+          },
+          [](TrackProxy& self, const Acts::BoundVector& v) {
+            self.parameters() = v;
+          })
+      .def_property(
+          "covariance",
+          [](const TrackProxy& self) {
+            return Acts::BoundMatrix{self.covariance()};
+          },
+          [](TrackProxy& self, const Acts::BoundMatrix& m) {
+            self.covariance() = m;
+          })
+      .def_property_readonly("particleHypothesis",
+                             &TrackProxy::particleHypothesis)
       .def("setParticleHypothesis",
            [](TrackProxy& self, const Acts::ParticleHypothesis& hyp) {
              self.setParticleHypothesis(hyp);
            })
       .def_property(
           "nMeasurements",
-          [](TrackProxy& self) -> std::uint32_t {
+          [](const TrackProxy& self) -> std::uint32_t {
             return self.nMeasurements();
           },
           [](TrackProxy& self, std::uint32_t n) { self.nMeasurements() = n; })
       .def_property(
           "nHoles",
-          [](TrackProxy& self) -> std::uint32_t { return self.nHoles(); },
+          [](const TrackProxy& self) -> std::uint32_t { return self.nHoles(); },
           [](TrackProxy& self, std::uint32_t n) { self.nHoles() = n; })
       .def_property(
-          "chi2", [](TrackProxy& self) -> float { return self.chi2(); },
+          "chi2", [](const TrackProxy& self) -> float { return self.chi2(); },
           [](TrackProxy& self, float v) { self.chi2() = v; });
 
   py::class_<TrackContainer>(mex, "TrackContainer")
       .def(py::init([]() {
-        return TrackContainer{
-            std::make_shared<Acts::VectorTrackContainer>(),
-            std::make_shared<Acts::VectorMultiTrajectory>()};
+        return TrackContainer{std::make_shared<Acts::VectorTrackContainer>(),
+                              std::make_shared<Acts::VectorMultiTrajectory>()};
       }))
       .def("__len__", &TrackContainer::size)
       .def("makeTrack", &TrackContainer::makeTrack, py::keep_alive<0, 1>())
