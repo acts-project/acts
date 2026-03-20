@@ -43,14 +43,27 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
       Acts::GeometryContext::dangerouslyDefaultConstruct();
   auto detectorElementFactory =
       [this](const Acts::Transform3& transform,
-             std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,
+             std::variant<std::shared_ptr<const Acts::PlanarBounds>,
+                          std::shared_ptr<const Acts::DiscBounds>>
+                 bounds,
+             double thickness,
              std::shared_ptr<const Acts::ISurfaceMaterial> material)
       -> std::shared_ptr<TelescopeDetectorElement> {
     auto ID = static_cast<TelescopeDetectorElement::Identifier>(
         m_detectorStore.size());
-    auto detElem = std::make_shared<TelescopeDetectorElement>(
-        ID, std::make_shared<const Acts::Transform3>(transform),
-        std::move(bounds), thickness, std::move(material));
+
+    std::shared_ptr<TelescopeDetectorElement> detElem;
+    if (bounds.index() == 0) {
+      detElem = std::make_shared<TelescopeDetectorElement>(
+          ID, std::make_shared<Acts::Transform3>(transform),
+          std::get<std::shared_ptr<const Acts::PlanarBounds>>(bounds),
+          thickness, std::move(material));
+    } else {
+      detElem = std::make_shared<TelescopeDetectorElement>(
+          ID, std::make_shared<Acts::Transform3>(transform),
+          std::get<std::shared_ptr<const Acts::DiscBounds>>(bounds), thickness,
+          std::move(material));
+    }
     m_detectorStore.push_back(detElem);
     return detElem;
   };

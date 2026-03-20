@@ -94,7 +94,7 @@ ActsExamples::buildTelescopeDetector(
     if (surfaceType == TelescopeSurfaceType::Plane) {
       detElement = factory(trafo, pBounds, 1._um, surfaceMaterial);
     } else {
-      detElement = factory(trafo, pBounds, 1._um, surfaceMaterial);
+      detElement = factory(trafo, rBounds, 1._um, surfaceMaterial);
     }
     // Get the surface
     auto surface = detElement->surface().getSharedPtr();
