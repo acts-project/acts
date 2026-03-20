@@ -32,8 +32,11 @@ add_library(docs-examples SHARED)
 set_target_properties(docs-examples PROPERTIES EXCLUDE_FROM_ALL TRUE)
 target_sources(
     docs-examples
-    PRIVATE examples/logging.cpp examples/units.cpp examples/errors.cpp
-            examples/geometry_module.cpp
+    PRIVATE
+        examples/logging.cpp
+        examples/units.cpp
+        examples/errors.cpp
+        examples/geometry_module.cpp
 )
 target_link_libraries(docs-examples PRIVATE Acts::Core)
 
