@@ -46,6 +46,9 @@ class TrackFittingAlgorithm final : public IAlgorithm {
     int pickTrack = -1;
     // Type erased calibrator for the measurements
     std::shared_ptr<MeasurementCalibrator> calibrator;
+    /// Forward-link all tracks after fitting, enabling inside-out track state
+    /// iteration via TrackProxy::trackStates(). Off by default.
+    bool linkForward = false;
   };
 
   /// Constructor of the fitting algorithm

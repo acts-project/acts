@@ -255,6 +255,7 @@ class TrackProxy
   using Base::chi2;
   using Base::direction;
   using Base::fourMomentum;
+  using Base::isForwardLinked;
   using Base::loc0;
   using Base::loc1;
   using Base::momentum;

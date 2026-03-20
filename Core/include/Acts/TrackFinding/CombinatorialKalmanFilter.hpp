@@ -852,9 +852,10 @@ class CombinatorialKalmanFilter {
             .template makeState<PropagatorOptions, StubPathLimitReached>(
                 propOptions);
 
-    auto initResult = m_propagator.template initialize<
-        decltype(propState), BoundTrackParameters, StubPathLimitReached>(
-        propState, initialParameters);
+    auto initResult =
+        m_propagator
+            .template initialize<decltype(propState), StubPathLimitReached>(
+                propState, initialParameters);
     if (!initResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
       return initResult.error();
