@@ -26,10 +26,16 @@ namespace Acts {
 template <typename return_t, typename... args_t>
 class JsonKindDispatcher {
  public:
+  /// Decoder callable type
   using decoder_type =
       std::function<return_t(const nlohmann::json&, args_t...)>;
+  /// Type of the dispatcher specialization
   using self_type = JsonKindDispatcher<return_t, args_t...>;
 
+  /// Explicit constructor of the dispatcher
+  ///
+  /// @param kindKey the key containing the type kind in json
+  /// @param context context string for error signaling
   explicit JsonKindDispatcher(std::string kindKey = "kind",
                               std::string context = "JSON payload")
       : m_kindKey(std::move(kindKey)), m_context(std::move(context)) {
@@ -42,6 +48,12 @@ class JsonKindDispatcher {
     }
   }
 
+  /// Register a kind and the corresponding decoder
+  ///
+  /// @param kind kind to register
+  /// @param corresponding decoder
+  ///
+  /// @return reference to this dispatcher instance
   self_type& registerKind(std::string kind, decoder_type decoder) {
     if (kind.empty()) {
       throw std::invalid_argument("JsonKindDispatcher kind must be non-empty");
@@ -58,6 +70,12 @@ class JsonKindDispatcher {
     return *this;
   }
 
+  /// Decode the registered kind from a json file
+  ///
+  /// @param encoded json file to decode
+  /// @param args_t forwarding reference to the decoders' arguments
+  ///
+  /// return return_t the object constructed from the json encoding
   return_t operator()(const nlohmann::json& encoded, args_t&&... args) const {
     if (!encoded.contains(m_kindKey)) {
       throw std::invalid_argument("Missing '" + m_kindKey + "' in " +
@@ -85,12 +103,21 @@ class JsonKindDispatcher {
     }
   }
 
+  /// Check if a certain kind is registered
+  ///
+  /// @param kind the kind to check for registration
+  ///
+  /// @return boolean showing registration status
   bool hasKind(std::string_view kind) const {
     return m_decoders.find(std::string{kind}) != m_decoders.end();
   }
 
+  /// Clear the registered decoders list
   void clear() { m_decoders.clear(); }
 
+  /// Get the number of registered decoders
+  ///
+  /// @return number of registered decoders
   std::size_t size() const { return m_decoders.size(); }
 
  private:

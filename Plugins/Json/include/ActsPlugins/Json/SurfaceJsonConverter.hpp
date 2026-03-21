@@ -66,11 +66,14 @@ class SurfaceJsonConverter {
     bool portal = false;
   };
 
+  /// Encoder type for the surface bounds
   using SurfaceBoundsEncoder = TypeDispatcher<SurfaceBounds, nlohmann::json()>;
+  /// Encoder type for the surfaces
   using SurfaceEncoder =
       TypeDispatcher<Surface,
                      nlohmann::json(const GeometryContext&, const Options&)>;
 
+  /// Deccoder type for the surfaces
   using SurfaceDecoder = JsonKindDispatcher<std::shared_ptr<Surface>>;
 
   /// Configuration struct
@@ -83,6 +86,7 @@ class SurfaceJsonConverter {
     /// Decoder for the surfaces
     SurfaceDecoder surfaceDecoder{};
 
+    /// Default configuration construction
     static Config defaultConfig();
   };
 
@@ -125,8 +129,7 @@ class SurfaceJsonConverter {
 
   /// @brief Set externally constructed configuration
   ///
-  /// @note May be removed when the dispatcher migration is finished 
-  /// and the static structure is removed
+  /// @note May be removed when the dispatcher migration is finished
   ///
   /// @param cfg configuration to use
   static void setConfig(const Config& cfg) { m_cfg = cfg; };
