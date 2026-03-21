@@ -87,6 +87,8 @@ class SurfaceJsonConverter {
     SurfaceDecoder surfaceDecoder{};
 
     /// Default configuration construction
+    ///
+    /// @return default configuration
     static Config defaultConfig();
   };
 

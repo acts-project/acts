@@ -51,7 +51,7 @@ class JsonKindDispatcher {
   /// Register a kind and the corresponding decoder
   ///
   /// @param kind kind to register
-  /// @param corresponding decoder
+  /// @param decoder corresponding decoder
   ///
   /// @return reference to this dispatcher instance
   self_type& registerKind(std::string kind, decoder_type decoder) {
@@ -73,7 +73,7 @@ class JsonKindDispatcher {
   /// Decode the registered kind from a json file
   ///
   /// @param encoded json file to decode
-  /// @param args_t forwarding reference to the decoders' arguments
+  /// @param args forwarding reference to the decoder arguments
   ///
   /// return return_t the object constructed from the json encoding
   return_t operator()(const nlohmann::json& encoded, args_t&&... args) const {
