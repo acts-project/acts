@@ -10,10 +10,8 @@
 
 #include "Acts/Seeding/detail/UtilityFunctions.hpp"
 
-#include <iterator>
 #include <list>
 #include <set>
-#include <string>
 #include <unordered_set>
 #include <vector>
 

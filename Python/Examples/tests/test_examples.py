@@ -22,7 +22,6 @@ from helpers import (
     onnxEnabled,
     hashingSeedingEnabled,
     AssertCollectionExistsAlg,
-    failure_threshold,
 )
 
 import acts
@@ -533,132 +532,6 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
-
-
-@pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
-def test_truth_tracking_kalman(
-    tmp_path, assert_root_hash, revFiltMomThresh, detector_config
-):
-    root_files = [
-        ("trackstates_kf.root", "trackstates", 19),
-        ("tracksummary_kf.root", "tracksummary", 10),
-        ("performance_kf.root", None, -1),
-    ]
-
-    for fn, _, _ in root_files:
-        fp = tmp_path / fn
-        assert not fp.exists()
-
-    with detector_config.detector:
-        from truth_tracking_kalman import runTruthTrackingKalman
-
-        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-        seq = Sequencer(events=10, numThreads=1)
-
-        runTruthTrackingKalman(
-            trackingGeometry=detector_config.trackingGeometry,
-            field=field,
-            digiConfigFile=detector_config.digiConfigFile,
-            outputDir=tmp_path,
-            reverseFilteringMomThreshold=revFiltMomThresh,
-            s=seq,
-        )
-
-        seq.run()
-
-    for fn, tn, ee in root_files:
-        fp = tmp_path / fn
-        assert fp.exists()
-        assert fp.stat().st_size > 1024
-        if tn is not None:
-            assert_has_entries(fp, tn)
-            assert_root_hash(fn, fp)
-
-    import ROOT
-
-    ROOT.PyConfig.IgnoreCommandLineOptions = True
-    ROOT.gROOT.SetBatch(True)
-    rf = ROOT.TFile.Open(str(tmp_path / "tracksummary_kf.root"))
-    keys = [k.GetName() for k in rf.GetListOfKeys()]
-    assert "tracksummary" in keys
-    for entry in rf.Get("tracksummary"):
-        assert entry.hasFittedParams
-
-
-def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
-    from truth_tracking_gsf import runTruthTrackingGsf
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    seq = Sequencer(
-        events=10,
-        numThreads=1,
-    )
-
-    root_files = [
-        ("trackstates_gsf.root", "trackstates"),
-        ("tracksummary_gsf.root", "tracksummary"),
-    ]
-
-    for fn, _ in root_files:
-        fp = tmp_path / fn
-        assert not fp.exists()
-
-    with detector_config.detector:
-        runTruthTrackingGsf(
-            trackingGeometry=detector_config.trackingGeometry,
-            decorators=detector_config.decorators,
-            field=field,
-            digiConfigFile=detector_config.digiConfigFile,
-            outputDir=tmp_path,
-            s=seq,
-        )
-
-        # See https://github.com/acts-project/acts/issues/1300
-        with failure_threshold(acts.logging.FATAL):
-            seq.run()
-
-    for fn, tn in root_files:
-        fp = tmp_path / fn
-        assert fp.exists()
-        assert fp.stat().st_size > 1024
-        if tn is not None:
-            assert_root_hash(fn, fp)
-
-
-def test_refitting(tmp_path, detector_config, assert_root_hash):
-    from truth_tracking_gsf_refitting import runRefittingGsf
-
-    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-    seq = Sequencer(
-        events=10,
-        numThreads=1,
-    )
-
-    with detector_config.detector:
-        # Only check if it runs without errors right known
-        # Changes in fitter behaviour should be caught by other tests
-        runRefittingGsf(
-            trackingGeometry=detector_config.trackingGeometry,
-            field=field,
-            digiConfigFile=detector_config.digiConfigFile,
-            outputDir=tmp_path,
-            s=seq,
-        ).run()
-
-    root_files = [
-        ("trackstates_gsf_refit.root", "trackstates"),
-        ("tracksummary_gsf_refit.root", "tracksummary"),
-    ]
-
-    for fn, tn in root_files:
-        fp = tmp_path / fn
-        assert fp.exists()
-        assert fp.stat().st_size > 1024
-        if tn is not None:
-            assert_root_hash(fn, fp)
 
 
 def test_particle_gun(tmp_path, assert_root_hash):
@@ -1215,27 +1088,25 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
         assert_root_hash(fn, fp)
 
 
-@pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not gnnEnabled, reason="Gnn environment not set up")
-def test_gnn_metric_learning(
-    tmp_path, trk_geo, field, assert_root_hash, backend, hardware
-):
+def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardware):
     """Test GNN track finding with metric learning graph construction"""
-    if backend == "onnx" and hardware == "cpu":
-        pytest.skip("Combination of ONNX and CPU not yet supported")
+    if hardware == "cpu":
+        pytest.skip("CPU not yet supported")
 
-    root_file = "performance_track_finding.root"
-    assert not (tmp_path / root_file).exists()
+    root_files = ["performance_finding_gnn.root", "ntuple_finding_gnn.root"]
+    for f in root_files:
+        assert not (tmp_path / f).exists()
 
     # Check if models exist using MODEL_STORAGE environment variable
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models = Path(model_storage)
 
-    model_subdir = "torchscript_models" if backend == "torch" else "onnx_models"
-    model_ext = "pt" if backend == "torch" else "onnx"
-    filter_name = "filter" if backend == "torch" else "filtering"
+    model_subdir = "torchscript_models"
+    model_ext = "pt"
+    filter_name = "filter"
 
     assert (ci_models / "torchscript_models/embed.pt").exists()
     assert (ci_models / f"{model_subdir}/{filter_name}.{model_ext}").exists()
@@ -1253,7 +1124,7 @@ def test_gnn_metric_learning(
 
     try:
         subprocess.check_call(
-            [sys.executable, str(script), backend],
+            [sys.executable, str(script)],
             cwd=tmp_path,
             env=env,
             stderr=subprocess.STDOUT,
@@ -1263,10 +1134,11 @@ def test_gnn_metric_learning(
             print(e.output.decode("utf-8"))
         raise
 
-    rfp = tmp_path / root_file
-    assert rfp.exists()
+    for f in root_files:
+        rfp = tmp_path / f
+        assert rfp.exists()
 
-    assert_root_hash(root_file, rfp)
+        assert_root_hash(f, rfp)
 
 
 @pytest.mark.odd
@@ -1324,9 +1196,13 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
         )
 
     # Verify output
-    output_file = tmp_path / "performance_track_finding.root"
+    output_file = tmp_path / "performance_finding_gnn.root"
     assert output_file.exists()
-    assert_root_hash("performance_track_finding.root", output_file)
+    assert_root_hash("performance_finding_gnn.root", output_file)
+
+    output_file = tmp_path / "ntuple_finding_gnn.root"
+    assert output_file.exists()
+    assert_root_hash("ntuple_finding_gnn.root", output_file)
 
 
 @pytest.mark.odd

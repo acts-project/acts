@@ -112,7 +112,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(
 
     auto dup = std::adjacent_find(indices.begin(), indices.end());
     if (dup != indices.end()) {
-      std::invalid_argument(
+      throw std::invalid_argument(
           "Digitization configuration contains duplicate parameter indices");
     }
 
@@ -150,8 +150,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementContainer measurements;
   ClusterContainer clusters;
 
-  IndexMultimap<SimBarcode> measurementParticlesMap;
-  IndexMultimap<Index> measurementSimHitsMap;
+  MeasurementParticlesMap measurementParticlesMap;
+  MeasurementSimHitsMap measurementSimHitsMap;
   measurements.reserve(simHits.size());
   measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(simHits.size());

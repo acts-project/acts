@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Material/MaterialValidater.hpp"
+#include "Acts/Material/MaterialValidator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -45,8 +45,8 @@ class MaterialValidation : public IAlgorithm {
     /// Random number service
     std::shared_ptr<RandomNumbers> randomNumberSvc = nullptr;
 
-    // The validater
-    std::shared_ptr<Acts::MaterialValidater> materialValidater = nullptr;
+    // The validator
+    std::shared_ptr<Acts::MaterialValidator> materialValidator = nullptr;
 
     /// Output collection name
     std::string outputMaterialTracks = "material_tracks";

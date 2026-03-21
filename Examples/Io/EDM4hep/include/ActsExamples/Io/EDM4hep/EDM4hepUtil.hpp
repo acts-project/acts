@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include <ActsPodioEdm/MutableTrackerHitLocal.h>
 #include <ActsPodioEdm/TrackerHitLocal.h>
@@ -30,13 +31,12 @@
 namespace ActsExamples::EDM4hepUtil {
 
 using MapParticleIdFrom =
-    std::function<ActsFatras::Barcode(const edm4hep::MCParticle& particle)>;
+    std::function<SimBarcode(const edm4hep::MCParticle& particle)>;
 using MapParticleIdTo =
-    std::function<edm4hep::MCParticle(ActsFatras::Barcode particleId)>;
+    std::function<edm4hep::MCParticle(SimBarcode particleId)>;
 
-inline ActsFatras::Barcode zeroParticleMapper(
-    const edm4hep::MCParticle& /*particle*/) {
-  return ActsFatras::Barcode::Invalid();
+inline SimBarcode zeroParticleMapper(const edm4hep::MCParticle& /*particle*/) {
+  return SimBarcode::Invalid();
 }
 
 using MapGeometryIdFrom =
@@ -136,7 +136,7 @@ void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
                      const Trajectories& from, edm4hep::MutableTrack to,
                      std::size_t fromIndex,
                      const Acts::ParticleHypothesis& particleHypothesis,
-                     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);
+                     const MeasurementParticlesMap& measurementParticlesMap);
 
 /// Helper function to either return an id as is, or unpack an index from it
 /// if it is a podio::ObjectID.
