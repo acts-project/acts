@@ -26,7 +26,6 @@
 #include <span>
 #include <stdexcept>
 
-#include <boost/container/static_vector.hpp>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
@@ -338,13 +337,6 @@ constexpr bool kEdm4hepVertexHasTime =
 
 void writeVertex(const Acts::Vertex& vertex, edm4hep::MutableVertex to);
 
-namespace detail {
-// These functions are exposed here so they can be used from the unit tests
-std::uint32_t encodeIndices(std::span<const std::uint8_t> indices);
-boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
-decodeIndices(std::uint32_t type);
-}  // namespace detail
-
 /// Write a measurement to an EDM4hep tracker hit
 ///
 /// This function converts an ACTS measurement into the EDM4hep format. It
@@ -353,12 +345,14 @@ decodeIndices(std::uint32_t type);
 /// - Time storage (in ns)
 /// - Measurement values and covariance matrix storage
 /// - Encoding of measurement indices into a 32-bit integer:
-///   - First 4 bits: number of indices (max 6)
-///   - Next 4 bits per index: which parameter is being measured (0-6)
+///   - First 4 bits: number of indices (max
+///     `ActsPodioEdm::detail::kMaxSubspaceSize`)
+///   - Next 4 bits per index: measured bound parameter index (max
+///     `ActsPodioEdm::detail::kMaxSubspaceIndex`)
 ///
 /// The function will throw if:
-/// - The number of indices exceeds 6
-/// - Any index is larger than 6
+/// - The number of indices exceeds `ActsPodioEdm::detail::kMaxSubspaceSize`
+/// - Any index is larger than `ActsPodioEdm::detail::kMaxSubspaceIndex`
 /// - There's a size mismatch between parameters and covariance matrix
 ///
 /// @param gctx The geometry context
@@ -382,8 +376,7 @@ struct MeasurementData {
   /// Covariance matrix of the measurement (full bound space)
   Acts::BoundMatrix covariance{Acts::BoundMatrix::Zero()};
   /// Indices of the measured parameters (subspace)
-  boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
-      indices;
+  std::vector<Acts::SubspaceIndex> indices;
   /// Cell ID of the measurement
   std::uint64_t cellId{0};
 };
