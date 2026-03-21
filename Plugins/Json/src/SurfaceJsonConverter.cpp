@@ -8,8 +8,6 @@
 
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -25,13 +23,148 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "ActsPlugins/Json/GeometryIdentifierJsonConverter.hpp"
+#include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
 
 #include <memory>
 
-#include <nlohmann/json_fwd.hpp>
+namespace {
+
+// @brief Get string representation of the surface bounds kind
+//
+// @return string representation of the surface bounds kind
+template <typename bounds_t>
+std::string getSurfaceBoundsKind() {
+  if (std::is_same_v<bounds_t, Acts::EllipseBounds>) {
+    return "Ellipse";
+  } else if (std::is_same_v<bounds_t, Acts::RectangleBounds>) {
+    return "Rectangle";
+  } else if (std::is_same_v<bounds_t, Acts::TrapezoidBounds>) {
+    return "Trapezoid";
+  } else if (std::is_same_v<bounds_t, Acts::AnnulusBounds>) {
+    return "Annulus";
+  } else if (std::is_same_v<bounds_t, Acts::RadialBounds>) {
+    return "Radial";
+  } else if (std::is_same_v<bounds_t, Acts::DiscTrapezoidBounds>) {
+    return "DiscTrapezoid";
+  } else if (std::is_same_v<bounds_t, Acts::CylinderBounds>) {
+    return "Cylinder";
+  } else if (std::is_same_v<bounds_t, Acts::ConeBounds>) {
+    return "Cone";
+  } else if (std::is_same_v<bounds_t, Acts::LineBounds>) {
+    return "Line";
+  } else if (std::is_same_v<bounds_t, Acts::SurfaceBounds>) {
+    return "DefaultBounds";
+  } else if (std::is_same_v<bounds_t, Acts::InfiniteBounds>) {
+    return "Infinite";
+  } else {
+    throw std::invalid_argument("Unknown surface bounds kind");
+  }
+}
+
+// @brief Get string representation of the surface kind
+//
+// @return string representation of the surface kind
+template <typename surface_t>
+std::string getSurfaceKind() {
+  if (std::is_same_v<surface_t, Acts::PlaneSurface>) {
+    return "Plane";
+  } else if (std::is_same_v<surface_t, Acts::DiscSurface>) {
+    return "Disc";
+  } else if (std::is_same_v<surface_t, Acts::CylinderSurface>) {
+    return "Cylinder";
+  } else if (std::is_same_v<surface_t, Acts::ConeSurface>) {
+    return "Cone";
+  } else if (std::is_same_v<surface_t, Acts::StrawSurface>) {
+    return "Straw";
+  } else if (std::is_same_v<surface_t, Acts::PerigeeSurface>) {
+    return "Perigee";
+  } else {
+    throw std::invalid_argument("Unknown surface kind");
+  }
+}
+
+// @brief Type-based surface bounds json encoding
+//
+// @tparam bounds_t surface bounds type
+//
+// @param bounds surface bounds to be converted
+//
+// @return json representation of the surface bounds
+template <typename bounds_t>
+nlohmann::json surfaceBoundsToJsonT(const bounds_t& bounds) {
+  nlohmann::json jBounds = Acts::SurfaceBoundsJsonConverter::toJson(bounds);
+  jBounds["kind"] = getSurfaceBoundsKind<bounds_t>();
+  return jBounds;
+}
+
+// @brief Type-based surface json encoding
+//
+// @tparam surface_t surface type
+//
+// @param bounds surface to be converted
+// @param gctx geometry context
+// @param opt surface json conversion options
+//
+// @return json representation of the surface bounds
+template <typename surface_t>
+nlohmann::json surfaceToJsonT(const surface_t& surface,
+                              const Acts::GeometryContext& gctx,
+                              const Acts::SurfaceJsonConverter::Options& opt) {
+  nlohmann::json jSurface;
+  const auto sTransform = surface.localToGlobalTransform(gctx);
+
+  jSurface["transform"] =
+      Acts::Transform3JsonConverter::toJson(sTransform, opt.transformOptions);
+  jSurface["type"] = surface.type();
+  jSurface["geo_id"] = nlohmann::json(surface.geometryId());
+  jSurface["sensitive"] = surface.isSensitive();
+  if (surface.surfaceMaterial() != nullptr && opt.writeMaterial) {
+    jSurface["material"] =
+        nlohmann::json(surface.surfaceMaterial())["material"];
+  }
+  jSurface["kind"] = getSurfaceKind<surface_t>();
+  return jSurface;
+}
+
+// @brief Type-based surface json decoding
+//
+// @tparam surface_t surface type
+//
+// @param j json encoding of the surface
+//
+// @return shared pointer to the decoded surface
+template <typename surface_t>
+std::shared_ptr<Acts::Surface> surfaceFromJsonT(const nlohmann::json& j) {
+  nlohmann::json jTransform = j["transform"];
+  Acts::Transform3 sTransform =
+      Acts::Transform3JsonConverter::fromJson(jTransform);
+  return Acts::Surface::makeShared<surface_t>(sTransform);
+}
+
+// @brief Type-based surface json decoding
+//
+// @tparam surface_t surface type
+// @tparam bounds_t surface bounds type
+//
+// @param j json encoding of the surface
+//
+// @return shared pointer to the decoded surface
+template <typename surface_t, typename bounds_t>
+std::shared_ptr<Acts::Surface> surfaceFromJsonT(const nlohmann::json& j) {
+  nlohmann::json jTransform = j["transform"];
+  Acts::Transform3 sTransform =
+      Acts::Transform3JsonConverter::fromJson(jTransform);
+  nlohmann::json jBounds = j["bounds"];
+  auto sBounds = Acts::SurfaceBoundsJsonConverter::fromJson<bounds_t>(jBounds);
+  return Acts::Surface::makeShared<surface_t>(sTransform, std::move(sBounds));
+}
+
+}  // namespace
 
 void Acts::to_json(nlohmann::json& j,
                    const Acts::SurfaceAndMaterialWithContext& surface) {

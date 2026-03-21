@@ -58,7 +58,7 @@ class JsonKindDispatcher {
     return *this;
   }
 
-  return_t operator()(const nlohmann::json& encoded, args_t... args) const {
+  return_t operator()(const nlohmann::json& encoded, args_t&&... args) const {
     if (!encoded.contains(m_kindKey)) {
       throw std::invalid_argument("Missing '" + m_kindKey + "' in " +
                                   m_context);
