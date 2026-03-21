@@ -1095,8 +1095,9 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardwar
     if hardware == "cpu":
         pytest.skip("CPU not yet supported")
 
-    root_file = "performance_track_finding.root"
-    assert not (tmp_path / root_file).exists()
+    root_files = ["performance_finding_gnn.root", "ntuple_finding_gnn.root"]
+    for f in root_files:
+        assert not (tmp_path / f).exists()
 
     # Check if models exist using MODEL_STORAGE environment variable
     model_storage = os.environ.get("MODEL_STORAGE")
@@ -1133,10 +1134,11 @@ def test_gnn_metric_learning(tmp_path, trk_geo, field, assert_root_hash, hardwar
             print(e.output.decode("utf-8"))
         raise
 
-    rfp = tmp_path / root_file
-    assert rfp.exists()
+    for f in root_files:
+        rfp = tmp_path / f
+        assert rfp.exists()
 
-    assert_root_hash(root_file, rfp)
+        assert_root_hash(f, rfp)
 
 
 @pytest.mark.odd
@@ -1194,9 +1196,13 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
         )
 
     # Verify output
-    output_file = tmp_path / "performance_track_finding.root"
+    output_file = tmp_path / "performance_finding_gnn.root"
     assert output_file.exists()
-    assert_root_hash("performance_track_finding.root", output_file)
+    assert_root_hash("performance_finding_gnn.root", output_file)
+
+    output_file = tmp_path / "ntuple_finding_gnn.root"
+    assert output_file.exists()
+    assert_root_hash("ntuple_finding_gnn.root", output_file)
 
 
 @pytest.mark.odd

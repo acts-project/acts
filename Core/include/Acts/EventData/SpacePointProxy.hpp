@@ -9,12 +9,17 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 
 /// Proxy giving read access to space point data in a container.
 template <typename container_t>
-class SpacePointProxy {
+class [[deprecated(
+    "Will be dropped soon and is replaced by the new "
+    "space point proxies")]] SpacePointProxy {
  public:
   /// Container type
   using ContainerType = container_t;
@@ -80,3 +85,5 @@ class SpacePointProxy {
 }  // namespace Acts
 
 #include "Acts/EventData/SpacePointProxy.ipp"
+
+ACTS_POP_IGNORE_DEPRECATED()
