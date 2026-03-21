@@ -75,7 +75,7 @@ class JsonKindDispatcher {
   /// @param encoded json file to decode
   /// @param args forwarding reference to the decoder arguments
   ///
-  /// return return_t the object constructed from the json encoding
+  /// @return the object constructed from the json encoding
   return_t operator()(const nlohmann::json& encoded, args_t&&... args) const {
     if (!encoded.contains(m_kindKey)) {
       throw std::invalid_argument("Missing '" + m_kindKey + "' in " +
