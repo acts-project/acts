@@ -159,13 +159,14 @@ class MultiStepperLoop final {
   /// @brief Typedef to the Config of the single component Stepper
   using SingleConfig = typename SingleStepper::Config;
 
+  /// Type alias for bound track parameters
+  using BoundParameters = MultiComponentBoundTrackParameters;
   /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
   /// Bound state tuple containing parameters, Jacobian, and path length
-  using BoundState =
-      std::tuple<MultiComponentBoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// @brief The reducer type
   using Reducer = component_reducer_t;
@@ -270,8 +271,13 @@ class MultiStepperLoop final {
   /// Initialize the stepper state from multi-component bound track parameters
   /// @param state The stepper state to initialize
   /// @param par The multi-component bound track parameters
-  void initialize(State& state,
-                  const MultiComponentBoundTrackParameters& par) const {
+  void initialize(State& state, const BoundParameters& par) const {
+    if (par.empty()) {
+      throw std::invalid_argument(
+          "Cannot construct MultiEigenStepperLoop::State with empty "
+          "multi-component parameters");
+    }
+
     state.particleHypothesis = par.particleHypothesis();
 
     const auto surface = par.referenceSurface().getSharedPtr();

@@ -15,7 +15,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -144,14 +144,14 @@ class DigitizationAlgorithm final : public IAlgorithm {
   WriteDataHandle<CellsMap> m_outputCells{this, "OutputCells"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 
-  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+  WriteDataHandle<MeasurementParticlesMap> m_outputMeasurementParticlesMap{
       this, "OutputMeasurementParticlesMap"};
-  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+  WriteDataHandle<MeasurementSimHitsMap> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
 
-  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+  WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasurementsMap{
       this, "OutputParticleMeasurementsMap"};
-  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+  WriteDataHandle<SimHitMeasurementsMap> m_outputSimHitMeasurementsMap{
       this, "OutputSimHitMeasurementsMap"};
 
   /// Construct a fixed-size smearer from a configuration.

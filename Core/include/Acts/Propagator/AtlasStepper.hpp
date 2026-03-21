@@ -37,12 +37,14 @@ class IVolumeMaterial;
 /// This is based original stepper code from the ATLAS RungeKuttaPropagator
 class AtlasStepper {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
   /// Type alias for Jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
   /// Type alias for bound state (parameters, jacobian, path length)
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// Configuration for constructing an AtlasStepper.
   struct Config {
@@ -183,7 +185,7 @@ class AtlasStepper {
   /// Initialize stepper state from bound track parameters
   /// @param state Stepper state to initialize
   /// @param par Bound track parameters containing initial conditions
-  void initialize(State& state, const BoundTrackParameters& par) const {
+  void initialize(State& state, const BoundParameters& par) const {
     initialize(state, par.parameters(), par.covariance(),
                par.particleHypothesis(), par.referenceSurface());
   }

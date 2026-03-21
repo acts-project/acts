@@ -327,8 +327,7 @@ Result<void> extrapolateTrackToReferenceSurface(
                << " with starting parameters " << parameters);
 
   auto propagateResult =
-      propagator.template propagate<BoundTrackParameters, propagator_options_t,
-                                    ForcedSurfaceReached>(
+      propagator.template propagate<propagator_options_t, ForcedSurfaceReached>(
           parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {

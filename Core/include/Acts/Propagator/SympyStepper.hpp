@@ -28,12 +28,14 @@ class IVolumeMaterial;
 /// Stepper implementation using sympy-generated expressions.
 class SympyStepper final {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
   /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
   /// Bound state tuple containing parameters, Jacobian, and path length
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// Configuration for the sympy stepper.
   struct Config {
@@ -145,7 +147,7 @@ class SympyStepper final {
   /// Initialize the state from bound track parameters
   /// @param state The state to initialize
   /// @param par The bound track parameters
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  void initialize(State& state, const BoundParameters& par) const;
 
   /// Initialize the state from bound parameters
   /// @param state The state to initialize
