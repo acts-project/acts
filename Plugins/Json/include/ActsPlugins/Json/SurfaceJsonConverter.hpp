@@ -123,6 +123,14 @@ class SurfaceJsonConverter {
   /// @return a shared object created from json input
   static std::shared_ptr<Surface> fromJson(const nlohmann::json& jSurface);
 
+  /// @brief Set externally constructed configuration
+  ///
+  /// @note May be removed when the dispatcher migration is finished 
+  /// and the static structure is removed
+  ///
+  /// @param cfg configuration to use
+  static void setConfig(const Config& cfg) { m_cfg = cfg; };
+
  private:
   static Config m_cfg;
 };
