@@ -26,11 +26,14 @@ namespace Acts {
 template <typename return_t, typename... args_t>
 class JsonKindDispatcher {
  public:
-  /// Decoder callable type
-  using decoder_type =
-      std::function<return_t(const nlohmann::json&, args_t...)>;
   /// Type of the dispatcher specialization
   using self_type = JsonKindDispatcher<return_t, args_t...>;
+  /// Function signature type
+  using decoder_signature = return_t(const nlohmann::json&, args_t...);
+  /// Decoder callable type
+  using decoder_type = std::function<decoder_signature>;
+  /// Decoder callable pointer type
+  using decoder_pointer_type = return_t (*)(args_t...);
 
   /// Explicit constructor of the dispatcher
   ///
@@ -76,7 +79,11 @@ class JsonKindDispatcher {
   /// @param args forwarding reference to the decoder arguments
   ///
   /// @return the object constructed from the json encoding
-  return_t operator()(const nlohmann::json& encoded, args_t&&... args) const {
+  template <typename... func_args_t>
+  return_t operator()(const nlohmann::json& encoded,
+                      func_args_t&&... args) const
+    requires std::invocable<decoder_pointer_type, func_args_t...>
+  {
     if (!encoded.contains(m_kindKey)) {
       throw std::invalid_argument("Missing '" + m_kindKey + "' in " +
                                   m_context);
@@ -96,10 +103,10 @@ class JsonKindDispatcher {
     }
 
     if constexpr (std::is_void_v<return_t>) {
-      decoder->second(encoded, std::forward<args_t>(args)...);
+      decoder->second(encoded, std::forward<func_args_t>(args)...);
       return;
     } else {
-      return decoder->second(encoded, std::forward<args_t>(args)...);
+      return decoder->second(encoded, std::forward<func_args_t>(args)...);
     }
   }
 
