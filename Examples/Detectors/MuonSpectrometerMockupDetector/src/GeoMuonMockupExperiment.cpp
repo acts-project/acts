@@ -169,14 +169,14 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   VolumeMap_t publishedVol{};
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
     try {
-      const auto key = [pubKey]() {
+      const std::string key = [](const auto& a) {
         if constexpr (std::is_same_v<std::remove_cvref_t<decltype(pubKey)>,
-                                     std::string>) {
-          return std::any_cast<std::string>(pubKey);
+                                     std::any>) {
+          return std::any_cast<std::string>(a);
         } else {
-          return std::get<std::string>(pubKey);
+          return std::get<std::string>(a);
         }
-      }();
+      }(pubKey);
 
       if (!publishedVol
                .insert(std::make_pair(key, static_cast<GeoFullPhysVol*>(fpV)))
