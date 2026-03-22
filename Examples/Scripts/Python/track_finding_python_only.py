@@ -130,7 +130,7 @@ def runTrackFindingPythonOnly(
             container = acts.examples.TrackContainer()
             for prototrack in prototracks:
                 track = container.makeTrack()
-                track.parameters = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+                track.parameters = acts.BoundVector(1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
                 track.nMeasurements = len(prototrack)
 
             self.tracks(context, container.makeConst())
