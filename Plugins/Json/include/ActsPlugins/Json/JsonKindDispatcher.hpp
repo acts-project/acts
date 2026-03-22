@@ -116,7 +116,7 @@ class JsonKindDispatcher {
   ///
   /// @return boolean showing registration status
   bool hasKind(std::string_view kind) const {
-    return m_decoders.find(std::string{kind}) != m_decoders.end();
+    return m_decoders.contains(std::string{kind});
   }
 
   /// Clear the registered decoders list
