@@ -25,7 +25,7 @@ from acts.examples.simulation import (
     ParticleConfig,
     addFatras,
     addDigitization,
-    addGenParticleSelection,
+    addDigiParticleSelection,
     ParticleSelectorConfig,
 )
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
@@ -94,16 +94,6 @@ def runGnnModuleMap(
         rnd=rnd,
     )
 
-    addGenParticleSelection(
-        s,
-        ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-        ),
-    )
-
     # FATRAS simulation
     addFatras(
         s,
@@ -125,6 +115,16 @@ def runGnnModuleMap(
         digiConfigFile=digiConfigFile,
         rnd=rnd,
         logLevel=acts.logging.INFO,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-3.0, 3.0),
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
     )
 
     addSpacePointsMaking(
