@@ -84,10 +84,8 @@ class PythonTrackFinderPerformanceWriter final
     }
 
     m_inputParticles.initialize(m_cfg.inputParticles);
-    m_inputTrackParticleMatching.initialize(
-        m_cfg.inputTrackParticleMatching);
-    m_inputParticleTrackMatching.initialize(
-        m_cfg.inputParticleTrackMatching);
+    m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+    m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
     m_inputParticleMeasurementsMap.initialize(
         m_cfg.inputParticleMeasurementsMap);
   }
@@ -181,20 +179,20 @@ void addPythonSpecific(py::module_& mex) {
   using Writer = PythonTrackFinderPerformanceWriter;
   using Config = Writer::Config;
 
-  auto w =
-      py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
-          mex, "PythonTrackFinderPerformanceWriter")
-          .def(py::init<const Config&, Acts::Logging::Level>(),
-               py::arg("config"), py::arg("level"))
-          .def_property_readonly("config", &Writer::config)
-          .def("histograms", &Writer::histograms);
+  auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+               mex, "PythonTrackFinderPerformanceWriter")
+               .def(py::init<const Config&, Acts::Logging::Level>(),
+                    py::arg("config"), py::arg("level"))
+               .def_property_readonly("config", &Writer::config)
+               .def("histograms", &Writer::histograms);
 
   auto c = py::class_<Config>(w, "Config").def(py::init<>());
   ACTS_PYTHON_STRUCT(c, inputTracks, inputParticles, inputTrackParticleMatching,
-                    inputParticleTrackMatching, inputParticleMeasurementsMap,
-                    effPlotToolConfig, fakePlotToolConfig,
-                    duplicationPlotToolConfig, trackSummaryPlotToolConfig,
-                    trackQualityPlotToolConfig, subDetectorTrackSummaryVolumes);
+                     inputParticleTrackMatching, inputParticleMeasurementsMap,
+                     effPlotToolConfig, fakePlotToolConfig,
+                     duplicationPlotToolConfig, trackSummaryPlotToolConfig,
+                     trackQualityPlotToolConfig,
+                     subDetectorTrackSummaryVolumes);
 }
 
 }  // namespace ActsPython

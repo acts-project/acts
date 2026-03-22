@@ -115,11 +115,11 @@ ProcessCode RootTrackFinderPerformanceWriter::finalize() {
     for (const auto& [name, eff] : m_collector.effPlotTool().efficiencies1D()) {
       toRoot(eff)->Write();
     }
-    for (const auto& [name, eff] :
-         m_collector.effPlotTool().efficiencies2D()) {
+    for (const auto& [name, eff] : m_collector.effPlotTool().efficiencies2D()) {
       toRoot(eff)->Write();
     }
-    for (const auto& eff : m_collector.effPlotTool().trackEffVsEtaInPtRanges()) {
+    for (const auto& eff :
+         m_collector.effPlotTool().trackEffVsEtaInPtRanges()) {
       toRoot(eff)->Write();
     }
     for (const auto& eff :

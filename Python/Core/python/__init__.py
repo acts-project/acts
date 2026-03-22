@@ -7,6 +7,7 @@ import functools
 
 from .ActsPythonBindings import *
 from .ActsPythonBindings import __version__
+from .ActsPythonBindings import _demo_histogram1, _demo_profile1, _demo_efficiency1
 from . import ActsPythonBindings
 from ._adapter import _patch_config
 from .histogram import _patch_histogram_types

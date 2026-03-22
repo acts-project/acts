@@ -6,229 +6,113 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import numpy as np
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
 import pytest
 
 import acts
 
 bh = pytest.importorskip("boost_histogram")
+mplhep = pytest.importorskip("mplhep")
 
 
 # ---------------------------------------------------------------------------
-# Axis construction
+# Compound types: exist
 # ---------------------------------------------------------------------------
 
 
-def test_axis_regular():
-    ax = acts.Axis(10, 0.0, 1.0, "x")
-    assert ax.size == 10
-    assert ax.label == "x"
-    edges = ax.edges
-    assert len(edges) == 11
-    assert edges[0] == pytest.approx(0.0)
-    assert edges[-1] == pytest.approx(1.0)
-
-
-def test_axis_regular_no_label():
-    ax = acts.Axis(5, -1.0, 1.0)
-    assert ax.size == 5
-    assert ax.label == ""
-
-
-def test_axis_variable():
-    edges_in = [0.0, 1.0, 3.0, 6.0]
-    ax = acts.Axis(edges_in, "eta")
-    assert ax.size == 3
-    assert ax.label == "eta"
-    edges_out = ax.edges
-    assert len(edges_out) == 4
-    for a, b in zip(edges_out, edges_in):
-        assert a == pytest.approx(b)
+def test_compound_types_exist():
+    for name in (
+        "Axis",
+        "BoostHistogram",
+        "BoostProfileHistogram",
+        "Histogram1",
+        "Histogram2",
+        "Histogram3",
+        "ProfileHistogram1",
+        "Efficiency1",
+        "Efficiency2",
+    ):
+        assert hasattr(acts, name), f"acts.{name} not found"
 
 
 # ---------------------------------------------------------------------------
-# Histogram construction and fill
+# Demo factories
 # ---------------------------------------------------------------------------
 
 
-def test_histogram1_construction():
-    ax = acts.Axis(10, 0.0, 1.0, "x")
-    h = acts.Histogram1("h1", "title 1", [ax])
-    assert h.name == "h1"
-    assert h.title == "title 1"
-    assert h.rank == 1
-
-
-def test_histogram2_construction():
-    ax = acts.Axis(10, 0.0, 1.0, "x")
-    ay = acts.Axis(5, 0.0, 5.0, "y")
-    h = acts.Histogram2("h2", "title 2", [ax, ay])
-    assert h.rank == 2
-
-
-def test_histogram3_construction():
-    ax = acts.Axis(4, 0.0, 1.0, "x")
-    ay = acts.Axis(4, 0.0, 1.0, "y")
-    az = acts.Axis(4, 0.0, 1.0, "z")
-    h = acts.Histogram3("h3", "title 3", [ax, ay, az])
-    assert h.rank == 3
-
-
-def test_histogram1_fill_and_values():
-    ax = acts.Axis(4, 0.0, 4.0, "x")
-    h = acts.Histogram1("h", "t", [ax])
-    h.fill([0.5])
-    h.fill([0.5])
-    h.fill([1.5])
-    vals = h.histogram().values()
-    assert vals.shape == (4,)
-    assert vals[0] == pytest.approx(2.0)
-    assert vals[1] == pytest.approx(1.0)
-    assert vals[2] == pytest.approx(0.0)
-    assert vals[3] == pytest.approx(0.0)
-
-
-def test_histogram2_fill_and_values():
-    ax = acts.Axis(2, 0.0, 2.0, "x")
-    ay = acts.Axis(2, 0.0, 2.0, "y")
-    h = acts.Histogram2("h2", "t", [ax, ay])
-    h.fill([0.5, 0.5])
-    h.fill([0.5, 1.5])
-    h.fill([1.5, 0.5])
-    vals = h.histogram().values()
-    assert vals.shape == (2, 2)
-    assert vals[0, 0] == pytest.approx(1.0)
-    assert vals[0, 1] == pytest.approx(1.0)
-    assert vals[1, 0] == pytest.approx(1.0)
-    assert vals[1, 1] == pytest.approx(0.0)
+def test_demo_factories_exist():
+    for name in ("_demo_histogram1", "_demo_profile1", "_demo_efficiency1"):
+        assert hasattr(acts, name), f"acts.{name} not found"
 
 
 # ---------------------------------------------------------------------------
-# BoostHistogram axis access
+# _to_boost_histogram_ conversion
 # ---------------------------------------------------------------------------
 
 
-def test_boost_histogram_axis():
-    ax = acts.Axis(10, 0.0, 1.0, "myaxis")
-    h = acts.Histogram1("h", "t", [ax])
-    bh_raw = h.histogram()
-    assert bh_raw.rank == 1
-    ax0 = bh_raw.axis(0)
-    assert ax0.size == 10
-    assert ax0.label == "myaxis"
-
-
-# ---------------------------------------------------------------------------
-# Conversion to boost_histogram via _to_boost_histogram_() protocol
-# ---------------------------------------------------------------------------
-
-
-def test_histogram1_to_bh():
-    ax = acts.Axis(4, 0.0, 4.0, "x")
-    h = acts.Histogram1("h", "t", [ax])
-    h.fill([0.5])
-    h.fill([1.5])
-    bh_h = bh.Histogram(h)
+def test_histogram1_to_boost_histogram():
+    bh_h = bh.Histogram(acts._demo_histogram1())
     assert bh_h.ndim == 1
-    assert bh_h.axes[0].extent == 6  # 4 bins + 2 flow
-    assert bh_h.sum() == pytest.approx(2.0)
+    assert bh_h.sum() > 0
+    assert bh_h.axes[0].metadata == "x [a.u.]"
 
 
-def test_histogram2_to_bh():
-    ax = acts.Axis(3, 0.0, 3.0, "x")
-    ay = acts.Axis(2, 0.0, 2.0, "y")
-    h = acts.Histogram2("h2", "t", [ax, ay])
-    h.fill([0.5, 0.5])
-    h.fill([0.5, 1.5])
-    bh_h = bh.Histogram(h)
-    assert bh_h.ndim == 2
-    assert bh_h.sum() == pytest.approx(2.0)
-
-
-def test_histogram1_to_bh_axes_metadata():
-    ax = acts.Axis(5, 0.0, 5.0, "mylabel")
-    h = acts.Histogram1("h", "t", [ax])
-    bh_h = bh.Histogram(h)
-    assert bh_h.axes[0].metadata == "mylabel"
-
-
-# ---------------------------------------------------------------------------
-# ProfileHistogram1
-# ---------------------------------------------------------------------------
-
-
-def test_profile_histogram1_fill_and_means():
-    ax = acts.Axis(10, 0.0, 10.0, "x")
-    ph = acts.ProfileHistogram1("p", "t", [ax], "y value")
-    assert ph.name == "p"
-    assert ph.sampleAxisTitle == "y value"
-    assert ph.rank == 1
-    # Fill bin 2 (x in [2,3)) with sample values 10, 20, 30 -> mean=20
-    ph.fill([2.5], 10.0)
-    ph.fill([2.5], 20.0)
-    ph.fill([2.5], 30.0)
-    means = ph.histogram().means()
-    assert means.shape == (10,)
-    assert means[2] == pytest.approx(20.0)
-
-
-def test_profile_histogram1_variances():
-    ax = acts.Axis(10, 0.0, 10.0, "x")
-    ph = acts.ProfileHistogram1("p", "t", [ax], "y")
-    ph.fill([0.5], 1.0)
-    ph.fill([0.5], 3.0)
-    # sample variance of [1, 3] = ((1-2)^2 + (3-2)^2) / (2-1) = 2
-    variances = ph.histogram().variances()
-    assert variances.shape == (10,)
-    assert variances[0] == pytest.approx(2.0)
-
-
-def test_profile_histogram1_to_bh():
-    ax = acts.Axis(5, 0.0, 5.0, "x")
-    ph = acts.ProfileHistogram1("p", "t", [ax], "y")
-    ph.fill([0.5], 10.0)
-    ph.fill([0.5], 20.0)
-    bh_h = bh.Histogram(ph)
+def test_profile1_to_boost_histogram():
+    bh_h = bh.Histogram(acts._demo_profile1())
     assert bh_h.ndim == 1
-    view = bh_h.view()
-    assert view["value"][0] == pytest.approx(15.0)
+    assert bh_h.view()["count"].sum() > 0
+
+
+def test_efficiency1_to_boost_histogram():
+    h = acts._demo_efficiency1()
+    bh_acc = bh.Histogram(h.accepted)
+    bh_tot = bh.Histogram(h.total)
+    assert bh_acc.sum() > 0
+    assert bh_tot.sum() >= bh_acc.sum()
 
 
 # ---------------------------------------------------------------------------
-# Efficiency1 and Efficiency2
+# .plot() methods
 # ---------------------------------------------------------------------------
 
 
-def test_efficiency1_fill():
-    ax = acts.Axis(4, 0.0, 4.0, "x")
-    eff = acts.Efficiency1("eff", "t", [ax])
-    assert eff.rank == 1
-    eff.fill([0.5], True)
-    eff.fill([0.5], True)
-    eff.fill([0.5], False)
-    eff.fill([1.5], False)
-    accepted = eff.accepted().values()
-    total = eff.total().values()
-    assert accepted.shape == (4,)
-    assert total.shape == (4,)
-    assert accepted[0] == pytest.approx(2.0)
-    assert total[0] == pytest.approx(3.0)
-    assert accepted[1] == pytest.approx(0.0)
-    assert total[1] == pytest.approx(1.0)
+def test_plot_histogram():
+    fig, ax = plt.subplots()
+    result = acts._demo_histogram1().plot(ax=ax)
+    assert result is not None
+    assert ax.get_xlabel() == "x [a.u.]"
+    assert ax.get_title() == "Demo Histogram"
+    plt.close(fig)
 
 
-def test_efficiency2_fill():
-    ax = acts.Axis(2, 0.0, 2.0, "x")
-    ay = acts.Axis(2, 0.0, 2.0, "y")
-    eff = acts.Efficiency2("eff2", "t", [ax, ay])
-    assert eff.rank == 2
-    eff.fill([0.5, 0.5], True)
-    eff.fill([0.5, 0.5], False)
-    eff.fill([1.5, 1.5], True)
-    total = eff.total().values()
-    accepted = eff.accepted().values()
-    assert total.shape == (2, 2)
-    assert total[0, 0] == pytest.approx(2.0)
-    assert total[1, 1] == pytest.approx(1.0)
-    assert accepted[0, 0] == pytest.approx(1.0)
-    assert accepted[1, 1] == pytest.approx(1.0)
+def test_plot_histogram_no_ax():
+    result = acts._demo_histogram1().plot()
+    assert result is not None
+    plt.close("all")
+
+
+def test_plot_profile():
+    fig, ax = plt.subplots()
+    result = acts._demo_profile1().plot(ax=ax)
+    assert result is not None
+    assert ax.get_xlabel() == "x [a.u.]"
+    assert ax.get_ylabel() == "y [a.u.]"
+    assert ax.get_title() == "Demo Profile"
+    plt.close(fig)
+
+
+def test_plot_efficiency():
+    fig, ax = plt.subplots()
+    acts._demo_efficiency1().plot(ax=ax)
+    assert ax.get_title() == "Demo Efficiency"
+    plt.close(fig)
+
+
+def test_plot_methods_patched_on_types():
+    assert hasattr(acts.Histogram1, "plot")
+    assert hasattr(acts.ProfileHistogram1, "plot")
+    assert hasattr(acts.Efficiency1, "plot")

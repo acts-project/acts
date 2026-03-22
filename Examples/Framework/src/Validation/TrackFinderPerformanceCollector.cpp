@@ -175,8 +175,7 @@ ProcessCode TrackFinderPerformanceCollector::fill(
 
 void TrackFinderPerformanceCollector::logSummary(
     const Acts::Logger& log) const {
-  float eff_tracks =
-      static_cast<float>(m_nTotalMatchedTracks) / m_nTotalTracks;
+  float eff_tracks = static_cast<float>(m_nTotalMatchedTracks) / m_nTotalTracks;
   float fakeRatio_tracks =
       static_cast<float>(m_nTotalFakeTracks) / m_nTotalTracks;
   float duplicationRatio_tracks =

@@ -52,12 +52,12 @@ class TrackFinderPerformanceCollector {
   /// Fill histograms for one event.
   ///
   /// @note The caller must ensure exclusive access (e.g. hold a mutex).
-  ProcessCode fill(
-      const AlgorithmContext& ctx, const ConstTrackContainer& tracks,
-      const SimParticleContainer& particles,
-      const TrackParticleMatching& trackParticleMatching,
-      const ParticleTrackMatching& particleTrackMatching,
-      const InverseMultimap<SimBarcode>& particleMeasurementsMap);
+  ProcessCode fill(const AlgorithmContext& ctx,
+                   const ConstTrackContainer& tracks,
+                   const SimParticleContainer& particles,
+                   const TrackParticleMatching& trackParticleMatching,
+                   const ParticleTrackMatching& particleTrackMatching,
+                   const InverseMultimap<SimBarcode>& particleMeasurementsMap);
 
   /// Summary count statistics accumulated across all filled events.
   struct Stats {
@@ -73,10 +73,14 @@ class TrackFinderPerformanceCollector {
 
   /// Return accumulated event counts.
   Stats stats() const {
-    return {m_nTotalTracks,           m_nTotalMatchedTracks,
-            m_nTotalFakeTracks,       m_nTotalDuplicateTracks,
-            m_nTotalParticles,        m_nTotalMatchedParticles,
-            m_nTotalDuplicateParticles, m_nTotalFakeParticles};
+    return {m_nTotalTracks,
+            m_nTotalMatchedTracks,
+            m_nTotalFakeTracks,
+            m_nTotalDuplicateTracks,
+            m_nTotalParticles,
+            m_nTotalMatchedParticles,
+            m_nTotalDuplicateParticles,
+            m_nTotalFakeParticles};
   }
 
   /// Emit efficiency/fake/duplicate summary statistics via @p log.
