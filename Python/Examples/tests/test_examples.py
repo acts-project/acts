@@ -1160,7 +1160,9 @@ def test_gnn_module_map(tmp_path, assert_root_hash, backend, hardware):
 
     # Dict of required files - used for checking and as kwargs
     required_files = {
-        "moduleMapPath": str(ci_models / "module_map_odd_2k_events.1e-03.float"),
+        "moduleMapPath": str(
+            ci_models / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH"
+        ),
         "gnnModel": str(ci_models / f"gnn_odd_module_map{model_ext}"),
     }
 
