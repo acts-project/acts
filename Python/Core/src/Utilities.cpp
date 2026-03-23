@@ -363,7 +363,8 @@ void addUtilities(py::module_& m) {
 
     m.def("_demo_profile1", []() -> ProfileHistogram1 {
       BoostRegularAxis ax(10, 0.0, 10.0, "x [a.u.]");
-      ProfileHistogram1 h("demo", "Demo Profile", {AxisVariant(ax)}, "y [a.u.]");
+      ProfileHistogram1 h("demo", "Demo Profile", {AxisVariant(ax)},
+                          "y [a.u.]");
       std::mt19937 rng(42);
       std::uniform_real_distribution<double> x(0.0, 10.0);
       std::normal_distribution<double> noise(0.0, 0.1);
