@@ -164,9 +164,9 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   // Solve the linear equation to get alignment parameters change
   alignResult.deltaAlignmentParameters =
       -sumChi2SecondDerivative.fullPivLu().solve(sumChi2Derivative);
-  ACTS_INFO("sumChi2SecondDerivative = \n" << sumChi2SecondDerivative);
-  ACTS_INFO("sumChi2Derivative = \n" << sumChi2Derivative);
-  ACTS_INFO("alignResult.deltaAlignmentParameters \n");
+  ACTS_VERBOSE("sumChi2SecondDerivative = \n" << sumChi2SecondDerivative);
+  ACTS_VERBOSE("sumChi2Derivative = \n" << sumChi2Derivative);
+  ACTS_VERBOSE("alignResult.deltaAlignmentParameters \n");
 
   // Alignment parameters covariance
   alignResult.alignmentCovariance = 2 * sumChi2SecondDerivativeInverse;
