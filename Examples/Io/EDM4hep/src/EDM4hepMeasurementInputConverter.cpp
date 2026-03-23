@@ -60,7 +60,7 @@ ProcessCode EDM4hepMeasurementInputConverter::convert(
     const AlgorithmContext& ctx, const podio::Frame& frame) const {
   MeasurementContainer measurements;
   ClusterContainer clusters;
-  IndexMultimap<Index> measurementSimHitsMap;
+  MeasurementSimHitsMap measurementSimHitsMap;
 
   const auto& trackerHitLocalCollection =
       frame.get<ActsPodioEdm::TrackerHitLocalCollection>(

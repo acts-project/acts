@@ -6,7 +6,7 @@ from pathlib import Path
 
 import acts
 from acts import (
-    MaterialValidater,
+    MaterialValidator,
     IntersectionMaterialAssigner,
     logging,
     GeometryContext,
@@ -37,14 +37,14 @@ def runMaterialValidation(s, ntracks, surfaces, outputFile, seed, loglevel):
     materialAssingerConfig.surfaces = surfaces
     materialAssinger = IntersectionMaterialAssigner(materialAssingerConfig, loglevel)
 
-    # Validater setup
-    materialValidaterConfig = MaterialValidater.Config()
-    materialValidaterConfig.materialAssigner = materialAssinger
-    materialValidater = MaterialValidater(materialValidaterConfig, loglevel)
+    # Validator setup
+    materialValidatorConfig = MaterialValidator.Config()
+    materialValidatorConfig.materialAssigner = materialAssinger
+    materialValidator = MaterialValidator(materialValidatorConfig, loglevel)
 
     # Validation Algorithm
     materialValidationConfig = MaterialValidation.Config()
-    materialValidationConfig.materialValidater = materialValidater
+    materialValidationConfig.materialValidator = materialValidator
     materialValidationConfig.outputMaterialTracks = "recorded-material-tracks"
     materialValidationConfig.ntracks = ntracks
     materialValidationConfig.randomNumberSvc = rnd

@@ -11,12 +11,12 @@
 #include "ActsPlugins/Gnn/detail/CudaUtils.hpp"
 #include "ActsPlugins/Gnn/detail/ModuleMapUtils.cuh"
 
-#include <CUDA_graph_creator>
-#include <CUDA_module_map_doublet>
-#include <CUDA_module_map_triplet>
-#include <TTree_hits>
 #include <chrono>
 
+#include <MMG/CUDA_graph_creator>
+#include <MMG/CUDA_module_map_doublet>
+#include <MMG/CUDA_module_map_triplet>
+#include <MMG/TTree_hits>
 #include <cub/block/block_merge_sort.cuh>
 #include <thrust/execution_policy.h>
 #include <thrust/functional.h>

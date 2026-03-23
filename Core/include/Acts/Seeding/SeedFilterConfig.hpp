@@ -16,7 +16,9 @@
 namespace Acts {
 
 /// @brief Structure that holds configuration parameters for the seed filter algorithm
-struct SeedFilterConfig {
+struct [[deprecated(
+    "Will be dropped soon and is replaced by "
+    "BroadTripletSeedFilter::Config")]] SeedFilterConfig {
   /// Allowed difference in curvature (inverted seed radii) between two
   /// compatible seeds
   float deltaInvHelixDiameter = 0.00003 * 1. / UnitConstants::mm;

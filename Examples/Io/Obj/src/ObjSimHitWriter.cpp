@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Visualization/Interpolation3D.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -68,8 +69,7 @@ ProcessCode ObjSimHitWriter::writeT(const AlgorithmContext& ctx,
     }  // end simHit loop
   } else {
     // We need to associate first
-    std::unordered_map<ActsFatras::Barcode, std::vector<Acts::Vector4>>
-        particleHits;
+    std::unordered_map<SimBarcode, std::vector<Acts::Vector4>> particleHits;
     // Pre-loop over hits ... write those below threshold
     for (const auto& simHit : simHits) {
       double momentum = simHit.momentum4Before().head<3>().norm();

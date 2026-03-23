@@ -20,12 +20,12 @@ namespace Acts {
 
 class IAssignmentFinder;
 
-/// @brief The material validater is a tool that allows to record the material
+/// @brief The material validator is a tool that allows to record the material
 /// seen by a ray through a set of material surfaces.
 ///
 /// It does uses a material assigner that can be either done using the
 /// propagator or a more sinmple trial and error intersection;
-class MaterialValidater {
+class MaterialValidator {
  public:
   /// Nested configuration struct
   struct Config {
@@ -36,9 +36,9 @@ class MaterialValidater {
   /// Constructor
   /// @param cfg The configuration struct carrying the used tools
   /// @param mlogger The logging object
-  explicit MaterialValidater(const Config& cfg,
+  explicit MaterialValidator(const Config& cfg,
                              std::unique_ptr<const Logger> mlogger =
-                                 getDefaultLogger("MaterialValidater",
+                                 getDefaultLogger("MaterialValidator",
                                                   Logging::INFO));
 
   /// Method to record the material along a ray
