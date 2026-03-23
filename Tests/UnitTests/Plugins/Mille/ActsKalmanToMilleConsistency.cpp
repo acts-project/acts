@@ -120,8 +120,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
   ActsAlignment::detail::TrackAlignmentState millePedeState;
   // we need to externally supply the alignment parameter indexing logic
   millePedeState.alignedSurfaces = alignState.alignedSurfaces;
-  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(*milleReader,
-                                                          millePedeState) ==
+  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(
+                  *milleReader, millePedeState, idxedAlignSurfaces) ==
               Mille::MilleDecoder::ReadResult::OK);
 
   // now compare the results!

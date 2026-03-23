@@ -19,6 +19,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
 #include <memory>
@@ -86,7 +87,6 @@ ProcessCode MillePedeAlignmentSandbox::execute(
           const std::pair<Acts::GeometryIdentifier, const Acts::Surface*>&
               rhs) { return (lhs.first.layer() < rhs.first.layer()); });
 
-  // Set the surfaces to be aligned (fix the 4th layer with index 8)
   std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
   const Acts::Surface* firstSurf = nullptr;
   unsigned int iSurface = 0;
@@ -167,6 +167,11 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     }
   }
 
+  return ProcessCode::SUCCESS;
+}
+ProcessCode MillePedeAlignmentSandbox::finalize() {
+  m_milleOut.reset();  // ensure that we do the final write of our output
+                       // before subsequent algos finalise.
   return ProcessCode::SUCCESS;
 }
 

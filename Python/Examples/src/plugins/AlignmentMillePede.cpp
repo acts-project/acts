@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/AlignmentMillePede/ActsSolverFromMille.hpp"
 #include "ActsExamples/AlignmentMillePede/MillePedeAlignmentSandbox.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -23,4 +24,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignmentMillePede, m) {
                                 "MillePedeAlignmentSandbox", milleOutput,
                                 inputMeasurements, inputTracks,
                                 trackingGeometry, magneticField, fixModules);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsSolverFromMille, m, "ActsSolverFromMille",
+                                milleInput, trackingGeometry, magneticField,
+                                fixModules);
 }

@@ -190,6 +190,17 @@ struct Alignment {
       const fit_options_t& fitOptions, AlignmentResult& alignResult,
       const AlignmentMask& alignMask = AlignmentMask::All) const;
 
+  /// @brief calculate the alignment parameters delta from a set of
+  /// TrackAlignmentStates
+  ///
+  /// @param TrackStateCollection The collection of TrackAlignmentStates
+  /// as input of fitting
+  /// @param alignResult [in, out] The aligned result
+  /// @param alignMask The alignment mask (same for all measurements now)
+  void calculateAlignmentParameters(
+      const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
+      AlignmentResult& alignResult) const;
+
   /// @brief update the detector element alignment parameters
   ///
   /// @param gctx The geometry context

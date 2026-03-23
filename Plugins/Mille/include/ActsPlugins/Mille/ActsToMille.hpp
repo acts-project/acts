@@ -37,12 +37,16 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 /// Allows to use Mille to collect tracks across multiple events and
 /// align them with the ACTS solver, and to validate the outputs of dumpToMille.
 /// @param reader: A Mille Reader, connected to a valid input file.
-/// @param targetState: The TrackAlignmentState to populate. The *alignedSurfaces* member
-/// should already be pre-populated by the caller.
+/// @param targetState: The TrackAlignmentState to populate.
+/// @param idxedAlignSurfaces: [optional]: Indexed alignment surfaces from the geometry. If passed,
+/// the internal `alignedSurfaces` member of the state will be configured to
+/// link back to the correct surfaces.
 /// @return a ReadResult enum with 3 possible states to indicate the outcome- ok / end-of-file / read-error.
 /// The targetState will only be modified if the result is 'ok'.
 Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
-    ActsAlignment::detail::TrackAlignmentState& targetState);
+    ActsAlignment::detail::TrackAlignmentState& targetState,
+    const std::unordered_map<const Acts::Surface*, std::size_t>&
+        idxedAlignSurfaces);
 
 }  // namespace ActsPlugins::ActsToMille

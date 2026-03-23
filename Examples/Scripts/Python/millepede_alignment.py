@@ -22,7 +22,10 @@ from acts.examples.alignment import (
     GeoIdAlignmentStore,
     AlignmentGeneratorGlobalShift,
 )
-from acts.examples.alignmentmillepede import MillePedeAlignmentSandbox
+from acts.examples.alignmentmillepede import (
+    MillePedeAlignmentSandbox,
+    ActsSolverFromMille,
+)
 
 from acts.examples.simulation import (
     MomentumConfig,
@@ -104,6 +107,26 @@ def addAlignmentSandbox(
         fixModules=fixModules,
     )
     s.addAlgorithm(sandbox)
+    return s
+
+
+def addSolverFromMille(
+    s: Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    magField: acts.MagneticFieldProvider,
+    fixModules: set,
+    logLevel: acts.logging.Level = acts.logging.WARNING,
+    milleInput: str = "MilleBinary.root",
+):
+
+    solver = ActsSolverFromMille(
+        level=logLevel,
+        milleInput=milleInput,
+        trackingGeometry=trackingGeometry,
+        magneticField=magField,
+        fixModules=fixModules,
+    )
+    s.addAlgorithm(solver)
     return s
 
 
@@ -287,6 +310,10 @@ addCKFTracks(
 # And add our alignment sandbox
 addAlignmentSandbox(
     s, trackingGeometry, field, fixModules, milleOutput=outputDir / "MyBinary.root"
+)
+# And finally read back and solve in ACTS
+addSolverFromMille(
+    s, trackingGeometry, field, fixModules, milleInput=outputDir / "MyBinary.root"
 )
 
 s.run()
