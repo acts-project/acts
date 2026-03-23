@@ -269,42 +269,7 @@ class SurfaceArrayCreator {
   /// @return true if surfaces are equivalent for binning purposes
   static bool isSurfaceEquivalent(const GeometryContext& gctx,
                                   AxisDirection aDir, const Surface* a,
-                                  const Surface* b) {
-    using namespace UnitLiterals;
-    using VectorHelpers::perp;
-
-    if (aDir == AxisDirection::AxisPhi) {
-      // Take the two binning positions
-      Vector3 pos1 = a->referencePosition(gctx, AxisDirection::AxisR);
-      Vector3 pos2 = b->referencePosition(gctx, AxisDirection::AxisR);
-
-      // Project them on the (x, y) plane, where Phi angles are calculated
-      auto proj1 = pos1.head<2>(), proj2 = pos2.head<2>();
-
-      // Basic dot and cross products identities give us the cosine and sine
-      // of these angles, time the squared vector norm
-      auto cos_dPhi_n2 = proj1.dot(proj2);
-      auto sin_dPhi_n2 = proj1.x() * proj2.y() - proj2.x() * proj1.y();
-
-      // ...so by injecting them into atan2, we get the angle between them
-      auto dPhi = std::atan2(sin_dPhi_n2, cos_dPhi_n2);
-      return std::abs(dPhi) < std::numbers::pi / 180.;
-    }
-
-    if (aDir == AxisDirection::AxisZ) {
-      return (std::abs(a->referencePosition(gctx, AxisDirection::AxisR).z() -
-                       b->referencePosition(gctx, AxisDirection::AxisR).z()) <
-              1_um);
-    }
-
-    if (aDir == AxisDirection::AxisR) {
-      return (std::abs(perp(a->referencePosition(gctx, AxisDirection::AxisR)) -
-                       perp(b->referencePosition(gctx, AxisDirection::AxisR))) <
-              1_um);
-    }
-
-    return false;
-  }
+                                  const Surface* b);
 
   /// Set logging instance
   /// @param logger is the logging instance to be set
@@ -315,6 +280,9 @@ class SurfaceArrayCreator {
  private:
   /// configuration object
   Config m_cfg;
+
+  /// logging instance
+  std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logger
   const Logger& logger() const { return *m_logger; }
@@ -396,60 +364,7 @@ class SurfaceArrayCreator {
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
                           double layerTolerance, const ProtoAxis& pAxisA,
-                          const ProtoAxis& pAxisB) {
-    using ISGL = SurfaceArray::ISurfaceGridLookup;
-    std::unique_ptr<ISGL> ptr;
-
-    if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
-                                              pAxisA.nBins);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
-                                              pAxisB.nBins);
-
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
-
-    } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
-      Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
-                                              pAxisA.nBins);
-      Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
-
-    } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
-      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
-                                              pAxisB.nBins);
-
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
-
-    } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
-      Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
-    }
-
-    return ptr;
-  }
-
-  /// logging instance
-  std::unique_ptr<const Logger> m_logger;
+                          const ProtoAxis& pAxisB);
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates
