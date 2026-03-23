@@ -147,7 +147,7 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The geometry context for this building call
+  /// @param gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
@@ -171,11 +171,12 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The geometry context for this building call
+  /// @param gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param bTypeZ the binning type in z direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
@@ -195,11 +196,12 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The geometry context for this building call
+  /// @param gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
   /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
@@ -220,13 +222,15 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The geometry context for this building call
+  /// @param gctx The geometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/arbitrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
+  ///
   /// @note If there is more than on R-Ring, number of phi bins
   ///       will be set to lowest number of surfaces of any R-ring.
   ///       This ignores bTypePhi and produces equidistant binning in phi
@@ -241,20 +245,21 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
   ///
-  /// @param [in] gctx The geometry context for this building call
-  /// @param [in] surfaces is the vector of pointers to sensitive surfaces
+  /// @param gctx The geometry context for this building call
+  /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the plane aligned with either the x-, y-
   /// or z-axis
-  /// @param [in] bins1 is the number of bins in the orthogonal direction to @p
+  /// @param bins1 is the number of bins in the orthogonal direction to @p
   /// aDir
-  /// @param [in] bins2 is the number of bins in the orthogonal direction to @p
+  /// @param bins2 is the number of bins in the orthogonal direction to @p
   /// aDir
-  /// @param [in] aDir Direction of the aligned surfaces
-  /// @param [in] protoLayerOpt Optional @c ProtoLayer instance
-  /// @param [in] transform is the (optional) additional transform applied
+  /// @param aDir Direction of the aligned surfaces
+  /// @param protoLayerOpt Optional @c ProtoLayer instance
+  /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
@@ -267,7 +272,7 @@ class SurfaceArrayCreator {
 
   /// Static check function for surface equivalent
   ///
-  /// @param [in] gctx the geometry context for this check
+  /// @param gctx the geometry context for this check
   /// @param aDir the axis direction for the binning
   /// @param a first surface for checking
   /// @param b second surface for checking
@@ -344,7 +349,7 @@ class SurfaceArrayCreator {
   /// first and last surface.
   /// @note currently implemented for phi, r and z bining
   /// @todo implement for x,y binning
-  /// @param [in] gctx the geometry context for this call
+  /// @param gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
   /// @param aDir the AxisDirection in which direction should be binned
   /// (currently possible: AxisPhi, AxisR, AxisZ)
@@ -370,7 +375,7 @@ class SurfaceArrayCreator {
   /// binning direction) to the first/last surface.
   /// @note currently implemented for phi, r and z bining
   /// @todo implement for x,y binning
-  /// @param [in] gctx the geometry context for this call
+  /// @param gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
   /// @param aDir the AxisDirection in which direction should be binned
   /// (currently possible: AxisPhi, AxisR, AxisZ)
@@ -460,7 +465,7 @@ class SurfaceArrayCreator {
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates
-  /// @param [in] gctx the geometry context for this call
+  /// @param gctx the geometry context for this call
   /// @param surface the surface associated with the given vertices
   /// @param locVertices a vector of the vertices in local coordinates
   /// @return a vector of the vertices in global coordinates

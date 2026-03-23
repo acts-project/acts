@@ -16,7 +16,6 @@
 
 namespace Acts {
 
-// implementation for pure virtual destructor of ISurfaceGridLookup
 SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
 
 SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,

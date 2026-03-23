@@ -417,7 +417,7 @@ MutableLayerPtr LayerCreator::planeLayer(
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
         gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer,
-        fullTransform);
+        fullTransform, maxNeighborDistance);
 
     checkBinning(gctx, *sArray);
   }

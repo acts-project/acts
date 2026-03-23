@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <limits>
+#include <map>
 #include <vector>
 
 namespace Acts {
@@ -38,6 +39,8 @@ class SurfaceArray {
  public:
   /// @brief Base interface for all surface lookups.
   struct ISurfaceGridLookup {
+    virtual ~ISurfaceGridLookup() = 0;
+
     /// @brief Fill provided surfaces into the contained @c Grid.
     /// @param gctx The current geometry context object, e.g. alignment
     /// @param surfaces Input surface pointers
@@ -106,19 +109,13 @@ class SurfaceArray {
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes (optional) and empty for eingle lookups
     /// @return Vector of axis directions for binning
-    virtual std::vector<AxisDirection> binningValues() const { return {}; };
-
-    /// Pure virtual destructor
-    virtual ~ISurfaceGridLookup() = 0;
+    virtual std::vector<AxisDirection> binningValues() const { return {}; }
   };
 
   /// @brief Lookup helper which encapsulates a @c Grid
   /// @tparam Axes The axes used for the grid
   template <class Axis1, class Axis2>
   struct SurfaceGridLookup : ISurfaceGridLookup {
-    /// Grid type storing surface vectors with two axes
-    using Grid_t = Grid<SurfaceVector, Axis1, Axis2>;
-
     /// Construct a surface grid lookup
     /// @param representative The surface which is used as representative
     /// @param tolerance The tolerance used for intersection checks
@@ -134,10 +131,9 @@ class SurfaceArray {
           m_grid(std::move(axes)),
           m_binValues(std::move(bValues)),
           m_maxNeighborDistance(maxNeighborDistance) {
-      m_neighborMaps.resize(maxNeighborDistance);
-      for (auto& neighborMap : m_neighborMaps) {
-        neighborMap.resize(m_grid.size());
-      }
+      m_surfacePacks.resize(m_grid.size());
+      m_neighborSurfacePackIndices.resize(m_maxNeighborDistance *
+                                          m_grid.size());
     }
 
     /// @brief Fill provided surfaces into the contained @c Grid.
@@ -197,16 +193,20 @@ class SurfaceArray {
       const auto surfaceLocal = findSurfaceLocal(
           gctx, position, direction, std::numeric_limits<double>::infinity());
       if (!surfaceLocal.has_value()) {
-        return m_neighborMaps.at(0).at(0);  // overflow bin
+        static SurfaceVector emptyVector;
+        return emptyVector;
       }
-      const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
-      const double neighborDistance = std::clamp<double>(
-          1.0 / std::abs(normal.dot(direction)), 1, m_maxNeighborDistance);
-      const std::uint8_t neighborMapIndex =
-          static_cast<std::uint8_t>(neighborDistance - 1);
+
       const std::array<double, 2> gridLocal = surfaceToGridLocal(*surfaceLocal);
       const std::size_t globalBin = m_grid.globalBinFromPosition(gridLocal);
-      return m_neighborMaps.at(neighborMapIndex).at(globalBin);
+
+      const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
+      const auto neighborDistance = std::clamp<double>(
+          1.0 / std::abs(normal.dot(direction)), 1, m_maxNeighborDistance);
+      const std::uint8_t neighborDistanceIndex =
+          static_cast<std::uint8_t>(neighborDistance - 1);
+
+      return getNeighborSurfacePack(globalBin, neighborDistanceIndex);
     }
 
     /// @brief Returns the total size of the grid (including under/overflow
@@ -264,6 +264,24 @@ class SurfaceArray {
     }
 
    private:
+    /// Grid type storing surface vectors with two axes
+    using GridType = Grid<SurfaceVector, Axis1, Axis2>;
+
+    std::shared_ptr<RegularSurface> m_representative;
+    double m_tolerance{};
+    GridType m_grid;
+    std::vector<AxisDirection> m_binValues;
+    std::uint8_t m_maxNeighborDistance{};
+    std::vector<SurfaceVector> m_surfacePacks;
+    std::vector<std::size_t> m_neighborSurfacePackIndices;
+
+    const SurfaceVector& getNeighborSurfacePack(
+        std::size_t globalBin, std::uint8_t neighborDistanceIndex) const {
+      const std::size_t neighborPackIndex = m_neighborSurfacePackIndices.at(
+          m_maxNeighborDistance * globalBin + neighborDistanceIndex);
+      return m_surfacePacks.at(neighborPackIndex);
+    }
+
     /// map surface center to grid
     std::size_t fillSurfaceToBinMapping(const GeometryContext& gctx,
                                         const Surface& surface) {
@@ -275,7 +293,7 @@ class SurfaceArray {
         m_grid.at(globalBin).push_back(&surface);
       }
       return globalBin;
-    };
+    }
 
     /// flood fill neighboring bins given a starting bin
     void fillBinToSurfaceMapping(const GeometryContext& gctx,
@@ -321,10 +339,13 @@ class SurfaceArray {
         queue.insert(queue.end(), neighborIndices.begin(),
                      neighborIndices.end());
       }
-    };
+    }
 
     /// calculate neighbors for every bin and store in map
     void populateNeighborCache() {
+      std::map<std::vector<const Surface*>, std::size_t>
+          surfaceVectorToPackIndex;
+
       for (std::size_t globalBin = 0; globalBin < m_grid.size(); ++globalBin) {
         if (!isValidBin(globalBin)) {
           continue;
@@ -334,21 +355,28 @@ class SurfaceArray {
 
         for (std::uint8_t neighborMapIndex = 0;
              neighborMapIndex < m_maxNeighborDistance; ++neighborMapIndex) {
-          std::vector<const Surface*>& neighbors =
-              m_neighborMaps.at(neighborMapIndex).at(globalBin);
-          neighbors.clear();
+          std::vector<const Surface*> surfacePack;
 
           for (const std::size_t idx :
                m_grid.neighborHoodIndices(indices, neighborMapIndex + 1u)) {
             const std::vector<const Surface*>& binContent = m_grid.at(idx);
             std::copy(binContent.begin(), binContent.end(),
-                      std::back_inserter(neighbors));
+                      std::back_inserter(surfacePack));
           }
 
-          std::ranges::sort(neighbors);
-          auto last = std::ranges::unique(neighbors);
-          neighbors.erase(last.begin(), last.end());
-          neighbors.shrink_to_fit();
+          std::ranges::sort(surfacePack);
+          const auto last = std::ranges::unique(surfacePack);
+          surfacePack.erase(last.begin(), last.end());
+          surfacePack.shrink_to_fit();
+
+          if (const auto it = surfaceVectorToPackIndex.find(surfacePack);
+              it != surfaceVectorToPackIndex.end()) {
+            m_neighborSurfacePackIndices.push_back(it->second);
+          } else {
+            surfaceVectorToPackIndex[surfacePack] = m_surfacePacks.size();
+            m_neighborSurfacePackIndices.push_back(m_surfacePacks.size());
+            m_surfacePacks.push_back(std::move(surfacePack));
+          }
         }
       }
     }
@@ -373,6 +401,7 @@ class SurfaceArray {
       }
       return surfaceLocal;
     }
+
     std::array<double, 2> surfaceToGridLocal(Vector2 local) const {
       std::array<double, 2> gridLocal = {local[0], local[1]};
       if (const CylinderBounds* bounds = getCylinderBounds();
@@ -401,6 +430,7 @@ class SurfaceArray {
               .value();
       return surfaceLocal;
     }
+
     std::size_t findGlobalBin(const GeometryContext& gctx,
                               const Vector3& position, const Vector3& direction,
                               double tolerance) const {
@@ -412,13 +442,6 @@ class SurfaceArray {
       const std::array<double, 2> gridLocal = surfaceToGridLocal(*surfaceLocal);
       return m_grid.globalBinFromPosition(gridLocal);
     }
-
-    std::shared_ptr<RegularSurface> m_representative;
-    double m_tolerance{};
-    Grid_t m_grid;
-    std::vector<AxisDirection> m_binValues;
-    std::uint8_t m_maxNeighborDistance{};
-    std::vector<std::vector<SurfaceVector>> m_neighborMaps;
   };
 
   /// @brief Lookup implementation which wraps one element and always returns
@@ -585,7 +608,7 @@ class SurfaceArray {
   /// @return Vector of axis directions for binning
   std::vector<AxisDirection> binningValues() const {
     return p_gridLookup->binningValues();
-  };
+  }
 
   /// @brief String representation of this @c SurfaceArray
   /// @param gctx The current geometry context object, e.g. alignment

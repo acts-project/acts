@@ -81,6 +81,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
@@ -106,6 +107,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
@@ -132,6 +134,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
@@ -157,6 +160,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
@@ -171,22 +175,22 @@ class LayerCreator {
   /// returning a plane layer
   ///
   /// @param gctx is the geometry context with which the geometry is built
-  /// @param [in] surfaces is the vector of pointers to sensitive surfaces
+  /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] bins1 is the number of bins in the orthogonal direction to @p
+  /// @param bins1 is the number of bins in the orthogonal direction to @p
   /// bValue
-  /// @param [in] bins2 is the number of bins in the orthogonal direction to @p
+  /// @param bins2 is the number of bins in the orthogonal direction to @p
   /// bValue
-  /// @param [in] aDir Direction of the aligned surfaces
-  /// @param [in] transform is the (optional) transform of the layer
-  /// @param [in] _protoLayer (optional) proto layer specifying the dimensions
-  /// and
-  /// envelopes
-  /// @param [in] ad possibility to hand over a specific ApproachDescriptor,
+  /// @param aDir Direction of the aligned surfaces
+  /// @param transform is the (optional) transform of the layer
+  /// @param _protoLayer (optional) proto layer specifying the dimensions
+  /// and envelopes
+  /// @param ad possibility to hand over a specific ApproachDescriptor,
   /// which is needed for material mapping. Otherwise the default
   /// ApproachDescriptor will be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr planeLayer(
