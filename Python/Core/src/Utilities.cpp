@@ -285,6 +285,26 @@ void addUtilities(py::module_& m) {
   {
     // Single axis type covering regular, variable, and log axes
     py::class_<AxisVariant>(m, "Axis")
+        .def_static(
+            "regular",
+            [](unsigned bins, double low, double high,
+               const std::string& title) {
+              return AxisVariant(BoostRegularAxis(bins, low, high, title));
+            },
+            "bins"_a, "low"_a, "high"_a, "title"_a = "")
+        .def_static(
+            "log",
+            [](unsigned bins, double low, double high,
+               const std::string& title) {
+              return AxisVariant(BoostLogAxis(bins, low, high, title));
+            },
+            "bins"_a, "low"_a, "high"_a, "title"_a = "")
+        .def_static(
+            "variable",
+            [](const std::vector<double>& edges, const std::string& title) {
+              return AxisVariant(BoostVariableAxis(edges, title));
+            },
+            "edges"_a, "title"_a = "")
         .def_property_readonly("size", &AxisVariant::size)
         .def_property_readonly(
             "label",
