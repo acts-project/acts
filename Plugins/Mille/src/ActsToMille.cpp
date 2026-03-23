@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Alignment.hpp"
 #include "ActsPlugins/Mille/Helpers.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <iostream>
 #include <map>
@@ -178,26 +179,25 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
 
   // Step 1: Parameter discovery
   // Goal: Identify all existing parameters and assign internal indices.
-  unsigned int firstLocal = 99999;
-  unsigned int lastLocal = 0;
+  int firstLocal = 99999;
+  int lastLocal = 0;
   std::set<int> seenGlobalLabels;
+  // a measurement with a residual of identical zero is typically a
+  // correlation constraint encoded as pseudo-measurement
+  targetState.measurementDim =
+      std::count_if(measurements.begin(), measurements.end(),
+                    [](const Mille::MilleMeasurement& measurement) {
+                      return measurement.measurement != 0;
+                    });
+
+  // discover labels in use
   for (const Mille::MilleMeasurement& measurement : measurements) {
-    // a measurement with a residual of identical zero is typically a
-    // correlation constraint encoded as pseudo-measurement
-    if (measurement.measurement != 0)
-      ++targetState.measurementDim;
-    // discover labels in use
-    for (unsigned int loc : measurement.localLabels) {
-      if (loc < firstLocal)
-        firstLocal = loc;
-      if (loc > lastLocal)
-        lastLocal = loc;
-    }
-    std::for_each(measurement.globalLabels.begin(),
-                  measurement.globalLabels.end(),
-                  [&seenGlobalLabels](unsigned label) {
-                    seenGlobalLabels.insert(label);
-                  });
+    auto [minLabel, maxLabel] = std::minmax_element(
+        measurement.localLabels.begin(), measurement.localLabels.end());
+    firstLocal = std::min(firstLocal, *minLabel);
+    lastLocal = std::max(lastLocal, *maxLabel);
+    seenGlobalLabels.insert(measurement.globalLabels.begin(),
+                            measurement.globalLabels.end());
   }
   targetState.trackParametersDim = lastLocal - firstLocal + 1;
   targetState.alignmentDof = seenGlobalLabels.size();
