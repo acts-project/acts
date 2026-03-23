@@ -521,8 +521,8 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
     root_files = [
         (
             "geant4_material_tracks.root",
-            "material-tracks",
-            200,
+            "material_tracks",
+            2000,
         )
     ]
 
@@ -572,34 +572,45 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     trackingGeometry = odd.trackingGeometry()
     materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 
-    s = Sequencer(numThreads=1)
+    s = Sequencer(events=2000, numThreads=1)
 
     runMaterialMapping(
         surfaces=materialSurfaces,
         inputFile=material_recording / "geant4_material_tracks.root",
-        outputFileBase=str(tmp_path / "material-map"),
+        outputFileBase=str(tmp_path / "material_mapping"),
         outputMapFormats=["json", "root"],
         loglevel=acts.logging.INFO,
-        outputMaterialTracks="material-tracks",
-        treeName="material-tracks",
+        outputMaterialTracks="material_tracks",
+        treeName="material_tracks",
         readCachedSurfaceInformation=False,
     )
 
     s.run()
 
-    mat_file = tmp_path / "material-map.json"
+    # root map output check
+    map_file_root = tmp_path / "material_mapping_map.root"
+    assert map_file_root.exists()
+    assert_root_hash(map_file_root.name, map_file_root)
 
-    assert map_file.exists()
-    assert_entries(map_file, "material-tracks", 200)
-    assert_root_hash(map_file.name, map_file)
+    # json map output check
+    map_file_json = tmp_path / "material_mapping_map.json"
+    assert map_file_json.exists()
+    assert_root_hash(map_file_json.name, map_file_json)
 
-    assert mat_file.exists()
-    assert mat_file.stat().st_size > 10
+    # mapped tracks output check
+    map_file_mapped = tmp_path / "material_mapping_mapped.root"
+    assert map_file_mapped.exists()
+    assert_root_hash(map_file_mapped.name, map_file_mapped)
 
-    with mat_file.open() as fh:
+    # unmapped tracks output check
+    map_file_unmapped = tmp_path / "material_mapping_unmapped.root"
+    assert map_file_unmapped.exists()
+    assert_root_hash(map_file_unmapped.name, map_file_unmapped)
+
+    with map_file_json.open() as fh:
         assert json.load(fh)
 
-    val_file = tmp_path / "validation-material.root"
+    val_file = tmp_path / "material_validation.root"
     assert not val_file.exists()
 
     # test the validation as well
@@ -607,7 +618,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        materialDecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        materialDecorator=acts.IMaterialDecorator.fromFile(map_file_root)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
@@ -616,14 +627,14 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
             surfaces=materialSurfaces,
             s=s,
             tracksPerEvent=1000,
-            outputFile=tmp_path / "validation-material",
-            materialTrackCollectionName="material-tracks",
+            outputFile=tmp_path / "material_validation.root",
+            materialTrackCollectionName="material_tracks",
         )
 
         s.run()
 
     assert val_file.exists()
-    assert_entries(val_file, "material-tracks", 10000)
+    assert_entries(val_file, "material_tracks", 10000)
     assert_root_hash(val_file.name, val_file)
 
 

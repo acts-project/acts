@@ -64,14 +64,15 @@ def runMaterialValidation(
     )
 
     # Validator setup
-    MaterialValidatorConfig = MaterialValidator.Config()
-    MaterialValidatorConfig.materialAssigner = materialAssinger
-    MaterialValidator = MaterialValidator(MaterialValidatorConfig, acts.logging.INFO)
+    materialValidatorConfig = MaterialValidator.Config()
+    materialValidatorConfig.materialAssigner = materialAssinger
 
     # Validation Algorithm
     materialValidationConfig = MaterialValidation.Config()
     materialValidationConfig.inputTrackParameters = "params_particles_generated"
-    materialValidationConfig.MaterialValidator = MaterialValidator
+    materialValidationConfig.materialValidator = MaterialValidator(
+        materialValidatorConfig, acts.logging.INFO
+    )
     materialValidationConfig.outputMaterialTracks = materialTrackCollectionName
     materialValidation = MaterialValidation(materialValidationConfig, acts.logging.INFO)
     s.addAlgorithm(materialValidation)
@@ -81,7 +82,7 @@ def runMaterialValidation(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
             inputMaterialTracks=materialValidationConfig.outputMaterialTracks,
-            filePath=str(outputFile) + ".root",
+            filePath=str(outputFile),
             storeSurface=True,
             storeVolume=True,
         )

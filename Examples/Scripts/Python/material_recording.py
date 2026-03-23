@@ -85,7 +85,8 @@ def runMaterialRecording(
             prePostStep=True,
             recalculateTotals=True,
             inputMaterialTracks=materialTrackCollectionName,
-            filePath=str(outputFile) + ".root",
+            treeName=materialTrackCollectionName,
+            filePath=str(outputFile),
             level=acts.logging.INFO,
         )
     )
