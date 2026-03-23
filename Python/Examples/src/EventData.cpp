@@ -7,11 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
-#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
@@ -244,6 +244,72 @@ void addEventData(py::module& mex) {
   WhiteBoardRegistry::registerClass(protoTrackContainer);
 
   mex.attr("kTrackIndexInvalid") = Acts::kTrackIndexInvalid;
+
+  py::class_<IndexSourceLink>(mex, "IndexSourceLink")
+      .def("FromSourceLink",
+           [](Acts::SourceLink const& sl) { return sl.get<IndexSourceLink>(); })
+      .def("index", &IndexSourceLink::index)
+      .def("geometryId", &IndexSourceLink::geometryId);
+
+  py::class_<TrackProxy>(mex, "TrackProxy")
+      .def_property(
+          "referenceSurface",
+          [](const TrackProxy& self) -> const Acts::Surface& {
+            return self.referenceSurface();
+          },
+          [](TrackProxy& self, std::shared_ptr<const Acts::Surface> srf) {
+            self.setReferenceSurface(std::move(srf));
+          })
+      .def_property(
+          "parameters",
+          [](const TrackProxy& self) {
+            return Acts::BoundVector{self.parameters()};
+          },
+          [](TrackProxy& self, const Acts::BoundVector& v) {
+            self.parameters() = v;
+          })
+      .def_property(
+          "covariance",
+          [](const TrackProxy& self) {
+            return Acts::BoundMatrix{self.covariance()};
+          },
+          [](TrackProxy& self, const Acts::BoundMatrix& m) {
+            self.covariance() = m;
+          })
+      .def_property(
+          "particleHypothesis",
+          [](const TrackProxy& self) { return self.particleHypothesis(); },
+          [](TrackProxy& self, const Acts::ParticleHypothesis& hyp) {
+            self.setParticleHypothesis(hyp);
+          })
+      .def_property(
+          "nMeasurements",
+          [](const TrackProxy& self) -> std::uint32_t {
+            return self.nMeasurements();
+          },
+          [](TrackProxy& self, std::uint32_t n) { self.nMeasurements() = n; })
+      .def_property(
+          "nHoles",
+          [](const TrackProxy& self) -> std::uint32_t { return self.nHoles(); },
+          [](TrackProxy& self, std::uint32_t n) { self.nHoles() = n; })
+      .def_property(
+          "chi2", [](const TrackProxy& self) -> float { return self.chi2(); },
+          [](TrackProxy& self, float v) { self.chi2() = v; });
+
+  py::class_<TrackContainer>(mex, "TrackContainer")
+      .def(py::init([]() {
+        return TrackContainer{std::make_shared<Acts::VectorTrackContainer>(),
+                              std::make_shared<Acts::VectorMultiTrajectory>()};
+      }))
+      .def("__len__", &TrackContainer::size)
+      .def("makeTrack", &TrackContainer::makeTrack, py::keep_alive<0, 1>())
+      .def("makeConst", [](TrackContainer& self) {
+        return ConstTrackContainer{
+            std::make_shared<Acts::ConstVectorTrackContainer>(
+                std::move(self.container())),
+            std::make_shared<Acts::ConstVectorMultiTrajectory>(
+                std::move(self.trackStateContainer()))};
+      });
 }
 
 }  // namespace ActsPython
