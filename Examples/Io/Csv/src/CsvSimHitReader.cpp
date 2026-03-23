@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -63,7 +64,7 @@ ProcessCode CsvSimHitReader::read(const AlgorithmContext& ctx) {
     const auto geometryId = Acts::GeometryIdentifier(data.geometry_id);
     // TODO validate geo id consistency
 
-    const auto particleId = ActsFatras::Barcode()
+    const auto particleId = SimBarcode()
                                 .withVertexPrimary(data.particle_id_pv)
                                 .withVertexSecondary(data.particle_id_sv)
                                 .withParticle(data.particle_id_part)

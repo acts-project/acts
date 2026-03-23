@@ -174,6 +174,12 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   ACTS_DEBUG("Fitted tracks: " << trackContainer->size());
 
+  if (m_cfg.linkForward) {
+    for (auto track : tracks) {
+      track.linkForward();
+    }
+  }
+
   if (logger().doPrint(Acts::Logging::DEBUG)) {
     std::stringstream ss;
     trackStateContainer->statistics().toStream(ss);

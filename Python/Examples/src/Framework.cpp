@@ -147,7 +147,8 @@ class PyReadDataHandle : public ReadDataHandleBase {
                            expected + " but got " + actual);
     }
 
-    return m_entry->toPython(*holder, wbPy);
+    PyObject* out = m_entry->toPython(*holder, wbPy.ptr());
+    return py::reinterpret_steal<py::object>(out);
   }
 
  private:
@@ -160,10 +161,16 @@ class PyWriteDataHandle : public WriteDataHandleBase {
                     const std::string& name)
       : WriteDataHandleBase(parent, name) {
     m_entry = WhiteBoardRegistry::find(pytype);
+    if (m_entry == nullptr) {
+      throw py::type_error("Type '" +
+                           pytype.attr("__qualname__").cast<std::string>() +
+                           "' is not registered for WhiteBoard access");
+    }
+    registerAsWriteHandle();
   }
 
   void call(const AlgorithmContext& ctx, const py::object& obj) const {
-    auto any = m_entry->fromPython(obj);
+    auto any = m_entry->fromPython(obj.ptr());
     addHolder(ctx.eventStore, std::move(any), m_entry->typeHash);
   }
 

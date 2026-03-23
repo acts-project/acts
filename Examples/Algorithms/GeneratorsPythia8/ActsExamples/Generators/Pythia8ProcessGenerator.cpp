@@ -8,17 +8,10 @@
 
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 
-#include "Acts/Utilities/MathHelpers.hpp"
-#include "ActsExamples/EventData/SimVertex.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 #include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
 
-#include <algorithm>
-#include <iterator>
 #include <ostream>
 #include <random>
-#include <utility>
 
 #include <HepMC3/WriterAscii.h>
 #include <Pythia8/Pythia.h>

@@ -8,26 +8,20 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 
 #include <cstddef>
 #include <vector>
 
 namespace ActsExamples {
-struct Trajectories;
 
-/// Associate a particle to its hit count within a proto track.
-struct ParticleHitCount {
-  ActsFatras::Barcode particleId;
-  std::size_t hitCount;
-};
+struct Trajectories;
 
 /// Identify all particles that contribute to the proto track.
 ///
-/// @param[in] hitParticlesMap Map hit indices to contributing particles
+/// @param[in] measurementParticlesMap Map measurement indices to contributing particles
 /// @param[in] protoTrack The proto track to classify
 /// @param[out] particleHitCounts List of contributing particles
 ///
@@ -38,13 +32,13 @@ struct ParticleHitCount {
 /// of the particle hit count must not be identical to the size of the proto
 /// track.
 void identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const MeasurementParticlesMap& measurementParticlesMap,
     const ProtoTrack& protoTrack,
     std::vector<ParticleHitCount>& particleHitCounts);
 
 /// Identify all particles that contribute to a trajectory.
 ///
-/// @param[in] hitParticlesMap Map hit indices to contributing particles
+/// @param[in] measurementParticlesMap Map measurement indices to contributing particles
 /// @param[in] trajectories The input trajectories to classify
 /// @param[in] trajectoryTip Which trajectory in the trajectories to use
 /// @param[out] particleHitCounts List of contributing particles
@@ -52,12 +46,12 @@ void identifyContributingParticles(
 /// See `identifyContributingParticles` for proto tracks for further
 /// information.
 void identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const MeasurementParticlesMap& measurementParticlesMap,
     const Trajectories& trajectories, std::size_t trajectoryTip,
     std::vector<ParticleHitCount>& particleHitCounts);
 
 void identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const MeasurementParticlesMap& measurementParticlesMap,
     const ConstTrackContainer::ConstTrackProxy& track,
     std::vector<ParticleHitCount>& particleHitCounts);
 
