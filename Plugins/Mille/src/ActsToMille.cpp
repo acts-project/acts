@@ -26,6 +26,22 @@
 
 namespace ActsPlugins::ActsToMille {
 
+namespace {
+
+/// for the ACTS-internal indices, start counting at 0
+unsigned long internalIndexSurfToParam(unsigned long surfaceIndex,
+                                       unsigned long dofIndex) {
+  return surfaceIndex * Acts::eAlignmentSize + dofIndex;
+}
+/// for global alignment parameters, start counting at 1 (fotran convention) for
+/// Mille
+unsigned long globalIndexSurfToParam(unsigned long surfaceIndex,
+                                     unsigned long dofIndex) {
+  return surfaceIndex * Acts::eAlignmentSize + dofIndex + 1;
+}
+
+}  // namespace
+
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
                  MilleRecord* record) {
   // check for a valid record
@@ -49,9 +65,9 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   for (auto& [surf, indices] : state.alignedSurfaces) {
     auto& [globalSurfIndex, localStartIndex] = indices;
     for (std::size_t iPar = 0; iPar < Acts::eAlignmentSize; ++iPar) {
-      int dest = Acts::eAlignmentSize * globalSurfIndex + iPar + 1;
-      int src = Acts::eAlignmentSize * localStartIndex + iPar;
-      aliParLocalToGlobal.emplace_back(src, dest);
+      aliParLocalToGlobal.emplace_back(
+          internalIndexSurfToParam(localStartIndex, iPar),
+          globalIndexSurfToParam(globalSurfIndex, iPar));
     }
   }
 
@@ -156,7 +172,9 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
 
 Mille::MilleDecoder::ReadResult unpackMilleRecord(
     Mille::IMilleReader& reader,
-    ActsAlignment::detail::TrackAlignmentState& targetState) {
+    ActsAlignment::detail::TrackAlignmentState& targetState,
+    const std::unordered_map<const Acts::Surface*, std::size_t>&
+        idxedAlignSurfaces) {
   /// book a decoder
   Mille::MilleDecoder decoder;
   // vector to hold the extracted measurements
@@ -182,6 +200,7 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   int firstLocal = 99999;
   int lastLocal = 0;
   std::set<int> seenGlobalLabels;
+  std::set<int> seenSurfaceLabels;
   // a measurement with a residual of identical zero is typically a
   // correlation constraint encoded as pseudo-measurement
   targetState.measurementDim =
@@ -202,22 +221,32 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
   targetState.trackParametersDim = lastLocal - firstLocal + 1;
   targetState.alignmentDof = seenGlobalLabels.size();
 
+  for (int label : seenGlobalLabels) {
+    if ((label - 1) % Acts::eAlignmentSize == 0) {
+      seenSurfaceLabels.insert((label - 1) / Acts::eAlignmentSize);
+    }
+  };
+
   /// the trackAlignmentState uses an internal indexing for alignment
   /// parameters - so remap the indices to replicate this internal logic.
   std::map<int, int> globalToInternal;
-  for (auto& [surf, assignment] : targetState.alignedSurfaces) {
-    const auto& [destRow, srcRow] = assignment;
-    for (std::size_t k = 0; k < Acts::eAlignmentSize; ++k) {
-      globalToInternal[Acts::eAlignmentSize * destRow + k + 1] =
-          Acts::eAlignmentSize * srcRow + k;
+
+  /// try to map indices from the global indexed surface list, if we have it.
+  unsigned long iExtra = 0;
+  for (auto [surface, index] : idxedAlignSurfaces) {
+    if (seenSurfaceLabels.contains(index)) {
+      targetState.alignedSurfaces.emplace(surface,
+                                          std::make_pair(index, iExtra++));
     }
   }
-  // also map parameters not yet encountered (for an unknown surface mapping)
-  int iExtra = globalToInternal.size();
-  for (int glob : seenGlobalLabels) {
-    const auto& [it, added] = globalToInternal.emplace(glob, iExtra);
-    if (added)
-      ++iExtra;
+
+  // now use this to fill our internal "global to local" mapping function
+  for (auto [surface, indices] : targetState.alignedSurfaces) {
+    auto [globIx, intIx] = indices;
+    for (std::size_t iAli = 0; iAli < Acts::eAlignmentSize; ++iAli) {
+      globalToInternal.emplace(globalIndexSurfToParam(globIx, iAli),
+                               internalIndexSurfToParam(intIx, iAli));
+    }
   }
 
   // Now we have the needed information to initialise our matrices
