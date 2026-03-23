@@ -40,9 +40,12 @@ def getOpenDataDetector(
     if not odd_dir.exists():
         raise RuntimeError(f"OpenDataDetector not found at {odd_dir}")
 
-    odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
-    if not odd_xml.exists():
-        raise RuntimeError(f"OpenDataDetector.xml not found at {odd_xml}")
+    odd_xml_defs = odd_dir / "xml" / "OpenDataDetectorDefs.xml"
+    odd_xml_trk = odd_dir / "xml" / "OpenDataDetectorTracker.xml"
+    if not odd_xml_defs.exists() or not odd_xml_trk.exists():
+        raise RuntimeError(
+            f"OpenDataDetectorDefs.xml or OpenDataDetectorTracker.xml not found at {odd_dir / 'xml'}"
+        )
 
     env_vars = []
     map_name = "libOpenDataDetector.components"
@@ -83,7 +86,7 @@ def getOpenDataDetector(
             )
 
         oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
-            xmlFileNames=[str(odd_xml)],
+            xmlFileNames=[str(odd_xml_defs), str(odd_xml_trk)],
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
@@ -122,7 +125,7 @@ def getOpenDataDetector(
             return geoid
 
         dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
-            xmlFileNames=[str(odd_xml)],
+            xmlFileNames=[str(odd_xml_defs), str(odd_xml_trk)],
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
