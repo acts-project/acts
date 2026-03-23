@@ -252,11 +252,14 @@ void addEventData(py::module& mex) {
       .def("geometryId", &IndexSourceLink::geometryId);
 
   py::class_<TrackProxy>(mex, "TrackProxy")
-      .def_property_readonly("referenceSurface", &TrackProxy::referenceSurface)
-      .def("setReferenceSurface",
-           [](TrackProxy& self, std::shared_ptr<const Acts::Surface> srf) {
-             self.setReferenceSurface(std::move(srf));
-           })
+      .def_property(
+          "referenceSurface",
+          [](const TrackProxy& self) -> const Acts::Surface& {
+            return self.referenceSurface();
+          },
+          [](TrackProxy& self, std::shared_ptr<const Acts::Surface> srf) {
+            self.setReferenceSurface(std::move(srf));
+          })
       .def_property(
           "parameters",
           [](const TrackProxy& self) {
@@ -273,12 +276,12 @@ void addEventData(py::module& mex) {
           [](TrackProxy& self, const Acts::BoundMatrix& m) {
             self.covariance() = m;
           })
-      .def_property_readonly("particleHypothesis",
-                             &TrackProxy::particleHypothesis)
-      .def("setParticleHypothesis",
-           [](TrackProxy& self, const Acts::ParticleHypothesis& hyp) {
-             self.setParticleHypothesis(hyp);
-           })
+      .def_property(
+          "particleHypothesis",
+          [](const TrackProxy& self) { return self.particleHypothesis(); },
+          [](TrackProxy& self, const Acts::ParticleHypothesis& hyp) {
+            self.setParticleHypothesis(hyp);
+          })
       .def_property(
           "nMeasurements",
           [](const TrackProxy& self) -> std::uint32_t {
