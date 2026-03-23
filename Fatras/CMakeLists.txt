@@ -21,4 +21,6 @@ target_include_directories(
 )
 target_link_libraries(ActsFatras PUBLIC Acts::Core)
 
+acts_compile_headers(Fatras GLOB include/**/*.hpp)
+
 add_component_if(Geant4 FatrasGeant4 ACTS_BUILD_FATRAS_GEANT4)

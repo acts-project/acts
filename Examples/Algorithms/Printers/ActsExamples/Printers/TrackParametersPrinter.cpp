@@ -8,7 +8,7 @@
 
 #include "TrackParametersPrinter.hpp"
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
@@ -19,9 +19,9 @@
 
 namespace ActsExamples {
 
-TrackParametersPrinter::TrackParametersPrinter(const Config& cfg,
-                                               Acts::Logging::Level level)
-    : IAlgorithm("TrackParametersPrinter", level), m_cfg(cfg) {
+TrackParametersPrinter::TrackParametersPrinter(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackParametersPrinter", std::move(logger)), m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument(
         "Input track parameters collection is not configured");

@@ -11,9 +11,9 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>
 #include <utility>
@@ -26,20 +26,18 @@ namespace ActsExamples {
 /// This allows to conveniently work on subsets of the geometry.
 ///
 class MeasurementMapSelector final : public IAlgorithm {
-  using Map = IndexMultimap<ActsFatras::Barcode>;
-
  public:
   struct Config {
     /// Input measurements
     std::string inputMeasurements;
 
-    /// Input spacepoints collection.
+    /// Input space points collection.
     std::string inputMeasurementParticleMap;
 
-    /// Output protoTracks collection.
+    /// Output proto tracks collection.
     std::string outputMeasurementParticleMap;
 
-    /// What spacepoints to keep
+    /// What space points to keep
     std::vector<Acts::GeometryIdentifier> geometrySelection;
   };
 
@@ -47,8 +45,10 @@ class MeasurementMapSelector final : public IAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  MeasurementMapSelector(Config cfg, Acts::Logging::Level lvl)
-      : IAlgorithm("MeasurementMapSelector", lvl), m_cfg(std::move(cfg)) {
+  explicit MeasurementMapSelector(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr)
+      : IAlgorithm("MeasurementMapSelector", std::move(logger)),
+        m_cfg(std::move(cfg)) {
     m_inputMeasurements.initialize(m_cfg.inputMeasurements);
     m_inputMap.initialize(m_cfg.inputMeasurementParticleMap);
     m_outputMap.initialize(m_cfg.outputMeasurementParticleMap);
@@ -62,7 +62,7 @@ class MeasurementMapSelector final : public IAlgorithm {
     const auto& inputMeasurements = m_inputMeasurements(ctx);
     const auto& inputMap = m_inputMap(ctx);
 
-    Map outputMap;
+    MeasurementParticlesMap outputMap;
 
     for (const auto geoId : m_cfg.geometrySelection) {
       auto range = selectLowestNonZeroGeometryObject(
@@ -86,8 +86,10 @@ class MeasurementMapSelector final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-  ReadDataHandle<Map> m_inputMap{this, "InputMeasurementParticleMap"};
-  WriteDataHandle<Map> m_outputMap{this, "OutputMeasurementParticleMap"};
+  ReadDataHandle<MeasurementParticlesMap> m_inputMap{
+      this, "InputMeasurementParticleMap"};
+  WriteDataHandle<MeasurementParticlesMap> m_outputMap{
+      this, "OutputMeasurementParticleMap"};
 };
 
 }  // namespace ActsExamples

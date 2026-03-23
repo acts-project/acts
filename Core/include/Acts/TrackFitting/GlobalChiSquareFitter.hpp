@@ -13,7 +13,6 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -423,15 +422,15 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
                               const std::vector<BoundMatrix>& jacobianFromStart,
                               const track_state_t& trackState,
                               const Logger& logger) {
-  const ActsSquareMatrix<kMeasDim> covarianceMeasurement =
+  const SquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
 
   const BoundVector predicted = trackState.smoothed();
 
-  const ActsVector<kMeasDim> measurement =
+  const Vector<kMeasDim> measurement =
       trackState.template calibrated<kMeasDim>();
 
-  const ActsMatrix<kMeasDim, eBoundSize> projector =
+  const Matrix<kMeasDim, eBoundSize> projector =
       trackState.template projectorSubspaceHelper<kMeasDim>().projector();
 
   addMeasurementToGx2fSumsBackend(extendedSystem, jacobianFromStart,
@@ -720,10 +719,10 @@ class Gx2Fitter {
   ///
   /// @param pPropagator The propagator instance for track propagation
   /// @param _logger Logger instance for debugging output (optional)
-  explicit Gx2Fitter(propagator_t pPropagator,
+  explicit Gx2Fitter(const propagator_t& pPropagator,
                      std::unique_ptr<const Logger> _logger =
                          getDefaultLogger("Gx2Fitter", Logging::INFO))
-      : m_propagator(std::move(pPropagator)),
+      : m_propagator(pPropagator),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")},
         m_addToSumLogger{m_logger->cloneWithSuffix("AddToSum")} {}
@@ -1298,9 +1297,9 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainerTemp.clear();
 
+      // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      // Run the fitter
       auto result =
           m_propagator.makeResult(std::move(propagatorState), propagationResult,
                                   propagatorOptions, false);
@@ -1464,9 +1463,9 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainerTemp.clear();
 
+      // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      // Run the fitter
       auto result =
           m_propagator.makeResult(std::move(propagatorState), propagationResult,
                                   propagatorOptions, false);
@@ -1606,9 +1605,9 @@ class Gx2Fitter {
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
+      // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      // Run the fitter
       auto result =
           m_propagator.makeResult(std::move(propagatorState), propagationResult,
                                   propagatorOptions, false);

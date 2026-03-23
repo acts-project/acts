@@ -20,6 +20,8 @@ def runTruthTrackingKalman(
     generatedParticleType: acts.PdgParticle = acts.PdgParticle.eMuon,
     reverseFilteringMomThreshold=0 * u.GeV,
     reverseFilteringCovarianceScaling=100.0,
+    numParticles=1,
+    linkForward: bool = False,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -59,12 +61,14 @@ def runTruthTrackingKalman(
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
-    logger = acts.logging.getLogger("Truth tracking example")
+    logger = acts.getDefaultLogger("Truth tracking example", acts.logging.INFO)
 
     if inputParticlePath is None:
         addParticleGun(
             s,
-            ParticleConfig(num=1, pdg=generatedParticleType, randomizeCharge=True),
+            ParticleConfig(
+                num=numParticles, pdg=generatedParticleType, randomizeCharge=True
+            ),
             EtaConfig(-3.0, 3.0, uniform=True),
             MomentumConfig(1.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             PhiConfig(0.0, 360.0 * u.degree),
@@ -76,7 +80,7 @@ def runTruthTrackingKalman(
             rnd=rnd,
         )
     else:
-        logger.info("Reading particles from %s", inputParticlePath.resolve())
+        logger.info("Reading particles from {}", inputParticlePath.resolve())
         assert inputParticlePath.exists()
         s.addReader(
             RootParticleReader(
@@ -96,7 +100,7 @@ def runTruthTrackingKalman(
             enableInteractions=True,
         )
     else:
-        logger.info("Reading hits from %s", inputHitsPath.resolve())
+        logger.info("Reading hits from {}", inputHitsPath.resolve())
         assert inputHitsPath.exists()
         s.addReader(
             RootSimHitReader(
@@ -165,6 +169,7 @@ def runTruthTrackingKalman(
         field,
         reverseFilteringMomThreshold,
         reverseFilteringCovarianceScaling,
+        linkForward=linkForward,
     )
 
     s.addAlgorithm(

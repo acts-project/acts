@@ -28,8 +28,16 @@ class IAlgorithm : public SequenceElement {
   ///
   /// @name The algorithm name
   /// @level The logging level for this algorithm
-  explicit IAlgorithm(std::string name,
-                      Acts::Logging::Level level = Acts::Logging::INFO);
+  /// @deprecated Use the constructor with a logger instead
+  [[deprecated("Use the constructor with a logger instead")]]
+  explicit IAlgorithm(const std::string& name, Acts::Logging::Level level);
+
+  /// Constructor
+  ///
+  /// @name The algorithm name
+  /// @logger The logger for this algorithm
+  explicit IAlgorithm(const std::string& name,
+                      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// The algorithm name.
   std::string name() const override;

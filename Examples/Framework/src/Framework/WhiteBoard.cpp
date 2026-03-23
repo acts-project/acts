@@ -64,7 +64,7 @@ std::vector<std::string_view> WhiteBoard::similarNames(
     const std::string_view &name, int distThreshold,
     std::size_t maxNumber) const {
   std::vector<std::pair<int, std::string_view>> names;
-  for (const auto &[n, h] : m_store) {
+  for (const auto &[n, storeVal] : m_store) {
     if (const auto d = levenshteinDistance(n, name); d < distThreshold) {
       names.push_back({d, n});
     }
@@ -94,13 +94,14 @@ std::string WhiteBoard::typeMismatchMessage(const std::string &name,
 
 void WhiteBoard::copyFrom(const WhiteBoard &other) {
   for (auto &[key, val] : other.m_store) {
-    addHolder(key, val);
+    addHolder(key, val.first, val.second);
     ACTS_VERBOSE("Copied key '" << key << "' to whiteboard");
   }
 }
 
 void WhiteBoard::addHolder(const std::string &name,
-                           const std::shared_ptr<IHolder> &holder) {
+                           const std::shared_ptr<Acts::AnyMoveOnly> &holder,
+                           std::uint64_t typeHash) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
   }
@@ -109,23 +110,33 @@ void WhiteBoard::addHolder(const std::string &name,
     throw std::invalid_argument("Object '" + name + "' is nullptr");
   }
 
-  auto [storeIt, success] = m_store.insert({name, holder});
+  StoreValue storeVal{holder, typeHash};
+  auto [storeIt, success] = m_store.try_emplace(name, storeVal);
 
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
   ACTS_VERBOSE("Added object '"
                << name << "' of type '"
-               << boost::core::demangle(storeIt->second->type().name()) << "'");
+               << boost::core::demangle(
+                      storeIt->second.first->typeInfo()
+                          ? storeIt->second.first->typeInfo()->name()
+                          : "unknown")
+               << "'");
 
-  if (success) {
-    // deal with aliases
-    auto range = m_objectAliases.equal_range(name);
-    for (auto it = range.first; it != range.second; ++it) {
-      m_store[it->second] = holder;
-      ACTS_VERBOSE("Added alias object '" << it->second << "'");
-    }
+  // deal with aliases
+  auto range = m_objectAliases.equal_range(name);
+  for (auto it = range.first; it != range.second; ++it) {
+    m_store[it->second] = storeVal;
+    ACTS_VERBOSE("Added alias object '" << it->second << "'");
   }
+}
+
+void WhiteBoard::addHolder(const std::string &name,
+                           std::unique_ptr<Acts::AnyMoveOnly> holder,
+                           std::uint64_t typeHash) {
+  addHolder(name, std::shared_ptr<Acts::AnyMoveOnly>(std::move(holder)),
+            typeHash);
 }
 
 std::vector<std::string> WhiteBoard::getKeys() const {
@@ -134,6 +145,15 @@ std::vector<std::string> WhiteBoard::getKeys() const {
     keys.push_back(key);
   }
   return keys;
+}
+
+std::pair<Acts::AnyMoveOnly *, std::uint64_t> WhiteBoard::getHolder(
+    const std::string &name) const {
+  auto it = m_store.find(name);
+  if (it == m_store.end()) {
+    throw std::out_of_range("Object '" + name + "' does not exists");
+  }
+  return {it->second.first.get(), it->second.second};
 }
 
 }  // namespace ActsExamples

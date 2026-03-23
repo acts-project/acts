@@ -13,10 +13,13 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/Utils.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 
 #include <vector>
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 
@@ -41,13 +44,15 @@ struct SpacePointContainerOptions {
 
 /// Container wrapper providing space point proxy access.
 template <typename container_t, template <typename> class holder_t>
-class SpacePointContainer {
+class [[deprecated(
+    "Will be dropped soon and is replaced by the new "
+    "SpacePointContainer")]] SpacePointContainer {
  public:
   friend class Acts::SpacePointProxy<
       Acts::SpacePointContainer<container_t, holder_t>>;
 
  public:
-  /// Space point proxy type
+  /// space point proxy type
   using SpacePointProxyType =
       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
 
@@ -106,10 +111,10 @@ class SpacePointContainer {
 
   // move operations
   /// Move constructor
-  /// @param other Space point container to move from
+  /// @param other space point container to move from
   SpacePointContainer(SpacePointContainer&& other) noexcept = default;
   /// Move assignment operator
-  /// @param other Space point container to move from
+  /// @param other space point container to move from
   /// @return Reference to this container
   SpacePointContainer& operator=(SpacePointContainer&& other) noexcept =
       default;
@@ -184,3 +189,5 @@ class SpacePointContainer {
 }  // namespace Acts
 
 #include "Acts/EventData/SpacePointContainer.ipp"
+
+ACTS_POP_IGNORE_DEPRECATED()

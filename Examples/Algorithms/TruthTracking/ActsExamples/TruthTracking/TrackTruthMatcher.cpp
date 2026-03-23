@@ -21,8 +21,8 @@
 namespace ActsExamples {
 
 TrackTruthMatcher::TrackTruthMatcher(const Config& config,
-                                     Acts::Logging::Level level)
-    : IAlgorithm("TrackTruthMatcher", level), m_cfg(config) {
+                                     std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackTruthMatcher", std::move(logger)), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks");
   }
@@ -80,8 +80,7 @@ ProcessCode TrackTruthMatcher::execute(const AlgorithmContext& ctx) const {
     // Get the majority particleId and majority particle counts
     // Note that the majority particle might not be in the truth seeds
     // collection
-    ActsFatras::Barcode majorityParticleId =
-        particleHitCounts.front().particleId;
+    SimBarcode majorityParticleId = particleHitCounts.front().particleId;
     std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
     if (!particles.contains(majorityParticleId)) {

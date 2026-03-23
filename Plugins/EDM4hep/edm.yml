@@ -121,3 +121,196 @@ datatypes:
         std::size_t size() const {
           return indices_size();
         }
+
+  ActsPodioEdm::TrackerHitLocal:
+    Description: "Sensor-local tracker hit"
+    Author: "Paul Gessinger, CERN"
+    Members:
+    # These are chosen to be compatible with the `edm4hep::TrackerHit` interface
+    # (https://github.com/key4hep/EDM4hep/blob/c877c7fadf412db3c1126e7b410d8074a78014f2/edm4hep.yaml#L652-L666V)
+    # to allow for potential upstreaming.
+    # Members not used by ACTS (quality, eDep, eDepError) are omitted and
+    # fulfilled by throwing ExtraCode stubs to satisfy the interface.
+    - uint64_t cellID                    // ID of the sensor that created this hit
+    - int32_t type                       // type of raw data hit, use depends on writer
+    - float time [ns]                    // time of the hit (depends on measurement type)
+    - edm4hep::Vector3d position [mm]    // global hit position (depends on measurement type)
+
+    VectorMembers:
+      - float measurement // Entries in the measurement value vector
+      - float covariance // Entries in the measurement covariance vector. Order is column major
+
+    ExtraCode:
+      includes: "#include <ActsPodioEdm/detail/SubspaceIndexHelpers.hpp>"
+      declaration: |
+        /// Number of active subspace dimensions
+        /// @return The number of active subspace dimensions
+        std::size_t getSize() const {
+          return getSubspaceIndices().size();
+        }
+
+
+        /// Get the value for the passed subspace index
+        /// @param valueIndex The index of the value
+        /// @return The value
+        float getValue(std::size_t valueIndex) const {
+          const auto dim = getSize();
+          auto values = getMeasurement();
+          if (values.size() != dim) {
+            throw std::runtime_error("Measurement vector size mismatch");
+          }
+
+          if (valueIndex >= dim) {
+            throw std::runtime_error("Measurement index out of range");
+          }
+          return values[valueIndex];
+        }
+
+        /// Get covariance value for the two passed matrix indices
+        /// @param indexI The first index
+        /// @param indexJ The second index
+        /// @return The covariance value
+        float getCov(std::size_t indexI, std::size_t indexJ) const {
+          auto cov = getCovariance();
+          const auto dim = getSize();
+          if (indexI >= dim || indexJ >= dim) {
+            throw std::runtime_error("Covariance index out of range");
+          }
+          if (cov.size() != dim * dim) {
+            throw std::runtime_error("Covariance matrix size mismatch");
+          }
+          const auto offset = indexJ * dim + indexI;
+          return cov[offset];
+        }
+
+        /// Decode and return the subspace indices stored in the type field
+        /// @return The subspace indices
+        std::vector<std::uint8_t> getSubspaceIndices() const {
+          return ActsPodioEdm::detail::decodeIndices(getType());
+        }
+
+        /// Find the measurement-vector index for an enum-coded subspace coordinate
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param enumVal The enum value to look up
+        /// @return The position in the measurement/covariance vector
+        /// @throws std::runtime_error if enumVal is not in the active subspace
+        template <typename E> requires std::is_enum_v<E>
+        std::size_t findSubspaceIndex(E enumVal) const {
+          const auto indices = getSubspaceIndices();
+          return ActsPodioEdm::detail::findSubspaceIndex(
+              std::span<const std::uint8_t>{indices}, enumVal);
+        }
+
+        /// Get measurement value for an enum-coded subspace coordinate
+        ///
+        /// Equivalent to getValue(findSubspaceIndex(enumVal)).
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param enumVal The enum value identifying the coordinate
+        /// @return The measurement value
+        template <typename E> requires std::is_enum_v<E>
+        float getValue(E enumVal) const {
+          return getValue(findSubspaceIndex(enumVal));
+        }
+
+        /// Get covariance value for two enum-coded subspace coordinates
+        ///
+        /// Equivalent to getCov(findSubspaceIndex(enumI), findSubspaceIndex(enumJ)).
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param enumI The first coordinate's enum value
+        /// @param enumJ The second coordinate's enum value
+        /// @return The covariance value at (enumI, enumJ)
+        template <typename E> requires std::is_enum_v<E>
+        float getCov(E enumI, E enumJ) const {
+          return getCov(findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
+        }
+
+        // --- edm4hep::TrackerHit interface stubs (not implemented) ---
+
+        /// @throws std::logic_error always — quality is not used in TrackerHitLocal
+        std::int32_t getQuality() const {
+          throw std::logic_error("getQuality() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — eDep is not used in TrackerHitLocal
+        float getEDep() const {
+          throw std::logic_error("getEDep() is not implemented in TrackerHitLocal");
+        }
+
+        /// @throws std::logic_error always — eDepError is not used in TrackerHitLocal
+        float getEDepError() const {
+          throw std::logic_error("getEDepError() is not implemented in TrackerHitLocal");
+        }
+
+    MutableExtraCode:
+      includes: "#include <ActsPodioEdm/detail/SubspaceIndexHelpers.hpp>"
+      declaration: |
+        /// Set the value for the passed measurement-vector index
+        /// @param val The value to set
+        /// @param valueIndex The index of the value
+        void setValue(float val, std::size_t valueIndex) {
+          const auto dim = getSize();
+          if (m_obj->m_measurement->size() != dim) {
+            throw std::runtime_error("Measurement vector not initialized - call setSubspaceIndices first");
+          }
+          if (valueIndex >= dim) {
+            throw std::runtime_error("Measurement index out of range");
+          }
+          (*m_obj->m_measurement)[valueIndex] = val;
+        }
+
+        /// Set the covariance value for the two passed matrix indices
+        /// @param val The value to set
+        /// @param indexI The first index
+        /// @param indexJ The second index
+        void setCov(float val, std::size_t indexI, std::size_t indexJ) {
+          const auto dim = getSize();
+          if (m_obj->m_covariance->size() != dim * dim) {
+            throw std::runtime_error("Covariance vector not initialized - call setSubspaceIndices first");
+          }
+          if (indexI >= dim || indexJ >= dim) {
+            throw std::runtime_error("Covariance index out of range");
+          }
+          const auto offset = indexJ * dim + indexI;
+          (*m_obj->m_covariance)[offset] = val;
+        }
+
+        /// Encode and store subspace indices into the type field
+        /// @param indices The subspace indices
+        /// @note This will initialize the measurement and covariance vectors if they are not already initialized
+        void setSubspaceIndices(std::span<const std::uint8_t> indices) {
+          setType(ActsPodioEdm::detail::encodeIndices(indices));
+          m_obj->m_measurement->assign(indices.size(), 0.f);
+          m_obj->m_covariance->assign(indices.size() * indices.size(), 0.f);
+          m_obj->data.measurement_begin = 0u;
+          m_obj->data.measurement_end = indices.size();
+          m_obj->data.covariance_begin = 0u;
+          m_obj->data.covariance_end = indices.size() * indices.size();
+        }
+
+        /// Set measurement value for an enum-coded subspace coordinate
+        ///
+        /// Equivalent to setValue(val, findSubspaceIndex(enumVal)).
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param val The value to set
+        /// @param enumVal The enum value identifying the coordinate
+        template <typename E> requires std::is_enum_v<E>
+        void setValue(float val, E enumVal) {
+          setValue(val, findSubspaceIndex(enumVal));
+        }
+
+        /// Set covariance value for two enum-coded subspace coordinates
+        ///
+        /// Equivalent to setCov(val, findSubspaceIndex(enumI), findSubspaceIndex(enumJ)).
+        ///
+        /// @tparam E Enum type whose underlying value encodes a subspace index
+        /// @param val The value to set
+        /// @param enumI The first coordinate's enum value
+        /// @param enumJ The second coordinate's enum value
+        template <typename E> requires std::is_enum_v<E>
+        void setCov(float val, E enumI, E enumJ) {
+          setCov(val, findSubspaceIndex(enumI), findSubspaceIndex(enumJ));
+        }

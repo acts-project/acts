@@ -6,8 +6,7 @@ import sys, os, argparse, pathlib
 def parse_args():
     from acts.examples.reconstruction import SeedingAlgorithm
 
-    parser = argparse.ArgumentParser(
-        description="""
+    parser = argparse.ArgumentParser(description="""
 Script to test the full chain ACTS simulation and reconstruction.
 
 This script is provided for interactive developer testing only.
@@ -17,8 +16,7 @@ proper way to access the ActsExamples from scripts. The other Examples/Scripts
 are much better examples of how to do that. physmon in the CI is the proper
 way to do automated integration tests. This script is only for the case of
 interactive testing with one-off configuration specified by command-line options.
-"""
-    )
+""")
     parser.add_argument(
         "-G",
         "--generic-detector",
@@ -241,7 +239,7 @@ def full_chain(args):
     if args.dump_args_calls:
         acts.examples.dump_args_calls(locals())
 
-    logger = acts.logging.getLogger("full_chain_test")
+    logger = acts.getDefaultLogger("full_chain_test", acts.logging.Level(args.loglevel))
 
     nDetArgs = [args.generic_detector, args.odd, args.itk].count(True)
     if nDetArgs == 0:
@@ -345,7 +343,7 @@ def full_chain(args):
     if args.bf_constant:
         field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
     else:
-        logger.info("Create magnetic field map from %s" % str(bFieldFile))
+        logger.info("Create magnetic field map from {}", bFieldFile)
         field = acts.root.MagneticFieldMapXyz(str(bFieldFile))
     rnd = acts.examples.RandomNumbers(seed=42)
 

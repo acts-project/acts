@@ -10,6 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/TrackStateProxy.hpp"
+#include "Acts/Utilities/CloneablePtr.hpp"
 #include "Acts/Utilities/PointerTraits.hpp"
 
 #include <iostream>
@@ -29,6 +30,11 @@ BOOST_AUTO_TEST_CASE(testConceptPass) {
                 "std::unique_ptr<int> is a pointer concept");
   static_assert(PointerConcept<std::unique_ptr<const int>>,
                 "std::unique_ptr<const int> is a pointer concept");
+
+  static_assert(PointerConcept<CloneablePtr<int>>,
+                "CloneablePtr<int> is a pointer concept");
+  static_assert(PointerConcept<CloneablePtr<const int>>,
+                "CloneablePtr<const int> is a pointer concept");
 
   static_assert(PointerConcept<std::shared_ptr<int>>,
                 "std::shared_ptr<int> is a pointer concept");

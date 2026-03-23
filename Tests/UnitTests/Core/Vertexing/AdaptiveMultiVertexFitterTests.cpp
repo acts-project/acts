@@ -11,8 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -183,7 +182,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     int vtxIdx = static_cast<int>(iTrack / nTracksPerVtx);
 
     // Construct random track parameters
-    BoundTrackParameters::ParametersVector paramVec;
+    BoundVector paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
 
@@ -393,7 +392,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
     // clang-format on
 
     // Random track parameters
-    BoundTrackParameters::ParametersVector paramVec;
+    BoundVector paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), trueVtxTime + relTDist(gen);
 
@@ -689,7 +688,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   SquareMatrix3 expVtx1Cov;
   expVtx1Cov << 0.329, 0.016, -0.035, 0.016, 0.250, 0.085, -0.035, 0.085, 0.242;
 
-  ActsVector<6> expVtx1TrkWeights;
+  Vector<6> expVtx1TrkWeights;
   expVtx1TrkWeights << 0.8128, 0.7994, 0.8164, 0.8165, 0.8165, 0.8119;
   const double expVtx1chi2 = 0.9812;
   const double expVtx1ndf = 6.7474;

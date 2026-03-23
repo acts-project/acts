@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -20,10 +21,6 @@
 
 #include <memory>
 #include <string>
-
-namespace Acts {
-class MagneticFieldProvider;
-}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -51,7 +48,8 @@ class VertexFitterAlgorithm final : public IAlgorithm {
             .asDiagonal();
   };
 
-  VertexFitterAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  explicit VertexFitterAlgorithm(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Fit the input vertices.
   ///

@@ -15,10 +15,8 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <cstddef>
 #include <iterator>
@@ -194,8 +192,8 @@ class MeasurementProxyBase {
   using SubspaceIndex = std::uint8_t;
   using Scalar = double;
 
-  using FullVector = Acts::ActsVector<FullSize>;
-  using FullSquareMatrix = Acts::ActsSquareMatrix<FullSize>;
+  using FullVector = Acts::Vector<FullSize>;
+  using FullSquareMatrix = Acts::SquareMatrix<FullSize>;
 
   using Container = std::conditional_t<ReadOnly, const MeasurementContainer,
                                        MeasurementContainer>;
@@ -532,11 +530,5 @@ MeasurementContainer::FixedProxy<Size> MeasurementContainer::emplaceMeasurement(
 static_assert(
     std::random_access_iterator<MeasurementContainer::iterator> &&
     std::random_access_iterator<MeasurementContainer::const_iterator>);
-
-using MeasurementSimHitsMap = IndexMultimap<Index>;
-using MeasurementParticlesMap = IndexMultimap<SimBarcode>;
-
-using SimHitMeasurementsMap = InverseMultimap<Index>;
-using ParticleMeasurementsMap = InverseMultimap<SimBarcode>;
 
 }  // namespace ActsExamples

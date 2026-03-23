@@ -2,7 +2,7 @@ set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
-set(_examples_python_install_dir "${ACTS_PYTHON_INSTALL_DIR}/examples")
+set(_examples_python_install_dir "${_acts_python_install_dir}/examples")
 set(py_files
     __init__.py
     simulation.py
@@ -28,7 +28,9 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
 
         set_target_properties(
             ${_target}
-            PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+            PROPERTIES
+                INSTALL_RPATH
+                    "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
         )
         set_target_properties(
             ${_target}
@@ -58,13 +60,11 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     # Augment the file if needed
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in")
         file(
-            READ
-            "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
+            READ "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
             _extra_content
         )
         file(
-            APPEND
-            "${_python_dir}/acts/examples/${_name_lower}.py"
+            APPEND "${_python_dir}/acts/examples/${_name_lower}.py"
             "\n${_extra_content}"
         )
     endif()
@@ -85,6 +85,7 @@ target_sources(
     ActsExamplesPythonBindings
     PRIVATE
         src/Framework.cpp
+        src/EventData.cpp
         src/ExampleAlgorithms.cpp
         src/Generators.cpp
         src/AmbiguityResolution.cpp
@@ -95,6 +96,7 @@ target_sources(
         src/TrackFinding.cpp
         src/TrackFitting.cpp
         src/TruthTracking.cpp
+        src/HelloWorld.cpp
         src/Vertexing.cpp
         src/Input.cpp
         src/Output.cpp
@@ -103,15 +105,14 @@ target_sources(
 )
 
 install(
-    TARGETS
-        ActsExamplesPythonBindings
-        DESTINATION
-        ${_examples_python_install_dir}
+    TARGETS ActsExamplesPythonBindings
+    DESTINATION ${_examples_python_install_dir}
 )
 
 set_target_properties(
     ActsExamplesPythonBindings
-    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+    PROPERTIES
+        INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
 )
 set_target_properties(
     ActsExamplesPythonBindings
@@ -138,6 +139,7 @@ target_link_libraries(
         Acts::ExamplesTrackFinding
         Acts::ExamplesTrackFitting
         Acts::ExamplesTruthTracking
+        Acts::ExamplesHelloWorld
         Acts::ExamplesVertexing
         Acts::ExamplesPrinters
         Acts::PythonUtilities
@@ -161,23 +163,22 @@ add_examples_binding_if(Hashing Acts::ExamplesTrackFinding ACTS_BUILD_EXAMPLES_H
 add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
 add_examples_binding_if(Onnx Acts::ExamplesTrackFindingML ACTS_BUILD_PLUGIN_ONNX FALSE)
 add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 ACTS_BUILD_EXAMPLES_PYTHIA8 FALSE)
-add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_PLUGIN_ROOT TRUE)
+add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_EXAMPLES_ROOT TRUE)
 add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
-add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_PLUGIN_ROOT TRUE)
+add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_EXAMPLES_ROOT TRUE)
 add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" ACTS_BUILD_PLUGIN_TRACCC FALSE)
-add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_PLUGIN_FASTJET FALSE)
+add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_EXAMPLES_FASTJET FALSE)
 
 # Special case for HepMC3 as it a hard dependency
 pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
 install(
-    TARGETS
-        ActsExamplesPythonBindingsHepMC3
-        DESTINATION
-        ${_examples_python_install_dir}
+    TARGETS ActsExamplesPythonBindingsHepMC3
+    DESTINATION ${_examples_python_install_dir}
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
-    PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
+    PROPERTIES
+        INSTALL_RPATH "${_acts_python_modules_rpath};${_acts_rpath_origin}/.."
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3
@@ -191,24 +192,31 @@ add_dependencies(ActsPythonBindings ActsExamplesPythonBindingsHepMC3)
 list(APPEND py_files hepmc3/__init__.py)
 list(APPEND py_files hepmc3/__main__.py)
 
-# Symlink hepmc3_normalize.py to build/bin for development
-add_custom_target(
-    hepmc_normalize_symlink
-    ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
-    COMMAND
-        ${CMAKE_COMMAND} -E create_symlink
-        ${CMAKE_CURRENT_SOURCE_DIR}/python/hepmc_normalize.py
-        ${CMAKE_BINARY_DIR}/bin/hepmc_normalize.py
-    COMMENT "Creating symlink for hepmc_normalize.py"
-    VERBATIM
-)
-add_dependencies(hepmc_normalize_symlink ActsExamplesIoHepMC3)
-install(
-    PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/python/hepmc_normalize.py
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-    RENAME hepmc_normalize.py
-)
+# Handle python scripts
+file(GLOB _python_scripts ${CMAKE_CURRENT_SOURCE_DIR}/bin/*.py)
+
+# Symlink scripts to build dir. Create a custom command for each script
+# and a custom target that depends on all of them.
+set(_python_scripts_symlinks)
+foreach(_src ${_python_scripts})
+    get_filename_component(_name ${_src} NAME)
+    set(_dst ${CMAKE_BINARY_DIR}/bin/${_name})
+    add_custom_command(
+        OUTPUT ${_dst}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${_src} ${_dst}
+        DEPENDS ${_src}
+        COMMENT "Creating symlink for ${_script}"
+        VERBATIM
+    )
+    list(APPEND _python_scripts_symlinks ${_dst})
+endforeach()
+
+add_custom_target(python_bin_symlink ALL DEPENDS ${_python_scripts_symlinks})
+add_dependencies(python_bin_symlink ActsExamplesPythonBindings)
+
+# Install scripts from bin directory
+install(PROGRAMS ${_python_scripts} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Install the additional python files
 foreach(f ${py_files})

@@ -14,13 +14,18 @@
 namespace Acts {
 
 /// Seed built from N external space points.
-template <typename external_spacepoint_t, std::size_t N = 3ul>
-class Seed {
+/// @deprecated This EDM will be removed in one of the next major
+/// releases and is replaced by the new SeedContainer and proxies.
+/// See @ref SeedContainer2 and @ref SeedProxy2 for details.
+template <typename external_space_point_t, std::size_t N = 3ul>
+class [[deprecated(
+    "Will be dropped soon and is replaced by the new SeedContainer and "
+    "proxies")]] Seed {
   static_assert(N >= 3ul);
 
  public:
   /// Type of the external space point
-  using value_type = external_spacepoint_t;
+  using value_type = external_space_point_t;
   /// Number of space points in the seed
   static constexpr std::size_t DIM = N;
 
@@ -28,7 +33,7 @@ class Seed {
   /// @param points The space points to build the seed from
   template <typename... args_t>
     requires(sizeof...(args_t) == N) &&
-            (std::same_as<external_spacepoint_t, args_t> && ...)
+            (std::same_as<external_space_point_t, args_t> && ...)
   explicit Seed(const args_t&... points);
 
   /// Set the z-coordinate of the vertex
@@ -40,7 +45,7 @@ class Seed {
 
   /// Get the space points in the seed
   /// @return Array of pointers to the space points
-  const std::array<const external_spacepoint_t*, N>& sp() const;
+  const std::array<const external_space_point_t*, N>& sp() const;
   /// Get the z-coordinate of the vertex
   /// @return The vertex z-coordinate
   float z() const;
@@ -49,7 +54,7 @@ class Seed {
   float seedQuality() const;
 
  private:
-  std::array<const external_spacepoint_t*, N> m_spacepoints{};
+  std::array<const external_space_point_t*, N> m_spacePoints{};
   float m_vertexZ{0.f};
   float m_seedQuality{-std::numeric_limits<float>::infinity()};
 };

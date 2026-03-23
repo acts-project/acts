@@ -31,10 +31,10 @@ using ConstParameters = Eigen::Map<const BoundVector>;
 using ConstCovariance = Eigen::Map<const BoundMatrix>;
 
 using Measurement = Eigen::Map<Vector2>;
-using MeasurementCovariance = Eigen::Map<ActsSquareMatrix<2>>;
+using MeasurementCovariance = Eigen::Map<SquareMatrix<2>>;
 
 using ConstMeasurement = Eigen::Map<const Vector2>;
-using ConstMeasurementCovariance = Eigen::Map<const ActsSquareMatrix<2>>;
+using ConstMeasurementCovariance = Eigen::Map<const SquareMatrix<2>>;
 
 using DynamicMeasurement =
     Eigen::Map<Eigen::Matrix<Covariance::Scalar, Eigen::Dynamic, 1,
@@ -254,11 +254,10 @@ concept MutableTrackStateProxyConcept =
 
       { v.allocateCalibrated(measdim) };
 
-      { v.allocateCalibrated(ActsVector<1>{}, ActsSquareMatrix<1>{}) };
+      { v.allocateCalibrated(Vector<1>{}, SquareMatrix<1>{}) };
       // Assuming intermediate values are also allowed
       {
-        v.allocateCalibrated(ActsVector<eBoundSize>{},
-                             ActsSquareMatrix<eBoundSize>{})
+        v.allocateCalibrated(Vector<eBoundSize>{}, SquareMatrix<eBoundSize>{})
       };
 
       { v.chi2() } -> std::same_as<float&>;

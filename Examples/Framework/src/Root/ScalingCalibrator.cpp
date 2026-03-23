@@ -159,9 +159,9 @@ void ScalingCalibrator::calibrate(
         static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
             measurement);
 
-    Acts::ActsVector<kMeasurementSize> calibratedParameters =
+    Acts::Vector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
-    Acts::ActsSquareMatrix<kMeasurementSize> calibratedCovariance =
+    Acts::SquareMatrix<kMeasurementSize> calibratedCovariance =
         fixedMeasurement.covariance();
 
     calibratedParameters[boundLoc0] += ct.x_offset;

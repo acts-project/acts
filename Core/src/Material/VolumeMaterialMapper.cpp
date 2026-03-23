@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -351,16 +350,15 @@ void VolumeMaterialMapper::finalizeMaps(State& mState) const {
   }
 }
 
-void VolumeMaterialMapper::mapMaterialTrack(
+Result<void> VolumeMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters
-  NeutralBoundTrackParameters start =
-      NeutralBoundTrackParameters::createCurvilinear(
-          makeVector4(mTrack.first.first, 0), mTrack.first.second,
-          1 / mTrack.first.second.norm(), std::nullopt,
-          NeutralParticleHypothesis::geantino());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      makeVector4(mTrack.first.first, 0), mTrack.first.second,
+      1 / mTrack.first.second.norm(), std::nullopt,
+      ParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;
@@ -374,10 +372,10 @@ void VolumeMaterialMapper::mapMaterialTrack(
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options);
   if (!result.ok()) {
-    ACTS_ERROR("Encountered a propagator error for initial parameters : ");
-    ACTS_ERROR(" - Position: " << mTrack.first.first.transpose());
-    ACTS_ERROR(" - Momentum: " << mTrack.first.second.transpose());
-    return;  // Skip track
+    ACTS_DEBUG("Encountered a propagator error for initial parameters:");
+    ACTS_DEBUG(" - Position: " << mTrack.first.first.transpose());
+    ACTS_DEBUG(" - Momentum: " << mTrack.first.second.transpose());
+    return result.error();
   }
 
   auto mcResult = result.value().get<BoundSurfaceCollector::result_type>();
@@ -505,6 +503,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
     }
     ++rmIter;
   }
+
+  return Result<void>::success();
 }
 
 }  // namespace Acts

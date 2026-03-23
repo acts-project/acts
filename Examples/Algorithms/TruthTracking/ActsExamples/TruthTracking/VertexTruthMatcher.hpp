@@ -46,7 +46,9 @@ class VertexTruthMatcher final : public IAlgorithm {
     double minTrkWeight = 0.1;
   };
 
-  VertexTruthMatcher(const Config& config, Acts::Logging::Level level);
+  explicit VertexTruthMatcher(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
@@ -62,10 +64,10 @@ class VertexTruthMatcher final : public IAlgorithm {
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
 
-  WriteDataHandle<std::vector<VertexToTruthMatching>>
-      m_outputVertexTruthMatching{this, "OutputVertexTruthMatching"};
-  WriteDataHandle<std::map<SimVertexBarcode, VertexToRecoMatching>>
-      m_outputTruthVertexMatching{this, "OutputTruthVertexMatching"};
+  WriteDataHandle<VertexTruthMatching> m_outputVertexTruthMatching{
+      this, "OutputVertexTruthMatching"};
+  WriteDataHandle<TruthVertexMatching> m_outputTruthVertexMatching{
+      this, "OutputTruthVertexMatching"};
 };
 
 }  // namespace ActsExamples

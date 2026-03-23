@@ -13,6 +13,7 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
+#include "ActsExamples/Io/Root/RootMeasurementPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Root/RootMuonSpacePointWriter.hpp"
@@ -24,7 +25,7 @@
 #include "ActsExamples/Io/Root/RootSeedWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
-#include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
+#include "ActsExamples/Io/Root/RootSpacePointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
@@ -81,9 +82,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
         inputfiles, outputMeasurements, outputPixelSpacePoints,
         outputStripSpacePoints, outputSpacePoints, outputClusters,
         outputMeasurementParticlesMap, outputParticleMeasurementsMap,
-        outputParticles, onlySpacepoints, onlyPassedParticles,
+        outputParticles, onlySpacePoints, onlyPassedParticles,
         skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-        absBoundaryTolerance, onlySpacepoints, noTruth, readCellData);
+        absBoundaryTolerance, noTruth, readCellData);
 
 #ifdef WITH_GEOMODEL_PLUGIN
     ACTS_PYTHON_DECLARE_READER(RootAthenaDumpGeoIdCollector, root,
@@ -235,6 +236,21 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
     }
 
     {
+      using Writer = RootMeasurementPerformanceWriter;
+      auto w = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                   root, "RootMeasurementPerformanceWriter")
+                   .def(py::init<const Writer::Config&, Logging::Level>(),
+                        py::arg("config"), py::arg("level"));
+
+      auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
+
+      ACTS_PYTHON_STRUCT(
+          c, inputMeasurements, inputSimHits, inputMeasurementSimHitsMap,
+          inputMeasurementParticlesMap, inputSimHitMeasurementsMap, filePath,
+          fileMode, countAxis, purityAxis, zAxis, rAxis, etaAxis, phiAxis);
+    }
+
+    {
       using Writer = RootMaterialWriter;
       auto w =
           py::class_<Writer, IMaterialWriter, std::shared_ptr<Writer>>(
@@ -259,7 +275,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
                                inputSimHits, filePath, fileMode, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
-        RootSpacepointWriter, root, "RootSpacepointWriter", inputSpacepoints,
+        RootSpacePointWriter, root, "RootSpacePointWriter", inputSpacePoints,
         inputMeasurementParticlesMap, filePath, fileMode, treeName);
 
     ACTS_PYTHON_DECLARE_WRITER(
@@ -269,8 +285,9 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootTrackSummaryWriter, root, "RootTrackSummaryWriter", inputTracks,
-        inputParticles, inputTrackParticleMatching, filePath, treeName,
-        fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific);
+        inputParticles, inputTrackParticleMatching, inputJets, filePath,
+        treeName, fileMode, writeCovMat, writeGsfSpecific, writeGx2fSpecific,
+        writeJets);
 
     ACTS_PYTHON_DECLARE_WRITER(
         RootVertexNTupleWriter, root, "RootVertexNTupleWriter", inputVertices,

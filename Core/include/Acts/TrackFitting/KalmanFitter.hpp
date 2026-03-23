@@ -12,7 +12,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -462,7 +461,7 @@ class KalmanFitter {
 
         // Update state and stepper with pre material effects
         detail::performMaterialInteraction(
-            state, stepper, navigator,
+            state, stepper, surface,
             detail::determineMaterialUpdateMode(state, navigator,
                                                 MaterialUpdateMode::PreUpdate),
             NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
@@ -556,7 +555,7 @@ class KalmanFitter {
 
         // Update state and stepper with post material effects
         detail::performMaterialInteraction(
-            state, stepper, navigator,
+            state, stepper, surface,
             detail::determineMaterialUpdateMode(state, navigator,
                                                 MaterialUpdateMode::PostUpdate),
             NoiseUpdateMode::addNoise, multipleScattering, energyLoss,
@@ -637,7 +636,7 @@ class KalmanFitter {
 
         // Update state and stepper with (possible) material effects
         detail::performMaterialInteraction(
-            state, stepper, navigator,
+            state, stepper, surface,
             detail::determineMaterialUpdateMode(state, navigator,
                                                 MaterialUpdateMode::FullUpdate),
             NoiseUpdateMode::addNoise, multipleScattering, energyLoss,

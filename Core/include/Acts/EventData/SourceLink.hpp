@@ -72,6 +72,24 @@ class SourceLink final {
     return m_upstream.as<T>();
   }
 
+  /// Concrete source link pointer getter
+  /// @tparam T The source link type to retrieve
+  /// @return Pointer to the stored source link, or nullptr if the type
+  ///         doesn't match or the SourceLink is empty
+  template <typename T>
+  T* getPtr() {
+    return m_upstream.asPtr<T>();
+  }
+
+  /// Concrete source link pointer getter, const version
+  /// @tparam T The source link type to retrieve
+  /// @return Const pointer to the stored source link, or nullptr if the type
+  ///         doesn't match or the SourceLink is empty
+  template <typename T>
+  const T* getPtr() const {
+    return m_upstream.asPtr<T>();
+  }
+
  private:
   any_type m_upstream{};
 };

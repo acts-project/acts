@@ -59,6 +59,7 @@
                 "ACTS_BUILD_PLUGIN_ACTSVG": "ON",
                 "ACTS_BUILD_PLUGIN_DD4HEP": "ON",
                 "ACTS_BUILD_PLUGIN_EDM4HEP": "ON",
+                "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_PLUGIN_GEOMODEL": "ON",
                 "ACTS_BUILD_PLUGIN_TRACCC": "ON",
                 "ACTS_BUILD_PLUGIN_GEANT4": "ON",
@@ -66,14 +67,15 @@
                 "ACTS_BUILD_PLUGIN_JSON": "ON",
                 "ACTS_BUILD_PLUGIN_ONNX": "OFF",
                 "ACTS_BUILD_PLUGIN_ROOT": "ON",
-                "ACTS_BUILD_PLUGIN_FASTJET": "ON",
                 "ACTS_BUILD_EXAMPLES_EDM4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PODIO": "ON",
                 "ACTS_BUILD_EXAMPLES_GNN": "OFF",
                 "ACTS_BUILD_EXAMPLES_GEANT4": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHIA8": "ON",
                 "ACTS_BUILD_EXAMPLES_HASHING": "ON",
-                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
+                "ACTS_BUILD_EXAMPLES_FASTJET": "ON",
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
+                "ACTS_USE_SYSTEM_PYBIND11": "ON"
             }
         },
         {
@@ -109,8 +111,7 @@
             "displayName": "GitLab-CI",
             "inherits": "ci-common",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "ACTS_BUILD_PLUGIN_FPEMON": "ON"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         },
         {
@@ -120,7 +121,8 @@
             "cacheVariables": {
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
-                "ACTS_RUN_CLANG_TIDY": "ON"
+                "ACTS_RUN_CLANG_TIDY": "ON",
+                "ACTS_BUILD_PLUGIN_ONNX": "ON"
             }
         },
         {
@@ -128,7 +130,8 @@
             "displayName": "GitLab-CI LCG",
             "inherits": "ci-common",
             "cacheVariables": {
-                "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF"
+                "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF",
+                "ACTS_USE_SYSTEM_PYBIND11": "OFF"
             }
         },
         {
@@ -145,6 +148,7 @@
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "ON",
                 "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_BUILD_EXAMPLES_GNN": "ON",
@@ -152,7 +156,8 @@
                 "ACTS_GNN_ENABLE_ONNX": "ON",
                 "ACTS_GNN_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_MODULEMAP": "ON",
-                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
+                "ACTS_USE_SYSTEM_PYBIND11": "ON"
             }
         },
         {
@@ -164,6 +169,7 @@
                 "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "CMAKE_CUDA_ARCHITECTURES": "86",
                 "TORCH_CUDA_ARCH_LIST": "8.6",
+                "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_PLUGIN_GNN": "ON",
                 "ACTS_GNN_ENABLE_TORCH": "OFF",
                 "ACTS_GNN_ENABLE_CUDA": "ON",
@@ -188,8 +194,10 @@
                 "ACTS_BUILD_PYTHON_BINDINGS": "ON",
                 "ACTS_BUILD_EXAMPLES": "ON",
                 "ACTS_BUILD_PLUGIN_ROOT": "OFF",
+                "ACTS_BUILD_PLUGIN_FPEMON": "ON",
                 "ACTS_BUILD_EXAMPLES_ROOT": "OFF",
-                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
+                "ACTS_USE_SYSTEM_PYBIND11": "ON"
             }
         }
     ]

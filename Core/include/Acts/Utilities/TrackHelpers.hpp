@@ -11,10 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
@@ -327,8 +327,7 @@ Result<void> extrapolateTrackToReferenceSurface(
                << " with starting parameters " << parameters);
 
   auto propagateResult =
-      propagator.template propagate<BoundTrackParameters, propagator_options_t,
-                                    ForcedSurfaceReached>(
+      propagator.template propagate<propagator_options_t, ForcedSurfaceReached>(
           parameters, referenceSurface, options);
 
   if (!propagateResult.ok()) {
@@ -532,10 +531,10 @@ void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculatePredictedResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasPredicted()) {
     throw std::invalid_argument("track state has no predicted parameters");
@@ -569,10 +568,10 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculateFilteredResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasFiltered()) {
     throw std::invalid_argument("track state has no filtered parameters");
@@ -606,10 +605,10 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
 /// @return a pair of the residual and its covariance
 template <std::size_t nMeasurementDim,
           TrackStateProxyConcept track_state_proxy_t>
-std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+std::pair<Vector<nMeasurementDim>, SquareMatrix<nMeasurementDim>>
 calculateSmoothedResidual(track_state_proxy_t trackState) {
-  using MeasurementVector = ActsVector<nMeasurementDim>;
-  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+  using MeasurementVector = Vector<nMeasurementDim>;
+  using MeasurementMatrix = SquareMatrix<nMeasurementDim>;
 
   if (!trackState.hasSmoothed()) {
     throw std::invalid_argument("track state has no smoothed parameters");

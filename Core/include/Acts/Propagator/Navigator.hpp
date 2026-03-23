@@ -23,7 +23,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <map>
 #include <optional>
 #include <string>
 
@@ -35,7 +34,7 @@ namespace Acts {
 ///
 /// @tparam object_t Type of the object for navigation to check against
 template <typename object_t>
-struct NavigationOptions {
+struct NavigationOptions final {
   /// The boundary check directive
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
@@ -78,7 +77,7 @@ struct NavigationOptions {
 /// `state.currentSurface` pointer is set. This actors to observe
 /// that we are on a surface.
 ///
-class Navigator {
+class Navigator final {
  public:
   /// Type alias for navigation surface candidates container
   using NavigationSurfaces =
@@ -129,15 +128,6 @@ class Navigator {
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
 
-    /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
-
-    /// The near limit to resolve surfaces
-    double nearLimit = s_onSurfaceTolerance;
-
-    /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
-
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};
     /// Surfaces that are not part of the tracking geometry
@@ -152,20 +142,7 @@ class Navigator {
         freeSurfaces.push_back(&surface);
       }
     }
-    /// @brief Delegate to decide whether free surfaces are appended to the navigation
-    ///        stream given the current volume and the track coordinates. If the
-    ///        delegate is set, it is called in each candidate resolution step
-    ///        for each surface that has not been marked as reached yet.
-    /// @param gctx: Current geometry context carrying the alignment information
-    /// @param currentVol: The current tracking volume in which the propagator resides
-    /// @param pos: Position of the track in global coordinates
-    /// @param dir: Direction vector of the track
-    /// @param surface: Free surface candidate to test
-    using FreeSurfaceSelctor_t = Delegate<bool(
-        const GeometryContext& gctx, const TrackingVolume& currentVol,
-        const Vector3& pos, const Vector3& dir, const Surface& candidate)>;
-    /// Delegate for selecting free surfaces during navigation
-    FreeSurfaceSelctor_t freeSurfaceSelector{};
+
     /// Set the plain navigation options
     /// @param options The plain navigator options to set
     void setPlainOptions(const NavigatorPlainOptions& options) {

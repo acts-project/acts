@@ -12,6 +12,8 @@
 
 #include "Acts/Propagator/MultiStepperError.hpp"
 
+#include <vector>
+
 namespace Acts {
 
 template <Concepts::SingleStepper S, typename R>
@@ -21,8 +23,10 @@ auto MultiStepperLoop<S, R>::boundState(
     -> Result<BoundState> {
   assert(!state.components.empty());
 
-  std::vector<std::tuple<double, BoundVector, Covariance>> cmps;
-  cmps.reserve(numberComponents(state));
+  MultiComponentBoundTrackParameters params(
+      surface.getSharedPtr(), transportCov, state.particleHypothesis);
+  params.reserve(numberComponents(state));
+
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
@@ -43,30 +47,31 @@ auto MultiStepperLoop<S, R>::boundState(
             .closest()
             .position();
 
-    auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
-                                        freeToBoundCorrection);
+    auto bs = m_singleStepper.boundState(cmpState, surface, transportCov,
+                                         freeToBoundCorrection);
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
-      cmps.emplace_back(state.components[i].weight, btp.parameters(),
-                        btp.covariance().value_or(Acts::BoundMatrix::Zero()));
+      params.pushComponent(state.components[i].weight, btp.parameters(),
+                           btp.covariance());
       accumulatedPathLength +=
           std::get<double>(*bs) * state.components[i].weight;
     }
   }
 
-  if (cmps.empty()) {
+  if (params.empty()) {
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  return BoundState{MultiComponentBoundTrackParameters(
-                        surface.getSharedPtr(), cmps, state.particleHypothesis),
-                    Jacobian::Zero(), accumulatedPathLength};
+  params.normalizeWeights();
+
+  return BoundState{params, Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <Concepts::SingleStepper S, typename R>
-auto MultiStepperLoop<S, R>::curvilinearState(
-    State& state, bool transportCov) const -> BoundState {
+auto MultiStepperLoop<S, R>::curvilinearState(State& state,
+                                              bool transportCov) const
+    -> BoundState {
   assert(!state.components.empty());
 
   std::vector<std::tuple<double, Vector4, Vector3, double, BoundMatrix>> cmps;
@@ -74,7 +79,7 @@ auto MultiStepperLoop<S, R>::curvilinearState(
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
-    const auto [cp, jac, pl] = SingleStepper::curvilinearState(
+    const auto [cp, jac, pl] = m_singleStepper.curvilinearState(
         state.components[i].state, transportCov);
 
     cmps.emplace_back(state.components[i].weight,
@@ -166,7 +171,7 @@ Result<double> MultiStepperLoop<S, R>::step(
     }
 
     results.emplace_back(
-        SingleStepper::step(component.state, propDir, material));
+        m_singleStepper.step(component.state, propDir, material));
 
     if (results.back()->ok()) {
       accumulatedPathLength += component.weight * results.back()->value();

@@ -75,12 +75,12 @@ option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system 
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_SYSTEM_MODULEMAPGRAPH "Use a system installation of ModuleMapGraph" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
+option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
-option(ACTS_BUILD_PLUGIN_FASTJET "Build FastJet plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEOMODEL "Build GeoModel plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TRACCC "Build Traccc plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
@@ -91,6 +91,7 @@ option(ACTS_GNN_ENABLE_CUDA "Enable CUDA for the gnn plugin" OFF)
 option(ACTS_GNN_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_GNN_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
+option(ACTS_BUILD_PLUGIN_MILLE "Build Mille plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ROOT "Build ROOT plugin" OFF)
 option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
@@ -106,13 +107,14 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 option(ACTS_BUILD_EXAMPLES "Build basic examples components" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
+option(ACTS_BUILD_EXAMPLES_FASTJET "Build FastJet plugin" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" ON)
+option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" OFF)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -159,15 +161,21 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_EDM4HEP
     OR
+    ACTS_BUILD_EXAMPLES_FASTJET
+    OR
     ACTS_BUILD_EXAMPLES_GEANT4
-    OR
-    ACTS_BUILD_EXAMPLES_HASHING
-    OR
-    ACTS_BUILD_EXAMPLES_PYTHIA8
     OR
     ACTS_BUILD_EXAMPLES_GNN
     OR
+    ACTS_BUILD_EXAMPLES_HASHING
+    OR
+    ACTS_BUILD_EXAMPLES_PODIO
+    OR
+    ACTS_BUILD_EXAMPLES_PYTHIA8
+    OR
     ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
+    OR
+    ACTS_BUILD_EXAMPLES_ROOT
 )
 # core plugins might be required by examples or depend on each other
 set_option_if(
@@ -179,7 +187,12 @@ set_option_if(
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
-set_option_if(ACTS_BUILD_PLUGIN_ROOT ACTS_BUILD_PLUGIN_DD4HEP)
+set_option_if(
+    ACTS_BUILD_PLUGIN_ROOT
+    ACTS_BUILD_EXAMPLES_ROOT
+    OR
+    ACTS_BUILD_PLUGIN_DD4HEP
+)
 set_option_if(
     ACTS_BUILD_PLUGIN_IDENTIFICATION
     ACTS_BUILD_PLUGIN_ROOT
@@ -190,15 +203,23 @@ set_option_if(
 )
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES)
-set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_PLUGIN_FASTJET)
+set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_EXAMPLES_FASTJET)
 set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
+set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 # feature tests
 include(CheckCXXSourceCompiles)
+
+# We need to set the ORIGIN token based on the system we are compiling for
+if(APPLE)
+    set(_acts_rpath_origin "@loader_path")
+else()
+    set(_acts_rpath_origin "\$ORIGIN")
+endif()
 
 # Set flags dependent whether we build ACTS in the default configuration or for deployment in pip with scikit-build-core
 if(ACTS_BUILD_PYTHON_WHEEL)
@@ -212,10 +233,6 @@ if(ACTS_BUILD_PYTHON_WHEEL)
         message(WARNING "scikit-build-core not detected for building wheel")
     endif()
 
-    # For deployment with pip, we build static libs
-    set(BUILD_SHARED_LIBS FALSE)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
     # Set installation paths for proper python package creation
     # CMAKE_PREFIX_PATH should be site-packages (steered by scikit-build-core)
     set(CMAKE_INSTALL_BINDIR ${SKBUILD_NULL_DIR}) # Don't install binaries/scripts
@@ -223,13 +240,16 @@ if(ACTS_BUILD_PYTHON_WHEEL)
     set(CMAKE_INSTALL_INCLUDEDIR ${SKBUILD_NULL_DIR}) # Don't install headers
     set(CMAKE_INSTALL_DATAROOTDIR "acts/share")
     set(CMAKE_INSTALL_DATADIR "acts/share")
-    set(ACTS_PYTHON_INSTALL_DIR "acts")
-else()
-    # GNU-like installation paths, e.g. lib/, include/, ...
-    if(PROJECT_IS_TOP_LEVEL)
-        include(GNUInstallDirs)
-    endif()
-    set(ACTS_PYTHON_INSTALL_DIR "python/acts")
+    set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}")
+    set(_acts_python_install_dir "acts")
+    set(_acts_python_modules_rpath "${_acts_rpath_origin}")
+elseif(PROJECT_IS_TOP_LEVEL)
+    include(GNUInstallDirs)
+    set(CMAKE_INSTALL_RPATH "${_acts_rpath_origin}/../${CMAKE_INSTALL_LIBDIR}")
+    set(_acts_python_install_dir "python/acts")
+    set(_acts_python_modules_rpath
+        "${_acts_rpath_origin}/../../${CMAKE_INSTALL_LIBDIR}"
+    )
 endif()
 
 include(ActsCompilerOptions) # default compile options
@@ -276,12 +296,13 @@ set(_acts_podio_fallback_version 0.17.4) # if not found, will try this one
 set(_acts_doxygen_version 1.9.4)
 set(_acts_hepmc3_version 3.2.4)
 set(_acts_nlohmanjson_version 3.11.3)
+set(_acts_mille_version 01.00.00)
 set(_acts_onnxruntime_version 1.12.0)
 set(_acts_geomodel_version 6.8.0)
 set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
-set(_acts_pybind11_version 2.13.1)
+set(_acts_pybind11_version 3.0.1)
 set(_acts_detray_version 0.103.0)
 set(_acts_traccc_version 0.26.1)
 set(_acts_covfie_version 0.15.2)
@@ -428,8 +449,12 @@ if(ACTS_BUILD_PLUGIN_JSON)
         add_subdirectory(thirdparty/nlohmann_json)
     endif()
 endif()
-if(ACTS_BUILD_PLUGIN_FASTJET)
-    find_package(FastJet ${_acts_fastjet_version} REQUIRED)
+if(ACTS_BUILD_PLUGIN_MILLE)
+    if(ACTS_USE_SYSTEM_MILLE)
+        find_package(Mille ${_acts_mille_version} REQUIRED CONFIG)
+    else()
+        add_subdirectory(thirdparty/Mille)
+    endif()
 endif()
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
     find_package(GeoModelCore CONFIG)
@@ -610,6 +635,9 @@ if(ACTS_BUILD_EXAMPLES)
             CONFIG
             COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
         )
+    endif()
+    if(ACTS_BUILD_EXAMPLES_FASTJET)
+        find_package(FastJet ${_acts_fastjet_version} REQUIRED)
     endif()
     if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
         find_package(

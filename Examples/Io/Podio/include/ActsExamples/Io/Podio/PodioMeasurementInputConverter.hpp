@@ -10,6 +10,8 @@
 
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioInputConverter.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
@@ -42,7 +44,8 @@ class PodioMeasurementInputConverter : public PodioInputConverter {
   /// @param config is the configuration object
   /// @param level is the output logging level
   explicit PodioMeasurementInputConverter(
-      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -56,16 +59,16 @@ class PodioMeasurementInputConverter : public PodioInputConverter {
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
 
-  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+  WriteDataHandle<MeasurementParticlesMap> m_outputMeasurementParticlesMap{
       this, "OutputMeasurementParticlesMap"};
 
-  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+  WriteDataHandle<MeasurementSimHitsMap> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
 
-  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+  WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasurementsMap{
       this, "OutputParticleMeasurementsMap"};
 
-  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+  WriteDataHandle<SimHitMeasurementsMap> m_outputSimHitMeasurementsMap{
       this, "OutputSimHitMeasurementsMap"};
 
   // Temporary!

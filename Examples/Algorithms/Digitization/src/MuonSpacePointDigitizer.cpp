@@ -50,9 +50,9 @@ constexpr GeometryIdentifier toChamberId(const GeometryIdentifier& id) {
 
 namespace ActsExamples {
 
-MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
-                                                 Logging::Level lvl)
-    : IAlgorithm("MuonSpacePointDigitizer", lvl), m_cfg{cfg} {
+MuonSpacePointDigitizer::MuonSpacePointDigitizer(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("MuonSpacePointDigitizer", std::move(logger)), m_cfg{cfg} {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("No sim hits have been parsed ");
   }
@@ -85,9 +85,13 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
     throw std::invalid_argument("Missing output track parameters collection");
   }
 
-  ACTS_DEBUG("Retrieve sim hits and particles from "
-             << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
-  ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
+  ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::DEBUG,
+                       "Retrieve sim hits and particles from "
+                           << m_cfg.inputSimHits << " & "
+                           << m_cfg.inputParticles);
+  ACTS_LOG_WITH_LOGGER(
+      this->logger(), Acts::Logging::DEBUG,
+      "Write produced space points to " << m_cfg.outputSpacePoints);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
@@ -160,8 +164,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
   // need list here for stable addresses
   MeasurementContainer measurements;
 
-  IndexMultimap<SimBarcode> measurementParticlesMap;
-  IndexMultimap<Index> measurementSimHitsMap;
+  MeasurementParticlesMap measurementParticlesMap;
+  MeasurementSimHitsMap measurementSimHitsMap;
   measurements.reserve(gotSimHits.size());
   measurementParticlesMap.reserve(gotSimHits.size());
   measurementSimHitsMap.reserve(gotSimHits.size());

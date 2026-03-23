@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -66,13 +67,13 @@ class PhotonConversion {
   /// This method constructs and returns the child particles.
   ///
   /// @param [in] photon The interacting photon
-  /// @param [in] childEnergy The energy of one child particle
-  /// @param [in] childDirection The direction of the child particle
+  /// @param [in] child1Energy The energy of the first child particle
+  /// @param [in] child1Direction The direction of the first child particle
   ///
   /// @return Array containing the produced leptons
   std::array<Particle, 2> generateChildren(
-      const Particle& photon, double childEnergy,
-      const Acts::Vector3& childDirection) const;
+      const Particle& photon, double child1Energy,
+      const Acts::Vector3& child1Direction) const;
 
   /// Generate the energy fraction of the first child particle.
   ///
@@ -224,51 +225,47 @@ double PhotonConversion::generateFirstChildEnergyFraction(
 template <typename generator_t>
 Acts::Vector3 PhotonConversion::generateChildDirection(
     generator_t& generator, const Particle& particle) const {
-  /// This method is based upon the Athena class PhotonConversionTool
+  // This method is based upon the Athena class PhotonConversionTool
 
-  // Following the Geant4 approximation from L. Urban
-  // the azimutal angle
-  double theta = electronMass() / particle.energy();
-
+  // Following the Geant4 approximation from L. Urban the azimutal angle
   std::uniform_real_distribution<double> uniformDistribution{0., 1.};
   const double u = -std::log(uniformDistribution(generator) *
                              uniformDistribution(generator)) *
                    1.6;
-
-  theta *= (uniformDistribution(generator) < 0.25)
-               ? u
-               : u * 1. / 3.;  // 9./(9.+27) = 0.25
+  const double theta = (electronMass() / particle.energy()) *
+                       ((uniformDistribution(generator) < 0.25)
+                            ? u
+                            : u * 1. / 3.);  // 9./(9.+27) = 0.25
 
   // draw the random orientation angle
   const auto psi = std::uniform_real_distribution<double>(
       -std::numbers::pi, std::numbers::pi)(generator);
 
-  Acts::Vector3 direction = particle.direction();
   // construct the combined rotation to the scattered direction
-  Acts::RotationMatrix3 rotation(
+  const Acts::RotationMatrix3 rotation(
       // rotation of the scattering deflector axis relative to the reference
-      Acts::AngleAxis3(psi, direction) *
+      Acts::AngleAxis3(psi, particle.direction()) *
       // rotation by the scattering angle around the deflector axis
-      Acts::AngleAxis3(theta, Acts::createCurvilinearUnitU(direction)));
-  direction.applyOnTheLeft(rotation);
-  return direction;
+      Acts::AngleAxis3(theta,
+                       Acts::createCurvilinearUnitU(particle.direction())));
+  return rotation * particle.direction();
 }
 
 inline std::array<Particle, 2> PhotonConversion::generateChildren(
-    const Particle& photon, double childEnergy,
-    const Acts::Vector3& childDirection) const {
+    const Particle& photon, double child1Energy,
+    const Acts::Vector3& child1Direction) const {
   using namespace Acts::UnitLiterals;
 
   // Calculate the child momentum
   const double massChild = electronMass();
-  const double momentum1 =
-      std::sqrt(childEnergy * childEnergy - massChild * massChild);
+  const double absoluteMomentum1 = Acts::fastCathetus(child1Energy, massChild);
 
   // Use energy-momentum conservation for the other child
-  const Acts::Vector3 vtmp =
+  const Acts::Vector3 momentum2 =
       photon.fourMomentum().template segment<3>(Acts::eMom0) -
-      momentum1 * childDirection;
-  const double momentum2 = vtmp.norm();
+      absoluteMomentum1 * child1Direction;
+  const Acts::Vector3 child2Direction = momentum2.normalized();
+  const double absoluteMomentum2 = momentum2.norm();
 
   // The daughter particles are created with the explicit electron mass used in
   // the calculations for consistency. Using the full Particle constructor with
@@ -278,15 +275,15 @@ inline std::array<Particle, 2> PhotonConversion::generateChildren(
       Particle(photon.particleId().makeDescendant(0), Acts::eElectron, -1_e,
                electronMass())
           .setPosition4(photon.fourPosition())
-          .setDirection(childDirection)
-          .setAbsoluteMomentum(momentum1)
+          .setDirection(child1Direction)
+          .setAbsoluteMomentum(absoluteMomentum1)
           .setProcess(ProcessType::ePhotonConversion)
           .setReferenceSurface(photon.referenceSurface()),
       Particle(photon.particleId().makeDescendant(1), Acts::ePositron, 1_e,
                electronMass())
           .setPosition4(photon.fourPosition())
-          .setDirection(childDirection)
-          .setAbsoluteMomentum(momentum2)
+          .setDirection(child2Direction)
+          .setAbsoluteMomentum(absoluteMomentum2)
           .setProcess(ProcessType::ePhotonConversion)
           .setReferenceSurface(photon.referenceSurface()),
   };
@@ -308,14 +305,15 @@ bool PhotonConversion::run(generator_t& generator, Particle& particle,
   }
 
   // Get one child energy
-  const double childEnergy = p * generateFirstChildEnergyFraction(generator, p);
+  const double child1Energy =
+      p * generateFirstChildEnergyFraction(generator, p);
 
   // Now get the deflection
-  const Acts::Vector3 childDir = generateChildDirection(generator, particle);
+  const Acts::Vector3 child1Dir = generateChildDirection(generator, particle);
 
   // Produce the final state
   const std::array<Particle, 2> finalState =
-      generateChildren(particle, childEnergy, childDir);
+      generateChildren(particle, child1Energy, child1Dir);
   generated.insert(generated.end(), finalState.begin(), finalState.end());
 
   return true;

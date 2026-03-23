@@ -12,10 +12,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/SpacePointUtility.hpp"
 
 #include <boost/container/static_vector.hpp>
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 
@@ -25,11 +28,13 @@ namespace Acts {
 /// measurements on the pixel or strip detectors need further treatment. This
 /// class takes the SouceLinks and provides the corresponding space points.
 ///
-template <typename spacepoint_t>
-class SpacePointBuilder {
+template <typename space_point_t>
+class [[deprecated(
+    "Will be dropped soon and is replaced by PixelSpacePointBuilder / "
+    "StripSpacePointBuilder")]] SpacePointBuilder {
  public:
   /// Type alias for space point builder function
-  using BuilderFunction = std::function<spacepoint_t(
+  using BuilderFunction = std::function<space_point_t(
       Acts::Vector3, std::optional<double>, Acts::Vector2,
       std::optional<double>, boost::container::static_vector<SourceLink, 2>)>;
 
@@ -56,7 +61,7 @@ class SpacePointBuilder {
   void buildSpacePoint(
       const GeometryContext& gctx, const std::vector<SourceLink>& sourceLinks,
       const SpacePointBuilderOptions& opt,
-      std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const;
+      std::back_insert_iterator<container_t<space_point_t>> spacePointIt) const;
 
   /// @brief Searches possible combinations of two SourceLinks on different
   /// surfaces that may come from the same particles
@@ -77,7 +82,7 @@ class SpacePointBuilder {
   SpacePointBuilderConfig m_config;
 
   /// @brief Function to create external space point
-  /// The constructor of spacepoint_t with Vector3 global pos, Vector2 global
+  /// The constructor of space_point_t with Vector3 global pos, Vector2 global
   /// cov, and vector of source link pointers.
   BuilderFunction m_spConstructor;
 
@@ -95,3 +100,5 @@ class SpacePointBuilder {
 }  // namespace Acts
 
 #include "Acts/SpacePointFormation/SpacePointBuilder.ipp"
+
+ACTS_POP_IGNORE_DEPRECATED()

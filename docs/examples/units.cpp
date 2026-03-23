@@ -8,8 +8,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
 // This file contains code snippets for the Units documentation

@@ -16,6 +16,7 @@ import argparse
 import acts
 import acts.examples
 from acts.examples.reconstruction import addGnn
+from acts.examples.simulation import ParticleSelectorConfig, addDigiParticleSelection
 from acts.examples.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
@@ -81,6 +82,15 @@ def runGNN4ITk(
         )
     )
 
+    # Select primary particles with minimum 7 hits and 1 GeV pT for efficiency evaluation
+    s.addWhiteboardAlias("particles_simulated_selected", "particles")
+    particleSelectorConfig = ParticleSelectorConfig(
+        pt=(1.0 * u.GeV, None),
+        hits=(7, None),
+        removeSecondaries=True,
+    )
+    addDigiParticleSelection(s, particleSelectorConfig, logLevel=logLevel)
+
     # Configure GNN stages for module map workflow
     # All parameters hardcoded based on ITk configuration
 
@@ -130,7 +140,7 @@ def runGNN4ITk(
     }
     trackBuilder = CudaTrackBuilding(**trackBuilderConfig)
 
-    # Node features: ITk 12-feature configuration (spacepoint + 2 clusters)
+    # Node features: ITk 12-feature configuration (space point + 2 clusters)
     e = NodeFeature
     nodeFeatures = [
         e.R,
@@ -148,7 +158,7 @@ def runGNN4ITk(
     ]
     featureScales = [1000.0, 3.141592654, 1000.0, 1.0] * 3
 
-    # Add GNN tracking (spacepoints already created by reader, so no trackingGeometry)
+    # Add GNN tracking (space points already created by reader, so no trackingGeometry)
     addGnn(
         s,
         graphConstructor=graphConstructor,

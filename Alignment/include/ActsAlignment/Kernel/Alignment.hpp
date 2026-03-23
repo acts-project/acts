@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Alignment.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -94,14 +93,14 @@ struct AlignmentOptions {
 ///
 struct AlignmentResult {
   // The change of alignment parameters
-  Acts::ActsDynamicVector deltaAlignmentParameters;
+  Acts::DynamicVector deltaAlignmentParameters;
 
   // The aligned parameters for detector elements
   std::unordered_map<Acts::SurfacePlacementBase*, Acts::Transform3>
       alignedParameters;
 
   // The covariance of alignment parameters
-  Acts::ActsDynamicMatrix alignmentCovariance;
+  Acts::DynamicMatrix alignmentCovariance;
 
   // The average chi2/ndf (ndf is the measurement dim)
   double averageChi2ONdf = std::numeric_limits<double>::max();

@@ -22,65 +22,118 @@ namespace Acts {
 
 namespace {
 
-/// Check the compatibility of strip space point coordinates in xyz assuming
-/// the Bottom-Middle direction with the strip measurement details
-bool stripCoordinateCheck(float tolerance, const ConstSpacePointProxy2& sp,
-                          const std::array<float, 3>& spacePointPosition,
-                          std::array<float, 3>& outputCoordinates) {
-  const std::array<float, 3>& topStripVector = sp.topStripVector();
-  const std::array<float, 3>& bottomStripVector = sp.bottomStripVector();
-  const std::array<float, 3>& stripCenterDistance = sp.stripCenterDistance();
+/// Precomputed strip geometry data for a space point whose strip vectors
+/// are accessed repeatedly (i.e. middle and bottom SPs).
+///
+/// The scalar triple product identity a dot (b cross c) = c dot (a cross b)
+/// allows the cross products of the strip vectors to be precomputed once and
+/// reused saves a lot of cpu time for free in strip seeding
+struct StripData {
+  std::array<float, 3> bsvCrossTsv{};
+  std::array<float, 3> scdCrossTsv{};
+  std::array<float, 3> scdCrossBsv{};
+  std::array<float, 3> topStripVector{};
+  std::array<float, 3> topStripCenter{};
+};
 
-  // cross product between top strip vector and spacePointPosition
-  const std::array<float, 3> d1 = {
-      topStripVector[1] * spacePointPosition[2] -
-          topStripVector[2] * spacePointPosition[1],
-      topStripVector[2] * spacePointPosition[0] -
-          topStripVector[0] * spacePointPosition[2],
-      topStripVector[0] * spacePointPosition[1] -
-          topStripVector[1] * spacePointPosition[0]};
+inline StripData calculateStripData(const ConstSpacePointProxy2& sp) {
+  const auto& tsv = sp.topStripVector();
+  const auto& bsv = sp.bottomStripVector();
+  const auto& scd = sp.stripCenterDistance();
 
-  // scalar product between bottom strip vector and d1
-  const float bd1 = bottomStripVector[0] * d1[0] +
-                    bottomStripVector[1] * d1[1] + bottomStripVector[2] * d1[2];
+  return StripData{
+      .bsvCrossTsv = {bsv[1] * tsv[2] - bsv[2] * tsv[1],
+                      bsv[2] * tsv[0] - bsv[0] * tsv[2],
+                      bsv[0] * tsv[1] - bsv[1] * tsv[0]},
+      .scdCrossTsv = {scd[1] * tsv[2] - scd[2] * tsv[1],
+                      scd[2] * tsv[0] - scd[0] * tsv[2],
+                      scd[0] * tsv[1] - scd[1] * tsv[0]},
+      .scdCrossBsv = {scd[1] * bsv[2] - scd[2] * bsv[1],
+                      scd[2] * bsv[0] - scd[0] * bsv[2],
+                      scd[0] * bsv[1] - scd[1] * bsv[0]},
+      .topStripVector = tsv,
+      .topStripCenter = sp.topStripCenter(),
+  };
+}
 
-  // compatibility check using distance between strips to evaluate if
-  // spacepointPosition is inside the bottom detector element
-  const float s1 = stripCenterDistance[0] * d1[0] +
-                   stripCenterDistance[1] * d1[1] +
-                   stripCenterDistance[2] * d1[2];
+/// Check strip coordinate compatibility using StripData struct
+/// Best for sps checked many times (middle, bottom).
+inline bool stripCoordinateCheck(float tolerance, const StripData& strip,
+                                 const std::array<float, 3>& pm,
+                                 std::array<float, 3>& outputCoordinates) {
+  // bd1 = bottomStripVector dot (topStripVector cross pm)
+  const float bd1 = pm[0] * strip.bsvCrossTsv[0] +
+                    pm[1] * strip.bsvCrossTsv[1] + pm[2] * strip.bsvCrossTsv[2];
+
+  // s1 = stripCenterDistance dot (topStripVector cross pm)
+  // Check if pm is inside the bottom detector element
+  const float s1 = pm[0] * strip.scdCrossTsv[0] + pm[1] * strip.scdCrossTsv[1] +
+                   pm[2] * strip.scdCrossTsv[2];
   if (std::abs(s1) > std::abs(bd1) * tolerance) {
     return false;
   }
 
-  // cross product between bottom strip vector and spacePointPosition
-  const std::array<float, 3> d0 = {
-      bottomStripVector[1] * spacePointPosition[2] -
-          bottomStripVector[2] * spacePointPosition[1],
-      bottomStripVector[2] * spacePointPosition[0] -
-          bottomStripVector[0] * spacePointPosition[2],
-      bottomStripVector[0] * spacePointPosition[1] -
-          bottomStripVector[1] * spacePointPosition[0]};
-
-  // compatibility check using distance between strips to evaluate if
-  // spacePointPosition is inside the top detector element
-  float s0 = stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
-             stripCenterDistance[2] * d0[2];
+  // s0 = stripCenterDistance dot (bottomStripVector cross pm)
+  // Check if pm is inside the top detector element
+  float s0 = pm[0] * strip.scdCrossBsv[0] + pm[1] * strip.scdCrossBsv[1] +
+             pm[2] * strip.scdCrossBsv[2];
   if (std::abs(s0) > std::abs(bd1) * tolerance) {
     return false;
   }
 
-  // if arrive here spacePointPosition is compatible with strip directions and
-  // detector elements
-
-  const std::array<float, 3>& topStripCenter = sp.topStripCenter();
-
-  // spacePointPosition corrected with respect to the top strip position and
-  // direction and the distance between the strips
+  // Corrected position using the top strip center and direction
   s0 = s0 / bd1;
-  outputCoordinates[0] = topStripCenter[0] + topStripVector[0] * s0;
-  outputCoordinates[1] = topStripCenter[1] + topStripVector[1] * s0;
-  outputCoordinates[2] = topStripCenter[2] + topStripVector[2] * s0;
+  outputCoordinates[0] = strip.topStripCenter[0] + strip.topStripVector[0] * s0;
+  outputCoordinates[1] = strip.topStripCenter[1] + strip.topStripVector[1] * s0;
+  outputCoordinates[2] = strip.topStripCenter[2] + strip.topStripVector[2] * s0;
+  return true;
+}
+
+/// Check strip coordinate compatibility directly from a space point proxy.
+/// Best for space points checked only once (top SP), because the intermediate
+/// cross product d1 = tsv cross pm is reused for both bd1 and s1, and the
+/// second cross product d0 = bsv cross pm is skipped entirely when we exit
+/// early
+inline bool stripCoordinateCheck(float tolerance,
+                                 const ConstSpacePointProxy2& sp,
+                                 const std::array<float, 3>& pm,
+                                 std::array<float, 3>& outputCoordinates) {
+  const auto& tsv = sp.topStripVector();
+  const auto& bsv = sp.bottomStripVector();
+  const auto& scd = sp.stripCenterDistance();
+
+  // d1 = topStripVector cross pm (reused for both bd1 and s1)
+  const std::array<float, 3> d1 = {tsv[1] * pm[2] - tsv[2] * pm[1],
+                                   tsv[2] * pm[0] - tsv[0] * pm[2],
+                                   tsv[0] * pm[1] - tsv[1] * pm[0]};
+
+  // bd1 = bottomStripVector dot d1
+  const float bd1 = bsv[0] * d1[0] + bsv[1] * d1[1] + bsv[2] * d1[2];
+  // s1 = stripCenterDistance dot d1
+  // Check if pm is inside the bottom detector element
+  const float s1 = scd[0] * d1[0] + scd[1] * d1[1] + scd[2] * d1[2];
+  if (std::abs(s1) > std::abs(bd1) * tolerance) {
+    return false;
+  }
+
+  // d0 = bottomStripVector cross pm (only computed if check 1 passed)
+  const std::array<float, 3> d0 = {bsv[1] * pm[2] - bsv[2] * pm[1],
+                                   bsv[2] * pm[0] - bsv[0] * pm[2],
+                                   bsv[0] * pm[1] - bsv[1] * pm[0]};
+
+  // s0 = stripCenterDistance dot d0
+  // Check if pm is inside the top detector element
+  float s0 = scd[0] * d0[0] + scd[1] * d0[1] + scd[2] * d0[2];
+  if (std::abs(s0) > std::abs(bd1) * tolerance) {
+    return false;
+  }
+
+  // Corrected position using the top strip center and direction
+  const auto& tsc = sp.topStripCenter();
+  s0 = s0 / bd1;
+  outputCoordinates[0] = tsc[0] + tsv[0] * s0;
+  outputCoordinates[1] = tsc[1] + tsv[1] * s0;
+  outputCoordinates[2] = tsc[2] + tsv[2] * s0;
   return true;
 }
 
@@ -260,10 +313,16 @@ class Impl final : public TripletSeedFinder {
     const float sinTheta = 1 / std::sqrt(iSinTheta2);
     const float cosTheta = cotThetaB * sinTheta;
 
-    // coordinate transformation and checks for middle spacepoint
+    // coordinate transformation and checks for middle space point
     // x and y terms for the rotation from UV to XY plane
     const std::array<float, 2> rotationTermsUVtoXY = {cosPhiM * sinTheta,
                                                       sinPhiM * sinTheta};
+
+    // Pre-cache strip data for the loop-invariant middle and bottom SPs
+    const StripData stripM = calculateStripData(spM);
+    const ConstSpacePointProxy2 spB =
+        spacePoints[bottomDoublet.spacePointIndex()];
+    const StripData stripB = calculateStripData(spB);
 
     for (auto topDoublet : topDoublets) {
       // protects against division by 0
@@ -275,22 +334,23 @@ class Impl final : public TripletSeedFinder {
       // x_0 and y_0
       const float A0 = (topDoublet.v() - Vb) / dU;
 
-      const float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
-
-      // position of Middle SP converted from UV to XY assuming cotTheta
-      // evaluated from the Bottom and Middle SPs double
+      // The middle strip check is scale-invariant (ratios s1/bd1 and s0/bd1
+      // are unaffected by uniform scaling of pm), so we use cosTheta as the
+      // z-component instead of cosTheta * sqrt(1 + A0^2), deferring the sqrt.
       const std::array<float, 3> positionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
-          rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
-          zPositionMiddle};
+          rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
       std::array<float, 3> rMTransf{};
-      if (!stripCoordinateCheck(m_cfg.toleranceParam, spM, positionMiddle,
+      if (!stripCoordinateCheck(m_cfg.toleranceParam, stripM, positionMiddle,
                                 rMTransf)) {
         continue;
       }
 
-      // coordinate transformation and checks for bottom spacepoint
+      // sqrt only computed on the less-common path where middle check passed
+      const float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
+
+      // coordinate transformation and checks for bottom space point
       const float B0 = 2 * (Vb - A0 * Ub);
       const float Cb = 1 - B0 * bottomDoublet.y();
       const float Sb = A0 + B0 * bottomDoublet.x();
@@ -299,15 +359,13 @@ class Impl final : public TripletSeedFinder {
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
           zPositionMiddle};
 
-      const ConstSpacePointProxy2 spB =
-          spacePoints[bottomDoublet.spacePointIndex()];
       std::array<float, 3> rBTransf{};
-      if (!stripCoordinateCheck(m_cfg.toleranceParam, spB, positionBottom,
+      if (!stripCoordinateCheck(m_cfg.toleranceParam, stripB, positionBottom,
                                 rBTransf)) {
         continue;
       }
 
-      // coordinate transformation and checks for top spacepoint
+      // coordinate transformation and checks for top space point
       const float Ct = 1 - B0 * topDoublet.y();
       const float St = A0 + B0 * topDoublet.x();
       const std::array<float, 3> positionTop = {
@@ -414,7 +472,8 @@ class Impl final : public TripletSeedFinder {
 
       // inverse diameter is signed depending on if the curvature is
       // positive/negative in phi
-      tripletTopCandidates.emplace_back(spT.index(), B / std::sqrt(S2), im);
+      tripletTopCandidates.emplace_back(topDoublet.spacePointIndex(),
+                                        B / std::sqrt(S2), im);
     }  // loop on tops
   }
 
