@@ -177,10 +177,10 @@ struct RootTrackFinderNTupleWriter::Impl {
              const ParticleMeasurementsMap& particleMeasurementsMap,
              const TrackParticleMatching& trackParticleMatching) {
     // How often a particle was reconstructed.
-    std::unordered_map<ActsFatras::Barcode, std::size_t> reconCount;
+    std::unordered_map<SimBarcode, std::size_t> reconCount;
     reconCount.reserve(particles.size());
     // How often a particle was reconstructed as the majority particle.
-    std::unordered_map<ActsFatras::Barcode, std::size_t> majorityCount;
+    std::unordered_map<SimBarcode, std::size_t> majorityCount;
     majorityCount.reserve(particles.size());
 
     // write per-track performance measures

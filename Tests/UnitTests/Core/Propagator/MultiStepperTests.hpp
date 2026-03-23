@@ -778,8 +778,8 @@ struct MultiStepperTester {
 
     // Instantiate with target
     using type_a =
-        decltype(propagator.template propagate<
-                 decltype(pars), decltype(options), MultiStepperSurfaceReached>(
+        decltype(propagator.template propagate<decltype(options),
+                                               MultiStepperSurfaceReached>(
             pars, *surface, options));
     static_assert(!std::is_same_v<type_a, void>);
 

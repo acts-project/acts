@@ -12,10 +12,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/SpacePointUtility.hpp"
 
 #include <boost/container/static_vector.hpp>
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
 
@@ -26,7 +29,9 @@ namespace Acts {
 /// class takes the SouceLinks and provides the corresponding space points.
 ///
 template <typename space_point_t>
-class SpacePointBuilder {
+class [[deprecated(
+    "Will be dropped soon and is replaced by PixelSpacePointBuilder / "
+    "StripSpacePointBuilder")]] SpacePointBuilder {
  public:
   /// Type alias for space point builder function
   using BuilderFunction = std::function<space_point_t(
@@ -95,3 +100,5 @@ class SpacePointBuilder {
 }  // namespace Acts
 
 #include "Acts/SpacePointFormation/SpacePointBuilder.ipp"
+
+ACTS_POP_IGNORE_DEPRECATED()
