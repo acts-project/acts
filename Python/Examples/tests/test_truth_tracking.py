@@ -293,9 +293,7 @@ def test_python_track_state_access(generic_detector_config, tmp_path):
                     ]
                     assert len(fwd_predicted) == len(rev_predicted)
                     for fwd, rev in zip(fwd_predicted, reversed(rev_predicted)):
-                        assert all(
-                            fwd[i] == pytest.approx(rev[i]) for i in range(6)
-                        )
+                        assert all(fwd[i] == pytest.approx(rev[i]) for i in range(6))
 
                 return acts.examples.ProcessCode.SUCCESS
 
