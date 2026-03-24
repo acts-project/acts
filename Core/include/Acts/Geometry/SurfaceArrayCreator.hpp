@@ -152,6 +152,7 @@ class SurfaceArrayCreator {
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
