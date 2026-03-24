@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
@@ -25,14 +24,9 @@
 #include <functional>
 #include <iterator>
 #include <memory>
-#include <numbers>
 #include <optional>
 #include <utility>
 #include <vector>
-
-namespace ActsTests {
-struct SurfaceArrayCreatorFixture;
-}
 
 namespace Acts {
 
@@ -47,33 +41,13 @@ using SurfaceMatcher =
     std::function<bool(const GeometryContext& gctx, AxisDirection,
                        const Surface*, const Surface*)>;
 
-/// Vector of pointers to constant Surface objects
-using SurfaceVector = std::vector<const Surface*>;
-/// Matrix (2D vector) of pointers to constant Surface objects
-using SurfaceMatrix = std::vector<SurfaceVector>;
-
-/// @typedef V3Vector
-/// Vector of 3D vectors, used for storing collections of 3D points.
-using V3Vector = std::vector<Vector3>;
-
-/// @typedef V3Matrix
-/// Matrix (2D vector) of 3D vectors, used for storing grid-like collections of
-/// 3D points.
-using V3Matrix = std::vector<V3Vector>;
-
-/// @brief Scalar type used for axis values in surface array binning
-using AxisScalar = Vector3::Scalar;
-
 /// @class SurfaceArrayCreator
 ///
 /// It is designed create sub surface arrays to be ordered on Surfaces
 ///
 /// @todo write more documentation on how this is done
-class SurfaceArrayCreator {
+class SurfaceArrayCreator final {
  public:
-  friend struct ActsTests::SurfaceArrayCreatorFixture;
-  friend class SurfaceArray;
-
   /// Prototype axis definition for surface binning.
   struct ProtoAxis {
     /// Binning type (equidistant or variable)
@@ -83,19 +57,19 @@ class SurfaceArrayCreator {
     /// Number of bins
     std::size_t nBins = 0;
     /// Minimum value of the axis
-    AxisScalar min = 0;
+    double min = 0;
     /// Maximum value of the axis
-    AxisScalar max = 0;
+    double max = 0;
     /// Bin edges for variable binning
-    std::vector<AxisScalar> binEdges;
+    std::vector<double> binEdges;
 
     /// Get the bin index for a given value
     /// @param x The value to find the bin for
     /// @return The bin index
-    std::size_t getBin(AxisScalar x) const {
+    std::size_t getBin(double x) const {
       if (binEdges.empty()) {
         // equidistant
-        AxisScalar w = (max - min) / nBins;
+        const double w = (max - min) / nBins;
         return static_cast<std::size_t>(std::floor((x - min) / w));
       } else {
         // variable
@@ -134,9 +108,6 @@ class SurfaceArrayCreator {
                                    getDefaultLogger("SurfaceArrayCreator",
                                                     Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(logger)) {}
-
-  /// Destructor
-  virtual ~SurfaceArrayCreator() = default;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -354,13 +325,10 @@ class SurfaceArrayCreator {
   /// @brief Creates a SurfaceGridLookup instance within an any
   /// This is essentially a factory which absorbs some if/else logic
   /// that is required by the templating.
-  /// @tparam bdtA AxisBoundaryType of axis A
-  /// @tparam bdtB AxisBoundaryType of axis B
   /// @param surface the surface of the grid
   /// @param layerTolerance the layer tolerance
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
-  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
                           double layerTolerance, const ProtoAxis& pAxisA,

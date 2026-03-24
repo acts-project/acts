@@ -67,23 +67,6 @@ struct SurfaceArrayCreatorFixture {
   }
   ~SurfaceArrayCreatorFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
 
-  template <typename... Args>
-  SurfaceArrayCreator::ProtoAxis createEquidistantAxis(Args&&... args) {
-    return m_SAC.createEquidistantAxis(std::forward<Args>(args)...);
-  }
-
-  template <typename... Args>
-  SurfaceArrayCreator::ProtoAxis createVariableAxis(Args&&... args) {
-    return m_SAC.createVariableAxis(std::forward<Args>(args)...);
-  }
-
-  template <AxisBoundaryType bdtA, AxisBoundaryType bdtB, typename... Args>
-  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> makeSurfaceGridLookup2D(
-      Args&&... args) {
-    return m_SAC.makeSurfaceGridLookup2D<bdtA, bdtB>(
-        std::forward<Args>(args)...);
-  }
-
   SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
                                double zbase = 0, double r = 10, double w = 2,
                                double h = 1) {

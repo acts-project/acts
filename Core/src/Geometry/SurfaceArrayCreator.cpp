@@ -9,6 +9,7 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -457,7 +458,7 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createVariableAxis(
   };
   std::vector<const Surface*> keys = findKeySurfaces(surfaces, equal);
 
-  std::vector<AxisScalar> aDirs;
+  std::vector<double> aDirs;
   if (aDir == AxisDirection::AxisPhi) {
     std::stable_sort(
         keys.begin(), keys.end(), [&gctx](const Surface* a, const Surface* b) {
@@ -465,19 +466,19 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createVariableAxis(
                   phi(b->referencePosition(gctx, AxisDirection::AxisPhi)));
         });
 
-    AxisScalar maxPhi =
+    const double maxPhi =
         0.5 *
         (phi(keys.at(0)->referencePosition(gctx, AxisDirection::AxisPhi)) +
          phi(keys.at(1)->referencePosition(gctx, AxisDirection::AxisPhi)));
 
     // create rotation, so that maxPhi is +pi
-    AxisScalar angle = -(std::numbers::pi + maxPhi);
+    const double angle = -(std::numbers::pi + maxPhi);
     transform = transform * AngleAxis3(angle, Vector3::UnitZ());
 
     // iterate over all key surfaces, and use their mean position as aDirs,
     // but
     // rotate using transform from before
-    AxisScalar previous =
+    double previous =
         phi(keys.at(0)->referencePosition(gctx, AxisDirection::AxisPhi));
     // go through key surfaces
     for (std::size_t i = 1; i < keys.size(); i++) {
@@ -485,9 +486,10 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createVariableAxis(
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
-      AxisScalar edge = 0.5 * (previous + phi(surface->referencePosition(
-                                              gctx, AxisDirection::AxisPhi))) +
-                        angle;
+      const double edge =
+          0.5 * (previous + phi(surface->referencePosition(
+                                gctx, AxisDirection::AxisPhi))) +
+          angle;
       aDirs.push_back(edge);
       previous = phi(surface->referencePosition(gctx, AxisDirection::AxisPhi));
     }
@@ -507,13 +509,13 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createVariableAxis(
     // get the global vertices
     std::vector<Vector3> backVertices =
         makeGlobalVertices(gctx, *backSurface, backBounds->vertices(segments));
-    AxisScalar maxBValue = phi(*std::max_element(
+    const double maxBValue = phi(*std::max_element(
         backVertices.begin(), backVertices.end(),
         [](const Vector3& a, const Vector3& b) { return phi(a) < phi(b); }));
 
     aDirs.push_back(maxBValue);
 
-    aDirs.push_back(std::numbers::pi_v<AxisScalar>);
+    aDirs.push_back(std::numbers::pi_v<double>);
 
   } else if (aDir == AxisDirection::AxisZ) {
     std::stable_sort(
@@ -526,7 +528,7 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createVariableAxis(
     aDirs.push_back(protoLayer.max(AxisDirection::AxisZ));
 
     // the z-center position of the previous surface
-    AxisScalar previous =
+    double previous =
         keys.front()->referencePosition(gctx, AxisDirection::AxisZ).z();
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
@@ -550,7 +552,7 @@ SurfaceArrayCreator::ProtoAxis SurfaceArrayCreator::createVariableAxis(
     aDirs.push_back(protoLayer.max(AxisDirection::AxisR));
 
     // the r-center position of the previous surface
-    AxisScalar previous =
+    double previous =
         perp(keys.front()->referencePosition(gctx, AxisDirection::AxisR));
 
     // go through key surfaces
