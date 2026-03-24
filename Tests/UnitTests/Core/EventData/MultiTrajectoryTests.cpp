@@ -10,43 +10,30 @@
 #include <boost/test/tools/context.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
-#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/EventData/detail/TestTrackState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
-#include <array>
-#include <ostream>
 #include <random>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <variant>
-#include <vector>
 
 namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using namespace ActsTests;
 using namespace Acts::detail::Test;
 using namespace Acts::HashedStringLiteral;
 namespace bd = boost::unit_test::data;
 
-using ParametersVector = BoundTrackParameters::ParametersVector;
-using CovarianceMatrix = BoundTrackParameters::CovarianceMatrix;
+using ParametersVector = BoundVector;
+using CovarianceMatrix = BoundMatrix;
 using Jacobian = BoundMatrix;
 
 const auto gctx = GeometryContext::dangerouslyDefaultConstruct();

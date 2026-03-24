@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 3: start in the middle with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceTop);
+    options.appendExternalSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = Vector3::Zero();
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 4: start from top with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceBottom);
+    options.appendExternalSurface(surfaceBottom);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, 0.5_m, 0};
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE(Navigator_external_surfaces) {
     ACTS_INFO("Test 5: start from bottom with external surfaces");
 
     Navigator::Options options(tgContext);
-    options.insertExternalSurface(surfaceTop);
+    options.appendExternalSurface(surfaceTop);
     Navigator::State state = navigator.makeState(options);
 
     Vector3 position = {0, -0.5_m, 0};

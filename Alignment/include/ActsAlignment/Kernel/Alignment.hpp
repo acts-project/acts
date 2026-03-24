@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Alignment.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"

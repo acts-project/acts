@@ -9,6 +9,7 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
@@ -118,7 +119,8 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     throw std::runtime_error("Cannot create surface array with zero surfaces");
   }
 
-  ProtoLayer protoLayer(gctx, surfaces);
+  ProtoLayer protoLayer(
+      gctx, surfaces, Transform3{volume.localToGlobalTransform(gctx).linear()});
 
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
