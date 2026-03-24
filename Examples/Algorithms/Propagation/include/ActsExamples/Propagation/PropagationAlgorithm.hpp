@@ -37,7 +37,7 @@ class PropagationAlgorithm : public IAlgorithm {
     /// The step collection to be stored
     std::string outputSummaryCollection = "PropagationSummary";
     /// The material collection to be stored
-    std::string outputMaterialCollection = "RecordedMaterialTracks";
+    std::string outputMaterialCollection = "PropagationMaterialTracks";
 
     /// Instance of a propagator wrapper that performs the actual propagation
     std::shared_ptr<PropagatorInterface> propagatorImpl = nullptr;
@@ -83,7 +83,7 @@ class PropagationAlgorithm : public IAlgorithm {
   WriteDataHandle<PropagationSummaries> m_outputSummary{this, "OutputSummary"};
 
   WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
-      m_outputMaterialTracks{this, "RecordedMaterial"};
+      m_outputMaterialTracks{this, "PropagationMaterialTracks"};
 };
 
 }  // namespace ActsExamples
