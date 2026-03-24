@@ -28,7 +28,7 @@ def runMaterialRecording(
     etaRange=(-4.0, 4.0),
     phiRange=(0.0, 360.0 * u.degree),
     materialTrackCollectionName="material_tracks",
-    outputFile="geant4_material_tracks.root",
+    outputFileBase="geant4_material_tracks",
 ):
 
     rnd = RandomNumbers(seed=228)
@@ -85,7 +85,7 @@ def runMaterialRecording(
             recalculateTotals=True,
             inputMaterialTracks=materialTrackCollectionName,
             treeName=materialTrackCollectionName,
-            filePath=str(outputFile),
+            filePath=str(outputFileBase) + ".root",
             level=acts.logging.INFO,
         )
     )
@@ -152,7 +152,7 @@ def main():
         etaRange=tuple(args.eta_range),
         phiRange=(args.phi_range[0] * u.degree, args.phi_range[1] * u.degree),
         materialTrackCollectionName=args.material_track_collection,
-        outputFile=Path(args.output),
+        outputFileBase=args.output,
     ).run()
 
 

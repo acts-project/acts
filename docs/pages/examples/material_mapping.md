@@ -34,9 +34,9 @@ The following scripts implement the three stages:
 Example commands (Open Data Detector):
 
 ```console
-python material_recording.py -n1000 -t1000 -o odd_material_geant4
+python material_recording.py -n1000 -t1000 -o odd_material_geant4.root
 python material_mapping.py -n 1000000 -i odd_material_geant4.root -o odd_material
-python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_material_validated -p
+python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_material_validated.root -p
 ```
 
 > [!tip]
@@ -48,7 +48,7 @@ python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_ma
 ### 1) Material recording (`material_recording.py`)
 
 - Uses Geant4 material recording to create per-track material information.
-- Produces a ROOT file (output stem + `.root`) containing material tracks.
+- Produces a '<output>.root' ROOT file containing material tracks.
 - Typical output for the command above: `odd_material_geant4.root`.
 
 ### 2) Material mapping (`material_mapping.py`)
@@ -77,7 +77,7 @@ python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_ma
 The figure below overlays Geant4, mapped, validated, and propagated profiles
 for `t_X0` vs `eta`, with a ratio panel.
 
-![Overlay and ratio for material profiles.](material_mapping/overlay_profile_ratio_v_eta_t_X0.png)
+![Overlay and ratio for material profiles.](material/overlay_profile_ratio_v_eta_t_X0.png)
 
 ## Tests that guard this workflow
 

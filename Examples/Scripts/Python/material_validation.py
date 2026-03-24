@@ -33,7 +33,7 @@ def runMaterialValidation(
     etaRange=(-4.0, 4.0),
     phiRange=(0.0, 360.0 * u.degree),
     materialTrackCollectionName="material_tracks",
-    outputFile="material_validation",
+    outputFileBase="material_validation",
     trackingGeometry=None,
 ):
 
@@ -82,7 +82,7 @@ def runMaterialValidation(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
             inputMaterialTracks=materialValidationConfig.outputMaterialTracks,
-            filePath=str(outputFile),
+            filePath=str(outputFileBase) + ".root",
             storeSurface=True,
             storeVolume=True,
         )
@@ -186,7 +186,7 @@ def main():
         etaRange=tuple(args.eta_range),
         phiRange=(args.phi_range[0] * u.degree, args.phi_range[1] * u.degree),
         materialTrackCollectionName=args.material_track_collection,
-        outputFile=args.output,
+        outputFileBase=args.output,
         trackingGeometry=trackingGeometry if args.propagate else None,
     ).run()
 

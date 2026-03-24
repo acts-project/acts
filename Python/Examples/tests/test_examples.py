@@ -582,7 +582,6 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         loglevel=acts.logging.INFO,
         outputMaterialTracks="material_tracks",
         treeName="material_tracks",
-        readCachedSurfaceInformation=False,
     )
 
     s.run()
@@ -624,7 +623,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
             surfaces=materialSurfaces,
             s=s,
             tracksPerEvent=1000,
-            outputFile=tmp_path / "material_validation.root",
+            outputFileBase=tmp_path / "material_validation",
             materialTrackCollectionName="material_tracks",
         )
 

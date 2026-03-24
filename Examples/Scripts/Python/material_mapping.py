@@ -43,7 +43,6 @@ def runMaterialMapping(
     loglevel: acts.logging.Level = acts.logging.INFO,
     outputMaterialTracks: str = "material_tracks",
     treeName: str = "material_tracks",
-    readCachedSurfaceInformation: bool = False,
 ):
     # Create a sequencer
     print("Creating the sequencer with 1 thread (inter event information needed)")
@@ -163,6 +162,20 @@ if "__main__" == __name__:
         "--matconfig", type=str, default="", help="Material configuration file"
     )
 
+    p.add_argument(
+        "--tree-name",
+        type=str,
+        default="material_tracks",
+        help="Input material track tree name",
+    )
+
+    p.add_argument(
+        "--material-tracks-name",
+        type=str,
+        default="material_tracks",
+        help="Input material track collection name",
+    )
+
     args = p.parse_args()
     gContext = GeometryContext()
     logLevel = logging.INFO
@@ -182,4 +195,6 @@ if "__main__" == __name__:
         outputFileBase=args.output,
         outputMapFormats=["json", "root"],
         loglevel=logLevel,
+        outputMaterialTracks=args.material_tracks_name,
+        treeName=args.tree_name,
     ).run()
