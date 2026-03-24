@@ -34,9 +34,9 @@ The following scripts implement the three stages:
 Example commands (Open Data Detector):
 
 ```console
-python material_recording.py -n1000 -t1000 -o odd_material_geant4.root
-python material_mapping.py -n 1000000 -i odd_material_geant4.root -o odd_material
-python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_material_validated.root -p
+python material_recording.py -n1000 -t1000 -o odd_material_geant4
+python material_mapping.py -n 1000000 -i odd_material_geant4 -o odd_material
+python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_material_validated -p
 ```
 
 > [!tip]
@@ -48,7 +48,7 @@ python material_validation.py -n 1000 -t 1000 -m odd_material_map.root -o odd_ma
 ### 1) Material recording (`material_recording.py`)
 
 - Uses Geant4 material recording to create per-track material information.
-- Produces a '<output>.root' ROOT file containing material tracks.
+- Produces a `<output>.root` ROOT file containing material tracks.
 - Typical output for the command above: `odd_material_geant4.root`.
 
 ### 2) Material mapping (`material_mapping.py`)
