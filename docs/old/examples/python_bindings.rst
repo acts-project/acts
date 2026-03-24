@@ -9,7 +9,7 @@ library. Building these bindings can be enabled via
 including the development files to be installed. You can then build the special
 target `ActsPythonBindings` to build everything that can be accessed in python.
 
-The build will create a setup script in ``$BUILD_DIR/python/setup.sh`` which
+The build will create a setup script in ``$BUILD/this_acts_withdeps.sh`` which
 modifies ``$PYTHONPATH`` so that you can import the ``acts`` module in python.
 
 Here is a minimal example of a python script using the example bindings, which
@@ -77,7 +77,7 @@ They can be found in ``$REPO_ROOT/Examples/Scripts/Python``. Make sure you have 
 
 .. code-block:: console
 
-   source $BUILD_DIR/python/setup.sh
+   source $BUILD/this_acts_withdeps.sh
 
 to make sure python can find the ``acts`` module.
 

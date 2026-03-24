@@ -20,11 +20,12 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
+  ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -77,10 +78,14 @@ jobs:
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: ctest --test-dir build -j$(nproc)
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build -j$(nproc)
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -117,10 +122,10 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
     env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
+      ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
     steps:
       - uses: actions/checkout@v6
@@ -156,10 +161,8 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
-    env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
       - uses: actions/checkout@v6
@@ -235,10 +238,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2404_clang19
-            std: 20
-            cxx: clang++-19
-    container: ghcr.io/acts-project/${{ matrix.image }}:83
+          - image: ubuntu2404_clang22
+            std: 23
+            cxx: clang++-22
+    container: ghcr.io/acts-project/${{ matrix.image }}:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -252,6 +255,7 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: ${{ matrix.cxx }}
+          cxx_std: ${{ matrix.std }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -288,10 +292,14 @@ jobs:
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -314,7 +322,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -327,7 +335,7 @@ jobs:
       - name: Setup Xcode version
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.3.0"
+          xcode-version: "26.3.0"
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -581,7 +589,7 @@ jobs:
   linux_ubuntu_python_wheel:
     runs-on: ubuntu-latest
     needs: [linux_ubuntu]
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
 
     steps:
       - uses: actions/checkout@v6
@@ -627,4 +635,4 @@ jobs:
           path: "*.whl"
 
       - name: Test
-        run: CI/dependencies/run.sh .env python3 Python/Examples/scripts/hello_world_kalman.py
+        run: CI/dependencies/run.sh .env python3 Examples/Scripts/Python/track_finding_python_only.py

@@ -1,6 +1,22 @@
+set(_fpe_platform_source src/FpeMonitorPlatformUnsupported.cpp)
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _acts_fpe_arch)
+
+if(APPLE)
+    if(_acts_fpe_arch MATCHES "^(x86_64|amd64)$")
+        set(_fpe_platform_source src/FpeMonitorPlatformDarwinX86_64.cpp)
+    elseif(_acts_fpe_arch MATCHES "^(arm64|aarch64)$")
+        set(_fpe_platform_source src/FpeMonitorPlatformDarwinArm64.cpp)
+    endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(_acts_fpe_arch MATCHES "^(x86_64|amd64)$")
+        set(_fpe_platform_source src/FpeMonitorPlatformLinuxX86_64.cpp)
+    endif()
+endif()
+
 acts_add_library(
     PluginFpeMonitoring
     src/FpeMonitor.cpp
+    ${_fpe_platform_source}
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
@@ -47,7 +63,7 @@ else()
 
                 file(
                     WRITE
-                    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                     "
         #include <boost/stacktrace.hpp>
         int main() {}
@@ -91,7 +107,7 @@ else()
 
                         file(
                             WRITE
-                            "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                                "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                             "
             #include <boost/stacktrace.hpp>
             int main() {}
@@ -127,7 +143,7 @@ else()
 
                 file(
                     WRITE
-                    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                     "#include <boost/stacktrace.hpp>\n"
                     "#include <iostream>\n"
                     "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
@@ -155,7 +171,7 @@ else()
 
                     file(
                         WRITE
-                        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+                            "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
                         "#include <boost/stacktrace.hpp>\n"
                         "#include <iostream>\n"
                         "int main() { std::cout << boost::stacktrace::stacktrace(); }\n"
@@ -178,8 +194,7 @@ else()
                     if(_backtrace_link)
                         message(CHECK_PASS "yes")
                         list(
-                            APPEND
-                            _fpe_options
+                            APPEND _fpe_options
                             -DBOOST_STACKTRACE_USE_BACKTRACE
                         )
                         target_link_libraries(

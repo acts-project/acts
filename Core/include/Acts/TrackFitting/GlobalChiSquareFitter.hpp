@@ -13,7 +13,6 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -1265,7 +1264,7 @@ class Gx2Fitter {
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(*surface);
+        propagatorOptions.navigation.appendExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1294,9 +1293,9 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainerTemp.clear();
 
+      // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      // Run the fitter
       auto result =
           m_propagator.makeResult(std::move(propagatorState), propagationResult,
                                   propagatorOptions, false);
@@ -1431,7 +1430,7 @@ class Gx2Fitter {
       // Add the measurement surface as external surface to the navigator.
       // We will try to hit those surface by ignoring boundary checks.
       for (const auto& [surface, _] : inputMeasurements) {
-        propagatorOptions.navigation.insertExternalSurface(*surface);
+        propagatorOptions.navigation.appendExternalSurface(*surface);
       }
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
@@ -1460,9 +1459,9 @@ class Gx2Fitter {
       // existing states, but this needs some more thinking.
       trackContainerTemp.clear();
 
+      // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      // Run the fitter
       auto result =
           m_propagator.makeResult(std::move(propagatorState), propagationResult,
                                   propagatorOptions, false);
@@ -1602,9 +1601,9 @@ class Gx2Fitter {
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trackContainer.trackStateContainer();
 
+      // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      // Run the fitter
       auto result =
           m_propagator.makeResult(std::move(propagatorState), propagationResult,
                                   propagatorOptions, false);

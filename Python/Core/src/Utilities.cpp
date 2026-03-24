@@ -30,9 +30,13 @@ namespace ActsPython {
 /// @brief This adds the classes from Core/Utilities to the python module
 /// @param m the pybind11 core module
 void addUtilities(py::module_& m) {
-  { py::class_<AnyBase<512>>(m, "AnyBase512").def(py::init<>()); }
+  {
+    py::class_<AnyBase<512>>(m, "AnyBase512").def(py::init<>());
+  }
 
-  { py::class_<CalibrationContext>(m, "CalibrationContext").def(py::init<>()); }
+  {
+    py::class_<CalibrationContext>(m, "CalibrationContext").def(py::init<>());
+  }
 
   // Add l ogging infrastructure
   {

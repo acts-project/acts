@@ -4,12 +4,12 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: v1.0.2
-  SPACK_REPO_VERSION: v2025.07.0
+  SPACK_VERSION: v1.1.1
+  SPACK_REPO_VERSION: v2025.11.0
 
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v19.0.0
+  DEPENDENCY_TAG: v21.0.0
 
   MODEL_STORAGE: ${CI_PROJECT_DIR}/ci_models
 
@@ -45,7 +45,7 @@ variables:
 
 build_gnn_cpu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
   tags:
     - large
 
@@ -78,7 +78,7 @@ build_gnn_cpu:
 
 build_gnn:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
   tags:
     - large
 
@@ -120,7 +120,7 @@ test_gnn_unittests:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
   tags:
     - docker-gpu-nvidia
 
@@ -144,7 +144,7 @@ test_gnn_python:
   stage: test
   needs:
     - build_gnn
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_gnn:85
   tags:
     - docker-gpu-nvidia
 
@@ -175,7 +175,7 @@ test_gnn_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:83
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:85
 
   cache:
     - !reference [.spack_cache, cache]
@@ -200,7 +200,7 @@ build_gnn_tensorrt:
 
 build_linux_ubuntu:
   stage: build
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
 
   cache:
    - !reference [.ccache_base, cache]
@@ -261,7 +261,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
   needs: [build_linux_ubuntu]
 
   cache:
@@ -287,7 +287,7 @@ linux_test_examples:
 linux_physmon:
   stage: test
   needs: [build_linux_ubuntu]
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:83
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:85
 
   artifacts:
     when: always
@@ -375,12 +375,12 @@ linux_physmon:
   after_script:
    - !reference [.spack_cleanup, after_script]
 
-linux_ubuntu_2404_clang19:
+linux_ubuntu_2404_clang22:
   extends: .linux_ubuntu_extra
   variables:
-    CXX: clang++-19
-    CXXSTD: 20
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:83
+    CXX: clang++-22
+    CXXSTD: 23
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang22:85
 
 
 ######################
@@ -388,15 +388,14 @@ linux_ubuntu_2404_clang19:
 ######################
 
 .lcg_base_job:
-  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:83
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:85
   stage: build
   tags:
     - cvmfs
 
   variables:
     ACTS_LOG_FAILURE_THRESHOLD: WARNING
-    # disable fpe monitoring as we can't mask without backtrace support
-    ACTS_SEQUENCER_DISABLE_FPEMON: true
+    ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
     # force off even if it is CI mode
     ROOT_HASH_CHECKS: off

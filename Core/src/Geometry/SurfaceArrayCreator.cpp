@@ -57,6 +57,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
 
   auto surface = Surface::makeShared<CylinderSurface>(fullTransform, R, halfZ);
+  ACTS_VERBOSE("- projection surface is: " << surface->toString(gctx));
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
@@ -150,8 +151,18 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
   const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
+  ACTS_VERBOSE("- full transform is \n" << fullTransform.matrix());
+
+  if (fullTransform.translation().norm() < s_transformEquivalentTolerance) {
+    ACTS_VERBOSE(
+        "input transform does not have translation: putting projection surface "
+        "at center of gravity in z");
+    fullTransform.translate(Vector3::UnitZ() * Z);
+  }
 
   auto surface = Surface::makeShared<DiscSurface>(fullTransform, Rmin, Rmax);
+  ACTS_VERBOSE("- projection surface is: " << surface->toString(gctx));
+
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
@@ -252,6 +263,13 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
   const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
+
+  if (fullTransform.translation().norm() < s_transformEquivalentTolerance) {
+    ACTS_VERBOSE(
+        "input transform does not have translation: putting projection surface "
+        "at center of gravity in z");
+    fullTransform.translate(Vector3::UnitZ() * Z);
+  }
 
   auto surface = Surface::makeShared<DiscSurface>(fullTransform, Rmin, Rmax);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
