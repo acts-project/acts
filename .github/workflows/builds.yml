@@ -635,4 +635,4 @@ jobs:
           path: "*.whl"
 
       - name: Test
-        run: CI/dependencies/run.sh .env python3 Python/Examples/scripts/hello_world_kalman.py
+        run: CI/dependencies/run.sh .env python3 Examples/Scripts/Python/track_finding_python_only.py
