@@ -131,7 +131,8 @@ class SurfaceArray {
           m_grid(std::move(axes)),
           m_binValues(std::move(bValues)),
           m_maxNeighborDistance(maxNeighborDistance) {
-      m_surfacePacks.resize(m_grid.size());
+      m_surfacePacks.reserve(1 + m_grid.size());
+      m_surfacePacks.push_back({});  // reserve pack for empty neighbors
       m_neighborSurfacePackIndices.resize(m_maxNeighborDistance *
                                           m_grid.size());
     }
@@ -275,11 +276,15 @@ class SurfaceArray {
     std::vector<SurfaceVector> m_surfacePacks;
     std::vector<std::size_t> m_neighborSurfacePackIndices;
 
+    std::size_t globalBinNeighborDistanceIndex(
+        std::size_t globalBin, std::uint8_t neighborDistanceIndex) const {
+      return m_maxNeighborDistance * globalBin + neighborDistanceIndex;
+    }
+
     const SurfaceVector& getNeighborSurfacePack(
         std::size_t globalBin, std::uint8_t neighborDistanceIndex) const {
-      const std::size_t neighborPackIndex = m_neighborSurfacePackIndices.at(
-          m_maxNeighborDistance * globalBin + neighborDistanceIndex);
-      return m_surfacePacks.at(neighborPackIndex);
+      return m_surfacePacks.at(m_neighborSurfacePackIndices.at(
+          globalBinNeighborDistanceIndex(globalBin, neighborDistanceIndex)));
     }
 
     /// map surface center to grid
@@ -353,12 +358,13 @@ class SurfaceArray {
         const std::array<std::size_t, 2> indices =
             m_grid.localBinsFromGlobalBin(globalBin);
 
-        for (std::uint8_t neighborMapIndex = 0;
-             neighborMapIndex < m_maxNeighborDistance; ++neighborMapIndex) {
+        for (std::uint8_t neighborDistanceIndex = 0;
+             neighborDistanceIndex < m_maxNeighborDistance;
+             ++neighborDistanceIndex) {
           std::vector<const Surface*> surfacePack;
 
-          for (const std::size_t idx :
-               m_grid.neighborHoodIndices(indices, neighborMapIndex + 1u)) {
+          for (const std::size_t idx : m_grid.neighborHoodIndices(
+                   indices, neighborDistanceIndex + 1u)) {
             const std::vector<const Surface*>& binContent = m_grid.at(idx);
             std::copy(binContent.begin(), binContent.end(),
                       std::back_inserter(surfacePack));
@@ -371,10 +377,12 @@ class SurfaceArray {
 
           if (const auto it = surfaceVectorToPackIndex.find(surfacePack);
               it != surfaceVectorToPackIndex.end()) {
-            m_neighborSurfacePackIndices.push_back(it->second);
+            m_neighborSurfacePackIndices[globalBinNeighborDistanceIndex(
+                globalBin, neighborDistanceIndex)] = it->second;
           } else {
             surfaceVectorToPackIndex[surfacePack] = m_surfacePacks.size();
-            m_neighborSurfacePackIndices.push_back(m_surfacePacks.size());
+            m_neighborSurfacePackIndices[globalBinNeighborDistanceIndex(
+                globalBin, neighborDistanceIndex)] = m_surfacePacks.size();
             m_surfacePacks.push_back(std::move(surfacePack));
           }
         }
