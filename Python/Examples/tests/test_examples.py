@@ -29,7 +29,7 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
 )
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 u = acts.UnitConstants
 
@@ -595,7 +595,8 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     # json map output check
     map_file_json = tmp_path / "material_mapping_map.json"
     assert map_file_json.exists()
-    assert_root_hash(map_file_json.name, map_file_json)
+    with map_file_json.open() as fh:
+        assert json.load(fh)
 
     # mapped tracks output check
     map_file_mapped = tmp_path / "material_mapping_mapped.root"
@@ -607,18 +608,14 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     assert map_file_unmapped.exists()
     assert_root_hash(map_file_unmapped.name, map_file_unmapped)
 
-    with map_file_json.open() as fh:
-        assert json.load(fh)
-
     val_file = tmp_path / "material_validation.root"
     assert not val_file.exists()
 
     # test the validation as well
-
     s = Sequencer(events=10, numThreads=1)
 
     with getOpenDataDetector(
-        materialDecorator=acts.IMaterialDecorator.fromFile(map_file_root)
+        materialDecorator=acts.IMaterialDecorator.fromFile(map_file_json)
     ) as detector:
         trackingGeometry = detector.trackingGeometry()
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
