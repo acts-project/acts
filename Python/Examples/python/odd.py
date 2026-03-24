@@ -23,6 +23,9 @@ def getOpenDataDetector(
     odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
     gen3=False,
+    buildTracker=True,
+    buildCalorimeter=True,
+    buildMuonSystem=True,
 ):
     """This function sets up the open data detector. Requires DD4hep.
     Parameters
@@ -40,12 +43,15 @@ def getOpenDataDetector(
     if not odd_dir.exists():
         raise RuntimeError(f"OpenDataDetector not found at {odd_dir}")
 
-    odd_xml_defs = odd_dir / "xml" / "OpenDataDetectorDefs.xml"
-    odd_xml_trk = odd_dir / "xml" / "OpenDataDetectorTracker.xml"
-    if not odd_xml_defs.exists() or not odd_xml_trk.exists():
-        raise RuntimeError(
-            f"OpenDataDetectorDefs.xml or OpenDataDetectorTracker.xml not found at {odd_dir / 'xml'}"
-        )
+    xml_files = []
+    xml_files.append(odd_dir / "xml" / "OpenDataDetectorDefs.xml")
+    if buildTracker:
+        xml_files.append(odd_dir / "xml" / "OpenDataDetectorTracker.xml")
+    if buildCalorimeter:
+        xml_files.append(odd_dir / "xml" / "OpenDataDetectorCalorimeter.xml")
+    if buildMuonSystem:
+        xml_files.append(odd_dir / "xml" / "OpenDataDetectorMuonSystem.xml")
+    xml_files = [str(xml_file) for xml_file in xml_files]
 
     env_vars = []
     map_name = "libOpenDataDetector.components"
@@ -86,7 +92,7 @@ def getOpenDataDetector(
             )
 
         oddConfig = acts.examples.dd4hep.OpenDataDetector.Config(
-            xmlFileNames=[str(odd_xml_defs), str(odd_xml_trk)],
+            xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
@@ -125,7 +131,7 @@ def getOpenDataDetector(
             return geoid
 
         dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
-            xmlFileNames=[str(odd_xml_defs), str(odd_xml_trk)],
+            xmlFileNames=xml_files,
             name="OpenDataDetector",
             logLevel=customLogLevel(),
             dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
