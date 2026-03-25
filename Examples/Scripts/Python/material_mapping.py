@@ -177,7 +177,6 @@ if "__main__" == __name__:
     )
 
     args = p.parse_args()
-    gContext = GeometryContext()
     logLevel = logging.INFO
 
     matDeco = None
