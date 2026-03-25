@@ -112,6 +112,14 @@ class SurfaceArray {
     virtual ~ISurfaceGridLookup() = 0;
   };
 
+  /// Factory method to create a surface grid lookup for a given representative
+  /// surface, tolerance, and axes. This will internally create the appropriate
+  /// lookup class based on the axes and concrete @ref Grid.
+  /// @param representative The surface which is used as representative
+  /// @param tolerance The tolerance used for intersection checks
+  /// @param axes The axes used for the grid
+  /// @param bValues Optional vector of axis directions for binning
+  /// @return A unique pointer to the surface grid lookup
   static std::unique_ptr<ISurfaceGridLookup> makeSurfaceGridLookup(
       std::shared_ptr<RegularSurface> representative, double tolerance,
       std::tuple<const IAxis*, const IAxis*> axes,
@@ -411,8 +419,8 @@ class SurfaceArray {
  private:
   /// Check consistency between provided surfaces and grid contents.
   ///
-  /// Iterates over all local grid bins, collects every surface pointer seen
-  /// in the bins, and compares that set against the surfaces provided to this
+  /// Iterates over all local grid bins, collects every surface pointer seen in
+  /// the bins, and compares that set against the surfaces provided to this
   /// array. Throws if the sets differ (e.g. a provided surface is not present
   /// in the grid).
   ///
