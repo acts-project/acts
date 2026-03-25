@@ -9,12 +9,12 @@
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "ActsExamples/Geant4/AlgebraConverters.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
+#include "ActsExamples/Geant4/UnitConversion.hpp"
 
 #include <cstddef>
 #include <ostream>
@@ -31,17 +31,19 @@ MaterialSteppingAction::MaterialSteppingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-MaterialSteppingAction::~MaterialSteppingAction() = default;
+void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
+  assert(stepPtr != nullptr);
+  const G4Step& step = *stepPtr;
 
-void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
   // Get the material & check if it is present
-  G4Material* material = step->GetPreStepPoint()->GetMaterial();
-  if (material == nullptr) {
+  const G4Material* materialPtr = step.GetPreStepPoint()->GetMaterial();
+  if (materialPtr == nullptr) {
     return;
   }
+  const G4Material& material = *materialPtr;
 
   // First check for exclusion
-  std::string materialName = material->GetName();
+  const std::string materialName = material.GetName();
   for (const auto& emat : m_cfg.excludeMaterials) {
     if (emat == materialName) {
       ACTS_VERBOSE("Exclude step in material '" << materialName << "'.");
@@ -49,29 +51,24 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
     }
   }
 
-  constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  constexpr double convertDensity =
-      (Acts::UnitConstants::g / Acts::UnitConstants::mm3) /
-      (CLHEP::gram / CLHEP::mm3);
-
   ACTS_VERBOSE("Performing a step with step size = "
-               << convertLength * step->GetStepLength());
+               << convertLengthToActs * step.GetStepLength());
 
   // Quantities valid for elemental materials and mixtures
-  double X0 = convertLength * material->GetRadlen();
-  double L0 = convertLength * material->GetNuclearInterLength();
-  double rho = convertDensity * material->GetDensity();
+  const double X0 = convertLengthToActs * material.GetRadlen();
+  const double L0 = convertLengthToActs * material.GetNuclearInterLength();
+  const double rho = convertDensityToActs * material.GetDensity();
 
   // Get{A,Z} is only meaningful for single-element materials (according to
   // the Geant4 docs). Need to compute average manually.
-  const G4ElementVector* elements = material->GetElementVector();
-  const G4double* fraction = material->GetFractionVector();
-  std::size_t nElements = material->GetNumberOfElements();
+  const G4ElementVector* elements = material.GetElementVector();
+  const G4double* fraction = material.GetFractionVector();
+  std::size_t nElements = material.GetNumberOfElements();
   double Ar = 0.;
   double Z = 0.;
   if (nElements == 1) {
-    Ar = material->GetA() / (CLHEP::gram / CLHEP::mole);
-    Z = material->GetZ();
+    Ar = material.GetA() / (CLHEP::gram / CLHEP::mole);
+    Z = material.GetZ();
   } else {
     for (std::size_t i = 0; i < nElements; i++) {
       Ar += elements->at(i)->GetA() * fraction[i] / (CLHEP::gram / CLHEP::mole);
@@ -82,24 +79,25 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
   // Construct passed material slab for the step
   const auto slab =
       Acts::MaterialSlab(Acts::Material::fromMassDensity(X0, L0, Ar, Z, rho),
-                         convertLength * step->GetStepLength());
+                         convertLengthToActs * step.GetStepLength());
 
   // Create the RecordedMaterialSlab
   Acts::MaterialInteraction mInteraction;
   mInteraction.position =
-      convertPosition(step->GetPreStepPoint()->GetPosition());
+      convertPosition(step.GetPreStepPoint()->GetPosition());
   mInteraction.direction =
-      convertDirection(step->GetPreStepPoint()->GetMomentum()).normalized();
+      convertDirection(step.GetPreStepPoint()->GetMomentum()).normalized();
   mInteraction.materialSlab = slab;
-  mInteraction.pathCorrection = (step->GetStepLength() / CLHEP::mm);
+  mInteraction.pathCorrection = step.GetStepLength() * convertLengthToActs;
 
-  G4Track* g4Track = step->GetTrack();
-  std::size_t trackID = g4Track->GetTrackID();
+  assert(step.GetTrack() != nullptr);
+  const G4Track& track = *step.GetTrack();
+  std::size_t trackID = track.GetTrackID();
   auto& materialTracks = eventStore().materialTracks;
   if (!materialTracks.contains(trackID - 1)) {
     Acts::RecordedMaterialTrack rmTrack;
-    Acts::Vector3 vertex = convertPosition(g4Track->GetVertexPosition());
-    Acts::Vector3 direction = convertDirection(g4Track->GetMomentumDirection());
+    Acts::Vector3 vertex = convertPosition(track.GetVertexPosition());
+    Acts::Vector3 direction = convertDirection(track.GetMomentumDirection());
     rmTrack.first = {vertex, direction};
     rmTrack.second.materialInteractions.push_back(mInteraction);
     materialTracks[trackID - 1] = rmTrack;
