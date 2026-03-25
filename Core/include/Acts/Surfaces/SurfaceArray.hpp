@@ -443,7 +443,23 @@ class SurfaceArray {
 
   /// Return the lookup object
   /// @return Reference to the surface grid lookup interface
-  const ISurfaceGridLookup& gridLookup() const { return *p_gridLookup; }
+  [[deprecated(
+      "Grid lookup is an implementation detail and will be removed soon")]]
+  const ISurfaceGridLookup& gridLookup() const {
+    return *p_gridLookup;
+  }
+
+  /// Get the representative surface used for this surface array
+  /// @return Surface pointer
+  const Surface* surfaceRepresentation() const {
+    return p_gridLookup->surfaceRepresentation();
+  }
+
+  /// Get a view of the grid for inspection
+  /// @return Optional grid view containing surface vectors
+  std::optional<AnyGridConstView<SurfaceVector>> getGridView() const {
+    return p_gridLookup->getGridView();
+  }
 
  private:
   /// Check consistency between provided surfaces and grid contents.

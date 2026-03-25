@@ -161,7 +161,7 @@ namespace {
 /// @brief Lookup helper which encapsulates a @c Grid
 /// @tparam Axes The axes used for the grid
 template <class Axis1, class Axis2>
-struct SurfaceGridLookup2 : SurfaceArray::ISurfaceGridLookup {
+struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
   /// Grid type storing surface vectors with two axes
   using Grid_t = Grid<SurfaceVector, Axis1, Axis2>;
 
@@ -170,9 +170,9 @@ struct SurfaceGridLookup2 : SurfaceArray::ISurfaceGridLookup {
   /// @param tolerance The tolerance used for intersection checks
   /// @param axes The axes used for the grid
   /// @param bValues Optional vector of axis directions for binning
-  SurfaceGridLookup2(std::shared_ptr<RegularSurface> representative,
-                     double tolerance, std::tuple<Axis1, Axis2> axes,
-                     std::vector<AxisDirection> bValues = {})
+  SurfaceGridLookupImpl(std::shared_ptr<RegularSurface> representative,
+                        double tolerance, std::tuple<Axis1, Axis2> axes,
+                        std::vector<AxisDirection> bValues = {})
       : m_representative(std::move(representative)),
         m_tolerance(tolerance),
         m_grid(std::move(axes)),
@@ -434,7 +434,7 @@ SurfaceArray::makeSurfaceGridLookup(
     return iAxisB.visit(
         [&]<typename axis_b_t>(const axis_b_t& axisB)
             -> std::unique_ptr<SurfaceArray::ISurfaceGridLookup> {
-          return std::make_unique<SurfaceGridLookup2<axis_a_t, axis_b_t>>(
+          return std::make_unique<SurfaceGridLookupImpl<axis_a_t, axis_b_t>>(
               representative, tolerance,
               std::tuple<axis_a_t, axis_b_t>{axisA, axisB});
         });
