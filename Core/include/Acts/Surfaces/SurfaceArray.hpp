@@ -125,6 +125,9 @@ class SurfaceArray {
       std::tuple<const IAxis*, const IAxis*> axes,
       std::vector<AxisDirection> bValues = {});
 
+  /// @deprecated Use @ref makeSurfaceGridLookup instead. The construction of
+  ///             this class is now handled internally and becomes an
+  ///             implementation detail.
   template <class Axis1, class Axis2>
   struct [[deprecated("Use makeSurfaceGridLookup instead")]] SurfaceGridLookup
       : ISurfaceGridLookup {
@@ -242,7 +245,10 @@ class SurfaceArray {
 
   /// @brief Lookup implementation which wraps one element and always returns
   ///        this element when lookup is called
-  struct SingleElementLookup : ISurfaceGridLookup {
+  /// @deprecated Construct the @ref SurfaceArray directly with a single surface
+  struct [[deprecated(
+      "Construct the SurfaceArray directly with a single "
+      "surface")]] SingleElementLookup : ISurfaceGridLookup {
     /// @brief Default constructor.
     /// @param element the one and only element.
     explicit SingleElementLookup(SurfaceVector::value_type element)

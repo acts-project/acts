@@ -37,8 +37,53 @@ SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
   }
 }
 
+namespace {
+struct SingleElementLookupImpl : SurfaceArray::ISurfaceGridLookup {
+  explicit SingleElementLookupImpl(const Surface* element)
+      : m_element({element}) {}
+
+  const SurfaceVector& lookup(const Vector3& /*position*/,
+                              const Vector3& /*direction*/) const override {
+    return m_element;
+  }
+
+  SurfaceVector& lookup(std::size_t /*bin*/) override { return m_element; }
+
+  const SurfaceVector& lookup(std::size_t /*bin*/) const override {
+    return m_element;
+  }
+
+  const SurfaceVector& neighbors(const Vector3& /*position*/,
+                                 const Vector3& /*direction*/) const override {
+    return m_element;
+  }
+
+  std::size_t size() const override { return 1; }
+
+  Vector3 getBinCenter(std::size_t /*bin*/) const override {
+    return Vector3(0, 0, 0);
+  }
+
+  std::vector<const IAxis*> getAxes() const override { return {}; }
+
+  std::optional<AnyGridConstView<SurfaceVector>> getGridView() const override {
+    return std::nullopt;
+  }
+
+  const Surface* surfaceRepresentation() const override { return nullptr; }
+
+  void fill(const GeometryContext& /*gctx*/,
+            const SurfaceVector& /*surfaces*/) override {}
+
+  bool isValidBin(std::size_t /*bin*/) const override { return true; }
+
+ private:
+  SurfaceVector m_element;
+};
+}  // namespace
+
 SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
-    : p_gridLookup(std::make_unique<SingleElementLookup>(srf.get())),
+    : p_gridLookup(std::make_unique<SingleElementLookupImpl>(srf.get())),
       m_surfaces({std::move(srf)}) {
   m_surfacesRawPointers.push_back(m_surfaces.at(0).get());
 }
