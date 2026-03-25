@@ -11,7 +11,6 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/MultiTrajectoryTestsCommon.hpp"
@@ -465,8 +464,8 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
 }
 
 // Tests for the link-based uncalibrated source link storage mode, which is
-// activated by passing non-null TrackerHitLocalCollection* and
-// TrackStateHitLinkCollection* to the container constructor.
+// activated by passing a non-null TrackStateHitLinkCollection* to the
+// container constructor.
 
 BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
   NullHelper helper;
@@ -484,7 +483,7 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
   hit2.setCellID(67890);
 
   MutablePodioTrackStateContainer<Acts::RefHolder> tsc{
-      helper, trackStates, params, jacs, &hitsCollection, &linksCollection};
+      helper, trackStates, params, jacs, &linksCollection};
 
   auto i0 = tsc.addTrackState();
   auto i1 = tsc.addTrackState();
@@ -536,39 +535,20 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
 BOOST_AUTO_TEST_CASE(InvalidHitsLinksCombination) {
   NullHelper helper;
 
-  ActsPodioEdm::TrackerHitLocalCollection hitsCollection;
   ActsPodioEdm::TrackStateHitLinkCollection linksCollection;
 
-  // Providing only hits (null links) must throw
-  BOOST_CHECK_THROW(
-      (MutablePodioTrackStateContainer{
-          helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
-          std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-          std::make_unique<ActsPodioEdm::JacobianCollection>(), &hitsCollection,
-          nullptr}),
-      std::invalid_argument);
-
-  // Providing only links (null hits) must throw
-  BOOST_CHECK_THROW(
-      (MutablePodioTrackStateContainer{
-          helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
-          std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-          std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr,
-          &linksCollection}),
-      std::invalid_argument);
-
-  // Providing both null is valid (identifier-based mode)
+  // Constructor validity: only the (optional) TrackStateHitLinkCollection
+  // pointer controls whether the container uses link-based or identifier-based
+  // uncalibrated source-link storage.
   BOOST_CHECK_NO_THROW((MutablePodioTrackStateContainer{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr, nullptr}));
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr}));
 
-  // Providing both non-null is valid (link-based mode)
   BOOST_CHECK_NO_THROW((MutablePodioTrackStateContainer{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>(), &hitsCollection,
-      &linksCollection}));
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), &linksCollection}));
 }
 
 BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
@@ -591,7 +571,7 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
   hit2.setCellID(22222);
 
   MutablePodioTrackStateContainer tsc{
-      helper, trackStates, params, jacs, &hitsCollection, &linksCollection};
+      helper, trackStates, params, jacs, &linksCollection};
 
   auto i0 = tsc.addTrackState();
   auto i1 = tsc.addTrackState();
