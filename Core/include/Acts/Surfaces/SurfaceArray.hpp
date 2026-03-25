@@ -118,7 +118,8 @@ class SurfaceArray {
       std::vector<AxisDirection> bValues = {});
 
   template <class Axis1, class Axis2>
-  struct SurfaceGridLookup : ISurfaceGridLookup {
+  struct [[deprecated("Use makeSurfaceGridLookup instead")]] SurfaceGridLookup
+      : ISurfaceGridLookup {
     /// Construct a surface grid lookup
     /// @param representative The surface which is used as representative
     /// @param tolerance The tolerance used for intersection checks
@@ -410,8 +411,8 @@ class SurfaceArray {
  private:
   /// Check consistency between provided surfaces and grid contents.
   ///
-  /// Iterates over all local grid bins, collects every surface pointer seen in
-  /// the bins, and compares that set against the surfaces provided to this
+  /// Iterates over all local grid bins, collects every surface pointer seen
+  /// in the bins, and compares that set against the surfaces provided to this
   /// array. Throws if the sets differ (e.g. a provided surface is not present
   /// in the grid).
   ///
