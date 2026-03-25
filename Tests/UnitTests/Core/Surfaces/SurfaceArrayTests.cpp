@@ -196,9 +196,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 
   auto cylinder =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 10);
-  auto sl = std::make_unique<
-      SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-      cylinder, 1, std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+  auto sl = SurfaceArray::makeSurfaceGridLookup(cylinder, 1,
+                                                std::tuple{&phiAxis, &zAxis});
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
 
