@@ -144,7 +144,8 @@ class SurfaceArray {
                       double tolerance, std::tuple<Axis1, Axis2> axes,
                       const std::vector<AxisDirection>& bValues = {})
 
-        : m_impl(makeSurfaceGridLookup(representative, tolerance, axes)) {
+        : m_impl(makeSurfaceGridLookup(std::move(representative), tolerance,
+                                       axes)) {
       static_cast<void>(bValues);
     }
 
