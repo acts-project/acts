@@ -305,6 +305,7 @@ linux_physmon:
     - cd src
     - git checkout $HEAD_SHA
     - CI/dependencies/setup.sh -c g++ -e .env -f
+    - dependencies/venv/bin/python3 -m pip install histcmp==0.9.0
     - source .env
     - cd ..
 
