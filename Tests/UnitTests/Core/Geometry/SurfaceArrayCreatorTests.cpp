@@ -579,9 +579,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   auto sl = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
       cylinder, 1., std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-  ACTS_POP_IGNORE_DEPRECATED()
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
+  ACTS_POP_IGNORE_DEPRECATED()
 
   // Write the surrace array with grid
   ObjVisualization3D objVis;
@@ -611,12 +611,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning_newFactory,
   auto cylinder =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
 
-  auto sl = SurfaceArray::makeSurfaceGridLookup(
-      cylinder, 1.,
-      std::tuple{static_cast<const IAxis*>(&phiAxis),
-                 static_cast<const IAxis*>(&zAxis)});
-  sl->fill(tgContext, brlRaw);
-  SurfaceArray sa(std::move(sl), brl);
+  SurfaceArray sa(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis});
 
   // Write the surrace array with grid
   ObjVisualization3D objVis;
@@ -658,7 +653,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
                                                              pAxisPhi, pAxisZ);
 
   sl->fill(tgContext, brlRaw);
+  ACTS_PUSH_IGNORE_DEPRECATED()
   SurfaceArray sa(std::move(sl), brl);
+  ACTS_POP_IGNORE_DEPRECATED()
   auto axes = sa.getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
@@ -692,7 +689,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
         cylinder, 1., pAxisPhiVar, pAxisZVar);
 
     sl2->fill(tgContext, brlRaw);
+    ACTS_PUSH_IGNORE_DEPRECATED()
     SurfaceArray sa2(std::move(sl2), brl);
+    ACTS_POP_IGNORE_DEPRECATED()
     axes = sa2.getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);

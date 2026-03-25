@@ -407,8 +407,7 @@ class SurfaceArrayCreator {
                                               pAxisB.nBins);
 
       ptr = SurfaceArray::makeSurfaceGridLookup(
-          std::move(surface), layerTolerance, std::tuple{&axisA, &axisB},
-          std::vector{pAxisA.axisDir, pAxisB.axisDir});
+          std::move(surface), layerTolerance, std::tuple{axisA, axisB});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
       Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
@@ -416,8 +415,7 @@ class SurfaceArrayCreator {
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       ptr = SurfaceArray::makeSurfaceGridLookup(
-          std::move(surface), layerTolerance, std::tuple{&axisA, &axisB},
-          std::vector{pAxisA.axisDir, pAxisB.axisDir});
+          std::move(surface), layerTolerance, std::tuple{axisA, axisB});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
@@ -425,16 +423,14 @@ class SurfaceArrayCreator {
                                               pAxisB.nBins);
 
       ptr = SurfaceArray::makeSurfaceGridLookup(
-          std::move(surface), layerTolerance, std::tuple{&axisA, &axisB},
-          std::vector{pAxisA.axisDir, pAxisB.axisDir});
+          std::move(surface), layerTolerance, std::tuple{axisA, axisB});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       ptr = SurfaceArray::makeSurfaceGridLookup(
-          std::move(surface), layerTolerance, std::tuple{&axisA, &axisB},
-          std::vector{pAxisA.axisDir, pAxisB.axisDir});
+          std::move(surface), layerTolerance, std::tuple{axisA, axisB});
     }
 
     return ptr;

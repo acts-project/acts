@@ -196,10 +196,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 
   auto cylinder =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 10);
-  auto sl = SurfaceArray::makeSurfaceGridLookup(cylinder, 1,
-                                                std::tuple{&phiAxis, &zAxis});
-  sl->fill(tgContext, brlRaw);
-  SurfaceArray sa(std::move(sl), brl);
+  SurfaceArray sa(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis});
 
   // let's see if we can access all surfaces
   sa.toStream(tgContext, std::cout);

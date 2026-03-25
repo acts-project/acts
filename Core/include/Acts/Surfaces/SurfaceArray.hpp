@@ -112,6 +112,7 @@ class SurfaceArray {
     virtual ~ISurfaceGridLookup() = 0;
   };
 
+ private:
   /// Factory method to create a surface grid lookup for a given representative
   /// surface, tolerance, and axes. This will internally create the appropriate
   /// lookup class based on the axes and concrete @ref Grid.
@@ -122,9 +123,12 @@ class SurfaceArray {
   /// @return A unique pointer to the surface grid lookup
   static std::unique_ptr<ISurfaceGridLookup> makeSurfaceGridLookup(
       std::shared_ptr<RegularSurface> representative, double tolerance,
-      std::tuple<const IAxis*, const IAxis*> axes,
-      std::vector<AxisDirection> bValues = {});
+      std::tuple<const IAxis&, const IAxis&> axes);
 
+  // This is temporary until Gen1 is removed
+  friend class SurfaceArrayCreator;
+
+ public:
   /// @deprecated Use @ref makeSurfaceGridLookup instead. The construction of
   ///             this class is now handled internally and becomes an
   ///             implementation detail.
@@ -138,11 +142,11 @@ class SurfaceArray {
     /// @param bValues Optional vector of axis directions for binning
     SurfaceGridLookup(std::shared_ptr<RegularSurface> representative,
                       double tolerance, std::tuple<Axis1, Axis2> axes,
-                      std::vector<AxisDirection> bValues = {})
+                      const std::vector<AxisDirection>& bValues = {})
 
-        : m_impl(makeSurfaceGridLookup(representative, tolerance,
-                                       {&std::get<0>(axes), &std::get<1>(axes)},
-                                       bValues)) {}
+        : m_impl(makeSurfaceGridLookup(representative, tolerance, axes)) {
+      static_cast<void>(bValues);
+    }
 
     /// @brief Fill provided surfaces into the contained @c Grid.
     /// @param gctx The current geometry context object, e.g. alignment
@@ -325,13 +329,27 @@ class SurfaceArray {
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
   /// @param transform Optional additional transform for this SurfaceArray
-  explicit SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-                        std::vector<std::shared_ptr<const Surface>> surfaces,
-                        const Transform3& transform = Transform3::Identity());
+  [[deprecated("Use the constructor with axes instead")]]
+  SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
+               std::vector<std::shared_ptr<const Surface>> surfaces,
+               const Transform3& transform = Transform3::Identity());
 
   /// @brief Constructor with a single surface
   /// @param srf The one and only surface
   explicit SurfaceArray(std::shared_ptr<const Surface> srf);
+
+  /// Constructor to create a surface grid lookup for a given representative
+  /// surface, tolerance, and axes.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param surfaces The input vector of surfaces that will be accessible
+  ///                 through this @ref SurfaceArray.
+  /// @param representative The surface which is used as representative
+  /// @param tolerance The tolerance used for intersection checks
+  /// @param axes The axes used for the grid
+  SurfaceArray(const GeometryContext& gctx,
+               std::vector<std::shared_ptr<const Surface>> surfaces,
+               std::shared_ptr<RegularSurface> representative, double tolerance,
+               std::tuple<const IAxis&, const IAxis&> axes);
 
   /// @brief Get all surfaces in bin given by position @p pos.
   /// @param position the lookup position
@@ -403,7 +421,11 @@ class SurfaceArray {
 
   /// Get the transform of this surface array.
   /// @return Reference to the transformation matrix
-  const Transform3& transform() const { return m_transform; }
+  /// @deprecated This is an implementation detail and will be removed soon
+  [[deprecated("This is an implementation detail and will be removed soon")]]
+  const Transform3& transform() const {
+    return m_transform;
+  }
 
   /// @brief The binning values described by this surface grid lookup
   /// They are in order of the axes

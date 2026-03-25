@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Ranges.hpp"
 
 #include <ranges>
-#include <type_traits>
 #include <utility>
 
 using namespace Acts::Ranges;
@@ -428,19 +427,34 @@ struct SurfaceGridLookup2 : SurfaceArray::ISurfaceGridLookup {
 std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
 SurfaceArray::makeSurfaceGridLookup(
     std::shared_ptr<RegularSurface> representative, double tolerance,
-    std::tuple<const IAxis*, const IAxis*> axes,
-    std::vector<AxisDirection> bValues) {
+    std::tuple<const IAxis&, const IAxis&> axes) {
   const auto& [iAxisA, iAxisB] = axes;
 
-  return iAxisA->visit([&]<typename axis_a_t>(const axis_a_t& axisA) {
-    return iAxisB->visit(
+  return iAxisA.visit([&]<typename axis_a_t>(const axis_a_t& axisA) {
+    return iAxisB.visit(
         [&]<typename axis_b_t>(const axis_b_t& axisB)
             -> std::unique_ptr<SurfaceArray::ISurfaceGridLookup> {
           return std::make_unique<SurfaceGridLookup2<axis_a_t, axis_b_t>>(
               representative, tolerance,
-              std::tuple<axis_a_t, axis_b_t>{axisA, axisB}, bValues);
+              std::tuple<axis_a_t, axis_b_t>{axisA, axisB});
         });
   });
+}
+
+SurfaceArray::SurfaceArray(const GeometryContext& gctx,
+                           std::vector<std::shared_ptr<const Surface>> surfaces,
+                           std::shared_ptr<RegularSurface> representative,
+                           double tolerance,
+                           std::tuple<const IAxis&, const IAxis&> axes) {
+  m_transform = representative->localToGlobalTransform(gctx);
+  p_gridLookup =
+      makeSurfaceGridLookup(std::move(representative), tolerance, axes);
+  m_surfaces = std::move(surfaces);
+  m_surfacesRawPointers =
+      m_surfaces |
+      std::views::transform([](const auto& sp) { return sp.get(); }) |
+      to<std::vector>;
+  p_gridLookup->fill(gctx, m_surfacesRawPointers);
 }
 
 }  // namespace Acts
