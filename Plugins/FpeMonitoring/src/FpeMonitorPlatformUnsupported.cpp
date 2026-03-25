@@ -17,7 +17,7 @@ bool isRuntimeSupported() {
   return false;
 }
 
-std::optional<FpeType> decodeFpeType(int signal, siginfo_t* si, void* ctx) {
+std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si, void* ctx) {
   // No signal decoding support on unsupported platforms.
   static_cast<void>(signal);
   static_cast<void>(si);
