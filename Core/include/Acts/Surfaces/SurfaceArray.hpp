@@ -559,6 +559,16 @@ class SurfaceArray {
   const ISurfaceGridLookup& gridLookup() const { return *p_gridLookup; }
 
  private:
+  /// Check consistency between provided surfaces and grid contents.
+  ///
+  /// Iterates over all local grid bins, collects every surface pointer seen in
+  /// the bins, and compares that set against the surfaces provided to this
+  /// array. Throws if the sets differ (e.g. a provided surface is not present
+  /// in the grid).
+  ///
+  /// @param grid The grid to check
+  void checkGrid(AnyGridConstView<SurfaceVector> grid);
+
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;
   // this vector makes sure we have shared ownership over the surfaces
   std::vector<std::shared_ptr<const Surface>> m_surfaces;
