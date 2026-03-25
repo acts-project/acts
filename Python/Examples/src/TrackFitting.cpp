@@ -36,7 +36,7 @@ void addTrackFitting(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackFittingAlgorithm, mex, "TrackFittingAlgorithm", inputMeasurements,
       inputProtoTracks, inputInitialTrackParameters, inputClusters,
-      outputTracks, fit, pickTrack, calibrator);
+      outputTracks, fit, pickTrack, calibrator, linkForward);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(RefittingAlgorithm, mex, "RefittingAlgorithm",
                                 inputTracks, outputTracks, fit, pickTrack,
@@ -80,7 +80,8 @@ void addTrackFitting(py::module& mex) {
 
     py::enum_<MixtureReductionAlgorithm>(mex, "MixtureReductionAlgorithm")
         .value("weightCut", MixtureReductionAlgorithm::weightCut)
-        .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
+        .value("KLDistance", MixtureReductionAlgorithm::KLDistance)
+        .value("KLDistanceNaive", MixtureReductionAlgorithm::KLDistanceNaive);
 
     py::class_<BetheHeitlerApprox, std::shared_ptr<BetheHeitlerApprox>>(
         mex, "BetheHeitlerApprox");

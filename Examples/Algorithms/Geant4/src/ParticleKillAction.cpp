@@ -60,7 +60,7 @@ void ParticleKillAction::UserSteppingAction(const G4Step* step) {
   // check if we have a particle assigned to track
   if (trackIt != eventStore().trackIdMapping.end()) {
     // set the outcome of the particle
-    const ActsFatras::Barcode particleId = trackIt->second;
+    const SimBarcode particleId = trackIt->second;
     if (outOfVolume) {
       eventStore().particleOutcome[particleId] =
           ActsFatras::ParticleOutcome::KilledVolumeExit;

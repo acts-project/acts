@@ -80,8 +80,7 @@ ProcessCode TrackTruthMatcher::execute(const AlgorithmContext& ctx) const {
     // Get the majority particleId and majority particle counts
     // Note that the majority particle might not be in the truth seeds
     // collection
-    ActsFatras::Barcode majorityParticleId =
-        particleHitCounts.front().particleId;
+    SimBarcode majorityParticleId = particleHitCounts.front().particleId;
     std::size_t nMajorityHits = particleHitCounts.front().hitCount;
 
     if (!particles.contains(majorityParticleId)) {

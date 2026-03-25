@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -42,13 +42,15 @@ class IVolumeMaterial;
 /// used for simple material mapping, navigation validation
 class StraightLineStepper final {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
   /// Type alias for transport jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
   /// Type alias for bound state containing parameters, jacobian, and path
   /// length
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   /// Type alias for magnetic field (null field for straight line propagation)
   using BField = NullBField;
 
@@ -135,7 +137,7 @@ class StraightLineStepper final {
   /// Initialize the stepper state from bound track parameters
   /// @param state The stepper state to initialize
   /// @param par The bound track parameters to initialize from
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  void initialize(State& state, const BoundParameters& par) const;
 
   /// Initialize the stepper state from bound parameters and components
   /// @param state The stepper state to initialize

@@ -16,6 +16,7 @@ namespace py = pybind11;
 namespace ActsPython {
 
 void addFramework(py::module& mex);
+void addEventData(py::module& mex);
 void addAmbiguityResolution(py::module& mex);
 void addGenerators(py::module& mex);
 void addExampleAlgorithms(py::module& mex);
@@ -26,6 +27,7 @@ void addPropagation(py::module& mex);
 void addTrackFitting(py::module& mex);
 void addTrackFinding(py::module& mex);
 void addTruthTracking(py::module& mex);
+void addHelloWorld(py::module& mex);
 void addVertexing(py::module& mex);
 void addObj(py::module& mex);
 void addInput(py::module& mex);
@@ -39,6 +41,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
   mex.doc() = "Acts Examples";
 
   addFramework(mex);
+  addEventData(mex);
   addAmbiguityResolution(mex);
   addGenerators(mex);
   addExampleAlgorithms(mex);
@@ -49,6 +52,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindings, mex) {
   addTrackFitting(mex);
   addTrackFinding(mex);
   addTruthTracking(mex);
+  addHelloWorld(mex);
   addVertexing(mex);
   addObj(mex);
   addInput(mex);

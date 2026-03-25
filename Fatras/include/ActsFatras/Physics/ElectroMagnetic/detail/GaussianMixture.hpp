@@ -42,10 +42,9 @@ struct GaussianMixture {
   double operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                     Particle &particle) const {
     /// Calculate the highland formula first
-    double sigma = Acts::computeMultipleScatteringTheta0(
+    const double sigma = Acts::computeMultipleScatteringTheta0(
         slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
         particle.absoluteCharge());
-    double sigma2 = sigma * sigma;
 
     // Gauss distribution, will be sampled with generator
     std::normal_distribution<double> gaussDist(0., 1.);
@@ -56,16 +55,16 @@ struct GaussianMixture {
     // d_0'
     // beta² = (p/E)² = p²/(p² + m²) = 1/(1 + (m/p)²)
     // 1/beta² = 1 + (m/p)²
-    double mOverP = particle.mass() / particle.absoluteMomentum();
-    double beta2inv = 1 + mOverP * mOverP;
-    double dprime = slab.thicknessInX0() * beta2inv;
-    double log_dprime = std::log(dprime);
+    const double mOverP = particle.mass() / particle.absoluteMomentum();
+    const double beta2inv = 1 + mOverP * mOverP;
+    const double dprime = slab.thicknessInX0() * beta2inv;
+    const double log_dprime = std::log(dprime);
     // d_0''
-    double log_dprimeprime =
+    const double log_dprimeprime =
         std::log(std::pow(slab.material().Z(), 2.0 / 3.0) * dprime);
 
     // get epsilon
-    double epsilon =
+    const double epsilon =
         log_dprimeprime < 0.5
             ? gausMixEpsilon_a0 + gausMixEpsilon_a1 * log_dprimeprime +
                   gausMixEpsilon_a2 * log_dprimeprime * log_dprimeprime
@@ -73,13 +72,14 @@ struct GaussianMixture {
                   gausMixEpsilon_b2 * log_dprimeprime * log_dprimeprime;
 
     // the standard sigma
-    double sigma1square = gausMixSigma1_a0 + gausMixSigma1_a1 * log_dprime +
-                          gausMixSigma1_a2 * log_dprime * log_dprime;
+    const double sigma1square = gausMixSigma1_a0 +
+                                gausMixSigma1_a1 * log_dprime +
+                                gausMixSigma1_a2 * log_dprime * log_dprime;
 
+    double sigma2 = Acts::square(sigma);
     // G4 optimised / native double Gaussian model
     if (optGaussianMixtureG4) {
-      sigma2 = 225. * dprime /
-               (particle.absoluteMomentum() * particle.absoluteMomentum());
+      sigma2 = 225. * dprime / Acts::square(particle.absoluteMomentum());
     }
     // throw the random number core/tail
     if (uniformDist(generator) < epsilon) {
