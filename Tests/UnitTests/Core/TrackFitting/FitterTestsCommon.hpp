@@ -445,7 +445,8 @@ struct FitterTester {
   }
 
   template <typename fitter_t, typename fitter_options_t, typename parameters_t>
-  void test_ZeroFieldWithHole(const fitter_t& fitter, fitter_options_t options,
+  void test_ZeroFieldWithHole(const fitter_t& fitter,
+                              const fitter_options_t& options,
                               const parameters_t& start, Rng& rng,
                               const bool expected_reversed,
                               const bool expected_smoothed,
@@ -492,7 +493,7 @@ struct FitterTester {
 
   template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldWithOutliers(const fitter_t& fitter,
-                                  fitter_options_t options,
+                                  const fitter_options_t& options,
                                   const parameters_t& start, Rng& rng,
                                   const bool expected_reversed,
                                   const bool expected_smoothed,
@@ -592,7 +593,8 @@ struct FitterTester {
   // TODO this is not really Kalman fitter specific. is probably better tested
   // with a synthetic trajectory.
   template <typename fitter_t, typename fitter_options_t, typename parameters_t>
-  void test_GlobalCovariance(const fitter_t& fitter, fitter_options_t options,
+  void test_GlobalCovariance(const fitter_t& fitter,
+                             const fitter_options_t& options,
                              const parameters_t& start, Rng& rng) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);

@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
-#include "Acts/Material/MaterialValidater.hpp"
+#include "Acts/Material/MaterialValidator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -45,8 +45,8 @@ class MaterialValidation : public IAlgorithm {
     /// Random number service
     std::shared_ptr<RandomNumbers> randomNumberSvc = nullptr;
 
-    // The validater
-    std::shared_ptr<Acts::MaterialValidater> materialValidater = nullptr;
+    // The validator
+    std::shared_ptr<Acts::MaterialValidator> materialValidator = nullptr;
 
     /// Output collection name
     std::string outputMaterialTracks = "material_tracks";
@@ -56,8 +56,8 @@ class MaterialValidation : public IAlgorithm {
   ///
   /// @param cfg The configuration struct carrying the used tools
   /// @param level The output logging level
-  explicit MaterialValidation(const Config& cfg,
-                              Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit MaterialValidation(
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Destructor
   /// - it also writes out the file
@@ -66,8 +66,7 @@ class MaterialValidation : public IAlgorithm {
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const override;
+  ProcessCode execute(const AlgorithmContext& context) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

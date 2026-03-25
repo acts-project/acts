@@ -18,11 +18,13 @@ namespace Acts {
 /// @brief Type alias for accessing parameter covariance matrices
 /// @details Function type for retrieving covariance matrices from measurement parameters
 using ParamCovAccessor =
-    std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
+    std::function<std::pair<const BoundVector, const BoundMatrix>(
         const SourceLink&)>;
 
 /// Options controlling space point construction.
-struct SpacePointBuilderOptions {
+struct [[deprecated(
+    "Will be dropped soon and is replaced by PixelSpacePointBuilder / "
+    "StripSpacePointBuilder")]] SpacePointBuilderOptions {
   /// Ends of strip pairs
   std::pair<std::pair<Vector3, Vector3>, std::pair<Vector3, Vector3>>
       stripEndsPair;
@@ -37,7 +39,9 @@ struct SpacePointBuilderOptions {
 };
 
 /// Options for validating strip pair candidates.
-struct StripPairOptions {
+struct [[deprecated(
+    "Will be dropped soon and is replaced by PixelSpacePointBuilder / "
+    "StripSpacePointBuilder")]] StripPairOptions {
   /// Accessor for local position and covariance from source link
   ParamCovAccessor paramCovAccessor;
   /// vertex position

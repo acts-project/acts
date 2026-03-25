@@ -753,11 +753,11 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
   eqGrid.atPosition(Point{4.5}) = MaterialSlab::Vacuum(4.0);
 
   auto localX = std::make_unique<const LocalAccessX>();
-  IndexedSurfaceMaterial<EqGrid>::BoundToGridLocalDelegate bToX;
+  GridSurfaceMaterial<EqGrid>::BoundToGridLocalDelegate bToX;
   bToX.connect<&LocalAccessX::l2X>(std::move(localX));
 
   auto globalX = std::make_unique<const GlobalAccessX>();
-  IndexedSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
+  GridSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToX;
   gToX.connect<&GlobalAccessX::g2X>(std::move(globalX));
 
   GridSurfaceMaterial<EqGrid> gsm(std::move(eqGrid), GridMaterialAccessor{},

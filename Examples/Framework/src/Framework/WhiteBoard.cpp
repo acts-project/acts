@@ -15,6 +15,8 @@
 #include <Eigen/Core>
 #include <boost/core/demangle.hpp>
 
+namespace ActsExamples {
+
 namespace {
 
 /// Compute similarity between two words (see wikipedia)
@@ -58,11 +60,11 @@ inline int levenshteinDistance(const std::string_view &a,
 
 }  // namespace
 
-std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
+std::vector<std::string_view> WhiteBoard::similarNames(
     const std::string_view &name, int distThreshold,
     std::size_t maxNumber) const {
   std::vector<std::pair<int, std::string_view>> names;
-  for (const auto &[n, h] : m_store) {
+  for (const auto &[n, storeVal] : m_store) {
     if (const auto d = levenshteinDistance(n, name); d < distThreshold) {
       names.push_back({d, n});
     }
@@ -83,22 +85,23 @@ std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
   return selected_names;
 }
 
-std::string ActsExamples::WhiteBoard::typeMismatchMessage(
-    const std::string &name, const char *req, const char *act) {
+std::string WhiteBoard::typeMismatchMessage(const std::string &name,
+                                            const char *req, const char *act) {
   return std::string{"Type mismatch for '" + name + "'. Requested " +
                      boost::core::demangle(req) + " but actually " +
                      boost::core::demangle(act)};
 }
 
-void ActsExamples::WhiteBoard::copyFrom(const WhiteBoard &other) {
+void WhiteBoard::copyFrom(const WhiteBoard &other) {
   for (auto &[key, val] : other.m_store) {
-    addHolder(key, val);
+    addHolder(key, val.first, val.second);
     ACTS_VERBOSE("Copied key '" << key << "' to whiteboard");
   }
 }
 
-void ActsExamples::WhiteBoard::addHolder(
-    const std::string &name, const std::shared_ptr<IHolder> &holder) {
+void WhiteBoard::addHolder(const std::string &name,
+                           const std::shared_ptr<Acts::AnyMoveOnly> &holder,
+                           std::uint64_t typeHash) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
   }
@@ -107,29 +110,50 @@ void ActsExamples::WhiteBoard::addHolder(
     throw std::invalid_argument("Object '" + name + "' is nullptr");
   }
 
-  auto [storeIt, success] = m_store.insert({name, holder});
+  StoreValue storeVal{holder, typeHash};
+  auto [storeIt, success] = m_store.try_emplace(name, storeVal);
 
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
   ACTS_VERBOSE("Added object '"
                << name << "' of type '"
-               << boost::core::demangle(storeIt->second->type().name()) << "'");
+               << boost::core::demangle(
+                      storeIt->second.first->typeInfo()
+                          ? storeIt->second.first->typeInfo()->name()
+                          : "unknown")
+               << "'");
 
-  if (success) {
-    // deal with aliases
-    auto range = m_objectAliases.equal_range(name);
-    for (auto it = range.first; it != range.second; ++it) {
-      m_store[it->second] = holder;
-      ACTS_VERBOSE("Added alias object '" << it->second << "'");
-    }
+  // deal with aliases
+  auto range = m_objectAliases.equal_range(name);
+  for (auto it = range.first; it != range.second; ++it) {
+    m_store[it->second] = storeVal;
+    ACTS_VERBOSE("Added alias object '" << it->second << "'");
   }
 }
 
-std::vector<std::string> ActsExamples::WhiteBoard::getKeys() const {
+void WhiteBoard::addHolder(const std::string &name,
+                           std::unique_ptr<Acts::AnyMoveOnly> holder,
+                           std::uint64_t typeHash) {
+  addHolder(name, std::shared_ptr<Acts::AnyMoveOnly>(std::move(holder)),
+            typeHash);
+}
+
+std::vector<std::string> WhiteBoard::getKeys() const {
   std::vector<std::string> keys;
   for (const auto &[key, val] : m_store) {
     keys.push_back(key);
   }
   return keys;
 }
+
+std::pair<Acts::AnyMoveOnly *, std::uint64_t> WhiteBoard::getHolder(
+    const std::string &name) const {
+  auto it = m_store.find(name);
+  if (it == m_store.end()) {
+    throw std::out_of_range("Object '" + name + "' does not exists");
+  }
+  return {it->second.first.get(), it->second.second};
+}
+
+}  // namespace ActsExamples

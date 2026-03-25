@@ -55,11 +55,10 @@ struct MaterialMapLookup {
     ///                         each Dimension)
     /// @param [in] materialValues Material classification values at the hyper
     /// box corners sorted in the canonical order defined in Acts::interpolate
-    MaterialCell(
-        std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
-        std::array<double, DIM_POS> lowerLeft,
-        std::array<double, DIM_POS> upperRight,
-        std::array<Material::ParametersVector, N> materialValues)
+    MaterialCell(std::function<Vector<DIM_POS>(const Vector3&)> transformPos,
+                 std::array<double, DIM_POS> lowerLeft,
+                 std::array<double, DIM_POS> upperRight,
+                 std::array<Material::ParametersVector, N> materialValues)
         : m_transformPos(std::move(transformPos)),
           m_lowerLeft(std::move(lowerLeft)),
           m_upperRight(std::move(upperRight)),
@@ -95,7 +94,7 @@ struct MaterialMapLookup {
 
    private:
     /// Geometric transformation applied to global 3D positions
-    std::function<ActsVector<DIM_POS>(const Vector3&)> m_transformPos;
+    std::function<Vector<DIM_POS>(const Vector3&)> m_transformPos;
 
     /// Generalized lower-left corner of the confining hyper-box
     std::array<double, DIM_POS> m_lowerLeft;
@@ -115,9 +114,8 @@ struct MaterialMapLookup {
   /// @param [in] transformPos Mapping of global 3D coordinates (cartesian)
   /// onto grid space
   /// @param [in] grid Grid storing material classification values
-  MaterialMapLookup(
-      std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
-      Grid_t grid)
+  MaterialMapLookup(std::function<Vector<DIM_POS>(const Vector3&)> transformPos,
+                    Grid_t grid)
       : m_transformPos(std::move(transformPos)), m_grid(std::move(grid)) {}
 
   /// @brief Retrieve binned material at given position
@@ -211,7 +209,7 @@ struct MaterialMapLookup {
 
  private:
   /// Geometric transformation applied to global 3D positions
-  std::function<ActsVector<DIM_POS>(const Vector3&)> m_transformPos;
+  std::function<Vector<DIM_POS>(const Vector3&)> m_transformPos;
   /// Grid storing material values
   Grid_t m_grid;
 };
@@ -302,7 +300,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Currently the derivative is not calculated
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& /*derivative*/) const {
+                               Matrix<5, 5>& /*derivative*/) const {
     return m_mapper.getMaterial(position);
   }
 
@@ -315,7 +313,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Cache is not used currently
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& /*derivative*/,
+                               Matrix<5, 5>& /*derivative*/,
                                Cache& /*cache*/) const {
     return m_mapper.getMaterial(position);
   }

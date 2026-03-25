@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -174,7 +173,7 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   stddev[eBoundPhi] = 20_mrad;
   stddev[eBoundTheta] = 30_mrad;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
-  BoundSquareMatrix corr = BoundSquareMatrix::Identity();
+  BoundMatrix corr = BoundMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
   corr(eBoundLoc0, eBoundPhi) = corr(eBoundPhi, eBoundLoc0) = 0.25;
   corr(eBoundLoc1, eBoundTheta) = corr(eBoundTheta, eBoundLoc1) = -0.25;
@@ -182,7 +181,7 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundPhi, eBoundTheta) = corr(eBoundTheta, eBoundPhi) = -0.25;
   corr(eBoundPhi, eBoundQOverP) = corr(eBoundPhi, eBoundQOverP) = -0.125;
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
-  BoundSquareMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
+  BoundMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
   Vector4 pos4 = Vector4::Zero();
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));

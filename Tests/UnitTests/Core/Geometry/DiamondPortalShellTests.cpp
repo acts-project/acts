@@ -32,7 +32,8 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       Transform3::Identity(),
       std::make_shared<TrapezoidVolumeBounds>(20._cm, 10._cm, 10._cm, 5._cm));
 
-  BOOST_CHECK_THROW(SingleDiamondPortalShell{fVol}, std::invalid_argument);
+  BOOST_CHECK_THROW(SingleDiamondPortalShell(gctx, fVol),
+                    std::invalid_argument);
 
   // conastruct a convex polygon tracking volume for which we are gonna build
   // the portal shell
@@ -41,7 +42,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
                          std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
 
-  SingleDiamondPortalShell polygShell{testVol};
+  SingleDiamondPortalShell polygShell{gctx, testVol};
 
   BOOST_CHECK(polygShell.isValid());
   BOOST_CHECK_EQUAL(polygShell.size(), 8);
@@ -49,14 +50,14 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   // check if the portals are correctly built from the faces
   using enum DiamondVolumeBounds::Face;
 
-  const auto nXY = polygShell.portalPtr(NegativeZFaceXY);
-  const auto pXY = polygShell.portalPtr(PositiveZFaceXY);
-  const auto nXZ = polygShell.portalPtr(NegativeYFaceZX);
-  const auto pXZ = polygShell.portalPtr(PositiveYFaceZX);
-  const auto nYZ12 = polygShell.portalPtr(NegativeXFaceYZ12);
-  const auto pYZ12 = polygShell.portalPtr(PositiveXFaceYZ12);
-  const auto nYZ23 = polygShell.portalPtr(NegativeXFaceYZ23);
-  const auto pYZ23 = polygShell.portalPtr(PositiveXFaceYZ23);
+  const auto nXY = polygShell.portal(NegativeZFaceXY);
+  const auto pXY = polygShell.portal(PositiveZFaceXY);
+  const auto nXZ = polygShell.portal(NegativeYFaceZX);
+  const auto pXZ = polygShell.portal(PositiveYFaceZX);
+  const auto nYZ12 = polygShell.portal(NegativeXFaceYZ12);
+  const auto pYZ12 = polygShell.portal(PositiveXFaceYZ12);
+  const auto nYZ23 = polygShell.portal(NegativeXFaceYZ23);
+  const auto pYZ23 = polygShell.portal(PositiveXFaceYZ23);
 
   double alphaAngle = std::numbers::pi - std::atan2(15._cm, 5._cm);
   double betaAngle = std::atan2(20._cm, 10._cm);
@@ -122,23 +123,23 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
                           std::make_shared<DiamondVolumeBounds>(
                               20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
 
-  SingleDiamondPortalShell polygShell{polygVol};
+  SingleDiamondPortalShell polygShell{gctx, polygVol};
 
   // get the portal faces
-  const auto nXY = polygShell.portalPtr(NegativeZFaceXY);
-  const auto pXY = polygShell.portalPtr(PositiveZFaceXY);
+  const auto nXY = polygShell.portal(NegativeZFaceXY);
+  const auto pXY = polygShell.portal(PositiveZFaceXY);
 
   BOOST_REQUIRE_NE(nXY, nullptr);
   BOOST_REQUIRE_NE(pXY, nullptr);
 
-  const auto nYZ12 = polygShell.portalPtr(NegativeXFaceYZ12);
-  const auto pYZ12 = polygShell.portalPtr(PositiveXFaceYZ12);
+  const auto nYZ12 = polygShell.portal(NegativeXFaceYZ12);
+  const auto pYZ12 = polygShell.portal(PositiveXFaceYZ12);
 
-  const auto nYZ23 = polygShell.portalPtr(NegativeXFaceYZ23);
-  const auto pYZ23 = polygShell.portalPtr(PositiveXFaceYZ23);
+  const auto nYZ23 = polygShell.portal(NegativeXFaceYZ23);
+  const auto pYZ23 = polygShell.portal(PositiveXFaceYZ23);
 
-  const auto nZX = polygShell.portalPtr(NegativeYFaceZX);
-  const auto pZX = polygShell.portalPtr(PositiveYFaceZX);
+  const auto nZX = polygShell.portal(NegativeYFaceZX);
+  const auto pZX = polygShell.portal(PositiveYFaceZX);
 
   BOOST_REQUIRE_NE(nYZ23, nullptr);
   BOOST_REQUIRE_NE(pYZ23, nullptr);
@@ -159,16 +160,16 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
       std::make_shared<Portal>(Direction::OppositeNormal(), std::move(grid));
   polygShell.setPortal(newPortalpZX, PositiveYFaceZX);
 
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(PositiveYFaceZX), newPortalpZX);
+  BOOST_CHECK_EQUAL(polygShell.portal(PositiveYFaceZX), newPortalpZX);
 
   // //check also the other portals
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(NegativeZFaceXY), nXY);
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(PositiveZFaceXY), pXY);
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(NegativeXFaceYZ12), nYZ12);
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(PositiveXFaceYZ12), pYZ12);
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(NegativeXFaceYZ23), nYZ23);
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(PositiveXFaceYZ23), pYZ23);
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(NegativeYFaceZX), nZX);
+  BOOST_CHECK_EQUAL(polygShell.portal(NegativeZFaceXY), nXY);
+  BOOST_CHECK_EQUAL(polygShell.portal(PositiveZFaceXY), pXY);
+  BOOST_CHECK_EQUAL(polygShell.portal(NegativeXFaceYZ12), nYZ12);
+  BOOST_CHECK_EQUAL(polygShell.portal(PositiveXFaceYZ12), pYZ12);
+  BOOST_CHECK_EQUAL(polygShell.portal(NegativeXFaceYZ23), nYZ23);
+  BOOST_CHECK_EQUAL(polygShell.portal(PositiveXFaceYZ23), pYZ23);
+  BOOST_CHECK_EQUAL(polygShell.portal(NegativeYFaceZX), nZX);
 }
 
 BOOST_AUTO_TEST_CASE(Fill) {
@@ -177,15 +178,16 @@ BOOST_AUTO_TEST_CASE(Fill) {
   TrackingVolume testVol(Transform3::Identity(),
                          std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
-  SingleDiamondPortalShell polygShell(testVol);
+  SingleDiamondPortalShell polygShell{gctx, testVol};
 
   // without filling the protal shell from a volume the portal link to this
   // direction shouldn't exist - but only the other direction
-  BOOST_CHECK_EQUAL(polygShell.portalPtr(NegativeZFaceXY)
-                        ->getLink(Direction::OppositeNormal()),
-                    nullptr);
-  BOOST_CHECK(polygShell.portalPtr(NegativeZFaceXY)
-                  ->getLink(Direction::AlongNormal()) != nullptr);
+  BOOST_CHECK_EQUAL(
+      polygShell.portal(NegativeZFaceXY)->getLink(Direction::OppositeNormal()),
+      nullptr);
+  BOOST_CHECK(
+      polygShell.portal(NegativeZFaceXY)->getLink(Direction::AlongNormal()) !=
+      nullptr);
 
   // create a volume to link to the portal to the other side
   TrackingVolume testVol2(
@@ -194,9 +196,9 @@ BOOST_AUTO_TEST_CASE(Fill) {
                                             20._cm, 12._cm));
   polygShell.fill(testVol2);
 
-  BOOST_CHECK_NE(polygShell.portalPtr(NegativeZFaceXY)
-                     ->getLink(Direction::OppositeNormal()),
-                 nullptr);
+  BOOST_CHECK_NE(
+      polygShell.portal(NegativeZFaceXY)->getLink(Direction::OppositeNormal()),
+      nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(ApplyToVolume) {
@@ -204,7 +206,7 @@ BOOST_AUTO_TEST_CASE(ApplyToVolume) {
   TrackingVolume testVol(Transform3::Identity(),
                          std::make_shared<DiamondVolumeBounds>(
                              20._cm, 25._cm, 15._cm, 15._cm, 20._cm, 12._cm));
-  SingleDiamondPortalShell polygShell(testVol);
+  SingleDiamondPortalShell polygShell{gctx, testVol};
   // before apply to volueme called - the volume should have zero portals
   BOOST_CHECK_EQUAL(testVol.portals().size(), 0);
 

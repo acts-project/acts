@@ -9,7 +9,18 @@
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 
 #include "Acts/Geometry/ReferenceGenerators.hpp"
+#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+namespace {
+std::string printCandidates(const std::vector<const Acts::Surface*>& surfaces) {
+  std::stringstream sstr{};
+  for (const auto* surf : surfaces) {
+    sstr << " --- " << surf->geometryId() << std::endl;
+  }
+  return sstr.str();
+}
+}  // namespace
 
 namespace Acts::Experimental {
 
@@ -36,9 +47,12 @@ MultiLayerNavigationPolicy::MultiLayerNavigationPolicy(
 
 void MultiLayerNavigationPolicy::initializeCandidates(
     const GeometryContext& gctx, const NavigationArguments& args,
-    AppendOnlyNavigationStream& stream, const Logger& logger) const {
+    NavigationPolicyState& /*state*/, AppendOnlyNavigationStream& stream,
+    const Logger& logger) const {
   ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates initialization for volume"
-               << m_volume.volumeName());
+               << m_volume.volumeName() << " @ "
+               << toString(m_volume.localToGlobalTransform(gctx)));
+
   const Transform3& itransform = m_volume.globalToLocalTransform(gctx);
   const Vector3 locPosition = itransform * args.position;
   const Vector3 locDirection = itransform.linear() * args.direction;
@@ -59,7 +73,8 @@ void MultiLayerNavigationPolicy::initializeCandidates(
   }
 
   ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported "
-               << surfCandidates.size() << " candidates");
+               << surfCandidates.size() << " candidates. "
+               << "\n " << printCandidates(surfCandidates));
 
   // fill the navigation stream with the container
   for (const auto* surf : surfCandidates) {

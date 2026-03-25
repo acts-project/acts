@@ -6,7 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
@@ -15,9 +17,12 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
+#include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
+#include <stdexcept>
+
+#include <boost/core/demangle.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -63,7 +68,12 @@ class PySequenceElement : public SequenceElement {
 
 class PyIAlgorithm : public IAlgorithm {
  public:
-  using IAlgorithm::IAlgorithm;
+  explicit PyIAlgorithm(std::string name,
+                        std::unique_ptr<const Logger> logger = nullptr)
+      : IAlgorithm(std::move(name), std::move(logger)) {}
+
+  PyIAlgorithm(std::string name, Logging::Level level)
+      : IAlgorithm(std::move(name), getDefaultLogger(name, level)) {}
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     py::gil_scoped_acquire acquire{};
@@ -76,7 +86,100 @@ class PyIAlgorithm : public IAlgorithm {
     }
   }
 
+  ProcessCode initialize() override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE(ProcessCode, IAlgorithm, initialize, );
+  }
+
+  ProcessCode finalize() override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE(ProcessCode, IAlgorithm, finalize, );
+  }
+
   std::string_view typeName() const override { return "Algorithm"; }
+
+  const Acts::Logger& pyLogger() const { return logger(); }
+};
+
+class PyReadDataHandle : public ReadDataHandleBase {
+ public:
+  PyReadDataHandle(SequenceElement* parent, py::object pytype,
+                   const std::string& name)
+      : ReadDataHandleBase(parent, name) {
+    m_entry = WhiteBoardRegistry::find(pytype);
+    if (m_entry == nullptr) {
+      throw py::type_error("Type '" +
+                           pytype.attr("__qualname__").cast<std::string>() +
+                           "' is not registered for WhiteBoard access");
+    }
+    if (m_entry->typeinfo == nullptr) {
+      throw py::type_error("Type '" +
+                           pytype.attr("__qualname__").cast<std::string>() +
+                           "' is not registered for WhiteBoard access");
+    }
+
+    registerAsReadHandle();
+  }
+
+  const std::type_info& typeInfo() const override { return *m_entry->typeinfo; }
+
+  std::uint64_t typeHash() const override { return m_entry->typeHash; }
+
+  py::object call(const py::object& wbPy) const {
+    if (!isInitialized()) {
+      throw std::runtime_error("ReadDataHandle '" + name() +
+                               "' not initialized");
+    }
+    const auto& wb = wbPy.cast<const ActsExamples::WhiteBoard&>();
+
+    if (!wb.exists(key())) {
+      throw py::key_error("Key '" + key() + "' does not exist");
+    }
+
+    auto [holder, storedTypeHash] = getHolder(wb);
+
+    if (m_entry->typeHash != storedTypeHash) {
+      const auto& expected = boost::core::demangle(m_entry->typeinfo->name());
+      const auto& actual = boost::core::demangle(
+          (holder->typeInfo() != nullptr) ? holder->typeInfo()->name()
+                                          : "unknown");
+      throw py::type_error("Type mismatch for key '" + key() + "'. Expected " +
+                           expected + " but got " + actual);
+    }
+
+    PyObject* out = m_entry->toPython(*holder, wbPy.ptr());
+    return py::reinterpret_steal<py::object>(out);
+  }
+
+ private:
+  const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
+};
+
+class PyWriteDataHandle : public WriteDataHandleBase {
+ public:
+  PyWriteDataHandle(SequenceElement* parent, const py::object& pytype,
+                    const std::string& name)
+      : WriteDataHandleBase(parent, name) {
+    m_entry = WhiteBoardRegistry::find(pytype);
+    if (m_entry == nullptr) {
+      throw py::type_error("Type '" +
+                           pytype.attr("__qualname__").cast<std::string>() +
+                           "' is not registered for WhiteBoard access");
+    }
+    registerAsWriteHandle();
+  }
+
+  void call(const AlgorithmContext& ctx, const py::object& obj) const {
+    auto any = m_entry->fromPython(obj.ptr());
+    addHolder(ctx.eventStore, std::move(any), m_entry->typeHash);
+  }
+
+  const std::type_info& typeInfo() const override { return *m_entry->typeinfo; }
+
+  std::uint64_t typeHash() const override { return m_entry->typeHash; }
+
+ private:
+  const WhiteBoardRegistry::RegistryEntry* m_entry{nullptr};
 };
 
 void trigger_divbyzero() {
@@ -112,6 +215,7 @@ void addFramework(py::module& mex) {
 
   py::enum_<ProcessCode>(mex, "ProcessCode")
       .value("SUCCESS", ProcessCode::SUCCESS)
+      .value("SKIP", ProcessCode::SKIP)
       .value("ABORT", ProcessCode::ABORT)
       .value("END", ProcessCode::END);
 
@@ -122,6 +226,41 @@ void addFramework(py::module& mex) {
            py::arg("level"), py::arg("name") = "WhiteBoard")
       .def("exists", &WhiteBoard::exists)
       .def_property_readonly("keys", &WhiteBoard::getKeys);
+
+  py::class_<PyReadDataHandle>(mex, "ReadDataHandle")
+      .def(py::init([](const py::object& parent_py, py::object pytype,
+                       const std::string& name) {
+             auto* parent = parent_py.cast<SequenceElement*>();
+             return std::make_unique<PyReadDataHandle>(parent,
+                                                       std::move(pytype), name);
+           }),
+           py::arg("parent"), py::arg("type"), py::arg("name"),
+           py::keep_alive<1, 2>())
+      .def(
+          "initialize",
+          [](PyReadDataHandle& self, std::string_view key) {
+            self.initialize(key);
+          },
+          py::arg("key"))
+      .def("__call__", &PyReadDataHandle::call, py::arg("whiteboard"));
+
+  py::class_<PyWriteDataHandle>(mex, "WriteDataHandle")
+      .def(py::init([](const py::object& parent_py, py::object pytype,
+                       const std::string& name) {
+             auto* parent = parent_py.cast<SequenceElement*>();
+             return std::make_unique<PyWriteDataHandle>(
+                 parent, std::move(pytype), name);
+           }),
+           py::arg("parent"), py::arg("type"), py::arg("name"),
+           py::keep_alive<1, 2>())
+      .def(
+          "initialize",
+          [](PyWriteDataHandle& self, std::string_view key) {
+            self.initialize(key);
+          },
+          py::arg("key"))
+      .def("__call__", &PyWriteDataHandle::call, py::arg("context"),
+           py::arg("obj"));
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<std::size_t, std::size_t, WhiteBoard&, std::size_t>(),
@@ -149,7 +288,14 @@ void addFramework(py::module& mex) {
                  PyIAlgorithm>(mex, "IAlgorithm")
           .def(py::init_alias<const std::string&, Logging::Level>(),
                py::arg("name"), py::arg("level"))
-          .def("execute", &IAlgorithm::execute);
+          .def(py::init_alias<const std::string&,
+                              std::unique_ptr<const Logger>>(),
+               py::arg("name"), py::arg("logger"))
+          .def("execute", &IAlgorithm::execute)
+          .def_property_readonly(
+              "logger", [](const PyIAlgorithm& self) -> const Acts::Logger& {
+                return self.pyLogger();
+              });
 
   using Config = Sequencer::Config;
   auto sequencer =
@@ -180,13 +326,13 @@ void addFramework(py::module& mex) {
           .def_property_readonly("fpeResult", &Sequencer::fpeResult)
           .def_property_readonly_static(
               "_sourceLocation",
-              [](py::object /*self*/) { return std::string{__FILE__}; });
+              [](const py::object& /*self*/) { return std::string{__FILE__}; });
 
   auto c = py::class_<Config>(sequencer, "Config").def(py::init<>());
 
   ACTS_PYTHON_STRUCT(c, skip, events, logLevel, numThreads, outputDir,
                      outputTimingFile, trackFpes, fpeMasks, failOnFirstFpe,
-                     fpeStackTraceLength);
+                     failOnUnmaskedFpe, fpeStackTraceLength);
 
   auto fpem =
       py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
@@ -205,11 +351,16 @@ void addFramework(py::module& mex) {
     std::optional<FpeMonitor> mon;
   };
 
-  auto fpe = py::class_<FpeMonitor>(mex, "FpeMonitor")
-                 .def_static("_trigger_divbyzero", &trigger_divbyzero)
-                 .def_static("_trigger_overflow", &trigger_overflow)
-                 .def_static("_trigger_invalid", &trigger_invalid)
-                 .def_static("context", []() { return FpeMonitorContext(); });
+  auto fpe =
+      py::class_<FpeMonitor>(mex, "FpeMonitor")
+          .def_static("_trigger_divbyzero", &trigger_divbyzero)
+          .def_static("_trigger_overflow", &trigger_overflow)
+          .def_static("_trigger_invalid", &trigger_invalid)
+          .def_property_readonly_static("supported",
+                                        [](const py::object& /*self*/) {
+                                          return FpeMonitor::isSupported();
+                                        })
+          .def_static("context", []() { return FpeMonitorContext(); });
 
   fpe.def_property_readonly("result", py::overload_cast<>(&FpeMonitor::result),
                             py::return_value_policy::reference_internal)
@@ -234,9 +385,9 @@ void addFramework(py::module& mex) {
             return fm.mon.value();
           },
           py::return_value_policy::reference_internal)
-      .def("__exit__", [](FpeMonitorContext& fm, py::object /*exc_type*/,
-                          py::object /*exc_value*/,
-                          py::object /*traceback*/) { fm.mon.reset(); });
+      .def("__exit__", [](FpeMonitorContext& fm, const py::object& /*exc_type*/,
+                          const py::object& /*exc_value*/,
+                          const py::object& /*traceback*/) { fm.mon.reset(); });
 
   py::enum_<FpeType>(mex, "FpeType")
       .value("INTDIV", FpeType::INTDIV)
@@ -249,7 +400,7 @@ void addFramework(py::module& mex) {
       .value("FLTSUB", FpeType::FLTSUB)
 
       .def_property_readonly_static(
-          "values", [](py::object /*self*/) -> const auto& {
+          "values", [](const py::object& /*self*/) -> const auto& {
             static const std::vector<FpeType> values = {
                 FpeType::INTDIV, FpeType::INTOVF, FpeType::FLTDIV,
                 FpeType::FLTOVF, FpeType::FLTUND, FpeType::FLTRES,

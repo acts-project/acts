@@ -16,18 +16,17 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <array>
 #include <cstddef>
-#include <functional>
-#include <iostream>
-#include <memory>
 #include <system_error>
 #include <utility>
-#include <vector>
+
+ACTS_PUSH_IGNORE_DEPRECATED()
 
 namespace Acts {
+
 class SourceLink;
 
 /// @brief Storage container for variables related to the calculation of space
@@ -61,7 +60,9 @@ struct SpacePointParameters {
 
 /// @class SpacePointUtility
 /// Utility helper for space point calculations.
-class SpacePointUtility {
+class [[deprecated(
+    "Will be dropped soon and is replaced by PixelSpacePointBuilder / "
+    "StripSpacePointBuilder")]] SpacePointUtility {
  public:
   /// Constructor
   /// @param cfg Configuration for the space point builder
@@ -80,7 +81,7 @@ class SpacePointUtility {
   std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
   globalCoords(const GeometryContext& gctx, const SourceLink& slink,
                const SourceLinkSurfaceAccessor& surfaceAccessor,
-               const BoundVector& par, const BoundSquareMatrix& cov) const;
+               const BoundVector& par, const BoundMatrix& cov) const;
 
   /// @brief Get rho and z covariance from the local position and covariance
   /// @param gctx The current geometry context object, e.g. alignment
@@ -173,3 +174,5 @@ class SpacePointUtility {
 };
 
 }  // namespace Acts
+
+ACTS_POP_IGNORE_DEPRECATED()

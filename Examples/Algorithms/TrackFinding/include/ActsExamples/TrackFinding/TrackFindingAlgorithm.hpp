@@ -18,9 +18,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Seed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -40,13 +39,7 @@
 #include <tbb/combinable.h>
 #pragma GCC diagnostic pop
 
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class TrackFindingAlgorithm final : public IAlgorithm {
  public:
@@ -141,14 +134,14 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   ///
   /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingAlgorithm(Config config, Acts::Logging::Level level);
+  explicit TrackFindingAlgorithm(
+      Config config, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Framework execute method of the track finding algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -157,7 +150,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   void computeSharedHits(TrackContainer& tracks,
                          const MeasurementContainer& measurements) const;
 
-  ActsExamples::ProcessCode finalize() override;
+  ProcessCode finalize() override;
 
  private:
   Config m_cfg;
@@ -167,7 +160,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
                                                            "InputMeasurements"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
-  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<SeedContainer> m_inputSeeds{this, "InputSeeds"};
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 

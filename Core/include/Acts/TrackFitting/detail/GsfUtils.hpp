@@ -10,13 +10,15 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/TrackFitting/GsfComponent.hpp"
 #include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -32,9 +34,13 @@
 
 namespace Acts::detail::Gsf {
 
+/// The tolerated difference to 1 to accept weights as normalized
+constexpr static double s_normalizationTolerance = 1.e-4;
+
 template <typename component_range_t, typename projector_t>
 bool weightsAreNormalized(const component_range_t &cmps,
-                          const projector_t &proj, double tol = 1.e-4) {
+                          const projector_t &proj,
+                          double tol = s_normalizationTolerance) {
   double sumOfWeights = 0.0;
 
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
@@ -97,9 +103,8 @@ class ScopedGsfInfoPrinterAndChecker {
     [[maybe_unused]] const bool allFinite =
         std::all_of(cmps.begin(), cmps.end(),
                     [](auto cmp) { return std::isfinite(cmp.weight()); });
-    [[maybe_unused]] const bool allNormalized =
-        detail::Gsf::weightsAreNormalized(
-            cmps, [](const auto &cmp) { return cmp.weight(); });
+    [[maybe_unused]] const bool allNormalized = weightsAreNormalized(
+        cmps, [](const auto &cmp) { return cmp.weight(); });
     [[maybe_unused]] const bool zeroComponents =
         m_stepper.numberComponents(m_state.stepping) == 0;
 
@@ -188,7 +193,7 @@ void computePosteriorWeights(const traj_t &mt,
       continue;
     }
 
-    const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
+    const double factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
     if (!std::isfinite(factor)) {
       // If something is not finite here, just leave the weight as it is
@@ -221,14 +226,14 @@ struct MultiTrajectoryProjector {
     const auto proxy = mt.getTrackState(idx);
     switch (type) {
       case StatesType::ePredicted:
-        return std::make_tuple(weights.at(idx), proxy.predicted(),
-                               proxy.predictedCovariance());
+        return std::tuple(weights.at(idx), proxy.predicted(),
+                          proxy.predictedCovariance());
       case StatesType::eFiltered:
-        return std::make_tuple(weights.at(idx), proxy.filtered(),
-                               proxy.filteredCovariance());
+        return std::tuple(weights.at(idx), proxy.filtered(),
+                          proxy.filteredCovariance());
       case StatesType::eSmoothed:
-        return std::make_tuple(weights.at(idx), proxy.smoothed(),
-                               proxy.smoothedCovariance());
+        return std::tuple(weights.at(idx), proxy.smoothed(),
+                          proxy.smoothedCovariance());
       default:
         throw std::invalid_argument(
             "Incorrect StatesType, should be ePredicted"
@@ -266,6 +271,12 @@ struct TemporaryStates {
   traj_t traj;
   std::vector<TrackIndexType> tips;
   std::map<TrackIndexType, double> weights;
+
+  void clear() {
+    traj.clear();
+    tips.clear();
+    weights.clear();
+  }
 };
 
 /// Function that updates the stepper from the MultiTrajectory
@@ -298,13 +309,11 @@ void updateStepper(propagator_state_t &state, const stepper_t &stepper,
 }
 
 /// Function that updates the stepper from the ComponentCache
-template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+template <typename propagator_state_t, typename stepper_t>
 void updateStepper(propagator_state_t &state, const stepper_t &stepper,
-                   const navigator_t &navigator,
+                   const Surface &surface,
                    const std::vector<GsfComponent> &componentCache,
                    const Logger &logger) {
-  const auto &surface = *navigator.currentSurface(state.navigation);
-
   // Clear components before adding new ones
   stepper.clearComponents(state.stepping);
 
@@ -339,31 +348,29 @@ double applyBetheHeitler(
     double initialWeight, const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
     double weightCutoff, std::vector<GsfComponent> &componentCache,
-    Updatable<std::size_t> &nInvalidBetheHeitler,
-    Updatable<double> &maxPathXOverX0, const Logger &logger);
+    std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
+    const Logger &logger);
 
-template <typename traj_t, typename propagator_state_t, typename stepper_t,
-          typename navigator_t>
+template <typename traj_t, typename propagator_state_t, typename stepper_t>
 void convoluteComponents(
     propagator_state_t &state, const stepper_t &stepper,
-    const navigator_t &navigator, const TemporaryStates<traj_t> &tmpStates,
+    const TemporaryStates<traj_t> &tmpStates,
     const BetheHeitlerApprox &betheHeitlerApprox,
     std::vector<BetheHeitlerApprox::Component> &betheHeitlerCache,
     double weightCutoff, std::vector<GsfComponent> &componentCache,
-    Updatable<std::size_t> &nInvalidBetheHeitler,
-    Updatable<double> &maxPathXOverX0, Updatable<double> &sumPathXOverX0,
-    const Logger &logger) {
+    std::size_t &nInvalidBetheHeitler, double &maxPathXOverX0,
+    double &sumPathXOverX0, const Logger &logger) {
   const GeometryContext &geoContext = state.options.geoContext;
-  const Surface &surface = *navigator.currentSurface(state.navigation);
   const Direction direction = state.options.direction;
 
   double pathXOverX0 = 0.0;
   auto cmps = stepper.componentIterable(state.stepping);
   for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
     auto proxy = tmpStates.traj.getTrackState(idx);
+    const Surface &surface = proxy.referenceSurface();
 
-    BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
-                               proxy.filtered(), proxy.filteredCovariance(),
+    BoundTrackParameters bound(surface.getSharedPtr(), proxy.filtered(),
+                               proxy.filteredCovariance(),
                                stepper.particleHypothesis(state.stepping));
 
     pathXOverX0 += applyBetheHeitler(
@@ -374,21 +381,20 @@ void convoluteComponents(
 
   // Store average material seen by the components
   // Should not be too broadly distributed
-  sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
+  sumPathXOverX0 += pathXOverX0 / tmpStates.tips.size();
 }
 
 /// Apply the multiple scattering to the state
-template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+template <typename propagator_state_t, typename stepper_t>
 void applyMultipleScattering(propagator_state_t &state,
-                             const stepper_t &stepper,
-                             const navigator_t &navigator,
+                             const stepper_t &stepper, const Surface &surface,
                              const MaterialUpdateMode &updateMode,
                              const Logger &logger) {
   for (auto cmp : stepper.componentIterable(state.stepping)) {
     auto singleState = cmp.singleState(state);
     const auto &singleStepper = cmp.singleStepper(stepper);
 
-    detail::performMaterialInteraction(singleState, singleStepper, navigator,
+    detail::performMaterialInteraction(singleState, singleStepper, surface,
                                        updateMode, NoiseUpdateMode::addNoise,
                                        true, false, logger);
 

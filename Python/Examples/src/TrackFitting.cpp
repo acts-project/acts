@@ -11,7 +11,6 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
-#include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
@@ -37,7 +36,7 @@ void addTrackFitting(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackFittingAlgorithm, mex, "TrackFittingAlgorithm", inputMeasurements,
       inputProtoTracks, inputInitialTrackParameters, inputClusters,
-      outputTracks, fit, pickTrack, calibrator);
+      outputTracks, fit, pickTrack, calibrator, linkForward);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(RefittingAlgorithm, mex, "RefittingAlgorithm",
                                 inputTracks, outputTracks, fit, pickTrack,
@@ -75,20 +74,14 @@ void addTrackFitting(py::module& mex) {
               return std::make_shared<PassThroughCalibrator>();
             });
 
-    mex.def(
-        "makeScalingCalibrator",
-        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
-          return std::make_shared<ScalingCalibrator>(path);
-        },
-        py::arg("path"));
-
     py::enum_<ComponentMergeMethod>(mex, "ComponentMergeMethod")
         .value("mean", ComponentMergeMethod::eMean)
         .value("maxWeight", ComponentMergeMethod::eMaxWeight);
 
     py::enum_<MixtureReductionAlgorithm>(mex, "MixtureReductionAlgorithm")
         .value("weightCut", MixtureReductionAlgorithm::weightCut)
-        .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
+        .value("KLDistance", MixtureReductionAlgorithm::KLDistance)
+        .value("KLDistanceNaive", MixtureReductionAlgorithm::KLDistanceNaive);
 
     py::class_<BetheHeitlerApprox, std::shared_ptr<BetheHeitlerApprox>>(
         mex, "BetheHeitlerApprox");

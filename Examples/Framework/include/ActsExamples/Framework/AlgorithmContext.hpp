@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/MagneticField/MagneticFieldContext.hpp>
-#include <Acts/Utilities/CalibrationContext.hpp>
 
 namespace ActsExamples {
 

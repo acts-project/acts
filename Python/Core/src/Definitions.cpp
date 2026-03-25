@@ -8,11 +8,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 
 #include <format>
-#include <type_traits>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -98,6 +98,40 @@ void addDefinitions(py::module_& m) {
       .def("__str__", [](const Vector4& self) {
         return std::format("({}, {}, {}, {})", self[0], self[1], self[2],
                            self[3]);
+      });
+
+  py::class_<BoundVector>(m, "BoundVector")
+      .def(py::init<double, double, double, double, double, double>())
+      .def(py::init([](std::array<double, 6> a) {
+        BoundVector v;
+        v << a[0], a[1], a[2], a[3], a[4], a[5];
+        return v;
+      }))
+      .def_static("Zero", []() -> BoundVector { return BoundVector::Zero(); })
+      .def("__getitem__",
+           [](const BoundVector& self, Eigen::Index i) { return self[i]; })
+      .def("__str__", [](const BoundVector& self) {
+        return std::format("({}, {}, {}, {}, {}, {})", self[0], self[1],
+                           self[2], self[3], self[4], self[5]);
+      });
+
+  py::class_<BoundMatrix>(m, "BoundMatrix")
+      .def(py::init([]() { return BoundMatrix::Zero(); }))
+      .def_static("Zero", []() -> BoundMatrix { return BoundMatrix::Zero(); })
+      .def_static("Identity",
+                  []() -> BoundMatrix { return BoundMatrix::Identity(); })
+      .def("__getitem__",
+           [](const BoundMatrix& self, py::object idx) {
+             py::tuple t = idx.cast<py::tuple>();
+             if (py::len(t) != 2) {
+               throw py::index_error("BoundMatrix index must be (i, j)");
+             }
+             return self(t[0].cast<Eigen::Index>(), t[1].cast<Eigen::Index>());
+           })
+      .def("__str__", [](const BoundMatrix& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
       });
 
   py::class_<Translation3>(m, "Translation3")
@@ -260,13 +294,14 @@ void addDefinitions(py::module_& m) {
 
   py::class_<ParticleHypothesis>(m, "ParticleHypothesis")
       .def(py::init([](PdgParticle absPdg, float mass, float absCharge) {
-             return ParticleHypothesis(absPdg, mass, AnyCharge{absCharge});
+             return ParticleHypothesis(absPdg, mass,
+                                       ChargeHypothesis{absCharge});
            }),
            py::arg("pdg"), py::arg("mass"), py::arg("absCharge"))
       .def(py::init([](std::underlying_type_t<PdgParticle> absPdg, float mass,
                        float absCharge) {
              return ParticleHypothesis(static_cast<PdgParticle>(absPdg), mass,
-                                       AnyCharge{absCharge});
+                                       ChargeHypothesis{absCharge});
            }),
            py::arg("absPdg"), py::arg("mass"), py::arg("absCharge"))
       .def("__str__",
@@ -275,31 +310,33 @@ void addDefinitions(py::module_& m) {
              particleHypothesis.toStream(os);
              return os.str();
            })
-      .def("absolutePdg",
-           [](const ParticleHypothesis& p) { return p.absolutePdg(); })
-      .def("mass", [](const ParticleHypothesis& p) { return p.mass(); })
-      .def("absoluteCharge",
-           [](const ParticleHypothesis& p) { return p.absoluteCharge(); })
+      .def_property_readonly("absolutePdg", &ParticleHypothesis::absolutePdg)
+      .def_property_readonly("mass", &ParticleHypothesis::mass)
+      .def_property_readonly("absoluteCharge",
+                             &ParticleHypothesis::absoluteCharge)
       .def_property_readonly_static(
           "muon",
-          [](py::object /* self */) { return ParticleHypothesis::muon(); })
+          [](const py::object& /*self*/) { return ParticleHypothesis::muon(); })
       .def_property_readonly_static(
           "pion",
-          [](py::object /* self */) { return ParticleHypothesis::pion(); })
-      .def_property_readonly_static(
-          "electron",
-          [](py::object /* self */) { return ParticleHypothesis::electron(); })
+          [](const py::object& /*self*/) { return ParticleHypothesis::pion(); })
+      .def_property_readonly_static("electron",
+                                    [](const py::object& /*self*/) {
+                                      return ParticleHypothesis::electron();
+                                    })
       .def_property_readonly_static(
           "kaon",
-          [](py::object /* self */) { return ParticleHypothesis::kaon(); })
+          [](const py::object& /*self*/) { return ParticleHypothesis::kaon(); })
+      .def_property_readonly_static("proton",
+                                    [](const py::object& /*self*/) {
+                                      return ParticleHypothesis::proton();
+                                    })
+      .def_property_readonly_static("geantino",
+                                    [](const py::object& /*self*/) {
+                                      return ParticleHypothesis::geantino();
+                                    })
       .def_property_readonly_static(
-          "proton",
-          [](py::object /* self */) { return ParticleHypothesis::proton(); })
-      .def_property_readonly_static(
-          "geantino",
-          [](py::object /* self */) { return ParticleHypothesis::geantino(); })
-      .def_property_readonly_static(
-          "chargedGeantino", [](py::object /* self */) {
+          "chargedGeantino", [](const py::object& /*self*/) {
             return ParticleHypothesis::chargedGeantino();
           });
 }

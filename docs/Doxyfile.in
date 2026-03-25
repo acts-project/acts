@@ -784,11 +784,9 @@ INPUT                  = index.md \
                          ../Plugins/DD4hep/include \
                          ../Plugins/Detray/include \
                          ../Plugins/EDM4hep/include \
-                         ../Plugins/FastJet/include \
                          ../Plugins/FpeMonitoring/include \
                          ../Plugins/Geant4/include \
                          ../Plugins/GeoModel/include \
-                         ../Plugins/Hashing/include \
                          ../Plugins/Json/include \
                          ../Plugins/Onnx/include \
                          ../Plugins/Root/include \

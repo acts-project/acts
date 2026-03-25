@@ -80,12 +80,15 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
   /// Update the navigation state from the surface array
   /// @param gctx the geometry context
   /// @param args The navigation arguments
+  /// @param state The navigation policy state
   /// @param stream The navigation stream to update
   /// @param logger The logger
   void initializeCandidates(const GeometryContext& gctx,
                             const NavigationArguments& args,
+                            NavigationPolicyState& state,
                             AppendOnlyNavigationStream& stream,
                             const Logger& logger) const {
+    static_cast<void>(state);  // unused
     ACTS_VERBOSE(
         "IndexGridNavigationPolicy: candidates initialization for volume '"
         << m_volume.volumeName() << "'");
@@ -102,7 +105,7 @@ class IndexGridNavigationPolicy : public INavigationPolicy {
     const auto& surfaces = m_volume.surfaces();
     const auto& indices =
         m_indexGrid.grid.atPosition(GridAccessHelpers::castPosition<GridType>(
-            m_indexGrid.transform * position, m_indexGrid.casts));
+            m_indexGrid.toLocalFrame(gctx) * position, m_indexGrid.casts));
     // Fill the navigation stream with the container
     for (const auto& idx : indices) {
       stream.addSurfaceCandidate(surfaces[idx], args.tolerance);

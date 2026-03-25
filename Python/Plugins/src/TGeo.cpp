@@ -70,8 +70,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsTGeo, tgeo) {
               for (const auto& snode : tgpState.selectedNodes) {
                 auto identifier = TGeoDetectorElement::Identifier();
                 auto tgElement = TGeoLayerBuilder::defaultElementFactory(
-                    identifier, *snode.node, *snode.transform, localAxes,
-                    scaleConversion, nullptr);
+                    identifier, *snode.node, *snode.transform,
+                    TGeoAxes::parse(localAxes), scaleConversion, nullptr);
                 tgElements.emplace_back(tgElement);
               }
             }

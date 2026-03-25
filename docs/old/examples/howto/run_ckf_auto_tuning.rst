@@ -23,7 +23,7 @@ Once all the dependencies are installed, Build ACTS with python bindings and Pyt
 
    $ cmake -DACTS_BUILD_EXAMPLES_PYTHIA8=ON -DACTS_BUILD_PLUGIN_DD4HEP=OFF -DACTS_BUILD_PLUGIN_JSON=ON -DACTS_BUILD_PLUGIN_ROOT=ON -DACTS_BUILD_EXAMPLES_DD4HEP=OFF -DACTS_BUILD_EXAMPLES_GEANT4=ON -DACTS_BUILD_INTEGRATIONTESTS=OFF -DACTS_BUILD_UNITTESTS=OFF -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON -DACTS_BUILD_ODD=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -S . -B build/
    $ make
-   $ source build/python/setup.sh
+   $ source $BUILD/this_acts_withdeps.sh
 
 Once this setup is ready, at each new login, just do:
 
@@ -32,7 +32,7 @@ Once this setup is ready, at each new login, just do:
    $ source /cvmfs/sft.cern.ch/lcg/views/LCG_100/x86_64-centos7-gcc10-opt/setup.sh
    $ source PYTHON_VIRTUAL_ENV/bin/activate
    $ export PYTHONPATH=
-   $ source build/python/setup.sh
+   $ source $BUILD/this_acts_withdeps.sh
 
 How auto-tuning works
 ---------------------

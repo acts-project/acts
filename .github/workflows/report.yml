@@ -82,9 +82,9 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         if: steps.dl-af.outputs.comment-artifacts-found
         with:
           pattern: comment-*.md
@@ -135,4 +135,14 @@ jobs:
           if [ -f comment-50-external-failure.md ] ; then
             echo "{\"text\":\"External pipeline failure in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}?pr=${{steps.get-pr-number.outputs.PR_NUMBER}}.\"}" | tee data.json
             curl -X POST -H 'Content-type: application/json' --data "@data.json" ${EIC_EPIC_MATTERMOST_HOOK_URL}
+          fi
+
+      - name: Post failure notifications to Key4hep mattermost
+        if: steps.get-pr-number.outcome == 'success'
+        env:
+          KEY4HEP_MATTERMOST_HOOK_URL: ${{secrets.KEY4HEP_MATTERMOST_HOOK_URL}}
+        run: |
+          if [ -f comment-51-key4hep-external-failure.md ] ; then
+            echo "{\"text\":\"External pipeline failure in ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}?pr=${{steps.get-pr-number.outputs.PR_NUMBER}}.\"}" | tee data.json
+            curl -X POST -H 'Content-type: application/json' --data "@data.json" ${KEY4HEP_MATTERMOST_HOOK_URL}
           fi

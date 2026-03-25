@@ -16,11 +16,13 @@ using Acts::VectorHelpers::phi;
 
 using namespace Acts::Experimental;
 
+namespace ActsExamples {
+
 namespace {
 
-ProfileHistogram1 makeProfile(
-    const ActsExamples::DuplicationPlotTool::Config& cfg,
-    const std::string& name, const std::string& title, const AxisVariant& ax) {
+ProfileHistogram1 makeProfile(const DuplicationPlotTool::Config& cfg,
+                              const std::string& name, const std::string& title,
+                              const AxisVariant& ax) {
   const auto& yAxis = cfg.varBinning.at("Num");
   Acts::Range1D<double> yRange{yAxis.bin(0).lower(),
                                yAxis.bin(yAxis.size() - 1).upper()};
@@ -28,8 +30,6 @@ ProfileHistogram1 makeProfile(
 }
 
 }  // namespace
-
-namespace ActsExamples {
 
 DuplicationPlotTool::DuplicationPlotTool(const DuplicationPlotTool::Config& cfg,
                                          Acts::Logging::Level lvl)

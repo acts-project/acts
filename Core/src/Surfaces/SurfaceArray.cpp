@@ -11,9 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Ranges.hpp"
 
+#include <ranges>
 #include <utility>
 
+using namespace Acts::Ranges;
 namespace Acts {
 
 // implementation for pure virtual destructor of ISurfaceGridLookup
@@ -25,7 +28,13 @@ SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
     : p_gridLookup(std::move(gridLookup)),
       m_surfaces(std::move(surfaces)),
       m_surfacesRawPointers(unpackSmartPointers(m_surfaces)),
-      m_transform(transform) {}
+      m_transform(transform) {
+  if (p_gridLookup != nullptr) {
+    if (const auto& grid = p_gridLookup->getGridView()) {
+      checkGrid(grid.value());
+    }
+  }
+}
 
 SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
     : p_gridLookup(std::make_unique<SingleElementLookup>(srf.get())),
@@ -72,6 +81,34 @@ std::ostream& SurfaceArray::toStream(const GeometryContext& /*gctx*/,
     sl << " ]" << std::endl;
   }
   return sl;
+}
+
+void SurfaceArray::checkGrid(AnyGridConstView<SurfaceVector> grid) {
+  std::set allSurfaces =
+      m_surfaces |
+      std::views::transform([](const auto& sp) { return sp.get(); }) |
+      to<std::set>;
+  std::set<const Surface*> seenSurface;
+  auto bins = grid.numLocalBins();
+  for (std::size_t i = 0; i <= bins.at(0); ++i) {
+    for (std::size_t j = 0; j <= bins.at(1); ++j) {
+      const auto& surfaces = grid.atLocalBins({i, j});
+      for (const auto& srf : surfaces) {
+        seenSurface.insert(srf);
+      }
+    }
+  }
+
+  if (allSurfaces != seenSurface) {
+    std::set<const Surface*> diff;
+    std::ranges::set_difference(allSurfaces, seenSurface,
+                                std::inserter(diff, diff.begin()));
+
+    throw std::logic_error(
+        std::format("SurfaceArray grid does not contain all surfaces provided! "
+                    "{} surfaces not seen",
+                    diff.size()));
+  }
 }
 
 }  // namespace Acts

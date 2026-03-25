@@ -8,31 +8,15 @@
 
 #pragma once
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericFreeTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/EventData/FreeTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 
-namespace Acts {
-
-/// @brief Type alias for bound track parameters of singly charged particles
-/// @details Track parameters defined in a local coordinate system for particles with charge ±1
-using SinglyChargedBoundTrackParameters =
-    GenericBoundTrackParameters<SinglyChargedParticleHypothesis>;
-/// Type alias for free track parameters of singly charged particles
-using SinglyChargedFreeTrackParameters =
-    GenericFreeTrackParameters<SinglyChargedParticleHypothesis>;
-
-/// @brief Type alias for bound track parameters of neutral particles
-/// @details Track parameters for neutral particles in a bound coordinate system
-using NeutralBoundTrackParameters =
-    GenericBoundTrackParameters<NeutralParticleHypothesis>;
-/// Type alias for free track parameters of neutral particles
-using NeutralFreeTrackParameters =
-    GenericFreeTrackParameters<NeutralParticleHypothesis>;
-
-/// @brief BoundTrackParameters can hold any kind of charge
-using BoundTrackParameters = GenericBoundTrackParameters<ParticleHypothesis>;
-/// @brief FreeTrackParameters can hold any kind of charge
-using FreeTrackParameters = GenericFreeTrackParameters<ParticleHypothesis>;
-
-}  // namespace Acts
+namespace {
+[[deprecated(
+    "This header is deprecated. Please include the specific track parameters "
+    "header instead.")]]
+constexpr static int Acts_EventData_TrackParameters_hpp_is_deprecated = 0;
+constexpr static int please_dont_use_Acts_EventData_TrackParameters_hpp =
+    Acts_EventData_TrackParameters_hpp_is_deprecated;
+}  // namespace

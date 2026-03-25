@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -45,7 +44,7 @@ Acts::MagneticFieldContext mctx;
 
 using namespace Acts::UnitLiterals;
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Jacobian = BoundMatrix;
 
 /// These tests do not test for a correct covariance transport but only for the

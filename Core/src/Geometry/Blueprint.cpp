@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/detail/AlignablePortalVisitor.hpp"
 #include "Acts/Geometry/detail/BoundDeduplicator.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
@@ -60,8 +61,8 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
       id = GeometryIdentifier().withVolume(
           std::distance(m_volumesById.begin(), it) + 1);
 
-      ACTS_DEBUG("Assigning volume ID " << id << " for "
-                                        << volume.volumeName());
+      ACTS_VERBOSE("Assigning volume ID " << id << " for "
+                                          << volume.volumeName());
       volume.assignGeometryId(id);
       *it = &volume;
     }
@@ -72,7 +73,7 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
       }
       iportal += 1;
       auto portalId = id.withBoundary(iportal);
-      ACTS_DEBUG("Assigning portal ID: " << portalId);
+      ACTS_VERBOSE("Assigning portal ID: " << portalId);
       portal.surface().assignGeometryId(portalId);
     }
     for (auto &surface : volume.surfaces()) {
@@ -81,7 +82,7 @@ class BlueprintVisitor : public TrackingGeometryMutableVisitor {
       }
       isensitive += 1;
       auto surfaceId = id.withSensitive(isensitive);
-      ACTS_DEBUG("Assigning surface ID: " << surfaceId);
+      ACTS_VERBOSE("Assigning surface ID: " << surfaceId);
       surface.assignGeometryId(surfaceId);
     }
   }
@@ -192,7 +193,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
                                          std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
-    SingleCylinderPortalShell worldShell{*world};
+    SingleCylinderPortalShell worldShell{gctx, *world};
     worldShell.applyToVolume();
 
   } else if (const auto *box =
@@ -248,7 +249,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
                                          std::move(newBounds), worldName);
 
     // Need one-sided portal shell that connects outwards to nullptr
-    SingleCuboidPortalShell worldShell{*world};
+    SingleCuboidPortalShell worldShell{gctx, *world};
     worldShell.applyToVolume();
 
   } else {
@@ -308,6 +309,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   BlueprintVisitor visitor{logger, volumesById};
   world->apply(visitor);
+
+  Acts::detail::AlignablePortalVisitor alignPortals{gctx, logger};
+  world->apply(alignPortals);
 
   return std::make_unique<TrackingGeometry>(
       std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);

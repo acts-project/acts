@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
@@ -17,7 +18,6 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/tbbWrap.hpp"
 #include "ActsPlugins/FpeMonitoring/FpeMonitor.hpp"
-#include <Acts/Utilities/Logger.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -30,11 +30,6 @@
 #include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
-class IAlgorithm;
-class IContextDecorator;
-class IReader;
-class IWriter;
-class SequenceElement;
 
 using IterationCallback = void (*)();
 
@@ -59,8 +54,8 @@ class Sequencer {
   struct FpeMask {
     std::string file;
     std::pair<std::size_t, std::size_t> lines;
-    ActsPlugins::FpeType type;
-    std::size_t count;
+    ActsPlugins::FpeType type{};
+    std::size_t count = 0;
   };
 
   struct Config {
@@ -82,9 +77,16 @@ class Sequencer {
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};
 
+    /// If true, FPEs are tracked.
     bool trackFpes = true;
+    /// If true, FPEs are masked and reported.
     std::vector<FpeMask> fpeMasks{};
+    /// If true, the first FPE encountered makes Sequencer::run() fail.
     bool failOnFirstFpe = false;
+    /// If false, unmasked FPEs are reported but do not make Sequencer::run()
+    /// fail.
+    bool failOnUnmaskedFpe = true;
+    /// The number of stack frames to include in the FPE report.
     std::size_t fpeStackTraceLength = 8;
   };
 
@@ -185,12 +187,12 @@ class Sequencer {
 
   DataHandleBase::StateMapType m_whiteBoardState;
 
+  std::atomic<std::size_t> m_nSkippedEvents = 0;
   std::atomic<std::size_t> m_nUnmaskedFpe = 0;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };
 
-std::ostream &operator<<(std::ostream &os,
-                         const ActsExamples::Sequencer::FpeMask &m);
+std::ostream &operator<<(std::ostream &os, const Sequencer::FpeMask &m);
 
 }  // namespace ActsExamples

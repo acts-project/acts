@@ -9,15 +9,13 @@
 #pragma once
 
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPodioEdm/MeasurementCollection.h"
 
 #include <edm4hep/SimTrackerHit.h>
-
-namespace podio {
-class CollectionBase;
-}
 
 namespace ActsExamples {
 
@@ -38,7 +36,8 @@ class PodioMeasurementOutputConverter : public PodioOutputConverter {
   };
 
   explicit PodioMeasurementOutputConverter(
-      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -59,10 +58,11 @@ class PodioMeasurementOutputConverter : public PodioOutputConverter {
   ReadDataHandle<ActsPlugins::EDM4hepUtil::SimHitAssociation>
       m_inputSimHitAssociation{this, "InputSimHitAssociation"};
 
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 
-  CollectionBaseWriteHandle m_outputMeasurements{this, "OutputMeasurements"};
+  PodioCollectionWriteHandle<ActsPodioEdm::MeasurementCollection>
+      m_outputMeasurements{this, "OutputMeasurements"};
 };
 
 }  // namespace ActsExamples

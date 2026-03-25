@@ -9,8 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -38,8 +36,6 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
     const SimHitContainer& simHits, const HitSimHitsRange& hitSimHitsRange,
     const Acts::Logger& logger) {
-  using namespace Acts::UnitLiterals;
-
   Acts::Vector2 avgLocal = Acts::Vector2::Zero();
   Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
   Acts::Vector3 avgDir = Acts::Vector3::Zero();

@@ -15,9 +15,8 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -51,7 +50,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 using VectorHelpers::makeVector4;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Jacobian = BoundMatrix;
 using Stepper = AtlasStepper;
 
@@ -390,7 +389,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   auto newAbsMom = 4.2 * absMom;
   double newTime = 7.5;
   double newCharge = 1.;
-  BoundSquareMatrix newCov = 8.5 * Covariance::Identity();
+  BoundMatrix newCov = 8.5 * Covariance::Identity();
   cp = BoundTrackParameters::createCurvilinear(makeVector4(newPos, newTime),
                                                unitDir, newCharge / newAbsMom,
                                                newCov, particleHypothesis);

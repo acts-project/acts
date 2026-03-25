@@ -8,30 +8,32 @@
 
 #include "ActsExamples/MuonSpectrometerMockupDetector/GeoMuonMockupExperiment.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
-#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <format>
 #include <iostream>
+#include <type_traits>
+
+#include <GeoModelWrite/WriteGeoModel.h>
 
 #include "GeoGenericFunctions/Variable.h"
 #include "GeoModelHelpers/MaterialManager.h"
 #include "GeoModelHelpers/defineWorld.h"
 #include "GeoModelHelpers/printVolume.h"
-#include "GeoModelIOHelpers/GMIO.h"
 #include "GeoModelKernel/GeoBox.h"
 #include "GeoModelKernel/GeoSerialTransformer.h"
-#include "GeoModelKernel/GeoTransform.h"
 #include "GeoModelKernel/GeoTrd.h"
 #include "GeoModelKernel/GeoTube.h"
 #include "GeoModelKernel/GeoXF.h"
-#include "GeoModelKernel/throwExcept.h"
 
 using namespace Acts;
+
 namespace {
 constexpr double rot90deg = 90. * GeoModelKernelUnits::deg;
 }
+
 namespace ActsExamples {
 
 std::string to_string(GeoMuonMockupExperiment::MuonLayer layer) {
@@ -129,7 +131,7 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
     const double midWheelZ = barrelZ + 0.5 * m_stationHeightEndcap;
     const double outWheelZ =
         midWheelZ + m_stationHeightEndcap + m_cfg.bigWheelDistZ;
-    using enum ActsExamples::GeoMuonMockupExperiment::MuonLayer;
+    using enum GeoMuonMockupExperiment::MuonLayer;
     assembleBigWheel(muonEnvelope, Middle, midWheelZ);
     assembleBigWheel(muonEnvelope, Middle, -midWheelZ);
     assembleBigWheel(muonEnvelope, Outer, outWheelZ);
@@ -167,7 +169,15 @@ ActsPlugins::GeoModelTree GeoMuonMockupExperiment::constructMS() {
   VolumeMap_t publishedVol{};
   for (const auto& [fpV, pubKey] : m_publisher->getPublishedFPV()) {
     try {
-      const auto key = std::any_cast<std::string>(pubKey);
+      const std::string key = [](const auto& a) {
+        if constexpr (std::is_same_v<std::remove_cvref_t<decltype(pubKey)>,
+                                     std::any>) {
+          return std::any_cast<std::string>(a);
+        } else {
+          return std::get<std::string>(a);
+        }
+      }(pubKey);
+
       if (!publishedVol
                .insert(std::make_pair(key, static_cast<GeoFullPhysVol*>(fpV)))
                .second) {

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 
@@ -31,7 +30,7 @@ namespace detail {
 void printBoundParameters(std::ostream& os, const Surface& surface,
                           const ParticleHypothesis& particleHypothesis,
                           const BoundVector& params,
-                          const BoundSquareMatrix* cov = nullptr);
+                          const BoundMatrix* cov = nullptr);
 
 /// Print free track parameters content to the output stream.
 ///

@@ -14,13 +14,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include <ActsExamples/EventData/Measurement.hpp>
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <cassert>
-
-namespace Acts {
-class VectorMultiTrajectory;
-}  // namespace Acts
 
 namespace ActsExamples {
 

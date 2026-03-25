@@ -11,11 +11,11 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -29,13 +29,6 @@ class TTree;
 
 namespace ActsExamples {
 
-enum class RecoVertexClassification {
-  Unknown = 0,
-  Clean,
-  Merged,
-  Split,
-};
-
 /// @class RootVertexNTupleWriter
 ///
 /// Writes out the number of reconstructed primary vertices along with
@@ -43,7 +36,7 @@ enum class RecoVertexClassification {
 /// reconstructable primary vertices after track fitting.
 /// Additionally it matches the reco vertices to their truth vertices
 /// and write out the difference in x,y and z position.
-class RootVertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
+class RootVertexNTupleWriter final : public WriterT<VertexContainer> {
  public:
   struct Config {
     /// Input vertex collection.
@@ -58,6 +51,8 @@ class RootVertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
     std::string inputSelectedParticles;
     /// Input track-particle matching.
     std::string inputTrackParticleMatching;
+    /// Input vertex-truth matching.
+    std::string inputVertexTruthMatching;
     /// Magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Output filename.
@@ -67,12 +62,6 @@ class RootVertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
     /// File access mode.
     std::string fileMode = "RECREATE";
 
-    /// Minimum fraction of track weight matched between truth
-    /// and reco vertices to consider as truth matched.
-    double vertexMatchThreshold = 0.7;
-    /// Minimum fraction of hits associated to particle to consider track
-    /// as truth matched.
-    double trackMatchThreshold = 0.5;
     /// Whether to write information about tracks
     bool writeTrackInfo = false;
     /// Minimum track weight for track to be considered as part of the fit
@@ -101,7 +90,7 @@ class RootVertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const std::vector<Acts::Vertex>& vertices) override;
+                     const VertexContainer& vertices) override;
 
  private:
   void writeTrackInfo(const AlgorithmContext& ctx,
@@ -274,6 +263,8 @@ class RootVertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
       this, "InputSelectedParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
+  ReadDataHandle<std::vector<VertexToTruthMatching>> m_inputVertexTruthMatching{
+      this, "InputVertexTruthMatching"};
 };
 
 }  // namespace ActsExamples

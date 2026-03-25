@@ -48,9 +48,15 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
         "supported");
   }
 
-  std::unique_ptr<TrackingVolume> trackingVolume =
-      std::make_unique<TrackingVolume>(m_config.transform, m_config.bounds,
-                                       m_config.name);
+  std::unique_ptr<TrackingVolume> trackingVolume{};
+
+  if (m_config.alignablePlacement == nullptr) {
+    trackingVolume = std::make_unique<TrackingVolume>(
+        m_config.transform, m_config.bounds, m_config.name);
+  } else {
+    trackingVolume = std::make_unique<TrackingVolume>(
+        *m_config.alignablePlacement, m_config.bounds, m_config.name);
+  }
 
   // Add the surfaces to the tracking volume
   for (auto& surface : m_config.mlSurfaces) {
@@ -91,10 +97,19 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
                                                                         axisB);
 
   // The indexed grid to be filled from the navigation policy
-  IndexGrid<decltype(grid)> indexedGrid(
-      std::move(grid),
-      {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
-      m_config.transform.inverse());
+  const auto* placement = m_config.alignablePlacement;
+  auto indexedGrid =
+      placement == nullptr
+          ? IndexGrid<decltype(grid)>{std::move(grid),
+                                      {protoAxisA.getAxisDirection(),
+                                       protoAxisB.getAxisDirection()},
+                                      m_config.transform.inverse()}
+          : IndexGrid<decltype(grid)>{
+                std::move(grid),
+                {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
+                [placement](const GeometryContext& gctx) -> const Transform3& {
+                  return placement->localToGlobalTransform(gctx);
+                }};
 
   TryAllNavigationPolicy::Config tryAllConfig;
   tryAllConfig.portals = true;

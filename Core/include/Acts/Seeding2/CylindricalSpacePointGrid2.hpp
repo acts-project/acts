@@ -64,7 +64,7 @@ class CylindricalSpacePointGrid2 {
     /// positive direction in z
     float zMax = 2800 * UnitConstants::mm;
     /// maximum distance in r from middle space point to bottom or top
-    /// spacepoint
+    /// space point
     float deltaRMax = 270 * UnitConstants::mm;
     /// maximum forward direction expressed as cot(theta)
     float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)

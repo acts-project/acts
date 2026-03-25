@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -42,15 +42,16 @@ class IVolumeMaterial;
 /// p the momentum magnitude and B the magnetic field
 ///
 template <typename extension_t = EigenStepperDefaultExtension>
-class EigenStepper {
+class EigenStepper final {
  public:
-  /// Jacobian, Covariance and State definitions
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
+  /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
-  /// Type alias for covariance matrix (bound square matrix)
-  using Covariance = BoundSquareMatrix;
-  /// Type alias for bound state tuple containing parameters, jacobian, and path
-  /// length
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
+  /// Bound state tuple containing parameters, Jacobian, and path length
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// Configuration for the Eigen stepper.
   struct Config {
@@ -168,7 +169,7 @@ class EigenStepper {
   /// Initialize the stepper state from bound track parameters
   /// @param state Stepper state to initialize
   /// @param par Bound track parameters to initialize from
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  void initialize(State& state, const BoundParameters& par) const;
 
   /// Initialize the stepper state from bound parameters and surface
   /// @param state Stepper state to initialize

@@ -116,7 +116,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = sSequence;
+      propOptions.navigation.externalSurfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
@@ -132,7 +132,7 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = sSequence;
+      propOptions.navigation.externalSurfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = m_betheHeitlerApproximation.get();
 
@@ -170,7 +170,7 @@ struct GaussianSumFitter {
 
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.insertExternalSurface(
+          propOptions.navigation.appendExternalSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }
@@ -192,7 +192,7 @@ struct GaussianSumFitter {
 
       if (options.useExternalSurfaces) {
         for (auto it = begin; it != end; ++it) {
-          propOptions.navigation.insertExternalSurface(
+          propOptions.navigation.appendExternalSurface(
               *options.extensions.surfaceAccessor(*it));
         }
       }
@@ -293,19 +293,17 @@ struct GaussianSumFitter {
 
       fwdPropOptions.direction = gsfForward;
 
-      // If necessary convert to MultiComponentBoundTrackParameters
-      using IsMultiParameters =
-          detail::IsMultiComponentBoundParameters<start_parameters_t>;
-
-      // dirty optional because parameters are not default constructible
+      // optional because parameters are not default constructible
       std::optional<MultiComponentBoundTrackParameters> params;
 
-      // This allows the initialization with single- and multicomponent start
-      // parameters
-      if constexpr (!IsMultiParameters::value) {
+      // If necessary convert to MultiComponentBoundTrackParameters. This allows
+      // the initialization with single- and multicomponent start parameters.
+      constexpr bool IsMultiParameters =
+          detail::IsMultiComponentBoundParameters<start_parameters_t>::value;
+      if constexpr (!IsMultiParameters) {
         params = MultiComponentBoundTrackParameters(
             sParameters.referenceSurface().getSharedPtr(),
-            sParameters.parameters(), *sParameters.covariance(),
+            sParameters.parameters(), sParameters.covariance(),
             sParameters.particleHypothesis());
       } else {
         params = sParameters;
@@ -365,6 +363,11 @@ struct GaussianSumFitter {
     auto bwdResult = [&]() {
       auto bwdPropOptions = bwdPropInitializer(options);
 
+      // Type deduction for propagation result to pass on errors
+      using OptionsType = decltype(bwdPropOptions);
+      using ResultType =
+          Result<typename propagator_t::template ResultType<OptionsType>>;
+
       auto& actor = bwdPropOptions.actorList.template get<GsfActor>();
       actor.setOptions(options);
       actor.m_cfg.inputMeasurements = &inputMeasurements;
@@ -377,32 +380,24 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      std::vector<
-          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-          inflatedParamVector;
       assert(!fwdGsfResult.lastMeasurementComponents.empty());
       assert(fwdGsfResult.lastMeasurementSurface != nullptr);
-      for (auto& [w, p, cov] : fwdGsfResult.lastMeasurementComponents) {
-        inflatedParamVector.emplace_back(
-            w, p, cov * options.reverseFilteringCovarianceScaling);
-      }
 
       MultiComponentBoundTrackParameters inflatedParams(
           fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
-          std::move(inflatedParamVector), sParameters.particleHypothesis());
+          fwdGsfResult.lastMeasurementComponents,
+          [&options](const auto& cmp)
+              -> std::tuple<double, const BoundVector&, BoundMatrix> {
+            return {
+                std::get<0>(cmp), std::get<1>(cmp),
+                std::get<2>(cmp) * options.reverseFilteringCovarianceScaling};
+          },
+          sParameters.particleHypothesis());
 
-      auto state = m_propagator.template makeState<decltype(bwdPropOptions),
-                                                   MultiStepperSurfaceReached>(
-          target, bwdPropOptions);
-
-      // Type deduction for propagation result to pass on errors
-      using OptionsType = decltype(bwdPropOptions);
-      using StateType = decltype(state);
-      using PropagationResultType =
-          decltype(m_propagator.propagate(std::declval<StateType&>()));
-      using ResultType = decltype(m_propagator.makeResult(
-          std::declval<StateType&&>(), std::declval<PropagationResultType>(),
-          target, std::declval<const OptionsType&>()));
+      auto state =
+          m_propagator
+              .template makeState<OptionsType, MultiStepperSurfaceReached>(
+                  target, bwdPropOptions);
 
       auto initRes = m_propagator.initialize(state, inflatedParams);
       if (!initRes.ok()) {
@@ -428,7 +423,7 @@ struct GaussianSumFitter {
       auto propagationResult = m_propagator.propagate(state);
 
       return m_propagator.makeResult(std::move(state), propagationResult,
-                                     target, bwdPropOptions);
+                                     bwdPropOptions, true, &target);
     }();
 
     if (!bwdResult.ok()) {
@@ -505,15 +500,10 @@ struct GaussianSumFitter {
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
+      const auto singleParams = params.merge(options.componentMergeMethod);
 
-      const auto [finalPars, finalCov] = detail::Gsf::mergeGaussianMixture(
-          params.components(), params.referenceSurface(),
-          options.componentMergeMethod, [](auto& t) {
-            return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
-          });
-
-      track.parameters() = finalPars;
-      track.covariance() = finalCov;
+      track.parameters() = singleParams.parameters();
+      track.covariance() = singleParams.covariance().value();
 
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
