@@ -58,7 +58,6 @@ def assert_csv_output(csv_path, stem):
     )
 
 
-
 def assert_has_entries(root_file, tree_name):
     __tracebackhide__ = True
     assert_entries(root_file, tree_name, non_zero=True)
@@ -496,6 +495,7 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
+
 
 def test_particle_gun(tmp_path, assert_root_hash):
     from particle_gun import runParticleGun

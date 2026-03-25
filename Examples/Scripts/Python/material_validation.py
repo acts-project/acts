@@ -82,6 +82,7 @@ def runMaterialValidation(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
             inputMaterialTracks=materialValidationConfig.outputMaterialTracks,
+            treeName=materialTrackCollectionName,
             filePath=str(outputFileBase) + ".root",
             storeSurface=True,
             storeVolume=True,
@@ -109,7 +110,8 @@ def runMaterialValidation(
             RootMaterialTrackWriter(
                 level=acts.logging.INFO,
                 inputMaterialTracks=materialTrackCollectionName + "_propagated",
-                filePath=str(outputFile) + "_propagated.root",
+                treeName=materialTrackCollectionName,
+                filePath=str(outputFileBase) + "_propagated.root",
                 storeSurface=True,
                 storeVolume=True,
             )
