@@ -170,7 +170,7 @@ if "__main__" == __name__:
     )
 
     p.add_argument(
-        "--material-tracks-name",
+        "--material_tracks-name",
         type=str,
         default="material_tracks",
         help="Input material track collection name",
