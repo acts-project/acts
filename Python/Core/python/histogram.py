@@ -7,22 +7,14 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
-def _import_mplhep():
-    try:
-        import mplhep
-
-        return mplhep
-    except ImportError:
-        print("mplhep is not installed; cannot plot ACTS histograms.")
-        raise
-
-
 def plot_histogram(self, ax=None, **kwargs):
     import matplotlib.pyplot as plt
+    import mplhep
 
-    mh = _import_mplhep()
+    print(mplhep.__version__, flush=True)
+
     ax = ax or plt.subplots()[1]
-    artists = mh.histplot(self._to_boost_histogram_(), ax=ax, **kwargs)
+    artists = mplhep.histplot(self._to_boost_histogram_(), ax=ax, **kwargs)
     if label := self.histogram.axis(0).label:
         ax.set_xlabel(label)
     if self.title:
@@ -32,10 +24,12 @@ def plot_histogram(self, ax=None, **kwargs):
 
 def plot_profile(self, ax=None, **kwargs):
     import matplotlib.pyplot as plt
+    import mplhep
 
-    mh = _import_mplhep()
+    print(mplhep.__version__, flush=True)
+
     ax = ax or plt.subplots()[1]
-    artists = mh.histplot(self._to_boost_histogram_(), ax=ax, **kwargs)
+    artists = mplhep.histplot(self._to_boost_histogram_(), ax=ax, **kwargs)
     if label := self.histogram.axis(0).label:
         ax.set_xlabel(label)
     if self.sampleAxisTitle:
@@ -47,11 +41,13 @@ def plot_profile(self, ax=None, **kwargs):
 
 def plot_efficiency(self, ax=None, **kwargs):
     import matplotlib.pyplot as plt
+    import mplhep
 
-    mh = _import_mplhep()
+    print(mplhep.__version__, flush=True)
+
     ax = ax or plt.subplots()[1]
     xlabel = kwargs.pop("xlabel", self.total.axis(0).label)
-    mh.comp.comparison(
+    mplhep.comp.comparison(
         self.accepted._to_boost_histogram_(),
         self.total._to_boost_histogram_(),
         ax=ax,
