@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
+import acts.tgeo
 from acts import root
 import warnings
 
