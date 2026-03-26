@@ -50,7 +50,7 @@ runs:
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
-        brew install ninja ccache git
+        brew install ninja ccache
 
     - name: Restore cache
       id: cache-restore
@@ -107,16 +107,4 @@ runs:
 
         CI/dependencies/setup.sh $args
 
-    - name: Fix git for spack env (macOS)
-      if: startsWith(runner.os, 'macos')
-      shell: bash
-      run: |
-        # Spack sets DYLD_LIBRARY_PATH to its own libs (e.g. libiconv), which
-        # conflicts with the brew git binary and causes a dyld crash. Wrap git
-        # to unset DYLD_LIBRARY_PATH before exec so it uses its own libraries.
-        GIT_REAL="$(brew --prefix git)/bin/git"
-        WRAPPER="$HOME/.local/bin/git"
-        mkdir -p "$(dirname "$WRAPPER")"
-        printf '#!/bin/bash\nexec env -u DYLD_LIBRARY_PATH "%s" "$@"\n' "$GIT_REAL" > "$WRAPPER"
-        chmod +x "$WRAPPER"
-        echo "export PATH=\"$HOME/.local/bin:\$PATH\"" >> ${{ inputs.env_file }}
+

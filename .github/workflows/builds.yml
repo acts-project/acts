@@ -362,7 +362,8 @@ jobs:
           ccache -z &&
           CI/dependencies/run.sh .env which git &&
           CI/dependencies/run.sh .env git --version &&
-          CI/dependencies/run.sh .env xcode-select -p && 
+          CI/dependencies/run.sh .env xcode-select -p &&
+          ls -la $GITHUB_WORKSPACE/dependencies/view/bin/git || echo "git not in spack view" &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
