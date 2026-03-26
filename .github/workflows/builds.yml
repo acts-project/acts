@@ -355,9 +355,14 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
+      - run: which git; git --version; xcode-select -p
+
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env which git &&
+          CI/dependencies/run.sh .env git --version &&
+          CI/dependencies/run.sh .env xcode-select -p && 
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
