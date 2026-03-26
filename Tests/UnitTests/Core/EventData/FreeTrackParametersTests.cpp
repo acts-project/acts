@@ -13,16 +13,12 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericFreeTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/FreeTrackParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
 #include <optional>
-#include <utility>
-#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 
@@ -83,10 +79,10 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(EventDataSuite)
 
-BOOST_DATA_TEST_CASE(
-    NeutralConstructFromAngles,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
-    time, phi, theta, p) {
+BOOST_DATA_TEST_CASE(NeutralConstructFromAngles,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps,
+                     x, y, z, time, phi, theta, p) {
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
@@ -102,10 +98,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    ChargedConstructFromAngles,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    x, y, z, time, phi, theta, p, q) {
+BOOST_DATA_TEST_CASE(ChargedConstructFromAngles,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     x, y, z, time, phi, theta, p, q) {
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
@@ -121,10 +117,10 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
 
-BOOST_DATA_TEST_CASE(
-    AnyConstructFromAngles,
-    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    x, y, z, time, phi, theta, p, q) {
+BOOST_DATA_TEST_CASE(AnyConstructFromAngles,
+                     posSymmetric * posSymmetric * posSymmetric * ts * phis *
+                         thetas * ps * qsNonZero,
+                     x, y, z, time, phi, theta, p, q) {
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 

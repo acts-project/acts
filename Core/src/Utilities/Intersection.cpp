@@ -17,8 +17,8 @@ bool detail::checkPathLength(double pathLength, double nearLimit,
   // TODO why?
   const double tolerance = s_onSurfaceTolerance;
 
-  ACTS_VERBOSE(" -> near limit, far limit, distance: "
-               << nearLimit << ", " << farLimit << ", " << pathLength);
+  ACTS_VERBOSE(" -> near limit: " << nearLimit << ", far limit: " << farLimit
+                                  << ",  distance: " << pathLength);
 
   const bool coCriterion = pathLength > nearLimit;
   const bool cpCriterion = pathLength < farLimit + tolerance;

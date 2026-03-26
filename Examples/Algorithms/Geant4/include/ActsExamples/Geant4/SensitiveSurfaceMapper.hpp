@@ -113,7 +113,7 @@ class SensitiveSurfaceMapper {
     std::shared_ptr<SensitiveCandidatesBase> candidateSurfaces;
   };
 
-  /// State object that coutns the assignments and makes
+  /// State object that counts the assignments and makes
   /// a replica save copy association map
   struct State {
     /// The map of G4 physical volumes to the mapped surfaces (can be many as
@@ -133,7 +133,6 @@ class SensitiveSurfaceMapper {
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "SensitiveSurfaceMapper", Acts::Logging::INFO));
-  ~SensitiveSurfaceMapper() = default;
 
   /// Recursive mapping function that walks through the Geant4
   /// hierarchy and applies name remapping to the Physical volumes

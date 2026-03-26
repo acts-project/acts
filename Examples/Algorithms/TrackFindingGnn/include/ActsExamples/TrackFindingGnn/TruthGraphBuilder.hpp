@@ -9,10 +9,10 @@
 #pragma once
 
 #include "ActsExamples/EventData/Graph.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
@@ -60,20 +60,20 @@ class TruthGraphBuilder final : public IAlgorithm {
   std::vector<std::int64_t> buildFromMeasurements(
       const SpacePointContainer& spacePoints,
       const SimParticleContainer& particles,
-      const IndexMultimap<ActsFatras::Barcode>& measPartMap) const;
+      const MeasurementParticlesMap& measPartMap) const;
 
   std::vector<std::int64_t> buildFromSimhits(
       const SpacePointContainer& spacePoints,
-      const IndexMultimap<Index>& measHitMap, const SimHitContainer& simhits,
+      const MeasurementSimHitsMap& measHitMap, const SimHitContainer& simhits,
       const SimParticleContainer& particles) const;
 
   ReadDataHandle<SpacePointContainer> m_inputSpacePoints{this,
                                                          "InputSpacePoints"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMeasParticlesMap{
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasParticlesMap{
       this, "InputMeasParticlesMap"};
   ReadDataHandle<SimHitContainer> m_inputSimhits{this, "InputSimhits"};
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasSimhitMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasSimhitMap{
       this, "InputMeasSimhitMap"};
 
   WriteDataHandle<Graph> m_outputGraph{this, "OutputGraph"};

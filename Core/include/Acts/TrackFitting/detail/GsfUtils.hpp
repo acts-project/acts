@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -193,7 +193,7 @@ void computePosteriorWeights(const traj_t &mt,
       continue;
     }
 
-    const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
+    const double factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
     if (!std::isfinite(factor)) {
       // If something is not finite here, just leave the weight as it is

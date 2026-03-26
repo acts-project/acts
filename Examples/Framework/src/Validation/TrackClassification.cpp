@@ -9,6 +9,7 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -21,7 +22,7 @@ namespace {
 
 /// Increase the hit count for the given particle id by one.
 inline void increaseHitCount(std::vector<ParticleHitCount>& particleHitCounts,
-                             ActsFatras::Barcode particleId) {
+                             SimBarcode particleId) {
   // linear search since there is no ordering
   auto it = std::ranges::find_if(particleHitCounts, [=](const auto& phc) {
     return (phc.particleId == particleId);
@@ -42,8 +43,10 @@ inline void sortHitCount(std::vector<ParticleHitCount>& particleHitCounts) {
 
 }  // namespace
 
-void identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+}  // namespace ActsExamples
+
+void ActsExamples::identifyContributingParticles(
+    const MeasurementParticlesMap& measurementParticlesMap,
     const ProtoTrack& protoTrack,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
@@ -51,15 +54,15 @@ void identifyContributingParticles(
   for (auto hitIndex : protoTrack) {
     // register all particles that generated this hit
     for (const auto& [_, value] :
-         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+         makeRange(measurementParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, value);
     }
   }
   sortHitCount(particleHitCounts);
 }
 
-void identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+void ActsExamples::identifyContributingParticles(
+    const MeasurementParticlesMap& measurementParticlesMap,
     const Trajectories& trajectories, std::size_t tip,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
@@ -82,7 +85,7 @@ void identifyContributingParticles(
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
     for (const auto& [_, value] :
-         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+         makeRange(measurementParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, value);
     }
     return true;
@@ -90,8 +93,8 @@ void identifyContributingParticles(
   sortHitCount(particleHitCounts);
 }
 
-void identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+void ActsExamples::identifyContributingParticles(
+    const MeasurementParticlesMap& measurementParticlesMap,
     const ConstTrackContainer::ConstTrackProxy& track,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
@@ -110,11 +113,9 @@ void identifyContributingParticles(
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
     for (const auto& [_, value] :
-         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+         makeRange(measurementParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, value);
     }
   }
   sortHitCount(particleHitCounts);
 }
-
-}  // namespace ActsExamples
