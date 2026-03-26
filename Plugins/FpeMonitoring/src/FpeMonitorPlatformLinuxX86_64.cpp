@@ -33,7 +33,7 @@ constexpr std::uint32_t kSseStatusFlags = kFpuExceptionMask;
 
 }  // namespace
 
-bool isRuntimeSupported() {
+bool detail::isRuntimeSupported() {
   // Linux x86_64 supports feenableexcept/fedisableexcept and SIGFPE si_code
   // decoding, so trapping mode is fully available.
   return true;
