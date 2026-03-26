@@ -121,7 +121,15 @@ enum class HadronType {
   StrangeBaryon = 9,
   LightMeson = 10,
   LightBaryon = 11,
-  Unknown = 12
+  Other = 12,
+};
+
+enum class LeptonType {
+  Lepton = 1,
+  Electron = 2,
+  Muon = 3,
+  Tau = 4,
+  Unknown = 5,
 };
 
 /// Stream operator for HadronType
@@ -129,6 +137,12 @@ enum class HadronType {
 /// @param hadron The hadron type to output
 /// @return Reference to output stream
 std::ostream& operator<<(std::ostream& os, HadronType hadron);
+
+/// Stream operator for LeptonType
+/// @param os Output stream
+/// @param lepton The lepton type to output
+/// @return Reference to output stream
+std::ostream& operator<<(std::ostream& os, LeptonType lepton);
 
 /// Parse a PdgParticle from a particle name string.
 /// Supports common particle names like "e-", "e+", "mu-", "mu+", "tau-",

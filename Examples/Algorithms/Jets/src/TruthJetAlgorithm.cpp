@@ -57,6 +57,20 @@ ActsExamples::JetLabel jetLabelFromHadronType(Acts::HadronType hadronType) {
     case LightBaryon:
       return ActsExamples::JetLabel::LightJet;
     default:
+      return ActsExamples::JetLabel::OtherJet;
+  }
+}
+
+ActsExamples::JetLabel jetLabelFromLeptonType(Acts::LeptonType leptonType) {
+  using enum Acts::LeptonType;
+  switch (leptonType) {
+    case Electron:
+      return ActsExamples::JetLabel::ElectronJet;
+    case Muon:
+      return ActsExamples::JetLabel::MuonJet;
+    case Tau:
+      return ActsExamples::JetLabel::TauJet;
+    default:
       return ActsExamples::JetLabel::Unknown;
   }
 }
@@ -151,7 +165,10 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
           }
 
           Acts::PdgParticle pdgId{particle->pdg()};
-          if (!Acts::ParticleIdHelper::isHadron(pdgId)) {
+          if (!Acts::ParticleIdHelper::isHadron(pdgId) &&
+              !Acts::ParticleIdHelper::isMuon(pdgId) &&
+              !Acts::ParticleIdHelper::isElectron(pdgId) &&
+              !Acts::ParticleIdHelper::isTau(pdgId)) {
             return false;
           }
 
@@ -170,11 +187,13 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
         std::views::transform([](const auto* particle) {
           Acts::PdgParticle pdgId{particle->pdg()};
           auto type = Acts::ParticleIdHelper::hadronType(pdgId);
+          // TODO: if hadron get label from hadron type, else lepton type, else
+          // if other
           auto label = jetLabelFromHadronType(type);
           return std::make_pair(label, particle);
         }) |
         std::views::filter([](const auto& hadron) {
-          return hadron.first > ActsExamples::JetLabel::Unknown;
+          return hadron.first > ActsExamples::JetLabel::OtherJet;
         });
 
     std::ranges::copy(hadronView, std::back_inserter(hadrons));
@@ -189,7 +208,8 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   // Jet classification
-
+  // TODO: better naming instead hadron
+  /// ?? is it redundant
   auto classifyJet = [&](const fastjet::PseudoJet& jet) {
     auto hadronsInJetView =
         hadrons | std::views::filter([&jet, this](const auto& hadron) {
@@ -215,7 +235,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
       ACTS_VERBOSE(
           "  - " << hadron.first->pdg() << " "
                  << Acts::findName(Acts::PdgParticle{hadron.first->pdg()})
-                        .value_or("UNKNOWN")
+                        .value_or("OTHER")
                  << " label=" << hadron.second);
     }
 
@@ -228,15 +248,15 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     if (maxHadronIt == hadronsInJet.end()) {
       // Now hadronic "jet"
-      return ActsExamples::JetLabel::Unknown;
+      return ActsExamples::JetLabel::OtherJet;
     }
 
     const auto& [maxHadron, maxHadronLabel] = *maxHadronIt;
 
-    ACTS_VERBOSE("-> max hadron type="
-                 << Acts::findName(Acts::PdgParticle{maxHadron->pdg()})
-                        .value_or("UNKNOWN")
-                 << " label=" << maxHadronLabel);
+    ACTS_VERBOSE(
+        "-> max hadron type="
+        << Acts::findName(Acts::PdgParticle{maxHadron->pdg()}).value_or("OTHER")
+        << " label=" << maxHadronLabel);
 
     return maxHadronLabel;
   };  // jet classification
@@ -255,7 +275,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
       // content
       ActsExamples::JetLabel jetLabel = ActsExamples::JetLabel::Unknown;
       if (m_cfg.doJetLabeling) {
-        ACTS_DEBUG("Classifying jet " << i);
+        ACTS_VERBOSE("Classifying jet " << i);
         auto sample = timer.sample();
         jetLabel = classifyJet(jet);
       }
@@ -355,6 +375,27 @@ void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
       }
     }
     jets[ijet].setAssociatedTracks(associatedTracks);
+    ACTS_VERBOSE("Jet " << ijet << " has " << nTracksAssociated
+                        << " associated tracks after matching.");
+    if (jets[ijet].associatedTracks().size() == 0) {
+      Acts::Vector3 jet_3mom{jets[ijet].fourMomentum()[0],
+                             jets[ijet].fourMomentum()[1],
+                             jets[ijet].fourMomentum()[2]};
+      ACTS_VERBOSE(
+          "Jet " << ijet << " has no associated tracks and its eta is "
+                 << std::atanh(std::cos(Acts::VectorHelpers::theta(jet_3mom))));
+      for (auto track : tracks) {
+        ACTS_VERBOSE("Track "
+                     << track.index() << " and jet " << ijet << " has deltaR: "
+                     << Acts::VectorHelpers::deltaR(
+                            Acts::Vector3{jets[ijet].fourMomentum()[0],
+                                          jets[ijet].fourMomentum()[1],
+                                          jets[ijet].fourMomentum()[2]},
+                            Acts::Vector3{track.fourMomentum()[0],
+                                          track.fourMomentum()[1],
+                                          track.fourMomentum()[2]}));
+      }
+    }
   }
 }
 

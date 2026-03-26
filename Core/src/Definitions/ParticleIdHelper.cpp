@@ -846,7 +846,20 @@ HadronType ParticleIdHelper::hadronType(PdgParticle pdg) {
   if (isLightMeson(p)) {
     return LightMeson;
   }
+  return Other;
+}
 
+LeptonType ParticleIdHelper::leptonType(PdgParticle pdg) {
+  using enum LeptonType;
+  if (isElectron(pdg)) {
+    return Electron;
+  }
+  if (isMuon(pdg)) {
+    return Muon;
+  }
+  if (isTau(pdg)) {
+    return Tau;
+  }
   return Unknown;
 }
 
@@ -886,6 +899,23 @@ std::ostream& operator<<(std::ostream& os, HadronType hadron) {
       return os << "LightMeson";
     case LightBaryon:
       return os << "LightBaryon";
+    case Other:
+      return os << "Other";
+  }
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, LeptonType lepton) {
+  switch (lepton) {
+    using enum LeptonType;
+    case Lepton:
+      return os << "Lepton";
+    case Electron:
+      return os << "Electron";
+    case Muon:
+      return os << "Muon";
+    case Tau:
+      return os << "Tau";
     case Unknown:
       return os << "Unknown";
   }
