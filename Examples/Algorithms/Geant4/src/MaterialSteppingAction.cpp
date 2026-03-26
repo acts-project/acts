@@ -44,7 +44,7 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
 
   // First check for exclusion
   const std::string materialName = material.GetName();
-  for (const auto& emat : m_cfg.excludeMaterials) {
+  for (const std::string& emat : m_cfg.excludeMaterials) {
     if (emat == materialName) {
       ACTS_VERBOSE("Exclude step in material '" << materialName << "'.");
       return;
@@ -63,23 +63,23 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
   // the Geant4 docs). Need to compute average manually.
   const G4ElementVector* elements = material.GetElementVector();
   const G4double* fraction = material.GetFractionVector();
-  std::size_t nElements = material.GetNumberOfElements();
+  const std::size_t nElements = material.GetNumberOfElements();
   double Ar = 0.;
   double Z = 0.;
   if (nElements == 1) {
-    Ar = material.GetA() / (CLHEP::gram / CLHEP::mole);
+    Ar = material.GetA() * (CLHEP::mole / CLHEP::gram);
     Z = material.GetZ();
   } else {
     for (std::size_t i = 0; i < nElements; i++) {
-      Ar += elements->at(i)->GetA() * fraction[i] / (CLHEP::gram / CLHEP::mole);
+      Ar += elements->at(i)->GetA() * fraction[i] * (CLHEP::mole / CLHEP::gram);
       Z += elements->at(i)->GetZ() * fraction[i];
     }
   }
 
   // Construct passed material slab for the step
-  const auto slab =
-      Acts::MaterialSlab(Acts::Material::fromMassDensity(X0, L0, Ar, Z, rho),
-                         convertLengthToActs * step.GetStepLength());
+  const Acts::MaterialSlab slab(
+      Acts::Material::fromMassDensity(X0, L0, Ar, Z, rho),
+      convertLengthToActs * step.GetStepLength());
 
   // Create the RecordedMaterialSlab
   Acts::MaterialInteraction mInteraction;
@@ -92,18 +92,19 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* stepPtr) {
 
   assert(step.GetTrack() != nullptr);
   const G4Track& track = *step.GetTrack();
-  std::size_t trackID = track.GetTrackID();
-  auto& materialTracks = eventStore().materialTracks;
-  if (!materialTracks.contains(trackID - 1)) {
+  const std::size_t trackId = track.GetTrackID();
+  if (!eventStore().materialTracks.contains(trackId - 1)) {
     Acts::RecordedMaterialTrack rmTrack;
-    Acts::Vector3 vertex = convertPosition(track.GetVertexPosition());
-    Acts::Vector3 direction = convertDirection(track.GetMomentumDirection());
+    const Acts::Vector3 vertex = convertPosition(track.GetVertexPosition());
+    const Acts::Vector3 direction =
+        convertDirection(track.GetMomentumDirection());
     rmTrack.first = {vertex, direction};
     rmTrack.second.materialInteractions.push_back(mInteraction);
-    materialTracks[trackID - 1] = rmTrack;
+    eventStore().materialTracks[trackId - 1] = rmTrack;
   } else {
-    materialTracks[trackID - 1].second.materialInteractions.push_back(
-        mInteraction);
+    eventStore()
+        .materialTracks[trackId - 1]
+        .second.materialInteractions.push_back(mInteraction);
   }
 }
 

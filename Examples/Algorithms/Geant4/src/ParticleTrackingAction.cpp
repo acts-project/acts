@@ -45,15 +45,16 @@ void ParticleTrackingAction::PreUserTrackingAction(const G4Track* trackPtr) {
     ACTS_WARNING("Hit buffer not empty after track");
   }
 
-  const auto barcode = makeParticleId(track.GetTrackID(), track.GetParentID());
+  const std::optional<SimBarcode> barcode =
+      makeParticleId(track.GetTrackID(), track.GetParentID());
 
   // There is already a warning printed in the makeParticleId function if this
   // indicates a failure
-  if (!barcode) {
+  if (!barcode.has_value()) {
     return;
   }
 
-  const auto fatrasParticle = convert(track, *barcode);
+  const SimParticleState fatrasParticle = convert(track, *barcode);
   const SimParticle particle(fatrasParticle, fatrasParticle);
   const auto [it, success] = eventStore().particlesInitial.insert(particle);
 
@@ -125,14 +126,14 @@ SimParticleState ParticleTrackingAction::convert(const G4Track& track,
   const G4double p = convertEnergyToActs * track.GetKineticEnergy();
 
   std::uint32_t numberOfHits = 0;
-  if (auto it = eventStore().particleHitCount.find(particleId);
+  if (const auto it = eventStore().particleHitCount.find(particleId);
       it != eventStore().particleHitCount.end()) {
     numberOfHits = it->second;
   }
 
   ActsFatras::ParticleOutcome particleOutcome =
       ActsFatras::ParticleOutcome::Alive;
-  if (auto it = eventStore().particleOutcome.find(particleId);
+  if (const auto it = eventStore().particleOutcome.find(particleId);
       it != eventStore().particleOutcome.end()) {
     particleOutcome = it->second;
   }

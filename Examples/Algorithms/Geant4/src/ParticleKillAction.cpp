@@ -36,7 +36,7 @@ void ParticleKillAction::UserSteppingAction(const G4Step* stepPtr) {
   assert(step.GetTrack() != nullptr);
   G4Track& track = *step.GetTrack();
 
-  const auto time = convertTimeToActs * track.GetGlobalTime();
+  const double time = convertTimeToActs * track.GetGlobalTime();
   const bool isSecondary =
       track.GetDynamicParticle()->GetPrimaryParticle() == nullptr;
 
