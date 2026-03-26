@@ -37,6 +37,11 @@ from acts.examples.reconstruction import (
     addSeedFilterML,
     SeedFilterMLDBScanConfig,
 )
+from acts.examples.alignment import (
+    AlignmentDecorator,
+    AlignmentGeneratorLocalShift,
+    GeoIdAlignmentStore,
+)
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
@@ -169,7 +174,7 @@ oddDigiConfig = (
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
+detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco, misaligned=True)
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
@@ -181,6 +186,33 @@ s = acts.examples.Sequencer(
     numThreads=1 if args.geant4 else -1,
     outputDir=str(outputDir),
 )
+
+# Collect the nominal transforms for all surfaces before applying any
+# misalignment. This is needed for the alignment decorator to work, because
+# it needs to know the nominal positions before applying any changes.
+ctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+nominal_transforms = {}
+
+def collect_transforms(surface):
+    nominal_transforms[surface.geometryId] = surface.localToGlobalTransform(ctx)
+
+trackingGeometry.visitSurfaces(collect_transforms)
+nominal_store = GeoIdAlignmentStore(nominal_transforms)
+
+# Introduce a fixed misalignment in X by 0.05 mm.
+gen_shift = AlignmentGeneratorLocalShift()
+gen_shift.axisDirection = acts.AxisDirection.AxisX
+gen_shift.shift = 0.05 * u.mm
+
+# Define the interval of validity for the misalignment.
+iov_start_end = (0, args.events + args.skip + 1)
+
+# Create the alignment decorator and add it to the sequencer.
+align_cfg = AlignmentDecorator.Config()
+align_cfg.nominalStore = nominal_store
+align_cfg.iovGenerators = [(iov_start_end, gen_shift)]
+alignment_decorator = AlignmentDecorator(align_cfg, acts.logging.DEBUG)
+s.addContextDecorator(alignment_decorator)
 
 if args.edm4hep:
     import acts.examples.edm4hep
