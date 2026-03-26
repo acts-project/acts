@@ -85,6 +85,7 @@ def runMaterialRecording(
         randomNumbers=rnd,
         inputParticles=hepmc3Converter.config.outputParticles,
         outputMaterialTracks="material-tracks",
+        recordElementFractions= True,
     )
 
     s.addAlgorithm(g4Alg)

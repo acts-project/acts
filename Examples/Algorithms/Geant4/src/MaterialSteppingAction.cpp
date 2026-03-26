@@ -93,6 +93,21 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
   mInteraction.materialSlab = slab;
   mInteraction.pathCorrection = (step->GetStepLength() / CLHEP::mm);
 
+  if (m_cfg.recordElementFractions) {
+    if (nElements == 1) {
+	mInteraction.elementZ.push_back(
+      	static_cast<unsigned int>(material->GetZ()));
+    	mInteraction.elementFrac.push_back(1.0f);
+    } else {
+    	for (std::size_t i = 0; i < nElements; i++){
+      	mInteraction.elementZ.push_back(
+        static_cast<unsigned int>(elements->at(i)->GetZ()));
+      	mInteraction.elementFrac.push_back(
+        static_cast<float>(fraction[i]));
+    	}
+    }
+  }
+
   G4Track* g4Track = step->GetTrack();
   std::size_t trackID = g4Track->GetTrackID();
   auto& materialTracks = eventStore().materialTracks;
