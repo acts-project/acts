@@ -20,7 +20,8 @@
 #error "This translation unit is only valid for Linux x86_64"
 #endif
 
-namespace ActsPlugins::detail {
+namespace ActsPlugins {
+
 namespace {
 
 // Linux x86_64 signal context exposes raw x87/SSE control and status words.
@@ -38,8 +39,8 @@ bool isRuntimeSupported() {
   return true;
 }
 
-std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
-                                     void* ctx) {
+std::optional<FpeType> detail::decodeFpeType(int signal, const siginfo_t* si,
+                                             void* ctx) {
   // This backend only installs SIGFPE handlers. si_code carries the exception
   // category we expose in FpeType.
   static_cast<void>(ctx);
@@ -49,22 +50,22 @@ std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
   return fpeTypeFromSiCode(si->si_code);
 }
 
-void clearPendingExceptions(int excepts) {
+void detail::clearPendingExceptions(int excepts) {
   // Clear stale sticky flags before changing trap state.
   std::feclearexcept(excepts);
 }
 
-void enableExceptions(int excepts) {
+void detail::enableExceptions(int excepts) {
   // glibc helper enables hardware traps for requested FE_* bits.
   feenableexcept(excepts);
 }
 
-void disableExceptions(int excepts) {
+void detail::disableExceptions(int excepts) {
   // glibc helper disables hardware traps for requested FE_* bits.
   fedisableexcept(excepts);
 }
 
-void maskTrapsInSignalContext(void* ctx, FpeType type) {
+void detail::maskTrapsInSignalContext(void* ctx, FpeType type) {
   // Linux reports enough detail in si_code, so "type" is currently unused.
   // We mask all x87 trap bits and clear pending x87/SSE status flags to allow
   // safe unwinding past the faulting instruction.
@@ -81,8 +82,8 @@ void maskTrapsInSignalContext(void* ctx, FpeType type) {
   *mxcsr &= ~kSseStatusFlags;
 }
 
-std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
-                                          std::size_t bufferBytes) {
+std::size_t detail::captureStackFromSignalContext(void* ctx, void* buffer,
+                                                  std::size_t bufferBytes) {
   // Linux x86_64 currently falls back to boost::stacktrace::safe_dump_to in
   // the signal handler, so no context-based frame extraction is attempted here.
   static_cast<void>(ctx);
@@ -91,17 +92,17 @@ std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
   return 0;
 }
 
-std::size_t safeDumpSkipFrames() {
+std::size_t detail::safeDumpSkipFrames() {
   // Skip two frames to hide signal-handler and dump-helper internals.
   return 2;
 }
 
-bool shouldFailFastOnUnknownSignal() {
+bool detail::shouldFailFastOnUnknownSignal() {
   // Unknown/unsupported signal payloads are tolerated and ignored on Linux.
   return false;
 }
 
-void installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
+void detail::installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
   // Linux only needs SIGFPE for floating-point trap monitoring.
   struct sigaction action{};
   action.sa_sigaction = handler;
@@ -109,4 +110,4 @@ void installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
   sigaction(SIGFPE, &action, nullptr);
 }
 
-}  // namespace ActsPlugins::detail
+}  // namespace ActsPlugins
