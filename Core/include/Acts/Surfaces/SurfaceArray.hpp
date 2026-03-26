@@ -119,7 +119,6 @@ class SurfaceArray {
   /// @param representative The surface which is used as representative
   /// @param tolerance The tolerance used for intersection checks
   /// @param axes The axes used for the grid
-  /// @param bValues Optional vector of axis directions for binning
   /// @return A unique pointer to the surface grid lookup
   static std::unique_ptr<ISurfaceGridLookup> makeSurfaceGridLookup(
       std::shared_ptr<RegularSurface> representative, double tolerance,
@@ -129,9 +128,10 @@ class SurfaceArray {
   friend class SurfaceArrayCreator;
 
  public:
-  /// @deprecated Use @ref makeSurfaceGridLookup instead. The construction of
-  ///             this class is now handled internally and becomes an
-  ///             implementation detail.
+  /// @brief Lookup helper which encapsulates a @c Grid
+  /// @tparam Axis1 The first axis
+  /// @tparam Axis2 The second axis
+  /// @deprecated This is deprecated in favor of direct @ref SurfaceArray constructors.
   template <class Axis1, class Axis2>
   struct [[deprecated("Use makeSurfaceGridLookup instead")]] SurfaceGridLookup
       : ISurfaceGridLookup {

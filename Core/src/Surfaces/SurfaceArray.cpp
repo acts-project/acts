@@ -159,7 +159,8 @@ void SurfaceArray::checkGrid(AnyGridConstView<SurfaceVector> grid) {
 namespace {
 
 /// @brief Lookup helper which encapsulates a @c Grid
-/// @tparam Axes The axes used for the grid
+/// @tparam Axis1 The first axis
+/// @tparam Axis2 The second axis
 template <class Axis1, class Axis2>
 struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
   /// Grid type storing surface vectors with two axes
