@@ -20,18 +20,19 @@
 #include <utility>
 #include <vector>
 
-Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_, double alpha_,
-                                                   double beta_)
+namespace Acts {
+
+FreeToBoundCorrection::FreeToBoundCorrection(bool apply_, double alpha_,
+                                             double beta_)
     : apply(apply_), alpha(alpha_), beta(beta_) {}
 
-Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_)
-    : apply(apply_) {}
+FreeToBoundCorrection::FreeToBoundCorrection(bool apply_) : apply(apply_) {}
 
-Acts::FreeToBoundCorrection::operator bool() const {
+FreeToBoundCorrection::operator bool() const {
   return apply;
 }
 
-Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
+detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
     double alpha, double beta, double cosIncidentAngleMinCutoff,
     double cosIncidentAngleMaxCutoff)
     : m_alpha(alpha),
@@ -39,7 +40,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
       m_cosIncidentAngleMinCutoff(cosIncidentAngleMinCutoff),
       m_cosIncidentAngleMaxCutoff(cosIncidentAngleMaxCutoff) {}
 
-Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
+detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
     const FreeToBoundCorrection& freeToBoundCorrection) {
   m_alpha = freeToBoundCorrection.alpha;
   m_beta = freeToBoundCorrection.beta;
@@ -47,11 +48,11 @@ Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
   m_cosIncidentAngleMaxCutoff = freeToBoundCorrection.cosIncidentAngleMaxCutoff;
 }
 
-std::optional<std::tuple<Acts::BoundVector, Acts::BoundMatrix>>
-Acts::detail::CorrectedFreeToBoundTransformer::operator()(
-    const Acts::FreeVector& freeParams, const Acts::FreeMatrix& freeCovariance,
-    const Acts::Surface& surface, const Acts::GeometryContext& geoContext,
-    Direction navDir, const Logger& logger) const {
+std::optional<std::tuple<BoundVector, BoundMatrix>>
+detail::CorrectedFreeToBoundTransformer::operator()(
+    const FreeVector& freeParams, const FreeMatrix& freeCovariance,
+    const Surface& surface, const GeometryContext& geoContext, Direction navDir,
+    const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal =
@@ -178,3 +179,5 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
 
   return std::make_tuple(bpMean, bv);
 }
+
+}  // namespace Acts

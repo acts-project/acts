@@ -60,13 +60,11 @@ macro(add_examples_binding_if _name _link_libraries _flag _plugin_import)
     # Augment the file if needed
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in")
         file(
-            READ
-            "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
+            READ "${CMAKE_CURRENT_SOURCE_DIR}/python/${_name_lower}_aux.py.in"
             _extra_content
         )
         file(
-            APPEND
-            "${_python_dir}/acts/examples/${_name_lower}.py"
+            APPEND "${_python_dir}/acts/examples/${_name_lower}.py"
             "\n${_extra_content}"
         )
     endif()
@@ -87,6 +85,7 @@ target_sources(
     ActsExamplesPythonBindings
     PRIVATE
         src/Framework.cpp
+        src/EventData.cpp
         src/ExampleAlgorithms.cpp
         src/Generators.cpp
         src/AmbiguityResolution.cpp
@@ -106,10 +105,8 @@ target_sources(
 )
 
 install(
-    TARGETS
-        ActsExamplesPythonBindings
-        DESTINATION
-        ${_examples_python_install_dir}
+    TARGETS ActsExamplesPythonBindings
+    DESTINATION ${_examples_python_install_dir}
 )
 
 set_target_properties(
@@ -166,19 +163,17 @@ add_examples_binding_if(Hashing Acts::ExamplesTrackFinding ACTS_BUILD_EXAMPLES_H
 add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
 add_examples_binding_if(Onnx Acts::ExamplesTrackFindingML ACTS_BUILD_PLUGIN_ONNX FALSE)
 add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 ACTS_BUILD_EXAMPLES_PYTHIA8 FALSE)
-add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_PLUGIN_ROOT TRUE)
+add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_EXAMPLES_ROOT TRUE)
 add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
-add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_PLUGIN_ROOT TRUE)
+add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_EXAMPLES_ROOT TRUE)
 add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" ACTS_BUILD_PLUGIN_TRACCC FALSE)
 add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_EXAMPLES_FASTJET FALSE)
 
 # Special case for HepMC3 as it a hard dependency
 pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
 install(
-    TARGETS
-        ActsExamplesPythonBindingsHepMC3
-        DESTINATION
-        ${_examples_python_install_dir}
+    TARGETS ActsExamplesPythonBindingsHepMC3
+    DESTINATION ${_examples_python_install_dir}
 )
 set_target_properties(
     ActsExamplesPythonBindingsHepMC3

@@ -1,6 +1,30 @@
 import acts
 
 
+def test_space_point_container():
+    """Test SpacePointContainer2 and ConstSpacePointProxy2 bindings (read-only)."""
+    columns = (
+        acts.SpacePointColumns.X | acts.SpacePointColumns.Y | acts.SpacePointColumns.Z
+    )
+    container = acts.SpacePointContainer2(columns)
+    assert container.empty
+    assert len(container) == 0
+
+    # Mutable bindings removed - container is read-only from Python
+    # Can still test iteration and len on empty container
+    assert list(container) == []
+
+
+def test_seed_container():
+    """Test SeedContainer2 and ConstSeedProxy2 bindings (read-only)."""
+    seed_container = acts.SeedContainer2()
+    assert seed_container.empty
+    assert len(seed_container) == 0
+
+    # Mutable bindings removed - container is read-only from Python
+    assert list(seed_container) == []
+
+
 def test_particle_hypothesis():
     muon = acts.ParticleHypothesis.muon
     pion = acts.ParticleHypothesis.pion

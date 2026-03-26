@@ -13,7 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Geant4/AlgebraConverters.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
@@ -67,7 +67,8 @@ std::array<Acts::Vector4, 4u> kinematicsOfStep(const G4Step* step) {
   return {preStepPosition, preStepMomentum, postStepPosition, postStepMomentum};
 }
 
-ActsFatras::Hit hitFromStep(const G4Step* step, ActsFatras::Barcode particleId,
+ActsFatras::Hit hitFromStep(const G4Step* step,
+                            ActsExamples::SimBarcode particleId,
                             Acts::GeometryIdentifier geoId,
                             std::int32_t index) {
   auto [preStepPosition, preStepMomentum, postStepPosition, postStepMomentum] =

@@ -217,22 +217,23 @@ class DoubletsForMiddleSp {
   /// Subset view of doublets addressed by indices.
   class Subset
       : public detail::ContainerSubset<Subset, Subset, DoubletsForMiddleSp,
-                                       Proxy, Index, true> {
+                                       Proxy, std::span<const Index>, true> {
    public:
     /// Base class type alias
     using Base = detail::ContainerSubset<Subset, Subset, DoubletsForMiddleSp,
-                                         Proxy, Index, true>;
+                                         Proxy, std::span<const Index>, true>;
 
     using Base::Base;
   };
   /// Subset view of doublets addressed by index and cotTheta pairs.
-  class Subset2
-      : public detail::ContainerSubset<Subset2, Subset2, DoubletsForMiddleSp,
-                                       Proxy2, IndexAndCotTheta, true> {
+  class Subset2 : public detail::ContainerSubset<
+                      Subset2, Subset2, DoubletsForMiddleSp, Proxy2,
+                      std::span<const IndexAndCotTheta>, true> {
    public:
     /// Base class type alias
-    using Base = detail::ContainerSubset<Subset2, Subset2, DoubletsForMiddleSp,
-                                         Proxy2, IndexAndCotTheta, true>;
+    using Base =
+        detail::ContainerSubset<Subset2, Subset2, DoubletsForMiddleSp, Proxy2,
+                                std::span<const IndexAndCotTheta>, true>;
 
     using Base::Base;
   };

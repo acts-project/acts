@@ -29,7 +29,7 @@ auto Acts::EigenStepper<E>::makeState(const Options& options) const -> State {
 
 template <typename E>
 void Acts::EigenStepper<E>::initialize(State& state,
-                                       const BoundTrackParameters& par) const {
+                                       const BoundParameters& par) const {
   initialize(state, par.parameters(), par.covariance(),
              par.particleHypothesis(), par.referenceSurface());
 }
@@ -116,8 +116,9 @@ bool Acts::EigenStepper<E>::prepareCurvilinearState(State& state) const {
 }
 
 template <typename E>
-auto Acts::EigenStepper<E>::curvilinearState(
-    State& state, bool transportCov) const -> BoundState {
+auto Acts::EigenStepper<E>::curvilinearState(State& state,
+                                             bool transportCov) const
+    -> BoundState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, std::nullopt, state.pars, state.particleHypothesis,

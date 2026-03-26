@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/PropagatorStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"

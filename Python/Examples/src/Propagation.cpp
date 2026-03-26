@@ -7,7 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -67,13 +66,19 @@ void addPropagation(py::module& mex) {
       mex, "PropagatorInterface");
 
   // Eigen stepper based propagator
-  { addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen"); }
+  {
+    addConcretePropagator<EigenStepper<>, Navigator>(mex, "Eigen");
+  }
 
   // ATLAS stepper based propagator
-  { addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas"); }
+  {
+    addConcretePropagator<AtlasStepper, Navigator>(mex, "Atlas");
+  }
 
   // Sympy stepper based propagator
-  { addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy"); }
+  {
+    addConcretePropagator<SympyStepper, Navigator>(mex, "Sympy");
+  }
 
   // Straight line stepper
   {

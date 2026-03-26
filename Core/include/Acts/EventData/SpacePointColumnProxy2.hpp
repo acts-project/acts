@@ -57,6 +57,10 @@ class SpacePointColumnProxy {
     requires ReadOnly
       : m_container(&other.container()), m_column(&other.column()) {}
 
+  /// Returns the number of entries in the space point column.
+  /// @return The size of the space point column.
+  std::uint32_t size() const noexcept { return column().size(); }
+
   /// Returns a const proxy of the space point column.
   /// @return A const proxy of the space point column.
   SpacePointColumnProxy<T, true> asConst() const noexcept
@@ -142,12 +146,13 @@ class SpacePointColumnProxy {
   }
 
   /// Subset view over selected column entries.
-  class Subset : public detail::ContainerSubset<Subset, Subset, Column, Value,
-                                                Index, ReadOnly> {
+  class Subset
+      : public detail::ContainerSubset<Subset, Subset, Column, Value,
+                                       std::span<const Index>, ReadOnly> {
    public:
     /// Base class type
-    using Base =
-        detail::ContainerSubset<Subset, Subset, Column, Value, Index, ReadOnly>;
+    using Base = detail::ContainerSubset<Subset, Subset, Column, Value,
+                                         std::span<const Index>, ReadOnly>;
 
     using Base::Base;
   };
@@ -174,8 +179,6 @@ class SpacePointColumnProxy {
  private:
   Container *m_container{};
   Column *m_column{};
-
-  std::uint32_t size() const noexcept { return column().size(); }
 
   std::vector<Value> &column() noexcept
     requires(!ReadOnly)

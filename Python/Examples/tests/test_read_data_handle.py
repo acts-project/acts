@@ -123,6 +123,12 @@ def test_read_particles_via_handle():
                 self, acts.examples.SimParticleContainer, "InputParticles"
             )
             self.particles.initialize("particles_generated")
+
+            self.outputParticles = acts.examples.WriteDataHandle(
+                self, acts.examples.SimParticleContainer, "OutputParticles"
+            )
+            self.outputParticles.initialize("output_particles")
+
             self.seen_events = 0
 
         def execute(self, context):
@@ -134,7 +140,13 @@ def test_read_particles_via_handle():
             for particle in particles:
                 print(particle)
 
+            assert not context.eventStore.exists("output_particles")
+            newParticles = acts.examples.SimParticleContainer()
+            self.outputParticles(context, newParticles)
+            assert context.eventStore.exists("output_particles")
+
             self.seen_events += 1
+
             return acts.examples.ProcessCode.SUCCESS
 
     s = _make_sequencer(events=3)

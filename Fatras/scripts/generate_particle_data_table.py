@@ -18,7 +18,6 @@ from pathlib import Path
 
 from particle import Particle
 
-
 CODE_HEADER = """\
 // This file is part of the ACTS project.
 //
