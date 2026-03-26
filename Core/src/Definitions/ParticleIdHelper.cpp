@@ -908,8 +908,6 @@ std::ostream& operator<<(std::ostream& os, HadronType hadron) {
 std::ostream& operator<<(std::ostream& os, LeptonType lepton) {
   switch (lepton) {
     using enum LeptonType;
-    case Lepton:
-      return os << "Lepton";
     case Electron:
       return os << "Electron";
     case Muon:

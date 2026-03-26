@@ -148,7 +148,8 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   // Find hadrons for jet labeling with sim particles
-  std::vector<std::pair<ActsExamples::JetLabel, const SimParticle*>> labelCandidates;
+  std::vector<std::pair<ActsExamples::JetLabel, const SimParticle*>>
+      labelCandidates;
 
   if (m_cfg.doJetLabeling) {
     Acts::ScopedTimer timer("hadron finding", logger(), Acts::Logging::DEBUG);
@@ -165,7 +166,6 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
           }
 
           Acts::PdgParticle pdgId{particle->pdg()};
-          
 
           if (!Acts::ParticleIdHelper::isHadron(pdgId) &&
               !Acts::ParticleIdHelper::isMuon(pdgId) &&
@@ -177,11 +177,11 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
           // Apply a pt cut on B or C hadrons
           ActsExamples::JetLabel label;
           if (Acts::ParticleIdHelper::isHadron(pdgId)) {
-          label =
-              jetLabelFromHadronType(Acts::ParticleIdHelper::hadronType(pdgId));}
-          else if (Acts::ParticleIdHelper::isLepton(pdgId)) {
-          label =
-                jetLabelFromLeptonType(Acts::ParticleIdHelper::leptonType(pdgId));
+            label = jetLabelFromHadronType(
+                Acts::ParticleIdHelper::hadronType(pdgId));
+          } else if (Acts::ParticleIdHelper::isLepton(pdgId)) {
+            label = jetLabelFromLeptonType(
+                Acts::ParticleIdHelper::leptonType(pdgId));
           }
 
           using enum ActsExamples::JetLabel;
@@ -198,12 +198,11 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
           auto htype = Acts::ParticleIdHelper::hadronType(pdgId);
           auto ltype = Acts::ParticleIdHelper::leptonType(pdgId);
-          // TODO: if hadron get label from hadron type, else lepton type, else if other
+
           if (Acts::ParticleIdHelper::isHadron(pdgId)) {
             auto label = jetLabelFromHadronType(htype);
             return std::make_pair(label, particle);
-          }
-          else if (Acts::ParticleIdHelper::isLepton(pdgId)) {
+          } else if (Acts::ParticleIdHelper::isLepton(pdgId)) {
             auto label = jetLabelFromLeptonType(ltype);
             return std::make_pair(label, particle);
           }
@@ -224,25 +223,27 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   // Jet classification
-  // TODO: better naming instead hadron 
-  /// ?? is it redundant
+
   auto classifyJet = [&](const fastjet::PseudoJet& jet) {
     auto labelCandidatesInJetView =
-        labelCandidates | std::views::filter([&jet, this](const auto& labelCandidate) {
+        labelCandidates |
+        std::views::filter([&jet, this](const auto& labelCandidate) {
           const auto& momentum = labelCandidate.second->momentum();
-          Acts::Vector3 labelCandidateJetMom{momentum[0], momentum[1], momentum[2]};
+          Acts::Vector3 labelCandidateJetMom{momentum[0], momentum[1],
+                                             momentum[2]};
           Acts::Vector3 jetMom{jet.px(), jet.py(), jet.pz()};
           return Acts::VectorHelpers::deltaR(jetMom, labelCandidateJetMom) <
                  m_cfg.jetLabelingDeltaR;
         }) |
         std::views::transform([](const auto& labelCandidate) {
-          if (Acts::ParticleIdHelper::isHadron(Acts::PdgParticle{labelCandidate.second->pdg()})) {
+          if (Acts::ParticleIdHelper::isHadron(
+                  Acts::PdgParticle{labelCandidate.second->pdg()})) {
             return std::pair{
                 labelCandidate.second,
                 jetLabelFromHadronType(Acts::ParticleIdHelper::hadronType(
                     Acts::PdgParticle{labelCandidate.second->pdg()}))};
-          }
-          else if (Acts::ParticleIdHelper::isLepton(Acts::PdgParticle{labelCandidate.second->pdg()})) {
+          } else if (Acts::ParticleIdHelper::isLepton(
+                         Acts::PdgParticle{labelCandidate.second->pdg()})) {
             return std::pair{
                 labelCandidate.second,
                 jetLabelFromLeptonType(Acts::ParticleIdHelper::leptonType(
@@ -252,19 +253,21 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     std::vector<std::pair<const SimParticle*, ActsExamples::JetLabel>>
         labelCandidatesInJet;
-    std::ranges::copy(labelCandidatesInJetView, std::back_inserter(labelCandidatesInJet));
+    std::ranges::copy(labelCandidatesInJetView,
+                      std::back_inserter(labelCandidatesInJet));
 
     ACTS_VERBOSE("-> label candidates in jet: " << labelCandidatesInJet.size());
     for (const auto& labelCandidate : labelCandidatesInJet) {
-      ACTS_VERBOSE(
-          "  - " << labelCandidate.first->pdg() << " "
-                 << Acts::findName(Acts::PdgParticle{labelCandidate.first->pdg()})
-                        .value_or("OTHER")
-                 << " label=" << labelCandidate.second);
+      ACTS_VERBOSE("  - " << labelCandidate.first->pdg() << " "
+                          << Acts::findName(
+                                 Acts::PdgParticle{labelCandidate.first->pdg()})
+                                 .value_or("OTHER")
+                          << " label=" << labelCandidate.second);
     }
 
     auto maxHadronIt = std::ranges::max_element(
-        labelCandidatesInJet, [](const auto& a, const auto& b) { return a < b; },
+        labelCandidatesInJet,
+        [](const auto& a, const auto& b) { return a < b; },
         [](const auto& a) {
           const auto& [labelCandidate, label] = a;
           return label;
@@ -277,10 +280,10 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const auto& [maxHadron, maxHadronLabel] = *maxHadronIt;
 
-    ACTS_VERBOSE("-> max candidate type=" 
-                 << Acts::findName(Acts::PdgParticle{maxHadron->pdg()})
-                        .value_or("OTHER")
-                 << " label=" << maxHadronLabel);
+    ACTS_VERBOSE(
+        "-> max candidate type="
+        << Acts::findName(Acts::PdgParticle{maxHadron->pdg()}).value_or("OTHER")
+        << " label=" << maxHadronLabel);
 
     return maxHadronLabel;
   };  // jet classification
@@ -402,15 +405,23 @@ void TruthJetAlgorithm::trackJetMatching(const ConstTrackContainer& tracks,
     ACTS_VERBOSE("Jet " << ijet << " has " << nTracksAssociated
                         << " associated tracks after matching.");
     if (jets[ijet].associatedTracks().size() == 0) {
-      Acts::Vector3 jet_3mom{jets[ijet].fourMomentum()[0], jets[ijet].fourMomentum()[1],
-                    jets[ijet].fourMomentum()[2]};
-      ACTS_VERBOSE("Jet " << ijet << " has no associated tracks and its eta is " << std::atanh(std::cos(Acts::VectorHelpers::theta(jet_3mom))));
-      for(auto track : tracks) {
-        ACTS_VERBOSE("Track " << track.index() << " and jet " << ijet << " has deltaR: " << Acts::VectorHelpers::deltaR(
-          Acts::Vector3{jets[ijet].fourMomentum()[0], jets[ijet].fourMomentum()[1], jets[ijet].fourMomentum()[2]},
-          Acts::Vector3{track.fourMomentum()[0], track.fourMomentum()[1], track.fourMomentum()[2]}
-        ));
-      } 
+      Acts::Vector3 jet_3mom{jets[ijet].fourMomentum()[0],
+                             jets[ijet].fourMomentum()[1],
+                             jets[ijet].fourMomentum()[2]};
+      ACTS_VERBOSE(
+          "Jet " << ijet << " has no associated tracks and its eta is "
+                 << std::atanh(std::cos(Acts::VectorHelpers::theta(jet_3mom))));
+      for (auto track : tracks) {
+        ACTS_VERBOSE("Track "
+                     << track.index() << " and jet " << ijet << " has deltaR: "
+                     << Acts::VectorHelpers::deltaR(
+                            Acts::Vector3{jets[ijet].fourMomentum()[0],
+                                          jets[ijet].fourMomentum()[1],
+                                          jets[ijet].fourMomentum()[2]},
+                            Acts::Vector3{track.fourMomentum()[0],
+                                          track.fourMomentum()[1],
+                                          track.fourMomentum()[2]}));
+      }
     }
   }
 }

@@ -125,11 +125,10 @@ enum class HadronType {
 };
 
 enum class LeptonType {
-  Lepton = 1,
-  Electron = 2,
-  Muon = 3,
-  Tau = 4,
-  Unknown = 5,
+  Electron = 1,
+  Muon = 2,
+  Tau = 3,
+  Unknown = 4,
 };
 
 /// Stream operator for HadronType
