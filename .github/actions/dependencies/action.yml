@@ -50,7 +50,7 @@ runs:
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
-        brew install ninja ccache
+        brew install ninja ccache git
 
     - name: Restore cache
       id: cache-restore
