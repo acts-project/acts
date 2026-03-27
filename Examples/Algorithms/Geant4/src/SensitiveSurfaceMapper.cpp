@@ -89,6 +89,7 @@ void writeG4Polyhedron(
     visualizer.face(faces, color);
   }
 }
+
 }  // namespace
 
 namespace ActsExamples::Geant4 {
