@@ -31,7 +31,6 @@ class MaterialPhysicsList final : public G4VUserPhysicsList {
   explicit MaterialPhysicsList(std::unique_ptr<const Acts::Logger> logger =
                                    Acts::getDefaultLogger("MaterialPhysicsList",
                                                           Acts::Logging::INFO));
-  ~MaterialPhysicsList() override = default;
 
   /// @brief Interface particle construction method
   ///
