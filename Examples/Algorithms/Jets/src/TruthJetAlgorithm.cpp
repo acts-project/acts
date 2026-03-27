@@ -175,7 +175,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
           }
 
           // Apply a pt cut on B or C hadrons
-          ActsExamples::JetLabel label;
+          ActsExamples::JetLabel label = ActsExamples::JetLabel::Unknown;
           if (Acts::ParticleIdHelper::isHadron(pdgId)) {
             label = jetLabelFromHadronType(
                 Acts::ParticleIdHelper::hadronType(pdgId));
@@ -195,17 +195,16 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
         }) |
         std::views::transform([](const auto* particle) {
           Acts::PdgParticle pdgId{particle->pdg()};
-
+          ActsExamples::JetLabel label = ActsExamples::JetLabel::Unknown;
           auto htype = Acts::ParticleIdHelper::hadronType(pdgId);
           auto ltype = Acts::ParticleIdHelper::leptonType(pdgId);
 
           if (Acts::ParticleIdHelper::isHadron(pdgId)) {
-            auto label = jetLabelFromHadronType(htype);
-            return std::make_pair(label, particle);
+            label = jetLabelFromHadronType(htype);
           } else if (Acts::ParticleIdHelper::isLepton(pdgId)) {
-            auto label = jetLabelFromLeptonType(ltype);
-            return std::make_pair(label, particle);
+            label = jetLabelFromLeptonType(ltype);
           }
+            return std::make_pair(label, particle);
         }) |
         std::views::filter([](const auto& labelCandidate) {
           return labelCandidate.first > ActsExamples::JetLabel::OtherJet;
@@ -236,19 +235,20 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
                  m_cfg.jetLabelingDeltaR;
         }) |
         std::views::transform([](const auto& labelCandidate) {
+          ActsExamples::JetLabel label = ActsExamples::JetLabel::Unknown;
           if (Acts::ParticleIdHelper::isHadron(
                   Acts::PdgParticle{labelCandidate.second->pdg()})) {
-            return std::pair{
-                labelCandidate.second,
-                jetLabelFromHadronType(Acts::ParticleIdHelper::hadronType(
-                    Acts::PdgParticle{labelCandidate.second->pdg()}))};
+                    label = jetLabelFromHadronType(Acts::ParticleIdHelper::hadronType(
+                        Acts::PdgParticle{labelCandidate.second->pdg()}));
           } else if (Acts::ParticleIdHelper::isLepton(
                          Acts::PdgParticle{labelCandidate.second->pdg()})) {
-            return std::pair{
-                labelCandidate.second,
-                jetLabelFromLeptonType(Acts::ParticleIdHelper::leptonType(
-                    Acts::PdgParticle{labelCandidate.second->pdg()}))};
+            label = jetLabelFromLeptonType(Acts::ParticleIdHelper::leptonType(
+                Acts::PdgParticle{labelCandidate.second->pdg()}));
+
           }
+                      return std::pair{
+                labelCandidate.second,
+                label};
         });
 
     std::vector<std::pair<const SimParticle*, ActsExamples::JetLabel>>
