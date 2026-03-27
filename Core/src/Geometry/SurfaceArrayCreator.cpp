@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -65,8 +66,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   sl->fill(gctx, surfacesRaw);
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
@@ -122,8 +125,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
@@ -179,8 +184,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   sl->fill(gctx, surfacesRaw);
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
@@ -288,8 +295,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   sl->fill(gctx, surfacesRaw);
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
@@ -380,9 +389,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
 
   sl->fill(gctx, surfacesRaw);
 
+  ACTS_PUSH_IGNORE_DEPRECATED()
   return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
                                         fullTransform);
-  //!< @todo implement - take from ATLAS complex TRT builder
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::vector<const Surface*> SurfaceArrayCreator::findKeySurfaces(

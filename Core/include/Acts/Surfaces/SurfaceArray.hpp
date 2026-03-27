@@ -145,7 +145,7 @@ class SurfaceArray {
                       const std::vector<AxisDirection>& bValues = {})
 
         : m_impl(makeSurfaceGridLookup(std::move(representative), tolerance,
-                                       axes)) {
+                                       std::move(axes))) {
       static_cast<void>(bValues);
     }
 
