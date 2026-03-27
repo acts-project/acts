@@ -355,13 +355,9 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
-      - run: which git; git --version; xcode-select -p
-
       - name: Configure
         run: >
           ccache -z &&
-          CI/dependencies/run.sh .env which git &&
-          ls -la $GITHUB_WORKSPACE/dependencies/view/bin/git || echo "git not in spack view" &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci

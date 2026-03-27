@@ -106,5 +106,3 @@ runs:
         fi
 
         CI/dependencies/setup.sh $args
-
-
