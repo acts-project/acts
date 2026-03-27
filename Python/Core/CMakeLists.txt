@@ -3,7 +3,7 @@ set(_python_dir "${CMAKE_BINARY_DIR}/python")
 file(MAKE_DIRECTORY ${_python_dir})
 file(MAKE_DIRECTORY ${_python_dir}/acts)
 
-set(py_files __init__.py _adapter.py)
+set(py_files __init__.py _adapter.py histogram.py)
 
 pybind11_add_module(ActsPythonBindings src/CoreModuleEntry.cpp)
 
