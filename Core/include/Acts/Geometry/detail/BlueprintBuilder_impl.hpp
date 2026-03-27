@@ -418,7 +418,7 @@ SensorLayerAssembler<BackendT>::build() const {
     auto it = std::ranges::find_if(
         groups, [&](const GroupData& g) { return g.key == key; });
     if (it == groups.end()) {
-      groups.push_back(GroupData{.key = key});
+      groups.push_back(GroupData{.key = key, .sensors = {}});
       it = std::prev(groups.end());
     }
     it->sensors.push_back(sensor);
