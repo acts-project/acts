@@ -112,10 +112,10 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
     stereoDecomp(1, 0) = stereoDecomp(0, 1) = -stripAngle * invDist;
     stereoDecomp(1, 1) = stereoDecomp(0, 0) = invDist;
     dist = stereoDecomp * dist;
-    return (Acts::square(dist[0]) / hit.covariance()[bendIdx]) +
-           (Acts::square(dist[1]) / hit.covariance()[nonBendIdx]);
+    return (square(dist[0]) / hit.covariance()[bendIdx]) +
+           (square(dist[1]) / hit.covariance()[nonBendIdx]);
   } else if (hit.measuresLoc0()) {
-    chiSq = Acts::square(dist[0]) / hit.covariance()[nonBendIdx];
+    chiSq = square(dist[0]) / hit.covariance()[nonBendIdx];
   } else {
     chiSq = Acts::square(dist[0]) / hit.covariance()[bendIdx];
     if (hit.covariance()[nonBendIdx] > Acts::s_epsilon) {
