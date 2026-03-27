@@ -193,12 +193,12 @@ concept HasLayerNameMember =
 
 /// @brief Optional backend capability for barrel/endcap assembly discovery.
 template <typename BackendT>
-concept HasBarrelEndcapClassifier =
-    requires(const BackendT& backend, const typename BackendT::Element& element) {
-      { backend.isBarrel(element) } -> std::same_as<bool>;
-      { backend.isEndcap(element) } -> std::same_as<bool>;
-      { backend.isTracker(element) } -> std::same_as<bool>;
-    };
+concept HasBarrelEndcapClassifier = requires(
+    const BackendT& backend, const typename BackendT::Element& element) {
+  { backend.isBarrel(element) } -> std::same_as<bool>;
+  { backend.isEndcap(element) } -> std::same_as<bool>;
+  { backend.isTracker(element) } -> std::same_as<bool>;
+};
 
 /// @brief Concept that fully constrains a geometry backend usable with
 /// @ref BlueprintBuilder.
@@ -848,7 +848,8 @@ class BarrelEndcapAssembler {
   /// @return Shared pointer to the assembled Z-axis container node.
   [[nodiscard]] std::shared_ptr<
       Acts::Experimental::CylinderContainerBlueprintNode>
-  build() const requires(detail::HasBarrelEndcapClassifier<BackendT>);
+  build() const
+    requires(detail::HasBarrelEndcapClassifier<BackendT>);
 
   /// @brief Build the container node and attach it as a child of @p node.
   ///
