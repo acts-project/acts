@@ -166,7 +166,7 @@ DD4hepBackend::makeBeampipe() const {
 
   ACTS_INFO("Beampipe element found: " << beampipeElement->name());
 
-  const auto& tgTransform = beampipeElement->nominal().worldTransformation();
+  const auto tgTransform = beampipeElement->nominal().worldTransformation();
   auto [bounds, transform, thickness] =
       ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
           *beampipeElement->placement().ptr()->GetVolume()->GetShape(),
