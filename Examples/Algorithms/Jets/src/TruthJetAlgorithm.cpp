@@ -297,7 +297,7 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       // If jet labeling is enabled, classify the jet based on its hadronic
       // content
-      ActsExamples::JetLabel jetLabels;
+      ActsExamples::JetLabel jetLabel;
       if (m_cfg.doJetLabeling) {
         ACTS_VERBOSE("Classifying jet " << i);
         auto sample = timer.sample();
