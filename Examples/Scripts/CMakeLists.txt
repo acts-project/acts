@@ -1,4 +1,3 @@
-add_subdirectory(MaterialMapping)
 add_subdirectory(TrackingPerformance)
 
 if(ACTS_BUILD_EXAMPLES_ROOT)

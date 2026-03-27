@@ -77,6 +77,9 @@ source $BUILD/this_acts_withdeps.sh
 
 to make sure python can find the `acts` module.
 
+For a canonical description of the material mapping chain
+(recording -> mapping -> validation), see @ref material_mapping_workflow.
+
 ## Python based unit tests
 
 A number of unit tests based on the `pytest` library are shipped with the

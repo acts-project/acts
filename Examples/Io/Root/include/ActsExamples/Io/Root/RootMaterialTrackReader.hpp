@@ -37,13 +37,12 @@ class RootMaterialTrackReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    /// material collection to read
-    std::string outputMaterialTracks = "material-tracks";
-    /// name of the output tree
-    std::string treeName = "material-tracks";
+    /// material collection to be read from this file
+    std::string outputMaterialTracks = "material_tracks";
+    /// name of the input tree
+    std::string treeName = "material_tracks";
     /// List of input files
     std::vector<std::string> fileList;
-
     // Read surface information for the root file
     bool readCachedSurfaceInformation = false;
   };
