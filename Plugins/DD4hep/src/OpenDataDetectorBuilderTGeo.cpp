@@ -41,6 +41,16 @@ namespace ActsPlugins::DD4hep {
 
 namespace {
 
+const std::regex kTGeoPixelLayerFilter{"(?:PixelBarrel|PixelEndcap[NP])(\\d)"};
+const std::regex kTGeoShortStripLayerFilter{
+    "(?:ShortStripBarrel|ShortStripEndcap[NP])(\\d)"};
+const std::regex kTGeoLongStripLayerFilter{
+    "(?:LongStripBarrel|LongStripEndcap[NP])(\\d)"};
+
+const std::regex kTGeoPixelBarrelLayerFilter{"PixelBarrel\\d"};
+const std::regex kTGeoShortStripBarrelLayerFilter{"ShortStripBarrel\\d"};
+const std::regex kTGeoLongStripBarrelLayerFilter{"LongStripBarrel\\d"};
+
 struct TGeoLayerBinning {
   std::span<const std::size_t> barrelPhiBins = {};
   std::size_t barrelZBins = 0u;
@@ -273,23 +283,22 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
        .negativeEndcapName = "PixelEndcapN",
        .positiveEndcapName = "PixelEndcapP",
        .binning = kPixelLayerBinning,
-       .layerFilter = detail::kTGeoPixelLayerFilter,
-       .barrelLayerFilter = detail::kTGeoPixelBarrelLayerFilter,
+       .layerFilter = kTGeoPixelLayerFilter,
+       .barrelLayerFilter = kTGeoPixelBarrelLayerFilter,
        .negativeEndcapLayerFilter = detail::kPixelNegativeEndcapLayerFilter,
        .positiveEndcapLayerFilter = detail::kPixelPositiveEndcapLayerFilter});
-  addTGeoSubsystem(
-      builder, outer,
-      {.assembly = "ShortStrips",
-       .barrelName = "ShortStripBarrel",
-       .negativeEndcapName = "ShortStripEndcapN",
-       .positiveEndcapName = "ShortStripEndcapP",
-       .binning = kShortStripLayerBinning,
-       .layerFilter = detail::kTGeoShortStripLayerFilter,
-       .barrelLayerFilter = detail::kTGeoShortStripBarrelLayerFilter,
-       .negativeEndcapLayerFilter =
-           detail::kShortStripNegativeEndcapLayerFilter,
-       .positiveEndcapLayerFilter =
-           detail::kShortStripPositiveEndcapLayerFilter});
+  addTGeoSubsystem(builder, outer,
+                   {.assembly = "ShortStrips",
+                    .barrelName = "ShortStripBarrel",
+                    .negativeEndcapName = "ShortStripEndcapN",
+                    .positiveEndcapName = "ShortStripEndcapP",
+                    .binning = kShortStripLayerBinning,
+                    .layerFilter = kTGeoShortStripLayerFilter,
+                    .barrelLayerFilter = kTGeoShortStripBarrelLayerFilter,
+                    .negativeEndcapLayerFilter =
+                        detail::kShortStripNegativeEndcapLayerFilter,
+                    .positiveEndcapLayerFilter =
+                        detail::kShortStripPositiveEndcapLayerFilter});
   addTGeoSubsystem(
       builder, outer,
       {.assembly = "LongStrips",
@@ -297,8 +306,8 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
        .negativeEndcapName = "LongStripEndcapN",
        .positiveEndcapName = "LongStripEndcapP",
        .binning = kLongStripLayerBinning,
-       .layerFilter = detail::kTGeoLongStripLayerFilter,
-       .barrelLayerFilter = detail::kTGeoLongStripBarrelLayerFilter,
+       .layerFilter = kTGeoLongStripLayerFilter,
+       .barrelLayerFilter = kTGeoLongStripBarrelLayerFilter,
        .negativeEndcapLayerFilter = detail::kLongStripNegativeEndcapLayerFilter,
        .positiveEndcapLayerFilter =
            detail::kLongStripPositiveEndcapLayerFilter});
