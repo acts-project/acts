@@ -325,6 +325,16 @@ class Impl final : public TripletSeedFinder {
     const StripData stripB = calculateStripData(spB);
 
     for (auto topDoublet : topDoublets) {
+      // Pre-filter on doublet-stage cotTheta difference before expensive
+      // strip coordinate checks. The doublet cotTheta values are computed
+      // from SP centers and are approximate, so a generous cut is needed.
+      {
+        const float deltaCotTheta = cotThetaB - topDoublet.cotTheta();
+        if (deltaCotTheta * deltaCotTheta > m_cfg.cotThetaDiffMax2) {
+          continue;
+        }
+      }
+
       // protects against division by 0
       float dU = topDoublet.u() - Ub;
       if (dU == 0) {
@@ -550,6 +560,7 @@ TripletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
   const float pT2perRadius = square(highland / pTPerHelixRadius);
   sigmapT2perRadius = pT2perRadius * square(2 * sigmaScattering);
   multipleScattering2 = maxScatteringAngle2 * square(sigmaScattering);
+  cotThetaDiffMax2 = cotThetaDiffMax * cotThetaDiffMax;
 }
 
 std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(
