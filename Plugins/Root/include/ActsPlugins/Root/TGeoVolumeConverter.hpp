@@ -18,9 +18,18 @@ class Volume;
 }
 
 namespace ActsPlugins {
+/// Helper struct for converting supported ROOT `TGeoShape` instances into ACTS
+/// volumes.
 struct TGeoVolumeConverter {
+  /// Utility type; not instantiable.
   TGeoVolumeConverter() = delete;
 
+  /// Convert a cylindrical ROOT shape into an ACTS volume.
+  /// @param tgShape ROOT shape to convert.
+  /// @param tgTransform ROOT transform describing the placed volume.
+  /// @param lengthScale Unit scale applied when converting ROOT lengths to
+  ///        ACTS units.
+  /// @return Newly created ACTS volume.
   static std::unique_ptr<Acts::Volume> cylinderVolume(
       const TGeoShape& tgShape, const TGeoMatrix& tgTransform,
       double lengthScale = 10.);

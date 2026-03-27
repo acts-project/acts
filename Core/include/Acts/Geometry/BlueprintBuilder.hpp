@@ -260,7 +260,9 @@ class SensorLayer;
 ///   .addTo(parentNode);
 /// ```
 ///
-/// @tparam BackendT Geometry backend satisfying @ref detail::BlueprintBackend.
+/// @tparam BackendT Geometry backend that provides detector elements, layer
+///         specifications, hierarchy traversal, sensitive-element
+///         classification, and surface construction.
 template <detail::BlueprintBackend BackendT>
 class ElementLayerAssembler {
  public:
@@ -272,6 +274,11 @@ class ElementLayerAssembler {
   using Element = typename BackendT::Element;
   /// Backend layer-specification type.
   using LayerSpec = typename BackendT::LayerSpec;
+  /// Axis definition type, or `std::monostate` when the backend does not
+  /// support axis definitions.
+  using AxisDefinition =
+      std::conditional_t<detail::HasAxisDefinition<BackendT>,
+                         typename BackendT::AxisDefinition, std::monostate>;
   /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
   using LayerCustomizer = detail::LayerCustomizer<Element>;
 
@@ -295,7 +302,8 @@ class ElementLayerAssembler {
 
   /// @brief Set the axis definition used to orient sensitive surfaces.
   ///
-  /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+  /// Only available when the backend defines an @ref AxisDefinition type and
+  /// stores optional surface-axis information in `LayerSpec`.
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
@@ -309,7 +317,8 @@ class ElementLayerAssembler {
       /// @brief Set the axis definition used to derive the layer transform from the
       /// parent element shape.
       ///
-      /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+      /// Only available when the backend defines an @ref AxisDefinition type and
+      /// stores optional layer-axis information in `LayerSpec`.
       /// When set, the layer transform is extracted automatically from the
       /// geometry of the enclosing detector element.
       /// @param layerAxes Axis definition forwarded to `LayerSpec::layerAxes`.
@@ -408,6 +417,7 @@ class ElementLayerAssembler {
   /// - mutate a @ref LayerBlueprintNode in-place and return `void`.
   ///
   /// In both cases, the first argument is the source layer element.
+  /// @param customizer Callback applied to each created layer node.
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] ElementLayerAssembler&& onLayer(CustomizerT customizer) &&
@@ -508,7 +518,9 @@ class ElementLayerAssembler {
 ///   .addTo(parentNode);
 /// ```
 ///
-/// @tparam BackendT Geometry backend satisfying @ref detail::BlueprintBackend.
+/// @tparam BackendT Geometry backend that provides detector elements, layer
+///         specifications, hierarchy traversal, sensitive-element
+///         classification, and surface construction.
 template <detail::BlueprintBackend BackendT>
 class SensorLayerAssembler {
  public:
@@ -520,6 +532,11 @@ class SensorLayerAssembler {
   using Element = typename BackendT::Element;
   /// Backend layer-specification type.
   using LayerSpec = typename BackendT::LayerSpec;
+  /// Axis definition type, or `std::monostate` when the backend does not
+  /// support axis definitions.
+  using AxisDefinition =
+      std::conditional_t<detail::HasAxisDefinition<BackendT>,
+                         typename BackendT::AxisDefinition, std::monostate>;
   /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
   using LayerCustomizer = detail::LayerCustomizer<Element>;
   /// Callable that maps a sensor element to a string group key.
@@ -545,7 +562,8 @@ class SensorLayerAssembler {
 
   /// @brief Set the axis definition used to orient sensitive surfaces.
   ///
-  /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+  /// Only available when the backend defines an @ref AxisDefinition type and
+  /// stores optional surface-axis information in `LayerSpec`.
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
@@ -596,6 +614,7 @@ class SensorLayerAssembler {
   ///
   /// The callback may either return a (possibly replaced/wrapped) layer node,
   /// or mutate a layer node in-place and return `void`.
+  /// @param customizer Callback applied to each created layer node.
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] SensorLayerAssembler&& onLayer(CustomizerT customizer) &&
@@ -672,7 +691,9 @@ class SensorLayerAssembler {
 ///   .addTo(parentNode);
 /// ```
 ///
-/// @tparam BackendT Geometry backend satisfying @ref detail::BlueprintBackend.
+/// @tparam BackendT Geometry backend that provides detector elements, layer
+///         specifications, hierarchy traversal, sensitive-element
+///         classification, and surface construction.
 template <detail::BlueprintBackend BackendT>
 class SensorLayer {
  public:
@@ -684,6 +705,11 @@ class SensorLayer {
   using Element = typename BackendT::Element;
   /// Backend layer-specification type.
   using LayerSpec = typename BackendT::LayerSpec;
+  /// Axis definition type, or `std::monostate` when the backend does not
+  /// support axis definitions.
+  using AxisDefinition =
+      std::conditional_t<detail::HasAxisDefinition<BackendT>,
+                         typename BackendT::AxisDefinition, std::monostate>;
   /// Callback type that can replace or wrap a @ref LayerBlueprintNode.
   using LayerCustomizer = detail::LayerCustomizer<Element>;
 
@@ -707,7 +733,8 @@ class SensorLayer {
 
   /// @brief Set the axis definition used to orient sensitive surfaces.
   ///
-  /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+  /// Only available when the backend defines an @ref AxisDefinition type and
+  /// stores optional surface-axis information in `LayerSpec`.
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
@@ -738,6 +765,7 @@ class SensorLayer {
   ///
   /// The callback may either return a (possibly replaced/wrapped) layer node,
   /// or mutate a layer node in-place and return `void`.
+  /// @param customizer Callback applied to the created layer node.
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] SensorLayer&& onLayer(CustomizerT customizer) &&
@@ -810,7 +838,11 @@ class SensorLayer {
 ///   .addTo(rootNode);
 /// @endcode
 ///
-/// @tparam BackendT Geometry backend satisfying @ref detail::BlueprintBackend.
+/// This builder requires backend predicates that classify elements as barrel,
+/// endcap, and tracker components.
+/// @tparam BackendT Geometry backend that provides detector elements, layer
+///         specifications, hierarchy traversal, sensitive-element
+///         classification, and surface construction.
 template <detail::BlueprintBackend BackendT>
 class BarrelEndcapAssembler {
  public:
@@ -864,6 +896,7 @@ class BarrelEndcapAssembler {
   ///
   /// The callback may either return a (possibly replaced/wrapped) layer node,
   /// or mutate a layer node in-place and return `void`.
+  /// @param customizer Callback applied to each created layer node.
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] BarrelEndcapAssembler&& onLayer(CustomizerT customizer) &&
@@ -892,6 +925,8 @@ class BarrelEndcapAssembler {
   ///
   /// The callback may either return a (possibly replaced/wrapped) container
   /// node, or mutate a container node in-place and return `void`.
+  /// @param customizer Callback applied to each created barrel or endcap
+  ///        container node.
   /// @return `*this` (rvalue).
   template <typename CustomizerT>
   [[nodiscard]] BarrelEndcapAssembler&& onContainer(CustomizerT customizer) &&
@@ -924,7 +959,8 @@ class BarrelEndcapAssembler {
 
   /// @brief Set the axis definitions for both barrel and endcap layers at once.
   ///
-  /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+  /// Only available when the backend defines an @ref AxisDefinition type and
+  /// stores optional surface-axis information in `LayerSpec`.
   /// @param barrel Axis definition forwarded to barrel
   ///               @ref ElementLayerAssembler s.
   /// @param endcap Axis definition forwarded to endcap
@@ -936,7 +972,8 @@ class BarrelEndcapAssembler {
 
   /// @brief Set the axis definition used for endcap layers only.
   ///
-  /// Only available when the backend satisfies @ref detail::HasAxisDefinition.
+  /// Only available when the backend defines an @ref AxisDefinition type and
+  /// stores optional surface-axis information in `LayerSpec`.
   /// @param axes Axis definition forwarded to endcap
   ///             @ref ElementLayerAssembler s.
   /// @return `*this` (rvalue).
@@ -982,12 +1019,18 @@ class BarrelEndcapAssembler {
 /// It also exposes helpers for traversing and querying the detector element
 /// hierarchy, which are used internally by the assembler classes.
 ///
-/// The builder is parameterised on a backend type @p BackendT which must
-/// satisfy the @ref detail::BlueprintBackend concept. A backend encapsulates
-/// all geometry-framework-specific knowledge (e.g. DD4hep `DetElement`
+/// The builder is parameterised on a backend type @p BackendT. The backend
+/// must be constructible from its `Config` plus an `Acts::Logger`, expose
+/// `Element` and `LayerSpec` types, traverse the detector hierarchy via
+/// `world()` / `children()` / `parent()` / `nameOf()`, classify sensitive
+/// elements with `isSensitive()`, and build ACTS surfaces from sensitive
+/// elements and a layer specification. It encapsulates all
+/// geometry-framework-specific knowledge (e.g. DD4hep `DetElement`
 /// navigation, type-flag interpretation, surface conversion).
 ///
-/// @tparam BackendT Geometry backend satisfying @ref detail::BlueprintBackend.
+/// @tparam BackendT Geometry backend that provides detector elements, layer
+///         specifications, hierarchy traversal, sensitive-element
+///         classification, and surface construction.
 template <detail::BlueprintBackend BackendT>
 class BlueprintBuilder {
  public:
