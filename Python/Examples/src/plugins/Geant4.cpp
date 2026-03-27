@@ -58,7 +58,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
         mod, "Geant4ConstructionOptions")
         .def(py::init<>())
         .def_readwrite("regionCreators",
-                       &Geant4ConstructionOptions::regionCreators);
+                       &Geant4ConstructionOptions::regionCreators)
+        .def_readwrite("toggleGdmlValidation", &Geant4ConstructionOptions::toggleGdmlValidation);
   }
 
   {
@@ -71,7 +72,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c1, inputParticles, randomNumbers, detector,
+    ACTS_PYTHON_STRUCT(c1, inputParticles, randomNumbers,
+                       constructionOptions, detector,
                        geant4Handle);
   }
 

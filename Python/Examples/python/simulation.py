@@ -14,6 +14,7 @@ from acts.examples import (
     CsvVertexWriter,
 )
 import acts.examples.hepmc3
+import acts.examples.geant4
 
 # ROOT might not be available
 try:
@@ -658,7 +659,7 @@ def addGeant4(
     killAfterTime: float = float("inf"),
     killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
-    regionList: List[Any] = [],
+    detectorConstructionOptions: acts.examples.geant4.Geant4ConstructionOptions = acts.examples.geant4.Geant4ConstructionOptions(),
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -684,7 +685,7 @@ def addGeant4(
         if given, secondary particles are removed from simulation
     """
 
-    from acts.examples.geant4 import Geant4Simulation, SensitiveSurfaceMapper
+    from acts.examples.geant4 import Geant4Simulation, Geant4ConstructionOptions, SensitiveSurfaceMapper
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -696,12 +697,13 @@ def addGeant4(
     sensitiveMapper = SensitiveSurfaceMapper.create(
         smmConfig, customLogLevel(), trackingGeometry
     )
-
+        
     alg = Geant4Simulation(
         level=customLogLevel(),
         geant4Handle=__geant4Handle,
         detector=detector,
         randomNumbers=rnd,
+        constructionOptions=detectorConstructionOptions,
         inputParticles=inputParticles,
         outputParticles=outputParticles,
         outputSimHits=outputSimHits,
