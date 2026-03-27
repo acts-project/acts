@@ -153,8 +153,7 @@ DD4hepBackend::makeBeampipe() const {
     }
     if (beampipeElement.has_value()) {
       ACTS_WARNING("Multiple beampipe elements found, using first: "
-                   << beampipeElement->name()
-                   << ", ignoring: " << elem.name());
+                   << beampipeElement->name() << ", ignoring: " << elem.name());
       return;
     }
     beampipeElement = elem;
