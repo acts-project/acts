@@ -30,17 +30,12 @@ namespace ActsPlugins::DD4hep {
 
 namespace detail {
 
-inline const std::regex kPixelLayerFilter{"(?:PixelLayer|PixelEndcap[NP])(\\d)"};
+inline const std::regex kPixelLayerFilter{
+    "(?:PixelLayer|PixelEndcap[NP])(\\d)"};
 inline const std::regex kShortStripLayerFilter{
     "(?:ShortStripLayer|ShortStripEndcap[NP])(\\d)"};
 inline const std::regex kLongStripLayerFilter{
     "(?:LongStripLayer|LongStripEndcap[NP])(\\d)"};
-inline const std::regex kTGeoPixelLayerFilter{
-    "(?:PixelBarrel|PixelEndcap[NP])(\\d)"};
-inline const std::regex kTGeoShortStripLayerFilter{
-    "(?:ShortStripBarrel|ShortStripEndcap[NP])(\\d)"};
-inline const std::regex kTGeoLongStripLayerFilter{
-    "(?:LongStripBarrel|LongStripEndcap[NP])(\\d)"};
 inline const std::regex kPixelBarrelLayerFilter{"PixelLayer\\d"};
 inline const std::regex kPixelNegativeEndcapLayerFilter{"PixelEndcapN\\d"};
 inline const std::regex kPixelPositiveEndcapLayerFilter{"PixelEndcapP\\d"};
@@ -54,9 +49,6 @@ inline const std::regex kLongStripNegativeEndcapLayerFilter{
     "LongStripEndcapN\\d"};
 inline const std::regex kLongStripPositiveEndcapLayerFilter{
     "LongStripEndcapP\\d"};
-inline const std::regex kTGeoPixelBarrelLayerFilter{"PixelBarrel\\d"};
-inline const std::regex kTGeoShortStripBarrelLayerFilter{"ShortStripBarrel\\d"};
-inline const std::regex kTGeoLongStripBarrelLayerFilter{"LongStripBarrel\\d"};
 
 inline const Acts::ExtentEnvelope kBlueprintEnvelope =
     Acts::ExtentEnvelope::Zero()
@@ -96,9 +88,10 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
 
 /// Build the Open Data Detector tracking geometry using the TGeo backend with
 /// metadata extracted from DD4hep and explicit ODD layer-name patterns.
-std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcapViaTGeo(
-    const dd4hep::Detector& detector, const Acts::GeometryContext& gctx,
-    const Acts::Logger& logger);
+std::unique_ptr<Acts::TrackingGeometry>
+buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
+                                         const Acts::GeometryContext& gctx,
+                                         const Acts::Logger& logger);
 
 /// Build the Open Data Detector tracking geometry using the DirectLayer
 /// construction path (ElementLayerAssembler directly).
