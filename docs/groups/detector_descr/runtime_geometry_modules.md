@@ -48,12 +48,20 @@ You never fill this struct manually. Use the provided helper macros instead
 
 ## ABI compatibility
 
-Each ACTS build is tagged with an opaque string (`Acts_GEOMETRY_MODULE_ABI_TAG`)
-that encodes the library version. The loader checks that
-`module_abi_tag` from the shared library matches the tag compiled into the host
-`ActsCore` library. A mismatch causes an immediate `std::runtime_error`, so a
-module built against one ACTS version cannot accidentally be loaded by a
-different one.
+Each ACTS build is tagged with an opaque string (`ACTS_GEOMETRY_MODULE_ABI_TAG`)
+that encodes the host library ABI. Plain geometry modules use that tag as-is
+and are matched against the tag compiled into `ActsCore`.
+
+DD4hep geometry modules use a DD4hep-specific extension of that tag:
+
+```text
+${ACTS_GEOMETRY_MODULE_ABI_TAG}|dd4hep-${DD4hep_VERSION}
+```
+
+`loadDD4hepGeometryModule` matches `module_abi_tag` against the corresponding
+tag compiled into `Acts::PluginDD4hep`, so a DD4hep module must be built
+against both the same ACTS build and the same DD4hep version as the host
+plugin. Any mismatch causes an immediate `std::runtime_error`.
 
 ## Loading a module
 
@@ -101,8 +109,9 @@ required by `ACTS_DEFINE_GEOMETRY_MODULE`.
 
 @snippet{trimleft} CMakeLists.txt DD4hep Module CMake
 
-This links against `Acts::PluginDD4hep` instead of `Acts::Core` and sets the
-same ABI tag compile definition.
+This links against `Acts::PluginDD4hep` instead of `Acts::Core` and sets
+`ACTS_GEOMETRY_MODULE_ABI_TAG` to the DD4hep-specific tag derived from the
+installed ACTS tag plus `DD4hep_VERSION`.
 
 ## Lifetime management
 
@@ -139,9 +148,11 @@ checks in order before invoking the build function:
   programming error in the module.
 
 - **ABI tag mismatch.** `module_abi_tag` is compared against the tag baked into
-  the host `ActsCore` library at its own build time. A mismatch means the module
-  and the host were built from different ACTS versions and cannot safely
-  interoperate. Rebuild the module against the same ACTS installation.
+  the host loader library at its own build time (`ActsCore` for plain modules,
+  `Acts::PluginDD4hep` for DD4hep modules). A mismatch means the module and the
+  host were built from different ACTS or DD4hep versions and cannot safely
+  interoperate. Rebuild the module against the same ACTS installation and, for
+  DD4hep modules, the same DD4hep version.
 
 - **User-data type mismatch.** The `user_data_type` field in the descriptor is
   compared against the type the loader expects. If you call `loadGeometryModule`

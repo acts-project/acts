@@ -12,13 +12,19 @@
 
 #include <DD4hep/Detector.h>
 
+#ifndef ACTS_DD4HEP_GEOMETRY_MODULE_ABI_TAG
+#error \
+    "ACTS_DD4HEP_GEOMETRY_MODULE_ABI_TAG must be provided by CMake when building ActsPluginDD4hep."
+#endif
+
 namespace Acts {
 
 std::shared_ptr<TrackingGeometry> loadDD4hepGeometryModule(
     const std::filesystem::path& modulePath, const dd4hep::Detector& detector,
     const Logger& logger) {
-  return ::Acts::detail::loadGeometryModuleImpl(modulePath, "dd4hep::Detector",
-                                                &detector, logger);
+  return ::Acts::detail::loadGeometryModuleImpl(
+      modulePath, ACTS_DD4HEP_GEOMETRY_MODULE_ABI_TAG, "dd4hep::Detector",
+      &detector, logger);
 }
 
 }  // namespace Acts
