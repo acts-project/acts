@@ -151,7 +151,7 @@ jobs:
           ccache -z &&
           CI/dependencies/run.sh .env
           cmake -B build -S .
-          --preset=gitlab-ci-clangtidy
+          --preset=github-ci-clangtidy
 
       - name: Run codegen
         run: cmake --build build --target ActsCodegen
@@ -179,3 +179,45 @@ jobs:
         run: >
           uv run CI/clang_tidy/run_clang_tidy_pr.py
           annotate fixes.yml
+
+  cppcheck:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2404:83
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Install cppcheck
+        run: apt-get update && apt-get install -y cppcheck
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Configure
+        run: >
+          CI/dependencies/run.sh .env
+          cmake -B build -S .
+          --preset=github-ci-cppcheck
+
+      - name: Analyze (all files)
+        run: >
+          uv run CI/cppcheck/run_cppcheck_pr.py
+          analyze build results.xml --all
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cppcheck-results
+          path: results.xml
+
+      - name: Annotate
+        run: >
+          uv run CI/cppcheck/run_cppcheck_pr.py
+          annotate results.xml
