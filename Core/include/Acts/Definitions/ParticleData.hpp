@@ -130,6 +130,11 @@ bool isInteracting(PdgParticle pdg);
 /// @return Hadron type
 HadronType hadronType(PdgParticle pdg);
 
+/// @brief Get lepton type classification
+/// @param pdg PDG particle number
+/// @return Lepton type
+LeptonType leptonType(PdgParticle pdg);
+
 }  // namespace ParticleIdHelper
 
 }  // namespace Acts
