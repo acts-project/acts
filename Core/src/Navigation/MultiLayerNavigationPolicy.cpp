@@ -9,6 +9,7 @@
 #include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 
 #include "Acts/Geometry/ReferenceGenerators.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
@@ -49,30 +50,39 @@ void MultiLayerNavigationPolicy::initializeCandidates(
     const GeometryContext& gctx, const NavigationArguments& args,
     NavigationPolicyState& /*state*/, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
-  ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates initialization for volume"
-               << m_volume.volumeName() << " @ "
-               << toString(m_volume.localToGlobalTransform(gctx)));
-
   const Transform3& itransform = m_volume.globalToLocalTransform(gctx);
   const Vector3 locPosition = itransform * args.position;
   const Vector3 locDirection = itransform.linear() * args.direction;
+  ACTS_VERBOSE(
+      "MultiLayerNavigationPolicy() - Candidate initialization for volume "
+      << m_volume.volumeName() << ", " << m_volume.volumeBounds() << " @ "
+      << toString(m_volume.localToGlobalTransform(gctx))
+      << "\ntrack local position " << toString(locPosition)
+      << ", direction: " << toString(locDirection)
+      << ", inside: " << m_volume.volumeBounds().inside(locPosition));
 
   std::vector<Vector2> path = generatePath(locPosition, locDirection);
+  ACTS_VERBOSE("MultiLayerNavigationPolicy() - Created "
+               << path.size() << " points along the path.");
 
   const auto& surfaces = m_volume.surfaces();
   std::vector<const Surface*> surfCandidates = {};
   surfCandidates.reserve(surfaces.size());
 
-  for (const auto& pos : path) {
+  for (const Vector2& pos : path) {
     // Local access
+
     std::vector<std::size_t> fAccessor = {0u, 1u};
     const auto& indices = m_indexedGrid.grid.atPosition(
         GridAccessHelpers::accessLocal<GridType>(pos, fAccessor));
+    ACTS_VERBOSE("MultiLayerNavigationPolicy() - Fetch "
+                 << indices.size() << " candidates for point "
+                 << toString(pos));
     std::ranges::transform(indices, std::back_inserter(surfCandidates),
-                           [&](const auto& i) { return &surfaces[i]; });
+                           [&](const std::size_t i) { return &surfaces[i]; });
   }
 
-  ACTS_VERBOSE("MultiLayerNavigationPolicy Candidates reported "
+  ACTS_VERBOSE("MultiLayerNavigationPolicy() - reported "
                << surfCandidates.size() << " candidates. "
                << "\n " << printCandidates(surfCandidates));
 
