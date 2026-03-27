@@ -71,8 +71,9 @@ const char* geometryModuleHostAbiTag() noexcept {
 namespace Acts::detail {
 
 std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
-    const std::filesystem::path& modulePath, const char* expectedUserDataType,
-    const void* userData, const Logger& logger) {
+    const std::filesystem::path& modulePath, const char* expectedAbiTag,
+    const char* expectedUserDataType, const void* userData,
+    const Logger& logger) {
   auto library = openSharedLibrary(modulePath);
   auto entryPoint = resolveEntrypointV1(modulePath, library);
   const ActsGeometryModuleV1* descriptor = entryPoint();
@@ -83,12 +84,13 @@ std::shared_ptr<TrackingGeometry> loadGeometryModuleImpl(
       descriptor->destroy == nullptr) {
     throw std::runtime_error("Geometry module descriptor is incomplete");
   }
-  if (std::strcmp(descriptor->module_abi_tag, geometryModuleHostAbiTag()) !=
-      0) {
+  if (expectedAbiTag == nullptr) {
+    throw std::runtime_error("Expected geometry module ABI tag is null");
+  }
+  if (std::strcmp(descriptor->module_abi_tag, expectedAbiTag) != 0) {
     throw std::runtime_error(std::format(
         "Geometry module ABI mismatch: module='{}' host='{}' path='{}'",
-        descriptor->module_abi_tag, geometryModuleHostAbiTag(),
-        modulePath.string()));
+        descriptor->module_abi_tag, expectedAbiTag, modulePath.string()));
   }
 
   // Validate user_data_type: both sides must agree on whether userData is
@@ -134,7 +136,8 @@ namespace Acts {
 
 std::shared_ptr<TrackingGeometry> loadGeometryModule(
     const std::filesystem::path& modulePath, const Logger& logger) {
-  return detail::loadGeometryModuleImpl(modulePath, nullptr, nullptr, logger);
+  return detail::loadGeometryModuleImpl(modulePath, geometryModuleHostAbiTag(),
+                                        nullptr, nullptr, logger);
 }
 
 }  // namespace Acts

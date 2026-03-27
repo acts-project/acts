@@ -15,12 +15,24 @@ function(acts_add_dd4hep_geometry_module target)
             "ACTS_GEOMETRY_MODULE_ABI_TAG is not set; cannot configure DD4hep geometry module target '${target}'."
         )
     endif()
+    if(NOT DEFINED DD4hep_VERSION OR DD4hep_VERSION STREQUAL "")
+        message(
+            FATAL_ERROR
+            "DD4hep_VERSION is not set; cannot configure DD4hep geometry module target '${target}'."
+        )
+    endif()
+
+    set(
+        _acts_dd4hep_geometry_module_abi_tag
+        "${ACTS_GEOMETRY_MODULE_ABI_TAG}|dd4hep-${DD4hep_VERSION}"
+    )
 
     add_library(${target} SHARED ${ARGN})
 
     target_link_libraries(${target} PRIVATE Acts::PluginDD4hep)
     target_compile_definitions(
         ${target}
-        PRIVATE ACTS_GEOMETRY_MODULE_ABI_TAG="${ACTS_GEOMETRY_MODULE_ABI_TAG}"
+        PRIVATE
+            ACTS_GEOMETRY_MODULE_ABI_TAG="${_acts_dd4hep_geometry_module_abi_tag}"
     )
 endfunction()
