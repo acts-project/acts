@@ -7,6 +7,8 @@ acts_add_library(
     src/EventData/Particle.cpp
     src/EventData/ParticleOutcome.cpp
     src/EventData/ProcessType.cpp
+    src/EventData/HitContainer2.cpp
+    src/EventData/ParticleContainer2.cpp
     src/Kernel/SimulationError.cpp
     src/Physics/BetheHeitler.cpp
     src/Physics/StandardInteractions.cpp
