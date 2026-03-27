@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
