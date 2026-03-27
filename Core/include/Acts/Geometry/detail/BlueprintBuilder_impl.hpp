@@ -20,7 +20,7 @@ namespace Acts::Experimental {
 namespace detail {
 
 template <typename F, typename G, typename... Rest>
-auto compose(F f, G g, Rest... rest) {
+auto compose(const F& f, const G& g, Rest... rest) {
   auto fg = [=](auto&& x) -> decltype(auto) {
     return std::invoke(f, g(std::forward<decltype(x)>(x)));
   };
