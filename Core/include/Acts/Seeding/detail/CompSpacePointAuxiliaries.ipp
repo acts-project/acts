@@ -10,7 +10,6 @@
 
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
@@ -111,7 +110,6 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
     SquareMatrix<2> stereoDecomp{SquareMatrix<2>::Identity()};
     stereoDecomp(1, 0) = stereoDecomp(0, 1) = -stripAngle * invDist;
     stereoDecomp(1, 1) = stereoDecomp(0, 0) = invDist;
-    auto copyDist = dist;
     dist = stereoDecomp * dist;
     return (Acts::square(dist[0]) / hit.covariance()[bendIdx]) +
            (Acts::square(dist[1]) / hit.covariance()[nonBendIdx]);
