@@ -11,9 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -67,48 +69,24 @@ namespace ActsExamples {
 
 namespace {
 
-class MeasurementSelector {
- public:
-  using Traj = Acts::VectorMultiTrajectory;
+struct TrackStateCreator final
+    : public Acts::Experimental::TrackStateCreatorBase<TrackStateCreator> {
+  using Base = Acts::Experimental::TrackStateCreatorBase<TrackStateCreator>;
+  using TrackStateContainer = Acts::VectorMultiTrajectory;
+  using TrackStateProxy = typename TrackStateContainer::TrackStateProxy;
+  using State =
+      typename Base::template State<TrackStateProxy, TrackStateContainer>;
 
-  explicit MeasurementSelector(Acts::MeasurementSelector selector)
-      : m_selector(std::move(selector)) {}
+  const MeasurementContainer* measurements = nullptr;
+  std::optional<ConstSeedProxy> seed;
 
-  void setSeed(const std::optional<ConstSeedProxy>& seed) { m_seed = seed; }
-
-  Acts::Result<std::pair<std::vector<Traj::TrackStateProxy>::iterator,
-                         std::vector<Traj::TrackStateProxy>::iterator>>
-  select(std::vector<Traj::TrackStateProxy>& candidates, bool& isOutlier,
-         const Acts::Logger& logger) const {
-    if (m_seed.has_value()) {
-      std::vector<Traj::TrackStateProxy> newCandidates;
-
-      for (const auto& candidate : candidates) {
-        if (isSeedCandidate(candidate)) {
-          newCandidates.push_back(candidate);
-        }
-      }
-
-      if (!newCandidates.empty()) {
-        candidates = std::move(newCandidates);
-      }
-    }
-
-    return m_selector.select<Acts::VectorMultiTrajectory>(candidates, isOutlier,
-                                                          logger);
-  }
-
- private:
-  Acts::MeasurementSelector m_selector;
-  std::optional<ConstSeedProxy> m_seed;
-
-  bool isSeedCandidate(const Traj::TrackStateProxy& candidate) const {
+  bool isSeedCandidate(const TrackStateProxy& candidate) const {
     assert(candidate.hasUncalibratedSourceLink());
-    assert(m_seed.has_value());
+    assert(seed.has_value());
 
     const Acts::SourceLink& sourceLink = candidate.getUncalibratedSourceLink();
 
-    for (const ConstSpacePointProxy sp : m_seed->spacePoints()) {
+    for (const ConstSpacePointProxy sp : seed->spacePoints()) {
       for (const Acts::SourceLink& sl : sp.sourceLinks()) {
         if (sourceLink.get<IndexSourceLink>() == sl.get<IndexSourceLink>()) {
           return true;
@@ -117,6 +95,59 @@ class MeasurementSelector {
     }
 
     return false;
+  }
+
+  // TODO
+  // void select(std::vector<TrackStateProxy>& candidates, bool& isOutlier,
+  //             const Acts::Logger& logger) const {
+  //   if (seed.has_value()) {
+  //     std::vector<TrackStateProxy> newCandidates;
+
+  //     for (const auto& candidate : candidates) {
+  //       if (isSeedCandidate(candidate)) {
+  //         newCandidates.push_back(candidate);
+  //       }
+  //     }
+
+  //     if (!newCandidates.empty()) {
+  //       candidates = std::move(newCandidates);
+  //     }
+  //   }
+  // }
+
+  auto measurementRange(State& state) const {
+    const auto rangePair =
+        measurements->orderedIndices().equal_range(state.surface->geometryId());
+
+    return std::ranges::subrange(rangePair.first, rangePair.second);
+  }
+
+  Acts::SourceLink measurementSourceLink(
+      State& state, const IndexSourceLink& measurement) const {
+    static_cast<void>(state);
+
+    return Acts::SourceLink{measurement};
+  }
+
+  Acts::VariableBoundSubspaceHelper measurementSubspace(
+      State& state, const IndexSourceLink& measurement) const {
+    static_cast<void>(state);
+
+    return measurements->at(measurement.index()).subspaceHelper();
+  }
+
+  auto measuredParameters(State& state,
+                          const IndexSourceLink& measurement) const {
+    static_cast<void>(state);
+
+    return measurements->at(measurement.index()).parameters();
+  }
+
+  auto measurementCovariance(State& state,
+                             const IndexSourceLink& measurement) const {
+    static_cast<void>(state);
+
+    return measurements->at(measurement.index()).covariance();
   }
 };
 
@@ -321,29 +352,18 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
 
   BranchStopper branchStopper(m_cfg);
-  MeasurementSelector measSel{
-      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
-  IndexSourceLinkAccessor slAccessor;
-  slAccessor.container = &measurements.orderedIndices();
-
-  using TrackStateCreatorType =
-      Acts::TrackStateCreator<IndexSourceLinkAccessor::Iterator,
-                              TrackContainer>;
-  TrackStateCreatorType trackStateCreator;
-  trackStateCreator.sourceLinkAccessor
-      .template connect<&IndexSourceLinkAccessor::range>(&slAccessor);
-  trackStateCreator.calibrator
-      .template connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
-  trackStateCreator.measurementSelector
-      .template connect<&MeasurementSelector::select>(&measSel);
+  TrackStateCreator trackStateCreator;
+  trackStateCreator.measurements = &measurements;
 
   Extensions extensions;
   extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
       typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
   extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
   extensions.createTrackStates
-      .template connect<&TrackStateCreatorType ::createTrackStates>(
+      .template connect<&TrackStateCreator::createTrackStates<
+          TrackStateProxy,
+          typename TrackContainer::TrackStateContainerBackend>>(
           &trackStateCreator);
 
   Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
@@ -469,7 +489,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       }
 
       if (m_cfg.stayOnSeed) {
-        measSel.setSeed(seed);
+        trackStateCreator.seed = seed;
       }
     }
 
