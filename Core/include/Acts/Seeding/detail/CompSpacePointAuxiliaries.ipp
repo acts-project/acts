@@ -117,8 +117,8 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
   } else if (hit.measuresLoc0()) {
     chiSq = square(dist[0]) / hit.covariance()[nonBendIdx];
   } else {
-    chiSq = Acts::square(dist[0]) / hit.covariance()[bendIdx];
-    if (hit.covariance()[nonBendIdx] > Acts::s_epsilon) {
+    chiSq = square(dist[0]) / hit.covariance()[bendIdx];
+    if (hit.covariance()[nonBendIdx] > s_epsilon) {
       chiSq += square(dist[1]) / hit.covariance()[nonBendIdx];
     }
   }
