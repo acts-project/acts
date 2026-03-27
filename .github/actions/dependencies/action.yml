@@ -13,7 +13,7 @@ inputs:
   spack_version:
     description: 'Version of Spack to use'
     required: false
-    default: 'develop-2026-03-22'
+    default: 'bf1637a793b507a76bdc06e1169a373c83a5e535'
   spack_repo_version:
     description: 'Version of Spack builtin repo to use'
     required: false
