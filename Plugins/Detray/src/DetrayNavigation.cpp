@@ -57,19 +57,8 @@ detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
 std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     const SurfaceArrayNavigationPolicy& policy, const GeometryContext& gctx,
     const SurfaceLookupFunction& surfaceLookup, const Logger& logger) {
-  const auto* gridLookup =
-      dynamic_cast<const SurfaceArray::ISurfaceGridLookup*>(
-          &policy.surfaceArray().gridLookup());
-
-  if (gridLookup == nullptr) {
-    throw std::runtime_error(
-        "SurfaceArrayNavigationPolicy: The surface array does not provide a "
-        "grid based lookup object. This is not currently convertible to "
-        "detray");
-  }
-
   AnyGridConstView gridView = [&] {
-    auto r = gridLookup->getGridView();
+    auto r = policy.surfaceArray().getGridView();
     if (r == std::nullopt) {
       throw std::runtime_error(
           "SurfaceArrayNavigationPolicy: The surface array does not provide a "
@@ -78,7 +67,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     return r.value();
   }();
 
-  const Surface* surface = gridLookup->surfaceRepresentation();
+  const Surface* surface = policy.surfaceArray().surfaceRepresentation();
   if (surface == nullptr) {
     throw std::runtime_error(
         "SurfaceArrayNavigationPolicy: The surface array does not provide a "
@@ -98,7 +87,7 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 
   ACTS_DEBUG("Converting surface array with " << gridView.dimensions()
                                               << " dims to detray payload");
-  std::vector axes = gridLookup->getAxes();
+  std::vector axes = policy.surfaceArray().getAxes();
 
   if (axes.size() != 2) {
     throw std::runtime_error(
@@ -110,24 +99,24 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
   const IAxis& axis1 = *axes.at(1);
 
   // Get binning values to determine acceleration structure type
-  std::vector binValues = gridLookup->binningValues();
-  if (binValues.empty()) {
-    // Fall back to default based on surface type
-    switch (surface->type()) {
-      using enum Surface::SurfaceType;
-      case Cylinder:
-        binValues = {AxisDirection::AxisPhi, AxisDirection::AxisZ};
-        break;
-      case Disc:
-        binValues = {AxisDirection::AxisR, AxisDirection::AxisPhi};
-        break;
-      case Plane:
-        binValues = {AxisDirection::AxisX, AxisDirection::AxisY};
-        break;
-      default:
-        throw std::runtime_error(
-            "SurfaceArrayNavigationPolicy: Unsupported surface type");
-    }
+  std::vector<AxisDirection> binValues;
+
+  // Fall back to default based on surface type
+  switch (surface->type()) {
+    using enum Surface::SurfaceType;
+    using enum AxisDirection;
+    case Cylinder:
+      binValues = {AxisPhi, AxisZ};
+      break;
+    case Disc:
+      binValues = {AxisR, AxisPhi};
+      break;
+    case Plane:
+      binValues = {AxisX, AxisY};
+      break;
+    default:
+      throw std::runtime_error(
+          "SurfaceArrayNavigationPolicy: Unsupported surface type");
   }
 
   // Create the detray surface grid payload
