@@ -685,7 +685,11 @@ def addGeant4(
         if given, secondary particles are removed from simulation
     """
 
-    from acts.examples.geant4 import Geant4Simulation, Geant4ConstructionOptions, SensitiveSurfaceMapper
+    from acts.examples.geant4 import (
+        Geant4Simulation,
+        Geant4ConstructionOptions,
+        SensitiveSurfaceMapper,
+    )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -697,7 +701,7 @@ def addGeant4(
     sensitiveMapper = SensitiveSurfaceMapper.create(
         smmConfig, customLogLevel(), trackingGeometry
     )
-        
+
     alg = Geant4Simulation(
         level=customLogLevel(),
         geant4Handle=__geant4Handle,
