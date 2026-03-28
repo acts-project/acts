@@ -74,7 +74,17 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsDD4hep, m) {
     auto c = py::class_<OpenDataDetector::Config, DD4hepDetectorBase::Config>(
                  odd, "Config")
                  .def(py::init<>());
-    // ACTS_PYTHON_STRUCT(c, );
+    py::enum_<OpenDataDetector::Config::ConstructionMethod>(
+        c, "ConstructionMethod")
+        .value("BarrelEndcap",
+               OpenDataDetector::Config::ConstructionMethod::BarrelEndcap)
+        .value("DirectLayer",
+               OpenDataDetector::Config::ConstructionMethod::DirectLayer)
+        .value(
+            "DirectLayerGrouped",
+            OpenDataDetector::Config::ConstructionMethod::DirectLayerGrouped);
+    ACTS_PYTHON_STRUCT(c, detectorElementFactory, blueprintEnvelope,
+                       layerEnvelope, constructionMethod);
 
     patchKwargsConstructor(c);
   }

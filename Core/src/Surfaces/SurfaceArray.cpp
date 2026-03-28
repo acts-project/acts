@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Ranges.hpp"
 
+#include <format>
 #include <ranges>
 #include <utility>
 
