@@ -30,6 +30,7 @@
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -37,6 +38,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <span>
 #include <type_traits>
 #include <unordered_map>
 
@@ -185,6 +187,10 @@ struct Gx2FitterOptions {
   /// Max number of iterations during the fit (abort condition)
   std::size_t nUpdateMax = 5;
 
+  /// Number of iterations before missed measurements are tried to
+  /// be added back to the track
+  std::size_t nCoolDownMissed = 10;
+
   /// Check for convergence (abort condition). Set to 0 to skip.
   double relChi2changeCutOff = 1e-7;
 };
@@ -230,6 +236,9 @@ struct Gx2FitterResult {
 
   /// Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
+
+  /// Hit measurement surfaces
+  std::vector<const Surface*> hitActiveSurfaces;
 
   /// Measurement surfaces handled in both forward and
   /// backward filtering
@@ -756,6 +765,8 @@ class Gx2Fitter {
 
     /// Allows retrieving measurements for a surface
     const std::unordered_map<const Surface*, SourceLink>* inputMeasurements{};
+    /// Allows to skip measurements that cannot be considered as active
+    std::span<const Surface*> vetoedActiveSurfaces{};
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = false;
@@ -892,8 +903,10 @@ class Gx2Fitter {
 
       // Here we handle all measurements
       if (auto sourceLinkIt = inputMeasurements->find(surface);
-          sourceLinkIt != inputMeasurements->end()) {
+          sourceLinkIt != inputMeasurements->end() &&
+          (!Acts::rangeContainsValue(vetoedActiveSurfaces, surface))) {
         ACTS_DEBUG("    The surface contains a measurement.");
+        result.hitActiveSurfaces.push_back(surface);
 
         // Transport the covariance to the surface
         stepper.transportCovarianceToBound(state.stepping, *surface,
@@ -1202,6 +1215,9 @@ class Gx2Fitter {
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
     std::unordered_map<const Surface*, SourceLink> inputMeasurements{};
+    // Keep track of the hits that were not hit during the propagation
+    std::vector<const Surface*> missedMeasurements{};
+    std::size_t lastMissedIter{0u};
 
     for (; it != end; ++it) {
       inputMeasurements.try_emplace(gx2fOptions.extensions.surfaceAccessor(*it),
@@ -1258,6 +1274,12 @@ class Gx2Fitter {
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
+      if (missedMeasurements.size() > 0u &&
+          lastMissedIter + gx2fOptions.nCoolDownMissed <= nUpdate) {
+        ACTS_DEBUG("Try to add back " << missedMeasurements.size()
+                                      << " measurements");
+        missedMeasurements.clear();
+      }
       // set up propagator and co
       PropagatorOptions propagatorOptions{gx2fOptions.propagatorPlainOptions};
 
@@ -1269,6 +1291,7 @@ class Gx2Fitter {
 
       auto& gx2fActor = propagatorOptions.actorList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
+      gx2fActor.vetoedActiveSurfaces = missedMeasurements;
       gx2fActor.multipleScattering = false;
       gx2fActor.extensions = gx2fOptions.extensions;
       gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
@@ -1288,6 +1311,7 @@ class Gx2Fitter {
 
       auto& r = propagatorState.template get<Gx2FitterResult<traj_t>>();
       r.fittedStates = &trajectoryTempBackend;
+      r.hitActiveSurfaces.reserve(inputMeasurements.size());
 
       // Clear the track container. It could be more performant to update the
       // existing states, but this needs some more thinking.
@@ -1295,6 +1319,23 @@ class Gx2Fitter {
 
       // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
+
+      if (r.hitActiveSurfaces.size() + missedMeasurements.size() !=
+          inputMeasurements.size()) {
+        ACTS_DEBUG("Propagation only hit "
+                   << r.hitActiveSurfaces.size() << "/"
+                   << (inputMeasurements.size() - missedMeasurements.size())
+                   << " surfaces. Remove non hit surfaces from the list");
+        for (const auto [surface, _] : inputMeasurements) {
+          if (!Acts::rangeContainsValue(r.hitActiveSurfaces, surface)) {
+            missedMeasurements.push_back(surface);
+            ACTS_VERBOSE(" -- Remove hit associated to "
+                         << surface->geometryId() << ".");
+          }
+        }
+      }
+      ACTS_VERBOSE("Found " << r.hitActiveSurfaces.size() << " measurements, "
+                            << ", " << r.measurementHoles << " holes");
 
       auto result =
           m_propagator.makeResult(std::move(propagatorState), propagationResult,
@@ -1308,6 +1349,7 @@ class Gx2Fitter {
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
       auto& propRes = *result;
+
       GX2FResult gx2fResult = std::move(propRes.template get<GX2FResult>());
 
       auto track = trackContainerTemp.makeTrack();
@@ -1379,7 +1421,7 @@ class Gx2Fitter {
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << extendedSystem.chi2());
 
-      if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
+      if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 1) &&
           (std::abs(extendedSystem.chi2() / oldChi2sum - 1) <
            gx2fOptions.relChi2changeCutOff)) {
         ACTS_DEBUG("Abort with relChi2changeCutOff after "
@@ -1535,7 +1577,8 @@ class Gx2Fitter {
 
       ACTS_VERBOSE("aMatrix:\n"
                    << extendedSystem.aMatrix() << "\n"
-                   << "bVector:\n"
+                   << "determinant: " << extendedSystem.aMatrix().determinant()
+                   << ", bVector:\n"
                    << extendedSystem.bVector() << "\n"
                    << "deltaParamsExtended:\n"
                    << deltaParamsExtended << "\n"
