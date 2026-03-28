@@ -59,7 +59,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeant4, mod) {
         .def(py::init<>())
         .def_readwrite("regionCreators",
                        &Geant4ConstructionOptions::regionCreators)
-        .def_readwrite("toggleGdmlValidation", &Geant4ConstructionOptions::toggleGdmlValidation);
+        .def_readwrite("enableGdmlValidation", &Geant4ConstructionOptions::toggleGdmlValidation);
   }
 
   {
