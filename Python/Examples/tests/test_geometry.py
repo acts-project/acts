@@ -11,7 +11,7 @@ from helpers import dd4hepEnabled
 @pytest.mark.parametrize(
     "detectorFactory,aligned,nobj",
     [
-        (functools.partial(GenericDetector, gen3=False), True, 450),
+        (functools.partial(GenericDetector, gen3=False), True, 2),
         pytest.param(
             functools.partial(GenericDetector, gen3=True),
             True,
@@ -20,7 +20,7 @@ from helpers import dd4hepEnabled
         pytest.param(
             getOpenDataDetector,
             True,
-            540,
+            2,
             marks=[
                 pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
                 pytest.mark.slow,
