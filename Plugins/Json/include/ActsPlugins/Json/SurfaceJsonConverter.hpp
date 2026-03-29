@@ -92,6 +92,10 @@ class SurfaceJsonConverter {
     static Config defaultConfig();
   };
 
+  /// Delete the default constructor
+  /// as the class is purely static (for now)
+  SurfaceJsonConverter() = delete;
+
   /// Contextual conversion of a surface
   ///
   /// @param gctx the geometry context for this
