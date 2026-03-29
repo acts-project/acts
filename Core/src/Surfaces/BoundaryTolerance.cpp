@@ -97,4 +97,20 @@ bool BoundaryTolerance::isTolerated(
   throw std::logic_error("Unsupported tolerance type");
 }
 
+void BoundaryTolerance::print(std::ostream& ostr) const {
+  if (isInfinite()) {
+    ostr << "no boundary limit applied";
+  } else if (isNone()) {
+    ostr << "strict boundary limit";
+  } else if (hasAbsoluteEuclidean()) {
+    ostr << "boundary limit  dX < " << asAbsoluteEuclidean().tolerance;
+  } else if (hasChi2Bound()) {
+    ostr << "local chi2 " << asChi2Bound().maxChi2 << " with weights:\n"
+         << asChi2Bound().weightMatrix() << "\n";
+  } else if (hasChi2Cartesian()) {
+    ostr << "local chi2 " << asChi2Cartesian().maxChi2 << " with weights:\n"
+         << asChi2Cartesian().weightMatrix() << "\n";
+  }
+}
+
 }  // namespace Acts
