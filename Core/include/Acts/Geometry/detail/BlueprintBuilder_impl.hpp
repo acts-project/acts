@@ -21,8 +21,8 @@ namespace detail {
 
 template <typename F, typename G, typename... Rest>
 auto compose(const F& f, const G& g, Rest... rest) {
-  auto fg = [=](auto&& x) -> decltype(auto) {
-    return std::invoke(f, g(std::forward<decltype(x)>(x)));
+  auto fg = [=]<typename T>(T&& x) -> decltype(auto) {
+    return std::invoke(f, g(std::forward<T>(x)));
   };
   if constexpr (sizeof...(rest) == 0) {
     return fg;
@@ -159,7 +159,7 @@ ElementLayerAssembler<BackendT>::setContainerName(
 template <detail::BlueprintBackend BackendT>
 ElementLayerAssembler<BackendT>&&
 ElementLayerAssembler<BackendT>::setLayerNameSuffix(
-    std::optional<std::string> layerNameSuffix) && {
+    const std::optional<std::string>& layerNameSuffix) && {
   m_layerSpec.layerName = std::move(layerNameSuffix);
   return std::move(*this);
 }
@@ -623,21 +623,23 @@ BarrelEndcapAssembler<BackendT>::build() const
   ACTS_DEBUG("Have " << endcaps.size() << " endcap elements in assembly "
                      << assemblyName);
 
-  std::shared_ptr node =
+  auto node =
       std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
           assemblyName, Acts::AxisDirection::AxisZ);
 
   auto maybeAddAxes = [](const auto& axes) {
-    return [&axes](auto&& assembler) {
+    return [&axes]<typename T>(T&& assembler) {
       if constexpr (detail::HasAxisDefinition<BackendT>) {
-        return std::move(assembler).setSensorAxes(axes.value());
+        return std::forward<T>(assembler).setSensorAxes(axes.value());
       } else {
-        return std::move(assembler);
+        return std::forward<T>(assembler);
       }
     };
   };
 
-  auto build = [](auto&& assembler) { return assembler.build(); };
+  auto build = []<typename T>(T&& assembler) {
+    return std::forward<T>(assembler).build();
+  };
 
   auto addTo =
       std::bind_front(&Acts::Experimental::BlueprintNode::addChild, node.get());
@@ -751,7 +753,7 @@ BlueprintBuilder<BackendT>::findDetElementByName(
 
 template <detail::BlueprintBackend BackendT>
 std::string BlueprintBuilder<BackendT>::getPathToElementName(
-    const Element& elem, const std::string& separator) const {
+    const Element& elem, std::string_view separator) const {
   std::vector<std::string> names;
   names.emplace_back(m_backend.nameOf(elem));
 
@@ -783,8 +785,8 @@ BlueprintBuilder<BackendT>::findDetElementByNamePattern(
   std::vector<Element> matches;
 
   std::function<void(const Element&)> visit = [&](const Element& elem) {
-    const std::string elemName = m_backend.nameOf(elem);
-    if (std::regex_match(elemName, pattern)) {
+    if (const std::string elemName = m_backend.nameOf(elem);
+        std::regex_match(elemName, pattern)) {
       matches.push_back(elem);
     }
     for (const auto& child : m_backend.children(elem)) {

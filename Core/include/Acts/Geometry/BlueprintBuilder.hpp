@@ -307,37 +307,39 @@ class ElementLayerAssembler {
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-      [[nodiscard]] ElementLayerAssembler&& setSensorAxes(
-          typename B::AxisDefinition axes) &&
-      requires(detail::HasAxisDefinition<B>) {
-        m_layerSpec.axes = std::move(axes);
-        return std::move(*this);
-      }
+  [[nodiscard]] ElementLayerAssembler&& setSensorAxes(
+      typename B::AxisDefinition axes) &&
+    requires(detail::HasAxisDefinition<B>)
+  {
+    m_layerSpec.axes = std::move(axes);
+    return std::move(*this);
+  }
 
-      /// @brief Set the axis definition used to derive the layer transform from the
-      /// parent element shape.
-      ///
-      /// Only available when the backend defines an @ref AxisDefinition type and
-      /// stores optional layer-axis information in `LayerSpec`.
-      /// When set, the layer transform is extracted automatically from the
-      /// geometry of the enclosing detector element.
-      /// @param layerAxes Axis definition forwarded to `LayerSpec::layerAxes`.
-      /// @return `*this` (rvalue).
-      template <typename B = BackendT>
-      [[nodiscard]] ElementLayerAssembler&& setLayerAxes(
-          typename B::AxisDefinition layerAxes) &&
-      requires(detail::HasAxisDefinition<B>) {
-        m_layerSpec.layerAxes = std::move(layerAxes);
-        return std::move(*this);
-      }
+  /// @brief Set the axis definition used to derive the layer transform from the
+  /// parent element shape.
+  ///
+  /// Only available when the backend defines an @ref AxisDefinition type and
+  /// stores optional layer-axis information in `LayerSpec`.
+  /// When set, the layer transform is extracted automatically from the
+  /// geometry of the enclosing detector element.
+  /// @param layerAxes Axis definition forwarded to `LayerSpec::layerAxes`.
+  /// @return `*this` (rvalue).
+  template <typename B = BackendT>
+  [[nodiscard]] ElementLayerAssembler&& setLayerAxes(
+      typename B::AxisDefinition layerAxes) &&
+    requires(detail::HasAxisDefinition<B>)
+  {
+    m_layerSpec.layerAxes = std::move(layerAxes);
+    return std::move(*this);
+  }
 
-      /// @brief Set the regex filter used to select layer elements inside the
-      /// container by name string.
-      /// @param pattern Regular-expression string; converted to `std::regex`
-      ///                internally.
-      /// @return `*this` (rvalue).
-      [[nodiscard]] ElementLayerAssembler&& setLayerFilter(
-          const std::string& pattern) &&;
+  /// @brief Set the regex filter used to select layer elements inside the
+  /// container by name string.
+  /// @param pattern Regular-expression string; converted to `std::regex`
+  ///                internally.
+  /// @return `*this` (rvalue).
+  [[nodiscard]] ElementLayerAssembler&& setLayerFilter(
+      const std::string& pattern) &&;
 
   /// @brief Set the regex filter used to select layer elements inside the
   /// container.
@@ -373,7 +375,7 @@ class ElementLayerAssembler {
   ///                        name.
   /// @return `*this` (rvalue).
   [[nodiscard]] ElementLayerAssembler&& setLayerNameSuffix(
-      std::optional<std::string> layerNameSuffix) &&;
+      const std::optional<std::string>& layerNameSuffix) &&;
 
   /// @brief Set an explicit list of layer-representative elements.
   ///
@@ -567,18 +569,19 @@ class SensorLayerAssembler {
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-      [[nodiscard]] SensorLayerAssembler&& setSensorAxes(
-          typename B::AxisDefinition axes) &&
-      requires(detail::HasAxisDefinition<B>) {
-        m_layerSpec.axes = std::move(axes);
-        return std::move(*this);
-      }
+  [[nodiscard]] SensorLayerAssembler&& setSensorAxes(
+      typename B::AxisDefinition axes) &&
+    requires(detail::HasAxisDefinition<B>)
+  {
+    m_layerSpec.axes = std::move(axes);
+    return std::move(*this);
+  }
 
-      /// @brief Set the sensor elements to assemble into layers.
-      /// @param sensors Sensor elements (leaf-level sensitives).
-      /// @return `*this` (rvalue).
-      [[nodiscard]] SensorLayerAssembler&& setSensors(
-          std::vector<Element> sensors) &&;
+  /// @brief Set the sensor elements to assemble into layers.
+  /// @param sensors Sensor elements (leaf-level sensitives).
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayerAssembler&& setSensors(
+      std::vector<Element> sensors) &&;
 
   /// @brief Group sensors into layers by key (required).
   ///
@@ -738,17 +741,17 @@ class SensorLayer {
   /// @param axes Axis definition forwarded to `LayerSpec::axes`.
   /// @return `*this` (rvalue).
   template <typename B = BackendT>
-      [[nodiscard]] SensorLayer&& setSensorAxes(
-          typename B::AxisDefinition axes) &&
-      requires(detail::HasAxisDefinition<B>) {
-        m_layerSpec.axes = std::move(axes);
-        return std::move(*this);
-      }
+  [[nodiscard]] SensorLayer&& setSensorAxes(typename B::AxisDefinition axes) &&
+    requires(detail::HasAxisDefinition<B>)
+  {
+    m_layerSpec.axes = std::move(axes);
+    return std::move(*this);
+  }
 
-      /// @brief Set the sensor elements to assemble into the layer.
-      /// @param sensors Sensor elements (leaf-level sensitives).
-      /// @return `*this` (rvalue).
-      [[nodiscard]] SensorLayer&& setSensors(std::vector<Element> sensors) &&;
+  /// @brief Set the sensor elements to assemble into the layer.
+  /// @param sensors Sensor elements (leaf-level sensitives).
+  /// @return `*this` (rvalue).
+  [[nodiscard]] SensorLayer&& setSensors(std::vector<Element> sensors) &&;
 
   /// @brief Set the name for the produced layer node (required).
   /// @param name Layer node name.
@@ -1169,7 +1172,7 @@ class BlueprintBuilder {
   ///                  (default: `"|"`).
   /// @return The assembled path string.
   std::string getPathToElementName(const Element& elem,
-                                   const std::string& separator = "|") const;
+                                   std::string_view separator = "|") const;
 
   /// @brief Collect all elements in a subtree whose names match a regex.
   ///
