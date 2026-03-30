@@ -78,6 +78,9 @@ class Particle {
     return p;
   }
 
+  /// Kill the particle by setting the outcome to a non-alive status.
+  /// @param outcome The outcome status to set for the killed particle (must not be Alive)
+  /// @throws std::invalid_argument if the provided outcome is Alive
   void killParticle(ParticleOutcome outcome) {
     if (outcome == ParticleOutcome::Alive) {
       throw std::invalid_argument("Cannot kill particle with outcome 'Alive'.");
@@ -172,25 +175,36 @@ class Particle {
   /// Set the absolute momentum.
   /// @param absMomentum Absolute momentum magnitude
   /// @return Reference to this particle for method chaining
+  /// @throws std::invalid_argument if absMomentum is negative
   Particle &setAbsoluteMomentum(double absMomentum) {
-    if (absMomentum < 0.) {
+    if (absMomentum < 0) {
       throw std::invalid_argument("Absolute momentum cannot be negative.");
     }
     m_absMomentum = absMomentum;
     return *this;
   }
 
-  /// Reduce the energy by the given amount.
+  /// Reduce the energy by the given amount. If the energy loss exceeds the
+  /// current energy, the particle is killed with the specified outcome. If
+  /// stopping the particle was not expected (stoppedOutcome is Alive), an
+  /// exception is thrown.
   /// @param delta The energy loss amount to subtract from the current energy
+  /// @param stoppedOutcome The outcome to set if the energy loss exceeds the current energy
   /// @return Reference to this particle for method chaining
-  Particle &loseEnergy(double delta) {
-    const double currentEnergy = energy();
-    if (delta > currentEnergy) {
-      throw std::invalid_argument(
-          "Energy loss cannot exceed the current energy of the particle.");
+  /// @throws std::invalid_argument if the energy loss exceeds the current energy and stoppedOutcome is Alive
+  Particle &loseEnergy(
+      double delta, ParticleOutcome stoppedOutcome = ParticleOutcome::Alive) {
+    const double newEnergy = energy() - delta;
+    if (newEnergy < m_mass) {
+      if (stoppedOutcome == ParticleOutcome::Alive) {
+        throw std::invalid_argument(
+            "Energy loss cannot exceed the current energy of the particle if "
+            "the particle is to remain alive.");
+      }
+      killParticle(stoppedOutcome);
+    } else {
+      m_absMomentum = Acts::fastCathetus(newEnergy, m_mass);
     }
-    const double newEnergy = currentEnergy - delta;
-    m_absMomentum = Acts::fastCathetus(newEnergy, m_mass);
     return *this;
   }
 
@@ -395,17 +409,17 @@ class Particle {
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
-  double m_charge = 0.;
-  double m_mass = 0.;
+  double m_charge = 0;
+  double m_mass = 0;
   // kinematics, i.e. things that change over the particle lifetime.
   Acts::Vector3 m_direction = Acts::Vector3::UnitZ();
-  double m_absMomentum = 0.;
+  double m_absMomentum = 0;
   Acts::Vector4 m_position4 = Acts::Vector4::Zero();
   /// proper time in the particle rest frame
-  double m_properTime = 0.;
+  double m_properTime = 0;
   // accumulated material
-  double m_pathInX0 = 0.;
-  double m_pathInL0 = 0.;
+  double m_pathInX0 = 0;
+  double m_pathInL0 = 0;
   /// number of hits
   std::uint32_t m_numberOfHits = 0;
   /// reference surface

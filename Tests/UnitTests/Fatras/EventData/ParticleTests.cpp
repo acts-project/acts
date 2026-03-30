@@ -10,8 +10,10 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/EventData/ParticleOutcome.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
@@ -64,36 +66,42 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_CHECK_EQUAL(particle.fourMomentum().x(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.fourMomentum().y(), 0_GeV);
   BOOST_CHECK_EQUAL(particle.fourMomentum().z(), 0_GeV);
-  BOOST_CHECK_EQUAL(particle.fourMomentum().w(), std::hypot(1_GeV, 2_GeV));
+  BOOST_CHECK_EQUAL(particle.fourMomentum().w(), Acts::fastHypot(1_GeV, 2_GeV));
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 2_GeV);
-  BOOST_CHECK_EQUAL(particle.energy(), std::hypot(1_GeV, 2_GeV));
+  BOOST_CHECK_EQUAL(particle.energy(), Acts::fastHypot(1_GeV, 2_GeV));
   // particle direction must be normalized
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
 
   // lose some energy
   particle.loseEnergy(100_MeV);
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
+  BOOST_CHECK_GT(particle.transverseMomentum(), 0_GeV);
   BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
-  CHECK_CLOSE_REL(particle.energy(), std::hypot(1_GeV, 2_GeV) - 100_MeV, eps);
+  BOOST_CHECK_GT(particle.absoluteMomentum(), 0_GeV);
+  CHECK_CLOSE_REL(particle.energy(), Acts::fastHypot(1_GeV, 2_GeV) - 100_MeV,
+                  eps);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
 
   // lose some more energy
   particle.loseEnergy(200_MeV);
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
+  BOOST_CHECK_GT(particle.transverseMomentum(), 0_GeV);
   BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
-  CHECK_CLOSE_REL(particle.energy(), std::hypot(1_GeV, 2_GeV) - 300_MeV, eps);
+  BOOST_CHECK_GT(particle.absoluteMomentum(), 0_GeV);
+  CHECK_CLOSE_REL(particle.energy(), Acts::fastHypot(1_GeV, 2_GeV) - 300_MeV,
+                  eps);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
 
   // lose a lot of energy
-  particle.loseEnergy(3_GeV);
-  BOOST_CHECK_EQUAL(particle.transverseMomentum(), 0.);
-  BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 0.);
-  BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
-  CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-
-  // losing even more energy does nothing
   BOOST_CHECK_THROW(particle.loseEnergy(10_GeV), std::invalid_argument);
+
+  // lose a lot of energy
+  particle.loseEnergy(10_GeV, ParticleOutcome::KilledInteraction);
+  BOOST_CHECK_GT(particle.transverseMomentum(), 0.);
+  BOOST_CHECK_GT(particle.absoluteMomentum(), 0.);
+  CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
+  BOOST_CHECK_EQUAL(particle.outcome(), ParticleOutcome::KilledInteraction);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
