@@ -12,7 +12,7 @@ execnet==2.1.2
     # via pytest-xdist
 filelock==3.25.2
     # via -r Python/Examples/tests/requirements.in
-fsspec==2026.1.0
+fsspec==2026.3.0
     # via
     #   awkward
     #   uproot
@@ -44,7 +44,7 @@ pytest==9.0.2
     #   pytest-repeat
     #   pytest-timeout
     #   pytest-xdist
-pytest-check==2.7.7
+pytest-check==2.8.0
     # via -r Python/Examples/tests/requirements.in
 pytest-repeat==0.9.4
     # via -r Python/Examples/tests/requirements.in
