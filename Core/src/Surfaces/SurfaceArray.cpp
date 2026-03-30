@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -19,9 +20,8 @@
 #include <utility>
 
 using namespace Acts::Ranges;
-namespace Acts {
 
-SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
+namespace Acts {
 
 SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                            std::vector<std::shared_ptr<const Surface>> surfaces,
@@ -38,6 +38,7 @@ SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
 }
 
 namespace {
+
 struct SingleElementLookupImpl : SurfaceArray::ISurfaceGridLookup {
   explicit SingleElementLookupImpl(const Surface* element)
       : m_element({element}) {}
@@ -53,8 +54,20 @@ struct SingleElementLookupImpl : SurfaceArray::ISurfaceGridLookup {
     return m_element;
   }
 
+  std::span<const Surface* const> lookup(
+      const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+      const Vector3& /*direction*/) const override {
+    return m_element;
+  }
+
   const SurfaceVector& neighbors(const Vector3& /*position*/,
                                  const Vector3& /*direction*/) const override {
+    return m_element;
+  }
+
+  std::span<const Surface* const> neighbors(
+      const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+      const Vector3& /*direction*/) const override {
     return m_element;
   }
 
@@ -164,7 +177,7 @@ namespace {
 /// @tparam Axis1 The first axis
 /// @tparam Axis2 The second axis
 template <class Axis1, class Axis2>
-struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
+struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   /// Grid type storing surface vectors with two axes
   using Grid_t = Grid<SurfaceVector, Axis1, Axis2>;
 
@@ -213,8 +226,14 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
 
   const SurfaceVector& lookup(const Vector3& position,
                               const Vector3& direction) const override {
-    auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+    const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+    return m_grid.at(findGlobalBin(gctx, position, direction,
+                                   std::numeric_limits<double>::infinity()));
+  }
 
+  std::span<const Surface* const> lookup(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const override {
     return m_grid.at(findGlobalBin(gctx, position, direction,
                                    std::numeric_limits<double>::infinity()));
   }
@@ -240,25 +259,20 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
   /// @return @c SurfaceVector at given bin. Copy of all bins selected
   const SurfaceVector& neighbors(const Vector3& position,
                                  const Vector3& direction) const override {
-    auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+    const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+    return neighborsImpl(gctx, position, direction);
+  }
 
-    const auto surfaceLocal = findSurfaceLocal(
-        gctx, position, direction, std::numeric_limits<double>::infinity());
-    if (!surfaceLocal.has_value()) {
-      static SurfaceVector emptyVector;
-      return emptyVector;
-    }
-
-    const std::array<double, 2> gridLocal = surfaceToGridLocal(*surfaceLocal);
-    const std::size_t globalBin = m_grid.globalBinFromPosition(gridLocal);
-
-    const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
-    const auto neighborDistance = std::clamp<double>(
-        1.0 / std::abs(normal.dot(direction)), 1, m_maxNeighborDistance);
-    const std::uint8_t neighborDistanceIndex =
-        static_cast<std::uint8_t>(neighborDistance - 1);
-
-    return getNeighborSurfacePack(globalBin, neighborDistanceIndex);
+  /// @brief Performs a lookup at @c pos, but returns neighbors as well
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position Lookup position
+  /// @param direction Lookup direction
+  /// @return A span of surface pointers
+  std::span<const Surface* const> neighbors(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const override {
+    return neighborsImpl(gctx, position, direction);
   }
 
   /// @brief Returns the total size of the grid (including under/overflow
@@ -277,7 +291,7 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
   /// @param bin the global bin index
   /// @return The bin center
   Vector3 getBinCenter(std::size_t bin) const override {
-    auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+    const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
     return getBinCenterImpl(gctx, bin);
   }
 
@@ -492,6 +506,28 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
     }
     const std::array<double, 2> gridLocal = surfaceToGridLocal(*surfaceLocal);
     return m_grid.globalBinFromPosition(gridLocal);
+  }
+
+  const SurfaceVector& neighborsImpl(const GeometryContext& gctx,
+                                     const Vector3& position,
+                                     const Vector3& direction) const {
+    const auto surfaceLocal = findSurfaceLocal(
+        gctx, position, direction, std::numeric_limits<double>::infinity());
+    if (!surfaceLocal.has_value()) {
+      static SurfaceVector emptyVector;
+      return emptyVector;
+    }
+
+    const std::array<double, 2> gridLocal = surfaceToGridLocal(*surfaceLocal);
+    const std::size_t globalBin = m_grid.globalBinFromPosition(gridLocal);
+
+    const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
+    const auto neighborDistance = std::clamp<double>(
+        1.0 / std::abs(normal.dot(direction)), 1, m_maxNeighborDistance);
+    const std::uint8_t neighborDistanceIndex =
+        static_cast<std::uint8_t>(neighborDistance - 1);
+
+    return getNeighborSurfacePack(globalBin, neighborDistanceIndex);
   }
 };
 

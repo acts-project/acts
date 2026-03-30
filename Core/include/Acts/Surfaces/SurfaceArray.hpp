@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
@@ -34,7 +35,7 @@ class SurfaceArray {
  public:
   /// @brief Base interface for all surface lookups.
   struct ISurfaceGridLookup {
-    virtual ~ISurfaceGridLookup() = 0;
+    virtual ~ISurfaceGridLookup() = default;
 
     /// @brief Fill provided surfaces into the contained @c Grid.
     /// @param gctx The current geometry context object, e.g. alignment
@@ -47,8 +48,19 @@ class SurfaceArray {
     /// @param position Lookup position
     /// @param direction Lookup direction
     /// @return @c SurfaceVector at given bin
+    [[deprecated("Use lookup with GeometryContext instead")]]
     virtual const SurfaceVector& lookup(const Vector3& position,
                                         const Vector3& direction) const = 0;
+
+    /// @brief Performs lookup at @c pos and returns bin content as const
+    /// reference
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param position Lookup position
+    /// @param direction Lookup direction
+    /// @return A span of surface pointers
+    virtual std::span<const Surface* const> lookup(
+        const GeometryContext& gctx, const Vector3& position,
+        const Vector3& direction) const = 0;
 
     /// @brief Performs lookup at global bin and returns bin content as
     /// reference
@@ -67,8 +79,19 @@ class SurfaceArray {
     /// @param position Lookup position
     /// @param direction Lookup direction
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
+    [[deprecated("Use neighbors with GeometryContext instead")]]
     virtual const SurfaceVector& neighbors(const Vector3& position,
                                            const Vector3& direction) const = 0;
+
+    /// @brief Performs a lookup at @c pos, but returns neighbors as well
+    ///
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param position Lookup position
+    /// @param direction Lookup direction
+    /// @return A span of surface pointers
+    virtual std::span<const Surface* const> neighbors(
+        const GeometryContext& gctx, const Vector3& position,
+        const Vector3& direction) const = 0;
 
     /// @brief Returns the total size of the grid (including under/overflow
     /// bins)
@@ -161,7 +184,21 @@ class SurfaceArray {
     /// @return @c SurfaceVector at given bin
     const SurfaceVector& lookup(const Vector3& position,
                                 const Vector3& direction) const override {
+      ACTS_PUSH_IGNORE_DEPRECATED()
       return m_impl->lookup(position, direction);
+      ACTS_POP_IGNORE_DEPRECATED()
+    }
+
+    /// @brief Performs lookup at @c pos and returns bin content as const
+    /// reference
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param position Lookup position
+    /// @param direction Lookup direction
+    /// @return A span of surface pointers
+    std::span<const Surface* const> lookup(
+        const GeometryContext& gctx, const Vector3& position,
+        const Vector3& direction) const override {
+      return m_impl->lookup(gctx, position, direction);
     }
 
     /// @brief Performs lookup at global bin and returns bin content as
@@ -187,7 +224,21 @@ class SurfaceArray {
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     const SurfaceVector& neighbors(const Vector3& position,
                                    const Vector3& direction) const override {
+      ACTS_PUSH_IGNORE_DEPRECATED()
       return m_impl->neighbors(position, direction);
+      ACTS_POP_IGNORE_DEPRECATED()
+    }
+
+    /// @brief Performs a lookup at @c pos, but returns neighbors as well
+    ///
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param position Lookup position
+    /// @param direction Lookup direction
+    /// @return A span of surface pointers
+    std::span<const Surface* const> neighbors(
+        const GeometryContext& gctx, const Vector3& position,
+        const Vector3& direction) const override {
+      return m_impl->neighbors(gctx, position, direction);
     }
 
     /// @brief Returns the total size of the grid (including under/overflow
@@ -266,6 +317,14 @@ class SurfaceArray {
     }
 
     /// @brief Lookup, always returns @c element
+    /// @return span of surface pointers containing only @c element
+    std::span<const Surface* const> lookup(
+        const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+        const Vector3& /*direction*/) const override {
+      return m_element;
+    }
+
+    /// @brief Lookup, always returns @c element
     /// @return reference to vector containing only @c element
     SurfaceVector& lookup(std::size_t /*bin*/) override { return m_element; }
 
@@ -279,6 +338,14 @@ class SurfaceArray {
     /// @return reference to vector containing only @c element
     const SurfaceVector& neighbors(
         const Vector3& /*position*/,
+        const Vector3& /*direction*/) const override {
+      return m_element;
+    }
+
+    /// @brief Lookup, always returns @c element
+    /// @return span of surface pointers containing only @c element
+    std::span<const Surface* const> neighbors(
+        const GeometryContext& /*gctx*/, const Vector3& /*position*/,
         const Vector3& /*direction*/) const override {
       return m_element;
     }
@@ -353,7 +420,20 @@ class SurfaceArray {
   /// position
   const SurfaceVector& at(const Vector3& position,
                           const Vector3& direction) const {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return p_gridLookup->lookup(position, direction);
+    ACTS_POP_IGNORE_DEPRECATED()
+  }
+
+  /// @brief Get all surfaces in bin given by position @p pos.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position the lookup position
+  /// @param direction the lookup direction
+  /// @return span of surface pointers of the bin at that position
+  std::span<const Surface* const> at(const GeometryContext& gctx,
+                                     const Vector3& position,
+                                     const Vector3& direction) const {
+    return p_gridLookup->lookup(gctx, position, direction);
   }
 
   /// @brief Get all surfaces in bin given by global bin index @p bin.
@@ -372,12 +452,23 @@ class SurfaceArray {
   /// @param position The position to lookup
   /// @param direction The direction to lookup
   /// @return Merged @c SurfaceVector of neighbors and nominal
-  /// @note The @c SurfaceVector will be combined. For technical reasons, the
-  ///       different bin content vectors have to be copied, so the resulting
-  ///       vector contains copies.
+  [[deprecated("Use neighbors with GeometryContext instead")]]
   const SurfaceVector& neighbors(const Vector3& position,
                                  const Vector3& direction) const {
+    ACTS_PUSH_IGNORE_DEPRECATED()
     return p_gridLookup->neighbors(position, direction);
+    ACTS_POP_IGNORE_DEPRECATED()
+  }
+
+  /// @brief Get all surfaces in bin at @p pos and its neighbors
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position to lookup
+  /// @param direction The direction to lookup
+  /// @return span of surface pointers of neighbors and nominal
+  std::span<const Surface* const> neighbors(const GeometryContext& gctx,
+                                            const Vector3& position,
+                                            const Vector3& direction) const {
+    return p_gridLookup->neighbors(gctx, position, direction);
   }
 
   /// @brief Get the size of the underlying grid structure including
