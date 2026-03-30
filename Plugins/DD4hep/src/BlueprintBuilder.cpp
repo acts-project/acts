@@ -147,7 +147,8 @@ std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
 DD4hepBackend::makeBeampipe() const {
   std::optional<dd4hep::DetElement> beampipeElement = std::nullopt;
 
-  visitSubtree(world(), [&](const dd4hep::DetElement& elem) {
+  visitSubtree(world(), [this,
+                         &beampipeElement](const dd4hep::DetElement& elem) {
     if (!dd4hep::DetType{elem.typeFlag()}.is(dd4hep::DetType::BEAMPIPE)) {
       return;
     }
@@ -183,8 +184,8 @@ DD4hepBackend::makeBeampipe() const {
   auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
       0, bounds->get(Acts::CylinderBounds::eR),
       bounds->get(Acts::CylinderBounds::eHalfLengthZ));
-  std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
-      transform, volumeBounds, beampipeElement->name());
+  auto volume = std::make_unique<Acts::TrackingVolume>(transform, volumeBounds,
+                                                       beampipeElement->name());
   return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
       std::move(volume));
 }

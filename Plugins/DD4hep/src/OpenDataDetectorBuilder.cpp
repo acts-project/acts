@@ -38,7 +38,7 @@ namespace ActsPlugins::DD4hep {
 
 namespace {
 
-auto makeLayerCustomizer(BlueprintBuilder& builder, std::string det,
+auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
                          std::regex layerFilter) {
   return [&builder, det = std::move(det), layerFilter = std::move(layerFilter)](
              const std::optional<dd4hep::DetElement>& elem,
@@ -54,15 +54,16 @@ auto makeLayerCustomizer(BlueprintBuilder& builder, std::string det,
     using enum SrfArrayNavPol::LayerType;
 
     SrfArrayNavPol::Config navCfg;
-    const bool isBarrelLayer =
-        layer.layerType() ==
-        Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder;
-    if (isBarrelLayer) {
+
+    if (layer.layerType() ==
+        Acts::Experimental::LayerBlueprintNode::LayerType::Cylinder) {
+      // Barrel layer
       navCfg.layerType = Cylinder;
       navCfg.bins = {
           builder.backend().constant("{}_b{}_sf_b_phi", det, layerIdx),
           builder.backend().constant("{}_b_sf_b_z", det)};
     } else {
+      // Endcap layer
       navCfg.layerType = Disc;
       navCfg.bins = {builder.backend().constant("{}_e_sf_b_r", det),
                      builder.backend().constant("{}_e_sf_b_phi", det)};
@@ -255,13 +256,13 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
     auto layerCustomizer =
         makeLayerCustomizer(builder, std::move(det), layerFilter);
 
-    auto sensorToLayerKey = [&](const dd4hep::DetElement& elem) -> std::string {
+    auto sensorToLayerKey = [&](const dd4hep::DetElement& elem) {
       auto current = elem;
       const auto world = builder.backend().world();
       while (!(current == world)) {
         std::cmatch match;
-        const std::string name{builder.backend().nameOf(current)};
-        if (std::regex_search(name.c_str(), match, layerFilter) &&
+        if (const std::string name{builder.backend().nameOf(current)};
+            std::regex_search(name.c_str(), match, layerFilter) &&
             match.size() > 1) {
           return builder.getPathToElementName(current);
         }
