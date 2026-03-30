@@ -8,7 +8,7 @@
 
 
 #include <boost/test/unit_test.hpp>
-#include "Acts/Seeding2/AdaptiveHoughTransform.hpp"
+#include "Acts/Seeding2/HoughAccumulatorSection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 using namespace Acts;
 
@@ -16,11 +16,11 @@ namespace ActsTests {
     
 auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-BOOST_AUTO_TEST_SUITE(AdaptiveHoughTransformSuite)
+BOOST_AUTO_TEST_SUITE(HoughAccumulatorSectionSuite)
 
 
 BOOST_AUTO_TEST_CASE(construct) {
-    AccumulatorSection s(10., 100., -5., -50.0);
+    HoughAccumulatorSection s(10., 100., -5., -50.0);
     BOOST_CHECK_EQUAL(s.xSize(), 10.);
     BOOST_CHECK_EQUAL(s.ySize(), 100.);
     BOOST_CHECK_EQUAL(s.xBegin(), -5.);
@@ -28,10 +28,10 @@ BOOST_AUTO_TEST_CASE(construct) {
 }
 
 BOOST_AUTO_TEST_CASE(split_vertical) {
-    AccumulatorSection s(10., 100., -5., -50.0);
+    HoughAccumulatorSection s(10., 100., -5., -50.0);
 
-    AccumulatorSection t = s.top();
-    AccumulatorSection b = s.bottom();
+    HoughAccumulatorSection t = s.top();
+    HoughAccumulatorSection b = s.bottom();
     BOOST_CHECK_EQUAL(s.xSize(), t.xSize());
     BOOST_CHECK_EQUAL(s.xSize(), b.xSize());
     BOOST_CHECK_EQUAL(0.5*s.ySize(), t.ySize());
@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(split_vertical) {
 }
 
 BOOST_AUTO_TEST_CASE(split_horizontal) {
-    AccumulatorSection s(10., 100., -5., -50.0);
+    HoughAccumulatorSection s(10., 100., -5., -50.0);
 
-    AccumulatorSection l = s.left();
-    AccumulatorSection r = s.right();
+    HoughAccumulatorSection l = s.left();
+    HoughAccumulatorSection r = s.right();
     BOOST_CHECK_EQUAL(s.ySize(), l.ySize());
     BOOST_CHECK_EQUAL(s.ySize(), r.ySize());
 
@@ -59,24 +59,37 @@ BOOST_AUTO_TEST_CASE(split_horizontal) {
 }
 
 BOOST_AUTO_TEST_CASE(split_4) {
-    AccumulatorSection s(10., 100., -5., -50.0);
-    AccumulatorSection tl = s.topLeft();
-    AccumulatorSection br = s.bottomRight();
+    // it is asymmetric and shifted
+    HoughAccumulatorSection s(10., 100., 5., 50.0);
+    HoughAccumulatorSection tl = s.topLeft();
+    HoughAccumulatorSection tr = s.topRight();
+    HoughAccumulatorSection bl = s.bottomLeft();
+    HoughAccumulatorSection br = s.bottomRight();
 
-    BOOST_CHECK_EQUAL(tl.xBegin(), -5.0);
-    BOOST_CHECK_EQUAL(tl.yBegin(), 0.0);
+    BOOST_CHECK_EQUAL(tl.xBegin(), 5.0);
+    BOOST_CHECK_EQUAL(tl.yBegin(), 100.0);
     BOOST_CHECK_EQUAL(tl.xSize(), 5.0);
     BOOST_CHECK_EQUAL(tl.ySize(), 50.0);
 
-    BOOST_CHECK_EQUAL(br.xBegin(), 0.0);
-    BOOST_CHECK_EQUAL(br.yBegin(), -50.0);
+    BOOST_CHECK_EQUAL(tr.xBegin(), 10.0);
+    BOOST_CHECK_EQUAL(tr.yBegin(), 100.0);
+    BOOST_CHECK_EQUAL(tr.xSize(), 5.0);
+    BOOST_CHECK_EQUAL(tr.ySize(), 50.0);
+
+    BOOST_CHECK_EQUAL(bl.xBegin(), 5.0);
+    BOOST_CHECK_EQUAL(bl.yBegin(), 50.0);
+    BOOST_CHECK_EQUAL(bl.xSize(), 5.0);
+    BOOST_CHECK_EQUAL(bl.ySize(), 50.0);
+
+    BOOST_CHECK_EQUAL(br.xBegin(), 10.0);
+    BOOST_CHECK_EQUAL(br.yBegin(), 50.0);
     BOOST_CHECK_EQUAL(br.xSize(), 5.0);
     BOOST_CHECK_EQUAL(br.ySize(), 50.0);
 }
 
 BOOST_AUTO_TEST_CASE(is_line_inside) {
     // rather asymmetric section
-    AccumulatorSection s(10., 2., -5., -1.0);
+    HoughAccumulatorSection s(10., 2., -5., -1.0);
 
     // line above
     BOOST_CHECK( ! s.isLineInside( [](float x){ return 0.5*x+5.; }) );
@@ -96,7 +109,7 @@ BOOST_AUTO_TEST_CASE(is_line_inside) {
 
 BOOST_AUTO_TEST_CASE(is_crossing_inside) {
     // rather asymmetric section again
-    AccumulatorSection s(10., 6., -5., -6.);
+    HoughAccumulatorSection s(10., 6., -5., -6.);
     // test lines (best to draw it)
     std::function<float(float)> l1 = [](float x){ return 1.0*x+3.; };
     std::function<float(float)> l2 = [](float x){ return 0.5*x+1.; };
@@ -108,7 +121,6 @@ BOOST_AUTO_TEST_CASE(is_crossing_inside) {
     BOOST_CHECK(! s.isCrossingInside(l1, l3));
     BOOST_CHECK(! s.isCrossingInside(l4, l3));
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

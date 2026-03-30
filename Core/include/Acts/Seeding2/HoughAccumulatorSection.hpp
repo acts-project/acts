@@ -5,11 +5,11 @@
 namespace Acts {
 
 // Helper class describing one section of the accumulator space
-class AccumulatorSection {
+class HoughAccumulatorSection {
  public:
-  AccumulatorSection() = default;
+  HoughAccumulatorSection() = default;
 
-  AccumulatorSection(float xw, float yw, float xBegin, float yBegin,
+  HoughAccumulatorSection(float xw, float yw, float xBegin, float yBegin,
                      int div = 0, const std::vector<unsigned> &indices = {},
                      const std::vector<float> &history = {});
 
@@ -36,13 +36,13 @@ class AccumulatorSection {
   /// +------+
   /// |     <|-- this part
   /// +------+
-  AccumulatorSection bottom(bool copyIndices = false) const;
+  HoughAccumulatorSection bottom(bool copyIndices = false) const;
   /// see @bottom
-  AccumulatorSection top(bool copyIndices = false) const;
+  HoughAccumulatorSection top(bool copyIndices = false) const;
   /// @see @bottom
-  AccumulatorSection left(bool copyIndices = false) const;
+  HoughAccumulatorSection left(bool copyIndices = false) const;
   /// @see @bottom
-  AccumulatorSection right(bool copyIndices = false) const;
+  HoughAccumulatorSection right(bool copyIndices = false) const;
 
   /// create section that is bottom left corner of this this one
   /// by default the section is divided into 4 quadrants,
@@ -52,11 +52,11 @@ class AccumulatorSection {
   /// +---+---+
   /// |   |  <|-- this part
   /// +---+---+
-  AccumulatorSection bottomRight(bool copyIndices = false) const;
-  AccumulatorSection bottomLeft(bool copyIndices = false) const;
+  HoughAccumulatorSection bottomRight(bool copyIndices = false) const;
+  HoughAccumulatorSection bottomLeft(bool copyIndices = false) const;
 
-  AccumulatorSection topLeft(bool copyIndices = false) const;
-  AccumulatorSection topRight(bool copyIndices = false) const;
+  HoughAccumulatorSection topLeft(bool copyIndices = false) const;
+  HoughAccumulatorSection topRight(bool copyIndices = false) const;
 
   /// @brief true if the line defined by given parameters passes the section
   /// @param function is callable used to check crossing at the edges
@@ -114,7 +114,7 @@ class AccumulatorSection {
 };
 
 template <typename F>
-inline bool AccumulatorSection::isCrossingInside(F &&line1, F &&line2) const &
+inline bool HoughAccumulatorSection::isCrossingInside(F &&line1, F &&line2) const &
   requires std::invocable<F, float>
 {
   // this microalgorithm idea is illustrated below
@@ -132,11 +132,11 @@ inline bool AccumulatorSection::isCrossingInside(F &&line1, F &&line2) const &
   // left edge mid point                   |_           |
   //                                       |            +2
   // line 2crossing left section           +2           |
-  //
+  // The above covers most of the cases. 
+  // Additional precautions are made when both lines cross
+  // left & right (x) bounds outside of vertical (y) bounds.
 
-  // if for any of the two lines the condition
-  // (line1_left_y-middle_on_the_left_y)*(line1_right_y-middle_on_the_right_y)
-  // < 0 means that there is crossing
+
   const float xL = xBegin();
   const float xR = xBegin() + xSize();
 
