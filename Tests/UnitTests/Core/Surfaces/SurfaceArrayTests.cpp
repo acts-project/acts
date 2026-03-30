@@ -209,8 +209,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
     BOOST_CHECK(binContent.size() <= 2u);
   }
 
-  std::vector<const Surface*> neighbors = sa.neighbors(
-      itransform(Vector2(0, 0)), itransform(Vector2(0, 0)).normalized());
+  const auto neighbors = sa.neighbors(tgContext, itransform(Vector2(0, 0)),
+                                      itransform(Vector2(0, 0)).normalized());
   BOOST_CHECK_EQUAL(neighbors.size(), 6u);
 }
 
