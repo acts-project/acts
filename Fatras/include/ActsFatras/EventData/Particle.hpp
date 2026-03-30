@@ -78,6 +78,13 @@ class Particle {
     return p;
   }
 
+  void killParticle(ParticleOutcome outcome) {
+    if (outcome == ParticleOutcome::Alive) {
+      throw std::invalid_argument("Cannot kill particle with outcome 'Alive'.");
+    }
+    m_outcome = outcome;
+  }
+
   /// Set the process type that generated this particle.
   /// @param proc Process type that generated this particle
   /// @return Reference to this particle for method chaining
@@ -166,24 +173,24 @@ class Particle {
   /// @param absMomentum Absolute momentum magnitude
   /// @return Reference to this particle for method chaining
   Particle &setAbsoluteMomentum(double absMomentum) {
+    if (absMomentum < 0.) {
+      throw std::invalid_argument("Absolute momentum cannot be negative.");
+    }
     m_absMomentum = absMomentum;
     return *this;
   }
 
-  /// Change the energy by the given amount.
-  ///
-  /// Energy loss corresponds to a negative change. If the updated energy
-  /// would result in an unphysical value, the particle is put to rest, i.e.
-  /// its absolute momentum is set to zero.
-  /// @param delta Energy change (negative for energy loss)
+  /// Reduce the energy by the given amount.
+  /// @param delta The energy loss amount to subtract from the current energy
   /// @return Reference to this particle for method chaining
-  Particle &correctEnergy(double delta) {
-    const auto newEnergy = std::hypot(m_mass, m_absMomentum) + delta;
-    if (newEnergy <= m_mass) {
-      m_absMomentum = 0.;
-    } else {
-      m_absMomentum = Acts::fastCathetus(newEnergy, m_mass);
+  Particle &loseEnergy(double delta) {
+    const double currentEnergy = energy();
+    if (delta > currentEnergy) {
+      throw std::invalid_argument(
+          "Energy loss cannot exceed the current energy of the particle.");
     }
+    const double newEnergy = currentEnergy - delta;
+    m_absMomentum = Acts::fastCathetus(newEnergy, m_mass);
     return *this;
   }
 
@@ -266,11 +273,11 @@ class Particle {
   Acts::Vector3 momentum() const { return absoluteMomentum() * direction(); }
   /// Total energy, i.e. norm of the four-momentum.
   /// @return The total energy calculated from mass and momentum
-  double energy() const { return std::hypot(m_mass, m_absMomentum); }
+  double energy() const { return Acts::fastHypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
   /// @return True if particle has non-zero momentum, false otherwise
-  bool isAlive() const { return 0. < m_absMomentum; }
+  bool isAlive() const { return m_outcome == ParticleOutcome::Alive; }
 
   /// Check if this is a secondary particle.
   /// @return True if particle is a secondary (has non-zero vertex secondary, generation, or sub-particle), false otherwise

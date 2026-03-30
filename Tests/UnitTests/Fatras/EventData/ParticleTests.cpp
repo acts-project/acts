@@ -51,8 +51,6 @@ BOOST_AUTO_TEST_CASE(Construct) {
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), 0.);
   BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 0.);
-  // particle is created at rest and thus not alive
-  BOOST_CHECK(!particle.isAlive());
 }
 
 BOOST_AUTO_TEST_CASE(CorrectEnergy) {
@@ -74,40 +72,28 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
 
   // lose some energy
-  particle.correctEnergy(-100_MeV);
+  particle.loseEnergy(100_MeV);
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
   BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
   CHECK_CLOSE_REL(particle.energy(), std::hypot(1_GeV, 2_GeV) - 100_MeV, eps);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  // particle is still alive
-  BOOST_CHECK(particle.isAlive());
 
   // lose some more energy
-  particle.correctEnergy(-200_MeV);
+  particle.loseEnergy(200_MeV);
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
   BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
   CHECK_CLOSE_REL(particle.energy(), std::hypot(1_GeV, 2_GeV) - 300_MeV, eps);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  // particle is still alive
-  BOOST_CHECK(particle.isAlive());
 
   // lose a lot of energy
-  particle.correctEnergy(-3_GeV);
+  particle.loseEnergy(3_GeV);
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), 0.);
   BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 0.);
   BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  // particle is not alive anymore
-  BOOST_CHECK(!particle.isAlive());
 
   // losing even more energy does nothing
-  particle.correctEnergy(-10_GeV);
-  BOOST_CHECK_EQUAL(particle.transverseMomentum(), 0.);
-  BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 0.);
-  BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
-  CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  // particle is still not alive
-  BOOST_CHECK(!particle.isAlive());
+  BOOST_CHECK_THROW(particle.loseEnergy(10_GeV), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

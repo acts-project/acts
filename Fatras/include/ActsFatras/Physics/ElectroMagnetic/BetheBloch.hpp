@@ -59,7 +59,7 @@ struct BetheBloch {
     const double loss = lossDistribution(generator);
 
     // Apply the energy loss
-    particle.correctEnergy(-loss);
+    particle.loseEnergy(loss);
 
     // Generates no new particles
     return {};

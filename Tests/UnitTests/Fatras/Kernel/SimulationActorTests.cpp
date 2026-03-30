@@ -77,7 +77,7 @@ struct MockInteractionList {
                      Particle &particle,
                      std::vector<Particle> &generated) const {
     generated.push_back(particle);
-    particle.correctEnergy(-energyLoss);
+    particle.loseEnergy(energyLoss);
     // break if particle is not alive anymore
     return !particle.isAlive();
   }
