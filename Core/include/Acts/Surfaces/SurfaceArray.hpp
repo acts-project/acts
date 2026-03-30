@@ -183,7 +183,9 @@ class SurfaceArray {
     /// @return @c SurfaceVector at given bin
     const SurfaceVector& lookup(const Vector3& position,
                                 const Vector3& direction) const override {
+      ACTS_PUSH_IGNORE_DEPRECATED()
       return m_impl->lookup(position, direction);
+      ACTS_POP_IGNORE_DEPRECATED()
     }
 
     /// @brief Performs lookup at @c pos and returns bin content as const
@@ -221,7 +223,9 @@ class SurfaceArray {
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
     const SurfaceVector& neighbors(const Vector3& position,
                                    const Vector3& direction) const override {
+      ACTS_PUSH_IGNORE_DEPRECATED()
       return m_impl->neighbors(position, direction);
+      ACTS_POP_IGNORE_DEPRECATED()
     }
 
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
