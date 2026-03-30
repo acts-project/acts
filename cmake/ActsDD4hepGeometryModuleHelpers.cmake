@@ -22,8 +22,7 @@ function(acts_add_dd4hep_geometry_module target)
         )
     endif()
 
-    set(
-        _acts_dd4hep_geometry_module_abi_tag
+    set(_acts_dd4hep_geometry_module_abi_tag
         "${ACTS_GEOMETRY_MODULE_ABI_TAG}|dd4hep-${DD4hep_VERSION}"
     )
 
