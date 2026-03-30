@@ -43,25 +43,6 @@ class SimVertexBarcode {
   /// Return the generation identifier.
   constexpr GenerationId generation() const { return m_id.generation(); }
 
-  /// Set the primary vertex identifier.
-  [[deprecated("Use withVertexPrimary() instead")]]
-  constexpr SimVertexBarcode setVertexPrimary(PrimaryVertexId id) {
-    m_id = m_id.withVertexPrimary(id);
-    return *this;
-  }
-  /// Set the secondary vertex identifier.
-  [[deprecated("Use withVertexSecondary() instead")]]
-  constexpr SimVertexBarcode setVertexSecondary(SecondaryVertexId id) {
-    m_id = m_id.withVertexSecondary(id);
-    return *this;
-  }
-  /// Set the particle identifier.
-  [[deprecated("Use withGeneration() instead")]]
-  constexpr SimVertexBarcode setGeneration(GenerationId id) {
-    m_id = m_id.withGeneration(id);
-    return *this;
-  }
-
   /// Create a new barcode with a different primary vertex identifier.
   [[nodiscard]]
   constexpr SimVertexBarcode withVertexPrimary(PrimaryVertexId id) const {

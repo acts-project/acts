@@ -164,7 +164,7 @@ class HepMC3Reader final : public IReader {
   std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
+  ProcessCode read(const AlgorithmContext& ctx) override;
 
   ProcessCode finalize() override;
 
@@ -174,23 +174,23 @@ class HepMC3Reader final : public IReader {
   ProcessCode skip(std::size_t events) override;
 
  private:
-  std::size_t determineNumEvents(HepMC3::Reader& reader) const;
+  std::size_t determineNumEvents(const std::filesystem::path& path) const;
 
   static std::shared_ptr<HepMC3::GenEvent> makeEvent();
 
-  ProcessCode readSingleFile(const ActsExamples::AlgorithmContext& ctx,
+  ProcessCode readSingleFile(const AlgorithmContext& ctx,
                              std::shared_ptr<HepMC3::GenEvent>& outputEvent);
 
   ProcessCode readCached(
-      const ActsExamples::AlgorithmContext& ctx,
+      const AlgorithmContext& ctx,
       std::vector<std::shared_ptr<HepMC3::GenEvent>>& events);
 
   ProcessCode readBuffer(
-      const ActsExamples::AlgorithmContext& ctx,
+      const AlgorithmContext& ctx,
       std::vector<std::shared_ptr<HepMC3::GenEvent>>& outputEvents);
 
   ProcessCode readLogicalEvent(
-      const ActsExamples::AlgorithmContext& ctx,
+      const AlgorithmContext& ctx,
       std::vector<std::shared_ptr<HepMC3::GenEvent>>& events);
 
   /// The configuration of this writer
@@ -228,6 +228,7 @@ class HepMC3Reader final : public IReader {
     std::shared_ptr<HepMC3::Reader> reader;
     std::filesystem::path path;
     std::shared_ptr<const MultiplicityGenerator> multiplicityGenerator;
+    std::size_t eventsRead = 0;  // Track events read from this input
   };
 
   std::vector<InputConfig> m_inputs;

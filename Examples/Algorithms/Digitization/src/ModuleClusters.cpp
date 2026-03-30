@@ -11,6 +11,7 @@
 #include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 
 #include <array>
 #include <cmath>
@@ -21,7 +22,7 @@
 
 namespace ActsExamples {
 
-void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
+void ModuleClusters::add(DigitizedParameters params, SimHitIndex simhit) {
   ModuleValue mval;
   mval.paramIndices = std::move(params.indices);
   mval.paramValues = std::move(params.values);
@@ -42,12 +43,12 @@ void ModuleClusters::add(DigitizedParameters params, simhit_t simhit) {
   }
 }
 
-std::vector<std::pair<DigitizedParameters, std::set<ModuleClusters::simhit_t>>>
+std::vector<std::pair<DigitizedParameters, std::set<SimHitIndex>>>
 ModuleClusters::digitizedParameters() {
   if (m_merge) {  // (re-)build the clusters
     merge();
   }
-  std::vector<std::pair<DigitizedParameters, std::set<simhit_t>>> retv;
+  std::vector<std::pair<DigitizedParameters, std::set<SimHitIndex>>> retv;
   for (ModuleValue& mval : m_moduleValues) {
     if (std::holds_alternative<Cluster::Cell>(mval.value)) {
       // Should never happen! Either the cluster should have
@@ -67,15 +68,15 @@ ModuleClusters::digitizedParameters() {
 
 // Needed for clusterization
 int getCellRow(const ModuleValue& mval) {
-  if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
-    return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[0];
+  if (std::holds_alternative<Cluster::Cell>(mval.value)) {
+    return std::get<Cluster::Cell>(mval.value).bin[0];
   }
   throw std::domain_error("ModuleValue does not contain cell!");
 }
 
-int getCellColumn(const ActsExamples::ModuleValue& mval) {
-  if (std::holds_alternative<ActsExamples::Cluster::Cell>(mval.value)) {
-    return std::get<ActsExamples::Cluster::Cell>(mval.value).bin[1];
+int getCellColumn(const ModuleValue& mval) {
+  if (std::holds_alternative<Cluster::Cell>(mval.value)) {
+    return std::get<Cluster::Cell>(mval.value).bin[1];
   }
   throw std::domain_error("ModuleValue does not contain cell!");
 }
@@ -90,7 +91,7 @@ std::vector<ModuleValue> ModuleClusters::createCellCollection() {
     if (!std::holds_alternative<Cluster::Cell>(mval.value)) {
       continue;
     }
-    const auto& cell = std::get<ActsExamples::Cluster::Cell>(mval.value).bin;
+    const auto& cell = std::get<Cluster::Cell>(mval.value).bin;
 
     if (const auto it = uniqueCells.find(cell); it != uniqueCells.end()) {
       // Cell already exists, so merge the hit sources

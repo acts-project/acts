@@ -20,6 +20,10 @@
 class TGeoMaterial;
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
+
+/// Helper struct for converting TGeo materials to ACTS materials
 struct TGeoMaterialConverter {
   /// @brief Nested options struct
   /// to steer the conversion process
@@ -43,4 +47,5 @@ struct TGeoMaterialConverter {
                                          double thicknessOut,
                                          const Options& options);
 };
+/// @}
 }  // namespace ActsPlugins

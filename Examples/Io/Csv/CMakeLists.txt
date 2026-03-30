@@ -2,7 +2,6 @@ include(ActsTargetLinkLibrariesSystem)
 
 acts_add_library(
     ExamplesIoCsv
-    SHARED
     src/CsvMeasurementReader.cpp
     src/CsvMeasurementWriter.cpp
     src/CsvParticleReader.cpp
@@ -21,7 +20,6 @@ acts_add_library(
     src/CsvSpacePointWriter.cpp
     src/CsvGnnGraphWriter.cpp
     src/CsvGnnGraphReader.cpp
-    src/CsvSpacePointsBucketWriter.cpp
     src/CsvBFieldWriter.cpp
     src/CsvVertexWriter.cpp
 )

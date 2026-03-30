@@ -8,15 +8,11 @@
 
 #include "ActsPlugins/GeoModel/GeoModelToDetectorVolume.hpp"
 
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/InternalNavigation.hpp"
 
 #include <numbers>
 
@@ -135,16 +131,6 @@ std::shared_ptr<Volume> convertVolume(const Transform3& trf,
     throw std::runtime_error("Cannot convert " + printGeoShape(shape));
   }
   return std::make_shared<Volume>(newTrf, bounds);
-}
-
-std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
-    const GeometryContext& context, Volume& vol, const std::string& name,
-    const std::vector<std::shared_ptr<Surface>>& sensitives) {
-  auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
-  return Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, context, name, vol.transform(), vol.volumeBoundsPtr(),
-      sensitives, std::vector<std::shared_ptr<Experimental::DetectorVolume>>{},
-      Experimental::tryNoVolumes(), Experimental::tryAllPortalsAndSurfaces());
 }
 
 }  // namespace ActsPlugins::GeoModel

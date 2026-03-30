@@ -14,18 +14,26 @@
 #include <memory>
 
 namespace ActsPlugins {
+/// @addtogroup gnn_plugin
+/// @{
 
+/// Track building implementation using Boost
 class BoostTrackBuilding final : public TrackBuildingBase {
  public:
   struct Config {};
 
+  /// Constructor
+  /// @param cfg Configuration object
+  /// @param logger Logger instance
   BoostTrackBuilding(const Config &cfg,
                      std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   std::vector<std::vector<int>> operator()(
-      PipelineTensors tensors, std::vector<int> &spacepointIDs,
+      PipelineTensors tensors, std::vector<int> &spacePointIDs,
       const ExecutionContext &execContext = {}) override;
+  /// Get configuration
+  /// @return Configuration object
   const Config &config() const { return m_cfg; }
 
  private:
@@ -34,4 +42,5 @@ class BoostTrackBuilding final : public TrackBuildingBase {
   const auto &logger() const { return *m_logger; }
 };
 
+/// @}
 }  // namespace ActsPlugins

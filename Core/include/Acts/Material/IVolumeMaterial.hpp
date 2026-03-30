@@ -17,6 +17,8 @@ class Material;
 
 /// @class IVolumeMaterial
 ///
+/// @ingroup material
+///
 /// Virtual base class of volume material description
 //
 /// Material associated with a Volume (homogeneous, binned, interpolated)

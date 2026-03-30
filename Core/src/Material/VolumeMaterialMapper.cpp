@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -102,7 +101,7 @@ void VolumeMaterialMapper::checkAndInsert(State& mState,
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning is " << *bu);
       // Now update
-      BinUtility buAdjusted = adjustBinUtility(*bu, volume);
+      BinUtility buAdjusted = adjustBinUtility(mState.geoContext, *bu, volume);
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
       mState.materialBin[geoID] = buAdjusted;
@@ -130,7 +129,7 @@ void VolumeMaterialMapper::checkAndInsert(State& mState,
     }
     // Second attempt: 2D binned material
     auto bmp2 = dynamic_cast<
-        const InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>*>(
+        const InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid2D>>*>(
         volumeMaterial);
     bu = (bmp2 != nullptr) ? (&bmp2->binUtility()) : nullptr;
     if (bu != nullptr) {
@@ -145,7 +144,7 @@ void VolumeMaterialMapper::checkAndInsert(State& mState,
     }
     // Third attempt: 3D binned material
     auto bmp3 = dynamic_cast<
-        const InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>*>(
+        const InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid3D>>*>(
         volumeMaterial);
     bu = (bmp3 != nullptr) ? (&bmp3->binUtility()) : nullptr;
     if (bu != nullptr) {
@@ -321,10 +320,10 @@ void VolumeMaterialMapper::finalizeMaps(State& mState) const {
       auto grid = mState.grid2D.find(matBin.first);
       if (grid != mState.grid2D.end()) {
         MaterialGrid2D matGrid = mapMaterialPoints(grid->second);
-        MaterialMapper<MaterialGrid2D> matMap(mState.transform2D[matBin.first],
-                                              matGrid);
+        MaterialMapLookup<MaterialGrid2D> matMap(
+            mState.transform2D[matBin.first], matGrid);
         mState.volumeMaterial[matBin.first] = std::make_unique<
-            InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
+            InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid2D>>>(
             std::move(matMap), matBin.second);
       } else {
         throw std::domain_error("No grid 2D was found");
@@ -336,10 +335,10 @@ void VolumeMaterialMapper::finalizeMaps(State& mState) const {
       auto grid = mState.grid3D.find(matBin.first);
       if (grid != mState.grid3D.end()) {
         MaterialGrid3D matGrid = mapMaterialPoints(grid->second);
-        MaterialMapper<MaterialGrid3D> matMap(mState.transform3D[matBin.first],
-                                              matGrid);
+        MaterialMapLookup<MaterialGrid3D> matMap(
+            mState.transform3D[matBin.first], matGrid);
         mState.volumeMaterial[matBin.first] = std::make_unique<
-            InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
+            InterpolatedMaterialMap<MaterialMapLookup<MaterialGrid3D>>>(
             std::move(matMap), matBin.second);
       } else {
         throw std::domain_error("No grid 3D was found");
@@ -351,16 +350,15 @@ void VolumeMaterialMapper::finalizeMaps(State& mState) const {
   }
 }
 
-void VolumeMaterialMapper::mapMaterialTrack(
+Result<void> VolumeMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters
-  NeutralBoundTrackParameters start =
-      NeutralBoundTrackParameters::createCurvilinear(
-          makeVector4(mTrack.first.first, 0), mTrack.first.second,
-          1 / mTrack.first.second.norm(), std::nullopt,
-          NeutralParticleHypothesis::geantino());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      makeVector4(mTrack.first.first, 0), mTrack.first.second,
+      1 / mTrack.first.second.norm(), std::nullopt,
+      ParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;
@@ -372,9 +370,16 @@ void VolumeMaterialMapper::mapMaterialTrack(
                                                       mState.magFieldContext);
 
   // Now collect the material volume by using the straight line propagator
-  const auto& result = m_propagator.propagate(start, options).value();
-  auto mcResult = result.get<BoundSurfaceCollector::result_type>();
-  auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
+  const auto& result = m_propagator.propagate(start, options);
+  if (!result.ok()) {
+    ACTS_DEBUG("Encountered a propagator error for initial parameters:");
+    ACTS_DEBUG(" - Position: " << mTrack.first.first.transpose());
+    ACTS_DEBUG(" - Momentum: " << mTrack.first.second.transpose());
+    return result.error();
+  }
+
+  auto mcResult = result.value().get<BoundSurfaceCollector::result_type>();
+  auto mvcResult = result.value().get<MaterialVolumeCollector::result_type>();
 
   auto mappingSurfaces = mcResult.collected;
   auto mappingVolumes = mvcResult.collected;
@@ -417,7 +422,7 @@ void VolumeMaterialMapper::mapMaterialTrack(
   // to map onto
   while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
     if (volIter != mappingVolumes.end() &&
-        !volIter->volume->inside(rmIter->position)) {
+        !volIter->volume->inside(mState.geoContext, rmIter->position)) {
       // Check if the material point is past the entry point to the current
       // volume (this prevents switching volume before the first volume has been
       // reached)
@@ -430,7 +435,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
       }
     }
     if (volIter != mappingVolumes.end() &&
-        volIter->volume->inside(rmIter->position, s_epsilon)) {
+        volIter->volume->inside(mState.geoContext, rmIter->position,
+                                s_epsilon)) {
       currentID = volIter->volume->geometryId();
       direction = rmIter->direction;
       if (!(currentID == lastID)) {
@@ -464,7 +470,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
       // check if we have reached the end of the volume or the last hit of the
       // track.
       if ((rmIter + 1) == rMaterial.end() ||
-          !volIter->volume->inside((rmIter + 1)->position, s_epsilon)) {
+          !volIter->volume->inside(mState.geoContext, (rmIter + 1)->position,
+                                   s_epsilon)) {
         // find the boundary surface corresponding to the end of the volume
         while (sfIter != mappingSurfaces.end()) {
           if (sfIter->surface->geometryId().volume() == lastID.volume() ||
@@ -496,6 +503,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
     }
     ++rmIter;
   }
+
+  return Result<void>::success();
 }
 
 }  // namespace Acts

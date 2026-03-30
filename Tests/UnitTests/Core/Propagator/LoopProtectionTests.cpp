@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -42,7 +41,7 @@ using namespace Acts::detail;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 /// @brief mockup of stepping state
@@ -129,11 +128,11 @@ BOOST_DATA_TEST_CASE(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::xrange(1),
     phi, deltaPhi, index) {
-  (void)index;
-  (void)deltaPhi;
+  static_cast<void>(index);
+  static_cast<void>(deltaPhi);
 
   PropagatorState pState;
-  pState.stepping.dir = Vector3(cos(phi), sin(phi), 0.);
+  pState.stepping.dir = Vector3(std::cos(phi), std::sin(phi), 0.);
   pState.stepping.p = 100_MeV;
 
   Stepper pStepper;
@@ -180,10 +179,10 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double p = pT / sin(theta);
+  double px = pT * std::cos(phi);
+  double py = pT * std::sin(phi);
+  double pz = pT / std::tan(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
 
   const double Bz = 2_T;

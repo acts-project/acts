@@ -41,33 +41,33 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_id", &m_eventId);
-  m_inputChain->SetBranchAddress("particle_hash", &m_particleHash);
-  m_inputChain->SetBranchAddress("particle_type", &m_particleType);
-  m_inputChain->SetBranchAddress("process", &m_process);
-  m_inputChain->SetBranchAddress("vx", &m_vx);
-  m_inputChain->SetBranchAddress("vy", &m_vy);
-  m_inputChain->SetBranchAddress("vz", &m_vz);
-  m_inputChain->SetBranchAddress("vt", &m_vt);
-  m_inputChain->SetBranchAddress("p", &m_p);
-  m_inputChain->SetBranchAddress("px", &m_px);
-  m_inputChain->SetBranchAddress("py", &m_py);
-  m_inputChain->SetBranchAddress("pz", &m_pz);
-  m_inputChain->SetBranchAddress("m", &m_m);
-  m_inputChain->SetBranchAddress("q", &m_q);
-  m_inputChain->SetBranchAddress("eta", &m_eta);
-  m_inputChain->SetBranchAddress("phi", &m_phi);
-  m_inputChain->SetBranchAddress("pt", &m_pt);
-  m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary);
-  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary);
-  m_inputChain->SetBranchAddress("particle", &m_particle);
-  m_inputChain->SetBranchAddress("generation", &m_generation);
-  m_inputChain->SetBranchAddress("sub_particle", &m_subParticle);
+  m_inputChain->SetBranchAddress("particle_hash", &m_particleHash.get());
+  m_inputChain->SetBranchAddress("particle_type", &m_particleType.get());
+  m_inputChain->SetBranchAddress("process", &m_process.get());
+  m_inputChain->SetBranchAddress("vx", &m_vx.get());
+  m_inputChain->SetBranchAddress("vy", &m_vy.get());
+  m_inputChain->SetBranchAddress("vz", &m_vz.get());
+  m_inputChain->SetBranchAddress("vt", &m_vt.get());
+  m_inputChain->SetBranchAddress("p", &m_p.get());
+  m_inputChain->SetBranchAddress("px", &m_px.get());
+  m_inputChain->SetBranchAddress("py", &m_py.get());
+  m_inputChain->SetBranchAddress("pz", &m_pz.get());
+  m_inputChain->SetBranchAddress("m", &m_m.get());
+  m_inputChain->SetBranchAddress("q", &m_q.get());
+  m_inputChain->SetBranchAddress("eta", &m_eta.get());
+  m_inputChain->SetBranchAddress("phi", &m_phi.get());
+  m_inputChain->SetBranchAddress("pt", &m_pt.get());
+  m_inputChain->SetBranchAddress("vertex_primary", &m_vertexPrimary.get());
+  m_inputChain->SetBranchAddress("vertex_secondary", &m_vertexSecondary.get());
+  m_inputChain->SetBranchAddress("particle", &m_particle.get());
+  m_inputChain->SetBranchAddress("generation", &m_generation.get());
+  m_inputChain->SetBranchAddress("sub_particle", &m_subParticle.get());
 
-  m_inputChain->SetBranchAddress("e_loss", &m_eLoss);
-  m_inputChain->SetBranchAddress("total_x0", &m_pathInX0);
-  m_inputChain->SetBranchAddress("total_l0", &m_pathInL0);
-  m_inputChain->SetBranchAddress("number_of_hits", &m_numberOfHits);
-  m_inputChain->SetBranchAddress("outcome", &m_outcome);
+  m_inputChain->SetBranchAddress("e_loss", &m_eLoss.get());
+  m_inputChain->SetBranchAddress("total_x0", &m_pathInX0.get());
+  m_inputChain->SetBranchAddress("total_l0", &m_pathInL0.get());
+  m_inputChain->SetBranchAddress("number_of_hits", &m_numberOfHits.get());
+  m_inputChain->SetBranchAddress("outcome", &m_outcome.get());
 
   auto path = m_cfg.filePath;
 
@@ -94,36 +94,6 @@ RootParticleReader::RootParticleReader(const RootParticleReader::Config& config,
 std::pair<std::size_t, std::size_t> RootParticleReader::availableEvents()
     const {
   return {0u, m_events};
-}
-
-RootParticleReader::~RootParticleReader() {
-  delete m_particleHash;
-  delete m_particleType;
-  delete m_process;
-  delete m_vx;
-  delete m_vy;
-  delete m_vz;
-  delete m_vt;
-  delete m_p;
-  delete m_px;
-  delete m_py;
-  delete m_pz;
-  delete m_m;
-  delete m_q;
-  delete m_eta;
-  delete m_phi;
-  delete m_pt;
-  delete m_vertexPrimary;
-  delete m_vertexSecondary;
-  delete m_particle;
-  delete m_generation;
-  delete m_subParticle;
-
-  delete m_eLoss;
-  delete m_pathInX0;
-  delete m_pathInL0;
-  delete m_numberOfHits;
-  delete m_outcome;
 }
 
 ProcessCode RootParticleReader::read(const AlgorithmContext& context) {

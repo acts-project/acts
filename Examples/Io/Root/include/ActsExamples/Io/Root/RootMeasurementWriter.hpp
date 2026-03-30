@@ -12,9 +12,9 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -108,14 +108,18 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   TFile* m_outputFile = nullptr;
   // the output tree
   TTree* m_outputTree = nullptr;
-  std::vector<std::vector<std::uint32_t>> m_particles = {};
+  std::vector<std::uint32_t> m_particleVertexPrimary = {};
+  std::vector<std::uint32_t> m_particleVertexSecondary = {};
+  std::vector<std::uint32_t> m_particleParticle = {};
+  std::vector<std::uint32_t> m_particleGeneration = {};
+  std::vector<std::uint32_t> m_particleSubParticle = {};
 
   /// the output tree
   std::unique_ptr<ActsPlugins::RootMeasurementIo> m_measurementIo;
 
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 };
 

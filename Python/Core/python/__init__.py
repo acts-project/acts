@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import Union
+from typing import Callable, TypeVar, Union
 import os
 import warnings
+import functools
 
 
 from .ActsPythonBindings import *
@@ -31,18 +32,29 @@ def Propagator(stepper, navigator, level=ActsPythonBindings.logging.INFO):
     for prefix in ("Eigen", "Atlas", "StraightLine"):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
         if isinstance(stepper, _stepper):
-            _detectorNavigator = getattr(ActsPythonBindings, "DetectorNavigator")
-            if isinstance(navigator, _detectorNavigator):
-                return getattr(
-                    ActsPythonBindings._propagator, f"{prefix}DetectorPropagator"
-                )(stepper, navigator, level)
-            return getattr(ActsPythonBindings._propagator, f"{prefix}Propagator")(
+            return getattr(ActsPythonBindings, f"{prefix}Propagator")(
                 stepper, navigator, level
             )
     raise TypeError(f"Unknown stepper {type(stepper).__name__}")
 
 
 _patch_config(ActsPythonBindings)
+
+
+T = TypeVar("T")
+
+
+class with_log_threshold:
+    def __init__(self, level: logging.Level):
+        self.level = level
+
+    def __call__(self, func: Callable[..., T]) -> Callable[..., T]:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> T:
+            with logging.ScopedFailureThreshold(self.level):
+                return func(*args, **kwargs)
+
+        return wrapper
 
 
 @staticmethod
@@ -52,19 +64,21 @@ def _decoratorFromFile(file: Union[str, Path], **kwargs):
 
     kwargs.setdefault("level", ActsPythonBindings.logging.INFO)
 
+    from .ActsPluginsPythonBindingsJson import (
+        MaterialMapJsonConverter,
+        JsonMaterialDecorator,
+    )
+    from .ActsPluginsPythonBindingsRoot import RootMaterialDecorator
+
     if file.suffix in (".json", ".cbor"):
-        c = ActsPythonBindings.MaterialMapJsonConverter.Config()
+        c = MaterialMapJsonConverter.Config()
         for k in kwargs.keys():
             if hasattr(c, k):
                 setattr(c, k, kwargs.pop(k))
 
-        return ActsPythonBindings.JsonMaterialDecorator(
-            jFileName=str(file), rConfig=c, **kwargs
-        )
+        return JsonMaterialDecorator(jFileName=str(file), rConfig=c, **kwargs)
     elif file.suffix == ".root":
-        return ActsPythonBindings._examples.RootMaterialDecorator(
-            fileName=str(file), **kwargs
-        )
+        return RootMaterialDecorator(fileName=str(file), **kwargs)
     else:
         raise ValueError(f"Unknown file type {file.suffix}")
 

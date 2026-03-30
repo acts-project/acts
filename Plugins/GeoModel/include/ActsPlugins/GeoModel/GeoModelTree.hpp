@@ -16,12 +16,17 @@
 
 namespace ActsPlugins {
 
+/// @addtogroup geomodel_plugin
+/// @{
+
 /// @brief Holder struct to manage a GeoModel world. It holds the pointer to the
 ///        root volume of the world and provides additional links to dedicated
 ///        volumes inside the tree representing the sensors and chambers in a
 ///        detector.
 struct GeoModelTree {
+  /// Mutable pointer to a GeoFullPhysVol
   using FpvLink = GeoIntrusivePtr<GeoFullPhysVol>;
+  /// Const pointer to a GeoFullPhysVol
   using FpvConstLink = GeoIntrusivePtr<const GeoFullPhysVol>;
   /// @brief Helper struct to manage the list of published full physical volumes.
   ///        These volumes have unique name tags and seed the construction of
@@ -42,18 +47,21 @@ struct GeoModelTree {
     /// @brief Constructor taking an instance to the GeoModelReader.
     ///        If the publisher does not know yet about the system,
     ///        the published volumes are queried from the database
+    /// @param geoReader Pointer to the GeoModelReader instance
     explicit VolumePublisher(
         const std::shared_ptr<GeoModelIO::ReadGeoModel>& geoReader) noexcept;
 
     /// @brief Returns the list of published full physical volume for a given subsystem
-    /// @param systemName: System of interest (e.g. Tracker, MS)
+    /// @param systemName System of interest (e.g. Tracker, MS)
+    /// @return Reference to the volume map for the subsystem
     const VolumeMap_t& getPublishedVol(const std::string& systemName);
     /// @brief  Publish a list of full physical volumes for a given subsystem
-    /// @param systemName: Subsystem name under which the list will be registered
-    /// @param publishedVols: List of volumes to publish.
+    /// @param systemName Subsystem name under which the list will be registered
+    /// @param publishedVols List of volumes to publish
     void publishVolumes(const std::string& systemName,
                         VolumeMap_t&& publishedVols);
     /// @brief Returns the pointer to the ReadGeoModel instance (might be invalid)
+    /// @return Shared pointer to the GeoModelReader
     const std::shared_ptr<GeoModelIO::ReadGeoModel>& reader() const {
       return m_reader;
     }
@@ -83,5 +91,7 @@ struct GeoModelTree {
   /// @brief Name of the Root node
   std::string worldVolumeName{"World"};
 };
+
+/// @}
 
 }  // namespace ActsPlugins

@@ -4,22 +4,31 @@ from pathlib import Path
 import os
 import sys
 
-import acts.examples
 import acts
-from acts.examples.reconstruction import addGnn, GnnBackend
+import acts.examples
+import acts.examples.gnn
+from acts.examples.simulation import addDigiParticleSelection, ParticleSelectorConfig
+from acts.examples.reconstruction import addGnn, addSpacePointsMaking
+from acts.examples.gnn import (
+    TorchMetricLearning,
+    TorchEdgeClassifier,
+    BoostTrackBuilding,
+    NodeFeature,
+)
 from acts import UnitConstants as u
 
 from digitization import runDigitization
 
 
-def runGNNTrackFinding(
+def runGnnMetricLearning(
     trackingGeometry,
     field,
     outputDir,
     digiConfigFile,
     geometrySelection,
-    backend,
-    modelDir,
+    embedModelPath,
+    filterModelPath,
+    gnnModelPath,
     outputRoot=False,
     outputCsv=False,
     s=None,
@@ -35,27 +44,110 @@ def runGNNTrackFinding(
         s=s,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-3.0, 3.0),
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
+    )
+
+    addSpacePointsMaking(
+        s,
+        geoSelectionConfigFile=geometrySelection,
+        stripGeoSelectionConfigFile=None,
+        trackingGeometry=trackingGeometry,
+        logLevel=acts.logging.INFO,
+    )
+
+    graphConstructorConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(embedModelPath),
+        "embeddingDim": 8,
+        "rVal": 1.6,
+        "knnVal": 100,
+        "selectedFeatures": [0, 1, 2],  # R, Phi, Z
+    }
+    graphConstructor = TorchMetricLearning(**graphConstructorConfig)
+
+    filterConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(filterModelPath),
+        "cut": 0.01,
+    }
+    gnnConfig = {
+        "level": acts.logging.INFO,
+        "modelPath": str(gnnModelPath),
+        "cut": 0.5,
+    }
+
+    edgeClassifiers = []
+
+    if filterModelPath.suffix == ".pt":
+        edgeClassifiers.append(
+            TorchEdgeClassifier(
+                **filterConfig,
+                nChunks=5,
+                undirected=False,
+                selectedFeatures=[0, 1, 2],
+            )
+        )
+    elif filterModelPath.suffix == ".onnx":
+        from acts.examples.gnn import OnnxEdgeClassifier
+
+        edgeClassifiers.append(OnnxEdgeClassifier(**filterConfig))
+    else:
+        raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
+
+    if gnnModelPath.suffix == ".pt":
+        edgeClassifiers.append(
+            TorchEdgeClassifier(
+                **gnnConfig,
+                undirected=True,
+                selectedFeatures=[0, 1, 2],
+            )
+        )
+    elif gnnModelPath.suffix == ".onnx":
+        from acts.examples.gnn import OnnxEdgeClassifier
+
+        edgeClassifiers.append(
+            OnnxEdgeClassifier(**gnnConfig),
+        )
+    else:
+        raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
+
+    # Stage 3: CPU track building
+    trackBuilderConfig = {
+        "level": acts.logging.INFO,
+    }
+    trackBuilder = BoostTrackBuilding(**trackBuilderConfig)
+
+    # Node features: Standard 3 features (R, Phi, Z)
+    nodeFeatures = [
+        NodeFeature.R,
+        NodeFeature.Phi,
+        NodeFeature.Z,
+    ]
+    featureScales = [1.0, 1.0, 1.0]
+
+    # Add GNN tracking
     addGnn(
         s,
-        trackingGeometry,
-        geometrySelection,
-        modelDir,
-        backend=backend,
+        graphConstructor=graphConstructor,
+        edgeClassifiers=edgeClassifiers,
+        trackBuilder=trackBuilder,
+        nodeFeatures=nodeFeatures,
+        featureScales=featureScales,
         outputDirRoot=outputDir if outputRoot else None,
+        logLevel=acts.logging.INFO,
     )
 
     s.run()
 
 
 if "__main__" == __name__:
-
-    backend = GnnBackend.Torch
-
-    if "onnx" in sys.argv:
-        backend = GnnBackend.Onnx
-    if "torch" in sys.argv:
-        backend = GnnBackend.Torch
-
     detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
 
@@ -69,16 +161,15 @@ if "__main__" == __name__:
     digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists()
 
-    if backend == GnnBackend.Torch:
-        modelDir = Path.cwd() / "torchscript_models"
-        assert (modelDir / "embed.pt").exists()
-        assert (modelDir / "filter.pt").exists()
-        assert (modelDir / "gnn.pt").exists()
-    else:
-        modelDir = Path.cwd() / "onnx_models"
-        assert (modelDir / "embedding.onnx").exists()
-        assert (modelDir / "filtering.onnx").exists()
-        assert (modelDir / "gnn.onnx").exists()
+    # Model paths from MODEL_STORAGE environment variable
+    model_storage = os.environ.get("MODEL_STORAGE")
+    assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
+    ci_models = Path(model_storage)
+
+    # These models are chosen as they work without the torch-scatter dependency
+    embedModelPath = ci_models / "torchscript_models/embed.pt"
+    filterModelPath = ci_models / "torchscript_models/filter.pt"
+    gnnModelPath = ci_models / "onnx_models/gnn.onnx"
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
@@ -86,14 +177,15 @@ if "__main__" == __name__:
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())
 
-    runGNNTrackFinding(
+    runGnnMetricLearning(
         trackingGeometry,
         field,
         outputDir,
         digiConfigFile,
         geometrySelection,
-        backend,
-        modelDir,
+        embedModelPath,
+        filterModelPath,
+        gnnModelPath,
         outputRoot=True,
         outputCsv=False,
         s=s,

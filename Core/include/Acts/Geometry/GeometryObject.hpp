@@ -38,24 +38,13 @@ class GeometryObject {
 
   virtual ~GeometryObject() noexcept = default;
 
-  /// Assignment operator
-  ///
-  /// @param geometryId the source geometryId
-  /// @return Reference to this GeometryObject after assignment
-  GeometryObject& operator=(const GeometryObject& geometryId) {
-    if (&geometryId != this) {
-      m_geometryId = geometryId.m_geometryId;
-    }
-    return *this;
-  }
-
   /// @return the geometry id by reference
   GeometryIdentifier geometryId() const;
 
   /// Force a binning position method
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param aDir is the value for which the reference position is requesed
+  /// @param aDir is the value for which the reference position is requested
   ///
   /// @return vector 3D used for the binning schema
   virtual Vector3 referencePosition(const GeometryContext& gctx,

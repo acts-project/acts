@@ -15,7 +15,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -65,14 +65,14 @@ class DigitizationAlgorithm final : public IAlgorithm {
     /// clusters, measurements, and sim-hit-maps are output.
     bool doClusterization = true;
     /// Do we merge hits or not
-    bool doMerge = false;
+    bool doMerge = true;
     /// How close do parameters have to be to consider merged
     double mergeNsigma = 1.0;
     /// Consider clusters that share a corner as merged (8-cell connectivity)
-    bool mergeCommonCorner = false;
+    bool mergeCommonCorner = true;
     /// Energy deposit threshold for accepting a hit
     /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
-    /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
+    /// e/h-pair requires on average an energy of 3.65 eV (PDG  review 2023,
     /// Table 35.10)
     /// @NOTE The default is set to 0 because this works only well with Geant4
     double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
@@ -88,7 +88,8 @@ class DigitizationAlgorithm final : public IAlgorithm {
   ///
   /// @param config is the algorithm configuration
   /// @param level is the logging level
-  DigitizationAlgorithm(Config config, Acts::Logging::Level level);
+  explicit DigitizationAlgorithm(
+      Config config, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Build measurement from simulation hits at input.
   ///
@@ -143,14 +144,14 @@ class DigitizationAlgorithm final : public IAlgorithm {
   WriteDataHandle<CellsMap> m_outputCells{this, "OutputCells"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 
-  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+  WriteDataHandle<MeasurementParticlesMap> m_outputMeasurementParticlesMap{
       this, "OutputMeasurementParticlesMap"};
-  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+  WriteDataHandle<MeasurementSimHitsMap> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
 
-  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+  WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasurementsMap{
       this, "OutputParticleMeasurementsMap"};
-  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+  WriteDataHandle<SimHitMeasurementsMap> m_outputSimHitMeasurementsMap{
       this, "OutputSimHitMeasurementsMap"};
 
   /// Construct a fixed-size smearer from a configuration.

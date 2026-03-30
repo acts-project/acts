@@ -11,8 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -51,12 +50,12 @@ using Acts::VectorHelpers::makeVector4;
 // Set up logger
 ACTS_LOCAL_LOGGER(getDefaultLogger("AMVFitterTests", Logging::INFO))
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
@@ -170,7 +169,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxPosVec.size();
        iTrack++) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Fill vector of track objects with simple covariance matrix
     Covariance covMat;
@@ -183,7 +182,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     int vtxIdx = static_cast<int>(iTrack / nTracksPerVtx);
 
     // Construct random track parameters
-    BoundTrackParameters::ParametersVector paramVec;
+    BoundVector paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
 
@@ -369,7 +368,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   unsigned int nTracks = 4;
   for (unsigned int _ = 0; _ < nTracks; _++) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Track resolution
     double resD0 = resIPDist(gen);
@@ -393,7 +392,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
     // clang-format on
 
     // Random track parameters
-    BoundTrackParameters::ParametersVector paramVec;
+    BoundVector paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), trueVtxTime + relTDist(gen);
 
@@ -689,7 +688,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   SquareMatrix3 expVtx1Cov;
   expVtx1Cov << 0.329, 0.016, -0.035, 0.016, 0.250, 0.085, -0.035, 0.085, 0.242;
 
-  ActsVector<6> expVtx1TrkWeights;
+  Vector<6> expVtx1TrkWeights;
   expVtx1TrkWeights << 0.8128, 0.7994, 0.8164, 0.8165, 0.8165, 0.8119;
   const double expVtx1chi2 = 0.9812;
   const double expVtx1ndf = 6.7474;

@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Transforms) {
-  GeometryContext gctx;
+  auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
   G4Box* worldS = new G4Box("world", 1000, 1000, 1000);
   G4LogicalVolume* worldLV = new G4LogicalVolume(worldS, nullptr, "World");

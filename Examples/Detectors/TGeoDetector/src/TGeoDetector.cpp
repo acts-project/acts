@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -22,6 +21,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
@@ -93,7 +93,8 @@ std::vector<ActsPlugins::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       ActsPlugins::TGeoLayerBuilder::LayerConfig lConfig;
       lConfig.volumeName = volume.subVolumeName.at(ncp);
       lConfig.sensorNames = volume.sensitiveNames.at(ncp);
-      lConfig.localAxes = volume.sensitiveAxes.at(ncp);
+      lConfig.localAxes =
+          ActsPlugins::TGeoAxes::parse(volume.sensitiveAxes.at(ncp));
       lConfig.envelope = {config.layerEnvelopeR, config.layerEnvelopeR};
 
       auto rR = volume.rRange.at(ncp);
@@ -161,7 +162,7 @@ std::vector<ActsPlugins::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 /// @param vm is the variable map from the options
 std::shared_ptr<const TrackingGeometry> buildTGeoDetector(
     const TGeoDetector::Config& config, const GeometryContext& context,
-    std::vector<std::shared_ptr<const DetectorElementBase>>& detElementStore,
+    std::vector<std::shared_ptr<const SurfacePlacementBase>>& detElementStore,
     std::shared_ptr<const IMaterialDecorator> materialDecorator,
     const Logger& logger) {
   // configure surface array creator
@@ -363,7 +364,7 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
 
 TGeoDetector::TGeoDetector(const Config& cfg)
     : Detector(getDefaultLogger("TGeoDetector", cfg.logLevel)), m_cfg(cfg) {
-  m_nominalGeometryContext = GeometryContext();
+  m_nominalGeometryContext = GeometryContext::dangerouslyDefaultConstruct();
 
   m_trackingGeometry =
       buildTGeoDetector(m_cfg, m_nominalGeometryContext, m_detectorStore,
@@ -373,5 +374,15 @@ TGeoDetector::TGeoDetector(const Config& cfg)
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {
   readTGeoLayerBuilderConfigsFile(jsonFile, *this);
 }
-
+std::shared_ptr<const TrackingGeometry> buildTGeoDetectorWrapper(
+    const TGeoDetector::Config& config, const GeometryContext& context,
+    std::vector<std::shared_ptr<const SurfacePlacementBase>>& detElementStore,
+    std::shared_ptr<const IMaterialDecorator> materialDecorator,
+    const Logger& logger) {
+  std::vector<std::shared_ptr<const SurfacePlacementBase>> tmpStore{};
+  tmpStore.insert(tmpStore.begin(), detElementStore.begin(),
+                  detElementStore.end());
+  return buildTGeoDetector(config, context, tmpStore,
+                           std::move(materialDecorator), logger);
+}
 }  // namespace ActsExamples

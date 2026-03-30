@@ -36,7 +36,7 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Upper case ---------------------------------
   auto [plane_XYZ, thickness_XYZ] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "XY*", 1);
+      *vol->GetShape(), *gGeoIdentity, "XYZ", 1);
   BOOST_REQUIRE_NE(plane_XYZ, nullptr);
   BOOST_CHECK_EQUAL(plane_XYZ->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_XYZ, 2 * dZ, s_epsilon);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   CHECK_CLOSE_ABS(maxY - minY, 2 * dY, s_epsilon);
 
   // Check if the surface is the (negative) identity
-  auto transform_XYZ = plane_XYZ->transform(tgContext);
+  auto transform_XYZ = plane_XYZ->localToGlobalTransform(tgContext);
   auto rotation_XYZ = transform_XYZ.rotation();
   BOOST_CHECK(transform_XYZ.isApprox(Transform3::Identity()));
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Lower case ---------------------------------
   auto [plane_xyz, thickness_xyz] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "xy*", 1);
+      *vol->GetShape(), *gGeoIdentity, "xyZ", 1);
   BOOST_CHECK_NE(plane_xyz, nullptr);
   BOOST_CHECK_EQUAL(plane_xyz->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_xyz, 2 * dZ, s_epsilon);
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ->bounds()));
   BOOST_REQUIRE_NE(bounds_xyz, nullptr);
   BOOST_CHECK_EQUAL(bounds_xyz, bounds_XYZ);
-  auto transform_xyz = plane_xyz->transform(tgContext);
+  auto transform_xyz = plane_xyz->localToGlobalTransform(tgContext);
   auto rotation_xyz = transform_xyz.rotation();
   BOOST_CHECK(rotation_xyz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
   BOOST_CHECK(rotation_xyz.col(1).isApprox(-1 * rotation_XYZ.col(1)));
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Mixed case ---------------------------------
   auto [plane_xYz, thickness_xYz] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "xY*", 1);
+      *vol->GetShape(), *gGeoIdentity, "xYZ", 1);
   BOOST_REQUIRE_NE(plane_xYz, nullptr);
   BOOST_CHECK_EQUAL(plane_xYz->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_xYz, 2 * dZ, s_epsilon);
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
       dynamic_cast<const RectangleBounds *>(&(plane_xYz->bounds()));
   BOOST_CHECK_NE(bounds_xYz, nullptr);
   BOOST_CHECK_EQUAL(bounds_xYz, bounds_xYz);
-  auto transform_xYz = plane_xYz->transform(tgContext);
+  auto transform_xYz = plane_xYz->localToGlobalTransform(tgContext);
   auto rotation_xYz = transform_xYz.rotation();
   BOOST_CHECK(rotation_xYz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
   BOOST_CHECK(rotation_xYz.col(1).isApprox(rotation_XYZ.col(1)));
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Swap case --------------------------------- (x/y) here
   auto [plane_YXz, thickness_YXz] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "YX*", 1);
+      *vol->GetShape(), *gGeoIdentity, "YXZ", 1);
   BOOST_REQUIRE_NE(plane_YXz, nullptr);
   BOOST_CHECK_EQUAL(plane_YXz->type(), Surface::Plane);
   CHECK_CLOSE_ABS(thickness_YXz, 2 * dZ, s_epsilon);
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   CHECK_CLOSE_ABS(maxX - minX, 2 * dY, s_epsilon);
   CHECK_CLOSE_ABS(maxY - minY, 2 * dX, s_epsilon);
 
-  auto transform_YXz = plane_YXz->transform(tgContext);
+  auto transform_YXz = plane_YXz->localToGlobalTransform(tgContext);
   auto rotation_YXz = transform_YXz.rotation();
   BOOST_CHECK(rotation_YXz.col(0).isApprox(rotation_XYZ.col(1)));
   BOOST_CHECK(rotation_YXz.col(1).isApprox(rotation_XYZ.col(0)));
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   // Scaling test ---------------------------------
   auto [plane_XYZ10, thickness_XYZ10] = TGeoSurfaceConverter::toSurface(
-      *vol->GetShape(), *gGeoIdentity, "xY*", 10);
+      *vol->GetShape(), *gGeoIdentity, "xYZ", 10);
   BOOST_CHECK_NE(plane_XYZ10, nullptr);
   CHECK_CLOSE_ABS(thickness_XYZ10, 20 * dZ, s_epsilon);
 

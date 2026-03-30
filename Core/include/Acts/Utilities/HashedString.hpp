@@ -12,8 +12,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
-#include <type_traits>
-#include <utility>
+#include <typeinfo>
 
 namespace Acts {
 /// @brief Type alias for hashed string representation
@@ -32,6 +31,23 @@ constexpr HashedString fnv1a_32(std::string_view s) {
   return !s.empty() ? (fnv1a_32(s.substr(0, s.size() - 1)) ^ s[s.size() - 1]) *
                           16777619u
                     : 2166136261u;
+}
+
+// FNV-1a 64bit hashing algorithm.
+constexpr std::uint64_t fnv1a_64(const char* data, std::size_t len) {
+  constexpr std::uint64_t fnv_offset_basis = 0xcbf29ce484222325ULL;
+  constexpr std::uint64_t fnv_prime = 0x100000001b3ULL;
+
+  std::uint64_t hash = fnv_offset_basis;
+  for (std::size_t i = 0; i < len; ++i) {
+    hash ^= static_cast<std::uint64_t>(static_cast<unsigned char>(data[i]));
+    hash *= fnv_prime;
+  }
+  return hash;
+}
+
+constexpr std::uint64_t fnv1a_64(std::string_view sv) {
+  return fnv1a_64(sv.data(), sv.size());
 }
 
 constexpr int length(const char* str) {
@@ -59,4 +75,15 @@ constexpr HashedString operator""_hash(char const* s, std::size_t count) {
 }
 
 }  // namespace HashedStringLiteral
+
+/// Hash for a type. Since it's not possible to hash a type at compile-time,
+/// this function returns a runtime hash but caches it in a static variable.
+/// @tparam T Type to hash
+/// @return Hashed string representation
+template <typename T>
+std::uint64_t typeHash() {
+  const static std::uint64_t value = detail::fnv1a_64(typeid(T).name());
+  return value;
+}
+
 }  // namespace Acts

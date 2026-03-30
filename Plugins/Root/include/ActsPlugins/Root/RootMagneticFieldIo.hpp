@@ -19,8 +19,10 @@
 #include <string>
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
-/// Method to setup the FieldMap
+/// Method to set up the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of r,z to the
 /// global
 /// bin of the map magnetic field value e.g.: we have small grid with the
@@ -54,6 +56,7 @@ namespace ActsPlugins {
 /// If the flag is set to true the r-axis grid values will be set to
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
+/// @return Interpolated magnetic field map in R-Z coordinates
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>>>
@@ -64,7 +67,7 @@ makeMagneticFieldMapRzFromRoot(
     const std::string& fieldMapFile, const std::string& treeName,
     double lengthUnit, double BFieldUnit, bool firstQuadrant = false);
 
-/// Method to setup the FieldMap
+/// Method to set up the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
 /// global bin of the map magnetic field value e.g.: we have small grid with
 /// the
@@ -104,6 +107,7 @@ makeMagneticFieldMapRzFromRoot(
 /// If the flag is set to true the z-axis grid values will be set to
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
+/// @return Interpolated magnetic field map in X-Y-Z coordinates
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector3, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>,
@@ -115,4 +119,5 @@ makeMagneticFieldMapXyzFromRoot(
     const std::string& fieldMapFile, const std::string& treeName,
     double lengthUnit, double BFieldUnit, bool firstOctant = false);
 
+/// @}
 }  // namespace ActsPlugins

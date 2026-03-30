@@ -11,7 +11,6 @@ from acts.examples import (
     RootMuonSpacePointReader,
 )
 
-
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -71,7 +70,7 @@ def runHoughFromCsv(inDir: str, nEvents: int):
 
 if "__main__" == __name__:
     p = argparse.ArgumentParser(
-        description="Example script to run ITk seed finding based on CSV spacepoints",
+        description="Example script to run ITk seed finding based on CSV space points",
     )
     p.add_argument(
         "--input",

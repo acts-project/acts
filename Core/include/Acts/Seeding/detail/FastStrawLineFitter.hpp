@@ -69,6 +69,10 @@ class FastStrawLineFitter {
     std::size_t maxIter{10};
     /// @brief Cutoff to define the fit to be converged if the parameter change is below threshold
     double precCutOff{1.e-9};
+    /// @brief If the parameter change normalized to their uncertainties is below the cutOff the fit is converged.
+    //         For negative cut-offs this convergence schema is effectively
+    //         deactivated
+    double normPrecCutOff{1.e-2};
   };
   /// @brief Constructor of the fast straw line fitter
   /// @param cfg: Reference to the fitter's configuration object
@@ -123,7 +127,11 @@ class FastStrawLineFitter {
   template <CompositeSpacePointContainer StrawCont_t>
   std::optional<FitResult> fit(const StrawCont_t& measurements,
                                const std::vector<int>& signs) const;
-
+  /// @brief Fit a straight line to a set of strip measurements and return the associated
+  ///        angle & intercept. As strips are assumed to measure bending &
+  ///        non-bending coordinates the fitting plane needs to be specified
+  /// @param measurements: List of measurements that are supposed to be fitted
+  /// @param projection: Specificitation of the plane (nonBending / bending)
   template <CompositeSpacePointContainer StripCont_t>
   std::optional<FitResult> fit(const StripCont_t& measurements,
                                const ResidualIdx projection) const;
@@ -189,7 +197,7 @@ class FastStrawLineFitter {
     double T_rz{0.};
     ///@brief Expectation value of T_{y} * r
     double T_ry{0.};
-    ///@brief Prediced y0 given as the expectation value of the radii
+    ///@brief Predicted y0 given as the expectation value of the radii
     ///         divided by the inverse covariance sum.
     double fitY0{0.};
     /// @brief Number of degrees of freedom
@@ -292,15 +300,13 @@ class FastStrawLineFitter {
   /// @param pars: Fit constants of the current fit configuration
   static double calcTimeGrad(const TrigonomHelper& angles,
                              const FitAuxiliariesWithT0& pars);
-  /// @brief Fill the y0 and the uncertainties on theta and y0 in the result
+  /// @brief Fill the y0 and its uncertainty in the result
   /// @param fitPars: Fit constants from the straw measurements
-  /// @param thetaTwoPrime: Second derivative of the chi2 w.r.t theta
   /// @param result: Mutable reference to the FitResult object. The updated parameter are written
   ///                to this object
-  void completeResult(const FitAuxiliaries& fitPars, const double thetaTwoPrime,
-                      FitResult& result) const;
+  void completeResult(const FitAuxiliaries& fitPars, FitResult& result) const;
   /// @brief Enumeration to describe the outcome of the fit iteration
-  enum class UpdateStatus {
+  enum class UpdateStatus : std::uint8_t {
     Converged,  ///< The fit converged
     Exceeded,   ////< Maximum number of iterations exceeded
     GoodStep,   ///< The fit did not converge yet
@@ -312,7 +318,7 @@ class FastStrawLineFitter {
   ///                   step was successful
   UpdateStatus updateIteration(const FitAuxiliariesWithT0& fitPars,
                                FitResultT0& fitResult) const;
-  ///  @brief Calculate the extension of the fit constants needed for the simultaneous theta - t0 fit
+  /// @brief Calculate the extension of the fit constants needed for the simultaneous theta - t0 fit
   /// @param ctx: Reference to the experiment specific calibration context to
   ///             calculate the updated straw drift radius, velocity &
   ///             acceleration

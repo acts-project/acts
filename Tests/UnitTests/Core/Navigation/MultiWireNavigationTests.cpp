@@ -9,14 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/MultiWireStructureBuilder.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
 #include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/NavigationStateFillers.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
@@ -30,7 +27,7 @@ using namespace Acts;
 using namespace Acts::Experimental;
 using namespace Acts::detail;
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 constexpr std::size_t nSurfacesX = 15;
 constexpr std::size_t nSurfacesY = 4;
 constexpr double radius = 15.0;
@@ -65,54 +62,13 @@ void generateStrawSurfaces(
 
       element->surface().assignGeometryId(GeometryIdentifier(id++));
 
-      element->surface().assignDetectorElement(*element);
+      element->surface().assignSurfacePlacement(*element);
 
       strawSurfaces.push_back(element->surface().getSharedPtr());
     }
 
     pos.y() = ipos.y() + 2 * (i + 1) * radius;
   }
-}
-
-BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
-  std::vector<std::shared_ptr<Surface>> strawSurfaces = {};
-  std::vector<std::unique_ptr<DetectorElementStub>> detElements = {};
-
-  generateStrawSurfaces(nSurfacesX, nSurfacesY, radius, halfZ, strawSurfaces,
-                        detElements);
-
-  std::vector<double> vBounds = {0.5 * nSurfacesX * 2 * radius,
-                                 0.5 * nSurfacesX * 2 * radius,
-                                 0.5 * nSurfacesY * 2 * radius, halfZ};
-
-  MultiWireStructureBuilder::Config mlCfg;
-  mlCfg.name = "Multi_Layer_With_Wires";
-  mlCfg.mlSurfaces = strawSurfaces;
-
-  mlCfg.mlBinning = {
-      {DirectedProtoAxis(AxisDirection::AxisX, AxisBoundaryType::Bound,
-                         -vBounds[0], vBounds[0], nSurfacesX),
-       1u},
-      {DirectedProtoAxis(AxisDirection::AxisY, AxisBoundaryType::Bound,
-                         -vBounds[2], vBounds[2], nSurfacesY),
-       0u}};
-  auto boundsPtr = std::make_unique<TrapezoidVolumeBounds>(
-      vBounds[0], vBounds[1], vBounds[2], vBounds[3]);
-  mlCfg.mlBounds = boundsPtr->values();
-
-  MultiWireStructureBuilder mlBuilder(mlCfg);
-  auto [volumes, portals, roots] = mlBuilder.construct(tContext);
-
-  Acts::Experimental::NavigationState nState;
-  nState.position = Acts::Vector3(0., -59., 0.);
-  nState.direction = Acts::Vector3(0., 1., 0.);
-
-  nState.currentVolume = volumes.front().get();
-  nState.currentVolume->updateNavigationState(tContext, nState);
-
-  // check the surface candidates after update (12 surfaces + 6 portals but only
-  // 4 surfaces are reachable (one of each layer and one portal)
-  BOOST_CHECK_EQUAL(nState.surfaceCandidates.size(), 5u);
 }
 
 // This tests the multilayer navigation policy for gen3 geometry interface
@@ -147,7 +103,7 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   MultiWireVolumeBuilder mwBuilder(mwCfg);
   std::unique_ptr<Acts::TrackingVolume> volume = mwBuilder.buildVolume();
 
-  SingleTrapezoidPortalShell portalShell(*volume);
+  SingleTrapezoidPortalShell portalShell{tContext, *volume};
   portalShell.applyToVolume();
 
   // Check the volume
@@ -169,7 +125,12 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   auto navFactory = mwBuilder.createNavigationPolicyFactory();
   volume->setNavigationPolicy(navFactory->build(tContext, *volume, *logger));
 
-  volume->initializeNavigationCandidates(args, stream, *logger);
+  NavigationPolicyStateManager stateManager;
+  volume->navigationPolicy()->createState(tContext, args, stateManager,
+                                          *logger);
+  auto policyState = stateManager.currentState();
+  volume->initializeNavigationCandidates(tContext, args, policyState, stream,
+                                         *logger);
 
   // we expect 18 candidates (12 surfaces + 6 portals)
   BOOST_CHECK_EQUAL(main.candidates().size(), 18u);
@@ -187,7 +148,12 @@ BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   args.direction = startDir;
   // clear the candidates and re initialize with new arguments
   main.candidates().clear();
-  volume->initializeNavigationCandidates(args, stream, *logger);
+  NavigationPolicyStateManager stateManager2;
+  volume->navigationPolicy()->createState(tContext, args, stateManager2,
+                                          *logger);
+  auto policyState2 = stateManager2.currentState();
+  volume->initializeNavigationCandidates(tContext, args, policyState2, stream,
+                                         *logger);
   // we expect 18 candidates (12 surfaces + 6 portals)
   BOOST_CHECK_EQUAL(main.candidates().size(), 18u);
 }

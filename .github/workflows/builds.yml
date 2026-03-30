@@ -20,19 +20,19 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
+  ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:80
+    container: ghcr.io/acts-project/ubuntu2404:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -40,10 +40,11 @@ jobs:
         with:
           compiler: g++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
         id: ccache-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -53,6 +54,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -61,35 +63,51 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      - name: Build docs examples
+        # these are excluded from the ALL target, but we want to test them here
+        run: cmake --build build --target docs-examples
+
       - name: ccache stats
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: ctest --test-dir build -j$(nproc)
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build -j$(nproc)
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
 
+      - name: Python sanity check after install
+        shell: bash
+        run: >
+          source .env &&
+          source install/python/setup.sh &&
+          python -c "import acts; v = acts.Vector3(1,2,3)"
+
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: acts-linux-ubuntu
           path: build.tar.gz
 
       - name: Downstream configure
         run: >
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -104,15 +122,14 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:80
+    container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
     env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
+      ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
@@ -120,8 +137,9 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
+          env_file: .env
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: acts-linux-ubuntu
 
@@ -134,22 +152,21 @@ jobs:
           PYTEST_MD_REPORT: true
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
+          PYTEST_ADDOPTS: "-rs --durations=10"
         run: |
+          source .env
           source build/this_acts_withdeps.sh
           pytest -rfExw -k "not gnn" -v
           cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:80
+    container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
-    env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - run: apt-get update && apt-get install -y time
@@ -159,8 +176,9 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           full_install: true
+          env_file: .env
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: acts-linux-ubuntu
 
@@ -171,6 +189,7 @@ jobs:
         shell: bash
         run: |
           git config --global safe.directory "$GITHUB_WORKSPACE"
+          source .env
           source build/this_acts_withdeps.sh
           CI/physmon/phys_perf_mon.sh all physmon
 
@@ -180,7 +199,7 @@ jobs:
           mkdir -p physmon
           cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: physmon
@@ -194,7 +213,7 @@ jobs:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.1.2
 
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: physmon
           path: physmon
@@ -219,28 +238,29 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2404_clang19
-            std: 20
-            cxx: clang++-19
-    container: ghcr.io/acts-project/${{ matrix.image }}:80
+          - image: ubuntu2404_clang22
+            std: 23
+            cxx: clang++-22
+    container: ghcr.io/acts-project/${{ matrix.image }}:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
           compiler: ${{ matrix.cxx }}
+          cxx_std: ${{ matrix.std }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: ccache-restore
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -251,6 +271,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
@@ -264,23 +285,28 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
 
       - name: Downstream configure
         run: >
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -296,31 +322,33 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
 
   macos:
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           lfs: true
 
       - name: Setup Xcode version
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.3.0"
+          xcode-version: "26.3.0"
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
         with:
           compiler: clang++
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
 
       - name: Restore ccache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: ccache-restore
+        env:
+          DYLD_LIBRARY_PATH: ""
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -330,6 +358,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
+          CI/dependencies/run.sh .env
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
@@ -341,28 +370,33 @@ jobs:
         run: ccache -s
 
       - name: Save ccache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
 
       - name: Downstream configure
         run: >
+          CI/dependencies/run.sh .env
           cmake -B build-downstream -S Tests/DownstreamProject
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
@@ -373,19 +407,16 @@ jobs:
         run: cmake --build build-downstream
 
       - name: Downstream run
-        run: >
-          PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-          && ./build-downstream/bin/ShowActsVersion
+        run: ./build-downstream/bin/ShowActsVersion
 
   external_eic-shell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           path: acts
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: eic/EICrecon
           path: EICrecon
@@ -395,17 +426,17 @@ jobs:
 
       - name: Restore ccache
         id: ccache-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
-      - name: Build
-        id: build
-        uses: addnab/docker-run-action@v3
-        continue-on-error: true
+      - name: Build ACTS
+        id: build-acts
+        uses: eic/docker-run-action@v4
+        continue-on-error: false
         with:
           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
           options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
@@ -422,7 +453,7 @@ jobs:
             pushd acts
             ccache -p | grep cache_dir
             ccache -z && \
-            export CMAKE_INSTALL_PREFIX=$HOME/prefix
+            export CMAKE_INSTALL_PREFIX=/work/prefix
             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
             echo "::group::Acts configure phase"
             cmake -B build -S . \
@@ -439,6 +470,24 @@ jobs:
             echo "::endgroup::"
             popd
 
+      - name: Build EICrecon
+        id: build-eicrecon
+        uses: eic/docker-run-action@v4
+        continue-on-error: true
+        with:
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+            export CMAKE_INSTALL_PREFIX=/work/prefix
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
             pushd EICrecon
             echo "::group::EICrecon configure phase"
             ccache -z && \
@@ -453,25 +502,25 @@ jobs:
 
             ccache -s
 
-      - name: Create comment body
-        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+      - name: Create comment body header
+        if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
         run: |
           cat >comment-50-external-failure.md <<EOF
           # ❗️: Downstream build failure
 
-           - eic-shell (cc @acts-project/epic-contacts)
+          - eic-shell EICrecon (cc @acts-project/epic-contacts)
           EOF
 
       - name: Upload Artifact
-        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v5
+        if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v7
         with:
           name: comment-50-external-failure.md
           path: comment-50-external-failure.md
           retention-days: 5
 
       - name: Save ccache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: always()
         with:
           path: ${{ github.workspace }}/ccache
@@ -480,11 +529,10 @@ jobs:
   external_key4hep-nightlies:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
-          submodules: true
           path: acts
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: key4hep/k4ActsTracking
           path: k4ActsTracking
@@ -549,8 +597,60 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: comment-51-key4hep-external-failure.md
           path: comment-51-key4hep-external-failure.md
           retention-days: 5
+
+
+  linux_ubuntu_python_wheel:
+    runs-on: ubuntu-latest
+    needs: [linux_ubuntu]
+    container: ghcr.io/acts-project/ubuntu2404:85
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env_file: .env
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Reset ccache
+        run: ccache -z
+
+      - name: Build wheel with pip
+        run: CI/dependencies/run.sh .env pip wheel . -v
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Install wheel
+        run: CI/dependencies/run.sh .env pip install $(ls ./*.whl)
+
+      - name: Save ccache
+        uses: actions/cache/save@v5
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-ubuntu-wheel
+          path: "*.whl"
+
+      - name: Test
+        run: CI/dependencies/run.sh .env python3 Examples/Scripts/Python/track_finding_python_only.py

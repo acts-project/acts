@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/CompositeSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+
 namespace Acts::Experimental {
 
 /// @brief Interface concept to define the straw measurement calibrator used by the FastStrawLineFitter.

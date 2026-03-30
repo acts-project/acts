@@ -10,21 +10,19 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
-#include <Acts/Surfaces/AnnulusBounds.hpp>
-#include <Acts/Surfaces/DiscTrapezoidBounds.hpp>
-#include <Acts/Surfaces/PlanarBounds.hpp>
-#include <Acts/Surfaces/RadialBounds.hpp>
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Helpers.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <memory>
 #include <numbers>
 
 namespace {
@@ -80,7 +78,6 @@ Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
 ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                                      const Segment2D& segment) const {
   auto surfaceType = surface.type();
-  Segment2D clipped(segment);
 
   // Plane surface section -------------------
   if (surfaceType == Acts::Surface::Plane ||

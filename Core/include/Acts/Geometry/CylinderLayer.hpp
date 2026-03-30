@@ -23,7 +23,7 @@ class SurfaceArray;
 
 /// @class CylinderLayer
 ///
-/// Class to describe a cylindrical detector layer for tracking, it inhertis
+/// Class to describe a cylindrical detector layer for tracking, it inherits
 /// from both, Layer base class and CylinderSurface class
 ///
 class CylinderLayer : public CylinderSurface, public Layer {
@@ -44,8 +44,8 @@ class CylinderLayer : public CylinderSurface, public Layer {
   static std::shared_ptr<CylinderLayer> create(
       const Transform3& transform,
       const std::shared_ptr<const CylinderBounds>& cbounds,
-      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = passive);
 
   CylinderLayer(const CylinderLayer& cla) = delete;
@@ -78,7 +78,7 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// @todo change ApproachDescriptor to unique_ptr
   CylinderLayer(const Transform3& transform,
                 const std::shared_ptr<const CylinderBounds>& cBounds,
-                std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+                std::unique_ptr<SurfaceArray> surfaceArray,
                 double thickness = 0.,
                 std::unique_ptr<ApproachDescriptor> ades = nullptr,
                 LayerType laytyp = passive);

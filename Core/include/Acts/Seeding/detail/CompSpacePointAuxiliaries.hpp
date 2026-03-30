@@ -15,6 +15,15 @@
 
 #include <cstdint>
 
+namespace Acts {
+template <Experimental::CompositeSpacePoint SpacePoint_t>
+/// @brief Print the position, the drift radius & the sensor directions of a space point.
+///        If the space point is shipped with an ostream operator, this oone is
+///        used
+/// @param measurement: Reference to the space point to print
+std::string toString(const SpacePoint_t& measurement);
+}
+
 namespace Acts::Experimental::detail {
 /// @brief Helper class to calculate the residual between a straight line and
 ///        a CompositeSpacePoint measurement as well as the partial derivatives.
@@ -136,10 +145,9 @@ class CompSpacePointAuxiliaries {
     /// @brief Chi2 squared term
     double chi2{0.};
     /// @brief First derivative of the chi2 w.r.t. the fit parameters
-    Acts::ActsVector<s_nPars> gradient{Acts::ActsVector<s_nPars>::Zero()};
+    Acts::Vector<s_nPars> gradient{Acts::Vector<s_nPars>::Zero()};
     /// @brief Second derivative of the chi2 w.r.t. the fit parameters
-    Acts::ActsSquareMatrix<s_nPars> hessian{
-        Acts::ActsSquareMatrix<s_nPars>::Zero()};
+    Acts::SquareMatrix<s_nPars> hessian{Acts::SquareMatrix<s_nPars>::Zero()};
     /// @brief Set the chi2, the gradient and hessian back to zero
     void reset();
   };
@@ -268,6 +276,8 @@ class CompSpacePointAuxiliaries {
   template <CompositeSpacePointContainer StrawCont_t>
   static std::vector<int> strawSigns(const Vector& pos, const Vector& dir,
                                      const StrawCont_t& measurements);
+  /// @brief Resets the residual and all partial derivatives to zero.
+  void reset();
 
  private:
   /// @brief Reference to the logging object
@@ -275,7 +285,7 @@ class CompSpacePointAuxiliaries {
   /// @brief  Update the auxiliary variables needed to calculate the residuals
   ///         of a straw measurement to the current line. They are the
   ///         projection of the line direction vector into the straw's wire
-  ///         plane and its derivatives. Returns fals if line and wire are
+  ///         plane and its derivatives. Returns false if line and wire are
   ///         parallel to each other
   /// @param line: Reference to the line to project
   /// @param wireDir: Reference to the straw wire direction vector
@@ -311,7 +321,7 @@ class CompSpacePointAuxiliaries {
                            const Vector& sensorN, const Vector& sensorD,
                            const Vector& stripPos, const bool isBending,
                            const bool isNonBending);
-  /// @brief Calculates the reidual of a strip measurement w.r.t. the time offset parameter
+  /// @brief Calculates the residual of a strip measurement w.r.t. the time offset parameter
   /// @param sensorN: Reference to the first basis vector inside the strip measruement plane,
   ///            which is given by the sensor normal
   /// @param sensorD: Reference to the second basis vector inside the strip measruement plane,
@@ -335,8 +345,6 @@ class CompSpacePointAuxiliaries {
   void updateTimeStrawRes(const Line_t& line, const Vector& hitMinSeg,
                           const Vector& wireDir, const double driftR,
                           const double driftV, const double driftA);
-  /// @brief Resets the residual and all partial derivatives to zero.
-  void reset();
   /// @brief Resets the time residual and the partial derivatives
   void resetTime();
   Config m_cfg{};
@@ -380,8 +388,8 @@ class CompSpacePointAuxiliaries {
   /// @brief Partial derivative of the actual distance of the closest approach
   std::array<double, s_nLinePars> m_partialApproachDist{
       filledArray<double, s_nLinePars>(0.)};
-  /// @brief Tansform matrix to treat stereo angles amongst the strips
-  ActsSquareMatrix<2> m_stereoTrf{ActsSquareMatrix<2>::Identity()};
+  /// @brief Transform matrix to treat stereo angles amongst the strips
+  SquareMatrix<2> m_stereoTrf{SquareMatrix<2>::Identity()};
 };
 
 }  // namespace Acts::Experimental::detail

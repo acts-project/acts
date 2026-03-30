@@ -38,7 +38,7 @@ namespace bdata = boost::unit_test::data;
 using namespace Acts;
 
 constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
-const GeometryContext geoCtx;
+const auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
 void runTest(const Surface& surface, double l0, double l1, double phi,
              double theta) {
@@ -118,8 +118,8 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
 BOOST_DATA_TEST_CASE(ConeSurface,
-                     cones* posAngle* posPositiveNonzero* phis* thetas, surface,
-                     lphi, lz, phi, theta) {
+                     cones * posAngle * posPositiveNonzero * phis * thetas,
+                     surface, lphi, lz, phi, theta) {
   // TODO extend lz to zero after fixing the transform implementation
   // local parameter r*phi has limits that depend on the z position
   const auto r = lz * surface->bounds().tanAlpha();
@@ -128,35 +128,36 @@ BOOST_DATA_TEST_CASE(ConeSurface,
 }
 
 BOOST_DATA_TEST_CASE(CylinderSurface,
-                     cylinders* posSymmetric* posSymmetric* phis* thetas,
+                     cylinders * posSymmetric * posSymmetric * phis * thetas,
                      surface, lrphi, lz, phi, theta) {
   runTest(*surface, lrphi, lz, phi, theta);
 }
 
-BOOST_DATA_TEST_CASE(DiscSurface, discs* posPositive* posAngle* phis* thetas,
-                     surface, lr, lphi, phi, theta) {
+BOOST_DATA_TEST_CASE(DiscSurface,
+                     discs * posPositive * posAngle * phis * thetas, surface,
+                     lr, lphi, phi, theta) {
   // local coordinates are singular at r = 0 -> normalize local phi
   runTest(*surface, lr, (0 < lr) ? lphi : 0., phi, theta);
 }
 
-BOOST_DATA_TEST_CASE(
-    PerigeeSurface,
-    perigees* posSymmetric* posSymmetric* phis* thetasNoForwardBackward,
-    surface, d0, z0, phi, theta) {
+BOOST_DATA_TEST_CASE(PerigeeSurface,
+                     perigees * posSymmetric * posSymmetric * phis *
+                         thetasNoForwardBackward,
+                     surface, d0, z0, phi, theta) {
   // TODO extend theta to forward/back extreme cases fixing the transform
   runTest(*surface, d0, z0, phi, theta);
 }
 
 BOOST_DATA_TEST_CASE(PlaneSurface,
-                     planes* posSymmetric* posSymmetric* phis* thetas, surface,
-                     l0, l1, phi, theta) {
+                     planes * posSymmetric * posSymmetric * phis * thetas,
+                     surface, l0, l1, phi, theta) {
   runTest(*surface, l0, l1, phi, theta);
 }
 
-BOOST_DATA_TEST_CASE(
-    StrawSurface,
-    straws* posSymmetric* posSymmetric* phis* thetasNoForwardBackward, surface,
-    lr, lz, phi, theta) {
+BOOST_DATA_TEST_CASE(StrawSurface,
+                     straws * posSymmetric * posSymmetric * phis *
+                         thetasNoForwardBackward,
+                     surface, lr, lz, phi, theta) {
   // TODO extend theta to forward/back extreme cases fixing the transform
   runTest(*surface, lr, lz, phi, theta);
 }

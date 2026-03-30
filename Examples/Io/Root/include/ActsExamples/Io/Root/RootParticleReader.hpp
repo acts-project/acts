@@ -8,13 +8,12 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Propagator/MaterialInteractor.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "ActsPlugins/Root/detail/RootBranchPtr.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -47,9 +46,6 @@ class RootParticleReader : public IReader {
   /// @param config The Configuration struct
   RootParticleReader(const Config& config, Acts::Logging::Level level);
 
-  /// Destructor
-  ~RootParticleReader() override;
-
   /// Framework name() method
   std::string name() const override { return "RootParticleReader"; }
 
@@ -59,7 +55,7 @@ class RootParticleReader : public IReader {
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
+  ProcessCode read(const AlgorithmContext& context) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -92,34 +88,36 @@ class RootParticleReader : public IReader {
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<std::size_t>* m_particleHash = new std::vector<std::size_t>;
-  std::vector<std::int32_t>* m_particleType = new std::vector<std::int32_t>;
-  std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
-  std::vector<float>* m_vx = new std::vector<float>;
-  std::vector<float>* m_vy = new std::vector<float>;
-  std::vector<float>* m_vz = new std::vector<float>;
-  std::vector<float>* m_vt = new std::vector<float>;
-  std::vector<float>* m_px = new std::vector<float>;
-  std::vector<float>* m_py = new std::vector<float>;
-  std::vector<float>* m_pz = new std::vector<float>;
-  std::vector<float>* m_m = new std::vector<float>;
-  std::vector<float>* m_q = new std::vector<float>;
-  std::vector<float>* m_eta = new std::vector<float>;
-  std::vector<float>* m_phi = new std::vector<float>;
-  std::vector<float>* m_pt = new std::vector<float>;
-  std::vector<float>* m_p = new std::vector<float>;
-  std::vector<std::uint32_t>* m_vertexPrimary = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_vertexSecondary =
-      new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_particle = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
-  std::vector<std::uint32_t>* m_subParticle = new std::vector<std::uint32_t>;
+  template <typename T>
+  using BranchVector = RootBranchPtr<std::vector<T>>;
 
-  std::vector<float>* m_eLoss = new std::vector<float>;
-  std::vector<float>* m_pathInX0 = new std::vector<float>;
-  std::vector<float>* m_pathInL0 = new std::vector<float>;
-  std::vector<std::int32_t>* m_numberOfHits = new std::vector<std::int32_t>;
-  std::vector<std::uint32_t>* m_outcome = new std::vector<std::uint32_t>;
+  BranchVector<std::size_t> m_particleHash;
+  BranchVector<std::int32_t> m_particleType;
+  BranchVector<std::uint32_t> m_process;
+  BranchVector<float> m_vx;
+  BranchVector<float> m_vy;
+  BranchVector<float> m_vz;
+  BranchVector<float> m_vt;
+  BranchVector<float> m_px;
+  BranchVector<float> m_py;
+  BranchVector<float> m_pz;
+  BranchVector<float> m_m;
+  BranchVector<float> m_q;
+  BranchVector<float> m_eta;
+  BranchVector<float> m_phi;
+  BranchVector<float> m_pt;
+  BranchVector<float> m_p;
+  BranchVector<std::uint32_t> m_vertexSecondary;
+  BranchVector<std::uint32_t> m_vertexPrimary;
+  BranchVector<std::uint32_t> m_particle;
+  BranchVector<std::uint32_t> m_generation;
+  BranchVector<std::uint32_t> m_subParticle;
+
+  BranchVector<float> m_eLoss;
+  BranchVector<float> m_pathInX0;
+  BranchVector<float> m_pathInL0;
+  BranchVector<std::int32_t> m_numberOfHits;
+  BranchVector<std::uint32_t> m_outcome;
 };
 
 }  // namespace ActsExamples

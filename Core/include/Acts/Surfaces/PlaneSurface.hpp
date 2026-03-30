@@ -24,7 +24,6 @@
 
 namespace Acts {
 
-class DetectorElementBase;
 class PlanarBounds;
 class SurfaceBounds;
 
@@ -54,12 +53,17 @@ class PlaneSurface : public RegularSurface {
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
 
-  /// Constructor from DetectorElementBase : Element proxy
+  /// Constructor from SurfacePlacementBase : Element proxy
   ///
   /// @param pbounds are the provided planar bounds
-  /// @param detelement is the linked detector element to this surface
+  /// @param placement Reference to the surface placement
+  /// @note The Surface does not take any ownership over the
+  ///       `SurfacePlacementBase` it is expected that the user
+  ///        ensures the life-time of the `SurfacePlacementBase`
+  ///        and that the `Surface` is actually owned by
+  ///        the `SurfacePlacementBase` instance
   PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const DetectorElementBase& detelement);
+               const SurfacePlacementBase& placement);
 
   /// Constructor for Planes with (optional) shared bounds object
   ///
@@ -119,6 +123,12 @@ class PlaneSurface : public RegularSurface {
   /// Return method for bounds object of this surfrace
   /// @return Reference to the surface bounds
   const SurfaceBounds& bounds() const override;
+  /// This method returns the shared_ptr to the DiscBounds
+  /// @return Shared pointer to the planar bounds
+  const std::shared_ptr<const PlanarBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const PlanarBounds> newBounds);
 
   /// Local to global transformation
   ///
@@ -216,7 +226,7 @@ class PlaneSurface : public RegularSurface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
   /// Merge two plane surfaces into a single one.

@@ -59,6 +59,9 @@ ActsPlugins::detail::GeoModelExentHelper::readBinningConstraints(
   for (const auto& sbe : binningEntry) {
     if (sbe.empty()) {
       continue;
+    } else if (sbe.size() > 2u && sbe.substr(0, 3u) == "exp") {
+      // Skip expansion entries
+      continue;
     }
     std::vector<std::string> sbTokens;
     boost::split(sbTokens, sbe, boost::is_any_of(","));

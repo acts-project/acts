@@ -8,20 +8,21 @@
 
 #include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
 
-#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <stdexcept>
 
 namespace ActsExamples {
 
-MaterialValidation::MaterialValidation(const MaterialValidation::Config& cfg,
-                                       Acts::Logging::Level level)
-    : IAlgorithm("MaterialValidation", level), m_cfg(cfg) {
+MaterialValidation::MaterialValidation(
+    const MaterialValidation::Config& cfg,
+    std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("MaterialValidation", std::move(logger)), m_cfg(cfg) {
   // Prepare the I/O collections
   m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
-  // Check the configuration - material validater
-  if (m_cfg.materialValidater == nullptr) {
-    throw std::invalid_argument("Missing material validater.");
+  // Check the configuration - material validator
+  if (m_cfg.materialValidator == nullptr) {
+    throw std::invalid_argument("Missing material validator.");
   }
   // Check the configuration - random number service
   if (m_cfg.randomNumberSvc == nullptr) {
@@ -31,8 +32,7 @@ MaterialValidation::MaterialValidation(const MaterialValidation::Config& cfg,
 
 ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
   // Create a random number generator
-  ActsExamples::RandomEngine rng =
-      m_cfg.randomNumberSvc->spawnGenerator(context);
+  RandomEngine rng = m_cfg.randomNumberSvc->spawnGenerator(context);
 
   // Setup random number distributions for some quantities
   std::uniform_real_distribution<double> phiDist(m_cfg.phiRange.first,
@@ -54,7 +54,7 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
                             std::sin(phi) * std::sin(theta), std::cos(theta));
 
     // Record the material
-    auto rMaterial = m_cfg.materialValidater->recordMaterial(
+    auto rMaterial = m_cfg.materialValidator->recordMaterial(
         context.geoContext, context.magFieldContext, m_cfg.startPosition,
         direction);
 

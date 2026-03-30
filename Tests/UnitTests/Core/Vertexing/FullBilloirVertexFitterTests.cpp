@@ -9,11 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -30,17 +28,11 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cmath>
-#include <fstream>
-#include <functional>
 #include <iostream>
 #include <memory>
 #include <numbers>
 #include <random>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -49,10 +41,10 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // 4D vertex distributions
@@ -223,7 +215,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Calculate random track emerging from vicinity of vertex position
     for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
       // Charge
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      double q = std::copysign(1., qDist(gen));
 
       // Track parameters
       BoundVector paramVec;

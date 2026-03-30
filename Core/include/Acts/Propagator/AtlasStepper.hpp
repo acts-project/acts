@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -37,21 +37,31 @@ class IVolumeMaterial;
 /// This is based original stepper code from the ATLAS RungeKuttaPropagator
 class AtlasStepper {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
   /// Type alias for Jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
-  using Covariance = BoundSquareMatrix;
+  using Covariance = BoundMatrix;
   /// Type alias for bound state (parameters, jacobian, path length)
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
+  /// Configuration for constructing an AtlasStepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Stepper options extending plain stepper settings.
   struct Options : public StepperPlainOptions {
+    /// Constructor from context objects
+    /// @param gctx Geometry context
+    /// @param mctx Magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain options
+    /// @param options Plain stepper options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -119,7 +129,7 @@ class AtlasStepper {
     /// Jacobian matrix storage for parameter derivatives
     double jacobian[eBoundSize * eBoundSize] = {};
 
-    // accummulated path length cache
+    // accumulated path length cache
     /// Accumulated path length during propagation
     double pathAccumulated = 0.;
 
@@ -175,7 +185,7 @@ class AtlasStepper {
   /// Initialize stepper state from bound track parameters
   /// @param state Stepper state to initialize
   /// @param par Bound track parameters containing initial conditions
-  void initialize(State& state, const BoundTrackParameters& par) const {
+  void initialize(State& state, const BoundParameters& par) const {
     initialize(state, par.parameters(), par.covariance(),
                par.particleHypothesis(), par.referenceSurface());
   }
@@ -237,7 +247,7 @@ class AtlasStepper {
     state.covTransport = cov.has_value();
     if (state.covTransport) {
       // copy the covariance matrix
-      state.covariance = new BoundSquareMatrix(*cov);
+      state.covariance = new BoundMatrix(*cov);
       state.useJacobian = true;
       const auto transform =
           surface.referenceFrame(state.options.geoContext, pos, dir);
@@ -484,7 +494,7 @@ class AtlasStepper {
   /// @param stype [in] The step size type to be set
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
+    static_cast<void>(direction);
     double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
@@ -586,7 +596,7 @@ class AtlasStepper {
   /// @param [in, out] state The stepping state (thread-local cache)
   /// @return true if nothing is missing after this call, false otherwise.
   bool prepareCurvilinearState(State& state) const {
-    (void)state;
+    static_cast<void>(state);
     return true;
   }
 
@@ -795,7 +805,7 @@ class AtlasStepper {
       state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
     }
 
-    state.covariance = new BoundSquareMatrix(covariance);
+    state.covariance = new BoundMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 
@@ -1138,7 +1148,7 @@ class AtlasStepper {
       double R2 = RC * RC + RS * RS;
 
       // inverse radius
-      double Ri = 1. / sqrt(R2);
+      double Ri = 1. / std::sqrt(R2);
       MA[0] = (RC * Ax[0] + RS * Ay[0]) * Ri;
       MA[1] = (RC * Ax[1] + RS * Ay[1]) * Ri;
       MA[2] = (RC * Ax[2] + RS * Ay[2]) * Ri;
@@ -1216,7 +1226,7 @@ class AtlasStepper {
   ///       propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
-    (void)material;
+    static_cast<void>(material);
 
     // we use h for keeping the nominclature with the original atlas code
     auto h = state.stepSize.value() * propDir;

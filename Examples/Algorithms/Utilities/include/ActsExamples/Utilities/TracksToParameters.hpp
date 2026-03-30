@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -18,8 +17,6 @@
 #include <string>
 
 namespace ActsExamples {
-
-struct AlgorithmContext;
 
 class TracksToParameters final : public IAlgorithm {
  public:
@@ -32,7 +29,8 @@ class TracksToParameters final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TracksToParameters(Config cfg, Acts::Logging::Level lvl);
+  explicit TracksToParameters(
+      Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Run the algorithm.
   ///

@@ -23,9 +23,10 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-// can not match our naming guidelines.
 namespace Acts {
+
+/// @addtogroup json_plugin
+/// @{
 class ISurfaceMaterial;
 
 using SurfaceAndMaterialWithContext =
@@ -88,13 +89,14 @@ std::shared_ptr<surface_t> surfaceFromJsonT(const nlohmann::json& j) {
 
 namespace SurfaceJsonConverter {
 
+/// Options controlling surface JSON serialization.
 struct Options {
-  // The way the transforms are written out
+  /// Transform serialization options
   Transform3JsonConverter::Options transformOptions =
       Transform3JsonConverter::Options{};
-  // Write the material
+  /// Write material information
   bool writeMaterial = true;
-  // Write surface as a portal
+  /// Write surface as portal
   bool portal = false;
 };
 
@@ -141,4 +143,5 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
      {Surface::SurfaceType::Other, "Other"}})
 
+/// @}
 }  // namespace Acts

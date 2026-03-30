@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(Transitions) {
   BOOST_CHECK(sm.is(states::Disconnected{}));
 }
 
-BOOST_AUTO_TEST_CASE(Terminted) {
+BOOST_AUTO_TEST_CASE(Terminated) {
   fsm sm{};
   BOOST_CHECK(sm.is(states::Disconnected{}));
 

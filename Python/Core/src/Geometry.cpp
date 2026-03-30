@@ -7,23 +7,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/CuboidalContainerBuilder.hpp"
-#include "Acts/Detector/CylindricalContainerBuilder.hpp"
-#include "Acts/Detector/Detector.hpp"
-#include "Acts/Detector/DetectorBuilder.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/DetectorVolumeBuilder.hpp"
-#include "Acts/Detector/GeometryIdGenerator.hpp"
-#include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
-#include "Acts/Detector/KdtSurfacesProvider.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/VolumeStructureBuilder.hpp"
-#include "Acts/Detector/interface/IDetectorBuilder.hpp"
-#include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
-#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
-#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -47,7 +30,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
@@ -138,7 +120,23 @@ namespace ActsPython {
 /// @param m the module to add the bindings to
 void addGeometry(py::module_& m) {
   {
-    py::class_<GeometryContext>(m, "GeometryContext").def(py::init<>());
+    py::class_<GeometryContext>(m, "GeometryContext")
+        .def(py::init([]() {
+          // Issue Python warning about deprecated default constructor
+          auto warnings = py::module_::import("warnings");
+          auto builtins = py::module_::import("builtins");
+          warnings.attr("warn")(
+              "GeometryContext::dangerouslyDefaultConstruct() is deprecated. "
+              "Use "
+              "GeometryContext.dangerouslyDefaultConstruct() instead to "
+              "make empty context construction explicit.",
+              builtins.attr("DeprecationWarning"));
+          return GeometryContext::dangerouslyDefaultConstruct();
+        }))  // Keep for backward compatibility but warn
+        .def_static("dangerouslyDefaultConstruct",
+                    &GeometryContext::dangerouslyDefaultConstruct,
+                    "Create a default GeometryContext (empty, no alignment "
+                    "data)");
 
     py::class_<GeometryIdentifier>(m, "GeometryIdentifier")
         .def(py::init<>())
@@ -192,6 +190,11 @@ void addGeometry(py::module_& m) {
           ss << self;
           return ss.str();
         });
+  }
+
+  {
+    py::class_<SurfacePlacementBase, std::shared_ptr<SurfacePlacementBase>>(
+        m, "SurfacePlacementBase");
   }
 
   {

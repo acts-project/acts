@@ -16,10 +16,13 @@
 #include <vector>
 
 namespace Acts {
-class Surface;
-}
 
-namespace Acts::JsonSurfacesReader {
+class Surface;
+
+/// @addtogroup json_plugin
+/// @{
+
+namespace JsonSurfacesReader {
 
 /// @brief Options specification for surface reading
 /// The file should contain an array of json surfaces
@@ -59,4 +62,8 @@ std::vector<std::shared_ptr<Acts::Surface>> readVector(const Options& options);
 std::vector<std::shared_ptr<Acts::JsonDetectorElement>> readDetectorElements(
     const Options& options, double thickness);
 
-}  // namespace Acts::JsonSurfacesReader
+}  // namespace JsonSurfacesReader
+
+/// @}
+
+}  // namespace Acts

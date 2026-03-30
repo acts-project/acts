@@ -34,12 +34,12 @@ using namespace Acts;
 
 namespace ActsTests {
 
-GeometryContext gctx = GeometryContext();
+GeometryContext gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(GeometrySuite)
 
 BOOST_AUTO_TEST_CASE(construction_test) {
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(construction_test) {
 }
 
 BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
 }
 
 BOOST_AUTO_TEST_CASE(ply_test) {
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(ply_test) {
 
 BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   float tol = 1e-4;
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {2, 0, 0.4},
                {2, 1, 0.4},
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 }
 
 BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
-  std::array<Vector3, 8> vertices;
+  std::array<Vector3, 8> vertices{};
   vertices = {{{0, 0, 0},
                {4, 0, 0},
                {4, 2, 0},
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
   BOOST_CHECK_EQUAL(gcvbOrientedSurfaces.size(), 6);
 
   for (auto& os : gcvbOrientedSurfaces) {
-    auto geoCtx = GeometryContext();
+    auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
     auto osCenter = os.surface->center(geoCtx);
     const auto* pSurface = dynamic_cast<const PlaneSurface*>(os.surface.get());
     BOOST_REQUIRE_MESSAGE(pSurface != nullptr,

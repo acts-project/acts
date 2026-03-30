@@ -13,6 +13,7 @@
 
 #include <concepts>
 #include <memory>
+
 namespace Acts {
 
 class TrackingVolume;
@@ -61,14 +62,6 @@ class NavigationPolicyFactory {
  public:
   /// Default constructor
   NavigationPolicyFactory() = default;
-
-  /// Create a new navigation policy factory
-  /// @deprecated Use the default constructor instead
-  /// @return A new NavigationPolicyFactory instance
-  [[deprecated("Use the default constructor")]]
-  static auto make() {
-    return NavigationPolicyFactory{};
-  }
 
   /// Add a navigation policy to the factory
   /// @tparam P The policy type to add

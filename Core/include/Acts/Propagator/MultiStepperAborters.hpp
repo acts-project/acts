@@ -14,6 +14,7 @@
 
 namespace Acts {
 
+/// Aborter that stops when all components reach the target surface.
 struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
   /// If this is set, we are also happy if the mean of the components is on the
   /// surface. How the averaging is performed depends on the stepper
@@ -37,6 +38,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
   /// @param [in] stepper Stepper used for propagation
   /// @param [in] navigator Navigator used for the propagation
   /// @param logger a logger instance
+  /// @return True if the abort condition is met, false otherwise
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool checkAbort(propagator_state_t& state, const stepper_t& stepper,

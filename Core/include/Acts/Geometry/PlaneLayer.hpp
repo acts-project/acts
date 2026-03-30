@@ -23,7 +23,7 @@ class SurfaceArray;
 /// @class PlaneLayer
 ///
 /// Class to describe a planar detector layer for tracking,
-/// it inhertis from both, Layer base class and PlaneSurface class
+/// it inherits from both, Layer base class and PlaneSurface class
 ///
 class PlaneLayer : virtual public PlaneSurface, public Layer {
  public:
@@ -39,8 +39,8 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   /// @return shared pointer to a PlaneLayer
   static std::shared_ptr<PlaneLayer> create(
       const Transform3& transform, std::shared_ptr<const PlanarBounds> pbounds,
-      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = active);
 
   PlaneLayer() = delete;
@@ -71,8 +71,7 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   /// @param laytyp is the layer type
   PlaneLayer(const Transform3& transform,
              std::shared_ptr<const PlanarBounds>& pbounds,
-             std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-             double thickness = 0.,
+             std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
              std::unique_ptr<ApproachDescriptor> ades = nullptr,
              LayerType laytyp = active);
 

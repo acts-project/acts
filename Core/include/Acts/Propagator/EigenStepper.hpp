@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -42,24 +42,33 @@ class IVolumeMaterial;
 /// p the momentum magnitude and B the magnetic field
 ///
 template <typename extension_t = EigenStepperDefaultExtension>
-class EigenStepper {
+class EigenStepper final {
  public:
-  /// Jacobian, Covariance and State definitions
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
+  /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
-  /// Type alias for covariance matrix (bound square matrix)
-  using Covariance = BoundSquareMatrix;
-  /// Type alias for bound state tuple containing parameters, jacobian, and path
-  /// length
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  /// Type alias for covariance matrix
+  using Covariance = BoundMatrix;
+  /// Bound state tuple containing parameters, Jacobian, and path length
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
+  /// Configuration for the Eigen stepper.
   struct Config {
+    /// Magnetic field provider
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
+  /// Stepper options including geometry and magnetic field contexts.
   struct Options : public StepperPlainOptions {
+    /// Constructor from geometry and magnetic field contexts
+    /// @param gctx The geometry context
+    /// @param mctx The magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain options
+    /// @param options The plain options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -106,7 +115,7 @@ class EigenStepper {
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
-    /// Accummulated path length state
+    /// Accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
@@ -131,10 +140,10 @@ class EigenStepper {
 
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
     struct {
-      /// Magnetic field evaulations
-      Vector3 B_first, B_middle, B_last;
+      /// Magnetic field evaluations
+      Vector3 B_first{}, B_middle{}, B_last{};
       /// k_i of the RKN4 algorithm
-      Vector3 k1, k2, k3, k4;
+      Vector3 k1{}, k2{}, k3{}, k4{};
       /// k_i elements of the momenta
       std::array<double, 4> kQoP{};
     } stepData;
@@ -160,7 +169,7 @@ class EigenStepper {
   /// Initialize the stepper state from bound track parameters
   /// @param state Stepper state to initialize
   /// @param par Bound track parameters to initialize from
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  void initialize(State& state, const BoundParameters& par) const;
 
   /// Initialize the stepper state from bound parameters and surface
   /// @param state Stepper state to initialize
@@ -282,7 +291,7 @@ class EigenStepper {
   /// @param stype [in] The step size type to be set
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
+    static_cast<void>(direction);
     double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }

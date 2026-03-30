@@ -31,7 +31,7 @@ namespace ActsTests {
 /// @brief Simplified stepper state
 struct StepperState {
   ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
-  Vector3 pos, dir;
+  Vector3 pos{}, dir{};
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
   double absCharge = UnitConstants::e;
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Create a propagator state
   State state;
-  state.stepping.particleHypothesis =
-      ParticleHypothesis(static_cast<PdgParticle>(11), 10., AnyCharge{9.});
+  state.stepping.particleHypothesis = ParticleHypothesis(
+      static_cast<PdgParticle>(11), 10., ChargeHypothesis{9.});
   state.stepping.pos = Vector3(1., 2., 3.);
   state.stepping.dir = Vector3(4., 5., 6.);
   state.stepping.t = 7.;

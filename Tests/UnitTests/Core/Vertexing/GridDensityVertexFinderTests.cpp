@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -42,10 +41,10 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 const double zVertexPos1 = 12.;
@@ -135,7 +134,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -254,7 +253,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -425,7 +424,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    double charge = std::copysign(1., etaDist(gen));
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);

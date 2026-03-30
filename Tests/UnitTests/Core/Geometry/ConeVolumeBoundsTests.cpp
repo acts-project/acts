@@ -90,14 +90,14 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsSurfaceOrientation) {
   auto cvbOrientedSurfaces = hcone.orientedSurfaces(Transform3::Identity());
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 4);
 
-  auto geoCtx = GeometryContext();
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   Vector3 xaxis(1., 0., 0.);
   Vector3 yaxis(0., 1., 0.);
   Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : cvbOrientedSurfaces) {
     // Test the orientation of the boundary surfaces
-    auto rot = os.surface->transform(geoCtx).rotation();
+    auto rot = os.surface->localToGlobalTransform(geoCtx).rotation();
     BOOST_CHECK(rot.col(0).isApprox(xaxis));
     BOOST_CHECK(rot.col(1).isApprox(yaxis));
     BOOST_CHECK(rot.col(2).isApprox(zaxis));

@@ -1,0 +1,11 @@
+pytest
+pytest-check
+pytest-repeat
+pytest-timeout
+uproot
+awkward
+pytest-xdist
+pyyaml
+pyhepmc
+numpy
+filelock

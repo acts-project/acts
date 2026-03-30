@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -40,24 +40,32 @@ class IVolumeMaterial;
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
-class StraightLineStepper {
+class StraightLineStepper final {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
   /// Type alias for transport jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
-  using Covariance = BoundSquareMatrix;
+  using Covariance = BoundMatrix;
   /// Type alias for bound state containing parameters, jacobian, and path
   /// length
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   /// Type alias for magnetic field (null field for straight line propagation)
   using BField = NullBField;
 
   struct Config {};
 
+  /// Configuration options for straight line propagation.
   struct Options : public StepperPlainOptions {
+    /// Constructor from geometry and magnetic field contexts
+    /// @param gctx The geometry context
+    /// @param mctx The magnetic field context
     Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
+    /// Set plain stepper options
+    /// @param options The plain options to set
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -101,7 +109,7 @@ class StraightLineStepper {
     /// Additional free parameter covariance matrix
     std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
-    /// accummulated path length state
+    /// accumulated path length state
     double pathAccumulated = 0.;
 
     /// Total number of performed steps
@@ -129,7 +137,7 @@ class StraightLineStepper {
   /// Initialize the stepper state from bound track parameters
   /// @param state The stepper state to initialize
   /// @param par The bound track parameters to initialize from
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  void initialize(State& state, const BoundParameters& par) const;
 
   /// Initialize the stepper state from bound parameters and components
   /// @param state The stepper state to initialize
@@ -246,7 +254,7 @@ class StraightLineStepper {
   /// @param stype [in] The step size type to be set
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    (void)direction;
+    static_cast<void>(direction);
     double stepSize = target.pathLength();
     updateStepSize(state, stepSize, stype);
   }
@@ -402,7 +410,7 @@ class StraightLineStepper {
   ///       backwards track propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
-    (void)material;
+    static_cast<void>(material);
 
     // use the adjusted step size
     const auto h = state.stepSize.value() * propDir;
@@ -419,7 +427,7 @@ class StraightLineStepper {
     if (state.covTransport) {
       // The step transport matrix in global coordinates
       FreeMatrix D = FreeMatrix::Identity();
-      D.block<3, 3>(0, 4) = ActsSquareMatrix<3>::Identity() * h;
+      D.block<3, 3>(0, 4) = SquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
       D(3, 7) = h * m * m * state.pars[eFreeQOverP] / dtds;

@@ -16,6 +16,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cassert>
 #include <limits>
 #include <numbers>
 
@@ -153,7 +154,7 @@ inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = std::sqrt(1 - z * z);
+  const double sinTheta = fastCathetus(1, z);
   assert(sinTheta != 0 &&
          "VectorHelpers: Vector is parallel to the z-axis "
          "which leads to division by zero");

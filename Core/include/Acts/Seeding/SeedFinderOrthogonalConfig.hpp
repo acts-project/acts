@@ -25,7 +25,10 @@ class SeedFilter;
 
 /// @brief Structure that holds configuration parameters for the orthogonal seed finder algorithm
 template <typename SpacePoint>
-struct SeedFinderOrthogonalConfig {
+struct [[deprecated(
+    "Will be dropped soon and is replaced by "
+    "DoubletSeedFinder::Config / TripletSeedFinder::Config / "
+    "TripletSeeder::Config")]] SeedFinderOrthogonalConfig {
   /// Shared pointer to the seed filter for quality assessment
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
 
@@ -164,11 +167,6 @@ struct SeedFinderOrthogonalConfig {
 
   /// Flag indicating whether configuration uses ACTS internal units
   bool isInInternalUnits = true;
-
-  /// Convert to internal units (deprecated, already in internal units)
-  /// @return Copy of this configuration (already in internal units)
-  //[[deprecated("SeedFinderOrthogonalConfig uses internal units")]]
-  SeedFinderOrthogonalConfig toInternalUnits() const { return *this; }
 
   /// Calculate derived quantities from the basic configuration parameters
   /// @return New configuration with derived quantities calculated

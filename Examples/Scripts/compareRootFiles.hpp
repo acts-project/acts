@@ -162,7 +162,7 @@ void swap(std::vector<U>& vec, std::size_t i, std::size_t j) {
 using IndexComparator = std::function<Ordering(std::size_t, std::size_t)>;
 using IndexSwapper = std::function<void(std::size_t, std::size_t)>;
 
-// Selection sort has pertty bad asymptotic scaling, but it is non-recursive
+// Selection sort has pretty bad asymptotic scaling, but it is non-recursive
 // and in-place, which makes it a good choice for smaller inputs
 void selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
                    const IndexComparator& compare, const IndexSwapper& swap) {

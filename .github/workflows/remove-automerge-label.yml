@@ -6,7 +6,7 @@ on:
 
 jobs:
   remove-automerge-label:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     if: github.event.pull_request.merged == true
     steps:
       - uses: actions-ecosystem/action-remove-labels@v1

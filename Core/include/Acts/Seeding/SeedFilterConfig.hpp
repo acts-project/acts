@@ -16,7 +16,9 @@
 namespace Acts {
 
 /// @brief Structure that holds configuration parameters for the seed filter algorithm
-struct SeedFilterConfig {
+struct [[deprecated(
+    "Will be dropped soon and is replaced by "
+    "BroadTripletSeedFilter::Config")]] SeedFilterConfig {
   /// Allowed difference in curvature (inverted seed radii) between two
   /// compatible seeds
   float deltaInvHelixDiameter = 0.00003 * 1. / UnitConstants::mm;
@@ -86,12 +88,6 @@ struct SeedFilterConfig {
 
   /// Flag indicating whether configuration values are in internal units
   bool isInInternalUnits = true;
-
-  /// Convert configuration to internal units.
-  /// @deprecated SeedFilterConfig already uses internal units
-  /// @return Copy of this configuration (already in internal units)
-  //[[deprecated("SeedFilterConfig uses internal units")]]
-  SeedFilterConfig toInternalUnits() const { return *this; }
 };
 
 }  // namespace Acts

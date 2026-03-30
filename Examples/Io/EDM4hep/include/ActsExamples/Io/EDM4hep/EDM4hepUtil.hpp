@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -12,8 +13,10 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
-#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
+#include <ActsPodioEdm/MutableTrackerHitLocal.h>
+#include <ActsPodioEdm/TrackerHitLocal.h>
 
 #include <functional>
 
@@ -28,13 +31,12 @@
 namespace ActsExamples::EDM4hepUtil {
 
 using MapParticleIdFrom =
-    std::function<ActsFatras::Barcode(const edm4hep::MCParticle& particle)>;
+    std::function<SimBarcode(const edm4hep::MCParticle& particle)>;
 using MapParticleIdTo =
-    std::function<edm4hep::MCParticle(ActsFatras::Barcode particleId)>;
+    std::function<edm4hep::MCParticle(SimBarcode particleId)>;
 
-inline ActsFatras::Barcode zeroParticleMapper(
-    const edm4hep::MCParticle& /*particle*/) {
-  return ActsFatras::Barcode::Invalid();
+inline SimBarcode zeroParticleMapper(const edm4hep::MCParticle& /*particle*/) {
+  return SimBarcode::Invalid();
 }
 
 using MapGeometryIdFrom =
@@ -66,7 +68,8 @@ void writeParticle(const SimParticle& from, edm4hep::MutableMCParticle to);
 /// - digitization channel
 ActsFatras::Hit readSimHit(const edm4hep::SimTrackerHit& from,
                            const MapParticleIdFrom& particleMapper,
-                           const MapGeometryIdFrom& geometryMapper);
+                           const MapGeometryIdFrom& geometryMapper,
+                           std::uint32_t index = -1);
 
 /// Writes a Fatras hit to EDM4hep.
 ///
@@ -93,21 +96,36 @@ VariableBoundMeasurementProxy readMeasurement(
     const edm4hep::TrackerHit3DCollection* fromClusters, Cluster* toCluster,
     const MapGeometryIdFrom& geometryMapper);
 
-/// Writes a measurement cluster to EDM4hep.
+/// Writes an ACTS measurement to EDM4hep.
 ///
-/// Inpersistent information:
-/// - hit index
-/// - 1D local coords?
-/// - segment path
+/// Converts bound parameters (local coordinates, time) and covariance from an
+/// ACTS measurement to a MutableTrackerHitLocal. The surface is used
+/// to obtain the detector cell ID from the DD4hepDetectorElement and to
+/// transform local coordinates to global position.
 ///
-/// Known issues:
-/// - cluster channels are written to inappropriate fields
-/// - local 2D coordinates and time are written to position
-void writeMeasurement(const ConstVariableBoundMeasurementProxy& from,
-                      edm4hep::MutableTrackerHitPlane to,
-                      const Cluster* fromCluster,
-                      edm4hep::TrackerHit3DCollection& toClusters,
-                      const MapGeometryIdTo& geometryMapper);
+/// @param gctx The geometry context for coordinate transformations.
+/// @param from The ACTS measurement to convert.
+/// @param to The EDM4hep tracker hit to write to.
+/// @param surface The surface associated with the measurement (must have a
+///        DD4hepDetectorElement placement).
+void writeMeasurement(const Acts::GeometryContext& gctx,
+                      const ConstVariableBoundMeasurementProxy& from,
+                      ActsPodioEdm::MutableTrackerHitLocal& to,
+                      const Acts::Surface& surface);
+
+/// Reads a measurement from an EDM4hep TrackerHitLocal.
+///
+/// Converts bound parameters, covariance, and indices from an EDM4hep
+/// TrackerHitLocal into an ACTS measurement. The geometry mapper is used to
+/// convert the cell ID to a geometry identifier.
+///
+/// @param container The measurement container to insert into.
+/// @param from The EDM4hep tracker hit to read from.
+/// @param geometryMapper Function to map cell ID to geometry identifier.
+/// @return Proxy to the created measurement.
+VariableBoundMeasurementProxy readMeasurement(
+    MeasurementContainer& container, const ActsPodioEdm::TrackerHitLocal& from,
+    const MapGeometryIdFrom& geometryMapper);
 
 /// Writes a trajectory to EDM4hep.
 ///
@@ -118,7 +136,7 @@ void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
                      const Trajectories& from, edm4hep::MutableTrack to,
                      std::size_t fromIndex,
                      const Acts::ParticleHypothesis& particleHypothesis,
-                     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);
+                     const MeasurementParticlesMap& measurementParticlesMap);
 
 /// Helper function to either return an id as is, or unpack an index from it
 /// if it is a podio::ObjectID.

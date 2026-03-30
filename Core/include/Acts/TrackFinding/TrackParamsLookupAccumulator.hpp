@@ -77,8 +77,8 @@ class TrackParamsLookupAccumulator {
   /// @return Grid with the bin track parameters averaged
   LookupGrid finalizeLookup() {
     auto meanTrack = [&](const TrackParameters& track, std::size_t count) {
-      if constexpr (detail::isGenericBoundTrackParams<TrackParameters>) {
-        Acts::GeometryContext gctx;
+      if constexpr (detail::isBoundTrackParams<TrackParameters>) {
+        const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
         auto res = TrackParameters::create(
             gctx, track.referenceSurface().getSharedPtr(),
@@ -134,7 +134,7 @@ class TrackParamsLookupAccumulator {
       throw std::invalid_argument(
           "Cannot accumulate track parameters with different charges");
     }
-    if constexpr (detail::isGenericBoundTrackParams<TrackParameters>) {
+    if constexpr (detail::isBoundTrackParams<TrackParameters>) {
       if (a.referenceSurface() != b.referenceSurface()) {
         throw std::invalid_argument(
             "Cannot accumulate bound track parameters with different reference "
@@ -145,8 +145,8 @@ class TrackParamsLookupAccumulator {
     Acts::Vector3 momentum = a.momentum() + b.momentum();
 
     // Assume track parameters being i.i.d.
-    if constexpr (detail::isGenericBoundTrackParams<TrackParameters>) {
-      Acts::GeometryContext gctx;
+    if constexpr (detail::isBoundTrackParams<TrackParameters>) {
+      const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
 
       Acts::Vector4 fourPosition = a.fourPosition(gctx) + b.fourPosition(gctx);
 

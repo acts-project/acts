@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "ActsTests/CommonHelpers/LineSurfaceStub.hpp"
 
 namespace Acts {
@@ -28,7 +28,7 @@ namespace ActsTests {
 ///
 /// This is a lightweight type of detector element,
 /// it simply implements the base class.
-class DetectorElementStub : public Acts::DetectorElementBase {
+class DetectorElementStub : public Acts::SurfacePlacementBase {
  public:
   /// Default constructor
   DetectorElementStub() = default;
@@ -82,7 +82,7 @@ class DetectorElementStub : public Acts::DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform() in the PROXY mode
-  const Acts::Transform3& transform(
+  const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
 
   /// Return surface associated with this detector element
@@ -92,7 +92,10 @@ class DetectorElementStub : public Acts::DetectorElementBase {
   Acts::Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  double thickness() const;
+
+  /// Is the detector element a sensitive element
+  bool isSensitive() const override { return true; }
 
  private:
   /// the transform for positioning in 3D space
@@ -103,7 +106,7 @@ class DetectorElementStub : public Acts::DetectorElementBase {
   double m_elementThickness{0.};
 };
 
-inline const Acts::Transform3& DetectorElementStub::transform(
+inline const Acts::Transform3& DetectorElementStub::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
   return m_elementTransform;
 }

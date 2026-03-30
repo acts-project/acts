@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
@@ -63,11 +62,12 @@ struct InteractionVolumeCollector {
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
+  /// @return Result object indicating success or failure
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void act(propagator_state_t& state, const stepper_t& stepper,
-           const navigator_t& navigator, result_type& result,
-           const Logger& /*logger*/) const {
+  Result<void> act(propagator_state_t& state, const stepper_t& stepper,
+                   const navigator_t& navigator, result_type& result,
+                   const Logger& /*logger*/) const {
     // Retrieve the current volume
     auto currentVolume = navigator.currentVolume(state.navigation);
 
@@ -87,6 +87,7 @@ struct InteractionVolumeCollector {
         (collIt->second).exit = stepper.position(state.stepping);
       }
     }
+    return Result<void>::success();
   }
 };
 
@@ -127,10 +128,9 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
 
     using VectorHelpers::makeVector4;
     // Neutral curvilinear parameters
-    NeutralBoundTrackParameters start =
-        NeutralBoundTrackParameters::createCurvilinear(
-            makeVector4(position, 0), direction, 1, std::nullopt,
-            NeutralParticleHypothesis::geantino());
+    BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+        makeVector4(position, 0), direction, 1, std::nullopt,
+        ParticleHypothesis::geantino());
 
     // Prepare Action list and abort list
     using MaterialSurfaceCollector =

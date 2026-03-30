@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -17,7 +16,6 @@
 #include "ActsPlugins/Root/RootMeasurementIo.hpp"
 
 #include <ios>
-#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -25,11 +23,12 @@
 #include <TFile.h>
 #include <TTree.h>
 
+namespace ActsExamples {
+
 namespace {
 
 std::tuple<std::vector<double>, std::vector<double>, std::vector<unsigned int>>
-prepareBoundMeasurement(
-    const ActsExamples::ConstVariableBoundMeasurementProxy& m) {
+prepareBoundMeasurement(const ConstVariableBoundMeasurementProxy& m) {
   std::vector<double> measurements = {};
   std::vector<double> variances = {};
   std::vector<unsigned int> subspaceIndex = {};
@@ -45,8 +44,7 @@ prepareBoundMeasurement(
   return {measurements, variances, subspaceIndex};
 }
 
-std::vector<std::tuple<int, int, float>> prepareChannels(
-    const ActsExamples::Cluster& c) {
+std::vector<std::tuple<int, int, float>> prepareChannels(const Cluster& c) {
   std::vector<std::tuple<int, int, float>> channels = {};
   for (auto ch : c.channels) {
     channels.emplace_back(static_cast<int>(ch.bin[0]),
@@ -57,8 +55,6 @@ std::vector<std::tuple<int, int, float>> prepareChannels(
 }
 
 }  // namespace
-
-namespace ActsExamples {
 
 RootMeasurementWriter::RootMeasurementWriter(
     const RootMeasurementWriter::Config& config, Acts::Logging::Level level)
@@ -88,7 +84,12 @@ RootMeasurementWriter::RootMeasurementWriter(
 
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), "Measurements");
-  m_outputTree->Branch("particles", &m_particles);
+  m_outputTree->Branch("particles_vertex_primary", &m_particleVertexPrimary);
+  m_outputTree->Branch("particles_vertex_secondary",
+                       &m_particleVertexSecondary);
+  m_outputTree->Branch("particles_particle", &m_particleParticle);
+  m_outputTree->Branch("particles_generation", &m_particleGeneration);
+  m_outputTree->Branch("particles_sub_particle", &m_particleSubParticle);
 
   ActsPlugins::RootMeasurementIo::Config treeCfg{m_cfg.boundIndices,
                                                  m_cfg.clusterIndices};
@@ -152,7 +153,12 @@ ProcessCode RootMeasurementWriter::writeT(
     std::pair<double, double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
     for (auto [_, i] : indices) {
-      m_particles.push_back(simHits.nth(i)->particleId().asVector());
+      const auto barcode = simHits.nth(i)->particleId();
+      m_particleVertexPrimary.push_back(barcode.vertexPrimary());
+      m_particleVertexSecondary.push_back(barcode.vertexSecondary());
+      m_particleParticle.push_back(barcode.particle());
+      m_particleGeneration.push_back(barcode.generation());
+      m_particleSubParticle.push_back(barcode.subParticle());
     }
     m_measurementIo->fillTruthParameters(local, pos4, dir, angles);
 
@@ -168,7 +174,11 @@ ProcessCode RootMeasurementWriter::writeT(
     }
 
     m_outputTree->Fill();
-    m_particles.clear();
+    m_particleVertexPrimary.clear();
+    m_particleVertexSecondary.clear();
+    m_particleParticle.clear();
+    m_particleGeneration.clear();
+    m_particleSubParticle.clear();
     m_measurementIo->clear();
   }
 

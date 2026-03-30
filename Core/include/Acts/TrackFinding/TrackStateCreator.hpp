@@ -140,8 +140,8 @@ struct TrackStateCreator {
   Result<CkfTypes::BranchVector<TrackIndexType>> createSourceLinkTrackStates(
       const GeometryContext& gctx, const CalibrationContext& calibrationContext,
       [[maybe_unused]] const Surface& surface, const BoundState& boundState,
-      source_link_iterator_t slBegin, source_link_iterator_t slEnd,
-      TrackIndexType prevTip,
+      const source_link_iterator_t& slBegin,
+      const source_link_iterator_t& slEnd, TrackIndexType prevTip,
       std::vector<TrackStateProxy>& trackStateCandidates,
       TrackStateContainerBackend& trajectory, const Logger& logger) const {
     using PM = TrackStatePropMask;
@@ -208,7 +208,7 @@ struct TrackStateCreator {
         selectorResult =
             measurementSelector(trackStateCandidates, isOutlier, logger);
     if (!selectorResult.ok()) {
-      ACTS_ERROR("Selection of calibrated measurements failed: "
+      ACTS_DEBUG("Selection of calibrated measurements failed: "
                  << selectorResult.error().message());
       resultTrackStateList =
           ResultTrackStateList::failure(selectorResult.error());
@@ -278,16 +278,16 @@ struct TrackStateCreator {
       trackState.copyFrom(candidateTrackState, mask, false);
 
       auto typeFlags = trackState.typeFlags();
-      typeFlags.set(TrackStateFlag::ParameterFlag);
-      typeFlags.set(TrackStateFlag::MeasurementFlag);
+      typeFlags.setHasParameters();
+      typeFlags.setHasMeasurement();
       if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
-        typeFlags.set(TrackStateFlag::MaterialFlag);
+        typeFlags.setHasMaterial();
       }
       if (isOutlier) {
         // propagate information that this is an outlier state
         ACTS_VERBOSE(
             "Creating outlier track state with tip = " << trackState.index());
-        typeFlags.set(TrackStateFlag::OutlierFlag);
+        typeFlags.setIsOutlier();
       }
 
       trackStateList.push_back(trackState.index());

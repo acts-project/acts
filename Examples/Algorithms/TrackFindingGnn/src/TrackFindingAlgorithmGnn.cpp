@@ -9,15 +9,16 @@
 #include "ActsExamples/TrackFindingGnn/TrackFindingAlgorithmGnn.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SpacePointColumns.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsPlugins/Gnn/GraphStoreHook.hpp"
 #include "ActsPlugins/Gnn/TruthGraphMetricsHook.hpp"
+#include "ActsPlugins/Gnn/detail/NvtxUtils.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -25,9 +26,15 @@
 
 #include "createFeatures.hpp"
 
+#ifdef ACTS_GNN_WITH_CUDA
+#include <cuda_runtime_api.h>
+#endif
+
 using namespace Acts;
 using namespace ActsPlugins;
 using namespace Acts::UnitLiterals;
+
+namespace ActsExamples {
 
 namespace {
 
@@ -44,17 +51,17 @@ struct LoopHook : public GnnHook {
 
 }  // namespace
 
-ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
-    Config config, Logging::Level level)
-    : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
+TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
+    Config config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackFindingMLBasedAlgorithm", std::move(logger)),
       m_cfg(std::move(config)),
       m_pipeline(m_cfg.graphConstructor, m_cfg.edgeClassifiers,
-                 m_cfg.trackBuilder, logger().clone()) {
+                 m_cfg.trackBuilder, this->logger().clone()) {
   if (m_cfg.inputSpacePoints.empty()) {
-    throw std::invalid_argument("Missing spacepoint input collection");
+    throw std::invalid_argument("Missing space point input collection");
   }
   if (m_cfg.outputProtoTracks.empty()) {
-    throw std::invalid_argument("Missing protoTrack output collection");
+    throw std::invalid_argument("Missing proto track output collection");
   }
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
@@ -87,12 +94,19 @@ ActsExamples::TrackFindingAlgorithmGnn::TrackFindingAlgorithmGnn(
     throw std::invalid_argument(
         "Number of features mismatches number of scale parameters.");
   }
+
+// Reset error state to prevent failure due to previous runs
+#ifdef ACTS_GNN_WITH_CUDA
+  cudaGetLastError();
+#endif
 }
 
 /// Allow access to features with nice names
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode TrackFindingAlgorithmGnn::execute(
+    const AlgorithmContext& ctx) const {
+  ACTS_NVTX_START(data_preparation);
+
   using Clock = std::chrono::high_resolution_clock;
   using Duration = std::chrono::duration<double, std::milli>;
   auto t0 = Clock::now();
@@ -114,7 +128,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
   }
 
   // Read input data
-  const auto& spacepoints = m_inputSpacePoints(ctx);
+  const auto& spacePoints = m_inputSpacePoints(ctx);
 
   const ClusterContainer* clusters = nullptr;
   if (m_inputClusters.isInitialized()) {
@@ -123,24 +137,22 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
 
   // Convert Input data to a list of size [num_measurements x
   // measurement_features]
-  const std::size_t numSpacepoints = spacepoints.size();
+  const std::size_t numSpacePoints = spacePoints.size();
   const std::size_t numFeatures = m_cfg.nodeFeatures.size();
-  ACTS_DEBUG("Received " << numSpacepoints << " spacepoints");
+  ACTS_DEBUG("Received " << numSpacePoints << " space points");
   ACTS_DEBUG("Construct " << numFeatures << " node features");
 
   auto t01 = Clock::now();
 
   std::vector<std::uint64_t> moduleIds;
-  moduleIds.reserve(spacepoints.size());
+  moduleIds.reserve(spacePoints.size());
 
-  for (auto isp = 0ul; isp < numSpacepoints; ++isp) {
-    const auto& sp = spacepoints[isp];
-
+  for (const auto& sp : spacePoints) {
     // For now just take the first index since does require one single index
-    // per spacepoint
+    // per space point
     // TODO does it work for the module map construction to use only the first
     // sp?
-    const auto& sl1 = sp.sourceLinks().at(0).template get<IndexSourceLink>();
+    const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
 
     if (m_cfg.geometryIdMap != nullptr) {
       moduleIds.push_back(m_cfg.geometryIdMap->right.at(sl1.geometryId()));
@@ -151,21 +163,23 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
 
   auto t02 = Clock::now();
 
-  // Sort the spacepoints by module ide. Required by module map
-  std::vector<int> idxs(numSpacepoints);
-  std::iota(idxs.begin(), idxs.end(), 0);
-  std::ranges::sort(idxs, {}, [&](auto i) { return moduleIds[i]; });
+  // Sort the space points by module ide. Required by module map
+  std::vector<SpacePointIndex> sortedSpacePointIndices(numSpacePoints);
+  std::iota(sortedSpacePointIndices.begin(), sortedSpacePointIndices.end(), 0);
+  std::ranges::sort(sortedSpacePointIndices, {},
+                    [&](auto i) { return moduleIds[i]; });
 
-  std::ranges::sort(moduleIds);
+  std::vector<std::uint64_t> sortedModuleIds;
+  sortedModuleIds.reserve(moduleIds.size());
+  std::ranges::transform(sortedSpacePointIndices,
+                         std::back_inserter(sortedModuleIds),
+                         [&](auto i) { return moduleIds[i]; });
 
-  SimSpacePointContainer sortedSpacepoints;
-  sortedSpacepoints.reserve(spacepoints.size());
-  std::ranges::transform(idxs, std::back_inserter(sortedSpacepoints),
-                         [&](auto i) { return spacepoints[i]; });
+  const auto sortedSpacePoints = spacePoints.subset(sortedSpacePointIndices);
 
   auto t03 = Clock::now();
 
-  auto features = createFeatures(sortedSpacepoints, clusters,
+  auto features = createFeatures(sortedSpacePoints, clusters,
                                  m_cfg.nodeFeatures, m_cfg.featureScales);
 
   auto t1 = Clock::now();
@@ -175,25 +189,31 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
   };
   ACTS_DEBUG("Setup time:              " << ms(t0, t01));
   ACTS_DEBUG("ModuleId mapping & copy: " << ms(t01, t02));
-  ACTS_DEBUG("Spacepoint sort:         " << ms(t02, t03));
+  ACTS_DEBUG("Space point sort:         " << ms(t02, t03));
   ACTS_DEBUG("Feature creation:        " << ms(t03, t1));
 
   // Run the pipeline
+  ACTS_NVTX_STOP(data_preparation);
   GnnTiming timing;
 #ifdef ACTS_GNN_CPUONLY
   Device device = {Device::Type::eCPU, 0};
 #else
   Device device = {Device::Type::eCUDA, 0};
 #endif
+  // TODO `idxs` seems not to be used anymore and should be removed from the
+  // input
+  std::vector<int> idxs(numSpacePoints);
+  std::iota(idxs.begin(), idxs.end(), 0);
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
+  ACTS_NVTX_START(post_processing);
 
   auto t2 = Clock::now();
 
   ACTS_DEBUG("Done with pipeline, received " << trackCandidates.size()
                                              << " candidates");
 
-  // Make the prototracks
+  // Make the proto tracks
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
 
@@ -206,7 +226,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
     onetrack.reserve(candidate.size());
 
     for (auto i : candidate) {
-      for (const auto& sl : spacepoints.at(i).sourceLinks()) {
+      for (const auto& sl : sortedSpacePoints.at(i).sourceLinks()) {
         onetrack.push_back(sl.template get<IndexSourceLink>().index());
       }
     }
@@ -251,10 +271,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::execute(
     m_timing.fullTime(Duration(t3 - t0).count());
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  ACTS_NVTX_STOP(post_processing);
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::finalize() {
+ProcessCode TrackFindingAlgorithmGnn::finalize() {
   namespace ba = boost::accumulators;
 
   auto print = [](const auto& t) {
@@ -278,3 +299,5 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmGnn::finalize() {
 
   return {};
 }
+
+}  // namespace ActsExamples

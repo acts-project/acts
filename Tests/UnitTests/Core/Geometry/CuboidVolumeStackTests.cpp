@@ -38,6 +38,8 @@ namespace ActsTests {
 
 auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
+const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
 struct Fixture {
   Logging::Level m_level;
   Fixture() {
@@ -137,13 +139,13 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
                  });
 
   if (shift < 1.0) {
-    BOOST_CHECK_THROW(CuboidVolumeStack(volumes, dir, strategy,
+    BOOST_CHECK_THROW(CuboidVolumeStack(gctx, volumes, dir, strategy,
                                         VolumeResizeStrategy::Gap, *logger),
                       std::invalid_argument);
     return;
   }
-  CuboidVolumeStack stack(volumes, dir, strategy, VolumeResizeStrategy::Gap,
-                          *logger);
+  CuboidVolumeStack stack(gctx, volumes, dir, strategy,
+                          VolumeResizeStrategy::Gap, *logger);
 
   auto stackBounds =
       dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
@@ -153,7 +155,8 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
   BOOST_CHECK_CLOSE(stackBounds->get(boundDirOrth2), 600_mm, 1e-6);
   BOOST_CHECK_CLOSE(stackBounds->get(boundDir), halfDir + 2 * halfDir * shift,
                     1e-6);
-  CHECK_CLOSE_OR_SMALL(stack.transform().matrix(), base.matrix(), 1e-10, 1e-12);
+  CHECK_CLOSE_OR_SMALL(stack.localToGlobalTransform(gctx).matrix(),
+                       base.matrix(), 1e-10, 1e-12);
 
   // All volumes (including gaps) are cuboids and have the same orthogonal
   // bounds
@@ -170,8 +173,8 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
     const auto& a = volumes.at(i);
     const auto& b = volumes.at(i + 1);
 
-    BOOST_CHECK_LT((base.inverse() * a->center())[dirIdx],
-                   (base.inverse() * b->center())[dirIdx]);
+    BOOST_CHECK_LT((base.inverse() * a->center(gctx))[dirIdx],
+                   (base.inverse() * b->center(gctx))[dirIdx]);
   }
 
   if (shift <= 1.0) {
@@ -179,9 +182,12 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
     BOOST_CHECK_EQUAL(volumes.size(), 3);
 
     // No expansion, original volumes did not move
-    BOOST_CHECK_EQUAL(vol1->transform().matrix(), transform1.matrix());
-    BOOST_CHECK_EQUAL(vol2->transform().matrix(), transform2.matrix());
-    BOOST_CHECK_EQUAL(vol3->transform().matrix(), transform3.matrix());
+    BOOST_CHECK_EQUAL(vol1->localToGlobalTransform(gctx).matrix(),
+                      transform1.matrix());
+    BOOST_CHECK_EQUAL(vol2->localToGlobalTransform(gctx).matrix(),
+                      transform2.matrix());
+    BOOST_CHECK_EQUAL(vol3->localToGlobalTransform(gctx).matrix(),
+                      transform3.matrix());
 
     for (const auto& [volume, bounds] : zip(origVolumes, originalBounds)) {
       const auto* newBounds =
@@ -195,8 +201,10 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       auto gap1 = volumes.at(1);
       auto gap2 = volumes.at(3);
 
-      BOOST_TEST_MESSAGE("Gap 1: " << gap1->transform().matrix());
-      BOOST_TEST_MESSAGE("Gap 2: " << gap2->transform().matrix());
+      BOOST_TEST_MESSAGE(
+          "Gap 1: " << gap1->localToGlobalTransform(gctx).matrix());
+      BOOST_TEST_MESSAGE(
+          "Gap 2: " << gap2->localToGlobalTransform(gctx).matrix());
 
       const auto* gapBounds1 =
           dynamic_cast<const CuboidVolumeBounds*>(&gap1->volumeBounds());
@@ -217,10 +225,10 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Transform3 gap1Transform = base * gap1Translation;
       Transform3 gap2Transform = base * gap2Translation;
 
-      CHECK_CLOSE_OR_SMALL(gap1->transform().matrix(), gap1Transform.matrix(),
-                           1e-10, 1e-12);
-      CHECK_CLOSE_OR_SMALL(gap2->transform().matrix(), gap2Transform.matrix(),
-                           1e-10, 1e-12);
+      CHECK_CLOSE_OR_SMALL(gap1->localToGlobalTransform(gctx).matrix(),
+                           gap1Transform.matrix(), 1e-10, 1e-12);
+      CHECK_CLOSE_OR_SMALL(gap2->localToGlobalTransform(gctx).matrix(),
+                           gap2Transform.matrix(), 1e-10, 1e-12);
 
       // Original volumes did not changes bounds
       for (const auto& [volume, bounds] : zip(origVolumes, originalBounds)) {
@@ -230,9 +238,12 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       }
 
       // No expansion, original volumes did not move
-      BOOST_CHECK_EQUAL(vol1->transform().matrix(), transform1.matrix());
-      BOOST_CHECK_EQUAL(vol2->transform().matrix(), transform2.matrix());
-      BOOST_CHECK_EQUAL(vol3->transform().matrix(), transform3.matrix());
+      BOOST_CHECK_EQUAL(vol1->localToGlobalTransform(gctx).matrix(),
+                        transform1.matrix());
+      BOOST_CHECK_EQUAL(vol2->localToGlobalTransform(gctx).matrix(),
+                        transform2.matrix());
+      BOOST_CHECK_EQUAL(vol3->localToGlobalTransform(gctx).matrix(),
+                        transform3.matrix());
     } else if (strategy == VolumeAttachmentStrategy::First) {
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
@@ -246,7 +257,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       double pDir1 = -2 * halfDir * shift + wGap / 2.0;
       Translation3 expectedTranslation1(Vector3::Unit(dirIdx) * pDir1);
       Transform3 expectedTransform1 = base * expectedTranslation1;
-      CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol1->localToGlobalTransform(gctx).matrix(),
                            expectedTransform1.matrix(), 1e-10, 1e-12);
 
       // Volume 2 got bigger and shifted left
@@ -256,7 +267,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       double pDir2 = wGap / 2.0;
       Translation3 expectedTranslation2(Vector3::Unit(dirIdx) * pDir2);
       Transform3 expectedTransform2 = base * expectedTranslation2;
-      CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol2->localToGlobalTransform(gctx).matrix(),
                            expectedTransform2.matrix(), 1e-10, 1e-12);
 
       // Volume 3 stayed the same
@@ -266,7 +277,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       double pDir3 = 2 * halfDir * shift;
       Translation3 expectedTranslation3(Vector3::Unit(dirIdx) * pDir3);
       Transform3 expectedTransform3 = base * expectedTranslation3;
-      CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol3->localToGlobalTransform(gctx).matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-12);
     } else if (strategy == VolumeAttachmentStrategy::Second) {
       // No gap volumes were added
@@ -281,7 +292,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       double pDir1 = -2 * halfDir * shift;
       Translation3 expectedTranslation1(Vector3::Unit(dirIdx) * pDir1);
       Transform3 expectedTransform1 = base * expectedTranslation1;
-      CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol1->localToGlobalTransform(gctx).matrix(),
                            expectedTransform1.matrix(), 1e-10, 1e-12);
 
       // Volume 2 got bigger and shifted left
@@ -291,7 +302,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       double pDir2 = -wGap / 2.0;
       Translation3 expectedTranslation2(Vector3::Unit(dirIdx) * pDir2);
       Transform3 expectedTransform2 = base * expectedTranslation2;
-      CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol2->localToGlobalTransform(gctx).matrix(),
                            expectedTransform2.matrix(), 1e-10, 1e-12);
 
       // Volume 3 got bigger and shifted left
@@ -301,7 +312,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       double pDir3 = 2 * halfDir * shift - wGap / 2.0;
       Translation3 expectedTranslation3(Vector3::Unit(dirIdx) * pDir3);
       Transform3 expectedTransform3 = base * expectedTranslation3;
-      CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol3->localToGlobalTransform(gctx).matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-12);
     } else if (strategy == VolumeAttachmentStrategy::Midpoint) {
       // No gap volumes were added
@@ -316,15 +327,15 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       double pDir1 = -2 * halfDir * shift + wGap / 4.0;
       Translation3 expectedTranslation1(Vector3::Unit(dirIdx) * pDir1);
       Transform3 expectedTransform1 = base * expectedTranslation1;
-      CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol1->localToGlobalTransform(gctx).matrix(),
                            expectedTransform1.matrix(), 1e-10, 1e-12);
 
       // Volume 2 got bigger but didn't move
       auto newBounds2 =
           dynamic_cast<const CuboidVolumeBounds*>(&vol2->volumeBounds());
       BOOST_CHECK_CLOSE(newBounds2->get(boundDir), halfDir + wGap / 2.0, 1e-6);
-      CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(), base.matrix(), 1e-10,
-                           1e-12);
+      CHECK_CLOSE_OR_SMALL(vol2->localToGlobalTransform(gctx).matrix(),
+                           base.matrix(), 1e-10, 1e-12);
 
       // Volume 3 got bigger and shifted left
       auto newBounds3 =
@@ -333,7 +344,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       double pDir3 = 2 * halfDir * shift - wGap / 4.0;
       Translation3 expectedTranslation3(Vector3::Unit(dirIdx) * pDir3);
       Transform3 expectedTransform3 = base * expectedTranslation3;
-      CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol3->localToGlobalTransform(gctx).matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-12);
     }
   }
@@ -391,7 +402,7 @@ BOOST_DATA_TEST_CASE(Asymmetric,
 
   std::vector<Volume*> volumes = {vol2.get(), vol1.get(), vol3.get()};
 
-  CuboidVolumeStack stack(volumes, dir, VolumeAttachmentStrategy::Gap,
+  CuboidVolumeStack stack(gctx, volumes, dir, VolumeAttachmentStrategy::Gap,
                           VolumeResizeStrategy::Gap, *logger);
   BOOST_CHECK_EQUAL(volumes.size(), 5);
 
@@ -408,8 +419,8 @@ BOOST_DATA_TEST_CASE(Asymmetric,
   double midDir = (pDir1 - halfDir1 + pDir3 + halfDir3) / 2.0;
   Translation3 expectedTranslation(Vector3::Unit(dirIdx) * midDir);
   Transform3 expectedTransform = Transform3::Identity() * expectedTranslation;
-  CHECK_CLOSE_OR_SMALL(stack.transform().matrix(), expectedTransform.matrix(),
-                       1e-10, 1e-12);
+  CHECK_CLOSE_OR_SMALL(stack.localToGlobalTransform(gctx).matrix(),
+                       expectedTransform.matrix(), 1e-10, 1e-12);
 }
 
 BOOST_DATA_TEST_CASE(UpdateStack,
@@ -475,7 +486,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
   std::vector<Transform3> originalTransforms = {transform1, transform2,
                                                 transform3};
 
-  CuboidVolumeStack stack(volumes, dir,
+  CuboidVolumeStack stack(gctx, volumes, dir,
                           VolumeAttachmentStrategy::Gap,  // should not make a
                                                           // difference
                           strategy, *logger);
@@ -499,7 +510,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     // Assign a copy of the identical bounds gives identical bounds
     auto bounds = std::make_shared<CuboidVolumeBounds>(
         dynamic_cast<const CuboidVolumeBounds&>(stack.volumeBounds()));
-    stack.update(bounds, std::nullopt, *logger);
+    stack.update(gctx, bounds, std::nullopt, *logger);
     assertOriginalBounds();
   }
 
@@ -508,7 +519,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     auto bounds = std::make_shared<CuboidVolumeBounds>(
         dynamic_cast<const CuboidVolumeBounds&>(stack.volumeBounds()));
     bounds->set(boundDirOrth1, 20_mm);
-    BOOST_CHECK_THROW(stack.update(bounds, std::nullopt, *logger),
+    BOOST_CHECK_THROW(stack.update(gctx, bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -518,7 +529,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     auto bounds = std::make_shared<CuboidVolumeBounds>(
         dynamic_cast<const CuboidVolumeBounds&>(stack.volumeBounds()));
     bounds->set(boundDirOrth2, 200_mm);
-    BOOST_CHECK_THROW(stack.update(bounds, std::nullopt, *logger),
+    BOOST_CHECK_THROW(stack.update(gctx, bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -528,7 +539,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     auto bounds = std::make_shared<CuboidVolumeBounds>(
         dynamic_cast<const CuboidVolumeBounds&>(stack.volumeBounds()));
     bounds->set(boundDir, 2 * halfDir);
-    BOOST_CHECK_THROW(stack.update(bounds, std::nullopt, *logger),
+    BOOST_CHECK_THROW(stack.update(gctx, bounds, std::nullopt, *logger),
                       std::invalid_argument);
     assertOriginalBounds();
   }
@@ -538,7 +549,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     auto bounds = std::make_shared<CuboidVolumeBounds>(
         dynamic_cast<const CuboidVolumeBounds&>(stack.volumeBounds()));
     bounds->set(boundDirOrth1, 700_mm);
-    stack.update(bounds, std::nullopt, *logger);
+    stack.update(gctx, bounds, std::nullopt, *logger);
     const auto* updatedBounds =
         dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
     BOOST_REQUIRE(updatedBounds != nullptr);
@@ -559,7 +570,8 @@ BOOST_DATA_TEST_CASE(UpdateStack,
       BOOST_CHECK_CLOSE(newBounds->get(boundDir), halfDir, 1e-6);
 
       // Position stayed the same
-      BOOST_CHECK_EQUAL(volume->transform().matrix(), origTransform.matrix());
+      BOOST_CHECK_EQUAL(volume->localToGlobalTransform(gctx).matrix(),
+                        origTransform.matrix());
     }
   }
   {
@@ -567,7 +579,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     auto bounds = std::make_shared<CuboidVolumeBounds>(
         dynamic_cast<const CuboidVolumeBounds&>(stack.volumeBounds()));
     bounds->set(boundDirOrth2, 700_mm);
-    stack.update(bounds, std::nullopt, *logger);
+    stack.update(gctx, bounds, std::nullopt, *logger);
     const auto* updatedBounds =
         dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
     BOOST_REQUIRE(updatedBounds != nullptr);
@@ -588,7 +600,8 @@ BOOST_DATA_TEST_CASE(UpdateStack,
       BOOST_CHECK_CLOSE(newBounds->get(boundDir), halfDir, 1e-6);
 
       // Position stayed the same
-      BOOST_CHECK_EQUAL(volume->transform().matrix(), origTransform.matrix());
+      BOOST_CHECK_EQUAL(volume->localToGlobalTransform(gctx).matrix(),
+                        origTransform.matrix());
     }
   }
 
@@ -597,7 +610,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     auto bounds = std::make_shared<CuboidVolumeBounds>(
         dynamic_cast<const CuboidVolumeBounds&>(stack.volumeBounds()));
     bounds->set(boundDir, 4 * halfDir);
-    stack.update(bounds, std::nullopt, *logger);
+    stack.update(gctx, bounds, std::nullopt, *logger);
     const auto* updatedBounds =
         dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
     BOOST_REQUIRE(updatedBounds != nullptr);
@@ -617,15 +630,15 @@ BOOST_DATA_TEST_CASE(UpdateStack,
       auto expectedTranslation1 =
           Translation3(Vector3::Unit(dirIdx) * (-2 * halfDir - halfDir / 2.0));
       Transform3 expectedTransform1 = base * expectedTranslation1;
-      CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol1->localToGlobalTransform(gctx).matrix(),
                            expectedTransform1.matrix(), 1e-10, 1e-12);
 
       // Volume 2 stayed the same
       auto newBounds2 =
           dynamic_cast<const CuboidVolumeBounds*>(&vol2->volumeBounds());
       BOOST_CHECK_CLOSE(newBounds2->get(boundDir), halfDir, 1e-6);
-      CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(), transform2.matrix(),
-                           1e-10, 1e-12);
+      CHECK_CLOSE_OR_SMALL(vol2->localToGlobalTransform(gctx).matrix(),
+                           transform2.matrix(), 1e-10, 1e-12);
 
       // Volume 3 got bigger and shifted right
       auto newBounds3 =
@@ -635,7 +648,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
       auto expectedTranslation3 =
           Translation3(Vector3::Unit(dirIdx) * (2 * halfDir + halfDir / 2.0));
       Transform3 expectedTransform3 = base * expectedTranslation3;
-      CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
+      CHECK_CLOSE_OR_SMALL(vol3->localToGlobalTransform(gctx).matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-12);
     } else if (strategy == VolumeResizeStrategy::Gap) {
       // Gap volumes were added
@@ -649,7 +662,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
         BOOST_CHECK_CLOSE(newBounds->get(boundDirOrth2), 700_mm, 1e-6);
         BOOST_CHECK_CLOSE(newBounds->get(boundDir), halfDir, 1e-6);
         // Position stayed the same
-        CHECK_CLOSE_OR_SMALL(volume->transform().matrix(),
+        CHECK_CLOSE_OR_SMALL(volume->localToGlobalTransform(gctx).matrix(),
                              origTransform.matrix(), 1e-10, 1e-12);
       }
 
@@ -670,10 +683,10 @@ BOOST_DATA_TEST_CASE(UpdateStack,
       auto gap2Translation =
           Translation3(Vector3::Unit(dirIdx) * (3 * halfDir + halfDir / 2.0));
       Transform3 gap2Transform = base * gap2Translation;
-      CHECK_CLOSE_OR_SMALL(gap1->transform().matrix(), gap1Transform.matrix(),
-                           1e-10, 1e-12);
-      CHECK_CLOSE_OR_SMALL(gap2->transform().matrix(), gap2Transform.matrix(),
-                           1e-10, 1e-12);
+      CHECK_CLOSE_OR_SMALL(gap1->localToGlobalTransform(gctx).matrix(),
+                           gap1Transform.matrix(), 1e-10, 1e-12);
+      CHECK_CLOSE_OR_SMALL(gap2->localToGlobalTransform(gctx).matrix(),
+                           gap2Transform.matrix(), 1e-10, 1e-12);
     }
   }
 }
@@ -720,8 +733,8 @@ BOOST_DATA_TEST_CASE(
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
 
-  CuboidVolumeStack stack{volumes, dir, VolumeAttachmentStrategy::Gap, strategy,
-                          *logger};
+  CuboidVolumeStack stack{gctx,     volumes, dir, VolumeAttachmentStrategy::Gap,
+                          strategy, *logger};
   const auto* originalBounds =
       dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
 
@@ -744,32 +757,36 @@ BOOST_DATA_TEST_CASE(
   // Invalid: shift too far in merging direction
   BOOST_CHECK_THROW(
       auto errDelta = Translation3(Vector3::Unit(dirIdx) * f * 20_mm);
-      stack.update(newBounds, trf * errDelta, *logger), std::invalid_argument);
+      stack.update(gctx, newBounds, trf * errDelta, *logger),
+      std::invalid_argument);
   checkUnchanged();
 
   // Invalid: shift in orthogonal direction
   BOOST_CHECK_THROW(
       auto errDelta = Translation3(Vector3::Unit(dirOrth1Idx) * 10_mm);
-      stack.update(newBounds, trf * errDelta, *logger), std::invalid_argument);
+      stack.update(gctx, newBounds, trf * errDelta, *logger),
+      std::invalid_argument);
   checkUnchanged();
 
   // Invalid: shift in orthogonal direction
   BOOST_CHECK_THROW(
       auto errDelta = Translation3(Vector3::Unit(dirOrth2Idx) * 10_mm);
-      stack.update(newBounds, trf * errDelta, *logger), std::invalid_argument);
+      stack.update(gctx, newBounds, trf * errDelta, *logger),
+      std::invalid_argument);
   checkUnchanged();
 
   // Invalid: rotation
   BOOST_CHECK_THROW(
-      stack.update(newBounds,
+      stack.update(gctx, newBounds,
                    trf * AngleAxis3{10_degree, Vector3::Unit(dirOrth1Idx)},
                    *logger),
       std::invalid_argument);
   checkUnchanged();
 
-  stack.update(newBounds, trf, *logger);
+  stack.update(gctx, newBounds, trf, *logger);
 
-  CHECK_CLOSE_OR_SMALL(stack.transform().matrix(), trf.matrix(), 1e-10, 1e-12);
+  CHECK_CLOSE_OR_SMALL(stack.localToGlobalTransform(gctx).matrix(),
+                       trf.matrix(), 1e-10, 1e-12);
   const auto* bounds =
       dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
   BOOST_REQUIRE(bounds != nullptr);
@@ -800,7 +817,7 @@ BOOST_DATA_TEST_CASE(
         dynamic_cast<const CuboidVolumeBounds*>(&vol->volumeBounds());
     BOOST_REQUIRE(volBounds != nullptr);
     BOOST_CHECK_CLOSE(volBounds->get(boundDir), 450_mm, 1e-6);
-    BOOST_CHECK_EQUAL(vol->center()[dirIdx], f * 550_mm);
+    BOOST_CHECK_EQUAL(vol->center(gctx)[dirIdx], f * 550_mm);
   } else if (strategy == VolumeResizeStrategy::Gap) {
     // One gap volume was added
     BOOST_CHECK_EQUAL(volumes.size(), 4);
@@ -816,7 +833,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_REQUIRE(gapBounds != nullptr);
 
     BOOST_CHECK_CLOSE(gapBounds->get(boundDir), 50_mm, 1e-6);
-    BOOST_CHECK_EQUAL(gap->center()[dirIdx], f * 950_mm);
+    BOOST_CHECK_EQUAL(gap->center(gctx)[dirIdx], f * 950_mm);
   }
 }
 
@@ -869,7 +886,7 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
 
   BOOST_TEST_CONTEXT("Positive") {
     std::vector<Volume*> volumes = {&vol};
-    CuboidVolumeStack stack(volumes, dir, VolumeAttachmentStrategy::Gap,
+    CuboidVolumeStack stack(gctx, volumes, dir, VolumeAttachmentStrategy::Gap,
                             VolumeResizeStrategy::Gap, *logger);
 
     BOOST_CHECK_EQUAL(volumes.size(), 1);
@@ -879,12 +896,12 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
         std::initializer_list<
             std::pair<CuboidVolumeBounds::BoundValues, double>>{
             {boundDir, 200}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
-    stack.update(newBounds1, trf * Translation3{Vector3::Unit(dirIdx) * 100},
-                 *logger);
+    stack.update(gctx, newBounds1,
+                 trf * Translation3{Vector3::Unit(dirIdx) * 100}, *logger);
     BOOST_CHECK_EQUAL(volumes.size(), 2);
     BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
 
-    BOOST_CHECK_EQUAL(stack.gaps().front()->center()[dirIdx], 200.0);
+    BOOST_CHECK_EQUAL(stack.gaps().front()->center(gctx)[dirIdx], 200.0);
     const auto* updatedBounds = dynamic_cast<const CuboidVolumeBounds*>(
         &stack.gaps().front()->volumeBounds());
     BOOST_REQUIRE_NE(updatedBounds, nullptr);
@@ -894,14 +911,14 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
         std::initializer_list<
             std::pair<CuboidVolumeBounds::BoundValues, double>>{
             {boundDir, 300}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
-    stack.update(newBounds2, trf * Translation3{Vector3::Unit(dirIdx) * 200},
-                 *logger);
+    stack.update(gctx, newBounds2,
+                 trf * Translation3{Vector3::Unit(dirIdx) * 200}, *logger);
 
     BOOST_CHECK_EQUAL(volumes.size(), 2);
     // No additional gap volume was added!
     BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
 
-    BOOST_CHECK_EQUAL(stack.gaps().front()->center()[dirIdx], 300.0);
+    BOOST_CHECK_EQUAL(stack.gaps().front()->center(gctx)[dirIdx], 300.0);
     updatedBounds = dynamic_cast<const CuboidVolumeBounds*>(
         &stack.gaps().front()->volumeBounds());
     BOOST_REQUIRE_NE(updatedBounds, nullptr);
@@ -910,7 +927,7 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
 
   BOOST_TEST_CONTEXT("Negative") {
     std::vector<Volume*> volumes = {&vol};
-    CuboidVolumeStack stack(volumes, dir, VolumeAttachmentStrategy::Gap,
+    CuboidVolumeStack stack(gctx, volumes, dir, VolumeAttachmentStrategy::Gap,
                             VolumeResizeStrategy::Gap, *logger);
 
     BOOST_CHECK_EQUAL(volumes.size(), 1);
@@ -920,12 +937,12 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
         std::initializer_list<
             std::pair<CuboidVolumeBounds::BoundValues, double>>{
             {boundDir, 200}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
-    stack.update(newBounds1, trf * Translation3{Vector3::Unit(dirIdx) * -100},
-                 *logger);
+    stack.update(gctx, newBounds1,
+                 trf * Translation3{Vector3::Unit(dirIdx) * -100}, *logger);
     BOOST_CHECK_EQUAL(volumes.size(), 2);
     BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
 
-    BOOST_CHECK_EQUAL(stack.gaps().front()->center()[dirIdx], -200.0);
+    BOOST_CHECK_EQUAL(stack.gaps().front()->center(gctx)[dirIdx], -200.0);
     const auto* updatedBounds = dynamic_cast<const CuboidVolumeBounds*>(
         &stack.gaps().front()->volumeBounds());
     BOOST_REQUIRE_NE(updatedBounds, nullptr);
@@ -935,14 +952,14 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
         std::initializer_list<
             std::pair<CuboidVolumeBounds::BoundValues, double>>{
             {boundDir, 300}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
-    stack.update(newBounds2, trf * Translation3{Vector3::Unit(dirIdx) * -200},
-                 *logger);
+    stack.update(gctx, newBounds2,
+                 trf * Translation3{Vector3::Unit(dirIdx) * -200}, *logger);
 
     BOOST_CHECK_EQUAL(volumes.size(), 2);
     // No additional gap volume was added!
     BOOST_CHECK_EQUAL(stack.gaps().size(), 1);
 
-    BOOST_CHECK_EQUAL(stack.gaps().front()->center()[dirIdx], -300.0);
+    BOOST_CHECK_EQUAL(stack.gaps().front()->center(gctx)[dirIdx], -300.0);
     updatedBounds = dynamic_cast<const CuboidVolumeBounds*>(
         &stack.gaps().front()->volumeBounds());
     BOOST_REQUIRE_NE(updatedBounds, nullptr);
@@ -959,16 +976,18 @@ BOOST_DATA_TEST_CASE(InvalidDirection, boost::unit_test::data::make(strategies),
   volumes.push_back(vol1.get());
 
   // Single volume invalid direction still gives an error
-  BOOST_CHECK_THROW(CuboidVolumeStack(volumes, AxisDirection::AxisR, strategy),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      CuboidVolumeStack(gctx, volumes, AxisDirection::AxisR, strategy),
+      std::invalid_argument);
 
   auto vol2 = std::make_shared<Volume>(
       Transform3::Identity(),
       std::make_shared<CuboidVolumeBounds>(100_mm, 400_mm, 400_mm));
   volumes.push_back(vol2.get());
 
-  BOOST_CHECK_THROW(CuboidVolumeStack(volumes, AxisDirection::AxisR, strategy),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      CuboidVolumeStack(gctx, volumes, AxisDirection::AxisR, strategy),
+      std::invalid_argument);
 }
 
 BOOST_DATA_TEST_CASE(InvalidInput,
@@ -979,7 +998,7 @@ BOOST_DATA_TEST_CASE(InvalidInput,
                      strategy, direction) {
   BOOST_TEST_CONTEXT("Empty Volume") {
     std::vector<Volume*> volumes;
-    BOOST_CHECK_THROW(CuboidVolumeStack(volumes, direction, strategy),
+    BOOST_CHECK_THROW(CuboidVolumeStack(gctx, volumes, direction, strategy),
                       std::invalid_argument);
   }
 
@@ -1000,7 +1019,7 @@ BOOST_DATA_TEST_CASE(InvalidInput,
           std::make_shared<CuboidVolumeBounds>(100_mm, 400_mm, 400_mm));
       volumes.push_back(vol2.get());
 
-      BOOST_CHECK_THROW(CuboidVolumeStack(volumes, direction, strategy,
+      BOOST_CHECK_THROW(CuboidVolumeStack(gctx, volumes, direction, strategy,
                                           VolumeResizeStrategy::Gap, *logger),
                         std::invalid_argument);
     }
@@ -1021,7 +1040,7 @@ BOOST_DATA_TEST_CASE(InvalidInput,
           std::make_shared<CuboidVolumeBounds>(100_mm, 400_mm, 400_mm));
       volumes.push_back(vol2.get());
 
-      BOOST_CHECK_THROW(CuboidVolumeStack(volumes, direction, strategy,
+      BOOST_CHECK_THROW(CuboidVolumeStack(gctx, volumes, direction, strategy,
                                           VolumeResizeStrategy::Gap, *logger),
                         std::invalid_argument);
     }
@@ -1041,14 +1060,15 @@ BOOST_DATA_TEST_CASE(JoinCuboidVolumeSingle,
 
   std::vector<Volume*> volumes{vol.get()};
 
-  CuboidVolumeStack stack(volumes, direction, strategy,
+  CuboidVolumeStack stack(gctx, volumes, direction, strategy,
                           VolumeResizeStrategy::Gap, *logger);
 
   // Cuboid stack has the same transform as bounds as the single input
   // volume
   BOOST_CHECK_EQUAL(volumes.size(), 1);
   BOOST_CHECK_EQUAL(volumes.at(0), vol.get());
-  BOOST_CHECK_EQUAL(vol->transform().matrix(), stack.transform().matrix());
+  BOOST_CHECK_EQUAL(vol->localToGlobalTransform(gctx).matrix(),
+                    stack.localToGlobalTransform(gctx).matrix());
   BOOST_CHECK_EQUAL(vol->volumeBounds(), stack.volumeBounds());
 }
 

@@ -9,11 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -30,16 +28,12 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cmath>
 #include <iostream>
 #include <memory>
 #include <numbers>
 #include <optional>
 #include <random>
-#include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -48,12 +42,12 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
@@ -123,10 +117,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
       std::cout << "Test " << i + 1 << std::endl;
     }
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Construct random track parameters around origin
-    BoundTrackParameters::ParametersVector paramVec;
+    BoundVector paramVec;
 
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
@@ -248,10 +242,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   // vertex after the update process
   for (unsigned int i = 0; i < nTests; ++i) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    double q = std::copysign(1., qDist(gen));
 
     // Construct random track parameters
-    BoundTrackParameters::ParametersVector paramVec;
+    BoundVector paramVec;
 
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;

@@ -24,7 +24,6 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -41,7 +40,7 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 ViewConfig red{.color = {200, 0, 0}};
 ViewConfig green{.color = {0, 200, 0}};
@@ -69,7 +68,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> allowedAxes = {"XZ*", "xZ*", "xz*", "Xz*"};
+  std::vector<TGeoAxes> allowedAxes = {"XZY", "xZY", "xzY", "XzY"};
 
   std::size_t itrd = 0;
   for (const auto &axes : allowedAxes) {
@@ -90,7 +89,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
     CHECK_CLOSE_ABS(hy, hY, s_epsilon);
 
     // Check if the surface is the (negative) identity
-    auto transform = plane->transform(tgContext);
+    auto transform = plane->localToGlobalTransform(tgContext);
     auto rotation = transform.rotation();
     const Vector3 offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
     GeometryView3D::drawSurface(objVis, *plane, tgContext,
@@ -106,7 +105,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
   }
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {"XY*", "YZ*", "ZX*", "ZY*"};
+  std::vector<TGeoAxes> notAllowed = {"XYZ", "YZX", "ZXY", "ZYX"};
   for (const auto &naxis : notAllowed) {
     BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                       *gGeoIdentity, naxis, 1),

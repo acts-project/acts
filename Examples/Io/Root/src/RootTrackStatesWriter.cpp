@@ -117,7 +117,12 @@ RootTrackStatesWriter::RootTrackStatesWriter(
   m_outputTree->Branch("t_eTHETA", &m_t_eTHETA);
   m_outputTree->Branch("t_eQOP", &m_t_eQOP);
   m_outputTree->Branch("t_eT", &m_t_eT);
-  m_outputTree->Branch("particle_ids", &m_particleId);
+  m_outputTree->Branch("particle_ids_vertex_primary", &m_particleVertexPrimary);
+  m_outputTree->Branch("particle_ids_vertex_secondary",
+                       &m_particleVertexSecondary);
+  m_outputTree->Branch("particle_ids_particle", &m_particleParticle);
+  m_outputTree->Branch("particle_ids_generation", &m_particleGeneration);
+  m_outputTree->Branch("particle_ids_sub_particle", &m_particleSubParticle);
 
   m_outputTree->Branch("dim_hit", &m_dim_hit);
   m_outputTree->Branch("l_x_hit", &m_lx_hit);
@@ -281,25 +286,21 @@ ProcessCode RootTrackStatesWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
-
-  ACTS_INFO("Wrote states of trajectories to tree '"
-            << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
-
   return ProcessCode::SUCCESS;
 }
 
 RootTrackStatesWriter::StateType RootTrackStatesWriter::getStateType(
     ConstTrackStateProxy state) {
-  if (state.typeFlags().test(Acts::OutlierFlag)) {
+  if (state.typeFlags().isOutlier()) {
     return StateType::eOutlier;
   }
-  if (state.typeFlags().test(Acts::MeasurementFlag)) {
+  if (state.typeFlags().isMeasurement()) {
     return StateType::eMeasurement;
   }
-  if (state.typeFlags().test(Acts::HoleFlag)) {
+  if (state.typeFlags().isHole()) {
     return StateType::eHole;
   }
-  if (state.typeFlags().test(Acts::MaterialFlag)) {
+  if (state.typeFlags().isMaterial()) {
     return StateType::eMaterial;
   }
   return StateType::eUnknown;
@@ -353,9 +354,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     // Get the trackStates on the trajectory
     m_nParams = {0, 0, 0, 0};
 
-    // particle barcodes for a given track state (size depends on a type of
-    // digitization, for smeared digitization is not more than 1)
-    std::vector<std::vector<std::uint32_t>> particleIds;
+    std::vector<std::uint32_t> particleVertexPrimary;
+    std::vector<std::uint32_t> particleVertexSecondary;
+    std::vector<std::uint32_t> particleParticle;
+    std::vector<std::uint32_t> particleGeneration;
+    std::vector<std::uint32_t> particleSubParticle;
 
     for (const auto& state : track.trackStatesReversed()) {
       const Acts::Surface& surface = state.referenceSurface();
@@ -377,7 +380,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       // the truth track parameter at this track state
       Acts::BoundVector truthParams;
 
-      particleIds.clear();
+      particleVertexPrimary.clear();
+      particleVertexSecondary.clear();
+      particleParticle.clear();
+      particleGeneration.clear();
+      particleSubParticle.clear();
 
       if (!state.hasUncalibratedSourceLink()) {
         m_t_x.push_back(nan);
@@ -404,10 +411,12 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         // Use average truth in the case of multiple contributing sim hits
         const auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+
         const auto hitIdx = sl.index();
         const auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         const auto [truthLocal, truthPos4, truthUnitDir] =
             averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
+
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         if (!indices.empty()) {
@@ -422,7 +431,12 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           // extract particle ids contributed to this track state
           for (auto const& [key, simHitIdx] : indices) {
             const auto& simHit = *simHits.nth(simHitIdx);
-            particleIds.push_back(simHit.particleId().asVector());
+            const auto barcode = simHit.particleId();
+            particleVertexPrimary.push_back(barcode.vertexPrimary());
+            particleVertexSecondary.push_back(barcode.vertexSecondary());
+            particleParticle.push_back(barcode.particle());
+            particleGeneration.push_back(barcode.generation());
+            particleSubParticle.push_back(barcode.subParticle());
           }
         }
 
@@ -653,14 +667,12 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         if (ipar == ePredicted) {
           // local hit residual info
-          const Acts::ActsDynamicMatrix H =
+          const Acts::DynamicMatrix H =
               state.projectorSubspaceHelper().fullProjector().topLeftCorner(
                   state.calibratedSize(), Acts::eBoundSize);
-          const Acts::ActsDynamicMatrix V =
-              state.effectiveCalibratedCovariance();
-          const Acts::ActsDynamicMatrix resCov =
-              V + H * covariance * H.transpose();
-          const Acts::ActsDynamicVector res =
+          const Acts::DynamicMatrix V = state.effectiveCalibratedCovariance();
+          const Acts::DynamicMatrix resCov = V + H * covariance * H.transpose();
+          const Acts::DynamicVector res =
               state.effectiveCalibrated() - H * parameters;
 
           const double resX = res[Acts::eBoundLoc0];
@@ -701,7 +713,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           m_dim_hit.push_back(state.calibratedSize());
         }
       }
-      m_particleId.push_back(std::move(particleIds));
+      m_particleVertexPrimary.push_back(std::move(particleVertexPrimary));
+      m_particleVertexSecondary.push_back(std::move(particleVertexSecondary));
+      m_particleParticle.push_back(std::move(particleParticle));
+      m_particleGeneration.push_back(std::move(particleGeneration));
+      m_particleSubParticle.push_back(std::move(particleSubParticle));
     }
 
     // fill the variables for one track to tree
@@ -731,8 +747,11 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
     m_t_eTHETA.clear();
     m_t_eQOP.clear();
     m_t_eT.clear();
-
-    m_particleId.clear();
+    m_particleVertexPrimary.clear();
+    m_particleVertexSecondary.clear();
+    m_particleParticle.clear();
+    m_particleGeneration.clear();
+    m_particleSubParticle.clear();
 
     m_dim_hit.clear();
     m_lx_hit.clear();

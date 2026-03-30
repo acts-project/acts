@@ -12,10 +12,11 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ParticleOutcome.hpp"
@@ -181,7 +182,7 @@ class Particle {
     if (newEnergy <= m_mass) {
       m_absMomentum = 0.;
     } else {
-      m_absMomentum = std::sqrt(newEnergy * newEnergy - m_mass * m_mass);
+      m_absMomentum = Acts::fastCathetus(newEnergy, m_mass);
     }
     return *this;
   }
@@ -215,7 +216,7 @@ class Particle {
   Acts::ParticleHypothesis hypothesis() const {
     return Acts::ParticleHypothesis(
         absolutePdg(), static_cast<float>(mass()),
-        Acts::AnyCharge{static_cast<float>(absoluteCharge())});
+        Acts::ChargeHypothesis{static_cast<float>(absoluteCharge())});
   }
   /// Particl qOverP.
   /// @return The charge over momentum ratio
@@ -406,6 +407,10 @@ class Particle {
   ParticleOutcome m_outcome = ParticleOutcome::Alive;
 };
 
+/// Print particle to output stream
+/// @param os Output stream
+/// @param particle Particle to print
+/// @return Output stream
 std::ostream &operator<<(std::ostream &os, const Particle &particle);
 
 }  // namespace ActsFatras

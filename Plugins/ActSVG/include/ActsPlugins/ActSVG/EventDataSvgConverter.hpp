@@ -13,7 +13,14 @@
 #include "ActsPlugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/core.hpp>
 
+/// @namespace ActsPlugins::Svg::EventDataConverter
+/// @ingroup actsvg_plugin
+/// Utilities to convert event data to SVG objects
+
 namespace ActsPlugins::Svg::EventDataConverter {
+
+/// @addtogroup actsvg_plugin
+/// @{
 
 /// Write/create a 3D point in XY view
 ///
@@ -31,7 +38,7 @@ actsvg::svg::object pointXY(const Acts::Vector3& pos, double size,
 /// @param pos the position
 /// @param size the size of the object
 /// @param style the style of the object
-/// @param indx the running index
+/// @param idx the running index
 ///
 /// @return a vector of svg objects
 actsvg::svg::object pointZR(const Acts::Vector3& pos, double size,
@@ -42,7 +49,7 @@ actsvg::svg::object pointZR(const Acts::Vector3& pos, double size,
 /// @param pos the position
 /// @param size the size of the object
 /// @param style the style of the object
-/// @param indx the running index
+/// @param idx the running index
 ///
 /// @return a vector of svg objects
 template <typename view_type>
@@ -57,5 +64,7 @@ actsvg::svg::object point(const Acts::Vector3& pos, double size,
                            static_cast<actsvg::scalar>(size), fill, stroke);
   return circle;
 }
+
+/// @}
 
 }  // namespace ActsPlugins::Svg::EventDataConverter

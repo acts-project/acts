@@ -15,10 +15,28 @@
 
 namespace Acts {
 
-/// @ingroup MagneticField
-///
-/// @brief Magnetic field provider modelling a magnetic field consisting of
+/// Magnetic field provider modelling a magnetic field consisting of
 /// several (potentially overlapping) regions of constant values.
+///
+/// @ingroup magnetic_field
+///
+/// The multi-range constant field allows modelling cases where a magnetic field
+/// can be described as multiple (potentially overlapping) regions, each of
+/// which has its own constant magnetic field. This provides more flexibility
+/// than the
+/// @ref Acts::ConstantBField while providing higher performance than
+/// @ref Acts::InterpolatedBFieldMap.
+///
+/// This magnetic field provider is configured using a list of pairs, where each
+/// pair defines a region in three-dimensional space as well as a field vector.
+/// Magnetic field lookup then proceeds by finding the *last* region in the
+/// user-provided list that contains the requested coordinate and returning the
+/// corresponding field vector.
+///
+/// The implementation uses a simple caching mechanism to store the last matched
+/// region, providing improved performance for consecutive lookups within the
+/// same region. This is thread-safe when each thread uses its own cache
+/// instance. The field configuration itself is immutable after construction.
 class MultiRangeBField final : public MagneticFieldProvider {
  private:
   struct Cache {

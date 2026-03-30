@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -105,24 +104,6 @@ class NavigationTarget {
         m_surfaceRepresentation(&target.surface()),
         m_boundaryTolerance(boundaryTolerance) {}
 
-  /// Create a gen2 portal intersection from a 3D intersection, intersection
-  /// index, and a portal
-  ///
-  /// @param intersection is the intersection
-  /// @param intersectionIndex is the intersection index
-  /// @param target is the intersected target
-  /// @param boundaryTolerance is the boundary tolerance used for this
-  /// intersection
-  NavigationTarget(const Intersection3D& intersection,
-                   IntersectionIndex intersectionIndex,
-                   const Experimental::Portal& target,
-                   const BoundaryTolerance& boundaryTolerance) noexcept
-      : m_intersection(intersection),
-        m_intersectionIndex(intersectionIndex),
-        m_target(&target),
-        m_surfaceRepresentation(&target.surface()),
-        m_boundaryTolerance(boundaryTolerance) {}
-
   /// Copy constructor
   constexpr NavigationTarget(const NavigationTarget&) noexcept = default;
 
@@ -130,10 +111,12 @@ class NavigationTarget {
   constexpr NavigationTarget(NavigationTarget&&) noexcept = default;
 
   /// Copy assignment operator
+  /// @return Reference to this object
   constexpr NavigationTarget& operator=(const NavigationTarget&) noexcept =
       default;
 
   /// Move assignment operator
+  /// @return Reference to this object
   constexpr NavigationTarget& operator=(NavigationTarget&&) noexcept = default;
 
   /// Returns the intersection
@@ -182,12 +165,6 @@ class NavigationTarget {
     return *std::get<const Portal*>(m_target);
   }
 
-  /// Returns the gen2 portal that has been intersected
-  /// @return the portal
-  constexpr const Experimental::Portal& gen2Portal() const {
-    return *std::get<const Experimental::Portal*>(m_target);
-  }
-
   /// Returns whether the target is a surface
   /// @return true if the target is a surface
   constexpr bool isSurfaceTarget() const noexcept {
@@ -204,8 +181,7 @@ class NavigationTarget {
   /// @return true if the target is a portal
   constexpr bool isPortalTarget() const noexcept {
     return std::holds_alternative<const BoundarySurface*>(m_target) ||
-           std::holds_alternative<const Portal*>(m_target) ||
-           std::holds_alternative<const Experimental::Portal*>(m_target);
+           std::holds_alternative<const Portal*>(m_target);
   }
 
   /// Returns the boundary tolerance used for this intersection
@@ -247,6 +223,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by path length
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is before bIntersection
   constexpr static bool pathLengthOrder(
       const NavigationTarget& aIntersection,
@@ -256,6 +234,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by closest distance to the reference point
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is closer than bIntersection
   constexpr static bool closestOrder(
       const NavigationTarget& aIntersection,
@@ -265,6 +245,8 @@ class NavigationTarget {
   }
 
   /// Comparison operator by closest distance to the reference point in the
+  /// @param aIntersection First navigation target
+  /// @param bIntersection Second navigation target
   /// @return true if aIntersection is closer than bIntersection
   constexpr static bool closestForwardOrder(
       const NavigationTarget& aIntersection,
@@ -272,13 +254,20 @@ class NavigationTarget {
     return Intersection3D::closestForwardOrder(aIntersection.intersection(),
                                                bIntersection.intersection());
   }
+  /// @brief Define the ostream operator to print the object
+  /// @param ostr: Reference to the ostream
+  /// @param target: Reference to the target to print
+  friend std::ostream& operator<<(std::ostream& ostr,
+                                  const NavigationTarget& target) {
+    target.print(ostr);
+    return ostr;
+  }
 
  private:
   /// Alias for the target variant
   using TargetVariant =
       std::variant<std::monostate, const Surface*, const Layer*,
-                   const BoundarySurface*, const Portal*,
-                   const Experimental::Portal*>;
+                   const BoundarySurface*, const Portal*>;
 
   /// The intersection itself
   Intersection3D m_intersection = Intersection3D::Invalid();
@@ -293,6 +282,10 @@ class NavigationTarget {
 
   /// Default constructor creating a none target
   constexpr NavigationTarget() = default;
+
+  /// @brief print method
+  /// @param ostr: Stream to which the object is printed
+  void print(std::ostream& ostr) const;
 };
 
 static_assert(std::is_trivially_copy_constructible_v<NavigationTarget>);

@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesTrackFitting
-    SHARED
     src/RefittingCalibrator.cpp
     src/TrackFittingAlgorithm.cpp
     src/KalmanFitterFunction.cpp

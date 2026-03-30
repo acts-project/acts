@@ -17,7 +17,7 @@
 #include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
-#include "Acts/Material/interface/ISurfaceMaterialAccumulater.hpp"
+#include "Acts/Material/interface/ISurfaceMaterialAccumulator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -26,7 +26,7 @@ using namespace Acts;
 
 namespace ActsTests {
 
-auto tContext = GeometryContext();
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 
 /// @brief Interface for the material mapping that seeks the possible
 /// assignment candidates for the material interactiosn
@@ -80,22 +80,22 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
 };
 
 /// @brief Interface for the material mapping, this is the accumulation step
-class MaterialBlender : public ISurfaceMaterialAccumulater {
+class MaterialBlender : public ISurfaceMaterialAccumulator {
  public:
   explicit MaterialBlender(
       const std::vector<std::shared_ptr<Surface>>& surfaces = {})
       : m_surfaces(surfaces) {}
 
-  /// The state of the material accumulater, this is used
+  /// The state of the material accumulator, this is used
   /// to cache information across tracks/events
-  class State final : public ISurfaceMaterialAccumulater::State {
+  class State final : public ISurfaceMaterialAccumulator::State {
    public:
     std::map<const Surface*, AccumulatedMaterialSlab> accumulatedMaterial;
   };
 
   /// Factory for creating the state
-  std::unique_ptr<ISurfaceMaterialAccumulater::State> createState()
-      const override {
+  std::unique_ptr<ISurfaceMaterialAccumulator::State> createState(
+      const GeometryContext& /*gctx*/) const override {
     auto state = std::make_unique<State>();
     for (auto& surface : m_surfaces) {
       state->accumulatedMaterial[surface.get()] = AccumulatedMaterialSlab();
@@ -105,12 +105,13 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
 
   /// @brief Accumulate the material interaction on the surface
   ///
-  /// @param state is the state of the accumulater
+  /// @param state is the state of the accumulator
   /// @param interactions is the material interactions, with assigned surfaces
   /// @param surfacesWithoutAssignment are the surfaces without assignment
   ///
   /// @note this the track average over the binned material
-  void accumulate(ISurfaceMaterialAccumulater::State& state,
+  void accumulate(ISurfaceMaterialAccumulator::State& state,
+                  const GeometryContext& /*gctx*/,
                   const std::vector<MaterialInteraction>& interactions,
                   const std::vector<IAssignmentFinder::SurfaceAssignment>&
                   /*surfacesWithoutAssignment*/) const override {
@@ -139,7 +140,8 @@ class MaterialBlender : public ISurfaceMaterialAccumulater {
   ///
   /// @note this does the run average over the (binned) material
   std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
-  finalizeMaterial(ISurfaceMaterialAccumulater::State& state) const override {
+  finalizeMaterial(ISurfaceMaterialAccumulator::State& state,
+                   const GeometryContext& /*gctx*/) const override {
     auto cState = static_cast<State*>(&state);
 
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
@@ -180,19 +182,19 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
   assigner->surfaces = {surfaces[0].get(), surfaces[1].get(),
                         surfaces[2].get()};
 
-  // The accumulater - which blends all the material
+  // The accumulator - which blends all the material
   auto accumulator = std::make_shared<MaterialBlender>(surfaces);
 
   // Create the mapper
   MaterialMapper::Config mmConfig;
   mmConfig.assignmentFinder = assigner;
-  mmConfig.surfaceMaterialAccumulater = accumulator;
+  mmConfig.surfaceMaterialAccumulator = accumulator;
 
   MaterialMapper mapper(mmConfig);
 
-  auto state = mapper.createState();
+  auto state = mapper.createState(tContext);
   BOOST_CHECK(state.get() != nullptr);
-  BOOST_CHECK(state->surfaceMaterialAccumulaterState.get() != nullptr);
+  BOOST_CHECK(state->surfaceMaterialAccumulatorState.get() != nullptr);
 
   std::vector<RecordedMaterialTrack> mappedTracks;
   std::vector<RecordedMaterialTrack> unmappedTracks;
@@ -218,7 +220,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
   }
 
   // Get the maps
-  auto [surfaceMaps, volumeMaps] = mapper.finalizeMaps(*state);
+  auto [surfaceMaps, volumeMaps] = mapper.finalizeMaps(*state, tContext);
 
   BOOST_CHECK(surfaceMaps.size() == 3);
   BOOST_CHECK(volumeMaps.empty());
@@ -228,13 +230,13 @@ BOOST_AUTO_TEST_CASE(MaterialMapperInvalidTest) {
   // The assigner
   auto assigner = std::make_shared<IntersectSurfacesFinder>();
 
-  // The accumulater - which blends all the material
+  // The accumulator - which blends all the material
   auto accumulator = std::make_shared<MaterialBlender>();
 
   // Create the mapper
   MaterialMapper::Config mmConfigInvalid;
   mmConfigInvalid.assignmentFinder = nullptr;
-  mmConfigInvalid.surfaceMaterialAccumulater = accumulator;
+  mmConfigInvalid.surfaceMaterialAccumulator = accumulator;
 
   BOOST_CHECK_THROW(auto mapperIA = MaterialMapper(mmConfigInvalid),
                     std::invalid_argument);
@@ -242,7 +244,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperInvalidTest) {
   // BOOST_CHECK_THROW(MaterialMapper(mmConfigInvalid), std::invalid_argument);
 
   mmConfigInvalid.assignmentFinder = assigner;
-  mmConfigInvalid.surfaceMaterialAccumulater = nullptr;
+  mmConfigInvalid.surfaceMaterialAccumulator = nullptr;
 
   BOOST_CHECK_THROW(auto mapperIS = MaterialMapper(mmConfigInvalid),
                     std::invalid_argument);

@@ -24,6 +24,8 @@ class ISurfaceMaterial;
 
 /// @class AccumulatedSurfaceMaterial
 ///
+/// @ingroup material_mapping
+///
 /// This class is used by the SurfaceMaterialMapper in order to
 /// accumulate/collect material information during the mapping process.
 ///
@@ -163,12 +165,12 @@ class AccumulatedSurfaceMaterial {
 };
 
 inline const BinUtility& AccumulatedSurfaceMaterial::binUtility() const {
-  return (m_binUtility);
+  return m_binUtility;
 }
 
 inline const AccumulatedSurfaceMaterial::AccumulatedMatrix&
 AccumulatedSurfaceMaterial::accumulatedMaterial() const {
-  return (m_accumulatedMaterial);
+  return m_accumulatedMaterial;
 }
 
 inline double AccumulatedSurfaceMaterial::splitFactor() const {

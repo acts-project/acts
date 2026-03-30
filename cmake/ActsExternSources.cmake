@@ -34,7 +34,7 @@ set(ACTS_DETRAY_SOURCE
 mark_as_advanced(ACTS_DETRAY_SOURCE)
 
 set(ACTS_TRACCC_SOURCE
-    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=cee2d24ebd8dc99fd906fc41ee6e2dac0ce9f9b2c63eff4c06dc57f14365c3b5"
+    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=d2dd856a83503ab452936f79ebb2496ce59e2f63984b0e9403d1c881546b8872"
     CACHE STRING
     "Source to take TRACCC from"
 )
@@ -48,9 +48,17 @@ set(ACTS_FRNN_SOURCE
 mark_as_advanced(ACTS_FRNN_SOURCE)
 
 set(ACTS_NLOHMANNJSON_SOURCE
-    "URL;https://github.com/nlohmann/json/archive/refs/tags/v${_acts_nlohmanjson_version}.tar.gz;URL_HASH;SHA256=5daca6ca216495edf89d167f808d1d03c4a4d929cef7da5e10f135ae1540c7e4"
+    "URL;https://github.com/nlohmann/json/archive/refs/tags/v${_acts_nlohmanjson_version}.tar.gz;URL_HASH;SHA256=0d8ef5af7f9794e3263480193c491549b2ba6cc74bb018906202ada498a79406"
     CACHE STRING
     "Source to take nlohmann_json from"
+)
+
+# translate version string to the historical Mille release naming convention
+string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
+set(ACTS_MILLE_SOURCE
+    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=ae4bf37de8d835aa8adc2960bb795a2080233a4c8af3d4b55adf395e20df0f3e"
+    CACHE STRING
+    "Source to take Mille from"
 )
 mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 
@@ -74,3 +82,17 @@ set(ACTS_ANNOY_SOURCE
     "Source to take Annoy from"
 )
 mark_as_advanced(ACTS_ANNOY_SOURCE)
+
+set(ACTS_ODD_SOURCE
+    "GIT_REPOSITORY;https://gitlab.cern.ch/acts/OpenDataDetector.git;GIT_TAG;v4.0.4"
+    CACHE STRING
+    "Source to take OpenDataDetector from"
+)
+mark_as_advanced(ACTS_ODD_SOURCE)
+
+set(ACTS_MODULEMAPGRAPH_SOURCE
+    "GIT_REPOSITORY;https://gitlab.cern.ch/gnn4itkteam/ModuleMapGraph;GIT_TAG;1.4.0"
+    CACHE STRING
+    "Source to take ModuleMapGraph from"
+)
+mark_as_advanced(ACTS_MODULEMAPGRAPH_SOURCE)

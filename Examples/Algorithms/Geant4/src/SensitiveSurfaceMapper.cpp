@@ -89,6 +89,7 @@ void writeG4Polyhedron(
     visualizer.face(faces, color);
   }
 }
+
 }  // namespace
 
 namespace ActsExamples::Geant4 {
@@ -117,7 +118,7 @@ std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
       }
 
       for (const auto& surface : surfaceArray->surfaces()) {
-        if (surface->associatedDetectorElement() != nullptr) {
+        if (surface->isSensitive()) {
           surfaces.push_back(surface);
         }
       }
@@ -196,7 +197,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
   const bool isMappedMaterial =
       Acts::rangeContainsValue(m_cfg.materialMappings, volumeMaterialName);
   const bool isMappedVolume =
-      Acts::rangeContainsValue(m_cfg.volumeMappings, volumeName);
+      Acts::rangeContainsSubstring(m_cfg.volumeMappings, volumeName);
 
   if (!(isSensitive || isMappedMaterial || isMappedVolume)) {
     ACTS_VERBOSE("Did not try mapping '"
@@ -269,7 +270,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
       Acts::Vector3 boundsCentroidGlobal{boundsCentroidSurfaceFrame[0],
                                          boundsCentroidSurfaceFrame[1], 0.0};
       boundsCentroidGlobal =
-          candidateSurface->transform(gctx) * boundsCentroidGlobal;
+          candidateSurface->localToGlobalTransform(gctx) * boundsCentroidGlobal;
 
       const auto boundsCentroidG4Frame =
           localG4ToGlobal.inverse() * boundsCentroidGlobal;

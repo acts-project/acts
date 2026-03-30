@@ -31,7 +31,7 @@ ScoreBasedAmbiguityResolution::computeInitialState(
   trackFeaturesVectors.reserve(tracks.size());
 
   for (const auto& track : tracks) {
-    int numberOfDetectors = m_cfg.detectorConfigs.size();
+    std::size_t numberOfDetectors = m_cfg.detectorConfigs.size();
 
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
@@ -48,17 +48,17 @@ ScoreBasedAmbiguityResolution::computeInitialState(
       }
       auto detectorId = volume_it->second;
 
-      if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
+      if (ts.typeFlags().isHole()) {
         ACTS_VERBOSE("Track state type is HoleFlag");
         trackFeaturesVector[detectorId].nHoles++;
-      } else if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
+      } else if (ts.typeFlags().isOutlier()) {
         ACTS_VERBOSE("Track state type is OutlierFlag");
         trackFeaturesVector[detectorId].nOutliers++;
 
-      } else if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      } else if (ts.typeFlags().isMeasurement()) {
         ACTS_VERBOSE("Track state type is MeasurementFlag");
 
-        if (ts.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
+        if (ts.typeFlags().isSharedHit()) {
           trackFeaturesVector[detectorId].nSharedHits++;
         }
         trackFeaturesVector[detectorId].nHits++;
@@ -151,10 +151,14 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       const auto& detector = m_cfg.detectorConfigs.at(detectorId);
       const auto& trackFeatures = trackFeaturesVector[detectorId];
 
-      score += trackFeatures.nHits * detector.hitsScoreWeight;
-      score += trackFeatures.nHoles * detector.holesScoreWeight;
-      score += trackFeatures.nOutliers * detector.outliersScoreWeight;
-      score += trackFeatures.nSharedHits * detector.otherScoreWeight;
+      score +=
+          static_cast<double>(trackFeatures.nHits * detector.hitsScoreWeight);
+      score +=
+          static_cast<double>(trackFeatures.nHoles * detector.holesScoreWeight);
+      score += static_cast<double>(trackFeatures.nOutliers *
+                                   detector.outliersScoreWeight);
+      score += static_cast<double>(trackFeatures.nSharedHits *
+                                   detector.otherScoreWeight);
     }
 
     // Adding scores based on optional weights
@@ -272,7 +276,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       // detector.
       std::size_t nHits = trackFeatures.nHits;
       if (nHits > detector.maxHits) {
-        score = score * (nHits - detector.maxHits + 1);  // hits are good !
+        score = score * static_cast<double>(nHits - detector.maxHits +
+                                            1);  // hits are good !
         nHits = detector.maxHits;
       }
       score = score * detector.factorHits[nHits];
@@ -284,7 +289,8 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       // detector.
       std::size_t iHoles = trackFeatures.nHoles;
       if (iHoles > detector.maxHoles) {
-        score /= (iHoles - detector.maxHoles + 1);  // holes are bad !
+        // holes are bad !
+        score /= static_cast<double>(iHoles - detector.maxHoles + 1);
         iHoles = detector.maxHoles;
       }
       score = score * detector.factorHoles[iHoles];
@@ -355,8 +361,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
   for (const auto& track : tracks) {
     std::vector<std::size_t> measurementsPerTrack;
     for (const auto& ts : track.trackStatesReversed()) {
-      if (!ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) &&
-          !ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!ts.typeFlags().isOutlier() && !ts.typeFlags().isMeasurement()) {
         continue;
       }
       Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
@@ -415,8 +420,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // Loop over all measurements of the track and for each hit a
   // trackStateTypes is assigned.
   for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
-    if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
-        ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (ts.typeFlags().isOutlier() || ts.typeFlags().isMeasurement()) {
       std::size_t iMeasurement = measurementsPerTrack[index];
       auto it = nTracksPerMeasurement.find(iMeasurement);
       if (it == nTracksPerMeasurement.end()) {
@@ -426,7 +430,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       }
 
       std::size_t nTracksShared = it->second;
-      auto isoutliner = ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+      auto isoutliner = ts.typeFlags().isOutlier();
 
       if (isoutliner) {
         ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
@@ -453,8 +457,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
   // trackStateTypes and other conditions.
   // Good measurements are copied to the newMeasurementsPerTrack vector.
   for (std::size_t index = 0; auto ts : track.trackStatesReversed()) {
-    if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
-        ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (ts.typeFlags().isOutlier() || ts.typeFlags().isMeasurement()) {
       if (!ts.hasReferenceSurface()) {
         ACTS_DEBUG("Track state has no reference surface");
         continue;

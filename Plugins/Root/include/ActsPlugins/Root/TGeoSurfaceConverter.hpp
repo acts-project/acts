@@ -9,11 +9,13 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
-#include <string>
 #include <tuple>
 
 #include "RtypesCore.h"
@@ -31,6 +33,9 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
+
 class TGeoDetectorElement;
 
 /// Helper struct to convert TGeoShapes into Surface or Volume Bounds
@@ -47,7 +52,7 @@ struct TGeoSurfaceConverter {
   static std::tuple<std::shared_ptr<const Acts::CylinderBounds>,
                     const Acts::Transform3, double>
   cylinderComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                     const Double_t* translation, const std::string& axes,
+                     const Double_t* translation, TGeoAxes axes,
                      double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into disk surface components
@@ -62,7 +67,7 @@ struct TGeoSurfaceConverter {
   static std::tuple<std::shared_ptr<const Acts::DiscBounds>,
                     const Acts::Transform3, double>
   discComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                 const Double_t* translation, const std::string& axes,
+                 const Double_t* translation, TGeoAxes axes,
                  double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into plane surface components
@@ -77,7 +82,7 @@ struct TGeoSurfaceConverter {
   static std::tuple<std::shared_ptr<const Acts::PlanarBounds>,
                     const Acts::Transform3, double>
   planeComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                  const Double_t* translation, const std::string& axes,
+                  const Double_t* translation, TGeoAxes axes,
                   double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape to a Surface
@@ -90,19 +95,26 @@ struct TGeoSurfaceConverter {
   /// @return shared pointer to a surface and the original thickness that
   /// has been condensed to the surface
   static std::tuple<std::shared_ptr<Acts::Surface>, double> toSurface(
-      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
-      const std::string& axes, double scalor = 10.) noexcept(false);
+      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
+      double scalor = 10.) noexcept(false);
 
   /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
-  /// @param degree The input in degree
+  /// * it will return any multiple of 360.0 to 2pi
+  /// @param deg The input in degree
   /// @return angle in radians
-  static double toRadian(double degree) {
-    if (degree > 180. && degree < 360.) {
-      degree -= 360.;
+  static double toRadian(double deg) {
+    double d = Acts::detail::wrap_periodic(deg, -180.0, 360.0);
+
+    // If the angle was mapped to 0 from a non-0 multiple of 360, set it to 360
+    if (constexpr double eps = 1e-6; std::abs(d) < eps && std::abs(deg) > eps) {
+      d = 360.;
     }
-    return degree / 180. * std::numbers::pi;
+
+    // Convert to rads
+    return d * Acts::UnitConstants::degree;
   }
 };
 
+/// @}
 }  // namespace ActsPlugins

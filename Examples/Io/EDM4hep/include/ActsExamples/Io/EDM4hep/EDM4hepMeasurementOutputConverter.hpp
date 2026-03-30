@@ -8,12 +8,14 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/Cluster.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
 
+#include <memory>
 #include <string>
 
 namespace ActsExamples {
@@ -28,24 +30,24 @@ namespace ActsExamples {
 /// Known issues:
 /// - cluster channels are written to inappropriate fields
 /// - local 2D coordinates and time are written to position
-class EDM4hepMeasurementOutputConverter final : public EDM4hepOutputConverter {
+class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
  public:
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
-    /// Which cluster collection to write (optional)
-    std::string inputClusters;
-    /// Name of the output tracker hit plane collection.
-    std::string outputTrackerHitsPlane = "ActsTrackerHitsPlane";
     /// Name of the output tracker hit raw collection.
-    std::string outputTrackerHitsRaw = "ActsTrackerHitsRaw";
+    std::string outputTrackerHitsLocal;
+
+    /// Tracking geometry for surface lookup (local-to-global transform).
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor with
   /// @param config configuration struct
   /// @param level logging level
-  EDM4hepMeasurementOutputConverter(const Config& config,
-                                    Acts::Logging::Level level);
+  explicit EDM4hepMeasurementOutputConverter(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -63,12 +65,8 @@ class EDM4hepMeasurementOutputConverter final : public EDM4hepOutputConverter {
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
 
-  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
-
-  CollectionBaseWriteHandle m_outputTrackerHitsPlane{this,
-                                                     "OutputTrackerHitsPlane"};
-  CollectionBaseWriteHandle m_outputTrackerHitsRaw{this,
-                                                   "OutputTrackerHitsRaw"};
+  PodioCollectionWriteHandle<ActsPodioEdm::TrackerHitLocalCollection>
+      m_outputTrackerHitsLocal{this, "OutputTrackerHitsLocal"};
 };
 
 }  // namespace ActsExamples

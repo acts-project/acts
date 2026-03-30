@@ -30,6 +30,7 @@ def main():
         "Scripts",
         "thirdparty",
         "CI",
+        "Python",
         "git",
         "cmake",
         ".git",
@@ -60,6 +61,20 @@ def main():
         "lazy_autodoc.py",
         "codegen/src/codegen/sympy_common.py",
         "CompressedIO.h",
+        # Files for python binding generation
+        "tgeo_aux.py.in",
+        "serve.py",
+        "SNIPPETS.md",
+        "todo.md",
+        "bugs.md",
+        "deprecated.md",
+        "acts-version-manager.js",
+        "tex-mml-chtml.js",
+        "Python/conftest.py",
+        # Temporarily excluded files. TODO remove in next major release.
+        "Core/include/Acts/EventData/detail/ParameterTraits.hpp",
+        "Core/include/Acts/Seeding/PathSeeder.hpp",
+        "Tests/CommonHelpers/include/ActsTests/CommonHelpers/TestSpacePoint.hpp",
     )
 
     suffix_header = (
@@ -81,6 +96,9 @@ def main():
     suffix_doc = (
         ".md",
         ".rst",
+        ".dox",
+        ".html",
+        ".bib",
     )
     suffix_other = (
         "",
@@ -97,6 +115,8 @@ def main():
         ".toml",
         ".txt",
         ".yml",
+        ".xml",
+        ".sh",
     )
     suffix_allowed = (
         suffix_header
@@ -160,16 +180,12 @@ def main():
 
             # Check header files and remove
             elif filepath.suffix in suffix_header + suffix_source:
-                if file_can_be_removed(filepath.stem, dirs_base_code):
+                if file_can_be_removed(filename, dirs_base_code):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
                     os.system(remove_cmd)
 
             elif filepath.suffix in suffix_python:
-                # Skip the python tests folder
-                if str(root).find("Examples/Python") != -1:
-                    continue
-
                 if not file_can_be_removed("import .*" + filepath.stem, dirs_base):
                     continue
 

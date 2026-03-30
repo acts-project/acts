@@ -23,19 +23,15 @@
 
 namespace Acts {
 
+/// @addtogroup json_plugin
+/// @{
+
 /// @brief Material decorator from Json format
 ///
 /// This reads in material maps for surfaces and volumes
 /// from a json file
 class JsonMaterialDecorator : public IMaterialDecorator {
  public:
-  using SurfaceMaterialMap
-      [[deprecated("Use Acts::SurfaceMaterialMaps directly")]] =
-          SurfaceMaterialMaps;
-  using VolumeMaterialMap
-      [[deprecated("Use Acts::VolumeMaterialMaps directly")]] =
-          VolumeMaterialMaps;
-
   /// Constructor with configuration
   /// @param rConfig the configuration for the material map reader
   /// @param jFileName the json file name to read
@@ -74,4 +70,6 @@ class JsonMaterialDecorator : public IMaterialDecorator {
 
   const Logger& logger() const { return *m_logger; }
 };
+
+/// @}
 }  // namespace Acts

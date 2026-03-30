@@ -408,23 +408,24 @@ BOOST_AUTO_TEST_CASE(BinningData_phi_modules) {
   // now test the bin jump 0/maxbin
 
   float firstAngle = (-std::numbers::pi + 1.5 * deltaPhi);
-  Vector3 firstBin(cos(firstAngle), sin(firstAngle), 0.);
+  Vector3 firstBin(std::cos(firstAngle), std::sin(firstAngle), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(firstAngle), std::size_t{0});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(firstBin), std::size_t{0});
 
   float firstAngleNeg = (-std::numbers::pi + 0.5 * deltaPhi);
-  Vector3 lastBinNeg(cos(firstAngleNeg), sin(firstAngleNeg), 0.);
+  Vector3 lastBinNeg(std::cos(firstAngleNeg), std::sin(firstAngleNeg), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(firstAngleNeg), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinNeg), std::size_t{4});
 
   float lastAnglePos = (std::numbers::pi + 0.5 * deltaPhi);
-  Vector3 lastBinPos(cos(lastAnglePos), sin(lastAnglePos), 0.);
+  Vector3 lastBinPos(std::cos(lastAnglePos), std::sin(lastAnglePos), 0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(lastAnglePos), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(lastBinPos), std::size_t{4});
 
   // now test the (remaining) phi scaling
   float underscaledAngle = -std::numbers::pi - 0.5 * deltaPhi;
-  Vector3 underscaledPos(cos(underscaledAngle), sin(underscaledAngle), 0.);
+  Vector3 underscaledPos(std::cos(underscaledAngle), std::sin(underscaledAngle),
+                         0.);
   BOOST_CHECK_EQUAL(phiData_mod.search(underscaledAngle), std::size_t{4});
   BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), std::size_t{4});
 }

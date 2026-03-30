@@ -8,22 +8,21 @@
 
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
-#include <utility>
+
+namespace ActsExamples {
 
 namespace {
 
 /// Increase the hit count for the given particle id by one.
-inline void increaseHitCount(
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts,
-    ActsFatras::Barcode particleId) {
+inline void increaseHitCount(std::vector<ParticleHitCount>& particleHitCounts,
+                             SimBarcode particleId) {
   // linear search since there is no ordering
   auto it = std::ranges::find_if(particleHitCounts, [=](const auto& phc) {
     return (phc.particleId == particleId);
@@ -37,24 +36,25 @@ inline void increaseHitCount(
 }
 
 /// Sort hit counts by decreasing values, i.e. majority particle comes first.
-inline void sortHitCount(
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
+inline void sortHitCount(std::vector<ParticleHitCount>& particleHitCounts) {
   std::ranges::sort(particleHitCounts, std::greater{},
                     [](const auto& p) { return p.hitCount; });
 }
 
 }  // namespace
 
+}  // namespace ActsExamples
+
 void ActsExamples::identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const MeasurementParticlesMap& measurementParticlesMap,
     const ProtoTrack& protoTrack,
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
+    std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
 
   for (auto hitIndex : protoTrack) {
     // register all particles that generated this hit
     for (const auto& [_, value] :
-         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+         makeRange(measurementParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, value);
     }
   }
@@ -62,7 +62,7 @@ void ActsExamples::identifyContributingParticles(
 }
 
 void ActsExamples::identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const MeasurementParticlesMap& measurementParticlesMap,
     const Trajectories& trajectories, std::size_t tip,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
@@ -73,7 +73,11 @@ void ActsExamples::identifyContributingParticles(
 
   trajectories.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
     // no truth info with non-measurement state
-    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().isMeasurement()) {
+      return true;
+    }
+    // skip outliers
+    if (state.typeFlags().isOutlier()) {
       return true;
     }
     // register all particles that generated this hit
@@ -81,7 +85,7 @@ void ActsExamples::identifyContributingParticles(
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
     for (const auto& [_, value] :
-         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+         makeRange(measurementParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, value);
     }
     return true;
@@ -90,14 +94,18 @@ void ActsExamples::identifyContributingParticles(
 }
 
 void ActsExamples::identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const MeasurementParticlesMap& measurementParticlesMap,
     const ConstTrackContainer::ConstTrackProxy& track,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
 
   for (const auto& state : track.trackStatesReversed()) {
     // no truth info with non-measurement state
-    if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+    if (!state.typeFlags().isMeasurement()) {
+      continue;
+    }
+    // skip outliers
+    if (state.typeFlags().isOutlier()) {
       continue;
     }
     // register all particles that generated this hit
@@ -105,7 +113,7 @@ void ActsExamples::identifyContributingParticles(
         state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
     for (const auto& [_, value] :
-         makeRange(hitParticlesMap.equal_range(hitIndex))) {
+         makeRange(measurementParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, value);
     }
   }

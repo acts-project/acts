@@ -15,15 +15,15 @@
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <ios>
-#include <ostream>
 #include <stdexcept>
 
 #include <TFile.h>
 #include <TTree.h>
 
-ActsExamples::RootSimHitWriter::RootSimHitWriter(
-    const ActsExamples::RootSimHitWriter::Config& config,
-    Acts::Logging::Level level)
+namespace ActsExamples {
+
+RootSimHitWriter::RootSimHitWriter(const RootSimHitWriter::Config& config,
+                                   Acts::Logging::Level level)
     : WriterT(config.inputSimHits, "RootSimHitWriter", level), m_cfg(config) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -47,7 +47,11 @@ ActsExamples::RootSimHitWriter::RootSimHitWriter(
   // setup the branches
   m_outputTree->Branch("event_id", &m_eventId);
   m_outputTree->Branch("geometry_id", &m_geometryId, "geometry_id/l");
-  m_outputTree->Branch("barcode", &m_barcode);
+  m_outputTree->Branch("barcode_vertex_primary", &m_barcodeVertexPrimary);
+  m_outputTree->Branch("barcode_vertex_secondary", &m_barcodeVertexSecondary);
+  m_outputTree->Branch("barcode_particle", &m_barcodeParticle);
+  m_outputTree->Branch("barcode_generation", &m_barcodeGeneration);
+  m_outputTree->Branch("barcode_sub_particle", &m_barcodeSubParticle);
   m_outputTree->Branch("tx", &m_tx);
   m_outputTree->Branch("ty", &m_ty);
   m_outputTree->Branch("tz", &m_tz);
@@ -68,13 +72,13 @@ ActsExamples::RootSimHitWriter::RootSimHitWriter(
   m_outputTree->Branch("sensitive_id", &m_sensitiveId);
 }
 
-ActsExamples::RootSimHitWriter::~RootSimHitWriter() {
+RootSimHitWriter::~RootSimHitWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::finalize() {
+ProcessCode RootSimHitWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -85,8 +89,8 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
-    const AlgorithmContext& ctx, const ActsExamples::SimHitContainer& hits) {
+ProcessCode RootSimHitWriter::writeT(const AlgorithmContext& ctx,
+                                     const SimHitContainer& hits) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -94,7 +98,12 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
   m_eventId = ctx.eventNumber;
   for (const auto& hit : hits) {
     m_geometryId = hit.geometryId().value();
-    m_barcode = hit.particleId().asVector();
+    const auto barcode = hit.particleId();
+    m_barcodeVertexPrimary = barcode.vertexPrimary();
+    m_barcodeVertexSecondary = barcode.vertexSecondary();
+    m_barcodeParticle = barcode.particle();
+    m_barcodeGeneration = barcode.generation();
+    m_barcodeSubParticle = barcode.subParticle();
     // write hit position
     m_tx = hit.fourPosition().x() / Acts::UnitConstants::mm;
     m_ty = hit.fourPosition().y() / Acts::UnitConstants::mm;
@@ -122,5 +131,7 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
     // Fill the tree
     m_outputTree->Fill();
   }
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -19,13 +18,14 @@ namespace Acts {
 class Surface;
 
 /// @brief The Material interaction volume struct
-/// It acts as a switch between detctor and tracking volume
+///
+/// @ingroup material
+///
+/// It acts as a switch between detector and tracking volume
 /// as long as those co-exist alongside
 struct InteractionVolume {
   /// The tracking volume
   const TrackingVolume* trackingVolume = nullptr;
-  /// The detector volume
-  const Experimental::DetectorVolume* detectorVolume = nullptr;
 
   /// Empty constructor
   InteractionVolume() = default;
@@ -34,18 +34,11 @@ struct InteractionVolume {
   /// @param tv The tracking volume
   explicit InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
 
-  /// Constructor from detector volume
-  /// @param dv The detector volume
-  explicit InteractionVolume(const Experimental::DetectorVolume* dv)
-      : detectorVolume(dv) {}
-
   /// Forward the geometry identifier
   /// @return The geometry identifier from the contained volume, or invalid ID if empty
   GeometryIdentifier geometryId() const {
     if (trackingVolume != nullptr) {
       return trackingVolume->geometryId();
-    } else if (detectorVolume != nullptr) {
-      return detectorVolume->geometryId();
     } else {
       return GeometryIdentifier();
     }
@@ -53,9 +46,7 @@ struct InteractionVolume {
 
   /// Check if the volume is valid
   /// @return True if both tracking volume and detector volume pointers are null
-  bool empty() const {
-    return trackingVolume == nullptr && detectorVolume == nullptr;
-  }
+  bool empty() const { return trackingVolume == nullptr; }
 };
 
 /// @brief The Material interaction struct

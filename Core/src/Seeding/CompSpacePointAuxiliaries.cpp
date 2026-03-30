@@ -8,6 +8,7 @@
 
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 //
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -90,11 +91,16 @@ void CompSpacePointAuxiliaries::updateChiSq(
       }
       ACTS_VERBOSE("updateChiSq() - Update chi2 hessian w.r.t. "
                    << parName(partial1) << " & " << parName(partial2) << ".");
-      chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2)) +=
-          2. * contract(gradient(partial1), gradient(partial2)) +
-          (m_cfg.useHessian
-               ? 2. * contract(residual(), hessian(partial1, partial2))
-               : 0.0);
+
+      double& hessElem =
+          chiSqObj.hessian(toUnderlying(partial1), toUnderlying(partial2));
+
+      hessElem += 2. * contract(gradient(partial1), gradient(partial2));
+
+      if (!m_cfg.useHessian) {
+        continue;
+      }
+      hessElem += 2. * contract(residual(), hessian(partial1, partial2));
     }
   }
 }
@@ -127,13 +133,32 @@ const Vector& CompSpacePointAuxiliaries::hessian(
 }
 
 void CompSpacePointAuxiliaries::reset() {
+  m_invProjDirLenSq = 0.;
+  m_invProjDirLen = 0.;
+  m_wireProject = 0.;
+
+  m_projDir.setZero();
   m_residual.setZero();
-  for (Vector3& grad : m_gradient) {
-    grad.setZero();
-  }
-  if (m_cfg.useHessian) {
-    for (Vector3& hess : m_hessian) {
-      hess.setZero();
+  for (const auto par : m_cfg.parsToUse) {
+    const auto pIdx = toUnderlying(par);
+    if (par != FitParIndex::t0) {
+      m_projDirLenPartial[pIdx] = 0.;
+      m_partialApproachDist[pIdx] = 0.;
+      m_gradProjDir[pIdx].setZero();
+      m_gradCloseApproach[pIdx].setZero();
+    }
+    m_gradient[pIdx].setZero();
+
+    for (const auto par2 : m_cfg.parsToUse) {
+      if (par2 > par) {
+        break;
+      }
+      m_hessian[vecIdxFromSymMat<s_nPars>(toUnderlying(par2), pIdx)].setZero();
+      if (par != FitParIndex::t0 && par2 != FitParIndex::t0) {
+        const auto hIdx =
+            vecIdxFromSymMat<s_nLinePars>(toUnderlying(par2), pIdx);
+        m_hessianProjDir[hIdx].setZero();
+      }
     }
   }
 }
@@ -141,9 +166,9 @@ void CompSpacePointAuxiliaries::resetTime() {
   m_gradient[toUnderlying(FitParIndex::t0)].setZero();
   if (m_cfg.useHessian) {
     for (const auto partial : m_cfg.parsToUse) {
-      m_hessian[vecIdxFromSymMat<s_nPars>(toUnderlying(FitParIndex::t0),
-                                          toUnderlying(partial))]
-          .setZero();
+      const auto pIdx = vecIdxFromSymMat<s_nPars>(toUnderlying(FitParIndex::t0),
+                                                  toUnderlying(partial));
+      m_hessian[pIdx].setZero();
     }
   }
 }
@@ -194,10 +219,10 @@ bool CompSpacePointAuxiliaries::updateStrawResidual(const Line_t& line,
       continue;
     }
     for (const auto partial2 : m_cfg.parsToUse) {
-      if (partial2 == FitParIndex::t0) {
-        continue;
-      } else if (partial2 > partial1) {
+      if (partial2 > partial1) {
         break;
+      } else if (partial2 == FitParIndex::t0) {
+        continue;
       }
       ACTS_VERBOSE("updateStrawResidual() - Calculate Hessian for parameters "
                    << parName(partial1) << ", " << parName(partial2) << ".");
@@ -245,7 +270,6 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(
   if (projDirLenSq < s_tolerance) {
     ACTS_VERBOSE("updateStrawAuxiliaries() - Line & wire are parallel: "
                  << toString(wireDir) << " vs. " << toString(lineDir));
-    m_invProjDirLenSq = 0.;
     reset();
     return false;
   }
@@ -256,8 +280,7 @@ inline bool CompSpacePointAuxiliaries::updateStrawAuxiliaries(
   ACTS_VERBOSE("updateStrawAuxiliaries() - Projected direction is "
                << toString(newProjDir) << ", |D| " << newProjDir.norm());
 
-  if (Acts::abs(newProjDir.dot(m_projDir) - 1.) <
-      2. * std::numeric_limits<double>::epsilon()) {
+  if (Acts::abs(newProjDir.dot(m_projDir) - 1.) < Acts::s_epsilon) {
     ACTS_VERBOSE(
         "updateStrawAuxiliaries() - The old & the new dir projection coincide. "
         << "Don't update the auxiliaries");
@@ -419,12 +442,10 @@ void CompSpacePointAuxiliaries::updateStripResidual(
     const Line_t& line, const Vector& normal, const Vector& sensorN,
     const Vector& sensorD, const Vector& stripPos, const bool isBending,
     const bool isNonBending) {
-  using namespace Acts::UnitLiterals;
-
   const double normDot = normal.dot(line.direction());
 
   constexpr double tolerance = 1.e-12;
-  if (std::abs(normDot) < tolerance) {
+  if (Acts::abs(normDot) < tolerance) {
     reset();
     ACTS_WARNING(
         "updateStripResidual() - Segment line is embedded into the strip plane "
@@ -660,7 +681,7 @@ void CompSpacePointAuxiliaries::updateTimeStrawRes(
   using namespace Acts::detail::LineHelper;
   using namespace Acts::UnitLiterals;
 
-  const double dSign = driftR > 0. ? 1 : -1;
+  const double dSign = std::copysign(1., driftR);
   // Only assign drift velocity and acceleration
   if (!m_cfg.includeToF) {
     resetTime();

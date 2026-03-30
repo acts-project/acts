@@ -32,3 +32,9 @@
 #define ACTS_DIAGNOSTIC_POP() _ACTS_DO_PRAGMA(GCC diagnostic pop)
 
 #endif
+
+#define ACTS_PUSH_IGNORE_DEPRECATED() \
+  ACTS_DIAGNOSTIC_PUSH()              \
+  ACTS_DIAGNOSTIC_IGNORE("-Wdeprecated-declarations")
+
+#define ACTS_POP_IGNORE_DEPRECATED() ACTS_DIAGNOSTIC_POP()

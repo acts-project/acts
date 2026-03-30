@@ -13,7 +13,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -45,7 +44,7 @@ using namespace Acts::UnitLiterals;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
@@ -72,7 +71,7 @@ int ntests = 500;
 int skip = 0;
 bool debugMode = false;
 
-/// the actual test nethod that runs the test can be used with several
+/// the actual test method that runs the test can be used with several
 /// propagator types
 ///
 /// @tparam propagator_t is the actual propagator type
@@ -371,11 +370,11 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double p = pT / sin(theta);
+  double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
 
   // define start parameters
-  BoundSquareMatrix cov;
+  BoundMatrix cov;
   // take some major correlations (off-diagonals)
   // clang-format off
     cov <<

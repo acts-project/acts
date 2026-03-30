@@ -111,7 +111,7 @@ using PointLikeIndices = TupleFilter<PointLikeProcessTrait, processes_t>;
 /// Two different type of interaction processes are supported: continuous and
 /// point-like interactions.
 ///
-/// Continuous processes scale with the passed material. They tpyically
+/// Continuous processes scale with the passed material. They typically
 /// describe effective results of a large number of small interactions such as
 /// multiple scattering or ionisation. Continuous process types **must** provide
 /// a call operator with the following signature:

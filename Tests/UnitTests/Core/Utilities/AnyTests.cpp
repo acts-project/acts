@@ -13,15 +13,16 @@
 #include <any>
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <type_traits>
 #include <utility>
 
 using namespace Acts;
 
 #if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
-#define CHECK_ANY_ALLOCATIONS()                 \
-  do {                                          \
-    _AnyAllocationReporter::checkAllocations(); \
+#define CHECK_ANY_ALLOCATIONS()                         \
+  do {                                                  \
+    detail::_AnyAllocationReporter::checkAllocations(); \
   } while (0)
 #else
 #define CHECK_ANY_ALLOCATIONS() \
@@ -79,6 +80,79 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
                                   a.as<decltype(v)>().end(), v.begin(),
                                   v.end());
     BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnyAsPtr) {
+  {
+    // small type: correct type returns non-null pointer
+    Any a{42};
+    int* p = a.asPtr<int>();
+    BOOST_REQUIRE_NE(p, static_cast<int*>(nullptr));
+    BOOST_CHECK_EQUAL(*p, 42);
+
+    // wrong type returns nullptr
+    BOOST_CHECK_EQUAL(a.asPtr<float>(), static_cast<float*>(nullptr));
+    BOOST_CHECK_EQUAL(a.asPtr<double>(), static_cast<double*>(nullptr));
+
+    // mutation through pointer
+    *p = 99;
+    BOOST_CHECK_EQUAL(a.as<int>(), 99);
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // large (heap-allocated) type: correct type returns non-null pointer
+    std::array<unsigned long, 5> v{10, 20, 30, 40, 50};
+    Any a{v};
+    auto* p = a.asPtr<std::array<unsigned long, 5>>();
+    BOOST_REQUIRE_NE(p, static_cast<decltype(p)>(nullptr));
+    BOOST_CHECK_EQUAL_COLLECTIONS(p->begin(), p->end(), v.begin(), v.end());
+
+    // wrong type returns nullptr
+    BOOST_CHECK_EQUAL(a.asPtr<int>(), static_cast<int*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // empty Any returns nullptr
+    Any a;
+    BOOST_CHECK_EQUAL(a.asPtr<int>(), static_cast<int*>(nullptr));
+    BOOST_CHECK_EQUAL(a.asPtr<float>(), static_cast<float*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // const overload
+    const Any a{3.14f};
+    const float* p = a.asPtr<float>();
+    BOOST_REQUIRE_NE(p, static_cast<const float*>(nullptr));
+    BOOST_CHECK_EQUAL(*p, 3.14f);
+
+    // wrong type on const Any
+    BOOST_CHECK_EQUAL(a.asPtr<int>(), static_cast<const int*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // const overload with empty Any
+    const Any a;
+    BOOST_CHECK_EQUAL(a.asPtr<int>(), static_cast<const int*>(nullptr));
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    // const overload with heap-allocated type
+    std::array<int, 64> v{};
+    v.fill(7);
+    const Any a{v};
+    const auto* p = a.asPtr<std::array<int, 64>>();
+    BOOST_REQUIRE_NE(p, static_cast<decltype(p)>(nullptr));
+    for (const auto& elem : *p) {
+      BOOST_CHECK_EQUAL(elem, 7);
+    }
+    BOOST_CHECK_EQUAL(a.asPtr<float>(), static_cast<const float*>(nullptr));
   }
   CHECK_ANY_ALLOCATIONS();
 }
@@ -188,6 +262,41 @@ struct D2 {
 
   ~D2() { *destroyed = true; }
 };
+
+BOOST_AUTO_TEST_CASE(AnyEmplace) {
+  {
+    Any a;
+    auto& value = a.emplace<int>(42);
+    BOOST_CHECK_EQUAL(value, 42);
+    BOOST_CHECK_EQUAL(a.as<int>(), 42);
+    value = 84;
+    BOOST_CHECK_EQUAL(a.as<int>(), 84);
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    bool destroyed = false;
+    Any a{std::in_place_type<D>, &destroyed};
+    BOOST_CHECK(!destroyed);
+    a.emplace<int>(7);
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK_EQUAL(a.as<int>(), 7);
+  }
+  CHECK_ANY_ALLOCATIONS();
+
+  {
+    bool destroyed = false;
+    Any a{std::in_place_type<D2>, &destroyed};
+    BOOST_CHECK(!destroyed);
+    bool destroyed2 = false;
+    auto& ref = a.emplace<D2>(&destroyed2);
+    BOOST_CHECK(destroyed);
+    BOOST_CHECK(!destroyed2);
+    BOOST_CHECK_EQUAL(ref.destroyed, &destroyed2);
+    BOOST_CHECK_EQUAL(a.as<D2>().destroyed, &destroyed2);
+  }
+  CHECK_ANY_ALLOCATIONS();
+}
 
 BOOST_AUTO_TEST_CASE(AnyMoveTypeChange) {
   BOOST_TEST_CONTEXT("Small type") {
@@ -547,6 +656,76 @@ BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
   checkCounters();
 
   CHECK_ANY_ALLOCATIONS();
+}
+
+BOOST_AUTO_TEST_CASE(AnyMoveOnlyMoveOnlyTypes) {
+  using MoveOnlyAny = Acts::AnyMoveOnly;
+
+  using Ptr = std::unique_ptr<int>;
+
+  // AnyMoveOnly can store move-only types
+  {
+    auto ptr = std::make_unique<int>(42);
+    MoveOnlyAny a{std::move(ptr)};
+    BOOST_CHECK(!!a);
+    Ptr const* storedPtr = a.asPtr<Ptr>();
+    BOOST_REQUIRE_NE(storedPtr, nullptr);
+    BOOST_CHECK_NE(storedPtr->get(), nullptr);
+    BOOST_CHECK_EQUAL(**storedPtr, 42);
+  }
+
+  // AnyMoveOnly is moveable
+  {
+    auto ptr = std::make_unique<int>(7);
+    MoveOnlyAny a{std::move(ptr)};
+    MoveOnlyAny b = std::move(a);
+    // Note: moved-from Any may still report non-empty for local storage
+    BOOST_CHECK(!!b);
+    Ptr const* bPtr = b.asPtr<Ptr>();
+    BOOST_REQUIRE_NE(bPtr, nullptr);
+    int val = **bPtr;
+    BOOST_CHECK_EQUAL(val, 7);
+  }
+
+  // AnyMoveOnly is not copyable
+  static_assert(!std::is_copy_constructible_v<MoveOnlyAny>);
+  static_assert(!std::is_copy_assignable_v<MoveOnlyAny>);
+}
+
+BOOST_AUTO_TEST_CASE(AnyTake) {
+  // take() moves value out and leaves Any empty
+  {
+    Any a{42};
+    BOOST_CHECK(!!a);
+    int val = a.take<int>();
+    BOOST_CHECK_EQUAL(val, 42);
+    BOOST_CHECK(!a);
+  }
+
+  // take() with move-only type
+  {
+    auto ptr = std::make_unique<int>(99);
+    Acts::AnyMoveOnly a{std::move(ptr)};
+    BOOST_CHECK(!!a);
+    auto taken = a.take<std::unique_ptr<int>>();
+    BOOST_REQUIRE_NE(taken.get(), nullptr);
+    BOOST_CHECK_EQUAL(*taken, 99);
+    BOOST_CHECK(!a);
+  }
+
+  // take() throws on wrong type
+  {
+    Any a{42};
+    BOOST_CHECK_THROW(a.take<float>(), std::bad_any_cast);
+    BOOST_CHECK(!!a);
+    BOOST_CHECK_EQUAL(a.as<int>(), 42);
+  }
+
+  // take() throws on empty
+  {
+    Any a;
+    BOOST_CHECK_THROW(a.take<int>(), std::bad_any_cast);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -23,7 +23,7 @@ class SurfaceArray;
 /// @class DiscLayer
 ///
 /// Class to describe a disc-like detector layer for tracking,
-/// it inhertis from both, Layer base class
+/// it inherits from both, Layer base class
 /// and DiscSurface class
 
 class DiscLayer : virtual public DiscSurface, public Layer {
@@ -43,8 +43,8 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   static std::shared_ptr<DiscLayer> create(
       const Transform3& transform,
       const std::shared_ptr<const DiscBounds>& dbounds,
-      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = passive);
 
   DiscLayer() = delete;
@@ -75,8 +75,7 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   /// @param laytyp is the layer taype
   DiscLayer(const Transform3& transform,
             const std::shared_ptr<const DiscBounds>& dbounds,
-            std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-            double thickness = 0.,
+            std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
             std::unique_ptr<ApproachDescriptor> ades = nullptr,
             LayerType laytyp = active);
 

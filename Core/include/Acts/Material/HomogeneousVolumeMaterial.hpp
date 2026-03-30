@@ -18,6 +18,8 @@ namespace Acts {
 
 /// @class HomogeneousVolumeMaterial
 ///
+/// @ingroup material
+///
 /// It extends the IVolumeMaterial base class to describe a simple
 /// homogeneous material in a volume
 class HomogeneousVolumeMaterial : public IVolumeMaterial {

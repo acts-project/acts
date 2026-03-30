@@ -9,11 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Detector/ProtoSupport.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 
 #include <tuple>
 #include <vector>
@@ -33,6 +33,9 @@ class ISurfaceMaterial;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup dd4hep_plugin
+/// @{
+
 class DD4hepDetectorElement;
 
 /// A factory to convert DD4hep DetectorElements into sensitive
@@ -43,7 +46,7 @@ class DD4hepDetectorSurfaceFactory {
  public:
   /// DD4hepDetectorElement construction factory
   using ElementFactory = std::function<std::shared_ptr<DD4hepDetectorElement>(
-      const dd4hep::DetElement&, const std::string&, double, bool,
+      const dd4hep::DetElement&, TGeoAxes, double,
       std::shared_ptr<const Acts::ISurfaceMaterial>)>;
 
   /// Collect the sensitive surface & detector element
@@ -59,11 +62,10 @@ class DD4hepDetectorSurfaceFactory {
   struct Config {
     /// The factory to create the DD4hepDetectorElement
     ElementFactory detectorElementFactory =
-        [](const dd4hep::DetElement& detElem, const std::string& axes,
-           double scalor, bool isDisc,
+        [](const dd4hep::DetElement& detElem, TGeoAxes axes, double scalor,
            const std::shared_ptr<const Acts::ISurfaceMaterial>& material) {
           return std::make_shared<DD4hepDetectorElement>(detElem, axes, scalor,
-                                                         isDisc, material);
+                                                         material);
         };
   };
 
@@ -79,8 +81,6 @@ class DD4hepDetectorSurfaceFactory {
     std::size_t convertedMaterials = 0;
     /// The collected binnings
     std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> binnings = {};
-    /// The collected supports
-    std::vector<Acts::Experimental::ProtoSupport> supports = {};
     /// Optionally provide an Extent object to measure the sensitives
     std::optional<Acts::Extent> sExtent = std::nullopt;
     /// Optionally provide an Extent object to measure the passive
@@ -198,4 +198,5 @@ class DD4hepDetectorSurfaceFactory {
                              const Options& options) const;
 };
 
+/// @}
 }  // namespace ActsPlugins

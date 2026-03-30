@@ -29,29 +29,71 @@ class Logger;
 
 namespace ActsExamples::HepMC3Util {
 
+/// Merge multiple generator events into a single target event.
+///
+/// @param event Destination event that receives merged particles
+/// @param genEvents Collection of events to merge into @p event
+/// @param logger Logger used for diagnostic messages
 void mergeEvents(HepMC3::GenEvent& event,
                  std::span<const HepMC3::GenEvent*> genEvents,
                  const Acts::Logger& logger);
 
+/// Merge multiple generator events into a single target event.
+///
+/// @param event Destination event that receives merged particles
+/// @param genEvents Collection of shared events to merge into @p event
+/// @param logger Logger used for diagnostic messages
 void mergeEvents(HepMC3::GenEvent& event,
                  std::span<std::shared_ptr<const HepMC3::GenEvent>> genEvents,
                  const Acts::Logger& logger);
 
+/// Supported compression codecs for HepMC3 files.
 enum class Compression { none, zlib, lzma, bzip2, zstd };
 
+/// Stream operator for human-readable `Compression` output.
+///
+/// @param os Output stream receiving the textual representation
+/// @param compression Compression mode to serialize
+/// @return Reference to @p os for chaining
 std::ostream& operator<<(std::ostream& os, HepMC3Util::Compression compression);
 
+/// List of compression modes available in the linked HepMC3 build.
+///
+/// @return Span of supported compression values
 std::span<const Compression> availableCompressionModes();
 
+/// File extension associated with a compression mode (e.g. `.gz`).
+///
+/// @param compression Compression mode to query
+/// @return Extension string including leading dot when present, empty otherwise
 std::string_view compressionExtension(Compression compression);
 
+/// Deduce compression mode from a file path.
+///
+/// @param filename Path used to infer compression from its suffix
+/// @return Compression inferred from @p filename
+Compression compressionFromFilename(const std::filesystem::path& filename);
+
+/// Supported HepMC3 output formats.
 enum class Format { ascii, root };
 
+/// Stream operator for human-readable `Format` output.
+///
+/// @param os Output stream receiving the textual representation
+/// @param format File format to serialize
+/// @return Reference to @p os for chaining
 std::ostream& operator<<(std::ostream& os, Format format);
 
+/// List of output formats available in the linked HepMC3 build.
+///
+/// @return Span of supported format values
 std::span<const Format> availableFormats();
 
-Format formatFromFilename(std::string_view filename);
+/// Deduce HepMC3 format from a file path.
+///
+/// @param filename Path used to infer format from its suffix
+/// @return Format inferred from @p filename
+Format formatFromFilename(const std::filesystem::path& filename);
 
 /// Result of HepMC3 file normalization
 struct NormalizeResult {

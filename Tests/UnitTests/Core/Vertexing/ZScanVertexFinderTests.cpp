@@ -13,7 +13,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -50,11 +49,11 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsTests {
 
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 
 // Create a test context
-GeometryContext geoContext = GeometryContext();
+GeometryContext geoContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
@@ -125,7 +124,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     // Vector to store track objects used for vertex fit
     for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
       // Construct positive or negative charge randomly
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      double q = std::copysign(1., qDist(gen));
 
       // Construct random track parameters
       BoundVector paramVec = BoundVector::Zero();
@@ -243,7 +242,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Vector to store track objects used for vertex fit
     for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
       // Construct positive or negative charge randomly
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      double q = std::copysign(1., qDist(gen));
 
       // Construct random track parameters
       BoundVector paramVec;

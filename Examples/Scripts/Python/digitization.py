@@ -7,7 +7,6 @@ import argparse
 import acts
 import acts.examples
 
-
 u = acts.UnitConstants
 
 
@@ -30,6 +29,7 @@ def runDigitization(
         addFatras,
         addDigitization,
     )
+    from acts.examples.root import RootParticleReader
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
@@ -47,7 +47,7 @@ def runDigitization(
         )
     else:
         # Read input from input collection (e.g. Pythia8 output)
-        evGen = acts.examples.RootParticleReader(
+        evGen = RootParticleReader(
             level=s.config.logLevel,
             filePath=str(particlesInput),
             outputParticles="particles_generated",

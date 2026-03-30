@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -33,9 +33,10 @@
 
 namespace ActsExamples {
 
-TrackFittingAlgorithm::TrackFittingAlgorithm(Config config,
-                                             Acts::Logging::Level level)
-    : IAlgorithm("TrackFittingAlgorithm", level), m_cfg(std::move(config)) {
+TrackFittingAlgorithm::TrackFittingAlgorithm(
+    Config config, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TrackFittingAlgorithm", std::move(logger)),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
   }
@@ -95,8 +96,12 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
                                           clusters);
 
   TrackFitterFunction::GeneralFitterOptions options{
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),
-      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext)};
+      ctx.geoContext,
+      ctx.magFieldContext,
+      ctx.calibContext,
+      pSurface.get(),
+      Acts::PropagatorPlainOptions(ctx.geoContext, ctx.magFieldContext),
+      false};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
@@ -123,7 +128,7 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // We can have empty tracks which must give empty fit results so the number
     // of entries in input and output containers matches.
     if (protoTrack.empty()) {
-      ACTS_WARNING("Empty track " << itrack << " found.");
+      ACTS_WARNING("Empty proto track " << itrack << " found.");
       continue;
     }
 
@@ -155,7 +160,7 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
       if (track.hasReferenceSurface()) {
         ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << track.parameters().transpose());
-        ACTS_VERBOSE("Measurements: (prototrack->track): "
+        ACTS_VERBOSE("Measurements: (proto track->track): "
                      << protoTrack.size() << " -> " << track.nMeasurements());
       } else {
         ACTS_VERBOSE("No fitted parameters for track " << itrack);
@@ -164,6 +169,14 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
       ACTS_WARNING("Fit failed for track "
                    << itrack << " with error: " << result.error() << ", "
                    << result.error().message());
+    }
+  }
+
+  ACTS_DEBUG("Fitted tracks: " << trackContainer->size());
+
+  if (m_cfg.linkForward) {
+    for (auto track : tracks) {
+      track.linkForward();
     }
   }
 

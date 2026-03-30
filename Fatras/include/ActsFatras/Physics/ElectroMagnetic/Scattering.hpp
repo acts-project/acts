@@ -53,28 +53,30 @@ struct GenericScattering {
     // drawn from the specific scattering model distribution.
 
     // draw the random orientation angle
-    const auto psi = std::uniform_real_distribution<double>(
+    const double psi = std::uniform_real_distribution<double>(
         -std::numbers::pi, std::numbers::pi)(generator);
     // draw the scattering angle
-    const auto theta = angle(generator, slab, particle);
+    const double theta = angle(generator, slab, particle);
 
-    Acts::Vector3 direction = particle.direction();
     // construct the combined rotation to the scattered direction
-    Acts::RotationMatrix3 rotation(
+    const Acts::RotationMatrix3 rotation(
         // rotation of the scattering deflector axis relative to the reference
-        Acts::AngleAxis3(psi, direction) *
+        Acts::AngleAxis3(psi, particle.direction()) *
         // rotation by the scattering angle around the deflector axis
-        Acts::AngleAxis3(theta, Acts::createCurvilinearUnitU(direction)));
-    direction.applyOnTheLeft(rotation);
-    particle.setDirection(direction);
+        Acts::AngleAxis3(theta,
+                         Acts::createCurvilinearUnitU(particle.direction())));
+    particle.setDirection(rotation * particle.direction());
 
     // scattering is non-destructive and produces no secondaries
     return {};
   }
 };
 
+/// Scattering with Gaussian mixture model
 using GaussianMixtureScattering = GenericScattering<detail::GaussianMixture>;
+/// Scattering with general mixture model
 using GeneralMixtureScattering = GenericScattering<detail::GeneralMixture>;
+/// Scattering with Highland model
 using HighlandScattering = GenericScattering<detail::Highland>;
 
 }  // namespace ActsFatras

@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -40,10 +39,10 @@ namespace ActsTests {
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using AtlasStepperType = AtlasStepper;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 static auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 1_T});

@@ -23,7 +23,6 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Write out particles as a flat TTree.
 ///

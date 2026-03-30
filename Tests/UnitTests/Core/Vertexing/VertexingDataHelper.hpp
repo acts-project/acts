@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -14,7 +15,6 @@
 #include "ActsTests/CommonHelpers/DataDirectory.hpp"
 
 #include <fstream>
-#include <iterator>
 #include <regex>
 
 namespace ActsTests {
@@ -22,16 +22,16 @@ namespace ActsTests {
 using namespace Acts;
 
 using namespace Acts::UnitLiterals;
-using Covariance = BoundSquareMatrix;
+using Covariance = BoundMatrix;
 
 enum VertexCsvData { BeamSpotData, VerticesData, TracksData };
 
 /// @brief Helper struct to store reference vertex related information
 struct VertexInfo {
   // The position
-  Vector3 position;
+  Vector3 position{};
   // The covariance
-  SquareMatrix3 covariance;
+  SquareMatrix3 covariance{};
   // Number of tracks
   int nTracks = 0;
   // Weight of first track

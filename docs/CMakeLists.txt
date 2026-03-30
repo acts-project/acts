@@ -1,40 +1,37 @@
-# to be compatible with readthedocs.org, the documentation build is always
-# in-source; as opposed to the configurable out-of-source build directory for
-# the code. when running running on readthedocs.org, the build is fully driven
-# by Sphinx, including running Doxygen.
-#
-# this CMake-based build is only intended for local development.
+if(ACTS_BUILD_DOCS)
+    include(FetchContent)
+    FetchContent_Declare(
+        doxygen-awesome-css
+        GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css.git
+        GIT_TAG 1f3620084ff75734ed192101acf40e9dff01d848
+    )
+    FetchContent_MakeAvailable(doxygen-awesome-css)
 
-set(sphinx_build ${CMAKE_CURRENT_SOURCE_DIR}/_build)
-set(sphinx_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
-set(sphinx_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
+    # Save the location the files were cloned into
+    # This allows us to get the path to doxygen-awesome.css
+    FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 
-set(sphinx_command)
-list(APPEND sphinx_command "-b;html")
-list(APPEND sphinx_command "-d;${sphinx_doctrees}")
-list(APPEND sphinx_command "-j;auto")
-list(APPEND sphinx_command "-W;--keep-going")
-list(APPEND sphinx_command "-t;run_doxygen;-t;lazy_autodoc")
+    set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+    set(DOXYGEN_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
 
-if(DEFINED ENV{CI})
-    list(APPEND sphinx_command "-b;linkcheck")
+    doxygen_add_docs(
+        docs
+        COMMENT "Generating documentation using doxygen"
+        CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+    )
+
+    # docs build is off by default
+    set_target_properties(docs PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
-list(APPEND sphinx_command "${CMAKE_CURRENT_SOURCE_DIR}")
-list(APPEND sphinx_command "${sphinx_html}")
-
-message(${sphinx_command})
-
-# standard target to build the documentation without automatic API generation
-add_custom_target(
-    docs
-    COMMAND ${Sphinx_EXECUTABLE} ${sphinx_command}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Build documentation"
+# Additional target example build that is off by default but can be build
+# without the rest of the documentation
+add_library(docs-examples SHARED)
+set_target_properties(docs-examples PROPERTIES EXCLUDE_FROM_ALL TRUE)
+target_sources(
+    docs-examples
+    PRIVATE examples/logging.cpp examples/units.cpp examples/errors.cpp
 )
-
-install(
-    DIRECTORY ${sphinx_html}/
-    DESTINATION ${CMAKE_INSTALL_DOCDIR}/Acts
-    OPTIONAL
-)
+target_link_libraries(docs-examples PRIVATE Acts::Core)

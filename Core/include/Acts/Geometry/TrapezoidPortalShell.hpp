@@ -27,16 +27,11 @@ class TrapezoidPortalShell : public PortalShellBase {
 
   using enum TrapezoidVolumeBounds::Face;
 
-  /// Retrieve the portal associated to the given face. Can be nullptr if unset.
-  /// @param face The face to retrieve the portal for
-  /// @return The portal associated to the face
-  virtual Portal* portal(Face face) = 0;
-
   /// Retrieve a shared_ptr for the portal associated to the given face. Can be
   /// nullptr if unset.
   /// @param face The face to retrieve the portal for
   /// @return The portal associated to the face
-  virtual std::shared_ptr<Portal> portalPtr(Face face) = 0;
+  virtual std::shared_ptr<Portal> portal(Face face) = 0;
 
   /// Set the portal associated to the given face.
   /// @param portal The portal to set
@@ -45,10 +40,6 @@ class TrapezoidPortalShell : public PortalShellBase {
 
   /// @copydoc PortalShellBase::fill
   void fill(TrackingVolume& volume) override;
-
-  /// @brief Get the transformation matrix for this trapezoid portal shell
-  /// @return Reference to the transformation matrix
-  virtual const Transform3& transform() const = 0;
 };
 
 /// Output stream operator for the TrapezoidPortalShell::Face enum
@@ -62,17 +53,16 @@ std::ostream& operator<<(std::ostream& os, TrapezoidPortalShell::Face face);
 class SingleTrapezoidPortalShell : public TrapezoidPortalShell {
  public:
   /// Construct a single trapezoid shell for the given tracking volume.
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to create the shell for
-  explicit SingleTrapezoidPortalShell(TrackingVolume& volume);
+  explicit SingleTrapezoidPortalShell(const GeometryContext& gctx,
+                                      TrackingVolume& volume);
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const override;
 
   /// @copydoc TrapezoidPortalShell::portal
-  Portal* portal(Face face) override;
-
-  /// @copydoc TrapezoidPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) override;
+  std::shared_ptr<Portal> portal(Face face) override;
 
   /// @copydoc TrapezoidPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) override;
@@ -85,10 +75,6 @@ class SingleTrapezoidPortalShell : public TrapezoidPortalShell {
 
   /// @copydoc PortalShellBase::label
   std::string label() const override;
-
-  const Transform3& transform() const override {
-    return m_volume->transform();
-  };
 
  private:
   std::array<std::shared_ptr<Portal>, 6> m_portals{};

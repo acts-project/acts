@@ -141,6 +141,12 @@ class ConeSurface : public RegularSurface {
   /// This method returns the ConeBounds by reference
   /// @return Reference to the cone bounds
   const ConeBounds& bounds() const final;
+  /// This method returns the shared_ptr to the ConeBounds
+  /// @return Shared pointer to the cone bounds
+  const std::shared_ptr<const ConeBounds>& boundsPtr() const;
+  /// Overwrite the existing surface bounds with new ones
+  /// @param newBounds: Pointer to the new bounds
+  void assignSurfaceBounds(std::shared_ptr<const ConeBounds> newBounds);
 
   /// Local to global transformation
   ///
@@ -235,7 +241,7 @@ class ConeSurface : public RegularSurface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
+  Matrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
  protected:

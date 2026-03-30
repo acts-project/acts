@@ -15,6 +15,8 @@
 #include <onnxruntime_cxx_api.h>
 
 namespace ActsPlugins {
+/// @addtogroup onnx_plugin
+/// @{
 
 /// Onnx model implementation for seed scoring and selection
 class SeedClassifier {
@@ -22,7 +24,7 @@ class SeedClassifier {
   /// Construct the scoring algorithm.
   ///
   /// @param modelPath path to the model file
-  SeedClassifier(const char* modelPath)
+  explicit SeedClassifier(const char* modelPath)
       : m_env(ORT_LOGGING_LEVEL_WARNING, "MLSeedClassifier"),
         m_duplicateClassifier(m_env, modelPath) {};
 
@@ -89,4 +91,5 @@ class SeedClassifier {
   OnnxRuntimeBase m_duplicateClassifier;
 };
 
+/// @}
 }  // namespace ActsPlugins

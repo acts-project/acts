@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/MaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -35,6 +34,10 @@ class CoreMaterialMapping : public IAlgorithm {
   /// @class nested Config class
   /// of the MaterialMapping algorithm
   struct Config {
+    /// Geometry context to use for final material map finalization
+    Acts::GeometryContext geoContext =
+        Acts::GeometryContext::dangerouslyDefaultConstruct();
+
     /// Input collection
     std::string inputMaterialTracks = "material_tracks";
 
@@ -56,7 +59,7 @@ class CoreMaterialMapping : public IAlgorithm {
   /// @param cfg The configuration struct carrying the used tools
   /// @param level The output logging level
   explicit CoreMaterialMapping(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Destructor
   /// - it also writes out the file
@@ -65,8 +68,7 @@ class CoreMaterialMapping : public IAlgorithm {
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const override;
+  ProcessCode execute(const AlgorithmContext& context) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

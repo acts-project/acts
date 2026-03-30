@@ -1,11 +1,10 @@
 acts_add_library(
     PluginDetray
-    SHARED
     src/DetrayConversionUtils.cpp
-    src/DetrayConverter.cpp
-    src/DetrayGeometryConverter.cpp
-    src/DetrayMaterialConverter.cpp
-    src/DetraySurfaceGridsConverter.cpp
+    #src/DetrayConverter.cpp
+    #src/DetrayGeometryConverter.cpp
+    #src/DetrayMaterialConverter.cpp
+    #src/DetraySurfaceGridsConverter.cpp
     src/DetrayPayloadConverter.cpp
     src/DetrayMaterial.cpp
     src/DetrayNavigation.cpp
@@ -33,3 +32,5 @@ target_link_libraries(
         detray::svgtools
         vecmem::core
 )
+
+acts_compile_headers(PluginDetray GLOB include/**/*.hpp)

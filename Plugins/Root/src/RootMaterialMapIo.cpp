@@ -380,7 +380,7 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
     return nullptr;
   }
 
-  // Now reconstruct the bin untilities
+  // Now reconstruct the bin utilities
   BinUtility bUtility;
   for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
     auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));

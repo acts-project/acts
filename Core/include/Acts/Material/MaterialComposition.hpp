@@ -19,6 +19,8 @@ namespace Acts {
 
 /// Memory-efficient storage of the relative fraction of an element.
 ///
+/// @ingroup material
+///
 /// This can be used to define materials that are compounds of multiple elements
 /// with varying fractions. The element is identified by its atomic number
 /// stored as a single byte (allows up to 256 elements; more than we need).

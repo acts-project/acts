@@ -5,6 +5,7 @@ AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
+DerivePointerAlignment: true
 PointerAlignment: Left
 ColumnLimit: 80
 CommentPragmas: '[@\\].*'

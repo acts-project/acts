@@ -32,7 +32,7 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
-GeometryContext tgContext;
+auto tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 std::shared_ptr<const LayerCreator> lCreator(nullptr);
 

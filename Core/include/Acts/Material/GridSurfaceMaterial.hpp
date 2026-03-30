@@ -23,6 +23,9 @@
 
 namespace Acts {
 
+/// @addtogroup material
+/// @{
+
 /// @brief Base class for material accessors, this is needed
 /// for the I/O of the different grid material types, in the actual
 /// implementation the material accessor is a template parameter.
@@ -83,8 +86,10 @@ struct IndexedMaterialAccessor : public IGridMaterialAccessor {
   /// @return the material slab from the grid bin associated to the lookup point
   template <typename grid_type>
   inline const MaterialSlab& slab(
-      const grid_type& grid, const typename grid_type::point_t& point) const {
-    auto index = grid.atPosition(point);
+      const grid_type& grid, const typename grid_type::point_t& point) const
+    requires(std::is_same_v<typename grid_type::value_type, grid_value_type>)
+  {
+    std::size_t index = grid.atPosition(point);
     return material[index];
   }
 
@@ -263,6 +268,8 @@ class GridSurfaceMaterialT
     return m_materialAccessor.slab(m_grid, m_globalToGridLocal(gp));
   }
 
+  using ISurfaceMaterial::materialSlab;
+
   /// Scale operator
   ///
   /// @param factor is the scale factor applied
@@ -360,5 +367,7 @@ using GloballyIndexedSurfaceMaterial =
 template <typename grid_type>
 using GridSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, GridMaterialAccessor>;
+
+/// @}
 
 }  // namespace Acts

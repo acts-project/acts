@@ -28,7 +28,7 @@ namespace ActsTests {
 BOOST_AUTO_TEST_SUITE(DigitizationSuite)
 
 BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftCase) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
 
   PlanarSurfaceDrift psd;
 

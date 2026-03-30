@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
+#include "Acts/Geometry/DiamondPortalShell.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrapezoidPortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -60,13 +61,16 @@ PortalShellBase& StaticBlueprintNode::connect(const BlueprintOptions& options,
 
   VolumeBounds::BoundsType type = m_volume->volumeBounds().type();
   if (type == VolumeBounds::eCylinder) {
-    m_shell = std::make_unique<SingleCylinderPortalShell>(*m_volume);
+    m_shell = std::make_unique<SingleCylinderPortalShell>(gctx, *m_volume);
 
   } else if (type == VolumeBounds::eCuboid) {
-    m_shell = std::make_unique<SingleCuboidPortalShell>(*m_volume);
+    m_shell = std::make_unique<SingleCuboidPortalShell>(gctx, *m_volume);
 
   } else if (type == VolumeBounds::eTrapezoid) {
-    m_shell = std::make_unique<SingleTrapezoidPortalShell>(*m_volume);
+    m_shell = std::make_unique<SingleTrapezoidPortalShell>(gctx, *m_volume);
+
+  } else if (type == VolumeBounds::eDiamond) {
+    m_shell = std::make_unique<SingleDiamondPortalShell>(gctx, *m_volume);
 
   } else {
     throw std::logic_error("Volume type is not supported");

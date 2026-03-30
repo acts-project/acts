@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -75,10 +74,10 @@ struct BenchmarkStepper {
   void run(Stepper stepper, const std::string& name) const {
     using Propagator = Propagator<Stepper>;
     using PropagatorOptions = typename Propagator::template Options<>;
-    using Covariance = BoundSquareMatrix;
+    using Covariance = BoundMatrix;
 
     // Create a test context
-    GeometryContext tgContext = GeometryContext();
+    GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
     MagneticFieldContext mfContext = MagneticFieldContext();
 
     ACTS_LOCAL_LOGGER(getDefaultLogger(name, Logging::Level(lvl)));

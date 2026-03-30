@@ -48,7 +48,7 @@ using namespace Acts;
 namespace ActsTests {
 
 // Create a test context
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 BOOST_AUTO_TEST_SUITE(SurfacesSuite)
 
@@ -80,14 +80,14 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   Vector3 reference{0., 1., 2.};
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
+  auto pLayer = PlaneLayer::create(pTransform, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
   SurfaceStub surface(detElement);
 
   // associatedDetectorElement
-  BOOST_CHECK_EQUAL(surface.associatedDetectorElement(), &detElement);
+  BOOST_CHECK_EQUAL(surface.surfacePlacement(), &detElement);
 
   // test associatelayer, associatedLayer
   surface.associateLayer(*pLayer);
@@ -137,7 +137,8 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   surface.assignSurfaceMaterial(pNewMaterial);
   BOOST_CHECK_EQUAL(surface.surfaceMaterial(), pNewMaterial.get());
 
-  CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), pTransform, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(surface.localToGlobalTransform(tgContext), pTransform,
+                       1e-6, 1e-9);
 
   // type() is pure virtual
 }
@@ -155,7 +156,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);
-  auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound);
+  auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};

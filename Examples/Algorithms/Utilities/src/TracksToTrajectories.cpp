@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
@@ -23,10 +22,11 @@
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
-TracksToTrajectories::TracksToTrajectories(Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("TracksToTrajectories", lvl), m_cfg(std::move(cfg)) {
+TracksToTrajectories::TracksToTrajectories(
+    Config cfg, std::unique_ptr<const Acts::Logger> logger)
+    : IAlgorithm("TracksToTrajectories", std::move(logger)),
+      m_cfg(std::move(cfg)) {
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTrajectories.initialize(m_cfg.outputTrajectories);
 }
@@ -45,7 +45,7 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
     std::optional<unsigned int> lastSeed;
 
     Trajectories::IndexedParameters parameters;
-    std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
+    std::vector<Acts::TrackIndexType> tips;
 
     for (const auto& track : tracks) {
       if (!lastSeed) {
@@ -90,7 +90,7 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
       }
       Trajectories::IndexedParameters parameters;
       parameters.reserve(1);
-      std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
+      std::vector<Acts::TrackIndexType> tips;
       tips.reserve(1);
 
       tips.push_back(track.tipIndex());

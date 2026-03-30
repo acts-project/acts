@@ -8,22 +8,25 @@
 
 #pragma once
 
-#include "Acts/Utilities/Helpers.hpp"
-
 #include <array>
 #include <atomic>
 #include <csignal>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <stack>
+#include <vector>
 
 #include <boost/container/static_vector.hpp>
 #include <boost/stacktrace/stacktrace_fwd.hpp>
 
 namespace ActsPlugins {
+/// @addtogroup fpemonitoring_plugin
+/// @{
 
+/// Floating-point exception types
 enum class FpeType : std::uint32_t {
   INTDIV = FPE_INTDIV,
   INTOVF = FPE_INTOVF,
@@ -35,16 +38,26 @@ enum class FpeType : std::uint32_t {
   FLTSUB = FPE_FLTSUB,
 };
 
+/// Output stream operator for FpeType
+/// @param os The output stream
+/// @param type The FPE type to output
+/// @return The output stream
 std::ostream &operator<<(std::ostream &os, FpeType type);
 
+/// @brief Monitor for floating-point exceptions with stack trace capture
 class FpeMonitor {
  public:
+  /// @brief Buffer for storing stack traces
   struct Buffer {
+    /// Constructor
+    /// @param bufferSize Size of buffer to allocate
     explicit Buffer(std::size_t bufferSize)
         : m_data{std::make_unique<std::byte[]>(bufferSize)},
           m_size{bufferSize} {}
 
     Buffer(const Buffer &) = delete;
+    /// Move constructor
+    /// @param other Buffer to move from
     Buffer(Buffer &&other) noexcept
         : m_data(std::move(other.m_data)),
           m_size(other.m_size),
@@ -53,20 +66,31 @@ class FpeMonitor {
       other.m_offset = 0;
     }
 
+    /// Get pointer and size of remaining buffer space
+    /// @return Pair of pointer to next available byte and remaining size
     std::pair<void *, std::size_t> next() const {
       return {m_data.get() + m_offset, m_size - m_offset};
     }
 
+    /// Advance buffer offset
+    /// @param offset Number of bytes to advance
     void pushOffset(std::size_t offset) {
       assert(m_offset + offset < m_size);
-      m_offset = offset;
+      m_offset += offset;
     }
 
+    /// Reset buffer offset to beginning
     void reset() { m_offset = 0; }
 
+    /// Get total buffer size
+    /// @return Total buffer size in bytes
     std::size_t size() const { return m_size; }
+    /// Get current buffer offset
+    /// @return Current offset in bytes
     std::size_t offset() const { return m_offset; }
 
+    /// Get raw pointer to buffer data
+    /// @return Pointer to buffer data
     std::byte *data() { return m_data.get(); }
 
    private:
@@ -75,39 +99,82 @@ class FpeMonitor {
     std::size_t m_offset{};
   };
 
+  /// @brief Result of FPE monitoring containing counts and stack traces
   struct Result {
+    /// @brief Information about a floating-point exception occurrence
     struct FpeInfo {
+      /// Number of times this exception occurred
       std::size_t count;
+      /// Type of floating-point exception
       FpeType type;
+      /// Stack trace where the exception occurred
       std::shared_ptr<const boost::stacktrace::stacktrace> st;
+      /// Faulting instruction address if available from signal context
+      std::uintptr_t location;
 
+      /// Constructor
+      /// @param countIn Number of occurrences
+      /// @param typeIn Exception type
+      /// @param stIn Stack trace
+      /// @param locationIn Faulting instruction address if available
       FpeInfo(std::size_t countIn, FpeType typeIn,
-              std::shared_ptr<const boost::stacktrace::stacktrace> stIn);
+              std::shared_ptr<const boost::stacktrace::stacktrace> stIn,
+              std::uintptr_t locationIn = 0);
       ~FpeInfo();
     };
 
+    /// Merge with another result and return new result
+    /// @param with Result to merge with
+    /// @return Merged result
     Result merged(const Result &with) const;
+    /// Merge another result into this one
+    /// @param with Result to merge
     void merge(const Result &with);
 
+    /// Check if an exception type was encountered
+    /// @param type Exception type to check
+    /// @return True if encountered
     bool encountered(FpeType type) const;
+    /// Get count of exceptions of a specific type
+    /// @param type Exception type
+    /// @return Number of occurrences
     unsigned int count(FpeType type) const;
 
+    /// Get all stack traces
+    /// @return Vector of FPE information
     const std::vector<FpeInfo> &stackTraces() const;
+    /// Get number of stack traces
+    /// @return Number of stack traces
     unsigned int numStackTraces() const;
 
+    /// Remove duplicate stack traces
     void deduplicate();
 
-    bool contains(FpeType type, const boost::stacktrace::stacktrace &st) const;
+    /// Check if result contains an exception info entry under merge semantics
+    /// @param info Exception info to check
+    /// @return True if contained
+    bool contains(const FpeInfo &info) const;
 
+    /// Print summary of exceptions
+    /// @param os Output stream
+    /// @param depth Maximum stack trace depth
     void summary(
         std::ostream &os,
         std::size_t depth = std::numeric_limits<std::size_t>::max()) const;
 
     Result() = default;
 
+    /// Check if there are any stack traces
+    /// @return True if stack traces are present
     bool hasStackTraces() const { return !m_stackTraces.empty(); }
 
-    void add(FpeType type, void *stackPtr, std::size_t bufferSize);
+    /// Add an exception occurrence from raw stack data
+    /// @param type Exception type
+    /// @param stackPtr Pointer to stack data
+    /// @param bufferSize Size of stack buffer
+    /// @param location Faulting instruction address if available
+    void add(FpeType type, void *stackPtr, std::size_t bufferSize,
+             std::uintptr_t location = 0);
 
    private:
     std::vector<FpeInfo> m_stackTraces;
@@ -117,21 +184,41 @@ class FpeMonitor {
   };
 
   FpeMonitor();
+  /// Constructor with exception mask
+  /// @param excepts Mask of exceptions to monitor
   explicit FpeMonitor(int excepts);
+  /// Move constructor
+  /// @param other Monitor to move from
   FpeMonitor(FpeMonitor &&other) = default;
   ~FpeMonitor();
 
+  /// Get monitoring result
+  /// @return Reference to result object
   Result &result();
 
+  /// Process recorded exceptions
   void consumeRecorded();
 
+  /// Re-enable exception monitoring
   void rearm();
 
+  /// Convert stack trace to string
+  /// @param st Stack trace to convert
+  /// @param depth Maximum depth of stack trace to include
+  /// @return String representation of stack trace
   static std::string stackTraceToString(const boost::stacktrace::stacktrace &st,
                                         std::size_t depth);
+  /// Get source location from stack frame
+  /// @param frame Stack frame to extract location from
+  /// @return String representation of source location
   static std::string getSourceLocation(const boost::stacktrace::frame &frame);
 
+  /// Check if stack trace symbolization is available
+  /// @return True if symbolization is available
   static bool canSymbolize();
+  /// Check if trapping-based FPE monitoring is supported on this platform
+  /// @return True if runtime support is available
+  static bool isSupported();
 
  private:
   void enable();
@@ -154,8 +241,15 @@ class FpeMonitor {
 
   Buffer m_buffer{65536};
 
-  boost::container::static_vector<std::tuple<FpeType, void *, std::size_t>, 128>
-      m_recorded;
+  struct Recorded {
+    FpeType type;
+    void *stackPtr;
+    std::size_t bufferSize;
+    std::uintptr_t location;
+  };
+
+  boost::container::static_vector<Recorded, 128> m_recorded;
 };
 
+/// @}
 }  // namespace ActsPlugins

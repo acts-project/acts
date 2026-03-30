@@ -16,9 +16,20 @@
 #include <utility>
 #include <vector>
 
+// Tell the compiler to optimize the containing block assuming that
+// FP may trap.  This is sometimes needed with clang to avoid spurious FPEs
+// resulting from auto-vectorization.
+
+#if defined(__clang__) && defined(__x86_64__)
+#pragma float_control(push)
+#pragma float_control(except, on)
+#endif
+
 namespace Acts {
 
 /// Material description for an object with defined thickness.
+///
+/// @ingroup material
 ///
 /// This is intended to describe concrete surface materials.
 ///
@@ -113,12 +124,10 @@ class MaterialSlab {
 
   constexpr MaterialSlab(const Material& material, float thickness,
                          [[maybe_unused]] bool dummy)
-      : m_material(material),
-        m_thickness(thickness),
-        m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0())
-                                              : 0),
-        m_thicknessInL0((eps < material.L0()) ? (thickness / material.L0())
-                                              : 0) {}
+      : m_material(material), m_thickness(thickness) {
+    m_thicknessInX0 = (eps < material.X0()) ? (thickness / material.X0()) : 0;
+    m_thicknessInL0 = (eps < material.L0()) ? (thickness / material.L0()) : 0;
+  }
 
   /// @brief Check if two materials are exactly equal.
   ///
@@ -156,3 +165,7 @@ using RecordedMaterialVolumePoint =
     std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3>>>;
 
 }  // namespace Acts
+
+#if defined(__clang__) && defined(__x86_64__)
+#pragma float_control(pop)
+#endif

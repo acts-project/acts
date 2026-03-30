@@ -179,4 +179,8 @@ exclude:
   - event_nr
   - track_nr
   - hasFittedParams
-  - majorityParticleId
+  - majorityParticleId_vertex_primary
+  - majorityParticleId_vertex_secondary
+  - majorityParticleId_particle
+  - majorityParticleId_generation
+  - majorityParticleId_sub_particle

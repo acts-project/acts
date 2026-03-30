@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -19,10 +18,8 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Read in a simhit collection in comma-separated-value format.
 ///
@@ -61,7 +58,7 @@ class CsvSpacePointReader final : public IReader {
   std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
+  ProcessCode read(const AlgorithmContext& ctx) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -69,8 +66,8 @@ class CsvSpacePointReader final : public IReader {
  private:
   Config m_cfg;
 
-  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
-      this, "OutputSpacePoints"};
+  WriteDataHandle<SpacePointContainer> m_outputSpacePoints{this,
+                                                           "OutputSpacePoints"};
 
   std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;

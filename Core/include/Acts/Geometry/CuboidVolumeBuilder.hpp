@@ -23,13 +23,12 @@
 #include <vector>
 
 namespace Acts {
-
+class SurfacePlacementBase;
 class TrackingVolume;
 class VolumeBounds;
 class RectangleBounds;
 class ISurfaceMaterial;
 class IVolumeMaterial;
-class DetectorElementBase;
 class Surface;
 class Layer;
 
@@ -45,7 +44,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   struct SurfaceConfig {
     // Center position
     /// Center position of the surface
-    Vector3 position;
+    Vector3 position{};
     // Rotation
     /// Rotation matrix defining surface orientation
     RotationMatrix3 rotation = RotationMatrix3::Identity();
@@ -60,7 +59,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     double thickness = 0.;
     /// Constructor function for optional detector elements
     /// Arguments are transform, rectangle bounds and thickness.
-    std::function<DetectorElementBase*(
+    std::function<SurfacePlacementBase*(
         const Transform3&, std::shared_ptr<const RectangleBounds>, double)>
         detElementConstructor;
   };
@@ -103,9 +102,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// TrackingVolume with a given number of PlaneLayers
   struct VolumeConfig {
     /// Center position of the tracking volume
-    Vector3 position;
+    Vector3 position{};
     /// Dimensions of the volume in x, y, z directions
-    Vector3 length;
+    Vector3 length{};
     /// Configuration objects for layers within this volume
     std::vector<LayerConfig> layerCfg;
     /// Pre-built layers to be included in this volume

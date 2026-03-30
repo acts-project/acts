@@ -9,12 +9,14 @@
 #pragma once
 
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
-#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
+#include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 
 #include <string>
+
+#include <edm4hep/TrackCollection.h>
 
 namespace ActsExamples {
 
@@ -29,7 +31,7 @@ namespace ActsExamples {
 /// - curvature parameter
 /// - track state local coordinates are written to (D0,Z0)
 /// - covariance incorrect
-class EDM4hepMultiTrajectoryOutputConverter : public EDM4hepOutputConverter {
+class EDM4hepMultiTrajectoryOutputConverter : public PodioOutputConverter {
  public:
   struct Config {
     /// Input trajectory collection
@@ -49,7 +51,8 @@ class EDM4hepMultiTrajectoryOutputConverter : public EDM4hepOutputConverter {
   /// @param config is the configuration object
   /// @param level is the output logging level
   explicit EDM4hepMultiTrajectoryOutputConverter(
-      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -65,13 +68,14 @@ class EDM4hepMultiTrajectoryOutputConverter : public EDM4hepOutputConverter {
  private:
   Config m_cfg;
 
-  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>
-      m_inputMeasurementParticlesMap{this, "InputMeasurementParticlesMaps"};
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMaps"};
 
   ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
       this, "InputTrajectories"};
 
-  CollectionBaseWriteHandle m_outputTracks{this, "OutputTracks"};
+  PodioCollectionWriteHandle<edm4hep::TrackCollection> m_outputTracks{
+      this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

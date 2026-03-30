@@ -12,14 +12,11 @@
 #include "ActsExamples/EventData/Graph.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <cstddef>
-#include <limits>
 #include <string>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 class CsvGnnGraphWriter final : public WriterT<Graph> {
  public:

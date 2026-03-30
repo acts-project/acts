@@ -113,8 +113,8 @@ ProcessCode RootMuonSpacePointWriter::finalize() {
   m_file->cd();
   m_file->Write();
   m_file.reset();
-  ACTS_INFO("Wrote muon spacepoints to tree '" << m_cfg.treeName << "' in '"
-                                               << m_cfg.filePath << "'");
+  ACTS_INFO("Wrote muon space points to tree '" << m_cfg.treeName << "' in '"
+                                                << m_cfg.filePath << "'");
 
   return ProcessCode::SUCCESS;
 }
@@ -122,7 +122,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
     const AlgorithmContext& ctx, const MuonSpacePointContainer& hits) {
   std::lock_guard lock{m_mutex};
   m_eventId = ctx.eventNumber;
-  const Acts::GeometryContext gctx{};
+  const auto gctx = Acts::GeometryContext::dangerouslyDefaultConstruct();
   for (const auto& [counter, bucket] : enumerate(hits)) {
     for (const MuonSpacePoint& writeMe : bucket) {
       ACTS_VERBOSE("Dump space point " << writeMe);
@@ -160,7 +160,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
           m_cfg.trackingGeometry->findVolume(toChamberId(writeMe.geometryId()));
       assert(chambVol != nullptr);
 
-      const Vector3 globPos = chambVol->transform() *
+      const Vector3 globPos = chambVol->localToGlobalTransform(gctx) *
                               AngleAxis3{-90._degree, Vector3::UnitZ()} *
                               writeMe.localPosition();
       castPush(m_globalPosX, globPos.x());
@@ -168,7 +168,7 @@ ProcessCode RootMuonSpacePointWriter::writeT(
       castPush(m_globalPosZ, globPos.z());
 
       const auto& bounds{surface->bounds()};
-      const auto& trf{surface->transform(gctx)};
+      const auto& trf{surface->localToGlobalTransform(gctx)};
       Acts::Vector3 lowEdge{Vector3::Zero()};
       Acts::Vector3 highEdge{Vector3::Zero()};
       switch (bounds.type()) {

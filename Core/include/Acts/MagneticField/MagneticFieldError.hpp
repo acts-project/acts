@@ -14,15 +14,21 @@
 namespace Acts {
 
 /// Error codes for magnetic field operations
+/// @ingroup errors
 enum class MagneticFieldError {
+  /// The lookup position was outside of the validitiy domain of the underlying
+  /// magnetic field instance.
   OutOfBounds = 1,
+  /// An operation for this magnetic field type is not implemented.
   NotImplemented = 2,
 };
 
+/// @cond
 /// Create error code from MagneticFieldError
 /// @param e The error code enum value
 /// @return Standard error code
 std::error_code make_error_code(Acts::MagneticFieldError e);
+/// @endcond
 
 }  // namespace Acts
 

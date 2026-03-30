@@ -138,7 +138,7 @@ struct TestData {
   enum ESurfaceType { kPlane, kPolarDisk, kCylinder };
   TestData(Vector3 &&a_surface_center, SquareMatrix3 &&a_surface_rot,
            ESurfaceType a_surface_type, BoundVector &&a_param_vec,
-           BoundSquareMatrix &&a_param_cov, Vector3 &&a_bfield)
+           BoundMatrix &&a_param_cov, Vector3 &&a_bfield)
       : surface_center(std::move(a_surface_center)),
         surface_rot(std::move(a_surface_rot)),
         surface_type(a_surface_type),
@@ -150,14 +150,14 @@ struct TestData {
   SquareMatrix3 surface_rot;
   ESurfaceType surface_type;
   BoundVector param_vec;
-  BoundSquareMatrix param_cov;
+  BoundMatrix param_cov;
   Vector3 bfield;
 };
 
 template <typename T_StepperCreator>
 void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
                                const T_StepperCreator &stepper_creator) {
-  GeometryContext geoCtx;
+  auto geoCtx = GeometryContext::dangerouslyDefaultConstruct();
   MagneticFieldContext magFieldContext;
 
   for (const auto &test_data : test_data_list) {
@@ -170,7 +170,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
     const Vector3 &surface_center = test_data.surface_center;
     const SquareMatrix3 &surface_rot = test_data.surface_rot;
     const BoundVector &param_vec = test_data.param_vec;
-    const BoundSquareMatrix &cov = test_data.param_cov;
+    const BoundMatrix &cov = test_data.param_cov;
 
     AngleAxis3 surface_transform0;
     surface_transform0 = surface_rot;
@@ -195,12 +195,13 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
       }
     }
 
-    Vector3 direction{cos(param_vec[2]) * sin(param_vec[3]),
-                      sin(param_vec[2]) * sin(param_vec[3]), cos(param_vec[3])};
+    Vector3 direction{std::cos(param_vec[2]) * std::sin(param_vec[3]),
+                      std::sin(param_vec[2]) * std::sin(param_vec[3]),
+                      std::cos(param_vec[3])};
     Vector3 position(surface->localToGlobal(
         geoCtx, Vector2{param_vec[0], param_vec[1]}, direction));
     BoundTrackParameters params(surface, param_vec,
-                                std::optional<BoundSquareMatrix>(cov),
+                                std::optional<BoundMatrix>(cov),
                                 ParticleHypothesis::pion());
 
     // compute curvilinear parameters by using the propagator with
@@ -270,12 +271,12 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
                       << null_propagation_options.stepping.stepTolerance
                       << std::endl);
 
-          BoundSquareMatrix curvi_cov =
+          BoundMatrix curvi_cov =
               curvilinear_parameters.value().covariance().value();
           MSG_DEBUG("curvilinear covariance:" << std::endl
                                               << curvi_cov << std::endl);
           if (isDebugOutputEnabled()) {
-            BoundSquareMatrix b(curvi_cov_alt);
+            BoundMatrix b(curvi_cov_alt);
             auto ratio = matrixRatio(curvi_cov, b);
             MSG_DEBUG("ratio:" << std::endl << ratio << std::endl);
           }

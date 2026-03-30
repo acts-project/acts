@@ -27,7 +27,7 @@
 
 using namespace Acts;
 
-GeometryContext tgContext = GeometryContext();
+GeometryContext tgContext = GeometryContext::dangerouslyDefaultConstruct();
 
 namespace ActsTests {
 
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   auto pTransform = Transform3(translation);
   const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
   auto pRectangle = std::make_shared<const RectangleBounds>(halfX, halfY);
-  auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
+  auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle, nullptr);
   BOOST_CHECK_EQUAL(pPlaneLayer->layerType(), LayerType::active);
   // next level: need an array of Surfaces;
   // bounds object, rectangle type
@@ -62,10 +62,9 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   // construct with thickness:
   auto pPlaneLayerWithThickness = PlaneLayer::create(
       pTransform, pRectangle, std::move(pSurfaceArray), thickness);
-  BOOST_CHECK_EQUAL(pPlaneLayerWithThickness->thickness(), thickness);
+  BOOST_CHECK_EQUAL(pPlaneLayerWithThickness->layerThickness(), thickness);
   // with an approach descriptor...
-  std::unique_ptr<ApproachDescriptor> ad(
-      new GenericApproachDescriptor(aSurfaces));
+  auto ad(std::make_unique<GenericApproachDescriptor>(aSurfaces));
   auto adPtr = ad.get();
   auto pPlaneLayerWithApproachDescriptor =
       PlaneLayer::create(pTransform, pRectangle, std::move(pSurfaceArray),
@@ -85,7 +84,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
   auto pTransform = Transform3(translation);
   const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
   auto pRectangle = std::make_shared<const RectangleBounds>(halfX, halfY);
-  auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
+  auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle, nullptr);
   // auto planeSurface = pPlaneLayer->surfaceRepresentation();
   BOOST_CHECK_EQUAL(pPlaneLayer->surfaceRepresentation().name(),
                     std::string("Acts::PlaneSurface"));

@@ -25,11 +25,14 @@ class TrackingVolume;
 }  // namespace Acts
 
 namespace ActsPlugins {
+/// @addtogroup root_plugin
+/// @{
 
 /// Simple payload class that can be wrapped for reading
 /// and writing.
 class RootMaterialTrackIo {
  public:
+  /// Configuration struct for material track I/O
   struct Config {
     /// Whether to store pre- and post-step information
     bool prePostStepInfo = false;
@@ -204,4 +207,5 @@ class RootMaterialTrackIo {
   MaterialVolumePayload m_volumePayload = {};
 };
 
+/// @}
 }  // namespace ActsPlugins

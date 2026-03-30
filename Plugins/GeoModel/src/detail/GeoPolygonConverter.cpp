@@ -53,7 +53,7 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
     double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
     double hlxposy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
     double hly = std::abs(vertices[0][1] - vertices[3][1]) / 2;
-    std::vector<double> halfLengths = {hlxnegy, hlxposy, hly};
+    std::array<double, 3> halfLengths = {hlxnegy, hlxposy, hly};
 
     // Create the surface
     Vector3 colX = rotation.col(0);
@@ -85,7 +85,7 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
     double hlxzeroy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
     double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
     double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
-    std::vector<double> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly, hly};
+    std::array<double, 5> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly, hly};
 
     // Create the surface
 

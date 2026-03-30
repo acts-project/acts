@@ -26,7 +26,6 @@ BOOST_AUTO_TEST_SUITE(EventDataSuite)
 BOOST_AUTO_TEST_CASE(TestSourceLinkCoverage) {
   using detail::Test::TestSourceLink;
 
-  TestSourceLink ts;
   Vector2 stddev(0.01, 0.1);
   SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
   TestSourceLink l1(eBoundLoc0, 0.1, cov(0, 0), GeometryIdentifier(0x999), 0);
@@ -51,6 +50,45 @@ BOOST_AUTO_TEST_CASE(Construct) {
     SourceLink sl{msl};
     BOOST_CHECK_EQUAL(sl.get<MySourceLink>().geometryId(), msl.geometryId());
     BOOST_CHECK_THROW(sl.get<int>(), std::bad_any_cast);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(GetPtr) {
+  {
+    // correct type returns non-null pointer
+    MySourceLink msl;
+    msl.m_geometryId = GeometryIdentifier().withSensitive(7);
+    SourceLink sl{msl};
+
+    auto* p = sl.getPtr<MySourceLink>();
+    BOOST_REQUIRE_NE(p, static_cast<MySourceLink*>(nullptr));
+    BOOST_CHECK_EQUAL(p->geometryId(), msl.geometryId());
+
+    // wrong type returns nullptr
+    BOOST_CHECK_EQUAL(sl.getPtr<int>(), static_cast<int*>(nullptr));
+    BOOST_CHECK_EQUAL(sl.getPtr<double>(), static_cast<double*>(nullptr));
+  }
+
+  {
+    // const overload
+    int value = 42;
+    const SourceLink sl{value};
+
+    const int* p = sl.getPtr<int>();
+    BOOST_REQUIRE_NE(p, static_cast<const int*>(nullptr));
+    BOOST_CHECK_EQUAL(*p, 42);
+
+    BOOST_CHECK_EQUAL(sl.getPtr<float>(), static_cast<const float*>(nullptr));
+  }
+
+  {
+    // mutation through pointer
+    int value = 10;
+    SourceLink sl{value};
+    int* p = sl.getPtr<int>();
+    BOOST_REQUIRE_NE(p, static_cast<int*>(nullptr));
+    *p = 99;
+    BOOST_CHECK_EQUAL(sl.get<int>(), 99);
   }
 }
 

@@ -3,26 +3,35 @@
 import argparse
 
 import acts
+
+
 from acts import (
     MaterialMapper,
     IntersectionMaterialAssigner,
-    BinnedSurfaceMaterialAccumulater,
-    MaterialMapJsonConverter,
+    BinnedSurfaceMaterialAccumulator,
     logging,
     GeometryContext,
     DetectorBuilder,
     GeometryIdGenerator,
 )
 
+from acts.json import MaterialMapJsonConverter
+
 from acts.examples import (
     Sequencer,
     WhiteBoard,
     AlgorithmContext,
+    CoreMaterialMapping,
+)
+
+from acts.examples.root import (
     RootMaterialTrackReader,
     RootMaterialTrackWriter,
-    CoreMaterialMapping,
-    JsonMaterialWriter,
     RootMaterialWriter,
+)
+
+from acts.examples.json import (
+    JsonMaterialWriter,
     JsonFormat,
 )
 
@@ -53,17 +62,17 @@ def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
     materialAssingerConfig.surfaces = surfaces
     materialAssinger = IntersectionMaterialAssigner(materialAssingerConfig, loglevel)
 
-    # Accumulation setup : Binned surface material accumulater
-    materialAccumulaterConfig = BinnedSurfaceMaterialAccumulater.Config()
-    materialAccumulaterConfig.materialSurfaces = surfaces
-    materialAccumulater = BinnedSurfaceMaterialAccumulater(
-        materialAccumulaterConfig, loglevel
+    # Accumulation setup : Binned surface material accumulator
+    materialAccumulatorConfig = BinnedSurfaceMaterialAccumulator.Config()
+    materialAccumulatorConfig.materialSurfaces = surfaces
+    materialAccumulator = BinnedSurfaceMaterialAccumulator(
+        materialAccumulatorConfig, loglevel
     )
 
     # Mapper setup
     materialMapperConfig = MaterialMapper.Config()
     materialMapperConfig.assignmentFinder = materialAssinger
-    materialMapperConfig.surfaceMaterialAccumulater = materialAccumulater
+    materialMapperConfig.surfaceMaterialAccumulator = materialAccumulator
     materialMapper = MaterialMapper(materialMapperConfig, loglevel)
 
     # Add the map writer(s)
@@ -91,6 +100,7 @@ def runMaterialMapping(surfaces, inputFile, outputFile, outputMap, loglevel):
     # Mapping Algorithm
     coreMaterialMappingConfig = CoreMaterialMapping.Config()
     coreMaterialMappingConfig.materialMapper = materialMapper
+    coreMaterialMappingConfig.geoContext = context.geoContext
     coreMaterialMappingConfig.inputMaterialTracks = "material-tracks"
     coreMaterialMappingConfig.mappedMaterialTracks = "mapped-material-tracks"
     coreMaterialMappingConfig.unmappedMaterialTracks = "unmapped-material-tracks"
@@ -289,7 +299,7 @@ if "__main__" == __name__:
             )
 
             # Context and options
-            geoContext = acts.GeometryContext()
+            geoContext = acts.GeometryContext.dangerouslyDefaultConstruct()
             [detector, contextors, store] = dd4hepDetector.finalize(
                 geoContext, cOptions
             )

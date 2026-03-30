@@ -14,6 +14,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/TrackingGeometryMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"

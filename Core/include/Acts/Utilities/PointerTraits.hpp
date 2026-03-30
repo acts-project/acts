@@ -5,10 +5,14 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
+
 #include <concepts>
 #include <type_traits>
+
 namespace Acts {
+
 /// @brief The Pointer concept is an extension of the usual std::is_pointer_v type trait to
 ///         also include the smart pointers like
 ///     std::shared_ptr<T>,
@@ -60,5 +64,9 @@ struct RemovePointer<T> {
 /// Helper type alias for removing pointer from type
 template <typename T>
 using RemovePointer_t = RemovePointer<T>::type;
+
+/// @brief Construct a const pointer dereference
+template <PointerConcept T>
+using ConstDeRef_t = std::add_const_t<RemovePointer_t<T>>&;
 
 }  // namespace Acts

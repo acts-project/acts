@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
@@ -18,7 +18,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
-#include "Acts/Propagator/detail/ParameterTraits.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -84,87 +83,38 @@ class BasePropagatorHelper : public BasePropagator {
 /// - a type mapping for: (initial track parameter type and destination
 ///   surface type) -> type of internal state object
 ///
-template <typename stepper_t, typename navigator_t = VoidNavigator>
+template <StepperConcept stepper_t, typename navigator_t = VoidNavigator>
 class Propagator final
     : public std::conditional_t<
           SupportsBoundParameters_v<stepper_t>,
           detail::BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
           detail::PropagatorStub> {
-  /// Re-define bound track parameters dependent on the stepper
-  using StepperBoundTrackParameters =
-      detail::stepper_bound_parameters_type_t<stepper_t>;
-  static_assert(BoundTrackParametersConcept<StepperBoundTrackParameters>,
-                "Stepper bound track parameters do not fulfill bound "
-                "parameters concept.");
+  using BoundParameters = stepper_t::BoundParameters;
 
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
-  static_assert(StepperStateConcept<typename stepper_t::State>,
-                "Stepper does not fulfill stepper concept.");
-  static_assert(StepperConcept<stepper_t>,
-                "Stepper does not fulfill stepper concept.");
-
- public:
-  /// Type of the stepper in use for public scope
-  using Stepper = stepper_t;
-
-  /// Type of the navigator in use for public scope
-  using Navigator = navigator_t;
-
-  /// Type of state object used by the propagation implementation
-  using StepperState = typename Stepper::State;
-
-  /// Typedef the navigator state
-  using NavigatorState = typename navigator_t::State;
-
-  /// Type alias for propagator state combining stepper and navigator states
-  template <typename propagator_options_t, typename... extension_state_t>
-  using State = PropagatorState<propagator_options_t, StepperState,
-                                NavigatorState, extension_state_t...>;
-
-  /// Type alias for stepper configuration options
-  using StepperOptions = typename stepper_t::Options;
-
-  /// Type alias for navigator configuration options
-  using NavigatorOptions = typename navigator_t::Options;
-
-  /// Type alias for propagator configuration options with actor list
-  template <typename actor_list_t = ActorList<>>
-  using Options =
-      PropagatorOptions<StepperOptions, NavigatorOptions, actor_list_t>;
-
-  /// Constructor from implementation object
-  ///
-  /// @param stepper The stepper implementation is moved to a private member
-  /// @param navigator The navigator implementation, moved to a private member
-  /// @param _logger a logger instance
-  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t(),
-                      std::shared_ptr<const Logger> _logger =
-                          getDefaultLogger("Propagator", Acts::Logging::INFO))
-      : m_stepper(std::move(stepper)),
-        m_navigator(std::move(navigator)),
-        m_logger{std::move(_logger)} {}
-
- private:
   /// @brief Helper struct determining the state's type
   ///
   /// @tparam propagator_options_t Propagator options type
-  /// @tparam actor_list_t List of propagation action types
   ///
   /// This helper struct provides type definitions to extract the correct
   /// propagation state type from a given TrackParameter type and an
   /// ActorList.
   ///
-  template <typename propagator_options_t, typename actor_list_t>
+  template <typename propagator_options_t>
   struct state_type_helper {
+    using actor_list_t = typename propagator_options_t::actor_list_type;
+
     /// @brief Propagation state type for an arbitrary list of additional
     ///        propagation states
     ///
     /// @tparam args Parameter pack specifying additional propagation states
     ///
     template <typename... args>
-    using this_state_type = State<propagator_options_t, args...>;
+    using this_state_type =
+        PropagatorState<propagator_options_t, typename stepper_t::State,
+                        typename navigator_t::State, args...>;
 
     /// @brief Propagation result type derived from a given action list
     using type = typename actor_list_t::template result_type<this_state_type>;
@@ -172,46 +122,81 @@ class Propagator final
 
   /// @brief Helper struct determining the result's type
   ///
-  /// @tparam parameters_t Type of final track parameters
-  /// @tparam actor_list_t List of propagation action types
+  /// @tparam propagator_options_t Propagator options type
   ///
   /// This helper struct provides type definitions to extract the correct
   /// propagation result type from a given TrackParameter type and an
   /// ActorList.
   ///
-  template <typename parameters_t, typename actor_list_t>
+  template <typename propagator_options_t>
   struct result_type_helper {
+    using actor_list_t = typename propagator_options_t::actor_list_type;
+
     /// @brief Propagation result type for an arbitrary list of additional
     ///        propagation results
     ///
     /// @tparam args Parameter pack specifying additional propagation results
     ///
     template <typename... args>
-    using this_result_type = PropagatorResult<parameters_t, args...>;
+    using this_result_type = PropagatorResult<BoundParameters, args...>;
 
     /// @brief Propagation result type derived from a given action list
     using type = typename actor_list_t::template result_type<this_result_type>;
   };
 
  public:
-  /// @brief Short-hand type definition for propagation state derived from
-  ///        an action list
-  ///
-  /// @tparam actor_list_t List of propagation action types
-  ///
-  template <typename propagator_options_t, typename actor_list_t>
-  using actor_list_t_state_t =
-      typename state_type_helper<propagator_options_t, actor_list_t>::type;
+  /// Type of the stepper in use
+  using Stepper = stepper_t;
 
-  /// @brief Short-hand type definition for propagation result derived from
-  ///        an action list
+  /// Type of the navigator in use
+  using Navigator = navigator_t;
+
+  /// Type of the stepper options
+  using StepperOptions = typename Stepper::Options;
+
+  /// Type of the navigator options
+  using NavigatorOptions = typename Navigator::Options;
+
+  /// Type of the propagator options with actor list
+  template <typename actor_list_t = ActorList<>>
+  using Options =
+      PropagatorOptions<StepperOptions, NavigatorOptions, actor_list_t>;
+
+  /// Type of the stepper state
+  using StepperState = typename Stepper::State;
+
+  /// Type of the navigator state
+  using NavigatorState = typename Navigator::State;
+
+  /// Type of the propagation state derived from the propagator options
+  /// @tparam propagator_options_t Type of the propagator options
+  template <typename propagator_options_t>
+  using State = typename state_type_helper<propagator_options_t>::type;
+
+  /// Type of the propagation result derived from the propagator options
+  /// @tparam propagator_options_t Type of the propagator options
+  template <typename propagator_options_t>
+  using ResultType = typename result_type_helper<propagator_options_t>::type;
+
+  /// Constructor from implementation object
   ///
-  /// @tparam parameters_t Type of the final track parameters
-  /// @tparam actor_list_t List of propagation action types
-  ///
-  template <typename parameters_t, typename actor_list_t>
-  using actor_list_t_result_t =
-      typename result_type_helper<parameters_t, actor_list_t>::type;
+  /// @param stepper The stepper implementation is moved to a private member
+  /// @param navigator The navigator implementation, moved to a private member
+  /// @param _logger a logger instance
+  explicit Propagator(Stepper stepper, Navigator navigator = Navigator(),
+                      std::shared_ptr<const Logger> _logger =
+                          getDefaultLogger("Propagator", Acts::Logging::INFO))
+      : m_stepper(std::move(stepper)),
+        m_navigator(std::move(navigator)),
+        m_logger{std::move(_logger)} {}
+
+  /// Access to the stepper instance
+  /// @return Const reference to the stepper
+  const Stepper& stepper() const { return m_stepper; }
+
+  /// Access to the navigator instance
+  /// @return Const reference to the navigator
+  const Navigator& navigator() const { return m_navigator; }
 
   /// @brief Propagate track parameters
   ///
@@ -220,7 +205,6 @@ class Propagator final
   /// fulfilled or the maximum number of steps/path length provided in the
   /// propagation options is reached.
   ///
-  /// @tparam parameters_t Type of initial track parameters to propagate
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam path_aborter_t The path aborter type to be added
   ///
@@ -231,12 +215,11 @@ class Propagator final
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename parameters_t, typename propagator_options_t,
+  template <typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
-  Result<actor_list_t_result_t<StepperBoundTrackParameters,
-                               typename propagator_options_t::actor_list_type>>
-  propagate(const parameters_t& start, const propagator_options_t& options,
-            bool createFinalParameters = true) const;
+  Result<ResultType<propagator_options_t>> propagate(
+      const BoundParameters& start, const propagator_options_t& options,
+      bool createFinalParameters = true) const;
 
   /// @brief Propagate track parameters - User method
   ///
@@ -245,7 +228,6 @@ class Propagator final
   /// is fulfilled, the destination surface is hit or the maximum number of
   /// steps/path length as given in the propagation options is reached.
   ///
-  /// @tparam parameters_t Type of initial track parameters to propagate
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam target_aborter_t The target aborter type to be added
   /// @tparam path_aborter_t The path aborter type to be added
@@ -256,13 +238,12 @@ class Propagator final
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
-  template <typename parameters_t, typename propagator_options_t,
+  template <typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
-  Result<actor_list_t_result_t<StepperBoundTrackParameters,
-                               typename propagator_options_t::actor_list_type>>
-  propagate(const parameters_t& start, const Surface& target,
-            const propagator_options_t& options) const;
+  Result<ResultType<propagator_options_t>> propagate(
+      const BoundParameters& start, const Surface& target,
+      const propagator_options_t& options) const;
 
   /// @brief Builds the propagator state object
   ///
@@ -309,10 +290,10 @@ class Propagator final
   /// @param [in] start Initial track parameters to propagate
   ///
   /// @return Indication if the initialization was successful
-  template <typename propagator_state_t, typename parameters_t,
+  template <typename propagator_state_t,
             typename path_aborter_t = PathLimitReached>
   [[nodiscard]] Result<void> initialize(propagator_state_t& state,
-                                        const parameters_t& start) const;
+                                        const BoundParameters& start) const;
 
   /// @brief Propagate track parameters
   ///
@@ -346,58 +327,30 @@ class Propagator final
   /// @param [in] result Result of the propagation
   /// @param [in] options Propagation options
   /// @param [in] createFinalParameters Whether to produce parameters at the end of the propagation
+  /// @param [in] target Surface to be used for the final parameters, if createFinalParameters is true
+  ///             If nullptr, the current surface of the navigator will be used
   ///
   /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
-  Result<actor_list_t_result_t<StepperBoundTrackParameters,
-                               typename propagator_options_t::actor_list_type>>
-  makeResult(propagator_state_t state, Result<void> result,
-             const propagator_options_t& options,
-             bool createFinalParameters) const;
-
-  /// @brief Builds the propagator result object
-  ///
-  /// This function creates the propagator result object from the propagator
-  /// state object. The `result` is passed to pipe a potential error from the
-  /// propagation call. The `options` are used to determine the type of the
-  /// result object.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state object
-  /// @tparam propagator_options_t Type of the propagator options
-  ///
-  /// @param [in] state Propagator state object
-  /// @param [in] result Result of the propagation
-  /// @param [in] target Target surface of to propagate to
-  /// @param [in] options Propagation options
-  ///
-  /// @return Propagation result
-  template <typename propagator_state_t, typename propagator_options_t>
-  Result<actor_list_t_result_t<StepperBoundTrackParameters,
-                               typename propagator_options_t::actor_list_type>>
-  makeResult(propagator_state_t state, Result<void> result,
-             const Surface& target, const propagator_options_t& options) const;
-
-  /// Access to the stepper instance
-  /// @return Const reference to the stepper
-  const stepper_t& stepper() const { return m_stepper; }
-
-  /// Access to the navigator instance
-  /// @return Const reference to the navigator
-  const navigator_t& navigator() const { return m_navigator; }
+  Result<ResultType<propagator_options_t>> makeResult(
+      propagator_state_t state, Result<void> result,
+      const propagator_options_t& options, bool createFinalParameters,
+      const Surface* target = nullptr) const;
 
  private:
-  const Logger& logger() const { return *m_logger; }
-
-  template <typename propagator_state_t, typename result_t>
-  void moveStateToResult(propagator_state_t& state, result_t& result) const;
-
   /// Implementation of propagation algorithm
-  stepper_t m_stepper;
+  Stepper m_stepper;
 
   /// Implementation of navigator
-  navigator_t m_navigator;
+  Navigator m_navigator;
 
   std::shared_ptr<const Logger> m_logger;
+
+  const Logger& logger() const { return *m_logger; }
+
+  template <typename propagator_state_t, typename propagator_result_t>
+  void moveStateToResult(propagator_state_t& state,
+                         propagator_result_t& result) const;
 };
 
 }  // namespace Acts

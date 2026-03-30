@@ -57,7 +57,7 @@ std::shared_ptr<TrackingVolume> makeDummyVolume() {
       std::make_shared<CylinderVolumeBounds>(30_mm, 40_mm, 100_mm));
 }
 
-GeometryContext gctx;
+auto gctx = GeometryContext::dangerouslyDefaultConstruct();
 
 template <typename T>
 std::unique_ptr<T> copy(const std::unique_ptr<T>& p) {
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(Disc) {
     auto discPhi = Surface::makeShared<DiscSurface>(Transform3::Identity(),
                                                     30_mm, 100_mm, 45_degree);
 
-    // Check thet disc with phi sector does not accept closed axis
+    // Check that the disc with phi sector does not accept closed axis
     BOOST_CHECK_THROW(
         GridPortalLink::make(discPhi, AxisDirection::AxisPhi,
                              Axis{AxisClosed, -45_degree, 45_degree, 3}),

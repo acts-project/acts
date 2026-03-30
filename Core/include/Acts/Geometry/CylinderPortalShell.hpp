@@ -28,16 +28,11 @@ class CylinderPortalShell : public PortalShellBase {
 
   using enum CylinderVolumeBounds::Face;
 
-  /// Retrieve the portal associated to the given face. Can be nullptr if unset.
-  /// @param face The face to retrieve the portal for
-  /// @return The portal associated to the face
-  virtual Portal* portal(Face face) = 0;
-
   /// Retrieve a shared_ptr for the portal associated to the given face. Can be
   /// nullptr if unset.
   /// @param face The face to retrieve the portal for
   /// @return The portal associated to the face
-  virtual std::shared_ptr<Portal> portalPtr(Face face) = 0;
+  virtual std::shared_ptr<Portal> portal(Face face) = 0;
 
   /// Set the portal associated to the given face.
   /// @param portal The portal to set
@@ -66,17 +61,16 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
   using Base = CylinderPortalShell;
 
   /// Construct a single cylinder portal shell for the given volume
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to create the shell for
-  explicit SingleCylinderPortalShell(TrackingVolume& volume);
+  explicit SingleCylinderPortalShell(const GeometryContext& gctx,
+                                     TrackingVolume& volume);
 
   /// @copydoc PortalShellBase::size
   std::size_t size() const final;
 
   /// @copydoc CylinderPortalShell::portal
-  Portal* portal(Face face) final;
-
-  /// @copydoc CylinderPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) final;
+  std::shared_ptr<Portal> portal(Face face) final;
 
   /// @copydoc CylinderPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) final;
@@ -150,10 +144,7 @@ class CylinderStackPortalShell : public CylinderPortalShell {
   std::size_t size() const final;
 
   /// @copydoc CylinderPortalShell::portal
-  Portal* portal(Face face) final;
-
-  /// @copydoc CylinderPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) final;
+  std::shared_ptr<Portal> portal(Face face) final;
 
   /// @copydoc CylinderPortalShell::setPortal
   void setPortal(std::shared_ptr<Portal> portal, Face face) final;

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "ActsPlugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "ActsTests/CommonHelpers/CylindricalTrackingGeometry.hpp"
@@ -32,7 +33,7 @@ using namespace ActsPlugins;
 
 namespace ActsTests {
 
-GeometryContext tContext;
+auto tContext = GeometryContext::dangerouslyDefaultConstruct();
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 const char* beampipe_head_xml =
@@ -297,6 +298,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
   auto world = lcdd->world();
 
   // Test starts here - with nonimal detector construction
+  ACTS_PUSH_IGNORE_DEPRECATED()
   DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
   auto surfaceFactory = DD4hepDetectorSurfaceFactory(
       sFactoryConfig,
@@ -304,6 +306,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesDefault) {
 
   DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
   DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
+  ACTS_PUSH_IGNORE_DEPRECATED()
 
   surfaceFactory.construct(sFactoryCache, tContext, world, sFactoryOptions);
   // Check the number of surfaces
@@ -321,30 +324,25 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 
   auto world = lcdd->world();
 
-  // A typical extension would be overriding the `tranform(const
+  // A typical extension would be overriding the `transform(const
   // GeometryContext&)` method in order change how the detector element is
   // handled in alignment, for simplicity here we show a simple extension that
   // overrides the  thickness
   class ExtendedDetectorElement : public ActsPlugins::DD4hepDetectorElement {
    public:
     using ActsPlugins::DD4hepDetectorElement::DD4hepDetectorElement;
-
-    double thickness() const final {
-      // Return a fixed thickness for testing purposes
-      return 42. * UnitConstants::mm;
-    }
   };
 
   auto extendedFactory =
-      [](const dd4hep::DetElement& detElem, const std::string& axes,
-         double scalor, bool isDisc,
+      [](const dd4hep::DetElement& detElem, TGeoAxes axes, double scalor,
          const std::shared_ptr<const ISurfaceMaterial>& material)
       -> std::shared_ptr<ActsPlugins::DD4hepDetectorElement> {
     return std::make_shared<ExtendedDetectorElement>(detElem, axes, scalor,
-                                                     isDisc, material);
+                                                     material);
   };
 
   // Test starts here - with nonimal detector construction
+  ACTS_PUSH_IGNORE_DEPRECATED()
   DD4hepDetectorSurfaceFactory::Config sFactoryConfig;
   sFactoryConfig.detectorElementFactory = extendedFactory;
   auto surfaceFactory = DD4hepDetectorSurfaceFactory(
@@ -353,6 +351,7 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
 
   DD4hepDetectorSurfaceFactory::Cache sFactoryCache;
   DD4hepDetectorSurfaceFactory::Options sFactoryOptions;
+  ACTS_POP_IGNORE_DEPRECATED()
 
   surfaceFactory.construct(sFactoryCache, tContext, world, sFactoryOptions);
   // Check the number of surfaces
@@ -361,8 +360,6 @@ BOOST_AUTO_TEST_CASE(ConvertSensitivesextended) {
     // Check that the extended detector element is used
     BOOST_CHECK_NE(dynamic_cast<const ExtendedDetectorElement*>(detElem.get()),
                    nullptr);
-    // Check that the thickness is 42 mm
-    CHECK_CLOSE_ABS(detElem->thickness(), 42. * UnitConstants::mm, 1e-10);
   }
 
   // Kill that instance before going into the next test
