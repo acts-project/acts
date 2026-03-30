@@ -199,8 +199,8 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
-  const std::vector<const Surface*>& sensitiveSurfaces =
-      m_surfaceArray->neighbors(args.position, args.direction);
+  const auto sensitiveSurfaces =
+      m_surfaceArray->neighbors(gctx, args.position, args.direction);
   ACTS_VERBOSE("~> Surface array reports " << sensitiveSurfaces.size()
                                            << " sensitive surfaces");
 

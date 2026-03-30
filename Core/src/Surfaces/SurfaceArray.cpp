@@ -9,7 +9,9 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Ranges.hpp"
 
@@ -17,10 +19,8 @@
 #include <utility>
 
 using namespace Acts::Ranges;
-namespace Acts {
 
-// implementation for pure virtual destructor of ISurfaceGridLookup
-SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
+namespace Acts {
 
 SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                            std::vector<std::shared_ptr<const Surface>> surfaces,
@@ -37,6 +37,7 @@ SurfaceArray::SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
 }
 
 namespace {
+
 struct SingleElementLookupImpl : SurfaceArray::ISurfaceGridLookup {
   explicit SingleElementLookupImpl(const Surface* element)
       : m_element({element}) {}
@@ -52,8 +53,20 @@ struct SingleElementLookupImpl : SurfaceArray::ISurfaceGridLookup {
     return m_element;
   }
 
+  std::span<const Surface* const> lookup(
+      const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+      const Vector3& /*direction*/) const override {
+    return m_element;
+  }
+
   const SurfaceVector& neighbors(const Vector3& /*position*/,
                                  const Vector3& /*direction*/) const override {
+    return m_element;
+  }
+
+  std::span<const Surface* const> neighbors(
+      const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+      const Vector3& /*direction*/) const override {
     return m_element;
   }
 
@@ -79,6 +92,7 @@ struct SingleElementLookupImpl : SurfaceArray::ISurfaceGridLookup {
  private:
   SurfaceVector m_element;
 };
+
 }  // namespace
 
 SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
@@ -162,7 +176,7 @@ namespace {
 /// @tparam Axis1 The first axis
 /// @tparam Axis2 The second axis
 template <class Axis1, class Axis2>
-struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
+struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   /// Grid type storing surface vectors with two axes
   using Grid_t = Grid<SurfaceVector, Axis1, Axis2>;
 
@@ -206,7 +220,16 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
 
   const SurfaceVector& lookup(const Vector3& position,
                               const Vector3& direction) const override {
-    return m_grid.at(findGlobalBin(position, direction,
+    const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
+
+    return m_grid.at(findGlobalBin(gctx, position, direction,
+                                   std::numeric_limits<double>::infinity()));
+  }
+
+  std::span<const Surface* const> lookup(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const override {
+    return m_grid.at(findGlobalBin(gctx, position, direction,
                                    std::numeric_limits<double>::infinity()));
   }
 
@@ -231,8 +254,22 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
   /// @return @c SurfaceVector at given bin. Copy of all bins selected
   const SurfaceVector& neighbors(const Vector3& position,
                                  const Vector3& direction) const override {
+    const auto gctx = GeometryContext::dangerouslyDefaultConstruct();
     return m_neighborMap.at(findGlobalBin(
-        position, direction, std::numeric_limits<double>::infinity()));
+        gctx, position, direction, std::numeric_limits<double>::infinity()));
+  }
+
+  /// @brief Performs a lookup at @c pos, but returns neighbors as well
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position Lookup position
+  /// @param direction Lookup direction
+  /// @return A span of surface pointers
+  std::span<const Surface* const> neighbors(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const override {
+    return m_neighborMap.at(findGlobalBin(
+        gctx, position, direction, std::numeric_limits<double>::infinity()));
   }
 
   /// @brief Returns the total size of the grid (including under/overflow
@@ -294,12 +331,12 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
                                       const Surface& surface) {
     const Vector3 pos = surface.referencePosition(gctx, AxisDirection::AxisR);
     const Vector3 normal = m_representative->normal(gctx, pos);
-    const std::size_t globalBin = findGlobalBin(pos, normal, m_tolerance);
+    const std::size_t globalBin = findGlobalBin(gctx, pos, normal, m_tolerance);
     if (globalBin != 0) {
       m_grid.at(globalBin).push_back(&surface);
     }
     return globalBin;
-  };
+  }
 
   /// flood fill neighboring bins given a starting bin
   void fillBinToSurfaceMapping(const GeometryContext& gctx,
@@ -343,7 +380,7 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
           m_grid.neighborHoodIndices(currentIndices, 1u);
       queue.insert(queue.end(), neighborIndices.begin(), neighborIndices.end());
     }
-  };
+  }
 
   void populateNeighborCache() {
     // calculate neighbors for every bin and store in map
@@ -387,6 +424,7 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
     }
     return surfaceLocal;
   }
+
   std::array<double, 2> surfaceToGridLocal(Vector2 local) const {
     std::array<double, 2> gridLocal = {local[0], local[1]};
     if (const CylinderBounds* bounds = getCylinderBounds(); bounds != nullptr) {
@@ -395,10 +433,9 @@ struct SurfaceGridLookupImpl : SurfaceArray::ISurfaceGridLookup {
     return gridLocal;
   }
 
-  std::size_t findGlobalBin(const Vector3& position, const Vector3& direction,
+  std::size_t findGlobalBin(const GeometryContext& gctx,
+                            const Vector3& position, const Vector3& direction,
                             double tolerance) const {
-    auto gctx = GeometryContext::dangerouslyDefaultConstruct();
-
     const Intersection3D intersection =
         m_representative
             ->intersect(gctx, position, direction,
