@@ -137,6 +137,7 @@ class SurfaceArray {
   /// @param representative The surface which is used as representative
   /// @param tolerance The tolerance used for intersection checks
   /// @param axes The axes used for the grid
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   /// @return A unique pointer to the surface grid lookup
   static std::unique_ptr<ISurfaceGridLookup> makeSurfaceGridLookup(
       std::shared_ptr<RegularSurface> representative, double tolerance,
