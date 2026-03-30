@@ -10,3 +10,4 @@ pyhepmc
 numpy
 filelock
 mplhep
+hist
