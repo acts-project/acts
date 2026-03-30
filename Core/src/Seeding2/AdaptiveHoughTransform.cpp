@@ -1,6 +1,5 @@
 #include "Acts/Seeding2/AdaptiveHoughTransform.hpp"
 
-
 namespace Acts {
 AccumulatorSection::AccumulatorSection(float xs, float ys, float xBegin,
                                        float yBegin, int div,
@@ -29,42 +28,65 @@ void AccumulatorSection::expand(float xs, float ys) {
   m_ySize *= ys;
 }
 
-AccumulatorSection AccumulatorSection::bottomLeft(float xFraction,
-                                                  float yFraction) const {
-  return AccumulatorSection(m_xSize * xFraction, m_ySize * yFraction, m_xBegin,
-                            m_yBegin, m_divisionLevel + 1, m_indices,
-                            m_history);
-}
-AccumulatorSection AccumulatorSection::topLeft(float xFraction,
-                                               float yFraction) const {
-  return AccumulatorSection(m_xSize * xFraction, m_ySize * yFraction, m_xBegin,
-                            m_yBegin + m_ySize - m_ySize * yFraction,
-                            m_divisionLevel + 1, m_indices, m_history);
-}
-AccumulatorSection AccumulatorSection::topRight(float xFraction,
-                                                float yFraction) const {
-  return AccumulatorSection(m_xSize * xFraction, m_ySize * yFraction,
-                            m_xBegin + m_xSize - m_xSize * xFraction,
-                            m_yBegin + m_ySize - m_ySize * yFraction,
-                            m_divisionLevel + 1, m_indices, m_history);
-}
-AccumulatorSection AccumulatorSection::bottomRight(float xFraction,
-                                                   float yFraction) const {
-  return AccumulatorSection(m_xSize * xFraction, m_ySize * yFraction,
-                            m_xBegin + m_xSize - m_xSize * xFraction, m_yBegin,
-                            m_divisionLevel + 1, m_indices, m_history);
-}
-AccumulatorSection AccumulatorSection::bottom(float yFraction) const {
-  return bottomLeft(1.0, yFraction);
-}
-AccumulatorSection AccumulatorSection::top(float yFraction) const {
-  return topLeft(1.0, yFraction);
-}
-AccumulatorSection AccumulatorSection::left(float xFraction) const {
-  return bottomLeft(xFraction, 1.0);
-}
-AccumulatorSection AccumulatorSection::right(float xFraction) const {
-  return bottomRight(xFraction, 1.0);
+AccumulatorSection AccumulatorSection::bottomLeft(bool copyIndices) const {
+  return AccumulatorSection(m_xSize * 0.5, m_ySize * 0.5, m_xBegin,
+                            m_yBegin, m_divisionLevel + 1,
+                            (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
 }
 
+AccumulatorSection AccumulatorSection::topLeft(bool copyIndices) const {
+  return AccumulatorSection(m_xSize * 0.5, m_ySize * 0.5, m_xBegin,
+                            m_yBegin + m_ySize - m_ySize * 0.5,
+                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+                            m_history);
 }
+
+AccumulatorSection AccumulatorSection::topRight(bool copyIndices) const {
+  return AccumulatorSection(m_xSize * 0.5, m_ySize * 0.5,
+                            m_xBegin + m_xSize - m_xSize * 0.5,
+                            m_yBegin + m_ySize - m_ySize * 0.5,
+                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+                            m_history);
+}
+
+AccumulatorSection AccumulatorSection::bottomRight(bool copyIndices) const {
+  return AccumulatorSection(m_xSize * 0.5, m_ySize * 0.5,
+                            m_xBegin + m_xSize - m_xSize * 0.5, m_yBegin,
+                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+                            m_history);
+}
+
+AccumulatorSection AccumulatorSection::bottom(bool copyIndices) const {
+  return AccumulatorSection(m_xSize, m_ySize * 0.5,
+                            m_xBegin, m_yBegin,
+                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+                            m_history);
+
+}
+
+AccumulatorSection AccumulatorSection::top(bool copyIndices) const {
+  return AccumulatorSection(m_xSize, m_ySize * 0.5, m_xBegin,
+                            m_yBegin + m_ySize * 0.5,
+                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+                            m_history);
+
+}
+
+AccumulatorSection AccumulatorSection::left(bool copyIndices) const {
+  return AccumulatorSection(m_xSize * 0.5, m_ySize, m_xBegin,
+                            m_yBegin,
+                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+                            m_history);
+
+}
+
+AccumulatorSection AccumulatorSection::right(bool copyIndices) const {
+    return AccumulatorSection(m_xSize * 0.5, m_ySize,
+                            m_xBegin + m_xSize * 0.5,
+                            m_yBegin,
+                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+                            m_history);
+
+}
+
+}  // namespace Acts

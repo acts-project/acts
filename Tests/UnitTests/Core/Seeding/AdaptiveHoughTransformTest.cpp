@@ -74,24 +74,6 @@ BOOST_AUTO_TEST_CASE(split_4) {
     BOOST_CHECK_EQUAL(br.ySize(), 50.0);
 }
 
-BOOST_AUTO_TEST_CASE(split_4_uneven) {
-
-    AccumulatorSection s(10., 100., -5., -50.0);
-    AccumulatorSection tl = s.topLeft(0.4, 0.4);
-    AccumulatorSection br = s.bottomRight(0.4, 0.4);
-
-    BOOST_CHECK_EQUAL(tl.xBegin(), -5.0);
-    BOOST_CHECK_EQUAL(tl.yBegin(), 10.0);
-    BOOST_CHECK_EQUAL(tl.xSize(), 4.0);
-    BOOST_CHECK_EQUAL(tl.ySize(), 40.0);
-
-    BOOST_CHECK_EQUAL(br.xBegin(), 1.0);
-    BOOST_CHECK_EQUAL(br.yBegin(), -50.0);
-    BOOST_CHECK_EQUAL(br.xSize(), 4.0);
-    BOOST_CHECK_EQUAL(br.ySize(), 40.0);
-}
-
-
 BOOST_AUTO_TEST_CASE(is_line_inside) {
     // rather asymmetric section
     AccumulatorSection s(10., 2., -5., -1.0);
@@ -116,10 +98,10 @@ BOOST_AUTO_TEST_CASE(is_crossing_inside) {
     // rather asymmetric section again
     AccumulatorSection s(10., 6., -5., -6.);
     // test lines (best to draw it)
-    auto l1 = [](float x){ return 1.0*x+3.; };
-    auto l2 = [](float x){ return 0.5*x+1.; };
-    auto l3 = [](float x){ return 0.5*x-1.; };
-    auto l4 = [](float x){ return 1.0*x-3.; };
+    std::function<float(float)> l1 = [](float x){ return 1.0*x+3.; };
+    std::function<float(float)> l2 = [](float x){ return 0.5*x+1.; };
+    std::function<float(float)> l3 = [](float x){ return 0.5*x-1.; };
+    std::function<float(float)> l4 = [](float x){ return 1.0*x-3.; };
 
     BOOST_CHECK(s.isCrossingInside(l1, l2));
     BOOST_CHECK(! s.isCrossingInside(l2, l3));

@@ -1,5 +1,6 @@
-#include <vector>
+#include <cmath>
 #include <concepts>
+#include <vector>
 
 namespace Acts {
 
@@ -28,37 +29,34 @@ class AccumulatorSection {
   inline const std::vector<unsigned> &indices() const { return m_indices; }
   inline std::vector<unsigned> &indices() { return m_indices; }
 
-  // create section that is bottom part this this one
-  // +------+
-  // |      |
-  // +------+
-  // |     <|-- this part
-  // +------+
-  AccumulatorSection bottom(float yFraction = 0.5) const;
-  // see @bottom
-  AccumulatorSection top(float yFraction = 0.5) const;
-  // @see @bottom
-  AccumulatorSection left(float xFraction = 0.5) const;
-  // @see @bottom
-  AccumulatorSection right(float xFraction = 0.5) const;
+  /// create section that is bottom part this this one
+  /// @arg copyIndices - copies indices from the parent
+  /// +------+
+  /// |      |
+  /// +------+
+  /// |     <|-- this part
+  /// +------+
+  AccumulatorSection bottom(bool copyIndices = false) const;
+  /// see @bottom
+  AccumulatorSection top(bool copyIndices = false) const;
+  /// @see @bottom
+  AccumulatorSection left(bool copyIndices = false) const;
+  /// @see @bottom
+  AccumulatorSection right(bool copyIndices = false) const;
 
-  // create section that is bottom left corner of this this one
-  // by default the section is divided into 4 quadrants,
-  // if parameters are provided the quadrants size can be adjusted
-  // +---+---+
-  // |   |   |
-  // +---+---+
-  // |   |  <|-- this part
-  // +---+---+
-  AccumulatorSection bottomRight(float xFraction = 0.5,
-                                 float yFraction = 0.5) const;
-  AccumulatorSection bottomLeft(float xFraction = 0.5,
-                                float yFraction = 0.5) const;
+  /// create section that is bottom left corner of this this one
+  /// by default the section is divided into 4 quadrants,
+  /// if parameters are provided the quadrants size can be adjusted
+  /// +---+---+
+  /// |   |   |
+  /// +---+---+
+  /// |   |  <|-- this part
+  /// +---+---+
+  AccumulatorSection bottomRight(bool copyIndices = false) const;
+  AccumulatorSection bottomLeft(bool copyIndices = false) const;
 
-  AccumulatorSection topLeft(float xFraction = 0.5,
-                             float yFraction = 0.5) const;
-  AccumulatorSection topRight(float xFraction = 0.5,
-                              float yFraction = 0.5) const;
+  AccumulatorSection topLeft(bool copyIndices = false) const;
+  AccumulatorSection topRight(bool copyIndices = false) const;
 
   /// @brief true if the line defined by given parameters passes the section
   /// @param function is callable used to check crossing at the edges
@@ -79,43 +77,11 @@ class AccumulatorSection {
   /// It may be incorrect assumption for rapidly changing function or large
   /// sections
   /// @return true if the lines cross in the section
-  template <typename F1, typename F2>
-  inline bool isCrossingInside(F1 &&line1, F2 &&line2) const &
-    requires std::invocable<F1, float> and std::invocable<F2, float>
-  {
-    // this microalgorithm idea is illustrated below
-    // section left section right
-    // example with crossing
-    //                                       |            +2
-    // line 1 crossing left section edge     +1          _|
-    // left edge mid point                   |_           |
-    //                                       |            +1
-    // line 2crossing left section           +2           |
-    //
-    // example with no crossing
-    //                                       |            +1
-    // line 1 crossing left section edge     +1          _|
-    // left edge mid point                   |_           |
-    //                                       |            +2
-    // line 2crossing left section           +2           |
-    //
+  template <typename F>
+  inline bool isCrossingInside(F &&line1, F &&line2) const &
+    requires std::invocable<F, float>;
 
-
-    // if for any of the two lines the condition
-    // (line1_left_y-middle_on_the_left_y)*(line1_right_y-middle_on_the_right_y)
-    // < 0 means that there is crossing
-
-    const float line1_left_y = line1(xBegin());
-    const float line1_right_y = line1(xBegin() + xSize());
-    const float line2_left_y = line2(xBegin());
-    const float line2_right_y = line2(xBegin() + xSize());
-    const float left_mid = 0.5f * (line1_left_y + line2_left_y);
-    const float right_mid = 0.5f * (line1_right_y + line2_right_y);
-    return (line1_left_y - left_mid) * (line1_right_y - right_mid) < 0 
-      and left_mid ;
-  }
-
-  // sizes
+  /// sizes access
   float xSize() const { return m_xSize; }
   float ySize() const { return m_ySize; }
   float xBegin() const { return m_xBegin; }
@@ -146,4 +112,121 @@ class AccumulatorSection {
   std::vector<float> m_history;  // additional record where an arbitrary
                                  // information can be stored
 };
+
+template <typename F>
+inline bool AccumulatorSection::isCrossingInside(F &&line1, F &&line2) const &
+  requires std::invocable<F, float>
+{
+  // this microalgorithm idea is illustrated below
+  // section left section right
+  // example with crossing
+  //                                       |            +2
+  // line 1 crossing left section edge     +1          _|
+  // left edge mid point                   |_           |
+  //                                       |            +1
+  // line 2crossing left section           +2           |
+  //
+  // example with no crossing
+  //                                       |            +1
+  // line 1 crossing left section edge     +1          _|
+  // left edge mid point                   |_           |
+  //                                       |            +2
+  // line 2crossing left section           +2           |
+  //
+
+  // if for any of the two lines the condition
+  // (line1_left_y-middle_on_the_left_y)*(line1_right_y-middle_on_the_right_y)
+  // < 0 means that there is crossing
+  const float xL = xBegin();
+  const float xR = xBegin() + xSize();
+
+  // Evaluate both lines at section boundaries
+  const float y1L = line1(xL);
+  const float y1R = line1(xR);
+  const float y2L = line2(xL);
+  const float y2R = line2(xR);
+
+  // --- Step 1: Quick rejection based on ordering ---
+  // If one line is consistently above the other → no crossing
+  const float dL = y1L - y2L;
+  const float dR = y1R - y2R;
+
+  if (dL * dR > 0) {
+    return false;
+  }
+
+  // --- Step 2: Check if either line fully spans inside vertically ---
+  auto is_in = [this](float y) {
+    return yBegin() < y && y < yBegin() + ySize();
+  };
+
+  if (is_in(y1L) && is_in(y1R)) {
+    return true;
+  }
+
+  if (is_in(y2L) && is_in(y2R)) {
+    return true;
+  }
+
+  // --- Step 3: Approximate crossing position ---
+  // Linear interpolation assuming near-linear behavior
+  const float abs_dL = std::abs(dL);
+  const float abs_dR = std::abs(dR);
+
+  // Avoid division by zero (parallel & overlapping edge case)
+  if (abs_dL + abs_dR == 0.0f) {
+    return false;
+  }
+
+  const float t = abs_dL / (abs_dL + abs_dR);  // fraction from left
+  const float xCross = xL + t * (xR - xL);
+
+  // --- Step 4: Check if crossing lies inside vertical bounds ---
+  const float yCross1 = line1(xCross);
+  const float yCross2 = line2(xCross);
+  const float yCross = 0.5f * (yCross1 + yCross2);  // intersection approx
+
+  return is_in(yCross);
+
+  // const float line1_left_y = line1(xBegin());
+  // const float line1_right_y = line1(xBegin() + xSize());
+  // const float line2_left_y = line2(xBegin());
+  // const float line2_right_y = line2(xBegin() + xSize());
+  // const float left_mid = 0.5f * (line1_left_y + line2_left_y);
+  // const float right_mid = 0.5f * (line1_right_y + line2_right_y);
+  // // they do not cross for sure
+  // if ((line1_left_y - left_mid) * (line1_right_y - right_mid) > 0) {
+  //   return false;
+  // }
+  // //
+  // auto is_in = [this](float v) {
+  //   return yBegin() < v and v < yBegin() + ySize();
+  // };
+
+  // if (is_in(line1_left_y) and is_in(line1_right_y)) {
+  //   return true;
+  // }
+
+  // if (is_in(line2_left_y) and is_in(line2_right_y)) {
+  //   return true;
+  // }
+
+  // // check where they cross assuming thy are lines
+  // // assume that the functions are close to linear
+  // const float d_y_left = std::abs(line1_left_y - line2_left_y);
+  // const float d_y_right = std::abs(line1_right_y - line2_right_y);
+  // const float x_cross = xSize() * d_y_right / (d_y_left + d_y_right);
+  // // if any of the lines at point xBegin()+x_cross is in box we consider
+  // the
+  // // crossing to be close
+
+  // if (is_in(line1(xBegin() + x_cross))) {
+  //   return true;
+  // }
+  // if (is_in(line2(xBegin() + x_cross))) {
+  //   return true;
+  // }
+  // return false;
 }
+
+}  // namespace Acts
