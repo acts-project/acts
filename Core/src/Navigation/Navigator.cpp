@@ -23,6 +23,14 @@
 #include <sstream>
 
 namespace Acts {
+std::ostream& operator<<(
+    std::ostream& ostr,
+    const std::span<const Acts::NavigationTarget>& candidates) {
+  for (const auto& target : candidates) {
+    ostr << "\n  -- " << target;
+  }
+  return ostr;
+}
 
 Navigator::Navigator(Config cfg, std::shared_ptr<const Logger> _logger)
     : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {
@@ -437,7 +445,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
       ++state.navSurfaceIndex.value();
     }
     if (state.navSurfaceIndex.value() < state.navSurfaces.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target set to next surface. " << state.navSurface());
       return state.navSurface();
     } else {
       // This was the last surface, switch to layers
@@ -455,7 +464,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
       ++state.navLayerIndex.value();
     }
     if (state.navLayerIndex.value() < state.navLayers.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target set to next layer. " << state.navLayer());
       return state.navLayer();
     } else {
       // This was the last layer, switch to boundaries
@@ -473,7 +483,8 @@ NavigationTarget Navigator::getNextTargetGen1(State& state,
       ++state.navBoundaryIndex.value();
     }
     if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
-      ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target set to next boundary " << state.navBoundary());
       return state.navBoundary();
     } else {
       // This was the last boundary, we have to leave the volume somehow,
@@ -610,8 +621,10 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
                           BoundaryTolerance::None(),
                           state.options.surfaceTolerance);
 
-  ACTS_VERBOSE(volInfo(state) << "Now " << state.stream.candidates().size()
-                              << " navigation candidates after initialization");
+  ACTS_VERBOSE(volInfo(state)
+               << "Now " << state.stream.candidates().size()
+               << " navigation candidates after initialization.\n"
+               << state.stream.candidates());
 
   state.navCandidates.clear();
 
@@ -644,17 +657,8 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
   });
 
   // Print the navigation candidates
-
-  if (logger().doPrint(Logging::VERBOSE)) {
-    std::ostringstream os;
-    os << "Navigation candidates: " << state.navCandidates.size() << "\n";
-    for (auto& candidate : state.navCandidates) {
-      os << " -- " << candidate << " at "
-         << candidate.pathLength() / UnitConstants::mm << "mm\n";
-    }
-
-    logger().log(Logging::VERBOSE, os.str());
-  }
+  ACTS_VERBOSE("Navigation candidates: " << state.navCandidates.size() << "\n"
+                                         << state.navCandidates);
 }
 
 void Navigator::resolveSurfaces(State& state, const Vector3& position,
@@ -727,20 +731,13 @@ void Navigator::resolveSurfaces(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state)
                  << "Removing "
                  << std::distance(toBeRemoved.begin(), toBeRemoved.end())
-                 << " overlapping surfaces.");
+                 << " overlapping surfaces. " << toBeRemoved);
   }
   state.navSurfaces.erase(toBeRemoved.begin(), toBeRemoved.end());
 
-  // Print surface information
-  if (logger().doPrint(Logging::VERBOSE)) {
-    std::ostringstream os;
-    os << state.navSurfaces.size();
-    os << " surface candidates found at path(s): ";
-    for (auto& sfc : state.navSurfaces) {
-      os << sfc.pathLength() << "  ";
-    }
-    logger().log(Logging::VERBOSE, os.str());
-  }
+  ACTS_VERBOSE(volInfo(state) << state.navSurfaces.size()
+                              << " surface candidates found at path(s): "
+                              << state.navSurfaces);
 
   if (state.navSurfaces.empty()) {
     ACTS_VERBOSE(volInfo(state) << "No surface candidates found.");
@@ -764,16 +761,8 @@ void Navigator::resolveLayers(State& state, const Vector3& position,
       state.options.geoContext, position, direction, navOpts);
   std::ranges::sort(state.navLayers, NavigationTarget::pathLengthOrder);
 
-  // Print layer information
-  if (logger().doPrint(Logging::VERBOSE)) {
-    std::ostringstream os;
-    os << state.navLayers.size();
-    os << " layer candidates found at path(s): ";
-    for (auto& lc : state.navLayers) {
-      os << lc.pathLength() << "  ";
-    }
-    logger().log(Logging::VERBOSE, os.str());
-  }
+  ACTS_VERBOSE(state.navLayers.size()
+               << " layer candidates found at path(s): " << state.navLayers);
 
   if (state.navLayers.empty()) {
     ACTS_VERBOSE(volInfo(state) << "No layer candidates found.");
@@ -799,15 +788,9 @@ void Navigator::resolveBoundaries(State& state, const Vector3& position,
   std::ranges::sort(state.navBoundaries, NavigationTarget::pathLengthOrder);
 
   // Print boundary information
-  if (logger().doPrint(Logging::VERBOSE)) {
-    std::ostringstream os;
-    os << state.navBoundaries.size();
-    os << " boundary candidates found at path(s): ";
-    for (const auto& bc : state.navBoundaries) {
-      os << bc.pathLength() << "  ";
-    }
-    logger().log(Logging::VERBOSE, os.str());
-  }
+  ACTS_VERBOSE(state.navBoundaries.size()
+               << " boundary candidates found at path(s): "
+               << state.navBoundaries);
 
   if (state.navBoundaries.empty()) {
     ACTS_VERBOSE(volInfo(state) << "No boundary candidates found.");

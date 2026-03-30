@@ -232,12 +232,15 @@ def test_python_track_state_access(generic_detector_config, tmp_path):
 
                 for track in tracks:
                     params = track.parameters
-                    assert params.shape == (6,)
+                    assert isinstance(params, acts.BoundVector)
                     cov = track.covariance
-                    assert cov.shape == (6, 6)
+                    assert isinstance(cov, acts.BoundMatrix)
                     # parameters from per-proxy accessor must match the
                     # bulk numpy array at the same index
-                    assert np.allclose(params, tracks.parameters[track.index])
+                    assert np.allclose(
+                        [params[i] for i in range(6)],
+                        tracks.parameters[track.index],
+                    )
 
                     n_meas_from_summary = track.nMeasurements
                     n_meas_counted = 0
@@ -263,15 +266,15 @@ def test_python_track_state_access(generic_detector_config, tmp_path):
 
                         if state.hasPredicted:
                             pred = state.predicted
-                            assert pred.shape == (6,)
+                            assert isinstance(pred, acts.BoundVector)
 
                         if state.hasFiltered:
                             filt = state.filtered
-                            assert filt.shape == (6,)
+                            assert isinstance(filt, acts.BoundVector)
 
                         if state.hasSmoothed:
                             smth = state.smoothed
-                            assert smth.shape == (6,)
+                            assert isinstance(smth, acts.BoundVector)
 
                     assert n_meas_counted == n_meas_from_summary
                     assert n_holes_counted == track.nHoles
@@ -290,7 +293,7 @@ def test_python_track_state_access(generic_detector_config, tmp_path):
                     ]
                     assert len(fwd_predicted) == len(rev_predicted)
                     for fwd, rev in zip(fwd_predicted, reversed(rev_predicted)):
-                        assert np.allclose(fwd, rev)
+                        assert all(fwd[i] == pytest.approx(rev[i]) for i in range(6))
 
                 return acts.examples.ProcessCode.SUCCESS
 
