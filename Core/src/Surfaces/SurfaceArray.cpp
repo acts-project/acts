@@ -252,7 +252,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
     const double neighborDistanceReal = std::min<double>(
         m_maxNeighborDistance,
-        std::max<double>(1, 1.0 / std::abs(normal.dot(direction))));
+        std::max<double>(1, 1 / std::abs(normal.dot(direction))));
     const std::uint8_t neighborDistance =
         static_cast<std::uint8_t>(neighborDistanceReal);
 
