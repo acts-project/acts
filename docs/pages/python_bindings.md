@@ -1,16 +1,61 @@
-@page python_bindings Python Bindings for Examples
+@page python_bindings Python Bindings
 
-The examples part of ACTS ships with python bindings using the `pybind11`
-library. Building these bindings can be enabled via
-`-DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON`, and requires a python installation
-including the development files to be installed. You can then build the special
-target `ActsPythonBindings` to build everything that can be accessed in python.
+# Installation from PyPI
 
-The build will create a setup script in `$BUILD/this_acts_withdeps.sh` which
-modifies `$PYTHONPATH` so that you can import the `acts` module in python.
+The easiest way to get the ACTS Python bindings is via [PyPI](https://pypi.org/project/pyacts/):
 
-Here is a minimal example of a python script using the example bindings, which
-sets up the particle propagation and runs a few events.
+```console
+pip install pyacts
+```
+
+A nightly development build is also available from [TestPyPI](https://test.pypi.org/simple/pyacts/):
+
+```console
+pip install -i https://test.pypi.org/simple/ pyacts
+```
+
+The `pyacts` distribution includes bindings for the core library, Fatras, and
+the Examples framework. Selected plugins are included depending on the build
+configuration used to produce the wheel.
+
+> [!note]
+> The PyPI package does not include all optional plugins (e.g. DD4hep, Geant4).
+> To use those, build from source with the relevant CMake options enabled.
+
+# Building from source
+
+ACTS ships with Python bindings using the `pybind11` library. Enable them with:
+
+```console
+cmake -B <build> -S <source> -DACTS_BUILD_PYTHON_BINDINGS=ON
+```
+
+If you also need the Examples bindings (sequencer, algorithms, I/O writers, etc.):
+
+```console
+cmake -B <build> -S <source> -DACTS_BUILD_PYTHON_BINDINGS=ON -DACTS_BUILD_EXAMPLES=ON
+```
+
+Building requires a Python installation including the development headers.
+You can then build the special target `ActsPythonBindings` to build everything
+that can be accessed from Python:
+
+```console
+cmake --build <build> -- ActsPythonBindings
+```
+
+The build creates a setup script `$BUILD/this_acts_withdeps.sh` which modifies
+`$PYTHONPATH` so that you can import the `acts` module in Python.
+
+> [!warning]
+> The old flag `ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS` is **deprecated**.
+> Use `ACTS_BUILD_PYTHON_BINDINGS` (together with `ACTS_BUILD_EXAMPLES` if
+> needed) instead.
+
+# Minimal example
+
+Here is a minimal example of a Python script using the bindings, which sets up
+particle propagation and runs a few events.
 
 @snippet{trimleft} examples/test_generic.py Basic propagation example with GenericDetector
 
@@ -23,16 +68,16 @@ They can be found in `$REPO_ROOT/Examples/Scripts/Python`. Make sure you have ru
 source $BUILD/this_acts_withdeps.sh
 ```
 
-to make sure python can find the `acts` module.
+to make sure Python can find the `acts` module.
 
 ## Python based unit tests
 
 A number of unit tests based on the `pytest` library are shipped with the
 repository. They are located under `$REPO_ROOT/Examples/Python/tests`, and
-intend to cover the public API of the python bindings. A set of tests also
-executed the standalone example scripts.
+intend to cover the public API of the Python bindings. A set of tests also
+execute the standalone example scripts.
 
-To run these python based tests, `pytest` and a few other dependencies need
+To run these Python based tests, `pytest` and a few other dependencies need
 to be installed. They can be installed via `pip install -r
 Examples/Python/tests/requirements.txt` from the repository root.  You can
 then simply run `pytest` from the repository root.
