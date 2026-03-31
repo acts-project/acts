@@ -21,7 +21,12 @@ PortalPlacement::PortalPlacement(const std::size_t portalIdx,
       m_parent{parent},
       m_portalIdx{portalIdx} {
   assert(m_surface != nullptr);
+// TODO: migrate to shared_ptr overload once PortalPlacement uses a factory
+// pattern (shared_from_this() cannot be called in a constructor)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   m_surface->assignSurfacePlacement(*this);
+#pragma GCC diagnostic pop
 }
 
 Transform3 PortalPlacement::assembleFullTransform(

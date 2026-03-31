@@ -133,14 +133,31 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
   /// @return Reference to the nominal transformation matrix
   const Acts::Transform3& nominalTransform() const;
 
+  /// Create and return the surface associated with this detector element.
+  ///
+  /// This method uses @c shared_from_this() so it must only be called after
+  /// the element is already managed by a @c std::shared_ptr. The returned
+  /// surface takes shared ownership of this detector element.
+  ///
+  /// @return Shared pointer to the created surface
+  std::shared_ptr<Acts::Surface> createSurface() const;
+
   /// Return surface associated with this detector element
   /// @return Const reference to the surface
+  /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
+  [[deprecated(
+      "Use createSurface() to get a Surface with shared ownership of the "
+      "placement; surface() will be removed in a future release")]]
   const Acts::Surface& surface() const override;
 
   /// Return surface associated with this detector element
   ///
   /// @note this is the non-const access
   /// @return Mutable reference to the surface
+  /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
+  [[deprecated(
+      "Use createSurface() to get a Surface with shared ownership of the "
+      "placement; surface() will be removed in a future release")]]
   Acts::Surface& surface() override;
 
   /// Returns the thickness of the module
@@ -165,8 +182,13 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
   std::shared_ptr<const Acts::SurfaceBounds> m_bounds{nullptr};
   ///  Thickness of this detector element
   double m_thickness{0.};
-  /// Corresponding Surface
-  std::shared_ptr<Acts::Surface> m_surface{nullptr};
+  /// Material to be applied when createSurface() is called
+  std::shared_ptr<const Acts::ISurfaceMaterial> m_deferredMaterial{nullptr};
+  /// Weak reference back to the surface (owned externally via shared_ptr)
+  mutable std::weak_ptr<Acts::Surface> m_surface;
+  /// keeps the surface alive when constructed via the deprecated raw-ptr path;
+  /// null after createSurface() is called.
+  mutable std::shared_ptr<Acts::Surface> m_legacySurface;
 };
 
 inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {
@@ -176,14 +198,6 @@ inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {
 inline const Acts::Transform3& TGeoDetectorElement::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
   return m_transform;
-}
-
-inline const Acts::Surface& TGeoDetectorElement::surface() const {
-  return (*m_surface);
-}
-
-inline Acts::Surface& TGeoDetectorElement::surface() {
-  return (*m_surface);
 }
 
 inline double TGeoDetectorElement::thickness() const {

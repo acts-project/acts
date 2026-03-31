@@ -75,6 +75,9 @@ class CylinderSurface : public RegularSurface {
   ///        and that the `Surface` is actually owned by
   ///        the `SurfacePlacementBase` instance
   CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
+                  std::shared_ptr<const SurfacePlacementBase> placement);
+
+  CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
                   const SurfacePlacementBase& placement);
 
   /// Copy constructor

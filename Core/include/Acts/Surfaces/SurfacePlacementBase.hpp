@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
+#include <memory>
+
 namespace Acts {
 class Surface;
 /// @brief The `SurfacePlacementBase` is an API proxy to model the dynamic
@@ -29,7 +31,8 @@ class Surface;
 ///        `SurfacePlacementBase::localToGlobalTransform`. There the user needs
 ///        to unpack the GeometryContext, look-up the appropriate cached
 ///        transform and return it back to the Acts library
-class SurfacePlacementBase {
+class SurfacePlacementBase
+    : public std::enable_shared_from_this<SurfacePlacementBase> {
  public:
   /// @brief Virtual default constructor
   virtual ~SurfacePlacementBase() = default;
@@ -48,10 +51,20 @@ class SurfacePlacementBase {
   ///       Acts::Surface::surfacePlacement method return a pointer to
   ///       this object.
   /// @return Reference to a surface that represents this detector element
+  /// @deprecated Use createSurface() to produce a Surface that owns this
+  ///             placement. This method will be removed in a future release.
+  [[deprecated(
+      "surface() is deprecated; use createSurface() to produce a Surface that "
+      "takes shared ownership of the placement")]]
   virtual const Surface& surface() const = 0;
 
   /// @copydoc surface
   /// @return Reference to a surface that represents this detector element
+  /// @deprecated Use createSurface() to produce a Surface that owns this
+  ///             placement. This method will be removed in a future release.
+  [[deprecated(
+      "surface() is deprecated; use createSurface() to produce a Surface that "
+      "takes shared ownership of the placement")]]
   virtual Surface& surface() = 0;
 
   /// @brief Returns whether the placement corresponds to a surface on which

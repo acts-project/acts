@@ -33,7 +33,12 @@ std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
 ActsPlugins::TGeoCylinderDiscSplitter::split(
     const GeometryContext& gctx,
     std::shared_ptr<const ActsPlugins::TGeoDetectorElement> tgde) const {
+  // tgde->createSurface() was called by the caller before invoking split();
+  // the weak_ptr is valid so surface() returns the existing surface.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   const Surface& sf = tgde->surface();
+#pragma GCC diagnostic pop
   // Thickness
   auto tgIdentifier = tgde->identifier();
   const TGeoNode& tgNode = tgde->tgeoNode();

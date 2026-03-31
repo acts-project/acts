@@ -261,6 +261,10 @@ void ActsPlugins::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         auto tgElement = m_cfg.detectorElementFactory(
             identifier, *snode.node, *snode.transform, layerCfg.localAxes,
             m_cfg.unit, nullptr);
+        // createSurface() must be called before the splitter, which inspects
+        // the element's surface geometry.  Keep the shared_ptr alive until
+        // after split() returns so the weak_ptr inside tgElement stays valid.
+        auto tgElementSurface = tgElement->createSurface();
 
         std::vector<std::shared_ptr<const TGeoDetectorElement>> tgElements =
             (m_cfg.detectorElementSplitter == nullptr)
@@ -270,13 +274,20 @@ void ActsPlugins::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 
         for (const auto& tge : tgElements) {
           m_elementStore.push_back(tge);
-          layerSurfaces.push_back(tge->surface().getSharedPtr());
+          // For the original (unsplit) element the surface was already created
+          // above; for split children createSurface() is called here.
+          auto surf =
+              (tge == tgElement) ? tgElementSurface : tge->createSurface();
+          layerSurfaces.push_back(std::move(surf));
         }
       }
 
       ACTS_DEBUG("- created TGeoDetectorElements : " << layerSurfaces.size());
 
       if (m_cfg.protoLayerHelper != nullptr && !layerCfg.splitConfigs.empty()) {
+        // ProtoLayer stores raw Surface* pointers; keep the shared_ptrs alive
+        // until we've finished iterating over the proto-layers below.
+        auto allSurfaces = layerSurfaces;
         auto protoLayers = m_cfg.protoLayerHelper->protoLayers(
             gctx, unpackSmartPointers(layerSurfaces), layerCfg.splitConfigs);
         ACTS_DEBUG("- splitting into " << protoLayers.size() << " layers.");
