@@ -6,7 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -42,6 +44,14 @@ namespace ActsPython {
 // This adds the definitions from Core/Surfaces to the python module
 /// @param m is the pybind11 core module
 void addSurfaces(py::module_& m) {
+  {
+    py::class_<Polyhedron>(m, "Polyhedron")
+        .def_readonly("vertices", &Polyhedron::vertices)
+        .def_readonly("faces", &Polyhedron::faces)
+        .def_readonly("triangularMesh", &Polyhedron::triangularMesh)
+        .def_readonly("exact", &Polyhedron::exact);
+  }
+
   {
     py::class_<BoundaryTolerance>(m, "BoundaryTolerance")
         .def_static("infinite", &BoundaryTolerance::Infinite)
@@ -328,6 +338,13 @@ void addSurfaces(py::module_& m) {
         .def_property_readonly("thickness", &Surface::thickness)
         .def_property_readonly("isSensitive", &Surface::isSensitive)
         .def_property_readonly("isAlignable", &Surface::isAlignable)
+        .def(
+            "polyhedronRepresentation",
+            [](const Surface& self, const GeometryContext& gctx,
+               unsigned int quarterSegments) {
+              return self.polyhedronRepresentation(gctx, quarterSegments);
+            },
+            py::arg("geometryContext"), py::arg("quarterSegments") = 2)
         .def("visualize", &Surface::visualize)
         .def_property_readonly("surfaceMaterial",
                                &Surface::surfaceMaterialSharedPtr)
