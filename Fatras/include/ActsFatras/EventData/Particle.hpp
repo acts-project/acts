@@ -287,7 +287,7 @@ class Particle {
   Acts::Vector3 momentum() const { return absoluteMomentum() * direction(); }
   /// Total energy, i.e. norm of the four-momentum.
   /// @return The total energy calculated from mass and momentum
-  double energy() const { return Acts::fastHypot(m_mass, m_absMomentum); }
+  double energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
   /// @return True if particle has non-zero momentum, false otherwise
