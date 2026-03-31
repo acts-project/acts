@@ -375,6 +375,8 @@ class SurfaceArray {
 
     const Surface* surfaceRepresentation() const override { return nullptr; }
 
+    using ISurfaceGridLookup::fill;
+
     /// Comply with concept and provide fill method
     /// @note Does nothing
     void fill(const GeometryContext& /*gctx*/,

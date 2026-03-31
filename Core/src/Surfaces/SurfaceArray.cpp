@@ -84,6 +84,8 @@ struct SingleElementLookupImpl : SurfaceArray::ISurfaceGridLookup {
 
   const Surface* surfaceRepresentation() const override { return nullptr; }
 
+  using ISurfaceGridLookup::fill;
+
   void fill(const GeometryContext& /*gctx*/,
             std::span<const Surface* const> /*surfaces*/) override {}
 
@@ -195,6 +197,8 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
         m_grid(std::move(axes)),
         m_binValues(std::move(bValues)),
         m_maxNeighborDistance(maxNeighborDistance) {}
+
+  using ISurfaceGridLookup::fill;
 
   /// @brief Fill provided surfaces into the contained @c Grid.
   ///
