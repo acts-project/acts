@@ -118,10 +118,21 @@ class SurfaceArray {
     /// @return Vector of axis directions for binning
     virtual std::vector<AxisDirection> binningValues() const { return {}; }
 
+    /// Get the number of local bins in each dimension. This is used to
+    /// determine the size of the grid for neighbor lookups.
+    /// @return Array of number of local bins in each dimension
     virtual std::array<std::size_t, 2> numLocalBins() const = 0;
 
+    /// Get the maximum neighbor distance that is supported by this lookup. This
+    /// is used to determine how many neighbors to include in neighbor lookups.
+    /// @return Maximum neighbor distance
     virtual std::uint8_t maxNeighborDistance() const = 0;
 
+    /// Get all surfaces in bin given by local grid indices and neighbor
+    /// distance.
+    /// @param gridIndices the local grid indices
+    /// @param neighborDistance the neighbor distance to include in the lookup
+    /// @return span of surface pointers of the bin at that position and its neighbors
     virtual std::span<const Surface* const> at(
         std::array<std::size_t, 2> gridIndices,
         std::uint8_t neighborDistance) const = 0;
@@ -558,14 +569,25 @@ class SurfaceArray {
     return m_gridLookup->surfaceRepresentation();
   }
 
+  /// Get the number of local bins in each dimension. This is used to
+  /// determine the size of the grid for neighbor lookups.
+  /// @return Array of number of local bins in each dimension
   std::array<std::size_t, 2> numLocalBins() const {
     return m_gridLookup->numLocalBins();
   }
 
+  /// Get the maximum neighbor distance that is supported by this lookup. This
+  /// is used to determine how many neighbors to include in neighbor lookups.
+  /// @return Maximum neighbor distance
   std::uint8_t maxNeighborDistance() const {
     return m_gridLookup->maxNeighborDistance();
   }
 
+  /// Get all surfaces in bin given by local grid indices and neighbor
+  /// distance.
+  /// @param gridIndices the local grid indices
+  /// @param neighborDistance the neighbor distance to include in the lookup
+  /// @return span of surface pointers of the bin at that position and its neighbors
   std::span<const Surface* const> at(std::array<std::size_t, 2> gridIndices,
                                      std::uint8_t neighborDistance) const {
     return m_gridLookup->at(gridIndices, neighborDistance);
