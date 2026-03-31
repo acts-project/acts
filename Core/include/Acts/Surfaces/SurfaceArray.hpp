@@ -40,8 +40,18 @@ class SurfaceArray {
     /// @brief Fill provided surfaces into the contained @c Grid.
     /// @param gctx The current geometry context object, e.g. alignment
     /// @param surfaces Input surface pointers
+    /// @deprecated This method is deprecated in favor of the overload taking a span of surface pointers. It will be removed in a future release.
     virtual void fill(const GeometryContext& gctx,
-                      const SurfaceVector& surfaces) = 0;
+                      const SurfaceVector& surfaces) {
+      fill(gctx,
+           std::span<const Surface* const>(surfaces.data(), surfaces.size()));
+    }
+
+    /// @brief Fill provided surfaces into the contained @c Grid.
+    /// @param gctx The current geometry context object, e.g. alignment
+    /// @param surfaces Input surface pointers
+    virtual void fill(const GeometryContext& gctx,
+                      std::span<const Surface* const> surfaces) = 0;
 
     /// @brief Performs lookup at @c pos and returns bin content as const
     /// reference
@@ -174,7 +184,7 @@ class SurfaceArray {
     /// @param gctx The current geometry context object, e.g. alignment
     /// @param surfaces Input surface pointers
     void fill(const GeometryContext& gctx,
-              const SurfaceVector& surfaces) override {
+              std::span<const Surface* const> surfaces) override {
       m_impl->fill(gctx, surfaces);
     }
 
@@ -375,7 +385,7 @@ class SurfaceArray {
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
     void fill(const GeometryContext& /*gctx*/,
-              const SurfaceVector& /*surfaces*/) override {}
+              std::span<const Surface* const> /*surfaces*/) override {}
 
     /// @brief Returns if the bin is valid (it is)
     /// @return always true
