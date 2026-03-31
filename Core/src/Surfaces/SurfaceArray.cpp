@@ -172,7 +172,7 @@ void SurfaceArray::checkGrid(AnyGridConstView<SurfaceVector> grid) {
 
 namespace {
 
-/// @brief Lookup helper which encapsulates a @c Grid
+/// Lookup helper which encapsulates a @c Grid
 /// @tparam Axis1 The first axis
 /// @tparam Axis2 The second axis
 template <class Axis1, class Axis2>
@@ -233,21 +233,19 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
                                    std::numeric_limits<double>::infinity()));
   }
 
-  /// @brief Performs lookup at global bin and returns bin content as
-  /// reference
+  /// Performs lookup at global bin and returns bin content as reference
   /// @param bin Global lookup bin
   /// @return @c SurfaceVector at given bin
   SurfaceVector& lookup(std::size_t bin) override { return m_grid.at(bin); }
 
-  /// @brief Performs lookup at global bin and returns bin content as const
-  /// reference
+  /// Performs lookup at global bin and returns bin content as const reference
   /// @param bin Global lookup bin
   /// @return @c SurfaceVector at given bin
   const SurfaceVector& lookup(std::size_t bin) const override {
     return m_grid.at(bin);
   }
 
-  /// @brief Performs a lookup at @c pos, but returns neighbors as well
+  /// Performs a lookup at @c pos, but returns neighbors as well
   ///
   /// @param position Lookup position
   /// @param direction Lookup direction
@@ -262,7 +260,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return neighborsVector;
   }
 
-  /// @brief Performs a lookup at @c pos, but returns neighbors as well
+  /// Performs a lookup at @c pos, but returns neighbors as well
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Lookup position
@@ -290,19 +288,18 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return getNeighborSurfacePack(globalBin, neighborDistanceIndex);
   }
 
-  /// @brief Returns the total size of the grid (including under/overflow
-  /// bins)
+  /// Returns the total size of the grid (including under/overflow bins)
   /// @return Size of the grid data structure
   std::size_t size() const override { return m_grid.size(); }
 
-  /// @brief The binning values described by this surface grid lookup
-  /// They are in order of the axes
+  /// The binning values described by this surface grid lookup. They are in
+  /// order of the axes
   /// @return Vector of axis directions for binning
   std::vector<AxisDirection> binningValues() const override {
     return m_binValues;
   }
 
-  /// @brief Gets the center position of bin @c bin in global coordinates
+  /// Gets the center position of bin @c bin in global coordinates
   /// @param bin the global bin index
   /// @return The bin center
   Vector3 getBinCenter(std::size_t bin) const override {
@@ -310,7 +307,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return getBinCenterImpl(gctx, bin);
   }
 
-  /// @brief Returns copies of the axes used in the grid as @c AnyAxis
+  /// Returns copies of the axes used in the grid as @c AnyAxis
   /// @return The axes
   /// @note This returns copies. Use for introspection and querying.
   std::vector<const IAxis*> getAxes() const override {
@@ -326,7 +323,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     return m_representative.get();
   }
 
-  /// @brief Checks if global bin is valid
+  /// Checks if global bin is valid
   /// @param bin the global bin index
   /// @return bool if the bin is valid
   /// @note Valid means that the index points to a bin which is not a under
