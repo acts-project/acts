@@ -12,7 +12,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Ranges.hpp"
@@ -158,15 +157,16 @@ namespace {
 template <class Axis1, class Axis2>
 struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   SurfaceGridLookupImpl(std::shared_ptr<RegularSurface> representative,
-                        double tolerance, const std::tuple<Axis1, Axis2>& axes,
+                        double tolerance, std::tuple<Axis1, Axis2> axes,
                         std::vector<AxisDirection> binValues = {},
                         std::uint8_t maxNeighborDistance = 1)
       : m_representative(std::move(representative)),
         m_tolerance(tolerance),
-        m_axes(axes),
+        m_axes(std::move(axes)),
         m_binValues(std::move(binValues)),
-        m_maxNeighborDistance(maxNeighborDistance),
-        m_fillingGrid(axes) {}
+        m_maxNeighborDistance(maxNeighborDistance) {
+    m_fillingGrid.resize(size());
+  }
 
   void fill(const GeometryContext& gctx,
             std::span<const Surface* const> surfaces) override {
@@ -178,6 +178,13 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
       }
 
       fillBinToSurfaceMapping(gctx, *surface, *globalBin);
+    }
+
+    for (std::vector<const Surface*>& binSurfaces : m_fillingGrid) {
+      std::ranges::sort(binSurfaces);
+      const auto last = std::ranges::unique(binSurfaces);
+      binSurfaces.erase(last.begin(), last.end());
+      binSurfaces.shrink_to_fit();
     }
 
     checkGrid(surfaces);
@@ -194,8 +201,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
       static std::vector<const Surface*> emptyVector;
       return emptyVector;
     }
-    const std::size_t globalBin =
-        m_fillingGrid.globalBinFromLocalBins(*localBins);
+    const std::size_t globalBin = globalBinFromLocalBins2D(*localBins);
     return m_fillingGrid.at(globalBin);
   }
 
@@ -244,13 +250,15 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     const GridIndex localBins = localBinsFromPosition2D(gridLocal);
 
     const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
-    const double neighborDistanceReal = std::clamp<double>(
-        1.0 / std::abs(normal.dot(direction)), 1, m_maxNeighborDistance);
+    const double neighborDistanceReal = std::min<double>(
+        m_maxNeighborDistance,
+        std::max<double>(1, 1.0 / std::abs(normal.dot(direction))));
     const std::uint8_t neighborDistance =
         static_cast<std::uint8_t>(neighborDistanceReal);
 
     const std::size_t globalBin =
         globalBinFromLocalBins3D(localBins, neighborDistance);
+
     return m_neighborSurfacePacks.at(globalBin);
   }
 
@@ -299,13 +307,12 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   }
 
  private:
-  using GridType = Grid<std::vector<const Surface*>, Axis1, Axis2>;
   using GridIndex = std::array<std::size_t, 2>;
   using GridPoint = std::array<double, 2>;
 
   std::shared_ptr<RegularSurface> m_representative;
   double m_tolerance{};
-  // needs to be a tuple
+  // needs to be a tuple for the grid_helper functions
   std::tuple<Axis1, Axis2> m_axes;
   std::vector<AxisDirection> m_binValues;
   std::uint8_t m_maxNeighborDistance{};
@@ -313,7 +320,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   // legacy grid for filling and for deprecated lookup methods.
   // TODO: remove this once deprecated lookup methods are removed and filling is
   // done directly into the neighbor cache
-  GridType m_fillingGrid;
+  std::vector<std::vector<const Surface*>> m_fillingGrid;
 
   // containers to store the surfaces in the custom grid
   std::vector<const Surface*> m_surfacePacks;
@@ -350,7 +357,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
                                        std::uint8_t neighborDistance) const {
     const std::size_t globalGridBin =
         detail::grid_helper::getGlobalBin(localBins, m_axes);
-    return m_maxNeighborDistance * globalGridBin + neighborDistance;
+    return globalGridBin * (m_maxNeighborDistance + 1) + neighborDistance;
   }
 
   GridPoint binCenter(const GridIndex& localBins) const {
@@ -360,15 +367,17 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   /// map surface center to grid
   std::optional<std::size_t> fillSurfaceToBinMapping(
       const GeometryContext& gctx, const Surface& surface) {
-    const Vector3 pos = surface.referencePosition(gctx, AxisDirection::AxisR);
-    const Vector3 normal = m_representative->normal(gctx, pos);
+    const Vector3 position =
+        surface.referencePosition(gctx, AxisDirection::AxisR);
+    const Vector3 normal = m_representative->normal(gctx, position);
     const std::optional<Vector2> surfaceLocal =
-        findSurfaceLocal(gctx, pos, normal, m_tolerance);
+        findSurfaceLocal(gctx, position, normal, m_tolerance);
     if (!surfaceLocal.has_value()) {
       return std::nullopt;
     }
-    const std::size_t globalBin =
-        m_fillingGrid.globalBinFromPosition(*surfaceLocal);
+    const GridPoint gridLocal = surfaceToGridLocal(*surfaceLocal);
+    const GridIndex localBins = localBinsFromPosition2D(gridLocal);
+    const std::size_t globalBin = globalBinFromLocalBins2D(localBins);
     m_fillingGrid.at(globalBin).push_back(&surface);
     return globalBin;
   }
@@ -376,10 +385,9 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   /// flood fill neighboring bins given a starting bin
   void fillBinToSurfaceMapping(const GeometryContext& gctx,
                                const Surface& surface, std::size_t startBin) {
-    const GridIndex startIndices =
-        m_fillingGrid.localBinsFromGlobalBin(startBin);
+    const GridIndex startIndices = localBinsFromGlobalBin2D(startBin);
     const auto startNeighborIndices =
-        m_fillingGrid.neighborHoodIndices(startIndices, 1u);
+        detail::grid_helper::neighborHoodIndices(startIndices, 1u, m_axes);
 
     std::set<std::size_t> visited({startBin});
     std::vector<std::size_t> queue(startNeighborIndices.begin(),
@@ -392,11 +400,10 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
         continue;
       }
 
-      const GridIndex currentIndices =
-          m_fillingGrid.localBinsFromGlobalBin(current);
+      const GridIndex currentIndices = localBinsFromGlobalBin2D(current);
       visited.insert(current);
 
-      const GridPoint gridLocal = m_fillingGrid.binCenter(currentIndices);
+      const GridPoint gridLocal = binCenter(currentIndices);
       const Vector2 surfaceLocal = gridToSurfaceLocal(gridLocal);
       const Vector3 normal = m_representative->normal(gctx, surfaceLocal);
       const Vector3 global =
@@ -412,7 +419,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
       m_fillingGrid.at(current).push_back(&surface);
 
       const auto neighborIndices =
-          m_fillingGrid.neighborHoodIndices(currentIndices, 1u);
+          detail::grid_helper::neighborHoodIndices(currentIndices, 1u, m_axes);
       queue.insert(queue.end(), neighborIndices.begin(), neighborIndices.end());
     }
   }
@@ -430,8 +437,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     std::map<std::vector<const Surface*>, SurfacePackRange> surfacesToPackRange;
     for (std::size_t inputGlobalBin = 0; inputGlobalBin < m_fillingGrid.size();
          ++inputGlobalBin) {
-      const GridIndex indices =
-          m_fillingGrid.localBinsFromGlobalBin(inputGlobalBin);
+      const GridIndex indices = localBinsFromGlobalBin2D(inputGlobalBin);
 
       if (!isValidBin(indices)) {
         continue;
@@ -441,8 +447,8 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
            neighborDistance <= m_maxNeighborDistance; ++neighborDistance) {
         surfacePack.clear();
 
-        for (const std::size_t idx :
-             m_fillingGrid.neighborHoodIndices(indices, neighborDistance)) {
+        for (const std::size_t idx : detail::grid_helper::neighborHoodIndices(
+                 indices, neighborDistance, m_axes)) {
           const std::vector<const Surface*>& binContent = m_fillingGrid.at(idx);
           std::copy(binContent.begin(), binContent.end(),
                     std::back_inserter(surfacePack));
@@ -480,20 +486,6 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
                                  m_surfacePacks.data() + range.first,
                                  m_surfacePacks.data() + range.second);
                            });
-
-    for (std::size_t i = 0; i < numLocalBins2D()[0]; ++i) {
-      for (std::size_t j = 0; j < numLocalBins2D()[1]; ++j) {
-        for (std::uint8_t neighborDistance = 0;
-             neighborDistance <= m_maxNeighborDistance; ++neighborDistance) {
-          const std::size_t globalBin =
-              globalBinFromLocalBins3D({i, j}, neighborDistance);
-          std::cout << "globalBin: " << globalBin << ", localBins: [" << i
-                    << ", " << j << "], neighborDistance: "
-                    << static_cast<int>(neighborDistance) << ", nSurfaces: "
-                    << m_neighborSurfacePacks.at(globalBin).size() << std::endl;
-        }
-      }
-    }
   }
 
   void checkGrid(std::span<const Surface* const> surfaces) {
@@ -525,7 +517,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
   }
 
   Vector2 gridToSurfaceLocal(const GridPoint& gridLocal) const {
-    Vector2 surfaceLocal = Eigen::Map<const Vector2>(gridLocal.data());
+    Vector2 surfaceLocal = {gridLocal[0], gridLocal[1]};
     if (const CylinderBounds* bounds = getCylinderBounds(); bounds != nullptr) {
       surfaceLocal[0] *= bounds->get(CylinderBounds::eR);
     }
