@@ -212,14 +212,16 @@ class SurfaceArray {
     /// @param bin Global lookup bin
     /// @return A vector of surfaces at given bin
     std::vector<const Surface*>& lookup(std::size_t bin) override {
+      ACTS_PUSH_IGNORE_DEPRECATED()
       return m_impl->lookup(bin);
+      ACTS_POP_IGNORE_DEPRECATED()
     }
 
     /// Performs lookup at global bin and returns bin content as const reference
     /// @param bin Global lookup bin
     /// @return A vector of surfaces at given bin
     const std::vector<const Surface*>& lookup(std::size_t bin) const override {
-      return m_impl->lookup(bin);
+      return const_cast<const ISurfaceGridLookup*>(m_impl.get())->lookup(bin);
     }
 
     /// Performs a lookup at @c pos, but returns neighbors as well
