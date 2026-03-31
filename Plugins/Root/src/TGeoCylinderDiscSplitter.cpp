@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
 #include <cmath>
@@ -35,10 +36,9 @@ ActsPlugins::TGeoCylinderDiscSplitter::split(
     std::shared_ptr<const ActsPlugins::TGeoDetectorElement> tgde) const {
   // tgde->createSurface() was called by the caller before invoking split();
   // the weak_ptr is valid so surface() returns the existing surface.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  ACTS_PUSH_IGNORE_DEPRECATED()
   const Surface& sf = tgde->surface();
-#pragma GCC diagnostic pop
+  ACTS_POP_IGNORE_DEPRECATED()
   // Thickness
   auto tgIdentifier = tgde->identifier();
   const TGeoNode& tgNode = tgde->tgeoNode();

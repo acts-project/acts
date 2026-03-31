@@ -21,12 +21,16 @@ PortalPlacement::PortalPlacement(const std::size_t portalIdx,
       m_parent{parent},
       m_portalIdx{portalIdx} {
   assert(m_surface != nullptr);
-// TODO: migrate to shared_ptr overload once PortalPlacement uses a factory
-// pattern (shared_from_this() cannot be called in a constructor)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  m_surface->assignSurfacePlacement(*this);
-#pragma GCC diagnostic pop
+}
+
+std::shared_ptr<PortalPlacement> PortalPlacement::create(
+    const std::size_t portalIdx, const Transform3& portalTrf,
+    const VolumePlacementBase* parent,
+    std::shared_ptr<RegularSurface> surface) {
+  auto placement =
+      std::make_shared<PortalPlacement>(portalIdx, portalTrf, parent, surface);
+  surface->assignSurfacePlacement(placement);
+  return placement;
 }
 
 Transform3 PortalPlacement::assembleFullTransform(

@@ -24,6 +24,15 @@ class PortalPlacement final : public SurfacePlacementBase {
   ///  placement
   friend class Acts::VolumePlacementBase;
 
+  /// Factory: constructs a PortalPlacement and assigns it to the surface.
+  ///
+  /// Must be used instead of direct construction so that @c shared_from_this()
+  /// is valid when @c assignSurfacePlacement is called.
+  static std::shared_ptr<PortalPlacement> create(
+      std::size_t portalIdx, const Transform3& portalTrf,
+      const VolumePlacementBase* parent,
+      std::shared_ptr<RegularSurface> surface);
+
   /// Returns the transform to switch from the portal reference
   /// frame into the experiment's global frame taking the alignment
   /// correction into account

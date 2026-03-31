@@ -133,17 +133,18 @@ class VolumePlacementBase {
   virtual const Transform3& portalLocalToGlobal(
       const GeometryContext& gctx, const std::size_t portalIdx) const = 0;
 
-  /// Pointer to the `SurfacePlacementBase` object aligning the i-th portal
-  /// (May be nullptr if index exceeds the number of portals)
+  /// Shared pointer to the `SurfacePlacementBase` object aligning the i-th
+  /// portal (May be nullptr if index exceeds the number of portals)
   /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
-  /// @returns Pointer to the i-th portal placement
-  const detail::PortalPlacement* portalPlacement(
+  /// @returns Shared pointer to the i-th portal placement
+  std::shared_ptr<const detail::PortalPlacement> portalPlacement(
       const std::size_t portalIdx) const;
-  /// Pointer to the `SurfacePlacementBase` object aligning the i-th portal
-  /// (May be nullptr if index exceeds the number of portals)
+  /// Shared pointer to the `SurfacePlacementBase` object aligning the i-th
+  /// portal (May be nullptr if index exceeds the number of portals)
   /// @param portalIdx: Internal index of the portal surface [0 - number of portals)
-  /// @returns Pointer to the i-th portal placement
-  detail::PortalPlacement* portalPlacement(const std::size_t portalIdx);
+  /// @returns Shared pointer to the i-th portal placement
+  std::shared_ptr<detail::PortalPlacement> portalPlacement(
+      const std::size_t portalIdx);
 
  protected:
   /// Constructs the transform from the portal's frame into the
@@ -160,6 +161,6 @@ class VolumePlacementBase {
 
  private:
   /// Resource allocation of the SurfacePlacements to align the portals
-  std::vector<std::unique_ptr<detail::PortalPlacement>> m_portalPlacements{};
+  std::vector<std::shared_ptr<detail::PortalPlacement>> m_portalPlacements{};
 };
 }  // namespace Acts
