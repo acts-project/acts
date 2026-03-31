@@ -103,7 +103,7 @@ void Fill(std::map<std::uint64_t,TGraph*>& surface_hist,  std::map<std::uint64_t
 
   //Get file, tree and set top branch address
   TFile *tfile = new TFile(input_file.c_str());
-  TTree *tree = (TTree*)tfile->Get("material-tracks");
+  TTree *tree = (TTree*)tfile->Get("material_tracks");
 
   std::vector<float> *mat_x = 0;
   std::vector<float> *mat_y = 0;

@@ -1,6 +1,5 @@
 acts_add_library(
     ExamplesMaterialMapping
-    src/CoreMaterialMapping.cpp
     src/MaterialValidation.cpp
     src/MaterialMapping.cpp
 )
