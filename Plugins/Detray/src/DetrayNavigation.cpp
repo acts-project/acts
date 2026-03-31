@@ -148,16 +148,17 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 
   auto fillGeneric = [&](const auto& mapi, const auto& mapj,
                          index_type indices) {
-    auto [i, j] = indices;
+    const auto [i, j] = indices;
 
-    auto di = mapi(i);
-    auto dj = mapj(j);
+    const auto di = mapi(i);
+    const auto dj = mapj(j);
 
-    const auto& surfaces = gridView.atLocalBins({i, j});
+    const std::span<const Acts::Surface* const> surfaces =
+        surfaceArray.at({i, j}, 0);
 
     std::vector<std::size_t> surfaceIndices;
 
-    for (const auto* srf : surfaces) {
+    for (const Acts::Surface* srf : surfaces) {
       try {
         std::size_t surfaceIndex = surfaceLookup(srf);
         surfaceIndices.push_back(surfaceIndex);
