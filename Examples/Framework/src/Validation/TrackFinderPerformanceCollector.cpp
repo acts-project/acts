@@ -41,7 +41,9 @@ ProcessCode TrackFinderPerformanceCollector::fill(
     const TrackParticleMatching& trackParticleMatching,
     const ParticleTrackMatching& particleTrackMatching,
     const InverseMultimap<SimBarcode>& particleMeasurementsMap) {
-  std::size_t unmatched = 0, missingRefSurface = 0;
+  std::size_t unmatched = 0;
+  std::size_t missingRefSurface = 0;
+
   for (const auto& track : tracks) {
     m_nTotalTracks++;
 
@@ -58,8 +60,12 @@ ProcessCode TrackFinderPerformanceCollector::fill(
                                 track.nHoles(), track.nSharedHits());
 
     for (const auto& [key, volumes] : m_cfg.subDetectorTrackSummaryVolumes) {
-      std::size_t nTrackStates{}, nMeasurements{}, nOutliers{}, nHoles{},
-          nSharedHits{};
+      std::size_t nTrackStates{};
+      std::size_t nMeasurements{};
+      std::size_t nOutliers{};
+      std::size_t nHoles{};
+      std::size_t nSharedHits{};
+
       for (auto state : track.trackStatesReversed()) {
         if (!state.hasReferenceSurface() ||
             !volumes.contains(state.referenceSurface().geometryId().volume())) {

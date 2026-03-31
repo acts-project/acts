@@ -11,8 +11,6 @@ def plot_histogram(self, ax=None, **kwargs):
     import matplotlib.pyplot as plt
     import mplhep
 
-    print(mplhep.__version__, flush=True)
-
     ax = ax or plt.subplots()[1]
     artists = mplhep.histplot(self._to_boost_histogram_(), ax=ax, **kwargs)
     if label := self.histogram.axis(0).label:
@@ -25,8 +23,6 @@ def plot_histogram(self, ax=None, **kwargs):
 def plot_profile(self, ax=None, **kwargs):
     import matplotlib.pyplot as plt
     import mplhep
-
-    print(mplhep.__version__, flush=True)
 
     ax = ax or plt.subplots()[1]
     artists = mplhep.histplot(self._to_boost_histogram_(), ax=ax, **kwargs)
@@ -42,8 +38,6 @@ def plot_profile(self, ax=None, **kwargs):
 def plot_efficiency(self, ax=None, **kwargs):
     import matplotlib.pyplot as plt
     import mplhep
-
-    print(mplhep.__version__, flush=True)
 
     ax = ax or plt.subplots()[1]
     xlabel = kwargs.pop("xlabel", self.total.axis(0).label)
@@ -76,17 +70,6 @@ def _patch_histogram_types(m):
     is printed and re-raised if the package is not installed.
     """
 
-    def _import_bh():
-        try:
-            import boost_histogram as bh
-
-            return bh
-        except ImportError:
-            print(
-                "boost_histogram is not installed; cannot convert ACTS histogram to bh.Histogram."
-            )
-            raise
-
     def _bh_axes(bh, self):
         return [
             bh.axis.Variable(list(self.axis(i).edges), metadata=self.axis(i).label)
@@ -95,7 +78,8 @@ def _patch_histogram_types(m):
 
     # BoostHistogram -> bh.Histogram with Double storage
     def _boost_hist_to_bh(self):
-        bh = _import_bh()
+        import boost_histogram as bh
+
         h = bh.Histogram(*_bh_axes(bh, self), storage=bh.storage.Double())
         h.view(flow=False)[:] = self.values()
         return h
@@ -104,7 +88,8 @@ def _patch_histogram_types(m):
 
     # BoostProfileHistogram -> bh.Histogram with Mean storage
     def _profile_to_bh(self):
-        bh = _import_bh()
+        import boost_histogram as bh
+
         h = bh.Histogram(*_bh_axes(bh, self), storage=bh.storage.Mean())
         view = h.view()
         view["count"] = self.counts()

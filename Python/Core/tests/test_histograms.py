@@ -19,41 +19,6 @@ bh = pytest.importorskip("boost_histogram")
 mplhep = pytest.importorskip("mplhep")
 
 
-# ---------------------------------------------------------------------------
-# Compound types: exist
-# ---------------------------------------------------------------------------
-
-
-def test_compound_types_exist():
-    for name in (
-        "Axis",
-        "BoostHistogram",
-        "BoostProfileHistogram",
-        "Histogram1",
-        "Histogram2",
-        "Histogram3",
-        "ProfileHistogram1",
-        "Efficiency1",
-        "Efficiency2",
-    ):
-        assert hasattr(acts, name), f"acts.{name} not found"
-
-
-# ---------------------------------------------------------------------------
-# Demo factories
-# ---------------------------------------------------------------------------
-
-
-def test_demo_factories_exist():
-    for name in ("_demo_histogram1", "_demo_profile1", "_demo_efficiency1"):
-        assert hasattr(acts, name), f"acts.{name} not found"
-
-
-# ---------------------------------------------------------------------------
-# _to_boost_histogram_ conversion
-# ---------------------------------------------------------------------------
-
-
 def test_histogram1_to_boost_histogram():
     bh_h = bh.Histogram(acts._demo_histogram1())
     assert bh_h.ndim == 1
@@ -73,11 +38,6 @@ def test_efficiency1_to_boost_histogram():
     bh_tot = bh.Histogram(h.total)
     assert bh_acc.sum() > 0
     assert bh_tot.sum() >= bh_acc.sum()
-
-
-# ---------------------------------------------------------------------------
-# .plot() methods
-# ---------------------------------------------------------------------------
 
 
 def test_plot_histogram():
@@ -110,9 +70,3 @@ def test_plot_efficiency():
     acts._demo_efficiency1().plot(ax=ax)
     assert ax.get_title() == "Demo Efficiency"
     plt.close(fig)
-
-
-def test_plot_methods_patched_on_types():
-    assert hasattr(acts.Histogram1, "plot")
-    assert hasattr(acts.ProfileHistogram1, "plot")
-    assert hasattr(acts.Efficiency1, "plot")
