@@ -27,6 +27,16 @@ namespace ActsPlugins {
 using DetraySurfaceMaterial = DetrayPayloadConverter::DetraySurfaceMaterial;
 using DetraySurfaceGrid = DetrayPayloadConverter::DetraySurfaceGrid;
 
+namespace {
+BinUtility toBinUtility(const BinnedSurfaceMaterial& material) {
+  BinUtility converted(material.globalToLocalTransform().inverse());
+  for (const auto& axis : material.directedProtoAxes()) {
+    converted += BinUtility(BinningData(axis));
+  }
+  return converted;
+}
+}  // namespace
+
 std::optional<DetraySurfaceMaterial>
 DetrayPayloadConverter::convertBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& material) {
@@ -35,7 +45,7 @@ DetrayPayloadConverter::convertBinnedSurfaceMaterial(
   // Detray expects 2-dimensional grid, currently supported are
   // x-y, r-phi, phi-z
   auto [bUtility, swapped] =
-      DetrayConversionUtils::convertBinUtilityTo2D(material.binUtility());
+      DetrayConversionUtils::convertBinUtilityTo2D(toBinUtility(material));
 
   AxisDirection bVal0 = bUtility.binningData()[0u].binvalue;
   AxisDirection bVal1 = bUtility.binningData()[1u].binvalue;
@@ -99,14 +109,8 @@ DetrayPayloadConverter::convertHomogeneousSurfaceMaterial(
 }
 
 std::optional<DetraySurfaceMaterial>
-DetrayPayloadConverter::convertProtoSurfaceMaterialBinUtility(
-    const ProtoSurfaceMaterialT<Acts::BinUtility>& /*material*/) {
-  return std::nullopt;
-}
-
-std::optional<DetraySurfaceMaterial>
-DetrayPayloadConverter::convertProtoSurfaceMaterialProtoAxes(
-    const ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>& /*material*/) {
+DetrayPayloadConverter::convertProtoSurfaceMaterial(
+    const ProtoSurfaceMaterial& /*material*/) {
   return std::nullopt;
 }
 

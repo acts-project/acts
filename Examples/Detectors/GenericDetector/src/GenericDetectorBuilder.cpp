@@ -168,24 +168,24 @@ GenericDetectorBuilder::GenericDetectorBuilder(
     : m_cfg(cfg), m_logger(std::move(logger)) {
   // Prepare the proto material - in case it's designed to do so
   // - cylindrical
-  Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::closed,
-                                    Acts::AxisDirection::AxisPhi);
-  pCylinderUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::open, Acts::AxisDirection::AxisZ);
-  auto pCylinderMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pCylinderUtility);
+  std::vector<Acts::DirectedProtoAxis> pCylinderAxes = {
+      {Acts::AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed, -1., 1.,
+       10u},
+      {Acts::AxisDirection::AxisZ, Acts::AxisBoundaryType::Open, -1., 1., 10u}};
+  auto pCylinderMaterial = std::make_shared<const Acts::ProtoSurfaceMaterial>(
+      pCylinderAxes, Acts::Transform3::Identity());
   // - disc
-  Acts::BinUtility pDiscUtility(10, 0, 1, Acts::open,
-                                Acts::AxisDirection::AxisR);
-  pDiscUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::closed, Acts::AxisDirection::AxisPhi);
-  auto pDiscMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pDiscUtility);
+  std::vector<Acts::DirectedProtoAxis> pDiscAxes = {
+      {Acts::AxisDirection::AxisR, Acts::AxisBoundaryType::Open, 0., 1., 10u},
+      {Acts::AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed, -1., 1.,
+       10u}};
+  auto pDiscMaterial = std::make_shared<const Acts::ProtoSurfaceMaterial>(
+      pDiscAxes, Acts::Transform3::Identity());
   // - plane
-  Acts::BinUtility pPlaneUtility(1, -1, 1, Acts::open,
-                                 Acts::AxisDirection::AxisX);
-  auto pPlaneMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pPlaneUtility);
+  std::vector<Acts::DirectedProtoAxis> pPlaneAxes = {
+      {Acts::AxisDirection::AxisX, Acts::AxisBoundaryType::Open, -1., 1., 1u}};
+  auto pPlaneMaterial = std::make_shared<const Acts::ProtoSurfaceMaterial>(
+      pPlaneAxes, Acts::Transform3::Identity());
 
   ///
   /// BeamPipe material

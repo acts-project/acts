@@ -23,8 +23,6 @@
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinAdjustment.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
@@ -127,28 +125,19 @@ void SurfaceMaterialMapper::checkAndInsert(State& mState,
     // proper surface material
     auto psm = dynamic_cast<const ProtoSurfaceMaterial*>(surfaceMaterial);
 
-    // Get the bin utility: try proxy material first
-    const BinUtility* bu = (psm != nullptr) ? (&psm->binning()) : nullptr;
-    if (bu != nullptr) {
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - (proto) binning is " << *bu);
-      // Now update
-      BinUtility buAdjusted = adjustBinUtility(*bu, surface, mState.geoContext);
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - adjusted binning is " << buAdjusted);
-      mState.accumulatedMaterial[geoID] =
-          AccumulatedSurfaceMaterial(buAdjusted);
+    if (psm != nullptr) {
+      ACTS_DEBUG("       - (proto) binning is " << psm->directedProtoAxes());
+      mState.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(
+          psm->directedProtoAxes(), psm->globalToLocalTransform());
       return;
     }
 
     // Second attempt: binned material
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
-    bu = (bmp != nullptr) ? (&bmp->binUtility()) : nullptr;
-    // Create a binned type of material
-    if (bu != nullptr) {
-      // Screen output for Binned Surface material
-      ACTS_DEBUG("       - binning is " << *bu);
-      mState.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(*bu);
+    if (bmp != nullptr) {
+      ACTS_DEBUG("       - binning is " << bmp->directedProtoAxes());
+      mState.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(
+          bmp->directedProtoAxes(), bmp->globalToLocalTransform());
     } else {
       // Create a homogeneous type of material
       ACTS_DEBUG("       - this is homogeneous material.");

@@ -31,6 +31,7 @@
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <numbers>
@@ -281,6 +282,41 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
   return nullptr;
 }
 
+std::pair<std::vector<Acts::DirectedProtoAxis>, Acts::Transform3>
+binUtilityToDirectedAxes(const Acts::BinUtility& binUtility) {
+  const auto& binningData = binUtility.binningData();
+  std::vector<Acts::DirectedProtoAxis> directedProtoAxes;
+  directedProtoAxes.reserve(binningData.size());
+  for (const auto& bData : binningData) {
+    const auto boundaryType = bData.option == Acts::closed
+                                  ? Acts::AxisBoundaryType::Closed
+                                  : Acts::AxisBoundaryType::Open;
+    if (bData.type == Acts::equidistant) {
+      directedProtoAxes.emplace_back(
+          bData.binvalue, boundaryType, static_cast<double>(bData.min),
+          static_cast<double>(bData.max), bData.bins());
+      continue;
+    }
+    std::vector<double> edges;
+    edges.reserve(bData.boundaries().size());
+    for (const auto edge : bData.boundaries()) {
+      edges.push_back(static_cast<double>(edge));
+    }
+    directedProtoAxes.emplace_back(bData.binvalue, boundaryType, edges);
+  }
+  return {std::move(directedProtoAxes), binUtility.transform().inverse()};
+}
+
+Acts::BinUtility directedAxesToBinUtility(
+    const std::vector<Acts::DirectedProtoAxis>& directedProtoAxes,
+    const Acts::Transform3& globalToLocalTransform) {
+  Acts::BinUtility converted(globalToLocalTransform.inverse());
+  for (const auto& directedProtoAxis : directedProtoAxes) {
+    converted += Acts::BinUtility(Acts::BinningData(directedProtoAxis));
+  }
+  return converted;
+}
+
 }  // namespace
 
 void Acts::to_json(nlohmann::json& j, const Material& t) {
@@ -333,8 +369,6 @@ void Acts::from_json(const nlohmann::json& j, MaterialSlabMatrix& t) {
 
 void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
   nlohmann::json jMaterial;
-  // A bin utility needs to be written
-  const Acts::BinUtility* bUtility = nullptr;
 
   // First: Check if we have a proto material
   auto psMaterial = dynamic_cast<const Acts::ProtoSurfaceMaterial*>(material);
@@ -347,16 +381,17 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     // by default the protoMaterial is not used for mapping
     jMaterial[Acts::jsonKey().mapkey] = false;
     // write the bin utility
-    bUtility = &(psMaterial->binning());
+    BinUtility bUtility = directedAxesToBinUtility(
+        psMaterial->directedProtoAxes(), psMaterial->globalToLocalTransform());
     // Check in the number of bin is different from 1
-    auto& binningData = bUtility->binningData();
+    auto& binningData = bUtility.binningData();
     for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
       if (binningData[ibin].bins() > 1) {
         jMaterial[Acts::jsonKey().mapkey] = true;
         break;
       }
     }
-    nlohmann::json jBin(*bUtility);
+    nlohmann::json jBin(bUtility);
     jMaterial[Acts::jsonKey().binkey] = jBin;
     j[Acts::jsonKey().materialkey] = jMaterial;
     return;
@@ -393,7 +428,8 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     jMaterial[Acts::jsonKey().maptype] = mapType;
     // Material has been mapped
     jMaterial[Acts::jsonKey().mapkey] = true;
-    bUtility = &(bsMaterial->binUtility());
+    BinUtility bUtility = directedAxesToBinUtility(
+        bsMaterial->directedProtoAxes(), bsMaterial->globalToLocalTransform());
     // convert the data
     // get the material matrix
     nlohmann::json mmat = nlohmann::json::array();
@@ -407,7 +443,7 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     }
     jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
     // write the bin utility
-    nlohmann::json jBin(*bUtility);
+    nlohmann::json jBin(bUtility);
     jMaterial[Acts::jsonKey().binkey] = jBin;
     j[Acts::jsonKey().materialkey] = jMaterial;
     return;
@@ -490,11 +526,22 @@ void Acts::from_json(const nlohmann::json& j,
   }
   // Return the appropriate typr of material
   if (mpMatrix.empty()) {
-    material = new Acts::ProtoSurfaceMaterial(bUtility, mapType);
+    auto [axes, transform] = binUtilityToDirectedAxes(bUtility);
+    material =
+        new Acts::ProtoSurfaceMaterial(std::move(axes), transform, mapType);
   } else if (bUtility.bins() == 1) {
     material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], 1, mapType);
   } else {
-    material = new Acts::BinnedSurfaceMaterial(bUtility, mpMatrix, 1, mapType);
+    auto [axes, transform] = binUtilityToDirectedAxes(bUtility);
+    if (axes.size() == 1u) {
+      material = new Acts::BinnedSurfaceMaterial(
+          std::move(axes[0u]), transform, std::move(mpMatrix[0u]), 1, mapType);
+    } else {
+      material = new Acts::BinnedSurfaceMaterial(
+          std::array<Acts::DirectedProtoAxis, 2u>{std::move(axes[0u]),
+                                                  std::move(axes[1u])},
+          transform, std::move(mpMatrix), 1, mapType);
+    }
   }
 }
 
@@ -686,7 +733,9 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     // Get the bin utility (make a copy as we may modify it)
     // Detray expects 2-dimensional grid, currently supported are
     // x-y, r-phi, phi-z
-    BinUtility bUtility = binnedMaterial->binUtility();
+    BinUtility bUtility =
+        directedAxesToBinUtility(binnedMaterial->directedProtoAxes(),
+                                 binnedMaterial->globalToLocalTransform());
     // Turn the bin value into a 2D grid
     if (bUtility.dimensions() == 1u) {
       if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisR) {

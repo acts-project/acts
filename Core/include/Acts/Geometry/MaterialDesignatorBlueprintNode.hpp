@@ -56,7 +56,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// It receives the populated portal shell from its only child and attaches
   /// material proxies by consulting the configuration stored in the node.
   /// @note Currently, this node will unconditionally attach
-  ///       @ref Acts::ProtoGridSurfaceMaterial
+  ///       @ref Acts::ProtoSurfaceMaterial
   ///
   /// @param options The global blueprint options
   /// @param gctx The geometry context (nominal usually)

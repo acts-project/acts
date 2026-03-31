@@ -15,6 +15,7 @@
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <iosfwd>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -23,65 +24,85 @@ namespace Acts {
 /// @{
 
 ///
-/// @brief proxy to SurfaceMaterial hand over BinUtility or other suitable
-/// binning description
+/// @brief proxy to SurfaceMaterial carrying directed proto axis binning
+/// and a global-to-local transform
 ///
 /// The ProtoSurfaceMaterial class acts as a proxy to the SurfaceMaterial
 /// to mark the layers and surfaces on which the material should be mapped on
 /// at construction time of the geometry and to hand over the granularity of
-/// of the material map with the bin Utility.
-template <typename BinningType>
-class ProtoSurfaceMaterialT : public ISurfaceMaterial {
+/// of the material map with directed proto axes.
+class ProtoSurfaceMaterial : public ISurfaceMaterial {
  public:
   /// Constructor without binningType - homogeneous material
-  ProtoSurfaceMaterialT() = default;
+  ProtoSurfaceMaterial() = default;
 
-  /// Constructor with BinningType
-  /// @param binning a binning description for the material map binning
+  /// Constructor with directed proto axes and global-to-local transform
+  /// @param directedProtoAxes axis description for the material map binning
+  /// @param globalToLocalTransform transform from global to local 3D frame
   /// @param mappingType is the type of surface mapping associated to the surface
-  explicit ProtoSurfaceMaterialT(const BinningType& binning,
-                                 MappingType mappingType = MappingType::Default)
-      : ISurfaceMaterial(1., mappingType), m_binning(binning) {}
+  explicit ProtoSurfaceMaterial(
+      std::vector<DirectedProtoAxis> directedProtoAxes,
+      Transform3 globalToLocalTransform = Transform3::Identity(),
+      MappingType mappingType = MappingType::Default)
+      : ISurfaceMaterial(1., mappingType),
+        m_directedProtoAxes(std::move(directedProtoAxes)),
+        m_globalToLocalTransform(std::move(globalToLocalTransform)) {}
 
   /// Copy constructor
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterialT(const ProtoSurfaceMaterialT<BinningType>& smproxy) =
-      default;
+  ProtoSurfaceMaterial(const ProtoSurfaceMaterial& smproxy) = default;
 
   /// Copy move constructor
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterialT(ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept =
-      default;
+  ProtoSurfaceMaterial(ProtoSurfaceMaterial&& smproxy) noexcept = default;
 
   /// Destructor
-  ~ProtoSurfaceMaterialT() override = default;
+  ~ProtoSurfaceMaterial() override = default;
 
   /// Assignment operator
   ///
   /// @param smproxy The source proxy
   /// @return Reference to this object
-  ProtoSurfaceMaterialT<BinningType>& operator=(
-      const ProtoSurfaceMaterialT<BinningType>& smproxy) = default;
+  ProtoSurfaceMaterial& operator=(const ProtoSurfaceMaterial& smproxy) =
+      default;
 
   /// Assignment move operator
   ///
   /// @param smproxy The source proxy
   /// @return Reference to this object
-  ProtoSurfaceMaterialT<BinningType>& operator=(
-      ProtoSurfaceMaterialT<BinningType>&& smproxy) noexcept = default;
+  ProtoSurfaceMaterial& operator=(ProtoSurfaceMaterial&& smproxy) noexcept =
+      default;
 
   /// Scale operation - dummy implementation
   ///
   /// @return Reference to this object
-  ProtoSurfaceMaterialT<BinningType>& scale(double /*factor*/) final {
-    return (*this);
+  ProtoSurfaceMaterial& scale(double /*factor*/) final { return (*this); }
+
+  /// Return the directed proto axes
+  /// @return Reference to the binning axis descriptors
+  const std::vector<DirectedProtoAxis>& directedProtoAxes() const {
+    return m_directedProtoAxes;
   }
 
-  /// Return the BinUtility
-  /// @return Reference to the binning
-  const BinningType& binning() const { return (m_binning); }
+  /// Return transform from global to local 3D frame
+  /// @return Reference to transform
+  const Transform3& globalToLocalTransform() const {
+    return m_globalToLocalTransform;
+  }
+
+  /// Return a BinUtility representation of this proxy (on-the-fly)
+  [[deprecated(
+      "ProtoSurfaceMaterial::binning() is deprecated. "
+      "Use directedProtoAxes() and globalToLocalTransform() instead.")]]
+  BinUtility binning() const {
+    BinUtility converted(m_globalToLocalTransform.inverse());
+    for (const auto& directedProtoAxis : m_directedProtoAxes) {
+      converted += BinUtility(BinningData(directedProtoAxis));
+    }
+    return converted;
+  }
 
   /// Return method for full material description of the Surface - from local
   /// coordinates
@@ -107,27 +128,20 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// @return The output stream
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "Acts::ProtoSurfaceMaterial : " << std::endl;
-    sl << m_binning << std::endl;
+    sl << m_directedProtoAxes << std::endl;
     return sl;
   }
 
  private:
-  /// A binning description
-  BinningType m_binning;
+  /// Directed axis descriptions.
+  std::vector<DirectedProtoAxis> m_directedProtoAxes;
+
+  /// Transform from global to local 3D frame.
+  Transform3 m_globalToLocalTransform = Transform3::Identity();
 
   /// Dummy material properties
   MaterialSlab m_materialSlab = MaterialSlab::Nothing();
 };
-
-/// @brief Type alias for a prototype surface material using BinUtility
-/// A surface material implementation that uses BinUtility for binning
-using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
-
-/// @brief Type alias for a prototype surface material using a grid of ProtoAxis
-/// A surface material implementation that uses a vector of ProtoAxis for
-/// grid-based binning
-using ProtoGridSurfaceMaterial =
-    ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
 
 /// @}
 

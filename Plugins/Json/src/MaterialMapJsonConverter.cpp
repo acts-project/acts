@@ -167,7 +167,19 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
         trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY), Acts::open,
         Acts::AxisDirection::AxisY);
   }
-  return {surface, std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility),
+  std::vector<Acts::DirectedProtoAxis> directedProtoAxes;
+  directedProtoAxes.reserve(bUtility.binningData().size());
+  for (const auto& bData : bUtility.binningData()) {
+    const auto boundaryType = bData.option == Acts::closed
+                                  ? Acts::AxisBoundaryType::Closed
+                                  : Acts::AxisBoundaryType::Open;
+    directedProtoAxes.emplace_back(
+        bData.binvalue, boundaryType, static_cast<double>(bData.min),
+        static_cast<double>(bData.max), bData.bins());
+  }
+  return {surface,
+          std::make_shared<Acts::ProtoSurfaceMaterial>(
+              std::move(directedProtoAxes), bUtility.transform().inverse()),
           context};
 }
 

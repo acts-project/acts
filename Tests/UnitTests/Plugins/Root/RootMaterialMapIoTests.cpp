@@ -14,10 +14,11 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/Root/RootMaterialMapIo.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <array>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -55,13 +56,15 @@ std::vector<IdentifiedMaterial> createBinnedSurfaceMaterial() {
   for (std::size_t i = 0; i < nMaterials; ++i) {
     // construct the material properties from arguments
 
-    BinUtility xyBinning(100, -1., 1., open, AxisDirection::AxisX);
-    xyBinning += BinUtility(50, -3., 3., open, AxisDirection::AxisY);
+    DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Open, -1.,
+                            1., 100u);
+    DirectedProtoAxis yAxis(AxisDirection::AxisY, AxisBoundaryType::Open, -3.,
+                            3., 50u);
 
     std::vector<std::vector<MaterialSlab>> materialMatrix;
-    for (std::size_t j = 0; j < xyBinning.bins(1); ++j) {
+    for (std::size_t j = 0; j < yAxis.getAxis().getNBins(); ++j) {
       std::vector<MaterialSlab> materialRow;
-      for (std::size_t k = 0; k < xyBinning.bins(0); ++k) {
+      for (std::size_t k = 0; k < xAxis.getAxis().getNBins(); ++k) {
         // Create a material slab with some arbitrary properties
         Material mat = Material::fromMolarDensity(
             i + j * 1. + k * 0.5, i + j * 2 + k * 0.5, i + j * 3. + k * 0.5,
@@ -71,8 +74,9 @@ std::vector<IdentifiedMaterial> createBinnedSurfaceMaterial() {
       }
       materialMatrix.push_back(materialRow);
     }
-    auto binnedMaterial =
-        std::make_shared<BinnedSurfaceMaterial>(xyBinning, materialMatrix);
+    auto binnedMaterial = std::make_shared<BinnedSurfaceMaterial>(
+        std::array<DirectedProtoAxis, 2u>{xAxis, yAxis}, Transform3::Identity(),
+        materialMatrix);
     auto geoID = GeometryIdentifier().withVolume(2).withSensitive(i + 1);
     binnedMaterials.push_back({geoID, binnedMaterial});
   }
@@ -172,10 +176,18 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
     BOOST_REQUIRE(binnedMaterial != nullptr);
 
     // Check the binning
-    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(0),
-                      binnedReferenceMaterial->binUtility().bins(0));
-    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(1),
-                      binnedReferenceMaterial->binUtility().bins(1));
+    BOOST_CHECK_EQUAL(
+        binnedMaterial->directedProtoAxes().at(0).getAxis().getNBins(),
+        binnedReferenceMaterial->directedProtoAxes()
+            .at(0)
+            .getAxis()
+            .getNBins());
+    BOOST_CHECK_EQUAL(
+        binnedMaterial->directedProtoAxes().at(1).getAxis().getNBins(),
+        binnedReferenceMaterial->directedProtoAxes()
+            .at(1)
+            .getAxis()
+            .getNBins());
 
     // Compare the material matrix
     const auto& materialMatrix = binnedMaterial->fullMaterial();
@@ -237,10 +249,18 @@ BOOST_AUTO_TEST_CASE(RootMaterialMapIoBinnedReadWrite) {
         dynamic_cast<const BinnedSurfaceMaterial*>(readMaterial.get());
     BOOST_REQUIRE(binnedMaterial != nullptr);
     // Check the binning
-    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(0),
-                      binnedReferenceMaterial->binUtility().bins(0));
-    BOOST_CHECK_EQUAL(binnedMaterial->binUtility().bins(1),
-                      binnedReferenceMaterial->binUtility().bins(1));
+    BOOST_CHECK_EQUAL(
+        binnedMaterial->directedProtoAxes().at(0).getAxis().getNBins(),
+        binnedReferenceMaterial->directedProtoAxes()
+            .at(0)
+            .getAxis()
+            .getNBins());
+    BOOST_CHECK_EQUAL(
+        binnedMaterial->directedProtoAxes().at(1).getAxis().getNBins(),
+        binnedReferenceMaterial->directedProtoAxes()
+            .at(1)
+            .getAxis()
+            .getNBins());
     // Compare the material matrix
     const auto& materialMatrix = binnedMaterial->fullMaterial();
     const auto& referenceMaterialMatrix =

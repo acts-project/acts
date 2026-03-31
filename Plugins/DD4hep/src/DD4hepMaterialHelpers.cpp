@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
 #include <cstddef>
@@ -49,7 +50,17 @@ std::shared_ptr<ProtoSurfaceMaterial> ActsPlugins::createProtoMaterial(
       bu += BinUtility(bins, min, max, bopt, bval);
     }
   }
-  return std::make_shared<ProtoSurfaceMaterial>(bu);
+  std::vector<DirectedProtoAxis> directedProtoAxes;
+  directedProtoAxes.reserve(bu.binningData().size());
+  for (const auto& bData : bu.binningData()) {
+    const auto boundaryType = bData.option == closed ? AxisBoundaryType::Closed
+                                                     : AxisBoundaryType::Open;
+    directedProtoAxes.emplace_back(
+        bData.binvalue, boundaryType, static_cast<double>(bData.min),
+        static_cast<double>(bData.max), bData.bins());
+  }
+  return std::make_shared<ProtoSurfaceMaterial>(std::move(directedProtoAxes),
+                                                bu.transform().inverse());
 }
 
 void ActsPlugins::addLayerProtoMaterial(

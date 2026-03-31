@@ -15,7 +15,10 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+
+#include <array>
 
 #include <TFile.h>
 #include <TH1I.h>
@@ -29,6 +32,41 @@
 #include <boost/algorithm/string/iter_find.hpp>
 
 using namespace Acts;
+
+namespace {
+
+BinUtility toBinUtility(const BinnedSurfaceMaterial& material) {
+  BinUtility converted(material.globalToLocalTransform().inverse());
+  for (const auto& axis : material.directedProtoAxes()) {
+    converted += BinUtility(BinningData(axis));
+  }
+  return converted;
+}
+
+std::pair<std::vector<DirectedProtoAxis>, Transform3> toDirectedAxes(
+    const BinUtility& binUtility) {
+  std::vector<DirectedProtoAxis> axes;
+  axes.reserve(binUtility.binningData().size());
+  for (const auto& bData : binUtility.binningData()) {
+    const auto boundaryType = bData.option == closed ? AxisBoundaryType::Closed
+                                                     : AxisBoundaryType::Open;
+    if (bData.type == equidistant) {
+      axes.emplace_back(bData.binvalue, boundaryType,
+                        static_cast<double>(bData.min),
+                        static_cast<double>(bData.max), bData.bins());
+      continue;
+    }
+    std::vector<double> edges;
+    edges.reserve(bData.boundaries().size());
+    for (const auto edge : bData.boundaries()) {
+      edges.push_back(static_cast<double>(edge));
+    }
+    axes.emplace_back(bData.binvalue, boundaryType, edges);
+  }
+  return {std::move(axes), binUtility.transform().inverse()};
+}
+
+}  // namespace
 
 void ActsPlugins::RootMaterialMapIo::write(
     TFile& rFile, const GeometryIdentifier& geoID,
@@ -75,7 +113,8 @@ void ActsPlugins::RootMaterialMapIo::write(
 
     // Boundary condistions
     // Get the binning data
-    auto& binningData = bsMaterial->binUtility().binningData();
+    BinUtility bUtility = toBinUtility(*bsMaterial);
+    const auto& binningData = bUtility.binningData();
     // 1-D or 2-D maps
     auto bins = static_cast<int>(binningData.size());
     auto fBins = static_cast<float>(bins);
@@ -190,8 +229,9 @@ void ActsPlugins::RootMaterialMapIo::fillMaterialSlab(
 
 void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& bsMaterial) {
-  auto bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
-  auto bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
+  BinUtility bUtility = toBinUtility(bsMaterial);
+  auto bins0 = static_cast<int>(bUtility.bins(0));
+  auto bins1 = static_cast<int>(bUtility.bins(1));
   auto fBins0 = static_cast<float>(bins0);
   auto fBins1 = static_cast<float>(bins1);
 
@@ -236,8 +276,9 @@ void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
 
 void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
     MaterialTreePayload& payload, const BinnedSurfaceMaterial& bsMaterial) {
-  std::size_t bins0 = bsMaterial.binUtility().bins(0);
-  std::size_t bins1 = bsMaterial.binUtility().bins(1);
+  BinUtility bUtility = toBinUtility(bsMaterial);
+  std::size_t bins0 = bUtility.bins(0);
+  std::size_t bins1 = bUtility.bins(1);
 
   TH2I idx(m_cfg.indexHistName.c_str(), "indices; bin0; bin1",
            static_cast<int>(bins0), -0.5, static_cast<float>(bins0) - 0.5,
@@ -438,8 +479,15 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
           }
         }
       }  // Construct the binned material with the right bin utility
-      texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-          bUtility, std::move(materialMatrix));
+      auto [axes, transform] = toDirectedAxes(bUtility);
+      if (axes.size() == 1u) {
+        texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+            axes[0u], transform, materialMatrix[0u]);
+      } else {
+        texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+            std::array<DirectedProtoAxis, 2u>{axes[0u], axes[1u]}, transform,
+            std::move(materialMatrix));
+      }
     }
   } else {
     // Construct the names for histogram type storage
@@ -467,8 +515,15 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
               MaterialSlab(material, m_indexedMaterialTreePayload.ht);
         }
       }  // Construct the binned material with the right bin utility
-      texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-          bUtility, std::move(materialMatrix));
+      auto [axes, transform] = toDirectedAxes(bUtility);
+      if (axes.size() == 1u) {
+        texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+            axes[0u], transform, materialMatrix[0u]);
+      } else {
+        texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+            std::array<DirectedProtoAxis, 2u>{axes[0u], axes[1u]}, transform,
+            std::move(materialMatrix));
+      }
     }
   }
 
