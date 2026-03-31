@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
@@ -308,16 +309,14 @@ FreeToPathMatrix Surface::freeToPathDerivative(const GeometryContext& gctx,
 }
 
 const SurfacePlacementBase* Surface::placementPtr() const noexcept {
-  if (const auto* raw =
-          std::get_if<const SurfacePlacementBase*>(&m_placement)) {
-    return *raw;
-  }
-  if (const auto* sptr =
-          std::get_if<std::shared_ptr<const SurfacePlacementBase>>(
-              &m_placement)) {
-    return sptr->get();
-  }
-  return nullptr;
+  return std::visit(
+      overloaded{
+          [](std::monostate) -> const SurfacePlacementBase* { return nullptr; },
+          [](const SurfacePlacementBase* raw) { return raw; },
+          [](const std::shared_ptr<const SurfacePlacementBase>& sptr)
+              -> const SurfacePlacementBase* { return sptr.get(); },
+      },
+      m_placement);
 }
 
 const SurfacePlacementBase* Surface::surfacePlacement() const {
