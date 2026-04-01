@@ -18,9 +18,13 @@ pip install -i https://test.pypi.org/simple/ pyacts
 The `pyacts` distribution includes bindings for the core library, Fatras, and
 the Examples framework.
 
-> [!note]
+> [!warning]
 > The PyPI package does not include all optional plugins (e.g. DD4hep/ODD, Geant4, ROOT).
 > To use those, build from source with the relevant CMake options enabled.
+
+> [!note]
+> Even though the name of the PyPI package is `pyacts`, the python module must be imported
+> as `import acts`.
 
 # Building from source
 
