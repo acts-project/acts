@@ -62,7 +62,7 @@ def runMaterialValidation(
         recordMaterialInteractions=True,
         inputTrackParameters="params_particles_generated",
         outputPropagationSteps="propagation_steps",
-        outputMaterialTracks="material-tracks",
+        outputMaterialTracks="material_tracks",
     )
     s.addAlgorithm(alg)
 
