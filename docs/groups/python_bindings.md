@@ -9,10 +9,10 @@ The easiest way to get the ACTS Python bindings is via [PyPI](https://pypi.org/p
 pip install pyacts
 ```
 
-A nightly development build is also available from [TestPyPI](https://test.pypi.org/simple/pyacts/):
+A nightly development build is also available from [TestPyPI](https://test.pypi.org/project/pyacts/):
 
 ```console
-pip install -i https://test.pypi.org/simple/ pyacts
+pip install -i https://test.pypi.org/simple pyacts
 ```
 
 The `pyacts` distribution includes bindings for the core library, Fatras, and
