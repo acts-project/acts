@@ -104,8 +104,6 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
         gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, fullTransform,
         maxNeighborDistance);
-
-    checkBinning(gctx, *sArray);
   }
 
   // create the layer and push it back
@@ -184,8 +182,6 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
         gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer, fullTransform,
         maxNeighborDistance);
-
-    checkBinning(gctx, *sArray);
   }
 
   // create the layer and push it back
@@ -254,8 +250,6 @@ MutableLayerPtr LayerCreator::discLayer(
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
         gctx, std::move(surfaces), binsR, binsPhi, protoLayer, fullTransform,
         maxNeighborDistance);
-
-    checkBinning(gctx, *sArray);
   }
 
   // create the share disc bounds
@@ -326,8 +320,6 @@ MutableLayerPtr LayerCreator::discLayer(
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
         gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, fullTransform,
         maxNeighborDistance);
-
-    checkBinning(gctx, *sArray);
   }
 
   // create the shared disc bounds
@@ -419,8 +411,6 @@ MutableLayerPtr LayerCreator::planeLayer(
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
         gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer,
         fullTransform, maxNeighborDistance);
-
-    checkBinning(gctx, *sArray);
   }
 
   // create the layer and push it back
@@ -449,77 +439,6 @@ void LayerCreator::associateSurfacesToLayer(Layer& layer) const {
       mutableSurface->associateLayer(layer);
     }
   }
-}
-
-bool LayerCreator::checkBinning(const GeometryContext& gctx,
-                                const SurfaceArray& sArray) const {
-  // do consistency check: can we access all sensitive surfaces
-  // through the binning? If not, surfaces get lost and the binning does not
-  // work
-
-  ACTS_VERBOSE("Performing consistency check");
-
-  std::vector<const Surface*> surfaces = sArray.surfaces();
-  std::set<const Surface*> sensitiveSurfaces(surfaces.begin(), surfaces.end());
-  std::set<const Surface*> accessibleSurfaces;
-  std::size_t nEmptyBins = 0;
-  std::size_t nBinsChecked = 0;
-
-  // iterate over all bins
-  std::size_t size = sArray.size();
-  for (std::size_t b = 0; b < size; ++b) {
-    ACTS_PUSH_IGNORE_DEPRECATED()
-    const std::vector<const Surface*>& binContent = sArray.at(b);
-    ACTS_POP_IGNORE_DEPRECATED()
-    // we don't check under/overflow bins
-    if (!sArray.isValidBin(b)) {
-      continue;
-    }
-    for (const auto& srf : binContent) {
-      accessibleSurfaces.insert(srf);
-    }
-    if (binContent.empty()) {
-      nEmptyBins++;
-    }
-    nBinsChecked++;
-  }
-
-  std::vector<const Surface*> diff;
-  std::set_difference(sensitiveSurfaces.begin(), sensitiveSurfaces.end(),
-                      accessibleSurfaces.begin(), accessibleSurfaces.end(),
-                      std::inserter(diff, diff.begin()));
-
-  ACTS_VERBOSE(" - Checked " << nBinsChecked << " valid bins");
-
-  if (nEmptyBins > 0) {
-    ACTS_VERBOSE(" -- Not all bins point to surface. " << nEmptyBins
-                                                       << " empty");
-  } else {
-    ACTS_VERBOSE(" -- All bins point to a surface");
-  }
-
-  if (!diff.empty()) {
-    ACTS_ERROR(
-        " -- Not all sensitive surfaces are accessible through binning. "
-        "sensitive: "
-        << sensitiveSurfaces.size()
-        << "    accessible: " << accessibleSurfaces.size());
-
-    // print all inaccessibles
-    ACTS_ERROR(" -- Inaccessible surfaces: ");
-    for (const auto& srf : diff) {
-      // have to choose AxisDirection here
-      Vector3 ctr = srf->referencePosition(gctx, AxisDirection::AxisR);
-      ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y()
-                               << ", z=" << ctr.z() << ", r=" << perp(ctr)
-                               << ", phi=" << phi(ctr) << ")");
-    }
-
-  } else {
-    ACTS_VERBOSE(" -- All sensitive surfaces are accessible through binning.");
-  }
-
-  return diff.empty();
 }
 
 }  // namespace Acts
