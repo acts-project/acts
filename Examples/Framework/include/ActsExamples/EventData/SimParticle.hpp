@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <boost/container/flat_set.hpp>
 
@@ -172,7 +172,9 @@ class SimParticle final {
   std::uint32_t numberOfHits() const { return finalState().numberOfHits(); }
 
   /// Particle outcome.
-  ActsFatras::ParticleOutcome outcome() const { return finalState().outcome(); }
+  ActsFatras::SimulationOutcome outcome() const {
+    return finalState().outcome();
+  }
 
  private:
   SimParticleState m_initial;

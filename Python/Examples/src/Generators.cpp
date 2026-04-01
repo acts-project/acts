@@ -142,7 +142,7 @@ void addGenerators(py::module& mex) {
   auto fatras = py::module_::import("acts.fatras");
   mex.attr("SimBarcode") = fatras.attr("Barcode");
   mex.attr("GenerationProcess") = fatras.attr("GenerationProcess");
-  mex.attr("ParticleOutcome") = fatras.attr("ParticleOutcome");
+  mex.attr("SimulationOutcome") = fatras.attr("SimulationOutcome");
   mex.attr("SimParticleState") = fatras.attr("Particle");
 
   // SimParticle

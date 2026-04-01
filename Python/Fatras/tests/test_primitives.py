@@ -36,8 +36,8 @@ def test_process_and_outcome_enums_available():
         == acts.fatras.GenerationProcess.ePhotonConversion
     )
     assert (
-        acts.fatras.ParticleOutcome.Alive
-        != acts.fatras.ParticleOutcome.KilledInteraction
+        acts.fatras.SimulationOutcome.Alive
+        != acts.fatras.SimulationOutcome.KilledInteraction
     )
 
 
