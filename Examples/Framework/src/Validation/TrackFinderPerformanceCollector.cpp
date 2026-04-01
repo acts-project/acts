@@ -11,7 +11,6 @@
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <utility>
 
@@ -38,7 +37,7 @@ TrackFinderPerformanceCollector::TrackFinderPerformanceCollector(
 }
 
 ProcessCode TrackFinderPerformanceCollector::fill(
-    const AlgorithmContext& ctx, const ConstTrackContainer& tracks,
+    const Acts::GeometryContext& geoContext, const ConstTrackContainer& tracks,
     const SimParticleContainer& particles,
     const TrackParticleMatching& trackParticleMatching,
     const ParticleTrackMatching& particleTrackMatching,
@@ -171,7 +170,7 @@ ProcessCode TrackFinderPerformanceCollector::fill(
       }
     }
 
-    m_effPlotTool.fill(ctx.geoContext, particle.initialState(), minDeltaR,
+    m_effPlotTool.fill(geoContext, particle.initialState(), minDeltaR,
                        isReconstructed);
     m_duplicationPlotTool.fill(particle.initialState(), nMatchedTracks);
     m_fakePlotTool.fill(particle.initialState(), nMatchedTracks, nFakeTracks);

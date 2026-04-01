@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -26,8 +27,6 @@
 #include <string>
 
 namespace ActsExamples {
-
-struct AlgorithmContext;
 
 /// Collects track-finder performance histograms without any file I/O.
 ///
@@ -53,7 +52,7 @@ class TrackFinderPerformanceCollector {
   /// Fill histograms for one event.
   ///
   /// @note The caller must ensure exclusive access (e.g. hold a mutex).
-  ProcessCode fill(const AlgorithmContext& ctx,
+  ProcessCode fill(const Acts::GeometryContext& geoContext,
                    const ConstTrackContainer& tracks,
                    const SimParticleContainer& particles,
                    const TrackParticleMatching& trackParticleMatching,
