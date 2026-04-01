@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "pyacts"
 dynamic = ["version", "readme"]
-license = "Mozilla Public License 2.0"
+license = "MPL-2.0"
 license-files = ["LICENSE"]
 
 [project.urls]
@@ -15,7 +15,6 @@ Repository = "https://github.com/acts-project/acts"
 [tool.scikit-build]
 wheel.packages = [] # Manage installation with cmake
 wheel.exclude = ["**.a", "**.sh", "**.cmake", "**.hpp"]
-wheel.license-files = ["LICENSE"]
 build-dir = "build/{wheel_tag}"
 build.verbose = true
 cmake.args = ["--preset=python-wheel"]
