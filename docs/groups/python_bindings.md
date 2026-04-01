@@ -16,22 +16,23 @@ pip install -i https://test.pypi.org/simple/ pyacts
 ```
 
 The `pyacts` distribution includes bindings for the core library, Fatras, and
-the Examples framework. Selected plugins are included depending on the build
-configuration used to produce the wheel.
+the Examples framework.
 
 > [!note]
-> The PyPI package does not include all optional plugins (e.g. DD4hep, Geant4).
+> The PyPI package does not include all optional plugins (e.g. DD4hep/ODD, Geant4, ROOT).
 > To use those, build from source with the relevant CMake options enabled.
 
 # Building from source
 
-ACTS ships with Python bindings using the `pybind11` library. Enable them with:
+To use the full Python bindings including optional components such as DD4hep/ODD, Geant4, ROOT, build ACTS from
+source with `ACTS_BUILD_PYTHON_BINDINGS=ON`.
 
 ```console
 cmake -B <build> -S <source> -DACTS_BUILD_PYTHON_BINDINGS=ON
 ```
 
-If you also need the Examples bindings (sequencer, algorithms, I/O writers, etc.):
+Bindings for additional components (plugins, Examples framework) are built automatically if
+they are enabled.
 
 ```console
 cmake -B <build> -S <source> -DACTS_BUILD_PYTHON_BINDINGS=ON -DACTS_BUILD_EXAMPLES=ON
