@@ -81,6 +81,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
@@ -88,7 +89,8 @@ class LayerCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
       std::size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// returning a cylindrical layer
   ///
@@ -105,6 +107,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr cylinderLayer(
@@ -113,7 +116,8 @@ class LayerCreator {
       BinningType bTypePhi, BinningType bTypeZ,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// returning a disc layer
   ///
@@ -130,6 +134,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
@@ -137,7 +142,8 @@ class LayerCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
       std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// returning a disc layer
   ///
@@ -154,6 +160,7 @@ class LayerCreator {
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr discLayer(
@@ -162,7 +169,8 @@ class LayerCreator {
       BinningType bTypePhi,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// returning a plane layer
   ///
@@ -183,6 +191,7 @@ class LayerCreator {
   /// @param [in] ad possibility to hand over a specific ApproachDescriptor,
   /// which is needed for material mapping. Otherwise the default
   /// ApproachDescriptor will be taken used for this layer
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr planeLayer(
@@ -191,7 +200,8 @@ class LayerCreator {
       std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
       const Transform3& transform = Transform3::Identity(),
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct

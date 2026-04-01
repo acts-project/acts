@@ -649,8 +649,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   auto cylinder =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
   auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
-                                    AxisBoundaryType::Bound>(cylinder, 1.,
-                                                             pAxisPhi, pAxisZ);
+                                    AxisBoundaryType::Bound>(
+      cylinder, 1., pAxisPhi, pAxisZ, 1);
 
   sl->fill(tgContext, brlRaw);
   ACTS_PUSH_IGNORE_DEPRECATED()
@@ -686,7 +686,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     auto sl2 = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                                        AxisBoundaryType::Bound>(
-        cylinder, 1., pAxisPhiVar, pAxisZVar);
+        cylinder, 1., pAxisPhiVar, pAxisZVar, 1);
 
     sl2->fill(tgContext, brlRaw);
     ACTS_PUSH_IGNORE_DEPRECATED()
