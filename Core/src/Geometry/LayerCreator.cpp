@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -467,7 +468,9 @@ bool LayerCreator::checkBinning(const GeometryContext& gctx,
   // iterate over all bins
   std::size_t size = sArray.size();
   for (std::size_t b = 0; b < size; ++b) {
-    std::vector<const Surface*> binContent = sArray.at(b);
+    ACTS_PUSH_IGNORE_DEPRECATED()
+    const std::vector<const Surface*>& binContent = sArray.at(b);
+    ACTS_POP_IGNORE_DEPRECATED()
     // we don't check under/overflow bins
     if (!sArray.isValidBin(b)) {
       continue;
