@@ -11,6 +11,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
 
@@ -41,6 +42,26 @@ void to_json(nlohmann::json& j, const BinUtility& bu);
 /// @param j JSON object to convert from
 /// @param bu BinUtility to populate
 void from_json(const nlohmann::json& j, BinUtility& bu);
+
+/// Convert ProtoAxis to JSON
+/// @param j JSON object to write to
+/// @param pa ProtoAxis to convert
+void to_json(nlohmann::json& j, const ProtoAxis& pa);
+
+/// Convert JSON to ProtoAxis
+/// @param j JSON object to convert from
+/// @param pa ProtoAxis to populate
+void from_json(const nlohmann::json& j, ProtoAxis& pa);
+
+/// Convert DirectedProtoAxis to JSON
+/// @param j JSON object to write to
+/// @param dpa DirectedProtoAxis to convert
+void to_json(nlohmann::json& j, const DirectedProtoAxis& dpa);
+
+/// Convert JSON to DirectedProtoAxis
+/// @param j JSON object to convert from
+/// @param dpa DirectedProtoAxis to populate
+void from_json(const nlohmann::json& j, DirectedProtoAxis& dpa);
 
 /// Convert Range1D to JSON
 /// @param j JSON object to write to

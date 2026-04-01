@@ -51,9 +51,12 @@ BOOST_AUTO_TEST_CASE(RoundtripFromFile) {
   auto materialMap = converter.jsonToMaterialMaps(refJson);
   nlohmann::json encodedJson =
       converter.materialMapsToJson(materialMap, &decorator);
-
-  // verify identical encoded JSON values
-  BOOST_CHECK_EQUAL(refJson, encodedJson);
+  // The reference file uses the legacy schema. Verify we can read it and that
+  // the new schema is stable under another encode/decode cycle.
+  auto materialMapSecond = converter.jsonToMaterialMaps(encodedJson);
+  nlohmann::json encodedJsonSecond =
+      converter.materialMapsToJson(materialMapSecond, &decorator);
+  BOOST_CHECK_EQUAL(encodedJson, encodedJsonSecond);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

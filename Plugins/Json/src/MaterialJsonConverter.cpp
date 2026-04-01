@@ -282,31 +282,6 @@ Acts::ISurfaceMaterial* indexedMaterialFromJson(nlohmann::json& jMaterial) {
   return nullptr;
 }
 
-std::vector<Acts::DirectedProtoAxis> binUtilityToDirectedAxes(
-    const Acts::BinUtility& binUtility) {
-  const auto& binningData = binUtility.binningData();
-  std::vector<Acts::DirectedProtoAxis> directedProtoAxes;
-  directedProtoAxes.reserve(binningData.size());
-  for (const auto& bData : binningData) {
-    const auto boundaryType = bData.option == Acts::closed
-                                  ? Acts::AxisBoundaryType::Closed
-                                  : Acts::AxisBoundaryType::Bound;
-    if (bData.type == Acts::equidistant) {
-      directedProtoAxes.emplace_back(
-          bData.binvalue, boundaryType, static_cast<double>(bData.min),
-          static_cast<double>(bData.max), bData.bins());
-      continue;
-    }
-    std::vector<double> edges;
-    edges.reserve(bData.boundaries().size());
-    for (const auto edge : bData.boundaries()) {
-      edges.push_back(static_cast<double>(edge));
-    }
-    directedProtoAxes.emplace_back(bData.binvalue, boundaryType, edges);
-  }
-  return directedProtoAxes;
-}
-
 Acts::BinUtility directedAxesToBinUtility(
     const std::vector<Acts::DirectedProtoAxis>& directedProtoAxes) {
   Acts::BinUtility converted;
@@ -314,6 +289,87 @@ Acts::BinUtility directedAxesToBinUtility(
     converted += Acts::BinUtility(Acts::BinningData(directedProtoAxis));
   }
   return converted;
+}
+
+std::vector<Acts::DirectedProtoAxis> legacyBinUtilityJsonToDirectedAxes(
+    const nlohmann::json& jLegacyBinUtility) {
+  std::vector<Acts::DirectedProtoAxis> directedProtoAxes;
+  if (!jLegacyBinUtility.contains("binningdata")) {
+    return directedProtoAxes;
+  }
+
+  auto parseDirection = [](const nlohmann::json& jValue) {
+    if (jValue.is_string()) {
+      const auto value = jValue.get<std::string>();
+      if (value == "binX") {
+        return Acts::AxisDirection::AxisX;
+      }
+      if (value == "binY") {
+        return Acts::AxisDirection::AxisY;
+      }
+      if (value == "binZ") {
+        return Acts::AxisDirection::AxisZ;
+      }
+      if (value == "binR") {
+        return Acts::AxisDirection::AxisR;
+      }
+      if (value == "binPhi") {
+        return Acts::AxisDirection::AxisPhi;
+      }
+      if (value == "binRPhi") {
+        return Acts::AxisDirection::AxisRPhi;
+      }
+      if (value == "binH") {
+        return Acts::AxisDirection::AxisTheta;
+      }
+      if (value == "binEta") {
+        return Acts::AxisDirection::AxisEta;
+      }
+      if (value == "binMag") {
+        return Acts::AxisDirection::AxisMag;
+      }
+    }
+    return jValue.get<Acts::AxisDirection>();
+  };
+
+  for (const auto& jAxis : jLegacyBinUtility.at("binningdata")) {
+    const auto direction = parseDirection(jAxis.at("value"));
+    const auto option = jAxis.at("option").get<std::string>();
+    const auto boundaryType = option == "closed"
+                                  ? Acts::AxisBoundaryType::Closed
+                                  : Acts::AxisBoundaryType::Bound;
+    const auto axisType = jAxis.at("type").get<std::string>();
+    if (axisType == "arbitrary" && jAxis.contains("boundaries")) {
+      directedProtoAxes.emplace_back(
+          direction, boundaryType,
+          jAxis.at("boundaries").get<std::vector<double>>());
+      continue;
+    }
+    // Get min/max and if 0 then create auto-range axis
+    double min = jAxis.at("min").get<double>();
+    double max = jAxis.at("max").get<double>();
+    if (min == 0. && max == 0.) {
+      directedProtoAxes.emplace_back(direction, boundaryType,
+                                     jAxis.at("bins").get<std::size_t>());
+    } else {
+      directedProtoAxes.emplace_back(
+          direction, boundaryType, jAxis.at("min").get<double>(),
+          jAxis.at("max").get<double>(), jAxis.at("bins").get<std::size_t>());
+    }
+  }
+  return directedProtoAxes;
+}
+
+std::size_t directedAxesTotalBins(
+    const std::vector<Acts::DirectedProtoAxis>& directedProtoAxes) {
+  if (directedProtoAxes.empty()) {
+    return 0u;
+  }
+  std::size_t totalBins = 1u;
+  for (const auto& axis : directedProtoAxes) {
+    totalBins *= axis.getAxis().getNBins();
+  }
+  return totalBins;
 }
 
 }  // namespace
@@ -379,19 +435,14 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     jMaterial[Acts::jsonKey().maptype] = mapType;
     // by default the protoMaterial is not used for mapping
     jMaterial[Acts::jsonKey().mapkey] = false;
-    // write the bin utility
-    BinUtility bUtility =
-        directedAxesToBinUtility(psMaterial->directedProtoAxes());
+    const auto& directedProtoAxes = psMaterial->directedProtoAxes();
+    jMaterial[Acts::jsonKey().directedaxeskey] = directedProtoAxes;
     // Check in the number of bin is different from 1
-    auto& binningData = bUtility.binningData();
-    for (std::size_t ibin = 0; ibin < binningData.size(); ++ibin) {
-      if (binningData[ibin].bins() > 1) {
+    for (const auto& axis : directedProtoAxes) {
+      if (axis.getAxis().getNBins() > 1u) {
         jMaterial[Acts::jsonKey().mapkey] = true;
-        break;
       }
     }
-    nlohmann::json jBin(bUtility);
-    jMaterial[Acts::jsonKey().binkey] = jBin;
     j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
@@ -427,8 +478,8 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
     jMaterial[Acts::jsonKey().maptype] = mapType;
     // Material has been mapped
     jMaterial[Acts::jsonKey().mapkey] = true;
-    BinUtility bUtility =
-        directedAxesToBinUtility(bsMaterial->directedProtoAxes());
+    jMaterial[Acts::jsonKey().directedaxeskey] =
+        bsMaterial->directedProtoAxes();
     // convert the data
     // get the material matrix
     nlohmann::json mmat = nlohmann::json::array();
@@ -441,9 +492,6 @@ void Acts::to_json(nlohmann::json& j, const surfaceMaterialPointer& material) {
       mmat.push_back(std::move(mvec));
     }
     jMaterial[Acts::jsonKey().datakey] = std::move(mmat);
-    // write the bin utility
-    nlohmann::json jBin(bUtility);
-    jMaterial[Acts::jsonKey().binkey] = jBin;
     j[Acts::jsonKey().materialkey] = jMaterial;
     return;
   }
@@ -508,36 +556,52 @@ void Acts::from_json(const nlohmann::json& j,
     return;
   }
 
-  // The bin utility and material
-  Acts::BinUtility bUtility;
   Acts::MaterialSlabMatrix mpMatrix;
   Acts::MappingType mapType = Acts::MappingType::Default;
+  std::vector<Acts::DirectedProtoAxis> directedProtoAxes;
   for (auto& [key, value] : jMaterial.items()) {
-    if (key == Acts::jsonKey().binkey && !value.empty()) {
-      from_json(value, bUtility);
-    }
     if (key == Acts::jsonKey().datakey && !value.empty()) {
       from_json(value, mpMatrix);
     }
     if (key == Acts::jsonKey().maptype && !value.empty()) {
       from_json(value, mapType);
     }
+    if (key == Acts::jsonKey().directedaxeskey && !value.empty()) {
+      directedProtoAxes.clear();
+      directedProtoAxes.reserve(value.size());
+      for (const auto& jAxis : value) {
+        Acts::DirectedProtoAxis axis(Acts::AxisDirection::AxisX,
+                                     Acts::AxisBoundaryType::Bound, 1u);
+        from_json(jAxis, axis);
+        directedProtoAxes.push_back(std::move(axis));
+      }
+    }
+    // Legacy fallback: old schema stores a full BinUtility JSON object.
+    // Parse the legacy axis description directly into DirectedProtoAxis.
+    if (key == Acts::jsonKey().binkey && !value.empty() &&
+        directedProtoAxes.empty()) {
+      directedProtoAxes = legacyBinUtilityJsonToDirectedAxes(value);
+    }
   }
   // Return the appropriate typr of material
   if (mpMatrix.empty()) {
-    auto axes = binUtilityToDirectedAxes(bUtility);
-    material = new Acts::ProtoSurfaceMaterial(std::move(axes), mapType);
-  } else if (bUtility.bins() == 1) {
+    material =
+        new Acts::ProtoSurfaceMaterial(std::move(directedProtoAxes), mapType);
+  } else if (directedProtoAxes.size() > 2u) {
+    throw std::invalid_argument(
+        "Surface material JSON supports at most 2 directed proto axes.");
+  } else if (directedAxesTotalBins(directedProtoAxes) <= 1u) {
     material = new Acts::HomogeneousSurfaceMaterial(mpMatrix[0][0], 1, mapType);
   } else {
-    auto axes = binUtilityToDirectedAxes(bUtility);
-    if (axes.size() == 1u) {
-      material = new Acts::BinnedSurfaceMaterial(
-          std::move(axes[0u]), std::move(mpMatrix[0u]), 1, mapType);
+    if (directedProtoAxes.size() == 1u) {
+      material =
+          new Acts::BinnedSurfaceMaterial(std::move(directedProtoAxes[0u]),
+                                          std::move(mpMatrix[0u]), 1, mapType);
     } else {
       material = new Acts::BinnedSurfaceMaterial(
-          std::array<Acts::DirectedProtoAxis, 2u>{std::move(axes[0u]),
-                                                  std::move(axes[1u])},
+          std::array<Acts::DirectedProtoAxis, 2u>{
+              std::move(directedProtoAxes[0u]),
+              std::move(directedProtoAxes[1u])},
           std::move(mpMatrix), 1, mapType);
     }
   }

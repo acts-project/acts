@@ -24,6 +24,8 @@ struct jsonKey {
   std::string namekey = "NAME";
   /// The bin key
   std::string binkey = "binUtility";
+  /// The directed proto axes key
+  std::string directedaxeskey = "directedProtoAxes";
   /// The material key
   std::string materialkey = "material";
   /// The local to global transformation key

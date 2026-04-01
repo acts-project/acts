@@ -12,12 +12,48 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
+#include "ActsPlugins/Json/GridJsonConverter.hpp"
 
 #include <algorithm>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace {
+
+Acts::ProtoAxis protoAxisFromJsonImpl(const nlohmann::json& j) {
+  const auto axisBoundaryType =
+      j.at("axis").at("boundary_type").get<Acts::AxisBoundaryType>();
+  const auto axisType = j.at("axis").at("type").get<Acts::AxisType>();
+  if (axisType == Acts::AxisType::Equidistant) {
+    const auto nbins = j.at("axis").at("bins").get<std::size_t>();
+    if (nbins == 0u) {
+      throw std::invalid_argument("Number of bins must be positive");
+    }
+    if (j.at("autorange").get<bool>()) {
+      return Acts::ProtoAxis(axisBoundaryType, nbins);
+    }
+    const auto min = j.at("axis").at("range").at(0).get<double>();
+    const auto max = j.at("axis").at("range").at(1).get<double>();
+    if (min >= max) {
+      throw std::invalid_argument("Invalid range: min must be less than max");
+    }
+    return Acts::ProtoAxis(axisBoundaryType, min, max, nbins);
+  }
+  const auto binEdges =
+      j.at("axis").at("boundaries").get<std::vector<double>>();
+  if (binEdges.size() < 2u) {
+    throw std::invalid_argument("At least two bin edges required");
+  }
+  if (!std::ranges::is_sorted(binEdges)) {
+    throw std::invalid_argument("Bin edges must be sorted in ascending order");
+  }
+  return Acts::ProtoAxis(axisBoundaryType, binEdges);
+}
+
+}  // namespace
 
 void Acts::to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   // Common to all bin utilities
@@ -131,4 +167,52 @@ void Acts::from_json(const nlohmann::json& j, Acts::BinUtility& bu) {
     from_json(jdata, bd);
     bu += Acts::BinUtility(bd);
   }
+}
+
+void Acts::to_json(nlohmann::json& j, const Acts::ProtoAxis& pa) {
+  j["axis"] = AxisJsonConverter::toJson(pa.getAxis());
+  j["autorange"] = pa.isAutorange();
+}
+
+void Acts::from_json(const nlohmann::json& j, Acts::ProtoAxis& pa) {
+  pa = protoAxisFromJsonImpl(j);
+}
+
+void Acts::to_json(nlohmann::json& j, const Acts::DirectedProtoAxis& dpa) {
+  j["axis"] = AxisJsonConverter::toJson(dpa.getAxis());
+  j["autorange"] = dpa.isAutorange();
+  j["direction"] = dpa.getAxisDirection();
+}
+
+void Acts::from_json(const nlohmann::json& j, Acts::DirectedProtoAxis& dpa) {
+  const auto direction = j.at("direction").get<Acts::AxisDirection>();
+  const auto axisBoundaryType =
+      j.at("axis").at("boundary_type").get<Acts::AxisBoundaryType>();
+  const auto axisType = j.at("axis").at("type").get<Acts::AxisType>();
+  if (axisType == Acts::AxisType::Equidistant) {
+    const auto nbins = j.at("axis").at("bins").get<std::size_t>();
+    if (nbins == 0u) {
+      throw std::invalid_argument("Number of bins must be positive");
+    }
+    if (j.at("autorange").get<bool>()) {
+      dpa = Acts::DirectedProtoAxis(direction, axisBoundaryType, nbins);
+      return;
+    }
+    const auto min = j.at("axis").at("range").at(0).get<double>();
+    const auto max = j.at("axis").at("range").at(1).get<double>();
+    if (min >= max) {
+      throw std::invalid_argument("Invalid range: min must be less than max");
+    }
+    dpa = Acts::DirectedProtoAxis(direction, axisBoundaryType, min, max, nbins);
+    return;
+  }
+  const auto binEdges =
+      j.at("axis").at("boundaries").get<std::vector<double>>();
+  if (binEdges.size() < 2u) {
+    throw std::invalid_argument("At least two bin edges required");
+  }
+  if (!std::ranges::is_sorted(binEdges)) {
+    throw std::invalid_argument("Bin edges must be sorted in ascending order");
+  }
+  dpa = Acts::DirectedProtoAxis(direction, axisBoundaryType, binEdges);
 }
