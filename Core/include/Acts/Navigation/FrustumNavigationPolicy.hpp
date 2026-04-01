@@ -14,6 +14,8 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 
+#include <numbers>
+
 namespace Acts::Experimental {
 
 	/// A navigation policy that uses frustum-octree intersections to find portals
@@ -27,6 +29,10 @@ namespace Acts::Experimental {
 				/// The octree depth
 				int depth=3;
 			};
+			struct State{
+				Frustum3 frustum=Frustum3(Vector3::Zero(),Vector3::Zero(),std::numbers::pi/4);
+			};
+
 			/// Main constructor, which takes the top-level volume and builds the octree
 			/// @param gctx The geometrycontext object
 			/// @param volume The tracking volume used to build the octree
@@ -48,6 +54,19 @@ namespace Acts::Experimental {
 			/// Connect this policy with a navigation delegate
 			/// @param delegate The navigation delegate to connect to
   			void connect(NavigationDelegate& delegate) const override;
+
+			bool isValid(const GeometryContext& /*gctx*/,
+					const NavigationArguments& args,
+					NavigationPolicyState& state,
+					const Logger& logger) const override;
+			
+			void createState(const GeometryContext& /*gctx*/,
+					const NavigationArguments& args,
+					NavigationPolicyStateManager& stateManager,
+					const Logger& logger) const override;
+
+			void popState(NavigationPolicyStateManager& stateManager,
+					const Logger& logger) const override;
 
 		private:
 			// The tracking volume

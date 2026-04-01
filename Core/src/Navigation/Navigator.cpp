@@ -293,7 +293,6 @@ NavigationTarget Navigator::nextTarget(State& state, const Vector3& position,
     ACTS_VERBOSE(volInfo(state) << "Creating navigation policy state for new "
                                    "volume after renavigation.");
     createPolicyState(state, position, direction);
-  }
 
   state.currentLayer =
       state.currentVolume->associatedLayer(state.options.geoContext, position);

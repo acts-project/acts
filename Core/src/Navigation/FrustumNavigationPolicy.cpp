@@ -14,8 +14,8 @@ namespace Acts::Experimental {
 			const TrackingVolume& volume,
 			const Logger& logger,
 			const Config& config)
-		: m_volume(volume), m_frustum(nullptr) {
-			ACTS_VERBOSE("Constructing FrustumNavigationPolicy for volume " << m_volume.volumeName());
+		: m_volume(volume) {
+			ACTS_INFO("Constructing FrustumNavigationPolicy for volume " << m_volume.volumeName());
                         std::vector<BoundingBox*> prims;
                         m_boxes.push_back(std::make_unique<BoundingBox>(m_volume.boundingBox()));
                         prims.push_back(m_boxes.back().get());
@@ -29,9 +29,10 @@ namespace Acts::Experimental {
 	void FrustumNavigationPolicy::initializeCandidates(const NavigationArguments& args,
 			AppendOnlyNavigationStream& stream,
 	      		const Logger& logger) const {
-		ACTS_VERBOSE("FrustumNavigationPolicy Candidates initialization for volume"<< m_volume.volumeName());
-                // Create the frustum if not present
-		Frustum3 frustum(args.position,args.direction, M_PI / 4);
+		ACTS_INFO("FrustumNavigationPolicy Candidates initialization for volume"<< m_volume.volumeName());
+		auto& s = state.as<State>();
+                // Recreate the frustum
+		s.frustum=Frustum3(args.position,args.direction, std::numbers::pi / 4);
                 /*
 		if(m_frustum.get() == nullptr){
 			m_frustum.reset(new Frustum3(args.position,args.direction, M_PI / 4));
@@ -52,8 +53,7 @@ namespace Acts::Experimental {
 		*/
 		const BoundingBox* topBoxCopy = m_topBox.get();
 		while (topBoxCopy != nullptr) {
-    			//if (topBoxCopy->intersect(*m_frustum.get())) {
-			if(topBoxCopy->intersect(frustum)){
+			if(topBoxCopy->intersect(s.frustum)){
 				if (topBoxCopy->hasEntity()) {
 					const TrackingVolume* tvol=dynamic_cast<const TrackingVolume*>(topBoxCopy->entity());
 					ACTS_VERBOSE("get portals from volume "<<tvol->volumeName());
@@ -77,6 +77,43 @@ namespace Acts::Experimental {
 
 	void FrustumNavigationPolicy::connect(NavigationDelegate& delegate) const {
 		connectDefault<FrustumNavigationPolicy>(delegate);
+	}
+
+	bool FrustumNavigationPolicy::isValid(const GeometryContext&,
+                     const NavigationArguments& args,
+                     NavigationPolicyState& state,
+                     const Logger& logger) const {
+		// Check if we leave the frustum, reset candidates if so
+		auto& s = state.as<State>();
+		const auto& difference=args.position-s.frustum.origin();
+		const auto& normals = s.frustum.normals();
+		const bool outside = std::any_of(
+				normals.begin(), normals.end(), [&difference](const auto& normal) {
+				return difference.dot(normal) >= 0;
+				});
+		if (outside){
+			ACTS_INFO("FrustumNavigationPolicy: outside frustum");
+		       	return false;
+		}
+		else{
+			ACTS_INFO("FrustumNavigationPolicy: frustum still ok");
+		       	return true;
+		}
+	}
+
+	void FrustumNavigationPolicy::createState(const GeometryContext&,
+                         const NavigationArguments& args,
+                         NavigationPolicyStateManager& stateManager,
+                         const Logger& logger) const {
+		ACTS_INFO("create FrustumNavigationPolicy state");
+		auto& s = stateManager.pushState<State>();
+		s.frustum=Frustum3(args.position,args.direction,std::numbers::pi / 4);
+	}
+
+	void FrustumNavigationPolicy::popState(NavigationPolicyStateManager& stateManager,
+                      const Logger& logger) const {
+		ACTS_VERBOSE("remove FrustumNavigationPolicy state");
+		stateManager.popState();
 	}
 }
 

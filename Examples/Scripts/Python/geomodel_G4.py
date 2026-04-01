@@ -19,6 +19,73 @@ import acts.examples.geomodel as gm_ex
 from pathlib import Path
 from propagation import runPropagation
 
+from acts.examples.simulation import (
+    addParticleGun,
+    EtaConfig,
+    ParticleConfig,
+    MomentumConfig,
+)
+
+def runPropagation(
+    trackingGeometry, field, outputDir, s=None, decorators=[], sterileLogger=True
+):
+    s = s or acts.examples.Sequencer(events=100, numThreads=1)
+
+    for d in decorators:
+        s.addContextDecorator(d)
+
+    rnd = acts.examples.RandomNumbers(seed=42)
+
+    addParticleGun(
+        s,
+        ParticleConfig(num=1000, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+        EtaConfig(-4.0, 4.0),
+        MomentumConfig(1 * u.GeV, 100 * u.GeV, transverse=True),
+        rnd=rnd,
+    )
+
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+        level=acts.logging.WARNING,
+        inputParticles="particles_generated",
+        outputTrackParameters="params_particles_generated",
+    )
+    s.addAlgorithm(trkParamExtractor)
+
+    nav = acts.Navigator(trackingGeometry=trackingGeometry)
+
+    stepper = acts.EigenStepper(field)
+    # stepper = acts.AtlasStepper(field)
+    # stepper = acts.StraightLineStepper()
+
+    propagator = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
+
+    propagationAlgorithm = acts.examples.PropagationAlgorithm(
+        propagatorImpl=propagator,
+        level=acts.logging.INFO,
+        sterileLogger=sterileLogger,
+        inputTrackParameters="params_particles_generated",
+        outputSummaryCollection="propagation_summary",
+    )
+    s.addAlgorithm(propagationAlgorithm)
+
+    s.addWriter(
+        RootPropagationSummaryWriter(
+            level=acts.logging.INFO,
+            inputSummaryCollection="propagation_summary",
+            filePath=outputDir + "/propagation_summary.root",
+        )
+    )
+
+    if sterileLogger is False:
+        s.addWriter(
+            RootPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection="propagation_summary",
+                filePath=outputDir + "/propagation_steps.root",
+            )
+        )
+
+    return s
 
 def runGeant4(
     detector,

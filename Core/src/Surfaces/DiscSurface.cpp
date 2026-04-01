@@ -267,7 +267,6 @@ MultiIntersection3D DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
-	std::cout<<"DiscSurface::intersect"<<std::endl;
   // Get the contextual transform
   const Transform3& gctxTransform = localToGlobalTransform(gctx);
   // Use the intersection helper for planar surfaces

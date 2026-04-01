@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -20,6 +21,7 @@
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/detail/TrackingGeometryPrintVisitor.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
