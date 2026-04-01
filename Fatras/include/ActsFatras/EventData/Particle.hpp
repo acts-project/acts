@@ -19,8 +19,8 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <cmath>
 #include <iosfwd>
@@ -370,14 +370,14 @@ class Particle {
   ///
   /// @param outcome outcome code
   /// @return Reference to this particle for method chaining
-  Particle &setOutcome(ParticleOutcome outcome) {
+  Particle &setOutcome(SimulationOutcome outcome) {
     m_outcome = outcome;
     return *this;
   }
 
   /// Particle outcome.
   /// @return The outcome status of this particle
-  ParticleOutcome outcome() const { return m_outcome; }
+  SimulationOutcome outcome() const { return m_outcome; }
 
  private:
   // identity, i.e. things that do not change over the particle lifetime.
@@ -404,7 +404,7 @@ class Particle {
   /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
   /// outcome
-  ParticleOutcome m_outcome = ParticleOutcome::Alive;
+  SimulationOutcome m_outcome = SimulationOutcome::Alive;
 };
 
 /// Print particle to output stream

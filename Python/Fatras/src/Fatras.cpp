@@ -9,7 +9,6 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <sstream>
@@ -64,14 +63,15 @@ PYBIND11_MODULE(ActsFatrasPythonBindings, fatras) {
       .value("eNuclearInteraction",
              ActsFatras::ProcessType::eNuclearInteraction);
 
-  py::enum_<ActsFatras::ParticleOutcome>(fatras, "ParticleOutcome")
-      .value("Alive", ActsFatras::ParticleOutcome::Alive)
+  py::enum_<ActsFatras::SimulationOutcome>(fatras, "SimulationOutcome")
+      .value("Alive", ActsFatras::SimulationOutcome::Alive)
       .value("KilledInteraction",
-             ActsFatras::ParticleOutcome::KilledInteraction)
-      .value("KilledVolumeExit", ActsFatras::ParticleOutcome::KilledVolumeExit)
-      .value("KilledTime", ActsFatras::ParticleOutcome::KilledTime)
+             ActsFatras::SimulationOutcome::KilledInteraction)
+      .value("KilledVolumeExit",
+             ActsFatras::SimulationOutcome::KilledVolumeExit)
+      .value("KilledTime", ActsFatras::SimulationOutcome::KilledTime)
       .value("KilledSecondaryParticle",
-             ActsFatras::ParticleOutcome::KilledSecondaryParticle);
+             ActsFatras::SimulationOutcome::KilledSecondaryParticle);
 
   py::class_<Particle>(fatras, "Particle")
       .def(py::init<>())
