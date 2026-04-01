@@ -182,7 +182,6 @@ class AccumulatedSurfaceMaterial {
   AccumulatedMatrix m_accumulatedMaterial;
 };
 
-
 inline const std::vector<DirectedProtoAxis>&
 AccumulatedSurfaceMaterial::directedProtoAxes() const {
   return m_directedProtoAxes;

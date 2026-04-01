@@ -383,7 +383,7 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
   if (b == nullptr) {
     bName = tdName + "/" + m_cfg.axisOptionHistName;
     ACTS_INFO(
-        "Legacy histogram detected fpr boundary type, please consider "
+        "Legacy histogram detected for boundary type, please consider "
         "updating.");
     b = dynamic_cast<TH1F*>(rFile.Get(bName.c_str()));
     legacyDetected = true;
