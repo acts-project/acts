@@ -11,7 +11,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/MaterialMapping/CoreMaterialMapping.hpp"
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialValidation.hpp"
 #include "ActsPlugins/Json/ActsJson.hpp"
@@ -47,19 +46,15 @@ void addMaterialMapping(py::module& mex) {
   {
     auto [alg, c] =
         declareAlgorithm<MaterialMapping, IAlgorithm>(mex, "MaterialMapping");
-    alg.def("scoringParameters", &MaterialMapping::scoringParameters);
-    // Config also needs the geometry+field constructor because geoContext and
-    // magFieldContext are reference_wrapper fields with no default constructor.
-    c.def(py::init([](const Acts::GeometryContext& gc,
-                      const Acts::MagneticFieldContext& mfc) {
-            MaterialMapping::Config cfg{gc, mfc};
+    c.def(py::init([](const Acts::GeometryContext& gc) {
+            MaterialMapping::Config cfg;
+            cfg.geoContext = gc;
             return cfg;
           }),
-          py::arg("geoContext"), py::arg("magFieldContext"));
-    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappingMaterialCollection,
-                       materialSurfaceMapper, materialVolumeMapper,
-                       materialWriters, trackingGeometry, geoContext,
-                       magFieldContext);
+          py::arg("geoContext"));
+    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
+                       unmappedMaterialTracks, geoContext, materialMapper,
+                       materialWriters);
   }
 
   {
@@ -75,20 +70,11 @@ void addMaterialMapping(py::module& mex) {
   }
 
   {
-    auto [mmca, c] = declareAlgorithm<CoreMaterialMapping, IAlgorithm>(
-        mex, "CoreMaterialMapping");
-    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
-                       unmappedMaterialTracks, geoContext, materialMapper,
-                       materiaMaplWriters);
-  }
-
-  {
     auto [mv, c] = declareAlgorithm<MaterialValidation, IAlgorithm>(
         mex, "MaterialValidation");
     mv.def("execute", &MaterialValidation::execute);
-    ACTS_PYTHON_STRUCT(c, ntracks, startPosition, phiRange, etaRange,
-                       randomNumberSvc, materialValidator,
-                       outputMaterialTracks);
+    ACTS_PYTHON_STRUCT(c, inputTrackParameters, outputMaterialTracks,
+                       materialValidator);
   }
 }
 
