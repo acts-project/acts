@@ -277,11 +277,12 @@ ProcessCode TruthJetAlgorithm::execute(const AlgorithmContext& ctx) const {
 
     const auto& [maxHadron, maxHadronLabel] = *maxHadronIt;
 
-    ACTS_VERBOSE(
-        "-> max candidate type="
-        << Acts::findName(Acts::PdgParticle{maxHadron->pdg()}).value_or("OTHER")
-        << " label=" << maxHadronLabel);
+    // ACTS_DEBUG(
+    //     "-> max candidate type="
+    //     << Acts::findName(Acts::PdgParticle{maxHadron->pdg()}).value_or("OTHER")
+    //     << " label=" << maxHadronLabel);
 
+    ACTS_DEBUG("-> jet classified as " << maxHadronLabel <<" originates from the particle: " << maxHadron->pdg() );
     return maxHadronLabel;
   };  // jet classification
 
