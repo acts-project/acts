@@ -35,12 +35,10 @@ content-type = "text/markdown"
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
 text = """
 <a href="https://github.com/acts-project/acts">
-    <img src="https://github.com/acts-project/acts/blob/v46.0.0/docs/figures/acts_logo_colored.svg" alt="ACTS logo">
+    <img src="https://github.com/acts-project/acts/blob/main/docs/figures/acts_logo_colored.svg" alt="ACTS logo">
 </a>
 """
 
 [[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
 path = "README.md"
 end-before = "## Quick start"
-
-
