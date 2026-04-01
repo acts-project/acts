@@ -138,6 +138,35 @@ void addGenerators(py::module& mex) {
            py::arg("fixed"))
       .def_readwrite("fixed", &FixedPrimaryVertexPositionGenerator::fixed);
 
+  py::class_<AdditiveVertexPositionGenerator, PrimaryVertexPositionGenerator,
+             std::shared_ptr<AdditiveVertexPositionGenerator>>(
+      mex, "AdditiveVertexGenerator")
+      .def(py::init<>())
+      .def(
+          py::init([](const std::vector<
+                       std::shared_ptr<PrimaryVertexPositionGenerator>>& gens) {
+            AdditiveVertexPositionGenerator g;
+            g.generators = gens;
+            return g;
+          }),
+          py::arg("generators"))
+      .def_readwrite("generators",
+                     &AdditiveVertexPositionGenerator::generators);
+
+  py::class_<LumiBlockVertexPositionGenerator, PrimaryVertexPositionGenerator,
+             std::shared_ptr<LumiBlockVertexPositionGenerator>>(
+      mex, "LumiBlockVertexGenerator")
+      .def(py::init<>())
+      .def(py::init([](std::size_t blockSize, const Vector4& stddev) {
+             LumiBlockVertexPositionGenerator g;
+             g.blockSize = blockSize;
+             g.stddev = stddev;
+             return g;
+           }),
+           py::arg("blockSize"), py::arg("stddev"))
+      .def_readwrite("blockSize", &LumiBlockVertexPositionGenerator::blockSize)
+      .def_readwrite("stddev", &LumiBlockVertexPositionGenerator::stddev);
+
   // Aliases for Fatras types mirroring C++
   auto fatras = py::module_::import("acts.fatras");
   mex.attr("SimBarcode") = fatras.attr("Barcode");
