@@ -11,8 +11,6 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/DD4hep/DD4hepConversionHelpers.hpp"
 
@@ -27,45 +25,27 @@ using namespace Acts;
 
 std::shared_ptr<ProtoSurfaceMaterial> ActsPlugins::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
-    const std::vector<std::pair<const std::string, BinningOption> >& binning,
+    const std::vector<std::pair<const std::string, AxisBoundaryType> >& binning,
     const Logger& logger) {
   using namespace std::string_literals;
 
-  // Create the bin utility
-  BinUtility bu;
+  std::vector<DirectedProtoAxis> directedProtoAxes;
+  directedProtoAxes.reserve(binning.size());
   // Loop over the bins
   for (auto& bin : binning) {
     AxisDirection bval = axisDirectionFromName(bin.first);
-    BinningOption bopt = bin.second;
-    double min = 0.;
-    double max = 0.;
-    if (bopt == closed) {
-      min = -std::numbers::pi;
-      max = std::numbers::pi;
-    }
+    AxisBoundaryType bType = bin.second;
     int bins = params.get<int>(valueTag + "_"s + bin.first);
     ACTS_VERBOSE("  - material binning for " << bin.first << " on " << valueTag
                                              << ": " << bins);
-    if (bins >= 1) {
-      bu += BinUtility(bins, min, max, bopt, bval);
-    }
+    directedProtoAxes.emplace_back(bval, bType, bins);
   }
-  std::vector<DirectedProtoAxis> directedProtoAxes;
-  directedProtoAxes.reserve(bu.binningData().size());
-  for (const auto& bData : bu.binningData()) {
-    const auto boundaryType = bData.option == closed ? AxisBoundaryType::Closed
-                                                     : AxisBoundaryType::Open;
-    directedProtoAxes.emplace_back(
-        bData.binvalue, boundaryType, static_cast<double>(bData.min),
-        static_cast<double>(bData.max), bData.bins());
-  }
-  return std::make_shared<ProtoSurfaceMaterial>(std::move(directedProtoAxes),
-                                                bu.transform().inverse());
+  return std::make_shared<ProtoSurfaceMaterial>(std::move(directedProtoAxes));
 }
 
 void ActsPlugins::addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
-    const std::vector<std::pair<const std::string, BinningOption> >& binning,
+    const std::vector<std::pair<const std::string, AxisBoundaryType> >& binning,
     const Logger& logger) {
   ACTS_VERBOSE("addLayerProtoMaterial");
   // Start with the representing surface
@@ -114,7 +94,9 @@ void ActsPlugins::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), cylinderLayer,
-                          {{"binPhi", closed}, {"binZ", open}}, logger);
+                          {{"binPhi", AxisBoundaryType::Closed},
+                           {"binZ", AxisBoundaryType::Bound}},
+                          logger);
   }
 }
 
@@ -131,6 +113,8 @@ void ActsPlugins::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
   }
   if (getParamOr<bool>("layer_material", detElement, false)) {
     addLayerProtoMaterial(getParams(detElement), discLayer,
-                          {{"binPhi", closed}, {"binR", open}}, logger);
+                          {{"binPhi", AxisBoundaryType::Closed},
+                           {"binR", AxisBoundaryType::Bound}},
+                          logger);
   }
 }

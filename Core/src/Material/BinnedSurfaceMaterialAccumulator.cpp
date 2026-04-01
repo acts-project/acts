@@ -39,8 +39,8 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
       // Screen output for proto material
       ACTS_DEBUG("       - (proto) binning from ProtoSurfaceMaterial is "
                  << psm->directedProtoAxes());
-      state->accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(
-          psm->directedProtoAxes(), psm->globalToLocalTransform());
+      state->accumulatedMaterial[geoID] =
+          AccumulatedSurfaceMaterial(psm->directedProtoAxes());
       // Material accumulation  is created for this
       continue;
     }
@@ -49,8 +49,8 @@ Acts::BinnedSurfaceMaterialAccumulator::createState(
     if (bmp != nullptr) {
       ACTS_DEBUG("       - binning from BinnedSurfaceMaterial is "
                  << bmp->directedProtoAxes());
-      state->accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(
-          bmp->directedProtoAxes(), bmp->globalToLocalTransform());
+      state->accumulatedMaterial[geoID] =
+          AccumulatedSurfaceMaterial(bmp->directedProtoAxes());
       // Material accumulation  is created for this
       continue;
     }

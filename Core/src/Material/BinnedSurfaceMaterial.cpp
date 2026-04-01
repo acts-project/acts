@@ -19,10 +19,8 @@
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabVector fullProperties,
     double splitFactor, MappingType mappingType)
-    : ISurfaceMaterial(splitFactor, mappingType) {
-  auto converted = convertBinUtility(binUtility);
-  m_directedProtoAxes = std::move(converted.first);
-  m_globalToLocalTransform = std::move(converted.second);
+    : ISurfaceMaterial(splitFactor, mappingType),
+      m_directedProtoAxes(convertBinUtility(binUtility)) {
   // fill the material with deep copy
   m_fullMaterial.push_back(std::move(fullProperties));
 }
@@ -31,30 +29,24 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabMatrix fullProperties,
     double splitFactor, MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType),
-      m_fullMaterial(std::move(fullProperties)) {
-  auto converted = convertBinUtility(binUtility);
-  m_directedProtoAxes = std::move(converted.first);
-  m_globalToLocalTransform = std::move(converted.second);
-}
+      m_directedProtoAxes(convertBinUtility(binUtility)),
+      m_fullMaterial(std::move(fullProperties)) {}
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    DirectedProtoAxis directedProtoAxis, Transform3 globalToLocalTransform,
-    MaterialSlabVector fullProperties, double splitFactor,
-    MappingType mappingType)
+    DirectedProtoAxis directedProtoAxis, MaterialSlabVector fullProperties,
+    double splitFactor, MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType),
-      m_directedProtoAxes{std::move(directedProtoAxis)},
-      m_globalToLocalTransform(std::move(globalToLocalTransform)) {
+      m_directedProtoAxes{std::move(directedProtoAxis)} {
   m_fullMaterial.push_back(std::move(fullProperties));
 }
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     std::array<DirectedProtoAxis, 2> directedProtoAxes,
-    Transform3 globalToLocalTransform, MaterialSlabMatrix fullProperties,
-    double splitFactor, MappingType mappingType)
+    MaterialSlabMatrix fullProperties, double splitFactor,
+    MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType),
       m_directedProtoAxes{std::move(directedProtoAxes[0u]),
                           std::move(directedProtoAxes[1u])},
-      m_globalToLocalTransform(std::move(globalToLocalTransform)),
       m_fullMaterial(std::move(fullProperties)) {}
 
 Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(double factor) {
@@ -96,12 +88,12 @@ const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
 }
 
 const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
-    const Acts::Vector3& gp) const {
+    const Acts::Vector3& lp3D) const {
   if (m_directedProtoAxes.empty()) {
     throw std::logic_error(
         "BinnedSurfaceMaterial has no DirectedProtoAxis configured.");
   }
-  const Vector3 localPosition = m_globalToLocalTransform * gp;
+  const Vector3& localPosition = lp3D;
   std::size_t ibin0 = 0u;
   std::size_t ibin1 = 0u;
   if (m_directedProtoAxes.size() == 1u) {
@@ -146,7 +138,5 @@ std::ostream& Acts::BinnedSurfaceMaterial::toStream(std::ostream& sl) const {
     ++imat1;
   }
   sl << "  - DirectedProtoAxes: " << m_directedProtoAxes << std::endl;
-  sl << "  - GlobalToLocalTransform:\n"
-     << m_globalToLocalTransform.matrix() << std::endl;
   return sl;
 }

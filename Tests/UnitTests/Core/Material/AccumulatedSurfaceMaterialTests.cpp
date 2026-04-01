@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
 
   // Test:
   // BinsSurfaceMaterial accumulation - 1D
-  DirectedProtoAxis xAxis1D(AxisDirection::AxisX, AxisBoundaryType::Open, -5.,
+  DirectedProtoAxis xAxis1D(AxisDirection::AxisX, AxisBoundaryType::Bound, -5.,
                             5., 10u);
   AccumulatedSurfaceMaterial material1D{{xAxis1D}, Transform3::Identity()};
   auto accMat1D = material1D.accumulatedMaterial();
@@ -47,9 +47,9 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
 
   // Test:
   // BinsSurfaceMaterial accumulation - 2D
-  DirectedProtoAxis xAxis2D(AxisDirection::AxisX, AxisBoundaryType::Open, -5.,
+  DirectedProtoAxis xAxis2D(AxisDirection::AxisX, AxisBoundaryType::Bound, -5.,
                             5., 10u);
-  DirectedProtoAxis yAxis2D(AxisDirection::AxisY, AxisBoundaryType::Open, -10.,
+  DirectedProtoAxis yAxis2D(AxisDirection::AxisY, AxisBoundaryType::Bound, -10.,
                             10., 20u);
   AccumulatedSurfaceMaterial material2D{{xAxis2D, yAxis2D},
                                         Transform3::Identity()};
@@ -98,9 +98,9 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_1D) {
   MaterialSlab four(mat, 4.);
 
   // BinsSurfaceMaterial accumulation - 2D
-  DirectedProtoAxis xAxis2D(AxisDirection::AxisX, AxisBoundaryType::Open, -1.,
+  DirectedProtoAxis xAxis2D(AxisDirection::AxisX, AxisBoundaryType::Bound, -1.,
                             1., 2u);
-  DirectedProtoAxis yAxis2D(AxisDirection::AxisY, AxisBoundaryType::Open, -1.,
+  DirectedProtoAxis yAxis2D(AxisDirection::AxisY, AxisBoundaryType::Bound, -1.,
                             1., 2u);
   AccumulatedSurfaceMaterial material2D{{xAxis2D, yAxis2D},
                                         Transform3::Identity()};

@@ -9,8 +9,7 @@
 #pragma once
 
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -64,7 +63,7 @@ void addDiscLayerProtoMaterial(
 /// @param logger a @c Logger for output
 void addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Acts::Layer& layer,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
+    const std::vector<std::pair<const std::string, Acts::AxisBoundaryType> >&
         binning,
     const Acts::Logger& logger = Acts::getDummyLogger());
 
@@ -79,7 +78,7 @@ void addLayerProtoMaterial(
 /// @return Shared pointer to ProtoSurfaceMaterial created from DD4hep parameters
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
+    const std::vector<std::pair<const std::string, Acts::AxisBoundaryType> >&
         binning,
     const Acts::Logger& logger = Acts::getDummyLogger());
 

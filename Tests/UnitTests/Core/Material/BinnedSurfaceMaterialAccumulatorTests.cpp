@@ -86,17 +86,17 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
   // Second surface is binned Phi / Z
   DirectedProtoAxis phiAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
                             -std::numbers::pi, std::numbers::pi, 4u);
-  DirectedProtoAxis zAxis(AxisDirection::AxisZ, AxisBoundaryType::Open, -100.,
+  DirectedProtoAxis zAxis(AxisDirection::AxisZ, AxisBoundaryType::Bound, -100.,
                           100., 2u);
   surfaces[1u]->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
-      std::vector<DirectedProtoAxis>{phiAxis, zAxis}, Transform3::Identity()));
+      std::vector<DirectedProtoAxis>{phiAxis, zAxis}));
 
   // Third is binned
   std::vector<MaterialSlab> mps = {mp, mp, mp};
-  DirectedProtoAxis zAxis2(AxisDirection::AxisZ, AxisBoundaryType::Open, -100.,
+  DirectedProtoAxis zAxis2(AxisDirection::AxisZ, AxisBoundaryType::Bound, -100.,
                            100., 3u);
-  surfaces[2u]->assignSurfaceMaterial(std::make_shared<BinnedSurfaceMaterial>(
-      zAxis2, Transform3::Identity(), mps));
+  surfaces[2u]->assignSurfaceMaterial(
+      std::make_shared<BinnedSurfaceMaterial>(zAxis2, mps));
 
   BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
   bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get(),

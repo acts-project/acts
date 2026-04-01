@@ -55,8 +55,11 @@ class RootMaterialMapIo {
     std::string nBinsHistName = "n";
     /// The axis direction histogram name: AxisZ, AxisR, AxisPhi, etc.
     std::string axisDirHistName = "v";
+    /// The axis boundary type histogram name (read in only)
+    /// Legacy name, to be replaced by axisBoundaryTypeHistName
+    std::string axisOptionHistName = "o";
     /// The axis boundary type hist name
-    std::string axisBoundaryTypeHistName = "o";
+    std::string axisBoundaryTypeHistName = "b";
     /// The range histogram name: min value
     std::string minRangeHistName = "min";
     /// The range histogram name: max value

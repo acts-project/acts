@@ -649,16 +649,14 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
                             .surface()
                             .surfaceMaterial();
   BOOST_REQUIRE_NE(negDisc, nullptr);
-  const auto& negDiscMat =
-      dynamic_cast<const ProtoSurfaceMaterial&>(*negDisc);
+  const auto& negDiscMat = dynamic_cast<const ProtoSurfaceMaterial&>(*negDisc);
   // Check positive disc material
   const auto* posDisc = child.portals()
                             .at(static_cast<std::size_t>(PositiveDisc))
                             .surface()
                             .surfaceMaterial();
   BOOST_REQUIRE_NE(posDisc, nullptr);
-  const auto& posDiscMat =
-      dynamic_cast<const ProtoSurfaceMaterial&>(*posDisc);
+  const auto& posDiscMat = dynamic_cast<const ProtoSurfaceMaterial&>(*posDisc);
 
   BOOST_CHECK_EQUAL(negDiscMat.directedProtoAxes().at(0).getAxis().getNBins(),
                     5);

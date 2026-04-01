@@ -157,8 +157,7 @@ Acts::AccumulatedSurfaceMaterial::totalAverage() {
       mpVector[ib0] = m_accumulatedMaterial[0u][ib0].totalAverage().first;
     }
     return std::make_unique<const BinnedSurfaceMaterial>(
-        m_directedProtoAxes[0u], m_globalToLocalTransform, std::move(mpVector),
-        m_splitFactor);
+        m_directedProtoAxes[0u], std::move(mpVector), m_splitFactor);
   }
 
   // Create the properties matrix
@@ -172,5 +171,5 @@ Acts::AccumulatedSurfaceMaterial::totalAverage() {
   return std::make_unique<const BinnedSurfaceMaterial>(
       std::array<DirectedProtoAxis, 2u>{m_directedProtoAxes[0u],
                                         m_directedProtoAxes[1u]},
-      m_globalToLocalTransform, std::move(mpMatrix), m_splitFactor);
+      std::move(mpMatrix), m_splitFactor);
 }

@@ -24,10 +24,10 @@ BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
-  DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Open, -1., 1.,
-                          2u);
-  DirectedProtoAxis yAxis(AxisDirection::AxisY, AxisBoundaryType::Open, -3., 3.,
-                          3u);
+  DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Bound, -1.,
+                          1., 2u);
+  DirectedProtoAxis yAxis(AxisDirection::AxisY, AxisBoundaryType::Bound, -3.,
+                          3., 3u);
 
   // Constructor a few material properties
   MaterialSlab a00(Material::fromMolarDensity(1., 2., 3., 4., 5.), 6.);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
 
   // Create the material
   BinnedSurfaceMaterial bsm(std::array<DirectedProtoAxis, 2u>{xAxis, yAxis},
-                            Transform3::Identity(), std::move(m));
+                            std::move(m));
 
   // Copy the material
   BinnedSurfaceMaterial bsmCopy(bsm);

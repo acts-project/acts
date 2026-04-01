@@ -29,7 +29,7 @@ using DetraySurfaceGrid = DetrayPayloadConverter::DetraySurfaceGrid;
 
 namespace {
 BinUtility toBinUtility(const BinnedSurfaceMaterial& material) {
-  BinUtility converted(material.globalToLocalTransform().inverse());
+  BinUtility converted;
   for (const auto& axis : material.directedProtoAxes()) {
     converted += BinUtility(BinningData(axis));
   }

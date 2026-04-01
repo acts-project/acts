@@ -127,8 +127,8 @@ void SurfaceMaterialMapper::checkAndInsert(State& mState,
 
     if (psm != nullptr) {
       ACTS_DEBUG("       - (proto) binning is " << psm->directedProtoAxes());
-      mState.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(
-          psm->directedProtoAxes(), psm->globalToLocalTransform());
+      mState.accumulatedMaterial[geoID] =
+          AccumulatedSurfaceMaterial(psm->directedProtoAxes());
       return;
     }
 
@@ -136,8 +136,8 @@ void SurfaceMaterialMapper::checkAndInsert(State& mState,
     auto bmp = dynamic_cast<const BinnedSurfaceMaterial*>(surfaceMaterial);
     if (bmp != nullptr) {
       ACTS_DEBUG("       - binning is " << bmp->directedProtoAxes());
-      mState.accumulatedMaterial[geoID] = AccumulatedSurfaceMaterial(
-          bmp->directedProtoAxes(), bmp->globalToLocalTransform());
+      mState.accumulatedMaterial[geoID] =
+          AccumulatedSurfaceMaterial(bmp->directedProtoAxes());
     } else {
       // Create a homogeneous type of material
       ACTS_DEBUG("       - this is homogeneous material.");

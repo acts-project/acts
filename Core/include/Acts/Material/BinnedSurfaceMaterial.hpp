@@ -47,7 +47,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param mappingType is the type of surface mapping associated to the surface
   [[deprecated(
       "BinnedSurfaceMaterial BinUtility constructor is deprecated. "
-      "Use DirectedProtoAxis + Transform3 constructor instead.")]]
+      "Use DirectedProtoAxis constructor instead.")]]
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabVector fullProperties,
                         double splitFactor = 0.,
@@ -57,12 +57,10 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// for one-dimensional binning.
   ///
   /// @param directedProtoAxis defines axis direction and axis binning
-  /// @param globalToLocalTransform transform from global to local 3D frame
   /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(DirectedProtoAxis directedProtoAxis,
-                        Transform3 globalToLocalTransform,
                         MaterialSlabVector fullProperties,
                         double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
@@ -81,8 +79,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param mappingType is the type of surface mapping associated to the surface
   [[deprecated(
       "BinnedSurfaceMaterial BinUtility constructor is deprecated. "
-      "Use std::array<DirectedProtoAxis, 2> + Transform3 constructor "
-      "instead.")]]
+      "Use std::array<DirectedProtoAxis, 2> constructor instead.")]]
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabMatrix fullProperties,
                         double splitFactor = 0.,
@@ -92,12 +89,10 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// for two-dimensional binning.
   ///
   /// @param directedProtoAxes defines axis directions and axis binnings
-  /// @param globalToLocalTransform transform from global to local 3D frame
   /// @param fullProperties is the matrix of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(std::array<DirectedProtoAxis, 2> directedProtoAxes,
-                        Transform3 globalToLocalTransform,
                         MaterialSlabMatrix fullProperties,
                         double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
@@ -135,16 +130,12 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @return BinUtility used for material binning (created on-the-fly)
   [[deprecated(
       "BinnedSurfaceMaterial::binUtility() is deprecated. "
-      "Use directedProtoAxes() and globalToLocalTransform() instead.")]]
+      "Use directedProtoAxes() instead.")]]
   BinUtility binUtility() const;
 
   /// Return the DirectedProtoAxis descriptors
   /// @return Reference to the directed proto axes used for material binning
   const std::vector<DirectedProtoAxis>& directedProtoAxes() const;
-
-  /// Return the transform from global to local 3D frame
-  /// @return Reference to global-to-local transform
-  const Transform3& globalToLocalTransform() const;
 
   /// @brief Retrieve the entire material slab matrix
   /// @return Reference to the complete matrix of material slabs
@@ -154,7 +145,10 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  const MaterialSlab& materialSlab(const Vector3& gp) const final;
+  ///
+  /// For this class the provided 3D position is expected to already be in the
+  /// local surface frame.
+  const MaterialSlab& materialSlab(const Vector3& lp3D) const final;
 
   using ISurfaceMaterial::materialSlab;
 
@@ -164,29 +158,22 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:
-  /// Convert legacy BinUtility setup to DirectedProtoAxis + transform.
-  static std::pair<std::vector<DirectedProtoAxis>, Transform3>
-  convertBinUtility(const BinUtility& binUtility);
+  /// Convert legacy BinUtility setup to DirectedProtoAxis.
+  static std::vector<DirectedProtoAxis> convertBinUtility(
+      const BinUtility& binUtility);
 
   /// Correct potentially underflow/overflow IAxis bins into matrix bins.
   static std::size_t correctedBinIndex(const IAxis& axis, double value);
 
-  /// Access local 3D value from local position based on axis direction.
-  static double localAxisValue(const Vector3& localPosition,
-                               AxisDirection axisDirection);
-
   /// The helper for axis-based bin finding
   std::vector<DirectedProtoAxis> m_directedProtoAxes;
-
-  /// Global to local transform for bin lookups.
-  Transform3 m_globalToLocalTransform = Transform3::Identity();
 
   /// The five different MaterialSlab
   MaterialSlabMatrix m_fullMaterial;
 };
 
 inline BinUtility BinnedSurfaceMaterial::binUtility() const {
-  BinUtility converted(m_globalToLocalTransform.inverse());
+  BinUtility converted;
   for (const auto& directedProtoAxis : m_directedProtoAxes) {
     converted += BinUtility(BinningData(directedProtoAxis));
   }
@@ -198,12 +185,8 @@ BinnedSurfaceMaterial::directedProtoAxes() const {
   return m_directedProtoAxes;
 }
 
-inline const Transform3& BinnedSurfaceMaterial::globalToLocalTransform() const {
-  return m_globalToLocalTransform;
-}
-
-inline std::pair<std::vector<DirectedProtoAxis>, Transform3>
-BinnedSurfaceMaterial::convertBinUtility(const BinUtility& binUtility) {
+inline std::vector<DirectedProtoAxis> BinnedSurfaceMaterial::convertBinUtility(
+    const BinUtility& binUtility) {
   const auto& binningData = binUtility.binningData();
   if (binningData.empty() || binningData.size() > 2u) {
     throw std::invalid_argument(
@@ -215,7 +198,7 @@ BinnedSurfaceMaterial::convertBinUtility(const BinUtility& binUtility) {
   for (const auto& bData : binningData) {
     const AxisBoundaryType boundaryType = bData.option == closed
                                               ? AxisBoundaryType::Closed
-                                              : AxisBoundaryType::Open;
+                                              : AxisBoundaryType::Bound;
     if (bData.type == equidistant) {
       directedProtoAxes.emplace_back(
           bData.binvalue, boundaryType, static_cast<double>(bData.min),
@@ -230,9 +213,7 @@ BinnedSurfaceMaterial::convertBinUtility(const BinUtility& binUtility) {
     directedProtoAxes.emplace_back(bData.binvalue, boundaryType, edges);
   }
 
-  // BinUtility stores local-to-global transform and applies its inverse during
-  // lookup. We store global-to-local directly.
-  return {std::move(directedProtoAxes), binUtility.transform().inverse()};
+  return directedProtoAxes;
 }
 
 inline std::size_t BinnedSurfaceMaterial::correctedBinIndex(const IAxis& axis,
@@ -249,11 +230,6 @@ inline std::size_t BinnedSurfaceMaterial::correctedBinIndex(const IAxis& axis,
     return nBins - 1u;
   }
   return rawBin - 1u;
-}
-
-inline double BinnedSurfaceMaterial::localAxisValue(
-    const Vector3& localPosition, AxisDirection axisDirection) {
-  return VectorHelpers::cast(localPosition, axisDirection);
 }
 
 inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial() const {

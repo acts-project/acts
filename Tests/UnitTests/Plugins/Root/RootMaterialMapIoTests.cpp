@@ -56,9 +56,9 @@ std::vector<IdentifiedMaterial> createBinnedSurfaceMaterial() {
   for (std::size_t i = 0; i < nMaterials; ++i) {
     // construct the material properties from arguments
 
-    DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Open, -1.,
+    DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Bound, -1.,
                             1., 100u);
-    DirectedProtoAxis yAxis(AxisDirection::AxisY, AxisBoundaryType::Open, -3.,
+    DirectedProtoAxis yAxis(AxisDirection::AxisY, AxisBoundaryType::Bound, -3.,
                             3., 50u);
 
     std::vector<std::vector<MaterialSlab>> materialMatrix;
@@ -75,8 +75,7 @@ std::vector<IdentifiedMaterial> createBinnedSurfaceMaterial() {
       materialMatrix.push_back(materialRow);
     }
     auto binnedMaterial = std::make_shared<BinnedSurfaceMaterial>(
-        std::array<DirectedProtoAxis, 2u>{xAxis, yAxis}, Transform3::Identity(),
-        materialMatrix);
+        std::array<DirectedProtoAxis, 2u>{xAxis, yAxis}, materialMatrix);
     auto geoID = GeometryIdentifier().withVolume(2).withSensitive(i + 1);
     binnedMaterials.push_back({geoID, binnedMaterial});
   }

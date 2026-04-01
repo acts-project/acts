@@ -20,13 +20,13 @@ BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
-  DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Open, -10.,
+  DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Bound, -10.,
                           10., 10u);
-  DirectedProtoAxis yAxis(AxisDirection::AxisY, AxisBoundaryType::Open, -10.,
+  DirectedProtoAxis yAxis(AxisDirection::AxisY, AxisBoundaryType::Bound, -10.,
                           10., 10u);
 
   // Constructor from arguments
-  ProtoSurfaceMaterial smp({xAxis, yAxis}, Transform3::Identity());
+  ProtoSurfaceMaterial smp({xAxis, yAxis});
   // Copy constructor
   ProtoSurfaceMaterial smpCopy(smp);
   // Copy move constructor
