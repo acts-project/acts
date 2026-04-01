@@ -13,10 +13,9 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
-#include <cmath>
 #include <limits>
 
 using Acts::PdgParticle;
@@ -97,11 +96,11 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_CHECK_THROW(particle.loseEnergy(10_GeV), std::invalid_argument);
 
   // lose a lot of energy
-  particle.loseEnergy(10_GeV, ParticleOutcome::KilledInteraction);
+  particle.loseEnergy(10_GeV, SimulationOutcome::KilledInteraction);
   BOOST_CHECK_GT(particle.transverseMomentum(), 0.);
   BOOST_CHECK_GT(particle.absoluteMomentum(), 0.);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
-  BOOST_CHECK_EQUAL(particle.outcome(), ParticleOutcome::KilledInteraction);
+  BOOST_CHECK_EQUAL(particle.outcome(), SimulationOutcome::KilledInteraction);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -81,8 +81,8 @@ class Particle {
   /// Kill the particle by setting the outcome to a non-alive status.
   /// @param outcome The outcome status to set for the killed particle (must not be Alive)
   /// @throws std::invalid_argument if the provided outcome is Alive
-  void killParticle(ParticleOutcome outcome) {
-    if (outcome == ParticleOutcome::Alive) {
+  void killParticle(SimulationOutcome outcome) {
+    if (outcome == SimulationOutcome::Alive) {
       throw std::invalid_argument("Cannot kill particle with outcome 'Alive'.");
     }
     m_outcome = outcome;
@@ -192,11 +192,11 @@ class Particle {
   /// @param stoppedOutcome The outcome to set if the energy loss exceeds the current energy
   /// @return Reference to this particle for method chaining
   /// @throws std::invalid_argument if the energy loss exceeds the current energy and stoppedOutcome is Alive
-  Particle &loseEnergy(
-      double delta, ParticleOutcome stoppedOutcome = ParticleOutcome::Alive) {
+  Particle &loseEnergy(double delta, SimulationOutcome stoppedOutcome =
+                                         SimulationOutcome::Alive) {
     const double newEnergy = energy() - delta;
     if (newEnergy < m_mass) {
-      if (stoppedOutcome == ParticleOutcome::Alive) {
+      if (stoppedOutcome == SimulationOutcome::Alive) {
         throw std::invalid_argument(
             "Energy loss cannot exceed the current energy of the particle if "
             "the particle is to remain alive.");
@@ -291,7 +291,7 @@ class Particle {
 
   /// Check if the particle is alive, i.e. is not at rest.
   /// @return True if particle has non-zero momentum, false otherwise
-  bool isAlive() const { return m_outcome == ParticleOutcome::Alive; }
+  bool isAlive() const { return m_outcome == SimulationOutcome::Alive; }
 
   /// Check if this is a secondary particle.
   /// @return True if particle is a secondary (has non-zero vertex secondary, generation, or sub-particle), false otherwise
