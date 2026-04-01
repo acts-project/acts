@@ -144,12 +144,13 @@ def test_root_material_track_reader(material_recording):
         RootMaterialTrackReader(
             level=acts.logging.INFO,
             fileList=[str(input_tracks)],
-            outputMaterialTracks="material-tracks",
+            outputMaterialTracks="material_tracks",
+            treeName="material_tracks",
         )
     )
 
     alg = AssertCollectionExistsAlg(
-        "material-tracks", "check_alg", acts.logging.WARNING
+        "material_tracks", "check_alg", acts.logging.WARNING
     )
     s.addAlgorithm(alg)
 

@@ -50,7 +50,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -100,7 +101,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, fullTransform);
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, fullTransform,
+        maxNeighborDistance);
 
     checkBinning(gctx, *sArray);
   }
@@ -127,7 +129,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -178,7 +181,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer, fullTransform);
+        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer, fullTransform,
+        maxNeighborDistance);
 
     checkBinning(gctx, *sArray);
   }
@@ -205,7 +209,8 @@ MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -246,7 +251,8 @@ MutableLayerPtr LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, fullTransform);
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, fullTransform,
+        maxNeighborDistance);
 
     checkBinning(gctx, *sArray);
   }
@@ -275,7 +281,8 @@ MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -316,7 +323,8 @@ MutableLayerPtr LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, fullTransform);
+        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, fullTransform,
+        maxNeighborDistance);
 
     checkBinning(gctx, *sArray);
   }
@@ -343,7 +351,8 @@ MutableLayerPtr LayerCreator::planeLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> _protoLayer, const Transform3& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -408,7 +417,7 @@ MutableLayerPtr LayerCreator::planeLayer(
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
         gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer,
-        fullTransform);
+        fullTransform, maxNeighborDistance);
 
     checkBinning(gctx, *sArray);
   }
