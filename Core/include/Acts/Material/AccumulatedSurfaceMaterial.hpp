@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -88,13 +87,6 @@ class AccumulatedSurfaceMaterial {
 
   /// Destructor
   ~AccumulatedSurfaceMaterial() = default;
-
-  /// Return the BinUtility
-  /// @return BinUtility used for material binning (created on-the-fly)
-  [[deprecated(
-      "AccumulatedSurfaceMaterial::binUtility() is deprecated. "
-      "Use directedProtoAxes() and globalToLocalTransform() instead.")]]
-  BinUtility binUtility() const;
 
   /// Return the DirectedProtoAxis descriptors
   /// @return Reference to the directed proto axes used for material binning
@@ -190,13 +182,6 @@ class AccumulatedSurfaceMaterial {
   AccumulatedMatrix m_accumulatedMaterial;
 };
 
-inline BinUtility AccumulatedSurfaceMaterial::binUtility() const {
-  BinUtility converted(m_globalToLocalTransform.inverse());
-  for (const auto& directedProtoAxis : m_directedProtoAxes) {
-    converted += BinUtility(BinningData(directedProtoAxis));
-  }
-  return converted;
-}
 
 inline const std::vector<DirectedProtoAxis>&
 AccumulatedSurfaceMaterial::directedProtoAxes() const {

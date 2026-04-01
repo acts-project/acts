@@ -265,13 +265,13 @@ class MappingMaterialDecorator : public IMaterialDecorator {
     for (const auto& bData : bUtility.binningData()) {
       const auto boundaryType = bData.option == Acts::closed
                                     ? Acts::AxisBoundaryType::Closed
-                                    : Acts::AxisBoundaryType::Open;
+                                    : Acts::AxisBoundaryType::Bound;
       directedProtoAxes.emplace_back(
           bData.binvalue, boundaryType, static_cast<double>(bData.min),
           static_cast<double>(bData.max), bData.bins());
     }
     return std::make_shared<Acts::ProtoSurfaceMaterial>(
-        std::move(directedProtoAxes), bUtility.transform().inverse());
+        std::move(directedProtoAxes));
   }
 
   /// Readonly access to the BinningMap
