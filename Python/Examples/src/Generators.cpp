@@ -44,7 +44,9 @@ void addGenerators(py::module& mex) {
 
     py::class_<PrimaryVertexPositionGenerator,
                std::shared_ptr<PrimaryVertexPositionGenerator>>(
-        gen, "VertexGenerator");
+        gen, "VertexGenerator")
+        .def("__call__", &PrimaryVertexPositionGenerator::operator(),
+             py::arg("rng"), py::arg("eventNumber"));
     py::class_<ParticlesGenerator, std::shared_ptr<ParticlesGenerator>>(
         gen, "ParticlesGenerator");
     py::class_<MultiplicityGenerator, std::shared_ptr<MultiplicityGenerator>>(
