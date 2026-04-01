@@ -46,7 +46,7 @@ RootTrackFinderPerformanceWriter::RootTrackFinderPerformanceWriter(
               m_cfg.duplicationPlotToolConfig, m_cfg.trackSummaryPlotToolConfig,
               m_cfg.trackQualityPlotToolConfig,
               m_cfg.subDetectorTrackSummaryVolumes},
-          lvl) {
+          logger().clone()) {
   // tracks collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -100,7 +100,7 @@ RootTrackFinderPerformanceWriter::~RootTrackFinderPerformanceWriter() {
 }
 
 ProcessCode RootTrackFinderPerformanceWriter::finalize() {
-  m_collector.logSummary(logger());
+  m_collector.logSummary();
 
   auto writeFloat = [&](float f, const char* name) {
     TVectorF v(1);

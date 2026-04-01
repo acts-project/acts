@@ -69,7 +69,7 @@ class PythonTrackFinderPerformanceWriter final
                 m_cfg.trackSummaryPlotToolConfig,
                 m_cfg.trackQualityPlotToolConfig,
                 m_cfg.subDetectorTrackSummaryVolumes},
-            lvl) {
+            logger().clone()) {
     if (m_cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
     }
@@ -91,7 +91,7 @@ class PythonTrackFinderPerformanceWriter final
   }
 
   ProcessCode finalize() override {
-    m_collector.logSummary(logger());
+    m_collector.logSummary();
     return ProcessCode::SUCCESS;
   }
 

@@ -47,7 +47,8 @@ class TrackFinderPerformanceCollector {
     std::map<std::string, std::set<int>> subDetectorTrackSummaryVolumes;
   };
 
-  TrackFinderPerformanceCollector(Config cfg, Acts::Logging::Level lvl);
+  TrackFinderPerformanceCollector(Config cfg,
+                                  std::unique_ptr<const Acts::Logger> logger);
 
   /// Fill histograms for one event.
   ///
@@ -72,19 +73,10 @@ class TrackFinderPerformanceCollector {
   };
 
   /// Return accumulated event counts.
-  Stats stats() const {
-    return {m_nTotalTracks,
-            m_nTotalMatchedTracks,
-            m_nTotalFakeTracks,
-            m_nTotalDuplicateTracks,
-            m_nTotalParticles,
-            m_nTotalMatchedParticles,
-            m_nTotalDuplicateParticles,
-            m_nTotalFakeParticles};
-  }
+  const Stats& stats() const { return m_stats; }
 
-  /// Emit efficiency/fake/duplicate summary statistics via @p log.
-  void logSummary(const Acts::Logger& log) const;
+  /// Emit efficiency/fake/duplicate summary statistics via the internal logger.
+  void logSummary() const;
 
   /// @name Accessors for the underlying plot tools
   /// @{
@@ -118,14 +110,7 @@ class TrackFinderPerformanceCollector {
   std::map<std::string, TrackSummaryPlotTool> m_subDetectorSummaryTools;
   TrackQualityPlotTool m_trackQualityPlotTool;
 
-  std::size_t m_nTotalTracks = 0;
-  std::size_t m_nTotalMatchedTracks = 0;
-  std::size_t m_nTotalFakeTracks = 0;
-  std::size_t m_nTotalDuplicateTracks = 0;
-  std::size_t m_nTotalParticles = 0;
-  std::size_t m_nTotalMatchedParticles = 0;
-  std::size_t m_nTotalDuplicateParticles = 0;
-  std::size_t m_nTotalFakeParticles = 0;
+  Stats m_stats;
 };
 
 }  // namespace ActsExamples
