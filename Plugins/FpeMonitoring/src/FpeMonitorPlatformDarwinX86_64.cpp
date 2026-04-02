@@ -18,16 +18,16 @@
 #error "This translation unit is only valid for macOS x86_64"
 #endif
 
-namespace ActsPlugins::detail {
+namespace ActsPlugins {
 
 // Darwin x86_64 has full trap support via the legacy x87 control word plus
 // SSE MXCSR, so runtime support is always available on this build target.
-bool isRuntimeSupported() {
+bool detail::isRuntimeSupported() {
   return true;
 }
 
-std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
-                                     void* ctx) {
+std::optional<FpeType> detail::decodeFpeType(int signal, const siginfo_t* si,
+                                             void* ctx) {
   // On this platform we only install a SIGFPE handler; si_code is enough to
   // classify all FPE kinds we track.
   static_cast<void>(ctx);
@@ -37,13 +37,13 @@ std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
   return fpeTypeFromSiCode(si->si_code);
 }
 
-void clearPendingExceptions(int excepts) {
+void detail::clearPendingExceptions(int excepts) {
   // Clear sticky exception state before enabling traps to avoid immediate
   // retriggering from stale flags.
   darwin::clearPendingExceptions(excepts);
 }
 
-void enableExceptions(int excepts) {
+void detail::enableExceptions(int excepts) {
   // Darwin x86_64 mirrors Linux semantics:
   // - x87 control word: trap enabled when corresponding mask bit is cleared
   // - MXCSR: trap enabled when corresponding mask bit [7:12] is cleared
@@ -58,7 +58,7 @@ void enableExceptions(int excepts) {
   fesetenv(&env);
 }
 
-void disableExceptions(int excepts) {
+void detail::disableExceptions(int excepts) {
   // Restore masking for requested exceptions in both x87 and SSE domains.
   fenv_t env{};
   if (fegetenv(&env) != 0) {
@@ -69,7 +69,7 @@ void disableExceptions(int excepts) {
   fesetenv(&env);
 }
 
-void maskTrapsInSignalContext(void* ctx, FpeType type) {
+void detail::maskTrapsInSignalContext(void* ctx, FpeType type) {
   // We mask only the trap that fired in the interrupted context so the faulting
   // instruction can be unwound safely, then clear status flags in both units.
   const int excepts = darwin::exceptMaskForType(type);
@@ -83,8 +83,8 @@ void maskTrapsInSignalContext(void* ctx, FpeType type) {
       ~static_cast<unsigned int>(FE_ALL_EXCEPT);
 }
 
-std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
-                                          std::size_t bufferBytes) {
+std::size_t detail::captureStackFromSignalContext(void* ctx, void* buffer,
+                                                  std::size_t bufferBytes) {
   // Use the shared Darwin frame-walker and provide x86_64 register extraction
   // from the interrupted thread state.
   return darwin::captureStackFromSignalContext(
@@ -98,18 +98,18 @@ std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
       });
 }
 
-std::size_t safeDumpSkipFrames() {
+std::size_t detail::safeDumpSkipFrames() {
   // Skip one frame to hide the monitor's own dump helper from final traces.
   return 1;
 }
 
-bool shouldFailFastOnUnknownSignal() {
+bool detail::shouldFailFastOnUnknownSignal() {
   // x86_64 should only see SIGFPE with known si_code values. Unknowns are
   // treated as non-fatal to preserve backward compatibility.
   return false;
 }
 
-void installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
+void detail::installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
   // A single SIGFPE handler is sufficient on Darwin x86_64.
   struct sigaction action{};
   action.sa_sigaction = handler;
@@ -117,4 +117,4 @@ void installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
   sigaction(SIGFPE, &action, nullptr);
 }
 
-}  // namespace ActsPlugins::detail
+}  // namespace ActsPlugins

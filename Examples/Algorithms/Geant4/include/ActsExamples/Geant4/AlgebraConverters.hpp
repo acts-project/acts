@@ -13,6 +13,7 @@
 #include "G4ThreeVector.hh"
 
 namespace ActsExamples::Geant4 {
+
 /// @brief Converts a G4 3-vector position into an Acts 3-vector
 Acts::Vector3 convertPosition(const G4ThreeVector& g4vec);
 /// @brief Converts a G4 4-vector position into an Acts 4-vector

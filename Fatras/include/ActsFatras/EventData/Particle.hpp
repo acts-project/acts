@@ -19,8 +19,8 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <cmath>
 #include <iosfwd>
@@ -81,7 +81,7 @@ class Particle {
   /// Set the process type that generated this particle.
   /// @param proc Process type that generated this particle
   /// @return Reference to this particle for method chaining
-  Particle &setProcess(ProcessType proc) {
+  Particle &setProcess(GenerationProcess proc) {
     m_process = proc;
     return *this;
   }
@@ -192,7 +192,7 @@ class Particle {
   Barcode particleId() const { return m_particleId; }
   /// Which type of process generated this particle.
   /// @return The process type that generated this particle
-  ProcessType process() const { return m_process; }
+  GenerationProcess process() const { return m_process; }
   /// PDG particle number that identifies the type.
   /// @return The PDG particle identifier
   Acts::PdgParticle pdg() const { return m_pdg; }
@@ -370,21 +370,21 @@ class Particle {
   ///
   /// @param outcome outcome code
   /// @return Reference to this particle for method chaining
-  Particle &setOutcome(ParticleOutcome outcome) {
+  Particle &setOutcome(SimulationOutcome outcome) {
     m_outcome = outcome;
     return *this;
   }
 
   /// Particle outcome.
   /// @return The outcome status of this particle
-  ParticleOutcome outcome() const { return m_outcome; }
+  SimulationOutcome outcome() const { return m_outcome; }
 
  private:
   // identity, i.e. things that do not change over the particle lifetime.
   /// Particle identifier within the event.
   Barcode m_particleId;
   /// Process type specifier.
-  ProcessType m_process = ProcessType::eUndefined;
+  GenerationProcess m_process = GenerationProcess::eUndefined;
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
@@ -404,7 +404,7 @@ class Particle {
   /// reference surface
   const Acts::Surface *m_referenceSurface{nullptr};
   /// outcome
-  ParticleOutcome m_outcome = ParticleOutcome::Alive;
+  SimulationOutcome m_outcome = SimulationOutcome::Alive;
 };
 
 /// Print particle to output stream

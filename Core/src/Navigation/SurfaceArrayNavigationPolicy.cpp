@@ -9,81 +9,12 @@
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 
 namespace Acts {
-namespace {
-bool checkBinning(const GeometryContext& gctx, const SurfaceArray& sArray,
-                  const Logger& logger) {
-  // do consistency check: can we access all sensitive surfaces
-  // through the binning? If not, surfaces get lost and the binning does not
-  // work
-
-  ACTS_VERBOSE("Performing consistency check");
-
-  std::vector<const Surface*> surfaces = sArray.surfaces();
-  std::set<const Surface*> sensitiveSurfaces(surfaces.begin(), surfaces.end());
-  std::set<const Surface*> accessibleSurfaces;
-  std::size_t nEmptyBins = 0;
-  std::size_t nBinsChecked = 0;
-
-  // iterate over all bins
-  std::size_t size = sArray.size();
-  for (std::size_t b = 0; b < size; ++b) {
-    std::vector<const Surface*> binContent = sArray.at(b);
-    // we don't check under/overflow bins
-    if (!sArray.isValidBin(b)) {
-      continue;
-    }
-    for (const auto& srf : binContent) {
-      accessibleSurfaces.insert(srf);
-    }
-    if (binContent.empty()) {
-      nEmptyBins++;
-    }
-    nBinsChecked++;
-  }
-
-  std::vector<const Surface*> diff;
-  std::set_difference(sensitiveSurfaces.begin(), sensitiveSurfaces.end(),
-                      accessibleSurfaces.begin(), accessibleSurfaces.end(),
-                      std::inserter(diff, diff.begin()));
-
-  ACTS_VERBOSE(" - Checked " << nBinsChecked << " valid bins");
-
-  if (nEmptyBins > 0) {
-    ACTS_VERBOSE(" -- Not all bins point to surface. " << nEmptyBins
-                                                       << " empty");
-  } else {
-    ACTS_VERBOSE(" -- All bins point to a surface");
-  }
-
-  if (!diff.empty()) {
-    ACTS_ERROR(
-        " -- Not all sensitive surfaces are accessible through binning. "
-        "sensitive: "
-        << sensitiveSurfaces.size()
-        << "    accessible: " << accessibleSurfaces.size());
-
-    // print all inaccessibles
-    ACTS_ERROR(" -- Inaccessible surfaces: ");
-    for (const auto& srf : diff) {
-      // have to choose AxisDirection here
-      Vector3 ctr = srf->referencePosition(gctx, AxisDirection::AxisR);
-      ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y() << ", z="
-                               << ctr.z() << ", r=" << VectorHelpers::perp(ctr)
-                               << ", phi=" << VectorHelpers::phi(ctr) << ")");
-    }
-
-  } else {
-    ACTS_VERBOSE(" -- All sensitive surfaces are accessible through binning.");
-  }
-
-  return diff.empty();
-}
-}  // namespace
 
 SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     const GeometryContext& gctx, const TrackingVolume& volume,
@@ -118,7 +49,8 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     throw std::runtime_error("Cannot create surface array with zero surfaces");
   }
 
-  ProtoLayer protoLayer(gctx, surfaces);
+  ProtoLayer protoLayer(
+      gctx, surfaces, Transform3{volume.localToGlobalTransform(gctx).linear()});
 
   if (config.layerType == LayerType::Disc) {
     auto [binsR, binsPhi] = config.bins;
@@ -186,8 +118,6 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     ACTS_ERROR("Failed to create surface array");
     throw std::runtime_error("Failed to create surface array");
   }
-
-  checkBinning(gctx, *m_surfaceArray, logger);
 }
 
 void SurfaceArrayNavigationPolicy::initializeCandidates(
@@ -197,8 +127,8 @@ void SurfaceArrayNavigationPolicy::initializeCandidates(
   ACTS_VERBOSE("SrfArrNavPol (volume=" << m_volume.volumeName() << ")");
 
   ACTS_VERBOSE("Querying sensitive surfaces at " << args.position.transpose());
-  const std::vector<const Surface*>& sensitiveSurfaces =
-      m_surfaceArray->neighbors(args.position, args.direction);
+  const auto sensitiveSurfaces =
+      m_surfaceArray->neighbors(gctx, args.position, args.direction);
   ACTS_VERBOSE("~> Surface array reports " << sensitiveSurfaces.size()
                                            << " sensitive surfaces");
 
