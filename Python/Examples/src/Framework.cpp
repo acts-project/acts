@@ -416,7 +416,10 @@ void addFramework(py::module& mex) {
           .def(py::init<const RandomNumbers::Config&>());
 
   {
-    py::class_<RandomEngine>(mex, "RandomEngine").def(py::init<>());
+    py::class_<RandomEngine>(mex, "RandomEngine")
+        .def(py::init<>())
+        .def(py::init<RandomSeed>(), py::arg("seed"))
+        .def("seed", &RandomEngine::seed);
 
     py::class_<RandomNumbers::Config>(randomNumbers, "Config")
         .def(py::init<>())

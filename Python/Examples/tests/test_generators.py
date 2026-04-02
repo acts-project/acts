@@ -235,6 +235,66 @@ def test_full_composition_tilt_shift_gaussian():
         assert shift_a[i] == shift_b[i]
 
 
+def test_random_engine_seed():
+    """RandomEngine wrapper exposes the seed it was constructed with."""
+    rng_default = acts.examples.RandomEngine()
+    assert rng_default.seed() == 0
+
+    rng_seeded = acts.examples.RandomEngine(seed=42)
+    assert rng_seeded.seed() == 42
+
+
+def test_lumi_block_seed_dependence():
+    """Different seeds must produce different lumi-block offsets."""
+    gen = acts.examples.LumiBlockVertexGenerator(
+        blockSize=100,
+        stddev=acts.Vector4(1 * u.mm, 1 * u.mm, 1 * u.mm, 0),
+    )
+
+    rng_a = acts.examples.RandomEngine(seed=1)
+    rng_b = acts.examples.RandomEngine(seed=2)
+
+    pos_a = gen(rng_a, 0)
+    pos_b = gen(rng_b, 0)
+    differs = any(pos_a[i] != pos_b[i] for i in range(3))
+    assert differs, "Different seeds should produce different lumi-block offsets"
+
+
+def test_lumi_block_seed_reproducibility():
+    """Same seed + same block must always give the same offset."""
+    gen = acts.examples.LumiBlockVertexGenerator(
+        blockSize=100,
+        stddev=acts.Vector4(1 * u.mm, 1 * u.mm, 1 * u.mm, 0),
+    )
+
+    rng1 = acts.examples.RandomEngine(seed=42)
+    rng2 = acts.examples.RandomEngine(seed=42)
+
+    pos1 = gen(rng1, 50)
+    pos2 = gen(rng2, 50)
+    for i in range(4):
+        assert pos1[i] == pos2[i], f"Same seed, same block: component {i} should match"
+
+
+def test_lumi_block_rotation_seed_dependence():
+    """Different seeds must produce different rotations."""
+    base = acts.examples.FixedVertexGenerator(fixed=acts.Vector4(0, 0, 100 * u.mm, 0))
+    gen = acts.examples.LumiBlockRotationVertexGenerator(
+        base=base,
+        blockSize=100,
+        xAngleStddev=0.01,
+        yAngleStddev=0.01,
+    )
+
+    rng_a = acts.examples.RandomEngine(seed=1)
+    rng_b = acts.examples.RandomEngine(seed=2)
+
+    pos_a = gen(rng_a, 0)
+    pos_b = gen(rng_b, 0)
+    differs = any(pos_a[i] != pos_b[i] for i in range(3))
+    assert differs, "Different seeds should produce different rotations"
+
+
 def test_examples_fatras_aliases_present():
     assert hasattr(acts.examples, "SimBarcode")
     assert hasattr(acts.examples, "GenerationProcess")
