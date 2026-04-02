@@ -591,7 +591,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   // actually filled SA
   for (const auto& srf : brl) {
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr, ctr.normalized());
+    auto binContent = sa.at(tgContext, ctr, ctr.normalized());
 
     BOOST_CHECK(binContent.size() <= 2u);
   }
@@ -621,7 +621,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning_newFactory,
   // actually filled SA
   for (const auto& srf : brl) {
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr, ctr.normalized());
+    auto binContent = sa.at(tgContext, ctr, ctr.normalized());
     BOOST_CHECK(binContent.size() <= 2u);
   }
 }
@@ -665,7 +665,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     auto B = pr.second;
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr, ctr.normalized());
+    auto binContent = sa.at(tgContext, ctr, ctr.normalized());
     BOOST_CHECK_EQUAL(binContent.size(), 4u);
     std::set<const Surface*> act(binContent.begin(), binContent.end());
 
@@ -724,7 +724,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       auto B = pr.second;
 
       Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-      auto binContent = sa2.at(ctr, ctr.normalized());
+      auto binContent = sa2.at(tgContext, ctr, ctr.normalized());
       BOOST_CHECK_EQUAL(binContent.size(), 4u);
       std::set<const Surface*> act(binContent.begin(), binContent.end());
 
