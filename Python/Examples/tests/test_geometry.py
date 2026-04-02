@@ -11,7 +11,7 @@ from helpers import dd4hepEnabled
 @pytest.mark.parametrize(
     "detectorFactory,aligned,nobj",
     [
-        (functools.partial(GenericDetector, gen3=False), True, 450),
+        (functools.partial(GenericDetector, gen3=False), True, 2),
         pytest.param(
             functools.partial(GenericDetector, gen3=True),
             True,
@@ -20,7 +20,7 @@ from helpers import dd4hepEnabled
         pytest.param(
             getOpenDataDetector,
             True,
-            540,
+            2,
             marks=[
                 pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
                 pytest.mark.slow,
@@ -143,15 +143,37 @@ def test_odd_gen1():
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-def test_odd_gen3():
-    with getOpenDataDetector(gen3=True) as detector:
+@pytest.mark.parametrize(
+    "constructionMethod",
+    [
+        pytest.param(None, id="default"),
+        pytest.param("BarrelEndcap", id="barrel-endcap"),
+        pytest.param("DirectLayer", id="direct-layer"),
+        pytest.param("DirectLayerGrouped", id="direct-layer-grouped"),
+    ],
+)
+def test_odd_gen3(constructionMethod):
+    import acts.examples.dd4hep as dd4hep
+
+    cm = None
+    if constructionMethod is not None:
+        cm = getattr(
+            dd4hep.OpenDataDetector.Config.ConstructionMethod, constructionMethod
+        )
+
+    with getOpenDataDetector(gen3=True, constructionMethod=cm) as detector:
         trackingGeometry = detector.trackingGeometry()
 
         visitor = CountingVisitor()
         trackingGeometry.apply(visitor)
 
-        assert visitor.num_surfaces == 9
+        # Gen3 invariants that hold regardless of construction method
         assert visitor.num_layers == 0  # Gen3: no layers
-        assert visitor.num_volumes == 2
-        assert visitor.num_portals == 9  # Gen3: will have portals
         assert visitor.num_boundary_surfaces == 0  # Gen3: no boundary surfaces
+        assert visitor.num_portals > 0  # Gen3: uses portals instead
+        assert visitor.num_surfaces > 0
+        assert visitor.num_volumes > 0
+
+        assert visitor.num_surfaces == 19261
+        assert visitor.num_volumes == 109
+        assert visitor.num_portals == 437

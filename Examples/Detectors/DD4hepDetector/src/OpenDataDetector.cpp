@@ -8,9 +8,11 @@
 
 #include "ActsExamples/DD4hepDetector/OpenDataDetector.hpp"
 
-#include "Acts/Geometry/Blueprint.hpp"
-#include "Acts/Geometry/BlueprintOptions.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "ActsPlugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "ActsPlugins/DD4hep/OpenDataDetectorBuilder.hpp"
+#include "ActsPlugins/Root/TGeoAxes.hpp"
+
+#include <memory>
 
 namespace ActsExamples {
 
@@ -18,32 +20,35 @@ OpenDataDetector::OpenDataDetector(const Config& cfg,
                                    const Acts::GeometryContext& gctx)
     : DD4hepDetectorBase{cfg}, m_cfg{cfg} {
   ACTS_INFO("OpenDataDetector construct");
-  construct(gctx);
+  switch (m_cfg.constructionMethod) {
+    case Config::ConstructionMethod::BarrelEndcap:
+      m_trackingGeometry =
+          ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcap(
+              dd4hepDetector(), gctx, logger());
+      break;
+    case Config::ConstructionMethod::DirectLayer:
+      m_trackingGeometry =
+          ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayer(
+              dd4hepDetector(), gctx, logger());
+      break;
+    case Config::ConstructionMethod::DirectLayerGrouped:
+      m_trackingGeometry =
+          ActsPlugins::DD4hep::buildOpenDataDetectorDirectLayerGrouped(
+              dd4hepDetector(), gctx, logger());
+      break;
+  }
 }
 
 auto OpenDataDetector::config() const -> const Config& {
   return m_cfg;
 }
 
-void OpenDataDetector::construct(const Acts::GeometryContext& gctx) {
-  using namespace Acts::Experimental;
-  using namespace Acts;
-  using namespace Acts::UnitLiterals;
-
-  Blueprint::Config cfg;
-  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
-  cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
-  Blueprint root{cfg};
-
-  auto volBounds = std::make_shared<CylinderVolumeBounds>(0_mm, 100_mm, 1_m);
-  auto vol =
-      std::make_unique<TrackingVolume>(Transform3::Identity(), volBounds);
-
-  root.addStaticVolume(std::move(vol));
-
-  BlueprintOptions options;
-
-  m_trackingGeometry = root.construct(options, gctx, logger());
+std::shared_ptr<ActsPlugins::DD4hepDetectorElement>
+OpenDataDetector::defaultDetectorElementFactory(
+    const dd4hep::DetElement& element, ActsPlugins::TGeoAxes axes,
+    double scale) {
+  return std::make_shared<ActsPlugins::DD4hepDetectorElement>(element, axes,
+                                                              scale);
 }
 
 }  // namespace ActsExamples
