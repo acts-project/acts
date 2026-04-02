@@ -25,7 +25,8 @@
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
-#include "ActsFatras/Kernel/Simulation.hpp"
+#include "ActsFatras/Kernel/MultiParticleSimulation.hpp"
+#include "ActsFatras/Kernel/SingleParticleSimulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
@@ -63,22 +64,7 @@ struct HitSurfaceSelector {
 }  // namespace
 
 // Same interface as `ActsFatras::Simulation` but with concrete types.
-struct detail::FatrasSimulation {
-  virtual ~FatrasSimulation() = default;
-  virtual Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
-      const Acts::GeometryContext &, const Acts::MagneticFieldContext &,
-      RandomEngine &, const std::vector<ActsFatras::Particle> &,
-      std::vector<ActsFatras::Particle> &, std::vector<ActsFatras::Particle> &,
-      std::vector<ActsFatras::Hit> &) const = 0;
-};
-
-namespace {
-
-// Magnetic-field specific PIMPL implementation.
-//
-// This always uses the SympyStepper for charged particle propagation and is
-// thus limited to propagation in vacuum at the moment.
-struct FatrasSimulationT final : detail::FatrasSimulation {
+struct FatrasSimulation::Impl {
   using CutPMin = ActsFatras::Min<ActsFatras::Casts::P>;
 
   // typedefs for charge particle simulation
@@ -104,13 +90,14 @@ struct FatrasSimulationT final : detail::FatrasSimulation {
       ActsFatras::NoDecay>;
 
   // combined simulation type
-  using Simulation = ActsFatras::Simulation<ChargedSelector, ChargedSimulation,
-                                            NeutralSelector, NeutralSimulation>;
+  using Simulation =
+      ActsFatras::MultiParticleSimulation<ChargedSelector, ChargedSimulation,
+                                          NeutralSelector, NeutralSimulation>;
 
   Simulation simulation;
 
-  FatrasSimulationT(const ActsExamples::FatrasSimulation::Config &cfg,
-                    const Acts::Logger &logger)
+  Impl(const ActsExamples::FatrasSimulation::Config &cfg,
+       const Acts::Logger &logger)
       : simulation(
             ChargedSimulation(
                 ChargedPropagator(ChargedStepper(cfg.magneticField),
@@ -158,7 +145,6 @@ struct FatrasSimulationT final : detail::FatrasSimulation {
     simulation.neutral.maxStepSize = cfg.maxStepSize;
     simulation.neutral.pathLimit = cfg.pathLimit;
   }
-  ~FatrasSimulationT() final = default;
 
   Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
       const Acts::GeometryContext &geoCtx,
@@ -166,14 +152,12 @@ struct FatrasSimulationT final : detail::FatrasSimulation {
       const std::vector<ActsFatras::Particle> &inputParticles,
       std::vector<ActsFatras::Particle> &simulatedParticlesInitial,
       std::vector<ActsFatras::Particle> &simulatedParticlesFinal,
-      std::vector<ActsFatras::Hit> &simHits) const final {
+      std::vector<ActsFatras::Hit> &simHits) const {
     return simulation.simulate(geoCtx, magCtx, rng, inputParticles,
                                simulatedParticlesInitial,
                                simulatedParticlesFinal, simHits);
   }
 };
-
-}  // namespace
 
 FatrasSimulation::FatrasSimulation(Config cfg,
                                    std::unique_ptr<const Acts::Logger> logger)
@@ -206,7 +190,7 @@ FatrasSimulation::FatrasSimulation(Config cfg,
   }
 
   // construct the simulation for the specific magnetic field
-  m_sim = std::make_unique<FatrasSimulationT>(m_cfg, this->logger());
+  m_sim = std::make_unique<Impl>(m_cfg, this->logger());
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputParticles.initialize(m_cfg.outputParticles);
