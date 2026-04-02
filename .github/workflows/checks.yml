@@ -38,28 +38,6 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
   
-  sonarcloud_report:
-    runs-on: ubuntu-slim
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-
-      - name: Install requests
-        run: pip install requests
-
-      - name: Fetch SonarCloud report
-        uses: SonarSource/sonarqube-scan-action@v7.0.0
-        run: python CI/scripts/fetch_sonarcloud_report.py --token ${{ secrets.SONAR_TOKEN }} --project_key "acts-project_acts" --filename "sonar_report.json"
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: sonar-report
-          path: sonar_report.json
-
-
   smearing_config:
     runs-on: ubuntu-slim
     steps:
