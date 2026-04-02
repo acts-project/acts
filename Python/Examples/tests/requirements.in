@@ -9,3 +9,5 @@ pyyaml
 pyhepmc
 numpy
 filelock
+mplhep
+hist
