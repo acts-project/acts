@@ -28,10 +28,12 @@ def test_invalid_barcode_factory():
 
 
 def test_process_and_outcome_enums_available():
-    assert acts.fatras.ProcessType.eUndefined != acts.fatras.ProcessType.eDecay
     assert (
-        acts.fatras.ProcessType.ePhotonConversion
-        == acts.fatras.ProcessType.ePhotonConversion
+        acts.fatras.GenerationProcess.eUndefined != acts.fatras.GenerationProcess.eDecay
+    )
+    assert (
+        acts.fatras.GenerationProcess.ePhotonConversion
+        == acts.fatras.GenerationProcess.ePhotonConversion
     )
     assert (
         acts.fatras.SimulationOutcome.Alive

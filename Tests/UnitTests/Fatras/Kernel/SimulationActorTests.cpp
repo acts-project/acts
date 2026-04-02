@@ -21,8 +21,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Kernel/detail/SimulationActor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
@@ -167,7 +167,7 @@ struct Fixture {
 
   // reference information for initial particle
   Barcode pid = Barcode().withVertexPrimary(12u).withParticle(3u);
-  ProcessType proc = ProcessType::eUndefined;
+  GenerationProcess proc = GenerationProcess::eUndefined;
   PdgParticle pdg = PdgParticle::eProton;
   double q = 1_e;
   double m = 1_GeV;

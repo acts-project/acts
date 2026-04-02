@@ -13,10 +13,10 @@
 
 namespace ActsFatras {
 
-/// Process type identifier.
+/// Generation process type identifier.
 ///
 /// Encodes the type of process that generated a particle.
-enum class ProcessType : std::uint32_t {
+enum class GenerationProcess : std::uint32_t {
   eUndefined = 0,
   eDecay = 1,
   ePhotonConversion = 2,
@@ -24,10 +24,10 @@ enum class ProcessType : std::uint32_t {
   eNuclearInteraction = 4,
 };
 
-/// Print process type to output stream
+/// Print generation process type to output stream
 /// @param os Output stream
-/// @param processType Process type to print
+/// @param processType Generation process type to print
 /// @return Output stream
-std::ostream &operator<<(std::ostream &os, ProcessType processType);
+std::ostream &operator<<(std::ostream &os, GenerationProcess processType);
 
 }  // namespace ActsFatras
