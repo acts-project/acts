@@ -13,8 +13,8 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -149,7 +149,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
                                  (*m_pathInL0).at(i) * Acts::UnitConstants::mm);
     finalState.setNumberOfHits((*m_numberOfHits).at(i));
     finalState.setOutcome(
-        static_cast<ActsFatras::ParticleOutcome>((*m_outcome).at(i)));
+        static_cast<ActsFatras::SimulationOutcome>((*m_outcome).at(i)));
 
     particles.insert(p);
   }
