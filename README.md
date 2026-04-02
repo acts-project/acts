@@ -34,6 +34,12 @@ guide](https://acts-project.github.io/building_acts.html). If you find a bug,
 have a feature request, or want to contribute to ACTS, have a look at the
 [contribution guidelines](CONTRIBUTING.md).
 
+### Python bindings
+
+ACTS is also available as a Python package via `pip install pyacts`. See the
+[Python bindings documentation](https://acts-project.github.io/python_bindings.html)
+for details.
+
 ## Versioning and public API
 
 Release versions follow [semantic versioning](https://semver.org/spec/v2.0.0.html)
