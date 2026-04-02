@@ -41,7 +41,7 @@ BOOST_DATA_TEST_CASE(FatrasBetheBloch, Dataset::parameters, pdg, phi, theta, p,
     BOOST_CHECK_LT(after.energy(), before.energy());
   } else {
     BOOST_CHECK_EQUAL(after.outcome(),
-                      ActsFatras::ParticleOutcome::KilledInteraction);
+                      ActsFatras::SimulationOutcome::KilledInteraction);
   }
 }
 

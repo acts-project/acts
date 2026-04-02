@@ -13,10 +13,10 @@
 
 namespace ActsFatras {
 
-/// Particle outcome identifier.
+/// Simulation outcome identifier.
 ///
 /// Encodes the outcome of the particle after the simulation
-enum class ParticleOutcome : std::uint32_t {
+enum class SimulationOutcome : std::uint32_t {
   Alive = 0,
   KilledInteraction = 1,
   KilledVolumeExit = 2,
@@ -24,10 +24,10 @@ enum class ParticleOutcome : std::uint32_t {
   KilledSecondaryParticle = 4,
 };
 
-/// Print particle outcome to output stream
+/// Print simulation outcome to output stream
 /// @param os Output stream
-/// @param outcome Particle outcome to print
+/// @param outcome Simulation outcome to print
 /// @return Output stream
-std::ostream &operator<<(std::ostream &os, ParticleOutcome outcome);
+std::ostream &operator<<(std::ostream &os, SimulationOutcome outcome);
 
 }  // namespace ActsFatras
