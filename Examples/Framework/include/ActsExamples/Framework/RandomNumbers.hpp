@@ -31,7 +31,7 @@ class RandomEngine {
   using result_type = std::mt19937::result_type;
 
   /// Default constructor. Uses mt19937 default seed.
-  RandomEngine() : m_seed(0), m_engine() {}
+  RandomEngine() : m_seed(0) {}
 
   /// Construct with a specific seed.
   explicit RandomEngine(RandomSeed seed) : m_seed(seed), m_engine(seed) {}

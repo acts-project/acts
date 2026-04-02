@@ -155,7 +155,7 @@ struct LumiBlockVertexPositionGenerator
                            std::size_t eventNumber) const override {
     std::size_t block = eventNumber / blockSize;
     auto blockRng = rng.combinedWith(block);
-    std::normal_distribution<double> dist(0.0, 1.0);
+    std::normal_distribution dist(0.0, 1.0);
     Acts::Vector4 rnd = {
         dist(blockRng),
         dist(blockRng),
@@ -194,7 +194,7 @@ struct LumiBlockRotationVertexPositionGenerator
     // is uncorrelated with the positional shift from
     // LumiBlockVertexPositionGenerator using the same block size.
     auto blockRng = rng.combinedWith(block).combinedWith(0x9e3779b9);
-    std::normal_distribution<double> dist(0.0, 1.0);
+    std::normal_distribution dist(0.0, 1.0);
     double ax = dist(blockRng) * xAngleStddev;
     double ay = dist(blockRng) * yAngleStddev;
 
