@@ -108,7 +108,7 @@ MultiWireVolumeBuilder::createNavigationPolicyFactory() const {
                 std::move(grid),
                 {protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()},
                 [placement](const GeometryContext& gctx) -> const Transform3& {
-                  return placement->localToGlobalTransform(gctx);
+                  return placement->globalToLocalTransform(gctx);
                 }};
 
   TryAllNavigationPolicy::Config tryAllConfig;

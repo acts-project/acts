@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -152,13 +153,15 @@ class SurfaceArrayCreator {
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
       std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -175,6 +178,7 @@ class SurfaceArrayCreator {
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param bTypeZ the binning type in z direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
@@ -182,7 +186,8 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extrema and
@@ -198,6 +203,7 @@ class SurfaceArrayCreator {
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
   /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
@@ -205,7 +211,8 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
       std::size_t binsPhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -222,8 +229,10 @@ class SurfaceArrayCreator {
   /// @param bTypeR the binning type in r direction (equidistant/arbitrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
+  ///
   /// @note If there is more than on R-Ring, number of phi bins
   ///       will be set to lowest number of surfaces of any R-ring.
   ///       This ignores bTypePhi and produces equidistant binning in phi
@@ -232,7 +241,8 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -251,6 +261,7 @@ class SurfaceArrayCreator {
   /// @param [in] aDir Direction of the aligned surfaces
   /// @param [in] protoLayerOpt Optional @c ProtoLayer instance
   /// @param [in] transform is the (optional) additional transform applied
+  /// @param maxNeighborDistance Maximum next neighbor distance to be included in neighbor lookups
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
@@ -258,7 +269,8 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
       std::size_t bins2, AxisDirection aDir,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const Transform3& transform = Transform3::Identity()) const;
+      const Transform3& transform = Transform3::Identity(),
+      std::uint8_t maxNeighborDistance = 1) const;
 
   /// Static check function for surface equivalent
   ///
@@ -392,11 +404,13 @@ class SurfaceArrayCreator {
   /// @param layerTolerance the layer tolerance
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
+  /// @param maxNeighborDistance the maximum neighbor distance for the grid lookup
   template <AxisBoundaryType bdtA, AxisBoundaryType bdtB>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(std::shared_ptr<RegularSurface> surface,
                           double layerTolerance, const ProtoAxis& pAxisA,
-                          const ProtoAxis& pAxisB) {
+                          const ProtoAxis& pAxisB,
+                          std::uint8_t maxNeighborDistance) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 
@@ -406,43 +420,35 @@ class SurfaceArrayCreator {
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
                                               pAxisB.nBins);
 
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr = SurfaceArray::makeSurfaceGridLookup(
+          std::move(surface), layerTolerance, std::tuple{axisA, axisB},
+          maxNeighborDistance);
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
       Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max,
                                               pAxisA.nBins);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr = SurfaceArray::makeSurfaceGridLookup(
+          std::move(surface), layerTolerance, std::tuple{axisA, axisB},
+          maxNeighborDistance);
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max,
                                               pAxisB.nBins);
 
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr = SurfaceArray::makeSurfaceGridLookup(
+          std::move(surface), layerTolerance, std::tuple{axisA, axisB},
+          maxNeighborDistance);
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
-      using SGL =
-          SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::make_unique<SGL>(std::move(surface), layerTolerance,
-                                  std::pair{axisA, axisB},
-                                  std::vector{pAxisA.axisDir, pAxisB.axisDir});
+      ptr = SurfaceArray::makeSurfaceGridLookup(
+          std::move(surface), layerTolerance, std::tuple{axisA, axisB},
+          maxNeighborDistance);
     }
 
     return ptr;

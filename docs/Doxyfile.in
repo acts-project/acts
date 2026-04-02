@@ -774,7 +774,6 @@ WARN_LOGFILE           =
 INPUT                  = index.md \
                          groups \
                          pages \
-                         examples \
                          namespaces.dox \
                          experimental.md \
                          ../Core/include \
