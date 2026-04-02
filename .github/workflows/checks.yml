@@ -51,9 +51,7 @@ jobs:
         run: pip install requests
 
       - name: Fetch SonarCloud report
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: python CI/scripts/fetch_sonarcloud_report.py --token ${{ secrets.SONAR_TOKEN }} --project_key "acts-project_acts" --filename "sonar_report.json"
+        run: python CI/scripts/fetch_sonarcloud_report.py --token ${{ secrets.GITHUB_TOKEN }} --project_key "acts-project_acts" --filename "sonar_report.json"
 
       - uses: actions/upload-artifact@v7
         with:
