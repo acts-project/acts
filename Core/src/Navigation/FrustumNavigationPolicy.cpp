@@ -26,13 +26,15 @@ namespace Acts::Experimental {
                         m_topBox=std::unique_ptr<BoundingBox>(make_octree(m_boxes,prims,config.depth));
 		}
 
-	void FrustumNavigationPolicy::initializeCandidates(const NavigationArguments& args,
+	void FrustumNavigationPolicy::initializeCandidates(const GeometryContext& gctx,
+			const NavigationArguments& args,
+			NavigationPolicyState& state,
 			AppendOnlyNavigationStream& stream,
 	      		const Logger& logger) const {
 		ACTS_INFO("FrustumNavigationPolicy Candidates initialization for volume"<< m_volume.volumeName());
 		auto& s = state.as<State>();
-                // Recreate the frustum
-		s.frustum=Frustum3(args.position,args.direction, std::numbers::pi / 4);
+                // Recreate the frustum - needed?
+		//s.frustum=Frustum3(args.position,args.direction, std::numbers::pi / 4);
                 /*
 		if(m_frustum.get() == nullptr){
 			m_frustum.reset(new Frustum3(args.position,args.direction, M_PI / 4));

@@ -47,7 +47,9 @@ namespace Acts::Experimental {
   			/// @param args The navigation arguments
   			/// @param stream The navigation stream to update
   			/// @param logger The logger
-  			void initializeCandidates(const NavigationArguments& args,
+  			void initializeCandidates(const GeometryContext& gctx,
+					const NavigationArguments& args,
+					NavigationPolicyState& state,
                             		AppendOnlyNavigationStream& stream,
                             		const Logger& logger) const;
 
