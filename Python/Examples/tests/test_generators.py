@@ -122,6 +122,119 @@ def test_lumi_block_with_gaussian_composition():
     assert len(set(xs)) > 1, "Combined generator should vary within a block"
 
 
+def test_lumi_block_rotation_vertex_generator():
+    """Test that the rotation wrapper applies a consistent per-block tilt."""
+    rng = acts.examples.RandomEngine()
+    base = acts.examples.FixedVertexGenerator(fixed=acts.Vector4(0, 0, 100 * u.mm, 0))
+    gen = acts.examples.LumiBlockRotationVertexGenerator(
+        base=base,
+        blockSize=1000,
+        xAngleStddev=0.01,
+        yAngleStddev=0.01,
+    )
+
+    # Same block must produce identical results
+    pos_a = gen(rng, 0)
+    pos_b = gen(rng, 500)
+    for i in range(4):
+        assert pos_a[i] == pos_b[i], f"Same block, component {i} should match"
+
+    # Different block should produce a different rotation
+    pos_c = gen(rng, 1000)
+    differs = any(pos_a[i] != pos_c[i] for i in range(3))
+    assert differs, "Different blocks should produce different rotations"
+
+    # Time component must be unchanged
+    assert pos_a[3] == 0
+
+
+def test_lumi_block_rotation_preserves_length():
+    """Rotation should preserve the 3D length of the position vector."""
+    import math
+
+    rng = acts.examples.RandomEngine()
+    base = acts.examples.FixedVertexGenerator(
+        fixed=acts.Vector4(1 * u.mm, 2 * u.mm, 100 * u.mm, 5 * u.ns)
+    )
+    gen = acts.examples.LumiBlockRotationVertexGenerator(
+        base=base,
+        blockSize=100,
+        xAngleStddev=0.1,
+        yAngleStddev=0.1,
+    )
+
+    original_len = math.sqrt((1 * u.mm) ** 2 + (2 * u.mm) ** 2 + (100 * u.mm) ** 2)
+    for evt in [0, 100, 200, 999]:
+        pos = gen(rng, evt)
+        rotated_len = math.sqrt(pos[0] ** 2 + pos[1] ** 2 + pos[2] ** 2)
+        assert abs(rotated_len - original_len) < 1e-10 * u.mm
+
+
+def test_rotation_uncorrelated_with_position_shift():
+    """Rotation and position shift use different seeds for the same block size."""
+    rng = acts.examples.RandomEngine()
+    base = acts.examples.FixedVertexGenerator(fixed=acts.Vector4(0, 0, 100 * u.mm, 0))
+    rot_gen = acts.examples.LumiBlockRotationVertexGenerator(
+        base=base,
+        blockSize=100,
+        xAngleStddev=0.01,
+        yAngleStddev=0.01,
+    )
+    pos_gen = acts.examples.LumiBlockVertexGenerator(
+        blockSize=100,
+        stddev=acts.Vector4(1 * u.mm, 1 * u.mm, 1 * u.mm, 0),
+    )
+
+    # Collect which blocks change for rotation vs position shift
+    rot_blocks_differ = []
+    pos_blocks_differ = []
+    ref_rot = rot_gen(rng, 0)
+    ref_pos = pos_gen(rng, 0)
+    for block in range(1, 10):
+        evt = block * 100
+        r = rot_gen(rng, evt)
+        p = pos_gen(rng, evt)
+        rot_blocks_differ.append(any(ref_rot[i] != r[i] for i in range(3)))
+        pos_blocks_differ.append(any(ref_pos[i] != p[i] for i in range(3)))
+
+    # Both should vary across blocks
+    assert any(rot_blocks_differ), "Rotation should vary across blocks"
+    assert any(pos_blocks_differ), "Position shift should vary across blocks"
+
+
+def test_full_composition_tilt_shift_gaussian():
+    """Full integration: Gaussian smearing + lumi-block tilt + lumi-block shift."""
+    rng = acts.examples.RandomEngine()
+    gaussian = acts.examples.GaussianVertexGenerator(
+        stddev=acts.Vector4(0.01 * u.mm, 0.01 * u.mm, 50 * u.mm, 1 * u.ns),
+        mean=acts.Vector4(0, 0, 0, 0),
+    )
+    tilted_gaussian = acts.examples.LumiBlockRotationVertexGenerator(
+        base=gaussian,
+        blockSize=1000,
+        xAngleStddev=0.001,
+        yAngleStddev=0.001,
+    )
+    lumi_shift = acts.examples.LumiBlockVertexGenerator(
+        blockSize=1000,
+        stddev=acts.Vector4(0.01 * u.mm, 0.01 * u.mm, 1.0 * u.mm, 0),
+    )
+    combined = acts.examples.AdditiveVertexGenerator(
+        generators=[tilted_gaussian, lumi_shift]
+    )
+
+    # Should produce varying positions within a block (gaussian component)
+    positions = [combined(rng, evt) for evt in range(10)]
+    xs = [p[0] for p in positions]
+    assert len(set(xs)) > 1
+
+    # Shift component should be constant within the block
+    shift_a = lumi_shift(rng, 0)
+    shift_b = lumi_shift(rng, 999)
+    for i in range(4):
+        assert shift_a[i] == shift_b[i]
+
+
 def test_examples_fatras_aliases_present():
     assert hasattr(acts.examples, "SimBarcode")
     assert hasattr(acts.examples, "GenerationProcess")
