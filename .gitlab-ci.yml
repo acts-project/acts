@@ -447,7 +447,9 @@ linux_ubuntu_2404_clang22:
     - source build/this_acts_withdeps.sh
     - python3 -m pip install -r src//Python/Examples/tests/requirements.txt
     - cd src
-    - pytest -rsfExw --durations=10 -k "not gnn" -v -n1
+    # plotting tests with mplhep fail because an ancient mplhep version in LCG
+    # overrides the mplhep version in our venv
+    - pytest -rsfExw --durations=10 -k "not gnn and not plot" -v -n1
 
 lcg_107:
   extends: .lcg_base_job
