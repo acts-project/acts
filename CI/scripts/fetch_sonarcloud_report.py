@@ -44,8 +44,5 @@ def export_sonar_metrics_to_json(token, project_key="acts-project_acts", filenam
 
 
 if __name__ == "__main__":
-    token = os.environ.get("SONAR_TOKEN")
-    if not token:
-        print("Error: SONAR_TOKEN environment variable is not set", file=sys.stderr)
-        raise SystemExit(1)
-    export_sonar_metrics_to_json(token)
+    token = sys.argv[1]
+    export_sonar_metrics_to_json(token, project_key="acts-project_acts", filename="sonar_report.json")
