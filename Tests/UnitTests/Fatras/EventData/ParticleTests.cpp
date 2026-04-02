@@ -93,10 +93,10 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
                   eps);
   CHECK_CLOSE_REL(particle.direction().norm(), 1, eps);
 
-  // lose a lot of energy
+  // lose too much energy without a stopping strategy
   BOOST_CHECK_THROW(particle.loseEnergy(10_GeV), std::invalid_argument);
 
-  // lose a lot of energy
+  // lose too much energy with a stopping strategy
   particle.loseEnergy(10_GeV, ParticleOutcome::KilledInteraction);
   BOOST_CHECK_GT(particle.transverseMomentum(), 0.);
   BOOST_CHECK_GT(particle.absoluteMomentum(), 0.);
