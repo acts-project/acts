@@ -12,7 +12,6 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 

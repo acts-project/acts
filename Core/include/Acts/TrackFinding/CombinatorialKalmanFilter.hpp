@@ -12,6 +12,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -627,7 +628,7 @@ class CombinatorialKalmanFilter {
                        << surface.geometryId());
         }
 
-        auto stateMask = PM::Predicted | PM::Jacobian;
+        const auto stateMask = PM::Predicted | PM::Jacobian;
 
         // Add a hole or material track state to the multitrajectory
         TrackIndexType currentTip =
@@ -865,18 +866,37 @@ class CombinatorialKalmanFilter {
             state, stepper, surface, updateMode, NoiseUpdateMode::addNoise,
             multipleScattering, energyLoss, logger());
       } else {
+        if (surface.surfaceMaterial() == nullptr) {
+          return;
+        }
+
         if (ACTS_CHECK_BIT(updateMode, MaterialUpdateMode::PostUpdate)) {
-          temporaryStates->clear();
           betheHeitlerCache->clear();
           componentCache->clear();
           std::size_t nInvalidBetheHeitler = 0;
           double maxPathXOverX0 = 0;
-          double sumPathXOverX0 = 0;
 
-          detail::Gsf::convoluteComponents(
-              state, stepper, *temporaryStates, *betheHeitlerApprox,
-              *betheHeitlerCache, weightCutoff, *componentCache,
-              nInvalidBetheHeitler, maxPathXOverX0, sumPathXOverX0, logger());
+          for (auto cmp : stepper.componentIterable(state.stepping)) {
+            const auto boundParamsRes = transformFreeToBoundParameters(
+                cmp.state().pars, surface, state.options.geoContext);
+            if (!boundParamsRes.ok()) {
+              ACTS_DEBUG(
+                  "Failed to transform free to bound parameters for "
+                  "Bethe-Heitler approximation: "
+                  << boundParamsRes.error());
+              continue;
+            }
+
+            const BoundTrackParameters bound(
+                surface.getSharedPtr(), *boundParamsRes, cmp.state().cov,
+                stepper.particleHypothesis(state.stepping));
+
+            detail::Gsf::applyBetheHeitler(
+                state.options.geoContext, surface, state.options.direction,
+                bound, cmp.weight(), *betheHeitlerApprox, *betheHeitlerCache,
+                weightCutoff, *componentCache, nInvalidBetheHeitler,
+                maxPathXOverX0, logger());
+          }
 
           if (componentCache->empty()) {
             ACTS_WARNING(

@@ -91,6 +91,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
+    /// Type erased track finder with brem recovery function.
+    std::shared_ptr<TrackFinderFunction> findTracksBrem;
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Track selector config
