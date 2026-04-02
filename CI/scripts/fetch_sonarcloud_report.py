@@ -3,7 +3,14 @@ import os
 import sys
 
 import requests
+import argparse
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Fetch SonarCloud metrics and save to a JSON file")
+    parser.add_argument("token", type=str, help="SonarCloud token")
+    parser.add_argument("project_key", type=str, help="SonarCloud project key")
+    parser.add_argument("filename", type=str, help="Output filename")
+    return parser.parse_args()
 
 def export_sonar_metrics_to_json(token, project_key="acts-project_acts", filename="sonar_report.json"):
     # Endpoint for component measures (SonarCloud Web API)
@@ -44,5 +51,7 @@ def export_sonar_metrics_to_json(token, project_key="acts-project_acts", filenam
 
 
 if __name__ == "__main__":
-    token = sys.argv[1]
+ 
+    args = parse_args()
+    token = args.token
     export_sonar_metrics_to_json(token, project_key="acts-project_acts", filename="sonar_report.json")
