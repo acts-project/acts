@@ -258,9 +258,7 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
         std::max<double>(1, 1 / (1e-6 + std::abs(normal.dot(direction)))));
     // clamp value to range before converting to std::uint8_t to avoid overflow
     const std::uint8_t neighborDistance =
-        static_cast<std::uint8_t>(std::clamp<double>(
-            neighborDistanceReal, std::numeric_limits<std::uint8_t>::min(),
-            std::numeric_limits<std::uint8_t>::max()));
+        clampValue<std::uint8_t>(neighborDistanceReal);
 
     const std::size_t globalBin =
         globalBinFromLocalBins3D(localBins, neighborDistance);
