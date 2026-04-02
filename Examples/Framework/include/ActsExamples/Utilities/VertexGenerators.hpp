@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <numbers>
 #include <random>
@@ -163,6 +165,58 @@ struct LumiBlockVertexPositionGenerator
         dist(blockRng),
     };
     return rnd.cwiseProduct(stddev);
+  }
+};
+
+/// @brief Wraps another vertex generator and applies a per-lumi-block
+/// rotation (beam tilt) to its output.
+///
+/// For each luminosity block, two tilt angles (around x and y) are drawn
+/// from Gaussian distributions seeded deterministically by the block number.
+/// The rotation is applied to the spatial components only; time is unchanged.
+/// Use this inside an AdditiveVertexPositionGenerator together with a
+/// LumiBlockVertexPositionGenerator to get both tilt and positional drift.
+struct LumiBlockRotationVertexPositionGenerator
+    : public PrimaryVertexPositionGenerator {
+  /// The base vertex generator whose output is rotated.
+  std::shared_ptr<PrimaryVertexPositionGenerator> base;
+  /// Number of events per luminosity block.
+  std::size_t blockSize = 1000;
+  /// Standard deviation of the tilt angle around the x-axis [rad].
+  double xAngleStddev = 0;
+  /// Standard deviation of the tilt angle around the y-axis [rad].
+  double yAngleStddev = 0;
+
+  Acts::Vector4 operator()(RandomEngine& rng,
+                           std::size_t eventNumber) const override {
+    Acts::Vector4 pos = (*base)(rng, eventNumber);
+
+    std::size_t block = eventNumber / blockSize;
+    // Use a salted seed so the rotation is uncorrelated with the positional
+    // shift from LumiBlockVertexPositionGenerator using the same block size.
+    auto seed = static_cast<std::uint32_t>(
+        block ^ std::size_t{0x9e3779b9});  // golden-ratio salt
+    std::mt19937 blockRng(seed);
+    std::normal_distribution<double> dist(0.0, 1.0);
+    double ax = dist(blockRng) * xAngleStddev;
+    double ay = dist(blockRng) * yAngleStddev;
+
+    // Rotation around x-axis (tilt in y-z plane)
+    double cosX = std::cos(ax);
+    double sinX = std::sin(ax);
+    // Rotation around y-axis (tilt in x-z plane)
+    double cosY = std::cos(ay);
+    double sinY = std::sin(ay);
+
+    // Combined rotation Ry * Rx applied to the spatial part
+    double x = pos[0];
+    double y = pos[1];
+    double z = pos[2];
+    pos[0] = cosY * x + sinY * (sinX * y + cosX * z);
+    pos[1] = cosX * y - sinX * z;
+    pos[2] = -sinY * x + cosY * (sinX * y + cosX * z);
+
+    return pos;
   }
 };
 
