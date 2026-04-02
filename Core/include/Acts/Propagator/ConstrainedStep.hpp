@@ -80,7 +80,7 @@ class ConstrainedStep {
   /// returns the min step size
   /// @return The minimum constrained step size considering all constraints
   constexpr double value() const {
-    double min = *std::min_element(m_values.begin(), m_values.end());
+    double min = *std::ranges::min_element(m_values);
     // accuracy is always positive and therefore handled separately
     double result = std::min(std::abs(min), m_accuracy);
     return std::signbit(min) ? -result : result;
