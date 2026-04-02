@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Ranges.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
+#include <limits>
 #include <map>
 #include <ranges>
 #include <utility>
@@ -250,11 +251,16 @@ struct SurfaceGridLookupImpl final : SurfaceArray::ISurfaceGridLookup {
     const GridIndex localBins = localBinsFromPosition2D(gridLocal);
 
     const Vector3 normal = m_representative->normal(gctx, *surfaceLocal);
+    // using 1e-6 to avoid division by zero, the actual value does not matter as
+    // long as it is small compared to the angles we want to distinguish
     const double neighborDistanceReal = std::min<double>(
         m_maxNeighborDistance,
-        std::max<double>(1, 1 / std::abs(normal.dot(direction))));
+        std::max<double>(1, 1 / (1e-6 + std::abs(normal.dot(direction)))));
+    // clamp value to range before converting to std::uint8_t to avoid overflow
     const std::uint8_t neighborDistance =
-        static_cast<std::uint8_t>(neighborDistanceReal);
+        static_cast<std::uint8_t>(std::clamp<double>(
+            neighborDistanceReal, std::numeric_limits<std::uint8_t>::min(),
+            std::numeric_limits<std::uint8_t>::max()));
 
     const std::size_t globalBin =
         globalBinFromLocalBins3D(localBins, neighborDistance);
