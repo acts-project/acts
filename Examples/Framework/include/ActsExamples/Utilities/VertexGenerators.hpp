@@ -12,13 +12,10 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <numbers>
 #include <random>
 #include <vector>
-
-#include <boost/functional/hash.hpp>
 
 namespace ActsExamples {
 
@@ -157,11 +154,7 @@ struct LumiBlockVertexPositionGenerator
   Acts::Vector4 operator()(RandomEngine& rng,
                            std::size_t eventNumber) const override {
     std::size_t block = eventNumber / blockSize;
-    // Combine the user seed with the block number for deterministic,
-    // user-seed-dependent per-block offsets.
-    std::size_t seed = rng.seed();
-    boost::hash_combine(seed, block);
-    std::mt19937 blockRng(static_cast<std::uint32_t>(seed));
+    auto blockRng = rng.combinedWith(block);
     std::normal_distribution<double> dist(0.0, 1.0);
     Acts::Vector4 rnd = {
         dist(blockRng),
@@ -200,10 +193,7 @@ struct LumiBlockRotationVertexPositionGenerator
     // Combine user seed with block number and a salt so the rotation
     // is uncorrelated with the positional shift from
     // LumiBlockVertexPositionGenerator using the same block size.
-    std::size_t seed = rng.seed();
-    boost::hash_combine(seed, block);
-    boost::hash_combine(seed, std::size_t{0x9e3779b9});
-    std::mt19937 blockRng(static_cast<std::uint32_t>(seed));
+    auto blockRng = rng.combinedWith(block).combinedWith(0x9e3779b9);
     std::normal_distribution<double> dist(0.0, 1.0);
     double ax = dist(blockRng) * xAngleStddev;
     double ay = dist(blockRng) * yAngleStddev;
