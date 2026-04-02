@@ -1,0 +1,27 @@
+name: SonarCloud report
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sonar-report:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Fetch SonarCloud report
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: python CI/scripts/fetch_sonarcloud_report.py
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sonar-report
+          path: sonar_report.json
