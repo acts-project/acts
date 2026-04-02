@@ -195,7 +195,7 @@ class Particle {
   Particle &loseEnergy(double delta, SimulationOutcome stoppedOutcome =
                                          SimulationOutcome::Alive) {
     const double newEnergy = energy() - delta;
-    if (newEnergy < m_mass) {
+    if (newEnergy <= m_mass) {
       if (stoppedOutcome == SimulationOutcome::Alive) {
         throw std::invalid_argument(
             "Energy loss cannot exceed the current energy of the particle if "
