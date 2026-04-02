@@ -8,8 +8,11 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <random>
+
+#include <boost/functional/hash.hpp>
 
 namespace ActsExamples {
 
@@ -35,6 +38,15 @@ class RandomEngine {
 
   /// Return the seed this engine was constructed with.
   RandomSeed seed() const { return m_seed; }
+
+  /// Create a new engine whose seed combines this engine's seed with an
+  /// additional value. Useful for deriving deterministic sub-sequences
+  /// (e.g. per-lumi-block seeds) that depend on the user's original seed.
+  RandomEngine combinedWith(std::size_t extra) const {
+    std::size_t combined = m_seed;
+    boost::hash_combine(combined, extra);
+    return RandomEngine(static_cast<RandomSeed>(combined));
+  }
 
   result_type operator()() { return m_engine(); }
 
