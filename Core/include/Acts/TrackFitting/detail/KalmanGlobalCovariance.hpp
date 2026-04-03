@@ -36,13 +36,14 @@ globalTrackParametersCovariance(const traj_t& multiTraj,
                                 const std::size_t& entryIndex) {
   using CovMatrix = BoundMatrix;
   using GainMatrix = BoundMatrix;
+  using Index = typename traj_t::IndexType;
 
   // The last smoothed state index
   std::size_t lastSmoothedIndex = kTrackIndexInvalid;
   // The total number of smoothed states
   std::size_t nSmoothedStates = 0;
   // Visit all the states
-  multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
+  multiTraj.visitBackwards(static_cast<Index>(entryIndex), [&](const auto& ts) {
     if (ts.hasSmoothed()) {
       if (lastSmoothedIndex == kTrackIndexInvalid) {
         lastSmoothedIndex = ts.index();
@@ -61,37 +62,40 @@ globalTrackParametersCovariance(const traj_t& multiTraj,
   // Visit the smoothed states to calculate the full global track parameters
   // covariance
   std::size_t nProcessed = 0;
-  auto prev_ts = multiTraj.getTrackState(lastSmoothedIndex);
-  multiTraj.visitBackwards(lastSmoothedIndex, [&](const auto& ts) {
-    const std::size_t iRow =
-        fullGlobalTrackParamsCov.rows() - eBoundSize * (nProcessed + 1);
-    // Fill the covariance of this state
-    fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(iRow, iRow) =
-        ts.smoothedCovariance();
-    // Fill the correlation between this state (indexed by i-1) and
-    // beforehand smoothed states (indexed by j): C^n_{i-1, j}= G_{i-1} *
-    // C^n_{i, j} for i <= j
-    if (nProcessed > 0) {
-      // Calculate the gain matrix
-      GainMatrix G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
-                     prev_ts.predictedCovariance().inverse();
-      // Loop over the beforehand smoothed states
-      for (std::size_t iProcessed = 1; iProcessed <= nProcessed; iProcessed++) {
-        const std::size_t iCol = iRow + eBoundSize * iProcessed;
-        CovMatrix prev_correlation =
-            fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(
-                iRow + eBoundSize, iCol);
-        CovMatrix correlation = G * prev_correlation;
-        fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(iRow, iCol) =
-            correlation;
-        fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(iCol, iRow) =
-            correlation.transpose();
-      }
-    }
-    stateRowIndices.emplace(ts.index(), iRow);
-    nProcessed++;
-    prev_ts = ts;
-  });
+  auto prev_ts = multiTraj.getTrackState(static_cast<Index>(lastSmoothedIndex));
+  multiTraj.visitBackwards(
+      static_cast<Index>(lastSmoothedIndex), [&](const auto& ts) {
+        const std::size_t iRow =
+            fullGlobalTrackParamsCov.rows() - eBoundSize * (nProcessed + 1);
+        // Fill the covariance of this state
+        fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(iRow, iRow) =
+            ts.smoothedCovariance();
+        // Fill the correlation between this state (indexed by i-1) and
+        // beforehand smoothed states (indexed by j): C^n_{i-1, j}= G_{i-1} *
+        // C^n_{i, j} for i <= j
+        if (nProcessed > 0) {
+          // Calculate the gain matrix
+          GainMatrix G = ts.filteredCovariance() *
+                         prev_ts.jacobian().transpose() *
+                         prev_ts.predictedCovariance().inverse();
+          // Loop over the beforehand smoothed states
+          for (std::size_t iProcessed = 1; iProcessed <= nProcessed;
+               iProcessed++) {
+            const std::size_t iCol = iRow + eBoundSize * iProcessed;
+            CovMatrix prev_correlation =
+                fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(
+                    iRow + eBoundSize, iCol);
+            CovMatrix correlation = G * prev_correlation;
+            fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(iRow, iCol) =
+                correlation;
+            fullGlobalTrackParamsCov.block<eBoundSize, eBoundSize>(iCol, iRow) =
+                correlation.transpose();
+          }
+        }
+        stateRowIndices.emplace(ts.index(), iRow);
+        nProcessed++;
+        prev_ts = ts;
+      });
 
   return {fullGlobalTrackParamsCov, stateRowIndices};
 }

@@ -45,7 +45,7 @@ class GaussianGridTrackDensity {
         : mainGridSize(mainGridSize_),
           trkGridSize(trkGridSize_),
           zMinMax(zMinMax_) {
-      binSize = 2. * zMinMax / mainGridSize;
+      binSize = 2.f * zMinMax / static_cast<float>(mainGridSize);
 
       if (trkGridSize % 2 == 0) {
         throw std::runtime_error(
@@ -76,7 +76,7 @@ class GaussianGridTrackDensity {
 
     /// Maximum relative density deviation from main maximum to consider
     /// secondary maxima for the highest-sum approach
-    float maxRelativeDensityDev = 0.01;
+    float maxRelativeDensityDev = 0.01f;
   };
 
   /// Constructor with configuration

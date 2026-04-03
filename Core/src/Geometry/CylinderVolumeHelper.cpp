@@ -949,7 +949,8 @@ std::shared_ptr<const Layer> CylinderVolumeHelper::createCylinderLayer(
   const Transform3 transform(Translation3(0., 0., z));
 
   // z-binning
-  BinUtility layerBinUtility(binsZ, z - halflengthZ, z + halflengthZ, open,
+  BinUtility layerBinUtility(binsZ, static_cast<float>(z - halflengthZ),
+                             static_cast<float>(z + halflengthZ), open,
                              AxisDirection::AxisZ);
   if (binsPhi == 1) {
     // the BinUtility for the material
@@ -959,9 +960,10 @@ std::shared_ptr<const Layer> CylinderVolumeHelper::createCylinderLayer(
 
   } else {  // break the phi symmetry
     // update the BinUtility: local position on Cylinder is rPhi, z
-    BinUtility layerBinUtilityPhiZ(binsPhi, -r * std::numbers::pi,
-                                   r * std::numbers::pi, closed,
-                                   AxisDirection::AxisPhi);
+    BinUtility layerBinUtilityPhiZ(binsPhi,
+                                   static_cast<float>(-r * std::numbers::pi),
+                                   static_cast<float>(r * std::numbers::pi),
+                                   closed, AxisDirection::AxisPhi);
     layerBinUtilityPhiZ += layerBinUtility;
     // ---------------------> create material for the layer surface
     ACTS_VERBOSE(" -> Preparing the binned material with "
@@ -986,7 +988,9 @@ std::shared_ptr<const Layer> CylinderVolumeHelper::createDiscLayer(
   const Transform3 transform(Translation3(0., 0., z));
 
   // R is the primary binning for the material
-  BinUtility materialBinUtility(binsR, rMin, rMax, open, AxisDirection::AxisR);
+  BinUtility materialBinUtility(binsR, static_cast<float>(rMin),
+                                static_cast<float>(rMax), open,
+                                AxisDirection::AxisR);
   if (binsPhi == 1) {
     ACTS_VERBOSE(" -> Preparing the binned material with " << binsR
                                                            << " bins in R. ");

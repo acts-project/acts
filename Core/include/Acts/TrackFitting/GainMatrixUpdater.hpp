@@ -58,7 +58,7 @@ class GainMatrixUpdater {
     const auto [chi2, error] =
         visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
 
-    trackState.chi2() = chi2;
+    trackState.chi2() = static_cast<float>(chi2);
 
     return error ? Result<void>::failure(error) : Result<void>::success();
   }

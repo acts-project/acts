@@ -51,7 +51,9 @@ class GbtsLayer final {
 
   /// Get number of bins
   /// @return Number of bins
-  std::int32_t numOfBins() const { return m_bins.size(); }
+  std::int32_t numOfBins() const {
+    return static_cast<std::int32_t>(m_bins.size());
+  }
 
   /// Get bins
   /// @return Vector of bin indices
@@ -128,7 +130,9 @@ class GbtsGeometry final {
 
   /// Get number of layers
   /// @return Number of layers
-  std::uint32_t numLayers() const { return m_layers.size(); }
+  std::uint32_t numLayers() const {
+    return static_cast<std::uint32_t>(m_layers.size());
+  }
 
   /// Get bin groups
   /// @return Bin groups vector

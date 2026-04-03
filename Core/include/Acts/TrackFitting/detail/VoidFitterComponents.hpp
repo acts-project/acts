@@ -39,10 +39,11 @@ template <typename traj_t>
 Result<void> voidFitterSmoother(const GeometryContext& /*gctx*/,
                                 traj_t& trackStates, std::size_t entry,
                                 const Logger& /*logger*/) {
-  trackStates.applyBackwards(entry, [](auto trackState) {
-    trackState.smoothed() = trackState.filtered();
-    trackState.smoothedCovariance() = trackState.filteredCovariance();
-  });
+  trackStates.applyBackwards(
+      static_cast<typename traj_t::IndexType>(entry), [](auto trackState) {
+        trackState.smoothed() = trackState.filtered();
+        trackState.smoothedCovariance() = trackState.filteredCovariance();
+      });
 
   return Result<void>::success();
 }

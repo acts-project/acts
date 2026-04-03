@@ -96,7 +96,7 @@ class BinningData {
         binvalue(bValue),
         min(bMin),
         max(bMax),
-        step((bMax - bMin) / bBins),
+        step((bMax - bMin) / static_cast<float>(bBins)),
         zdim(bBins == 1 ? true : false),
         subBinningData(std::move(sBinData)),
         subBinningAdditive(sBinAdditive),
@@ -109,7 +109,7 @@ class BinningData {
     // fill the boundary vector for fast access to center & boundaries
     m_boundaries.reserve(m_bins + 1);
     for (std::size_t ib = 0; ib < m_bins + 1; ++ib) {
-      m_boundaries.push_back(min + ib * step);
+      m_boundaries.push_back(min + static_cast<float>(ib) * step);
     }
     // the binning data has sub structure - multiplicative or additive
     checkSubStructure();
@@ -274,10 +274,10 @@ class BinningData {
         binvalue == AxisDirection::AxisRPhi ||
         binvalue == AxisDirection::AxisX ||
         binvalue == AxisDirection::AxisTheta) {
-      return lposition[0];
+      return static_cast<float>(lposition[0]);
     }
 
-    return lposition[1];
+    return static_cast<float>(lposition[1]);
   }
 
   /// Take the right float value
@@ -292,19 +292,19 @@ class BinningData {
     // ordered after occurrence
     if (binvalue == AxisDirection::AxisR ||
         binvalue == AxisDirection::AxisTheta) {
-      return (perp(position));
+      return static_cast<float>(perp(position));
     }
     if (binvalue == AxisDirection::AxisRPhi) {
-      return (perp(position) * phi(position));
+      return static_cast<float>(perp(position) * phi(position));
     }
     if (binvalue == AxisDirection::AxisEta) {
-      return (eta(position));
+      return static_cast<float>(eta(position));
     }
     if (toUnderlying(binvalue) < 3) {
       return static_cast<float>(position[toUnderlying(binvalue)]);
     }
     // phi gauging
-    return phi(position);
+    return static_cast<float>(phi(position));
   }
 
   /// Get the center value of a bin
@@ -417,8 +417,8 @@ class BinningData {
       return masterbin + subBinningData->search(value);
     }
     // gauge the value to the subBinData
-    float gvalue =
-        value - masterbin * (subBinningData->max - subBinningData->min);
+    float gvalue = value - static_cast<float>(masterbin) *
+                               (subBinningData->max - subBinningData->min);
     // now go / additive or multiplicative
     std::size_t subbin = subBinningData->search(gvalue);
     // now return
@@ -451,11 +451,11 @@ class BinningData {
   /// @return the center value of the bin is given
   float centerValue(std::size_t bin) const {
     if (zdim) {
-      return 0.5 * (min + max);
+      return 0.5f * (min + max);
     }
     float bmin = m_boundaries[bin];
     float bmax = bin < m_boundaries.size() ? m_boundaries[bin + 1] : max;
-    return 0.5 * (bmin + bmax);
+    return 0.5f * (bmin + bmax);
   }
 
  private:
@@ -506,7 +506,7 @@ class BinningData {
         // create the boundary vector
         m_totalBoundaries.push_back(min);
         for (std::size_t ib = 0; ib < m_bins; ++ib) {
-          float offset = ib * step;
+          float offset = static_cast<float>(ib) * step;
           for (std::size_t isb = 1; isb < subBinBoundaries.size(); ++isb) {
             m_totalBoundaries.push_back(offset + subBinBoundaries[isb]);
           }

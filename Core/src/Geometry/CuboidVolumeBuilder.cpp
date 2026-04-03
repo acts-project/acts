@@ -76,7 +76,7 @@ std::shared_ptr<const Layer> CuboidVolumeBuilder::buildLayer(
     centroid += surface->localToGlobalTransform(gctx).translation();
   }
 
-  centroid /= cfg.surfaces.size();
+  centroid /= static_cast<double>(cfg.surfaces.size());
 
   // In the case the layer configuration doesn't define the rotation of the
   // layer use the orientation of the first surface to define the layer rotation
@@ -241,11 +241,11 @@ MutableTrackingVolumePtr CuboidVolumeBuilder::trackingVolume(
 
   // Set bin boundaries along binning
   std::vector<float> binBoundaries;
-  binBoundaries.push_back(volumes[0]->center(gctx).x() -
-                          m_cfg.volumeCfg[0].length.x() * 0.5);
+  binBoundaries.push_back(static_cast<float>(
+      volumes[0]->center(gctx).x() - m_cfg.volumeCfg[0].length.x() * 0.5));
   for (std::size_t i = 0; i < volumes.size(); i++) {
-    binBoundaries.push_back(volumes[i]->center(gctx).x() +
-                            m_cfg.volumeCfg[i].length.x() * 0.5);
+    binBoundaries.push_back(static_cast<float>(
+        volumes[i]->center(gctx).x() + m_cfg.volumeCfg[i].length.x() * 0.5));
   }
 
   // Build binning

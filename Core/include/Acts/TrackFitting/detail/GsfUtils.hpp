@@ -381,7 +381,7 @@ void convoluteComponents(
 
   // Store average material seen by the components
   // Should not be too broadly distributed
-  sumPathXOverX0 += pathXOverX0 / tmpStates.tips.size();
+  sumPathXOverX0 += pathXOverX0 / static_cast<double>(tmpStates.tips.size());
 }
 
 /// Apply the multiple scattering to the state

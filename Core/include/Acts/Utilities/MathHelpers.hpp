@@ -176,7 +176,8 @@ constexpr auto cathetusSquare(T hypotenuse, Args... args) {
 template <typename T, typename... Args>
 constexpr auto fastCathetus(T hypotenuse, Args... args) {
   const auto hypotArgs = fastHypot(args...);
-  return std::sqrt((hypotenuse - hypotArgs) * (hypotenuse + hypotArgs));
+  const double h = static_cast<double>(hypotenuse);
+  return std::sqrt((h - hypotArgs) * (h + hypotArgs));
 }
 
 /// Slow but more accurate cathetus calculation for multiple arguments

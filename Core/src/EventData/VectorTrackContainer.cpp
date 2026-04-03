@@ -66,7 +66,7 @@ VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
 
   assert(checkConsistency());
 
-  return m_tipIndex.size() - 1;
+  return static_cast<IndexType>(m_tipIndex.size() - 1);
 }
 
 void VectorTrackContainer::removeTrack_impl(IndexType itrack) {

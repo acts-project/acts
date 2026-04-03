@@ -64,10 +64,12 @@ struct VolumeMaterialInteraction {
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
-        qOverP(stepper.qOverP(state.stepping)),
-        absQ(stepper.particleHypothesis(state.stepping).absoluteCharge()),
-        momentum(stepper.absoluteMomentum(state.stepping)),
-        mass(stepper.particleHypothesis(state.stepping).mass()),
+        qOverP(static_cast<float>(stepper.qOverP(state.stepping))),
+        absQ(static_cast<float>(
+            stepper.particleHypothesis(state.stepping).absoluteCharge())),
+        momentum(static_cast<float>(stepper.absoluteMomentum(state.stepping))),
+        mass(static_cast<float>(
+            stepper.particleHypothesis(state.stepping).mass())),
         absPdg(stepper.particleHypothesis(state.stepping).absolutePdg()),
         performCovarianceTransport(state.stepping.covTransport),
         navDir(state.options.direction) {}

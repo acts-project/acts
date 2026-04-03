@@ -356,8 +356,8 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
                   return (test > vrr.first && test < vrr.second);
                 });
             if (ringVolume != volumeRminRmax.end()) {
-              unsigned int ringBin =
-                  std::distance(volumeRminRmax.begin(), ringVolume);
+              unsigned int ringBin = static_cast<unsigned int>(
+                  std::distance(volumeRminRmax.begin(), ringVolume));
               ringLayers[ringBin].push_back(elay);
             }
           }

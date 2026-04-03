@@ -54,7 +54,8 @@ class MbfSmoother {
 
     using TrackStateProxy = typename traj_t::TrackStateProxy;
 
-    TrackStateProxy startTs = trajectory.getTrackState(entryIndex);
+    TrackStateProxy startTs = trajectory.getTrackState(
+        static_cast<typename traj_t::IndexType>(entryIndex));
 
     // Notation consistent with the Wikipedia article
     // https://en.wikipedia.org/wiki/Kalman_filter

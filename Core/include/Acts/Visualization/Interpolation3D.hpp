@@ -69,9 +69,9 @@ trajectory_type spline(const trajectory_type& inputsRaw, std::size_t nPoints,
     // MARK: fpeMaskEnd(FLTDIV)
     // MARK: fpeMaskEnd(FLTINV)
 
-    double step = 1. / (nPoints - 1);
+    double step = 1. / (static_cast<double>(nPoints) - 1.);
     for (std::size_t i = 0; i < nPoints; ++i) {
-      double t = i * step;
+      double t = static_cast<double>(i) * step;
       InputVectorType point;
       point[0] = spline3D(t)[0];
       point[1] = spline3D(t)[1];

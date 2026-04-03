@@ -246,7 +246,7 @@ struct MaterialInteractor {
     result.materialInteractions.back().deltaP =
         momentum - result.materialInteractions.back().direction.norm();
     result.materialInteractions.back().materialSlab.scaleThickness(
-        shift.norm());
+        static_cast<float>(shift.norm()));
     result.materialInteractions.back().updatedVolumeStep = true;
     result.materialInX0 +=
         result.materialInteractions.back().materialSlab.thicknessInX0();

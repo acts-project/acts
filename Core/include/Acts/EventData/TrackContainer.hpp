@@ -340,7 +340,9 @@ class TrackContainer {
 
   /// Get the size (number of tracks) of the track container
   /// @return the sixe
-  constexpr IndexType size() const { return m_container->size_impl(); }
+  constexpr IndexType size() const {
+    return static_cast<IndexType>(m_container->size_impl());
+  }
 
   /// Clear the content of the track container
   /// @note Only available if the track container is not read-only

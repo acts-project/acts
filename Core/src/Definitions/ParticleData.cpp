@@ -164,24 +164,31 @@ float Acts::calculateNucleusMass(Acts::PdgParticle pdg) {
   int Z = std::abs(ZandA.first);
   int A = ZandA.second;
 
-  float a_Vol = 15.260f * Acts::UnitConstants::MeV;
-  float a_Surf = 16.267f * Acts::UnitConstants::MeV;
-  float a_Col = 0.689f * Acts::UnitConstants::MeV;
-  float a_Sym = 22.209f * Acts::UnitConstants::MeV;
-  float a_Pair =
-      (1 - 2 * (Z % 2)) * (1 - A % 2) * 10.076f * Acts::UnitConstants::MeV;
+  float a_Vol = static_cast<float>(15.260 * Acts::UnitConstants::MeV);
+  float a_Surf = static_cast<float>(16.267 * Acts::UnitConstants::MeV);
+  float a_Col = static_cast<float>(0.689 * Acts::UnitConstants::MeV);
+  float a_Sym = static_cast<float>(22.209 * Acts::UnitConstants::MeV);
+  float a_Pair = static_cast<float>((1 - 2 * (Z % 2)) * (1 - A % 2) * 10.076 *
+                                    Acts::UnitConstants::MeV);
 
-  float massP = 0.938272f * Acts::UnitConstants::GeV;
-  float massN = 0.939565f * Acts::UnitConstants::GeV;
+  float massP = static_cast<float>(0.938272 * Acts::UnitConstants::GeV);
+  float massN = static_cast<float>(0.939565 * Acts::UnitConstants::GeV);
 
   float bindEnergy = 0.f;
-  bindEnergy += a_Vol * A;
-  bindEnergy -= a_Surf * std::pow(A, 2. / 3.);
-  bindEnergy -= a_Col * Z * (Z - 1) * std::pow(A, -1. / 3.);
-  bindEnergy -= a_Sym * std::pow(A - 2 * Z, 2.) / A;
-  bindEnergy -= a_Pair * std::pow(A, -1. / 2.);
+  bindEnergy += a_Vol * static_cast<float>(A);
+  bindEnergy -=
+      static_cast<float>(a_Surf * std::pow(static_cast<double>(A), 2. / 3.));
+  bindEnergy -= static_cast<float>(static_cast<double>(a_Col) *
+                                   static_cast<double>(Z * (Z - 1)) *
+                                   std::pow(static_cast<double>(A), -1. / 3.));
+  bindEnergy -=
+      static_cast<float>(a_Sym * std::pow(static_cast<double>(A - 2 * Z), 2.) /
+                         static_cast<double>(A));
+  bindEnergy -=
+      static_cast<float>(a_Pair * std::pow(static_cast<double>(A), -1. / 2.));
 
-  return massP * Z + massN * (A - Z) - bindEnergy;
+  return massP * static_cast<float>(Z) + massN * static_cast<float>(A - Z) -
+         bindEnergy;
 }
 
 std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {

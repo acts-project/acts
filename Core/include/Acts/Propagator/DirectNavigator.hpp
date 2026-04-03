@@ -127,7 +127,7 @@ class DirectNavigator {
     /// @return Number of surfaces left to process in the propagation direction
     int remainingSurfaces() const {
       if (direction == Direction::Forward()) {
-        return options.externalSurfaces.size() - surfaceIndex;
+        return static_cast<int>(options.externalSurfaces.size()) - surfaceIndex;
       }
       return surfaceIndex + 1;
     }
@@ -251,8 +251,8 @@ class DirectNavigator {
     if (found != state.options.externalSurfaces.end()) {
       // The index should be the index before the start surface, depending on
       // the direction
-      state.surfaceIndex =
-          std::distance(state.options.externalSurfaces.begin(), found);
+      state.surfaceIndex = static_cast<int>(
+          std::distance(state.options.externalSurfaces.begin(), found));
       state.surfaceIndex += state.direction == Direction::Backward() ? 1 : -1;
     } else {
       ACTS_DEBUG(

@@ -285,7 +285,8 @@ class TrackProxy
       return 0;
     }
     auto tsRange = trackStatesReversed();
-    return std::distance(tsRange.begin(), tsRange.end());
+    return static_cast<unsigned int>(
+        std::distance(tsRange.begin(), tsRange.end()));
   }
 
   /// Return the index of this track in the track container

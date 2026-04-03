@@ -82,8 +82,10 @@ class TrackParamsLookupAccumulator {
 
         auto res = TrackParameters::create(
             gctx, track.referenceSurface().getSharedPtr(),
-            track.fourPosition(gctx) / count, track.momentum().normalized(),
-            count * track.charge() / track.momentum().norm(),
+            track.fourPosition(gctx) / static_cast<double>(count),
+            track.momentum().normalized(),
+            static_cast<double>(count) * track.charge() /
+                track.momentum().norm(),
             track.covariance(), track.particleHypothesis());
 
         if (!res.ok()) {
@@ -91,10 +93,12 @@ class TrackParamsLookupAccumulator {
         }
         return res.value();
       } else {
-        return TrackParameters(track.fourPosition() / count,
-                               track.momentum().normalized(),
-                               count * track.charge() / track.momentum().norm(),
-                               track.covariance(), track.particleHypothesis());
+        return TrackParameters(
+            track.fourPosition() / static_cast<double>(count),
+            track.momentum().normalized(),
+            static_cast<double>(count) * track.charge() /
+                track.momentum().norm(),
+            track.covariance(), track.particleHypothesis());
       }
     };
 

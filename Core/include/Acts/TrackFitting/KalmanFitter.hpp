@@ -12,6 +12,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -195,13 +196,13 @@ struct KalmanFitterResult {
   /// This corresponds to the last measurement state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
   /// TrackTraits::kInvalid is the start of a trajectory.
-  std::size_t lastMeasurementIndex = kTrackIndexInvalid;
+  TrackIndexType lastMeasurementIndex = kTrackIndexInvalid;
 
   /// This is the index of the 'tip' of the states stored in multitrajectory.
   /// This corresponds to the last state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
   /// TrackTraits::kInvalid is the start of a trajectory.
-  std::size_t lastTrackIndex = kTrackIndexInvalid;
+  TrackIndexType lastTrackIndex = kTrackIndexInvalid;
 
   /// The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;

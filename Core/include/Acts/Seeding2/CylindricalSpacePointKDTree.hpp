@@ -45,22 +45,22 @@ class CylindricalSpacePointKDTree {
   struct Options {
     /// maximum extension of sensitive detector layer relevant for seeding as
     /// distance from x=y=0 (i.e. in r)
-    float rMax = 600 * UnitConstants::mm;
+    float rMax = static_cast<float>(600 * UnitConstants::mm);
     /// minimum extension of sensitive detector layer relevant for seeding in
     /// negative direction in z
-    float zMin = -2800 * UnitConstants::mm;
+    float zMin = static_cast<float>(-2800 * UnitConstants::mm);
     /// maximum extension of sensitive detector layer relevant for seeding in
     /// positive direction in z
-    float zMax = 2800 * UnitConstants::mm;
+    float zMax = static_cast<float>(2800 * UnitConstants::mm);
     /// minimum phi value for phiAxis construction
     float phiMin = -std::numbers::pi_v<float>;
     /// maximum phi value for phiAxis construction
     float phiMax = std::numbers::pi_v<float>;
 
     /// Minimum radial distance between two doublet components
-    float deltaRMin = 5 * UnitConstants::mm;
+    float deltaRMin = static_cast<float>(5 * UnitConstants::mm);
     /// Maximum radial distance between two doublet components
-    float deltaRMax = 270 * UnitConstants::mm;
+    float deltaRMax = static_cast<float>(270 * UnitConstants::mm);
 
     /// Minimal z distance between two doublet components
     float deltaZMin = -std::numeric_limits<float>::infinity();
@@ -69,13 +69,13 @@ class CylindricalSpacePointKDTree {
 
     /// Limiting location of collision region in z-axis used to check if doublet
     /// origin is within reasonable bounds
-    float collisionRegionMin = -150 * UnitConstants::mm;
+    float collisionRegionMin = static_cast<float>(-150 * UnitConstants::mm);
     /// Maximum location of collision region in z-axis
-    float collisionRegionMax = +150 * UnitConstants::mm;
+    float collisionRegionMax = static_cast<float>(150 * UnitConstants::mm);
 
     /// Maximum allowed cotTheta between two space-points in doublet, used to
     /// check if forward angle is within bounds
-    float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
+    float cotThetaMax = 10.01788f;  // equivalent to eta = 3 (pseudorapidity)
 
     /// Shrink the phi range of middle space-point (analogous to phi bin size in
     /// grid from default seeding + number of phi bins used in search)

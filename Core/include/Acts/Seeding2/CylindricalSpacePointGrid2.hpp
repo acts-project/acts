@@ -53,23 +53,23 @@ class CylindricalSpacePointGrid2 {
     /// distance from x=y=0 (i.e. in r)
     /// WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
     /// which will make seeding very slow!
-    float rMin = 0 * UnitConstants::mm;
+    float rMin = static_cast<float>(0 * UnitConstants::mm);
     /// maximum extension of sensitive detector layer relevant for seeding as
     /// distance from x=y=0 (i.e. in r)
-    float rMax = 600 * UnitConstants::mm;
+    float rMax = static_cast<float>(600 * UnitConstants::mm);
     /// minimum extension of sensitive detector layer relevant for seeding in
     /// negative direction in z
-    float zMin = -2800 * UnitConstants::mm;
+    float zMin = static_cast<float>(-2800 * UnitConstants::mm);
     /// maximum extension of sensitive detector layer relevant for seeding in
     /// positive direction in z
-    float zMax = 2800 * UnitConstants::mm;
+    float zMax = static_cast<float>(2800 * UnitConstants::mm);
     /// maximum distance in r from middle space point to bottom or top
     /// space point
-    float deltaRMax = 270 * UnitConstants::mm;
+    float deltaRMax = static_cast<float>(270 * UnitConstants::mm);
     /// maximum forward direction expressed as cot(theta)
-    float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
+    float cotThetaMax = 10.01788f;  // equivalent to eta = 3 (pseudorapidity)
     /// maximum impact parameter in mm
-    float impactMax = 0 * UnitConstants::mm;
+    float impactMax = static_cast<float>(0 * UnitConstants::mm);
     /// minimum phi value for phiAxis construction
     float phiMin = -std::numbers::pi_v<float>;
     /// maximum phi value for phiAxis construction
