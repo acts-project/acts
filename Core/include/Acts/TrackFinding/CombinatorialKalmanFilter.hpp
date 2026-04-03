@@ -292,8 +292,8 @@ class CombinatorialKalmanFilter {
         // 3) The surface is neither in the measurement map nor with material
         // -> Do nothing
         ACTS_VERBOSE("Perform filter step");
-        auto res = filter(*surface, state, stepper, navigator, result);
-        if (!res.ok()) {
+        if (auto res = filter(*surface, state, stepper, navigator, result);
+            !res.ok()) {
           ACTS_DEBUG("Error in filter: " << res.error().message());
           return res.error();
         }
@@ -312,9 +312,9 @@ class CombinatorialKalmanFilter {
           state, stepper, navigator, logger());
       const bool isPathLimitReached = result.pathLimitReached.checkAbort(
           state, stepper, navigator, logger());
-      const bool isTargetReached =
-          targetReached.checkAbort(state, stepper, navigator, logger());
-      if (isEndOfWorldReached || isVolumeConstraintReached ||
+      if (const bool isTargetReached =
+              targetReached.checkAbort(state, stepper, navigator, logger());
+          isEndOfWorldReached || isVolumeConstraintReached ||
           isPathLimitReached || isTargetReached) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
@@ -406,10 +406,10 @@ class CombinatorialKalmanFilter {
       // Set targetSurface to nullptr for forward filtering
       state.navigation.options.startSurface = &currentState.referenceSurface();
       state.navigation.options.targetSurface = nullptr;
-      auto navInitRes = navigator.initialize(
-          state.navigation, stepper.position(state.stepping),
-          stepper.direction(state.stepping), state.options.direction);
-      if (!navInitRes.ok()) {
+      if (auto navInitRes = navigator.initialize(
+              state.navigation, stepper.position(state.stepping),
+              stepper.direction(state.stepping), state.options.direction);
+          !navInitRes.ok()) {
         ACTS_DEBUG("Navigation initialization failed: " << navInitRes.error());
         return navInitRes.error();
       }
@@ -518,9 +518,8 @@ class CombinatorialKalmanFilter {
                      << procRes.error().message());
           return procRes.error();
         }
-        unsigned int nBranchesOnSurface = *procRes;
-
-        if (nBranchesOnSurface == 0) {
+        if (unsigned int nBranchesOnSurface = *procRes;
+            nBranchesOnSurface == 0) {
           ACTS_VERBOSE("All branches on surface " << surface.geometryId()
                                                   << " have been stopped");
 
@@ -587,9 +586,8 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      auto currentState = currentBranch.outermostTrackState();
-
-      if (currentState.typeFlags().isOutlier()) {
+      if (auto currentState = currentBranch.outermostTrackState();
+          currentState.typeFlags().isOutlier()) {
         // We don't need to update the stepper given an outlier state
         ACTS_VERBOSE("Outlier state detected on surface "
                      << surface.geometryId());
@@ -662,9 +660,8 @@ class CombinatorialKalmanFilter {
       // Update and select from the new branches
       for (TrackProxy newBranch : newBranches) {
         auto trackState = newBranch.outermostTrackState();
-        TrackStateTypeMap typeFlags = trackState.typeFlags();
-
-        if (typeFlags.isOutlier()) {
+        if (TrackStateTypeMap typeFlags = trackState.typeFlags();
+            typeFlags.isOutlier()) {
           // No Kalman update for outlier
           // Set the filtered parameter index to be the same with predicted
           // parameter
@@ -673,8 +670,9 @@ class CombinatorialKalmanFilter {
           newBranch.nOutliers()++;
         } else if (typeFlags.isMeasurement()) {
           // Kalman update
-          auto updateRes = extensions.updater(gctx, trackState, *updaterLogger);
-          if (!updateRes.ok()) {
+          if (auto updateRes =
+                  extensions.updater(gctx, trackState, *updaterLogger);
+              !updateRes.ok()) {
             ACTS_DEBUG("Update step failed: " << updateRes.error().message());
             return updateRes.error();
           }
@@ -852,11 +850,11 @@ class CombinatorialKalmanFilter {
             .template makeState<PropagatorOptions, StubPathLimitReached>(
                 propOptions);
 
-    auto initResult =
-        m_propagator
-            .template initialize<decltype(propState), StubPathLimitReached>(
-                propState, initialParameters);
-    if (!initResult.ok()) {
+    if (auto initResult =
+            m_propagator
+                .template initialize<decltype(propState), StubPathLimitReached>(
+                    propState, initialParameters);
+        !initResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
       return initResult.error();
     }

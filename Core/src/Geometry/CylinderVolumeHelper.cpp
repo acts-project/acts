@@ -445,10 +445,10 @@ bool CylinderVolumeHelper::estimateAndCheckDimension(
     double currentZmin = 0.;
     double currentZmax = 0.;
     // dynamic cast the bounds either to CylinderBounds or DiscBounds
-    const CylinderBounds* cylBounds = dynamic_cast<const CylinderBounds*>(
-        &(layerIter->surfaceRepresentation()).bounds());
     // cylinder bounds
-    if (cylBounds != nullptr) {
+    if (const CylinderBounds* cylBounds = dynamic_cast<const CylinderBounds*>(
+            &(layerIter->surfaceRepresentation()).bounds());
+        cylBounds != nullptr) {
       radial = true;
       // get the raw data
       double currentR = cylBounds->get(CylinderBounds::eR);
@@ -460,9 +460,9 @@ bool CylinderVolumeHelper::estimateAndCheckDimension(
       currentZmax = centerZ + cylBounds->get(CylinderBounds::eHalfLengthZ);
     }
     // dynamic cast to the DiscBounds
-    const RadialBounds* discBounds = dynamic_cast<const RadialBounds*>(
-        &(layerIter->surfaceRepresentation()).bounds());
-    if (discBounds != nullptr) {
+    if (const RadialBounds* discBounds = dynamic_cast<const RadialBounds*>(
+            &(layerIter->surfaceRepresentation()).bounds());
+        discBounds != nullptr) {
       // check for min/max in the cylinder bounds case
       double centerZ = (layerIter->surfaceRepresentation()).center(gctx).z();
       currentRmin = discBounds->rMin();

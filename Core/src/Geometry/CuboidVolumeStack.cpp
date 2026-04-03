@@ -161,9 +161,9 @@ void CuboidVolumeStack::initializeOuterVolume(const GeometryContext& gctx,
   volumeTuples.reserve(m_volumes.size());
 
   for (const auto& volume : m_volumes) {
-    const auto* cuboidBounds =
-        dynamic_cast<const CuboidVolumeBounds*>(&volume->volumeBounds());
-    if (cuboidBounds == nullptr) {
+    if (const auto* cuboidBounds =
+            dynamic_cast<const CuboidVolumeBounds*>(&volume->volumeBounds());
+        cuboidBounds == nullptr) {
       throw std::invalid_argument{
           "CuboidVolumeStack requires all volumes to "
           "have CuboidVolumeBounds"};

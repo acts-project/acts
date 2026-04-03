@@ -113,8 +113,8 @@ struct TrackStateCreator {
       TrackStateContainerBackend& trajectory, const Logger& logger) const {
     TrackStatesResult tsRes = TrackStatesResult::success({});
     using SourceLinkRange = decltype(sourceLinkAccessor(surface));
-    SourceLinkRange slRange = sourceLinkAccessor(surface);
-    if (slRange.first != slRange.second) {
+    if (SourceLinkRange slRange = sourceLinkAccessor(surface);
+        slRange.first != slRange.second) {
       auto [slBegin, slEnd] = slRange;
       tsRes = createSourceLinkTrackStates(
           gctx, calibrationContext, surface, boundState, slBegin, slEnd,
@@ -203,11 +203,11 @@ struct TrackStateCreator {
     }
 
     bool isOutlier = false;
-    Result<std::pair<typename std::vector<TrackStateProxy>::iterator,
-                     typename std::vector<TrackStateProxy>::iterator>>
-        selectorResult =
-            measurementSelector(trackStateCandidates, isOutlier, logger);
-    if (!selectorResult.ok()) {
+    if (Result<std::pair<typename std::vector<TrackStateProxy>::iterator,
+                         typename std::vector<TrackStateProxy>::iterator>>
+            selectorResult =
+                measurementSelector(trackStateCandidates, isOutlier, logger);
+        !selectorResult.ok()) {
       ACTS_DEBUG("Selection of calibrated measurements failed: "
                  << selectorResult.error().message());
       resultTrackStateList =

@@ -132,10 +132,10 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
       }
       // a final navigation layer
       // calculate the layer value for the offset
-      double navigationValue =
-          0.5 * (boundaries.at(boundaries.size() - 1) + max);
       // create navigation layer only when necessary
-      if (navigationValue != max && lastLayer != nullptr) {
+      if (double navigationValue =
+              0.5 * (boundaries.at(boundaries.size() - 1) + max);
+          navigationValue != max && lastLayer != nullptr) {
         // create the navigation layer surface from the layer
         std::shared_ptr<const Surface> navLayerSurface =
             createNavigationSurface(gctx, *lastLayer, aDir,

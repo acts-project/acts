@@ -158,11 +158,10 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
   wConfig.cVolumeConfig = analyzeContent(gctx, centralLayers, centralVolumes);
   wConfig.pVolumeConfig = analyzeContent(gctx, positiveLayers, {});  // TODO
 
-  bool hasLayers = wConfig.nVolumeConfig.present ||
-                   wConfig.cVolumeConfig.present ||
-                   wConfig.pVolumeConfig.present;
-
-  if (!hasLayers) {
+  if (bool hasLayers = wConfig.nVolumeConfig.present ||
+                       wConfig.cVolumeConfig.present ||
+                       wConfig.pVolumeConfig.present;
+      !hasLayers) {
     ACTS_INFO("No layers present, returning nullptr");
     return nullptr;
   }
@@ -271,10 +270,10 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
           double tolerance = m_cfg.ringTolerance;
           // Search for the rmin value  - and insert if necessary
           double rMin = discBounds->rMin();
-          auto innerSearch = std::ranges::find_if(innerRadii, [&](double r) {
-            return std::abs(rMin - r) < tolerance;
-          });
-          if (innerSearch == innerRadii.end()) {
+          if (auto innerSearch = std::ranges::find_if(
+                  innerRadii,
+                  [&](double r) { return std::abs(rMin - r) < tolerance; });
+              innerSearch == innerRadii.end()) {
             innerRadii.push_back(rMin);
           }
           // Search for the rmax value - and insert if necessary
@@ -461,9 +460,8 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
   }
 
   // Prepare the gap volumes first
-  TrackingVolumePtr existingVolumeCp = existingVolume;
   // Check if further action is needed on existing volumes and gap volumes
-  if (existingVolumeCp) {
+  if (TrackingVolumePtr existingVolumeCp = existingVolume; existingVolumeCp) {
     // Check if gaps are needed
     std::vector<TrackingVolumePtr> existingContainer;
     if (wConfig.fGapVolumeConfig.present) {
@@ -559,9 +557,9 @@ VolumeConfig CylinderVolumeBuilder::analyzeContent(
       const Vector3& center = layer->surfaceRepresentation().center(gctx);
       double rCenter = std::hypot(center.x(), center.y());
       // check if it is a cylinder layer
-      const CylinderLayer* cLayer =
-          dynamic_cast<const CylinderLayer*>(layer.get());
-      if (cLayer != nullptr) {
+      if (const CylinderLayer* cLayer =
+              dynamic_cast<const CylinderLayer*>(layer.get());
+          cLayer != nullptr) {
         // now we have access to all the information
         double rMinC =
             cLayer->surfaceRepresentation().bounds().get(CylinderBounds::eR) -

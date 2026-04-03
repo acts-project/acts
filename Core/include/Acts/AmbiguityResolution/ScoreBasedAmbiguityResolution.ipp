@@ -430,9 +430,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
       }
 
       std::size_t nTracksShared = it->second;
-      auto isoutliner = ts.typeFlags().isOutlier();
-
-      if (isoutliner) {
+      if (auto isoutliner = ts.typeFlags().isOutlier(); isoutliner) {
         ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
         trackStateTypes.push_back(TrackStateTypes::Outlier);
         continue;

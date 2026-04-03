@@ -43,9 +43,9 @@ DiscLayer::DiscLayer(const Transform3& transform,
     : DiscSurface(transform, dbounds),
       Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp) {
   // In case we have Radial bounds
-  const RadialBounds* rBounds =
-      dynamic_cast<const RadialBounds*>(DiscSurface::m_bounds.get());
-  if (rBounds != nullptr) {
+  if (const RadialBounds* rBounds =
+          dynamic_cast<const RadialBounds*>(DiscSurface::m_bounds.get());
+      rBounds != nullptr) {
     // The volume bounds
     auto rVolumeBounds =
         std::make_shared<CylinderVolumeBounds>(*rBounds, thickness);

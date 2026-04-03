@@ -580,8 +580,8 @@ void CylinderVolumeStack::checkVolumeAlignment(
     ACTS_VERBOSE(" -> Rotation is ok!");
 
     // b) the volumes cannot have translation in x or y
-    Vector2 translation = vt.localTransform.translation().head<2>();
-    if (std::abs(translation[0]) > tolerance ||  //
+    if (Vector2 translation = vt.localTransform.translation().head<2>();
+        std::abs(translation[0]) > tolerance ||  //
         std::abs(translation[1]) > tolerance) {
       ACTS_ERROR("Volumes are not aligned: translation in x or y");
       throw std::invalid_argument(

@@ -105,12 +105,12 @@ inline auto createCurvilinearUnitU(
   // explicit version of U = Z x T
   unitU[0] = -direction[1];
   unitU[1] = direction[0];
-  const auto scale = unitU.template head<2>().norm();
   // if the absolute scale is tiny, the initial direction vector is aligned with
   // the z-axis. the ZxT product is ill-defined since any vector in the x-y
   // plane would be orthogonal to the direction. fix the U unit vector along the
   // x-axis to avoid this numerical instability.
-  if (scale < (16 * std::numeric_limits<OutputScalar>::epsilon())) {
+  if (const auto scale = unitU.template head<2>().norm();
+      scale < (16 * std::numeric_limits<OutputScalar>::epsilon())) {
     unitU[0] = 1;
     unitU[1] = 0;
   } else {

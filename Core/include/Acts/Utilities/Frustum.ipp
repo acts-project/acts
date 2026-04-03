@@ -189,8 +189,8 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
     vec3 den = d1.cross(d2);
 
     value_type f = 1.;
-    value_type dot = num.normalized().dot(den.normalized());
-    if (std::abs(dot) - 1 < 1e-9 && dot < 0) {
+    if (value_type dot = num.normalized().dot(den.normalized());
+        std::abs(dot) - 1 < 1e-9 && dot < 0) {
       f = -1.;
     }
 

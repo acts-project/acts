@@ -53,9 +53,9 @@ bool CutoutCylinderVolumeBounds::inside(const Vector3& gpos, double tol) const {
   double ros = perp(gpos);
 
   bool insideR = (ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol);
-  bool insideZ = std::abs(gpos.z()) <= get(eHalfLengthZ) + tol;
 
-  if (!insideR || !insideZ) {
+  if (bool insideZ = std::abs(gpos.z()) <= get(eHalfLengthZ) + tol;
+      !insideR || !insideZ) {
     return false;
   }
 

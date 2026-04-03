@@ -46,8 +46,8 @@ struct PathLimitReached {
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
     double tolerance = state.options.surfaceTolerance;
-    bool limitReached = (std::abs(distance) < std::abs(tolerance));
-    if (limitReached) {
+    if (bool limitReached = (std::abs(distance) < std::abs(tolerance));
+        limitReached) {
       ACTS_VERBOSE("PathLimit aborter | " << "Path limit reached at distance "
                                           << distance);
       return true;
@@ -258,11 +258,12 @@ struct AnySurfaceReached {
 
     const Surface* startSurface = navigator.startSurface(state.navigation);
     const Surface* targetSurface = navigator.targetSurface(state.navigation);
-    const Surface* currentSurface = navigator.currentSurface(state.navigation);
 
     // `startSurface` is excluded because we want to reach a new surface
     // `targetSurface` is excluded because another aborter should handle it
-    if (currentSurface != nullptr && currentSurface != startSurface &&
+    if (const Surface* currentSurface =
+            navigator.currentSurface(state.navigation);
+        currentSurface != nullptr && currentSurface != startSurface &&
         currentSurface != targetSurface) {
       return true;
     }

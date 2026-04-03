@@ -133,9 +133,9 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       }
     }
 
-    Result<void> actResult =
-        state.options.actorList.act(state, m_stepper, m_navigator, logger());
-    if (!actResult.ok()) {
+    if (Result<void> actResult = state.options.actorList.act(
+            state, m_stepper, m_navigator, logger());
+        !actResult.ok()) {
       ACTS_DEBUG("Actor call failed: " << actResult.error() << ": "
                                        << actResult.error().message());
       return actResult.error();
@@ -210,8 +210,8 @@ auto Propagator<S, N>::propagate(const BoundParameters& start,
     -> Result<ResultType<propagator_options_t>> {
   auto state = makeState<propagator_options_t, path_aborter_t>(options);
 
-  auto initRes = initialize<decltype(state), path_aborter_t>(state, start);
-  if (!initRes.ok()) {
+  if (auto initRes = initialize<decltype(state), path_aborter_t>(state, start);
+      !initRes.ok()) {
     ACTS_DEBUG("Initialization failed: " << initRes.error() << ": "
                                          << initRes.error().message());
     return initRes.error();
@@ -235,8 +235,8 @@ auto Propagator<S, N>::propagate(const BoundParameters& start,
       makeState<propagator_options_t, target_aborter_t, path_aborter_t>(
           target, options);
 
-  auto initRes = initialize<decltype(state), path_aborter_t>(state, start);
-  if (!initRes.ok()) {
+  if (auto initRes = initialize<decltype(state), path_aborter_t>(state, start);
+      !initRes.ok()) {
     ACTS_DEBUG("Initialization failed: " << initRes.error() << ": "
                                          << initRes.error().message());
     return initRes.error();
@@ -309,10 +309,10 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
   state.navigation.options.startSurface = &start.referenceSurface();
 
   // Navigator initialize state call
-  auto navInitRes =
-      m_navigator.initialize(state.navigation, state.position, state.direction,
-                             state.options.direction);
-  if (!navInitRes.ok()) {
+  if (auto navInitRes =
+          m_navigator.initialize(state.navigation, state.position,
+                                 state.direction, state.options.direction);
+      !navInitRes.ok()) {
     ACTS_DEBUG("Navigator initialization failed: "
                << navInitRes.error() << ": " << navInitRes.error().message());
     return navInitRes.error();

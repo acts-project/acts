@@ -241,16 +241,15 @@ struct GaussianSumFitter {
     const auto gsfBackward = gsfForward.invert();
 
     // Check if the start parameters are on the start surface
-    IntersectionStatus intersectionStatusStartSurface =
-        sParameters.referenceSurface()
-            .intersect(GeometryContext::dangerouslyDefaultConstruct(),
-                       sParameters.position(
-                           GeometryContext::dangerouslyDefaultConstruct()),
-                       sParameters.direction(), BoundaryTolerance::None())
-            .closest()
-            .status();
-
-    if (intersectionStatusStartSurface != IntersectionStatus::onSurface) {
+    if (IntersectionStatus intersectionStatusStartSurface =
+            sParameters.referenceSurface()
+                .intersect(GeometryContext::dangerouslyDefaultConstruct(),
+                           sParameters.position(
+                               GeometryContext::dangerouslyDefaultConstruct()),
+                           sParameters.direction(), BoundaryTolerance::None())
+                .closest()
+                .status();
+        intersectionStatusStartSurface != IntersectionStatus::onSurface) {
       ACTS_DEBUG(
           "Surface intersection of start parameters WITH bound-check failed");
     }
@@ -298,9 +297,10 @@ struct GaussianSumFitter {
 
       // If necessary convert to MultiComponentBoundTrackParameters. This allows
       // the initialization with single- and multicomponent start parameters.
-      constexpr bool IsMultiParameters =
-          detail::IsMultiComponentBoundParameters<start_parameters_t>::value;
-      if constexpr (!IsMultiParameters) {
+      if constexpr (constexpr bool IsMultiParameters =
+                        detail::IsMultiComponentBoundParameters<
+                            start_parameters_t>::value;
+                    !IsMultiParameters) {
         params = MultiComponentBoundTrackParameters(
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), sParameters.covariance(),
@@ -320,8 +320,8 @@ struct GaussianSumFitter {
           std::declval<StateType&&>(), std::declval<PropagationResultType>(),
           std::declval<const OptionsType&>(), false));
 
-      auto initRes = m_propagator.initialize(state, *params);
-      if (!initRes.ok()) {
+      if (auto initRes = m_propagator.initialize(state, *params);
+          !initRes.ok()) {
         return ResultType::failure(initRes.error());
       }
 
@@ -399,8 +399,8 @@ struct GaussianSumFitter {
               .template makeState<OptionsType, MultiStepperSurfaceReached>(
                   target, bwdPropOptions);
 
-      auto initRes = m_propagator.initialize(state, inflatedParams);
-      if (!initRes.ok()) {
+      if (auto initRes = m_propagator.initialize(state, inflatedParams);
+          !initRes.ok()) {
         return ResultType::failure(initRes.error());
       }
 
@@ -480,9 +480,9 @@ struct GaussianSumFitter {
 
     for (auto state : fwdGsfResult.fittedStates->reverseTrackStateRange(
              fwdGsfResult.currentTip)) {
-      const bool found =
-          rangeContainsValue(foundBwd, &state.referenceSurface());
-      if (!found && state.typeFlags().isMeasurement()) {
+      if (const bool found =
+              rangeContainsValue(foundBwd, &state.referenceSurface());
+          !found && state.typeFlags().isMeasurement()) {
         state.typeFlags().setIsOutlier();
         state.unset(TrackStatePropMask::Smoothed);
       }

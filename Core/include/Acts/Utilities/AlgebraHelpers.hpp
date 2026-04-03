@@ -243,8 +243,7 @@ struct ExpSafeLimit<float> {
 template <typename T>
 constexpr T safeExp(T val) noexcept {
   constexpr T maxExponent = ExpSafeLimit<T>::value;
-  constexpr T minExponent = -maxExponent;
-  if (val < minExponent) {
+  if (const T minExponent = -maxExponent; val < minExponent) {
     return 0.0;
   }
 
@@ -282,8 +281,7 @@ constexpr std::array<std::size_t, 2> symMatIndices(const std::size_t k)
   requires(N > 1)
 {
   assert(k < sumUpToN(N));
-  constexpr std::size_t bound = sumUpToN(N - 1);
-  if (k >= bound) {
+  if (const std::size_t bound = sumUpToN(N - 1); k >= bound) {
     return std::array<std::size_t, 2>{N - 1, k - bound};
   }
   if constexpr (N > 2) {

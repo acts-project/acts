@@ -125,10 +125,9 @@ Result<void> smoothTrack(
     return last.error();
   }
 
-  auto smoothingResult =
-      smoother(geoContext, trackStateContainer, last->index(), logger);
-
-  if (!smoothingResult.ok()) {
+  if (auto smoothingResult =
+          smoother(geoContext, trackStateContainer, last->index(), logger);
+      !smoothingResult.ok()) {
     ACTS_DEBUG("Smoothing track " << track.index() << " failed with error "
                                   << smoothingResult.error());
     return smoothingResult.error();

@@ -28,8 +28,8 @@ GlueVolumesDescriptor::GlueVolumesDescriptor(
 void GlueVolumesDescriptor::registerGlueVolumes(
     BoundarySurfaceFace bsf, std::shared_ptr<const TrackingVolumeArray> gvs) {
   // register the face
-  auto searchIter = m_glueVolumes.find(bsf);
-  if (searchIter == m_glueVolumes.end()) {
+  if (auto searchIter = m_glueVolumes.find(bsf);
+      searchIter == m_glueVolumes.end()) {
     m_glueFaces.push_back(bsf);
   }
   // simple assignment overwrites already existing entries
@@ -40,8 +40,8 @@ void GlueVolumesDescriptor::registerGlueVolumes(
 std::shared_ptr<const TrackingVolumeArray> GlueVolumesDescriptor::glueVolumes(
     BoundarySurfaceFace bsf) const {
   // searching for the glue volumes according
-  auto searchIter = m_glueVolumes.find(bsf);
-  if (searchIter != m_glueVolumes.end()) {
+  if (auto searchIter = m_glueVolumes.find(bsf);
+      searchIter != m_glueVolumes.end()) {
     return searchIter->second;
   }
   return nullptr;

@@ -199,9 +199,9 @@ void ConeVolumeBounds::checkConsistency() noexcept(false) {
 bool ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   double z = pos.z();
   double zmin = z + tol;
-  double zmax = z - tol;
   // Quick check outside z
-  if (zmin < -get(eHalfLengthZ) || zmax > get(eHalfLengthZ)) {
+  if (double zmax = z - tol;
+      zmin < -get(eHalfLengthZ) || zmax > get(eHalfLengthZ)) {
     return false;
   }
   double r = VectorHelpers::perp(pos);

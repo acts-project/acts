@@ -245,8 +245,8 @@ ActsAlignment::Alignment<fitter_t>::align(
     // Initialize the alignment mask (all dof in default)
     AlignmentMask alignMask = AlignmentMask::All;
     // Set the alignment mask
-    auto iter_it = alignOptions.iterationState.find(iIter);
-    if (iter_it != alignOptions.iterationState.end()) {
+    if (auto iter_it = alignOptions.iterationState.find(iIter);
+        iter_it != alignOptions.iterationState.end()) {
       alignMask = iter_it->second;
     }
     // Calculate the alignment parameters delta etc.
@@ -291,10 +291,10 @@ ActsAlignment::Alignment<fitter_t>::align(
     ACTS_INFO("The solved delta of alignmentParameters = \n "
               << alignResult.deltaAlignmentParameters);
     // Not coveraged yet, update the detector element alignment parameters
-    auto updateRes = updateAlignmentParameters(
-        alignOptions.fitOptions.geoContext, alignOptions.alignedDetElements,
-        alignOptions.alignedTransformUpdater, alignResult);
-    if (!updateRes.ok()) {
+    if (auto updateRes = updateAlignmentParameters(
+            alignOptions.fitOptions.geoContext, alignOptions.alignedDetElements,
+            alignOptions.alignedTransformUpdater, alignResult);
+        !updateRes.ok()) {
       ACTS_ERROR("Update alignment parameters failed: " << updateRes.error());
       return updateRes.error();
     }

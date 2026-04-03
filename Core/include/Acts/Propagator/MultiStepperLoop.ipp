@@ -144,11 +144,12 @@ Result<double> MultiStepperLoop<S, R>::step(
   // If at least one component is on a surface, we can remove all missed
   // components before the step. If not, we must keep them for the case that all
   // components miss and we need to retarget
-  const auto cmpsOnSurface = std::count_if(
-      components.cbegin(), components.cend(),
-      [&](auto& cmp) { return cmp.status == IntersectionStatus::onSurface; });
-
-  if (cmpsOnSurface > 0) {
+  if (const auto cmpsOnSurface =
+          std::count_if(components.cbegin(), components.cend(),
+                        [&](auto& cmp) {
+                          return cmp.status == IntersectionStatus::onSurface;
+                        });
+      cmpsOnSurface > 0) {
     removeMissedComponents(state);
     reweightNecessary = true;
   }

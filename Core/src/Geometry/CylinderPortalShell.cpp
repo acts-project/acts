@@ -238,10 +238,9 @@ CylinderStackPortalShell::CylinderStackPortalShell(
     bool allHaveInnerCylinders = std::ranges::all_of(
         m_shells, [](const auto* shell) { return shell->size() == 4; });
 
-    bool noneHaveInnerCylinders = std::ranges::all_of(
-        m_shells, [](const auto* shell) { return shell->size() == 3; });
-
-    if (!allHaveInnerCylinders && !noneHaveInnerCylinders) {
+    if (bool noneHaveInnerCylinders = std::ranges::all_of(
+            m_shells, [](const auto* shell) { return shell->size() == 3; });
+        !allHaveInnerCylinders && !noneHaveInnerCylinders) {
       ACTS_ERROR("Invalid inner cylinder configuration");
       throw std::invalid_argument("Invalid inner cylinder configuration");
     }

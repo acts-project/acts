@@ -173,9 +173,9 @@ struct GsfActor {
 
     // Early return if we already were on this surface TODO why is this
     // necessary
-    const bool visited = rangeContainsValue(result.visitedSurfaces, &surface);
-
-    if (visited) {
+    if (const bool visited =
+            rangeContainsValue(result.visitedSurfaces, &surface);
+        visited) {
       ACTS_VERBOSE("Already visited surface, return");
       return Result<void>::success();
     }
@@ -243,10 +243,9 @@ struct GsfActor {
     if (!haveMaterial) {
       TemporaryStates tmpStates;
 
-      auto res = kalmanUpdate(state, stepper, surface, result, tmpStates,
-                              foundSourceLink->second);
-
-      if (!res.ok()) {
+      if (auto res = kalmanUpdate(state, stepper, surface, result, tmpStates,
+                                  foundSourceLink->second);
+          !res.ok()) {
         if (m_cfg.abortOnError) {
           std::abort();
         }
@@ -386,9 +385,9 @@ struct GsfActor {
 
       if (!m_cfg.extensions.outlierFinder(trackStateProxyConst)) {
         // Run Kalman update
-        auto updateRes = m_cfg.extensions.updater(state.geoContext,
-                                                  trackStateProxy, logger());
-        if (!updateRes.ok()) {
+        if (auto updateRes = m_cfg.extensions.updater(
+                state.geoContext, trackStateProxy, logger());
+            !updateRes.ok()) {
           ACTS_DEBUG("Update step failed: " << updateRes.error());
           return updateRes.error();
         }

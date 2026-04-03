@@ -72,8 +72,9 @@ double phi(const T& v) noexcept
 /// @return The transverse radius value.
 template <typename Derived>
 double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
-  constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
-  if constexpr (rows != -1) {
+  if constexpr (constexpr int rows =
+                    Eigen::MatrixBase<Derived>::RowsAtCompileTime;
+                rows != -1) {
     // static size, do compile time check
     static_assert(rows >= 2,
                   "Perp function not valid for vectors not at least 2D");

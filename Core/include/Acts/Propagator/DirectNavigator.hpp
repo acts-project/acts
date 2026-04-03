@@ -245,10 +245,9 @@ class DirectNavigator {
     }
 
     // Find initial index.
-    auto found = std::ranges::find(state.options.externalSurfaces,
-                                   state.options.startSurface);
-
-    if (found != state.options.externalSurfaces.end()) {
+    if (auto found = std::ranges::find(state.options.externalSurfaces,
+                                       state.options.startSurface);
+        found != state.options.externalSurfaces.end()) {
       // The index should be the index before the start surface, depending on
       // the direction
       state.surfaceIndex =
@@ -302,11 +301,11 @@ class DirectNavigator {
       // TODO we do not know the intersection index - passing the closer one
       const Surface& surface = state.navSurface();
       const double farLimit = std::numeric_limits<double>::max();
-      const NavigationTarget target = chooseIntersection(
-          state.options.geoContext, surface, position, direction,
-          BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
-          state.options.surfaceTolerance);
-      if (target.isValid()) {
+      if (const NavigationTarget target = chooseIntersection(
+              state.options.geoContext, surface, position, direction,
+              BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
+              state.options.surfaceTolerance);
+          target.isValid()) {
         return target;
       }
 

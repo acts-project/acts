@@ -37,9 +37,9 @@ std::unique_ptr<TrackingVolume> MultiWireVolumeBuilder::buildVolume() const {
                << toString(m_config.transform.translation())
                << " and number of surfaces " << m_config.mlSurfaces.size());
 
-  auto boundsType = m_config.bounds ? m_config.bounds->type()
-                                    : VolumeBounds::BoundsType::eOther;
-  if (!(boundsType == VolumeBounds::BoundsType::eTrapezoid ||
+  if (auto boundsType = m_config.bounds ? m_config.bounds->type()
+                                        : VolumeBounds::BoundsType::eOther;
+      !(boundsType == VolumeBounds::BoundsType::eTrapezoid ||
         boundsType == VolumeBounds::BoundsType::eCuboid ||
         boundsType == VolumeBounds::BoundsType::eDiamond)) {
     throw std::invalid_argument(

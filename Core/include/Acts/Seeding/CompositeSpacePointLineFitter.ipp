@@ -153,12 +153,11 @@ CompositeSpacePointLineFitter::fastFit(
   double tanBeta = preFitDir.y() / preFitDir.z();
 
   using precResult_t = FastFitDelegate_t<Cont_t, fitTime>::result_type;
-  precResult_t precResult =
-      doPrecFit ? fastPrecFit<fitStraws, fitTime>(measurements, initialGuess,
-                                                  precFitDelegate)
-                : std::nullopt;
-
-  if (doPrecFit && !precResult) {
+  if (precResult_t precResult =
+          doPrecFit ? fastPrecFit<fitStraws, fitTime>(
+                          measurements, initialGuess, precFitDelegate)
+                    : std::nullopt;
+      doPrecFit && !precResult) {
     return result;
   } else if (precResult) {
     if constexpr (fitTime) {
@@ -204,10 +203,9 @@ CompositeSpacePointLineFitter::fastFit(
     tanBeta = postFitDir.y() / postFitDir.z();
   }
   // Try to perform a fast fit in non-precision direction
-  const FastFitResult nonPrecResult =
-      doNonPrecFit ? fastNonPrecFit(measurements) : std::nullopt;
-
-  if (nonPrecResult) {
+  if (const FastFitResult nonPrecResult =
+          doNonPrecFit ? fastNonPrecFit(measurements) : std::nullopt;
+      nonPrecResult) {
     tanAlpha = nonPrecResult->theta;
     result.parameters[toUnderlying(x0)] = nonPrecResult->y0;
     result.nDoF += nonPrecResult->nDoF;
@@ -564,9 +562,8 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << toString(miniHessian) << "\n"
                         << printEigenDecomposition(miniHessian)
                         << "\n, determinant: " << miniHessian.determinant());
-  std::optional<SquareMatrix<N>> inverseH{safeInverse(miniHessian)};
-
-  if (inverseH) {
+  if (std::optional<SquareMatrix<N>> inverseH{safeInverse(miniHessian)};
+      inverseH) {
     const Vector<N> update{(*inverseH) * miniGradient};
     // We compute also the normalized update, defined as the parameter
     // update expressed in units of the parameter uncertainties. This quantifies

@@ -360,8 +360,8 @@ class KalmanFitter {
 
       // Update:
       // - Waiting for a current surface
-      const Surface* surface = navigator.currentSurface(state.navigation);
-      if (surface != nullptr) {
+      if (const Surface* surface = navigator.currentSurface(state.navigation);
+          surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
@@ -388,9 +388,9 @@ class KalmanFitter {
           state, stepper, navigator, logger());
       const bool isPathLimitReached = result.pathLimitReached.checkAbort(
           state, stepper, navigator, logger());
-      const bool isTargetReached =
-          targetReached.checkAbort(state, stepper, navigator, logger());
-      if (isTrackComplete || isEndOfWorldReached || isVolumeConstraintReached ||
+      if (const bool isTargetReached =
+              targetReached.checkAbort(state, stepper, navigator, logger());
+          isTrackComplete || isEndOfWorldReached || isVolumeConstraintReached ||
           isPathLimitReached || isTargetReached) {
         ACTS_VERBOSE(
             "Finalizing Kalman fit: "
@@ -450,8 +450,8 @@ class KalmanFitter {
       const bool surfaceHasMaterial = surface.surfaceMaterial() != nullptr;
 
       // Try to find the surface in the measurement surfaces
-      const auto sourceLinkIt = inputMeasurements.find(&surface);
-      if (sourceLinkIt != inputMeasurements.end()) {
+      if (const auto sourceLinkIt = inputMeasurements.find(&surface);
+          sourceLinkIt != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface.geometryId()
                                             << " detected.");
@@ -517,9 +517,9 @@ class KalmanFitter {
         // Else, just tag it as an outlier
         if (!extensions.outlierFinder(trackStateProxyConst)) {
           // Run Kalman update
-          auto updateRes =
-              extensions.updater(state.geoContext, trackStateProxy, logger());
-          if (!updateRes.ok()) {
+          if (auto updateRes = extensions.updater(state.geoContext,
+                                                  trackStateProxy, logger());
+              !updateRes.ok()) {
             ACTS_DEBUG("Update step failed: " << updateRes.error());
             return updateRes.error();
           }
@@ -776,9 +776,9 @@ class KalmanFitter {
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-    auto propagatorInitResult =
-        m_propagator.initialize(propagatorState, sParameters);
-    if (!propagatorInitResult.ok()) {
+    if (auto propagatorInitResult =
+            m_propagator.initialize(propagatorState, sParameters);
+        !propagatorInitResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: "
                  << propagatorInitResult.error());
       return propagatorInitResult.error();
@@ -789,9 +789,7 @@ class KalmanFitter {
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    auto result = m_propagator.propagate(propagatorState);
-
-    if (!result.ok()) {
+    if (auto result = m_propagator.propagate(propagatorState); !result.ok()) {
       ACTS_DEBUG("Propagation failed: " << result.error());
       return result.error();
     }

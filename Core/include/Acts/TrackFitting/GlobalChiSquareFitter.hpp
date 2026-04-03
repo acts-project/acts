@@ -635,9 +635,8 @@ std::size_t countMaterialStates(
   ACTS_DEBUG("Count the valid material surfaces.");
   for (const auto& trackState : track.trackStates()) {
     const auto typeFlags = trackState.typeFlags();
-    const bool stateHasMaterial = typeFlags.hasMaterial();
-
-    if (!stateHasMaterial) {
+    if (const bool stateHasMaterial = typeFlags.hasMaterial();
+        !stateHasMaterial) {
       continue;
     }
 
@@ -1062,8 +1061,9 @@ class Gx2Fitter {
 
         // Set hole only, if we are on a sensitive surface and had
         // measurements before (no holes before the first measurement)
-        const bool precedingMeasurementExists = (result.measurementStates > 0);
-        if (surfaceIsSensitive && precedingMeasurementExists) {
+        if (const bool precedingMeasurementExists =
+                (result.measurementStates > 0);
+            surfaceIsSensitive && precedingMeasurementExists) {
           ACTS_DEBUG("    Surface is also sensitive. Marked as hole.");
           typeFlags.setIsHole();
 
@@ -1278,9 +1278,9 @@ class Gx2Fitter {
 
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-      auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
-      if (!propagatorInitResult.ok()) {
+      if (auto propagatorInitResult =
+              m_propagator.initialize(propagatorState, params);
+          !propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();
@@ -1444,9 +1444,9 @@ class Gx2Fitter {
 
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-      auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
-      if (!propagatorInitResult.ok()) {
+      if (auto propagatorInitResult =
+              m_propagator.initialize(propagatorState, params);
+          !propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();
@@ -1590,9 +1590,9 @@ class Gx2Fitter {
 
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-      auto propagatorInitResult =
-          m_propagator.initialize(propagatorState, params);
-      if (!propagatorInitResult.ok()) {
+      if (auto propagatorInitResult =
+              m_propagator.initialize(propagatorState, params);
+          !propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
                    << propagatorInitResult.error());
         return propagatorInitResult.error();

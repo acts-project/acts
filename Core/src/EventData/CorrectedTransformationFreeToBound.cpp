@@ -57,11 +57,11 @@ detail::CorrectedFreeToBoundTransformer::operator()(
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal =
       surface.normal(geoContext, freeParams.segment<3>(eFreePos0), dir);
-  double absCosIncidenceAng = std::abs(dir.dot(normal));
   // No correction if the incidentAngle is small enough (not necessary ) or too
   // large (correction could be invalid). Fall back to nominal free to bound
   // transformation
-  if (absCosIncidenceAng < m_cosIncidentAngleMinCutoff ||
+  if (double absCosIncidenceAng = std::abs(dir.dot(normal));
+      absCosIncidenceAng < m_cosIncidentAngleMinCutoff ||
       absCosIncidenceAng > m_cosIncidentAngleMaxCutoff) {
     ACTS_VERBOSE("Incident angle: " << std::acos(absCosIncidenceAng)
                                     << " is out of range for correction");

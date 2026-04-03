@@ -72,10 +72,9 @@ struct MaterialInteractor {
 
     // Note that start and target surface conditions are handled in the
     // interaction code
-    const Surface* surface = navigator.currentSurface(state.navigation);
-
     // We only have material interactions if there is potential material
-    if (surface != nullptr && surface->surfaceMaterial()) {
+    if (const Surface* surface = navigator.currentSurface(state.navigation);
+        surface != nullptr && surface->surfaceMaterial()) {
       ACTS_VERBOSE("MaterialInteractor | " << "Found material on surface "
                                            << surface->geometryId());
 
@@ -132,10 +131,10 @@ struct MaterialInteractor {
       updateResult(state, stepper, result);
     }
 
-    const TrackingVolume* volume = navigator.currentVolume(state.navigation);
-
     // We only have material interactions if there is potential material
-    if (volume && volume->volumeMaterial()) {
+    if (const TrackingVolume* volume =
+            navigator.currentVolume(state.navigation);
+        volume && volume->volumeMaterial()) {
       ACTS_VERBOSE("MaterialInteractor | " << "Found material in volume "
                                            << volume->geometryId());
 

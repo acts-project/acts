@@ -62,9 +62,9 @@ IntersectionStatus updateSingleSurfaceStatus(
   }
 
   const double nearLimit = std::numeric_limits<double>::lowest();
-  const double farLimit = std::numeric_limits<double>::max();
 
-  if (sIntersection.isValid() &&
+  if (const double farLimit = std::numeric_limits<double>::max();
+      sIntersection.isValid() &&
       detail::checkPathLength(sIntersection.pathLength(), nearLimit, farLimit,
                               logger)) {
     ACTS_VERBOSE("Surface is reachable");
