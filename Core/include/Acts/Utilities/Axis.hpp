@@ -652,8 +652,8 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
   std::size_t getBin(double x) const final {
     const auto it = std::ranges::upper_bound(m_binEdges, x);
-    return wrapBin(static_cast<int>(
-        std::ranges::distance(m_binEdges.begin(), it)));
+    return wrapBin(
+        static_cast<int>(std::ranges::distance(m_binEdges.begin(), it)));
   }
 
   /// @brief get bin width

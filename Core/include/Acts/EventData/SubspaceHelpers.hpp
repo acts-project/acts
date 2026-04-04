@@ -49,7 +49,8 @@ inline static bool checkSubspaceIndices(const index_range_t& indexRange,
       return false;
     }
     ++it;
-    if (const auto tail = std::ranges::subrange(it, indexRange.end()); std::ranges::find(tail, index) != tail.end()) {
+    if (const auto tail = std::ranges::subrange(it, indexRange.end());
+        std::ranges::find(tail, index) != tail.end()) {
       return false;
     }
   }
@@ -127,8 +128,7 @@ class SubspaceHelperBase {
     const auto r = std::ranges::subrange(begin(), end());
     const auto it = std::ranges::find(r, index);
     return it != r.end()
-               ? static_cast<std::size_t>(
-                     std::ranges::distance(r.begin(), it))
+               ? static_cast<std::size_t>(std::ranges::distance(r.begin(), it))
                : kFullSize;
   }
 
