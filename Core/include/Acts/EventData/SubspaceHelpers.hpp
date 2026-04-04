@@ -49,8 +49,7 @@ inline static bool checkSubspaceIndices(const index_range_t& indexRange,
       return false;
     }
     ++it;
-    const auto tail = std::ranges::subrange(it, indexRange.end());
-    if (std::ranges::find(tail, index) != std::ranges::end(tail)) {
+    if (const auto tail = std::ranges::subrange(it, indexRange.end()); std::ranges::find(tail, index) != tail.end()) {
       return false;
     }
   }
