@@ -653,7 +653,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   std::size_t getBin(double x) const final {
     const auto it = std::ranges::upper_bound(m_binEdges, x);
     return wrapBin(static_cast<int>(
-        std::ranges::distance(std::ranges::begin(m_binEdges), it)));
+        std::ranges::distance(m_binEdges.begin(), it)));
   }
 
   /// @brief get bin width
