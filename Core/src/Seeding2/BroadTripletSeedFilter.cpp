@@ -152,8 +152,7 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
 
   const auto getTopR = [&](ConstSpacePointProxy2 spT) -> float {
     if (config().useDeltaRinsteadOfTopRadius) {
-      return static_cast<float>(
-          fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]));
+      return fastHypot(spT.zr()[1] - spM.zr()[1], spT.zr()[0] - spM.zr()[0]);
     }
     return spT.zr()[1];
   };

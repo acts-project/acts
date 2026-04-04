@@ -179,7 +179,7 @@ PointwiseMaterialEffects performMaterialInteraction(
   const Vector3 position = stepper.position(state.stepping);
   const double time = stepper.time(state.stepping);
   const Vector3 direction = stepper.direction(state.stepping);
-  const auto qOverP = static_cast<float>(stepper.qOverP(state.stepping));
+  const double qOverP = stepper.qOverP(state.stepping);
   const double momentum = stepper.absoluteMomentum(state.stepping);
 
   // in forward(backward) propagation, energy decreases(increases) and
@@ -193,8 +193,8 @@ PointwiseMaterialEffects performMaterialInteraction(
   // TODO 10 MeV might be quite low and we should make this configurable
   static constexpr double minP = 10 * Acts::UnitConstants::MeV;
   nextP = std::max(minP, nextP);
-  const double nextQOverP = particleHypothesis.qOverP(
-      nextP, std::copysign(absQ, static_cast<double>(qOverP)));
+  const double nextQOverP =
+      particleHypothesis.qOverP(nextP, std::copysign(absQ, qOverP));
 
   // update track parameters
   stepper.update(state.stepping, position, direction, nextQOverP, time);

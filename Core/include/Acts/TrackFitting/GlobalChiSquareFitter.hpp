@@ -972,8 +972,9 @@ class Gx2Fitter {
         // We count the processed measurement
         ++result.processedMeasurements;
 
-        result.lastMeasurementIndex = currentTrackIndex;
-        result.lastTrackIndex = currentTrackIndex;
+        result.lastMeasurementIndex =
+            static_cast<TrackIndexType>(currentTrackIndex);
+        result.lastTrackIndex = static_cast<TrackIndexType>(currentTrackIndex);
 
         // TODO check for outlier first
         // We count the state with measurement
@@ -1071,7 +1072,7 @@ class Gx2Fitter {
           result.missedActiveSurfaces.push_back(surface);
         }
 
-        result.lastTrackIndex = currentTrackIndex;
+        result.lastTrackIndex = static_cast<TrackIndexType>(currentTrackIndex);
 
         ++result.processedStates;
 
@@ -1147,7 +1148,7 @@ class Gx2Fitter {
           result.missedActiveSurfaces.push_back(surface);
         }
 
-        result.lastTrackIndex = currentTrackIndex;
+        result.lastTrackIndex = static_cast<TrackIndexType>(currentTrackIndex);
 
         ++result.processedStates;
 
