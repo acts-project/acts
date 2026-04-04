@@ -122,7 +122,7 @@ class SubspaceHelperBase {
 
   bool contains(std::uint8_t index) const {
     const auto r = std::ranges::subrange(begin(), end());
-    return std::ranges::find(r, index) != std::ranges::end(r);
+    return std::ranges::find(r, index) != r.end();
   }
   std::size_t indexOf(std::uint8_t index) const {
     const auto r = std::ranges::subrange(begin(), end());
