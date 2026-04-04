@@ -233,7 +233,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
       return NeighborHoodIndices();
     }
     constexpr int min = 1;
-    const int max = static_cast<int>(getNBins());
+    const auto max = static_cast<int>(getNBins());
     const int itmin = std::clamp(static_cast<int>(idx) + sizes.first, min, max);
     const int itmax =
         std::clamp(static_cast<int>(idx) + sizes.second, min, max);
@@ -262,7 +262,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
     // Handle corner case where user requests more neighbours than the number
     // of bins on the axis. All bins are returned in this case.
 
-    const int max = static_cast<int>(getNBins());
+    const auto max = static_cast<int>(getNBins());
     sizes.first = std::clamp(sizes.first, -max, max);
     sizes.second = std::clamp(sizes.second, -max, max);
     if (std::abs(sizes.first - sizes.second) >= max) {
@@ -321,7 +321,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Closed)
   {
-    const int w = static_cast<int>(getNBins());
+    const auto w = static_cast<int>(getNBins());
     return 1 + (w + ((bin - 1) % w)) % w;
     // return int(bin<1)*w - int(bin>w)*w + bin;
   }
@@ -548,7 +548,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
       return NeighborHoodIndices();
     }
     constexpr int min = 1;
-    const int max = static_cast<int>(getNBins());
+    const auto max = static_cast<int>(getNBins());
     const int itmin = std::max(min, static_cast<int>(idx) + sizes.first);
     const int itmax = std::min(max, static_cast<int>(idx) + sizes.second);
     return NeighborHoodIndices(itmin, itmax + 1);
@@ -576,7 +576,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
     // Handle corner case where user requests more neighbours than the number
     // of bins on the axis. All bins are returned in this case
 
-    const int max = static_cast<int>(getNBins());
+    const auto max = static_cast<int>(getNBins());
     sizes.first = std::clamp(sizes.first, -max, max);
     sizes.second = std::clamp(sizes.second, -max, max);
     if (std::abs(sizes.first - sizes.second) >= max) {
@@ -635,7 +635,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Closed)
   {
-    const int w = static_cast<int>(getNBins());
+    const auto w = static_cast<int>(getNBins());
     return 1 + (w + ((bin - 1) % w)) % w;
     // return int(bin<1)*w - int(bin>w)*w + bin;
   }

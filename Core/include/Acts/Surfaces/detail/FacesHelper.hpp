@@ -65,7 +65,7 @@ struct FacesHelper {
       const std::vector<Vector3>& vertices) {
     FaceVector faces;
     FaceVector triangularMesh;
-    std::size_t nqfaces =
+    auto nqfaces =
         static_cast<std::size_t>(0.5 * static_cast<double>(vertices.size()));
     for (std::size_t iface = 0; iface < nqfaces - 1; ++iface) {
       std::size_t p2 = (iface + 1 == nqfaces) ? 0 : iface + 1;

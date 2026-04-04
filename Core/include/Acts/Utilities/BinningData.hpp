@@ -523,7 +523,7 @@ class BinningData {
                                                    const BinningData& bData) {
     // vanilla
 
-    int bin = static_cast<int>((value - bData.min) / bData.step);
+    auto bin = static_cast<int>((value - bData.min) / bData.step);
     // special treatment of the 0 bin for closed
     if (bData.option == closed) {
       if (value < bData.min) {

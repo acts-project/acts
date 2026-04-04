@@ -866,7 +866,7 @@ class Gx2Fitter {
             const auto& particle =
                 parametersWithHypothesis->particleHypothesis();
 
-            const double sigma =
+            const auto sigma =
                 static_cast<double>(Acts::computeMultipleScatteringTheta0(
                     slab, particle.absolutePdg(), particle.mass(),
                     static_cast<float>(

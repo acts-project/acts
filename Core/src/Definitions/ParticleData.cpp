@@ -164,15 +164,14 @@ float Acts::calculateNucleusMass(Acts::PdgParticle pdg) {
   int Z = std::abs(ZandA.first);
   int A = ZandA.second;
 
-  float a_Vol = static_cast<float>(15.260 * Acts::UnitConstants::MeV);
-  float a_Surf = static_cast<float>(16.267 * Acts::UnitConstants::MeV);
-  float a_Col = static_cast<float>(0.689 * Acts::UnitConstants::MeV);
-  float a_Sym = static_cast<float>(22.209 * Acts::UnitConstants::MeV);
-  float a_Pair = static_cast<float>((1 - 2 * (Z % 2)) * (1 - A % 2) * 10.076 *
-                                    Acts::UnitConstants::MeV);
-
-  float massP = static_cast<float>(0.938272 * Acts::UnitConstants::GeV);
-  float massN = static_cast<float>(0.939565 * Acts::UnitConstants::GeV);
+  auto a_Vol = static_cast<float>(15.260 * Acts::UnitConstants::MeV);
+  auto a_Surf = static_cast<float>(16.267 * Acts::UnitConstants::MeV);
+  auto a_Col = static_cast<float>(0.689 * Acts::UnitConstants::MeV);
+  auto a_Sym = static_cast<float>(22.209 * Acts::UnitConstants::MeV);
+  auto a_Pair = static_cast<float>((1 - 2 * (Z % 2)) * (1 - A % 2) * 10.076 *
+                                   Acts::UnitConstants::MeV);
+  auto massP = static_cast<float>(0.938272 * Acts::UnitConstants::GeV);
+  auto massN = static_cast<float>(0.939565 * Acts::UnitConstants::GeV);
 
   float bindEnergy = 0.f;
   bindEnergy += a_Vol * static_cast<float>(A);

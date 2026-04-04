@@ -140,7 +140,7 @@ PointwiseMaterialEffects computeMaterialEffects(const propagator_state_t& state,
                                                 bool energyLoss) {
   const bool covTransport = state.stepping.covTransport;
   const Vector3 direction = stepper.direction(state.stepping);
-  const float qOverP = static_cast<float>(stepper.qOverP(state.stepping));
+  const auto qOverP = static_cast<float>(stepper.qOverP(state.stepping));
   const ParticleHypothesis& particleHypothesis =
       stepper.particleHypothesis(state.stepping);
 
@@ -179,7 +179,7 @@ PointwiseMaterialEffects performMaterialInteraction(
   const Vector3 position = stepper.position(state.stepping);
   const double time = stepper.time(state.stepping);
   const Vector3 direction = stepper.direction(state.stepping);
-  const float qOverP = static_cast<float>(stepper.qOverP(state.stepping));
+  const auto qOverP = static_cast<float>(stepper.qOverP(state.stepping));
   const double momentum = stepper.absoluteMomentum(state.stepping);
 
   // in forward(backward) propagation, energy decreases(increases) and
