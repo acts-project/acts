@@ -125,10 +125,10 @@ class SubspaceHelperBase {
   }
   std::size_t indexOf(std::uint8_t index) const {
     const auto r = std::ranges::subrange(begin(), end());
-    auto it = std::ranges::find(r, index);
-    return it != std::ranges::end(r)
+    const auto it = std::ranges::find(r, index);
+    return it != r.end()
                ? static_cast<std::size_t>(
-                     std::ranges::distance(std::ranges::begin(r), it))
+                     std::ranges::distance(r.begin(), it))
                : kFullSize;
   }
 
