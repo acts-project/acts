@@ -80,14 +80,14 @@ std::vector<OrientedSurface> CutoutCylinderVolumeBounds::orientedSurfaces(
   // Outer cylinder envelope
   auto outer =
       Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
-  oSurfaces.at(tubeOuterCover) =
-      OrientedSurface{std::move(outer), Direction::OppositeNormal()};
+  oSurfaces.at(tubeOuterCover) = {std::move(outer),
+                                  Direction::OppositeNormal()};
 
   // Inner (cutout) cylinder envelope
   auto cutoutInner =
       Surface::makeShared<CylinderSurface>(transform, m_cutoutCylinderBounds);
-  oSurfaces.at(tubeInnerCover) =
-      OrientedSurface{std::move(cutoutInner), Direction::AlongNormal()};
+  oSurfaces.at(tubeInnerCover) = {std::move(cutoutInner),
+                                  Direction::AlongNormal()};
 
   // z position of the pos and neg choke points
   double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
@@ -97,14 +97,12 @@ std::vector<OrientedSurface> CutoutCylinderVolumeBounds::orientedSurfaces(
     auto posChokeTrf = transform * Translation3(Vector3(0, 0, zChoke));
     auto posInner = Surface::makeShared<CylinderSurface>(posChokeTrf,
                                                          m_innerCylinderBounds);
-    oSurfaces.at(index7) =
-        OrientedSurface{std::move(posInner), Direction::AlongNormal()};
+    oSurfaces.at(index7) = {std::move(posInner), Direction::AlongNormal()};
 
     auto negChokeTrf = transform * Translation3(Vector3(0, 0, -zChoke));
     auto negInner = Surface::makeShared<CylinderSurface>(negChokeTrf,
                                                          m_innerCylinderBounds);
-    oSurfaces.at(index6) =
-        OrientedSurface{std::move(negInner), Direction::AlongNormal()};
+    oSurfaces.at(index6) = {std::move(negInner), Direction::AlongNormal()};
   }
 
   // Two Outer disks
@@ -112,30 +110,28 @@ std::vector<OrientedSurface> CutoutCylinderVolumeBounds::orientedSurfaces(
       transform * Translation3(Vector3(0, 0, get(eHalfLengthZ)));
   auto posOutDisc =
       Surface::makeShared<DiscSurface>(posOutDiscTrf, m_outerDiscBounds);
-  oSurfaces.at(positiveFaceXY) =
-      OrientedSurface{std::move(posOutDisc), Direction::OppositeNormal()};
+  oSurfaces.at(positiveFaceXY) = {std::move(posOutDisc),
+                                  Direction::OppositeNormal()};
 
   auto negOutDiscTrf =
       transform * Translation3(Vector3(0, 0, -get(eHalfLengthZ)));
   auto negOutDisc =
       Surface::makeShared<DiscSurface>(negOutDiscTrf, m_outerDiscBounds);
-  oSurfaces.at(negativeFaceXY) =
-      OrientedSurface{std::move(negOutDisc), Direction::AlongNormal()};
+  oSurfaces.at(negativeFaceXY) = {std::move(negOutDisc),
+                                  Direction::AlongNormal()};
 
   // Two Inner disks
   auto posInDiscTrf =
       transform * Translation3(Vector3(0, 0, get(eHalfLengthZcutout)));
   auto posInDisc =
       Surface::makeShared<DiscSurface>(posInDiscTrf, m_innerDiscBounds);
-  oSurfaces.at(index5) =
-      OrientedSurface{std::move(posInDisc), Direction::AlongNormal()};
+  oSurfaces.at(index5) = {std::move(posInDisc), Direction::AlongNormal()};
 
   auto negInDiscTrf =
       transform * Translation3(Vector3(0, 0, -get(eHalfLengthZcutout)));
   auto negInDisc =
       Surface::makeShared<DiscSurface>(negInDiscTrf, m_innerDiscBounds);
-  oSurfaces.at(index4) =
-      OrientedSurface{std::move(negInDisc), Direction::OppositeNormal()};
+  oSurfaces.at(index4) = {std::move(negInDisc), Direction::OppositeNormal()};
 
   return oSurfaces;
 }

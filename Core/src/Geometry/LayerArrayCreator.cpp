@@ -59,8 +59,8 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
       for (auto& layIter : layers) {
         ACTS_VERBOSE("equidistant : registering a Layer at binning position : "
                      << (layIter->referencePosition(gctx, aDir)));
-        layerOrderVector.emplace_back(LayerOrderPosition(
-            layIter, layIter->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(layIter,
+                                      layIter->referencePosition(gctx, aDir));
       }
       // create the binUitlity
       binUtility = std::make_unique<const BinUtility>(layers.size(), min, max,
@@ -117,12 +117,12 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
             << (navLayerSurface->referencePosition(gctx, aDir)).z());
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
-        layerOrderVector.emplace_back(LayerOrderPosition(
-            navLayer, navLayer->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(navLayer,
+                                      navLayer->referencePosition(gctx, aDir));
 
         // push the original layer in
-        layerOrderVector.emplace_back(LayerOrderPosition(
-            layIter, layIter->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(layIter,
+                                      layIter->referencePosition(gctx, aDir));
         ACTS_VERBOSE("arbitrary : registering MaterialLayer at  "
                      << (layIter->referencePosition(gctx, aDir)).x() << ", "
                      << (layIter->referencePosition(gctx, aDir)).y() << ", "
@@ -147,8 +147,8 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
             << (navLayerSurface->referencePosition(gctx, aDir)).z());
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
-        layerOrderVector.emplace_back(LayerOrderPosition(
-            navLayer, navLayer->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(navLayer,
+                                      navLayer->referencePosition(gctx, aDir));
       }
       // now close the boundaries
       boundaries.emplace_back(max);
