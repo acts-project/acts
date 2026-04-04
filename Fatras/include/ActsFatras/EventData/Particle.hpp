@@ -19,7 +19,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 #include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <cmath>
@@ -91,7 +91,7 @@ class Particle {
   /// Set the process type that generated this particle.
   /// @param proc Process type that generated this particle
   /// @return Reference to this particle for method chaining
-  Particle &setProcess(ProcessType proc) {
+  Particle &setProcess(GenerationProcess proc) {
     m_process = proc;
     return *this;
   }
@@ -213,7 +213,7 @@ class Particle {
   Barcode particleId() const { return m_particleId; }
   /// Which type of process generated this particle.
   /// @return The process type that generated this particle
-  ProcessType process() const { return m_process; }
+  GenerationProcess process() const { return m_process; }
   /// PDG particle number that identifies the type.
   /// @return The PDG particle identifier
   Acts::PdgParticle pdg() const { return m_pdg; }
@@ -405,7 +405,7 @@ class Particle {
   /// Particle identifier within the event.
   Barcode m_particleId;
   /// Process type specifier.
-  ProcessType m_process = ProcessType::eUndefined;
+  GenerationProcess m_process = GenerationProcess::eUndefined;
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
