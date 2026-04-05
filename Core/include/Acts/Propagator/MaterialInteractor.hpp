@@ -134,7 +134,7 @@ struct MaterialInteractor {
     // We only have material interactions if there is potential material
     if (const TrackingVolume* volume =
             navigator.currentVolume(state.navigation);
-        volume && volume->volumeMaterial()) {
+        volume != nullptr && volume->volumeMaterial()) {
       ACTS_VERBOSE("MaterialInteractor | " << "Found material in volume "
                                            << volume->geometryId());
 
