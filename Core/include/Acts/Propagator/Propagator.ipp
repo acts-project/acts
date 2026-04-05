@@ -133,7 +133,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
       }
     }
 
-    if (Result<void> actResult = state.options.actorList.act(
+    if (const Result<void> actResult = state.options.actorList.act(
             state, m_stepper, m_navigator, logger());
         !actResult.ok()) {
       ACTS_DEBUG("Actor call failed: " << actResult.error() << ": "

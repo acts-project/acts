@@ -46,7 +46,7 @@ struct PathLimitReached {
     double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
     double tolerance = state.options.surfaceTolerance;
-    if (bool limitReached = (std::abs(distance) < std::abs(tolerance));
+    if (const bool limitReached = std::abs(distance) < std::abs(tolerance);
         limitReached) {
       ACTS_VERBOSE("PathLimit aborter | " << "Path limit reached at distance "
                                           << distance);

@@ -635,8 +635,7 @@ std::size_t countMaterialStates(
   ACTS_DEBUG("Count the valid material surfaces.");
   for (const auto& trackState : track.trackStates()) {
     const auto typeFlags = trackState.typeFlags();
-    if (const bool stateHasMaterial = typeFlags.hasMaterial();
-        !stateHasMaterial) {
+    if (!typeFlags.hasMaterial()) {
       continue;
     }
 

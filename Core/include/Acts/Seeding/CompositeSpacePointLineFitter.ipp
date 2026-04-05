@@ -562,8 +562,8 @@ CompositeSpacePointLineFitter::updateParameters(const FitParIndex firstPar,
                         << toString(miniHessian) << "\n"
                         << printEigenDecomposition(miniHessian)
                         << "\n, determinant: " << miniHessian.determinant());
-  if (std::optional<SquareMatrix<N>> inverseH{safeInverse(miniHessian)};
-      inverseH) {
+  if (const std::optional<SquareMatrix<N>> inverseH = safeInverse(miniHessian);
+      inverseH.has_value()) {
     const Vector<N> update{(*inverseH) * miniGradient};
     // We compute also the normalized update, defined as the parameter
     // update expressed in units of the parameter uncertainties. This quantifies
