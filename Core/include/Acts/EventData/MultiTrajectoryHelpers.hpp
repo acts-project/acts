@@ -66,7 +66,7 @@ TrajectoryState trajectoryState(const traj_t& multiTraj, std::size_t tipIndex) {
     const auto& volume = geoID.volume();
     const auto& layer = geoID.layer();
     trajState.nStates++;
-    if (auto typeFlags = state.typeFlags(); typeFlags.isHole()) {
+    if (const auto typeFlags = state.typeFlags(); typeFlags.isHole()) {
       trajState.nHoles++;
     } else if (typeFlags.isOutlier()) {
       trajState.nOutliers++;
@@ -117,7 +117,7 @@ VolumeTrajectoryStateContainer trajectoryState(
     auto& trajState = trajStateContainer[volume];
     trajState.nStates++;
     trajState.NDF += state.calibratedSize();
-    if (auto typeFlags = state.typeFlags(); typeFlags.isHole()) {
+    if (const auto typeFlags = state.typeFlags(); typeFlags.isHole()) {
       trajState.nHoles++;
     } else if (typeFlags.isOutlier()) {
       trajState.nOutliers++;

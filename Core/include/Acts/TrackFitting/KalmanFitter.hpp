@@ -517,8 +517,8 @@ class KalmanFitter {
         // Else, just tag it as an outlier
         if (!extensions.outlierFinder(trackStateProxyConst)) {
           // Run Kalman update
-          if (auto updateRes = extensions.updater(state.geoContext,
-                                                  trackStateProxy, logger());
+          if (const auto updateRes = extensions.updater(
+                  state.geoContext, trackStateProxy, logger());
               !updateRes.ok()) {
             ACTS_DEBUG("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -776,7 +776,7 @@ class KalmanFitter {
       -> Result<typename track_container_t::TrackProxy> {
     auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-    if (auto propagatorInitResult =
+    if (const auto propagatorInitResult =
             m_propagator.initialize(propagatorState, sParameters);
         !propagatorInitResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: "
@@ -789,7 +789,8 @@ class KalmanFitter {
     kalmanResult.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    if (auto result = m_propagator.propagate(propagatorState); !result.ok()) {
+    if (const auto result = m_propagator.propagate(propagatorState);
+        !result.ok()) {
       ACTS_DEBUG("Propagation failed: " << result.error());
       return result.error();
     }

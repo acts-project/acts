@@ -245,8 +245,8 @@ class DirectNavigator {
     }
 
     // Find initial index.
-    if (auto found = std::ranges::find(state.options.externalSurfaces,
-                                       state.options.startSurface);
+    if (const auto found = std::ranges::find(state.options.externalSurfaces,
+                                             state.options.startSurface);
         found != state.options.externalSurfaces.end()) {
       // The index should be the index before the start surface, depending on
       // the direction

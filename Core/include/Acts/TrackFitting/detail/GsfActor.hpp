@@ -243,8 +243,8 @@ struct GsfActor {
     if (!haveMaterial) {
       TemporaryStates tmpStates;
 
-      if (auto res = kalmanUpdate(state, stepper, surface, result, tmpStates,
-                                  foundSourceLink->second);
+      if (const auto res = kalmanUpdate(state, stepper, surface, result,
+                                        tmpStates, foundSourceLink->second);
           !res.ok()) {
         if (m_cfg.abortOnError) {
           std::abort();
@@ -385,7 +385,7 @@ struct GsfActor {
 
       if (!m_cfg.extensions.outlierFinder(trackStateProxyConst)) {
         // Run Kalman update
-        if (auto updateRes = m_cfg.extensions.updater(
+        if (const auto updateRes = m_cfg.extensions.updater(
                 state.geoContext, trackStateProxy, logger());
             !updateRes.ok()) {
           ACTS_DEBUG("Update step failed: " << updateRes.error());

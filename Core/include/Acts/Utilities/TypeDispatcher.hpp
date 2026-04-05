@@ -150,7 +150,7 @@ class TypeDispatcher<base_t, return_t(args_t...)> {
     }
 
     // Exactly one compatible function found
-    if (auto funcIt = m_functions.find(compatibleTypes[0]);
+    if (const auto funcIt = m_functions.find(compatibleTypes[0]);
         funcIt != m_functions.end()) {
       return funcIt->second(obj, std::forward<func_args_t>(args)...);
     }

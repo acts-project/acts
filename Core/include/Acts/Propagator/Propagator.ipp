@@ -191,7 +191,7 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
   state.stage = PropagatorStage::postPropagation;
 
   // Post-stepping call to the actor list
-  if (auto postPropagationResult =
+  if (const auto postPropagationResult =
           state.options.actorList.act(state, m_stepper, m_navigator, logger());
       !postPropagationResult.ok()) {
     ACTS_DEBUG("Post-propagation actor call failed: "
@@ -210,7 +210,8 @@ auto Propagator<S, N>::propagate(const BoundParameters& start,
     -> Result<ResultType<propagator_options_t>> {
   auto state = makeState<propagator_options_t, path_aborter_t>(options);
 
-  if (auto initRes = initialize<decltype(state), path_aborter_t>(state, start);
+  if (const auto initRes =
+          initialize<decltype(state), path_aborter_t>(state, start);
       !initRes.ok()) {
     ACTS_DEBUG("Initialization failed: " << initRes.error() << ": "
                                          << initRes.error().message());
@@ -235,7 +236,8 @@ auto Propagator<S, N>::propagate(const BoundParameters& start,
       makeState<propagator_options_t, target_aborter_t, path_aborter_t>(
           target, options);
 
-  if (auto initRes = initialize<decltype(state), path_aborter_t>(state, start);
+  if (const auto initRes =
+          initialize<decltype(state), path_aborter_t>(state, start);
       !initRes.ok()) {
     ACTS_DEBUG("Initialization failed: " << initRes.error() << ": "
                                          << initRes.error().message());
@@ -309,7 +311,7 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state,
   state.navigation.options.startSurface = &start.referenceSurface();
 
   // Navigator initialize state call
-  if (auto navInitRes =
+  if (const auto navInitRes =
           m_navigator.initialize(state.navigation, state.position,
                                  state.direction, state.options.direction);
       !navInitRes.ok()) {

@@ -110,7 +110,7 @@ struct SurfaceCollector {
     }
 
     // The current surface has been assigned by the navigator
-    if (auto currentSurface = navigator.currentSurface(state.navigation);
+    if (const auto currentSurface = navigator.currentSurface(state.navigation);
         currentSurface && selector(*currentSurface)) {
       // Create for recording
       SurfaceHit surface_hit;

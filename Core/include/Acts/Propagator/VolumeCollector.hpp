@@ -105,7 +105,7 @@ struct VolumeCollector {
                    const navigator_t& navigator, result_type& result,
                    const Logger& logger) const {
     // The current volume has been assigned by the navigator
-    if (auto currentVolume = navigator.currentVolume(state.navigation);
+    if (const auto currentVolume = navigator.currentVolume(state.navigation);
         currentVolume && selector(*currentVolume)) {
       // Create for recording
       VolumeHit volume_hit;

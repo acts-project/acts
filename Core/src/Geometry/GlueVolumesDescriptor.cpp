@@ -28,7 +28,7 @@ GlueVolumesDescriptor::GlueVolumesDescriptor(
 void GlueVolumesDescriptor::registerGlueVolumes(
     BoundarySurfaceFace bsf, std::shared_ptr<const TrackingVolumeArray> gvs) {
   // register the face
-  if (auto searchIter = m_glueVolumes.find(bsf);
+  if (const auto searchIter = m_glueVolumes.find(bsf);
       searchIter == m_glueVolumes.end()) {
     m_glueFaces.push_back(bsf);
   }
@@ -40,7 +40,7 @@ void GlueVolumesDescriptor::registerGlueVolumes(
 std::shared_ptr<const TrackingVolumeArray> GlueVolumesDescriptor::glueVolumes(
     BoundarySurfaceFace bsf) const {
   // searching for the glue volumes according
-  if (auto searchIter = m_glueVolumes.find(bsf);
+  if (const auto searchIter = m_glueVolumes.find(bsf);
       searchIter != m_glueVolumes.end()) {
     return searchIter->second;
   }

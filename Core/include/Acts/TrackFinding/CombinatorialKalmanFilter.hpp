@@ -292,7 +292,8 @@ class CombinatorialKalmanFilter {
         // 3) The surface is neither in the measurement map nor with material
         // -> Do nothing
         ACTS_VERBOSE("Perform filter step");
-        if (auto res = filter(*surface, state, stepper, navigator, result);
+        if (const auto res =
+                filter(*surface, state, stepper, navigator, result);
             !res.ok()) {
           ACTS_DEBUG("Error in filter: " << res.error().message());
           return res.error();
@@ -406,7 +407,7 @@ class CombinatorialKalmanFilter {
       // Set targetSurface to nullptr for forward filtering
       state.navigation.options.startSurface = &currentState.referenceSurface();
       state.navigation.options.targetSurface = nullptr;
-      if (auto navInitRes = navigator.initialize(
+      if (const auto navInitRes = navigator.initialize(
               state.navigation, stepper.position(state.stepping),
               stepper.direction(state.stepping), state.options.direction);
           !navInitRes.ok()) {
@@ -586,7 +587,7 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (auto currentState = currentBranch.outermostTrackState();
+      if (const auto currentState = currentBranch.outermostTrackState();
           currentState.typeFlags().isOutlier()) {
         // We don't need to update the stepper given an outlier state
         ACTS_VERBOSE("Outlier state detected on surface "
@@ -670,7 +671,7 @@ class CombinatorialKalmanFilter {
           newBranch.nOutliers()++;
         } else if (typeFlags.isMeasurement()) {
           // Kalman update
-          if (auto updateRes =
+          if (const auto updateRes =
                   extensions.updater(gctx, trackState, *updaterLogger);
               !updateRes.ok()) {
             ACTS_DEBUG("Update step failed: " << updateRes.error().message());
@@ -850,7 +851,7 @@ class CombinatorialKalmanFilter {
             .template makeState<PropagatorOptions, StubPathLimitReached>(
                 propOptions);
 
-    if (auto initResult =
+    if (const auto initResult =
             m_propagator
                 .template initialize<decltype(propState), StubPathLimitReached>(
                     propState, initialParameters);

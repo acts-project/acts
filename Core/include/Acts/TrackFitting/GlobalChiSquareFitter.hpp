@@ -890,7 +890,7 @@ class Gx2Fitter {
       }
 
       // Here we handle all measurements
-      if (auto sourceLinkIt = inputMeasurements->find(surface);
+      if (const auto sourceLinkIt = inputMeasurements->find(surface);
           sourceLinkIt != inputMeasurements->end()) {
         ACTS_DEBUG("    The surface contains a measurement.");
 
@@ -1278,7 +1278,7 @@ class Gx2Fitter {
 
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-      if (auto propagatorInitResult =
+      if (const auto propagatorInitResult =
               m_propagator.initialize(propagatorState, params);
           !propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
@@ -1444,7 +1444,7 @@ class Gx2Fitter {
 
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-      if (auto propagatorInitResult =
+      if (const auto propagatorInitResult =
               m_propagator.initialize(propagatorState, params);
           !propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "
@@ -1590,7 +1590,7 @@ class Gx2Fitter {
 
       auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-      if (auto propagatorInitResult =
+      if (const auto propagatorInitResult =
               m_propagator.initialize(propagatorState, params);
           !propagatorInitResult.ok()) {
         ACTS_DEBUG("Propagation initialization failed: "

@@ -270,7 +270,7 @@ std::shared_ptr<TrackingVolume> CylinderVolumeBuilder::trackingVolume(
           double tolerance = m_cfg.ringTolerance;
           // Search for the rmin value  - and insert if necessary
           double rMin = discBounds->rMin();
-          if (auto innerSearch = std::ranges::find_if(
+          if (const auto innerSearch = std::ranges::find_if(
                   innerRadii,
                   [&](double r) { return std::abs(rMin - r) < tolerance; });
               innerSearch == innerRadii.end()) {
