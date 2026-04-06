@@ -36,7 +36,7 @@ MaterialSlab combineSlabs(const MaterialSlab& slab1, const MaterialSlab& slab2);
 ///                   subtract the second material from the first slab.
 ///
 /// @returns Material slab with the combined thickness and average parameters
-MaterialSlab combineSlabs(const MaterialSlab& slab1, const Material& material2,
-                          float thickness2);
+/// MaterialSlab combineSlabs(const MaterialSlab& slab1, const Material&
+/// material2, float thickness2);
 
 }  // namespace Acts::detail

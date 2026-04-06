@@ -71,6 +71,10 @@ class RootMaterialMapIo {
     std::string zHistName = "Z";
     /// The rho thisogram name
     std::string rhoHistName = "rho";
+    /// the element histogram name
+    std::string elementZHistName = "ElementZ";
+    /// The element Fraction histogram name
+    std::string elementFracHistName = "ElementFrac";
     /// The index histogram name
     std::string indexHistName = "i";
   };
@@ -88,7 +92,7 @@ class RootMaterialMapIo {
     /// The name of the output volume tree
     std::string folderVolumeNameBase = "VolumeMaterial";
     /// Use an indexed material tree
-    bool indexedMaterial = false;
+    bool indexedMaterial = true;
   };
 
   /// Payload structure for material tree data
@@ -109,6 +113,10 @@ class RootMaterialMapIo {
     float hZ = 0.0f;
     /// Rho
     float hRho = 0.0f;
+    /// ElementZ
+    std::vector<unsigned int> hElementZ = {};
+    /// ElementFrac
+    std::vector<float> hElementFrac = {};
   };
 
   /// Constructor from config struct
@@ -195,6 +203,9 @@ class RootMaterialMapIo {
   /// The globally indexed material tree
   TTree* m_gTree = nullptr;
   MaterialTreePayload m_indexedMaterialTreePayload;
+
+  // should output include element and Frac branch
+  bool m_elementBranchesCreated = false;
 };
 
 /// @}

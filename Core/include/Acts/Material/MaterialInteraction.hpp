@@ -81,10 +81,6 @@ struct MaterialInteraction {
   double pathCorrection = 1.;
   /// The effective, passed material properties including the path correction.
   MaterialSlab materialSlab = MaterialSlab::Nothing();
-  /// Vectors of the individual elements present
-  std::vector<unsigned int> elementZ = {};
-  /// How much of each element are present
-  std::vector<float> elementFrac = {};
 };
 
 /// Simple result struct to be returned

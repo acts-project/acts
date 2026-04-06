@@ -213,6 +213,9 @@ class RootMaterialTrackIo {
 
   /// The material volume payload
   MaterialVolumePayload m_volumePayload = {};
+  /// Should an 'element' and 'elementFraction' branch be added
+  TTree* m_tree = nullptr;
+  bool m_elementBranchesCreated = false;
 };
 
 /// @}
