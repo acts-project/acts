@@ -44,9 +44,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   /// decorating, same as above, but for volumes
   JsonMaterialDecorator(const MaterialMapJsonConverter::Config& rConfig,
                         const std::string& jFileName,
-                        Acts::Logging::Level level,
-                        bool clearSurfaceMaterial = true,
-                        bool clearVolumeMaterial = true);
+                        Acts::Logging::Level level);
 
   /// Decorate a surface
   ///
@@ -62,9 +60,6 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   MaterialMapJsonConverter::Config m_readerConfig;
   SurfaceMaterialMaps m_surfaceMaterialMap;
   VolumeMaterialMaps m_volumeMaterialMap;
-
-  bool m_clearSurfaceMaterial{true};
-  bool m_clearVolumeMaterial{true};
 
   std::unique_ptr<const Logger> m_logger;
 

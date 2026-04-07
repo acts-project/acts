@@ -72,10 +72,6 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   ///
   /// @param volume the non-cost volume that is decorated
   void decorate(Acts::TrackingVolume& volume) const final {
-    // Null out the material for this volume
-    if (m_clearSurfaceMaterial) {
-      volume.assignVolumeMaterial(nullptr);
-    }
     // Try to find the surface in the map
     auto vMaterial = m_volumeMaterialMap.find(volume.geometryId());
     if (vMaterial != m_volumeMaterialMap.end()) {
