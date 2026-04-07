@@ -76,7 +76,8 @@ struct BetheHeitler {
                           photon.energy() * photon.direction());
 
     // apply the energy loss
-    particle.correctEnergy(-sampledEnergyLoss);
+    particle.loseEnergy(sampledEnergyLoss,
+                        SimulationOutcome::KilledInteraction);
 
     return {photon};
   }

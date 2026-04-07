@@ -100,9 +100,10 @@ class SurfaceArrayCreator {
         return static_cast<std::size_t>(std::floor((x - min) / w));
       } else {
         // variable
-        const auto it =
-            std::upper_bound(std::begin(binEdges), std::end(binEdges), x);
-        return std::distance(std::begin(binEdges), it) - 1;
+        const auto it = std::ranges::upper_bound(binEdges, x);
+        return static_cast<std::size_t>(
+                   std::ranges::distance(binEdges.begin(), it)) -
+               1;
       }
     }
   };

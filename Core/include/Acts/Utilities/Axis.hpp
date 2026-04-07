@@ -651,9 +651,9 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
   std::size_t getBin(double x) const final {
-    const auto it =
-        std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
-    return wrapBin(static_cast<int>(std::distance(std::begin(m_binEdges), it)));
+    const auto it = std::ranges::upper_bound(m_binEdges, x);
+    return wrapBin(
+        static_cast<int>(std::ranges::distance(m_binEdges.begin(), it)));
   }
 
   /// @brief get bin width
