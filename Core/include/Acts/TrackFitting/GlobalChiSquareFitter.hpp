@@ -1423,7 +1423,7 @@ class Gx2Fitter {
                    << "oldChi2sum = " << oldChi2sum << "\n"
                    << "chi2sum = " << extendedSystem.chi2());
 
-      if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 1) &&
+      if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
           (std::abs(extendedSystem.chi2() / oldChi2sum - 1) <
            gx2fOptions.relChi2changeCutOff)) {
         ACTS_DEBUG("Abort with relChi2changeCutOff after "
