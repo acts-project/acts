@@ -116,32 +116,32 @@ void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
   /// compute the part of the weight matrix arising from Step 1).
   /// This is already present in the Mille record and should not
   /// be duplicated
-  auto weightMatMeasurements = state.projectionMatrix.transpose() *
-                               state.measurementCovariance.inverse() *
-                               state.projectionMatrix;
+  const Acts::DynamicMatrix weightMatMeasurements =
+      state.projectionMatrix.transpose() *
+      state.measurementCovariance.inverse() * state.projectionMatrix;
 
   // regularise the (full) Kalman covariance. This is needed to stabilise
   // poorly constrained directions (usually: time)
-  Acts::DynamicMatrix regularisedCov =
+  const Acts::DynamicMatrix regularisedCov =
       regulariseCovariance(state.trackParametersCovariance);
 
   // now we can get the piece of the weight matrix not already covered by
   // the measurement uncertainties
-  Acts::DynamicMatrix correlationTerm =
+  const Acts::DynamicMatrix correlationTerm =
       getInverseComplement(regularisedCov, weightMatMeasurements);
 
   // Decompose the matrix we need to add into a sum of rank-1 matrices,
   // C_add = sum (lambda_i v_i v_i^T), which can be interpreted
   // as pseudo-measurements with sigma_i 1/sqrt(lambda_i) and local derivatives
   // v_i. This relies on C_add being symmetric positive (semi)definite.
-  auto eigensolver =
-      Eigen::SelfAdjointEigenSolver<Acts::DynamicMatrix>(correlationTerm);
-  if (eigensolver.info() != Eigen::Success) {
+  Eigen::SelfAdjointEigenSolver<Acts::DynamicMatrix> eigenSolver(
+      correlationTerm);
+  if (eigenSolver.info() != Eigen::Success) {
     std::cout << " FAILED to find decompose correlation term" << std::endl;
     return;
   }
-  auto eigenVals = eigensolver.eigenvalues();
-  auto eigenVecs = eigensolver.eigenvectors();
+  const Acts::DynamicVector eigenVals = eigenSolver.eigenvalues();
+  const Acts::DynamicMatrix eigenVecs = eigenSolver.eigenvectors();
 
   // no dependence on global parameters - these terms only enter the
   // track covariance sub-matrix of the alignment problem (bottom right

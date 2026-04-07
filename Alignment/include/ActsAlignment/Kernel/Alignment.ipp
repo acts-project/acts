@@ -84,7 +84,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   alignResult.chi2 = 0;
   alignResult.measurementDim = 0;
   alignResult.numTracks = trajectoryCollection.size();
-  std::vector<detail::TrackAlignmentState> aliStates;
+  std::vector<detail::TrackAlignmentState> alignmentStates;
   for (unsigned int iTraj = 0; iTraj < trajectoryCollection.size(); iTraj++) {
     const auto& sourceLinks = trajectoryCollection.at(iTraj);
     const auto& sParameters = startParametersCollection.at(iTraj);
@@ -100,9 +100,9 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
       continue;
     }
     const auto& alignState = evaluateRes.value();
-    aliStates.push_back(alignState);
+    alignmentStates.push_back(alignState);
   }
-  return calculateAlignmentParameters(aliStates, alignResult);
+  return calculateAlignmentParameters(alignmentStates, alignResult);
 }
 
 template <typename fitter_t>

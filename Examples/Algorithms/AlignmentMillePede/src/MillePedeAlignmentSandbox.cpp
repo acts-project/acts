@@ -87,7 +87,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
           const std::pair<Acts::GeometryIdentifier, const Acts::Surface*>&
               rhs) { return (lhs.first.layer() < rhs.first.layer()); });
 
-  std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
+  std::unordered_map<const Acts::Surface*, std::size_t> indexedAlignSurfaces;
   const Acts::Surface* firstSurf = nullptr;
   unsigned int iSurface = 0;
   for (auto& [geoID, surface] : sortedGeo) {
@@ -100,7 +100,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
       firstSurf = surface;
     }
     if (!m_cfg.fixModules.contains(geoID)) {
-      idxedAlignSurfaces.emplace(surface, iSurface);
+      indexedAlignSurfaces.emplace(surface, iSurface);
       iSurface++;
     }
   }
@@ -155,7 +155,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     // alignment class. This will compute the needed
     // residuals and derivatives.
     auto aliStates = m_align->evaluateTrackAlignmentState(
-        dummyGeoCtx, trackSourceLinks, refPar, kfOptions, idxedAlignSurfaces,
+        dummyGeoCtx, trackSourceLinks, refPar, kfOptions, indexedAlignSurfaces,
         ActsAlignment::AlignmentMask::All  // use this to restrict alignment
                                            // degrees of freedom if desired
     );

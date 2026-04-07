@@ -20,8 +20,6 @@
 
 #include <memory>
 
-#include "Mille/MilleFactory.h"
-
 namespace Acts {
 class MagneticFieldProvider;
 }

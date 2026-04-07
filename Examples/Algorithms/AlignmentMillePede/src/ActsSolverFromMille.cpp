@@ -31,8 +31,6 @@ ActsSolverFromMille::ActsSolverFromMille(
     Config cfg, std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("ActsSolverFromMille", std::move(logger)),
       m_cfg(std::move(cfg)) {
-  // initialize our handles
-
   // retrieve tracking geo
   m_trackingGeometry = m_cfg.trackingGeometry;
 
@@ -98,7 +96,7 @@ ProcessCode ActsSolverFromMille::finalize() {
   }
 
   ACTS_INFO("Performing alignment fit on collected Mille records");
-  std::vector<ActsAlignment::detail::TrackAlignmentState> TAS;
+  std::vector<ActsAlignment::detail::TrackAlignmentState> alignmentStates;
   ActsAlignment::detail::TrackAlignmentState state;
   std::size_t iRec = 0;
   while (ActsPlugins::ActsToMille::unpackMilleRecord(
@@ -107,7 +105,7 @@ ProcessCode ActsSolverFromMille::finalize() {
     if (++iRec % 10000 == 0) {
       ACTS_INFO("     Reading input record " << iRec);
     }
-    TAS.push_back(state);
+    alignmentStates.push_back(state);
   }
 
   /// TODO: Should try a local iteration without track state info.
@@ -115,14 +113,15 @@ ProcessCode ActsSolverFromMille::finalize() {
   /// to calculate approximate track parameter & residual updates
   /// and then repeat the solution. As in Millepede, probably
   /// safe to keep the "big matrix" and only update the right hand side.
-  m_align->calculateAlignmentParameters(TAS, alignResult);
+  m_align->calculateAlignmentParameters(alignmentStates, alignResult);
 
   /// in a real experiment, the results would be written out
   /// and stored e.g. in a DB file for further use / validation.
   /// For this initial demo, we just print them out.
 
   std::cout << "Performed internal alignment. " << std::endl;
-  std::cout << std::setw(16) << "  Tracks used: " << TAS.size() << std::endl;
+  std::cout << std::setw(16) << "  Tracks used: " << alignmentStates.size()
+            << std::endl;
   std::cout << std::setw(16)
             << "  avg Chi2/NDF = " << alignResult.averageChi2ONdf << std::endl;
   std::cout << std::setw(16) << "  Chi2   = " << alignResult.chi2 << std::endl;
