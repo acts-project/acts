@@ -224,7 +224,7 @@ class BoundaryTolerance {
   bool isTolerated(const Vector2& boundDelta,
                    const SquareMatrix2& boundToCartesian) const;
 
-  /// @brief Define the ostream operator to print the object
+  /// Define the ostream operator to print the object
   /// @param ostr: Reference to the ostream
   /// @param tolerance: Reference to the tolerance to print
   friend std::ostream& operator<<(std::ostream& ostr,
