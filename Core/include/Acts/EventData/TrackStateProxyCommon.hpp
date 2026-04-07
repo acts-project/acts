@@ -366,9 +366,8 @@ class TrackStateProxyCommon {
     assert(derived().template has<detail_tsp::kProjectorKey>());
     assert(subspaceIndices.size() <= eBoundSize);
     BoundSubspaceIndices boundSubspace{};
-    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
-                   boundSubspace.begin(),
-                   [](auto i) { return static_cast<std::uint8_t>(i); });
+    std::ranges::transform(subspaceIndices, boundSubspace.begin(),
+                           [](auto i) { return static_cast<std::uint8_t>(i); });
     derived()
         .template component<SerializedSubspaceIndices,
                             detail_tsp::kProjectorKey>() =

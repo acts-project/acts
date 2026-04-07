@@ -93,6 +93,7 @@ target_sources(
         src/Digitization.cpp
         src/MaterialMapping.cpp
         src/Propagation.cpp
+        src/PythonSpecific.cpp
         src/TrackFinding.cpp
         src/TrackFitting.cpp
         src/TruthTracking.cpp
