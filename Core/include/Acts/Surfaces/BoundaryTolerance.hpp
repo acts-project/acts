@@ -234,7 +234,7 @@ class BoundaryTolerance {
   }
 
  private:
-  /// @brief print method
+  /// Print method
   /// @param ostr: Stream to which the object is printed
   void print(std::ostream& ostr) const;
 
