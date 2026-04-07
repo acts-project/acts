@@ -59,8 +59,8 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
       for (auto& layIter : layers) {
         ACTS_VERBOSE("equidistant : registering a Layer at binning position : "
                      << (layIter->referencePosition(gctx, aDir)));
-        layerOrderVector.push_back(LayerOrderPosition(
-            layIter, layIter->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(layIter,
+                                      layIter->referencePosition(gctx, aDir));
       }
       // create the binUitlity
       binUtility = std::make_unique<const BinUtility>(layers.size(), min, max,
@@ -72,7 +72,7 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
     case arbitrary: {
       std::vector<float> boundaries;
       // initial step
-      boundaries.push_back(static_cast<float>(min));
+      boundaries.emplace_back(static_cast<float>(min));
       double layerValue = 0.;
       double layerThickness = 0.;
       std::shared_ptr<const Layer> navLayer = nullptr;
@@ -83,9 +83,9 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
         layerThickness = layIter->layerThickness();
         layerValue = layIter->referencePositionValue(gctx, aDir);
         // register the new boundaries in the step vector
-        boundaries.push_back(
+        boundaries.emplace_back(
             static_cast<float>(layerValue - 0.5 * layerThickness));
-        boundaries.push_back(
+        boundaries.emplace_back(
             static_cast<float>(layerValue + 0.5 * layerThickness));
         // calculate the layer value for the offset
         double navigationValue = 0.5 * ((layerValue - 0.5 * layerThickness) +
@@ -119,12 +119,12 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
             << (navLayerSurface->referencePosition(gctx, aDir)).z());
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
-        layerOrderVector.push_back(LayerOrderPosition(
-            navLayer, navLayer->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(navLayer,
+                                      navLayer->referencePosition(gctx, aDir));
 
         // push the original layer in
-        layerOrderVector.push_back(LayerOrderPosition(
-            layIter, layIter->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(layIter,
+                                      layIter->referencePosition(gctx, aDir));
         ACTS_VERBOSE("arbitrary : registering MaterialLayer at  "
                      << (layIter->referencePosition(gctx, aDir)).x() << ", "
                      << (layIter->referencePosition(gctx, aDir)).y() << ", "
@@ -149,11 +149,11 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
             << (navLayerSurface->referencePosition(gctx, aDir)).z());
         navLayer = NavigationLayer::create(std::move(navLayerSurface));
         // push the navigation layer in
-        layerOrderVector.push_back(LayerOrderPosition(
-            navLayer, navLayer->referencePosition(gctx, aDir)));
+        layerOrderVector.emplace_back(navLayer,
+                                      navLayer->referencePosition(gctx, aDir));
       }
       // now close the boundaries
-      boundaries.push_back(static_cast<float>(max));
+      boundaries.emplace_back(static_cast<float>(max));
       // some screen output
       ACTS_VERBOSE(layerOrderVector.size()
                    << " Layers (material + navigation) built. ");
