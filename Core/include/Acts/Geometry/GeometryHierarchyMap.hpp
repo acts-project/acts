@@ -291,8 +291,8 @@ inline auto GeometryHierarchyMap<value_t>::find(
   // might be stored at a higher level. ids for higher levels would always
   // be sorted before the requested id. searching for the first element
   // after the requested ensures that we include the full hierarchy.
-  const auto it = std::upper_bound(m_ids.begin(), m_ids.end(), id.value());
-  auto i = std::distance(m_ids.begin(), it);
+  const auto it = std::ranges::upper_bound(m_ids, id.value());
+  auto i = std::ranges::distance(m_ids.begin(), it);
 
   // now go up the hierarchy to find the first matching element.
   // example: the container stores four identifiers

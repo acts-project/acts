@@ -41,8 +41,8 @@ CuboidVolumeBounds::CuboidVolumeBounds(
     m_values[key] = value;
   }
   // Throw error here instead of consistency check for clarity
-  if (std::any_of(m_values.begin(), m_values.end(),
-                  [](const auto& val) { return val == -1; })) {
+  if (std::ranges::any_of(m_values,
+                          [](const auto& val) { return val == -1; })) {
     throw std::logic_error("Missing bound values");
   }
   checkConsistency();
