@@ -67,11 +67,6 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   /// @param volume the non-cost volume that is decorated
   void decorate(TrackingVolume& volume) const final {
     ACTS_VERBOSE("Processing volume: " << volume.geometryId());
-    // Clear the material if registered to do so
-    if (m_clearVolumeMaterial) {
-      ACTS_VERBOSE("-> Clearing volume material");
-      volume.assignVolumeMaterial(nullptr);
-    }
     // Try to find the volume in the map
     auto vMaterial = m_volumeMaterialMap.find(volume.geometryId());
     if (vMaterial != m_volumeMaterialMap.end()) {
