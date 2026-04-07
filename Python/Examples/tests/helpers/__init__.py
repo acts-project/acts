@@ -169,3 +169,20 @@ def failure_threshold(level: acts.logging.Level, enabled: bool = True):
         acts.logging.setFailureThreshold(prev)
     else:
         yield
+
+
+def assert_entries(root_file, tree_name, exp=None, non_zero=False):
+    __tracebackhide__ = True
+    import ROOT
+
+    ROOT.PyConfig.IgnoreCommandLineOptions = True
+    ROOT.gROOT.SetBatch(True)
+
+    rf = ROOT.TFile.Open(str(root_file))
+    keys = [k.GetName() for k in rf.GetListOfKeys()]
+    assert tree_name in keys
+    print("Entries:", rf.Get(tree_name).GetEntries())
+    if non_zero:
+        assert rf.Get(tree_name).GetEntries() > 0, f"{root_file}:{tree_name}"
+    if exp is not None:
+        assert rf.Get(tree_name).GetEntries() == exp, f"{root_file}:{tree_name}"

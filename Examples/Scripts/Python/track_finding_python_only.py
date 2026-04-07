@@ -138,7 +138,30 @@ def runTrackFindingPythonOnly(
 
     s.addAlgorithm(PythonTrackFitter("PythonTrackFitter", acts.logging.INFO))
 
-    return s
+    s.addAlgorithm(
+        acts.examples.TrackTruthMatcher(
+            level=acts.logging.INFO,
+            inputTracks="fitted_tracks",
+            inputParticles="particles",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputTrackParticleMatching="track_particle_matching",
+            outputParticleTrackMatching="particle_track_matching",
+            doubleMatching=True,
+        )
+    )
+
+    cfg = acts.examples.PythonTrackFinderPerformanceWriter.Config()
+    cfg.inputTracks = "fitted_tracks"
+    cfg.inputParticles = "particles"
+    cfg.inputTrackParticleMatching = "track_particle_matching"
+    cfg.inputParticleTrackMatching = "particle_track_matching"
+    cfg.inputParticleMeasurementsMap = "particle_measurements_map"
+    perfWriter = acts.examples.PythonTrackFinderPerformanceWriter(
+        cfg, acts.logging.INFO
+    )
+    s.addWriter(perfWriter)
+
+    return s, perfWriter
 
 
 if __name__ == "__main__":
@@ -156,11 +179,17 @@ if __name__ == "__main__":
     outputDir = Path.cwd() / "output_track_finding_python_only"
     outputDir.mkdir(exist_ok=True)
 
-    runTrackFindingPythonOnly(
+    s, perfWriter = runTrackFindingPythonOnly(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
         geoSelectionConfigFile=geoSelectionConfigFile,
         outputDir=outputDir,
         decorators=decorators,
-    ).run()
+    )
+    s.run()
+
+    histograms = perfWriter.histograms()
+    print(
+        f"Retrieved {len(histograms)} performance histograms: {list(histograms.keys())}"
+    )

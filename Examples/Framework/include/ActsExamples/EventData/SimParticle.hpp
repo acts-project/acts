@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <boost/container/flat_set.hpp>
 
@@ -74,7 +74,7 @@ class SimParticle final {
   }
 
   /// Set the process type that generated this particle.
-  SimParticle& setProcess(ActsFatras::ProcessType proc) {
+  SimParticle& setProcess(ActsFatras::GenerationProcess proc) {
     initialState().setProcess(proc);
     finalState().setProcess(proc);
     return *this;
@@ -107,7 +107,9 @@ class SimParticle final {
   /// Particle identifier within an event.
   SimBarcode particleId() const { return initialState().particleId(); }
   /// Which type of process generated this particle.
-  ActsFatras::ProcessType process() const { return initialState().process(); }
+  ActsFatras::GenerationProcess process() const {
+    return initialState().process();
+  }
   /// PDG particle number that identifies the type.
   Acts::PdgParticle pdg() const { return initialState().pdg(); }
   /// Absolute PDG particle number that identifies the type.
@@ -170,7 +172,9 @@ class SimParticle final {
   std::uint32_t numberOfHits() const { return finalState().numberOfHits(); }
 
   /// Particle outcome.
-  ActsFatras::ParticleOutcome outcome() const { return finalState().outcome(); }
+  ActsFatras::SimulationOutcome outcome() const {
+    return finalState().outcome();
+  }
 
  private:
   SimParticleState m_initial;
