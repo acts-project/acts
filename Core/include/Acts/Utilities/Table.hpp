@@ -12,6 +12,7 @@
 #include <cctype>
 #include <format>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -115,20 +116,19 @@ class Table {
 
     // Build header row
     result += "|";
-    for (std::size_t i = 0; i < m_columns.size(); ++i) {
+    for (const auto& col : m_columns) {
       result += std::format(
-          " {} |", formatAligned(m_columns[i].header, m_columns[i].width,
-                                 m_columns[i].alignment));
+          " {} |", formatAligned(col.header, col.width, col.alignment));
     }
     result += "\n";
 
     // Build separator row
     result += "|";
-    for (std::size_t i = 0; i < m_columns.size(); ++i) {
-      std::size_t contentWidth = m_columns[i].width;
+    for (const auto& col : m_columns) {
+      std::size_t contentWidth = col.width;
 
       if (m_includeMarkdownMarkers) {
-        switch (m_columns[i].alignment) {
+        switch (col.alignment) {
           case Alignment::Left:
             result += std::format(":{:-<{}}", "", contentWidth + 1);
             break;
@@ -169,7 +169,9 @@ class Table {
   /// @throws std::invalid_argument if alignment string is not recognized
   static Alignment parseAlignment(const std::string& alignment) {
     std::string lower = alignment;
-    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    std::ranges::transform(lower, lower.begin(), [](unsigned char c) {
+      return static_cast<char>(std::tolower(c));
+    });
 
     if (lower == "left" || lower == "l") {
       return Alignment::Left;
