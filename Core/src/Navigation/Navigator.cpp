@@ -313,6 +313,8 @@ void Navigator::handleSurfaceReached(State& state, const Vector3& position,
 
   // handling portals in gen3 configuration
   if (m_geometryVersion == GeometryVersion::Gen3) {
+    state.navCandidate().targetReached();
+
     if (state.navCandidate().isPortalTarget() &&
         &state.navCandidate().surface() == &surface) {
       ACTS_VERBOSE(volInfo(state) << "Handling portal status.");
@@ -581,12 +583,6 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
         "Navigator: No navigation policy found for current volume.");
   }
 
-  auto policyState = state.policyStateManager.currentState();
-  state.currentVolume->initializeNavigationCandidates(
-      state.options.geoContext, args, policyState, appendOnly, logger());
-
-  ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
-                              << " navigation candidates.");
   for (const Surface* surface : state.options.externalSurfaces) {
     const GeometryIdentifier geoId = surface->geometryId();
     // Don't add any surface which is not in the same volume (volume bits)
@@ -598,6 +594,28 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
                                 << " surface " << geoId);
     appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
   }
+
+  if (!state.options.eraseUnboundVolChange) {
+    // unbound targets are copied over to the next surface if they've not been
+    // reached yet by the propagator
+    for (const NavigationTarget& target : state.navCandidates) {
+      if (target.isSurfaceTarget() && target.boundaryTolerance().isInfinite() &&
+          !target.isReached()) {
+        appendOnly.addSurfaceCandidate(target.surface(),
+                                       BoundaryTolerance::Infinite());
+        ACTS_VERBOSE(volInfo(state) << "Target " << target
+                                    << " not been reached yet. Try now");
+      }
+    }
+  }
+
+  auto policyState = state.policyStateManager.currentState();
+  state.currentVolume->initializeNavigationCandidates(
+      state.options.geoContext, args, policyState, appendOnly, logger());
+
+  ACTS_VERBOSE(volInfo(state) << "Found " << state.stream.candidates().size()
+                              << " navigation candidates.");
+
   bool pruneFreeCand{false};
   if (!state.freeCandidates.empty()) {
     for (const auto& [surface, wasReached] : state.freeCandidates) {
@@ -615,8 +633,11 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
         appendOnly.addSurfaceCandidate(*surface, BoundaryTolerance::Infinite());
         pruneFreeCand = !state.options.freeSurfaceSelector.connected();
       }
-    };
+    }
   }
+
+  state.navCandidates.clear();
+
   state.stream.initialize(state.options.geoContext, {position, direction},
                           BoundaryTolerance::None(),
                           state.options.surfaceTolerance);
@@ -625,8 +646,6 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
                << "Now " << state.stream.candidates().size()
                << " navigation candidates after initialization.\n"
                << state.stream.candidates());
-
-  state.navCandidates.clear();
 
   double farLimit = state.options.farLimit;
   // If the user has not provided the selection delegate, then

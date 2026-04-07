@@ -84,8 +84,9 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   }
 
   // Append the multi intersection candidates
-  m_candidates.insert(m_candidates.end(), additionalCandidates.begin(),
-                      additionalCandidates.end());
+  m_candidates.insert(m_candidates.end(),
+                      std::make_move_iterator(additionalCandidates.begin()),
+                      std::make_move_iterator(additionalCandidates.end()));
 
   // Sort the candidates by path length
   std::ranges::sort(m_candidates, NavigationTarget::pathLengthOrder);

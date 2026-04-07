@@ -240,10 +240,6 @@ struct Gx2FitterResult {
   /// Hit measurement surfaces
   std::vector<const Surface*> hitActiveSurfaces;
 
-  /// Measurement surfaces handled in both forward and
-  /// backward filtering
-  std::vector<const Surface*> passedAgainSurfaces;
-
   /// Count how many surfaces have been hit
   std::size_t surfaceCount = 0;
 };
@@ -1320,23 +1316,6 @@ class Gx2Fitter {
       // Run the fitter
       auto propagationResult = m_propagator.propagate(propagatorState);
 
-      if (r.hitActiveSurfaces.size() + missedMeasurements.size() !=
-          inputMeasurements.size()) {
-        ACTS_DEBUG("Propagation only hit "
-                   << r.hitActiveSurfaces.size() << "/"
-                   << (inputMeasurements.size() - missedMeasurements.size())
-                   << " surfaces. Remove non hit surfaces from the list");
-        for (const auto [surface, _] : inputMeasurements) {
-          if (!Acts::rangeContainsValue(r.hitActiveSurfaces, surface)) {
-            missedMeasurements.push_back(surface);
-            ACTS_VERBOSE(" -- Remove hit associated to "
-                         << surface->geometryId() << ".");
-          }
-        }
-      }
-      ACTS_VERBOSE("Found " << r.hitActiveSurfaces.size() << " measurements, "
-                            << ", " << r.measurementHoles << " holes");
-
       auto result =
           m_propagator.makeResult(std::move(propagatorState), propagationResult,
                                   propagatorOptions, false);
@@ -1354,6 +1333,26 @@ class Gx2Fitter {
 
       auto track = trackContainerTemp.makeTrack();
       tipIndex = gx2fResult.lastMeasurementIndex;
+
+      if (false &&
+          gx2fResult.hitActiveSurfaces.size() + missedMeasurements.size() !=
+              inputMeasurements.size()) {
+        ACTS_DEBUG("Propagation only hit "
+                   << gx2fResult.hitActiveSurfaces.size() << "/"
+                   << (inputMeasurements.size() - missedMeasurements.size())
+                   << " surfaces. Remove non hit surfaces from the list");
+        for (const auto [surface, _] : inputMeasurements) {
+          if (!Acts::rangeContainsValue(gx2fResult.hitActiveSurfaces,
+                                        surface)) {
+            missedMeasurements.push_back(surface);
+            ACTS_VERBOSE(" -- Remove hit associated to "
+                         << surface->geometryId() << ".");
+          }
+        }
+      }
+      ACTS_VERBOSE("Found " << gx2fResult.hitActiveSurfaces.size()
+                            << " measurements, "
+                            << ", " << gx2fResult.measurementHoles << " holes");
 
       // It could happen, that no measurements were found. Then the track would
       // be empty and the following operations would be invalid. Usually, this
@@ -1406,6 +1405,9 @@ class Gx2Fitter {
         ACTS_INFO("Not enough measurements. Require "
                   << extendedSystem.findRequiredNdf() + 1 << ", but only "
                   << extendedSystem.ndf() << " could be used.");
+        for (const Surface* surface : gx2fResult.hitActiveSurfaces) {
+          ACTS_INFO(" --- " << surface->geometryId());
+        }
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 

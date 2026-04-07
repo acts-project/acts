@@ -226,7 +226,7 @@ class BoundaryTolerance {
 
   /// @brief Define the ostream operator to print the object
   /// @param ostr: Reference to the ostream
-  /// @param target: Reference to the target to print
+  /// @param tolerance: Reference to the tolerance to print
   friend std::ostream& operator<<(std::ostream& ostr,
                                   const BoundaryTolerance& tolerance) {
     tolerance.print(ostr);
