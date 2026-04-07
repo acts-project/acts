@@ -57,7 +57,7 @@ class Table {
     if (!m_rows.empty()) {
       throw std::runtime_error("Cannot add columns after rows have been added");
     }
-    m_columns.push_back({header, format, alignment, header.length()});
+    m_columns.emplace_back(header, format, alignment, header.length());
   }
 
   /// Add a column with header, format string, and alignment as string
@@ -94,7 +94,7 @@ class Table {
     auto addCell = [&](auto&& arg) {
       std::string formatted =
           std::vformat(m_columns[colIndex].format, std::make_format_args(arg));
-      row.push_back(formatted);
+      row.emplace_back(formatted);
       m_columns[colIndex].width =
           std::max(m_columns[colIndex].width, formatted.length());
       ++colIndex;
@@ -102,7 +102,7 @@ class Table {
 
     (addCell(args), ...);
 
-    m_rows.push_back(std::move(row));
+    m_rows.emplace_back(std::move(row));
   }
 
   /// Generate the formatted table as a markdown string
