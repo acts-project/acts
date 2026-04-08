@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "Acts/Utilities/HashCombine.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -18,7 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/functional/hash.hpp>
 
 using namespace Acts;
 
@@ -53,7 +53,7 @@ void hash(Cluster1D& cl) {
   std::ranges::sort(cl.cells, cellComp);
   cl.hash = 0;
   for (const Cell1D& c : cl.cells) {
-    boost::hash_combine(cl.hash, c.col);
+    Acts::hashCombine(cl.hash, c.col);
   }
 }
 

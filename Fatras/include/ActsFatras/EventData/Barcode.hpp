@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "Acts/Utilities/HashCombine.hpp"
+
 #include <cstdint>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <boost/functional/hash.hpp>
 
 namespace ActsFatras {
 
@@ -286,12 +286,8 @@ class Barcode {
   /// @return Hash value of the barcode
   std::size_t hash() const {
     std::size_t seed = 0;
-    boost::hash_combine(seed, vertexPrimary());
-    boost::hash_combine(seed, vertexSecondary());
-    boost::hash_combine(seed, particle());
-    boost::hash_combine(seed, generation());
-    boost::hash_combine(seed, subParticle());
-
+    Acts::hashCombine(seed, vertexPrimary(), vertexSecondary(), particle(),
+                      generation(), subParticle());
     return seed;
   }
 

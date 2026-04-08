@@ -8,9 +8,8 @@
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include "Acts/Utilities/HashCombine.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-
-#include <boost/functional/hash.hpp>
 
 namespace ActsExamples {
 
@@ -23,7 +22,7 @@ RandomEngine RandomNumbers::spawnGenerator(
 
 RandomSeed RandomNumbers::generateSeed(const AlgorithmContext& context) const {
   std::size_t seed = m_cfg.seed;
-  boost::hash_combine(seed, context.eventNumber);
+  Acts::hashCombine(seed, context.eventNumber);
   return seed;
 }
 
