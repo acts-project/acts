@@ -219,6 +219,8 @@ class TrackingGeometry {
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
+  using PlacementOwnPtr = TrackingVolume::PlacementOwnPtr;
+  std::vector<PlacementOwnPtr> m_placements;
 };
 
 }  // namespace Acts
