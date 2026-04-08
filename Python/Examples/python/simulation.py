@@ -685,7 +685,7 @@ def addGeant4(
     """
 
     import acts.examples.geant4
-    
+
     from acts.examples.geant4 import (
         Geant4Simulation,
         Geant4ConstructionOptions,
