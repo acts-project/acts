@@ -17,11 +17,12 @@
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/FakePlotTool.hpp"
+#include "ActsExamples/Validation/TrackFinderPerformanceCollector.hpp"
 #include "ActsExamples/Validation/TrackQualityPlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
-#include <cstddef>
 #include <mutex>
+#include <set>
 #include <string>
 
 class TFile;
@@ -90,18 +91,8 @@ class RootTrackFinderPerformanceWriter final
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
-  /// Plot tool for efficiency
-  EffPlotTool m_effPlotTool;
-  /// Plot tool for fake rate
-  FakePlotTool m_fakePlotTool;
-  /// Plot tool for duplication rate
-  DuplicationPlotTool m_duplicationPlotTool;
-  /// Plot tool for track hit info
-  TrackSummaryPlotTool m_trackSummaryPlotTool;
-  /// Plot tools for subdetector track summaries
-  std::map<std::string, TrackSummaryPlotTool> m_subDetectorSummaryTools;
-  /// Plot tool for track quality
-  TrackQualityPlotTool m_trackQualityPlotTool;
+  /// Collector holding all plot tools and per-event counters.
+  TrackFinderPerformanceCollector m_collector;
 
   /// For optional output of the matching details
   TTree* m_matchingTree{nullptr};
@@ -115,22 +106,12 @@ class RootTrackFinderPerformanceWriter final
   std::uint32_t m_treeParticleSubParticle{};
   bool m_treeIsMatched{};
 
-  // Adding numbers for efficiency, fake, duplicate calculations
-  std::size_t m_nTotalTracks = 0;
-  std::size_t m_nTotalMatchedTracks = 0;
-  std::size_t m_nTotalFakeTracks = 0;
-  std::size_t m_nTotalDuplicateTracks = 0;
-  std::size_t m_nTotalParticles = 0;
-  std::size_t m_nTotalMatchedParticles = 0;
-  std::size_t m_nTotalDuplicateParticles = 0;
-  std::size_t m_nTotalFakeParticles = 0;
-
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
   ReadDataHandle<ParticleTrackMatching> m_inputParticleTrackMatching{
       this, "InputParticleTrackMatching"};
-  ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
+  ReadDataHandle<ParticleMeasurementsMap> m_inputParticleMeasurementsMap{
       this, "InputParticleMeasurementsMap"};
 };
 

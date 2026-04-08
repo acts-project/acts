@@ -38,14 +38,13 @@ class MagneticFieldWrapper : public G4MagneticField {
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger =
           Acts::getDefaultLogger("MagneticFieldWrapper", Acts::Logging::INFO));
-  ~MagneticFieldWrapper() override = default;
 
   /// Public get field interface
   ///
-  /// @param Point is the field request point
-  /// @param Bfield [in,out] is the field value
+  /// @param point is the field request point
+  /// @param bField [in,out] is the field value
   ///
-  void GetFieldValue(const G4double Point[4], G4double* Bfield) const final;
+  void GetFieldValue(const G4double point[4], G4double* bField) const final;
 
  protected:
   Config m_cfg;

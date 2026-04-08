@@ -129,6 +129,9 @@ class VolumeMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param slogger The logger
+  [[deprecated(
+      "Material mapping with propagation is deprecated. Use MaterialMapper "
+      "instead.")]]
   VolumeMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
                        std::unique_ptr<const Logger> slogger = getDefaultLogger(
                            "VolumeMaterialMapper", Logging::INFO));
@@ -158,12 +161,14 @@ class VolumeMaterialMapper {
 
   /// Process/map a single track
   ///
-  /// @param mState The current state map
-  /// @param mTrack The material track to be mapped
-  ///
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  ///
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  /// @return Result of the mapping process
+  Result<void> mapMaterialTrack(State& mState,
+                                RecordedMaterialTrack& mTrack) const;
 
  private:
   /// selector for finding surface

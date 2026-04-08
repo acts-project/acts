@@ -654,7 +654,7 @@ int charge3(const DecodedPID& p) {
   int signmult = 1;
   int result = 0;
   bool classified = false;
-  if (!classified && isMeson(p)) {
+  if (isMeson(p)) {
     classified = true;
     nq = 2;
     if ((*(p.second.rbegin() + 2)) == 2 || (*(p.second.rbegin() + 2)) == 4) {

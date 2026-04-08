@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/detail/CompSpacePointAuxiliaries.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/detail/LineHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
@@ -30,11 +31,17 @@ std::string toString(const SpacePoint_t& measurement) {
         Experimental::detail::CompSpacePointAuxiliaries::ResidualIdx;
     if (measurement.isStraw()) {
       return std::format(
-          "straw SP @ {:} with r: {:.3f}+-{:.3f} & wire : {:} ",
+          "{:}straw SP @ {:} with r: {:.3f}+-{:.3f} & wire : {:}{:} ",
+          measurement.measuresLoc0() ? "twin-" : "",
           toString(measurement.localPosition()), measurement.driftRadius(),
           std::sqrt(
               measurement.covariance()[toUnderlying(ResidualIdx::bending)]),
-          toString(measurement.sensorDirection()));
+          toString(measurement.sensorDirection()),
+          measurement.measuresLoc0()
+              ? std::format(", dZ: {:.3f}",
+                            std::sqrt(measurement.covariance()[toUnderlying(
+                                ResidualIdx::nonBending)]))
+              : "");
     } else {
       return std::format(
           "strip SP @ {:} with normal: {:}, strip dir: {:}, to next {:}, "
@@ -88,33 +95,31 @@ double CompSpacePointAuxiliaries::chi2Term(const Vector& pos, const Vector& dir,
       chiSq += Acts::square(closePointOnStraw.pathLength()) /
                hit.covariance()[nonBendIdx];
     }
+    return chiSq;
+  }
+  const Vector distOnPlane =
+      (extrapolateToPlane(pos, dir, hit) - hit.localPosition());
+  const Vector& b1{hit.toNextSensor()};
+  const Vector& b2{hit.sensorDirection()};
 
+  Vector2 dist{distOnPlane.dot(b1), distOnPlane.dot(b2)};
+  if (hit.measuresLoc0() && hit.measuresLoc1()) {
+    /// Check whether the two vectors are orthogonal
+    const double stripAngle = b1.dot(b2);
+
+    const double invDist = 1. / (1. - square(stripAngle));
+    SquareMatrix<2> stereoDecomp{SquareMatrix<2>::Identity()};
+    stereoDecomp(1, 0) = stereoDecomp(0, 1) = -stripAngle * invDist;
+    stereoDecomp(1, 1) = stereoDecomp(0, 0) = invDist;
+    dist = stereoDecomp * dist;
+    return (square(dist[0]) / hit.covariance()[bendIdx]) +
+           (square(dist[1]) / hit.covariance()[nonBendIdx]);
+  } else if (hit.measuresLoc0()) {
+    chiSq = square(dist[0]) / hit.covariance()[nonBendIdx];
   } else {
-    const Vector distOnPlane =
-        (extrapolateToPlane(pos, dir, hit) - hit.localPosition());
-    const Vector& b1{hit.toNextSensor()};
-    const Vector& b2{hit.sensorDirection()};
-    Vector2 dist{distOnPlane.dot(b1), distOnPlane.dot(b2)};
-    if (hit.measuresLoc0() && hit.measuresLoc1()) {
-      /// Check whether the two vectors are orthogonal
-      constexpr double tolerance = 1.e-8;
-      const double stripAngle = b1.dot(b2);
-      if (stripAngle > tolerance) {
-        const double invDist = 1. / (1. - square(stripAngle));
-        SquareMatrix<2> stereoDecomp{invDist * SquareMatrix<2>::Identity()};
-        stereoDecomp(1, 0) = stereoDecomp(0, 1) = -stripAngle * invDist;
-        dist = stereoDecomp * dist;
-      }
-      chiSq = Acts::square(dist[0]) / hit.covariance()[bendIdx] +
-              Acts::square(dist[1]) / hit.covariance()[nonBendIdx];
-    } else if (hit.measuresLoc0()) {
-      chiSq = Acts::square(dist[0]) / hit.covariance()[nonBendIdx];
-    } else {
-      chiSq = Acts::square(dist[0]) / hit.covariance()[bendIdx];
-      if (hit.covariance()[nonBendIdx] >
-          std::numeric_limits<double>::epsilon()) {
-        chiSq += square(dist[1]) / hit.covariance()[nonBendIdx];
-      }
+    chiSq = square(dist[0]) / hit.covariance()[bendIdx];
+    if (hit.covariance()[nonBendIdx] > s_epsilon) {
+      chiSq += square(dist[1]) / hit.covariance()[nonBendIdx];
     }
   }
   return chiSq;

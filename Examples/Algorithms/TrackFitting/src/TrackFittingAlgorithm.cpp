@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -173,6 +173,12 @@ ProcessCode TrackFittingAlgorithm::execute(const AlgorithmContext& ctx) const {
   }
 
   ACTS_DEBUG("Fitted tracks: " << trackContainer->size());
+
+  if (m_cfg.linkForward) {
+    for (auto track : tracks) {
+      track.linkForward();
+    }
+  }
 
   if (logger().doPrint(Acts::Logging::DEBUG)) {
     std::stringstream ss;

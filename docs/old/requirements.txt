@@ -2,7 +2,7 @@
 #    uv pip compile --python-version 3.14 docs/old/requirements.in -o docs/old/requirements.txt
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.3
+aiohttp==3.13.4
     # via -r docs/old/requirements.in
 aiosignal==1.4.0
     # via aiohttp
@@ -12,7 +12,7 @@ annotated-doc==0.0.4
     # via typer
 annotated-types==0.7.0
     # via pydantic
-attrs==25.4.0
+attrs==26.1.0
     # via aiohttp
 babel==2.18.0
     # via sphinx
@@ -22,11 +22,11 @@ certifi==2026.2.25
     # via requests
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.4
+charset-normalizer==3.4.6
     # via requests
 click==8.3.1
     # via typer
-cryptography==46.0.5
+cryptography==46.0.6
     # via pyjwt
 docutils==0.21.2
     # via
@@ -38,7 +38,7 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2026.2.0
+fsspec==2026.3.0
     # via -r docs/old/requirements.in
 gidgethub==5.4.0
     # via -r docs/old/requirements.in
@@ -46,7 +46,7 @@ idna==3.11
     # via
     #   requests
     #   yarl
-imagesize==1.4.1
+imagesize==2.0.0
     # via sphinx
 jinja2==3.1.6
     # via
@@ -86,13 +86,13 @@ pygments==2.19.2
     # via
     #   rich
     #   sphinx
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via gidgethub
-python-dotenv==1.2.1
+python-dotenv==1.2.2
     # via -r docs/old/requirements.in
 pyyaml==6.0.3
     # via myst-parser
-requests==2.32.5
+requests==2.33.0
     # via sphinx
 rich==14.3.3
     # via
@@ -140,5 +140,5 @@ uritemplate==4.2.0
     # via gidgethub
 urllib3==2.6.3
     # via requests
-yarl==1.22.0
+yarl==1.23.0
     # via aiohttp

@@ -295,13 +295,13 @@ components.
 | ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_FASTJET         | Build FastJet plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
-| ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_BUILD_EXAMPLES_GNN             | Build the GNN example code<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
 | ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
+| ACTS_BUILD_EXAMPLES_GNN             | Build the GNN example code<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_BUILD_EXAMPLES_PODIO           | Build Podio-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | [Deprecated] Build python bindings and<br>enables the examples<br> type: `bool`, default: `OFF`                                                                                                                                    |
-| ACTS_BUILD_EXAMPLES_ROOT            | Build modules based on ROOT I/O<br> type: `bool`, default: `ON`                                                                                                                                                                    |
+| ACTS_BUILD_EXAMPLES_ROOT            | Build modules based on ROOT I/O<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
@@ -365,11 +365,16 @@ The following environment variables might be useful.
 
 # The OpenDataDetector
 
+![3D rendering of the OpenDataDetector](figures/odd_render.jpg) {width=66%}
+
 ACTS comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map.
 When configuring with `ACTS_BUILD_ODD=ON`, the detector is fetched automatically via CMake's `ExternalProject_Add`. This step requires network access during the first build to clone the upstream repository.
 
 To use it, build ACTS with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or
 `DYLD_LIBRARY_PATH` and `DD4HEP_LIBRARY_PATH` on macOS to the install path of the ODD factory (for example: `$ODD_BUILD_DIR/factory`). The setup scripts generated by the build do this automatically when present.
+
+> [!tip]
+> If you source `$BUILD/this_acts_withdeps.sh`, these library paths are set automatically and the ODD python components are available as well.
 
 You can now use the ODD in the python binding by using:
 

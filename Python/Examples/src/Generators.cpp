@@ -15,7 +15,7 @@
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
-#include "ActsPython/Utilities/WhiteBoardTypeRegistry.hpp"
+#include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -141,8 +141,8 @@ void addGenerators(py::module& mex) {
   // Aliases for Fatras types mirroring C++
   auto fatras = py::module_::import("acts.fatras");
   mex.attr("SimBarcode") = fatras.attr("Barcode");
-  mex.attr("ProcessType") = fatras.attr("ProcessType");
-  mex.attr("ParticleOutcome") = fatras.attr("ParticleOutcome");
+  mex.attr("GenerationProcess") = fatras.attr("GenerationProcess");
+  mex.attr("SimulationOutcome") = fatras.attr("SimulationOutcome");
   mex.attr("SimParticleState") = fatras.attr("Particle");
 
   // SimParticle
@@ -197,7 +197,7 @@ void addGenerators(py::module& mex) {
       });
 
   auto simParticleContainer =
-      py::class_<SimParticleContainer>(mex, "SimParticleContainer")
+      py::classh<SimParticleContainer>(mex, "SimParticleContainer")
           .def(py::init<>())
           .def("__len__",
                [](const SimParticleContainer& c) { return c.size(); })

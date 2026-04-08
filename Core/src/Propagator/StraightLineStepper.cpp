@@ -21,7 +21,7 @@ StraightLineStepper::State StraightLineStepper::makeState(
 }
 
 void StraightLineStepper::initialize(State& state,
-                                     const BoundTrackParameters& par) const {
+                                     const BoundParameters& par) const {
   initialize(state, par.parameters(), par.covariance(),
              par.particleHypothesis(), par.referenceSurface());
 }
@@ -60,7 +60,7 @@ void StraightLineStepper::initialize(State& state,
   }
 }
 
-Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
+Result<std::tuple<StraightLineStepper::BoundParameters, BoundMatrix, double>>
 StraightLineStepper::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
@@ -72,7 +72,7 @@ StraightLineStepper::boundState(
       freeToBoundCorrection);
 }
 
-std::tuple<BoundTrackParameters, BoundMatrix, double>
+std::tuple<StraightLineStepper::BoundParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,

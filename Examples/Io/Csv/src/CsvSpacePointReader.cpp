@@ -65,7 +65,7 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
   const auto& path =
       perEventFilepath(m_cfg.inputDir, filename + ".csv", ctx.eventNumber);
 
-  NamedTupleCsvReader<SpacePointData> reader(path);
+  BoostDescribeCsvReader<SpacePointData> reader(path);
   SpacePointData data;
 
   while (reader.read(data)) {
@@ -79,11 +79,21 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
 
     if (m_cfg.extendCollection) {
       const Acts::Vector3 topStripVector =
-          data.sp_topStripDirection * 2 * data.sp_topHalfStripLength;
+          Acts::Vector3(data.sp_topStripDirection_0,
+                        data.sp_topStripDirection_1,
+                        data.sp_topStripDirection_2) *
+          2 * data.sp_topHalfStripLength;
       const Acts::Vector3 bottomStripVector =
-          data.sp_bottomStripDirection * 2 * data.sp_bottomHalfStripLength;
-      const Acts::Vector3 stripCenterDistance = data.sp_stripCenterDistance;
-      const Acts::Vector3 topStripCenter = data.sp_topStripCenterPosition;
+          Acts::Vector3(data.sp_bottomStripDirection_0,
+                        data.sp_bottomStripDirection_1,
+                        data.sp_bottomStripDirection_2) *
+          2 * data.sp_bottomHalfStripLength;
+      const Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance_0,
+                                              data.sp_stripCenterDistance_1,
+                                              data.sp_stripCenterDistance_2);
+      const Acts::Vector3 topStripCenter(data.sp_topStripCenterPosition_0,
+                                         data.sp_topStripCenterPosition_1,
+                                         data.sp_topStripCenterPosition_2);
 
       Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
           topStripVector.cast<float>();
