@@ -13,8 +13,8 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Root/RootUtility.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -121,7 +121,8 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
   for (unsigned int i = 0; i < nParticles; i++) {
     SimParticle p;
 
-    p.setProcess(static_cast<ActsFatras::ProcessType>((*m_process).at(i)));
+    p.setProcess(
+        static_cast<ActsFatras::GenerationProcess>((*m_process).at(i)));
     p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType).at(i)));
     p.setCharge((*m_q).at(i) * Acts::UnitConstants::e);
     p.setMass((*m_m).at(i) * Acts::UnitConstants::GeV);
@@ -149,7 +150,7 @@ ProcessCode RootParticleReader::read(const AlgorithmContext& context) {
                                  (*m_pathInL0).at(i) * Acts::UnitConstants::mm);
     finalState.setNumberOfHits((*m_numberOfHits).at(i));
     finalState.setOutcome(
-        static_cast<ActsFatras::ParticleOutcome>((*m_outcome).at(i)));
+        static_cast<ActsFatras::SimulationOutcome>((*m_outcome).at(i)));
 
     particles.insert(p);
   }

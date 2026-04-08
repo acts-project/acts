@@ -8,9 +8,8 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <sstream>
 
@@ -56,22 +55,24 @@ PYBIND11_MODULE(ActsFatrasPythonBindings, fatras) {
         return oss.str();
       });
 
-  py::enum_<ActsFatras::ProcessType>(fatras, "ProcessType")
-      .value("eUndefined", ActsFatras::ProcessType::eUndefined)
-      .value("eDecay", ActsFatras::ProcessType::eDecay)
-      .value("ePhotonConversion", ActsFatras::ProcessType::ePhotonConversion)
-      .value("eBremsstrahlung", ActsFatras::ProcessType::eBremsstrahlung)
+  py::enum_<ActsFatras::GenerationProcess>(fatras, "GenerationProcess")
+      .value("eUndefined", ActsFatras::GenerationProcess::eUndefined)
+      .value("eDecay", ActsFatras::GenerationProcess::eDecay)
+      .value("ePhotonConversion",
+             ActsFatras::GenerationProcess::ePhotonConversion)
+      .value("eBremsstrahlung", ActsFatras::GenerationProcess::eBremsstrahlung)
       .value("eNuclearInteraction",
-             ActsFatras::ProcessType::eNuclearInteraction);
+             ActsFatras::GenerationProcess::eNuclearInteraction);
 
-  py::enum_<ActsFatras::ParticleOutcome>(fatras, "ParticleOutcome")
-      .value("Alive", ActsFatras::ParticleOutcome::Alive)
+  py::enum_<ActsFatras::SimulationOutcome>(fatras, "SimulationOutcome")
+      .value("Alive", ActsFatras::SimulationOutcome::Alive)
       .value("KilledInteraction",
-             ActsFatras::ParticleOutcome::KilledInteraction)
-      .value("KilledVolumeExit", ActsFatras::ParticleOutcome::KilledVolumeExit)
-      .value("KilledTime", ActsFatras::ParticleOutcome::KilledTime)
+             ActsFatras::SimulationOutcome::KilledInteraction)
+      .value("KilledVolumeExit",
+             ActsFatras::SimulationOutcome::KilledVolumeExit)
+      .value("KilledTime", ActsFatras::SimulationOutcome::KilledTime)
       .value("KilledSecondaryParticle",
-             ActsFatras::ParticleOutcome::KilledSecondaryParticle);
+             ActsFatras::SimulationOutcome::KilledSecondaryParticle);
 
   py::class_<Particle>(fatras, "Particle")
       .def(py::init<>())

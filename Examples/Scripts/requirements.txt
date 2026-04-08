@@ -24,7 +24,7 @@ cycler==0.12.1
     # via matplotlib
 fonttools==4.62.1
     # via matplotlib
-fsspec==2026.1.0
+fsspec==2026.3.0
     # via
     #   awkward
     #   uproot
