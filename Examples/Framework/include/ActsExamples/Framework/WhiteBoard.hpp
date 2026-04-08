@@ -161,7 +161,7 @@ Acts::AnyMoveOnly* WhiteBoard::getHolder(const std::string& name) const {
   auto& [holder, storedTypeHash] = it->second;
   if (storedTypeHash != Acts::typeHash<T>()) {
     const char* holderTypeName =
-        holder->typeInfo() ? holder->typeInfo()->name() : "unknown";
+        /* holder->typeInfo() ? holder->typeInfo()->name() : */ "unknown";
     std::string msg =
         typeMismatchMessage(name, typeid(T).name(), holderTypeName);
     throw std::out_of_range(msg.c_str());
