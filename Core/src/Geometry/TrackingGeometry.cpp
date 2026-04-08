@@ -210,6 +210,11 @@ TrackingGeometry::TrackingGeometry(
     ACTS_DEBUG("Closing tracking geometry with Gen1 assignment");
     Gen1GeometryClosureVisitor visitor{logger, materialDecorator, hook};
     apply(visitor);
+    m_placements.insert(
+        m_placements.end(),
+        std::make_move_iterator(highestVolume->m_placements.begin()),
+        std::make_move_iterator(highestVolume->m_placements.end()));
+    highestVolume->m_placements.clear();
   }
 
   GeometryIdMapVisitor mapVisitor{logger};
