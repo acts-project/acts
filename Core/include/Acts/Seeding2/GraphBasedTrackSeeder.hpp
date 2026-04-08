@@ -72,9 +72,8 @@ class GraphBasedTrackSeeder {
     float minPt = 1.0f * UnitConstants::GeV;
 
     // graph building options
-    /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of
-    /// 2*T).
-    double ptCoeff = 0.29997 * 1.9972 / 2.0;
+    ///Bfield in z
+    float Bz = 1.9972f * UnitConstants::T; 
     /// Use eta binning from geometry structure.
     bool useEtaBinning = true;
     /// Apply RZ cuts on doublets.
@@ -84,7 +83,7 @@ class GraphBasedTrackSeeder {
     /// Minimum delta radius between layers.
     float minDeltaRadius = 2.0;
     /// Maximum d0 impact perameter when validating edge connection triplet
-    float d0Max = 3.0;
+    float d0Max = 3.0 * UnitConstants::mm;
 
     // Seed extraction options
     /// Minimum eta for edge masking.
@@ -95,7 +94,7 @@ class GraphBasedTrackSeeder {
     float maxSeedSplitEta = 0.6;
     /// Max allowed curvature for seed self consistancy check.
     // Units of inverse meters
-    float maxInvRadDiff = 0.7e-2;
+    float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     // GbtsDataStorage options
     /// Maximum endcap cluster width.
     float maxEndcapClusterWidth = 0.35;
@@ -110,6 +109,10 @@ class GraphBasedTrackSeeder {
 
     /// Phi slice width
     float phiSliceWidth = std::numeric_limits<float>::quiet_NaN();
+
+    /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of
+    /// 2*T).
+    double ptCoeff = std::numeric_limits<float>::quiet_NaN();
   };
 
   /// candidate seed metadata produced by the GBTS algorithm.

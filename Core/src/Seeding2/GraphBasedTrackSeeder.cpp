@@ -25,6 +25,8 @@ namespace Acts::Experimental {
 GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
     : Config(config) {
   phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;
+
+  ptCoeff = 0.5f * config.Bz * Acts::UnitConstants::m;
 }
 
 GraphBasedTrackSeeder::GraphBasedTrackSeeder(
@@ -1001,7 +1003,7 @@ float GraphBasedTrackSeeder::estimateCurvature(const std::array<const GbtsNode*,
 
   float B = v[1] - A*u[1];
   
-  return 1000.0*B/std::sqrt(1 + A*A); //inverse meters
+  return B/std::sqrt(1 + A*A); //inverse mm
   
 }
 
@@ -1057,7 +1059,7 @@ bool GraphBasedTrackSeeder::validateTriplet(std::span<const GbtsNode*, 3> candid
   
     const float R = std::sqrt(1 + A*A)/B; //signed radius in mm
 
-    const float pT = std::abs(0.3*R/1000); //asssuming uniform 2T field and GeV Pt units
+    const float pT = std::abs(m_cfg.Bz * R / 2); //asssuming uniform 2T field and GeV Pt units
 
     if (pT < tripletMinPt) { return false;
 }
