@@ -14,7 +14,6 @@
 #include <cassert>
 #include <cstddef>
 #include <type_traits>
-#include <typeinfo>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
@@ -281,7 +280,7 @@ class AnyBase : public AnyBaseAll {
   T take() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       throw std::bad_any_cast{};
     }
     T* ptr = std::bit_cast<T*>(dataPtr());
@@ -394,12 +393,6 @@ class AnyBase : public AnyBaseAll {
   /// Check if the AnyBase contains a value
   /// @return True if a value is stored, false if empty
   explicit operator bool() const { return m_handler != nullptr; }
-
-  /// Type info of the stored value. Returns nullptr if empty.
-  /// @return Pointer to the type info of the stored value, or nullptr if empty
-  const std::type_info* typeInfo() const {
-    return m_handler != nullptr ? m_handler->typeInfo : nullptr;
-  }
 
  private:
   void* dataPtr() {
