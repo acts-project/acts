@@ -92,6 +92,14 @@ Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
     m_volume->addSurface(surface);
   }
 
+  auto visitor = overloaded{
+      [](const std::shared_ptr<Surface>&) {
+
+      },
+      [this](const std::shared_ptr<SurfacePlacementBase>& placement) {
+        m_volume->cachePlacement(placement);
+      }};
+
   return StaticBlueprintNode::build(options, gctx, logger);
 }
 
