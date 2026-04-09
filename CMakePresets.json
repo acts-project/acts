@@ -174,7 +174,10 @@
                 "ACTS_GNN_ENABLE_TORCH": "OFF",
                 "ACTS_GNN_ENABLE_CUDA": "ON",
                 "ACTS_GNN_ENABLE_TENSORRT": "ON",
-                "ACTS_GNN_ENABLE_MODULEMAP": "OFF"
+                "ACTS_GNN_ENABLE_MODULEMAP": "OFF",
+                "ACTS_BUILD_EXAMPLES": "ON",
+                "ACTS_BUILD_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_EXAMPLES_GNN": "ON"
             }
         },
         {
