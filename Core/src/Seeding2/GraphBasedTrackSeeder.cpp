@@ -1003,7 +1003,7 @@ float GraphBasedTrackSeeder::estimateCurvature(const std::array<const GbtsNode*,
 
   float B = v[1] - A*u[1];
   
-  return B/std::sqrt(1 + A*A); //inverse mm
+  return B/std::sqrt(1 + A*A) / Acts::UnitConstants::mm; 
   
 }
 
@@ -1057,9 +1057,10 @@ bool GraphBasedTrackSeeder::validateTriplet(std::span<const GbtsNode*, 3> candid
 
   if (B != 0.0) {//straight-line track is OK
   
-    const float R = std::sqrt(1 + A*A)/B; //signed radius in mm
+    const float R = std::sqrt(1 + A*A)/B * Acts::UnitConstants::mm;
 
-    const float pT = std::abs(m_cfg.Bz * R / 2); //asssuming uniform 2T field and GeV Pt units
+    // 1T magnetic field used
+    const float pT = std::abs(m_cfg.Bz * R / 2) * Acts::UnitConstants::GeV;
 
     if (pT < tripletMinPt) { return false;
 }

@@ -81,7 +81,7 @@ class GraphBasedTrackSeeder {
     /// Maximum number of Gbts edges/doublets.
     std::uint32_t nMaxEdges = 2000000;
     /// Minimum delta radius between layers.
-    float minDeltaRadius = 2.0;
+    float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
     /// Maximum d0 impact perameter when validating edge connection triplet
     float d0Max = 3.0 * UnitConstants::mm;
 
@@ -97,7 +97,7 @@ class GraphBasedTrackSeeder {
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     // GbtsDataStorage options
     /// Maximum endcap cluster width.
-    float maxEndcapClusterWidth = 0.35;
+    float maxEndcapClusterWidth = 0.35 * Acts::UnitConstants::mm;
   };
 
   /// Derived configuration struct that contains calculated parameters based on
