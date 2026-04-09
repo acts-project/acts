@@ -11,6 +11,7 @@
 #include "Acts/Utilities/HashCombine.hpp"
 
 #include <cstdint>
+#include <ostream>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -285,10 +286,8 @@ class Barcode {
   /// Get hash of the barcode
   /// @return Hash value of the barcode
   std::size_t hash() const {
-    std::size_t seed = 0;
-    Acts::hashCombine(seed, vertexPrimary(), vertexSecondary(), particle(),
-                      generation(), subParticle());
-    return seed;
+    return Acts::hashMixAndCombine(vertexPrimary(), vertexSecondary(),
+                                   particle(), generation(), subParticle());
   }
 
  private:

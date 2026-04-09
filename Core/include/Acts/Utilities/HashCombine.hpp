@@ -10,8 +10,7 @@
 
 #include <cstddef>
 #include <functional>
-
-#include <boost/functional/hash.hpp>
+#include <type_traits>
 
 namespace Acts {
 
@@ -27,7 +26,7 @@ namespace Acts {
 ///
 /// @param x the value to mix
 /// @return the mixed value
-constexpr std::size_t hashMix(std::size_t x) {
+constexpr std::uint64_t hashMix(std::size_t x) {
   x ^= x >> 33;
   x *= 0xff51afd7ed558ccdULL;
   x ^= x >> 33;
@@ -36,30 +35,38 @@ constexpr std::size_t hashMix(std::size_t x) {
   return x;
 }
 
-/// Combine a hash seed with one or more values.
+/// Combine one or more values into a single hash.
 ///
-/// Each value is passed through @c std::hash and then @c hashMix before being
-/// folded into the seed via @c boost::hash_combine. This avoids the poor
-/// distribution that @c boost::hash_combine alone exhibits when inputs are
-/// small or patterned integers (where @c std::hash is typically the identity).
+/// Each value is passed through @c std::hash and @c hashMix, then folded
+/// together using an asymmetric combine step (fold-left). This produces
+/// well-distributed, order-dependent hashes even for small or sequential
+/// integer inputs where @c std::hash is typically the identity.
 ///
-/// Multiple values can be combined in a single call:
 /// @code
-/// std::size_t seed = 0;
-/// Acts::hashCombine(seed, a, b, c);
+/// std::uint64_t h = Acts::hashMixAndCombine(a, b, c);
 /// @endcode
 ///
-/// @tparam T the type of the first value to combine
-/// @tparam Rest the types of any additional values to combine
-/// @param seed the hash seed to update in place
-/// @param value the first value to fold into the seed
-/// @param rest additional values to fold into the seed
+/// @tparam T the type of the first value
+/// @tparam Rest the types of any additional values
+/// @param value the first value to hash
+/// @param rest additional values to fold in
+/// @return the combined hash
 template <typename T, typename... Rest>
-constexpr void hashCombine(std::size_t& seed, const T& value, const Rest&... rest) {
-  boost::hash_combine(seed, hashMix(std::hash<T>{}(value)));
+[[nodiscard]]
+constexpr std::uint64_t hashMixAndCombine(const T& value, const Rest&... rest) {
+  std::uint64_t seed = hashMix(std::hash<T>{}(value));
   if constexpr (sizeof...(rest) > 0) {
-    hashCombine(seed, rest...);
+    // Fold-left combine adapted from boost::hash_combine's 32-bit formula,
+    // extended to 64-bit with wider shifts. The XOR with shifted seed makes
+    // the operation asymmetric, preserving argument order.
+    // @see https://github.com/boostorg/container_hash/blob/e3cbbebc8a1f9833287c8eb52fb0484ba744646b/include/boost/container_hash/hash.hpp#L469-L473
+    auto foldLeft = [&seed](const auto& v) {
+      std::size_t h = hashMix(std::hash<std::decay_t<decltype(v)>>{}(v));
+      seed ^= h + 0x9e3779b97f4a7c15ULL + (seed << 12) + (seed >> 4);
+    };
+    (foldLeft(rest), ...);
   }
+  return seed;
 }
 
 }  // namespace Acts

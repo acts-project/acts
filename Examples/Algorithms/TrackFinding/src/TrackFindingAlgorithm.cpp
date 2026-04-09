@@ -55,7 +55,7 @@ struct std::hash<std::array<T, N>> {
   std::size_t operator()(const std::array<T, N>& array) const {
     std::size_t result = 0;
     for (auto&& element : array) {
-      Acts::hashCombine(result, element);
+      result = Acts::hashMixAndCombine(result, element);
     }
     return result;
   }

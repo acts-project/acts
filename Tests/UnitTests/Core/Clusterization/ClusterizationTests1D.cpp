@@ -19,7 +19,6 @@
 #include <utility>
 #include <vector>
 
-
 using namespace Acts;
 
 struct Cell1D {
@@ -53,7 +52,7 @@ void hash(Cluster1D& cl) {
   std::ranges::sort(cl.cells, cellComp);
   cl.hash = 0;
   for (const Cell1D& c : cl.cells) {
-    Acts::hashCombine(cl.hash, c.col);
+    cl.hash = Acts::hashMixAndCombine(cl.hash, c.col);
   }
 }
 

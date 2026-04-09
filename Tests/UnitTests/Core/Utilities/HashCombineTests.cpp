@@ -38,27 +38,24 @@ BOOST_AUTO_TEST_CASE(hashMix_distinct) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(hashCombine_basic) {
+BOOST_AUTO_TEST_CASE(hashMixAndCombine_basic) {
   // same inputs produce same hash
-  std::size_t a = 0, b = 0;
-  hashCombine(a, 1, 2, 3);
-  hashCombine(b, 1, 2, 3);
+  std::size_t a = hashMixAndCombine(1, 2, 3);
+  std::size_t b = hashMixAndCombine(1, 2, 3);
   BOOST_CHECK_EQUAL(a, b);
 
   // different inputs produce different hashes
-  std::size_t c = 0;
-  hashCombine(c, 1, 2, 4);
+  std::size_t c = hashMixAndCombine(1, 2, 4);
   BOOST_CHECK_NE(a, c);
 }
 
-BOOST_AUTO_TEST_CASE(hashCombine_orderMatters) {
-  std::size_t a = 0, b = 0;
-  hashCombine(a, 1, 2);
-  hashCombine(b, 2, 1);
+BOOST_AUTO_TEST_CASE(hashMixAndCombine_orderMatters) {
+  std::size_t a = hashMixAndCombine(1, 2);
+  std::size_t b = hashMixAndCombine(2, 1);
   BOOST_CHECK_NE(a, b);
 }
 
-BOOST_AUTO_TEST_CASE(hashCombine_consecutiveCollisionRate) {
+BOOST_AUTO_TEST_CASE(hashMixAndCombine_consecutiveCollisionRate) {
   // Simulate barcode-like inputs: 5 small integer fields, many with zeros.
   // Hash into a 4096-bucket table and check collision quality.
   constexpr std::size_t nBuckets = 4096;
@@ -71,11 +68,10 @@ BOOST_AUTO_TEST_CASE(hashCombine_consecutiveCollisionRate) {
   std::size_t nInputs = 0;
   for (std::uint32_t vp = 0; vp < 10; ++vp) {
     for (std::uint32_t p = 0; p < 100000; ++p) {
-      std::size_t seed = 0;
-      hashCombine(seed, vp, std::uint32_t{0}, p, std::uint32_t{0},
-                  std::uint32_t{0});
-      hashes.insert(seed);
-      buckets[seed % nBuckets]++;
+      std::size_t h = hashMixAndCombine(vp, std::uint32_t{0}, p, std::uint32_t{0},
+                                  std::uint32_t{0});
+      hashes.insert(h);
+      buckets[h % nBuckets]++;
       ++nInputs;
     }
   }
@@ -92,7 +88,7 @@ BOOST_AUTO_TEST_CASE(hashCombine_consecutiveCollisionRate) {
   BOOST_CHECK_LT(ratio, 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(hashCombine_multiFieldCollisionRate) {
+BOOST_AUTO_TEST_CASE(hashMixAndCombine_multiFieldCollisionRate) {
   // All fields vary in small ranges (realistic barcode space)
   std::unordered_set<std::size_t> hashes;
   std::size_t nInputs = 0;
@@ -103,9 +99,8 @@ BOOST_AUTO_TEST_CASE(hashCombine_multiFieldCollisionRate) {
       for (std::uint32_t p = 0; p < 500; ++p) {
         for (std::uint32_t g = 0; g < 5; ++g) {
           for (std::uint32_t sp = 0; sp < 5; ++sp) {
-            std::size_t seed = 0;
-            hashCombine(seed, vp, vs, p, g, sp);
-            hashes.insert(seed);
+            std::size_t h = hashMixAndCombine(vp, vs, p, g, sp);
+            hashes.insert(h);
             ++nInputs;
           }
         }

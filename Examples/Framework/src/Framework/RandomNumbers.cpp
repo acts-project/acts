@@ -21,9 +21,8 @@ RandomEngine RandomNumbers::spawnGenerator(
 }
 
 RandomSeed RandomNumbers::generateSeed(const AlgorithmContext& context) const {
-  std::size_t seed = m_cfg.seed;
-  Acts::hashCombine(seed, context.eventNumber);
-  return seed;
+  return Acts::hashMixAndCombine(m_cfg.seed, context.eventNumber,
+                           context.algorithmNumber);
 }
 
 }  // namespace ActsExamples

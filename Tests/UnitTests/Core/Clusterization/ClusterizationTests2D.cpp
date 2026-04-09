@@ -23,7 +23,6 @@
 #include <utility>
 #include <vector>
 
-
 using namespace Acts;
 
 using Rectangle = std::array<int, 4>;
@@ -113,7 +112,7 @@ void hash(Cluster2D& cl) {
   std::ranges::sort(cl.cells, cellComp);
   cl.hash = 0;
   for (const Cell2D& c : cl.cells) {
-    Acts::hashCombine(cl.hash, c.col);
+    cl.hash = Acts::hashMixAndCombine(cl.hash, c.col);
   }
 }
 
