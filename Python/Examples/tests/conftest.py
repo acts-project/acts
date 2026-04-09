@@ -237,45 +237,67 @@ DetectorConfig = namedtuple(
 )
 
 
+def _get_generic_detector_config(srcdir: Path) -> DetectorConfig:
+    detector = acts.examples.GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
+    return DetectorConfig(
+        detector,
+        trackingGeometry,
+        decorators,
+        geometrySelection=(srcdir / "Examples/Configs/generic-seeding-config.json"),
+        digiConfigFile=(srcdir / "Examples/Configs/generic-digi-smearing-config.json"),
+        name="generic",
+    )
+
+
+def _get_odd_detector_config(srcdir: Path) -> DetectorConfig:
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep not set up")
+
+    odd_dir = getOpenDataDetectorDirectory()
+    matDeco = acts.IMaterialDecorator.fromFile(
+        odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
+    )
+    detector = getOpenDataDetector(matDeco)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
+    return DetectorConfig(
+        detector,
+        trackingGeometry,
+        decorators,
+        digiConfigFile=(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
+        geometrySelection=(srcdir / "Examples/Configs/odd-seeding-config.json"),
+        name="odd",
+    )
+
+
+def _srcdir() -> Path:
+    return Path(__file__).resolve().parent.parent.parent.parent
+
+
+@pytest.fixture
+def generic_detector_config():
+    """Detector config for the generic detector only."""
+    return _get_generic_detector_config(_srcdir())
+
+
+@pytest.fixture
+def odd_detector_config():
+    """Detector config for the Open Data Detector only (requires DD4hep)."""
+    return _get_odd_detector_config(_srcdir())
+
+
 @pytest.fixture(params=["generic", pytest.param("odd", marks=pytest.mark.odd)])
 def detector_config(request):
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-
+    """Parametrized fixture that runs tests with both generic and ODD detectors."""
+    srcdir = _srcdir()
     if request.param == "generic":
-        detector = acts.examples.GenericDetector()
-        trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
-        return DetectorConfig(
-            detector,
-            trackingGeometry,
-            decorators,
-            geometrySelection=(srcdir / "Examples/Configs/generic-seeding-config.json"),
-            digiConfigFile=(
-                srcdir / "Examples/Configs/generic-digi-smearing-config.json"
-            ),
-            name=request.param,
-        )
+        return _get_generic_detector_config(srcdir)
     elif request.param == "odd":
-        if not helpers.dd4hepEnabled:
-            pytest.skip("DD4hep not set up")
-
-        odd_dir = getOpenDataDetectorDirectory()
-        matDeco = acts.IMaterialDecorator.fromFile(
-            odd_dir / "data/odd-material-maps.root", level=acts.logging.INFO
-        )
-        detector = getOpenDataDetector(matDeco)
-        trackingGeometry = detector.trackingGeometry()
-        decorators = detector.contextDecorators()
-        return DetectorConfig(
-            detector,
-            trackingGeometry,
-            decorators,
-            digiConfigFile=(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
-            geometrySelection=(srcdir / "Examples/Configs/odd-seeding-config.json"),
-            name=request.param,
-        )
+        return _get_odd_detector_config(srcdir)
     else:
-        raise ValueError(f"Invalid detector {detector}")
+        raise ValueError(f"Invalid detector {request.param}")
 
 
 @pytest.fixture

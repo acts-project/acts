@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
@@ -18,7 +18,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
-#include "Acts/Propagator/detail/ParameterTraits.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -84,28 +83,16 @@ class BasePropagatorHelper : public BasePropagator {
 /// - a type mapping for: (initial track parameter type and destination
 ///   surface type) -> type of internal state object
 ///
-template <typename stepper_t, typename navigator_t = VoidNavigator>
+template <StepperConcept stepper_t, typename navigator_t = VoidNavigator>
 class Propagator final
     : public std::conditional_t<
           SupportsBoundParameters_v<stepper_t>,
           detail::BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
           detail::PropagatorStub> {
-  /// Re-define bound track parameters dependent on the stepper
-  using StepperBoundTrackParameters =
-      detail::stepper_bound_parameters_type_t<stepper_t>;
-  static_assert(BoundTrackParametersConcept<StepperBoundTrackParameters>,
-                "Stepper bound track parameters do not fulfill bound "
-                "parameters concept.");
-  static_assert(std::copy_constructible<StepperBoundTrackParameters>,
-                "return track parameter type must be copy-constructible");
+  using BoundParameters = stepper_t::BoundParameters;
 
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
-
-  static_assert(StepperStateConcept<typename stepper_t::State>,
-                "Stepper does not fulfill stepper concept.");
-  static_assert(StepperConcept<stepper_t>,
-                "Stepper does not fulfill stepper concept.");
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// @brief Helper struct determining the state's type
   ///
@@ -143,7 +130,6 @@ class Propagator final
   ///
   template <typename propagator_options_t>
   struct result_type_helper {
-    using parameters_t = StepperBoundTrackParameters;
     using actor_list_t = typename propagator_options_t::actor_list_type;
 
     /// @brief Propagation result type for an arbitrary list of additional
@@ -152,7 +138,7 @@ class Propagator final
     /// @tparam args Parameter pack specifying additional propagation results
     ///
     template <typename... args>
-    using this_result_type = PropagatorResult<parameters_t, args...>;
+    using this_result_type = PropagatorResult<BoundParameters, args...>;
 
     /// @brief Propagation result type derived from a given action list
     using type = typename actor_list_t::template result_type<this_result_type>;
@@ -219,7 +205,6 @@ class Propagator final
   /// fulfilled or the maximum number of steps/path length provided in the
   /// propagation options is reached.
   ///
-  /// @tparam parameters_t Type of initial track parameters to propagate
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam path_aborter_t The path aborter type to be added
   ///
@@ -230,10 +215,10 @@ class Propagator final
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename parameters_t, typename propagator_options_t,
+  template <typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
   Result<ResultType<propagator_options_t>> propagate(
-      const parameters_t& start, const propagator_options_t& options,
+      const BoundParameters& start, const propagator_options_t& options,
       bool createFinalParameters = true) const;
 
   /// @brief Propagate track parameters - User method
@@ -243,7 +228,6 @@ class Propagator final
   /// is fulfilled, the destination surface is hit or the maximum number of
   /// steps/path length as given in the propagation options is reached.
   ///
-  /// @tparam parameters_t Type of initial track parameters to propagate
   /// @tparam propagator_options_t Type of the propagator options
   /// @tparam target_aborter_t The target aborter type to be added
   /// @tparam path_aborter_t The path aborter type to be added
@@ -254,11 +238,11 @@ class Propagator final
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
-  template <typename parameters_t, typename propagator_options_t,
+  template <typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
   Result<ResultType<propagator_options_t>> propagate(
-      const parameters_t& start, const Surface& target,
+      const BoundParameters& start, const Surface& target,
       const propagator_options_t& options) const;
 
   /// @brief Builds the propagator state object
@@ -306,10 +290,10 @@ class Propagator final
   /// @param [in] start Initial track parameters to propagate
   ///
   /// @return Indication if the initialization was successful
-  template <typename propagator_state_t, typename parameters_t,
+  template <typename propagator_state_t,
             typename path_aborter_t = PathLimitReached>
   [[nodiscard]] Result<void> initialize(propagator_state_t& state,
-                                        const parameters_t& start) const;
+                                        const BoundParameters& start) const;
 
   /// @brief Propagate track parameters
   ///
@@ -343,33 +327,15 @@ class Propagator final
   /// @param [in] result Result of the propagation
   /// @param [in] options Propagation options
   /// @param [in] createFinalParameters Whether to produce parameters at the end of the propagation
+  /// @param [in] target Surface to be used for the final parameters, if createFinalParameters is true
+  ///             If nullptr, the current surface of the navigator will be used
   ///
   /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
   Result<ResultType<propagator_options_t>> makeResult(
       propagator_state_t state, Result<void> result,
-      const propagator_options_t& options, bool createFinalParameters) const;
-
-  /// @brief Builds the propagator result object
-  ///
-  /// This function creates the propagator result object from the propagator
-  /// state object. The `result` is passed to pipe a potential error from the
-  /// propagation call. The `options` are used to determine the type of the
-  /// result object.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state object
-  /// @tparam propagator_options_t Type of the propagator options
-  ///
-  /// @param [in] state Propagator state object
-  /// @param [in] result Result of the propagation
-  /// @param [in] target Target surface of to propagate to
-  /// @param [in] options Propagation options
-  ///
-  /// @return Propagation result
-  template <typename propagator_state_t, typename propagator_options_t>
-  Result<ResultType<propagator_options_t>> makeResult(
-      propagator_state_t state, Result<void> result, const Surface& target,
-      const propagator_options_t& options) const;
+      const propagator_options_t& options, bool createFinalParameters,
+      const Surface* target = nullptr) const;
 
  private:
   /// Implementation of propagation algorithm

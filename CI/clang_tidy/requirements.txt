@@ -30,7 +30,7 @@ pyyaml==6.0.3
     # via -r CI/clang_tidy/requirements.in
 rich==14.3.3
     # via -r CI/clang_tidy/requirements.in
-setuptools==82.0.0
+setuptools==82.0.1
     # via fs
 six==1.17.0
     # via fs

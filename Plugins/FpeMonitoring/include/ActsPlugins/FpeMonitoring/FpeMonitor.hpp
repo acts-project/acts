@@ -12,6 +12,7 @@
 #include <atomic>
 #include <csignal>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -75,7 +76,7 @@ class FpeMonitor {
     /// @param offset Number of bytes to advance
     void pushOffset(std::size_t offset) {
       assert(m_offset + offset < m_size);
-      m_offset = offset;
+      m_offset += offset;
     }
 
     /// Reset buffer offset to beginning
@@ -108,13 +109,17 @@ class FpeMonitor {
       FpeType type;
       /// Stack trace where the exception occurred
       std::shared_ptr<const boost::stacktrace::stacktrace> st;
+      /// Faulting instruction address if available from signal context
+      std::uintptr_t location;
 
       /// Constructor
       /// @param countIn Number of occurrences
       /// @param typeIn Exception type
       /// @param stIn Stack trace
+      /// @param locationIn Faulting instruction address if available
       FpeInfo(std::size_t countIn, FpeType typeIn,
-              std::shared_ptr<const boost::stacktrace::stacktrace> stIn);
+              std::shared_ptr<const boost::stacktrace::stacktrace> stIn,
+              std::uintptr_t locationIn = 0);
       ~FpeInfo();
     };
 
@@ -145,11 +150,10 @@ class FpeMonitor {
     /// Remove duplicate stack traces
     void deduplicate();
 
-    /// Check if result contains a specific exception type and stack trace
-    /// @param type Exception type
-    /// @param st Stack trace to check
+    /// Check if result contains an exception info entry under merge semantics
+    /// @param info Exception info to check
     /// @return True if contained
-    bool contains(FpeType type, const boost::stacktrace::stacktrace &st) const;
+    bool contains(const FpeInfo &info) const;
 
     /// Print summary of exceptions
     /// @param os Output stream
@@ -168,7 +172,9 @@ class FpeMonitor {
     /// @param type Exception type
     /// @param stackPtr Pointer to stack data
     /// @param bufferSize Size of stack buffer
-    void add(FpeType type, void *stackPtr, std::size_t bufferSize);
+    /// @param location Faulting instruction address if available
+    void add(FpeType type, void *stackPtr, std::size_t bufferSize,
+             std::uintptr_t location = 0);
 
    private:
     std::vector<FpeInfo> m_stackTraces;
@@ -210,6 +216,9 @@ class FpeMonitor {
   /// Check if stack trace symbolization is available
   /// @return True if symbolization is available
   static bool canSymbolize();
+  /// Check if trapping-based FPE monitoring is supported on this platform
+  /// @return True if runtime support is available
+  static bool isSupported();
 
  private:
   void enable();
@@ -232,8 +241,14 @@ class FpeMonitor {
 
   Buffer m_buffer{65536};
 
-  boost::container::static_vector<std::tuple<FpeType, void *, std::size_t>, 128>
-      m_recorded;
+  struct Recorded {
+    FpeType type;
+    void *stackPtr;
+    std::size_t bufferSize;
+    std::uintptr_t location;
+  };
+
+  boost::container::static_vector<Recorded, 128> m_recorded;
 };
 
 /// @}

@@ -31,8 +31,7 @@ SympyStepper::State SympyStepper::makeState(const Options& options) const {
   return state;
 }
 
-void SympyStepper::initialize(State& state,
-                              const BoundTrackParameters& par) const {
+void SympyStepper::initialize(State& state, const BoundParameters& par) const {
   return initialize(state, par.parameters(), par.covariance(),
                     par.particleHypothesis(), par.referenceSurface());
 }
@@ -71,7 +70,7 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
   }
 }
 
-Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
+Result<std::tuple<SympyStepper::BoundParameters, BoundMatrix, double>>
 SympyStepper::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
@@ -93,7 +92,7 @@ bool SympyStepper::prepareCurvilinearState(State& state) const {
   return true;
 }
 
-std::tuple<BoundTrackParameters, BoundMatrix, double>
+std::tuple<SympyStepper::BoundParameters, BoundMatrix, double>
 SympyStepper::curvilinearState(State& state, bool transportCov) const {
   std::optional<FreeMatrix> additionalFreeCovariance =
       state.materialEffectsAccumulator.computeAdditionalFreeCovariance(

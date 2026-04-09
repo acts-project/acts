@@ -29,7 +29,7 @@ auto Acts::EigenStepper<E>::makeState(const Options& options) const -> State {
 
 template <typename E>
 void Acts::EigenStepper<E>::initialize(State& state,
-                                       const BoundTrackParameters& par) const {
+                                       const BoundParameters& par) const {
   initialize(state, par.parameters(), par.covariance(),
              par.particleHypothesis(), par.referenceSurface());
 }

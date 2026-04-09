@@ -226,7 +226,7 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
     onetrack.reserve(candidate.size());
 
     for (auto i : candidate) {
-      for (const auto& sl : spacePoints.at(i).sourceLinks()) {
+      for (const auto& sl : sortedSpacePoints.at(i).sourceLinks()) {
         onetrack.push_back(sl.template get<IndexSourceLink>().index());
       }
     }

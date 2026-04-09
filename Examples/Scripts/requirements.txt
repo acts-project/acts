@@ -22,9 +22,9 @@ cramjam==2.11.0
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.61.1
+fonttools==4.62.1
     # via matplotlib
-fsspec==2026.2.0
+fsspec==2026.1.0
     # via
     #   awkward
     #   uproot
@@ -32,7 +32,7 @@ hist==2.10.1
     # via -r Examples/Scripts/requirements.in
 histoprint==2.6.0
     # via hist
-kiwisolver==1.4.9
+kiwisolver==1.5.0
     # via matplotlib
 markdown-it-py==4.0.0
     # via rich
@@ -46,7 +46,7 @@ mplhep==1.1.2
     # via -r Examples/Scripts/requirements.in
 mplhep-data==0.0.5
     # via mplhep
-numpy==2.4.2
+numpy==2.4.3
     # via
     #   awkward
     #   awkward-cpp
@@ -108,7 +108,7 @@ uhi==1.0.0
     # via
     #   histoprint
     #   mplhep
-uproot==5.7.1
+uproot==5.7.2
     # via -r Examples/Scripts/requirements.in
 xxhash==3.6.0
     # via uproot

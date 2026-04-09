@@ -25,7 +25,7 @@ from acts.examples.simulation import (
     ParticleConfig,
     addFatras,
     addDigitization,
-    addGenParticleSelection,
+    addDigiParticleSelection,
     ParticleSelectorConfig,
 )
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
@@ -94,16 +94,6 @@ def runGnnModuleMap(
         rnd=rnd,
     )
 
-    addGenParticleSelection(
-        s,
-        ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-            eta=(-3.0, 3.0),
-            pt=(150 * u.MeV, None),
-        ),
-    )
-
     # FATRAS simulation
     addFatras(
         s,
@@ -125,6 +115,16 @@ def runGnnModuleMap(
         digiConfigFile=digiConfigFile,
         rnd=rnd,
         logLevel=acts.logging.INFO,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-3.0, 3.0),
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
     )
 
     addSpacePointsMaking(
@@ -237,7 +237,9 @@ if __name__ == "__main__":
     model_storage = os.environ.get("MODEL_STORAGE")
     assert model_storage is not None, "MODEL_STORAGE environment variable is not set"
     ci_models_odd = Path(model_storage)
-    moduleMapPath = str(ci_models_odd / "module_map_odd_2k_events.1e-03.float")
+    moduleMapPath = str(
+        ci_models_odd / "module_map_odd_2k_events.1e-03.float.v1_3_PATCH"
+    )
     gnnModel = str(ci_models_odd / "gnn_odd_module_map.pt")
     outputDir = Path.cwd()
     events = 100

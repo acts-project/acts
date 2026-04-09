@@ -723,7 +723,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   if (m_cfg.sortSimHitsInTime) {
     Acts::ScopedTimer timer("Sorting sim hits in time", logger(),
                             Acts::Logging::DEBUG);
-    std::multimap<ActsFatras::Barcode, std::size_t> hitsByParticle;
+    std::multimap<SimBarcode, std::size_t> hitsByParticle;
 
     for (std::size_t i = 0; i < simHits.size(); ++i) {
       hitsByParticle.insert({simHits.nth(i)->particleId(), i});

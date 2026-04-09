@@ -144,7 +144,7 @@ class TGeoDetector : public Detector {
 
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetectorWrapper(
     const TGeoDetector::Config& config, const Acts::GeometryContext& context,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+    std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
         detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator,
     const Acts::Logger& logger);

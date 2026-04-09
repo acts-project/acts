@@ -11,7 +11,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -310,14 +309,10 @@ const int nTestsRefConsistency = 500;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 using TestEigenStepper = EigenStepper<>;
 using EigenPropagator = Propagator<TestEigenStepper, Navigator>;
-using Reference1StraightLinePropagator =
+using ReferenceStraightLinePropagator =
     Propagator<StraightLineStepper, Experimental::TryAllNavigator>;
-using Reference1EigenPropagator =
+using ReferenceEigenPropagator =
     Propagator<TestEigenStepper, Experimental::TryAllNavigator>;
-using Reference2StraightLinePropagator =
-    Propagator<StraightLineStepper, Experimental::TryAllOverstepNavigator>;
-using Reference2EigenPropagator =
-    Propagator<TestEigenStepper, Experimental::TryAllOverstepNavigator>;
 
 StraightLineStepper slstepper;
 TestEigenStepper estepper(bField);
@@ -332,31 +327,18 @@ EigenPropagator epropagator(estepper,
                                       getDefaultLogger("e_nav", Logging::INFO)),
                             getDefaultLogger("e_prop", Logging::INFO));
 
-Reference1StraightLinePropagator refslpropagator1(
+ReferenceStraightLinePropagator refslpropagator(
     slstepper,
     Experimental::TryAllNavigator({tGeometry, true, true, false},
-                                  getDefaultLogger("ref1_sl_nav",
+                                  getDefaultLogger("ref_sl_nav",
                                                    Logging::INFO)),
-    getDefaultLogger("ref1_sl_prop", Logging::INFO));
-Reference1EigenPropagator refepropagator1(
+    getDefaultLogger("ref_sl_prop", Logging::INFO));
+ReferenceEigenPropagator refepropagator(
     estepper,
-    Experimental::TryAllNavigator(
-        {tGeometry, true, true, false, BoundaryTolerance::Infinite()},
-        getDefaultLogger("ref1_e_nav", Logging::INFO)),
-    getDefaultLogger("ref1_e_prop", Logging::INFO));
-
-Reference2EigenPropagator refepropagator2(
-    estepper,
-    Experimental::TryAllOverstepNavigator(
-        {tGeometry, true, true, false, BoundaryTolerance::Infinite()},
-        getDefaultLogger("ref2_e_nav", Logging::INFO)),
-    getDefaultLogger("ref2_e_prop", Logging::INFO));
-Reference2StraightLinePropagator refslpropagator2(
-    slstepper,
-    Experimental::TryAllOverstepNavigator({tGeometry, true, true, false},
-                                          getDefaultLogger("ref2_sl_nav",
-                                                           Logging::INFO)),
-    getDefaultLogger("ref2_sl_prop", Logging::INFO));
+    Experimental::TryAllNavigator({tGeometry, true, true, false,
+                                   BoundaryTolerance::Infinite()},
+                                  getDefaultLogger("ref_e_nav", Logging::INFO)),
+    getDefaultLogger("ref_e_prop", Logging::INFO));
 
 auto eventGen =
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
@@ -411,7 +393,7 @@ BOOST_DATA_TEST_CASE(NavigatorEigenSelfConsistency,
   runSelfConsistencyTest(epropagator, start, logger());
 }
 
-BOOST_DATA_TEST_CASE(NavigatorRef1StraightLineConsistency,
+BOOST_DATA_TEST_CASE(NavigatorRefStraightLineConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
@@ -422,11 +404,11 @@ BOOST_DATA_TEST_CASE(NavigatorRef1StraightLineConsistency,
              << pT << "\n    phi = " << phi << "\n    theta = " << theta
              << "\n    charge = " << charge << "\n    index = " << index);
 
-  ACTS_DEBUG(">>> Test reference 1 consistency slpropagator");
-  runConsistencyTest(slpropagator, refslpropagator1, start, logger());
+  ACTS_DEBUG(">>> Test reference consistency slpropagator");
+  runConsistencyTest(slpropagator, refslpropagator, start, logger());
 }
 
-BOOST_DATA_TEST_CASE(NavigatorRef1EigenConsistency,
+BOOST_DATA_TEST_CASE(NavigatorRefEigenConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
@@ -437,38 +419,8 @@ BOOST_DATA_TEST_CASE(NavigatorRef1EigenConsistency,
              << pT << "\n    phi = " << phi << "\n    theta = " << theta
              << "\n    charge = " << charge << "\n    index = " << index);
 
-  ACTS_DEBUG(">>> Test reference 1 consistency epropagator");
-  runConsistencyTest(epropagator, refepropagator1, start, logger());
-}
-
-BOOST_DATA_TEST_CASE(NavigatorRef2StraightLineConsistency,
-                     eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
-                     theta, charge, index) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
-
-  BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
-
-  ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
-             << pT << "\n    phi = " << phi << "\n    theta = " << theta
-             << "\n    charge = " << charge << "\n    index = " << index);
-
-  ACTS_DEBUG(">>> Test reference 2 consistency slpropagator");
-  runConsistencyTest(slpropagator, refslpropagator2, start, logger());
-}
-
-BOOST_DATA_TEST_CASE(NavigatorRef2EigenConsistency,
-                     eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
-                     theta, charge, index) {
-  ACTS_LOCAL_LOGGER(getDefaultLogger("NavigatorTest", logLevel));
-
-  BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
-
-  ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
-             << pT << "\n    phi = " << phi << "\n    theta = " << theta
-             << "\n    charge = " << charge << "\n    index = " << index);
-
-  ACTS_DEBUG(">>> Test reference 2 consistency epropagator");
-  runConsistencyTest(epropagator, refepropagator2, start, logger());
+  ACTS_DEBUG(">>> Test reference consistency epropagator");
+  runConsistencyTest(epropagator, refepropagator, start, logger());
 }
 
 }  // namespace ActsTests

@@ -10,12 +10,12 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/RangeXD.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -101,14 +101,14 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
 
-  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+  WriteDataHandle<MeasurementParticlesMap> m_outputMeasurementParticlesMap{
       this, "OutputMeasurementParticlesMap"};
-  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+  WriteDataHandle<MeasurementSimHitsMap> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
 
-  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+  WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasurementsMap{
       this, "OutputParticleMeasurementsMap"};
-  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+  WriteDataHandle<SimHitMeasurementsMap> m_outputSimHitMeasurementsMap{
       this, "OutputSimHitMeasurementsMap"};
 };
 }  // namespace ActsExamples

@@ -24,10 +24,6 @@ BOOST_AUTO_TEST_CASE(multi_stepper_state_no_cov) {
   tester.test_multi_stepper_state<false>();
 }
 
-BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_invalid) {
-  tester.test_multi_stepper_state_invalid();
-}
-
 BOOST_AUTO_TEST_CASE(test_combined_bound_state) {
   tester.test_combined_bound_state_function();
 }

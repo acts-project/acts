@@ -11,6 +11,7 @@ target_sources(
     ActsPythonBindings
     PRIVATE
         src/Definitions.cpp
+        src/EventData.cpp
         src/Utilities.cpp
         src/MagneticField.cpp
         src/Material.cpp

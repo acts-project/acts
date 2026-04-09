@@ -60,7 +60,7 @@ ProcessCode CsvParticleReader::read(const AlgorithmContext& ctx) {
   ParticleData data;
 
   while (reader.read(data)) {
-    SimParticleState particle(ActsFatras::Barcode()
+    SimParticleState particle(SimBarcode()
                                   .withVertexPrimary(data.particle_id_pv)
                                   .withVertexSecondary(data.particle_id_sv)
                                   .withParticle(data.particle_id_part)

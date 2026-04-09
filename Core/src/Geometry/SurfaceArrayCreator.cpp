@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -57,6 +58,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
 
   auto surface = Surface::makeShared<CylinderSurface>(fullTransform, R, halfZ);
+  ACTS_VERBOSE("- projection surface is: " << surface->toString(gctx));
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
@@ -64,8 +66,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   sl->fill(gctx, surfacesRaw);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
@@ -121,8 +125,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
@@ -150,8 +156,18 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
   const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
+  ACTS_VERBOSE("- full transform is \n" << fullTransform.matrix());
+
+  if (fullTransform.translation().norm() < s_transformEquivalentTolerance) {
+    ACTS_VERBOSE(
+        "input transform does not have translation: putting projection surface "
+        "at center of gravity in z");
+    fullTransform.translate(Vector3::UnitZ() * Z);
+  }
 
   auto surface = Surface::makeShared<DiscSurface>(fullTransform, Rmin, Rmax);
+  ACTS_VERBOSE("- projection surface is: " << surface->toString(gctx));
+
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
@@ -168,8 +184,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   sl->fill(gctx, surfacesRaw);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
@@ -253,6 +271,13 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
+  if (fullTransform.translation().norm() < s_transformEquivalentTolerance) {
+    ACTS_VERBOSE(
+        "input transform does not have translation: putting projection surface "
+        "at center of gravity in z");
+    fullTransform.translate(Vector3::UnitZ() * Z);
+  }
+
   auto surface = Surface::makeShared<DiscSurface>(fullTransform, Rmin, Rmax);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
@@ -270,8 +295,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   sl->fill(gctx, surfacesRaw);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
@@ -362,9 +389,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
 
   sl->fill(gctx, surfacesRaw);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
-  //!< @todo implement - take from ATLAS complex TRT builder
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::vector<const Surface*> SurfaceArrayCreator::findKeySurfaces(

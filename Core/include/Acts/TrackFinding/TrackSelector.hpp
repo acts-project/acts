@@ -438,8 +438,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
       continue;
     }
     auto destProxy = outputTracks.makeTrack();
-    destProxy.copyFromWithoutStates(track);
-    destProxy.tipIndex() = track.tipIndex();
+    destProxy.copyFromShallow(track);
   }
 }
 

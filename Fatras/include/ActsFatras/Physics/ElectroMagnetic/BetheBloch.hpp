@@ -56,7 +56,7 @@ struct BetheBloch {
     //      probable value and the Gaussian-equivalent sigma
     LandauDistribution lossDistribution(scaleFactorMPV * energyLoss,
                                         scaleFactorSigma * energyLossSigma);
-    const auto loss = lossDistribution(generator);
+    const double loss = lossDistribution(generator);
 
     // Apply the energy loss
     particle.correctEnergy(-loss);

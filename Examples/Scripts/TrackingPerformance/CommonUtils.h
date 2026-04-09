@@ -25,6 +25,9 @@
 /// @param color the color
 template <typename hist_t>
 void setHistStyle(hist_t* hist, short color = 1) {
+  if (hist == nullptr) {
+    return;
+  }
   hist->GetXaxis()->SetTitleSize(0.04);
   hist->GetYaxis()->SetTitleSize(0.04);
   hist->GetXaxis()->SetLabelSize(0.04);

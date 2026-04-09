@@ -285,7 +285,7 @@ class CompSpacePointAuxiliaries {
   /// @brief  Update the auxiliary variables needed to calculate the residuals
   ///         of a straw measurement to the current line. They are the
   ///         projection of the line direction vector into the straw's wire
-  ///         plane and its derivatives. Returns fals if line and wire are
+  ///         plane and its derivatives. Returns false if line and wire are
   ///         parallel to each other
   /// @param line: Reference to the line to project
   /// @param wireDir: Reference to the straw wire direction vector

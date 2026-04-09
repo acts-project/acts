@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SpacePoint.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -139,8 +140,7 @@ class RootAthenaDumpReader : public IReader {
   SimParticleContainer readParticles() const;
 
   /// Helper method to read measurements
-  std::tuple<ClusterContainer, MeasurementContainer,
-             IndexMultimap<ActsFatras::Barcode>,
+  std::tuple<ClusterContainer, MeasurementContainer, MeasurementParticlesMap,
              std::unordered_map<int, std::size_t>>
   readMeasurements(SimParticleContainer &particles,
                    const Acts::GeometryContext &gctx) const;
@@ -154,10 +154,9 @@ class RootAthenaDumpReader : public IReader {
                       &imIdxMap) const;
 
   /// Helper method to reprocess particle ids
-  std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
-  reprocessParticles(
+  std::pair<SimParticleContainer, MeasurementParticlesMap> reprocessParticles(
       const SimParticleContainer &particles,
-      const IndexMultimap<ActsFatras::Barcode> &measPartMap) const;
+      const MeasurementParticlesMap &measPartMap) const;
 
   /// Write handlers
   WriteDataHandle<SpacePointContainer> m_outputPixelSpacePoints{
@@ -171,9 +170,9 @@ class RootAthenaDumpReader : public IReader {
                                                           "OutputParticles"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
-  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>> m_outputMeasParticleMap{
+  WriteDataHandle<MeasurementParticlesMap> m_outputMeasParticleMap{
       this, "OutputMeasurementParticlesMap"};
-  WriteDataHandle<InverseMultimap<ActsFatras::Barcode>> m_outputParticleMeasMap{
+  WriteDataHandle<ParticleMeasurementsMap> m_outputParticleMeasMap{
       this, "OutputParticleMeasurementsMap"};
 
   std::unique_ptr<const Acts::Logger> m_logger;

@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
@@ -128,7 +127,7 @@ struct TelescopeDetector {
       auto surface = detElement->surface().getSharedPtr();
       // Add it to the event store
       detectorStore.push_back(std::move(detElement));
-      std::unique_ptr<SurfaceArray> surArray(new SurfaceArray(surface));
+      auto surArray = std::make_unique<SurfaceArray>(surface);
       // The layer thickness should not be too large
       layers[i] =
           PlaneLayer::create(trafo, rBounds, std::move(surArray),

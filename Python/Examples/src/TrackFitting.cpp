@@ -36,7 +36,7 @@ void addTrackFitting(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       TrackFittingAlgorithm, mex, "TrackFittingAlgorithm", inputMeasurements,
       inputProtoTracks, inputInitialTrackParameters, inputClusters,
-      outputTracks, fit, pickTrack, calibrator);
+      outputTracks, fit, pickTrack, calibrator, linkForward);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(RefittingAlgorithm, mex, "RefittingAlgorithm",
                                 inputTracks, outputTracks, fit, pickTrack,

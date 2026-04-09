@@ -33,7 +33,7 @@ struct Highland {
   double operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                     Particle &particle) const {
     // compute the planar scattering angle
-    const auto theta0 = Acts::computeMultipleScatteringTheta0(
+    const double theta0 = Acts::computeMultipleScatteringTheta0(
         slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
         particle.absoluteCharge());
     // draw from the normal distribution representing the 3d angle distribution

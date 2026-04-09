@@ -12,6 +12,8 @@
 
 #include "Acts/Propagator/MultiStepperError.hpp"
 
+#include <vector>
+
 namespace Acts {
 
 template <Concepts::SingleStepper S, typename R>
@@ -21,8 +23,10 @@ auto MultiStepperLoop<S, R>::boundState(
     -> Result<BoundState> {
   assert(!state.components.empty());
 
-  std::vector<std::tuple<double, BoundVector, Covariance>> cmps;
-  cmps.reserve(numberComponents(state));
+  MultiComponentBoundTrackParameters params(
+      surface.getSharedPtr(), transportCov, state.particleHypothesis);
+  params.reserve(numberComponents(state));
+
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
@@ -48,20 +52,20 @@ auto MultiStepperLoop<S, R>::boundState(
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
-      cmps.emplace_back(state.components[i].weight, btp.parameters(),
-                        btp.covariance().value_or(Acts::BoundMatrix::Zero()));
+      params.pushComponent(state.components[i].weight, btp.parameters(),
+                           btp.covariance());
       accumulatedPathLength +=
           std::get<double>(*bs) * state.components[i].weight;
     }
   }
 
-  if (cmps.empty()) {
+  if (params.empty()) {
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  return BoundState{MultiComponentBoundTrackParameters(
-                        surface.getSharedPtr(), cmps, state.particleHypothesis),
-                    Jacobian::Zero(), accumulatedPathLength};
+  params.normalizeWeights();
+
+  return BoundState{params, Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <Concepts::SingleStepper S, typename R>

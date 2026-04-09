@@ -9,10 +9,10 @@
 #pragma once
 
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>
 
@@ -68,8 +68,8 @@ class EDM4hepMultiTrajectoryOutputConverter : public PodioOutputConverter {
  private:
   Config m_cfg;
 
-  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>
-      m_inputMeasurementParticlesMap{this, "InputMeasurementParticlesMaps"};
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMaps"};
 
   ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
       this, "InputTrajectories"};

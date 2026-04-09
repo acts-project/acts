@@ -279,8 +279,7 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
   return particlesSet;
 }
 
-std::tuple<ClusterContainer, MeasurementContainer,
-           IndexMultimap<ActsFatras::Barcode>,
+std::tuple<ClusterContainer, MeasurementContainer, MeasurementParticlesMap,
            std::unordered_map<int, std::size_t>>
 RootAthenaDumpReader::readMeasurements(
     SimParticleContainer& particles, const Acts::GeometryContext& gctx) const {
@@ -293,7 +292,7 @@ RootAthenaDumpReader::readMeasurements(
   std::size_t nTotalTotZero = 0;
 
   const auto prevParticlesSize = particles.size();
-  IndexMultimap<ActsFatras::Barcode> measPartMap;
+  MeasurementParticlesMap measPartMap;
 
   // We cannot use im for the index since we might skip measurements
   std::unordered_map<int, std::size_t> imIdxMap;
@@ -471,7 +470,7 @@ RootAthenaDumpReader::readMeasurements(
           particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
         }
         measPartMap.insert(
-            std::pair<Index, ActsFatras::Barcode>{measIndex, dummyBarcode});
+            std::pair<Index, SimBarcode>{measIndex, dummyBarcode});
       }
     }
   }
@@ -675,13 +674,13 @@ RootAthenaDumpReader::readSpacePoints(
           std::move(stripSpacePoints)};
 }
 
-std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
+std::pair<SimParticleContainer, MeasurementParticlesMap>
 RootAthenaDumpReader::reprocessParticles(
     const SimParticleContainer& particles,
-    const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
+    const MeasurementParticlesMap& measPartMap) const {
   std::vector<SimParticle> newParticles;
   newParticles.reserve(particles.size());
-  IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
+  MeasurementParticlesMap newMeasPartMap;
   newMeasPartMap.reserve(measPartMap.size());
 
   const auto partMeasMap = invertIndexMultimap(measPartMap);
@@ -701,8 +700,7 @@ RootAthenaDumpReader::reprocessParticles(
     auto primary = particle.particleId().vertexSecondary() == 0;
 
     // vertex primary shouldn't be zero for a valid particle
-    ActsFatras::Barcode fatrasBarcode =
-        ActsFatras::Barcode().withVertexPrimary(1);
+    SimBarcode fatrasBarcode = SimBarcode().withVertexPrimary(1);
     if (primary) {
       fatrasBarcode =
           fatrasBarcode.withVertexSecondary(0).withParticle(primaryCount);
@@ -721,7 +719,7 @@ RootAthenaDumpReader::reprocessParticles(
 
     for (auto it = begin; it != end; ++it) {
       newMeasPartMap.insert(
-          std::pair<Index, ActsFatras::Barcode>{it->second, fatrasBarcode});
+          std::pair<Index, SimBarcode>{it->second, fatrasBarcode});
     }
   }
 

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Io/Podio/PodioCollectionDataHandle.hpp"
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
@@ -57,7 +58,7 @@ class PodioMeasurementOutputConverter : public PodioOutputConverter {
   ReadDataHandle<ActsPlugins::EDM4hepUtil::SimHitAssociation>
       m_inputSimHitAssociation{this, "InputSimHitAssociation"};
 
-  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 
   PodioCollectionWriteHandle<ActsPodioEdm::MeasurementCollection>

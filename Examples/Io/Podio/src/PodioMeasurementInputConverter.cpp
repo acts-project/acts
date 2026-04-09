@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsPodioEdm/MeasurementCollection.h"
 
 #include <podio/Frame.h>
@@ -53,9 +54,9 @@ ProcessCode PodioMeasurementInputConverter::convert(
   const auto& simHits = m_inputSimHits(ctx);
   const auto& simHitAssociations = m_inputSimHitAssociation(ctx);
 
-  IndexMultimap<SimBarcode> measurementToParticles;
+  MeasurementParticlesMap measurementToParticles;
   measurementToParticles.reserve(inputMeasurements.size());
-  IndexMultimap<Index> measurementToSimHits;
+  MeasurementSimHitsMap measurementToSimHits;
   measurementToParticles.reserve(inputMeasurements.size());
 
   for (const auto& inputMeas : inputMeasurements) {
