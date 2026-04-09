@@ -92,6 +92,8 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   Acts::SeedContainer2 seeds =
       m_finder->createSeeds(coreSpacePoints, internalRoi, maxLayers, *m_filter);
 
+  seeds.assignSpacePointContainer(spacePoints);
+
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
     for (auto &spIndex : seed.spacePointIndices()) {
