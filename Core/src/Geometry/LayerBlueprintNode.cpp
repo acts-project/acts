@@ -99,7 +99,9 @@ Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
       [this](const std::shared_ptr<SurfacePlacementBase>& placement) {
         m_volume->cachePlacement(placement);
       }};
-
+  for (auto& node : impl().m_nodes) {
+    std::visit(visitor, node);
+  }
   return StaticBlueprintNode::build(options, gctx, logger);
 }
 
