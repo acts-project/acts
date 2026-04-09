@@ -386,8 +386,7 @@ class TrackingVolume : public Volume {
   /// Add a surface to this tracking volume
   /// @param surface The surface to add
   /// @param placement Optional pointer to the surface placement associated with the surface
-  ///                  to add. The volume takes over the ownership of the
-  ///                  placement
+  /// @note The volume takes shared ownership of the placement
   void addSurface(
       std::shared_ptr<Surface> surface,
       std::shared_ptr<const SurfacePlacementBase> placement = nullptr);
@@ -397,9 +396,7 @@ class TrackingVolume : public Volume {
   /// @note The @p volume will have its mother volume assigned to @p this.
   ///       It will throw if @p volume already has a mother volume set
   /// @return Reference to the added volume
-  TrackingVolume& addVolume(
-      std::unique_ptr<TrackingVolume> volume,
-      std::shared_ptr<const VolumePlacementBase> placement = nullptr);
+  TrackingVolume& addVolume(std::unique_ptr<TrackingVolume> volume);
 
   /// Interface of @c TrackingVolume in the Gen1 geometry model
   /// @note This interface is being replaced, and is subject to removal
@@ -590,6 +587,10 @@ class TrackingVolume : public Volume {
   ///
   /// @param envelope is the clearance between volume boundary and layer
   void synchronizeLayers(double envelope = 1.) const;
+
+  /// Return the garbage container into which the placements are pushed. If the
+  /// volume does not have a mother it's the volume itself otherwise the mother
+  std::vector<PlacementOwnPtr>& cachedPlacements();
 
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
