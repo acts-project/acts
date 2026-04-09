@@ -78,6 +78,9 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   LayerBlueprintNode& setSurfaces(
       std::vector<std::shared_ptr<Surface>> surfaces);
 
+  LayerBlueprintNode& setPlacements(
+      std::vector<std::shared_ptr<const SurfacePlacement>> placements);
+
   /// Access the registered surfaces.
   /// @return The registered surfaces
   const std::vector<std::shared_ptr<Surface>>& surfaces() const;

@@ -566,24 +566,26 @@ TrackingVolume::MutableVolumeRange TrackingVolume::volumes() {
 }
 
 TrackingVolume& TrackingVolume::addVolume(
-    std::unique_ptr<TrackingVolume> volume,
-    std::shared_ptr<const VolumePlacementBase> placement) {
+    std::unique_ptr<TrackingVolume> volume) {
   if (volume->motherVolume() != nullptr) {
     throw std::invalid_argument("Volume already has a mother volume");
   }
 
   volume->setMotherVolume(this);
   // Take over the ownership of all placements hold
-  m_placements.insert(m_placements.end(),
-                      std::make_move_iterator(volume->m_placements.begin()),
-                      std::make_move_iterator(volume->m_placements.end()));
+  auto& placements = cachedPlacements();
+  placements.insert(placements.end(),
+                    std::make_move_iterator(volume->m_placements.begin()),
+                    std::make_move_iterator(volume->m_placements.end()));
   volume->m_placements.clear();
   m_volumes.push_back(std::move(volume));
-  if (placement != nullptr) {
-    m_placements.emplace_back(std::move(placement));
-  }
-
   return *m_volumes.back();
+}
+
+std::vector<TrackingVolume::PlacementOwnPtr>&
+TrackingVolume::cachedPlacements() {
+  return m_motherVolume == nullptr ? m_placements
+                                   : m_motherVolume->cachedPlacements();
 }
 
 TrackingVolume::PortalRange TrackingVolume::portals() const {
@@ -617,7 +619,7 @@ void TrackingVolume::addSurface(
   }
   m_surfaces.push_back(std::move(surface));
   if (placement != nullptr) {
-    m_placements.emplace_back(std::move(placement));
+    cachedPlacements().emplace_back(std::move(placement));
   }
 }
 
