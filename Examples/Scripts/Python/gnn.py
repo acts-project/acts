@@ -7,13 +7,14 @@ import sys
 import acts
 import acts.examples
 import acts.examples.gnn
+import acts.gnn
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
-from acts.examples.gnn import (
+from acts.gnn import (
     TorchMetricLearning,
     TorchEdgeClassifier,
     BoostTrackBuilding,
-    NodeFeature,
 )
+from acts.examples.gnn import NodeFeature
 from acts import UnitConstants as u
 
 from digitization import runDigitization
@@ -84,7 +85,7 @@ def runGnnMetricLearning(
             )
         )
     elif filterModelPath.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier
+        from acts.gnn import OnnxEdgeClassifier
 
         edgeClassifiers.append(OnnxEdgeClassifier(**filterConfig))
     else:
@@ -99,7 +100,7 @@ def runGnnMetricLearning(
             )
         )
     elif gnnModelPath.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier
+        from acts.gnn import OnnxEdgeClassifier
 
         edgeClassifiers.append(
             OnnxEdgeClassifier(**gnnConfig),
