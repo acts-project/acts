@@ -78,7 +78,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
 #ifdef ACTS_GNN_WITH_TENSORRT
   ACTS_PYTHON_DECLARE_GNN_STAGE(TensorRTEdgeClassifier, EdgeClassificationBase,
                                 gnn, modelPath, selectedFeatures, cut,
-                                nugnnecutionContexts);
+                                numExecutionContexts);
 #endif
 
 #ifdef ACTS_GNN_WITH_CUDA
