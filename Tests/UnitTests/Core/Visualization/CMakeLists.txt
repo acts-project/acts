@@ -1,4 +1,5 @@
 add_unittest(Visualization3D Visualization3DTests.cpp)
+add_unittest(ProjectedVisualization ProjectedVisualizationTests.cpp)
 add_unittest(EventDataView3D EventDataView3DTests.cpp)
 add_unittest(Interpolation3D Interpolation3DTests.cpp)
 add_unittest(PrimitivesView3D PrimitivesView3DTests.cpp)
