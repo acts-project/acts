@@ -115,14 +115,22 @@
             }
         },
         {
-            "name": "gitlab-ci-clangtidy",
-            "displayName": "GitLab-CI clang-tidy",
+            "name": "github-ci-clangtidy",
+            "displayName": "GitHub-CI clang-tidy",
             "inherits": "ci-common",
             "cacheVariables": {
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PYTHON_BINDINGS": "OFF",
-                "ACTS_RUN_CLANG_TIDY": "ON",
                 "ACTS_BUILD_PLUGIN_ONNX": "ON"
+            }
+        },
+        {
+            "name": "github-ci-cppcheck",
+            "displayName": "GitHub-CI cppcheck",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "ACTS_BUILD_ODD": "OFF",
+                "ACTS_BUILD_PYTHON_BINDINGS": "OFF"
             }
         },
         {

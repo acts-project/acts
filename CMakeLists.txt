@@ -126,7 +126,6 @@ else()
   set(_default_examples_unit_tests OFF)
 endif()
 option(ACTS_BUILD_EXAMPLES_UNITTESTS "Build unit tests" ${_default_examples_unit_tests}) # default: ACTS_BUILD_UNITTESTS AND ACTS_BUILD_EXAMPLES
-option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
 option(ACTS_SETUP_BOOST "Explicitly set up Boost for the project" ON)
@@ -254,9 +253,6 @@ endif()
 
 include(ActsCompilerOptions) # default compile options
 include(ActsComponentsHelpers) # handle components via add_..._if commands
-include(ActsStaticAnalysis)
-
-acts_disable_static_analysis() # disable static analysis for thirdparty dependencies, will be enabled later for the main code
 
 if(PROJECT_IS_TOP_LEVEL)
     # place build products in `<build>/bin` and `<build>/lib` for simple use
@@ -667,8 +663,6 @@ endif()
 if(ACTS_BUILD_DOCS)
     find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
 endif()
-
-acts_enable_static_analysis() # enable static analysis for the main code, after dependencies are set up
 
 # core library, core plugins, and other components
 add_component(Core Core)
