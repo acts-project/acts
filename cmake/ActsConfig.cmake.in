@@ -16,6 +16,7 @@
 set(Acts_COMPONENTS @_components@)
 set(Acts_COMMIT_HASH "@_acts_commit_hash@")
 set(Acts_COMMIT_HASH_SHORT "@_acts_commit_hash_short@")
+set(ACTS_GEOMETRY_MODULE_ABI_TAG "@ACTS_GEOMETRY_MODULE_ABI_TAG@")
 
 # print version and components information
 if(NOT Acts_FIND_QUIETLY)
@@ -46,8 +47,13 @@ foreach(_component ${Acts_FIND_COMPONENTS})
 endforeach()
 
 # add this to the current CMAKE_MODULE_PATH to find third party modules
-# that not provide a XXXConfig.cmake or XXX-config.cmake file
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/Modules)
+# that not provide a XXXConfig.cmake or XXX-config.cmake file, and to allow
+# including Acts-provided cmake helpers (e.g. ActsDD4hepGeometryModuleHelpers)
+list(
+    APPEND CMAKE_MODULE_PATH
+    ${CMAKE_CURRENT_LIST_DIR}/Modules
+    ${CMAKE_CURRENT_LIST_DIR}
+)
 
 # find external dependencies that are needed to link with Acts. since the
 # exported Acts targets only store the linked external target names they need

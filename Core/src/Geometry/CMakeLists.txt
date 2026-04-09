@@ -16,6 +16,8 @@ target_sources(
         GenericApproachDescriptor.cpp
         GenericCuboidVolumeBounds.cpp
         GeometryIdentifier.cpp
+        GeometryModuleHelper.cpp
+        GeometryModuleLoader.cpp
         GlueVolumesDescriptor.cpp
         Layer.cpp
         LayerArrayCreator.cpp

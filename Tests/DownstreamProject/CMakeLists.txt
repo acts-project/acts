@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 project(ActsDownstreamProject)
+enable_testing()
 
 # find all optional components that are build
 find_package(
@@ -51,4 +52,34 @@ if(GEOMODEL)
     message(STATUS "Adding GeoModel plugin")
     find_package(Acts CONFIG REQUIRED COMPONENTS PluginGeoModel)
     target_link_libraries(ShowActsVersion PRIVATE Acts::PluginGeoModel)
+endif()
+
+find_package(Boost REQUIRED COMPONENTS program_options)
+
+include(ActsGeometryModuleHelpers)
+
+acts_add_geometry_module(SimpleGeometryModule GeometryModule.cpp)
+
+add_executable(LoadGeometryModule LoadGeometryModule.cpp)
+target_link_libraries(
+    LoadGeometryModule
+    PRIVATE Acts::Core Boost::program_options
+)
+
+add_test(NAME DownstreamShowActsVersion COMMAND ShowActsVersion)
+add_test(
+    NAME DownstreamLoadGeometryModule
+    COMMAND LoadGeometryModule $<TARGET_FILE:SimpleGeometryModule>
+)
+
+if(DD4HEP)
+    include(ActsDD4hepGeometryModuleHelpers)
+
+    acts_add_dd4hep_geometry_module(
+        DD4hepGeometryModule
+        DD4hepGeometryModule.cpp
+    )
+
+    target_link_libraries(LoadGeometryModule PRIVATE Acts::PluginDD4hep)
+    target_compile_definitions(LoadGeometryModule PRIVATE ACTS_HAVE_DD4HEP)
 endif()

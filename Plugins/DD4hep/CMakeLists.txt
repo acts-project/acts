@@ -1,5 +1,7 @@
 acts_add_library(
     PluginDD4hep
+    src/GeometryModuleHelper.cpp
+    src/GeometryModuleLoader.cpp
     src/ConvertDD4hepDetector.cpp
     src/DD4hepBinningHelpers.cpp
     src/DD4hepMaterialHelpers.cpp
@@ -11,6 +13,10 @@ acts_add_library(
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
+set(_acts_dd4hep_geometry_module_abi_tag
+    "${ACTS_GEOMETRY_MODULE_ABI_TAG}|dd4hep-${DD4hep_VERSION}"
+)
+
 target_include_directories(
     ActsPluginDD4hep
     PUBLIC
@@ -19,6 +25,11 @@ target_include_directories(
 )
 
 target_link_libraries(ActsPluginDD4hep PUBLIC Acts::PluginRoot)
+target_compile_definitions(
+    ActsPluginDD4hep
+    PRIVATE
+        ACTS_DD4HEP_GEOMETRY_MODULE_ABI_TAG="${_acts_dd4hep_geometry_module_abi_tag}"
+)
 
 acts_compile_headers(PluginDD4hep GLOB include/**/*.hpp)
 
