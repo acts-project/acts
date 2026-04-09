@@ -79,9 +79,9 @@ TrackingVolume::TrackingVolume(VolumePlacementBase& placement,
 TrackingVolume::TrackingVolume(std::shared_ptr<VolumePlacementBase> placement,
                                std::shared_ptr<VolumeBounds> volBounds,
                                const std::string& volumeName)
-    : TrackingVolume(*placement, volBounds, volumeName) {
+    : TrackingVolume(*placement, std::move(volBounds), volumeName) {
   if (placement == nullptr) {
-    throw std::invalid_argument("The placement pointer must not be a nullptr");
+    throw std::invalid_argument("The passed placement must not be a nullptr");
   }
   m_placements.emplace_back(placement);
 }
@@ -582,6 +582,9 @@ TrackingVolume& TrackingVolume::addVolume(
   return *m_volumes.back();
 }
 
+void TrackingVolume::cachePlacement(PlacementOwnPtr placement) {
+  cachedPlacements().emplace_back(std::move(placement));
+}
 std::vector<TrackingVolume::PlacementOwnPtr>&
 TrackingVolume::cachedPlacements() {
   return m_motherVolume == nullptr ? m_placements
@@ -619,7 +622,7 @@ void TrackingVolume::addSurface(
   }
   m_surfaces.push_back(std::move(surface));
   if (placement != nullptr) {
-    cachedPlacements().emplace_back(std::move(placement));
+    cachePlacement(std::move(placement));
   }
 }
 
