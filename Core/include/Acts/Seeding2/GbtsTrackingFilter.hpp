@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding2/GbtsDataStorage.hpp"
 #include "Acts/Seeding2/GbtsGeometry.hpp"
-#include "Acts/Definitions/Units.hpp"
 
 #include <cstring>
 #include <vector>

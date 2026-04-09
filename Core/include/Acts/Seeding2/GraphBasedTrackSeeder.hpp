@@ -51,15 +51,15 @@ class GraphBasedTrackSeeder {
     bool matchBeforeCreate = false;
     /// Use legacy tuning parameters.
     bool useOldTunings = false;
-    ///description here
+    /// description here
     bool validateTriplets = true;
-    ///description here
+    /// description here
     bool useAdaptiveCuts = true;
     /// Tau ratio cut threshold.
     float tauRatioCut = 0.007;
     /// Tau ratio precut threshold.
     float tauRatioPrecut = 0.009f;
-    ///description here
+    /// description here
     float tauRatioCorr = 0.006;
     /// Eta bin width override (0 uses default from connection file).
     // specify non-zero to override eta bin width from connection file (default
@@ -72,8 +72,8 @@ class GraphBasedTrackSeeder {
     float minPt = 1.0f * UnitConstants::GeV;
 
     // graph building options
-    ///Bfield in z
-    float Bz = 1.9972f * UnitConstants::T; 
+    /// Bfield in z
+    float Bz = 1.9972f * UnitConstants::T;
     /// Use eta binning from geometry structure.
     bool useEtaBinning = true;
     /// Apply RZ cuts on doublets.
@@ -82,7 +82,7 @@ class GraphBasedTrackSeeder {
     std::uint32_t nMaxEdges = 2000000;
     /// Minimum delta radius between layers.
     float minDeltaRadius = 2.0 * Acts::UnitConstants::mm;
-    /// Maximum d0 impact perameter when validating edge connection triplet
+    /// Maximum d0 impact parameter when validating edge connection triplet
     float d0Max = 3.0 * UnitConstants::mm;
 
     // Seed extraction options
@@ -123,8 +123,12 @@ class GraphBasedTrackSeeder {
     /// @param sps Vector of pointers to actual space points
     /// @param splitFlag used to flag if seed needs to be split in two
     SeedCandidateProperties(float quality, std::int32_t clone,
-                   std::vector<const GbtsNode*> sps, std::uint32_t splitFlag)
-        : seedQuality(quality), isClone(clone), spacePoints(std::move(sps)), forSeedSplitting(splitFlag) {}
+                            std::vector<const GbtsNode*> sps,
+                            std::uint32_t splitFlag)
+        : seedQuality(quality),
+          isClone(clone),
+          spacePoints(std::move(sps)),
+          forSeedSplitting(splitFlag) {}
 
     /// Seed quality score.
     float seedQuality{};
@@ -133,21 +137,19 @@ class GraphBasedTrackSeeder {
     /// Space point indices.
     std::vector<const GbtsNode*> spacePoints;
     /// Flag for seed splitting.
-    std::uint32_t forSeedSplitting {};
-
+    std::uint32_t forSeedSplitting{};
   };
 
   /// Output seed metadata
-  struct OutputSeedProperties{
-
+  struct OutputSeedProperties {
     /// Constructor.
-    OutputSeedProperties(float Quality, std::vector<std::uint32_t> sps) : seedQuality(Quality), spacePoints(std::move(sps)) {}
+    OutputSeedProperties(float Quality, std::vector<std::uint32_t> sps)
+        : seedQuality(Quality), spacePoints(std::move(sps)) {}
 
     /// Quality of seed.
     float seedQuality{};
     /// Index of spacepoints in seed.
     std::vector<std::uint32_t> spacePoints;
-
   };
 
   /// Sliding window in phi used to define range used for edge creation
@@ -233,7 +235,7 @@ class GraphBasedTrackSeeder {
   void extractSeedsFromTheGraph(std::uint32_t maxLevel, std::uint32_t nEdges,
                                 std::int32_t nHits,
                                 std::vector<GbtsEdge>& edgeStorage,
-                                std::vector<OutputSeedProperties >& vOutputSeeds,
+                                std::vector<OutputSeedProperties>& vOutputSeeds,
                                 const GbtsTrackingFilter& filter) const;
 
   /// Check to see if z0 of segment is within the expected z range of the
@@ -248,7 +250,9 @@ class GraphBasedTrackSeeder {
 
   float estimateCurvature(const std::array<const GbtsNode*, 3>&) const;
 
-  bool validateTriplet(std::span<const GbtsNode*, 3> candidateTriplet, const float tripletMinPt, const float tauRatio, const float tauRatioCut ) const;
+  bool validateTriplet(std::span<const GbtsNode*, 3> candidateTriplet,
+                       const float tripletMinPt, const float tauRatio,
+                       const float tauRatioCut) const;
 };
 
 }  // namespace Acts::Experimental
