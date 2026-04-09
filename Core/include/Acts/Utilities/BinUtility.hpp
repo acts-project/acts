@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <iostream>
@@ -255,14 +256,9 @@ class BinUtility {
   bool inside(const Vector3& position) const {
     /// transform or not
     const Vector3& bPosition = m_itransform * position;
-    // loop and break
-    for (auto& bData : m_binningData) {
-      if (!(bData.inside(bPosition))) {
-        return false;
-      }
-    }
-    // survived all the checks
-    return true;
+    return std::ranges::all_of(m_binningData, [&](const auto& bData) {
+      return bData.inside(bPosition);
+    });
   }
 
   /// First bin maximal value

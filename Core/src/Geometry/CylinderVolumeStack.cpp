@@ -176,8 +176,7 @@ void CylinderVolumeStack::initializeOuterVolume(
     ACTS_VERBOSE("Appending "
                  << gapVolumes.size()
                  << " gap volumes to the end of the volume vector");
-    std::copy(gapVolumes.begin(), gapVolumes.end(),
-              std::back_inserter(volumeTuples));
+    std::ranges::copy(gapVolumes, std::back_inserter(volumeTuples));
 
     ACTS_VERBOSE("*** Volume configuration after z attachment:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
@@ -234,8 +233,7 @@ void CylinderVolumeStack::initializeOuterVolume(
     ACTS_VERBOSE("Appending "
                  << gapVolumes.size()
                  << " gap volumes to the end of the volume vector");
-    std::copy(gapVolumes.begin(), gapVolumes.end(),
-              std::back_inserter(volumeTuples));
+    std::ranges::copy(gapVolumes, std::back_inserter(volumeTuples));
 
     ACTS_VERBOSE("*** Volume configuration after r attachment:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::VERBOSE);
@@ -596,20 +594,16 @@ void CylinderVolumeStack::checkVolumeAlignment(
 std::pair<double, double> CylinderVolumeStack::synchronizeRBounds(
     std::vector<VolumeTuple>& volumes, const Logger& logger) {
   const double minR =
-      std::min_element(volumes.begin(), volumes.end(),
-                       [](const auto& a, const auto& b) {
-                         return a.bounds->get(CylinderVolumeBounds::eMinR) <
-                                b.bounds->get(CylinderVolumeBounds::eMinR);
-                       })
-          ->bounds->get(CylinderVolumeBounds::eMinR);
+      std::ranges::min_element(volumes, [](const auto& a, const auto& b) {
+        return a.bounds->get(CylinderVolumeBounds::eMinR) <
+               b.bounds->get(CylinderVolumeBounds::eMinR);
+      })->bounds->get(CylinderVolumeBounds::eMinR);
 
   const double maxR =
-      std::max_element(volumes.begin(), volumes.end(),
-                       [](const auto& a, const auto& b) {
-                         return a.bounds->get(CylinderVolumeBounds::eMaxR) <
-                                b.bounds->get(CylinderVolumeBounds::eMaxR);
-                       })
-          ->bounds->get(CylinderVolumeBounds::eMaxR);
+      std::ranges::max_element(volumes, [](const auto& a, const auto& b) {
+        return a.bounds->get(CylinderVolumeBounds::eMaxR) <
+               b.bounds->get(CylinderVolumeBounds::eMaxR);
+      })->bounds->get(CylinderVolumeBounds::eMaxR);
   ACTS_VERBOSE("Found: minR: " << minR << " maxR: " << maxR);
 
   for (auto& vt : volumes) {
@@ -624,17 +618,15 @@ std::pair<double, double> CylinderVolumeStack::synchronizeRBounds(
 
 std::pair<double, double> CylinderVolumeStack::synchronizeZBounds(
     std::vector<VolumeTuple>& volumes, const Logger& logger) {
-  const double minZ = std::min_element(volumes.begin(), volumes.end(),
-                                       [](const auto& a, const auto& b) {
-                                         return a.minZ() < b.minZ();
-                                       })
-                          ->minZ();
+  const double minZ =
+      std::ranges::min_element(volumes, [](const auto& a, const auto& b) {
+        return a.minZ() < b.minZ();
+      })->minZ();
 
-  const double maxZ = std::max_element(volumes.begin(), volumes.end(),
-                                       [](const auto& a, const auto& b) {
-                                         return a.maxZ() < b.maxZ();
-                                       })
-                          ->maxZ();
+  const double maxZ =
+      std::ranges::max_element(volumes, [](const auto& a, const auto& b) {
+        return a.maxZ() < b.maxZ();
+      })->maxZ();
   const double midZ = (minZ + maxZ) / 2.0;
   const double hlZ = (maxZ - minZ) / 2.0;
   ACTS_DEBUG("Found overall z bounds: [ " << minZ << " <- " << midZ << " -> "

@@ -36,17 +36,9 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   /// @param rConfig the configuration for the material map reader
   /// @param jFileName the json file name to read
   /// @param level the logging level
-  /// @param clearSurfaceMaterial if true, clear the surface material before
-  /// decorating, this means if there is no material for a certain surface
-  /// within the json file, the surface WILL NOT have any material, eventually
-  /// assigned (proto-/)material will be cleared
-  /// @param clearVolumeMaterial if true, clear the volume material before
-  /// decorating, same as above, but for volumes
   JsonMaterialDecorator(const MaterialMapJsonConverter::Config& rConfig,
                         const std::string& jFileName,
-                        Acts::Logging::Level level,
-                        bool clearSurfaceMaterial = true,
-                        bool clearVolumeMaterial = true);
+                        Acts::Logging::Level level);
 
   /// Decorate a surface
   ///
@@ -62,9 +54,6 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   MaterialMapJsonConverter::Config m_readerConfig;
   SurfaceMaterialMaps m_surfaceMaterialMap;
   VolumeMaterialMaps m_volumeMaterialMap;
-
-  bool m_clearSurfaceMaterial{true};
-  bool m_clearVolumeMaterial{true};
 
   std::unique_ptr<const Logger> m_logger;
 
