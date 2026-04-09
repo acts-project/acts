@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -33,7 +34,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // Check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -57,22 +58,26 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
 
   auto surface = Surface::makeShared<CylinderSurface>(fullTransform, R, halfZ);
+  ACTS_VERBOSE("- projection surface is: " << surface->toString(gctx));
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
+          std::move(surface), layerTolerance, pAxisPhi, pAxisZ,
+          maxNeighborDistance);
 
   sl->fill(gctx, surfacesRaw);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -107,7 +112,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                               AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxisPhi, pAxisZ);
+          std::move(surface), layerTolerance, pAxisPhi, pAxisZ,
+          maxNeighborDistance);
 
   sl->fill(gctx, surfacesRaw);
 
@@ -121,15 +127,17 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
   ACTS_VERBOSE(" -- with phi x z  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1 << " bins.");
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -150,12 +158,23 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
   const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
+  ACTS_VERBOSE("- full transform is \n" << fullTransform.matrix());
+
+  if (fullTransform.translation().norm() < s_transformEquivalentTolerance) {
+    ACTS_VERBOSE(
+        "input transform does not have translation: putting projection surface "
+        "at center of gravity in z");
+    fullTransform.translate(Vector3::UnitZ() * Z);
+  }
 
   auto surface = Surface::makeShared<DiscSurface>(fullTransform, Rmin, Rmax);
+  ACTS_VERBOSE("- projection surface is: " << surface->toString(gctx));
+
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          std::move(surface), layerThickness, pAxisR, pAxisPhi);
+          std::move(surface), layerThickness, pAxisR, pAxisPhi,
+          maxNeighborDistance);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -168,15 +187,17 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   sl->fill(gctx, surfacesRaw);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    const Transform3& transform, std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -253,11 +274,19 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
+  if (fullTransform.translation().norm() < s_transformEquivalentTolerance) {
+    ACTS_VERBOSE(
+        "input transform does not have translation: putting projection surface "
+        "at center of gravity in z");
+    fullTransform.translate(Vector3::UnitZ() * Z);
+  }
+
   auto surface = Surface::makeShared<DiscSurface>(fullTransform, Rmin, Rmax);
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl =
       makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                               AxisBoundaryType::Closed>(
-          std::move(surface), layerThickness, pAxisR, pAxisPhi);
+          std::move(surface), layerThickness, pAxisR, pAxisPhi,
+          maxNeighborDistance);
 
   // get the number of bins
   auto axes = sl->getAxes();
@@ -270,8 +299,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
 
   sl->fill(gctx, surfacesRaw);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
@@ -279,8 +310,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
-    std::optional<ProtoLayer> protoLayerOpt,
-    const Transform3& transform) const {
+    std::optional<ProtoLayer> protoLayerOpt, const Transform3& transform,
+    std::uint8_t maxNeighborDistance) const {
   std::vector<const Surface*> surfacesRaw = unpackSmartPointers(surfaces);
   // check if we have proto layer, else build it
   ProtoLayer protoLayer =
@@ -313,7 +344,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                      protoLayer.max(AxisDirection::AxisZ))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2,
+          maxNeighborDistance);
       break;
     }
     case AxisDirection::AxisY: {
@@ -331,7 +363,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                      protoLayer.max(AxisDirection::AxisY))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2,
+          maxNeighborDistance);
       break;
     }
     case AxisDirection::AxisZ: {
@@ -349,7 +382,8 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
                                      protoLayer.max(AxisDirection::AxisY))));
       sl = makeSurfaceGridLookup2D<AxisBoundaryType::Bound,
                                    AxisBoundaryType::Bound>(
-          std::move(surface), layerTolerance, pAxis1, pAxis2);
+          std::move(surface), layerTolerance, pAxis1, pAxis2,
+          maxNeighborDistance);
       break;
     }
     default: {
@@ -362,9 +396,10 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
 
   sl->fill(gctx, surfacesRaw);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), std::move(surfaces),
-                                        fullTransform);
-  //!< @todo implement - take from ATLAS complex TRT builder
+  ACTS_PUSH_IGNORE_DEPRECATED()
+  SurfaceArray sa(std::move(sl), std::move(surfaces), fullTransform);
+  return std::make_unique<SurfaceArray>(std::move(sa));
+  ACTS_POP_IGNORE_DEPRECATED()
 }
 
 std::vector<const Surface*> SurfaceArrayCreator::findKeySurfaces(

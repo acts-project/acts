@@ -196,61 +196,38 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 
   auto cylinder =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 10);
-  auto sl = std::make_unique<
-      SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-      cylinder, 1, std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-  sl->fill(tgContext, brlRaw);
-  SurfaceArray sa(std::move(sl), brl);
+  SurfaceArray sa(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis});
 
   // let's see if we can access all surfaces
   sa.toStream(tgContext, std::cout);
 
   for (const auto& srf : brl) {
-    Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    Vector3 normal = srf->normal(tgContext, ctr, Vector3::UnitZ());
-    std::vector<const Surface*> binContent = sa.at(ctr, normal);
+    const Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
+    const Vector3 normal = srf->normal(tgContext, ctr, Vector3::UnitZ());
+    const auto binContent = sa.at(tgContext, ctr, normal);
 
     BOOST_CHECK(binContent.size() <= 2u);
   }
 
-  std::vector<const Surface*> neighbors = sa.neighbors(
-      itransform(Vector2(0, 0)), itransform(Vector2(0, 0)).normalized());
+  const auto neighbors = sa.neighbors(tgContext, itransform(Vector2(0, 0)),
+                                      itransform(Vector2(0, 0)).normalized());
   BOOST_CHECK_EQUAL(neighbors.size(), 6u);
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   const double w = 3;
   const double h = 4;
-  auto bounds = std::make_shared<const RectangleBounds>(w, h);
+  const auto bounds = std::make_shared<const RectangleBounds>(w, h);
   auto srf = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
   SurfaceArray sa(srf);
 
-  auto binContent = sa.at(Vector3(42, 42, 42), Vector3::UnitX());
+  const auto binContent =
+      sa.at(tgContext, Vector3(42, 42, 42), Vector3::UnitX());
   BOOST_CHECK_EQUAL(binContent.size(), 1u);
-  BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
+  BOOST_CHECK_EQUAL(binContent[0], srf.get());
   BOOST_CHECK_EQUAL(sa.surfaces().size(), 1u);
   BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
-}
-
-BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
-  const double w = 3;
-  const double h = 4;
-  auto bounds = std::make_shared<const RectangleBounds>(w, h);
-  auto srf0 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
-  auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
-
-  std::vector<const Surface*> sfPointers = {srf0.get(), srf1.get()};
-  std::vector<std::shared_ptr<const Surface>> surfaces = {srf0, srf1};
-
-  auto singleLookUp =
-      std::make_unique<Acts::SurfaceArray::SingleElementLookup>(sfPointers);
-
-  SurfaceArray sa(std::move(singleLookUp), surfaces);
-
-  auto binContent = sa.at(Vector3(42, 42, 42), Vector3::UnitX());
-  BOOST_CHECK_EQUAL(binContent.size(), 2u);
-  BOOST_CHECK_EQUAL(sa.surfaces().size(), 2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

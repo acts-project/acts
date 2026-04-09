@@ -8,6 +8,7 @@ import acts
 import acts.examples
 import acts.examples.gnn
 import acts.gnn
+from acts.examples.simulation import addDigiParticleSelection, ParticleSelectorConfig
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
 from acts.gnn import (
     TorchMetricLearning,
@@ -42,6 +43,16 @@ def runGnnMetricLearning(
         outputRoot=outputRoot,
         outputCsv=outputCsv,
         s=s,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-3.0, 3.0),
+            measurements=(7, None),
+            removeNeutral=True,
+        ),
     )
 
     addSpacePointsMaking(

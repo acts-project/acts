@@ -76,44 +76,6 @@ void addMaterial(py::module_& m) {
   }
 
   {
-    auto cls =
-        py::class_<SurfaceMaterialMapper,
-                   std::shared_ptr<SurfaceMaterialMapper>>(
-            m, "SurfaceMaterialMapper")
-            .def(py::init([](const SurfaceMaterialMapper::Config& config,
-                             SurfaceMaterialMapper::StraightLinePropagator prop,
-                             Logging::Level level) {
-                   return std::make_shared<SurfaceMaterialMapper>(
-                       config, std::move(prop),
-                       getDefaultLogger("SurfaceMaterialMapper", level));
-                 }),
-                 py::arg("config"), py::arg("propagator"), py::arg("level"));
-
-    auto c = py::class_<SurfaceMaterialMapper::Config>(cls, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, etaRange, emptyBinCorrection, mapperDebugOutput,
-                       computeVariance);
-  }
-
-  {
-    auto cls =
-        py::class_<VolumeMaterialMapper, std::shared_ptr<VolumeMaterialMapper>>(
-            m, "VolumeMaterialMapper")
-            .def(py::init([](const VolumeMaterialMapper::Config& config,
-                             VolumeMaterialMapper::StraightLinePropagator prop,
-                             Logging::Level level) {
-                   return std::make_shared<VolumeMaterialMapper>(
-                       config, std::move(prop),
-                       getDefaultLogger("VolumeMaterialMapper", level));
-                 }),
-                 py::arg("config"), py::arg("propagator"), py::arg("level"));
-
-    auto c = py::class_<VolumeMaterialMapper::Config>(cls, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, mappingStep);
-  }
-
-  {
     py::class_<IAssignmentFinder, std::shared_ptr<IAssignmentFinder>>(
         m, "IAssignmentFinder");
   }

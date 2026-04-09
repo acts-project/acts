@@ -8,20 +8,14 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsPlugins/Json/ActsJson.hpp"
+#include "Acts/Utilities/TypeDispatcher.hpp"
 #include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
-#include "ActsPlugins/Json/SurfaceBoundsJsonConverter.hpp"
+#include "ActsPlugins/Json/JsonKindDispatcher.hpp"
 
 #include <memory>
-#include <string>
 #include <tuple>
-#include <utility>
-#include <vector>
-
-#include <nlohmann/json.hpp>
 
 namespace Acts {
 
@@ -30,9 +24,8 @@ namespace Acts {
 class ISurfaceMaterial;
 
 using SurfaceAndMaterialWithContext =
-    std::tuple<std::shared_ptr<const Acts::Surface>,
-               std::shared_ptr<const Acts::ISurfaceMaterial>,
-               Acts::GeometryContext>;
+    std::tuple<std::shared_ptr<const Surface>,
+               std::shared_ptr<const ISurfaceMaterial>, GeometryContext>;
 
 /// Convert SurfaceAndMaterialWithContext to JSON
 /// @param j Destination JSON object
@@ -59,77 +52,97 @@ void to_json(nlohmann::json& j, const std::shared_ptr<const Surface>& surface);
 void toJson(nlohmann::json& j, const std::shared_ptr<const Surface>& surface,
             const Acts::GeometryContext& gctx);
 
-/// Conversion to Surface from jsonn
-///
-/// @param j the read-in json object
-///
-/// @return a shared_ptr to a surface object for type polymorphism
-std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json& j);
+/// Static class performing JSON conversion of the surfaces
+class SurfaceJsonConverter {
+ public:
+  /// Options for surface conversion
+  struct Options {
+    /// Transform serialization options
+    Transform3JsonConverter::Options transformOptions =
+        Transform3JsonConverter::Options{};
+    /// Write material information
+    bool writeMaterial = true;
+    /// Write surface as portal
+    bool portal = false;
+  };
 
-/// Conversion to Surface from json in correct type
-///
-/// The type is given as a template argument in order to be able
-/// to construct the correct fitting types for surfaces.
-///
-/// @param j the read-in json object
-///
-/// @return a shared_ptr to a typed surface object for type polymorphism
-template <typename surface_t, typename bounds_t>
-std::shared_ptr<surface_t> surfaceFromJsonT(const nlohmann::json& j) {
-  nlohmann::json jTransform = j["transform"];
-  Transform3 sTransform = Transform3JsonConverter::fromJson(jTransform);
-  if constexpr (std::is_same_v<bounds_t, void>) {
-    return Surface::makeShared<surface_t>(sTransform);
-  } else {
-    nlohmann::json jBounds = j["bounds"];
-    auto sBounds = SurfaceBoundsJsonConverter::fromJson<bounds_t>(jBounds);
-    return Surface::makeShared<surface_t>(sTransform, std::move(sBounds));
-  }
-}
+  /// Encoder type for the surface bounds
+  using SurfaceBoundsEncoder = TypeDispatcher<SurfaceBounds, nlohmann::json()>;
+  /// Encoder type for the surfaces
+  using SurfaceEncoder =
+      TypeDispatcher<Surface,
+                     nlohmann::json(const GeometryContext&, const Options&)>;
 
-namespace SurfaceJsonConverter {
+  /// Deccoder type for the surfaces
+  using SurfaceDecoder = JsonKindDispatcher<std::shared_ptr<Surface>>;
 
-/// Options controlling surface JSON serialization.
-struct Options {
-  /// Transform serialization options
-  Transform3JsonConverter::Options transformOptions =
-      Transform3JsonConverter::Options{};
-  /// Write material information
-  bool writeMaterial = true;
-  /// Write surface as portal
-  bool portal = false;
+  /// Configuration struct
+  struct Config {
+    /// Encoder for the surfaces
+    SurfaceEncoder surfaceEncoder{};
+    /// Encoder for the surface bounds
+    SurfaceBoundsEncoder surfaceBoundsEncoder{};
+
+    /// Decoder for the surfaces
+    SurfaceDecoder surfaceDecoder{};
+
+    /// Default configuration construction
+    ///
+    /// @return default configuration
+    static Config defaultConfig();
+  };
+
+  /// Delete the default constructor
+  /// as the class is purely static (for now)
+  SurfaceJsonConverter() = delete;
+
+  /// Contextual conversion of a surface
+  ///
+  /// @param gctx the geometry context for this
+  /// @param surface the surface to be converted
+  /// @param options the writing options for the surfaces
+  ///
+  /// @return a json object representing the surface
+  static nlohmann::json toJson(
+      const GeometryContext& gctx, const Surface& surface,
+      const Options& options = Options{
+          .transformOptions = Transform3JsonConverter::Options{},
+          .writeMaterial = true,
+          .portal = false});
+
+  /// Contextual conversion of a surface - Detray export
+  ///
+  /// @param gctx the geometry context for this
+  /// @param surface the surface to be converted
+  /// @param options the writing options for the surfaces
+  ///
+  /// @note reading back detray json is not supported and will fail
+  ///
+  /// @return a json object representing the surface
+  static nlohmann::json toJsonDetray(
+      const GeometryContext& gctx, const Surface& surface,
+      const Options& options = Options{
+          .transformOptions = Transform3JsonConverter::Options{},
+          .writeMaterial = true,
+          .portal = false});
+
+  /// @brief The Surface converter from json
+  ///
+  /// @param jSurface the surface json object
+  ///
+  /// @return a shared object created from json input
+  static std::shared_ptr<Surface> fromJson(const nlohmann::json& jSurface);
+
+  /// @brief Set externally constructed configuration
+  ///
+  /// @note May be removed when the dispatcher migration is finished
+  ///
+  /// @param cfg configuration to use
+  static void setConfig(const Config& cfg) { m_cfg = cfg; };
+
+ private:
+  static Config m_cfg;
 };
-
-/// Contextual conversion of a surface
-///
-/// @param gctx the geometry context for this
-/// @param surface the surface to be converted
-/// @param options the writing options for the surfaces
-///
-/// @return a json object representing the surface
-nlohmann::json toJson(const GeometryContext& gctx, const Surface& surface,
-                      const Options& options = Options{});
-
-/// Contextual conversion of a surface - Detray export
-///
-/// @param gctx the geometry context for this
-/// @param surface the surface to be converted
-/// @param options the writing options for the surfaces
-///
-/// @note reading back detray json is not supported and will fail
-///
-/// @return a json object representing the surface
-nlohmann::json toJsonDetray(const GeometryContext& gctx, const Surface& surface,
-                            const Options& options = Options{});
-
-/// @brief The Surface converter from json
-///
-/// @param jSurface the surface json object
-///
-/// @return a shared object created from json input
-std::shared_ptr<Surface> fromJson(const nlohmann::json& jSurface);
-
-}  // namespace SurfaceJsonConverter
 
 // This macro create a conversion for the surface type
 NLOHMANN_JSON_SERIALIZE_ENUM(
@@ -143,5 +156,4 @@ NLOHMANN_JSON_SERIALIZE_ENUM(
      {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
      {Surface::SurfaceType::Other, "Other"}})
 
-/// @}
 }  // namespace Acts
