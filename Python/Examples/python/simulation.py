@@ -658,7 +658,7 @@ def addGeant4(
     killAfterTime: float = float("inf"),
     killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
-    detectorConstructionOptions: acts.examples.geant4.Geant4ConstructionOptions = None,
+    detectorConstructionOptions = None,
 ) -> None:
     """This function steers the detector simulation using Geant4
 
