@@ -572,6 +572,12 @@ class TrackingVolume : public Volume {
                                       AppendOnlyNavigationStream& stream,
                                       const Logger& logger) const;
 
+  /// Pass over a (Volume / Surface) placement to share owner ship
+  /// with the volume
+  /// @param placement: Pointer to the placement to be managed by the
+  ///                   tracking volume
+  void cachePlacement(PlacementOwnPtr placement);
+
  private:
   void connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
@@ -591,12 +597,6 @@ class TrackingVolume : public Volume {
   /// Return the garbage container into which the placements are pushed. If the
   /// volume does not have a mother it's the volume itself otherwise the mother
   std::vector<PlacementOwnPtr>& cachedPlacements();
-
-  /// Pass over a (Volume / Surface) placement to share owner ship
-  /// with the volume
-  /// @param placement: Pointer to the placement to be managed by the
-  ///                   tracking volume
-  void cachePlacement(PlacementOwnPtr placement);
 
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
