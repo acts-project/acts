@@ -78,8 +78,10 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   LayerBlueprintNode& setSurfaces(
       std::vector<std::shared_ptr<Surface>> surfaces);
 
+  /// @return Reference to this node for chaining
+
   LayerBlueprintNode& setPlacements(
-      std::vector<std::shared_ptr<const SurfacePlacement>> placements);
+      std::vector<std::shared_ptr<const SurfacePlacementBase>> placements);
 
   /// Access the registered surfaces.
   /// @return The registered surfaces

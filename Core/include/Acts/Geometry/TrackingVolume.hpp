@@ -592,6 +592,12 @@ class TrackingVolume : public Volume {
   /// volume does not have a mother it's the volume itself otherwise the mother
   std::vector<PlacementOwnPtr>& cachedPlacements();
 
+  /// Pass over a (Volume / Surface) placement to share owner ship
+  /// with the volume
+  /// @param placement: Pointer to the placement to be managed by the
+  ///                   tracking volume
+  void cachePlacement(PlacementOwnPtr placement);
+
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
 
