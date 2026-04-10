@@ -120,7 +120,7 @@ class CompositePortalLink final : public PortalLinkBase {
 
   /// Get the merge direction used to build this composite.
   /// @return The merge direction
-  AxisDirection direction() const { return m_direction; }
+  AxisDirection direction() const;
 
  private:
   boost::container::small_vector<std::unique_ptr<PortalLinkBase>, 4>

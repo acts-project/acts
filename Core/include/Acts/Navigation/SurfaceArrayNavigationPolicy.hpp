@@ -85,7 +85,9 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
   /// @return The surface array
   const SurfaceArray& surfaceArray() const;
 
-  const Config& config() const { return m_cfg; }
+  /// Constant access to config
+  /// @return config
+  const Config& config() const;
 
  private:
   Config m_cfg;
