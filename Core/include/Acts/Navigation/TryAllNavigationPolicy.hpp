@@ -63,6 +63,8 @@ class TryAllNavigationPolicy final : public INavigationPolicy {
   /// @param delegate is the navigation delegate
   void connect(NavigationDelegate& delegate) const override;
 
+  const Config& config() const { return m_cfg; }
+
  private:
   Config m_cfg;
   const TrackingVolume* m_volume;
