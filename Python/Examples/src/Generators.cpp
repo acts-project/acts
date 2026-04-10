@@ -170,7 +170,7 @@ void addGenerators(py::module& mex) {
       .def_property("mass", &SimParticle::mass,
                     [](SimParticle& p, double v) { p.setMass(v); })
       .def_property("process", &SimParticle::process,
-                    [](SimParticle& p, ActsFatras::ProcessType v) {
+                    [](SimParticle& p, ActsFatras::GenerationProcess v) {
                       p.setProcess(v);
                     })
       .def_property_readonly("isSecondary", &SimParticle::isSecondary)
@@ -239,7 +239,7 @@ void addGenerators(py::module& mex) {
           py::arg("numberOfHits"), py::return_value_policy::reference_internal)
       .def(
           "setFinalOutcome",
-          [](SimParticle& p, ActsFatras::ParticleOutcome o) -> SimParticle& {
+          [](SimParticle& p, ActsFatras::SimulationOutcome o) -> SimParticle& {
             p.finalState().setOutcome(o);
             return p;
           },

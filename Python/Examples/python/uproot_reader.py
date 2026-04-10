@@ -136,7 +136,7 @@ class UprootReader(acts.examples.IReader):
                         float(d["q"][idx][i]) * u.e,
                         float(d["m"][idx][i]) * u.GeV,
                     )
-                    p.process = acts.examples.ProcessType(int(d["process"][idx][i]))
+                    p.process = acts.examples.GenerationProcess(int(d["process"][idx][i]))
 
                     px = float(d["px"][idx][i])
                     py = float(d["py"][idx][i])
@@ -158,7 +158,7 @@ class UprootReader(acts.examples.IReader):
                     )
                     p.setFinalNumberOfHits(int(d["number_of_hits"][idx][i]))
                     p.setFinalOutcome(
-                        acts.examples.ParticleOutcome(int(d["outcome"][idx][i]))
+                        acts.examples.SimulationOutcome(int(d["outcome"][idx][i]))
                     )
 
                     particles.insert(p)
