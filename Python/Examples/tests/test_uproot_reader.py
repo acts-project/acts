@@ -18,13 +18,12 @@ from acts.examples import Sequencer
 from acts.examples.root import RootParticleWriter, RootSimHitWriter
 
 
-@pytest.mark.root
-def test_uproot_reader(tmp_path, fatras, conf_const):
-    """Write particles and simhits with ROOT writers, read back with UprootReader."""
+@pytest.fixture
+def sim_output(tmp_path, fatras, conf_const):
+    """Run one simulation and return paths to the two ROOT files."""
     particle_file = tmp_path / "particles_simulation.root"
     hit_file = tmp_path / "hits.root"
 
-    # Step 1: Run simulation and write ROOT output
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
     evGen, simAlg, _ = fatras(s)
 
@@ -46,13 +45,18 @@ def test_uproot_reader(tmp_path, fatras, conf_const):
     )
     s.run()
 
-    assert particle_file.exists(), "particle ROOT file was not created"
-    assert hit_file.exists(), "simhit ROOT file was not created"
+    assert particle_file.exists()
+    assert hit_file.exists()
+    return particle_file, hit_file
 
-    # Step 2: Read back with UprootReader (no ROOT plugin needed)
-    s2 = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
 
-    s2.addReader(
+@pytest.mark.root
+def test_uproot_reader_both(sim_output, conf_const):
+    """Read back particles and simhits together."""
+    particle_file, hit_file = sim_output
+
+    s = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+    s.addReader(
         UprootReader(
             particleFilePath=particle_file,
             simHitFilePath=hit_file,
@@ -61,14 +65,57 @@ def test_uproot_reader(tmp_path, fatras, conf_const):
             level=acts.logging.WARNING,
         )
     )
-
     alg = AssertCollectionExistsAlg(
         ["particles_read", "simhits_read"],
         "check_alg",
         acts.logging.WARNING,
     )
-    s2.addAlgorithm(alg)
+    s.addAlgorithm(alg)
+    s.run()
+    assert alg.events_seen == 10
 
-    s2.run()
 
+@pytest.mark.root
+def test_uproot_reader_particles_only(sim_output, conf_const):
+    """Read back particles without a simhit file."""
+    particle_file, _ = sim_output
+
+    s = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+    s.addReader(
+        UprootReader(
+            particleFilePath=particle_file,
+            outputParticles="particles_read",
+            level=acts.logging.WARNING,
+        )
+    )
+    alg = AssertCollectionExistsAlg(
+        ["particles_read"],
+        "check_alg",
+        acts.logging.WARNING,
+    )
+    s.addAlgorithm(alg)
+    s.run()
+    assert alg.events_seen == 10
+
+
+@pytest.mark.root
+def test_uproot_reader_hits_only(sim_output, conf_const):
+    """Read back simhits without a particle file."""
+    _, hit_file = sim_output
+
+    s = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+    s.addReader(
+        UprootReader(
+            simHitFilePath=hit_file,
+            outputSimHits="simhits_read",
+            level=acts.logging.WARNING,
+        )
+    )
+    alg = AssertCollectionExistsAlg(
+        ["simhits_read"],
+        "check_alg",
+        acts.logging.WARNING,
+    )
+    s.addAlgorithm(alg)
+    s.run()
     assert alg.events_seen == 10

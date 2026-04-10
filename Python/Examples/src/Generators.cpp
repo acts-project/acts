@@ -159,13 +159,20 @@ void addGenerators(py::module& mex) {
            py::arg("pdg"))
       .def(py::init<const SimParticleState&, const SimParticleState&>(),
            py::arg("initial"), py::arg("final"))
-      .def_property_readonly("particleId", &SimParticle::particleId)
-      .def_property_readonly("pdg", &SimParticle::pdg)
+      .def_property("particleId", &SimParticle::particleId,
+                    [](SimParticle& p, SimBarcode b) { p.setParticleId(b); })
+      .def_property("pdg", &SimParticle::pdg,
+                    [](SimParticle& p, Acts::PdgParticle v) { p.setPdg(v); })
       .def_property_readonly("absolutePdg", &SimParticle::absolutePdg)
-      .def_property_readonly("charge", &SimParticle::charge)
+      .def_property("charge", &SimParticle::charge,
+                    [](SimParticle& p, double v) { p.setCharge(v); })
       .def_property_readonly("absoluteCharge", &SimParticle::absoluteCharge)
-      .def_property_readonly("mass", &SimParticle::mass)
-      .def_property_readonly("process", &SimParticle::process)
+      .def_property("mass", &SimParticle::mass,
+                    [](SimParticle& p, double v) { p.setMass(v); })
+      .def_property("process", &SimParticle::process,
+                    [](SimParticle& p, ActsFatras::ProcessType v) {
+                      p.setProcess(v);
+                    })
       .def_property_readonly("isSecondary", &SimParticle::isSecondary)
       .def_property_readonly("fourPosition", &SimParticle::fourPosition)
       .def_property_readonly(
@@ -194,11 +201,6 @@ void addGenerators(py::module& mex) {
           py::overload_cast<>(&SimParticle::finalState, py::const_))
       .def("withParticleId", &SimParticle::withParticleId,
            py::arg("particleId"))
-      .def("setProcess", &SimParticle::setProcess, py::arg("process"))
-      .def("setPdg", &SimParticle::setPdg, py::arg("pdg"))
-      .def("setCharge", &SimParticle::setCharge, py::arg("charge"))
-      .def("setMass", &SimParticle::setMass, py::arg("mass"))
-      .def("setParticleId", &SimParticle::setParticleId, py::arg("particleId"))
       .def(
           "setInitialPosition4",
           [](SimParticle& p, const Acts::Vector4& pos4) -> SimParticle& {
