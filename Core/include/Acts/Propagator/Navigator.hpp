@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -94,9 +93,6 @@ class Navigator final {
   using NavigationCandidates =
       boost::container::small_vector<NavigationTarget, 10>;
 
-  /// Type alias for external surfaces container
-  using ExternalSurfaces = std::vector<GeometryIdentifier>;
-
   /// Type alias for geometry version enumeration
   using GeometryVersion = TrackingGeometry::GeometryVersion;
 
@@ -127,21 +123,6 @@ class Navigator final {
     /// @param gctx The geometry context for the navigation
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
-
-    /// Externally provided surfaces - these are tried to be hit
-    ExternalSurfaces externalSurfaces = {};
-    /// Surfaces that are not part of the tracking geometry
-    std::vector<const Surface*> freeSurfaces = {};
-
-    /// Insert an external surface to be considered during navigation
-    /// @param surface: The surface to add to the list
-    void insertExternalSurface(const Surface& surface) {
-      if (surface.geometryId() != GeometryIdentifier{}) {
-        externalSurfaces.push_back(surface.geometryId());
-      } else {
-        freeSurfaces.push_back(&surface);
-      }
-    }
 
     /// Set the plain navigation options
     /// @param options The plain navigator options to set
@@ -243,6 +224,9 @@ class Navigator final {
     /// Stream for navigation debugging and monitoring
     NavigationStream stream;
 
+    /// Surfaces that are not part of the tracking geometry
+    std::vector<const Surface*> freeSurfaces;
+
     /// Reset navigation state after switching layers
     void resetAfterLayerSwitch() {
       navSurfaces.clear();
@@ -266,7 +250,7 @@ class Navigator final {
     }
 
     /// Completely reset navigation state to initial conditions
-    void reset() {
+    void resetForRenavigation() {
       resetAfterVolumeSwitch();
 
       currentVolume = nullptr;
@@ -274,11 +258,14 @@ class Navigator final {
 
       navigationBreak = false;
       navigationStage = Stage::initial;
+
       // Set the surface reached switches back to false
       std::ranges::for_each(freeCandidates,
                             [](std::pair<const Surface*, bool>& freeSurface) {
                               freeSurface.second = false;
                             });
+
+      stream.reset();
     }
   };
 

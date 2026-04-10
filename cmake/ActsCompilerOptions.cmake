@@ -23,6 +23,13 @@ endif()
 # is much more aggressive and also triggers on e.g., double-to-float
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(cxx_flags "${cxx_flags} -Wfloat-conversion")
+    # __COUNTER__ is classified as a C2y extension in Clang 22+.
+    # Third-party generated code (podio, Boost.Test, etc.) relies on it.
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-Wno-c2y-extensions" _acts_has_wno_c2y)
+    if(_acts_has_wno_c2y)
+        set(cxx_flags "${cxx_flags} -Wno-c2y-extensions")
+    endif()
 endif()
 
 # -Wnull-dereference gets applied to -isystem includes in GCC13,

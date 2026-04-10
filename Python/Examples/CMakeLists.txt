@@ -94,6 +94,7 @@ target_sources(
         src/Digitization.cpp
         src/MaterialMapping.cpp
         src/Propagation.cpp
+        src/PythonSpecific.cpp
         src/TrackFinding.cpp
         src/TrackFitting.cpp
         src/TruthTracking.cpp
@@ -159,7 +160,7 @@ add_examples_binding_if(GeoModel
     "Acts::PluginGeoModel;Acts::ExamplesITkModuleSplitting;Acts::ExamplesDetectorGeoModel;Acts::ExamplesMuonSpectrometerMockupDetector"
     ACTS_BUILD_PLUGIN_GEOMODEL TRUE
 )
-add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn ACTS_BUILD_EXAMPLES_GNN FALSE)
+add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn ACTS_BUILD_EXAMPLES_GNN TRUE)
 add_examples_binding_if(Hashing Acts::ExamplesTrackFinding ACTS_BUILD_EXAMPLES_HASHING FALSE)
 add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
 add_examples_binding_if(Onnx Acts::ExamplesTrackFindingML ACTS_BUILD_PLUGIN_ONNX FALSE)

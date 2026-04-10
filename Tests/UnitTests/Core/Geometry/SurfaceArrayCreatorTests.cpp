@@ -21,6 +21,7 @@
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -574,11 +575,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
 
   auto cylinder =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
+  ACTS_PUSH_IGNORE_DEPRECATED()
   auto sl = std::make_unique<
       SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
       cylinder, 1., std::make_tuple(std::move(phiAxis), std::move(zAxis)));
   sl->fill(tgContext, brlRaw);
   SurfaceArray sa(std::move(sl), brl);
+  ACTS_POP_IGNORE_DEPRECATED()
 
   // Write the surrace array with grid
   ObjVisualization3D objVis;
@@ -588,8 +591,37 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   // actually filled SA
   for (const auto& srf : brl) {
     Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr, ctr.normalized());
+    auto binContent = sa.at(tgContext, ctr, ctr.normalized());
 
+    BOOST_CHECK(binContent.size() <= 2u);
+  }
+}
+
+BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning_newFactory,
+                        SurfaceArrayCreatorFixture) {
+  SrfVec brl = makeBarrel(30, 7, 2, 1);
+  std::vector<const Surface*> brlRaw = unpackSmartPointers(brl);
+  draw_surfaces(brl, "SurfaceArrayCreator_completeBinning_BRL.obj");
+
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+      -std::numbers::pi, std::numbers::pi, 30u);
+  Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
+
+  double R = 10.;
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
+
+  SurfaceArray sa(tgContext, brl, cylinder, 1., std::tuple{phiAxis, zAxis});
+
+  // Write the surrace array with grid
+  ObjVisualization3D objVis;
+  GeometryView3D::drawSurfaceArray(objVis, sa, tgContext);
+  objVis.write("SurfaceArrayCreator_BarrelGrid_newFactory");
+
+  // actually filled SA
+  for (const auto& srf : brl) {
+    Vector3 ctr = srf->referencePosition(tgContext, AxisDirection::AxisR);
+    auto binContent = sa.at(tgContext, ctr, ctr.normalized());
     BOOST_CHECK(binContent.size() <= 2u);
   }
 }
@@ -617,11 +649,13 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   auto cylinder =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), R, 100);
   auto sl = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
-                                    AxisBoundaryType::Bound>(cylinder, 1.,
-                                                             pAxisPhi, pAxisZ);
+                                    AxisBoundaryType::Bound>(
+      cylinder, 1., pAxisPhi, pAxisZ, 1);
 
   sl->fill(tgContext, brlRaw);
+  ACTS_PUSH_IGNORE_DEPRECATED()
   SurfaceArray sa(std::move(sl), brl);
+  ACTS_POP_IGNORE_DEPRECATED()
   auto axes = sa.getAxes();
   BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
@@ -631,7 +665,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     auto B = pr.second;
 
     Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-    auto binContent = sa.at(ctr, ctr.normalized());
+    auto binContent = sa.at(tgContext, ctr, ctr.normalized());
     BOOST_CHECK_EQUAL(binContent.size(), 4u);
     std::set<const Surface*> act(binContent.begin(), binContent.end());
 
@@ -652,10 +686,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
 
     auto sl2 = makeSurfaceGridLookup2D<AxisBoundaryType::Closed,
                                        AxisBoundaryType::Bound>(
-        cylinder, 1., pAxisPhiVar, pAxisZVar);
+        cylinder, 1., pAxisPhiVar, pAxisZVar, 1);
 
     sl2->fill(tgContext, brlRaw);
+    ACTS_PUSH_IGNORE_DEPRECATED()
     SurfaceArray sa2(std::move(sl2), brl);
+    ACTS_POP_IGNORE_DEPRECATED()
     axes = sa2.getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30u);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
@@ -688,7 +724,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
       auto B = pr.second;
 
       Vector3 ctr = A->referencePosition(tgContext, AxisDirection::AxisR);
-      auto binContent = sa2.at(ctr, ctr.normalized());
+      auto binContent = sa2.at(tgContext, ctr, ctr.normalized());
       BOOST_CHECK_EQUAL(binContent.size(), 4u);
       std::set<const Surface*> act(binContent.begin(), binContent.end());
 
