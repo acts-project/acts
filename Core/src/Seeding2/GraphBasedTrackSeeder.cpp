@@ -26,7 +26,11 @@ GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
     : Config(config) {
   phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;
 
-  ptCoeff = 0.5f * config.Bz * Acts::UnitConstants::m;
+}
+
+GraphBasedTrackSeeder::Options::Options(float bFieldInZ_) : bFieldInZ(bFieldInZ_){
+
+  ptCoeff = 0.5f * bFieldInZ * Acts::UnitConstants::m;
 }
 
 GraphBasedTrackSeeder::GraphBasedTrackSeeder(
@@ -40,7 +44,7 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
 
 SeedContainer2 GraphBasedTrackSeeder::createSeeds(
     const SpacePointContainer2& spacePoints, const GbtsRoiDescriptor& roi,
-    const std::uint32_t maxLayers, const GbtsTrackingFilter& filter) const {
+    const std::uint32_t maxLayers, const GbtsTrackingFilter& filter, Options options) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
   SeedContainer2 SeedContainer;
@@ -77,7 +81,7 @@ SeedContainer2 GraphBasedTrackSeeder::createSeeds(
   std::vector<GbtsEdge> edgeStorage;
 
   std::pair<std::int32_t, std::int32_t> graphStats =
-      buildTheGraph(roi, nodeStorage, edgeStorage);
+      buildTheGraph(roi, nodeStorage, edgeStorage, options);
 
   ACTS_DEBUG("Created graph with " << graphStats.first << " edges and "
                                    << graphStats.second << " edge links");
@@ -181,7 +185,7 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
 
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-    std::vector<GbtsEdge>& edgeStorage) const {
+    std::vector<GbtsEdge>& edgeStorage, Options options) const {
   // phi cut for triplets
   const float cutDPhiMax = m_cfg.lrtMode ? 0.07f : 0.012f;
   // curv cut for triplets
@@ -204,9 +208,9 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
   const float tripletPtMin = 0.8f * m_cfg.minPt;
 
   // to re-scale original tunings done for the 900 MeV pT cut
-  const float ptScale = (0.9f * UnitConstants::GeV) / m_cfg.minPt;
+  const float ptScale = 0.9f / m_cfg.minPt;
 
-  const float maxCurv = m_cfg.ptCoeff / tripletPtMin;
+  const float maxCurv = options.ptCoeff / tripletPtMin;
 
   float maxKappaHighEta =
       m_cfg.lrtMode ? 1.0f * maxCurv : std::sqrt(0.8f) * maxCurv;
@@ -481,16 +485,16 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
 
               const bool isBarrel3 = (lk3 / 10000) == 8;
 
-              float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
+              const float absTauRatio = std::abs(pS->p[0] * uat2 - 1.0f);
               float addTauRatioCorr = 0;
 
               if (m_cfg.useAdaptiveCuts) {
                 if (isBarrel1 && isBarrel2 && isBarrel3) {
-                  bool no_gap =
+                  const bool noGap =
                       ((lk3 - lk2) == 1000) && ((lk2 - layerId1) == 1000);
 
                   // assume more scattering due to the layer in between
-                  if (!no_gap) {
+                  if (!noGap) {
                     addTauRatioCorr = m_cfg.tauRatioCorr;
                   }
                 } else {
@@ -500,9 +504,8 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                   }
                 }
               }
-
-              if (absTauRatio > cutTauRatioMax + addTauRatioCorr) {  // bad
-                                                                     // match
+              // bad match
+              if (absTauRatio > cutTauRatioMax + addTauRatioCorr) {  
                 continue;
               }
 
@@ -528,11 +531,11 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
               if (m_cfg.validateTriplets) {
                 // Pixel barrel
                 if (isBarrel1 && isBarrel2 && isBarrel3) {
-                  std::array<const GbtsNode*, 3> candidateTriplet = {
+                  const std::array<const GbtsNode*, 3> candidateTriplet = {
                       B1.vn[n1Idx], B2.vn[n2Idx], pS->n2};
 
                   if (!validateTriplet(candidateTriplet, tripletPtMin,
-                                       absTauRatio, cutTauRatioMax)) {
+                                       absTauRatio, cutTauRatioMax, options)) {
                     continue;
                   }
                 }
@@ -746,9 +749,9 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       continue;
     }
 
-    std::uint32_t origSeedSize = vN.size();
+    const std::uint32_t origSeedSize = vN.size();
 
-    float origSeedQuality = -rs.j / origSeedSize;
+    const float origSeedQuality = -rs.j / origSeedSize;
 
     std::uint32_t seedSplitFlag = (seedEta < m_cfg.maxSeedSplitEta) &&
                                           (origSeedSize > 3) &&
@@ -767,7 +770,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       triplets[0] = {vN[0], vN[origSeedSize / 2], vN[origSeedSize - 1]};
 
       // all but the first one
-      std::vector<const GbtsNode*> dropOut1 = {vN.begin() + 1, vN.end()};
+      const std::vector<const GbtsNode*> dropOut1(vN.begin() + 1, vN.end());
 
       triplets[1] = {dropOut1[0], dropOut1[(origSeedSize - 1) / 2],
                      dropOut1[origSeedSize - 2]};
@@ -791,11 +794,11 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
         invRads[k] = estimateCurvature(triplets[k]);
       }
 
-      float diffs[3] = {std::abs(invRads[1] - invRads[0]),
+      const std::array<float, 3> diffs = {std::abs(invRads[1] - invRads[0]),
                         std::abs(invRads[2] - invRads[0]),
                         std::abs(invRads[2] - invRads[1])};
 
-      bool confirmed = diffs[0] < m_cfg.maxInvRadDiff &&
+      const bool confirmed = diffs[0] < m_cfg.maxInvRadDiff &&
                        diffs[1] < m_cfg.maxInvRadDiff &&
                        diffs[2] < m_cfg.maxInvRadDiff;
 
@@ -813,7 +816,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   // clone removal code goes below ...
 
-  std::sort(vArgSort.begin(), vArgSort.end());
+  std::ranges::sort(vArgSort);
 
   std::vector<std::uint32_t> h2t(nHits + 1, 0);  // hit to track associations
 
@@ -825,7 +828,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     // loop over space points indices
     for (const auto& h : seed.spacePoints) {
-      std::uint32_t hitId = h->idx + 1;
+      const std::uint32_t hitId = h->idx + 1;
 
       const std::uint32_t tid = h2t[hitId];
 
@@ -842,7 +845,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
   for (const auto& ags : vArgSort) {
     const auto& seed = vSeedCandidates[ags.second].spacePoints;
 
-    std::uint32_t nTotal = seed.size();
+    const std::uint32_t nTotal = seed.size();
 
     std::uint32_t nOther = 0;
 
@@ -851,7 +854,7 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
     ++trackIdx;
 
     for (const auto& h : seed) {
-      std::uint32_t hitId = h->idx + 1;
+      const std::uint32_t hitId = h->idx + 1;
 
       const std::uint32_t tid = h2t[hitId];
 
@@ -897,9 +900,9 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     // seed split into "drop-out" seeds
 
-    std::uint32_t seedSize = vN.size();
+    const std::uint32_t seedSize = vN.size();
 
-    std::array<std::size_t, 2> indices2drop = {
+    const std::array<std::size_t, 2> indices2drop = {
         0, seedSize / 2ul};  // the first and the middle
 
     for (const auto& skipIdx : indices2drop) {
@@ -962,54 +965,57 @@ bool GraphBasedTrackSeeder::checkZ0BitMask(const std::uint16_t z0BitMask,
 }
 
 float GraphBasedTrackSeeder::estimateCurvature(
-    const std::array<const GbtsNode*, 3>& sps) const {
+    const std::array<const GbtsNode*, 3>& nodes) const {
   // conformal mapping with the center at the last spacepoint
 
-  float u[2], v[2];
+  std::array<float, 2> u{};
+  std::array<float, 2> v{};
 
-  float x0 = sps[2]->x;
-  float y0 = sps[2]->y;
+  const float x0 = nodes[2]->x;
+  const float y0 = nodes[2]->y;
 
-  float r0 = sps[2]->r;
+  const float r0 = nodes[2]->r;
 
-  float cosA = x0 / r0;
+  const float cosA = x0 / r0;
 
-  float sinA = y0 / r0;
+  const float sinA = y0 / r0;
 
   for (std::uint32_t k = 0; k < 2; k++) {
-    float dx = sps[k]->x - x0;
+    const float dx = nodes[k]->x - x0;
 
-    float dy = sps[k]->y - y0;
+    const float dy = nodes[k]->y - y0;
 
-    float r2Inv = 1.0 / (dx * dx + dy * dy);
+    const float r2Inv = 1.0 / (dx * dx + dy * dy);
 
-    float xn = dx * cosA + dy * sinA;
+    const float xn = dx * cosA + dy * sinA;
 
-    float yn = -dx * sinA + dy * cosA;
+    const float yn = -dx * sinA + dy * cosA;
 
     u[k] = xn * r2Inv;
     v[k] = yn * r2Inv;
   }
 
-  float du = u[0] - u[1];
+  const float du = u[0] - u[1];
 
   if (du == 0.0) {
     return 0.0;
   }
 
-  float A = (v[0] - v[1]) / du;
+  const float A = (v[0] - v[1]) / du;
 
-  float B = v[1] - A * u[1];
+  const float B = v[1] - A * u[1];
 
-  return B / std::sqrt(1 + A * A) / Acts::UnitConstants::mm;
+  //curavture in units of 1/mm
+  return B / std::sqrt(1 + A * A);
 }
 
 bool GraphBasedTrackSeeder::validateTriplet(
-    std::span<const GbtsNode*, 3> candidateTriplet, const float tripletMinPt,
-    const float tauRatio, const float tauRatioCut) const {
+    const std::array<const GbtsNode*, 3> candidateTriplet, const float tripletMinPt,
+    const float tauRatio, const float tauRatioCut, Options options) const {
   // conformal mapping with the center at the middle spacepoint
 
-  float u[2], v[2];
+  std::array<float, 2> u{};
+  std::array<float, 2> v{};
 
   const float x0 = candidateTriplet[1]->x;
   const float y0 = candidateTriplet[1]->y;
@@ -1027,7 +1033,7 @@ bool GraphBasedTrackSeeder::validateTriplet(
 
     const float dy = candidateTriplet[spIdx]->y - y0;
 
-    const float r2Inv = 1.0 / (dx * dx + dy * dy);
+    const float r2Inv = 1.0f / (dx * dx + dy * dy);
 
     const float xn = dx * cosA + dy * sinA;
 
@@ -1055,10 +1061,10 @@ bool GraphBasedTrackSeeder::validateTriplet(
 
   if (B != 0.0) {  // straight-line track is OK
 
-    const float R = std::sqrt(1 + A * A) / B * Acts::UnitConstants::mm;
+    const float R = std::sqrt(1 + A * A) / B;
 
     // 1T magnetic field used
-    const float pT = std::abs(m_cfg.Bz * R / 2) * Acts::UnitConstants::GeV;
+    const float pT = std::abs(options.bFieldInZ * R / 2);
 
     if (pT < tripletMinPt) {
       return false;
@@ -1066,7 +1072,7 @@ bool GraphBasedTrackSeeder::validateTriplet(
 
     if (pT > 5 * tripletMinPt) {  // relatively high-pT track
 
-      if (tauRatio > 0.9 * tauRatioCut) {
+      if (tauRatio > 0.9f * tauRatioCut) {
         return false;
       }
     }

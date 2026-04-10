@@ -72,8 +72,6 @@ class GraphBasedTrackSeeder {
     float minPt = 1.0f * UnitConstants::GeV;
 
     // graph building options
-    /// Bfield in z
-    float Bz = 1.9972f * UnitConstants::T;
     /// Use eta binning from geometry structure.
     bool useEtaBinning = true;
     /// Apply RZ cuts on doublets.
@@ -110,11 +108,24 @@ class GraphBasedTrackSeeder {
     /// Phi slice width
     float phiSliceWidth = std::numeric_limits<float>::quiet_NaN();
 
-    /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of
-    /// 2*T).
-    double ptCoeff = std::numeric_limits<float>::quiet_NaN();
   };
 
+  /// Optional inputs for veriables passed in 
+  /// or derived during runtime.
+  struct Options{
+
+    ///Constructor.
+    /// @param bFieldInZ_ the magnetic field in z
+    explicit Options(float bFieldInZ_);
+
+    /// Magnetic field in z
+    /// units of GeV/(e*mm).
+    float bFieldInZ{};
+
+    /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of
+    /// 2*T).
+    double ptCoeff{};
+  };
   /// candidate seed metadata produced by the GBTS algorithm.
   struct SeedCandidateProperties {
     /// Constructor.
@@ -183,7 +194,8 @@ class GraphBasedTrackSeeder {
   SeedContainer2 createSeeds(const SpacePointContainer2& spacePoints,
                              const GbtsRoiDescriptor& roi,
                              std::uint32_t maxLayers,
-                             const GbtsTrackingFilter& filter) const;
+                             const GbtsTrackingFilter& filter,
+                             Options options) const;
 
  private:
   DerivedConfig m_cfg;
@@ -216,7 +228,7 @@ class GraphBasedTrackSeeder {
   /// @return Pair of edge count and maximum level
   std::pair<std::int32_t, std::int32_t> buildTheGraph(
       const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-      std::vector<GbtsEdge>& edgeStorage) const;
+      std::vector<GbtsEdge>& edgeStorage, Options options) const;
 
   /// Run connected component analysis on the graph.
   /// @param nEdges Number of edges in the graph
@@ -248,11 +260,11 @@ class GraphBasedTrackSeeder {
   bool checkZ0BitMask(std::uint16_t z0BitMask, float z0, float minZ0,
                       float z0HistoCoeff) const;
 
-  float estimateCurvature(const std::array<const GbtsNode*, 3>&) const;
+  float estimateCurvature(const std::array<const GbtsNode*, 3>& nodes) const;
 
-  bool validateTriplet(std::span<const GbtsNode*, 3> candidateTriplet,
-                       const float tripletMinPt, const float tauRatio,
-                       const float tauRatioCut) const;
+  bool validateTriplet(const std::array<const GbtsNode*, 3> candidateTriplet,
+                       float tripletMinPt, float tauRatio,
+                       float tauRatioCut, Options options) const;
 };
 
 }  // namespace Acts::Experimental
