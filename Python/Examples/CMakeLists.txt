@@ -9,6 +9,7 @@ set(py_files
     reconstruction.py
     itk.py
     odd.py
+    uproot_reader.py
 )
 
 # Macro to add example bindings conditionally

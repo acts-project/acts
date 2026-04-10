@@ -8,16 +8,20 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Utilities/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Utilities/VertexGenerators.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 #include "ActsPython/Utilities/WhiteBoardRegistry.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <sstream>
 #include <utility>
@@ -190,6 +194,54 @@ void addGenerators(py::module& mex) {
           py::overload_cast<>(&SimParticle::finalState, py::const_))
       .def("withParticleId", &SimParticle::withParticleId,
            py::arg("particleId"))
+      .def("setProcess", &SimParticle::setProcess, py::arg("process"))
+      .def("setPdg", &SimParticle::setPdg, py::arg("pdg"))
+      .def("setCharge", &SimParticle::setCharge, py::arg("charge"))
+      .def("setMass", &SimParticle::setMass, py::arg("mass"))
+      .def("setParticleId", &SimParticle::setParticleId, py::arg("particleId"))
+      .def(
+          "setInitialPosition4",
+          [](SimParticle& p, const Acts::Vector4& pos4) -> SimParticle& {
+            p.initialState().setPosition4(pos4);
+            return p;
+          },
+          py::arg("pos4"), py::return_value_policy::reference_internal)
+      .def(
+          "setInitialDirection",
+          [](SimParticle& p, const Acts::Vector3& dir) -> SimParticle& {
+            p.initialState().setDirection(dir);
+            return p;
+          },
+          py::arg("direction"), py::return_value_policy::reference_internal)
+      .def(
+          "setInitialAbsoluteMomentum",
+          [](SimParticle& p, double abs) -> SimParticle& {
+            p.initialState().setAbsoluteMomentum(abs);
+            return p;
+          },
+          py::arg("absMomentum"), py::return_value_policy::reference_internal)
+      .def(
+          "setFinalMaterialPassed",
+          [](SimParticle& p, double x0, double l0) -> SimParticle& {
+            p.finalState().setMaterialPassed(x0, l0);
+            return p;
+          },
+          py::arg("pathInX0"), py::arg("pathInL0"),
+          py::return_value_policy::reference_internal)
+      .def(
+          "setFinalNumberOfHits",
+          [](SimParticle& p, std::uint32_t n) -> SimParticle& {
+            p.finalState().setNumberOfHits(n);
+            return p;
+          },
+          py::arg("numberOfHits"), py::return_value_policy::reference_internal)
+      .def(
+          "setFinalOutcome",
+          [](SimParticle& p, ActsFatras::ParticleOutcome o) -> SimParticle& {
+            p.finalState().setOutcome(o);
+            return p;
+          },
+          py::arg("outcome"), py::return_value_policy::reference_internal)
       .def("__repr__", [](const SimParticle& p) {
         std::ostringstream oss;
         oss << p;
@@ -211,13 +263,55 @@ void addGenerators(py::module& mex) {
                [](const SimParticleContainer& c, SimBarcode barcode) {
                  return c.find(barcode) != c.end();
                })
-          .def("__repr__", [](const SimParticleContainer& c) {
+          .def("__repr__",
+               [](const SimParticleContainer& c) {
+                 std::ostringstream oss;
+                 oss << "SimParticleContainer(" << c.size() << " particles)";
+                 return oss.str();
+               })
+          .def("insert",
+               [](SimParticleContainer& c, const SimParticle& p) {
+                 c.insert(p);
+               },
+               py::arg("particle"));
+
+  WhiteBoardRegistry::registerClass(simParticleContainer);
+
+  py::class_<SimHit>(mex, "SimHit")
+      .def(py::init<Acts::GeometryIdentifier, SimBarcode, Acts::Vector4,
+                    Acts::Vector4, Acts::Vector4, std::int32_t>(),
+           py::arg("geometryId"), py::arg("particleId"), py::arg("pos4"),
+           py::arg("before4"), py::arg("after4"), py::arg("index") = -1)
+      .def_property_readonly("geometryId", &SimHit::geometryId)
+      .def_property_readonly("particleId", &SimHit::particleId)
+      .def_property_readonly("index", &SimHit::index)
+      .def_property_readonly("fourPosition", &SimHit::fourPosition)
+      .def_property_readonly("time", &SimHit::time)
+      .def_property_readonly("momentum4Before", &SimHit::momentum4Before)
+      .def_property_readonly("momentum4After", &SimHit::momentum4After)
+      .def_property_readonly("depositedEnergy", &SimHit::depositedEnergy);
+
+  auto simHitContainer =
+      py::classh<SimHitContainer>(mex, "SimHitContainer")
+          .def(py::init<>())
+          .def("__len__",
+               [](const SimHitContainer& c) { return c.size(); })
+          .def(
+              "__iter__",
+              [](const SimHitContainer& c) {
+                return py::make_iterator(c.begin(), c.end());
+              },
+              py::keep_alive<0, 1>())
+          .def("insert",
+               [](SimHitContainer& c, const SimHit& h) { c.insert(h); },
+               py::arg("hit"))
+          .def("__repr__", [](const SimHitContainer& c) {
             std::ostringstream oss;
-            oss << "SimParticleContainer(" << c.size() << " particles)";
+            oss << "SimHitContainer(" << c.size() << " hits)";
             return oss.str();
           });
 
-  WhiteBoardRegistry::registerClass(simParticleContainer);
+  WhiteBoardRegistry::registerClass(simHitContainer);
 
   {
     using Config = ParametricParticleGenerator::Config;
