@@ -27,7 +27,7 @@ namespace Acts {
 ///
 /// @param x the value to mix
 /// @return the mixed value
-constexpr std::uint64_t hashMix(std::size_t x) {
+constexpr std::uint64_t hashMix(std::uint64_t x) {
   x ^= x >> 33;
   x *= 0xff51afd7ed558ccdULL;
   x ^= x >> 33;
@@ -62,7 +62,7 @@ constexpr std::uint64_t hashMixAndCombine(const T& value, const Rest&... rest) {
     // the operation asymmetric, preserving argument order.
     // @see https://github.com/boostorg/container_hash/blob/e3cbbebc8a1f9833287c8eb52fb0484ba744646b/include/boost/container_hash/hash.hpp#L469-L473
     auto foldLeft = [&seed](const auto& v) {
-      std::size_t h = hashMix(std::hash<std::decay_t<decltype(v)>>{}(v));
+      std::uint64_t h = hashMix(std::hash<std::decay_t<decltype(v)>>{}(v));
       seed ^= h + 0x9e3779b97f4a7c15ULL + (seed << 12) + (seed >> 4);
     };
     (foldLeft(rest), ...);
