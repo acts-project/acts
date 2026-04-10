@@ -90,7 +90,7 @@ class GraphBasedTrackSeeder {
     float hitShareThreshold = 0.49;
     /// Max seed eta value considered for splitting.
     float maxSeedSplitEta = 0.6;
-    /// Max allowed curvature for seed self consistancy check.
+    /// Max allowed curvature for seed self consistency check.
     // Units of inverse meters
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     // GbtsDataStorage options
@@ -107,14 +107,12 @@ class GraphBasedTrackSeeder {
 
     /// Phi slice width
     float phiSliceWidth = std::numeric_limits<float>::quiet_NaN();
-
   };
 
-  /// Optional inputs for veriables passed in 
+  /// Optional inputs for variables passed in
   /// or derived during runtime.
-  struct Options{
-
-    ///Constructor.
+  struct Options {
+    /// Constructor.
     /// @param bFieldInZ_ the magnetic field in z
     explicit Options(float bFieldInZ_);
 
@@ -263,8 +261,8 @@ class GraphBasedTrackSeeder {
   float estimateCurvature(const std::array<const GbtsNode*, 3>& nodes) const;
 
   bool validateTriplet(const std::array<const GbtsNode*, 3> candidateTriplet,
-                       float tripletMinPt, float tauRatio,
-                       float tauRatioCut, Options options) const;
+                       float tripletMinPt, float tauRatio, float tauRatioCut,
+                       Options options) const;
 };
 
 }  // namespace Acts::Experimental

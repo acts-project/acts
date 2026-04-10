@@ -25,11 +25,10 @@ namespace Acts::Experimental {
 GraphBasedTrackSeeder::DerivedConfig::DerivedConfig(const Config& config)
     : Config(config) {
   phiSliceWidth = 2 * std::numbers::pi_v<float> / config.nMaxPhiSlice;
-
 }
 
-GraphBasedTrackSeeder::Options::Options(float bFieldInZ_) : bFieldInZ(bFieldInZ_){
-
+GraphBasedTrackSeeder::Options::Options(float bFieldInZ_)
+    : bFieldInZ(bFieldInZ_) {
   ptCoeff = 0.5f * bFieldInZ * Acts::UnitConstants::m;
 }
 
@@ -44,7 +43,8 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
 
 SeedContainer2 GraphBasedTrackSeeder::createSeeds(
     const SpacePointContainer2& spacePoints, const GbtsRoiDescriptor& roi,
-    const std::uint32_t maxLayers, const GbtsTrackingFilter& filter, Options options) const {
+    const std::uint32_t maxLayers, const GbtsTrackingFilter& filter,
+    Options options) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
   SeedContainer2 SeedContainer;
@@ -505,7 +505,7 @@ std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
                 }
               }
               // bad match
-              if (absTauRatio > cutTauRatioMax + addTauRatioCorr) {  
+              if (absTauRatio > cutTauRatioMax + addTauRatioCorr) {
                 continue;
               }
 
@@ -795,12 +795,12 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
       }
 
       const std::array<float, 3> diffs = {std::abs(invRads[1] - invRads[0]),
-                        std::abs(invRads[2] - invRads[0]),
-                        std::abs(invRads[2] - invRads[1])};
+                                          std::abs(invRads[2] - invRads[0]),
+                                          std::abs(invRads[2] - invRads[1])};
 
       const bool confirmed = diffs[0] < m_cfg.maxInvRadDiff &&
-                       diffs[1] < m_cfg.maxInvRadDiff &&
-                       diffs[2] < m_cfg.maxInvRadDiff;
+                             diffs[1] < m_cfg.maxInvRadDiff &&
+                             diffs[2] < m_cfg.maxInvRadDiff;
 
       if (confirmed) {
         seedSplitFlag = 0;  // reset the flag
@@ -822,8 +822,8 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   std::uint32_t trackId = 0;
 
-  for (const auto& ags : vArgSort) {
-    const auto& seed = vSeedCandidates[ags.second];
+  for (const auto& args : vArgSort) {
+    const auto& seed = vSeedCandidates[args.second];
     ++trackId;
 
     // loop over space points indices
@@ -842,8 +842,8 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
   std::uint32_t trackIdx = 0;
 
-  for (const auto& ags : vArgSort) {
-    const auto& seed = vSeedCandidates[ags.second].spacePoints;
+  for (const auto& args : vArgSort) {
+    const auto& seed = vSeedCandidates[args.second].spacePoints;
 
     const std::uint32_t nTotal = seed.size();
 
@@ -866,15 +866,15 @@ void GraphBasedTrackSeeder::extractSeedsFromTheGraph(
 
     if (nOther > m_cfg.hitShareThreshold * nTotal) {
       // reject
-      vSeedCandidates[ags.second].isClone = -1;  // reject
+      vSeedCandidates[args.second].isClone = -1;  // reject
     }
   }
   vOutputSeeds.reserve(vSeedCandidates.size());
 
   // drop the clones and split seeds if need be
 
-  for (const auto& ags : vArgSort) {
-    const auto& seed = vSeedCandidates[ags.second];
+  for (const auto& args : vArgSort) {
+    const auto& seed = vSeedCandidates[args.second];
 
     if (seed.isClone != 0) {
       continue;  // identified as a clone of a better candidate
@@ -1005,13 +1005,14 @@ float GraphBasedTrackSeeder::estimateCurvature(
 
   const float B = v[1] - A * u[1];
 
-  //curavture in units of 1/mm
+  // curavture in units of 1/mm
   return B / std::sqrt(1 + A * A);
 }
 
 bool GraphBasedTrackSeeder::validateTriplet(
-    const std::array<const GbtsNode*, 3> candidateTriplet, const float tripletMinPt,
-    const float tauRatio, const float tauRatioCut, Options options) const {
+    const std::array<const GbtsNode*, 3> candidateTriplet,
+    const float tripletMinPt, const float tauRatio, const float tauRatioCut,
+    Options options) const {
   // conformal mapping with the center at the middle spacepoint
 
   std::array<float, 2> u{};
