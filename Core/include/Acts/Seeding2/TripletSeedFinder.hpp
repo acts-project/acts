@@ -148,24 +148,24 @@ class TripletSeedFinder {
     /// (produced by the minimum allowed pT particle) + a certain uncertainty
     /// term. Check the documentation for more information
     /// https://acts.readthedocs.io/en/latest/core/reconstruction/pattern_recognition/seeding.html
-    float minPt = 400 * UnitConstants::MeV;
+    float minPt = static_cast<float>(400 * UnitConstants::MeV);
     /// Number of sigmas of scattering angle to be considered in the minimum pT
     /// scattering term
-    float sigmaScattering = 5;
+    float sigmaScattering = 5.f;
     /// Term that accounts for the thickness of scattering medium in radiation
     /// lengths in the Lynch & Dahl correction to the Highland equation default
     /// is 5%
-    float radLengthPerSeed = 0.05;
+    float radLengthPerSeed = 0.05f;
     /// Maximum value of impact parameter estimation of the seed candidates
-    float impactMax = 20 * UnitConstants::mm;
+    float impactMax = static_cast<float>(20 * UnitConstants::mm);
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
-    float helixCutTolerance = 1;
+    float helixCutTolerance = 1.f;
 
     /// Tolerance parameter used to check the compatibility of space-point
     /// coordinates in xyz. This is only used in a detector specific check for
     /// strip modules
-    float toleranceParam = 1.1 * UnitConstants::mm;
+    float toleranceParam = static_cast<float>(1.1 * UnitConstants::mm);
   };
 
   /// Derived configuration for the triplet seed finder using a magnetic field.

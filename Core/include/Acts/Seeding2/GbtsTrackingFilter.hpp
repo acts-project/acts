@@ -65,24 +65,24 @@ class GbtsTrackingFilter final {
   /// Configuration for the tracking filter.
   struct Config {
     /// Multiple scattering sigma (for 900 MeV track at eta=0).
-    float sigmaMS = 0.016;
+    float sigmaMS = 0.016f;
     /// Radiation length fraction per layer (2.5% per layer).
-    float radLen = 0.025;
+    float radLen = 0.025f;
 
     /// Measurement uncertainty in x direction.
-    float sigmaX = 0.08;
+    float sigmaX = 0.08f;
     /// Measurement uncertainty in y direction.
-    float sigmaY = 0.25;
+    float sigmaY = 0.25f;
 
     /// Measurement weight in x direction.
-    float weightX = 0.5;
+    float weightX = 0.5f;
     /// Measurement weight in y direction.
-    float weightY = 0.5;
+    float weightY = 0.5f;
 
     /// Maximum delta chi2 in x direction.
-    float maxDChi2X = 5.0;
+    float maxDChi2X = 5.0f;
     /// Maximum delta chi2 in y direction.
-    float maxDChi2Y = 6.0;
+    float maxDChi2Y = 6.0f;
 
     /// Chi2 penalty for adding a hit.
     float addHit = 14.0;

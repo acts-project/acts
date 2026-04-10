@@ -29,7 +29,7 @@ constexpr std::array<double, N - D> derivativeCoefficients(
   }
   std::array<double, N - D> newCoeffs{filledArray<double, N - D>(0.)};
   for (std::size_t i = 0; i < N - D; ++i) {
-    newCoeffs[i] = product(i + 1ul, i + D) * coeffs[i + D];
+    newCoeffs[i] = static_cast<double>(product(i + 1ul, i + D)) * coeffs[i + D];
   }
   return newCoeffs;
 }

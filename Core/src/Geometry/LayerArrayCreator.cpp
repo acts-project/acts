@@ -72,7 +72,7 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
     case arbitrary: {
       std::vector<float> boundaries;
       // initial step
-      boundaries.emplace_back(min);
+      boundaries.emplace_back(static_cast<float>(min));
       double layerValue = 0.;
       double layerThickness = 0.;
       std::shared_ptr<const Layer> navLayer = nullptr;
@@ -83,8 +83,10 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
         layerThickness = layIter->layerThickness();
         layerValue = layIter->referencePositionValue(gctx, aDir);
         // register the new boundaries in the step vector
-        boundaries.emplace_back(layerValue - 0.5 * layerThickness);
-        boundaries.emplace_back(layerValue + 0.5 * layerThickness);
+        boundaries.emplace_back(
+            static_cast<float>(layerValue - 0.5 * layerThickness));
+        boundaries.emplace_back(
+            static_cast<float>(layerValue + 0.5 * layerThickness));
         // calculate the layer value for the offset
         double navigationValue = 0.5 * ((layerValue - 0.5 * layerThickness) +
                                         boundaries.at(boundaries.size() - 3));
@@ -151,7 +153,7 @@ std::unique_ptr<const LayerArray> LayerArrayCreator::layerArray(
                                       navLayer->referencePosition(gctx, aDir));
       }
       // now close the boundaries
-      boundaries.emplace_back(max);
+      boundaries.emplace_back(static_cast<float>(max));
       // some screen output
       ACTS_VERBOSE(layerOrderVector.size()
                    << " Layers (material + navigation) built. ");

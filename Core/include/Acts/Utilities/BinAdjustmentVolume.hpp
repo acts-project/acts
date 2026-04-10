@@ -59,14 +59,14 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     float max = 0;
     // Perform the value adjustment
     if (bval == AxisDirection::AxisPhi) {
-      min = minPhi;
-      max = maxPhi;
+      min = static_cast<float>(minPhi);
+      max = static_cast<float>(maxPhi);
     } else if (bval == AxisDirection::AxisR) {
-      min = minR;
-      max = maxR;
+      min = static_cast<float>(minR);
+      max = static_cast<float>(maxR);
     } else if (bval == AxisDirection::AxisZ) {
-      min = minZ;
-      max = maxZ;
+      min = static_cast<float>(minZ);
+      max = static_cast<float>(maxZ);
     }
     // Create the updated BinningData
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);
@@ -116,14 +116,14 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     float max = 0;
     // Perform the value adjustment
     if (bval == AxisDirection::AxisPhi) {
-      min = minPhi;
-      max = maxPhi;
+      min = static_cast<float>(minPhi);
+      max = static_cast<float>(maxPhi);
     } else if (bval == AxisDirection::AxisR) {
-      min = minR;
-      max = maxR;
+      min = static_cast<float>(minR);
+      max = static_cast<float>(maxR);
     } else if (bval == AxisDirection::AxisZ) {
-      min = minZ;
-      max = maxZ;
+      min = static_cast<float>(minZ);
+      max = static_cast<float>(maxZ);
     }
     // Create the updated BinningData
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);
@@ -171,14 +171,14 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     float max = 0;
     // Perform the value adjustment
     if (bval == AxisDirection::AxisX) {
-      min = minX;
-      max = maxX;
+      min = static_cast<float>(minX);
+      max = static_cast<float>(maxX);
     } else if (bval == AxisDirection::AxisY) {
-      min = minY;
-      max = maxY;
+      min = static_cast<float>(minY);
+      max = static_cast<float>(maxY);
     } else if (bval == AxisDirection::AxisZ) {
-      min = minZ;
-      max = maxZ;
+      min = static_cast<float>(minZ);
+      max = static_cast<float>(maxZ);
     }
     // Create the updated BinningData
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);

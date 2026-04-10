@@ -294,9 +294,9 @@ class DoubletSeedFinder {
     Direction candidateDirection = Direction::Forward();
 
     /// Minimum radial distance between two doublet components
-    float deltaRMin = 5 * UnitConstants::mm;
+    float deltaRMin = static_cast<float>(5 * UnitConstants::mm);
     /// Maximum radial distance between two doublet components
-    float deltaRMax = 270 * UnitConstants::mm;
+    float deltaRMax = static_cast<float>(270 * UnitConstants::mm);
 
     /// Minimal z distance between two doublet components
     float deltaZMin = -std::numeric_limits<float>::infinity();
@@ -304,7 +304,7 @@ class DoubletSeedFinder {
     float deltaZMax = std::numeric_limits<float>::infinity();
 
     /// Maximum value of impact parameter estimation of the seed candidates
-    float impactMax = 20 * UnitConstants::mm;
+    float impactMax = static_cast<float>(20 * UnitConstants::mm);
 
     /// Enable cut on the compatibility between interaction point and doublet,
     /// this is an useful approximation to speed up the seeding
@@ -312,23 +312,23 @@ class DoubletSeedFinder {
 
     /// Limiting location of collision region in z-axis used to check if doublet
     /// origin is within reasonable bounds
-    float collisionRegionMin = -150 * UnitConstants::mm;
+    float collisionRegionMin = static_cast<float>(-150 * UnitConstants::mm);
     /// Maximum collision region boundary in z-axis for doublet origin checks
-    float collisionRegionMax = +150 * UnitConstants::mm;
+    float collisionRegionMax = static_cast<float>(150 * UnitConstants::mm);
 
     /// Maximum allowed cotTheta between two space-points in doublet, used to
     /// check if forward angle is within bounds
-    float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
+    float cotThetaMax = 10.01788f;  // equivalent to eta = 3 (pseudorapidity)
 
     /// Minimum transverse momentum (pT) used to check the r-z slope
     /// compatibility of triplets with maximum multiple scattering effect
     /// (produced by the minimum allowed pT particle) + a certain uncertainty
     /// term. Check the documentation for more information
     /// https://acts.readthedocs.io/en/latest/core/reconstruction/pattern_recognition/seeding.html
-    float minPt = 400 * UnitConstants::MeV;
+    float minPt = static_cast<float>(400 * UnitConstants::MeV);
     /// Parameter which can loosen the tolerance of the track seed to form a
     /// helix. This is useful for e.g. misaligned seeding.
-    float helixCutTolerance = 1;
+    float helixCutTolerance = 1.f;
 
     /// Type alias for delegate to apply experiment specific cuts during doublet
     /// finding

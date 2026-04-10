@@ -29,7 +29,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
 
   m_index.emplace_back();
   IndexData& p = m_index.back();
-  IndexType index = static_cast<IndexType>(m_index.size() - 1);
+  auto index = static_cast<IndexType>(m_index.size() - 1);
   m_previous.emplace_back(iprevious);
   m_next.emplace_back(kInvalid);
 
@@ -248,10 +248,11 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
   const auto& type_axis = axis::get<axis::category<>>(h.axis(1));
 
   auto p = [&](const auto& key, const auto v, std::string_view suffix = "") {
+    const auto ndc = static_cast<double>(n);
     if constexpr (std::is_same_v<std::decay_t<decltype(v)>, double>) {
-      os << std::format("{:>20}: {:8.2f}{}", key, v / n, suffix) << std::endl;
+      os << std::format("{:>20}: {:8.2f}{}", key, v / ndc, suffix) << std::endl;
     } else {
-      os << std::format("{:>20}: {:8.2f}{}", key, static_cast<double>(v) / n,
+      os << std::format("{:>20}: {:8.2f}{}", key, static_cast<double>(v) / ndc,
                         suffix)
          << std::endl;
     }

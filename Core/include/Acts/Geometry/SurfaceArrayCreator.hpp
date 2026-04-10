@@ -96,7 +96,7 @@ class SurfaceArrayCreator {
     std::size_t getBin(AxisScalar x) const {
       if (binEdges.empty()) {
         // equidistant
-        AxisScalar w = (max - min) / nBins;
+        AxisScalar w = (max - min) / static_cast<AxisScalar>(nBins);
         return static_cast<std::size_t>(std::floor((x - min) / w));
       } else {
         // variable

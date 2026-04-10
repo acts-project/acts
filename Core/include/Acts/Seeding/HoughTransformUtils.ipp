@@ -23,15 +23,16 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fill(
   // loop over all bins in the first coordinate to populate the line
   for (std::size_t xBin = 0; xBin < m_cfg.nBinsX; xBin++) {
     // get the x-coordinate for the given bin
-    auto x = binCenter(axisRanges.xMin, axisRanges.xMax, m_cfg.nBinsX, xBin);
+    auto x = binCenter(axisRanges.xMin, axisRanges.xMax,
+                       static_cast<unsigned>(m_cfg.nBinsX), xBin);
     // now evaluate the line equation provided by the user
     CoordType y = linePar(x, measurement);
     CoordType dy = widthPar(x, measurement);
     // translate the y-coordinate range to a bin range
-    int yBinDown =
-        binIndex(axisRanges.yMin, axisRanges.yMax, m_cfg.nBinsY, y - dy);
-    int yBinUp =
-        binIndex(axisRanges.yMin, axisRanges.yMax, m_cfg.nBinsY, y + dy);
+    int yBinDown = binIndex(axisRanges.yMin, axisRanges.yMax,
+                            static_cast<unsigned>(m_cfg.nBinsY), y - dy);
+    int yBinUp = binIndex(axisRanges.yMin, axisRanges.yMax,
+                          static_cast<unsigned>(m_cfg.nBinsY), y + dy);
     // now we can loop over the bin range to fill the corresponding cells
     for (int yBin = yBinDown; yBin <= yBinUp; ++yBin) {
       // skip 'out of bounds' cases
@@ -104,8 +105,8 @@ template <class identifier_t>
 Acts::HoughTransformUtils::HoughPlane<identifier_t>::HoughPlane(
     const HoughPlaneConfig& cfg)
     : m_cfg(cfg),
-      m_houghHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX),
-                  Axis(0, m_cfg.nBinsY, m_cfg.nBinsY)) {
+      m_houghHist(Axis(0., static_cast<double>(m_cfg.nBinsX), m_cfg.nBinsX),
+                  Axis(0., static_cast<double>(m_cfg.nBinsY), m_cfg.nBinsY)) {
   // instantiate our histogram.
   // m_houghHist = HoughHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX), Axis(0,
   // m_cfg.nBinsY, m_cfg.nBinsY));
@@ -119,7 +120,8 @@ void Acts::HoughTransformUtils::HoughPlane<identifier_t>::fillBin(
   m_touchedBins.insert(globalBin({binX, binY}));
 
   // add content to the cell
-  m_houghHist.atLocalBins({binX, binY}).fill(identifier, layer, w);
+  m_houghHist.atLocalBins({binX, binY})
+      .fill(identifier, layer, static_cast<YieldType>(w));
   // and update our cached maxima
   YieldType layers = nLayers(binX, binY);
   YieldType hits = nHits(binX, binY);
@@ -307,10 +309,10 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
     // CALL AXIS BINS HERE
     std::array<std::size_t, 2> xy = plane.axisBins(cand);
     // translate to parameter space for overlap veto
-    CoordType xCand =
-        binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), xy[0]);
-    CoordType yCand =
-        binCenter(ranges.yMin, ranges.yMax, plane.nBinsY(), xy[1]);
+    CoordType xCand = binCenter(ranges.xMin, ranges.xMax,
+                                static_cast<unsigned>(plane.nBinsX()), xy[0]);
+    CoordType yCand = binCenter(ranges.yMin, ranges.yMax,
+                                static_cast<unsigned>(plane.nBinsY()), xy[1]);
     // check if we are too close to a previously found maximum
     bool goodSpacing = true;
     for (auto& found : maxima) {
@@ -354,10 +356,10 @@ Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
       auto hidIds = plane.hitIds(xBin, yBin);
       allHits.insert(allHits.end(), std::make_move_iterator(hidIds.begin()),
                      std::make_move_iterator(hidIds.end()));
-      CoordType xHit =
-          binCenter(ranges.xMin, ranges.xMax, plane.nBinsX(), xBin);
-      CoordType yHit =
-          binCenter(ranges.yMin, ranges.yMax, plane.nBinsY(), yBin);
+      CoordType xHit = binCenter(ranges.xMin, ranges.xMax,
+                                 static_cast<unsigned>(plane.nBinsX()), xBin);
+      CoordType yHit = binCenter(ranges.yMin, ranges.yMax,
+                                 static_cast<unsigned>(plane.nBinsY()), yBin);
       YieldType nHits = plane.nHits(xBin, yBin);
       max_x += xHit * nHits;
       max_y += yHit * nHits;
@@ -485,8 +487,8 @@ slidingWindowRecenter(
          y <= ycenter + config.yRecenterSize; ++y) {
       const YieldType numOfHits = plane.nHits(x, y);
       if (numOfHits >= maxValue) {
-        xw += x * numOfHits;
-        yw += y * numOfHits;
+        xw += static_cast<YieldType>(x) * numOfHits;
+        yw += static_cast<YieldType>(y) * numOfHits;
         tot += numOfHits;
       }
     }

@@ -67,10 +67,11 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
   struct Config {
     /// Allowed difference in curvature (inverted seed radii) between two
     /// compatible seeds
-    float deltaInvHelixDiameter = 0.00003 * (1 / UnitConstants::mm);
+    float deltaInvHelixDiameter =
+        static_cast<float>(0.00003 / UnitConstants::mm);
     /// Minimum distance between compatible outer space-points to be considered.
     /// This is used to avoid counting space-points from the same layer
-    float deltaRMin = 5 * UnitConstants::mm;
+    float deltaRMin = static_cast<float>(5 * UnitConstants::mm);
     /// Seed weight/score is increased by this value if a compatible seed has
     /// been found. This is the c1 factor in the seed score calculation (w = c1
     /// * Nt - c2 * d0 - c3 * z0)

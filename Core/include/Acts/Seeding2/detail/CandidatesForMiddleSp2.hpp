@@ -53,7 +53,7 @@ class CandidatesForMiddleSp2 {
   /// @param nHigh Maximum number of candidates in the high-quality collection
   CandidatesForMiddleSp2(Size nLow, Size nHigh);
 
-  Size size() const { return m_storage.size(); }
+  Size size() const { return static_cast<Size>(m_storage.size()); }
 
   /// @brief Clear the internal storage
   void clear();

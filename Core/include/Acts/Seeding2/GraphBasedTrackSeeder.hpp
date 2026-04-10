@@ -52,7 +52,7 @@ class GraphBasedTrackSeeder {
     /// Use legacy tuning parameters.
     bool useOldTunings = false;
     /// Tau ratio cut threshold.
-    float tauRatioCut = 0.007;
+    float tauRatioCut = 0.007f;
     /// Tau ratio precut threshold.
     float tauRatioPrecut = 0.009f;
     /// Eta bin width override (0 uses default from connection file).
@@ -63,7 +63,7 @@ class GraphBasedTrackSeeder {
     /// Maximum number of phi slices.
     float nMaxPhiSlice = 53;  // used to calculate phi slices
     /// Minimum transverse momentum.
-    float minPt = 1.0f * UnitConstants::GeV;
+    float minPt = static_cast<float>(UnitConstants::GeV);
 
     // graph building options
     /// Transverse momentum coefficient (~0.3*B/2 - assumes nominal field of
@@ -76,17 +76,17 @@ class GraphBasedTrackSeeder {
     /// Maximum number of Gbts edges/doublets.
     std::uint32_t nMaxEdges = 2000000;
     /// Minimum delta radius between layers.
-    float minDeltaRadius = 2.0;
+    float minDeltaRadius = 2.0f;
 
     // Seed extraction options
     /// Minimum eta for edge masking.
-    float edgeMaskMinEta = 1.5;
+    float edgeMaskMinEta = 1.5f;
     /// Threshold for hit sharing between seeds.
-    float hitShareThreshold = 0.49;
+    float hitShareThreshold = 0.49f;
 
     // GbtsDataStorage options
     /// Maximum endcap cluster width.
-    float maxEndcapClusterWidth = 0.35;
+    float maxEndcapClusterWidth = 0.35f;
   };
 
   /// Derived configuration struct that contains calculated parameters based on

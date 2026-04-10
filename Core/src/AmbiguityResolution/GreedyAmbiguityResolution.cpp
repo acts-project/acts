@@ -46,8 +46,8 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
   auto trackComperator = [&state](std::size_t a, std::size_t b) {
     /// Helper to calculate the relative amount of shared measurements.
     auto relativeSharedMeasurements = [&state](std::size_t i) {
-      return 1.0 * state.sharedMeasurementsPerTrack[i] /
-             state.measurementsPerTrack[i].size();
+      return static_cast<double>(state.sharedMeasurementsPerTrack[i]) /
+             static_cast<double>(state.measurementsPerTrack[i].size());
     };
 
     if (relativeSharedMeasurements(a) != relativeSharedMeasurements(b)) {

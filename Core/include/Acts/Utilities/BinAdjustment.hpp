@@ -58,11 +58,11 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     float min = 0., max = 0.;
     // Perform the value adjustment
     if (bval == AxisDirection::AxisPhi) {
-      min = minPhi;
-      max = maxPhi;
+      min = static_cast<float>(minPhi);
+      max = static_cast<float>(maxPhi);
     } else {
-      min = minR;
-      max = maxR;
+      min = static_cast<float>(minR);
+      max = static_cast<float>(maxR);
     }
     // Create the updated BinningData
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);
@@ -110,14 +110,14 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     float min = 0., max = 0.;
     // Perform the value adjustment
     if (bval == AxisDirection::AxisPhi) {
-      min = minPhi;
-      max = maxPhi;
+      min = static_cast<float>(minPhi);
+      max = static_cast<float>(maxPhi);
     } else if (bval == AxisDirection::AxisRPhi) {
-      min = cR * minPhi;
-      max = cR * maxPhi;
+      min = static_cast<float>(cR * minPhi);
+      max = static_cast<float>(cR * maxPhi);
     } else {
-      min = -cHz;
-      max = cHz;
+      min = static_cast<float>(-cHz);
+      max = static_cast<float>(cHz);
     }
     // Create the updated BinningData
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);
@@ -162,11 +162,11 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     float min = 0., max = 0.;
     // Perform the value adjustment
     if (bval == AxisDirection::AxisX) {
-      min = minX;
-      max = maxX;
+      min = static_cast<float>(minX);
+      max = static_cast<float>(maxX);
     } else {
-      min = minY;
-      max = maxY;
+      min = static_cast<float>(minY);
+      max = static_cast<float>(maxY);
     }
     // Create the updated BinningData
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);
@@ -212,11 +212,11 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
     float min = 0., max = 0.;
     // Perform the value adjustment
     if (bval == AxisDirection::AxisX) {
-      min = -1 * halfX;
-      max = halfX;
+      min = static_cast<float>(-halfX);
+      max = static_cast<float>(halfX);
     } else {
-      min = -1 * halfY;
-      max = halfY;
+      min = static_cast<float>(-halfY);
+      max = static_cast<float>(halfY);
     }
     // Create the updated BinningData
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);

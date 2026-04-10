@@ -34,7 +34,8 @@ void SeedContainer2::reserve(Index size, float averageSpacePoints) noexcept {
   m_spacePointCounts.reserve(size);
   m_qualities.reserve(size);
   m_vertexZs.reserve(size);
-  m_spacePoints.reserve(static_cast<std::size_t>(size * averageSpacePoints));
+  m_spacePoints.reserve(
+      static_cast<std::size_t>(static_cast<float>(size) * averageSpacePoints));
 }
 
 void SeedContainer2::clear() noexcept {

@@ -50,7 +50,8 @@ class GainMatrixSmoother {
 
     // For the last state: smoothed is filtered - also: switch to next
     ACTS_VERBOSE("Getting previous track state");
-    auto prev_ts = trajectory.getTrackState(entryIndex);
+    auto prev_ts = trajectory.getTrackState(
+        static_cast<typename traj_t::IndexType>(entryIndex));
 
     prev_ts.shareFrom(TrackStatePropMask::Filtered,
                       TrackStatePropMask::Smoothed);

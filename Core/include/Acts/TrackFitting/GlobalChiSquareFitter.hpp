@@ -199,13 +199,13 @@ struct Gx2FitterResult {
   /// This corresponds to the last measurement state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
   /// Acts::TrackTraits::kInvalid is the start of a trajectory.
-  std::size_t lastMeasurementIndex = Acts::kTrackIndexInvalid;
+  TrackIndexType lastMeasurementIndex = Acts::kTrackIndexInvalid;
 
   /// This is the index of the 'tip' of the states stored in multitrajectory.
   /// This corresponds to the last state in the multitrajectory.
   /// Since this KF only stores one trajectory, it is unambiguous.
   /// Acts::TrackTraits::kInvalid is the start of a trajectory.
-  std::size_t lastTrackIndex = Acts::kTrackIndexInvalid;
+  TrackIndexType lastTrackIndex = Acts::kTrackIndexInvalid;
 
   /// The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
@@ -866,7 +866,7 @@ class Gx2Fitter {
             const auto& particle =
                 parametersWithHypothesis->particleHypothesis();
 
-            const double sigma =
+            const auto sigma =
                 static_cast<double>(Acts::computeMultipleScatteringTheta0(
                     slab, particle.absolutePdg(), particle.mass(),
                     static_cast<float>(
@@ -972,8 +972,9 @@ class Gx2Fitter {
         // We count the processed measurement
         ++result.processedMeasurements;
 
-        result.lastMeasurementIndex = currentTrackIndex;
-        result.lastTrackIndex = currentTrackIndex;
+        result.lastMeasurementIndex =
+            static_cast<TrackIndexType>(currentTrackIndex);
+        result.lastTrackIndex = static_cast<TrackIndexType>(currentTrackIndex);
 
         // TODO check for outlier first
         // We count the state with measurement
@@ -1071,7 +1072,7 @@ class Gx2Fitter {
           result.missedActiveSurfaces.push_back(surface);
         }
 
-        result.lastTrackIndex = currentTrackIndex;
+        result.lastTrackIndex = static_cast<TrackIndexType>(currentTrackIndex);
 
         ++result.processedStates;
 
@@ -1147,7 +1148,7 @@ class Gx2Fitter {
           result.missedActiveSurfaces.push_back(surface);
         }
 
-        result.lastTrackIndex = currentTrackIndex;
+        result.lastTrackIndex = static_cast<TrackIndexType>(currentTrackIndex);
 
         ++result.processedStates;
 
@@ -1654,7 +1655,7 @@ class Gx2Fitter {
 
     // Set the chi2sum for the track summary manually, since we don't calculate
     // it for each state
-    track.chi2() = chi2sum;
+    track.chi2() = static_cast<float>(chi2sum);
 
     // Return the converted Track
     return track;

@@ -86,7 +86,7 @@ struct EventDataView3D {
     ellipse.reserve(lseg);
     double thetaStep = 2 * std::numbers::pi / lseg;
     for (std::size_t it = 0; it < lseg; ++it) {
-      double phi = -std::numbers::pi + it * thetaStep;
+      double phi = -std::numbers::pi + static_cast<double>(it) * thetaStep;
       double cphi = std::cos(phi);
       double sphi = std::sin(phi);
       double x = lposition.x() + (l1sq * ctheta * cphi - l2sq * stheta * sphi);

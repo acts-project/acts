@@ -73,7 +73,7 @@ inline int binIndex(double min, double max, unsigned nSteps, double val) {
 /// left to the caller
 inline double lowerBinEdge(double min, double max, unsigned nSteps,
                            std::size_t binIndex) {
-  return min + (max - min) * binIndex / nSteps;
+  return min + (max - min) * static_cast<double>(binIndex) / nSteps;
 }
 // Returns the lower bound of the bin specified by step
 /// @param min: Start of axis range
@@ -85,7 +85,8 @@ inline double lowerBinEdge(double min, double max, unsigned nSteps,
 /// left to the caller
 inline double binCenter(double min, double max, unsigned nSteps,
                         std::size_t binIndex) {
-  return min + (max - min) * 0.5 * (2 * binIndex + 1) / nSteps;
+  return min +
+         (max - min) * 0.5 * (2 * static_cast<double>(binIndex) + 1) / nSteps;
 }
 
 /// @brief data class for the information to store for each

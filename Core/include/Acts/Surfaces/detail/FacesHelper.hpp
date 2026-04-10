@@ -39,7 +39,8 @@ struct FacesHelper {
     std::iota(face.begin(), face.end(), 0);
     faces.push_back(face);
     /// Triangular mesh construction
-    unsigned int anker = centerLast ? vertices.size() - 1 : 0;
+    unsigned int anker =
+        centerLast ? static_cast<unsigned int>(vertices.size() - 1) : 0;
     for (unsigned int it = 2 - offset; it < vertices.size() - offset; ++it) {
       triangularMesh.push_back({anker, it - 1, it});
     }
@@ -64,7 +65,8 @@ struct FacesHelper {
       const std::vector<Vector3>& vertices) {
     FaceVector faces;
     FaceVector triangularMesh;
-    std::size_t nqfaces = static_cast<std::size_t>(0.5 * vertices.size());
+    auto nqfaces =
+        static_cast<std::size_t>(0.5 * static_cast<double>(vertices.size()));
     for (std::size_t iface = 0; iface < nqfaces - 1; ++iface) {
       std::size_t p2 = (iface + 1 == nqfaces) ? 0 : iface + 1;
       std::vector<std::size_t> face = {iface, p2, p2 + nqfaces,
