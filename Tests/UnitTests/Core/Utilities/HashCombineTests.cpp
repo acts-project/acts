@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(hashMixAndCombine_consecutiveCollisionRate) {
   std::size_t nInputs = 0;
   for (std::uint32_t vp = 0; vp < 10; ++vp) {
     for (std::uint32_t p = 0; p < 100000; ++p) {
-      std::size_t h = hashMixAndCombine(vp, std::uint32_t{0}, p, std::uint32_t{0},
-                                  std::uint32_t{0});
+      std::size_t h = hashMixAndCombine(vp, std::uint32_t{0}, p,
+                                        std::uint32_t{0}, std::uint32_t{0});
       hashes.insert(h);
       buckets[h % nBuckets]++;
       ++nInputs;

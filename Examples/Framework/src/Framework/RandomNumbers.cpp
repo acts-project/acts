@@ -22,7 +22,7 @@ RandomEngine RandomNumbers::spawnGenerator(
 
 RandomSeed RandomNumbers::generateSeed(const AlgorithmContext& context) const {
   return Acts::hashMixAndCombine(m_cfg.seed, context.eventNumber,
-                           context.algorithmNumber);
+                                 context.algorithmNumber);
 }
 
 }  // namespace ActsExamples
