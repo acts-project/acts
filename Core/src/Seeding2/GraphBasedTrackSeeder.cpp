@@ -1028,7 +1028,7 @@ bool GraphBasedTrackSeeder::validateTriplet(
   const float sinA = y0 / r0;
 
   for (std::uint32_t k = 0; k < 2; k++) {
-    std::uint32_t spIdx = (k == 1) ? 2 : k;
+    const std::uint32_t spIdx = (k == 1) ? 2 : k;
 
     const float dx = candidateTriplet[spIdx]->x - x0;
 
