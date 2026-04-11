@@ -406,7 +406,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("etaBinWidthOverride: " << cfg1.etaBinWidthOverride);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("minPt: " << cfg1.minPt);
-  ACTS_DEBUG("ptCoeff: " << cfg1.ptCoeff);
   ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
   ACTS_DEBUG("doubletFilterRZ: " << cfg1.doubletFilterRZ);
   ACTS_DEBUG("nMaxEdges: " << cfg1.nMaxEdges);
