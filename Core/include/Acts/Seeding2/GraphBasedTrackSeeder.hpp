@@ -111,7 +111,6 @@ class GraphBasedTrackSeeder {
   /// Optional inputs for variables passed in
   /// or derived during runtime.
   struct Options {
-    /// Constructor.
     /// @param bFieldInZ_ the magnetic field in z
     explicit Options(float bFieldInZ_);
 
@@ -126,7 +125,6 @@ class GraphBasedTrackSeeder {
 
   /// candidate seed metadata produced by the GBTS algorithm.
   struct SeedCandidateProperties {
-    /// Constructor.
     /// @param quality Seed quality score
     /// @param clone Clone flag
     /// @param sps Vector of pointers to actual space points
@@ -151,9 +149,10 @@ class GraphBasedTrackSeeder {
 
   /// Output seed metadata
   struct OutputSeedProperties {
-    /// Constructor.
-    OutputSeedProperties(float Quality, std::vector<std::uint32_t> sps)
-        : seedQuality(Quality), spacePoints(std::move(sps)) {}
+    /// @param quality Seed quality score
+    /// @param sps Vector of space point indices in the seed
+    OutputSeedProperties(float quality, std::vector<std::uint32_t> sps)
+        : seedQuality(quality), spacePoints(std::move(sps)) {}
 
     /// Quality of seed.
     float seedQuality{};
@@ -188,6 +187,7 @@ class GraphBasedTrackSeeder {
   /// @param roi Region of interest descriptor
   /// @param maxLayers Maximum number of layers
   /// @param filter Tracking filter to be applied
+  /// @param options Event based options such as magnetic field strength
   /// @return Container with generated seeds
   SeedContainer2 createSeeds(const SpacePointContainer2& spacePoints,
                              const GbtsRoiDescriptor& roi,
@@ -223,6 +223,7 @@ class GraphBasedTrackSeeder {
   /// @param roi Region of interest descriptor
   /// @param nodeStorage Data storage containing nodes
   /// @param edgeStorage Storage for generated edges
+  /// @param options Event based options such as magnetic field strength
   /// @return Pair of edge count and maximum level
   std::pair<std::int32_t, std::int32_t> buildTheGraph(
       const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
@@ -240,7 +241,7 @@ class GraphBasedTrackSeeder {
   /// @param nEdges Number of edges
   /// @param nHits Number of hits
   /// @param edgeStorage Storage containing edges
-  /// @param vSeedCandidates Output vector for seed candidates
+  /// @param vOutputSeeds Output vector for seed candidates
   /// @param filter Tracking filter to be applied
   void extractSeedsFromTheGraph(std::uint32_t maxLevel, std::uint32_t nEdges,
                                 std::int32_t nHits,
