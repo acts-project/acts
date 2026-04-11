@@ -45,6 +45,9 @@ class GraphBasedSeedingAlgorithm final : public IAlgorithm {
     /// seeds
     std::string outputSeeds;
 
+    /// Magnetic field in z direction
+    float bFieldInZ = 2 * Acts::UnitConstants::T;
+
     /// contains all the options used to steer the algorithm
     /// includes both user options available to change in the python script and
     /// those seen just be the algorithm
