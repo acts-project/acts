@@ -1012,7 +1012,7 @@ float GraphBasedTrackSeeder::estimateCurvature(
 bool GraphBasedTrackSeeder::validateTriplet(
     const std::array<const GbtsNode*, 3> candidateTriplet,
     const float tripletMinPt, const float tauRatio, const float tauRatioCut,
-    Options options) const {
+    const Options& options) const {
   // conformal mapping with the center at the middle spacepoint
 
   std::array<float, 2> u{};
