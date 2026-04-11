@@ -91,7 +91,6 @@ class GraphBasedTrackSeeder {
     /// Max seed eta value considered for splitting.
     float maxSeedSplitEta = 0.6;
     /// Max allowed curvature for seed self consistency check.
-    // Units of inverse meters
     float maxInvRadDiff = 0.7e-2 / UnitConstants::m;
     // GbtsDataStorage options
     /// Maximum endcap cluster width.
