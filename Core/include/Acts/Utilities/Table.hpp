@@ -12,6 +12,7 @@
 #include <cctype>
 #include <format>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -56,7 +57,7 @@ class Table {
     if (!m_rows.empty()) {
       throw std::runtime_error("Cannot add columns after rows have been added");
     }
-    m_columns.push_back({header, format, alignment, header.length()});
+    m_columns.emplace_back(header, format, alignment, header.length());
   }
 
   /// Add a column with header, format string, and alignment as string
@@ -93,7 +94,7 @@ class Table {
     auto addCell = [&](auto&& arg) {
       std::string formatted =
           std::vformat(m_columns[colIndex].format, std::make_format_args(arg));
-      row.push_back(formatted);
+      row.emplace_back(formatted);
       m_columns[colIndex].width =
           std::max(m_columns[colIndex].width, formatted.length());
       ++colIndex;
@@ -101,7 +102,7 @@ class Table {
 
     (addCell(args), ...);
 
-    m_rows.push_back(std::move(row));
+    m_rows.emplace_back(std::move(row));
   }
 
   /// Generate the formatted table as a markdown string
@@ -115,20 +116,19 @@ class Table {
 
     // Build header row
     result += "|";
-    for (std::size_t i = 0; i < m_columns.size(); ++i) {
+    for (const auto& col : m_columns) {
       result += std::format(
-          " {} |", formatAligned(m_columns[i].header, m_columns[i].width,
-                                 m_columns[i].alignment));
+          " {} |", formatAligned(col.header, col.width, col.alignment));
     }
     result += "\n";
 
     // Build separator row
     result += "|";
-    for (std::size_t i = 0; i < m_columns.size(); ++i) {
-      std::size_t contentWidth = m_columns[i].width;
+    for (const auto& col : m_columns) {
+      std::size_t contentWidth = col.width;
 
       if (m_includeMarkdownMarkers) {
-        switch (m_columns[i].alignment) {
+        switch (col.alignment) {
           case Alignment::Left:
             result += std::format(":{:-<{}}", "", contentWidth + 1);
             break;
@@ -169,7 +169,9 @@ class Table {
   /// @throws std::invalid_argument if alignment string is not recognized
   static Alignment parseAlignment(const std::string& alignment) {
     std::string lower = alignment;
-    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    std::ranges::transform(lower, lower.begin(), [](unsigned char c) {
+      return static_cast<char>(std::tolower(c));
+    });
 
     if (lower == "left" || lower == "l") {
       return Alignment::Left;
