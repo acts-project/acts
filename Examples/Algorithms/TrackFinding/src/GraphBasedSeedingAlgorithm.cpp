@@ -41,9 +41,10 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
   // create the connection objects
-  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap(
-      m_cfg.seedFinderConfig.connectorInputFile,
-      m_cfg.seedFinderConfig.lrtMode);
+  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap =
+      Acts::Experimental::GbtsLayerConnectionMap::fromFile(
+          m_cfg.seedFinderConfig.connectorInputFile,
+          m_cfg.seedFinderConfig.lrtMode);
 
   // option that allows for adding custom eta binning (default is at 0.2)
   if (m_cfg.seedFinderConfig.etaBinWidthOverride != 0.0f) {
