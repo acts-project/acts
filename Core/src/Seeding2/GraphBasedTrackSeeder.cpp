@@ -185,7 +185,7 @@ std::vector<std::vector<GbtsNode>> GraphBasedTrackSeeder::createNodes(
 
 std::pair<std::int32_t, std::int32_t> GraphBasedTrackSeeder::buildTheGraph(
     const GbtsRoiDescriptor& roi, GbtsNodeStorage& nodeStorage,
-    std::vector<GbtsEdge>& edgeStorage, Options options) const {
+    std::vector<GbtsEdge>& edgeStorage, const Options& options) const {
   // phi cut for triplets
   const float cutDPhiMax = m_cfg.lrtMode ? 0.07f : 0.012f;
   // curv cut for triplets
