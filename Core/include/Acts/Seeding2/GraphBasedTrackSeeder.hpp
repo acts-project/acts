@@ -123,6 +123,7 @@ class GraphBasedTrackSeeder {
     /// 2*T).
     double ptCoeff{};
   };
+
   /// candidate seed metadata produced by the GBTS algorithm.
   struct SeedCandidateProperties {
     /// Constructor.
