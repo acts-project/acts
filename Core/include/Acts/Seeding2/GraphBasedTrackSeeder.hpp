@@ -193,7 +193,7 @@ class GraphBasedTrackSeeder {
                              const GbtsRoiDescriptor& roi,
                              std::uint32_t maxLayers,
                              const GbtsTrackingFilter& filter,
-                             Options options) const;
+                             const Options& options) const;
 
  private:
   DerivedConfig m_cfg;
