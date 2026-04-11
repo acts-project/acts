@@ -262,7 +262,7 @@ class GraphBasedTrackSeeder {
 
   bool validateTriplet(const std::array<const GbtsNode*, 3> candidateTriplet,
                        float tripletMinPt, float tauRatio, float tauRatioCut,
-                       Options options) const;
+                       const Options& options) const;
 };
 
 }  // namespace Acts::Experimental
