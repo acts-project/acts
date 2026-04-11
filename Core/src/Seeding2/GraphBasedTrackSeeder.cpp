@@ -44,7 +44,7 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
 SeedContainer2 GraphBasedTrackSeeder::createSeeds(
     const SpacePointContainer2& spacePoints, const GbtsRoiDescriptor& roi,
     const std::uint32_t maxLayers, const GbtsTrackingFilter& filter,
-    Options options) const {
+    const Options& options) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
   SeedContainer2 SeedContainer;
