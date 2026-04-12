@@ -92,9 +92,12 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
 
+  Acts::SeedContainer2 seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+
   // create the seeds
-  Acts::SeedContainer2 seeds = m_finder->createSeeds(
-      coreSpacePoints, internalRoi, maxLayers, *m_filter, options);
+  m_finder->createSeeds(coreSpacePoints, internalRoi, maxLayers, *m_filter,
+                        options, seeds);
 
   // update seed space point indices to original space point container
   for (auto seed : seeds) {

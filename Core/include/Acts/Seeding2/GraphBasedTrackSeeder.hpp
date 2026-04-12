@@ -172,7 +172,6 @@ class GraphBasedTrackSeeder {
     const GbtsEtaBin* bin{};
   };
 
-  /// Constructor.
   /// @param config Configuration for the seed finder
   /// @param geometry GBTS geometry
   /// @param logger Logging instance
@@ -188,12 +187,11 @@ class GraphBasedTrackSeeder {
   /// @param maxLayers Maximum number of layers
   /// @param filter Tracking filter to be applied
   /// @param options Event based options such as magnetic field strength
-  /// @return Container with generated seeds
-  SeedContainer2 createSeeds(const SpacePointContainer2& spacePoints,
-                             const GbtsRoiDescriptor& roi,
-                             std::uint32_t maxLayers,
-                             const GbtsTrackingFilter& filter,
-                             const Options& options) const;
+  /// @param outputSeeds Container with generated seeds
+  void createSeeds(const SpacePointContainer2& spacePoints,
+                   const GbtsRoiDescriptor& roi, std::uint32_t maxLayers,
+                   const GbtsTrackingFilter& filter, const Options& options,
+                   SeedContainer2& outputSeeds) const;
 
  private:
   DerivedConfig m_cfg;
