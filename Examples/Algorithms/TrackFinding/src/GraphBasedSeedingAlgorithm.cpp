@@ -45,7 +45,7 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
-  auto layerGeometry =
+  const auto layerGeometry =
       layerNumbering(Acts::GeometryContext::dangerouslyDefaultConstruct());
 
   // option that allows for adding custom eta binning (default is at 0.2)
