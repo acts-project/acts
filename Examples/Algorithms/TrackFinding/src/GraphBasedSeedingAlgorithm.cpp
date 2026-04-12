@@ -78,19 +78,23 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   // container due to how space point container works, we need to keep the
   // container and the external columns we added alive this is done by using a
   // tuple of the core container and the two extra columns
-  auto coreSpacePoints = makeSpContainer(spacePoints, m_actsGbtsMap);
+  const Acts::SpacePointContainer2 coreSpacePoints =
+      makeSpContainer(spacePoints, m_actsGbtsMap);
 
   // used to reserve size of nodes 2D vector in core
-  std::uint32_t maxLayers = m_layerIdMap.size();
+  const std::uint32_t maxLayers = m_layerIdMap.size();
 
   // ROI file:Defines what region in detector we are interested in, currently
   // set to entire detector
-  Acts::Experimental::GbtsRoiDescriptor internalRoi(
+  const Acts::Experimental::GbtsRoiDescriptor internalRoi(
       0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
 
+  const Acts::Experimental::GraphBasedTrackSeeder::Options options(
+      m_cfg.bFieldInZ);
+
   // create the seeds
-  Acts::SeedContainer2 seeds =
-      m_finder->createSeeds(coreSpacePoints, internalRoi, maxLayers, *m_filter);
+  Acts::SeedContainer2 seeds = m_finder->createSeeds(
+      coreSpacePoints, internalRoi, maxLayers, *m_filter, options);
 
   seeds.assignSpacePointContainer(spacePoints);
 
@@ -413,7 +417,6 @@ void GraphBasedSeedingAlgorithm::printConfig() const {
   ACTS_DEBUG("etaBinWidthOverride: " << cfg1.etaBinWidthOverride);
   ACTS_DEBUG("nMaxPhiSlice: " << cfg1.nMaxPhiSlice);
   ACTS_DEBUG("minPt: " << cfg1.minPt);
-  ACTS_DEBUG("ptCoeff: " << cfg1.ptCoeff);
   ACTS_DEBUG("useEtaBinning: " << cfg1.useEtaBinning);
   ACTS_DEBUG("doubletFilterRZ: " << cfg1.doubletFilterRZ);
   ACTS_DEBUG("nMaxEdges: " << cfg1.nMaxEdges);

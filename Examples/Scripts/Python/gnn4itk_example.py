@@ -17,11 +17,11 @@ import acts
 import acts.examples
 from acts.examples.reconstruction import addGnn
 from acts.examples.simulation import ParticleSelectorConfig, addDigiParticleSelection
-from acts.examples.gnn import (
+from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
-    NodeFeature,
 )
+from acts.examples.gnn import NodeFeature
 
 u = acts.UnitConstants
 
@@ -118,15 +118,15 @@ def runGNN4ITk(
 
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig["useEdgeFeatures"] = True
-        from acts.examples.gnn import TorchEdgeClassifier
+        from acts.gnn import TorchEdgeClassifier
 
         edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier
+        from acts.gnn import OnnxEdgeClassifier
 
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        from acts.examples.gnn import TensorRTEdgeClassifier
+        from acts.gnn import TensorRTEdgeClassifier
 
         edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:
