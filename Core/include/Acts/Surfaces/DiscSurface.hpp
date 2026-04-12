@@ -95,6 +95,9 @@ class DiscSurface : public RegularSurface {
   ///        and that the `Surface` is actually owned by
   ///        the `SurfacePlacementBase` instance
   explicit DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
+                       std::shared_ptr<const SurfacePlacementBase> placement);
+
+  explicit DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
                        const SurfacePlacementBase& placement);
 
   /// Copy Constructor

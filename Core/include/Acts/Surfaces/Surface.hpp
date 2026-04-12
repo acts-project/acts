@@ -29,6 +29,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 
 namespace Acts {
 
@@ -91,14 +92,20 @@ class Surface : public virtual GeometryObject,
   /// @param other Source surface for copy.
   Surface(const Surface& other) noexcept = default;
 
-  /// Constructor from SurfacePlacement: Element proxy
+  /// Constructor from SurfacePlacement: Element proxy with shared ownership
+  ///
+  /// @param placement Shared pointer to the surface placement
+  /// @note The Surface takes shared ownership of the placement. The placement
+  ///       must be managed by a shared_ptr before calling this constructor
+  ///       (i.e. @c shared_from_this() must be valid on it).
+  explicit Surface(
+      std::shared_ptr<const SurfacePlacementBase> placement) noexcept;
+
+  /// Constructor from SurfacePlacement: Element proxy (raw reference)
   ///
   /// @param placement Reference to the surface placement
-  /// @note The Surface does not take any ownership over the
-  ///       `SurfacePlacementBase` it is expected that the user
-  ///        ensures the life-time of the `SurfacePlacementBase`
-  ///        and that the `Surface` is actually owned by
-  ///        the `SurfacePlacementBase` instance
+  /// @note Prefer the @c shared_ptr overload; this raw-reference path is kept
+  ///       for backward compatibility and will be removed in a future release.
   explicit Surface(const SurfacePlacementBase& placement) noexcept;
 
   /// Copy constructor with optional shift
@@ -233,7 +240,18 @@ class Surface : public virtual GeometryObject,
       const;
 
   /// Assign a placement object which may dynamically align the surface in space
+  /// (shared ownership — preferred)
+  /// @param placement Shared pointer to the placement object
+  void assignSurfacePlacement(
+      std::shared_ptr<const SurfacePlacementBase> placement);
+
+  /// Assign a placement object which may dynamically align the surface in space
+  /// (raw reference — deprecated)
   /// @param placement: Placement object defining the surface's position
+  /// @deprecated Pass a @c shared_ptr<const SurfacePlacementBase> instead.
+  [[deprecated(
+      "Pass a shared_ptr<const SurfacePlacementBase> instead; this overload "
+      "will be removed in a future release")]]
   void assignSurfacePlacement(const SurfacePlacementBase& placement);
 
   /// Assign the surface material description
@@ -538,9 +556,18 @@ class Surface : public virtual GeometryObject,
   /// (translation, rotation) the surface in global space
   CloneablePtr<const Transform3> m_transform{};
 
+ protected:
+  /// Helper to extract the raw SurfacePlacementBase pointer regardless of
+  /// which variant path (deprecated raw pointer or new shared_ptr) is active.
+  /// Returns nullptr if no placement is set.
+  const SurfacePlacementBase* placementPtr() const noexcept;
+
  private:
-  /// Pointer to the a SurfacePlacement
-  const SurfacePlacementBase* m_placement{nullptr};
+  /// Placement storage: either empty (monostate), a raw pointer (deprecated
+  /// backward-compat path), or a shared_ptr (new owning path).
+  std::variant<std::monostate, const SurfacePlacementBase*,
+               std::shared_ptr<const SurfacePlacementBase>>
+      m_placement;
 
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated

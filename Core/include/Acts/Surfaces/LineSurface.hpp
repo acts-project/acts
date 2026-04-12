@@ -66,6 +66,9 @@ class LineSurface : public Surface {
   ///        and that the `Surface` is actually owned by
   ///        the `SurfacePlacementBase` instance
   explicit LineSurface(std::shared_ptr<const LineBounds> lbounds,
+                       std::shared_ptr<const SurfacePlacementBase> placement);
+
+  explicit LineSurface(std::shared_ptr<const LineBounds> lbounds,
                        const SurfacePlacementBase& placement);
 
   /// Copy constructor

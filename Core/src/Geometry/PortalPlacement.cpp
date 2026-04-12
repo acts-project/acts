@@ -21,7 +21,16 @@ PortalPlacement::PortalPlacement(const std::size_t portalIdx,
       m_parent{parent},
       m_portalIdx{portalIdx} {
   assert(m_surface != nullptr);
-  m_surface->assignSurfacePlacement(*this);
+}
+
+std::shared_ptr<PortalPlacement> PortalPlacement::create(
+    const std::size_t portalIdx, const Transform3& portalTrf,
+    const VolumePlacementBase* parent,
+    std::shared_ptr<RegularSurface> surface) {
+  auto placement =
+      std::make_shared<PortalPlacement>(portalIdx, portalTrf, parent, surface);
+  surface->assignSurfacePlacement(placement);
+  return placement;
 }
 
 Transform3 PortalPlacement::assembleFullTransform(

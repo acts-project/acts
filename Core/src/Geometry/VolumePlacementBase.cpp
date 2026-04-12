@@ -46,19 +46,19 @@ void VolumePlacementBase::makePortalsAlignable(
         globalToLocalTransform(gctx) *
         portalSurface->localToGlobalTransform(gctx);
 
-    m_portalPlacements.emplace_back(std::make_unique<detail::PortalPlacement>(
+    m_portalPlacements.push_back(detail::PortalPlacement::create(
         portalIdx, portalToVolTrf, this, portalSurface));
   }
 }
 
-const detail::PortalPlacement* VolumePlacementBase::portalPlacement(
-    const std::size_t portalIdx) const {
-  return m_portalPlacements.at(portalIdx).get();
+std::shared_ptr<const detail::PortalPlacement>
+VolumePlacementBase::portalPlacement(const std::size_t portalIdx) const {
+  return m_portalPlacements.at(portalIdx);
 }
 
-detail::PortalPlacement* VolumePlacementBase::portalPlacement(
+std::shared_ptr<detail::PortalPlacement> VolumePlacementBase::portalPlacement(
     const std::size_t portalIdx) {
-  return m_portalPlacements.at(portalIdx).get();
+  return m_portalPlacements.at(portalIdx);
 }
 
 std::size_t VolumePlacementBase::nPortalPlacements() const {

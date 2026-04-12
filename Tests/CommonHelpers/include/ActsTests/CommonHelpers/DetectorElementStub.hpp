@@ -85,10 +85,26 @@ class DetectorElementStub : public Acts::SurfacePlacementBase {
   const Acts::Transform3& localToGlobalTransform(
       const Acts::GeometryContext& gctx) const override;
 
+  /// Create and return the surface associated with this detector element.
+  ///
+  /// Must be called only after the element is managed by a @c std::shared_ptr.
+  /// The returned surface takes shared ownership of this detector element.
+  ///
+  /// @return Shared pointer to the created surface
+  std::shared_ptr<Acts::Surface> createSurface() const;
+
   /// Return surface associated with this detector element
+  /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
+  [[deprecated(
+      "Use createSurface() to get a Surface with shared ownership of the "
+      "placement; surface() will be removed in a future release")]]
   const Acts::Surface& surface() const override;
 
   /// Non-const access to surface associated with this detector element
+  /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
+  [[deprecated(
+      "Use createSurface() to get a Surface with shared ownership of the "
+      "placement; surface() will be removed in a future release")]]
   Acts::Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
@@ -100,23 +116,25 @@ class DetectorElementStub : public Acts::SurfacePlacementBase {
  private:
   /// the transform for positioning in 3D space
   Acts::Transform3 m_elementTransform;
-  /// the surface represented by it
-  std::shared_ptr<Acts::Surface> m_elementSurface{nullptr};
+  /// weak reference back to the surface (owned externally via shared_ptr)
+  mutable std::weak_ptr<Acts::Surface> m_elementSurface;
+  /// keeps the surface alive when constructed via the deprecated raw-ptr path
+  /// (i.e. not via createSurface() with shared ownership); null after
+  /// createSurface() is called.
+  mutable std::shared_ptr<Acts::Surface> m_legacySurface;
   /// the element thickness
   double m_elementThickness{0.};
+  /// bounds (one of these will be non-null)
+  std::shared_ptr<const Acts::CylinderBounds> m_cylinderBounds;
+  std::shared_ptr<const Acts::PlanarBounds> m_planarBounds;
+  std::shared_ptr<const Acts::LineBounds> m_lineBounds;
+  /// optional deferred material
+  std::shared_ptr<const Acts::ISurfaceMaterial> m_deferredMaterial;
 };
 
 inline const Acts::Transform3& DetectorElementStub::localToGlobalTransform(
     const Acts::GeometryContext& /*gctx*/) const {
   return m_elementTransform;
-}
-
-inline const Acts::Surface& DetectorElementStub::surface() const {
-  return *m_elementSurface;
-}
-
-inline Acts::Surface& DetectorElementStub::surface() {
-  return *m_elementSurface;
 }
 
 inline double DetectorElementStub::thickness() const {

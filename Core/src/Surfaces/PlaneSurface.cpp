@@ -41,6 +41,14 @@ PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                            const Transform3& transform)
     : RegularSurface(gctx, other, transform), m_bounds(other.m_bounds) {}
 
+PlaneSurface::PlaneSurface(
+    std::shared_ptr<const PlanarBounds> pbounds,
+    std::shared_ptr<const SurfacePlacementBase> placement)
+    : RegularSurface{std::move(placement)}, m_bounds(std::move(pbounds)) {
+  throw_assert(m_bounds, "PlaneBounds must not be nullptr");
+  throw_assert(placementPtr(), "SurfacePlacementBase must not be nullptr");
+}
+
 PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
                            const SurfacePlacementBase& placement)
     : RegularSurface{placement}, m_bounds(std::move(pbounds)) {
