@@ -23,7 +23,10 @@ struct LayerBlueprintNodeImpl {
 
   std::string m_name;
 
-  std::vector<std::shared_ptr<Surface>> m_surfaces{};
+  using LayerNodePtr = std::variant<std::shared_ptr<Surface>,
+                                    std::shared_ptr<SurfacePlacementBase>>;
+
+  std::vector<LayerNodePtr> m_nodes{};
 
   /// If a proto layer is already given externally, this node will not perform
   /// sizing from surfaces
@@ -57,21 +60,20 @@ const detail::LayerBlueprintNodeImpl& LayerBlueprintNode::impl() const {
 Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
                                   const GeometryContext& gctx,
                                   const Logger& logger) {
-  if (impl().m_surfaces.empty()) {
+  if (impl().m_nodes.empty()) {
     ACTS_ERROR("LayerBlueprintNode: no surfaces provided");
     throw std::invalid_argument("LayerBlueprintNode: no surfaces provided");
   }
 
   ACTS_DEBUG(prefix() << "Building Layer " << name() << " from "
-                      << impl().m_surfaces.size() << " surfaces");
+                      << impl().m_nodes.size() << " nodes");
   ACTS_VERBOSE(prefix() << " -> layer type: " << impl().m_layerType);
   ACTS_VERBOSE(prefix() << " -> transform:\n" << impl().m_transform.matrix());
 
   Extent extent;
 
   if (!impl().m_protoLayer.has_value()) {
-    impl().m_protoLayer.emplace(gctx, impl().m_surfaces,
-                                impl().m_transform.inverse());
+    impl().m_protoLayer.emplace(gctx, surfaces(), impl().m_transform.inverse());
     ACTS_VERBOSE(prefix() << "Built proto layer: "
                           << impl().m_protoLayer.value());
   } else {
@@ -86,10 +88,20 @@ Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
   buildVolume(extent, logger);
   assert(m_volume != nullptr && "Volume not built from proto layer");
 
-  for (auto& surface : impl().m_surfaces) {
+  for (auto& surface : surfaces()) {
     m_volume->addSurface(surface);
   }
 
+  auto visitor = overloaded{
+      [](const std::shared_ptr<Surface>&) {
+
+      },
+      [this](const std::shared_ptr<SurfacePlacementBase>& placement) {
+        m_volume->cachePlacement(placement);
+      }};
+  for (auto& node : impl().m_nodes) {
+    std::visit(visitor, node);
+  }
   return StaticBlueprintNode::build(options, gctx, logger);
 }
 
@@ -148,23 +160,73 @@ const std::string& LayerBlueprintNode::name() const {
 
 LayerBlueprintNode& LayerBlueprintNode::setSurfaces(
     std::vector<std::shared_ptr<Surface>> surfaces) {
-  impl().m_surfaces = std::move(surfaces);
+  impl().m_nodes.reserve(impl().m_nodes.size() + surfaces.size());
+  for (auto& surface : surfaces) {
+    impl().m_nodes.emplace_back(std::move(surface));
+  }
   impl().m_protoLayer.reset();
   return *this;
 }
 
-const std::vector<std::shared_ptr<Surface>>& LayerBlueprintNode::surfaces()
-    const {
-  return impl().m_surfaces;
+LayerBlueprintNode& LayerBlueprintNode::setPlacements(
+    std::vector<std::shared_ptr<SurfacePlacementBase>> placements) {
+  impl().m_nodes.reserve(impl().m_nodes.size() + placements.size());
+  for (auto& placement : placements) {
+    impl().m_nodes.emplace_back(std::move(placement));
+  }
+  impl().m_protoLayer.reset();
+
+  return *this;
+}
+
+/// Register a new surface with the layer
+/// @note This will clear any previously registered proto layer
+/// @return Reference to this node for chaining
+LayerBlueprintNode& LayerBlueprintNode::addSurface(
+    std::shared_ptr<Surface> surface) {
+  impl().m_nodes.emplace_back(std::move(surface));
+  return *this;
+}
+
+/// Register a new placement with the layer
+/// @note This will clear any previously registered proto layer
+/// @return Reference to this node for chaining
+LayerBlueprintNode& LayerBlueprintNode::addPlacement(
+    std::shared_ptr<SurfacePlacementBase> placement) {
+  impl().m_nodes.emplace_back(std::move(placement));
+  return *this;
+}
+
+std::vector<std::shared_ptr<Surface>> LayerBlueprintNode::surfaces() const {
+  std::vector<std::shared_ptr<Surface>> surfaces{};
+  surfaces.reserve(impl().m_nodes.size());
+  auto visitor = overloaded{
+      [&surfaces](const std::shared_ptr<Surface>& surface) {
+        surfaces.emplace_back(surface);
+      },
+      [&surfaces](const std::shared_ptr<SurfacePlacementBase>& placement) {
+        surfaces.emplace_back(placement->surface().getSharedPtr());
+      }};
+  for (const auto& node : impl().m_nodes) {
+    std::visit(visitor, node);
+  }
+  auto nonUniqueRange = std::ranges::unique(
+      surfaces.begin(), surfaces.end(),
+      [](const std::shared_ptr<Surface>& a, const std::shared_ptr<Surface>& b) {
+        return a == b;
+      });
+  surfaces.erase(nonUniqueRange.begin(), nonUniqueRange.end());
+
+  return surfaces;
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setProtoLayer(
     std::optional<MutableProtoLayer> protoLayer) {
   impl().m_protoLayer = std::move(protoLayer);
-  impl().m_surfaces.clear();
+  impl().m_nodes.clear();
   // also take ownership of the surfaces now
   for (auto& surface : impl().m_protoLayer.value().surfaces()) {
-    impl().m_surfaces.push_back(surface->getSharedPtr());
+    impl().m_nodes.emplace_back(surface->getSharedPtr());
   }
   return *this;
 }

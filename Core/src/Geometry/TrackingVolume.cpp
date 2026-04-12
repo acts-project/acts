@@ -76,6 +76,16 @@ TrackingVolume::TrackingVolume(VolumePlacementBase& placement,
   m_navigationDelegate.connect<&INavigationPolicy::noopInitializeCandidates>();
 }
 
+TrackingVolume::TrackingVolume(std::shared_ptr<VolumePlacementBase> placement,
+                               std::shared_ptr<VolumeBounds> volBounds,
+                               const std::string& volumeName)
+    : TrackingVolume(*placement, std::move(volBounds), volumeName) {
+  if (placement == nullptr) {
+    throw std::invalid_argument("The passed placement must not be a nullptr");
+  }
+  m_placements.emplace_back(placement);
+}
+
 TrackingVolume::~TrackingVolume() = default;
 TrackingVolume::TrackingVolume(TrackingVolume&&) noexcept = default;
 TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
@@ -562,8 +572,23 @@ TrackingVolume& TrackingVolume::addVolume(
   }
 
   volume->setMotherVolume(this);
+  // Take over the ownership of all placements hold
+  auto& placements = cachedPlacements();
+  placements.insert(placements.end(),
+                    std::make_move_iterator(volume->m_placements.begin()),
+                    std::make_move_iterator(volume->m_placements.end()));
+  volume->m_placements.clear();
   m_volumes.push_back(std::move(volume));
   return *m_volumes.back();
+}
+
+void TrackingVolume::cachePlacement(PlacementOwnPtr placement) {
+  cachedPlacements().emplace_back(std::move(placement));
+}
+std::vector<TrackingVolume::PlacementOwnPtr>&
+TrackingVolume::cachedPlacements() {
+  return m_motherVolume == nullptr ? m_placements
+                                   : m_motherVolume->cachedPlacements();
 }
 
 TrackingVolume::PortalRange TrackingVolume::portals() const {
@@ -589,11 +614,16 @@ TrackingVolume::MutableSurfaceRange TrackingVolume::surfaces() {
   return MutableSurfaceRange{m_surfaces};
 }
 
-void TrackingVolume::addSurface(std::shared_ptr<Surface> surface) {
+void TrackingVolume::addSurface(
+    std::shared_ptr<Surface> surface,
+    std::shared_ptr<const SurfacePlacementBase> placement) {
   if (surface == nullptr) {
     throw std::invalid_argument("Surface is nullptr");
   }
   m_surfaces.push_back(std::move(surface));
+  if (placement != nullptr) {
+    cachePlacement(std::move(placement));
+  }
 }
 
 void TrackingVolume::visualize(IVisualization3D& helper,

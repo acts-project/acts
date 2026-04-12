@@ -78,9 +78,30 @@ class LayerBlueprintNode final : public StaticBlueprintNode {
   LayerBlueprintNode& setSurfaces(
       std::vector<std::shared_ptr<Surface>> surfaces);
 
+  /// Register a set of surface placemen with the layer node. The surfaces that
+  /// are not yet registered with the layer are also registered
+  /// @param placements The list of placements to be registered with the layer
+  /// @note This will clear any previously registered proto layer
+  /// @return Reference to this node for chaining
+  LayerBlueprintNode& setPlacements(
+      std::vector<std::shared_ptr<SurfacePlacementBase>> placements);
+
+  /// Register a new surface with the layer
+  /// @note This will clear any previously registered proto layer
+  /// @param surface Pointer to the surface tobe appended
+  /// @return Reference to this node for chaining
+  LayerBlueprintNode& addSurface(std::shared_ptr<Surface> surface);
+
+  /// Register a new placement with the layer
+  /// @note This will clear any previously registered proto layer
+  /// @param placement Pointer to be placement to be appended
+  /// @return Reference to this node for chaining
+  LayerBlueprintNode& addPlacement(
+      std::shared_ptr<SurfacePlacementBase> placement);
+
   /// Access the registered surfaces.
   /// @return The registered surfaces
-  const std::vector<std::shared_ptr<Surface>>& surfaces() const;
+  std::vector<std::shared_ptr<Surface>> surfaces() const;
 
   /// Register a proto layer with the layer node.
   /// @param protoLayer The proto layer to register

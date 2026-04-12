@@ -51,7 +51,6 @@ class TrackingVolume;
 struct GeometryIdentifierHook;
 class Portal;
 class INavigationPolicy;
-
 /// Interface types of the Gen1 geometry model
 /// @note This interface is being replaced, and is subject to removal
 /// @{
@@ -125,6 +124,18 @@ class TrackingVolume : public Volume {
   /// @param volumeName is a string identifier
   TrackingVolume(VolumePlacementBase& placement,
                  std::shared_ptr<VolumeBounds> volbounds,
+                 const std::string& volumeName = "undefined");
+
+  /// Constructor for an aligned container volumes where the tracking volume
+  /// also takes (temporary) ownership of the placement. This constructor is
+  /// only memory safe if the volume is appended to the tracking geometry tree
+  /// or if the placement does not own the placement
+  /// @param placement is the shared_ptr to the volume placement object
+  ///                  dynamically positioning the volume in space
+  /// @param volbounds is the description of the volume boundaries
+  /// @param volumeName is a string identifier
+  TrackingVolume(std::shared_ptr<VolumePlacementBase> placement,
+                 std::shared_ptr<VolumeBounds> volBounds,
                  const std::string& volumeName = "undefined");
 
   /// Constructor for a container Volume
@@ -339,7 +350,10 @@ class TrackingVolume : public Volume {
   using PortalRange =
       detail::TransformRange<detail::ConstDereference,
                              const std::vector<std::shared_ptr<Portal>>>;
-
+  /// Abrivation of the shared ptr variant holding the placements
+  using PlacementOwnPtr =
+      std::variant<std::shared_ptr<const VolumePlacementBase>,
+                   std::shared_ptr<const SurfacePlacementBase>>;
   /// Return all portals registered under this tracking volume
   /// @return the range of portals
   PortalRange portals() const;
@@ -371,7 +385,11 @@ class TrackingVolume : public Volume {
 
   /// Add a surface to this tracking volume
   /// @param surface The surface to add
-  void addSurface(std::shared_ptr<Surface> surface);
+  /// @param placement Optional pointer to the surface placement associated with the surface
+  /// @note The volume takes shared ownership of the placement
+  void addSurface(
+      std::shared_ptr<Surface> surface,
+      std::shared_ptr<const SurfacePlacementBase> placement = nullptr);
 
   /// Add a child volume to this tracking volume
   /// @param volume The volume to add
@@ -554,6 +572,12 @@ class TrackingVolume : public Volume {
                                       AppendOnlyNavigationStream& stream,
                                       const Logger& logger) const;
 
+  /// Pass over a (Volume / Surface) placement to share owner ship
+  /// with the volume
+  /// @param placement: Pointer to the placement to be managed by the
+  ///                   tracking volume
+  void cachePlacement(PlacementOwnPtr placement);
+
  private:
   void connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
@@ -569,6 +593,10 @@ class TrackingVolume : public Volume {
   ///
   /// @param envelope is the clearance between volume boundary and layer
   void synchronizeLayers(double envelope = 1.) const;
+
+  /// Return the garbage container into which the placements are pushed. If the
+  /// volume does not have a mother it's the volume itself otherwise the mother
+  std::vector<PlacementOwnPtr>& cachedPlacements();
 
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
@@ -600,6 +628,7 @@ class TrackingVolume : public Volume {
   std::vector<std::unique_ptr<TrackingVolume>> m_volumes;
   std::vector<std::shared_ptr<Portal>> m_portals;
   std::vector<std::shared_ptr<Surface>> m_surfaces;
+  std::vector<PlacementOwnPtr> m_placements;
 
   std::unique_ptr<INavigationPolicy> m_navigationPolicy;
 
