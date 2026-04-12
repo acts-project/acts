@@ -113,7 +113,7 @@ double detail::Gsf::applyBetheHeitler(
       continue;
     }
 
-    if (gaussian.mean < 1.e-8) {
+    if (gaussian.mean < 1e-8) {
       ACTS_WARNING("Skip component with gaussian " << gaussian.mean << " +- "
                                                    << gaussian.var);
       continue;
@@ -122,24 +122,24 @@ double detail::Gsf::applyBetheHeitler(
     // compute delta p from mixture and update parameters
     BoundVector newPars = initialParameters.parameters();
 
-    const auto delta_p = [&]() {
+    const double deltaP = [&]() {
       if (direction == Direction::Forward()) {
-        return initialMomentum * (gaussian.mean - 1.);
+        return initialMomentum * (gaussian.mean - 1);
       } else {
-        return initialMomentum * (1. / gaussian.mean - 1.);
+        return initialMomentum * (1 / gaussian.mean - 1);
       }
     }();
 
-    assert(initialMomentum + delta_p > 0. && "new momentum must be > 0");
+    assert(initialMomentum + deltaP > 0 && "new momentum must be > 0");
     newPars[eBoundQOverP] = particleHypothesis.qOverP(
-        initialMomentum + delta_p, initialParameters.charge());
+        initialMomentum + deltaP, initialParameters.charge());
 
     // compute inverse variance of p from mixture and update covariance
     BoundMatrix newCov = initialParameters.covariance().value();
 
-    const auto varInvP = [&]() {
+    const double varInvP = [&]() {
       if (direction == Direction::Forward()) {
-        const double f = 1. / (initialMomentum * gaussian.mean);
+        const double f = 1 / (initialMomentum * gaussian.mean);
         return f * f * gaussian.var;
       } else {
         return gaussian.var / (initialMomentum * initialMomentum);

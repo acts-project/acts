@@ -281,11 +281,25 @@ struct GsfActor {
       std::vector<GsfComponent>& componentCache = result.componentCache;
       componentCache.clear();
 
-      convoluteComponents(
-          state, stepper, tmpStates, *m_cfg.bethe_heitler_approx,
-          result.betheHeitlerCache, m_cfg.weightCutoff, componentCache,
-          result.nInvalidBetheHeitler.tmp(), result.maxPathXOverX0.tmp(),
-          result.sumPathXOverX0.tmp(), logger());
+      double pathXOverX0 = 0.0;
+      for (const TrackIndexType idx : tmpStates.tips) {
+        auto proxy = tmpStates.traj.getTrackState(idx);
+
+        const BoundTrackParameters bound(
+            surface.getSharedPtr(), proxy.filtered(),
+            proxy.filteredCovariance(),
+            stepper.particleHypothesis(state.stepping));
+
+        pathXOverX0 += applyBetheHeitler(
+            state.options.geoContext, surface, state.options.direction, bound,
+            tmpStates.weights.at(idx), *m_cfg.bethe_heitler_approx,
+            result.betheHeitlerCache, m_cfg.weightCutoff, componentCache,
+            result.nInvalidBetheHeitler.tmp(), result.maxPathXOverX0.tmp(),
+            logger());
+      }
+      // Store average material seen by the components
+      // Should not be too broadly distributed
+      result.sumPathXOverX0.tmp() += pathXOverX0 / tmpStates.tips.size();
 
       if (componentCache.empty()) {
         ACTS_WARNING(
