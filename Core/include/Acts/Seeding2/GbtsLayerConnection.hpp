@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <vector>
@@ -17,7 +18,6 @@ namespace Acts::Experimental {
 
 /// Connection between two GBTS layers with binning information.
 struct GbtsLayerConnection {
-  /// Constructor
   /// @param src_ Source layer index
   /// @param dst_ Destination layer index
   GbtsLayerConnection(std::uint32_t src_, std::uint32_t dst_)
@@ -35,9 +35,20 @@ struct GbtsLayerConnection {
 /// Loader and container for GBTS layer connection data.
 struct GbtsLayerConnectionMap {
  public:
+  /// Create a GbtsLayerConnectionMap from an input stream
+  /// @param inStream Input stream containing the connection data
+  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
+  /// @return A GbtsLayerConnectionMap instance populated with the data from the stream
+  static GbtsLayerConnectionMap fromStream(std::istream& inStream,
+                                           bool lrtMode);
+  /// Create a GbtsLayerConnectionMap from a file
+  /// @param inFile Input configuration file path
+  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
+  /// @return A GbtsLayerConnectionMap instance populated with the data from the file
+  static GbtsLayerConnectionMap fromFile(std::string& inFile, bool lrtMode);
+
   /// Group of connections targeting a destination layer.
   struct LayerGroup {
-    /// Constructor
     /// @param dst_ Destination layer key
     /// @param sources_ Vector of source connections
     LayerGroup(std::uint32_t dst_,
@@ -50,11 +61,6 @@ struct GbtsLayerConnectionMap {
     /// The source layers of the group
     std::vector<const GbtsLayerConnection*> sources;
   };
-
-  /// Constructor
-  /// @param inFile Input configuration file path
-  /// @param lrtMode Enable LRT (Large Radius Tracking) mode
-  GbtsLayerConnectionMap(std::string& inFile, bool lrtMode);
 
   /// Eta bin width
   float etaBinWidth{};

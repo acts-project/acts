@@ -39,9 +39,10 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_actsGbtsMap = makeActsGbtsMap();
 
   // create the connection objects
-  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap(
-      m_cfg.seedFinderConfig.connectorInputFile,
-      m_cfg.seedFinderConfig.lrtMode);
+  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap =
+      Acts::Experimental::GbtsLayerConnectionMap::fromFile(
+          m_cfg.seedFinderConfig.connectorInputFile,
+          m_cfg.seedFinderConfig.lrtMode);
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
