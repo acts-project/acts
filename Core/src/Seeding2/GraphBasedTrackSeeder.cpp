@@ -41,13 +41,14 @@ GraphBasedTrackSeeder::GraphBasedTrackSeeder(
   m_mlLut = parseGbtsMlLookupTable(m_cfg.lutInputFile);
 }
 
-SeedContainer2 GraphBasedTrackSeeder::createSeeds(
-    const SpacePointContainer2& spacePoints, const GbtsRoiDescriptor& roi,
-    const std::uint32_t maxLayers, const GbtsTrackingFilter& filter,
-    const Options& options) const {
+void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer2& spacePoints,
+                                        const GbtsRoiDescriptor& roi,
+                                        const std::uint32_t maxLayers,
+                                        const GbtsTrackingFilter& filter,
+                                        const Options& options,
+                                        SeedContainer2& outputSeeds) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
-  SeedContainer2 SeedContainer;
   std::vector<std::vector<GbtsNode>> nodesPerLayer =
       createNodes(spacePoints, maxLayers);
   std::uint32_t nPixelLoaded = 0;
@@ -98,19 +99,17 @@ SeedContainer2 GraphBasedTrackSeeder::createSeeds(
   extractSeedsFromTheGraph(maxLevel, graphStats.first, spacePoints.size(),
                            edgeStorage, vOutputSeeds, filter);
 
+  ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
   if (vOutputSeeds.empty()) {
     ACTS_WARNING("No Seed Candidates");
   }
-  // add to seed container:
+
+  // add to output seed container
   for (const auto& seed : vOutputSeeds) {
-    auto newSeed = SeedContainer.createSeed();
+    auto newSeed = outputSeeds.createSeed();
     newSeed.assignSpacePointIndices(seed.spacePoints);
     newSeed.quality() = seed.seedQuality;
   }
-
-  ACTS_DEBUG("GBTS created " << SeedContainer.size() << " seeds");
-
-  return SeedContainer;
 }
 
 GbtsMlLookupTable GraphBasedTrackSeeder::parseGbtsMlLookupTable(
