@@ -26,7 +26,7 @@ charset-normalizer==3.4.7
     # via requests
 click==8.3.2
     # via typer
-cryptography==46.0.6
+cryptography==46.0.7
     # via pyjwt
 docutils==0.21.2
     # via
@@ -94,7 +94,7 @@ pyyaml==6.0.3
     # via myst-parser
 requests==2.33.1
     # via sphinx
-rich==14.3.3
+rich==14.3.4
     # via
     #   -r docs/old/requirements.in
     #   typer
