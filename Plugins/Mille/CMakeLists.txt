@@ -1,5 +1,6 @@
 acts_add_library(
     PluginMille
+    src/Helpers.cpp
     src/ActsToMille.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )

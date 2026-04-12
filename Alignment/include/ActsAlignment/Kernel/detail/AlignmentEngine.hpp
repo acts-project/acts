@@ -74,6 +74,43 @@ struct TrackAlignmentState {
 void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
                               AlignmentMask mask);
 
+/// @brief Helper function to calculate first and second derivative
+/// of chi2 w.r.t. alignment parameters for a single track once the
+/// relevant information has
+/// been retrieved from the respective track.
+/// Updates in-place the chi2 and the matrix/vector forming the final
+/// equation.
+/// @param [in,out] alignState: TrackAlignmentState to modify (in-place).
+inline void finaliseTrackAlignState(TrackAlignmentState& alignState) {
+  // Calculate the chi2 and chi2 derivatives based on the alignment matrixs
+  alignState.chi2 = alignState.residual.transpose() *
+                    alignState.measurementCovariance.inverse() *
+                    alignState.residual;
+  alignState.alignmentToChi2Derivative =
+      Acts::DynamicVector::Zero(alignState.alignmentDof);
+  alignState.alignmentToChi2SecondDerivative = Acts::DynamicMatrix::Zero(
+      alignState.alignmentDof, alignState.alignmentDof);
+  // The covariance of residual
+  alignState.residualCovariance = Acts::DynamicMatrix::Zero(
+      alignState.measurementDim, alignState.measurementDim);
+  alignState.residualCovariance = alignState.measurementCovariance -
+                                  alignState.projectionMatrix *
+                                      alignState.trackParametersCovariance *
+                                      alignState.projectionMatrix.transpose();
+
+  alignState.alignmentToChi2Derivative =
+      2 * alignState.alignmentToResidualDerivative.transpose() *
+      alignState.measurementCovariance.inverse() *
+      alignState.residualCovariance *
+      alignState.measurementCovariance.inverse() * alignState.residual;
+  alignState.alignmentToChi2SecondDerivative =
+      2 * alignState.alignmentToResidualDerivative.transpose() *
+      alignState.measurementCovariance.inverse() *
+      alignState.residualCovariance *
+      alignState.measurementCovariance.inverse() *
+      alignState.alignmentToResidualDerivative;
+}
+
 ///
 /// Calculate the first and second derivative of chi2 w.r.t. alignment
 /// parameters for a single track
@@ -266,34 +303,7 @@ TrackAlignmentState trackAlignmentState(
           correlation;
     }
   }
-
-  // Calculate the chi2 and chi2 derivatives based on the alignment matrixs
-  alignState.chi2 = alignState.residual.transpose() *
-                    alignState.measurementCovariance.inverse() *
-                    alignState.residual;
-  alignState.alignmentToChi2Derivative =
-      Acts::DynamicVector::Zero(alignState.alignmentDof);
-  alignState.alignmentToChi2SecondDerivative = Acts::DynamicMatrix::Zero(
-      alignState.alignmentDof, alignState.alignmentDof);
-  // The covariance of residual
-  alignState.residualCovariance = Acts::DynamicMatrix::Zero(
-      alignState.measurementDim, alignState.measurementDim);
-  alignState.residualCovariance = alignState.measurementCovariance -
-                                  alignState.projectionMatrix *
-                                      alignState.trackParametersCovariance *
-                                      alignState.projectionMatrix.transpose();
-
-  alignState.alignmentToChi2Derivative =
-      2 * alignState.alignmentToResidualDerivative.transpose() *
-      alignState.measurementCovariance.inverse() *
-      alignState.residualCovariance *
-      alignState.measurementCovariance.inverse() * alignState.residual;
-  alignState.alignmentToChi2SecondDerivative =
-      2 * alignState.alignmentToResidualDerivative.transpose() *
-      alignState.measurementCovariance.inverse() *
-      alignState.residualCovariance *
-      alignState.measurementCovariance.inverse() *
-      alignState.alignmentToResidualDerivative;
+  finaliseTrackAlignState(alignState);
 
   return alignState;
 }

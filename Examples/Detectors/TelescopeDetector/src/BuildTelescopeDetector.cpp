@@ -29,7 +29,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -38,6 +37,7 @@
 std::unique_ptr<const Acts::TrackingGeometry>
 ActsExamples::buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
+    const TelescopeDetectorElement::DetectorElementFactory& factory,
     std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
         detectorStore,
     const std::vector<double>& positions,
@@ -92,13 +92,11 @@ ActsExamples::buildTelescopeDetector(
     // Create the detector element
     std::shared_ptr<TelescopeDetectorElement> detElement = nullptr;
     if (surfaceType == TelescopeSurfaceType::Plane) {
-      detElement = std::make_shared<TelescopeDetectorElement>(
-          std::make_shared<const Acts::Transform3>(trafo), pBounds, 1._um,
-          surfaceMaterial);
+      detElement =
+          factory(trafo, pBounds, 1._um, surfaceMaterial, detectorStore);
     } else {
-      detElement = std::make_shared<TelescopeDetectorElement>(
-          std::make_shared<const Acts::Transform3>(trafo), rBounds, 1._um,
-          surfaceMaterial);
+      detElement =
+          factory(trafo, rBounds, 1._um, surfaceMaterial, detectorStore);
     }
     // Get the surface
     auto surface = detElement->surface().getSharedPtr();

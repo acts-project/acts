@@ -14,10 +14,11 @@
 namespace ActsExamples {
 
 TelescopeDetectorElement::TelescopeDetectorElement(
-    std::shared_ptr<const Acts::Transform3> transform,
+    const Identifier ID, std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    : m_elementTransform(std::move(transform)),
+    : m_elementIdentifier(ID),
+      m_elementTransform(std::move(transform)),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::PlaneSurface>(pBounds, *this)),
       m_elementThickness(thickness),
@@ -28,10 +29,11 @@ TelescopeDetectorElement::TelescopeDetectorElement(
 }
 
 TelescopeDetectorElement::TelescopeDetectorElement(
-    std::shared_ptr<const Acts::Transform3> transform,
+    const Identifier ID, std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
-    : m_elementTransform(std::move(transform)),
+    : m_elementIdentifier(ID),
+      m_elementTransform(std::move(transform)),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::DiscSurface>(dBounds, *this)),
       m_elementThickness(thickness),

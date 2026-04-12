@@ -15,6 +15,7 @@
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/detail/EigenCompat.hpp"
 #include "ActsAlignment/Kernel/AlignmentError.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
 #include <queue>
 
@@ -76,11 +77,6 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   // The total alignment degree of freedom
   alignResult.alignmentDof =
       alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
-  // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
-  Acts::DynamicVector sumChi2Derivative =
-      Acts::DynamicVector::Zero(alignResult.alignmentDof);
-  Acts::DynamicMatrix sumChi2SecondDerivative = Acts::DynamicMatrix::Zero(
-      alignResult.alignmentDof, alignResult.alignmentDof);
   // Copy the fit options
   fit_options_t fitOptionsWithRefSurface = fitOptions;
   // Calculate contribution to chi2 derivatives from all input trajectories
@@ -88,7 +84,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   alignResult.chi2 = 0;
   alignResult.measurementDim = 0;
   alignResult.numTracks = trajectoryCollection.size();
-  double sumChi2ONdf = 0;
+  std::vector<detail::TrackAlignmentState> alignmentStates;
   for (unsigned int iTraj = 0; iTraj < trajectoryCollection.size(); iTraj++) {
     const auto& sourceLinks = trajectoryCollection.at(iTraj);
     const auto& sParameters = startParametersCollection.at(iTraj);
@@ -104,6 +100,28 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
       continue;
     }
     const auto& alignState = evaluateRes.value();
+    alignmentStates.push_back(alignState);
+  }
+  return calculateAlignmentParameters(alignmentStates, alignResult);
+}
+
+template <typename fitter_t>
+void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
+    const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
+    AlignmentResult& alignResult) const {
+  // The total alignment degree of freedom
+  alignResult.alignmentDof =
+      alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
+  // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
+  Acts::DynamicVector sumChi2Derivative =
+      Acts::DynamicVector::Zero(alignResult.alignmentDof);
+  Acts::DynamicMatrix sumChi2SecondDerivative = Acts::DynamicMatrix::Zero(
+      alignResult.alignmentDof, alignResult.alignmentDof);
+  alignResult.chi2 = 0;
+  alignResult.measurementDim = 0;
+  alignResult.numTracks = trackAlignmentStates.size();
+  double sumChi2ONdf = 0;
+  for (const auto& alignState : trackAlignmentStates) {
     for (const auto& [rowSurface, rows] : alignState.alignedSurfaces) {
       const auto& [dstRow, srcRow] = rows;
       // Fill the results into full chi2 derivative matrix

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Alignment.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -188,6 +189,17 @@ struct Alignment {
       const start_parameters_container_t& startParametersCollection,
       const fit_options_t& fitOptions, AlignmentResult& alignResult,
       const AlignmentMask& alignMask = AlignmentMask::All) const;
+
+  /// @brief calculate the alignment parameters delta from a set of
+  /// TrackAlignmentStates
+  ///
+  /// @param TrackStateCollection The collection of TrackAlignmentStates
+  /// as input of fitting
+  /// @param alignResult [in, out] The aligned result
+  /// @param alignMask The alignment mask (same for all measurements now)
+  void calculateAlignmentParameters(
+      const std::vector<detail::TrackAlignmentState>& trackAlignmentStates,
+      AlignmentResult& alignResult) const;
 
   /// @brief update the detector element alignment parameters
   ///
