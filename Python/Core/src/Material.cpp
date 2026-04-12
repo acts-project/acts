@@ -52,10 +52,6 @@ void addMaterial(py::module_& m) {
         m, "ISurfaceMaterial")
         .def("toString", &ISurfaceMaterial::toString);
 
-    py::class_<ProtoGridSurfaceMaterial, ISurfaceMaterial,
-               std::shared_ptr<ProtoGridSurfaceMaterial>>(
-        m, "ProtoGridSurfaceMaterial");
-
     py::class_<ProtoSurfaceMaterial, ISurfaceMaterial,
                std::shared_ptr<ProtoSurfaceMaterial>>(m,
                                                       "ProtoSurfaceMaterial");

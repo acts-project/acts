@@ -17,6 +17,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <array>
+
 #include <TFile.h>
 #include <TH1I.h>
 #include <TH2F.h>
@@ -75,21 +77,22 @@ void ActsPlugins::RootMaterialMapIo::write(
 
     // Boundary condistions
     // Get the binning data
-    auto& binningData = bsMaterial->binUtility().binningData();
+    auto protoAxes = bsMaterial->directedProtoAxes();
+
     // 1-D or 2-D maps
-    auto bins = static_cast<int>(binningData.size());
+    auto bins = static_cast<int>(protoAxes.size());
     auto fBins = static_cast<float>(bins);
 
     // The bin number information
     TH1F n(m_cfg.nBinsHistName.c_str(), "bins; bin", bins, -0.5, fBins - 0.5);
 
     // The binning value information
-    TH1F v(m_cfg.axisDirHistName.c_str(), "binning values; bin", bins, -0.5,
+    TH1F v(m_cfg.axisDirHistName.c_str(), "axus direction; bin", bins, -0.5,
            fBins - 0.5);
 
     // The binning option information
-    TH1F o(m_cfg.axisBoundaryTypeHistName.c_str(), "binning options; bin", bins,
-           -0.5, fBins - 0.5);
+    TH1F b(m_cfg.axisBoundaryTypeHistName.c_str(), "axis boundary type; bin",
+           bins, -0.5, fBins - 0.5);
 
     // The binning option information - range min
     TH1F rmin(m_cfg.minRangeHistName.c_str(), "min; bin", bins, -0.5,
@@ -100,18 +103,21 @@ void ActsPlugins::RootMaterialMapIo::write(
               fBins - 0.5);
 
     // Now fill the histogram content
-    for (auto [b, bData] : enumerate(binningData)) {
+    for (auto [bi, pAxis] : enumerate(protoAxes)) {
+      const auto& axis = pAxis.getAxis();
       // Fill: nbins, value, option, min, max
-      n.SetBinContent(static_cast<int>(b) + 1, static_cast<int>(bData.bins()));
-      v.SetBinContent(static_cast<int>(b) + 1,
-                      static_cast<int>(bData.binvalue));
-      o.SetBinContent(static_cast<int>(b) + 1, static_cast<int>(bData.option));
-      rmin.SetBinContent(static_cast<int>(b) + 1, bData.min);
-      rmax.SetBinContent(static_cast<int>(b) + 1, bData.max);
+      n.SetBinContent(static_cast<int>(bi) + 1,
+                      static_cast<int>(axis.getNBins()));
+      v.SetBinContent(static_cast<int>(bi) + 1,
+                      static_cast<int>(pAxis.getAxisDirection()));
+      b.SetBinContent(static_cast<int>(bi) + 1,
+                      static_cast<int>(axis.getBoundaryType()));
+      rmin.SetBinContent(static_cast<int>(bi) + 1, axis.getMin());
+      rmax.SetBinContent(static_cast<int>(bi) + 1, axis.getMax());
     }
     n.Write();
     v.Write();
-    o.Write();
+    b.Write();
     rmin.Write();
     rmax.Write();
 
@@ -190,8 +196,11 @@ void ActsPlugins::RootMaterialMapIo::fillMaterialSlab(
 
 void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
     const BinnedSurfaceMaterial& bsMaterial) {
-  auto bins0 = static_cast<int>(bsMaterial.binUtility().bins(0));
-  auto bins1 = static_cast<int>(bsMaterial.binUtility().bins(1));
+  const auto& dProtoAxes = bsMaterial.directedProtoAxes();
+  auto bins0 = static_cast<int>(dProtoAxes[0].getAxis().getNBins());
+  auto bins1 = dProtoAxes.size() > 1
+                   ? static_cast<int>(dProtoAxes[1].getAxis().getNBins())
+                   : 1;
   auto fBins0 = static_cast<float>(bins0);
   auto fBins1 = static_cast<float>(bins1);
 
@@ -236,8 +245,11 @@ void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
 
 void ActsPlugins::RootMaterialMapIo::fillBinnedSurfaceMaterial(
     MaterialTreePayload& payload, const BinnedSurfaceMaterial& bsMaterial) {
-  std::size_t bins0 = bsMaterial.binUtility().bins(0);
-  std::size_t bins1 = bsMaterial.binUtility().bins(1);
+  const auto& dProtoAxes = bsMaterial.directedProtoAxes();
+  auto bins0 = static_cast<int>(dProtoAxes[0].getAxis().getNBins());
+  auto bins1 = dProtoAxes.size() > 1
+                   ? static_cast<int>(dProtoAxes[1].getAxis().getNBins())
+                   : 1;
 
   TH2I idx(m_cfg.indexHistName.c_str(), "indices; bin0; bin1",
            static_cast<int>(bins0), -0.5, static_cast<float>(bins0) - 0.5,
@@ -360,17 +372,27 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
   // Construct the common names & get the common histograms
   std::string nName = tdName + "/" + m_cfg.nBinsHistName;
   std::string vName = tdName + "/" + m_cfg.axisDirHistName;
-  std::string oName = tdName + "/" + m_cfg.axisBoundaryTypeHistName;
+  std::string bName = tdName + "/" + m_cfg.axisBoundaryTypeHistName;
   std::string minName = tdName + "/" + m_cfg.minRangeHistName;
   std::string maxName = tdName + "/" + m_cfg.maxRangeHistName;
   // Get the histograms
-  auto n = dynamic_cast<TH1F*>(rFile.Get(nName.c_str()));
-  auto v = dynamic_cast<TH1F*>(rFile.Get(vName.c_str()));
-  auto o = dynamic_cast<TH1F*>(rFile.Get(oName.c_str()));
-  auto minh = dynamic_cast<TH1F*>(rFile.Get(minName.c_str()));
-  auto maxh = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
+  bool legacyDetected = false;
+  TH1F* n = dynamic_cast<TH1F*>(rFile.Get(nName.c_str()));
+  TH1F* v = dynamic_cast<TH1F*>(rFile.Get(vName.c_str()));
+  TH1F* b = dynamic_cast<TH1F*>(rFile.Get(bName.c_str()));
+  if (b == nullptr) {
+    bName = tdName + "/" + m_cfg.axisOptionHistName;
+    ACTS_INFO(
+        "Legacy histogram detected for boundary type, please consider "
+        "updating.");
+    b = dynamic_cast<TH1F*>(rFile.Get(bName.c_str()));
+    legacyDetected = true;
+  }
 
-  std::vector<const TH1*> hists{n, v, o, minh, maxh};
+  TH1F* minh = dynamic_cast<TH1F*>(rFile.Get(minName.c_str()));
+  TH1F* maxh = dynamic_cast<TH1F*>(rFile.Get(maxName.c_str()));
+
+  std::vector<const TH1*> hists{n, v, b, minh, maxh};
   if (std::ranges::any_of(hists,
                           [](const auto* hist) { return hist == nullptr; })) {
     ACTS_ERROR(
@@ -381,16 +403,30 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
   }
 
   // Now reconstruct the bin utilities
-  BinUtility bUtility;
+  std::vector<DirectedProtoAxis> dProtoAxes;
   for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
-    auto nbins = static_cast<std::size_t>(n->GetBinContent(ib));
-    auto val = static_cast<AxisDirection>(v->GetBinContent(ib));
-    auto opt = static_cast<BinningOption>(o->GetBinContent(ib));
-    auto rmin = static_cast<float>(minh->GetBinContent(ib));
-    auto rmax = static_cast<float>(maxh->GetBinContent(ib));
-    bUtility += BinUtility(nbins, rmin, rmax, opt, val);
+    std::size_t nBins = static_cast<std::size_t>(n->GetBinContent(ib));
+    AxisDirection aDir = static_cast<AxisDirection>(v->GetBinContent(ib));
+    AxisBoundaryType bType = AxisBoundaryType::Bound;
+    if (legacyDetected) {
+      int opt = static_cast<int>(b->GetBinContent(ib));
+      if (opt == 0) {
+        bType = AxisBoundaryType::Closed;
+      } else if (opt == 1) {
+        bType = AxisBoundaryType::Bound;
+      } else {
+        throw std::runtime_error(
+            "Invalid axis boundary type option read from legacy histogram: " +
+            std::to_string(opt));
+      }
+    } else {
+      bType = static_cast<AxisBoundaryType>(b->GetBinContent(ib));
+    }
+    double rmin = minh->GetBinContent(ib);
+    double rmax = maxh->GetBinContent(ib);
+    dProtoAxes.emplace_back(DirectedProtoAxis(aDir, bType, rmin, rmax, nBins));
   }
-  ACTS_VERBOSE("Created " << bUtility);
+  ACTS_VERBOSE("Created " << dProtoAxes.size() << " directed proto axes");
 
   /// Draw from histogram only source
   if (indexedMaterialTree == nullptr) {
@@ -438,8 +474,14 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
           }
         }
       }  // Construct the binned material with the right bin utility
-      texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-          bUtility, std::move(materialMatrix));
+      if (dProtoAxes.size() == 1u) {
+        texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+            dProtoAxes[0u], materialMatrix[0u]);
+      } else {
+        texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+            std::array<DirectedProtoAxis, 2u>{dProtoAxes[0u], dProtoAxes[1u]},
+            std::move(materialMatrix));
+      }
     }
   } else {
     // Construct the names for histogram type storage
@@ -467,8 +509,14 @@ ActsPlugins::RootMaterialMapIo::readTextureSurfaceMaterial(
               MaterialSlab(material, m_indexedMaterialTreePayload.ht);
         }
       }  // Construct the binned material with the right bin utility
-      texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
-          bUtility, std::move(materialMatrix));
+      if (dProtoAxes.size() == 1u) {
+        texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+            dProtoAxes[0u], materialMatrix[0u]);
+      } else {
+        texturedSurfaceMaterial = std::make_shared<const BinnedSurfaceMaterial>(
+            std::array<DirectedProtoAxis, 2u>{dProtoAxes[0u], dProtoAxes[1u]},
+            std::move(materialMatrix));
+      }
     }
   }
 

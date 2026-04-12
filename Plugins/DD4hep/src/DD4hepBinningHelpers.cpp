@@ -19,7 +19,6 @@ DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
                                      const std::string &bname) {
   // Return proto binning vector
   std::vector<std::tuple<DirectedProtoAxis, std::size_t>> protoBinnings;
-
   for (const auto &[ab, axisDir] : allowedBinnings) {
     auto type =
         getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
@@ -45,7 +44,7 @@ DD4hepBinningHelpers::convertBinning(const dd4hep::DetElement &dd4hepElement,
           double minDefault =
               axisDir == AxisDirection::AxisPhi ? -std::numbers::pi : 0.;
           double maxDefault =
-              axisDir == AxisDirection::AxisPhi ? std::numbers::pi : 0.;
+              axisDir == AxisDirection::AxisPhi ? std::numbers::pi : 1.;
           auto min = getParamOr<double>(bname + "_" + ab + "_min",
                                         dd4hepElement, minDefault);
           auto max = getParamOr<double>(bname + "_" + ab + "_max",

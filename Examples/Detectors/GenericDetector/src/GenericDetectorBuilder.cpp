@@ -168,24 +168,25 @@ GenericDetectorBuilder::GenericDetectorBuilder(
     : m_cfg(cfg), m_logger(std::move(logger)) {
   // Prepare the proto material - in case it's designed to do so
   // - cylindrical
-  Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::closed,
-                                    Acts::AxisDirection::AxisPhi);
-  pCylinderUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::open, Acts::AxisDirection::AxisZ);
+  std::vector<Acts::DirectedProtoAxis> pCylinderAxes = {
+      {Acts::AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed, -1., 1.,
+       10u},
+      {Acts::AxisDirection::AxisZ, Acts::AxisBoundaryType::Bound, -1., 1.,
+       10u}};
   auto pCylinderMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pCylinderUtility);
+      std::make_shared<const Acts::ProtoSurfaceMaterial>(pCylinderAxes);
   // - disc
-  Acts::BinUtility pDiscUtility(10, 0, 1, Acts::open,
-                                Acts::AxisDirection::AxisR);
-  pDiscUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::closed, Acts::AxisDirection::AxisPhi);
+  std::vector<Acts::DirectedProtoAxis> pDiscAxes = {
+      {Acts::AxisDirection::AxisR, Acts::AxisBoundaryType::Bound, 0., 1., 10u},
+      {Acts::AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed, -1., 1.,
+       10u}};
   auto pDiscMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pDiscUtility);
+      std::make_shared<const Acts::ProtoSurfaceMaterial>(pDiscAxes);
   // - plane
-  Acts::BinUtility pPlaneUtility(1, -1, 1, Acts::open,
-                                 Acts::AxisDirection::AxisX);
+  std::vector<Acts::DirectedProtoAxis> pPlaneAxes = {
+      {Acts::AxisDirection::AxisX, Acts::AxisBoundaryType::Bound, -1., 1., 1u}};
   auto pPlaneMaterial =
-      std::make_shared<const Acts::ProtoSurfaceMaterial>(pPlaneUtility);
+      std::make_shared<const Acts::ProtoSurfaceMaterial>(pPlaneAxes);
 
   ///
   /// BeamPipe material

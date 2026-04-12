@@ -10,8 +10,8 @@
 
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Utilities/ProtoAxisHelpers.hpp"
 
+#include <stdexcept>
 #include <utility>
 
 // Default Constructor - for homogeneous material
@@ -23,10 +23,21 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(double splitFactor)
 
 // Binned Material constructor with split factor
 Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
-    const BinUtility& binUtility, double splitFactor)
-    : m_binUtility(binUtility), m_splitFactor(splitFactor) {
-  std::size_t bins0 = m_binUtility.bins(0);
-  std::size_t bins1 = m_binUtility.bins(1);
+    std::vector<DirectedProtoAxis> directedProtoAxes,
+    Transform3 globalToLocalTransform, double splitFactor)
+    : m_directedProtoAxes(std::move(directedProtoAxes)),
+      m_globalToLocalTransform(std::move(globalToLocalTransform)),
+      m_splitFactor(splitFactor) {
+  if (m_directedProtoAxes.size() > 2u) {
+    throw std::invalid_argument(
+        "AccumulatedSurfaceMaterial supports only 0D/1D/2D binning.");
+  }
+  std::size_t bins0 = m_directedProtoAxes.empty()
+                          ? 1u
+                          : m_directedProtoAxes[0u].getAxis().getNBins();
+  std::size_t bins1 = m_directedProtoAxes.size() > 1u
+                          ? m_directedProtoAxes[1u].getAxis().getNBins()
+                          : 1u;
   AccumulatedVector accVec(bins0, AccumulatedMaterialSlab());
   m_accumulatedMaterial = AccumulatedMatrix(bins1, accVec);
 }
@@ -34,38 +45,37 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
 // Assign a material properties object
 std::array<std::size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
     const Vector2& lp, const MaterialSlab& mp, double pathCorrection) {
-  if (m_binUtility.dimensions() == 0) {
+  if (m_directedProtoAxes.empty()) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
   }
-  std::size_t bin0 = m_binUtility.bin(lp, 0);
-  std::size_t bin1 = m_binUtility.bin(lp, 1);
-  m_accumulatedMaterial[bin1][bin0].accumulate(mp, pathCorrection);
-  return {bin0, bin1, 0};
+  std::array<std::size_t, 3> bins = lookupBins(Vector3(lp[0], lp[1], 0.));
+  m_accumulatedMaterial[bins[1]][bins[0]].accumulate(mp, pathCorrection);
+  return bins;
 }
 
 // Assign a material properties object
 std::array<std::size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
     const Vector3& gp, const MaterialSlab& mp, double pathCorrection) {
-  if (m_binUtility.dimensions() == 0) {
+  if (m_directedProtoAxes.empty()) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
   }
-  std::array<std::size_t, 3> bTriple = m_binUtility.binTriple(gp);
-  m_accumulatedMaterial[bTriple[1]][bTriple[0]].accumulate(mp, pathCorrection);
-  return bTriple;
+  std::array<std::size_t, 3> bins = lookupBins(m_globalToLocalTransform * gp);
+  m_accumulatedMaterial[bins[1]][bins[0]].accumulate(mp, pathCorrection);
+  return bins;
 }
 
 // Void average for vacuum assignment
 void Acts::AccumulatedSurfaceMaterial::trackVariance(const Vector3& gp,
                                                      MaterialSlab slabReference,
                                                      bool emptyHit) {
-  if (m_binUtility.dimensions() == 0) {
+  if (m_directedProtoAxes.empty()) {
     m_accumulatedMaterial[0][0].trackVariance(slabReference, emptyHit);
     return;
   }
-  std::array<std::size_t, 3> bTriple = m_binUtility.binTriple(gp);
-  std::vector<std::array<std::size_t, 3>> trackBins = {bTriple};
+  std::array<std::size_t, 3> bins = lookupBins(m_globalToLocalTransform * gp);
+  std::vector<std::array<std::size_t, 3>> trackBins = {bins};
   trackVariance(trackBins, slabReference);
 }
 
@@ -74,7 +84,7 @@ void Acts::AccumulatedSurfaceMaterial::trackVariance(
     const std::vector<std::array<std::size_t, 3>>& trackBins,
     MaterialSlab slabReference, bool emptyHit) {
   // the homogeneous material case
-  if (m_binUtility.dimensions() == 0) {
+  if (m_directedProtoAxes.empty()) {
     m_accumulatedMaterial[0][0].trackVariance(slabReference, emptyHit);
     return;
   }
@@ -96,13 +106,13 @@ void Acts::AccumulatedSurfaceMaterial::trackVariance(
 // Void average for vacuum assignment
 void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3& gp,
                                                     bool emptyHit) {
-  if (m_binUtility.dimensions() == 0) {
+  if (m_directedProtoAxes.empty()) {
     m_accumulatedMaterial[0][0].trackAverage(emptyHit);
     return;
   }
 
-  std::array<std::size_t, 3> bTriple = m_binUtility.binTriple(gp);
-  std::vector<std::array<std::size_t, 3>> trackBins = {bTriple};
+  std::array<std::size_t, 3> bins = lookupBins(m_globalToLocalTransform * gp);
+  std::vector<std::array<std::size_t, 3>> trackBins = {bins};
   trackAverage(trackBins, emptyHit);
 }
 
@@ -110,7 +120,7 @@ void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3& gp,
 void Acts::AccumulatedSurfaceMaterial::trackAverage(
     const std::vector<std::array<std::size_t, 3>>& trackBins, bool emptyHit) {
   // the homogeneous material case
-  if (m_binUtility.dimensions() == 0) {
+  if (m_directedProtoAxes.empty()) {
     m_accumulatedMaterial[0][0].trackAverage(emptyHit);
     return;
   }
@@ -133,22 +143,33 @@ void Acts::AccumulatedSurfaceMaterial::trackAverage(
 /// Total average creates SurfaceMaterial
 std::unique_ptr<const Acts::ISurfaceMaterial>
 Acts::AccumulatedSurfaceMaterial::totalAverage() {
-  if (m_binUtility.bins() == 1) {
+  const std::size_t bins0 = m_accumulatedMaterial[0u].size();
+  const std::size_t bins1 = m_accumulatedMaterial.size();
+  if (bins0 * bins1 == 1u) {
     // Return HomogeneousSurfaceMaterial
     return std::make_unique<HomogeneousSurfaceMaterial>(
         m_accumulatedMaterial[0][0].totalAverage().first, m_splitFactor);
   }
+
+  if (m_directedProtoAxes.size() == 1u) {
+    MaterialSlabVector mpVector(bins0, MaterialSlab::Nothing());
+    for (std::size_t ib0 = 0; ib0 < bins0; ++ib0) {
+      mpVector[ib0] = m_accumulatedMaterial[0u][ib0].totalAverage().first;
+    }
+    return std::make_unique<const BinnedSurfaceMaterial>(
+        m_directedProtoAxes[0u], std::move(mpVector), m_splitFactor);
+  }
+
   // Create the properties matrix
   MaterialSlabMatrix mpMatrix(
-      m_binUtility.bins(1),
-      MaterialSlabVector(m_binUtility.bins(0), MaterialSlab::Nothing()));
-  // Loop over and fill
-  for (std::size_t ib1 = 0; ib1 < m_binUtility.bins(1); ++ib1) {
-    for (std::size_t ib0 = 0; ib0 < m_binUtility.bins(0); ++ib0) {
+      bins1, MaterialSlabVector(bins0, MaterialSlab::Nothing()));
+  for (std::size_t ib1 = 0; ib1 < bins1; ++ib1) {
+    for (std::size_t ib0 = 0; ib0 < bins0; ++ib0) {
       mpMatrix[ib1][ib0] = m_accumulatedMaterial[ib1][ib0].totalAverage().first;
     }
   }
-  // Now return the BinnedSurfaceMaterial
   return std::make_unique<const BinnedSurfaceMaterial>(
-      m_binUtility, std::move(mpMatrix), m_splitFactor);
+      std::array<DirectedProtoAxis, 2u>{m_directedProtoAxes[0u],
+                                        m_directedProtoAxes[1u]},
+      std::move(mpMatrix), m_splitFactor);
 }

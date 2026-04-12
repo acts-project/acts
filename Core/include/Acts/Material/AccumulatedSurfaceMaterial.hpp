@@ -11,11 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
 #include <cstddef>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -51,10 +53,13 @@ class AccumulatedSurfaceMaterial {
   ///    - 0. : alongPre
   ///  ===> 1 Dimensional array
   ///
-  /// @param binUtility defines the binning structure on the surface
+  /// @param directedProtoAxes defines the binning structure on the surface
+  /// @param globalToLocalTransform transform from global to local 3D frame
   /// @param splitFactor is the pre/post splitting directive
-  explicit AccumulatedSurfaceMaterial(const BinUtility& binUtility,
-                                      double splitFactor = 0.);
+  explicit AccumulatedSurfaceMaterial(
+      std::vector<DirectedProtoAxis> directedProtoAxes,
+      Transform3 globalToLocalTransform = Transform3::Identity(),
+      double splitFactor = 0.);
 
   /// Copy Constructor
   ///
@@ -83,9 +88,13 @@ class AccumulatedSurfaceMaterial {
   /// Destructor
   ~AccumulatedSurfaceMaterial() = default;
 
-  /// Return the BinUtility
-  /// @return Reference to the bin utility used for material binning
-  const BinUtility& binUtility() const;
+  /// Return the DirectedProtoAxis descriptors
+  /// @return Reference to the directed proto axes used for material binning
+  const std::vector<DirectedProtoAxis>& directedProtoAxes() const;
+
+  /// Return the transform from global to local 3D frame
+  /// @return Reference to global-to-local transform
+  const Transform3& globalToLocalTransform() const;
 
   /// Assign a material properties object
   ///
@@ -154,8 +163,17 @@ class AccumulatedSurfaceMaterial {
   double splitFactor() const;
 
  private:
-  /// The helper for the bin finding
-  BinUtility m_binUtility{};
+  /// Correct potentially underflow/overflow IAxis bins into matrix bins.
+  static std::size_t correctedBinIndex(const IAxis& axis, double value);
+
+  /// Return material bins corresponding to a local 3D position.
+  std::array<std::size_t, 3> lookupBins(const Vector3& localPosition) const;
+
+  /// The helper for axis-based bin finding
+  std::vector<DirectedProtoAxis> m_directedProtoAxes{};
+
+  /// Global to local transform for bin lookups.
+  Transform3 m_globalToLocalTransform = Transform3::Identity();
 
   /// the split factor
   double m_splitFactor{0.};
@@ -164,8 +182,46 @@ class AccumulatedSurfaceMaterial {
   AccumulatedMatrix m_accumulatedMaterial;
 };
 
-inline const BinUtility& AccumulatedSurfaceMaterial::binUtility() const {
-  return m_binUtility;
+inline const std::vector<DirectedProtoAxis>&
+AccumulatedSurfaceMaterial::directedProtoAxes() const {
+  return m_directedProtoAxes;
+}
+
+inline const Transform3& AccumulatedSurfaceMaterial::globalToLocalTransform()
+    const {
+  return m_globalToLocalTransform;
+}
+
+inline std::size_t AccumulatedSurfaceMaterial::correctedBinIndex(
+    const IAxis& axis, double value) {
+  const std::size_t rawBin = axis.getBin(value);
+  const std::size_t nBins = axis.getNBins();
+  if (nBins == 0u || rawBin == 0u) {
+    return 0u;
+  }
+  if (rawBin > nBins) {
+    return nBins - 1u;
+  }
+  return rawBin - 1u;
+}
+
+inline std::array<std::size_t, 3> AccumulatedSurfaceMaterial::lookupBins(
+    const Vector3& localPosition) const {
+  if (m_directedProtoAxes.empty()) {
+    return {0u, 0u, 0u};
+  }
+  std::array<std::size_t, 3> bins = {0u, 0u, 0u};
+  bins[0] = correctedBinIndex(
+      m_directedProtoAxes[0u].getAxis(),
+      VectorHelpers::cast(localPosition,
+                          m_directedProtoAxes[0u].getAxisDirection()));
+  if (m_directedProtoAxes.size() > 1u) {
+    bins[1] = correctedBinIndex(
+        m_directedProtoAxes[1u].getAxis(),
+        VectorHelpers::cast(localPosition,
+                            m_directedProtoAxes[1u].getAxisDirection()));
+  }
+  return bins;
 }
 
 inline const AccumulatedSurfaceMaterial::AccumulatedMatrix&

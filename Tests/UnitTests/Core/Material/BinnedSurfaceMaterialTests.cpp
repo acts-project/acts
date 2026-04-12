@@ -11,9 +11,8 @@
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
+#include <array>
 #include <utility>
 #include <vector>
 
@@ -25,8 +24,10 @@ BOOST_AUTO_TEST_SUITE(MaterialSuite)
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
-  BinUtility xyBinning(2, -1., 1., open, AxisDirection::AxisX);
-  xyBinning += BinUtility(3, -3., 3., open, AxisDirection::AxisY);
+  DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Bound, -1.,
+                          1., 2u);
+  DirectedProtoAxis yAxis(AxisDirection::AxisY, AxisBoundaryType::Bound, -3.,
+                          3., 3u);
 
   // Constructor a few material properties
   MaterialSlab a00(Material::fromMolarDensity(1., 2., 3., 4., 5.), 6.);
@@ -46,7 +47,8 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
                                               std::move(l2)};
 
   // Create the material
-  BinnedSurfaceMaterial bsm(xyBinning, std::move(m));
+  BinnedSurfaceMaterial bsm(std::array<DirectedProtoAxis, 2u>{xAxis, yAxis},
+                            std::move(m));
 
   // Copy the material
   BinnedSurfaceMaterial bsmCopy(bsm);

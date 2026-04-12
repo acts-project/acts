@@ -8,11 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/GridSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "ActsPlugins/Json/GeometryJsonKeys.hpp"
 #include "ActsPlugins/Json/MaterialJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -155,6 +158,66 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial2DTests) {
   const ISurfaceMaterial* ismRead = nullptr;
   from_json(jMaterial, ismRead);
   BOOST_REQUIRE(ismRead != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterialDirectedAxesSchemaTests) {
+  DirectedProtoAxis xAxis(AxisDirection::AxisX, AxisBoundaryType::Bound, -1.,
+                          1., 2u);
+  MaterialSlab slabA(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1f);
+  MaterialSlab slabB(Material::fromMolarDensity(2., 3., 4., 5., 6.), 0.2f);
+  BinnedSurfaceMaterial bsm(xAxis, std::vector<MaterialSlab>{slabA, slabB});
+
+  const ISurfaceMaterial* materialPtr = &bsm;
+  nlohmann::json jMaterial = materialPtr;
+  BOOST_REQUIRE(jMaterial.contains(jsonKey().materialkey));
+
+  const auto& jPayload = jMaterial.at(jsonKey().materialkey);
+  BOOST_CHECK(jPayload.contains(jsonKey().directedaxeskey));
+  BOOST_CHECK(!jPayload.contains(jsonKey().binkey));
+
+  const ISurfaceMaterial* decoded = nullptr;
+  from_json(jMaterial, decoded);
+  BOOST_REQUIRE(decoded != nullptr);
+  const auto* decodedBinned =
+      dynamic_cast<const BinnedSurfaceMaterial*>(decoded);
+  BOOST_REQUIRE(decodedBinned != nullptr);
+  BOOST_CHECK_EQUAL(decodedBinned->directedProtoAxes().size(), 1u);
+  BOOST_CHECK_EQUAL(decodedBinned->directedProtoAxes()[0u].getAxis().getNBins(),
+                    2u);
+}
+
+BOOST_AUTO_TEST_CASE(LegacyBinUtilitySurfaceMaterialReadTests) {
+  MaterialSlab slab(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.5f);
+  nlohmann::json jSlab = slab;
+
+  nlohmann::json jLegacy;
+  jLegacy[jsonKey().materialkey] = {
+      {jsonKey().typekey, "binned"},
+      {jsonKey().mapkey, true},
+      {jsonKey().maptype, "Default"},
+      {jsonKey().binkey,
+       {{"binningdata",
+         {{{"min", -1.0},
+           {"max", 1.0},
+           {"option", "open"},
+           {"value", "binX"},
+           {"type", "equidistant"},
+           {"bins", 2}}}}}},
+      {jsonKey().datakey,
+       nlohmann::json::array({nlohmann::json::array({jSlab, jSlab})})}};
+
+  const ISurfaceMaterial* decoded = nullptr;
+  from_json(jLegacy, decoded);
+  BOOST_REQUIRE(decoded != nullptr);
+  const auto* decodedBinned =
+      dynamic_cast<const BinnedSurfaceMaterial*>(decoded);
+  BOOST_REQUIRE(decodedBinned != nullptr);
+  BOOST_CHECK_EQUAL(decodedBinned->directedProtoAxes().size(), 1u);
+  BOOST_CHECK_EQUAL(
+      decodedBinned->directedProtoAxes()[0u].getAxis().getBoundaryType(),
+      AxisBoundaryType::Bound);
+  BOOST_CHECK_EQUAL(decodedBinned->directedProtoAxes()[0u].getAxis().getNBins(),
+                    2u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

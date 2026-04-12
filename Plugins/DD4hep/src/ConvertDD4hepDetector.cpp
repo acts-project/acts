@@ -242,15 +242,19 @@ std::shared_ptr<const CylinderVolumeBuilder> ActsPlugins::volumeBuilder_dd4hep(
             auto& params = getParams(volumeDetElement);
             if (hasParam("boundary_material_negative", volumeDetElement)) {
               ACTS_VERBOSE("--> negative");
-              cvbConfig.boundaryMaterial[2] = createProtoMaterial(
-                  params, "boundary_material_negative",
-                  {{"binPhi", closed}, {"binR", open}}, logger);
+              cvbConfig.boundaryMaterial[2] =
+                  createProtoMaterial(params, "boundary_material_negative",
+                                      {{"binPhi", AxisBoundaryType::Closed},
+                                       {"binR", AxisBoundaryType::Bound}},
+                                      logger);
             }
             if (hasParam("boundary_material_positive", volumeDetElement)) {
               ACTS_VERBOSE("--> positive");
-              cvbConfig.boundaryMaterial[3] = createProtoMaterial(
-                  params, "boundary_material_positive",
-                  {{"binPhi", closed}, {"binR", open}}, logger);
+              cvbConfig.boundaryMaterial[3] =
+                  createProtoMaterial(params, "boundary_material_positive",
+                                      {{"binPhi", AxisBoundaryType::Closed},
+                                       {"binR", AxisBoundaryType::Bound}},
+                                      logger);
             }
           }
         } else {
@@ -273,15 +277,19 @@ std::shared_ptr<const CylinderVolumeBuilder> ActsPlugins::volumeBuilder_dd4hep(
             auto& params = getParams(volumeDetElement);
             if (params.contains("boundary_material_negative")) {
               ACTS_VERBOSE("--> negative");
-              cvbConfig.boundaryMaterial[4] = createProtoMaterial(
-                  params, "boundary_material_negative",
-                  {{"binPhi", closed}, {"binR", open}}, logger);
+              cvbConfig.boundaryMaterial[4] =
+                  createProtoMaterial(params, "boundary_material_negative",
+                                      {{"binPhi", AxisBoundaryType::Closed},
+                                       {"binR", AxisBoundaryType::Bound}},
+                                      logger);
             }
             if (params.contains("boundary_material_positive")) {
               ACTS_VERBOSE("--> positive");
-              cvbConfig.boundaryMaterial[5] = createProtoMaterial(
-                  params, "boundary_material_positive",
-                  {{"binPhi", closed}, {"binR", open}}, logger);
+              cvbConfig.boundaryMaterial[5] =
+                  createProtoMaterial(params, "boundary_material_positive",
+                                      {{"binPhi", AxisBoundaryType::Closed},
+                                       {"binR", AxisBoundaryType::Bound}},
+                                      logger);
             }
           }
         }
@@ -306,15 +314,19 @@ std::shared_ptr<const CylinderVolumeBuilder> ActsPlugins::volumeBuilder_dd4hep(
           auto& params = getParams(volumeDetElement);
           if (params.contains("boundary_material_negative")) {
             ACTS_VERBOSE("--> negative");
-            cvbConfig.boundaryMaterial[3] = createProtoMaterial(
-                params, "boundary_material_negative",
-                {{"binPhi", closed}, {"binR", open}}, logger);
+            cvbConfig.boundaryMaterial[3] =
+                createProtoMaterial(params, "boundary_material_negative",
+                                    {{"binPhi", AxisBoundaryType::Closed},
+                                     {"binR", AxisBoundaryType::Bound}},
+                                    logger);
           }
           if (params.contains("boundary_material_positive")) {
             ACTS_VERBOSE("--> positive");
-            cvbConfig.boundaryMaterial[4] = createProtoMaterial(
-                params, "boundary_material_positive",
-                {{"binPhi", closed}, {"binR", open}}, logger);
+            cvbConfig.boundaryMaterial[4] =
+                createProtoMaterial(params, "boundary_material_positive",
+                                    {{"binPhi", AxisBoundaryType::Closed},
+                                     {"binR", AxisBoundaryType::Bound}},
+                                    logger);
           }
         }
       } else {
@@ -335,13 +347,17 @@ std::shared_ptr<const CylinderVolumeBuilder> ActsPlugins::volumeBuilder_dd4hep(
           ACTS_VERBOSE("--> inner");
           cvbConfig.boundaryMaterial[0] =
               createProtoMaterial(params, "boundary_material_inner",
-                                  {{"binPhi", closed}, {"binZ", open}}, logger);
+                                  {{"binPhi", AxisBoundaryType::Closed},
+                                   {"binZ", AxisBoundaryType::Bound}},
+                                  logger);
         }
         if (params.contains("boundary_material_outer")) {
           ACTS_VERBOSE("--> outer");
           cvbConfig.boundaryMaterial[1] =
               createProtoMaterial(params, "boundary_material_outer",
-                                  {{"binPhi", closed}, {"binZ", open}}, logger);
+                                  {{"binPhi", AxisBoundaryType::Closed},
+                                   {"binZ", AxisBoundaryType::Bound}},
+                                  logger);
         }
       }
     }
@@ -418,9 +434,11 @@ std::shared_ptr<const CylinderVolumeBuilder> ActsPlugins::volumeBuilder_dd4hep(
     if (getParamOr<bool>("layer_material", subDetector, false)) {
       // get the possible material of the surrounding volume
       ACTS_VERBOSE("--> adding layer material at 'representing'");
-      plMaterial = createProtoMaterial(
-          getParams(subDetector), "layer_material_representing",
-          {{"binPhi", closed}, {"binZ", open}}, logger);
+      plMaterial = createProtoMaterial(getParams(subDetector),
+                                       "layer_material_representing",
+                                       {{"binPhi", AxisBoundaryType::Closed},
+                                        {"binZ", AxisBoundaryType::Bound}},
+                                       logger);
     }
 
     // configure the passive layer builder
@@ -453,13 +471,17 @@ std::shared_ptr<const CylinderVolumeBuilder> ActsPlugins::volumeBuilder_dd4hep(
         ACTS_VERBOSE("--> inner");
         cvbConfig.boundaryMaterial[0] =
             createProtoMaterial(params, "boundary_material_inner",
-                                {{"binPhi", closed}, {"binZ", open}}, logger);
+                                {{"binPhi", AxisBoundaryType::Closed},
+                                 {"binZ", AxisBoundaryType::Bound}},
+                                logger);
       }
       if (hasParam("boundary_material_outer", subDetector)) {
         ACTS_VERBOSE("--> outer");
         cvbConfig.boundaryMaterial[1] =
             createProtoMaterial(params, "boundary_material_outer",
-                                {{"binPhi", closed}, {"binZ", open}}, logger);
+                                {{"binPhi", AxisBoundaryType::Closed},
+                                 {"binZ", AxisBoundaryType::Bound}},
+                                logger);
       }
     }
 

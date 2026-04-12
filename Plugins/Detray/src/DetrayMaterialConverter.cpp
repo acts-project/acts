@@ -36,6 +36,14 @@ struct MaterialSurfaceSelector {
   }
 };
 
+BinUtility toBinUtility(const BinnedSurfaceMaterial& material) {
+  BinUtility converted;
+  for (const auto& axis : material.directedProtoAxes()) {
+    converted += BinUtility(BinningData(axis));
+  }
+  return converted;
+}
+
 }  // namespace
 
 detray::io::detector_homogeneous_material_payload
@@ -125,7 +133,7 @@ ActsPlugins::DetrayMaterialConverter::convertGridSurfaceMaterial(
     // Detray expects 2-dimensional grid, currently supported are
     // x-y, r-phi, phi-z
     auto [bUtility, swapped] = DetrayConversionUtils::convertBinUtilityTo2D(
-        binnedMaterial->binUtility());
+        toBinUtility(*binnedMaterial));
 
     AxisDirection bVal0 = bUtility.binningData()[0u].binvalue;
     AxisDirection bVal1 = bUtility.binningData()[1u].binvalue;
@@ -175,10 +183,10 @@ ActsPlugins::DetrayMaterialConverter::convertGridSurfaceMaterial(
   }
 
   if (dynamic_cast<const ProtoSurfaceMaterial*>(&material) != nullptr ||
-      dynamic_cast<const ProtoGridSurfaceMaterial*>(&material) != nullptr) {
+      dynamic_cast<const ProtoSurfaceMaterial*>(&material) != nullptr) {
     ACTS_WARNING(
         "DetrayMaterialConverter: ProtoSurfaceMaterial and "
-        "ProtoGridSurfaceMaterial are not being translated, consider to switch "
+        "ProtoSurfaceMaterial are not being translated, consider to switch "
         "material conversion off.");
     return materialGrid;
   }

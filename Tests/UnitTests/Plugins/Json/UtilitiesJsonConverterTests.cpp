@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
@@ -136,6 +137,47 @@ BOOST_AUTO_TEST_CASE(Range1DRoundTrip) {
 
   CHECK_CLOSE_ABS(rIn.min(), -10., 10e-5);
   CHECK_CLOSE_ABS(rIn.max(), 100., 10e-5);
+}
+
+BOOST_AUTO_TEST_CASE(ProtoAxisRoundTripTests) {
+  ProtoAxis protoEq(AxisBoundaryType::Bound, -5., 5., 10u);
+  nlohmann::json jProtoEq = protoEq;
+  ProtoAxis protoEqRead(AxisBoundaryType::Bound, 1u);
+  from_json(jProtoEq, protoEqRead);
+  BOOST_CHECK_EQUAL(protoEqRead.getAxis(), protoEq.getAxis());
+  BOOST_CHECK_EQUAL(protoEqRead.isAutorange(), protoEq.isAutorange());
+
+  ProtoAxis protoVar(AxisBoundaryType::Closed,
+                     std::vector<double>{-2., -1., 3.});
+  nlohmann::json jProtoVar = protoVar;
+  ProtoAxis protoVarRead(AxisBoundaryType::Bound, 1u);
+  from_json(jProtoVar, protoVarRead);
+  BOOST_CHECK_EQUAL(protoVarRead.getAxis(), protoVar.getAxis());
+  BOOST_CHECK_EQUAL(protoVarRead.isAutorange(), protoVar.isAutorange());
+}
+
+BOOST_AUTO_TEST_CASE(DirectedProtoAxisRoundTripTests) {
+  DirectedProtoAxis dProtoEq(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                             -std::numbers::pi, std::numbers::pi, 8u);
+  nlohmann::json jdProtoEq = dProtoEq;
+  DirectedProtoAxis dProtoEqRead(AxisDirection::AxisX, AxisBoundaryType::Bound,
+                                 1u);
+  from_json(jdProtoEq, dProtoEqRead);
+  BOOST_CHECK_EQUAL(dProtoEqRead.getAxisDirection(),
+                    dProtoEq.getAxisDirection());
+  BOOST_CHECK_EQUAL(dProtoEqRead.getAxis(), dProtoEq.getAxis());
+  BOOST_CHECK_EQUAL(dProtoEqRead.isAutorange(), dProtoEq.isAutorange());
+
+  DirectedProtoAxis dProtoVar(AxisDirection::AxisR, AxisBoundaryType::Bound,
+                              std::vector<double>{0., 1., 4., 9.});
+  nlohmann::json jdProtoVar = dProtoVar;
+  DirectedProtoAxis dProtoVarRead(AxisDirection::AxisX, AxisBoundaryType::Bound,
+                                  1u);
+  from_json(jdProtoVar, dProtoVarRead);
+  BOOST_CHECK_EQUAL(dProtoVarRead.getAxisDirection(),
+                    dProtoVar.getAxisDirection());
+  BOOST_CHECK_EQUAL(dProtoVarRead.getAxis(), dProtoVar.getAxis());
+  BOOST_CHECK_EQUAL(dProtoVarRead.isAutorange(), dProtoVar.isAutorange());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

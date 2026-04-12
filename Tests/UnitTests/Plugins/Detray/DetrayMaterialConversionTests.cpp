@@ -16,8 +16,11 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsPlugins/Detray/DetrayPayloadConverter.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
+
+#include <array>
 
 #include <detray/io/frontend/payloads.hpp>
 
@@ -150,15 +153,15 @@ unpackGrid(const DetrayPayloadConverter::DetraySurfaceMaterial& material) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
   // Create a binned material in 4 bins in x direction
-  Acts::BinUtility binUtility(4u, -2., 2., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisX);
+  Acts::DirectedProtoAxis xAxis(Acts::AxisDirection::AxisX,
+                                Acts::AxisBoundaryType::Bound, -2., 2., 4u);
 
   std::vector<Acts::MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
       materialSlab109876};
 
-  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
-      binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
+  auto binnedMaterial = Acts::BinnedSurfaceMaterial(xAxis, materialSlabs, 0.,
+                                                    Acts::MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
@@ -212,15 +215,15 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
   // Create a binned material in 4 bins in y direction
-  Acts::BinUtility binUtility(4u, -2., 2., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisY);
+  Acts::DirectedProtoAxis yAxis(Acts::AxisDirection::AxisY,
+                                Acts::AxisBoundaryType::Bound, -2., 2., 4u);
 
   std::vector<Acts::MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
       materialSlab109876};
 
-  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
-      binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
+  auto binnedMaterial = Acts::BinnedSurfaceMaterial(yAxis, materialSlabs, 0.,
+                                                    Acts::MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
@@ -274,19 +277,19 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
   // Create a binned material in 2 x2  bins in x-y direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisX);
-  binUtility += Acts::BinUtility(2u, -2., 2., Acts::BinningOption::open,
-                                 Acts::AxisDirection::AxisY);
+  Acts::DirectedProtoAxis xAxis(Acts::AxisDirection::AxisX,
+                                Acts::AxisBoundaryType::Bound, -1., 1., 2u);
+  Acts::DirectedProtoAxis yAxis(Acts::AxisDirection::AxisY,
+                                Acts::AxisBoundaryType::Bound, -2., 2., 2u);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
   std::vector<Acts::MaterialSlab> materialSlabs1 = {materialSlab54321,
                                                     materialSlab109876};
 
-  auto binnedMaterial =
-      Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
-                                  0., Acts::MappingType::Default);
+  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
+      std::array<Acts::DirectedProtoAxis, 2u>{xAxis, yAxis},
+      {materialSlabs0, materialSlabs1}, 0., Acts::MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
@@ -332,16 +335,16 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionXY) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
   // Create a binned material in 4 bins (irregularly) in r direction
-  std::vector<float> binEdges = {0., 5., 10., 15., 20.};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisR);
+  std::vector<double> binEdges = {0., 5., 10., 15., 20.};
+  Acts::DirectedProtoAxis rAxis(Acts::AxisDirection::AxisR,
+                                Acts::AxisBoundaryType::Bound, binEdges);
 
   std::vector<Acts::MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
       materialSlab109876};
 
-  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
-      binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
+  auto binnedMaterial = Acts::BinnedSurfaceMaterial(rAxis, materialSlabs, 0.,
+                                                    Acts::MappingType::Default);
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
       payload =
@@ -373,21 +376,21 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
   // Create a binned material in 2 bins - irregularly in r, 2 bins in phi
-  std::vector<float> binEdges = {0., 5., 20.};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisR);
-  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                                 Acts::BinningOption::closed,
-                                 Acts::AxisDirection::AxisPhi);
+  std::vector<double> binEdges = {0., 5., 20.};
+  Acts::DirectedProtoAxis rAxis(Acts::AxisDirection::AxisR,
+                                Acts::AxisBoundaryType::Bound, binEdges);
+  Acts::DirectedProtoAxis phiAxis(Acts::AxisDirection::AxisPhi,
+                                  Acts::AxisBoundaryType::Closed,
+                                  -std::numbers::pi, std::numbers::pi, 2u);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
   std::vector<Acts::MaterialSlab> materialSlabs1 = {materialSlab54321,
                                                     materialSlab109876};
 
-  auto binnedMaterial =
-      Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
-                                  0., Acts::MappingType::Default);
+  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
+      std::array<Acts::DirectedProtoAxis, 2u>{rAxis, phiAxis},
+      {materialSlabs0, materialSlabs1}, 0., Acts::MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
@@ -414,16 +417,16 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
   // Create a binned material in 4 bins in x direction
-  std::vector<float> binEdges = {-20, 0, 25, 50, 100};
-  Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisZ);
+  std::vector<double> binEdges = {-20., 0., 25., 50., 100.};
+  Acts::DirectedProtoAxis zAxis(Acts::AxisDirection::AxisZ,
+                                Acts::AxisBoundaryType::Bound, binEdges);
 
   std::vector<Acts::MaterialSlab> materialSlabs = {
       materialSlab12345, materialSlab678910, materialSlab54321,
       materialSlab109876};
 
-  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
-      binUtility, {materialSlabs}, 0., Acts::MappingType::Default);
+  auto binnedMaterial = Acts::BinnedSurfaceMaterial(zAxis, materialSlabs, 0.,
+                                                    Acts::MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
@@ -456,20 +459,20 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
   // Create a binned material in 2 x2  bins in x-y direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisZ);
-  binUtility += Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
-                                 Acts::BinningOption::closed,
-                                 Acts::AxisDirection::AxisPhi);
+  Acts::DirectedProtoAxis zAxis(Acts::AxisDirection::AxisZ,
+                                Acts::AxisBoundaryType::Bound, -1., 1., 2u);
+  Acts::DirectedProtoAxis phiAxis(Acts::AxisDirection::AxisPhi,
+                                  Acts::AxisBoundaryType::Closed,
+                                  -std::numbers::pi, std::numbers::pi, 2u);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
   std::vector<Acts::MaterialSlab> materialSlabs1 = {materialSlab54321,
                                                     materialSlab109876};
 
-  auto binnedMaterial =
-      Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
-                                  0., Acts::MappingType::Default);
+  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
+      std::array<Acts::DirectedProtoAxis, 2u>{zAxis, phiAxis},
+      {materialSlabs0, materialSlabs1}, 0., Acts::MappingType::Default);
 
   detray::io::grid_payload<detray::io::material_slab_payload,
                            detray::io::material_id>
@@ -490,19 +493,19 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
 
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionInvalid) {
   // Create a binned material in 4 bins in x direction
-  Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
-                              Acts::AxisDirection::AxisR);
-  binUtility += Acts::BinUtility(2u, -2., 2., Acts::BinningOption::open,
-                                 Acts::AxisDirection::AxisEta);
+  Acts::DirectedProtoAxis rAxis(Acts::AxisDirection::AxisR,
+                                Acts::AxisBoundaryType::Bound, -1., 1., 2u);
+  Acts::DirectedProtoAxis etaAxis(Acts::AxisDirection::AxisEta,
+                                  Acts::AxisBoundaryType::Bound, -2., 2., 2u);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
   std::vector<Acts::MaterialSlab> materialSlabs1 = {materialSlab54321,
                                                     materialSlab109876};
 
-  auto binnedMaterial =
-      Acts::BinnedSurfaceMaterial(binUtility, {materialSlabs0, materialSlabs1},
-                                  0., Acts::MappingType::Default);
+  auto binnedMaterial = Acts::BinnedSurfaceMaterial(
+      std::array<Acts::DirectedProtoAxis, 2u>{rAxis, etaAxis},
+      {materialSlabs0, materialSlabs1}, 0., Acts::MappingType::Default);
 
   BOOST_CHECK_THROW(
       DetrayPayloadConverter::convertBinnedSurfaceMaterial(binnedMaterial),

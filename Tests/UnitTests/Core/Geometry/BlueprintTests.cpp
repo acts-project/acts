@@ -649,21 +649,23 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
                             .surface()
                             .surfaceMaterial();
   BOOST_REQUIRE_NE(negDisc, nullptr);
-  const auto& negDiscMat =
-      dynamic_cast<const ProtoGridSurfaceMaterial&>(*negDisc);
+  const auto& negDiscMat = dynamic_cast<const ProtoSurfaceMaterial&>(*negDisc);
   // Check positive disc material
   const auto* posDisc = child.portals()
                             .at(static_cast<std::size_t>(PositiveDisc))
                             .surface()
                             .surfaceMaterial();
   BOOST_REQUIRE_NE(posDisc, nullptr);
-  const auto& posDiscMat =
-      dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
+  const auto& posDiscMat = dynamic_cast<const ProtoSurfaceMaterial&>(*posDisc);
 
-  BOOST_CHECK_EQUAL(negDiscMat.binning().at(0).getAxis().getNBins(), 5);
-  BOOST_CHECK_EQUAL(negDiscMat.binning().at(1).getAxis().getNBins(), 10);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().at(0).getAxis().getNBins(), 15);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().at(1).getAxis().getNBins(), 20);
+  BOOST_CHECK_EQUAL(negDiscMat.directedProtoAxes().at(0).getAxis().getNBins(),
+                    5);
+  BOOST_CHECK_EQUAL(negDiscMat.directedProtoAxes().at(1).getAxis().getNBins(),
+                    10);
+  BOOST_CHECK_EQUAL(posDiscMat.directedProtoAxes().at(0).getAxis().getNBins(),
+                    15);
+  BOOST_CHECK_EQUAL(posDiscMat.directedProtoAxes().at(1).getAxis().getNBins(),
+                    20);
 
   // Check outer cylinder material
   const auto* outerCyl = child.portals()
@@ -672,9 +674,11 @@ BOOST_AUTO_TEST_CASE(MaterialTesting) {
                              .surfaceMaterial();
   BOOST_REQUIRE_NE(outerCyl, nullptr);
   const auto& outerCylMat =
-      dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().at(0).getAxis().getNBins(), 25);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().at(1).getAxis().getNBins(), 30);
+      dynamic_cast<const ProtoSurfaceMaterial&>(*outerCyl);
+  BOOST_CHECK_EQUAL(outerCylMat.directedProtoAxes().at(0).getAxis().getNBins(),
+                    25);
+  BOOST_CHECK_EQUAL(outerCylMat.directedProtoAxes().at(1).getAxis().getNBins(),
+                    30);
 
   // Check that other faces have no material
   for (std::size_t i = 0; i < child.portals().size(); i++) {
@@ -823,45 +827,46 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
     BOOST_REQUIRE_NE(material, nullptr);
 
     const auto& gridMaterial =
-        dynamic_cast<const ProtoGridSurfaceMaterial&>(*material);
+        dynamic_cast<const ProtoSurfaceMaterial&>(*material);
 
     // Check binning based on face
     CuboidVolumeBounds::Face face = static_cast<CuboidVolumeBounds::Face>(i);
     switch (face) {
       case NegativeXFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(), 5);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          10);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(0).getAxis().getNBins(), 5);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(1).getAxis().getNBins(), 10);
         break;
       case PositiveXFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          15);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          20);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(0).getAxis().getNBins(), 15);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(1).getAxis().getNBins(), 20);
         break;
       case NegativeYFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          25);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          30);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(0).getAxis().getNBins(), 25);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(1).getAxis().getNBins(), 30);
         break;
       case PositiveYFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          35);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          40);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(0).getAxis().getNBins(), 35);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(1).getAxis().getNBins(), 40);
         break;
       case NegativeZFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          45);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          50);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(0).getAxis().getNBins(), 45);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(1).getAxis().getNBins(), 50);
         break;
       case PositiveZFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
-                          55);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
-                          60);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(0).getAxis().getNBins(), 55);
+        BOOST_CHECK_EQUAL(
+            gridMaterial.directedProtoAxes().at(1).getAxis().getNBins(), 60);
         break;
     }
   }

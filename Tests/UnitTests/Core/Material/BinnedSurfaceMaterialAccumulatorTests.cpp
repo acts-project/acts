@@ -17,8 +17,8 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <numbers>
 #include <utility>
@@ -84,17 +84,19 @@ BOOST_AUTO_TEST_CASE(AccumulationTest) {
       std::make_shared<HomogeneousSurfaceMaterial>(mp, 1.));
 
   // Second surface is binned Phi / Z
-  BinUtility sb1(4, -std::numbers::pi, std::numbers::pi, closed,
-                 AxisDirection::AxisPhi);
-  sb1 += BinUtility(2, -100., 100., open, AxisDirection::AxisZ);
-  surfaces[1u]->assignSurfaceMaterial(
-      std::make_shared<ProtoSurfaceMaterial>(sb1));
+  DirectedProtoAxis phiAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                            -std::numbers::pi, std::numbers::pi, 4u);
+  DirectedProtoAxis zAxis(AxisDirection::AxisZ, AxisBoundaryType::Bound, -100.,
+                          100., 2u);
+  surfaces[1u]->assignSurfaceMaterial(std::make_shared<ProtoSurfaceMaterial>(
+      std::vector<DirectedProtoAxis>{phiAxis, zAxis}));
 
   // Third is binned
   std::vector<MaterialSlab> mps = {mp, mp, mp};
-  BinUtility sb2(3, -100., 100., open, AxisDirection::AxisZ);
+  DirectedProtoAxis zAxis2(AxisDirection::AxisZ, AxisBoundaryType::Bound, -100.,
+                           100., 3u);
   surfaces[2u]->assignSurfaceMaterial(
-      std::make_shared<BinnedSurfaceMaterial>(sb2, mps));
+      std::make_shared<BinnedSurfaceMaterial>(zAxis2, mps));
 
   BinnedSurfaceMaterialAccumulator::Config bsmaConfig;
   bsmaConfig.materialSurfaces = {surfaces[0].get(), surfaces[1].get(),
