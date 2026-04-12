@@ -8,15 +8,12 @@
 
 #pragma once
 
-#include "Acts/Utilities/HashedString.hpp"
-
-#include <algorithm>
 #include <any>
 #include <array>
+#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <type_traits>
-#include <typeinfo>
 #include <utility>
 
 // #define _ACTS_ANY_ENABLE_VERBOSE
@@ -219,7 +216,7 @@ class AnyBase : public AnyBaseAll {
   T& as() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       throw std::bad_any_cast{};
     }
 
@@ -237,7 +234,7 @@ class AnyBase : public AnyBaseAll {
   const T& as() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       throw std::bad_any_cast{};
     }
 
@@ -255,7 +252,7 @@ class AnyBase : public AnyBaseAll {
   T* asPtr() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       return nullptr;
     }
     return std::bit_cast<T*>(dataPtr());
@@ -269,7 +266,7 @@ class AnyBase : public AnyBaseAll {
   const T* asPtr() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       return nullptr;
     }
     return std::bit_cast<const T*>(dataPtr());
@@ -283,7 +280,7 @@ class AnyBase : public AnyBaseAll {
   T take() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    if (m_handler == nullptr || m_handler->typeHash != typeHash<T>()) {
+    if (m_handler != makeHandler<T>()) {
       throw std::bad_any_cast{};
     }
     T* ptr = std::bit_cast<T*>(dataPtr());
@@ -377,8 +374,7 @@ class AnyBase : public AnyBaseAll {
 
     // At this point they can't be equal and nullptr, so it's safe to
     // dereference
-    if (m_handler == other.m_handler &&
-        m_handler->typeHash == other.m_handler->typeHash) {
+    if (m_handler == other.m_handler) {
       // same type, but checked before they're not both nullptr
       move(std::move(other));
     } else {
@@ -397,12 +393,6 @@ class AnyBase : public AnyBaseAll {
   /// Check if the AnyBase contains a value
   /// @return True if a value is stored, false if empty
   explicit operator bool() const { return m_handler != nullptr; }
-
-  /// Type info of the stored value. Returns nullptr if empty.
-  /// @return Pointer to the type info of the stored value, or nullptr if empty
-  const std::type_info* typeInfo() const {
-    return m_handler != nullptr ? m_handler->typeInfo : nullptr;
-  }
 
  private:
   void* dataPtr() {
@@ -430,8 +420,6 @@ class AnyBase : public AnyBaseAll {
     void* (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
     bool heapAllocated{false};
-    std::uint64_t typeHash{0};
-    const std::type_info* typeInfo{nullptr};
   };
 
   template <typename T>
@@ -464,9 +452,6 @@ class AnyBase : public AnyBaseAll {
                      heapAllocated<T>())) {
         h.copy = &copyImpl<T>;
       }
-
-      h.typeHash = typeHash<T>();
-      h.typeInfo = &typeid(T);
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
