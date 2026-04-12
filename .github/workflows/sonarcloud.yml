@@ -34,7 +34,7 @@ jobs:
           env_file: .env
 
       - name: 'Download artifact'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         id: dl-af
         with:
           script: |
@@ -73,7 +73,7 @@ jobs:
       - name: Read PR metadata
         if: github.event.workflow_run.event == 'pull_request'
         id: pr_metadata
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
