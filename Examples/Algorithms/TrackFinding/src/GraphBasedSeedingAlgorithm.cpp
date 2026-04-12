@@ -293,7 +293,7 @@ GraphBasedSeedingAlgorithm::layerNumbering(const Acts::GeometryContext &gctx) {
       return;  // skip this surface in the visitor
     }
 
-    std::uint32_t gbtsId = std::get<0>(find->second);
+    const std::uint32_t gbtsId = std::get<0>(find->second);
 
     Acts::Experimental::GbtsLayerType barrelEc =
         Acts::Experimental::GbtsLayerType::Barrel;  // a variable that says if
