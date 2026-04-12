@@ -14,7 +14,7 @@ cffi==2.0.0
     # via cryptography
 click==8.3.2
     # via typer
-cryptography==46.0.6
+cryptography==46.0.7
     # via pyjwt
 frozenlist==1.8.0
     # via
@@ -42,7 +42,7 @@ pygments==2.20.0
     # via rich
 pyjwt==2.12.1
     # via gidgethub
-rich==14.3.3
+rich==14.3.4
     # via
     #   -r CI/fpe_masks/requirements.in
     #   typer
