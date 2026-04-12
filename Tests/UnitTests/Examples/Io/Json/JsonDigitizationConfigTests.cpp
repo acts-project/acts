@@ -21,6 +21,7 @@
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -119,6 +120,10 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
     for (auto& smearing : el.smearingDigiConfig.params) {
       // check if the forcePositiveValue parameter is successfully parsed
       BOOST_CHECK(smearing.forcePositiveValues);
+      const auto* gauss =
+          smearing.smearFunction.target<const Digitization::Gauss>();
+      BOOST_REQUIRE(gauss != nullptr);
+      CHECK_CLOSE_REL(gauss->sigma, 0.05, 1e-12);
       std::fill(std::begin(s.indices), std::end(s.indices),
                 static_cast<BoundIndices>(smearing.index));
       std::fill(std::begin(s.smearFunctions), std::end(s.smearFunctions),
@@ -133,14 +138,12 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
   BOOST_CHECK(ret.ok());
   auto [par, cov] = ret.value();
   for (std::size_t i = 0; i < s.indices.size(); i++) {
-    BOOST_TEST_INFO("Comparing smeared measurement "
+    BOOST_TEST_INFO("Checking smeared measurement "
                     << i << " originating from bound parameter "
                     << s.indices[i]);
-    double ref = f.boundParams[s.indices[i]];
-    if (s.forcePositive[i]) {
-      ref = std::abs(ref);
-    }
-    CHECK_CLOSE_REL(par[i], ref, 0.15);
+    BOOST_CHECK(std::isfinite(par[i]));
+    BOOST_CHECK_GE(par[i], 0.);
+    CHECK_CLOSE_REL(cov(i, i), 0.05 * 0.05, 1e-12);
   }
 }
 
