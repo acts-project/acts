@@ -8,18 +8,55 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <random>
+
+#include <boost/functional/hash.hpp>
 
 namespace ActsExamples {
 
 struct AlgorithmContext;
 
-/// The random number generator used in the framework.
-using RandomEngine = std::mt19937;  ///< Mersenne Twister
-
 /// The seed type used in the framework.
 using RandomSeed = std::uint32_t;
+
+/// The random number generator used in the framework.
+///
+/// Thin wrapper around std::mt19937 that remembers the seed it was
+/// constructed with so that downstream consumers (e.g. lumi-block vertex
+/// generators) can derive reproducible, user-seed-dependent sub-sequences.
+class RandomEngine {
+ public:
+  using result_type = std::mt19937::result_type;
+
+  /// Default constructor. Uses mt19937 default seed.
+  RandomEngine() : m_seed(0) {}
+
+  /// Construct with a specific seed.
+  explicit RandomEngine(RandomSeed seed) : m_seed(seed), m_engine(seed) {}
+
+  /// Return the seed this engine was constructed with.
+  RandomSeed seed() const { return m_seed; }
+
+  /// Create a new engine whose seed combines this engine's seed with an
+  /// additional value. Useful for deriving deterministic sub-sequences
+  /// (e.g. per-lumi-block seeds) that depend on the user's original seed.
+  RandomEngine combinedWith(std::size_t extra) const {
+    std::size_t combined = m_seed;
+    boost::hash_combine(combined, extra);
+    return RandomEngine(static_cast<RandomSeed>(combined));
+  }
+
+  result_type operator()() { return m_engine(); }
+
+  static constexpr result_type min() { return std::mt19937::min(); }
+  static constexpr result_type max() { return std::mt19937::max(); }
+
+ private:
+  RandomSeed m_seed;
+  std::mt19937 m_engine;
+};
 
 /// Provide event and algorithm specific random number generator.s
 ///

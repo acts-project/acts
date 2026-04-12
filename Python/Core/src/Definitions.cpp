@@ -14,6 +14,7 @@
 
 #include <format>
 
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -27,22 +28,31 @@ namespace ActsPython {
 void addDefinitions(py::module_& m) {
   using namespace Acts;
   // Add algebra classes here
-  py::class_<Vector2>(m, "Vector2")
+  py::class_<Vector2>(m, "Vector2", py::buffer_protocol())
       .def(py::init<double, double>())
       .def(py::init([](std::array<double, 2> a) {
         Vector2 v;
         v << a[0], a[1];
         return v;
       }))
+      .def_buffer([](const Vector2& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
       .def("__getitem__",
            [](const Vector2& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const Vector2& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
       .def("__str__", [](const Vector2& self) {
         std::stringstream ss;
         ss << self.transpose();
         return ss.str();
       });
 
-  py::class_<Vector3>(m, "Vector3")
+  py::class_<Vector3>(m, "Vector3", py::buffer_protocol())
       .def(py::init<double, double, double>())
       .def(py::init([](std::array<double, 3> a) {
         Vector3 v;
@@ -64,17 +74,26 @@ void addDefinitions(py::module_& m) {
            [](const Vector3& self, const Vector3& other) {
              return self.cwiseProduct(other).eval();
            })
+      .def_buffer([](const Vector3& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
       .def("cross",
            [](const Vector3& self, const Vector3& other) {
              return self.cross(other).eval();
            })
       .def("__getitem__",
            [](const Vector3& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const Vector3& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
       .def("__str__", [](const Vector3& self) {
         return std::format("({}, {}, {})", self[0], self[1], self[2]);
       });
 
-  py::class_<Vector4>(m, "Vector4")
+  py::class_<Vector4>(m, "Vector4", py::buffer_protocol())
       .def(py::init<double, double, double, double>())
       .def(py::init([](std::array<double, 4> a) {
         Vector4 v;
@@ -93,14 +112,23 @@ void addDefinitions(py::module_& m) {
            [](const Vector4& self, const Vector4& other) {
              return self.cwiseProduct(other).eval();
            })
+      .def_buffer([](const Vector4& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
       .def("__getitem__",
            [](const Vector4& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const Vector4& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
       .def("__str__", [](const Vector4& self) {
         return std::format("({}, {}, {}, {})", self[0], self[1], self[2],
                            self[3]);
       });
 
-  py::class_<BoundVector>(m, "BoundVector")
+  py::class_<BoundVector>(m, "BoundVector", py::buffer_protocol())
       .def(py::init<double, double, double, double, double, double>())
       .def(py::init([](std::array<double, 6> a) {
         BoundVector v;
@@ -108,8 +136,17 @@ void addDefinitions(py::module_& m) {
         return v;
       }))
       .def_static("Zero", []() -> BoundVector { return BoundVector::Zero(); })
+      .def_buffer([](const BoundVector& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
       .def("__getitem__",
            [](const BoundVector& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const BoundVector& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
       .def("__str__", [](const BoundVector& self) {
         return std::format("({}, {}, {}, {}, {}, {})", self[0], self[1],
                            self[2], self[3], self[4], self[5]);

@@ -28,6 +28,7 @@
 #include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/HashCombine.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -47,17 +48,14 @@
 #include <unordered_map>
 #include <utility>
 
-#include <boost/functional/hash.hpp>
-
 // Specialize std::hash for SeedIdentifier
 // This is required to use SeedIdentifier as a key in an `std::unordered_map`.
 template <class T, std::size_t N>
 struct std::hash<std::array<T, N>> {
   std::size_t operator()(const std::array<T, N>& array) const {
-    std::hash<T> hasher;
     std::size_t result = 0;
     for (auto&& element : array) {
-      boost::hash_combine(result, hasher(element));
+      result = Acts::hashMixAndCombine(result, element);
     }
     return result;
   }

@@ -92,7 +92,7 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
         nPrimaryVertices += 1;
 
         // generate primary vertex position
-        auto vertexPosition = (*generate.vertex)(rng);
+        auto vertexPosition = (*generate.vertex)(rng, ctx.eventNumber);
         ACTS_VERBOSE("Generate vertex at " << vertexPosition.transpose());
 
         // generate particles associated to this vertex

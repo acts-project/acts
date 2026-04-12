@@ -265,7 +265,7 @@ ProcessCode HepMC3Reader::readSingleFile(
                             Acts::Logging::DEBUG);
     auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
     for (auto& event : events) {
-      auto vertexPosition = (*m_cfg.vertexGenerator)(rng);
+      auto vertexPosition = (*m_cfg.vertexGenerator)(rng, ctx.eventNumber);
 
       ACTS_VERBOSE("Shifting event to " << vertexPosition.transpose());
       // Our internal time unit is ctau, so is HepMC3's, make sure we convert
