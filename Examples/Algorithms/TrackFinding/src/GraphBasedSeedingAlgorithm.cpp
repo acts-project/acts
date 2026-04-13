@@ -39,9 +39,10 @@ GraphBasedSeedingAlgorithm::GraphBasedSeedingAlgorithm(
   m_actsGbtsMap = makeActsGbtsMap();
 
   // create the connection objects
-  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap(
-      m_cfg.seedFinderConfig.connectorInputFile,
-      m_cfg.seedFinderConfig.lrtMode);
+  Acts::Experimental::GbtsLayerConnectionMap layerConnectionMap =
+      Acts::Experimental::GbtsLayerConnectionMap::fromFile(
+          m_cfg.seedFinderConfig.connectorInputFile,
+          m_cfg.seedFinderConfig.lrtMode);
 
   // create the TrigInDetSiLayers (Logical Layers),
   // as well as a map that tracks there index in m_layerGeometry
@@ -92,9 +93,12 @@ ProcessCode GraphBasedSeedingAlgorithm::execute(
   const Acts::Experimental::GraphBasedTrackSeeder::Options options(
       m_cfg.bFieldInZ);
 
+  Acts::SeedContainer2 seeds;
+  seeds.assignSpacePointContainer(spacePoints);
+
   // create the seeds
-  Acts::SeedContainer2 seeds = m_finder->createSeeds(
-      coreSpacePoints, internalRoi, maxLayers, *m_filter, options);
+  m_finder->createSeeds(coreSpacePoints, internalRoi, maxLayers, *m_filter,
+                        options, seeds);
 
   seeds.assignSpacePointContainer(spacePoints);
 
