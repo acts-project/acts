@@ -164,17 +164,6 @@ class Tensor {
 /// @param stream The stream to use for the operation in case of CUDA
 void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream = {});
 
-/// Apply a score cut to the tensor and return a new tensor with the values that
-/// satisfy the cut
-/// @param scores The edge score tensor
-/// @param edgeIndex The edge index tensor
-/// @param cut The score cut value which edges to accept
-/// @param stream The stream to use for the operation in case of CUDA
-/// @return Pair of filtered score and edge index tensors containing only edges above threshold
-std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
-    const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
-    float cut, std::optional<cudaStream_t> stream = {});
-
 /// Apply a limit on the number of edges consistently on edgeIndex and
 /// edgeFeatures.
 /// @param edgeIndex The edge index tensor

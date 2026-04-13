@@ -100,18 +100,6 @@ void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
   }
 }
 
-std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
-    const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
-    float cut, std::optional<cudaStream_t> stream) {
-  assert(edgeIndex.shape()[0] == 2);
-  assert(edgeIndex.shape()[1] == scores.shape()[0]);
-  assert(scores.device() == edgeIndex.device());
-  ExecutionContext execContext{scores.device(), stream};
-  auto mask = scoreMask(scores, cut, stream);
-  return {selectRows(scores, mask, execContext),
-          selectCols(edgeIndex, mask, execContext)};
-}
-
 std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     const Tensor<std::int64_t> &edgeIndex,
     const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,

@@ -54,8 +54,9 @@ void testEdgeSelection(const std::vector<float>& scores,
   auto scoreTensorTarget = scoreTensor.clone(execContext);
   auto edgeTensorTarget = edgeTensor.clone(execContext);
 
-  auto [selectedScores, selectedEdges] = applyScoreCut(
-      scoreTensorTarget, edgeTensorTarget, 0.5f, execContext.stream);
+  auto mask = scoreMask(scoreTensorTarget, 0.5f, execContext.stream);
+  auto selectedScores = selectRows(scoreTensorTarget, mask, execContext);
+  auto selectedEdges = selectCols(edgeTensorTarget, mask, execContext);
 
   auto selectedScoresHost =
       selectedScores.clone({Device::Cpu(), execContext.stream});
@@ -236,7 +237,7 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(GnnSuite)
 
-// Edge features for applyScoreCut-with-features test: 4 edges, 2 features each
+// Edge features for edge selection with features test: 4 edges, 2 features each
 // Score cut at 0.5 keeps edges at indices 2 and 3 (scores 0.6 and 0.9)
 const std::vector<float> edgeFeaturesData = {0.f, 1.f, 2.f, 3.f,
                                              4.f, 5.f, 6.f, 7.f};
