@@ -13,7 +13,7 @@ from helpers import AssertCollectionExistsAlg
 
 import acts
 import acts.examples
-from acts.examples.uproot_reader import UprootParticleReader, UprootSimHitReader
+from acts.examples.uproot import UprootParticleReader, UprootSimHitReader
 from acts.examples import Sequencer
 from acts.examples.root import RootParticleWriter, RootSimHitWriter
 
