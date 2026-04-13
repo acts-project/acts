@@ -187,5 +187,32 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
     const std::optional<Tensor<float>> &edgeFeatures, std::size_t maxEdges,
     std::optional<cudaStream_t> stream);
 
+/// Compute a boolean mask from a score tensor: mask[i] = (scores[i] > cut).
+/// @param scores The edge score tensor [N, 1]
+/// @param cut The score threshold
+/// @param stream The stream to use for the operation in case of CUDA
+/// @return Boolean tensor [N, 1] where true means the edge passes the cut
+Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
+                       std::optional<cudaStream_t> stream = {});
+
+/// Select rows from a 2D tensor where the corresponding mask element is true.
+/// @param tensor Source tensor [N, F]
+/// @param mask Boolean tensor [N, 1]; true means keep the corresponding row
+/// @param execContext Device and stream for output allocation
+/// @return New tensor [M, F] containing only the rows where mask is true
+template <Acts::Concepts::arithmetic T>
+Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                     const ExecutionContext &execContext);
+
+/// Select columns from a 2D tensor where the corresponding mask element is
+/// true.
+/// @param tensor Source tensor [R, N]
+/// @param mask Boolean tensor [N, 1]; true means keep the corresponding column
+/// @param execContext Device and stream for output allocation
+/// @return New tensor [R, M] containing only the columns where mask is true
+template <Acts::Concepts::arithmetic T>
+Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                     const ExecutionContext &execContext);
+
 /// @}
 }  // namespace ActsPlugins
