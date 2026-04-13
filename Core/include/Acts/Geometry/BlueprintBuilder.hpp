@@ -839,7 +839,8 @@ class BarrelEndcapAssembler {
       std::conditional_t<detail::HasAxisDefinition<BackendT>,
                          typename BackendT::AxisDefinition, std::monostate>;
   /// The @ref ElementLayerAssembler specialisation for this backend.
-  using ElementLayerAssembler = ElementLayerAssembler<BackendT>;
+  using ElementLayerAssembler =
+      ::Acts::Experimental::ElementLayerAssembler<BackendT>;
   /// Callback type that can replace or wrap a
   /// @ref CylinderContainerBlueprintNode.
   using ContainerCustomizer = detail::ContainerCustomizer<Element>;
@@ -1023,13 +1024,16 @@ class BlueprintBuilder {
       std::conditional_t<detail::HasAxisDefinition<Backend>,
                          typename Backend::AxisDefinition, std::monostate>;
   /// The @ref ElementLayerAssembler specialisation for this backend.
-  using ElementLayerAssembler = ElementLayerAssembler<Backend>;
+  using ElementLayerAssembler =
+      ::Acts::Experimental::ElementLayerAssembler<Backend>;
   /// The @ref SensorLayerAssembler specialisation for this backend.
-  using SensorLayerAssembler = SensorLayerAssembler<Backend>;
+  using SensorLayerAssembler =
+      ::Acts::Experimental::SensorLayerAssembler<Backend>;
   /// The @ref SensorLayer specialisation for this backend.
-  using SensorLayer = SensorLayer<Backend>;
+  using SensorLayer = ::Acts::Experimental::SensorLayer<Backend>;
   /// The @ref BarrelEndcapAssembler specialisation for this backend.
-  using BarrelEndcapAssembler = BarrelEndcapAssembler<Backend>;
+  using BarrelEndcapAssembler =
+      ::Acts::Experimental::BarrelEndcapAssembler<Backend>;
 
   /// @brief Construct a `BlueprintBuilder` from a backend configuration.
   ///
