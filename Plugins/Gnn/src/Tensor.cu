@@ -36,7 +36,9 @@ __global__ void applyCut(std::size_t size, float cutoff, const float *array,
 }
 
 /// Gather rows from src into dst using a device-side index list.
-/// Each thread handles one output row.
+/// One thread per output row; cols are iterated in a short inner loop.
+/// Assumes nCols is small (e.g. node/edge feature count) — not suitable for
+/// large nCols since the inner loop becomes the bottleneck.
 template <typename T>
 __global__ void gatherRowsKernel(const std::size_t *indices, std::size_t nOut,
                                  std::size_t nCols, const T *src, T *dst) {
@@ -51,18 +53,20 @@ __global__ void gatherRowsKernel(const std::size_t *indices, std::size_t nOut,
 }
 
 /// Gather columns from src into dst using a device-side column index list.
-/// Each thread handles one output element.
+/// One thread per output column; rows are iterated in a short inner loop.
+/// Assumes nRows is small (e.g. 2 for an edge index tensor) — not suitable for
+/// large nRows since the inner loop becomes the bottleneck.
 template <typename T>
 __global__ void gatherColsKernel(const std::size_t *indices, std::size_t nRows,
                                  std::size_t nColsSrc, std::size_t nColsDst,
                                  const T *src, T *dst) {
-  const std::size_t k = blockIdx.x * blockDim.x + threadIdx.x;
-  if (k >= nRows * nColsDst) {
+  const std::size_t col = blockIdx.x * blockDim.x + threadIdx.x;
+  if (col >= nColsDst) {
     return;
   }
-  const std::size_t row = k / nColsDst;
-  const std::size_t colDst = k % nColsDst;
-  dst[k] = src[row * nColsSrc + indices[colDst]];
+  for (std::size_t row = 0; row < nRows; ++row) {
+    dst[row * nColsDst + col] = src[row * nColsSrc + indices[col]];
+  }
 }
 
 }  // namespace
@@ -150,9 +154,8 @@ Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
                   thrust::make_counting_iterator<std::size_t>(nColsSrc),
                   mask.data(), devColIndices, pred);
 
-  const std::size_t totalOut = nRows * nSelected;
   dim3 blockDim = 1024;
-  dim3 gridDim = (totalOut + blockDim.x - 1) / blockDim.x;
+  dim3 gridDim = (nSelected + blockDim.x - 1) / blockDim.x;
   gatherColsKernel<<<gridDim, blockDim, 0, stream>>>(
       devColIndices, nRows, nColsSrc, nSelected, tensor.data(), result.data());
   ACTS_CUDA_CHECK(cudaGetLastError());
