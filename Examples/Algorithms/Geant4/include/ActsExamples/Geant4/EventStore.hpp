@@ -14,7 +14,6 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsFatras/EventData/ParticleOutcome.hpp"
 
 #include <set>
 #include <unordered_map>
@@ -66,7 +65,7 @@ struct EventStore {
   /// Particle hit count (for hit indexing)
   std::unordered_map<SimBarcode, std::size_t> particleHitCount;
   /// Particle status
-  std::unordered_map<SimBarcode, ActsFatras::ParticleOutcome> particleOutcome;
+  std::unordered_map<SimBarcode, ActsFatras::SimulationOutcome> particleOutcome;
   /// Geant4 Track ID to Barcode mapping
   std::unordered_map<G4int, SimBarcode> trackIdMapping;
   /// Geant4 Track ID subparticle counter (for subparticle indexing)

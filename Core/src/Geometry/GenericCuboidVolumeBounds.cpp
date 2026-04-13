@@ -114,7 +114,7 @@ std::vector<OrientedSurface> GenericCuboidVolumeBounds::orientedSurfaces(
     auto srfTrf = transform * vol2srf.inverse();
     auto srf = Surface::makeShared<PlaneSurface>(srfTrf, polyBounds);
 
-    oSurfaces.push_back(OrientedSurface{std::move(srf), dir});
+    oSurfaces.emplace_back(std::move(srf), dir);
   };
 
   make_surface(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
@@ -189,7 +189,7 @@ std::vector<double> GenericCuboidVolumeBounds::values() const {
   rvalues.reserve(BoundValues::eSize);
   for (std::size_t iv = 0; iv < 8; ++iv) {
     for (std::size_t ic = 0; ic < 3; ++ic) {
-      rvalues.push_back(m_vertices[iv][ic]);
+      rvalues.emplace_back(m_vertices[iv][ic]);
     }
   }
   return rvalues;

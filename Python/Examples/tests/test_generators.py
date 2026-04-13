@@ -31,11 +31,11 @@ def test_uniform_vertex_generator():
 
 def test_examples_fatras_aliases_present():
     assert hasattr(acts.examples, "SimBarcode")
-    assert hasattr(acts.examples, "ProcessType")
-    assert hasattr(acts.examples, "ParticleOutcome")
+    assert hasattr(acts.examples, "GenerationProcess")
+    assert hasattr(acts.examples, "SimulationOutcome")
     assert hasattr(acts.examples, "SimParticleState")
 
     assert acts.examples.SimBarcode is acts.fatras.Barcode
-    assert acts.examples.ProcessType is acts.fatras.ProcessType
-    assert acts.examples.ParticleOutcome is acts.fatras.ParticleOutcome
+    assert acts.examples.GenerationProcess is acts.fatras.GenerationProcess
+    assert acts.examples.SimulationOutcome is acts.fatras.SimulationOutcome
     assert acts.examples.SimParticleState is acts.fatras.Particle

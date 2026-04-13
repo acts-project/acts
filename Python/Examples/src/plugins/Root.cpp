@@ -98,34 +98,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsRoot, root) {
 
   // Output
   {
-    // Bindings for axis variant used in PlotTool configurations
     {
-      py::class_<Acts::Experimental::AxisVariant>(root, "AxisVariant")
-          .def_static(
-              "regular",
-              [](unsigned bins, double low, double high,
-                 const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostRegularAxis(bins, low, high,
-                                                         title));
-              },
-              "bins"_a, "low"_a, "high"_a, "title"_a = "")
-          .def_static(
-              "log",
-              [](unsigned bins, double low, double high,
-                 const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostLogAxis(bins, low, high, title));
-              },
-              "bins"_a, "low"_a, "high"_a, "title"_a = "")
-          .def_static(
-              "variable",
-              [](const std::vector<double>& edges, const std::string& title) {
-                return Acts::Experimental::AxisVariant(
-                    Acts::Experimental::BoostVariableAxis(edges, title));
-              },
-              "edges"_a, "title"_a = "");
-
       py::class_<EffPlotTool::Config>(root, "EffPlotToolConfig")
           .def(py::init<>())
           .def_readwrite("varBinning", &EffPlotTool::Config::varBinning)

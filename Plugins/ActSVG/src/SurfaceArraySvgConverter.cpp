@@ -178,19 +178,19 @@ ActsPlugins::Svg::SurfaceArrayConverter::convert(
   for (unsigned int il0 = 1; il0 < pGrid._edges_0.size(); ++il0) {
     double p0 = 0.5 * (pGrid._edges_0[il0] + pGrid._edges_0[il0 - 1]);
     for (unsigned int il1 = 1; il1 < pGrid._edges_1.size(); ++il1) {
-      double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
+      const double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
       // Create the fitting bin center estimates
       Vector3 bCenter;
-      Vector3 bDirection = Vector3(std::sin(p1), -std::cos(p1), 0.);
+      const Vector3 bDirection = Vector3(std::sin(p1), -std::cos(p1), 0.);
       if (vType == polar) {
         bCenter = Vector3(p0 * std::cos(p1), p0 * std::sin(p1), 0.);
       } else if (vType == cylinder) {
         bCenter = Vector3(radius * std::cos(p1), radius * std::sin(p1), p0);
       }
       // Get all the bin entries and members
-      auto bSurfaces = surfaceArray.neighbors(bCenter, bDirection);
+      const auto bSurfaces = surfaceArray.neighbors(gctx, bCenter, bDirection);
       std::vector<std::size_t> binnAssoc;
-      for (const auto& bs : bSurfaces) {
+      for (const Surface* bs : bSurfaces) {
         auto candidate = std::ranges::find(surfaces, bs);
         if (candidate != surfaces.end()) {
           binnAssoc.push_back(std::distance(surfaces.begin(), candidate));

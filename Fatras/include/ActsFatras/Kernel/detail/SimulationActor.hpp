@@ -14,7 +14,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Kernel/SimulationResult.hpp"
+#include "ActsFatras/Kernel/SingleParticleSimulationResult.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -37,7 +37,7 @@ namespace ActsFatras::detail {
 template <typename generator_t, typename decay_t, typename interactions_t,
           typename hit_surface_selector_t>
 struct SimulationActor {
-  using result_type = SimulationResult;
+  using result_type = SingleParticleSimulationResult;
 
   /// Random number generator used for the simulation.
   generator_t *generator = nullptr;

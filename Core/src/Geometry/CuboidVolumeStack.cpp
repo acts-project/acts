@@ -204,8 +204,7 @@ void CuboidVolumeStack::initializeOuterVolume(const GeometryContext& gctx,
 
   ACTS_VERBOSE("Appending " << gapVolumes.size()
                             << " gap volumes to the end of the volume vector");
-  std::copy(gapVolumes.begin(), gapVolumes.end(),
-            std::back_inserter(volumeTuples));
+  std::ranges::copy(gapVolumes, std::back_inserter(volumeTuples));
 
   ACTS_VERBOSE("*** Volume configuration after "
                << axisDirectionName(m_direction) << " attachment:");
@@ -525,19 +524,15 @@ std::pair<double, double> CuboidVolumeStack::synchronizeBounds(
   auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2);
 
   const double maxHl1 =
-      std::max_element(volumes.begin(), volumes.end(),
-                       [boundDirOrth1](const auto& a, const auto& b) {
-                         return a.bounds->get(boundDirOrth1) <
-                                b.bounds->get(boundDirOrth1);
-                       })
-          ->bounds->get(boundDirOrth1);
+      std::ranges::max_element(volumes, [boundDirOrth1](const auto& a,
+                                                        const auto& b) {
+        return a.bounds->get(boundDirOrth1) < b.bounds->get(boundDirOrth1);
+      })->bounds->get(boundDirOrth1);
   const double maxHl2 =
-      std::max_element(volumes.begin(), volumes.end(),
-                       [boundDirOrth2](const auto& a, const auto& b) {
-                         return a.bounds->get(boundDirOrth2) <
-                                b.bounds->get(boundDirOrth2);
-                       })
-          ->bounds->get(boundDirOrth2);
+      std::ranges::max_element(volumes, [boundDirOrth2](const auto& a,
+                                                        const auto& b) {
+        return a.bounds->get(boundDirOrth2) < b.bounds->get(boundDirOrth2);
+      })->bounds->get(boundDirOrth2);
   ACTS_VERBOSE("Found: half length " << axisDirectionName(m_dirOrth1) << ":"
                                      << maxHl1 << ", half length "
                                      << axisDirectionName(m_dirOrth2) << ":"
