@@ -174,30 +174,27 @@ void addGenerators(py::module& mex) {
                       p.setProcess(v);
                     })
       .def_property_readonly("isSecondary", &SimParticle::isSecondary)
-      .def_property(
-          "fourPosition", &SimParticle::fourPosition,
-          [](SimParticle& p, const Acts::Vector4& pos4) {
-            p.initialState().setPosition4(pos4);
-          })
+      .def_property("fourPosition", &SimParticle::fourPosition,
+                    [](SimParticle& p, const Acts::Vector4& pos4) {
+                      p.initialState().setPosition4(pos4);
+                    })
       .def_property_readonly(
           "position",
           [](const SimParticle& p) { return Vector3(p.position()); })
       .def_property_readonly("time", &SimParticle::time)
       .def_property_readonly("fourMomentum", &SimParticle::fourMomentum)
-      .def_property(
-          "direction", &SimParticle::direction,
-          [](SimParticle& p, const Acts::Vector3& dir) {
-            p.initialState().setDirection(dir);
-          })
+      .def_property("direction", &SimParticle::direction,
+                    [](SimParticle& p, const Acts::Vector3& dir) {
+                      p.initialState().setDirection(dir);
+                    })
       .def_property_readonly("theta", &SimParticle::theta)
       .def_property_readonly("phi", &SimParticle::phi)
       .def_property_readonly("transverseMomentum",
                              &SimParticle::transverseMomentum)
-      .def_property(
-          "absoluteMomentum", &SimParticle::absoluteMomentum,
-          [](SimParticle& p, double v) {
-            p.initialState().setAbsoluteMomentum(v);
-          })
+      .def_property("absoluteMomentum", &SimParticle::absoluteMomentum,
+                    [](SimParticle& p, double v) {
+                      p.initialState().setAbsoluteMomentum(v);
+                    })
       .def_property_readonly("momentum", &SimParticle::momentum)
       .def_property_readonly("energy", &SimParticle::energy)
       .def_property_readonly("energyLoss", &SimParticle::energyLoss)
@@ -211,16 +208,14 @@ void addGenerators(py::module& mex) {
           },
           py::arg("pathInX0"), py::arg("pathInL0"),
           py::return_value_policy::reference_internal)
-      .def_property(
-          "numberOfHits", &SimParticle::numberOfHits,
-          [](SimParticle& p, std::uint32_t n) {
-            p.finalState().setNumberOfHits(n);
-          })
-      .def_property(
-          "outcome", &SimParticle::outcome,
-          [](SimParticle& p, ActsFatras::SimulationOutcome o) {
-            p.finalState().setOutcome(o);
-          })
+      .def_property("numberOfHits", &SimParticle::numberOfHits,
+                    [](SimParticle& p, std::uint32_t n) {
+                      p.finalState().setNumberOfHits(n);
+                    })
+      .def_property("outcome", &SimParticle::outcome,
+                    [](SimParticle& p, ActsFatras::SimulationOutcome o) {
+                      p.finalState().setOutcome(o);
+                    })
       .def_property_readonly(
           "initialState",
           py::overload_cast<>(&SimParticle::initialState, py::const_))
