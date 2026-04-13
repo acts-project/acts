@@ -65,10 +65,6 @@ def runGeometry(
                 viewConfig=acts.ViewConfig(visible=False),
             )
             vis.write(outputDir / "obj" / "geometry.obj")
-            # writer = ObjTrackingGeometryWriter(
-            #     level=acts.logging.INFO, outputDir=outputDir / "obj"
-            # )
-            # writer.write(context, trackingGeometry)
 
         if outputJson:
             # if not os.path.isdir(outputDir / "json"):

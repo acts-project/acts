@@ -14,22 +14,11 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintBuilder.hpp"
+#include "Acts/Utilities/FunctionComposition.hpp"
 
 namespace Acts::Experimental {
 
 namespace detail {
-
-template <typename F, typename G, typename... Rest>
-auto compose(const F& f, const G& g, Rest... rest) {
-  auto fg = [=]<typename T>(T&& x) -> decltype(auto) {
-    return std::invoke(f, g(std::forward<T>(x)));
-  };
-  if constexpr (sizeof...(rest) == 0) {
-    return fg;
-  } else {
-    return compose(fg, rest...);
-  }
-}
 
 template <typename ElementT>
 struct LayerBuildInputs {
@@ -424,7 +413,7 @@ SensorLayerAssembler<BackendT>::build() const {
     it->sensors.push_back(sensor);
   }
 
-  for (auto& group : groups) {
+  for (const auto& group : groups) {
     if (group.key.empty()) {
       throw std::runtime_error(
           "groupBy() key must be non-empty for all sensors in "
@@ -645,9 +634,8 @@ BarrelEndcapAssembler<BackendT>::build() const
       std::bind_front(&Acts::Experimental::BlueprintNode::addChild, node.get());
 
   for (const auto& barrel : barrels) {
-    auto compose =
-        detail::compose(addTo, std::bind_front(m_onContainer, barrel), build,
-                        maybeAddAxes(m_barrelAxes));
+    auto compose = Acts::compose(addTo, std::bind_front(m_onContainer, barrel),
+                                 build, maybeAddAxes(m_barrelAxes));
 
     compose(m_builder->layers()
                 .barrel()
@@ -657,9 +645,8 @@ BarrelEndcapAssembler<BackendT>::build() const
   }
 
   for (const auto& endcap : endcaps) {
-    auto compose =
-        detail::compose(addTo, std::bind_front(m_onContainer, endcap), build,
-                        maybeAddAxes(m_endcapAxes));
+    auto compose = Acts::compose(addTo, std::bind_front(m_onContainer, endcap),
+                                 build, maybeAddAxes(m_endcapAxes));
 
     compose(m_builder->layers()
                 .endcap()

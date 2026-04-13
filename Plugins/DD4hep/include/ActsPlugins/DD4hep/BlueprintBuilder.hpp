@@ -31,9 +31,6 @@ class DetElement;
 
 namespace ActsPlugins::DD4hep {
 
-// @TODO: Flip this
-using GeometryAxes = ActsPlugins::TGeoAxes;
-
 /// Backend adapter that maps a DD4hep detector hierarchy onto the ACTS
 /// experimental blueprint-builder interface.
 ///

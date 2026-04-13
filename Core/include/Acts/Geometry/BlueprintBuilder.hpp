@@ -14,25 +14,17 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
-#include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
-#include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
-#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <concepts>
-#include <format>
 #include <functional>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <regex>
 #include <span>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -71,9 +63,8 @@ concept HasAxisDefinition =
       layerSpec.layerAxes = std::move(layerAxes);
     };
 
-using LayerNodePtr = std::shared_ptr<Acts::Experimental::LayerBlueprintNode>;
-using ContainerNodePtr =
-    std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>;
+using LayerNodePtr = std::shared_ptr<LayerBlueprintNode>;
+using ContainerNodePtr = std::shared_ptr<ContainerBlueprintNode>;
 using SurfacePtr = std::shared_ptr<Acts::Surface>;
 using SurfaceVector = std::vector<SurfacePtr>;
 
@@ -83,18 +74,15 @@ using SurfaceVector = std::vector<SurfacePtr>;
 /// context exists) and the newly created layer node, and returns the
 /// (possibly replaced) node to be added to the container.
 template <typename ElementT>
-using LayerCustomizer =
-    std::function<std::shared_ptr<Acts::Experimental::LayerBlueprintNode>(
-        const std::optional<ElementT>&,
-        std::shared_ptr<Acts::Experimental::LayerBlueprintNode>)>;
+using LayerCustomizer = std::function<std::shared_ptr<LayerBlueprintNode>(
+    const std::optional<ElementT>&, std::shared_ptr<LayerBlueprintNode>)>;
 
 /// @brief Callback type that can replace or wrap a
 /// @ref CylinderContainerBlueprintNode.
 template <typename ElementT>
 using ContainerCustomizer =
-    std::function<std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>(
-        const ElementT&,
-        std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>)>;
+    std::function<std::shared_ptr<ContainerBlueprintNode>(
+        const ElementT&, std::shared_ptr<ContainerBlueprintNode>)>;
 
 /// @brief Concept satisfied when @p CallableT can be called with an optional
 /// element and a @ref LayerBlueprintNode shared pointer and returns a (possibly
@@ -116,10 +104,10 @@ concept LayerNodeReturningCallable =
 template <typename ElementT, typename CallableT>
 concept LayerNodeReplacingCallable =
     std::invocable<CallableT&, const std::optional<ElementT>&,
-                   Acts::Experimental::LayerBlueprintNode&> &&
+                   LayerBlueprintNode&> &&
     std::same_as<
         std::invoke_result_t<CallableT&, const std::optional<ElementT>&,
-                             Acts::Experimental::LayerBlueprintNode&>,
+                             LayerBlueprintNode&>,
         void>;
 
 /// @brief Concept satisfied when @p CallableT can be called with an element and
@@ -141,12 +129,10 @@ concept ContainerNodeReturningCallable =
 /// callback.
 template <typename ElementT, typename CallableT>
 concept ContainerNodeReplacingCallable =
-    std::invocable<CallableT&, const ElementT&,
-                   Acts::Experimental::ContainerBlueprintNode&> &&
-    std::same_as<
-        std::invoke_result_t<CallableT&, const ElementT&,
-                             Acts::Experimental::ContainerBlueprintNode&>,
-        void>;
+    std::invocable<CallableT&, const ElementT&, ContainerBlueprintNode&> &&
+    std::same_as<std::invoke_result_t<CallableT&, const ElementT&,
+                                      ContainerBlueprintNode&>,
+                 void>;
 
 /// @brief Concept requiring a backend to provide a surface-construction method.
 ///
@@ -432,8 +418,7 @@ class ElementLayerAssembler {
     } else {
       m_onLayer = [customizer = std::move(customizer)](
                       const std::optional<Element>& layerElement,
-                      std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-                          layer) mutable {
+                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
         customizer(layerElement, *layer);
         return layer;
       };
@@ -480,7 +465,7 @@ class ElementLayerAssembler {
   /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
   explicit ElementLayerAssembler(const Builder& builder);
 
-  const Builder* m_builder;
+  const Builder* m_builder = nullptr;
   std::optional<LayerType> m_layerType;
   LayerSpec m_layerSpec{};
   std::optional<std::regex> m_filter;
@@ -527,7 +512,7 @@ class SensorLayerAssembler {
   /// The associated @ref BlueprintBuilder type.
   using Builder = BlueprintBuilder<BackendT>;
   /// Distinguishes barrel (Cylinder) from endcap (Disc) layer geometry.
-  using LayerType = Acts::Experimental::LayerBlueprintNode::LayerType;
+  using LayerType = LayerBlueprintNode::LayerType;
   /// Backend detector element handle type.
   using Element = typename BackendT::Element;
   /// Backend layer-specification type.
@@ -629,8 +614,7 @@ class SensorLayerAssembler {
     } else {
       m_onLayer = [customizer = std::move(customizer)](
                       const std::optional<Element>& elem,
-                      std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-                          layer) mutable {
+                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
         customizer(elem, *layer);
         return layer;
       };
@@ -646,15 +630,14 @@ class SensorLayerAssembler {
   ///         the container name is not set, or if @ref groupBy has not been
   ///         configured.
   /// @return Shared pointer to the assembled container node.
-  [[nodiscard]] std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
-  build() const;
+  [[nodiscard]] std::shared_ptr<ContainerBlueprintNode> build() const;
 
   /// @brief Build the container node and attach it as a child of @p node.
   ///
   /// Equivalent to `node.addChild(build())`.
   /// @param node Blueprint node that will receive the built container as a
   ///             child.
-  void addTo(Acts::Experimental::BlueprintNode& node) const&&;
+  void addTo(BlueprintNode& node) const&&;
 
  private:
   friend class BlueprintBuilder<BackendT>;
@@ -663,7 +646,7 @@ class SensorLayerAssembler {
   /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
   explicit SensorLayerAssembler(const Builder& builder);
 
-  const Builder* m_builder;
+  const Builder* m_builder = nullptr;
   std::optional<LayerType> m_layerType;
   LayerSpec m_layerSpec{};
   std::optional<std::vector<Element>> m_sensors;
@@ -701,7 +684,7 @@ class SensorLayer {
   /// The associated @ref BlueprintBuilder type.
   using Builder = BlueprintBuilder<BackendT>;
   /// Distinguishes barrel (Cylinder) from endcap (Disc) layer geometry.
-  using LayerType = Acts::Experimental::LayerBlueprintNode::LayerType;
+  using LayerType = LayerBlueprintNode::LayerType;
   /// Backend detector element handle type.
   using Element = typename BackendT::Element;
   /// Backend layer-specification type.
@@ -781,8 +764,7 @@ class SensorLayer {
     } else {
       m_onLayer = [customizer = std::move(customizer)](
                       const std::optional<Element>& elem,
-                      std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-                          layer) mutable {
+                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
         customizer(elem, *layer);
         return layer;
       };
@@ -797,14 +779,13 @@ class SensorLayer {
   ///         or
   ///         if @ref setLayerName has not been called.
   /// @return Shared pointer to the assembled @ref LayerBlueprintNode.
-  [[nodiscard]] std::shared_ptr<Acts::Experimental::LayerBlueprintNode> build()
-      const;
+  [[nodiscard]] std::shared_ptr<LayerBlueprintNode> build() const;
 
   /// @brief Build the layer node and attach it as a child of @p node.
   ///
   /// Equivalent to `node.addChild(build())`.
   /// @param node Blueprint node that will receive the built layer as a child.
-  void addTo(Acts::Experimental::BlueprintNode& node) const&&;
+  void addTo(BlueprintNode& node) const&&;
 
  private:
   friend class BlueprintBuilder<BackendT>;
@@ -813,7 +794,7 @@ class SensorLayer {
   /// @param builder The owning @ref BlueprintBuilder; must outlive this object.
   explicit SensorLayer(const Builder& builder);
 
-  const Builder* m_builder;
+  const Builder* m_builder = nullptr;
   std::optional<LayerType> m_layerType;
   LayerSpec m_layerSpec{};
   std::optional<std::vector<Element>> m_sensors;
@@ -858,8 +839,7 @@ class BarrelEndcapAssembler {
       std::conditional_t<detail::HasAxisDefinition<BackendT>,
                          typename BackendT::AxisDefinition, std::monostate>;
   /// The @ref ElementLayerAssembler specialisation for this backend.
-  using ElementLayerAssembler =
-      Acts::Experimental::ElementLayerAssembler<BackendT>;
+  using ElementLayerAssembler = ElementLayerAssembler<BackendT>;
   /// Callback type that can replace or wrap a
   /// @ref CylinderContainerBlueprintNode.
   using ContainerCustomizer = detail::ContainerCustomizer<Element>;
@@ -880,9 +860,7 @@ class BarrelEndcapAssembler {
   ///         filter has not been set, or if more than one barrel element is
   ///         found inside the assembly.
   /// @return Shared pointer to the assembled Z-axis container node.
-  [[nodiscard]] std::shared_ptr<
-      Acts::Experimental::CylinderContainerBlueprintNode>
-  build() const
+  [[nodiscard]] std::shared_ptr<CylinderContainerBlueprintNode> build() const
     requires(detail::HasBarrelEndcapClassifier<BackendT>);
 
   /// @brief Build the container node and attach it as a child of @p node.
@@ -890,7 +868,7 @@ class BarrelEndcapAssembler {
   /// Equivalent to `node.addChild(build())`.
   /// @param node Blueprint node that will receive the built container as a
   ///             child.
-  void addTo(Acts::Experimental::BlueprintNode& node) const&&
+  void addTo(BlueprintNode& node) const&&
     requires(detail::HasBarrelEndcapClassifier<BackendT>);
 
   /// @brief Register a layer callback forwarded to each inner
@@ -913,8 +891,7 @@ class BarrelEndcapAssembler {
     } else {
       m_onLayer = [customizer = std::move(customizer)](
                       const std::optional<Element>& elem,
-                      std::shared_ptr<Acts::Experimental::LayerBlueprintNode>
-                          layer) mutable {
+                      std::shared_ptr<LayerBlueprintNode> layer) mutable {
         customizer(elem, *layer);
         return layer;
       };
@@ -944,8 +921,7 @@ class BarrelEndcapAssembler {
       m_onContainer =
           [customizer = std::move(customizer)](
               const Element& elem,
-              std::shared_ptr<Acts::Experimental::ContainerBlueprintNode>
-                  node) mutable {
+              std::shared_ptr<ContainerBlueprintNode> node) mutable {
             customizer(elem, *node);
             return node;
           };
@@ -992,8 +968,7 @@ class BarrelEndcapAssembler {
  private:
   typename ElementLayerAssembler::LayerCustomizer m_onLayer;
   ContainerCustomizer m_onContainer =
-      [](const Element&,
-         std::shared_ptr<Acts::Experimental::ContainerBlueprintNode> node) {
+      [](const Element&, std::shared_ptr<ContainerBlueprintNode> node) {
         return node;
       };
 
@@ -1001,7 +976,7 @@ class BarrelEndcapAssembler {
   std::optional<AxisDefinition> m_barrelAxes;
   std::optional<AxisDefinition> m_endcapAxes;
   std::optional<std::regex> m_layerFilter;
-  const Builder* m_builder;
+  const Builder* m_builder = nullptr;
 };
 
 /// @brief High-level builder that converts a backend detector element hierarchy
@@ -1048,16 +1023,13 @@ class BlueprintBuilder {
       std::conditional_t<detail::HasAxisDefinition<Backend>,
                          typename Backend::AxisDefinition, std::monostate>;
   /// The @ref ElementLayerAssembler specialisation for this backend.
-  using ElementLayerAssembler =
-      Acts::Experimental::ElementLayerAssembler<Backend>;
+  using ElementLayerAssembler = ElementLayerAssembler<Backend>;
   /// The @ref SensorLayerAssembler specialisation for this backend.
-  using SensorLayerAssembler =
-      Acts::Experimental::SensorLayerAssembler<Backend>;
+  using SensorLayerAssembler = SensorLayerAssembler<Backend>;
   /// The @ref SensorLayer specialisation for this backend.
-  using SensorLayer = Acts::Experimental::SensorLayer<Backend>;
+  using SensorLayer = SensorLayer<Backend>;
   /// The @ref BarrelEndcapAssembler specialisation for this backend.
-  using BarrelEndcapAssembler =
-      Acts::Experimental::BarrelEndcapAssembler<Backend>;
+  using BarrelEndcapAssembler = BarrelEndcapAssembler<Backend>;
 
   /// @brief Construct a `BlueprintBuilder` from a backend configuration.
   ///
@@ -1079,7 +1051,7 @@ class BlueprintBuilder {
   /// @param layerSpec  Specification controlling surface axes and optional
   ///                   name/transform overrides.
   /// @return Shared pointer to the constructed @ref LayerBlueprintNode.
-  std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
+  std::shared_ptr<LayerBlueprintNode> makeLayer(
       const Element& layerElement, const LayerSpec& layerSpec) const;
 
   /// @brief Create a @ref LayerBlueprintNode from an explicit list of sensitive
@@ -1094,7 +1066,7 @@ class BlueprintBuilder {
   /// @param layerSpec  Specification controlling surface axes and optional
   ///                   name/transform overrides.
   /// @return Shared pointer to the constructed @ref LayerBlueprintNode.
-  std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
+  std::shared_ptr<LayerBlueprintNode> makeLayer(
       const Element& parent, std::span<const Element> sensitives,
       const LayerSpec& layerSpec) const;
 
@@ -1108,7 +1080,7 @@ class BlueprintBuilder {
   /// @param layerSpec  Specification controlling surface axes and name.
   /// @throws std::runtime_error if `layerSpec.layerName` is not set.
   /// @return Shared pointer to the constructed @ref LayerBlueprintNode.
-  std::shared_ptr<Acts::Experimental::LayerBlueprintNode> makeLayer(
+  std::shared_ptr<LayerBlueprintNode> makeLayer(
       std::span<const Element> sensitives, const LayerSpec& layerSpec) const;
 
   /// @brief Create an @ref ElementLayerAssembler bound to this builder.
