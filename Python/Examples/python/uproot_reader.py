@@ -55,9 +55,6 @@ class UprootParticleReader(acts.examples.IReader):
         self._min_event = int(min(all_ids))
         self._max_event = int(max(all_ids))
 
-    def name(self) -> str:
-        return "UprootParticleReader"
-
     def availableEvents(self):
         return (self._min_event, self._max_event + 1)
 
@@ -156,9 +153,6 @@ class UprootSimHitReader(acts.examples.IReader):
         return {
             int(uid): (int(s), int(e)) for uid, s, e in zip(unique_ids, starts, ends)
         }
-
-    def name(self) -> str:
-        return "UprootSimHitReader"
 
     def availableEvents(self):
         return (self._min_event, self._max_event + 1)
