@@ -20,12 +20,12 @@
 namespace Acts::Experimental {
 
 GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
-    std::istream& inputStream, bool lrtMode) {
+    std::istream& inStream, bool lrtMode) {
   GbtsLayerConnectionMap connectionMap;
 
   std::uint32_t nLinks{};
 
-  inputStream >> nLinks >> connectionMap.etaBinWidth;
+  inStream >> nLinks >> connectionMap.etaBinWidth;
 
   for (std::uint32_t l = 0; l < nLinks; l++) {
     std::uint32_t stage{};
@@ -36,7 +36,7 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
     std::uint32_t height{};
     std::uint32_t width{};
 
-    inputStream >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
+    inStream >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
 
     auto pC = std::make_unique<GbtsLayerConnection>(src, dst);
 
@@ -44,7 +44,7 @@ GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
 
     for (std::uint32_t i = 0; i < height; ++i) {
       for (std::uint32_t j = 0; j < width; ++j) {
-        inputStream >> dummy;
+        inStream >> dummy;
       }
     }
 
