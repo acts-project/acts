@@ -1293,7 +1293,7 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.GbtsConfig(
+    seedFinderConfig = acts.examples.GraphBasedSeedingConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
             connectorInputFile=connectorInputFileStr,
