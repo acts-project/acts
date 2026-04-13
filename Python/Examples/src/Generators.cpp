@@ -174,54 +174,35 @@ void addGenerators(py::module& mex) {
                       p.setProcess(v);
                     })
       .def_property_readonly("isSecondary", &SimParticle::isSecondary)
-      .def_property_readonly("fourPosition", &SimParticle::fourPosition)
+      .def_property(
+          "fourPosition", &SimParticle::fourPosition,
+          [](SimParticle& p, const Acts::Vector4& pos4) {
+            p.initialState().setPosition4(pos4);
+          })
       .def_property_readonly(
           "position",
           [](const SimParticle& p) { return Vector3(p.position()); })
       .def_property_readonly("time", &SimParticle::time)
       .def_property_readonly("fourMomentum", &SimParticle::fourMomentum)
-      .def_property_readonly("direction", &SimParticle::direction)
+      .def_property(
+          "direction", &SimParticle::direction,
+          [](SimParticle& p, const Acts::Vector3& dir) {
+            p.initialState().setDirection(dir);
+          })
       .def_property_readonly("theta", &SimParticle::theta)
       .def_property_readonly("phi", &SimParticle::phi)
       .def_property_readonly("transverseMomentum",
                              &SimParticle::transverseMomentum)
-      .def_property_readonly("absoluteMomentum", &SimParticle::absoluteMomentum)
+      .def_property(
+          "absoluteMomentum", &SimParticle::absoluteMomentum,
+          [](SimParticle& p, double v) {
+            p.initialState().setAbsoluteMomentum(v);
+          })
       .def_property_readonly("momentum", &SimParticle::momentum)
       .def_property_readonly("energy", &SimParticle::energy)
       .def_property_readonly("energyLoss", &SimParticle::energyLoss)
       .def_property_readonly("pathInX0", &SimParticle::pathInX0)
       .def_property_readonly("pathInL0", &SimParticle::pathInL0)
-      .def_property_readonly("numberOfHits", &SimParticle::numberOfHits)
-      .def_property_readonly("outcome", &SimParticle::outcome)
-      .def_property_readonly(
-          "initialState",
-          py::overload_cast<>(&SimParticle::initialState, py::const_))
-      .def_property_readonly(
-          "finalState",
-          py::overload_cast<>(&SimParticle::finalState, py::const_))
-      .def("withParticleId", &SimParticle::withParticleId,
-           py::arg("particleId"))
-      .def(
-          "setInitialPosition4",
-          [](SimParticle& p, const Acts::Vector4& pos4) -> SimParticle& {
-            p.initialState().setPosition4(pos4);
-            return p;
-          },
-          py::arg("pos4"), py::return_value_policy::reference_internal)
-      .def(
-          "setInitialDirection",
-          [](SimParticle& p, const Acts::Vector3& dir) -> SimParticle& {
-            p.initialState().setDirection(dir);
-            return p;
-          },
-          py::arg("direction"), py::return_value_policy::reference_internal)
-      .def(
-          "setInitialAbsoluteMomentum",
-          [](SimParticle& p, double abs) -> SimParticle& {
-            p.initialState().setAbsoluteMomentum(abs);
-            return p;
-          },
-          py::arg("absMomentum"), py::return_value_policy::reference_internal)
       .def(
           "setFinalMaterialPassed",
           [](SimParticle& p, double x0, double l0) -> SimParticle& {
@@ -230,20 +211,24 @@ void addGenerators(py::module& mex) {
           },
           py::arg("pathInX0"), py::arg("pathInL0"),
           py::return_value_policy::reference_internal)
-      .def(
-          "setFinalNumberOfHits",
-          [](SimParticle& p, std::uint32_t n) -> SimParticle& {
+      .def_property(
+          "numberOfHits", &SimParticle::numberOfHits,
+          [](SimParticle& p, std::uint32_t n) {
             p.finalState().setNumberOfHits(n);
-            return p;
-          },
-          py::arg("numberOfHits"), py::return_value_policy::reference_internal)
-      .def(
-          "setFinalOutcome",
-          [](SimParticle& p, ActsFatras::SimulationOutcome o) -> SimParticle& {
+          })
+      .def_property(
+          "outcome", &SimParticle::outcome,
+          [](SimParticle& p, ActsFatras::SimulationOutcome o) {
             p.finalState().setOutcome(o);
-            return p;
-          },
-          py::arg("outcome"), py::return_value_policy::reference_internal)
+          })
+      .def_property_readonly(
+          "initialState",
+          py::overload_cast<>(&SimParticle::initialState, py::const_))
+      .def_property_readonly(
+          "finalState",
+          py::overload_cast<>(&SimParticle::finalState, py::const_))
+      .def("withParticleId", &SimParticle::withParticleId,
+           py::arg("particleId"))
       .def("__repr__", [](const SimParticle& p) {
         std::ostringstream oss;
         oss << p;

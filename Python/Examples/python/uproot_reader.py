@@ -87,24 +87,20 @@ class UprootParticleReader(acts.examples.IReader):
                 )
                 p.process = acts.examples.GenerationProcess(int(d["process"][idx][i]))
 
-                p.setInitialPosition4(
-                    acts.Vector4(
-                        *[float(d[k][idx][i]) * u.mm for k in ("vx", "vy", "vz", "vt")]
-                    )
+                p.fourPosition = acts.Vector4(
+                    *[float(d[k][idx][i]) * u.mm for k in ("vx", "vy", "vz", "vt")]
                 )
-                p.setInitialDirection(
-                    acts.Vector3(*[float(d[k][idx][i]) for k in ("px", "py", "pz")])
+                p.direction = acts.Vector3(
+                    *[float(d[k][idx][i]) for k in ("px", "py", "pz")]
                 )
-                p.setInitialAbsoluteMomentum(float(d["p"][idx][i]) * u.GeV)
+                p.absoluteMomentum = float(d["p"][idx][i]) * u.GeV
 
                 p.setFinalMaterialPassed(
                     float(d["total_x0"][idx][i]) * u.mm,
                     float(d["total_l0"][idx][i]) * u.mm,
                 )
-                p.setFinalNumberOfHits(int(d["number_of_hits"][idx][i]))
-                p.setFinalOutcome(
-                    acts.examples.SimulationOutcome(int(d["outcome"][idx][i]))
-                )
+                p.numberOfHits = int(d["number_of_hits"][idx][i])
+                p.outcome = acts.examples.SimulationOutcome(int(d["outcome"][idx][i]))
 
                 particles.insert(p)
 
