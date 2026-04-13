@@ -25,10 +25,6 @@
 
 namespace ActsExamples {
 
-namespace detail {
-struct FatrasSimulation;
-}
-
 /// Fast track simulation using the Acts propagation and navigation.
 class FatrasSimulation final : public IAlgorithm {
  public:
@@ -103,8 +99,10 @@ class FatrasSimulation final : public IAlgorithm {
                                                           "OutputParticles"};
 
  private:
+  struct Impl;
+
   Config m_cfg;
-  std::unique_ptr<detail::FatrasSimulation> m_sim;
+  std::unique_ptr<Impl> m_sim;
 };
 
 }  // namespace ActsExamples

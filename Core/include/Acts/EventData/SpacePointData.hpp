@@ -21,7 +21,9 @@ namespace Acts {
 /// reads them
 /// The variables collected here are also dynamic variables only present
 /// for strip space points
-class SpacePointData {
+class [[deprecated(
+    "Will be dropped soon and is replaced by the new "
+    "space point proxies")]] SpacePointData {
  public:
   /// @brief Default constructor
   SpacePointData() = default;

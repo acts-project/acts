@@ -24,7 +24,9 @@ namespace Acts {
 
 /// Orthogonal range-search based seed finder.
 template <typename external_space_point_t>
-class SeedFinderOrthogonal {
+class [[deprecated(
+    "Will be dropped soon and is replaced by "
+    "TripletSeeder")]] SeedFinderOrthogonal {
  public:
   /**
    * @brief Set the number of dimensions in which to embed points. This is just

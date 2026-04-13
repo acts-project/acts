@@ -8,41 +8,42 @@
 
 #include "ActsExamples/Geant4/AlgebraConverters.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Geant4/UnitConversion.hpp"
 
-#include "CLHEP/Units/SystemOfUnits.h"
+namespace ActsExamples {
 
-namespace {
-constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
-constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
-constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
-}  // namespace
-
-namespace ActsExamples::Geant4 {
-Acts::Vector3 convertPosition(const G4ThreeVector& g4vec) {
-  return Acts::Vector3(g4vec[0] * convertLength, g4vec[1] * convertLength,
-                       g4vec[2] * convertLength);
-};
-
-Acts::Vector4 convertPosition(const G4ThreeVector& g4vec, const double time) {
-  return Acts::Vector4(g4vec[0] * convertLength, g4vec[1] * convertLength,
-                       g4vec[2] * convertLength, time * convertTime);
+Acts::Vector3 Geant4::convertPosition(const G4ThreeVector& g4vec) {
+  return Acts::Vector3(g4vec[0] * convertLengthToActs,
+                       g4vec[1] * convertLengthToActs,
+                       g4vec[2] * convertLengthToActs);
 }
 
-Acts::Vector4 convertMomentum(const G4ThreeVector& g4vec, const double energy) {
-  return Acts::Vector4{convertEnergy * g4vec[0], convertEnergy * g4vec[1],
-                       convertEnergy * g4vec[2], convertEnergy * energy};
+Acts::Vector4 Geant4::convertPosition(const G4ThreeVector& g4vec,
+                                      const double time) {
+  return Acts::Vector4(
+      g4vec[0] * convertLengthToActs, g4vec[1] * convertLengthToActs,
+      g4vec[2] * convertLengthToActs, time * convertTimeToActs);
 }
 
-G4ThreeVector convertPosition(const Acts::Vector3& actsVec) {
-  return G4ThreeVector(actsVec[0] / convertLength, actsVec[1] / convertLength,
-                       actsVec[2] / convertLength);
+Acts::Vector4 Geant4::convertMomentum(const G4ThreeVector& g4vec,
+                                      const double energy) {
+  return Acts::Vector4{
+      convertEnergyToActs * g4vec[0], convertEnergyToActs * g4vec[1],
+      convertEnergyToActs * g4vec[2], convertEnergyToActs * energy};
 }
-Acts::Vector3 convertDirection(const G4ThreeVector& g4vec) {
+
+G4ThreeVector Geant4::convertPosition(const Acts::Vector3& actsVec) {
+  return G4ThreeVector(actsVec[0] / convertLengthToActs,
+                       actsVec[1] / convertLengthToActs,
+                       actsVec[2] / convertLengthToActs);
+}
+
+Acts::Vector3 Geant4::convertDirection(const G4ThreeVector& g4vec) {
   return Acts::Vector3{g4vec[0], g4vec[1], g4vec[2]};
 }
-G4ThreeVector convertDirection(const Acts::Vector3& actsVec) {
+
+G4ThreeVector Geant4::convertDirection(const Acts::Vector3& actsVec) {
   return G4ThreeVector{actsVec[0], actsVec[1], actsVec[2]};
 }
 
-}  // namespace ActsExamples::Geant4
+}  // namespace ActsExamples

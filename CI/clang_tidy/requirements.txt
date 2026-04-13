@@ -20,7 +20,7 @@ pydantic==2.12.5
     # via -r CI/clang_tidy/requirements.in
 pydantic-core==2.41.5
     # via pydantic
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   codereport
     #   rich
@@ -28,7 +28,7 @@ python-slugify==6.1.2
     # via codereport
 pyyaml==6.0.3
     # via -r CI/clang_tidy/requirements.in
-rich==14.3.3
+rich==14.3.4
     # via -r CI/clang_tidy/requirements.in
 setuptools==82.0.1
     # via fs

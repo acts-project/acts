@@ -21,10 +21,6 @@
 
     <tab type="user" url="@ref versioning" visible="yes" title="Versioning and public API"/>
 
-    <tab type="usergroup" title="Examples" url="[none]">
-      <tab type="user" url="@ref python_bindings" visible="yes" title="Python bindings"/>
-    </tab>
-
     <tab type="topics" visible="yes" title="" intro=""/>
 
 

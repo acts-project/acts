@@ -12,7 +12,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/ProcessType.hpp"
+#include "ActsFatras/EventData/GenerationProcess.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -59,7 +59,7 @@ Particle BetheHeitler::bremPhoton(const Particle &particle, double gammaE,
 
   Particle photon(particle.particleId().makeDescendant(0),
                   Acts::PdgParticle::eGamma);
-  photon.setProcess(ProcessType::eBremsstrahlung)
+  photon.setProcess(GenerationProcess::eBremsstrahlung)
       .setPosition4(particle.fourPosition())
       .setDirection(photonDirection)
       .setAbsoluteMomentum(gammaE)

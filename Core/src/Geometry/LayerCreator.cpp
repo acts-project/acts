@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Diagnostics.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -50,7 +51,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsPhi,
     std::size_t binsZ, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -100,9 +102,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, fullTransform);
-
-    checkBinning(gctx, *sArray);
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, fullTransform,
+        maxNeighborDistance);
   }
 
   // create the layer and push it back
@@ -127,7 +128,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
     BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -178,9 +180,8 @@ MutableLayerPtr LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer, fullTransform);
-
-    checkBinning(gctx, *sArray);
+        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer, fullTransform,
+        maxNeighborDistance);
   }
 
   // create the layer and push it back
@@ -205,7 +206,8 @@ MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t binsR,
     std::size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -246,9 +248,8 @@ MutableLayerPtr LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, fullTransform);
-
-    checkBinning(gctx, *sArray);
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, fullTransform,
+        maxNeighborDistance);
   }
 
   // create the share disc bounds
@@ -275,7 +276,8 @@ MutableLayerPtr LayerCreator::discLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
     BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
-    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad) const {
+    const Transform3& transform, std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -316,9 +318,8 @@ MutableLayerPtr LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, fullTransform);
-
-    checkBinning(gctx, *sArray);
+        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, fullTransform,
+        maxNeighborDistance);
   }
 
   // create the shared disc bounds
@@ -343,7 +344,8 @@ MutableLayerPtr LayerCreator::planeLayer(
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
     std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> _protoLayer, const Transform3& transform,
-    std::unique_ptr<ApproachDescriptor> ad) const {
+    std::unique_ptr<ApproachDescriptor> ad,
+    std::uint8_t maxNeighborDistance) const {
   ProtoLayer protoLayer =
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
   if (!_protoLayer) {
@@ -408,9 +410,7 @@ MutableLayerPtr LayerCreator::planeLayer(
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
         gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer,
-        fullTransform);
-
-    checkBinning(gctx, *sArray);
+        fullTransform, maxNeighborDistance);
   }
 
   // create the layer and push it back
@@ -439,75 +439,6 @@ void LayerCreator::associateSurfacesToLayer(Layer& layer) const {
       mutableSurface->associateLayer(layer);
     }
   }
-}
-
-bool LayerCreator::checkBinning(const GeometryContext& gctx,
-                                const SurfaceArray& sArray) const {
-  // do consistency check: can we access all sensitive surfaces
-  // through the binning? If not, surfaces get lost and the binning does not
-  // work
-
-  ACTS_VERBOSE("Performing consistency check");
-
-  std::vector<const Surface*> surfaces = sArray.surfaces();
-  std::set<const Surface*> sensitiveSurfaces(surfaces.begin(), surfaces.end());
-  std::set<const Surface*> accessibleSurfaces;
-  std::size_t nEmptyBins = 0;
-  std::size_t nBinsChecked = 0;
-
-  // iterate over all bins
-  std::size_t size = sArray.size();
-  for (std::size_t b = 0; b < size; ++b) {
-    std::vector<const Surface*> binContent = sArray.at(b);
-    // we don't check under/overflow bins
-    if (!sArray.isValidBin(b)) {
-      continue;
-    }
-    for (const auto& srf : binContent) {
-      accessibleSurfaces.insert(srf);
-    }
-    if (binContent.empty()) {
-      nEmptyBins++;
-    }
-    nBinsChecked++;
-  }
-
-  std::vector<const Surface*> diff;
-  std::set_difference(sensitiveSurfaces.begin(), sensitiveSurfaces.end(),
-                      accessibleSurfaces.begin(), accessibleSurfaces.end(),
-                      std::inserter(diff, diff.begin()));
-
-  ACTS_VERBOSE(" - Checked " << nBinsChecked << " valid bins");
-
-  if (nEmptyBins > 0) {
-    ACTS_VERBOSE(" -- Not all bins point to surface. " << nEmptyBins
-                                                       << " empty");
-  } else {
-    ACTS_VERBOSE(" -- All bins point to a surface");
-  }
-
-  if (!diff.empty()) {
-    ACTS_ERROR(
-        " -- Not all sensitive surfaces are accessible through binning. "
-        "sensitive: "
-        << sensitiveSurfaces.size()
-        << "    accessible: " << accessibleSurfaces.size());
-
-    // print all inaccessibles
-    ACTS_ERROR(" -- Inaccessible surfaces: ");
-    for (const auto& srf : diff) {
-      // have to choose AxisDirection here
-      Vector3 ctr = srf->referencePosition(gctx, AxisDirection::AxisR);
-      ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y()
-                               << ", z=" << ctr.z() << ", r=" << perp(ctr)
-                               << ", phi=" << phi(ctr) << ")");
-    }
-
-  } else {
-    ACTS_VERBOSE(" -- All sensitive surfaces are accessible through binning.");
-  }
-
-  return diff.empty();
 }
 
 }  // namespace Acts

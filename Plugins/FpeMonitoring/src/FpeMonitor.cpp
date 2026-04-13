@@ -47,6 +47,7 @@ bool canMergeFpeInfo(const FpeMonitor::Result::FpeInfo &existing, FpeType type,
   return boost::stacktrace::hash_value(existingFrame) ==
          boost::stacktrace::hash_value(candidateFrame);
 }
+
 }  // namespace
 
 FpeMonitor::Result::FpeInfo::~FpeInfo() = default;

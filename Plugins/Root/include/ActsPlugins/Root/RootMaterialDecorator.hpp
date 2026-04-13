@@ -61,10 +61,6 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   ///
   /// @param surface the non-cost surface that is decorated
   void decorate(Acts::Surface& surface) const final {
-    // Null out the material for this surface
-    if (m_clearSurfaceMaterial) {
-      surface.assignSurfaceMaterial(nullptr);
-    }
     // Try to find the surface in the map
     auto sMaterial = m_surfaceMaterialMap.find(surface.geometryId());
     if (sMaterial != m_surfaceMaterialMap.end()) {
@@ -76,10 +72,6 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   ///
   /// @param volume the non-cost volume that is decorated
   void decorate(Acts::TrackingVolume& volume) const final {
-    // Null out the material for this volume
-    if (m_clearSurfaceMaterial) {
-      volume.assignVolumeMaterial(nullptr);
-    }
     // Try to find the surface in the map
     auto vMaterial = m_volumeMaterialMap.find(volume.geometryId());
     if (vMaterial != m_volumeMaterialMap.end()) {
@@ -111,8 +103,6 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
 
   /// Volume based material
   Acts::VolumeMaterialMaps m_volumeMaterialMap;
-
-  bool m_clearSurfaceMaterial{true};
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
