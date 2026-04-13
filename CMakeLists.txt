@@ -576,6 +576,10 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
         endif()
     endif()
 
+    find_package(CUDAToolkit REQUIRED)
+    enable_cuda()
+    message(STATUS "Build Traccc plugin with CUDA")
+
     # traccc also depends on vecmem and covfie, but those plugins should always
     # be enabled if traccc is.
     if(ACTS_USE_SYSTEM_TRACCC)

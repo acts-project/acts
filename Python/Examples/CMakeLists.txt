@@ -280,6 +280,27 @@ add_examples_binding_if(
     PLUGIN_IMPORT FALSE
 )
 
+if(ACTS_BUILD_PLUGIN_TRACCC)
+
+    target_sources(ActsExamplesPythonBindingsTraccc PRIVATE
+        ${traccc_SOURCE_DIR}/examples/run/cuda/full_chain_algorithm.cpp
+    )
+    target_include_directories(ActsExamplesPythonBindingsTraccc PRIVATE
+        ${traccc_SOURCE_DIR}/examples/run/cuda
+        ${traccc_SOURCE_DIR}/examples/run/common
+        ${traccc_SOURCE_DIR}/core/include
+        ${traccc_SOURCE_DIR}/device/common/include
+        ${traccc_SOURCE_DIR}/device/cuda/include
+        ${traccc_SOURCE_DIR}/device/cuda_utils/include
+        ${traccc_SOURCE_DIR}/io/include
+        ${traccc_SOURCE_DIR}/examples/options/include
+        ${traccc_SOURCE_DIR}/examples/utils/include
+        ${traccc_BINARY_DIR}/core/CMakeFiles/include
+        ${vecmem_SOURCE_DIR}/cuda/include
+        ${vecmem_BINARY_DIR}/cuda/CMakeFiles
+    )
+endif()
+
 # Special case for HepMC3 as it a hard dependency
 pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
 install(
