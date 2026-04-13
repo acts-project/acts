@@ -331,7 +331,7 @@ class Impl final : public TripletSeedFinder {
       // so the cut is very loose
       {
         const float deltaCotTheta = cotThetaB - topDoublet.cotTheta();
-        if (deltaCotTheta * deltaCotTheta > m_cfg.cotThetaDiffMax2) {
+        if (std::abs(deltaCotTheta) > m_cfg.cotThetaDiffMax) {
           continue;
         }
       }
@@ -561,7 +561,6 @@ TripletSeedFinder::DerivedConfig::DerivedConfig(const Config& config,
   const float pT2perRadius = square(highland / pTPerHelixRadius);
   sigmapT2perRadius = pT2perRadius * square(2 * sigmaScattering);
   multipleScattering2 = maxScatteringAngle2 * square(sigmaScattering);
-  cotThetaDiffMax2 = cotThetaDiffMax * cotThetaDiffMax;
 }
 
 std::unique_ptr<TripletSeedFinder> TripletSeedFinder::create(

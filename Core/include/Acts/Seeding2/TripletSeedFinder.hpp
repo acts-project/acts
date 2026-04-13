@@ -193,8 +193,6 @@ class TripletSeedFinder {
     float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
     /// Squared multiple scattering angle for uncertainty calculations
     float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
-    /// Squared maximum cot(theta) difference for pre-filter
-    float cotThetaDiffMax2 = std::numeric_limits<float>::infinity();
   };
 
   /// Creates a new triplet seed finder instance given the configuration.
