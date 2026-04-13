@@ -21,6 +21,14 @@ namespace Acts {
 /// @ingroup track_fitting
 class GainMatrixUpdater {
  public:
+  GainMatrixUpdater() = default;
+
+  /// @param useJosephFormulation Whether to use the Joseph formulation for the
+  /// covariance update, which is more numerically stable at the cost of
+  /// additional computations.
+  explicit GainMatrixUpdater(bool useJosephFormulation)
+      : m_useJosephFormulation(useJosephFormulation) {}
+
   /// Run the Kalman update step for a single trajectory state.
   ///
   /// @tparam kMeasurementSizeMax
@@ -57,6 +65,8 @@ class GainMatrixUpdater {
   }
 
  private:
+  bool m_useJosephFormulation = false;
+
   Result<void> visitMeasurement(AnyMutableTrackStateProxy trackState,
                                 const Logger& logger) const;
 
