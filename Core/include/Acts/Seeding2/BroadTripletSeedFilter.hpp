@@ -101,7 +101,7 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     float numSeedIncrement = std::numeric_limits<float>::infinity();
 
     /// Weight factor for the abs(delta-eta) penalty between the seed direction
-    /// and the vector from the beamspot to the seed's pca. 
+    /// and the vector from the beamspot to the seed's pca.
     /// Seeds from LLP decays tend toward small delta-eta
     /// values due to the correlated direction of the LLP and its decay
     /// products. Set to 0 (default) to disable.
