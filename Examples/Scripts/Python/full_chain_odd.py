@@ -235,20 +235,22 @@ else:
         addParticleGun(
             s,
             MomentumConfig(
-                1,
-                1,
+                args.gun_pt_range[0] * u.GeV,
+                args.gun_pt_range[1] * u.GeV,
                 transverse=True,
             ),
-            EtaConfig(-3, 3),
+            EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
+            ParticleConfig(
+                args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
+            ),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=1,
+            multiplicity=args.gun_multiplicity,
             rnd=rnd,
         )
     else:
@@ -264,6 +266,7 @@ else:
             ),
             rnd=rnd,
             outputDirRoot=outputDir if args.output_root else None,
+            outputDirCsv=outputDir if args.output_csv else None,
         )
 
         addGenParticleSelection(
@@ -289,6 +292,8 @@ else:
             trackingGeometry,
             field,
             outputDirRoot=outputDir if args.output_root else None,
+            outputDirCsv=outputDir if args.output_csv else None,
+            outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
             killVolume=trackingGeometry.highestTrackingVolume,
             killAfterTime=25 * u.ns,
@@ -300,6 +305,8 @@ else:
             field,
             enableInteractions=True,
             outputDirRoot=outputDir if args.output_root else None,
+            outputDirCsv=outputDir if args.output_csv else None,
+            outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
         )
 
@@ -309,6 +316,7 @@ addDigitization(
     field,
     digiConfigFile=oddDigiConfig,
     outputDirRoot=outputDir if args.output_root else None,
+    outputDirCsv=outputDir if args.output_csv else None,
     rnd=rnd,
 )
 
@@ -341,6 +349,7 @@ if args.reco:
         particleHypothesis=acts.ParticleHypothesis.muon,
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
+        outputDirCsv=outputDir if args.output_csv else None,
     )
 
     if seedFilter_ML:
@@ -352,6 +361,7 @@ if args.reco:
             onnxModelFile=os.path.dirname(__file__)
             + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
             outputDirRoot=outputDir if args.output_root else None,
+            outputDirCsv=outputDir if args.output_csv else None,
         )
 
     addCKFTracks(
@@ -393,9 +403,9 @@ if args.reco:
                 29,
                 30,  # long strip
             ],
-            useJosephFormulation=True,
         ),
         outputDirRoot=outputDir if args.output_root else None,
+        outputDirCsv=outputDir if args.output_csv else None,
         writeCovMat=True,
     )
 
@@ -406,6 +416,7 @@ if args.reco:
                 maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
             ),
             outputDirRoot=outputDir if args.output_root else None,
+            outputDirCsv=outputDir if args.output_csv else None,
             onnxModelFile=os.path.dirname(__file__)
             + "/MLAmbiguityResolution/duplicateClassifier.onnx",
         )
@@ -422,6 +433,7 @@ if args.reco:
                 useAmbiguityScoring=False,
             ),
             outputDirRoot=outputDir if args.output_root else None,
+            outputDirCsv=outputDir if args.output_csv else None,
             ambiVolumeFile=ambi_config,
             writeCovMat=True,
         )
@@ -432,6 +444,7 @@ if args.reco:
                 maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
             ),
             outputDirRoot=outputDir if args.output_root else None,
+            outputDirCsv=outputDir if args.output_csv else None,
             writeCovMat=True,
         )
 
@@ -440,6 +453,7 @@ if args.reco:
         field,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=outputDir if args.output_root else None,
+        outputDirCsv=outputDir if args.output_csv else None,
     )
 
 s.run()

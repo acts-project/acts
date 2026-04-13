@@ -138,7 +138,6 @@ with tempfile.TemporaryDirectory() as temp:
             numMeasurementsCutOff=10,
             seedDeduplication=True,
             stayOnSeed=True,
-            useJosephFormulation=True,
         ),
         outputDirRoot=tp,
     )

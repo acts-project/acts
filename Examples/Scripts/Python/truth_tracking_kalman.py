@@ -170,7 +170,6 @@ def runTruthTrackingKalman(
         reverseFilteringMomThreshold,
         reverseFilteringCovarianceScaling,
         linkForward=linkForward,
-        useJosephFormulation=True,
     )
 
     s.addAlgorithm(

@@ -158,7 +158,6 @@ def run_ckf_tracking(label, seeding):
                     True if seeding != SeedingAlgorithm.TruthSmeared else False
                 ),
                 stayOnSeed=True if seeding != SeedingAlgorithm.TruthSmeared else False,
-                useJosephFormulation=True,
             ),
             outputDirRoot=tp,
         )
