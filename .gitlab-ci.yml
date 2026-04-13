@@ -166,7 +166,7 @@ test_gnn_python:
     - source ../build/this_acts_withdeps.sh
     - python3 -m pip install -r Python/Examples/tests/requirements.txt
     # There is not yet a proper test for the ModuleMap, but we can at least ensure that it is present and can be imported
-    - python3 -c "from acts.examples.gnn import ModuleMapCuda"
+    - python3 -c "from acts.gnn import ModuleMapCuda"
     - pytest -rsfExw -k torch -v --collect-only
     - pytest -rsFExw -k gpu -v # For now only test torch GPU pipeline
 
@@ -253,8 +253,8 @@ build_linux_ubuntu:
     # Downstream build
     - cmake --build build-downstream
 
-    # Downstream run
-    - ./build-downstream/bin/ShowActsVersion
+    # Downstream tests
+    - ctest --test-dir build-downstream --output-on-failure
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -369,8 +369,8 @@ linux_physmon:
     # Downstream build
     - cmake --build build-downstream
 
-    # Downstream run
-    - ./build-downstream/bin/ShowActsVersion
+    # Downstream tests
+    - ctest --test-dir build-downstream --output-on-failure
 
   after_script:
    - !reference [.spack_cleanup, after_script]

@@ -13,7 +13,7 @@
 // clang-format off
 namespace Acts {
 
-template std::tuple<double, std::error_code>
+template Result<void>
 GainMatrixUpdater::visitMeasurementImpl<@DIM@>(AnyMutableTrackStateProxy trackState,
                                                const Logger& logger) const;
 
