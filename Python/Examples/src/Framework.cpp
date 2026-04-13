@@ -329,10 +329,10 @@ void addFramework(py::module& mex) {
       .def("availableEvents", &IReader::availableEvents)
       .def("read", &IReader::read)
       .def("name", &IReader::name)
-      .def_property_readonly(
-          "logger", [](const PyIReader& self) -> const Acts::Logger& {
-            return self.pyLogger();
-          });
+      .def_property_readonly("logger",
+                             [](const PyIReader& self) -> const Acts::Logger& {
+                               return self.pyLogger();
+                             });
 
   auto bareAlgorithm =
       py::class_<IAlgorithm, std::shared_ptr<IAlgorithm>, SequenceElement,

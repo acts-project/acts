@@ -271,11 +271,12 @@ void addGenerators(py::module& mex) {
                  oss << "SimParticleContainer(" << c.size() << " particles)";
                  return oss.str();
                })
-          .def("insert",
-               [](SimParticleContainer& c, const SimParticle& p) {
-                 c.insert(p);
-               },
-               py::arg("particle"));
+          .def(
+              "insert",
+              [](SimParticleContainer& c, const SimParticle& p) {
+                c.insert(p);
+              },
+              py::arg("particle"));
 
   WhiteBoardRegistry::registerClass(simParticleContainer);
 
@@ -296,17 +297,17 @@ void addGenerators(py::module& mex) {
   auto simHitContainer =
       py::classh<SimHitContainer>(mex, "SimHitContainer")
           .def(py::init<>())
-          .def("__len__",
-               [](const SimHitContainer& c) { return c.size(); })
+          .def("__len__", [](const SimHitContainer& c) { return c.size(); })
           .def(
               "__iter__",
               [](const SimHitContainer& c) {
                 return py::make_iterator(c.begin(), c.end());
               },
               py::keep_alive<0, 1>())
-          .def("insert",
-               [](SimHitContainer& c, const SimHit& h) { c.insert(h); },
-               py::arg("hit"))
+          .def(
+              "insert",
+              [](SimHitContainer& c, const SimHit& h) { c.insert(h); },
+              py::arg("hit"))
           .def("__repr__", [](const SimHitContainer& c) {
             std::ostringstream oss;
             oss << "SimHitContainer(" << c.size() << " hits)";

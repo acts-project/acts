@@ -140,9 +140,7 @@ class UprootSimHitReader(acts.examples.IReader):
         with uproot.open(str(filePath)) as f:
             tree = f["hits"]
             self._data = tree.arrays(library="np")
-            self._event_range_map = self._build_event_range_map(
-                self._data["event_id"]
-            )
+            self._event_range_map = self._build_event_range_map(self._data["event_id"])
             self._has_barcode_branch = "barcode" in tree.keys()
 
         all_ids = set(self._event_range_map.keys())
@@ -156,7 +154,9 @@ class UprootSimHitReader(acts.examples.IReader):
             return {}
         unique_ids, starts = np.unique(event_ids, return_index=True)
         ends = np.append(starts[1:], len(event_ids))
-        return {int(uid): (int(s), int(e)) for uid, s, e in zip(unique_ids, starts, ends)}
+        return {
+            int(uid): (int(s), int(e)) for uid, s, e in zip(unique_ids, starts, ends)
+        }
 
     def name(self) -> str:
         return "UprootSimHitReader"
