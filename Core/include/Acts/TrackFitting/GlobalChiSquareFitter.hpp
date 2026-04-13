@@ -900,7 +900,7 @@ class Gx2Fitter {
       // Here we handle all measurements
       if (auto sourceLinkIt = inputMeasurements->find(surface);
           sourceLinkIt != inputMeasurements->end() &&
-          (!Acts::rangeContainsValue(vetoedActiveSurfaces, surface))) {
+          !Acts::rangeContainsValue(vetoedActiveSurfaces, surface)) {
         ACTS_DEBUG("    The surface contains a measurement.");
         result.hitActiveSurfaces.push_back(surface);
 
@@ -1270,7 +1270,7 @@ class Gx2Fitter {
     for (nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       ACTS_DEBUG("nUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax);
 
-      if (missedMeasurements.size() > 0u &&
+      if (!missedMeasurements.empty() &&
           lastMissedIter + gx2fOptions.nCoolDownMissed <= nUpdate) {
         ACTS_DEBUG("Try to add back " << missedMeasurements.size()
                                       << " measurements");
@@ -1334,14 +1334,13 @@ class Gx2Fitter {
       auto track = trackContainerTemp.makeTrack();
       tipIndex = gx2fResult.lastMeasurementIndex;
 
-      if (false &&
-          gx2fResult.hitActiveSurfaces.size() + missedMeasurements.size() !=
+      if (gx2fResult.hitActiveSurfaces.size() + missedMeasurements.size() !=
               inputMeasurements.size()) {
         ACTS_DEBUG("Propagation only hit "
                    << gx2fResult.hitActiveSurfaces.size() << "/"
                    << (inputMeasurements.size() - missedMeasurements.size())
                    << " surfaces. Remove non hit surfaces from the list");
-        for (const auto [surface, _] : inputMeasurements) {
+        for (const auto& [surface, _] : inputMeasurements) {
           if (!Acts::rangeContainsValue(gx2fResult.hitActiveSurfaces,
                                         surface)) {
             missedMeasurements.push_back(surface);

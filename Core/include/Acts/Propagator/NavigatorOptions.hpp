@@ -46,7 +46,7 @@ struct NavigatorPlainOptions {
 
   /// Switch deciding whether surfaces without boundary
   /// are cleared after a volume switch although they've not been reached yet
-  bool eraseUnboundVolChange{false};
+  bool eraseUnboundVolChange{true};
 
   /// Delegate to decide whether free surfaces are appended to the navigation
   /// stream given the current volume and the track coordinates. If the
