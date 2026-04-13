@@ -141,7 +141,6 @@ class UprootSimHitReader(acts.examples.IReader):
             tree = f["hits"]
             self._data = tree.arrays(library="np")
             self._event_range_map = self._build_event_range_map(self._data["event_id"])
-            self._has_barcode_branch = "barcode" in tree.keys()
 
         all_ids = set(self._event_range_map.keys())
         self._min_event = int(min(all_ids))
@@ -179,21 +178,12 @@ class UprootSimHitReader(acts.examples.IReader):
             for i in range(start, end):
                 geoid = acts.GeometryIdentifier(int(d["geometry_id"][i]))
 
-                if self._has_barcode_branch:
-                    bc_data = d["barcode"][i]
-                    barcode = acts.examples.SimBarcode()
-                    barcode.vertexPrimary = int(bc_data[0])
-                    barcode.vertexSecondary = int(bc_data[1])
-                    barcode.particle = int(bc_data[2])
-                    barcode.generation = int(bc_data[3])
-                    barcode.subParticle = int(bc_data[4])
-                else:
-                    barcode = acts.examples.SimBarcode()
-                    barcode.vertexPrimary = int(d["barcode_vertex_primary"][i])
-                    barcode.vertexSecondary = int(d["barcode_vertex_secondary"][i])
-                    barcode.particle = int(d["barcode_particle"][i])
-                    barcode.generation = int(d["barcode_generation"][i])
-                    barcode.subParticle = int(d["barcode_sub_particle"][i])
+                barcode = acts.examples.SimBarcode()
+                barcode.vertexPrimary = int(d["barcode_vertex_primary"][i])
+                barcode.vertexSecondary = int(d["barcode_vertex_secondary"][i])
+                barcode.particle = int(d["barcode_particle"][i])
+                barcode.generation = int(d["barcode_generation"][i])
+                barcode.subParticle = int(d["barcode_sub_particle"][i])
 
                 pos4 = acts.Vector4(
                     *[float(d[k][i]) * u.mm for k in ("tx", "ty", "tz", "tt")]
