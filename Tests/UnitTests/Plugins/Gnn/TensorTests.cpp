@@ -18,6 +18,9 @@ using namespace ActsPlugins;
 #endif
 
 const ExecutionContext execContextCpu{Device::Cpu(), {}};
+#ifdef ACTS_GNN_WITH_CUDA
+const ExecutionContext execContextCuda{Device::Cuda(0), cudaStreamLegacy};
+#endif
 
 template <typename T>
 Tensor<T> createCpuTensor(const std::vector<T>& data,
@@ -237,6 +240,9 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(GnnSuite)
 
+const std::vector<float> scores = {0.1f, 0.4f, 0.6f, 0.9f};
+const std::vector<std::int64_t> edgeIndex = {0, 1, 2, 3, 4, 5, 6, 7};
+const std::vector<std::int64_t> edgeIndexExpected = {2, 3, 6, 7};
 // Edge features for edge selection with features test: 4 edges, 2 features each
 // Score cut at 0.5 keeps edges at indices 2 and 3 (scores 0.6 and 0.9)
 const std::vector<float> edgeFeaturesData = {0.f, 1.f, 2.f, 3.f,
@@ -268,10 +274,6 @@ BOOST_AUTO_TEST_CASE(tensor_sigmoid_cpu) {
   testSigmoid({-2.f, -1.f, 0.f, 1.f, 2.f}, execContextCpu);
 }
 
-const std::vector<float> scores = {0.1f, 0.4f, 0.6f, 0.9f};
-const std::vector<std::int64_t> edgeIndex = {0, 1, 2, 3, 4, 5, 6, 7};
-const std::vector<std::int64_t> edgeIndexExpected = {2, 3, 6, 7};
-
 BOOST_AUTO_TEST_CASE(tensor_edge_selection_cpu) {
   testEdgeSelection(scores, edgeIndex, edgeIndexExpected, execContextCpu);
 }
@@ -295,8 +297,6 @@ BOOST_AUTO_TEST_CASE(tensor_edge_selection_with_features_cpu) {
 }
 
 #ifdef ACTS_GNN_WITH_CUDA
-
-const ExecutionContext execContextCuda{Device::Cuda(0), cudaStreamLegacy};
 
 BOOST_AUTO_TEST_CASE(tensor_create_move_cuda) {
   testConstructionAndMove(execContextCuda);
