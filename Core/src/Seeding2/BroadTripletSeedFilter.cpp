@@ -240,9 +240,9 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
       weight += config().seedWeightIncrement;
     }
 
-    // Delta-eta weight: penalize seeds whose direction (eta) is
+    // Delta eta weight: penalize seeds whose eta is
     // inconsistent with the vector from the beamspot to the point of
-    // closest approach. Real displaced-decay seeds have small delta-eta.
+    // closest approach. Real displaced decay seeds have small delta eta.
     if (config().deltaEtaWeightFactor > 0 &&
         impact > config().deltaEtaMinImpact) {
       float etaSeed = std::asinh(bottomLink.cotTheta());

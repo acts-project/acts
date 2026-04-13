@@ -101,14 +101,13 @@ class BroadTripletSeedFilter final : public ITripletSeedFilter {
     float numSeedIncrement = std::numeric_limits<float>::infinity();
 
     /// Weight factor for the delta-eta penalty between the seed direction
-    /// and the vector from the beamspot to the seed's point of closest
-    /// approach (PCA). Seeds from LLP decays tend toward small delta-eta
+    /// and the vector from the beamspot to the seed's pca. 
+    /// Seeds from LLP decays tend toward small delta-eta
     /// values due to the correlated direction of the LLP and its decay
     /// products. Set to 0 (default) to disable.
     float deltaEtaWeightFactor = 0;
-    /// Minimum impact parameter to apply the delta-eta weight. Below this
-    /// threshold the PCA direction is poorly defined and the weight is
-    /// skipped.
+    /// Minimum impact parameter to apply the delta-eta weight
+    /// only want to apply to displaced seeds
     float deltaEtaMinImpact = 2 * UnitConstants::mm;
 
     /// Seeding parameters used for quality seed confirmation
