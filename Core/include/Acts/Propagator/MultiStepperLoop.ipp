@@ -12,6 +12,7 @@
 
 #include "Acts/Propagator/MultiStepperError.hpp"
 
+#include <algorithm>
 #include <vector>
 
 namespace Acts {
@@ -144,9 +145,9 @@ Result<double> MultiStepperLoop<S, R>::step(
   // If at least one component is on a surface, we can remove all missed
   // components before the step. If not, we must keep them for the case that all
   // components miss and we need to retarget
-  const auto cmpsOnSurface = std::count_if(
-      components.cbegin(), components.cend(),
-      [&](auto& cmp) { return cmp.status == IntersectionStatus::onSurface; });
+  const auto cmpsOnSurface = std::ranges::count_if(components, [&](auto& cmp) {
+    return cmp.status == IntersectionStatus::onSurface;
+  });
 
   if (cmpsOnSurface > 0) {
     removeMissedComponents(state);
@@ -184,9 +185,8 @@ Result<double> MultiStepperLoop<S, R>::step(
   };
 
   // Loop over components and remove errorous components
-  components.erase(
-      std::remove_if(components.begin(), components.end(), errorInStep),
-      components.end());
+  const auto removedTail = std::ranges::remove_if(components, errorInStep);
+  components.erase(removedTail.begin(), removedTail.end());
 
   // Reweight if necessary
   if (reweightNecessary) {

@@ -2,7 +2,7 @@
 #    uv pip compile --python-version 3.14 docs/old/requirements.in -o docs/old/requirements.txt
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.4
+aiohttp==3.13.5
     # via -r docs/old/requirements.in
 aiosignal==1.4.0
     # via aiohttp
@@ -22,11 +22,11 @@ certifi==2026.2.25
     # via requests
 cffi==2.0.0
     # via cryptography
-charset-normalizer==3.4.6
+charset-normalizer==3.4.7
     # via requests
-click==8.3.1
+click==8.3.2
     # via typer
-cryptography==46.0.6
+cryptography==46.0.7
     # via pyjwt
 docutils==0.21.2
     # via
@@ -82,7 +82,7 @@ pydantic==2.12.5
     # via -r docs/old/requirements.in
 pydantic-core==2.41.5
     # via pydantic
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   rich
     #   sphinx
@@ -92,9 +92,9 @@ python-dotenv==1.2.2
     # via -r docs/old/requirements.in
 pyyaml==6.0.3
     # via myst-parser
-requests==2.33.0
+requests==2.33.1
     # via sphinx
-rich==14.3.3
+rich==14.3.4
     # via
     #   -r docs/old/requirements.in
     #   typer

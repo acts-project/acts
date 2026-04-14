@@ -22,6 +22,7 @@ def runTruthTrackingKalman(
     reverseFilteringCovarianceScaling=100.0,
     numParticles=1,
     linkForward: bool = False,
+    useJosephFormulation: bool = False,
     s: acts.examples.Sequencer = None,
 ):
     from acts.examples.simulation import (
@@ -170,6 +171,7 @@ def runTruthTrackingKalman(
         reverseFilteringMomThreshold,
         reverseFilteringCovarianceScaling,
         linkForward=linkForward,
+        useJosephFormulation=useJosephFormulation,
     )
 
     s.addAlgorithm(

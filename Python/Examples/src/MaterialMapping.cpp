@@ -61,10 +61,8 @@ void addMaterialMapping(py::module& mex) {
     py::class_<MappingMaterialDecorator, IMaterialDecorator,
                std::shared_ptr<MappingMaterialDecorator>>(
         mex, "MappingMaterialDecorator")
-        .def(py::init<const TrackingGeometry&, Logging::Level, bool, bool>(),
-             py::arg("tGeometry"), py::arg("level"),
-             py::arg("clearSurfaceMaterial") = true,
-             py::arg("clearVolumeMaterial") = true)
+        .def(py::init<const TrackingGeometry&, Logging::Level>(),
+             py::arg("tGeometry"), py::arg("level"))
         .def("binningMap", &MappingMaterialDecorator::binningMap)
         .def("setBinningMap", &MappingMaterialDecorator::setBinningMap);
   }
