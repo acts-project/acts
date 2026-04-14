@@ -16,10 +16,10 @@ namespace ActsExamples {
 struct AlgorithmContext;
 
 /// The random number generator used in the framework.
-using RandomEngine = std::mt19937;  ///< Mersenne Twister
+using RandomEngine = std::mt19937_64;  ///< 64-bit Mersenne Twister
 
 /// The seed type used in the framework.
-using RandomSeed = std::uint32_t;
+using RandomSeed = std::uint64_t;
 
 /// Provide event and algorithm specific random number generator.s
 ///

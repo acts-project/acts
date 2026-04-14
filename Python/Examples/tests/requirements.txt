@@ -6,7 +6,7 @@ awkward==2.9.0
     #   uproot
 awkward-cpp==52
     # via awkward
-boost-histogram==1.7.1
+boost-histogram==1.7.2
     # via hist
 click==8.3.2
     # via histoprint
@@ -73,7 +73,7 @@ pyhepmc==2.16.1
     # via -r Python/Examples/tests/requirements.in
 pyparsing==3.3.2
     # via matplotlib
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   -r Python/Examples/tests/requirements.in
     #   pytest-check

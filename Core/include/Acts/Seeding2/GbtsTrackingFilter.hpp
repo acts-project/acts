@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding2/GbtsDataStorage.hpp"
 #include "Acts/Seeding2/GbtsGeometry.hpp"
 
@@ -70,9 +71,9 @@ class GbtsTrackingFilter final {
     float radLen = 0.025;
 
     /// Measurement uncertainty in x direction.
-    float sigmaX = 0.08;
+    float sigmaX = 0.08 * Acts::UnitConstants::mm;
     /// Measurement uncertainty in y direction.
-    float sigmaY = 0.25;
+    float sigmaY = 0.25 * Acts::UnitConstants::mm;
 
     /// Measurement weight in x direction.
     float weightX = 0.5;
@@ -88,9 +89,9 @@ class GbtsTrackingFilter final {
     float addHit = 14.0;
 
     /// Maximum track curvature.
-    float maxCurvature = 1e-3f;
+    float maxCurvature = 1e-3f / Acts::UnitConstants::mm;
     /// Maximum longitudinal impact parameter.
-    float maxZ0 = 170.0;
+    float maxZ0 = 170.0 * Acts::UnitConstants::mm;
   };
 
   /// State for the tracking filter, containing edge states and a global

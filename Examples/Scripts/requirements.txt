@@ -10,7 +10,7 @@ awkward==2.9.0
     #   uproot
 awkward-cpp==52
     # via awkward
-boost-histogram==1.7.1
+boost-histogram==1.7.2
     # via hist
 click==8.3.2
     # via
@@ -85,7 +85,7 @@ python-dateutil==2.9.0.post0
     #   pandas
 pyyaml==6.0.3
     # via -r Examples/Scripts/requirements.in
-rich==14.3.3
+rich==14.3.4
     # via
     #   -r Examples/Scripts/requirements.in
     #   typer
