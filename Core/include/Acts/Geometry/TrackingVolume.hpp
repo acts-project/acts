@@ -185,7 +185,7 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    auto sensitive = [&visitor,&restrictToSensitives](const Surface& surface) {
+    auto sensitive = [&visitor, &restrictToSensitives](const Surface& surface) {
       if (surface.geometryId().sensitive() == 0 && restrictToSensitives) {
         return;
       }
