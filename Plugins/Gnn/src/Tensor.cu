@@ -106,6 +106,10 @@ Tensor<T> cudaSelectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
 
   auto result = Tensor<T>::Create({nSelected, nCols}, execContext);
 
+  if (nSelected == 0) {
+    return result;
+  }
+
   if (nCols == 1) {
     // Fast path: direct element selection via thrust stencil
     thrust::copy_if(thrust::device.on(stream), tensor.data(),
@@ -144,6 +148,10 @@ Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
       thrust::device.on(stream), mask.data(), mask.data() + nColsSrc, true);
 
   auto result = Tensor<T>::Create({nRows, nSelected}, execContext);
+
+  if (nSelected == 0) {
+    return result;
+  }
 
   // Collect surviving column indices on device, then use gather kernel
   std::size_t *devColIndices{};
