@@ -37,7 +37,7 @@ class CombinatoricIndices {
   using IndexArray = std::array<std::size_t, K>;
 
   /// Constructor of the combinatoric indices
-  /// @param The size of the set from which indices are drawn
+  /// @param n The size of the set from which indices are drawn
   /// @note An exception is thrown if the size is less than the
   /// number of indices to draw
   explicit CombinatoricIndices(const std::size_t N);
@@ -50,7 +50,7 @@ class CombinatoricIndices {
   std::size_t setSize() const;
 
   /// Draws a new combination of indices and stores them in the array
-  /// @param combination: The number of the combination in the sequence
+  /// @param combination The number of the combination in the sequence
   /// @returns An array where each is a unique number from [0 -N)
   IndexArray draw(const std::size_t combination) const;
 
@@ -60,32 +60,32 @@ class CombinatoricIndices {
     /// Empty default constructor
     iterator() = default;
     /// Constructor with a CombinatoricIndex parent and the iterator position
-    /// @param parent: Pointer to the parent used to draw the combinatoric indices
-    /// @param _itr: Position of the iterator in the sequence of combinations
+    /// @param parent Pointer to the parent used to draw the combinatoric indices
+    /// @param _itr Position of the iterator in the sequence of combinations
     iterator(const CombinatoricIndices* parent, const std::size_t _itr);
 
     /// Increment the internal iterator count by one unit
-    /// @returns: Mutable reference to the iterator instance
+    /// @returns Mutable reference to the iterator instance
     iterator& operator++();
     /// Return an iterator shifted by x indices in the sequence
-    /// @param idx: Number of indexes by which the new operator is shifted from this one
+    /// @param idx Number of indexes by which the new operator is shifted from this one
     /// @returns A new iterator
     iterator operator+(const std::size_t idx) const;
 
     /// Comparison operator to check whether two iterators are equal,
     /// i.e. they share the same parent and have the same internal iterator
     /// index
-    /// @param other: Const reference to the other iterator to check
+    /// @param other Const reference to the other iterator to check
     /// @returns The equality assessment of the two iterators
     bool operator==(const iterator& other) const;
 
     /// Comparison operator to check whether two iterators are unequal
-    /// @param other: Const reference to the other iterator to check
+    /// @param other Const reference to the other iterator to check
     /// @returns The inequality assessment of the two iterators
     bool operator!=(const iterator& other) const;
 
     /// Dereference operator to the underlying memory
-    /// @returns: The array containing the unique indices of the combinatoric generator
+    /// @returns The array containing the unique indices of the combinatoric generator
     const IndexArray& operator*() const;
 
    private:
@@ -109,7 +109,7 @@ class CombinatoricIndices {
   /// Draws the unique index
   /// @param combination: The number of the combination in the list
   ///         of sequences
-  /// @param slot: The positional index of the index inside the returned array
+  /// @param slot The positional index of the index inside the returned array
   /// @returns A unique index for the n-th combination
   std::size_t drawIndex(const std::size_t combination,
                         const std::size_t slot) const;
