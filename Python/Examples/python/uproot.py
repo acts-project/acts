@@ -51,9 +51,8 @@ class UprootParticleReader(acts.examples.IReader):
             event_ids = self._data["event_id"]
             self._entry_map = {int(eid): i for i, eid in enumerate(event_ids)}
 
-        all_ids = set(self._entry_map.keys())
-        self._min_event = int(min(all_ids))
-        self._max_event = int(max(all_ids))
+        self._min_event = min(self._entry_map.keys())
+        self._max_event = max(self._entry_map.keys())
 
     def availableEvents(self):
         return (self._min_event, self._max_event + 1)
