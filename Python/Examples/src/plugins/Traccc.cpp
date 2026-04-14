@@ -23,7 +23,7 @@
 #include <vecmem/memory/host_memory_resource.hpp>
 #include <vecmem/memory/memory_resource.hpp>
 
-#include "full_chain_algorithm.hpp"
+#include "traccc/examples/full_chain_algorithm.hpp"
 #include "traccc/edm/silicon_cell_collection.hpp"
 #include "traccc/geometry/detector_design_description.hpp"
 #include "traccc/geometry/detector_conditions_description.hpp"
