@@ -24,8 +24,6 @@
 #include <detray/test/common/bfield.hpp>
 #include <detray/test/utils/inspectors.hpp>
 #include <detray/test/validation/material_validation_utils.hpp>
-#include <detray/test/common/bfield.hpp>
-#include <covfie/core/field.hpp>
 
 namespace ActsExamples {
 
@@ -110,6 +108,7 @@ class DetrayPropagator : public PropagatorInterface {
       // Navigation with inspection
       using DetrayNavigator =
 <<<<<<< HEAD:Examples/Algorithms/Detray/include/ActsExamples/Detray/DetrayPropagator.hpp
+<<<<<<< HEAD:Examples/Algorithms/Detray/include/ActsExamples/Detray/DetrayPropagator.hpp
           detray::caching_navigator<ActsPlugins::DetrayHostDetector,
                                     detray::navigation::default_cache_size,
                                     DetrayInspector, DetrayIntersection>;
@@ -119,6 +118,11 @@ class DetrayPropagator : public PropagatorInterface {
                           DetrayInspector,
                           DetrayIntersection>;
 >>>>>>> 018d53f19 (bump dependancy versions, add full chain alg example):Examples/Algorithms/Traccc/include/ActsExamples/Traccc/DetrayPropagator.hpp
+=======
+          detray::caching_navigator<ActsPlugins::DetrayHostDetector,
+                                    detray::navigation::default_cache_size,
+                                    DetrayInspector, DetrayIntersection>;
+>>>>>>> 4cf1eb686 (set traccc tag, adding sequence example):Examples/Algorithms/Traccc/include/ActsExamples/Traccc/DetrayPropagator.hpp
 
       // Propagator with empty actor chain (for the moment)
       using Propagator =
@@ -140,14 +144,17 @@ class DetrayPropagator : public PropagatorInterface {
       }
 
     } else {
-
       // Navigation with inspection
       using DetrayNavigator =
+<<<<<<< HEAD:Examples/Algorithms/Detray/include/ActsExamples/Detray/DetrayPropagator.hpp
 <<<<<<< HEAD:Examples/Algorithms/Detray/include/ActsExamples/Detray/DetrayPropagator.hpp
           detray::caching_navigator<ActsPlugins::DetrayHostDetector>;
 =======
         detray::caching_navigator<ActsPlugins::DetrayHostDetector>;
 >>>>>>> 018d53f19 (bump dependancy versions, add full chain alg example):Examples/Algorithms/Traccc/include/ActsExamples/Traccc/DetrayPropagator.hpp
+=======
+          detray::caching_navigator<ActsPlugins::DetrayHostDetector>;
+>>>>>>> 4cf1eb686 (set traccc tag, adding sequence example):Examples/Algorithms/Traccc/include/ActsExamples/Traccc/DetrayPropagator.hpp
 
       // Propagator with empty actor chain (for the moment)
       using Propagator =
@@ -222,6 +229,7 @@ class DetrayPropagator : public PropagatorInterface {
       step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
       step.geoID = geoID;
 <<<<<<< HEAD:Examples/Algorithms/Detray/include/ActsExamples/Detray/DetrayPropagator.hpp
+<<<<<<< HEAD:Examples/Algorithms/Detray/include/ActsExamples/Detray/DetrayPropagator.hpp
       step.navDir = object.intersection.is_along()
                         ? Acts::Direction::Forward()
                         : Acts::Direction::Backward();
@@ -229,6 +237,11 @@ class DetrayPropagator : public PropagatorInterface {
       step.navDir = object.intersection.is_along() ? Acts::Direction::Forward()
                                                   : Acts::Direction::Backward();
 >>>>>>> 018d53f19 (bump dependancy versions, add full chain alg example):Examples/Algorithms/Traccc/include/ActsExamples/Traccc/DetrayPropagator.hpp
+=======
+      step.navDir = object.intersection.is_along()
+                        ? Acts::Direction::Forward()
+                        : Acts::Direction::Backward();
+>>>>>>> 4cf1eb686 (set traccc tag, adding sequence example):Examples/Algorithms/Traccc/include/ActsExamples/Traccc/DetrayPropagator.hpp
       summary.steps.emplace_back(step);
     }
 

@@ -280,6 +280,11 @@ add_examples_binding_if(
     PLUGIN_IMPORT FALSE
 )
 
+add_examples_binding_if(Traccc
+  "Acts::PluginCovfie;Acts::ExamplesTraccc;traccc::device_common;traccc::cuda"
+  ACTS_BUILD_PLUGIN_TRACCC FALSE
+)
+
 # Special case for HepMC3 as it a hard dependency
 pybind11_add_module(ActsExamplesPythonBindingsHepMC3 src/plugins/HepMC3.cpp)
 install(

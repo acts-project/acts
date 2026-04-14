@@ -27,8 +27,7 @@ set(TRACCC_CUSTOM_SCALARTYPE
     "Scalar type to use in the traccc code"
 )
 
-# set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} CACHE STRING "CMake prefix path" FORCE)
-set(TRACCC_SETUP_VECMEM OFF CACHE BOOL "Do not set up Actsvg as part of Traccc")
+set(TRACCC_SETUP_VECMEM OFF CACHE BOOL "Do not set up VecMem as part of Traccc")
 set(TRACCC_SETUP_EIGEN3 OFF CACHE BOOL "Do not set up Eigen3 as part of Traccc")
 set(TRACCC_SETUP_THRUST ON CACHE BOOL "Do not set up Thrust as part of Traccc")
 set(TRACCC_SETUP_ALGEBRA_PLUGINS
@@ -45,8 +44,17 @@ set(TRACCC_SETUP_DFELIBS
 set(TRACCC_SETUP_DETRAY OFF CACHE BOOL "Set up Detray as part of Traccc")
 set(TRACCC_SETUP_ACTS OFF CACHE BOOL "Do not set up ACTS as part of Traccc")
 
-set(TRACCC_BUILD_CUDA ON CACHE BOOL "Build traccc CUDA library")
-set(CMAKE_CUDA_ARCHITECTURES "native" CACHE STRING "CUDA architectures" FORCE)
+if(ACTS_ENABLE_CUDA)
+    message(STATUS "Enabling CUDA support for traccc")
+    set(TRACCC_BUILD_CUDA ON CACHE BOOL "Build Traccc with CUDA support")
+    set(CMAKE_CUDA_ARCHITECTURES
+        "native"
+        CACHE STRING
+        "CUDA architectures"
+        FORCE
+    )
+endif()
+
 set(TRACCC_SETUP_BENCHMARKS
     OFF
     CACHE BOOL
@@ -65,15 +73,23 @@ set(TRACCC_BUILD_TESTING
     "Turn off the build of the Traccc unit tests"
 )
 
-set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc" FORCE)
-set(TRACCC_USE_SYSTEM_TBB ON CACHE BOOL "Use system TBB" FORCE)
-find_package(TBB REQUIRED)
+if(ACTS_BUILD_EXAMPLES)
+    set(TRACCC_SETUP_TBB
+        OFF
+        CACHE BOOL
+        "Do not set up TBB as part of Traccc"
+        FORCE
+    )
+    set(TRACCC_USE_SYSTEM_TBB ON CACHE BOOL "Use system TBB" FORCE)
+    find_package(TBB REQUIRED)
 
-set(TRACCC_BUILD_EXAMPLES
-    ON
-    CACHE BOOL
-    "Turn off the build of the Traccc examples"
-)
+    set(TRACCC_BUILD_EXAMPLES
+        ON
+        CACHE BOOL
+        "Turn off the build of the Traccc examples"
+    )
+endif()
+
 set(TRACCC_BUILD_BENCHMARKS
     OFF
     CACHE BOOL
