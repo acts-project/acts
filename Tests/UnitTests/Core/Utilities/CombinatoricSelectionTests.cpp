@@ -86,7 +86,7 @@ void checkComboDrawing(const std::size_t N) {
     /// Check that all indices are unique
     for (std::size_t i = 1ul; i < combination.size(); ++i) {
       for (std::size_t k = 0ul; k < i; ++k) {
-        BOOST_CHECK_NE(combination[i], combination[k]);
+        BOOST_CHECK_LT(combination[k], combination[i]);
       }
     }
     /// Sort the indices as we are only inter
