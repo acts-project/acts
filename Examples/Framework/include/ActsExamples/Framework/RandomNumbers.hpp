@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/HashCombine.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <random>
@@ -42,10 +44,8 @@ class RandomEngine {
   /// Create a new engine whose seed combines this engine's seed with an
   /// additional value. Useful for deriving deterministic sub-sequences
   /// (e.g. per-lumi-block seeds) that depend on the user's original seed.
-  RandomEngine combinedWith(std::size_t extra) const {
-    std::size_t combined = m_seed;
-    boost::hash_combine(combined, extra);
-    return RandomEngine(static_cast<RandomSeed>(combined));
+  RandomEngine combinedWith(std::uint64_t extra) const {
+    return RandomEngine(Acts::hashMixAndCombine(m_seed, extra));
   }
 
   result_type operator()() { return m_engine(); }
