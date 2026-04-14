@@ -73,7 +73,7 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
   Ort::SessionOptions sessionOptions;
   sessionOptions.SetIntraOpNumThreads(1);
   sessionOptions.SetGraphOptimizationLevel(
-      GraphOptimizationLevel::ORT_DISABLE_ALL);
+      GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
   sessionOptions.SetExecutionMode(ORT_SEQUENTIAL);
 
   if (m_cfg.useCuda) {
