@@ -87,4 +87,14 @@ BOOST_AUTO_TEST_CASE(CombinationDraw4D) {
   BOOST_CHECK_EQUAL(cachedCombos.size(), indexGenerator.size());
 }
 
+BOOST_AUTO_TEST_CASE(CombinatoricIterator) {
+  CombinatoricIndices<5> indexGenerator{11ul};
+  BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(11ul, 4ul));
+  BOOST_CHECK_EQUAL(indexGenerator.setSize(), 11ul);
+  CombinationSet<5> cachedCombos{};
+  for (const auto& combination : indexGenerator) {
+    BOOST_CHECK_EQUAL(cachedCombos.insert(combination).second, true);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

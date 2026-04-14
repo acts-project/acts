@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
 namespace Acts {
@@ -18,6 +19,8 @@ class CombinatoricIndices {
   /// Declare other combinatoric indices classes as friends
   template <std::size_t L>
   friend class CombinatoricIndices;
+
+  using IndexArray = std::array<std::size_t, K>;
 
   /// Constructor of the combinatoric indices
   /// @param The size of the set from which indices are drawn
@@ -35,7 +38,49 @@ class CombinatoricIndices {
   /// Draws a new combination of indices and stores them in the array
   /// @param combination: The number of the combination in the sequence
   /// @returns An array where each is a unique number from [0 -N)
-  std::array<std::size_t, K> draw(const std::size_t combination) const;
+  IndexArray draw(const std::size_t combination) const;
+
+  class iterator {
+   public:
+    iterator() = default;
+    iterator(const CombinatoricIndices* parent, const std::size_t _itr)
+        : m_parent{parent}, m_itr{_itr} {
+      updateArray();
+    }
+
+    iterator& operator++() {
+      ++m_itr;
+      updateArray();
+      return *this;
+    }
+    bool operator==(const iterator& other) const {
+      return m_parent == other.m_parent && m_itr == other.m_itr;
+    }
+    bool operator!=(const iterator& other) const {
+      return m_parent != other.m_parent || m_itr != other.m_itr;
+    }
+    const IndexArray& operator*() const { return m_array; }
+
+   private:
+    void updateArray() {
+      if (m_parent == nullptr || m_itr >= m_parent->size()) {
+        m_array = filledArray<std::size_t, K>(
+            std::numeric_limits<std::size_t>::max());
+      } else {
+        for (std::size_t s = 0; s < m_array.size(); ++s) {
+          m_array[s] = m_parent->drawIndex(m_itr, s);
+        }
+      }
+    }
+    const CombinatoricIndices* m_parent{nullptr};
+    std::size_t m_itr{0ul};
+    IndexArray m_array{
+        filledArray<std::size_t, K>(std::numeric_limits<std::size_t>::max())};
+  };
+
+  iterator begin() const { return iterator{this, 0ul}; }
+
+  iterator end() const { return iterator{this, size()}; }
 
  private:
   std::size_t drawIndex(const std::size_t combination,
