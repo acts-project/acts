@@ -53,16 +53,8 @@ CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
 
 CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
-    std::shared_ptr<const SurfacePlacementBase> placement)
+    std::shared_ptr<SurfacePlacementBase> placement)
     : RegularSurface{std::move(placement)}, m_bounds(std::move(cbounds)) {
-  throw_assert(m_bounds, "CylinderBounds must not be nullptr");
-  throw_assert(placementPtr(), "SurfacePlacementBase must not be nullptr");
-}
-
-CylinderSurface::CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                                 const SurfacePlacementBase& placement)
-    : RegularSurface{placement}, m_bounds(std::move(cbounds)) {
-  // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
 

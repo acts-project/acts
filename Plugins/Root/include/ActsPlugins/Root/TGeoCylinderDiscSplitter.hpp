@@ -60,9 +60,9 @@ class TGeoCylinderDiscSplitter : public ITGeoDetectorElementSplitter {
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
-  std::vector<std::shared_ptr<const TGeoDetectorElement>> split(
+  std::vector<std::shared_ptr<TGeoDetectorElement>> split(
       const Acts::GeometryContext& gctx,
-      std::shared_ptr<const TGeoDetectorElement> tgde) const override;
+      std::shared_ptr<TGeoDetectorElement> tgde) const override;
 
  private:
   Config m_cfg;

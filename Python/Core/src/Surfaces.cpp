@@ -345,9 +345,11 @@ void addSurfaces(py::module_& m) {
                     })
         .def_static("createDisc",
                     [](const std::shared_ptr<const DiscBounds>& bounds,
-                       const SurfacePlacementBase& detelement) {
-                      return Surface::makeShared<DiscSurface>(bounds,
-                                                              detelement);
+                       std::shared_ptr<SurfacePlacementBase> detelement) {
+                      auto surf = Surface::makeShared<DiscSurface>(
+                          Transform3::Identity(), bounds);
+                      surf->assignSurfacePlacement(std::move(detelement));
+                      return surf;
                     })
         .def_static("createStraw",
                     [](const Transform3& transform,
@@ -357,9 +359,11 @@ void addSurfaces(py::module_& m) {
                     })
         .def_static("createStraw",
                     [](const std::shared_ptr<const LineBounds>& bounds,
-                       const SurfacePlacementBase& detelement) {
-                      return Surface::makeShared<StrawSurface>(bounds,
-                                                               detelement);
+                       std::shared_ptr<SurfacePlacementBase> detelement) {
+                      auto surf = Surface::makeShared<StrawSurface>(
+                          Transform3::Identity(), bounds);
+                      surf->assignSurfacePlacement(std::move(detelement));
+                      return surf;
                     })
         .def_static("createPerigee",
                     [](const Vector3& vertex) {
@@ -373,9 +377,11 @@ void addSurfaces(py::module_& m) {
                     })
         .def_static("createPlane",
                     [](const std::shared_ptr<const PlanarBounds>& pbounds,
-                       const SurfacePlacementBase& detelement) {
-                      return Surface::makeShared<PlaneSurface>(pbounds,
-                                                               detelement);
+                       std::shared_ptr<SurfacePlacementBase> detelement) {
+                      auto surf = Surface::makeShared<PlaneSurface>(
+                          Transform3::Identity(), pbounds);
+                      surf->assignSurfacePlacement(std::move(detelement));
+                      return surf;
                     });
 
     py::class_<CylinderSurface, Surface, std::shared_ptr<CylinderSurface>>(

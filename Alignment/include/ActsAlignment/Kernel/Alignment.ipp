@@ -229,7 +229,7 @@ ActsAlignment::Alignment<fitter_t>::align(
   for (unsigned int iDetElement = 0;
        iDetElement < alignOptions.alignedDetElements.size(); iDetElement++) {
     alignResult.idxedAlignSurfaces.emplace(
-        &alignOptions.alignedDetElements.at(iDetElement)->surface(),
+        alignOptions.alignedDetElements.at(iDetElement)->surface(),
         iDetElement);
   }
   ACTS_VERBOSE("There are " << alignResult.idxedAlignSurfaces.size()
@@ -311,7 +311,7 @@ ActsAlignment::Alignment<fitter_t>::align(
   // @todo
   if (alignmentParametersUpdated) {
     for (const auto& det : alignOptions.alignedDetElements) {
-      const auto& surface = &det->surface();
+      const auto* surface = det->surface();
       const auto& transform =
           det->localToGlobalTransform(alignOptions.fitOptions.geoContext);
       // write it to the result

@@ -18,27 +18,36 @@ TelescopeDetectorElement::TelescopeDetectorElement(
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
     : m_elementTransform(std::move(transform)),
-      m_elementSurface(
-          Acts::Surface::makeShared<Acts::PlaneSurface>(pBounds, *this)),
       m_elementThickness(thickness),
       m_elementPlanarBounds(std::move(pBounds)),
-      m_elementDiscBounds(nullptr) {
-  m_elementSurface->assignSurfaceMaterial(std::move(material));
-  m_elementSurface->assignThickness(thickness);
-}
+      m_elementDiscBounds(nullptr),
+      m_elementMaterial(std::move(material)) {}
 
 TelescopeDetectorElement::TelescopeDetectorElement(
     std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
     : m_elementTransform(std::move(transform)),
-      m_elementSurface(
-          Acts::Surface::makeShared<Acts::DiscSurface>(dBounds, *this)),
       m_elementThickness(thickness),
       m_elementPlanarBounds(nullptr),
-      m_elementDiscBounds(std::move(dBounds)) {
-  m_elementSurface->assignSurfaceMaterial(std::move(material));
-  m_elementSurface->assignThickness(thickness);
+      m_elementDiscBounds(std::move(dBounds)),
+      m_elementMaterial(std::move(material)) {}
+
+std::shared_ptr<Acts::Surface> TelescopeDetectorElement::createSurface() {
+  std::shared_ptr<Acts::Surface> surf;
+  if (m_elementPlanarBounds) {
+    surf = Acts::Surface::makeShared<Acts::PlaneSurface>(*m_elementTransform,
+                                                         m_elementPlanarBounds);
+  } else {
+    surf = Acts::Surface::makeShared<Acts::DiscSurface>(*m_elementTransform,
+                                                        m_elementDiscBounds);
+  }
+  assignSurface(surf);
+  surf->assignThickness(m_elementThickness);
+  if (m_elementMaterial) {
+    surf->assignSurfaceMaterial(m_elementMaterial);
+  }
+  return surf;
 }
 
 }  // namespace ActsExamples

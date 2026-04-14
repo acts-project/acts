@@ -63,10 +63,7 @@ class PlaneSurface : public RegularSurface {
   ///        and that the `Surface` is actually owned by
   ///        the `SurfacePlacementBase` instance
   PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               std::shared_ptr<const SurfacePlacementBase> placement);
-
-  PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const SurfacePlacementBase& placement);
+               std::shared_ptr<SurfacePlacementBase> placement);
 
   /// Constructor for Planes with (optional) shared bounds object
   ///

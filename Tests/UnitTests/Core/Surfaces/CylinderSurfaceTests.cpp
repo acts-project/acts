@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
 BOOST_AUTO_TEST_SUITE(CylinderSurfaceMerging)
 
 BOOST_AUTO_TEST_CASE(InvalidDetectorElement) {
-  DetectorElementStub detElem;
+  auto detElem = std::make_shared<DetectorElementStub>();
 
   auto bounds = std::make_shared<CylinderBounds>(100_mm, 100_mm);
   auto cyl1 = Surface::makeShared<CylinderSurface>(bounds, detElem);

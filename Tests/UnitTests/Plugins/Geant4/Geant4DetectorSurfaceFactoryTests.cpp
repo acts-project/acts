@@ -225,8 +225,13 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_elemnet_overwrite) {
       [](std::shared_ptr<Surface> surface, const G4VPhysicalVolume& g4physVol,
          const Transform3& toGlobal,
          double thickness) -> std::shared_ptr<Geant4DetectorElement> {
-    return std::make_shared<ExtendedGeant4DetectorElement>(
-        std::move(surface), g4physVol, toGlobal, thickness);
+    auto el = std::make_shared<ExtendedGeant4DetectorElement>(g4physVol, toGlobal,
+                                                              thickness);
+    if (thickness > 0.) {
+      surface->assignThickness(thickness);
+    }
+    el->assignSurface(std::move(surface));
+    return el;
   };
 
   G4Box* worldS = new G4Box("world", 100, 100, 100);

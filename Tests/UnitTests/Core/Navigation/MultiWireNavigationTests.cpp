@@ -42,7 +42,7 @@ auto logger = getDefaultLogger("MultiWireNavigationTests", Logging::VERBOSE);
 void generateStrawSurfaces(
     std::size_t nStraws, std::size_t nLayers, double radius, double halfZ,
     std::vector<std::shared_ptr<Surface>>& strawSurfaces,
-    std::vector<std::unique_ptr<DetectorElementStub>>& elements) {
+    std::vector<std::shared_ptr<DetectorElementStub>>& elements) {
   // The transform of the 1st surface
   Vector3 ipos = {-0.5 * nStraws * 2 * radius + radius,
                   -0.5 * nLayers * 2 * radius + radius, 0.};
@@ -56,15 +56,13 @@ void generateStrawSurfaces(
     for (std::size_t j = 0; j < nStraws; j++) {
       pos.x() = ipos.x() + 2 * j * radius;
 
-      auto& element =
-          elements.emplace_back(std::make_unique<DetectorElementStub>(
-              Transform3(Translation3(pos)), lineBounds, 0));
+      auto element = std::make_shared<DetectorElementStub>(
+          Transform3(Translation3(pos)), lineBounds, 0);
+      elements.push_back(element);
 
-      element->surface().assignGeometryId(GeometryIdentifier(id++));
-
-      element->surface().assignSurfacePlacement(*element);
-
-      strawSurfaces.push_back(element->surface().getSharedPtr());
+      auto surf = element->createSurface();
+      surf->assignGeometryId(GeometryIdentifier(id++));
+      strawSurfaces.push_back(std::move(surf));
     }
 
     pos.y() = ipos.y() + 2 * (i + 1) * radius;
@@ -75,7 +73,7 @@ void generateStrawSurfaces(
 BOOST_AUTO_TEST_CASE(MultiLayer_NavigationPolicy) {
   // Create the surfaces
   std::vector<std::shared_ptr<Surface>> strawSurfaces = {};
-  std::vector<std::unique_ptr<DetectorElementStub>> detElements = {};
+  std::vector<std::shared_ptr<DetectorElementStub>> detElements = {};
 
   generateStrawSurfaces(nSurfacesX, nSurfacesY, radius, halfZ, strawSurfaces,
                         detElements);

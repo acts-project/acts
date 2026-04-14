@@ -66,11 +66,8 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
   ///  Destructor
   ~TelescopeDetectorElement() override = default;
 
-  /// Return surface associated with this detector element
-  const Acts::Surface& surface() const final;
-
-  /// Non-const access to the surface associated with this detector element
-  Acts::Surface& surface() final;
+  /// Create and return the surface associated with this detector element.
+  std::shared_ptr<Acts::Surface> createSurface();
 
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const;
@@ -107,23 +104,15 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
   std::shared_ptr<const Acts::Transform3> m_elementTransform = nullptr;
   // the aligned transforms
   std::vector<std::unique_ptr<Acts::Transform3>> m_alignedTransforms = {};
-  /// the surface represented by it
-  std::shared_ptr<Acts::Surface> m_elementSurface = nullptr;
   /// the element thickness
   double m_elementThickness = 0.;
   /// the planar bounds
   std::shared_ptr<const Acts::PlanarBounds> m_elementPlanarBounds = nullptr;
   /// the disc bounds
   std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;
+  /// optional material applied when createSurface() is called
+  std::shared_ptr<const Acts::ISurfaceMaterial> m_elementMaterial = nullptr;
 };
-
-inline const Acts::Surface& TelescopeDetectorElement::surface() const {
-  return *m_elementSurface;
-}
-
-inline Acts::Surface& TelescopeDetectorElement::surface() {
-  return *m_elementSurface;
-}
 
 inline double TelescopeDetectorElement::thickness() const {
   return m_elementThickness;

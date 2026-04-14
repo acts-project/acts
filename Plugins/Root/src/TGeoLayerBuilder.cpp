@@ -266,18 +266,18 @@ void ActsPlugins::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         // after split() returns so the weak_ptr inside tgElement stays valid.
         auto tgElementSurface = tgElement->createSurface();
 
-        std::vector<std::shared_ptr<const TGeoDetectorElement>> tgElements =
+        std::vector<std::shared_ptr<TGeoDetectorElement>> tgElements =
             (m_cfg.detectorElementSplitter == nullptr)
-                ? std::vector<
-                      std::shared_ptr<const TGeoDetectorElement>>{tgElement}
+                ? std::vector<std::shared_ptr<TGeoDetectorElement>>{tgElement}
                 : m_cfg.detectorElementSplitter->split(gctx, tgElement);
 
         for (const auto& tge : tgElements) {
           m_elementStore.push_back(tge);
           // For the original (unsplit) element the surface was already created
           // above; for split children createSurface() is called here.
-          auto surf =
-              (tge == tgElement) ? tgElementSurface : tge->createSurface();
+          auto surf = (tge == tgElement)
+                          ? tgElementSurface
+                          : tge->createSurface();
           layerSurfaces.push_back(std::move(surf));
         }
       }

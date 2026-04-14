@@ -88,17 +88,9 @@ class DiscSurface : public RegularSurface {
   /// Constructor from SurfacePlacementBase : Element proxy
   ///
   /// @param dbounds The disc bounds describing the surface coverage
-  /// @param placement Reference to the surface placement
-  /// @note The Surface does not take any ownership over the
-  ///       `SurfacePlacementBase` it is expected that the user
-  ///        ensures the life-time of the `SurfacePlacementBase`
-  ///        and that the `Surface` is actually owned by
-  ///        the `SurfacePlacementBase` instance
+  /// @param placement Shared pointer to the surface placement
   explicit DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                       std::shared_ptr<const SurfacePlacementBase> placement);
-
-  explicit DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                       const SurfacePlacementBase& placement);
+                       std::shared_ptr<SurfacePlacementBase> placement);
 
   /// Copy Constructor
   ///

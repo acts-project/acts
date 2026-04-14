@@ -36,7 +36,7 @@ TGeoDetectorElement::TGeoDetectorElement(
     std::shared_ptr<const ISurfaceMaterial> material)
     : m_detElement(&tGeoNode),
       m_identifier(identifier),
-      m_deferredMaterial(material) {
+      m_deferredMaterial(std::move(material)) {
   const Double_t* translation = tGeoMatrix.GetTranslation();
   const Double_t* rotation = tGeoMatrix.GetRotationMatrix();
 
@@ -50,12 +50,6 @@ TGeoDetectorElement::TGeoDetectorElement(
     m_transform = cTransform;
     m_bounds = cBounds;
     m_thickness = cThickness;
-    // Backward-compat: create surface immediately via deprecated raw-ref path
-    auto surf = Surface::makeShared<CylinderSurface>(cBounds, *this);
-    surf->assignSurfaceMaterial(std::move(material));
-    surf->assignThickness(m_thickness);
-    m_surface = surf;
-    m_legacySurface = std::move(surf);
     return;
   }
 
@@ -65,11 +59,6 @@ TGeoDetectorElement::TGeoDetectorElement(
     m_bounds = dBounds;
     m_transform = dTransform;
     m_thickness = dThickness;
-    auto surf = Surface::makeShared<DiscSurface>(dBounds, *this);
-    surf->assignSurfaceMaterial(std::move(material));
-    surf->assignThickness(m_thickness);
-    m_surface = surf;
-    m_legacySurface = std::move(surf);
     return;
   }
 
@@ -80,11 +69,6 @@ TGeoDetectorElement::TGeoDetectorElement(
     m_bounds = pBounds;
     m_transform = pTransform;
     m_thickness = pThickness;
-    auto surf = Surface::makeShared<PlaneSurface>(pBounds, *this);
-    surf->assignSurfaceMaterial(std::move(material));
-    surf->assignThickness(m_thickness);
-    m_surface = surf;
-    m_legacySurface = std::move(surf);
   }
 }
 
@@ -96,12 +80,7 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
-      m_thickness(tgThickness) {
-  auto surf = Surface::makeShared<PlaneSurface>(tgBounds, *this);
-  surf->assignThickness(m_thickness);
-  m_surface = surf;
-  m_legacySurface = std::move(surf);
-}
+      m_thickness(tgThickness) {}
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
@@ -111,52 +90,33 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
-      m_thickness(tgThickness) {
-  auto surf = Surface::makeShared<DiscSurface>(tgBounds, *this);
-  surf->assignThickness(m_thickness);
-  m_surface = surf;
-  m_legacySurface = std::move(surf);
-}
+      m_thickness(tgThickness) {}
 
 TGeoDetectorElement::~TGeoDetectorElement() = default;
 
-std::shared_ptr<Acts::Surface> TGeoDetectorElement::createSurface() const {
+std::shared_ptr<Acts::Surface> TGeoDetectorElement::createSurface() {
   std::shared_ptr<Acts::Surface> surf;
 
   if (auto cBounds =
           std::dynamic_pointer_cast<const CylinderBounds>(m_bounds)) {
-    surf = Surface::makeShared<CylinderSurface>(cBounds, shared_from_this());
+    surf = Surface::makeShared<CylinderSurface>(m_transform, cBounds);
   } else if (auto dBounds =
                  std::dynamic_pointer_cast<const DiscBounds>(m_bounds)) {
-    surf = Surface::makeShared<DiscSurface>(dBounds, shared_from_this());
+    surf = Surface::makeShared<DiscSurface>(m_transform, dBounds);
   } else if (auto pBounds =
                  std::dynamic_pointer_cast<const PlanarBounds>(m_bounds)) {
-    surf = Surface::makeShared<PlaneSurface>(pBounds, shared_from_this());
+    surf = Surface::makeShared<PlaneSurface>(m_transform, pBounds);
   }
 
   if (surf != nullptr) {
+    assignSurface(surf);
     surf->assignThickness(m_thickness);
     if (m_deferredMaterial) {
       surf->assignSurfaceMaterial(m_deferredMaterial);
     }
   }
 
-  // Replace legacy surface with the new owning surface
-  m_legacySurface.reset();
-  m_surface = surf;
   return surf;
-}
-
-const Acts::Surface& TGeoDetectorElement::surface() const {
-  auto s = m_surface.lock();
-  assert(s && "TGeoDetectorElement: call createSurface() before surface()");
-  return *s;
-}
-
-Acts::Surface& TGeoDetectorElement::surface() {
-  auto s = m_surface.lock();
-  assert(s && "TGeoDetectorElement: call createSurface() before surface()");
-  return *s;
 }
 
 const Transform3& TGeoDetectorElement::nominalTransform() const {

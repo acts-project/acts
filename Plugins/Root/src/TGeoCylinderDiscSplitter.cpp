@@ -30,14 +30,14 @@ ActsPlugins::TGeoCylinderDiscSplitter::TGeoCylinderDiscSplitter(
     std::unique_ptr<const Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
 ActsPlugins::TGeoCylinderDiscSplitter::split(
     const GeometryContext& gctx,
-    std::shared_ptr<const ActsPlugins::TGeoDetectorElement> tgde) const {
+    std::shared_ptr<ActsPlugins::TGeoDetectorElement> tgde) const {
   // tgde->createSurface() was called by the caller before invoking split();
   // the weak_ptr is valid so surface() returns the existing surface.
   ACTS_PUSH_IGNORE_DEPRECATED()
-  const Surface& sf = tgde->surface();
+  const Surface& sf = *tgde->surface();
   ACTS_POP_IGNORE_DEPRECATED()
   // Thickness
   auto tgIdentifier = tgde->identifier();
@@ -51,7 +51,7 @@ ActsPlugins::TGeoCylinderDiscSplitter::split(
         sf.bounds().type() == SurfaceBounds::eDisc) {
       ACTS_DEBUG("- splitting detected for a Disc shaped sensor.");
 
-      std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+      std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
           tgDetectorElements = {};
       tgDetectorElements.reserve(std::abs(m_cfg.discPhiSegments) *
                                  std::abs(m_cfg.discRadialSegments));
@@ -119,7 +119,7 @@ ActsPlugins::TGeoCylinderDiscSplitter::split(
         sf.bounds().type() == SurfaceBounds::eCylinder) {
       ACTS_DEBUG("- splitting detected for a Cylinder shaped sensor.");
 
-      std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+      std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
           tgDetectorElements = {};
       tgDetectorElements.reserve(std::abs(m_cfg.cylinderPhiSegments) *
                                  std::abs(m_cfg.cylinderLongitudinalSegments));

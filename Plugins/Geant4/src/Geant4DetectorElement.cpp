@@ -10,34 +10,15 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <utility>
 
 using namespace Acts;
 
 namespace ActsPlugins {
 
-Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
-                                             const G4VPhysicalVolume& g4physVol,
+Geant4DetectorElement::Geant4DetectorElement(const G4VPhysicalVolume& g4physVol,
                                              const Transform3& toGlobal,
                                              double thickness)
-    : m_surface(std::move(surface)),
-      m_g4physVol(&g4physVol),
-      m_toGlobal(toGlobal),
-      m_thickness(thickness) {
-  if (m_surface == nullptr) {
-    throw std::invalid_argument(
-        "Geant4DetectorElement: Surface cannot be nullptr");
-  }
-  if (m_surface->isSensitive()) {
-    throw std::logic_error(
-        "Geant4DetectorElement: Surface already has an associated detector "
-        "element");
-  }
-  if (thickness > 0.) {
-    m_surface->assignThickness(m_thickness);
-  }
-  m_surface->assignSurfacePlacement(*this);
-}
+    : m_g4physVol(&g4physVol), m_toGlobal(toGlobal), m_thickness(thickness) {}
 
 const Transform3& Geant4DetectorElement::localToGlobalTransform(
     const GeometryContext& /*gctx*/) const {
@@ -45,11 +26,11 @@ const Transform3& Geant4DetectorElement::localToGlobalTransform(
 }
 
 const Surface& Geant4DetectorElement::surface() const {
-  return *m_surface;
+  return *SurfacePlacementBase::surface();
 }
 
 Surface& Geant4DetectorElement::surface() {
-  return *m_surface;
+  return const_cast<Surface&>(*SurfacePlacementBase::surface());
 }
 
 double Geant4DetectorElement::thickness() const {

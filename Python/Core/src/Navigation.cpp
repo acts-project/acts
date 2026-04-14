@@ -44,13 +44,13 @@ class DetectorElementStub : public SurfacePlacementBase {
 
   /// Is the detector element a sensitive element
   bool isSensitive() const override { return true; }
-  /// Return surface representation - const return pattern
-  const Surface& surface() const override {
+  /// Return surface representation - const return pattern (shadows base)
+  const Surface& surface() const {
     throw std::runtime_error("Not implemented");
   }
 
-  /// Non-const return pattern
-  Surface& surface() override { throw std::runtime_error("Not implemented"); }
+  /// Non-const return pattern (shadows base)
+  Surface& surface() { throw std::runtime_error("Not implemented"); }
 
  private:
   Transform3 m_transform{Transform3::Identity()};
@@ -121,11 +121,11 @@ void addNavigation(py::module_& m) {
             std::make_shared<CylinderVolumeBounds>(30, 40, 100));
         vol1->setVolumeName("TestVolume");
 
-        auto detElem = std::make_unique<Test::DetectorElementStub>();
+        auto detElem = std::make_shared<Test::DetectorElementStub>();
 
         auto surface = Surface::makeShared<CylinderSurface>(
             Transform3::Identity(), std::make_shared<CylinderBounds>(30, 40));
-        surface->assignSurfacePlacement(*detElem);
+        surface->assignSurfacePlacement(std::move(detElem));
 
         vol1->addSurface(std::move(surface));
 

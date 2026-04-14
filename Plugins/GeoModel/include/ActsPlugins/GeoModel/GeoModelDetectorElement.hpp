@@ -43,27 +43,20 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   // Deleted default constructor
   GeoModelDetectorElement() = delete;
 
-  /// @brief Factory to create a planar detector element with connected surface
-  ///
-  /// @tparam SurfaceType the surface type
-  /// @tparam BoundsType the bounds type
+  /// @brief Factory to create a detector element wired to an existing surface
   ///
   /// @param geoPhysVol representing the physical volume
-  /// @param bounds the bounds class
   /// @param sfTransform the surface transform
   /// @param thickness the thickness of the detector element
+  /// @param surface the surface to associate with this element
   ///
   /// @return a shared pointer to an instance of the detector element
-  template <typename SurfaceType, typename BoundsType>
   static std::shared_ptr<GeoModelDetectorElement> createDetectorElement(
-      const PVConstLink& geoPhysVol,
-      const std::shared_ptr<const BoundsType>& bounds,
-      const Acts::Transform3& sfTransform, double thickness) {
-    // First create the detector element with a nullptr
+      const PVConstLink& geoPhysVol, const Acts::Transform3& sfTransform,
+      double thickness, const std::shared_ptr<Acts::Surface>& surface) {
     auto detElement = std::make_shared<GeoModelDetectorElement>(
-        geoPhysVol, nullptr, sfTransform, thickness);
-    auto surface = Acts::Surface::makeShared<SurfaceType>(bounds, *detElement);
-    detElement->attachSurface(surface);
+        geoPhysVol, sfTransform, thickness);
+    detElement->assignSurface(surface);
     return detElement;
   }
 
@@ -74,7 +67,6 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   /// @param sfTransform the surface transform
   /// @param thickness the thickness of the detector element
   GeoModelDetectorElement(PVConstLink geoPhysVol,
-                          std::shared_ptr<Acts::Surface> surface,
                           const Acts::Transform3& sfTransform,
                           double thickness);
 
@@ -88,14 +80,6 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   /// Return the nominal - non-contextual transform
   /// @return The nominal transform
   const Acts::Transform3& nominalTransform() const;
-
-  /// Return surface associated with this detector element
-  /// @return The surface
-  const Acts::Surface& surface() const override;
-
-  /// Non-const access to surface associated with this detector element
-  /// @return The surface
-  Acts::Surface& surface() override;
 
   /// Return the thickness of this detector element
   /// @return The thickness
@@ -122,22 +106,10 @@ class GeoModelDetectorElement : public Acts::SurfacePlacementBase {
   bool isSensitive() const final { return true; }
 
  protected:
-  /// Attach a surface
-  ///
-  /// @param surface The surface to attach
-  void attachSurface(std::shared_ptr<Acts::Surface> surface) {
-    m_surface = std::move(surface);
-    assert(m_surface != nullptr);
-    m_surface->assignThickness(thickness());
-    m_surface->assignSurfacePlacement(*this);
-  }
-
  private:
   std::string m_entryName;
   /// The GeoModel full physical volume
   PVConstLink m_geoPhysVol{nullptr};
-  /// The surface
-  std::shared_ptr<Acts::Surface> m_surface;
   /// The global transformation before the volume
   Acts::Transform3 m_surfaceTransform{Acts::Transform3::Identity()};
   ///  Thickness of this detector element

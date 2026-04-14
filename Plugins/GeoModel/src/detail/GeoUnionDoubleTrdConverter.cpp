@@ -160,12 +160,10 @@ Result<GeoModelSensitiveSurface> GeoUnionDoubleTrdConverter::operator()(
     return std::make_tuple(nullptr, surface);
   }
 
-  // Create the element and the surface (we assume both have equal thickness)
-  auto detectorElement =
-      GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-          geoPV, trapezoidBounds, transform, elA->thickness());
-  auto surface = detectorElement->surface().getSharedPtr();
-
+  // Create the surface and element (we assume both have equal thickness)
+  auto surface = Surface::makeShared<PlaneSurface>(transform, trapezoidBounds);
+  auto detectorElement = GeoModelDetectorElement::createDetectorElement(
+      geoPV, transform, elA->thickness(), surface);
   return std::make_tuple(detectorElement, surface);
 }
 

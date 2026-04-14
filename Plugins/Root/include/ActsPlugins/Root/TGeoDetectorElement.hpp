@@ -140,25 +140,7 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
   /// surface takes shared ownership of this detector element.
   ///
   /// @return Shared pointer to the created surface
-  std::shared_ptr<Acts::Surface> createSurface() const;
-
-  /// Return surface associated with this detector element
-  /// @return Const reference to the surface
-  /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
-  [[deprecated(
-      "Use createSurface() to get a Surface with shared ownership of the "
-      "placement; surface() will be removed in a future release")]]
-  const Acts::Surface& surface() const override;
-
-  /// Return surface associated with this detector element
-  ///
-  /// @note this is the non-const access
-  /// @return Mutable reference to the surface
-  /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
-  [[deprecated(
-      "Use createSurface() to get a Surface with shared ownership of the "
-      "placement; surface() will be removed in a future release")]]
-  Acts::Surface& surface() override;
+  std::shared_ptr<Acts::Surface> createSurface();
 
   /// Returns the thickness of the module
   /// @return Thickness of the detector element in units of length
@@ -184,11 +166,6 @@ class TGeoDetectorElement : public Acts::SurfacePlacementBase {
   double m_thickness{0.};
   /// Material to be applied when createSurface() is called
   std::shared_ptr<const Acts::ISurfaceMaterial> m_deferredMaterial{nullptr};
-  /// Weak reference back to the surface (owned externally via shared_ptr)
-  mutable std::weak_ptr<Acts::Surface> m_surface;
-  /// keeps the surface alive when constructed via the deprecated raw-ptr path;
-  /// null after createSurface() is called.
-  mutable std::shared_ptr<Acts::Surface> m_legacySurface;
 };
 
 inline TGeoDetectorElement::Identifier TGeoDetectorElement::identifier() const {

@@ -17,16 +17,10 @@
 using namespace Acts;
 
 ActsPlugins::GeoModelDetectorElement::GeoModelDetectorElement(
-    PVConstLink geoPhysVol, std::shared_ptr<Surface> surface,
-    const Transform3& sfTransform, double thickness)
+    PVConstLink geoPhysVol, const Transform3& sfTransform, double thickness)
     : m_geoPhysVol(std::move(geoPhysVol)),
-      m_surface(std::move(surface)),
       m_surfaceTransform(sfTransform),
-      m_thickness(thickness) {
-  if (m_surface) {
-    attachSurface(std::move(m_surface));
-  }
-}
+      m_thickness(thickness) {}
 
 const Transform3& ActsPlugins::GeoModelDetectorElement::localToGlobalTransform(
     const GeometryContext& /*gctx*/) const {
@@ -36,14 +30,6 @@ const Transform3& ActsPlugins::GeoModelDetectorElement::localToGlobalTransform(
 const Transform3& ActsPlugins::GeoModelDetectorElement::nominalTransform()
     const {
   return m_surfaceTransform;
-}
-
-const Surface& ActsPlugins::GeoModelDetectorElement::surface() const {
-  return *m_surface;
-}
-
-Surface& ActsPlugins::GeoModelDetectorElement::surface() {
-  return *m_surface;
 }
 
 double ActsPlugins::GeoModelDetectorElement::thickness() const {

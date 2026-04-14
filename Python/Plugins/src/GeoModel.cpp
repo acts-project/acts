@@ -59,15 +59,15 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGeoModel, gm) {
         gm, "GeoModelDetectorElement")
         .def("logVolName", &GeoModelDetectorElement::logVolName)
         .def("databaseEntryName", &GeoModelDetectorElement::databaseEntryName)
-        .def("surface", [](GeoModelDetectorElement self) {
-          return self.surface().getSharedPtr();
+        .def("surface", [](GeoModelDetectorElement& self) {
+          return self.surface()->getSharedPtr();
         });
 
     py::class_<GeoModelDetectorElementITk,
                std::shared_ptr<GeoModelDetectorElementITk>>(
         gm, "GeoModelDetectorElementITk")
         .def("surface", [](GeoModelDetectorElementITk& self) {
-          return self.surface().getSharedPtr();
+          return self.surface()->getSharedPtr();
         });
     gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
   }

@@ -11,7 +11,6 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
-#include <cassert>
 #include <utility>
 
 namespace ActsExamples {
@@ -23,18 +22,9 @@ GenericDetectorElement::GenericDetectorElement(
     : m_elementIdentifier(identifier),
       m_elementTransform(transform),
       m_elementThickness(thickness),
-      m_elementPlanarBounds(pBounds),
+      m_elementPlanarBounds(std::move(pBounds)),
       m_elementDiscBounds(nullptr),
-      m_elementMaterial(material) {
-  // Backward-compat: create surface immediately via deprecated raw-ref path
-  // so that surface() works without calling createSurface() first.
-  auto surf =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(std::move(pBounds), *this);
-  surf->assignSurfaceMaterial(std::move(material));
-  surf->assignThickness(thickness);
-  m_elementSurface = surf;
-  m_legacySurface = std::move(surf);
-}
+      m_elementMaterial(std::move(material)) {}
 
 GenericDetectorElement::GenericDetectorElement(
     const Identifier identifier, const Acts::Transform3& transform,
@@ -44,32 +34,23 @@ GenericDetectorElement::GenericDetectorElement(
       m_elementTransform(transform),
       m_elementThickness(thickness),
       m_elementPlanarBounds(nullptr),
-      m_elementDiscBounds(dBounds),
-      m_elementMaterial(material) {
-  auto surf =
-      Acts::Surface::makeShared<Acts::DiscSurface>(std::move(dBounds), *this);
-  surf->assignSurfaceMaterial(std::move(material));
-  surf->assignThickness(thickness);
-  m_elementSurface = surf;
-  m_legacySurface = std::move(surf);
-}
+      m_elementDiscBounds(std::move(dBounds)),
+      m_elementMaterial(std::move(material)) {}
 
-std::shared_ptr<Acts::Surface> GenericDetectorElement::createSurface() const {
+std::shared_ptr<Acts::Surface> GenericDetectorElement::createSurface() {
   std::shared_ptr<Acts::Surface> surf;
   if (m_elementPlanarBounds) {
-    surf = Acts::Surface::makeShared<Acts::PlaneSurface>(m_elementPlanarBounds,
-                                                         shared_from_this());
+    surf = Acts::Surface::makeShared<Acts::PlaneSurface>(m_elementTransform,
+                                                         m_elementPlanarBounds);
   } else {
-    surf = Acts::Surface::makeShared<Acts::DiscSurface>(m_elementDiscBounds,
-                                                        shared_from_this());
+    surf = Acts::Surface::makeShared<Acts::DiscSurface>(m_elementTransform,
+                                                        m_elementDiscBounds);
   }
+  assignSurface(surf);
   surf->assignThickness(m_elementThickness);
   if (m_elementMaterial) {
     surf->assignSurfaceMaterial(m_elementMaterial);
   }
-  // Replace legacy surface with the new owning surface
-  m_legacySurface.reset();
-  m_elementSurface = surf;
   return surf;
 }
 
@@ -106,18 +87,6 @@ const Acts::Transform3& GenericDetectorElement::localToGlobalTransform(
 
 const Acts::Transform3& GenericDetectorElement::nominalTransform() const {
   return m_elementTransform;
-}
-
-const Acts::Surface& GenericDetectorElement::surface() const {
-  auto s = m_elementSurface.lock();
-  assert(s && "GenericDetectorElement: call createSurface() before surface()");
-  return *s;
-}
-
-Acts::Surface& GenericDetectorElement::surface() {
-  auto s = m_elementSurface.lock();
-  assert(s && "GenericDetectorElement: call createSurface() before surface()");
-  return *s;
 }
 
 double GenericDetectorElement::thickness() const {

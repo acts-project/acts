@@ -27,8 +27,9 @@ class SurfaceStub : public Acts::RegularSurface {
   SurfaceStub(const Acts::GeometryContext& gctx, const SurfaceStub& sf,
               const Acts::Transform3& transf)
       : Acts::GeometryObject(), Acts::RegularSurface(gctx, sf, transf) {}
-  explicit SurfaceStub(const Acts::SurfacePlacementBase& detelement)
-      : Acts::GeometryObject(), Acts::RegularSurface(detelement) {}
+  explicit SurfaceStub(std::shared_ptr<Acts::SurfacePlacementBase> placement)
+      : Acts::GeometryObject(),
+        Acts::RegularSurface(std::move(placement)) {}
 
   ~SurfaceStub() override = default;
 

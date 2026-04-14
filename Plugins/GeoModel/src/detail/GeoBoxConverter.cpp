@@ -63,12 +63,10 @@ ActsPlugins::detail::GeoBoxConverter::operator()(
         Surface::makeShared<PlaneSurface>(transform, rectangleBounds);
     return std::make_tuple(nullptr, surface);
   }
-  // Create the element and the surface
-  auto detectorElement =
-      GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-          geoPV, rectangleBounds, transform,
-          2 * unitLength * halfLengths[zIndex]);
-  auto surface = detectorElement->surface().getSharedPtr();
+  // Create the surface and element
+  auto surface = Surface::makeShared<PlaneSurface>(transform, rectangleBounds);
+  auto detectorElement = GeoModelDetectorElement::createDetectorElement(
+      geoPV, transform, 2 * unitLength * halfLengths[zIndex], surface);
   // Return the detector element and surface
   return std::make_tuple(detectorElement, surface);
 }

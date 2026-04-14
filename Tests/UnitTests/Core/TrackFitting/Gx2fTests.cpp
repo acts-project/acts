@@ -163,7 +163,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
         [](const Transform3& trans,
            const std::shared_ptr<const RectangleBounds>& bounds,
            double thickness) {
-          return new DetectorElementStub(trans, bounds, thickness);
+          return std::make_shared<DetectorElementStub>(trans, bounds, thickness);
         };
     surfaceConfig.push_back(cfg);
   }

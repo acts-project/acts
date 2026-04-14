@@ -139,6 +139,7 @@ class VolumePlacementBase {
   /// @returns Shared pointer to the i-th portal placement
   std::shared_ptr<const detail::PortalPlacement> portalPlacement(
       const std::size_t portalIdx) const;
+
   /// Shared pointer to the `SurfacePlacementBase` object aligning the i-th
   /// portal (May be nullptr if index exceeds the number of portals)
   /// @param portalIdx: Internal index of the portal surface [0 - number of portals)

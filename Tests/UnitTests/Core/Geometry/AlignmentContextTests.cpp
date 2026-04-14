@@ -111,13 +111,21 @@ class AlignableDetectorElement : public SurfacePlacementBase {
   AlignableDetectorElement(std::shared_ptr<const Transform3> transform,
                            const std::shared_ptr<const PlanarBounds>& pBounds,
                            double thickness)
-      : m_elementTransform(std::move(transform)) {
-    m_elementSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-    m_elementSurface->assignThickness(thickness);
-  }
+      : m_elementTransform(std::move(transform)),
+        m_pBounds(pBounds),
+        m_thickness(thickness) {}
 
   ///  Destructor
   ~AlignableDetectorElement() override = default;
+
+  /// Create and return the surface associated with this detector element.
+  /// Must be called only after the element is managed by a std::shared_ptr.
+  std::shared_ptr<Surface> createSurface() {
+    auto surf = Surface::makeShared<PlaneSurface>(Transform3::Identity(), m_pBounds);
+    surf->assignSurfacePlacement(shared_from_this());
+    surf->assignThickness(m_thickness);
+    return surf;
+  }
 
   /// Return local to global transform associated with this identifier
   ///
@@ -127,20 +135,14 @@ class AlignableDetectorElement : public SurfacePlacementBase {
   const Transform3& localToGlobalTransform(
       const GeometryContext& gctx) const override;
 
-  /// Return surface associated with this detector element
-  const Surface& surface() const override;
-
-  /// Non-const access to the surface associated with this detector element
-  Surface& surface() override;
-
   /// Is the detector element a sensitive element
   bool isSensitive() const override { return true; }
 
  private:
   /// the transform for positioning in 3D space
   std::shared_ptr<const Transform3> m_elementTransform;
-  /// the surface represented by it
-  std::shared_ptr<Surface> m_elementSurface{nullptr};
+  std::shared_ptr<const PlanarBounds> m_pBounds;
+  double m_thickness;
 };
 
 inline const Transform3& AlignableDetectorElement::localToGlobalTransform(
@@ -151,14 +153,6 @@ inline const Transform3& AlignableDetectorElement::localToGlobalTransform(
     return alignContext->detElementAlignment->at(alignContext->alignmentIndex);
   }
   return (*m_elementTransform);
-}
-
-inline const Surface& AlignableDetectorElement::surface() const {
-  return *m_elementSurface;
-}
-
-inline Surface& AlignableDetectorElement::surface() {
-  return *m_elementSurface;
 }
 
 class AlignableVolumePlacement : public VolumePlacementBase {
@@ -276,11 +270,11 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
       std::make_shared<const std::array<Transform3, 2>>(alignmentArray);
 
   // The detector element at nominal position
-  AlignableDetectorElement alignedElement(
+  auto alignedElementPtr = std::make_shared<AlignableDetectorElement>(
       std::make_shared<const Transform3>(Transform3::Identity()),
       std::make_shared<const RectangleBounds>(100_cm, 100_cm), 1_mm);
 
-  const auto& alignedSurface = alignedElement.surface();
+  auto alignedSurface = alignedElementPtr->createSurface();
 
   // The alignment contexts
   AlignmentContext alignDefault{};
@@ -292,48 +286,48 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   GeometryContext positiveContext{alignPositive.getContext()};
 
   // Test the transforms
-  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(defaultContext),
+  BOOST_CHECK(isSame(alignedSurface->localToGlobalTransform(defaultContext),
                      Transform3::Identity()));
-  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(negativeContext),
+  BOOST_CHECK(isSame(alignedSurface->localToGlobalTransform(negativeContext),
                      negativeTransform));
-  BOOST_CHECK(isSame(alignedSurface.localToGlobalTransform(positiveContext),
+  BOOST_CHECK(isSame(alignedSurface->localToGlobalTransform(positiveContext),
                      positiveTransform));
 
   // Test the centers
-  BOOST_CHECK_EQUAL(alignedSurface.center(defaultContext), nominalCenter);
-  BOOST_CHECK_EQUAL(alignedSurface.center(negativeContext), negativeCenter);
-  BOOST_CHECK_EQUAL(alignedSurface.center(positiveContext), positiveCenter);
+  BOOST_CHECK_EQUAL(alignedSurface->center(defaultContext), nominalCenter);
+  BOOST_CHECK_EQUAL(alignedSurface->center(negativeContext), negativeCenter);
+  BOOST_CHECK_EQUAL(alignedSurface->center(positiveContext), positiveCenter);
 
   // Test OnSurface
   BOOST_CHECK(
-      alignedSurface.isOnSurface(defaultContext, onNominal, dummyMomentum));
+      alignedSurface->isOnSurface(defaultContext, onNominal, dummyMomentum));
   BOOST_CHECK(
-      alignedSurface.isOnSurface(negativeContext, onNegative, dummyMomentum));
+      alignedSurface->isOnSurface(negativeContext, onNegative, dummyMomentum));
   BOOST_CHECK(
-      alignedSurface.isOnSurface(positiveContext, onPositive, dummyMomentum));
+      alignedSurface->isOnSurface(positiveContext, onPositive, dummyMomentum));
 
   // Test local to Global and vice versa
-  globalPosition = alignedSurface.localToGlobal(defaultContext, localPosition,
-                                                dummyMomentum);
+  globalPosition = alignedSurface->localToGlobal(defaultContext, localPosition,
+                                                 dummyMomentum);
   BOOST_CHECK_EQUAL(globalPosition, onNominal);
   localPosition =
-      alignedSurface.globalToLocal(defaultContext, onNominal, dummyMomentum)
+      alignedSurface->globalToLocal(defaultContext, onNominal, dummyMomentum)
           .value();
   BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 
-  globalPosition = alignedSurface.localToGlobal(negativeContext, localPosition,
-                                                dummyMomentum);
+  globalPosition = alignedSurface->localToGlobal(negativeContext, localPosition,
+                                                 dummyMomentum);
   BOOST_CHECK_EQUAL(globalPosition, onNegative);
   localPosition =
-      alignedSurface.globalToLocal(negativeContext, onNegative, dummyMomentum)
+      alignedSurface->globalToLocal(negativeContext, onNegative, dummyMomentum)
           .value();
   BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 
-  globalPosition = alignedSurface.localToGlobal(positiveContext, localPosition,
-                                                dummyMomentum);
+  globalPosition = alignedSurface->localToGlobal(positiveContext, localPosition,
+                                                 dummyMomentum);
   BOOST_CHECK_EQUAL(globalPosition, onPositive);
   localPosition =
-      alignedSurface.globalToLocal(positiveContext, onPositive, dummyMomentum)
+      alignedSurface->globalToLocal(positiveContext, onPositive, dummyMomentum)
           .value();
   BOOST_CHECK_EQUAL(localPosition, Vector2(3., 3.));
 }

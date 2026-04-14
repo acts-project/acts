@@ -34,15 +34,8 @@ LineSurface::LineSurface(const Transform3& transform,
     : Surface(transform), m_bounds(std::move(lbounds)) {}
 
 LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                         std::shared_ptr<const SurfacePlacementBase> placement)
+                         std::shared_ptr<SurfacePlacementBase> placement)
     : Surface{std::move(placement)}, m_bounds(std::move(lbounds)) {
-  throw_assert(m_bounds, "LineBounds must not be nullptr");
-  throw_assert(placementPtr(), "SurfacePlacementBase must not be nullptr");
-}
-
-LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                         const SurfacePlacementBase& placement)
-    : Surface{placement}, m_bounds(std::move(lbounds)) {
   throw_assert(m_bounds, "LineBounds must not be nullptr");
 }
 

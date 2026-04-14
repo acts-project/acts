@@ -63,9 +63,9 @@ class TGeoITkModuleSplitter : public ActsPlugins::ITGeoDetectorElementSplitter {
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
-  std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>> split(
+  std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>> split(
       const Acts::GeometryContext& gctx,
-      std::shared_ptr<const ActsPlugins::TGeoDetectorElement> detElement)
+      std::shared_ptr<ActsPlugins::TGeoDetectorElement> detElement)
       const override;
 
  private:
@@ -86,10 +86,10 @@ class TGeoITkModuleSplitter : public ActsPlugins::ITGeoDetectorElementSplitter {
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
-  std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+  std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
   splitBarrelModule(
       const Acts::GeometryContext& gctx,
-      const std::shared_ptr<const ActsPlugins::TGeoDetectorElement>& detElement,
+      const std::shared_ptr<ActsPlugins::TGeoDetectorElement>& detElement,
       unsigned int nSegments) const;
 
   /// Take a geometry context and TGeoElement in the Itk disks and split it
@@ -102,10 +102,10 @@ class TGeoITkModuleSplitter : public ActsPlugins::ITGeoDetectorElementSplitter {
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
-  std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+  std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
   splitDiscModule(
       const Acts::GeometryContext& gctx,
-      const std::shared_ptr<const ActsPlugins::TGeoDetectorElement>& detElement,
+      const std::shared_ptr<ActsPlugins::TGeoDetectorElement>& detElement,
       const std::vector<SplitRange>& splitRanges) const;
 
   /// Contains the splitting parameters, sorted by sensor type

@@ -15,8 +15,6 @@
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 #include "ActsTests/CommonHelpers/LineSurfaceStub.hpp"
 
-#include <cassert>
-
 using namespace Acts;
 
 ActsTests::DetectorElementStub::DetectorElementStub(const Transform3& transform)
@@ -27,15 +25,11 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     double thickness, std::shared_ptr<const ISurfaceMaterial> material)
     : m_elementTransform(transform),
       m_elementThickness(thickness),
-      m_cylinderBounds(cBounds),
-      m_deferredMaterial(material) {
-  // Backward-compat: create surface immediately using deprecated raw-ref path
-  // so that surface() works without calling createSurface() first.
-  auto surf = Surface::makeShared<CylinderSurface>(std::move(cBounds), *this);
-  surf->assignThickness(thickness);
-  surf->assignSurfaceMaterial(std::move(material));
-  assert(surf->surfacePlacement() == this);
-  assert(surf->isSensitive() == isSensitive());
+      m_cylinderBounds(std::move(cBounds)),
+      m_deferredMaterial(std::move(material)) {
+  auto surf = Surface::makeShared<CylinderSurface>(transform, m_cylinderBounds);
+  surf->assignThickness(m_elementThickness);
+  surf->assignSurfaceMaterial(m_deferredMaterial);
   m_elementSurface = surf;
   m_legacySurface = std::move(surf);
 }
@@ -45,13 +39,11 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     double thickness, std::shared_ptr<const ISurfaceMaterial> material)
     : m_elementTransform(transform),
       m_elementThickness(thickness),
-      m_planarBounds(pBounds),
-      m_deferredMaterial(material) {
-  auto surf = Surface::makeShared<PlaneSurface>(std::move(pBounds), *this);
-  surf->assignThickness(thickness);
-  surf->assignSurfaceMaterial(std::move(material));
-  assert(surf->surfacePlacement() == this);
-  assert(surf->isSensitive() == isSensitive());
+      m_planarBounds(std::move(pBounds)),
+      m_deferredMaterial(std::move(material)) {
+  auto surf = Surface::makeShared<PlaneSurface>(transform, m_planarBounds);
+  surf->assignThickness(m_elementThickness);
+  surf->assignSurfaceMaterial(m_deferredMaterial);
   m_elementSurface = surf;
   m_legacySurface = std::move(surf);
 }
@@ -61,41 +53,35 @@ ActsTests::DetectorElementStub::DetectorElementStub(
     double thickness, std::shared_ptr<const ISurfaceMaterial> material)
     : m_elementTransform(transform),
       m_elementThickness(thickness),
-      m_lineBounds(lBounds),
-      m_deferredMaterial(material) {
-  auto surf = Surface::makeShared<LineSurfaceStub>(std::move(lBounds), *this);
-  surf->assignThickness(thickness);
-  surf->assignSurfaceMaterial(std::move(material));
-  assert(surf->surfacePlacement() == this);
-  assert(surf->isSensitive() == isSensitive());
+      m_lineBounds(std::move(lBounds)),
+      m_deferredMaterial(std::move(material)) {
+  auto surf = Surface::makeShared<LineSurfaceStub>(transform, m_lineBounds);
+  surf->assignThickness(m_elementThickness);
+  surf->assignSurfaceMaterial(m_deferredMaterial);
   m_elementSurface = surf;
   m_legacySurface = std::move(surf);
 }
 
-std::shared_ptr<Acts::Surface> ActsTests::DetectorElementStub::createSurface()
-    const {
+std::shared_ptr<Acts::Surface> ActsTests::DetectorElementStub::createSurface() {
   std::shared_ptr<Acts::Surface> surf;
 
   if (m_cylinderBounds) {
-    surf = Surface::makeShared<CylinderSurface>(m_cylinderBounds,
-                                                shared_from_this());
+    surf = Surface::makeShared<CylinderSurface>(m_elementTransform,
+                                                m_cylinderBounds);
   } else if (m_planarBounds) {
-    surf =
-        Surface::makeShared<PlaneSurface>(m_planarBounds, shared_from_this());
+    surf = Surface::makeShared<PlaneSurface>(m_elementTransform, m_planarBounds);
   } else if (m_lineBounds) {
     surf =
-        Surface::makeShared<LineSurfaceStub>(m_lineBounds, shared_from_this());
+        Surface::makeShared<LineSurfaceStub>(m_elementTransform, m_lineBounds);
   }
 
   if (surf != nullptr) {
+    assignSurface(surf);
     surf->assignThickness(m_elementThickness);
     surf->assignSurfaceMaterial(m_deferredMaterial);
-    assert(surf->surfacePlacement() == this);
-    assert(surf->isSensitive() == isSensitive());
   }
 
-  // Replace the weak_ptr so surface() returns the new owning surface
-  m_legacySurface.reset();
+  m_legacySurface = surf;
   m_elementSurface = surf;
   return surf;
 }

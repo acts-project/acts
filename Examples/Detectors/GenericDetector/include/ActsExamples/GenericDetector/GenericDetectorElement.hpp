@@ -84,7 +84,7 @@ class GenericDetectorElement : public Acts::SurfacePlacementBase {
   /// surface takes shared ownership of this detector element.
   ///
   /// @return Shared pointer to the created surface
-  std::shared_ptr<Acts::Surface> createSurface() const;
+  std::shared_ptr<Acts::Surface> createSurface();
 
   /// Convenience factory: constructs the element and immediately calls
   /// @c createSurface(), returning both.
@@ -116,22 +116,6 @@ class GenericDetectorElement : public Acts::SurfacePlacementBase {
          std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
          std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
-  /// Return surface associated with this detector element
-  /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
-  ///             This method will be removed in a future release.
-  [[deprecated(
-      "Use createSurface() to get a Surface with shared ownership of the "
-      "placement; surface() will be removed in a future release")]]
-  const Acts::Surface& surface() const override;
-
-  /// Non-cost access to surface associated with this detector element
-  /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
-  ///             This method will be removed in a future release.
-  [[deprecated(
-      "Use createSurface() to get a Surface with shared ownership of the "
-      "placement; surface() will be removed in a future release")]]
-  Acts::Surface& surface() override;
-
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const;
 
@@ -145,12 +129,6 @@ class GenericDetectorElement : public Acts::SurfacePlacementBase {
   Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
   const Acts::Transform3 m_elementTransform;
-  /// weak reference back to the surface (owned by external holders via
-  /// shared_ptr)
-  mutable std::weak_ptr<Acts::Surface> m_elementSurface;
-  /// keeps the surface alive when constructed via the deprecated raw-ptr path;
-  /// null after createSurface() is called.
-  mutable std::shared_ptr<Acts::Surface> m_legacySurface;
   /// the element thickness
   double m_elementThickness;
   /// store either planar or disc bounds

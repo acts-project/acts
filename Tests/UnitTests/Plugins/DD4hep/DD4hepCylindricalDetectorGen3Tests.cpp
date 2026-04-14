@@ -504,7 +504,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
         auto dd4hepDetEl = std::make_shared<DD4hepDetectorElement>(
             module, detAxis, 1_cm, nullptr);
         detectorElements.push_back(dd4hepDetEl);
-        layers[layerId].push_back(dd4hepDetEl->surface().getSharedPtr());
+        layers[layerId].push_back(dd4hepDetEl->createSurface());
       }
       layerId++;
     }
@@ -591,8 +591,7 @@ BOOST_AUTO_TEST_CASE(DD4hepCylidricalDetectorExplicit) {
           auto dd4hepDetEl = std::make_shared<DD4hepDetectorElement>(
               module, detAxis, 1_cm, nullptr);
           detectorElements.push_back(dd4hepDetEl);
-          initialLayers[layerId].push_back(
-              dd4hepDetEl->surface().getSharedPtr());
+          initialLayers[layerId].push_back(dd4hepDetEl->createSurface());
         }
         layerId++;
       }

@@ -53,11 +53,10 @@ ActsPlugins::detail::GeoTubeConverter::operator()(
       return std::make_tuple(nullptr, surface);
     }
 
-    auto detectorElement =
-        GeoModelDetectorElement::createDetectorElement<StrawSurface>(
-            geoPV, lineBounds, transform, 2 * outerRadius);
-    auto surface = detectorElement->surface().getSharedPtr();
-    return std::make_tuple(detectorElement, surface);
+    auto surf0 = Surface::makeShared<StrawSurface>(transform, lineBounds);
+    auto detEl0 = GeoModelDetectorElement::createDetectorElement(
+        geoPV, transform, 2 * outerRadius, surf0);
+    return std::make_tuple(detEl0, surf0);
     // Next option is translation to disc
   } else if (targetShape == Surface::SurfaceType::Disc) {
     auto radialBounds =
@@ -68,12 +67,10 @@ ActsPlugins::detail::GeoTubeConverter::operator()(
     }
 
     // Create the element and the surface
-    auto detectorElement =
-        GeoModelDetectorElement::createDetectorElement<DiscSurface,
-                                                       RadialBounds>(
-            geoPV, radialBounds, transform, 2 * halfZ);
-    auto surface = detectorElement->surface().getSharedPtr();
-    return std::make_tuple(detectorElement, surface);
+    auto surf1 = Surface::makeShared<DiscSurface>(transform, radialBounds);
+    auto detEl1 = GeoModelDetectorElement::createDetectorElement(
+        geoPV, transform, 2 * halfZ, surf1);
+    return std::make_tuple(detEl1, surf1);
   }
   // Finally cylinder to cylinder
   auto cylinderBounds = std::make_shared<CylinderBounds>(outerRadius, halfZ);
@@ -83,11 +80,8 @@ ActsPlugins::detail::GeoTubeConverter::operator()(
     return std::make_tuple(nullptr, surface);
   }
   // Create the element and the surface
-
-  auto detectorElement =
-      GeoModelDetectorElement::createDetectorElement<CylinderSurface,
-                                                     CylinderBounds>(
-          geoPV, cylinderBounds, transform, outerRadius - innerRadius);
-  auto surface = detectorElement->surface().getSharedPtr();
-  return std::make_tuple(detectorElement, surface);
+  auto surf2 = Surface::makeShared<CylinderSurface>(transform, cylinderBounds);
+  auto detEl2 = GeoModelDetectorElement::createDetectorElement(
+      geoPV, transform, outerRadius - innerRadius, surf2);
+  return std::make_tuple(detEl2, surf2);
 }

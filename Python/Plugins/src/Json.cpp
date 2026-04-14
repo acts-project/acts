@@ -68,7 +68,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
                std::shared_ptr<JsonDetectorElement>>(json,
                                                      "JsonDetectorElement")
         .def("surface", [](JsonDetectorElement& self) {
-          return self.surface().getSharedPtr();
+          return self.surface()->getSharedPtr();
         });
 
     json.def("readDetectorElementsFromJson",

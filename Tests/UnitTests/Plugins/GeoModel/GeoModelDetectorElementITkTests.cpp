@@ -60,23 +60,21 @@ BOOST_AUTO_TEST_CASE(GeoModelDetectorElementConstruction) {
   auto fphys = make_intrusive<GeoFullPhysVol>(log);
   auto rBounds = std::make_shared<RectangleBounds>(100, 200);
 
-  auto element =
-      GeoModelDetectorElement::createDetectorElement<PlaneSurface,
-                                                     RectangleBounds>(
-          fphys, rBounds, Transform3::Identity(), 2.0);
+  auto geoSurface =
+      Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds);
+  auto geoElement = GeoModelDetectorElement::createDetectorElement(
+      fphys, Transform3::Identity(), 2.0, geoSurface);
 
   const int hardware = 0, barrelEndcap = -2, layerWheel = 100, phiModule = 200,
             etaModule = 300, side = 1;
 
-  auto [itkElement, _] = GeoModelDetectorElementITk::convertFromGeomodel(
-      element, element->surface().getSharedPtr(), gctx, hardware, barrelEndcap,
+  auto [itkElement, itkSurface] = GeoModelDetectorElementITk::convertFromGeomodel(
+      geoElement, geoSurface, gctx, hardware, barrelEndcap,
       layerWheel, etaModule, phiModule, side);
 
-  BOOST_CHECK_EQUAL(element->surface().type(), itkElement->surface().type());
-  BOOST_CHECK_EQUAL(element->surface().bounds().type(),
-                    itkElement->surface().bounds().type());
-  BOOST_CHECK_NE(element->surface().surfacePlacement(),
-                 itkElement->surface().surfacePlacement());
+  BOOST_CHECK_EQUAL(geoSurface->type(), itkSurface->type());
+  BOOST_CHECK_EQUAL(geoSurface->bounds().type(), itkSurface->bounds().type());
+  BOOST_CHECK_NE(geoSurface->surfacePlacement(), itkSurface->surfacePlacement());
   BOOST_CHECK_EQUAL(itkElement->identifier().barrelEndcap(), barrelEndcap);
   BOOST_CHECK_EQUAL(itkElement->identifier().hardware(), hardware);
   BOOST_CHECK_EQUAL(itkElement->identifier().layerWheel(), layerWheel);

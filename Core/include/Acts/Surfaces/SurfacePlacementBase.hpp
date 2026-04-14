@@ -51,26 +51,21 @@ class SurfacePlacementBase
   ///       Acts::Surface::surfacePlacement method return a pointer to
   ///       this object.
   /// @return Reference to a surface that represents this detector element
-  /// @deprecated Use createSurface() to produce a Surface that owns this
-  ///             placement. This method will be removed in a future release.
-  [[deprecated(
-      "surface() is deprecated; use createSurface() to produce a Surface that "
-      "takes shared ownership of the placement")]]
-  virtual const Surface& surface() const = 0;
+  const Surface* surface() const;
 
-  /// @copydoc surface
-  /// @return Reference to a surface that represents this detector element
-  /// @deprecated Use createSurface() to produce a Surface that owns this
-  ///             placement. This method will be removed in a future release.
-  [[deprecated(
-      "surface() is deprecated; use createSurface() to produce a Surface that "
-      "takes shared ownership of the placement")]]
-  virtual Surface& surface() = 0;
+  /// Assign a surface to this placement element.
+  /// @note The placement will NOT take ownership of the surface.
+  void assignSurface(const std::shared_ptr<Surface>& surface);
 
   /// @brief Returns whether the placement corresponds to a surface on which
   ///        the measurements from the experiment are represented, i.e. it is
   //         a detector surface
   /// @return True if this is a sensitive surface
   virtual bool isSensitive() const = 0;
+
+ private:
+  // This is a raw pointer to the surface that is associated with this
+  // placement. That surface will eventually own this placement.
+  Surface* m_surface;
 };
 }  // namespace Acts

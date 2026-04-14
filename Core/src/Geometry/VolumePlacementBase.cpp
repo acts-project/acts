@@ -46,8 +46,11 @@ void VolumePlacementBase::makePortalsAlignable(
         globalToLocalTransform(gctx) *
         portalSurface->localToGlobalTransform(gctx);
 
-    m_portalPlacements.push_back(detail::PortalPlacement::create(
-        portalIdx, portalToVolTrf, this, portalSurface));
+    auto placement = std::make_shared<detail::PortalPlacement>(
+        detail::PortalPlacement::ConstructTag{}, portalIdx, portalToVolTrf,
+        this);
+    placement->assignSurface(portalSurface);
+    m_portalPlacements.push_back(std::move(placement));
   }
 }
 

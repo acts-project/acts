@@ -55,7 +55,7 @@ struct FileFixture {
   FileFixture() {
     nlohmann::json js = nlohmann::json::array();
 
-    for (const auto &s : surfaces) {
+    for (const auto& s : surfaces) {
       js.push_back(SurfaceJsonConverter::toJson(gctx, *s));
     }
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(json_detelement_reading_test) {
 
   BOOST_REQUIRE_EQUAL(surfaces.size(), readBackDetElements.size());
   for (auto [refSurface, detElement] : zip(surfaces, readBackDetElements)) {
-    auto surface = &detElement->surface();
+    const auto* surface = detElement->surface();
     BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(
         surface->localToGlobalTransform(gctx), 1.e-4));
     BOOST_CHECK(refSurface->localToGlobalTransform(gctx).isApprox(

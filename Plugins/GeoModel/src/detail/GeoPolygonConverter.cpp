@@ -73,11 +73,10 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
       auto surface = Surface::makeShared<PlaneSurface>(transform, trapBounds);
       return std::make_tuple(nullptr, surface);
     }
-    // Create the element and the surface
-    auto detectorElement =
-        GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-            geoPV, trapBounds, transform, unitLength * polygon.getDZ());
-    auto surface = detectorElement->surface().getSharedPtr();
+    // Create the surface and element
+    auto surface = Surface::makeShared<PlaneSurface>(transform, trapBounds);
+    auto detectorElement = GeoModelDetectorElement::createDetectorElement(
+        geoPV, transform, unitLength * polygon.getDZ(), surface);
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
   } else if (nVertices == 6) {
@@ -111,11 +110,10 @@ ActsPlugins::detail::GeoPolygonConverter::operator()(
           Surface::makeShared<PlaneSurface>(transform, diamondBounds);
       return std::make_tuple(nullptr, surface);
     }
-    // Create the element and the surface
-    auto detectorElement =
-        GeoModelDetectorElement::createDetectorElement<PlaneSurface>(
-            geoPV, diamondBounds, transform, unitLength * polygon.getDZ());
-    auto surface = detectorElement->surface().getSharedPtr();
+    // Create the surface and element
+    auto surface = Surface::makeShared<PlaneSurface>(transform, diamondBounds);
+    auto detectorElement = GeoModelDetectorElement::createDetectorElement(
+        geoPV, transform, unitLength * polygon.getDZ(), surface);
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
   } else {

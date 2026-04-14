@@ -12,26 +12,13 @@
 
 namespace Acts::detail {
 
-PortalPlacement::PortalPlacement(const std::size_t portalIdx,
+PortalPlacement::PortalPlacement(ConstructTag /*tag*/,
+                                 const std::size_t portalIdx,
                                  const Transform3& portalTrf,
-                                 const VolumePlacementBase* parent,
-                                 std::shared_ptr<RegularSurface> surface)
+                                 const VolumePlacementBase* parent)
     : m_portalToVolumeCenter{portalTrf},
-      m_surface{std::move(surface)},
       m_parent{parent},
-      m_portalIdx{portalIdx} {
-  assert(m_surface != nullptr);
-}
-
-std::shared_ptr<PortalPlacement> PortalPlacement::create(
-    const std::size_t portalIdx, const Transform3& portalTrf,
-    const VolumePlacementBase* parent,
-    std::shared_ptr<RegularSurface> surface) {
-  auto placement =
-      std::make_shared<PortalPlacement>(portalIdx, portalTrf, parent, surface);
-  surface->assignSurfacePlacement(placement);
-  return placement;
-}
+      m_portalIdx{portalIdx} {}
 
 Transform3 PortalPlacement::assembleFullTransform(
     const GeometryContext& gctx) const {
@@ -41,14 +28,6 @@ Transform3 PortalPlacement::assembleFullTransform(
 const Transform3& PortalPlacement::localToGlobalTransform(
     const GeometryContext& gctx) const {
   return m_parent->portalLocalToGlobal(gctx, m_portalIdx);
-}
-
-const RegularSurface& PortalPlacement::surface() const {
-  return *m_surface;
-}
-
-RegularSurface& PortalPlacement::surface() {
-  return *m_surface;
 }
 
 bool PortalPlacement::isSensitive() const {
@@ -63,11 +42,4 @@ const Transform3& PortalPlacement::portalToVolumeCenter() const {
   return m_portalToVolumeCenter;
 }
 
-const std::shared_ptr<RegularSurface>& PortalPlacement::surfacePtr() {
-  return m_surface;
-}
-
-std::shared_ptr<const RegularSurface> PortalPlacement::surfacePtr() const {
-  return m_surface;
-}
 }  // namespace Acts::detail

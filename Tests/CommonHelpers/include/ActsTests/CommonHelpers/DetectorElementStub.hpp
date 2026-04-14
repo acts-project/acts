@@ -91,21 +91,21 @@ class DetectorElementStub : public Acts::SurfacePlacementBase {
   /// The returned surface takes shared ownership of this detector element.
   ///
   /// @return Shared pointer to the created surface
-  std::shared_ptr<Acts::Surface> createSurface() const;
+  std::shared_ptr<Acts::Surface> createSurface();
 
   /// Return surface associated with this detector element
   /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
   [[deprecated(
       "Use createSurface() to get a Surface with shared ownership of the "
       "placement; surface() will be removed in a future release")]]
-  const Acts::Surface& surface() const override;
+  const Acts::Surface& surface() const;
 
   /// Non-const access to surface associated with this detector element
   /// @deprecated Use @c createSurface() and hold the returned shared_ptr.
   [[deprecated(
       "Use createSurface() to get a Surface with shared ownership of the "
       "placement; surface() will be removed in a future release")]]
-  Acts::Surface& surface() override;
+  Acts::Surface& surface();
 
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const;

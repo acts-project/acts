@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <iomanip>
@@ -23,11 +23,10 @@ namespace Acts {
 Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
 
-Surface::Surface(std::shared_ptr<const SurfacePlacementBase> placement) noexcept
-    : GeometryObject(), m_placement(std::move(placement)) {}
-
-Surface::Surface(const SurfacePlacementBase& placement) noexcept
-    : GeometryObject(), m_placement(&placement) {}
+Surface::Surface(std::shared_ptr<SurfacePlacementBase> placement)
+    : GeometryObject(), m_placement(std::move(placement)) {
+  throw_assert(m_placement, "SurfacePlacementBase must not be nullptr");
+}
 
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
                  const Transform3& shift) noexcept
@@ -165,7 +164,7 @@ bool Surface::operator==(const Surface& other) const {
     return false;
   }
   // (d) compare  detector elements
-  if (placementPtr() != other.placementPtr()) {
+  if (m_placement != other.m_placement) {
     return false;
   }
   // (e) compare transform values
@@ -222,8 +221,8 @@ Vector3 Surface::center(const GeometryContext& gctx) const {
 
 const Transform3& Surface::localToGlobalTransform(
     const GeometryContext& gctx) const {
-  if (const auto* p = placementPtr()) {
-    return p->localToGlobalTransform(gctx);
+  if (m_placement != nullptr) {
+    return m_placement->localToGlobalTransform(gctx);
   }
   return *m_transform;
 }
@@ -308,19 +307,8 @@ FreeToPathMatrix Surface::freeToPathDerivative(const GeometryContext& gctx,
   return freeToPath;
 }
 
-const SurfacePlacementBase* Surface::placementPtr() const noexcept {
-  return std::visit(
-      overloaded{
-          [](std::monostate) -> const SurfacePlacementBase* { return nullptr; },
-          [](const SurfacePlacementBase* raw) { return raw; },
-          [](const std::shared_ptr<const SurfacePlacementBase>& sptr)
-              -> const SurfacePlacementBase* { return sptr.get(); },
-      },
-      m_placement);
-}
-
 const SurfacePlacementBase* Surface::surfacePlacement() const {
-  return placementPtr();
+  return m_placement.get();
 }
 
 double Surface::thickness() const {
@@ -346,19 +334,14 @@ Surface::surfaceMaterialSharedPtr() const {
 }
 
 void Surface::assignSurfacePlacement(
-    std::shared_ptr<const SurfacePlacementBase> placement) {
+    std::shared_ptr<SurfacePlacementBase> placement) {
   m_placement = std::move(placement);
   m_transform.reset();
   m_isSensitive = false;
-}
-
-void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
-  m_placement = &placement;
-  // resetting the transform as it will be handled through the detector element
-  // now
-  m_transform.reset();
-  // reset sensitivity flag
-  m_isSensitive = false;
+  // Call assignSurface to wire the back-pointer on the placement side.
+  // assignSurface checks surface->surfacePlacement(): since m_placement is
+  // already set above, it will find `this` and return without calling back.
+  m_placement->assignSurface(getSharedPtr());
 }
 
 void Surface::assignSurfaceMaterial(
@@ -367,7 +350,7 @@ void Surface::assignSurfaceMaterial(
 }
 
 void Surface::associateLayer(const Layer& lay) {
-  m_associatedLayer = (&lay);
+  m_associatedLayer = &lay;
 }
 
 void Surface::visualize(IVisualization3D& helper, const GeometryContext& gctx,
@@ -378,7 +361,7 @@ void Surface::visualize(IVisualization3D& helper, const GeometryContext& gctx,
 }
 
 void Surface::assignIsSensitive(bool isSensitive) {
-  if (placementPtr() != nullptr) {
+  if (m_placement != nullptr) {
     throw std::logic_error(
         "Cannot assign sensitivity to a surface associated to a detector "
         "element.");
@@ -387,13 +370,13 @@ void Surface::assignIsSensitive(bool isSensitive) {
 }
 
 bool Surface::isSensitive() const {
-  if (const auto* p = placementPtr()) {
-    return p->isSensitive();
+  if (m_placement != nullptr) {
+    return m_placement->isSensitive();
   }
   return m_isSensitive;
 }
 bool Surface::isAlignable() const {
-  return placementPtr() != nullptr;
+  return m_placement != nullptr;
 }
 
 }  // namespace Acts

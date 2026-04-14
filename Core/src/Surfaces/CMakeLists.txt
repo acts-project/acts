@@ -31,4 +31,5 @@ target_sources(
         detail/AlignmentHelper.cpp
         detail/AnnulusBoundsHelper.cpp
         detail/MergeHelper.cpp
+        SurfacePlacementBase.cpp
 )
