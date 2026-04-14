@@ -65,36 +65,80 @@ BOOST_AUTO_TEST_CASE(SizeTest) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(CombinationDraw4D) {
-  CombinatoricIndices<4> indexGenerator{10ul};
-  BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(10ul, 4ul));
-  BOOST_CHECK_EQUAL(indexGenerator.setSize(), 10ul);
+template <std::size_t K>
+void checkComboDrawing(const std::size_t N) {
+  if (N < K) {
+    return;
+  }
+  const CombinatoricIndices<K> indexGenerator{N};
+  BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(N, K));
+  BOOST_CHECK_EQUAL(indexGenerator.setSize(), N);
 
-  CombinationSet<4> cachedCombos{};
-  for (std::size_t comb = 0; comb < indexGenerator.size(); ++comb) {
-    std::array<std::size_t, 4> combination = indexGenerator.draw(comb);
-    std::ranges::sort(combination);
-    // Check that all 4 indices are different
-    for (std::size_t i = 1; i < 4; ++i) {
-      for (std::size_t k = 0; k < i; ++k) {
+  CombinationSet<K> cachedCombos{};
+
+  for (std::size_t combo = 0ul; combo < indexGenerator.size(); ++combo) {
+    std::array<std::size_t, K> combination = indexGenerator.draw(combo);
+    /// Check that all indices are less than N
+    for (const std::size_t idx : combination) {
+      BOOST_CHECK_LT(idx, N);
+    }
+    /// Check that all indices are unique
+    for (std::size_t i = 1ul; i < combination.size(); ++i) {
+      for (std::size_t k = 0ul; k < i; ++k) {
         BOOST_CHECK_NE(combination[i], combination[k]);
       }
     }
-    std::cout << "Iteration: " << comb << "-> drawn indices: " << combination
+    /// Sort the indices as we are only inter
+    std::ranges::sort(combination);
+    std::cout << "Iteration: " << (combo) << "-> drawn indices: " << combination
               << std::endl;
     BOOST_CHECK_EQUAL(cachedCombos.insert(combination).second, true);
   }
   BOOST_CHECK_EQUAL(cachedCombos.size(), indexGenerator.size());
+  if constexpr (K > 1) {
+    checkComboDrawing<K - 1>(N);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CombinationDraw) {
+  checkComboDrawing<10ul>(15ul);
+}
+
+template <std::size_t K>
+void checkCombinatoricIterator(const std::size_t N) {
+  if (N < K) {
+    return;
+  }
+  CombinatoricIndices<K> indexGenerator{N};
+  BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(N, K));
+  BOOST_CHECK_EQUAL(indexGenerator.setSize(), N);
+
+  auto begin = indexGenerator.begin();
+  auto end = indexGenerator.end();
+  BOOST_CHECK_EQUAL(begin != end, true);
+  BOOST_CHECK_EQUAL((begin + indexGenerator.size()) == end, true);
+
+  CombinationSet<K> cachedCombos{};
+  for (const auto& combination : indexGenerator) {
+    BOOST_CHECK_EQUAL(cachedCombos.insert(combination).second, true);
+
+    for (const std::size_t idx : combination) {
+      BOOST_CHECK_LT(idx, N);
+    }
+    /// Check that all indices are unique
+    for (std::size_t i = 1ul; i < combination.size(); ++i) {
+      for (std::size_t k = 0ul; k < i; ++k) {
+        BOOST_CHECK_NE(combination[i], combination[k]);
+      }
+    }
+  }
+  if constexpr (K > 1) {
+    checkCombinatoricIterator<K - 1>(N);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(CombinatoricIterator) {
-  CombinatoricIndices<5> indexGenerator{11ul};
-  BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(11ul, 5ul));
-  BOOST_CHECK_EQUAL(indexGenerator.setSize(), 11ul);
-  CombinationSet<5> cachedCombos{};
-  for (const auto& combination : indexGenerator) {
-    BOOST_CHECK_EQUAL(cachedCombos.insert(combination).second, true);
-  }
+  checkCombinatoricIterator<7>(16);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

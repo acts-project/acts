@@ -15,14 +15,25 @@
 #include <vector>
 
 namespace Acts {
-/// Utilitty class to draw
+/// Utility class to loop over all possible ways to draw K unique elements out
+/// of a continuous sequence of N elements. The list of combinations starts with
+/// the lowest possible set of indices, e.g. for a sequence of 4
+///             [0, 1,2, 3]
+/// The next members of the series increment the (K-1) th index until
+///             [0,1,2, N-1].
+/// Then the third index is incremented and the last one set to the next value
+///             [0, 1, 3, 4].
+/// The sequence continues until all elements are at their maximum value.
+///
+/// The user can either loop manually to draw the list of elements
+/// or use a range based for loop
 template <std::size_t K>
 class CombinatoricIndices {
  public:
   /// Declare other combinatoric indices classes as friends
   template <std::size_t L>
   friend class CombinatoricIndices;
-
+  /// Declare the Return type of the Index generator to be an array of size K
   using IndexArray = std::array<std::size_t, K>;
 
   /// Constructor of the combinatoric indices
@@ -43,59 +54,76 @@ class CombinatoricIndices {
   /// @returns An array where each is a unique number from [0 -N)
   IndexArray draw(const std::size_t combination) const;
 
+  /// Iterator class to be used in the ranged for loop
   class iterator {
    public:
+    /// Empty default constructor
     iterator() = default;
-    iterator(const CombinatoricIndices* parent, const std::size_t _itr)
-        : m_parent{parent}, m_itr{_itr} {
-      updateArray();
-    }
+    /// Constructor with a CombinatoricIndex parent and the iterator position
+    /// @param parent: Pointer to the parent used to draw the combinatoric indices
+    /// @param _itr: Position of the iterator in the sequence of combinations
+    iterator(const CombinatoricIndices* parent, const std::size_t _itr);
 
-    iterator& operator++() {
-      ++m_itr;
-      updateArray();
-      return *this;
-    }
-    bool operator==(const iterator& other) const {
-      return m_parent == other.m_parent && m_itr == other.m_itr;
-    }
-    bool operator!=(const iterator& other) const {
-      return m_parent != other.m_parent || m_itr != other.m_itr;
-    }
-    const IndexArray& operator*() const { return m_array; }
+    /// Increment the internal iterator count by one unit
+    /// @returns: Mutable reference to the iterator instance
+    iterator& operator++();
+    /// Return an iterator shifted by x indices in the sequence
+    /// @param idx: Number of indexes by which the new operator is shifted from this one
+    /// @returns A new iterator
+    iterator operator+(const std::size_t idx) const;
+
+    /// Comparison operator to check whether two iterators are equal,
+    /// i.e. they share the same parent and have the same internal iterator
+    /// index
+    /// @param other: Const reference to the other iterator to check
+    /// @returns The equality assessment of the two iterators
+    bool operator==(const iterator& other) const;
+
+    /// Comparison operator to check whether two iterators are unequal
+    /// @param other: Const reference to the other iterator to check
+    /// @returns The inequality assessment of the two iterators
+    bool operator!=(const iterator& other) const;
+
+    /// Dereference operator to the underlying memory
+    /// @returns: The array containing the unique indices of the combinatoric generator
+    const IndexArray& operator*() const;
 
    private:
-    void updateArray() {
-      if (m_parent == nullptr || m_itr >= m_parent->size()) {
-        m_array = filledArray<std::size_t, K>(
-            std::numeric_limits<std::size_t>::max());
-      } else {
-        for (std::size_t s = 0; s < m_array.size(); ++s) {
-          m_array[s] = m_parent->drawIndex(m_itr, s);
-        }
-      }
-    }
+    /// Update the internal array to the current element in the sequence
+    void updateArray();
+    /// Pointer to the parent from which the combinatoric indices are drawn
     const CombinatoricIndices* m_parent{nullptr};
+    /// Iterator index in the sequence of iterations
     std::size_t m_itr{0ul};
+    /// Storage for the drawn indices
     IndexArray m_array{
         filledArray<std::size_t, K>(std::numeric_limits<std::size_t>::max())};
   };
 
-  iterator begin() const { return iterator{this, 0ul}; }
-
-  iterator end() const { return iterator{this, size()}; }
+  /// @returns the begin iterator of the sequence of combinatoric indices
+  constexpr iterator begin() const { return iterator{this, 0ul}; }
+  /// @returns the end iterator of the sequence of combinatoric indices
+  constexpr iterator end() const { return iterator{this, size()}; }
 
  private:
+  /// Draws the unique index
+  /// @param combination: The number of the combination in the list
+  ///         of sequences
+  /// @param slot: The positional index of the index inside the returned array
+  /// @returns A unique index for the n-th combination
   std::size_t drawIndex(const std::size_t combination,
                         const std::size_t slot) const;
 
+  /// Flag to toggle whether child drawer classes are needed to calculate the
+  /// combinations
   static constexpr bool s_hasSubDraw = K > 1ul;
   using SubDrawer_t =
       std::conditional_t<s_hasSubDraw, CombinatoricIndices<K - 1>, std::size_t>;
-
+  /// Size of the set from which the combinations can be drawn needs to be >= K
   std::size_t m_N{};
+  /// Utility class to fill up the unique indices
   SubDrawer_t m_childDrawer{m_N - 1ul};
-
+  /// Vector stating in how many combinations the i-th element is used
   std::vector<std::size_t> m_borders{};
 };
 

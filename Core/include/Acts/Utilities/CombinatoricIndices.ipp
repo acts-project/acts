@@ -30,6 +30,8 @@ CombinatoricIndices<K>::CombinatoricIndices(const std::size_t N) : m_N{N} {
   ///  (N, K) = sum_{i=K)^{N-1} (I, K)
   m_borders.reserve(N - K);
   std::size_t setSize{0ul};
+  /// Calculate the number of combinations in which the i-th element
+  /// in the sequence is used
   for (std::size_t i = N - 1; i >= K - 1ul; --i) {
     setSize += binomial(i, K - 1);
     m_borders.push_back(setSize);
@@ -43,6 +45,7 @@ template <std::size_t K>
 std::size_t CombinatoricIndices<K>::size() const {
   return m_borders.back();
 }
+
 template <std::size_t K>
 std::size_t CombinatoricIndices<K>::setSize() const {
   return m_N;
@@ -65,7 +68,6 @@ std::array<std::size_t, K> CombinatoricIndices<K>::draw(
 }
 
 template <std::size_t K>
-
 std::size_t CombinatoricIndices<K>::drawIndex(const std::size_t combination,
                                               const std::size_t slot) const {
   // There is only one combination if N == K
@@ -91,6 +93,54 @@ std::size_t CombinatoricIndices<K>::drawIndex(const std::size_t combination,
                     m_N, K, combination, size()));
     return 0ul;
   }
+}
+
+template <std::size_t K>
+CombinatoricIndices<K>::iterator::iterator(const CombinatoricIndices* parent,
+                                           const std::size_t _itr)
+    : m_parent{parent}, m_itr{_itr} {
+  updateArray();
+}
+
+template <std::size_t K>
+CombinatoricIndices<K>::iterator&
+CombinatoricIndices<K>::iterator::operator++() {
+  ++m_itr;
+  updateArray();
+  return *this;
+}
+
+template <std::size_t K>
+bool CombinatoricIndices<K>::iterator::operator==(const iterator& other) const {
+  return m_parent == other.m_parent && m_itr == other.m_itr;
+}
+
+template <std::size_t K>
+bool CombinatoricIndices<K>::iterator::operator!=(const iterator& other) const {
+  return m_parent != other.m_parent || m_itr != other.m_itr;
+}
+
+template <std::size_t K>
+const CombinatoricIndices<K>::IndexArray&
+CombinatoricIndices<K>::iterator::operator*() const {
+  return m_array;
+}
+
+template <std::size_t K>
+void CombinatoricIndices<K>::iterator::updateArray() {
+  if (m_parent == nullptr || m_itr >= m_parent->size()) {
+    m_array =
+        filledArray<std::size_t, K>(std::numeric_limits<std::size_t>::max());
+  } else {
+    for (std::size_t s = 0; s < m_array.size(); ++s) {
+      m_array[s] = m_parent->drawIndex(m_itr, s);
+    }
+  }
+}
+template <std::size_t K>
+CombinatoricIndices<K>::iterator CombinatoricIndices<K>::iterator::operator+(
+    const std::size_t idx) const {
+  return iterator{m_parent, m_itr + idx};
 }
 
 }  // namespace Acts
