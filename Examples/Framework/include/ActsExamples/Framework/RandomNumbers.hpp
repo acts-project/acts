@@ -18,22 +18,19 @@ namespace ActsExamples {
 
 struct AlgorithmContext;
 
-/// The random number generator used in the framework.
-using RandomEngine = std::mt19937_64;  ///< 64-bit Mersenne Twister
-
 /// The seed type used in the framework.
 using RandomSeed = std::uint64_t;
 
 /// The random number generator used in the framework.
 ///
-/// Thin wrapper around std::mt19937 that remembers the seed it was
+/// Thin wrapper around std::mt19937_64 that remembers the seed it was
 /// constructed with so that downstream consumers (e.g. lumi-block vertex
 /// generators) can derive reproducible, user-seed-dependent sub-sequences.
 class RandomEngine {
  public:
-  using result_type = std::mt19937::result_type;
+  using result_type = std::mt19937_64::result_type;
 
-  /// Default constructor. Uses mt19937 default seed.
+  /// Default constructor. Uses mt19937_64 default seed.
   RandomEngine() : m_seed(0) {}
 
   /// Construct with a specific seed.
@@ -53,12 +50,12 @@ class RandomEngine {
 
   result_type operator()() { return m_engine(); }
 
-  static constexpr result_type min() { return std::mt19937::min(); }
-  static constexpr result_type max() { return std::mt19937::max(); }
+  static constexpr result_type min() { return std::mt19937_64::min(); }
+  static constexpr result_type max() { return std::mt19937_64::max(); }
 
  private:
   RandomSeed m_seed;
-  std::mt19937 m_engine;
+  std::mt19937_64 m_engine;
 };
 
 /// Provide event and algorithm specific random number generator.s
