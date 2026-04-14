@@ -303,8 +303,13 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
+<<<<<<< HEAD
 set(_acts_detray_version 1.0.1)
 set(_acts_traccc_version 1.2.0)
+=======
+set(_acts_detray_version 0.112.0)
+set(_acts_traccc_version 1.1.0)
+>>>>>>> dd23d2850 (switching to traccc tag)
 set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.24.0)
 set(_acts_annoy_version 1.17.3)
