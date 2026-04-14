@@ -74,7 +74,7 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
   };
 }
 
-void addDirectLayerSubsystem(BlueprintBuilder& builder,
+void addDirectLayerSubsystem(const BlueprintBuilder& builder,
                              Acts::Experimental::ContainerBlueprintNode& outer,
                              std::string assembly, std::string det,
                              const std::regex& layerFilter) {
@@ -128,7 +128,7 @@ void addDirectLayerSubsystem(BlueprintBuilder& builder,
   outer.addChild(std::move(containerNode));
 }
 
-void addBarrelEndcapSubsystem(BlueprintBuilder& builder,
+void addBarrelEndcapSubsystem(const BlueprintBuilder& builder,
                               Acts::Experimental::ContainerBlueprintNode& outer,
                               std::string assembly, std::string det,
                               const std::regex& layerFilter) {
@@ -153,7 +153,7 @@ void addBarrelEndcapSubsystem(BlueprintBuilder& builder,
 }
 
 void addDirectLayerGroupedSubsystem(
-    BlueprintBuilder& builder,
+    const BlueprintBuilder& builder,
     Acts::Experimental::ContainerBlueprintNode& outer, std::string assembly,
     std::string det, const std::regex& layerFilter) {
   const auto assemblyElement = builder.findDetElementByName(assembly);
