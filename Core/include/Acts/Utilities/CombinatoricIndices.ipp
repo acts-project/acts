@@ -81,9 +81,9 @@ std::size_t CombinatoricIndices<K>::drawIndex(const std::size_t combination,
     return std::distance(m_borders.begin(), slotItr);
   }
   if constexpr (s_hasSubDraw) {
-    const std::size_t combInSubDraw =
+    const std::size_t subCombination =
         m_borders.front() - ((*slotItr) - combination);
-    return m_childDrawer.drawIndex(combInSubDraw, slot - 1ul) + 1ul;
+    return m_childDrawer.drawIndex(subCombination, slot - 1ul) + 1ul;
   } else {
     throw std::invalid_argument(
         std::format("CombinatoricIndices ({:}, {:}). The combination {:} "

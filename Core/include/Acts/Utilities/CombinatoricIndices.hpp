@@ -11,6 +11,9 @@
 #include "Acts/Utilities/ArrayHelpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
+#include <algorithm>
+#include <vector>
+
 namespace Acts {
 /// Utilitty class to draw
 template <std::size_t K>
