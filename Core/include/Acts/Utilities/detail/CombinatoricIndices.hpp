@@ -129,4 +129,4 @@ class CombinatoricIndices {
 
 }  // namespace Acts::detail
 
-#include "Acts/Utilities/CombinatoricIndices.ipp"
+#include "Acts/Utilities/detail/CombinatoricIndices.ipp"

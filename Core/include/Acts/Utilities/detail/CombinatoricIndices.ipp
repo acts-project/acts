@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/CombinatoricIndices.hpp"
+#include "Acts/Utilities/detail/CombinatoricIndices.hpp"
 
 #include <format>
 

@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/CombinatoricIndices.hpp"
+#include "Acts/Utilities/detail/CombinatoricIndices.hpp"
 
 #include <ranges>
 #include <set>
