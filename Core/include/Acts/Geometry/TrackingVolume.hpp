@@ -185,15 +185,14 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    
     if (restrictToSensitives) {
       apply([&visitor](const Surface& surface) {
-	if(!surface.isSensitive()) {
-	  return;
-	}
-	visitor(&surface);
+        if (!surface.isSensitive()) {
+          return;
+        }
+        visitor(&surface);
       });
-    
+
     } else {
       apply(overloaded{
           [&visitor](const Surface& surface) { visitor(&surface); },
