@@ -89,7 +89,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsGnn, gnn) {
 
 #ifdef ACTS_GNN_ONNX_BACKEND
   ACTS_PYTHON_DECLARE_GNN_STAGE(OnnxEdgeClassifier, EdgeClassificationBase, gnn,
-                                modelPath, cut);
+                                modelPath, cut, useCuda);
 #endif
 
 #ifdef ACTS_GNN_WITH_MODULEMAP

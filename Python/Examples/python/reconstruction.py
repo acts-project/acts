@@ -1962,6 +1962,7 @@ def addGnn(
     inputSpacePoints: str = "spacepoints",
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    useCuda: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """
@@ -1982,6 +1983,7 @@ def addGnn(
         inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
+        useCuda: Whether to initialize the execution as CUDA or CPU
         logLevel: Logging level
 
     Note:
@@ -2011,6 +2013,7 @@ def addGnn(
         trackBuilder=trackBuilder,
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
+        useCuda=useCuda,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)

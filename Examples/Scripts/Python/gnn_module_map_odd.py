@@ -163,6 +163,7 @@ def runGnnModuleMap(
     elif gnnModel.suffix == ".onnx":
         from acts.gnn import OnnxEdgeClassifier
 
+        edgeClassifierConfig["useCuda"] = True
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
         from acts.gnn import TensorRTEdgeClassifier

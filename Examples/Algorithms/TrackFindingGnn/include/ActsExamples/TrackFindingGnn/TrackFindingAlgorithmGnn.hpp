@@ -124,6 +124,9 @@ class TrackFindingAlgorithmGnn final : public IAlgorithm {
 
     /// Optionally remap the geometry Ids that are put into the chain
     std::shared_ptr<GeometryIdMapActsAthena> geometryIdMap;
+
+    /// Use CPU or CUDA
+    bool useCuda = true;
   };
 
   /// Constructor of the track finding algorithm
