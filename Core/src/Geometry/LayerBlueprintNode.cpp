@@ -211,10 +211,8 @@ std::vector<std::shared_ptr<Surface>> LayerBlueprintNode::surfaces() const {
     std::visit(visitor, node);
   }
   auto nonUniqueRange = std::ranges::unique(
-      surfaces.begin(), surfaces.end(),
-      [](const std::shared_ptr<Surface>& a, const std::shared_ptr<Surface>& b) {
-        return a == b;
-      });
+      surfaces, [](const std::shared_ptr<Surface>& a,
+                   const std::shared_ptr<Surface>& b) { return a == b; });
   surfaces.erase(nonUniqueRange.begin(), nonUniqueRange.end());
 
   return surfaces;
