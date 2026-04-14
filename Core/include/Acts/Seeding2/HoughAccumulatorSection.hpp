@@ -1,3 +1,4 @@
+#include <array>
 #include <cmath>
 #include <concepts>
 #include <vector>
@@ -132,7 +133,7 @@ inline bool HoughAccumulatorSection::isCrossingInside(F &&line1, F &&line2) cons
   // left edge mid point                   |_           |
   //                                       |            +2
   // line 2crossing left section           +2           |
-  // The above covers most of the cases. 
+  // The above covers most of the cases.
   // Additional precautions are made when both lines cross
   // left & right (x) bounds outside of vertical (y) bounds.
 
@@ -235,17 +236,17 @@ void exploreParametersSpace(std::vector<HoughAccumulatorSection> &sectionsStack,
                             const Options &opt,
                             Functor lineFunctor,
                             std::vector<HoughAccumulatorSection> &results) {
-    
+
     using Decision = typename Options::Decision;
-    
+
     while (!sectionsStack.empty()) {
         //ACTS_VERBOSE("Stack size " << sectionsStack.size());
-        
+
         HoughAccumulatorSection thisSection = std::move(sectionsStack.back());
         sectionsStack.pop_back();
 
         Decision whatNext = opt.decisionFunctor(thisSection, measurements);
-
+        std::vector<HoughAccumulatorSection> newSections;
         if (whatNext == Decision::Discard) {
             continue;
         } else if (whatNext == Decision::Accept) {
@@ -256,73 +257,34 @@ void exploreParametersSpace(std::vector<HoughAccumulatorSection> &sectionsStack,
 
             if (splitX && splitY) {
                 // Split into 4 sections
-                HoughAccumulatorSection bL = thisSection.bottomLeft();
-                HoughAccumulatorSection tL = thisSection.topLeft();
-                HoughAccumulatorSection bR = thisSection.bottomRight();
-                HoughAccumulatorSection tR = thisSection.topRight();
-
-                if (whatNext == Decision::DrillAndExpand) {
-                    bL.expand(opt.expandX, opt.expandY);
-                    tL.expand(opt.expandX, opt.expandY);
-                    bR.expand(opt.expandX, opt.expandY);
-                    tR.expand(opt.expandX, opt.expandY);
-                }
-                
-                // checking if lines are crossing 4 new sections 
-                for (unsigned idx : thisSection.indices()) {
-                    const auto &m = measurements[idx];
-                    auto line = [&](float x){return lineFunctor(m,x);};
-
-                    if (bL.isLineInside(line)) bL.indices().push_back(idx);
-                    if (tL.isLineInside(line)) tL.indices().push_back(idx);
-                    if (bR.isLineInside(line)) bR.indices().push_back(idx);
-                    if (tR.isLineInside(line)) tR.indices().push_back(idx);
-                }
-                sectionsStack.push_back(std::move(bL));
-                sectionsStack.push_back(std::move(tL));
-                sectionsStack.push_back(std::move(bR));
-                sectionsStack.push_back(std::move(tR));
-
+                newSections.insert(newSections.end(), {thisSection.bottomLeft(), thisSection.topLeft(), thisSection.bottomRight(), thisSection.topRight()});
             } else if (!splitX && splitY) {
-                // Split into 2 horizontal sections
-                HoughAccumulatorSection b = thisSection.bottom();
-                HoughAccumulatorSection t = thisSection.top();
-
-                if (whatNext == Decision::DrillAndExpand) {
-                    b.expand(opt.expandX, opt.expandY);
-                    t.expand(opt.expandX, opt.expandY);
-                }
-
-                for (unsigned idx : thisSection.indices()) {
-                    const auto &m = measurements[idx];
-                    auto line = [&](float x){return lineFunctor(m,x);};
-
-                    if (b.isLineInside(line)) b.indices().push_back(idx);
-                    if (t.isLineInside(line)) t.indices().push_back(idx);
-                }
-                sectionsStack.push_back(std::move(b));
-                sectionsStack.push_back(std::move(t));
-
+                // Split into 2 sections horizontally
+                newSections.insert(newSections.end(), {thisSection.bottom(), thisSection.top()});
             } else if (splitX && !splitY) {
-                // Split into 2 vertical sections
-                HoughAccumulatorSection l = thisSection.left();
-                HoughAccumulatorSection r = thisSection.right();
-
-                if (whatNext == Decision::DrillAndExpand) {
-                    l.expand(opt.expandX, opt.expandY);
-                    r.expand(opt.expandX, opt.expandY);
-                }
-
-                for (unsigned idx : thisSection.indices()) {
-                    const auto &m = measurements[idx];
-                    auto line = [&](float x){return lineFunctor(m,x);};
-
-                    if (l.isLineInside(line)) l.indices().push_back(idx);
-                    if (r.isLineInside(line)) r.indices().push_back(idx);
-                }
-                sectionsStack.push_back(std::move(l));
-                sectionsStack.push_back(std::move(r));
+                // Split into 2 sections vertically
+                newSections.insert(newSections.end(), {thisSection.left(), thisSection.right()});
             }
+
+            if (whatNext == Decision::DrillAndExpand) {
+                for (HoughAccumulatorSection& s: newSections ) {
+                    s.expand(opt.expandX, opt.expandY);
+                }
+            }
+            for (unsigned idx : thisSection.indices()) {
+                const auto &m = measurements[idx];
+                auto line = [&](float x){return lineFunctor(m,x);};
+
+                for (HoughAccumulatorSection& s: newSections ) {
+                    if(s.isLineInside(line)) {
+                        s.indices().push_back(idx);
+                    }
+                }
+            }
+            for (HoughAccumulatorSection& s: newSections ) {
+                sectionsStack.push_back(std::move(s));
+            }
+
         }
     }
 }
@@ -331,27 +293,27 @@ template <typename SectionType, typename MeasurementType, typename Functor>
 bool passIntersectionsCheck(
     const SectionType &section,
     const std::vector<MeasurementType> &measurements,
-    Functor lineFunctor, 
+    Functor lineFunctor,
     const unsigned threshold) {
-    
-    const unsigned count = section.count();
+
+    const size_t count = section.count();
     const float xLeft = section.xBegin();
     const float xRight = xLeft + section.xSize();
     const auto& indices = section.indices();
 
     // Small Buffer Optimization
-    constexpr unsigned kMaxStackLines = 64; 
-    
+    constexpr size_t kMaxStackLines = 64;
+
     if (count <= kMaxStackLines) {
-        float yLeft[kMaxStackLines];
-        float yRight[kMaxStackLines];        
-        
-        for (unsigned i = 0; i < count; ++i) {
+        std::array<float, kMaxStackLines> yLeft;
+        std::array<float, kMaxStackLines> yRight;
+
+        for (size_t i = 0; i < count; ++i) {
             const auto &m = measurements[indices[i]];
             yLeft[i] = lineFunctor(m, xLeft);
             yRight[i] = lineFunctor(m, xRight);
         }
-        
+
         unsigned inside = 0;
         for (unsigned i = 0; i < count; ++i) {
             for (unsigned j = i + 1; j < count; ++j) {
@@ -362,7 +324,7 @@ bool passIntersectionsCheck(
             }
         }
         return false;
-    } 
+    }
     else {
         std::vector<float> yLeft(count);
         std::vector<float> yRight(count);

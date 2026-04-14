@@ -16,7 +16,7 @@
 using namespace Acts;
 
 namespace ActsTests {
-    
+
 auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
 // Structure representing test parameters for a line in the accumulator space: y = slope * x + intercept
@@ -49,7 +49,7 @@ struct TestExplorationOptions {
     using DecisionFunctor = std::function<Decision(
         const HoughAccumulatorSection &section,
         const std::vector<measurement_t> &measurements)>;
-        
+
     DecisionFunctor decisionFunctor;
 };
 
@@ -147,39 +147,39 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ExploreParametersSpaceSuite)
 
 BOOST_AUTO_TEST_CASE(test_extra_split_x_min_div_0) {
-    
+
     // DESCRIPTION:
     // This test verifies the asymmetric binary split logic (!splitX && splitY / splitX && !splitY)
     // We define 3 lines with very low slopes that cross in the center of the X-axis
     // but remain entirely in the lower half of the Y-axis.
     // The grid has a yMinBinSize (10.0) and a smaller xMinBinSize (6.0)
-     
+
 
     // Linear function definition: y = slope * x + intercept
     auto lineFunctor = [](const LineParameters& p, float arg) { return p.slope * arg + p.intercept; };
 
     std::vector<LineParameters> measurements = {
-        { 0.05f, 1.0f},   // y = 0.05x + 1 
+        { 0.05f, 1.0f},   // y = 0.05x + 1
         { 0.08f, 1.01f},  // y = 0.08x + 1.01
         {-0.10f, 3.0f}    // y = -0.1x + 3
     };
 
     TestExplorationOptions<LineParameters> opt;
-    opt.xMinBinSize = 6.0f;   
-    opt.yMinBinSize = 10.0f; 
+    opt.xMinBinSize = 6.0f;
+    opt.yMinBinSize = 10.0f;
     opt.noiseThreshold = 3;
     opt.threshold = 2;
-    opt.min_division_level = 0; 
-    
+    opt.min_division_level = 0;
+
     HoughAccumulatorSection section(20.0f, 20.0f, 0.0f, 0.0f, 0);
-    section.indices() = {0, 1, 2}; 
+    section.indices() = {0, 1, 2};
 
     std::map<int, Stats> sStat;
 
     opt.decisionFunctor = [&sStat, &opt, lineFunctor](
                                 const HoughAccumulatorSection &sec,
                                 const std::vector<LineParameters> &mes) {
-        
+
         using enum TestExplorationOptions<LineParameters>::Decision;
 
         if (sec.count() < opt.threshold) {
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(test_extra_split_x_min_div_0) {
             return Drill;
         }
         if (sec.count() <= opt.noiseThreshold &&
-            sec.xSize() <= opt.xMinBinSize && 
+            sec.xSize() <= opt.xMinBinSize &&
             sec.ySize() <= opt.yMinBinSize) {
             return Accept;
         }
@@ -214,8 +214,8 @@ BOOST_AUTO_TEST_CASE(test_extra_split_x_min_div_0) {
     std::vector<HoughAccumulatorSection> results;
 
     exploreParametersSpace(sectionsStack, measurements, opt, lineFunctor, results);
-    
-    BOOST_CHECK(sectionsStack.empty()); 
+
+    BOOST_CHECK(sectionsStack.empty());
 
     BOOST_REQUIRE_EQUAL(results.size(), 1);
     BOOST_CHECK_EQUAL(results[0].xSize(), 5.0);
@@ -224,41 +224,41 @@ BOOST_AUTO_TEST_CASE(test_extra_split_x_min_div_0) {
     // ==========================================
     // TREE EXECUTION TRACE
     // ==========================================
-    
+
     // LEVEL 0:
     // Section(20, 20, 0, 0) - Contains all lines. div_level(0) <= min_div(0) -> Drill.
     BOOST_CHECK_EQUAL(sStat[0].nSections, 1);
     BOOST_CHECK_EQUAL(sStat[0].area, 400.0);
-    
-    // LEVEL 1: Split into 4 (10x10). The lines are in the bottom half. 
+
+    // LEVEL 1: Split into 4 (10x10). The lines are in the bottom half.
     // Section(10, 10, 0, 10) [tL] - Discarded by threshold cut (0 lines).
     // Section(10, 10, 10, 10) [tR] - Discarded by threshold cut (0 lines).
     // Section(10, 10, 0, 0) [bL] - Discarded by crossing cut (has 3 lines, but no intersections inside).
     // Section(10, 10, 10, 0) [bR] - Contains crossings -> Drill.
     BOOST_CHECK_EQUAL(sStat[1].discardedByThresholdCut, 2);
     BOOST_CHECK_EQUAL(sStat[1].discardedByCrossingCut, 1);
-    BOOST_CHECK_EQUAL(sStat[1].nSections, 1); 
+    BOOST_CHECK_EQUAL(sStat[1].nSections, 1);
     BOOST_CHECK_EQUAL(sStat[1].area, 100.0);
 
-    // LEVEL 2: bR section splits. ySize(10) is NO longer > yMinBinSize(10). 
+    // LEVEL 2: bR section splits. ySize(10) is NO longer > yMinBinSize(10).
     // splitX=true, splitY=false. Splits vertically into 2 (5x10).
     // Section(5, 10, 15, 0) [right] - Discarded by crossing cut (intersections are around x=13).
     // Section(5, 10, 10, 0) [left] - Contains crossings. xSize(5) <= xMinBinSize(6). -> Accept
     BOOST_CHECK_EQUAL(sStat[2].nSections, 1);
-    BOOST_CHECK_EQUAL(sStat[2].area, 50.0); 
+    BOOST_CHECK_EQUAL(sStat[2].area, 50.0);
     BOOST_CHECK_EQUAL(sStat[2].discardedByThresholdCut, 0);
     BOOST_CHECK_EQUAL(sStat[2].discardedByCrossingCut, 1);
 }
 
 
 BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
-    
+
     // DESCRIPTION:
     // This test verifies the standard QuadTree exploration (splitX && splitY).
     // We inject 5 direct line parameter sets (y = slope*x + intercept) into a 10x20 area.
     // min_division_level is set to 1, forcing an initial blind split into 4 sections,
     // after which the Early Culling and Small Buffer Optimization (SBO) logic takes over.
-    
+
 
     // Linear function definition: y = a*x + b, where LineParameters stores (a, b) parameters for test purposes.
     auto lineFunctor = [](const LineParameters& p, float arg) { return p.slope * arg + p.intercept; };
@@ -277,11 +277,11 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
     opt.yMinBinSize = 2.5;
     opt.noiseThreshold = 3;
     opt.threshold = 2;
-    opt.min_division_level = 1;  
-    
+    opt.min_division_level = 1;
+
     // Create initial section and populate it with indices mapping to our 3 measurements
     HoughAccumulatorSection section(10.0, 20.0, -5.0, -10.0);
-    section.indices() = {0, 1, 2, 3, 4}; 
+    section.indices() = {0, 1, 2, 3, 4};
 
     // Statistics map for verification in tests
     std::map<int, Stats> sStat;
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
     opt.decisionFunctor = [&sStat, &opt, lineFunctor](
                                 const HoughAccumulatorSection &sec,
                                 const std::vector<LineParameters> &mes) {
-        
+
         using enum TestExplorationOptions<LineParameters>::Decision;
 
         if (sec.count() < opt.threshold) {
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
             return Drill;
         }
         if (sec.count() <= opt.noiseThreshold &&
-            sec.xSize() <= opt.xMinBinSize && 
+            sec.xSize() <= opt.xMinBinSize &&
             sec.ySize() <= opt.yMinBinSize) {
             return Accept;
         }
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
 
     std::vector<HoughAccumulatorSection> sectionsStack;
     sectionsStack.push_back(std::move(section)); // pushing root node
-    
+
     std::vector<HoughAccumulatorSection> results;
 
     // Core engine
@@ -330,10 +330,10 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
 
     // Initial Assertions to verify the engine explored the space
     BOOST_CHECK(sStat.size() > 0); // Verifies the tree was drilled
-    
+
     // Empty section stack after algorithm
-    BOOST_CHECK(sectionsStack.empty()); 
-    
+    BOOST_CHECK(sectionsStack.empty());
+
     // Results vector tests
     BOOST_REQUIRE_EQUAL(results.size(), 2);
     BOOST_CHECK_EQUAL(results[0].xSize(), 2.5);
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
     // ==========================================
     // TREE EXECUTION TRACE
     // ==========================================
-    
+
     // LEVEL 0:
     // Section(10.0, 20.0, -5.0, -10.0) - Forced to Drill (min_division_level == 1).
     BOOST_CHECK_EQUAL(sStat[0].nSections, 1);
@@ -387,38 +387,38 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
 
 
 BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
-    
+
     // DESCRIPTION:
-    // This test verifies how new ExploreParametersSpace algorithm works with 
-    // DrillAndExpand option in the decision functor. 
-    // Bottom-right section is the found solution thanks to expanding sections 
-    
+    // This test verifies how new ExploreParametersSpace algorithm works with
+    // DrillAndExpand option in the decision functor.
+    // Bottom-right section is the found solution thanks to expanding sections
+
     auto lineFunctor = [](const LineParameters& p, float arg) { return p.slope * arg + p.intercept; };
 
     std::vector<LineParameters> measurements = {
-        { 0.0f, -3.5f},   // y = -3.5 
+        { 0.0f, -3.5f},   // y = -3.5
         { 2.0f, -4.0f},  // y = 2x - 4
         {0.0f, 0.5f}    //  y = 0.5
     };
 
     TestExplorationOptions<LineParameters> opt;
-    opt.xMinBinSize = 6.0f;   
-    opt.yMinBinSize = 6.0f; 
+    opt.xMinBinSize = 6.0f;
+    opt.yMinBinSize = 6.0f;
     opt.noiseThreshold = 3;
     opt.threshold = 2;
     opt.min_division_level = 0;
     opt.expandX = 1.5;
     opt.expandY = 1.5;
-    
+
     HoughAccumulatorSection section(8.0f, 8.0f, -4.0f, -4.0f, 0);
-    section.indices() = {0, 1, 2}; 
+    section.indices() = {0, 1, 2};
 
     std::map<int, Stats> sStat;
 
     opt.decisionFunctor = [&sStat, &opt, lineFunctor](
                                 const HoughAccumulatorSection &sec,
                                 const std::vector<LineParameters> &mes) {
-        
+
         using enum TestExplorationOptions<LineParameters>::Decision;
 
         if (sec.count() < opt.threshold) {
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
             return DrillAndExpand;
         }
         if (sec.count() <= opt.noiseThreshold &&
-            sec.xSize() <= opt.xMinBinSize && 
+            sec.xSize() <= opt.xMinBinSize &&
             sec.ySize() <= opt.yMinBinSize) {
             return Accept;
         }
@@ -453,8 +453,8 @@ BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
     std::vector<HoughAccumulatorSection> results;
 
     exploreParametersSpace(sectionsStack, measurements, opt, lineFunctor, results);
-    
-    BOOST_CHECK(sectionsStack.empty()); 
+
+    BOOST_CHECK(sectionsStack.empty());
 
     BOOST_REQUIRE_EQUAL(results.size(), 1);
     BOOST_CHECK_EQUAL(results[0].xSize(), 6.0);
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
     // Section(8.0, 8.0, -4.0, -4.0) - Root node. div_level(0) <= min_div(0). -> DrillAndExpand.
     BOOST_CHECK_EQUAL(sStat[0].nSections, 1);
     BOOST_CHECK_EQUAL(sStat[0].area, 64.0);
-    
+
     // LEVEL 1: Splits into 4 sections, but each expands by 1.5 in both directions (4.0 -> 6.0).
     // Section(6.0, 6.0, -5.0, 1.0) [tL] - Discarded by threshold cut (only y=0.5 reaches it).
     // Section(6.0, 6.0, -1.0, 1.0) [tR] - Discarded by crossing cut (has 2 lines, but no crossings inside).
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
     // Section(6.0, 6.0, -1.0, -5.0) [bR] - Intersection captured inside thanks to expansion -> Accept
     BOOST_CHECK_EQUAL(sStat[1].discardedByThresholdCut, 1);
     BOOST_CHECK_EQUAL(sStat[1].discardedByCrossingCut, 2);
-    BOOST_CHECK_EQUAL(sStat[1].nSections, 1); 
+    BOOST_CHECK_EQUAL(sStat[1].nSections, 1);
     BOOST_CHECK_EQUAL(sStat[1].area, 36.0);
     BOOST_CHECK_EQUAL(sStat[1].nLines, 3);
 }
