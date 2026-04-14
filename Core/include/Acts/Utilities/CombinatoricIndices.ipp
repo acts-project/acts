@@ -12,7 +12,7 @@
 
 #include <format>
 
-namespace Acts {
+namespace Acts::detail {
 
 template <std::size_t K>
 CombinatoricIndices<K>::CombinatoricIndices(const std::size_t N) : m_N{N} {
@@ -143,4 +143,4 @@ CombinatoricIndices<K>::iterator CombinatoricIndices<K>::iterator::operator+(
   return iterator{m_parent, m_itr + idx};
 }
 
-}  // namespace Acts
+}  // namespace Acts::detail

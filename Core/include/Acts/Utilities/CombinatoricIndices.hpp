@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace Acts {
+namespace Acts::detail {
 /// Utility class to loop over all possible ways to draw K unique elements out
 /// of a continuous sequence of N elements. The list of combinations starts with
 /// the lowest possible set of indices, e.g. for a sequence of 4
@@ -127,6 +127,6 @@ class CombinatoricIndices {
   std::vector<std::size_t> m_borders{};
 };
 
-}  // namespace Acts
+}  // namespace Acts::detail
 
 #include "Acts/Utilities/CombinatoricIndices.ipp"

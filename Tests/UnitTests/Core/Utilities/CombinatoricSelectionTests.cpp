@@ -13,6 +13,7 @@
 #include <ranges>
 #include <set>
 
+using namespace Acts::detail;
 using namespace Acts;
 
 struct ArraySorter {
