@@ -149,7 +149,7 @@ template <detail::BlueprintBackend BackendT>
 ElementLayerAssembler<BackendT>&&
 ElementLayerAssembler<BackendT>::setLayerNameSuffix(
     const std::optional<std::string>& layerNameSuffix) && {
-  m_layerSpec.layerName = std::move(layerNameSuffix);
+  m_layerSpec.layerName = layerNameSuffix;
   return std::move(*this);
 }
 

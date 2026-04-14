@@ -68,8 +68,8 @@ inline int layerIndexFromName(std::string_view elemName,
     return std::stoi(match[1].str());
   }
 
-  static const std::regex groupedLayerNameFilter{"layer(\\d+)"};
-  if (std::regex_search(elemName.begin(), elemName.end(), match,
+  if (std::regex groupedLayerNameFilter{"layer(\\d+)"};
+      std::regex_search(elemName.begin(), elemName.end(), match,
                         groupedLayerNameFilter) &&
       match.size() > 1) {
     return std::stoi(match[1].str());

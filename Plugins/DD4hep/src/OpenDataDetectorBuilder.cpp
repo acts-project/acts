@@ -14,8 +14,6 @@
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
-#include "Acts/Geometry/StaticBlueprintNode.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
@@ -76,6 +74,155 @@ auto makeLayerCustomizer(const BlueprintBuilder& builder, std::string det,
   };
 }
 
+void addDirectLayerSubsystem(BlueprintBuilder& builder,
+                             Acts::Experimental::ContainerBlueprintNode& outer,
+                             std::string assembly, std::string det,
+                             const std::regex& layerFilter) {
+  const auto assemblyElement = builder.findDetElementByName(assembly);
+  if (!assemblyElement.has_value()) {
+    throw std::runtime_error(
+        std::format("Could not find assembly '{}'", assembly));
+  }
+
+  auto barrels = builder.findBarrelElements(*assemblyElement);
+  auto endcaps = builder.findEndcapElements(*assemblyElement);
+
+  const std::string assemblyName{builder.backend().nameOf(*assemblyElement)};
+  auto containerNode =
+      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+          assemblyName, Acts::AxisDirection::AxisZ);
+
+  auto layerCustomizer =
+      makeLayerCustomizer(builder, std::move(det), layerFilter);
+
+  auto addLayerChildren = [&](const auto& elements, auto makeNode) {
+    for (const auto& element : elements) {
+      auto node = makeNode(element);
+      node->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+      node->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
+                                Acts::VolumeResizeStrategy::Gap);
+      containerNode->addChild(std::move(node));
+    }
+  };
+
+  addLayerChildren(barrels, [&](const auto& barrel) {
+    return builder.layers()
+        .barrel()
+        .setSensorAxes("XYZ")
+        .setLayerFilter(layerFilter)
+        .setContainer(barrel)
+        .onLayer(layerCustomizer)
+        .build();
+  });
+
+  addLayerChildren(endcaps, [&](const auto& endcap) {
+    return builder.layers()
+        .endcap()
+        .setSensorAxes("XZY")
+        .setLayerFilter(layerFilter)
+        .setContainer(endcap)
+        .onLayer(layerCustomizer)
+        .build();
+  });
+
+  outer.addChild(std::move(containerNode));
+}
+
+void addBarrelEndcapSubsystem(BlueprintBuilder& builder,
+                              Acts::Experimental::ContainerBlueprintNode& outer,
+                              std::string assembly, std::string det,
+                              const std::regex& layerFilter) {
+  const auto assemblyElement = builder.findDetElementByName(assembly);
+  if (!assemblyElement.has_value()) {
+    throw std::runtime_error(
+        std::format("Could not find assembly '{}'", assembly));
+  }
+
+  builder.barrelEndcap()
+      .setAssembly(*assemblyElement)
+      .setSensorAxes("XYZ", "XZY")
+      .setLayerFilter(layerFilter)
+      .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter))
+      .onContainer(
+          [](const auto&, Acts::Experimental::ContainerBlueprintNode& node) {
+            node.setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+            node.setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
+                                     Acts::VolumeResizeStrategy::Gap);
+          })
+      .addTo(outer);
+}
+
+void addDirectLayerGroupedSubsystem(
+    BlueprintBuilder& builder,
+    Acts::Experimental::ContainerBlueprintNode& outer, std::string assembly,
+    std::string det, const std::regex& layerFilter) {
+  const auto assemblyElement = builder.findDetElementByName(assembly);
+  if (!assemblyElement.has_value()) {
+    throw std::runtime_error(
+        std::format("Could not find assembly '{}'", assembly));
+  }
+
+  auto barrels = builder.findBarrelElements(*assemblyElement);
+  auto endcaps = builder.findEndcapElements(*assemblyElement);
+
+  const std::string assemblyName{builder.backend().nameOf(*assemblyElement)};
+  auto containerNode =
+      std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
+          assemblyName, Acts::AxisDirection::AxisZ);
+
+  auto layerCustomizer =
+      makeLayerCustomizer(builder, std::move(det), layerFilter);
+
+  auto sensorToLayerKey = [&](const dd4hep::DetElement& elem) {
+    auto current = elem;
+    const auto world = builder.backend().world();
+    while (!(current == world)) {
+      std::cmatch match;
+      if (const std::string name{builder.backend().nameOf(current)};
+          std::regex_search(name.c_str(), match, layerFilter) &&
+          match.size() > 1) {
+        return builder.getPathToElementName(current);
+      }
+      current = builder.backend().parent(current);
+    }
+    return builder.getPathToElementName(elem);
+  };
+
+  for (const auto& barrel : barrels) {
+    auto sensors = builder.resolveSensitives(barrel);
+    auto barrelNode = builder.layersFromSensors()
+                          .barrel()
+                          .setSensorAxes("XYZ")
+                          .setSensors(std::move(sensors))
+                          .setContainerName(builder.backend().nameOf(barrel))
+                          .groupBy(sensorToLayerKey)
+                          .onLayer(layerCustomizer)
+                          .build();
+    barrelNode->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+    barrelNode->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
+                                    Acts::VolumeResizeStrategy::Gap);
+    containerNode->addChild(std::move(barrelNode));
+  }
+
+  for (const auto& endcap : endcaps) {
+    auto sensors = builder.resolveSensitives(endcap);
+    auto endcapNode = builder.layersFromSensors()
+                          .endcap()
+                          .setSensorAxes("XZY")
+                          .setSensors(std::move(sensors))
+                          .setContainerName(builder.backend().nameOf(endcap))
+                          .groupBy(sensorToLayerKey)
+                          .onLayer(layerCustomizer)
+                          .build();
+    endcapNode->setAttachmentStrategy(Acts::VolumeAttachmentStrategy::Gap);
+    endcapNode->setResizeStrategies(Acts::VolumeResizeStrategy::Gap,
+                                    Acts::VolumeResizeStrategy::Gap);
+    containerNode->addChild(std::move(endcapNode));
+  }
+
+  outer.addChild(std::move(containerNode));
+}
+
 }  // namespace
 
 std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
@@ -101,33 +248,12 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
 
   outer.addChild(builder.backend().makeBeampipe());
 
-  auto addSubsystem = [&](std::string assembly, std::string det,
-                          const std::regex& layerFilter) {
-    const auto assemblyElement = builder.findDetElementByName(assembly);
-    if (!assemblyElement.has_value()) {
-      throw std::runtime_error(
-          std::format("Could not find assembly '{}'", assembly));
-    }
-
-    builder.barrelEndcap()
-        .setAssembly(*assemblyElement)
-        .setSensorAxes("XYZ", "XZY")
-        .setLayerFilter(layerFilter)
-        .onLayer(makeLayerCustomizer(builder, std::move(det), layerFilter))
-        .onContainer(
-            [](const auto&, Acts::Experimental::ContainerBlueprintNode& node) {
-              node.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
-              node.setResizeStrategies(VolumeResizeStrategy::Gap,
-                                       VolumeResizeStrategy::Gap);
-            })
-        .addTo(outer);
-  };
-
-  addSubsystem("Pixels", "pix", ActsPlugins::DD4hep::detail::kPixelLayerFilter);
-  addSubsystem("ShortStrips", "ss",
-               ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
-  addSubsystem("LongStrips", "ls",
-               ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
+  addBarrelEndcapSubsystem(builder, outer, "Pixels", "pix",
+                           ActsPlugins::DD4hep::detail::kPixelLayerFilter);
+  addBarrelEndcapSubsystem(builder, outer, "ShortStrips", "ss",
+                           ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
+  addBarrelEndcapSubsystem(builder, outer, "LongStrips", "ls",
+                           ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
@@ -155,61 +281,12 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayer(
 
   outer.addChild(builder.backend().makeBeampipe());
 
-  auto addSubsystem = [&](std::string assembly, std::string det,
-                          const std::regex& layerFilter) {
-    const auto assemblyElement = builder.findDetElementByName(assembly);
-    if (!assemblyElement.has_value()) {
-      throw std::runtime_error(
-          std::format("Could not find assembly '{}'", assembly));
-    }
-
-    auto barrels = builder.findBarrelElements(*assemblyElement);
-    auto endcaps = builder.findEndcapElements(*assemblyElement);
-
-    const std::string assemblyName{builder.backend().nameOf(*assemblyElement)};
-    auto containerNode =
-        std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-            assemblyName, Acts::AxisDirection::AxisZ);
-
-    auto layerCustomizer =
-        makeLayerCustomizer(builder, std::move(det), layerFilter);
-
-    for (const auto& barrel : barrels) {
-      auto barrelNode = builder.layers()
-                            .barrel()
-                            .setSensorAxes("XYZ")
-                            .setLayerFilter(layerFilter)
-                            .setContainer(barrel)
-                            .onLayer(layerCustomizer)
-                            .build();
-      barrelNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
-      barrelNode->setResizeStrategies(VolumeResizeStrategy::Gap,
-                                      VolumeResizeStrategy::Gap);
-      containerNode->addChild(std::move(barrelNode));
-    }
-
-    for (const auto& endcap : endcaps) {
-      auto endcapNode = builder.layers()
-                            .endcap()
-                            .setSensorAxes("XZY")
-                            .setLayerFilter(layerFilter)
-                            .setContainer(endcap)
-                            .onLayer(layerCustomizer)
-                            .build();
-      endcapNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
-      endcapNode->setResizeStrategies(VolumeResizeStrategy::Gap,
-                                      VolumeResizeStrategy::Gap);
-      containerNode->addChild(std::move(endcapNode));
-    }
-
-    outer.addChild(std::move(containerNode));
-  };
-
-  addSubsystem("Pixels", "pix", ActsPlugins::DD4hep::detail::kPixelLayerFilter);
-  addSubsystem("ShortStrips", "ss",
-               ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
-  addSubsystem("LongStrips", "ls",
-               ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
+  addDirectLayerSubsystem(builder, outer, "Pixels", "pix",
+                          ActsPlugins::DD4hep::detail::kPixelLayerFilter);
+  addDirectLayerSubsystem(builder, outer, "ShortStrips", "ss",
+                          ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
+  addDirectLayerSubsystem(builder, outer, "LongStrips", "ls",
+                          ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
@@ -237,80 +314,15 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorDirectLayerGrouped(
 
   outer.addChild(builder.backend().makeBeampipe());
 
-  auto addSubsystem = [&](std::string assembly, std::string det,
-                          const std::regex& layerFilter) {
-    const auto assemblyElement = builder.findDetElementByName(assembly);
-    if (!assemblyElement.has_value()) {
-      throw std::runtime_error(
-          std::format("Could not find assembly '{}'", assembly));
-    }
-
-    auto barrels = builder.findBarrelElements(*assemblyElement);
-    auto endcaps = builder.findEndcapElements(*assemblyElement);
-
-    const std::string assemblyName{builder.backend().nameOf(*assemblyElement)};
-    auto containerNode =
-        std::make_shared<Acts::Experimental::CylinderContainerBlueprintNode>(
-            assemblyName, Acts::AxisDirection::AxisZ);
-
-    auto layerCustomizer =
-        makeLayerCustomizer(builder, std::move(det), layerFilter);
-
-    auto sensorToLayerKey = [&](const dd4hep::DetElement& elem) {
-      auto current = elem;
-      const auto world = builder.backend().world();
-      while (!(current == world)) {
-        std::cmatch match;
-        if (const std::string name{builder.backend().nameOf(current)};
-            std::regex_search(name.c_str(), match, layerFilter) &&
-            match.size() > 1) {
-          return builder.getPathToElementName(current);
-        }
-        current = builder.backend().parent(current);
-      }
-      return builder.getPathToElementName(elem);
-    };
-
-    for (const auto& barrel : barrels) {
-      auto sensors = builder.resolveSensitives(barrel);
-      auto barrelNode = builder.layersFromSensors()
-                            .barrel()
-                            .setSensorAxes("XYZ")
-                            .setSensors(std::move(sensors))
-                            .setContainerName(builder.backend().nameOf(barrel))
-                            .groupBy(sensorToLayerKey)
-                            .onLayer(layerCustomizer)
-                            .build();
-      barrelNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
-      barrelNode->setResizeStrategies(VolumeResizeStrategy::Gap,
-                                      VolumeResizeStrategy::Gap);
-      containerNode->addChild(std::move(barrelNode));
-    }
-
-    for (const auto& endcap : endcaps) {
-      auto sensors = builder.resolveSensitives(endcap);
-      auto endcapNode = builder.layersFromSensors()
-                            .endcap()
-                            .setSensorAxes("XZY")
-                            .setSensors(std::move(sensors))
-                            .setContainerName(builder.backend().nameOf(endcap))
-                            .groupBy(sensorToLayerKey)
-                            .onLayer(layerCustomizer)
-                            .build();
-      endcapNode->setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
-      endcapNode->setResizeStrategies(VolumeResizeStrategy::Gap,
-                                      VolumeResizeStrategy::Gap);
-      containerNode->addChild(std::move(endcapNode));
-    }
-
-    outer.addChild(std::move(containerNode));
-  };
-
-  addSubsystem("Pixels", "pix", ActsPlugins::DD4hep::detail::kPixelLayerFilter);
-  addSubsystem("ShortStrips", "ss",
-               ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
-  addSubsystem("LongStrips", "ls",
-               ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
+  addDirectLayerGroupedSubsystem(
+      builder, outer, "Pixels", "pix",
+      ActsPlugins::DD4hep::detail::kPixelLayerFilter);
+  addDirectLayerGroupedSubsystem(
+      builder, outer, "ShortStrips", "ss",
+      ActsPlugins::DD4hep::detail::kShortStripLayerFilter);
+  addDirectLayerGroupedSubsystem(
+      builder, outer, "LongStrips", "ls",
+      ActsPlugins::DD4hep::detail::kLongStripLayerFilter);
 
   return root.construct(BlueprintOptions{}, gctx, logger);
 }
