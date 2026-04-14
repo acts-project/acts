@@ -86,6 +86,13 @@ option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
 option(ACTS_GNN_ENABLE_TORCH "Build the torchscript backend for the gnn plugin" ON)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/traccc plugin" OFF)
+=======
+>>>>>>> 65ffefb3b (set traccc tag, adding sequence example)
+>>>>>>> 1326bacb1 (set traccc tag, adding sequence example)
 option(ACTS_GNN_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_GNN_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
@@ -208,6 +215,7 @@ set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP AND ACTS_BUILD_PLUGIN_GNN)
+
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 
@@ -589,9 +597,15 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
         message(STATUS "Build Traccc plugin for CPU only")
     endif()
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> b3cd6c42e (add traccc example alg)
+=======
+=======
+
+>>>>>>> 65ffefb3b (set traccc tag, adding sequence example)
+>>>>>>> 1326bacb1 (set traccc tag, adding sequence example)
     # traccc also depends on vecmem and covfie, but those plugins should always
     # be enabled if traccc is.
     if(ACTS_USE_SYSTEM_TRACCC)

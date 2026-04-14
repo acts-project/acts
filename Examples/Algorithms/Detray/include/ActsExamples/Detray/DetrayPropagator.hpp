@@ -24,8 +24,6 @@
 #include <detray/test/common/bfield.hpp>
 #include <detray/test/utils/inspectors.hpp>
 #include <detray/test/validation/material_validation_utils.hpp>
-#include <detray/test/common/bfield.hpp>
-#include <covfie/core/field.hpp>
 
 namespace ActsExamples {
 
@@ -133,7 +131,6 @@ class DetrayPropagator : public PropagatorInterface {
       }
 
     } else {
-
       // Navigation with inspection
       using DetrayNavigator =
           detray::caching_navigator<ActsPlugins::DetrayHostDetector>;
