@@ -81,11 +81,6 @@ constexpr int kNoSurface = -1;
 /// @ingroup edm4hep_plugin
 class ConversionHelper {
  public:
-  class NotImplementedError : public std::runtime_error {
-   public:
-    NotImplementedError() : std::runtime_error("Not implemented") {}
-  };
-
   virtual ~ConversionHelper() = default;
 
   /// Convert surface to identifier
@@ -102,25 +97,26 @@ class ConversionHelper {
 
   /// Convert source link to identifier
   /// @param sl The source link to convert
-  /// @return Optional identifier for the source link
-  /// @note If this returns `std::nullopt`, the source link is not expressible as an identifier
-  virtual Identifier sourceLinkToIdentifier(
+  /// @return Identifier for the source link, or nullopt if not supported
+  virtual std::optional<Identifier> sourceLinkToIdentifier(
       [[maybe_unused]] const Acts::SourceLink& sl) const {
-    throw NotImplementedError();
-  };
+    return std::nullopt;
+  }
 
   /// Convert identifier to source link
   /// @param identifier The identifier to convert
-  /// @note If this returns `std::nullopt`, the source link is not expressible as an identifier
-  /// @return Optional source link for the identifier
-  virtual Acts::SourceLink identifierToSourceLink(
+  /// @return Source link for the identifier, or nullopt if not supported
+  virtual std::optional<Acts::SourceLink> identifierToSourceLink(
       [[maybe_unused]] Identifier identifier) const {
-    throw NotImplementedError();
+    return std::nullopt;
   }
 
-  virtual ActsPodioEdm::TrackerHitLocal sourceLinkToTrackerHitLocal(
+  /// Convert source link to TrackerHitLocal
+  /// @param sourceLink The source link to convert
+  /// @return TrackerHitLocal for the source link, or nullopt if not supported
+  virtual std::optional<ActsPodioEdm::TrackerHitLocal> sourceLinkToTrackerHitLocal(
       [[maybe_unused]] const Acts::SourceLink& sourceLink) const {
-    throw NotImplementedError();
+    return std::nullopt;
   }
 };
 

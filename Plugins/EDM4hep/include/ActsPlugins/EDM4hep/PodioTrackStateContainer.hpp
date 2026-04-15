@@ -40,7 +40,6 @@ ACTS_DIAGNOSTIC_POP()
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
-#include <podio/LinkNavigator.h>
 
 namespace ActsPlugins {
 /// @addtogroup edm4hep_plugin
@@ -215,9 +214,12 @@ class PodioTrackStateContainerBase {
   static bool hasUncalibratedSourceLink_impl(
       T& instance, ActsPodioEdm::TrackState trackState) {
     if (instance.storeUncalibrated()) {
-      const auto linkNavigator = podio::LinkNavigator(*instance.m_links);
-      const auto hits = linkNavigator.getLinked(trackState, podio::ReturnTo);
-      return !hits.empty();
+      for (const auto& link : *instance.m_links) {
+        if (link.getFrom() == trackState) {
+          return true;
+        }
+      }
+      return false;
     } else {
       return trackState.getData().uncalibratedIdentifier !=
              PodioUtil::kNoIdentifier;
@@ -233,18 +235,28 @@ class PodioTrackStateContainerBase {
       T& instance, Acts::TrackIndexType istate) {
     auto trackState = instance.m_collection->at(istate);
     if (instance.storeUncalibrated()) {
-      const auto linkNavigator = podio::LinkNavigator(*instance.m_links);
-      const std::vector<
-          podio::detail::links::WeightedObject<ActsPodioEdm::TrackerHitLocal>>
-          hits = linkNavigator.getLinked(trackState, podio::ReturnTo);
-      if (hits.size() != 1) {
-        throw std::invalid_argument(
-            "Track state has no or multiple links to hits");
+      std::optional<ActsPodioEdm::TrackerHitLocal> hit;
+      for (const auto& link : *instance.m_links) {
+        if (link.getFrom() == trackState) {
+          if (hit.has_value()) {
+            throw std::invalid_argument(
+                "Track state has multiple links to hits");
+          }
+          hit = link.getTo();
+        }
       }
-      return Acts::SourceLink(hits.front().o);
+      if (!hit.has_value()) {
+        throw std::invalid_argument("Track state has no link to a hit");
+      }
+      return Acts::SourceLink(hit.value());
     } else {
-      return instance.m_helper.get().identifierToSourceLink(
+      auto sl = instance.m_helper.get().identifierToSourceLink(
           trackState.getData().uncalibratedIdentifier);
+      if (!sl.has_value()) {
+        throw std::invalid_argument(
+            "Helper could not convert identifier to source link");
+      }
+      return sl.value();
     }
   }
 
@@ -362,17 +374,27 @@ class ConstPodioTrackStateContainer final
 
  public:
   /// Constructor from collections
+  ///
+  /// The @p links parameter selects the uncalibrated source-link storage mode:
+  ///   - Pass a valid collection pointer to use **link mode**: uncalibrated
+  ///     source links are stored as entries in a TrackStateHitLinkCollection,
+  ///     and @ref ConversionHelper::sourceLinkToTrackerHitLocal is used.
+  ///   - Pass @c nullptr to use **identifier mode**: uncalibrated source links
+  ///     are stored as integer identifiers in the track-state data, and
+  ///     @ref ConversionHelper::sourceLinkToIdentifier /
+  ///     @ref ConversionHelper::identifierToSourceLink are used.
+  ///
   /// @param helper Conversion helper
   /// @param trackStates Track state collection
   /// @param params Parameters collection
   /// @param jacs Jacobian collection
-  /// @param links Optional track state–hit links collection
+  /// @param links Track state–hit links collection (nullptr for identifier mode)
   ConstPodioTrackStateContainer(
       const PodioUtil::ConversionHelper& helper,
       holder_t<const ActsPodioEdm::TrackStateCollection> trackStates,
       holder_t<const ActsPodioEdm::BoundParametersCollection> params,
       holder_t<const ActsPodioEdm::JacobianCollection> jacs,
-      const ActsPodioEdm::TrackStateHitLinkCollection* links = nullptr)
+      const ActsPodioEdm::TrackStateHitLinkCollection* links)
       : m_helper{helper},
         m_collection{std::move(trackStates)},
         m_params{std::move(params)},
@@ -580,16 +602,21 @@ class MutablePodioTrackStateContainer final
 
  public:
   /// Constructor
+  ///
+  /// The @p links parameter selects the uncalibrated source-link storage mode.
+  /// See ConstPodioTrackStateContainer for a full description of the two modes.
+  ///
   /// @param helper Conversion helper
   /// @param trackStates Track states collection
   /// @param params Parameters collection
   /// @param jacs Jacobians collection
+  /// @param links Track state–hit links collection (nullptr for identifier mode)
   explicit MutablePodioTrackStateContainer(
       PodioUtil::ConversionHelper& helper,
       holder_t<ActsPodioEdm::TrackStateCollection> trackStates,
       holder_t<ActsPodioEdm::BoundParametersCollection> params,
       holder_t<ActsPodioEdm::JacobianCollection> jacs,
-      ActsPodioEdm::TrackStateHitLinkCollection* links = nullptr)
+      ActsPodioEdm::TrackStateHitLinkCollection* links)
       : m_helper{helper},
         m_collection{std::move(trackStates)},
         m_params{std::move(params)},
@@ -599,16 +626,21 @@ class MutablePodioTrackStateContainer final
   }
 
   /// Constructor from references (for RefHolder)
+  ///
+  /// The @p links parameter selects the uncalibrated source-link storage mode.
+  /// See ConstPodioTrackStateContainer for a full description of the two modes.
+  ///
   /// @param helper Conversion helper
   /// @param trackStates Track states collection reference
   /// @param params Parameters collection reference
   /// @param jacs Jacobians collection reference
+  /// @param links Track state–hit links collection (nullptr for identifier mode)
   explicit MutablePodioTrackStateContainer(
       PodioUtil::ConversionHelper& helper,
       ActsPodioEdm::TrackStateCollection& trackStates,
       ActsPodioEdm::BoundParametersCollection& params,
       ActsPodioEdm::JacobianCollection& jacs,
-      ActsPodioEdm::TrackStateHitLinkCollection* links = nullptr)
+      ActsPodioEdm::TrackStateHitLinkCollection* links)
     requires std::is_same_v<holder_t<ActsPodioEdm::TrackStateCollection>,
                             Acts::RefHolder<ActsPodioEdm::TrackStateCollection>>
       : m_helper{helper},
@@ -1002,16 +1034,12 @@ class MutablePodioTrackStateContainer final
         hit = m_helper.get().sourceLinkToTrackerHitLocal(sourceLink);
       }
 
-      // This should never happen, but we check anyway
       if (!hit.has_value()) {
         throw std::invalid_argument(
             "Source link could not be converted to a TrackerHitLocal");
       }
 
-      // The given source link is a TrackerHitLocal, so we can use it directly
-      // Check first if this track state already has a link to this hit
-      const auto linkNavigator = podio::LinkNavigator(*m_links);
-
+      // Check if this track state already has a link to this hit
       std::optional<ActsPodioEdm::MutableTrackStateHitLink> existingLink;
       for (const auto& link : *m_links) {
         if (link.getFrom() == trackState) {
@@ -1034,10 +1062,13 @@ class MutablePodioTrackStateContainer final
       }
     } else {
       // Call out to helper to convert source link to identifier
-      PodioUtil::Identifier id =
-          m_helper.get().sourceLinkToIdentifier(sourceLink);
+      auto id = m_helper.get().sourceLinkToIdentifier(sourceLink);
+      if (!id.has_value()) {
+        throw std::invalid_argument(
+            "Helper could not convert source link to identifier");
+      }
       auto& data = PodioUtil::getDataMutable(trackState);
-      data.uncalibratedIdentifier = id;
+      data.uncalibratedIdentifier = id.value();
     }
   }
 
@@ -1186,14 +1217,6 @@ static_assert(Acts::MutableMultiTrajectoryBackend<
                   MutablePodioTrackStateContainer<std::unique_ptr>>,
               "MutablePodioTrackStateContainer does not fulfill "
               "TrackStateContainerBackend");
-
-/// Deduction guide: when passing collection references, deduce RefHolder
-/// This is needed to support the defaulted arguments
-MutablePodioTrackStateContainer(PodioUtil::ConversionHelper&,
-                                ActsPodioEdm::TrackStateCollection&,
-                                ActsPodioEdm::BoundParametersCollection&,
-                                ActsPodioEdm::JacobianCollection&)
-    -> MutablePodioTrackStateContainer<Acts::RefHolder>;
 
 /// Deduction guide: when passing collection references, deduce RefHolder
 MutablePodioTrackStateContainer(PodioUtil::ConversionHelper&,

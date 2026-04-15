@@ -66,12 +66,12 @@ class NullHelper : public PodioUtil::ConversionHelper {
     return nullptr;
   }
 
-  SourceLink identifierToSourceLink(
+  std::optional<SourceLink> identifierToSourceLink(
       PodioUtil::Identifier /*identifier*/) const override {
     return SourceLink{0};
   }
 
-  PodioUtil::Identifier sourceLinkToIdentifier(
+  std::optional<PodioUtil::Identifier> sourceLinkToIdentifier(
       const SourceLink& /*sourceLink*/) const override {
     return 0;
   }
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     MutablePodioTrackStateContainer tsc{
         helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
         std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-        std::make_unique<ActsPodioEdm::JacobianCollection>()};
+        std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
     MutablePodioTrackContainer ptc{
         helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
     ActsPodioEdm::TrackCollection& tracks = ptc.trackCollection();
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
   MutablePodioTrackStateContainer tsc2{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
   MutablePodioTrackContainer ptc2{
       helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
   TrackContainer tc2{ptc2, tsc2};
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumnsDifferentBackends) {
   MutablePodioTrackStateContainer tsc3{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
   MutablePodioTrackContainer ptc3{
       helper, std::make_unique<ActsPodioEdm::TrackCollection>()};
   TrackContainer tc3{ptc3, tsc3};

@@ -37,7 +37,7 @@ class DD4hepPodioConversionHelper
   const Acts::Surface* identifierToSurface(
       ActsPlugins::PodioUtil::Identifier identifier) const override;
 
-  ActsPodioEdm::TrackerHitLocal sourceLinkToTrackerHitLocal(
+  std::optional<ActsPodioEdm::TrackerHitLocal> sourceLinkToTrackerHitLocal(
       const Acts::SourceLink& sourceLink) const override;
 
  private:

@@ -48,12 +48,12 @@ class NullHelper : public PodioUtil::ConversionHelper {
     return nullptr;
   }
 
-  SourceLink identifierToSourceLink(
+  std::optional<SourceLink> identifierToSourceLink(
       PodioUtil::Identifier /*identifier*/) const override {
     return SourceLink{0};
   }
 
-  PodioUtil::Identifier sourceLinkToIdentifier(
+  std::optional<PodioUtil::Identifier> sourceLinkToIdentifier(
       const SourceLink& /*sourceLink*/) const override {
     return 0;
   }
@@ -78,21 +78,19 @@ struct MapHelper : public NullHelper {
     return it->second;
   }
 
-  PodioUtil::Identifier sourceLinkToIdentifier(
+  std::optional<PodioUtil::Identifier> sourceLinkToIdentifier(
       const SourceLink& sl) const override {
-    sourceLinks->push_back(sl);
-    return sourceLinks->size() - 1;
+    sourceLinks.push_back(sl);
+    return sourceLinks.size() - 1;
   }
 
-  SourceLink identifierToSourceLink(PodioUtil::Identifier id) const override {
-    return sourceLinks->at(id);
+  std::optional<SourceLink> identifierToSourceLink(
+      PodioUtil::Identifier id) const override {
+    return sourceLinks.at(id);
   }
 
   std::unordered_map<PodioUtil::Identifier, const Surface*> surfaces;
-  // This is a bit of a hack to work around the conversion helper methods being
-  // const
-  std::unique_ptr<std::vector<SourceLink>> sourceLinks =
-      std::make_unique<std::vector<SourceLink>>();
+  mutable std::vector<SourceLink> sourceLinks;
 };
 
 struct Factory {
@@ -105,7 +103,7 @@ struct Factory {
     return MutablePodioTrackStateContainer{
         m_helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
         std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-        std::make_unique<ActsPodioEdm::JacobianCollection>()};
+        std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
   }
 };
 
@@ -251,7 +249,7 @@ BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   MutablePodioTrackStateContainer c{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
   BOOST_CHECK(!c.hasColumn("int_column"_hash));
   BOOST_CHECK(!c.hasColumn("float_column"_hash));
   c.addColumn<std::int32_t>("int_column");
@@ -358,7 +356,7 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
   ActsPodioEdm::JacobianCollection externalJacs;
 
   MutablePodioTrackStateContainer<Acts::RefHolder> externalContainer{
-      helper, externalTrackStates, externalParams, externalJacs};
+      helper, externalTrackStates, externalParams, externalJacs, nullptr};
 
   // Add a track state to the external container
   auto ts = externalContainer.addTrackState();
@@ -370,7 +368,7 @@ BOOST_AUTO_TEST_CASE(ExternalCollectionSupport) {
   MutablePodioTrackStateContainer ownedContainer{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
   ts = ownedContainer.addTrackState();
   BOOST_CHECK_EQUAL(ts, 0);
   BOOST_CHECK_EQUAL(ownedContainer.size(), 1);
@@ -389,7 +387,7 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
   MutablePodioTrackStateContainer mutableContainer{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
 
   // Add some track states
   mutableContainer.addColumn<std::int32_t>("test_column");
@@ -434,7 +432,7 @@ BOOST_AUTO_TEST_CASE(CopyAndMoveConstructors) {
   MutablePodioTrackStateContainer mutableContainer2{
       helper, std::make_unique<ActsPodioEdm::TrackStateCollection>(),
       std::make_unique<ActsPodioEdm::BoundParametersCollection>(),
-      std::make_unique<ActsPodioEdm::JacobianCollection>()};
+      std::make_unique<ActsPodioEdm::JacobianCollection>(), nullptr};
 
   mutableContainer2.addColumn<std::int32_t>("test_column");
   ts1 = mutableContainer2.addTrackState();

@@ -55,12 +55,12 @@ const Acts::Surface* DD4hepPodioConversionHelper::identifierToSurface(
   return &dd4hepDetElementExtension->detectorElement().surface();
 }
 
-ActsPodioEdm::TrackerHitLocal
+std::optional<ActsPodioEdm::TrackerHitLocal>
 DD4hepPodioConversionHelper::sourceLinkToTrackerHitLocal(
     const Acts::SourceLink& sourceLink) const {
   const auto* indexSourceLink = sourceLink.getPtr<IndexSourceLink>();
   if (indexSourceLink == nullptr) {
-    throw std::invalid_argument("Source link is not an IndexSourceLink");
+    return std::nullopt;
   }
   // This assumes that the conversion was index preserving!
   return m_trackerHitLocalCollection->at(indexSourceLink->index());
