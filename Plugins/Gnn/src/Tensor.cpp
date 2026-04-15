@@ -184,7 +184,9 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
 
 Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
                        std::optional<cudaStream_t> stream) {
-  assert(scores.shape()[1] == 1);
+  if (scores.shape()[1] != 1) {
+    throw std::invalid_argument("scoreMask: scores must have shape [N, 1]");
+  }
   ExecutionContext execContext{scores.device(), stream};
 
   if (scores.device().type == Device::Type::eCUDA) {
@@ -207,9 +209,7 @@ Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
 template <Acts::Concepts::arithmetic T>
 Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
                      const ExecutionContext &execContext) {
-  assert(tensor.shape()[0] == mask.shape()[0]);
-  assert(mask.shape()[1] == 1);
-  assert(tensor.device() == mask.device());
+  detail::checkMaskCompatibility(tensor, mask, 0);
   const auto nCols = tensor.shape()[1];
 
   if (tensor.device().type == Device::Type::eCUDA) {
@@ -238,9 +238,7 @@ Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
 template <Acts::Concepts::arithmetic T>
 Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
                      const ExecutionContext &execContext) {
-  assert(tensor.shape()[1] == mask.shape()[0]);
-  assert(mask.shape()[1] == 1);
-  assert(tensor.device() == mask.device());
+  detail::checkMaskCompatibility(tensor, mask, 1);
   const auto nRows = tensor.shape()[0];
   const auto nColsSrc = tensor.shape()[1];
 

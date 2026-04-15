@@ -20,6 +20,8 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <stdexcept>
+#include <string>
 
 /// Forward declare cuda stream, to be able to use the header without cuda
 struct CUstream_st;
@@ -159,6 +161,39 @@ class Tensor {
   Device m_device{};
 };
 
+/// @cond
+namespace detail {
+
+/// Throw std::invalid_argument if @p tensor and @p mask are incompatible.
+/// Checks that @p tensor.shape()[matchDim] == @p mask.shape()[0], that the
+/// mask has exactly one column, and that both tensors reside on the same
+/// device.
+/// @tparam T Element type of the data tensor
+/// @param tensor The data tensor
+/// @param mask Boolean mask tensor [N, 1]
+/// @param matchDim The dimension of @p tensor that must equal the mask length
+template <Acts::Concepts::arithmetic T>
+void checkMaskCompatibility(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                            std::size_t matchDim) {
+  if (tensor.shape()[matchDim] != mask.shape()[0]) {
+    throw std::invalid_argument(
+        "tensor shape[" + std::to_string(matchDim) +
+        "]=" + std::to_string(tensor.shape()[matchDim]) +
+        " does not match mask length " + std::to_string(mask.shape()[0]));
+  }
+  if (mask.shape()[1] != 1) {
+    throw std::invalid_argument("mask must have shape [N, 1], got [N, " +
+                                std::to_string(mask.shape()[1]) + "]");
+  }
+  if (tensor.device() != mask.device()) {
+    throw std::invalid_argument(
+        "tensor and mask must reside on the same device");
+  }
+}
+
+}  // namespace detail
+/// @endcond
+
 /// Element-wise sigmoid function for float cpu tensors
 /// @param tensor The tensor to apply the sigmoid function to
 /// @param stream The stream to use for the operation in case of CUDA
@@ -184,21 +219,20 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
 Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
                        std::optional<cudaStream_t> stream = {});
 
-/// Select rows from a 2D tensor where the corresponding mask element is true.
-/// @param tensor Source tensor [N, F]
+/// Select rows from a 2D row-major tensor where the mask element is true.
+/// @param tensor Source tensor [N, F] in row-major layout
 /// @param mask Boolean tensor [N, 1]; true means keep the corresponding row
 /// @param execContext Device and stream for output allocation
-/// @return New tensor [M, F] containing only the rows where mask is true
+/// @return New tensor [M, F] in row-major layout containing only kept rows
 template <Acts::Concepts::arithmetic T>
 Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
                      const ExecutionContext &execContext);
 
-/// Select columns from a 2D tensor where the corresponding mask element is
-/// true.
-/// @param tensor Source tensor [R, N]
+/// Select columns from a 2D row-major tensor where the mask element is true.
+/// @param tensor Source tensor [R, N] in row-major layout
 /// @param mask Boolean tensor [N, 1]; true means keep the corresponding column
 /// @param execContext Device and stream for output allocation
-/// @return New tensor [R, M] containing only the columns where mask is true
+/// @return New tensor [R, M] in row-major layout containing only kept columns
 template <Acts::Concepts::arithmetic T>
 Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
                      const ExecutionContext &execContext);
