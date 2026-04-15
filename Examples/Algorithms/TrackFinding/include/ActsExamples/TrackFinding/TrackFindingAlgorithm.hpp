@@ -116,6 +116,10 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Whether to trim the tracks
     bool trimTracks = true;
 
+    /// Whether to use the Joseph formulation for the Kalman filter update. This
+    /// is typically more stable but also more computationally expensive.
+    bool useJosephFormulation = false;
+
     // Pixel and strip volume ids to be used for maxPixel/StripHoles cuts
     std::vector<std::uint32_t> pixelVolumeIds;
     std::vector<std::uint32_t> stripVolumeIds;
