@@ -51,7 +51,7 @@ class CombinatoricIndices {
 
   /// Draws a new combination of indices and stores them in the array
   /// @param combination The number of the combination in the sequence
-  /// @returns An array where each is a unique number from [0 -N)
+  /// @returns An array where each is a unique number from [0; N)
   IndexArray draw(const std::size_t combination) const;
 
   /// Iterator class to be used in the ranged for loop
