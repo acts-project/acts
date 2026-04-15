@@ -12,10 +12,10 @@ target_link_libraries(
         Acts::ExamplesPropagation
         Acts::PluginDetray
         Acts::PluginCovfie
-        traccc::cuda
-        traccc::core
         traccc::io
-        vecmem::cuda
+        traccc::core
+        $<$<BOOL:${ACTS_BUILD_PLUGIN_TRACCC}>:traccc::cuda>
+        $<$<BOOL:${ACTS_BUILD_PLUGIN_TRACCC}>:vecmem::cuda>
 )
 
 acts_compile_headers(ExamplesTraccc GLOB "include/**/*.hpp")
