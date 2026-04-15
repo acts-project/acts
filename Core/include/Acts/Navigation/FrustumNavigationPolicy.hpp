@@ -71,16 +71,14 @@ namespace Acts::Experimental {
 					const Logger& logger) const override;
 
 		private:
-			// The tracking volume
-  			const TrackingVolume& m_volume;
-
 			// The vector of unique pointers of bounding boxes
 			std::vector<std::unique_ptr<BoundingBox> > m_boxes;
 
 			// The top-level bounding box with the octree
-			std::unique_ptr<BoundingBox> m_topBox;
-	
-			std::unique_ptr<Frustum3> m_frustum;
+			BoundingBox* m_topBox;
+
+			//associated volume name
+			std::string m_name;
 	};
 
 	static_assert(NavigationPolicyConcept<FrustumNavigationPolicy>);

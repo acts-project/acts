@@ -110,6 +110,7 @@ const std::string& StaticBlueprintNode::name() const {
 StaticBlueprintNode& StaticBlueprintNode::setNavigationPolicyFactory(
     std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory) {
   m_navigationPolicyFactory = std::move(navigationPolicyFactory);
+  std::cout<<"set navigation policy factory for "<<name()<<std::endl;
   return *this;
 }
 
