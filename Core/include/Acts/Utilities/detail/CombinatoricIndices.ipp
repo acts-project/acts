@@ -24,28 +24,29 @@ CombinatoricIndices<K>::CombinatoricIndices(const std::size_t N) : m_N{N} {
   }
   static_assert(K >= 1, "The number of elements must not be zero");
 
-  /// Use the identity (N, M) = (N, N-M)
-  ///  (N, K) = sum_{i=K)^{N-1} (I, K)
-  m_borders.reserve(N - K);
-  std::size_t setSize{0ul};
-  /// Calculate the number of combinations in which the i-th element
-  /// in the sequence is used
-  for (std::size_t i = N - 1; i >= K - 1ul; --i) {
-    setSize += binomial(i, K - 1);
-    m_borders.push_back(setSize);
-    if (i == 0) {
-      break;
+  for (std::size_t slot = 0; slot < m_elementOccurance.size(); ++slot) {
+    std::size_t maxCombNumb = 0;
+    // Calculate in how many combinations the integer can occur
+    const std::size_t nPrime = (N - 1ul - slot);
+    const std::size_t kPrime = (K - 1ul - slot);
+
+    for (std::size_t leftCmb = nPrime; leftCmb >= kPrime; --leftCmb) {
+      maxCombNumb += binomial(leftCmb, kPrime);
+      m_elementOccurance[slot].push_back(maxCombNumb);
+      if (leftCmb == 0ul) {
+        break;
+      }
     }
   }
 }
 
 template <std::size_t K>
 std::size_t CombinatoricIndices<K>::size() const {
-  return m_borders.back();
+  return m_elementOccurance[0].back();
 }
 
 template <std::size_t K>
-std::size_t CombinatoricIndices<K>::setSize() const {
+std::size_t CombinatoricIndices<K>::intervalSize() const {
   return m_N;
 }
 
@@ -68,29 +69,22 @@ std::array<std::size_t, K> CombinatoricIndices<K>::draw(
 template <std::size_t K>
 std::size_t CombinatoricIndices<K>::drawIndex(const std::size_t combination,
                                               const std::size_t slot) const {
-  // There is only one combination if N == K
-  if (m_N == K) {
-    return slot;
-  }
+  std::size_t cmbPrime = combination;
   if (slot >= K) {
-    throw std::invalid_argument(std::format(
-        "CombinatoricIndices - The slot {:} must not exceed {:}.", slot, K));
+    throw std::runtime_error(
+        std::format("CombinatoricIndices: The slot must not exceed {:} the "
+                    "number of drawn elements {:}",
+                    slot, K));
   }
-  const auto slotItr = std::ranges::upper_bound(m_borders, combination);
-  if (slot == 0ul) {
-    return std::distance(m_borders.begin(), slotItr);
+  for (std::size_t s = 0; s <= slot; ++s) {
+    const auto slotItr =
+        std::ranges::upper_bound(m_elementOccurance[s], cmbPrime);
+    if (s == slot) {
+      return std::distance(m_elementOccurance[s].begin(), slotItr) + slot;
+    }
+    cmbPrime -= ((*slotItr) - m_elementOccurance[s].front());
   }
-  if constexpr (s_hasSubDraw) {
-    const std::size_t subCombination =
-        m_borders.front() - ((*slotItr) - combination);
-    return m_childDrawer.drawIndex(subCombination, slot - 1ul) + 1ul;
-  } else {
-    throw std::invalid_argument(
-        std::format("CombinatoricIndices ({:}, {:}). The combination {:} "
-                    "exceeds the allowed range {:}",
-                    m_N, K, combination, size()));
-    return 0ul;
-  }
+  return 0ul;
 }
 
 template <std::size_t K>

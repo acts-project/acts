@@ -47,7 +47,7 @@ class CombinatoricIndices {
   std::size_t size() const;
   /// The size of the set from which the indices are drawn
   /// @returns The parameter N with which this class was constructed
-  std::size_t setSize() const;
+  std::size_t intervalSize() const;
 
   /// Draws a new combination of indices and stores them in the array
   /// @param combination The number of the combination in the sequence
@@ -114,17 +114,13 @@ class CombinatoricIndices {
   std::size_t drawIndex(const std::size_t combination,
                         const std::size_t slot) const;
 
-  /// Flag to toggle whether child drawer classes are needed to calculate the
-  /// combinations
-  static constexpr bool s_hasSubDraw = K > 1ul;
-  using SubDrawer_t =
-      std::conditional_t<s_hasSubDraw, CombinatoricIndices<K - 1>, std::size_t>;
   /// Size of the set from which the combinations can be drawn needs to be >= K
   std::size_t m_N{};
-  /// Utility class to fill up the unique indices
-  SubDrawer_t m_childDrawer{m_N - 1ul};
-  /// Vector stating in how many combinations the i-th element is used
-  std::vector<std::size_t> m_borders{};
+  /// Cache to state until which member in the sequence of drawn combinations
+  /// the lowest possible integer can occur in a slot. E.g. for the case N = 5,
+  /// k = 3 The 0 at the first position is used until combination #6, the 1
+  /// until combination 6 + 3 = 9 and the 2 until combination  6 + 3 + 1 = 10
+  std::array<std::vector<std::size_t>, K> m_elementOccurance{};
 };
 
 }  // namespace Acts::detail

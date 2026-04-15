@@ -52,16 +52,16 @@ BOOST_AUTO_TEST_CASE(SizeTest) {
   for (std::size_t n = 10ul; n >= 1ul; --n) {
     if (n >= 3ul) {
       CombinatoricIndices<3> indices{n};
-      BOOST_CHECK_EQUAL(indices.setSize(), n);
+      BOOST_CHECK_EQUAL(indices.intervalSize(), n);
       BOOST_CHECK_EQUAL(indices.size(), binomial(n, 3ul));
     }
     if (n >= 2ul) {
       CombinatoricIndices<2> indices{n};
-      BOOST_CHECK_EQUAL(indices.setSize(), n);
+      BOOST_CHECK_EQUAL(indices.intervalSize(), n);
       BOOST_CHECK_EQUAL(indices.size(), binomial(n, 2ul));
     }
     CombinatoricIndices<1> indices{n};
-    BOOST_CHECK_EQUAL(indices.setSize(), n);
+    BOOST_CHECK_EQUAL(indices.intervalSize(), n);
     BOOST_CHECK_EQUAL(indices.size(), binomial(n, 1ul));
   }
 }
@@ -69,11 +69,14 @@ BOOST_AUTO_TEST_CASE(SizeTest) {
 template <std::size_t K>
 void checkComboDrawing(const std::size_t N) {
   if (N < K) {
+    if constexpr (K > 1) {
+      checkComboDrawing<K - 1>(N);
+    }
     return;
   }
   const CombinatoricIndices<K> indexGenerator{N};
   BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(N, K));
-  BOOST_CHECK_EQUAL(indexGenerator.setSize(), N);
+  BOOST_CHECK_EQUAL(indexGenerator.intervalSize(), N);
 
   CombinationSet<K> cachedCombos{};
 
@@ -102,7 +105,7 @@ void checkComboDrawing(const std::size_t N) {
 }
 
 BOOST_AUTO_TEST_CASE(CombinationDraw) {
-  checkComboDrawing<10ul>(15ul);
+  checkComboDrawing<11ul>(11ul);
 }
 
 template <std::size_t K>
@@ -112,7 +115,7 @@ void checkCombinatoricIterator(const std::size_t N) {
   }
   CombinatoricIndices<K> indexGenerator{N};
   BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(N, K));
-  BOOST_CHECK_EQUAL(indexGenerator.setSize(), N);
+  BOOST_CHECK_EQUAL(indexGenerator.intervalSize(), N);
 
   auto begin = indexGenerator.begin();
   auto end = indexGenerator.end();
