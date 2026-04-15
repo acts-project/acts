@@ -26,8 +26,6 @@ CombinatoricIndices<K>::CombinatoricIndices(const std::size_t N) : m_N{N} {
 
   /// Use the identity (N, M) = (N, N-M)
   ///  (N, K) = sum_{i=K)^{N-1} (I, K)
-  /// Use the identity (N, M) = (N, N-M)
-  ///  (N, K) = sum_{i=K)^{N-1} (I, K)
   m_borders.reserve(N - K);
   std::size_t setSize{0ul};
   /// Calculate the number of combinations in which the i-th element

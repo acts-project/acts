@@ -42,7 +42,7 @@ class CombinatoricIndices {
   /// number of indices to draw
   explicit CombinatoricIndices(const std::size_t N);
 
-  /// The number of possibilities to draw K different inidces from the set
+  /// The number of possibilities to draw K different indices from the set
   /// @returns The number of combinations
   std::size_t size() const;
   /// The size of the set from which the indices are drawn
