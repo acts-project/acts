@@ -19,7 +19,7 @@ CombinatoricIndices<K>::CombinatoricIndices(const std::size_t N) : m_N{N} {
   if (N < K) {
     throw std::invalid_argument(
         std::format("CombinatoricIndices() - The set size {:} needs at least "
-                    "to exceed  the number of elements to draw {:}",
+                    "to exceed the number of elements to draw {:}",
                     N, K));
   }
   static_assert(K >= 1, "The number of elements must not be zero");
