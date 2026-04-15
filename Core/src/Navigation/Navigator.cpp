@@ -597,7 +597,7 @@ void Navigator::resolveCandidates(State& state, const Vector3& position,
 
   if (!state.options.eraseUnboundVolChange) {
     // unbound targets are copied over to the next surface if they've not been
-    // reached yet by the propagator
+    // yet reached by the propagator
     for (const NavigationTarget& target : state.navCandidates) {
       if (target.isSurfaceTarget() && target.boundaryTolerance().isInfinite() &&
           !target.isReached()) {
