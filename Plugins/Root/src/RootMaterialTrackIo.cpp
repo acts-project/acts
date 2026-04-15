@@ -13,12 +13,17 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <TChain.h>
 #include <TTree.h>
 
 using namespace Acts;
 
-void ActsPlugins::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
+namespace ActsPlugins {
+
+std::uint32_t RootMaterialTrackIo::eventId() const {
+  return m_eventId;
+}
+
+void RootMaterialTrackIo::connectForRead(TTree& materialChain) {
   materialChain.SetBranchAddress("event_id", &m_eventId);
   materialChain.SetBranchAddress("v_x", &m_summaryPayload.vX);
   materialChain.SetBranchAddress("v_y", &m_summaryPayload.vY);
@@ -53,7 +58,7 @@ void ActsPlugins::RootMaterialTrackIo::connectForRead(TChain& materialChain) {
   }
 }
 
-void ActsPlugins::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
+void RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   // This sets the branch addresses for the material track
   // Set the branches
   materialTree.Branch("event_id", &m_eventId);
@@ -104,9 +109,9 @@ void ActsPlugins::RootMaterialTrackIo::connectForWrite(TTree& materialTree) {
   }
 }
 
-void ActsPlugins::RootMaterialTrackIo::write(
-    const GeometryContext& gctx, std::uint32_t eventNum,
-    const RecordedMaterialTrack& materialTrack) {
+void RootMaterialTrackIo::write(const GeometryContext& gctx,
+                                std::uint32_t eventNum,
+                                const RecordedMaterialTrack& materialTrack) {
   m_eventId = eventNum;
   // Clearing the vector first
   m_stepPayload.stepXs.clear();
@@ -282,7 +287,7 @@ void ActsPlugins::RootMaterialTrackIo::write(
   }
 }
 
-RecordedMaterialTrack ActsPlugins::RootMaterialTrackIo::read() const {
+RecordedMaterialTrack RootMaterialTrackIo::read() const {
   RecordedMaterialTrack rmTrack;
   // Fill the position and momentum
   rmTrack.first.first =
@@ -337,3 +342,4 @@ RecordedMaterialTrack ActsPlugins::RootMaterialTrackIo::read() const {
   }
   return rmTrack;
 }
+}  // namespace ActsPlugins
