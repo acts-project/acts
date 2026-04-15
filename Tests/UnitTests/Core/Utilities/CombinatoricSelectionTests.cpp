@@ -92,10 +92,8 @@ void checkComboDrawing(const std::size_t N) {
         BOOST_CHECK_LT(combination[k], combination[i]);
       }
     }
-    /// Sort the indices as we are only inter
-    std::ranges::sort(combination);
-    std::cout << "Iteration: " << (combo) << "-> drawn indices: " << combination
-              << std::endl;
+    std::cout << "N=" << N << ", K=" << K << " --- Iteration: " << (combo)
+              << "-> drawn indices: " << combination << std::endl;
     BOOST_CHECK_EQUAL(cachedCombos.insert(combination).second, true);
   }
   BOOST_CHECK_EQUAL(cachedCombos.size(), indexGenerator.size());
@@ -106,6 +104,7 @@ void checkComboDrawing(const std::size_t N) {
 
 BOOST_AUTO_TEST_CASE(CombinationDraw) {
   checkComboDrawing<11ul>(11ul);
+  checkComboDrawing<10ul>(10ul);
 }
 
 template <std::size_t K>
