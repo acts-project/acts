@@ -14,8 +14,8 @@ target_link_libraries(
         Acts::PluginCovfie
         traccc::io
         traccc::core
-        $<$<BOOL:${ACTS_BUILD_PLUGIN_TRACCC}>:traccc::cuda>
-        $<$<BOOL:${ACTS_BUILD_PLUGIN_TRACCC}>:vecmem::cuda>
+        $<$<BOOL:${ACTS_ENABLE_CUDA}>:traccc::cuda>
+        $<$<BOOL:${ACTS_ENABLE_CUDA}>:vecmem::cuda>
 )
 
 acts_compile_headers(ExamplesTraccc GLOB "include/**/*.hpp")
