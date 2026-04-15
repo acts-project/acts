@@ -18,6 +18,7 @@
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 
+#include <iostream>
 #include <tuple>
 
 namespace Acts {
@@ -276,6 +277,9 @@ class RiddersStepper final {
       State& state, const Surface& surface, bool transportCovariance = true,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const {
+    std::cout << "RiddersStepper::boundState called with transportCovariance = "
+              << transportCovariance << "\n";
+
     if (!transportCovariance) {
       Result<BoundState> result = singleStepper().boundState(
           primaryState(state), surface, false, freeToBoundCorrection);
@@ -290,6 +294,8 @@ class RiddersStepper final {
     for (auto& component : state.multiStepperState.components) {
       const Result<BoundState> result = singleStepper().boundState(
           component.state, surface, false, freeToBoundCorrection);
+      std::cout << "Bound state result: " << (result.ok() ? "success" : "error")
+                << "\n";
       if (!result.ok()) {
         return result.error();
       }

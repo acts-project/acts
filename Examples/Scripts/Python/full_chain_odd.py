@@ -407,6 +407,7 @@ if args.reco:
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
         writeCovMat=True,
+        logLevel=acts.logging.VERBOSE,
     )
 
     if ambi_ML:
