@@ -350,8 +350,7 @@ nlohmann::json encodeGridPortalLink(
     for (std::size_t i0 = 0u; i0 <= nBins.at(0) + 1u; ++i0) {
       nlohmann::json jBin;
       jBin[kLocalKey] = std::vector<std::size_t>{i0};
-      const auto* target = view.atLocalBins({i0});
-      if (target == nullptr) {
+      if (const auto* target = view.atLocalBins({i0}); target == nullptr) {
         jBin[kTargetVolumeIdKey] = nullptr;
       } else {
         jBin[kTargetVolumeIdKey] = volumeIds.at(*target);
@@ -363,8 +362,8 @@ nlohmann::json encodeGridPortalLink(
       for (std::size_t i1 = 0u; i1 <= nBins.at(1) + 1u; ++i1) {
         nlohmann::json jBin;
         jBin[kLocalKey] = std::vector<std::size_t>{i0, i1};
-        const auto* target = view.atLocalBins({i0, i1});
-        if (target == nullptr) {
+        if (const auto* target = view.atLocalBins({i0, i1});
+            target == nullptr) {
           jBin[kTargetVolumeIdKey] = nullptr;
         } else {
           jBin[kTargetVolumeIdKey] = volumeIds.at(*target);
@@ -518,6 +517,7 @@ void ensureIdentifiers(Acts::TrackingVolume& volume,
   }
 
   for (const auto [ib, boundary] : Acts::enumerate(volume.boundarySurfaces())) {
+    // Gen1 API, ignore Sonar complaints
     auto& mutableBoundarySurface =
         const_cast<Acts::RegularSurface&>(boundary->surfaceRepresentation());
     if (mutableBoundarySurface.geometryId() == Acts::GeometryIdentifier{}) {
@@ -528,8 +528,8 @@ void ensureIdentifiers(Acts::TrackingVolume& volume,
 
   std::size_t portalIndex = 0u;
   for (auto& portal : volume.portals()) {
-    auto& mutablePortalSurface = portal.surface();
-    if (mutablePortalSurface.geometryId() == Acts::GeometryIdentifier{}) {
+    if (auto& mutablePortalSurface = portal.surface();
+        mutablePortalSurface.geometryId() == Acts::GeometryIdentifier{}) {
       mutablePortalSurface.assignGeometryId(
           Acts::GeometryIdentifier(volumeId).withExtra(portalIndex + 1u));
     }
@@ -565,17 +565,18 @@ void collectGeometry(
     }
   };
 
-  auto insertPortalLink = [&](const auto& link, auto&& self) -> void {
+  auto insertPortalLink = [&](const auto& link, auto&& self) {
     insertSurface(link->surface());
 
-    const auto* trivial = dynamic_cast<const Acts::TrivialPortalLink*>(link);
-    if (trivial != nullptr) {
+    if (const auto* trivial =
+            dynamic_cast<const Acts::TrivialPortalLink*>(link);
+        trivial != nullptr) {
       return;
     }
 
-    const auto* composite =
-        dynamic_cast<const Acts::CompositePortalLink*>(link);
-    if (composite != nullptr) {
+    if (const auto* composite =
+            dynamic_cast<const Acts::CompositePortalLink*>(link);
+        composite != nullptr) {
       const auto& children = composite->links();
       for (const auto& child : children) {
         self(&child, self);
@@ -804,7 +805,7 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     const GeometryContext& gctx, const nlohmann::json& encoded,
-    const Options& /*options*/) {
+    const Options& /*options*/) const {
   verifySchemaHeader(encoded);
 
   if (!encoded.contains(kVolumesKey) || !encoded.contains(kRootVolumeIdKey) ||
@@ -819,9 +820,9 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     SurfaceRecord record;
     record.surfaceId = jSurface.at(kSurfaceIdKey).get<std::size_t>();
     record.payload = jSurface;
-    const auto inserted =
-        surfaceRecords.emplace(record.surfaceId, std::move(record));
-    if (!inserted.second) {
+    const auto [id, inserted] =
+        surfaceRecords.try_emplace(record.surfaceId, std::move(record));
+    if (!inserted) {
       throw std::invalid_argument("Duplicate serialized surface ID");
     }
   }
@@ -832,9 +833,9 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     PortalRecord record;
     record.portalId = jPortal.at(kPortalIdKey).get<std::size_t>();
     record.payload = jPortal;
-    const auto inserted =
-        portalRecords.emplace(record.portalId, std::move(record));
-    if (!inserted.second) {
+    const auto [id, inserted] =
+        portalRecords.try_emplace(record.portalId, std::move(record));
+    if (!inserted) {
       throw std::invalid_argument("Duplicate serialized portal ID");
     }
   }
@@ -862,9 +863,9 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
       record.geometryId = 0;
     }
 
-    const auto inserted =
-        volumeRecords.emplace(record.volumeId, std::move(record));
-    if (!inserted.second) {
+    const auto [id, inserted] =
+        volumeRecords.try_emplace(record.volumeId, std::move(record));
+    if (!inserted) {
       throw std::invalid_argument("Duplicate serialized volume ID");
     }
   }
@@ -908,7 +909,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   std::unordered_set<std::size_t> built;
 
   // Assemble the volume hierarchy
-  auto attachChildren = [&](std::size_t volumeId, auto&& self) -> void {
+  auto attachChildren = [&](std::size_t volumeId, auto&& self) {
     if (built.contains(volumeId)) {
       return;
     }
@@ -917,7 +918,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
           "Cycle detected in serialized volume hierarchy");
     }
 
-    auto& parent = volumeStorage.at(volumeId);
+    const auto& parent = volumeStorage.at(volumeId);
     if (parent == nullptr) {
       throw std::invalid_argument("Volume was already moved unexpectedly");
     }
@@ -1000,7 +1001,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
                                               const nlohmann::json& encoded,
-                                              const Options& options) {
+                                              const Options& options) const {
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 
   GeometryIdentifier::Value nextVolumeId = 1u;

@@ -223,7 +223,7 @@ class TrackingGeometryJsonConverter {
   /// Reconstruct a tracking geometry from JSON.
   std::shared_ptr<TrackingGeometry> fromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
-      const Options& options = Options{});
+      const Options& options = Options{}) const;
 
   /// Convert a tracking volume hierarchy to JSON.
   nlohmann::json trackingVolumeToJson(const GeometryContext& gctx,
@@ -233,7 +233,7 @@ class TrackingGeometryJsonConverter {
   /// Reconstruct a tracking volume hierarchy from JSON.
   std::shared_ptr<TrackingVolume> trackingVolumeFromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
-      const Options& options = Options{});
+      const Options& options = Options{}) const;
 
   /// Serialize one portal link using the configured dispatcher.
   nlohmann::json portalLinkToJson(const GeometryContext& gctx,
