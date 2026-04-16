@@ -15,11 +15,8 @@
 #include "Acts/Utilities/TypeDispatcher.hpp"
 #include "ActsPlugins/Json/JsonKindDispatcher.hpp"
 
-#include <cstddef>
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <unordered_map>
 
 #include <nlohmann/json.hpp>
 
@@ -58,87 +55,14 @@ class TrackingGeometryJsonConverter {
 
   /// Generic lookup from object pointer identity to serialized object ID.
   template <typename object_t, const char* kContext>
-  struct PointerToIdLookup {
-    /// Insert a new object to ID mapping.
-    ///
-    /// @param object is the source object pointer key
-    /// @param objectId is the serialized ID to assign
-    ///
-    /// @return true if insertion happened, false if the object was already
-    ///         present
-    bool emplace(const object_t& object, std::size_t objectId) {
-      return m_objectIds.emplace(&object, objectId).second;
-    }
-
-    /// Resolve a serialized object ID from an object reference.
-    ///
-    /// @param object is the source object key
-    ///
-    /// @return associated serialized object ID
-    ///
-    /// @throw std::invalid_argument if the object is not in the lookup
-    std::size_t at(const object_t& object) const {
-      auto it = m_objectIds.find(&object);
-      if (it == m_objectIds.end()) {
-        throw std::invalid_argument("Pointer-to-ID lookup failed for " +
-                                    std::string{kContext} +
-                                    ": object is outside serialized hierarchy");
-      }
-      return it->second;
-    }
-
-   private:
-    /// Container mapping object pointers to their respective id
-    std::unordered_map<const object_t*, std::size_t> m_objectIds;
-  };
+  struct PointerToIdLookup;
 
   /// Generic lookup from serialized ID to pointer-like object holder.
   ///
   /// `pointer_t` can be a raw pointer (`object_t*`) or an owning pointer-like
   /// type such as `std::shared_ptr<object_t>`.
   template <typename object_t, typename pointer_t, const char* kContext>
-  struct IdToPointerLikeLookup {
-    /// Insert a new serialized ID to object mapping.
-    ///
-    /// @param objectId is the serialized ID key
-    /// @param object is the target pointer-like object
-    ///
-    /// @return true if insertion happened, false if the ID was already present
-    bool emplace(std::size_t objectId, pointer_t object) {
-      return m_objects.emplace(objectId, std::move(object)).second;
-    }
-
-    /// Try to find a mapped pointer-like object by serialized ID.
-    ///
-    /// @param objectId is the serialized ID key
-    ///
-    /// @return mapped pointer-like object, or null-equivalent if not found
-    pointer_t find(std::size_t objectId) const {
-      auto it = m_objects.find(objectId);
-      return it == m_objects.end() ? pointer_t{} : it->second;
-    }
-
-    /// Resolve a mapped pointer-like object by serialized ID.
-    ///
-    /// @param objectId is the serialized ID key
-    ///
-    /// @return mapped pointer-like object reference
-    ///
-    /// @throw std::invalid_argument if the ID is not mapped
-    const pointer_t& at(std::size_t objectId) const {
-      auto it = m_objects.find(objectId);
-      if (it == m_objects.end()) {
-        throw std::invalid_argument("ID-to-pointer lookup failed for " +
-                                    std::string{kContext} +
-                                    ": unknown serialized object ID");
-      }
-      return it->second;
-    }
-
-   private:
-    /// Container mapping object ids to their respective pointers
-    std::unordered_map<std::size_t, pointer_t> m_objects;
-  };
+  struct IdToPointerLikeLookup;
 
   /// Exception context for surfaces
   static inline constexpr char kSurfaceLookupContext[] = "surface";
