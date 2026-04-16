@@ -65,7 +65,15 @@ Result<void> GainMatrixUpdater::visitMeasurementImpl(
   filtered = predicted + K * (calibrated - H * predicted);
   // Normalize phi and theta
   filtered = normalizeBoundParameters(filtered);
-  filteredCovariance = (BoundMatrix::Identity() - K * H) * predictedCovariance;
+
+  const auto tmp = (BoundMatrix::Identity() - K * H).eval();
+  if (!m_useJosephFormulation) {
+    filteredCovariance = tmp * predictedCovariance;
+  } else {
+    filteredCovariance = tmp * predictedCovariance * tmp.transpose() +
+                         K * calibratedCovariance * K.transpose();
+  }
+
   ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
   ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 
