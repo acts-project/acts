@@ -47,8 +47,6 @@
 #include <utility>
 #include <vector>
 
-#include <nlohmann/json_fwd.hpp>
-
 namespace ActsTests {
 
 using namespace Acts;
