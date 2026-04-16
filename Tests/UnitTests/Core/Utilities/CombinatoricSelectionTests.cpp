@@ -92,6 +92,7 @@ void checkComboDrawing(const std::size_t N) {
     BOOST_CHECK_EQUAL(cachedCombos.insert(combination).second, true);
   }
   BOOST_CHECK_EQUAL(cachedCombos.size(), indexGenerator.size());
+
   if constexpr (K > 1) {
     checkComboDrawing<K - 1>(N);
   }
@@ -130,64 +131,53 @@ BOOST_AUTO_TEST_CASE(CombinatoricIterator) {
   checkCombinatoricIterator<7>(16);
 }
 
-BOOST_AUTO_TEST_CASE(RemapIndices4) {
-  constexpr std::size_t N = 10;
-  CombinatoricIndices<4> indexGenerator{N};
-  CombinationSet<4> cachedCombos{}, allCombos{};
+template<std::size_t K>
+void checkCombinatoricRemapping(const std::size_t N, const std::vector<bool>& applyRemap) {
+  if (N < K) {
+    return;
+  }
+  CombinatoricIndices<K> indexGenerator{N};
+  CombinationSet<K> cachedCombos{}, allCombos{};
+  BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(N, K));
+  BOOST_CHECK_EQUAL(indexGenerator.intervalSize(), N);
+   
 
-  for (std::size_t combo = 0; combo < indexGenerator.size(); ++combo) {
+  for(std::size_t combo = 0; combo < indexGenerator.size(); ++combo){
     const auto indices = indexGenerator.draw(combo);
-    allCombos.insert(indices);
-    auto indexCopy = indices;
-    indexCopy[3] = N - indices[3] + indices[1];
-    indexCopy[2] = N - indices[2] + indices[1];
-
-    std::cout << "RemapIndices - Iteration: " << (combo + 1)
-              << " -> drawn: " << indices << " --> reshuffled: " << indexCopy
-              << std::endl;
-    const bool goodone = goodArray(indexCopy, N);
-    BOOST_CHECK_EQUAL(goodone, true);
-    std::ranges::sort(indexCopy);
-    if (goodone) {
-      BOOST_CHECK_EQUAL(cachedCombos.insert(indexCopy).second, true);
+    BOOST_CHECK_EQUAL(allCombos.insert(indices).second, true);
+    std::array<std::size_t, K> remappedIndices{};
+    for(std::size_t i = 0; i < K; ++i){
+      if(applyRemap[i]){
+        remappedIndices[i] = N - indices[i] + indices[1];
+      } else {
+      remappedIndices[i] = indices[i];
+      }
     }
+    std::cout << "RemapIndices - Iteration: " << (combo + 1)
+              << " -> drawn: " << indices << " --> remapped: " << remappedIndices
+              << std::endl;
+    BOOST_CHECK_EQUAL(goodArray(remappedIndices, N), true);
+    BOOST_CHECK_EQUAL(cachedCombos.insert(remappedIndices).second, true);
   }
   BOOST_CHECK_EQUAL(allCombos.size(), cachedCombos.size());
-  for (const auto& combo : allCombos) {
-    if (!cachedCombos.count(combo)) {
-      std::cout << "ReMapIndices -- Combination did not made it " << combo
-                << std::endl;
-    }
+
+}
+
+
+BOOST_AUTO_TEST_CASE(RemapIndices4) {
+  constexpr std::size_t N = 16;
+  for(std::size_t i = 4; i <= N ; ++i){
+    checkCombinatoricRemapping<4>(i, {false, false, true, true});
   }
+  
 }
 BOOST_AUTO_TEST_CASE(RemapIndices3) {
-  constexpr std::size_t N = 10;
-  CombinatoricIndices<3> indexGenerator{N};
-  CombinationSet<3> cachedCombos{}, allCombos{};
-
-  for (std::size_t combo = 0; combo < indexGenerator.size(); ++combo) {
-    const auto indices = indexGenerator.draw(combo);
-    allCombos.insert(indices);
-    auto indexCopy = indices;
-    indexCopy[2] = N - indices[2] + indices[1];
-
-    std::cout << "RemapIndices - Iteration: " << (combo + 1)
-              << " -> drawn: " << indices << " --> reshuffled: " << indexCopy
-              << std::endl;
-    const bool goodone = goodArray(indexCopy, N);
-    BOOST_CHECK_EQUAL(goodone, true);
-    std::ranges::sort(indexCopy);
-    if (goodone) {
-      BOOST_CHECK_EQUAL(cachedCombos.insert(indexCopy).second, true);
-    }
+  constexpr std::size_t N = 16;
+  for(std::size_t i = 3; i <= N ; ++i){
+    checkCombinatoricRemapping<3>(i, {false, false, true});
   }
-  BOOST_CHECK_EQUAL(allCombos.size(), cachedCombos.size());
-  for (const auto& combo : allCombos) {
-    if (!cachedCombos.count(combo)) {
-      std::cout << "ReMapIndices -- Combination did not made it " << combo
-                << std::endl;
-    }
-  }
+
 }
+   
 
 BOOST_AUTO_TEST_SUITE_END()
