@@ -94,7 +94,7 @@ void checkHierarchy(const GeometryContext& gctx,
     const auto* matA = surfA.surfaceMaterial();
     const auto* matB = surfB.surfaceMaterial();
     if (matA != nullptr) {
-      BOOST_CHECK_NE(matB, nullptr);
+      BOOST_REQUIRE_NE(matB, nullptr);
       BOOST_CHECK_EQUAL(surfA.surfaceMaterial()->materialSlab(Vector2{0, 0}),
                         surfB.surfaceMaterial()->materialSlab(Vector2{0, 0}));
     }
@@ -107,7 +107,7 @@ void checkHierarchy(const GeometryContext& gctx,
         const auto* trivialB =
             dynamic_cast<const Acts::TrivialPortalLink*>(linkB);
         if (trivialA != nullptr) {
-          BOOST_CHECK_NE(trivialB, nullptr);
+          BOOST_REQUIRE_NE(trivialB, nullptr);
           BOOST_CHECK(trivialA->volume() == trivialB->volume());
           checkSurfaces(trivialA->surface(), trivialB->surface());
         }
@@ -115,7 +115,7 @@ void checkHierarchy(const GeometryContext& gctx,
         const auto* gridA = dynamic_cast<const Acts::GridPortalLink*>(linkA);
         const auto* gridB = dynamic_cast<const Acts::GridPortalLink*>(linkB);
         if (gridA != nullptr) {
-          BOOST_CHECK_NE(gridB, nullptr);
+          BOOST_REQUIRE_NE(gridB, nullptr);
           BOOST_CHECK_EQUAL(gridA->dim(), gridB->dim());
           BOOST_CHECK_EQUAL(gridA->direction(), gridB->direction());
           BOOST_CHECK(gridA->grid() == gridB->grid());
@@ -135,7 +135,7 @@ void checkHierarchy(const GeometryContext& gctx,
         const auto* compositeB =
             dynamic_cast<const Acts::CompositePortalLink*>(linkB);
         if (compositeA != nullptr) {
-          BOOST_CHECK_NE(compositeB, nullptr);
+          BOOST_REQUIRE_NE(compositeB, nullptr);
           const auto& childrenA = compositeA->links();
           const auto& childrenB = compositeB->links();
           for (std::size_t i = 0; i < childrenA.size(); i++) {
