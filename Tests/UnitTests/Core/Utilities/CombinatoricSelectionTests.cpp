@@ -98,7 +98,6 @@ void checkComboDrawing(const std::size_t N) {
 }
 
 BOOST_AUTO_TEST_CASE(CombinationDraw) {
-  return;
   checkComboDrawing<11ul>(11ul);
   checkComboDrawing<10ul>(10ul);
 }
@@ -128,7 +127,6 @@ void checkCombinatoricIterator(const std::size_t N) {
 }
 
 BOOST_AUTO_TEST_CASE(CombinatoricIterator) {
-  return;
   checkCombinatoricIterator<7>(16);
 }
 
