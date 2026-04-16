@@ -211,7 +211,8 @@ using SensorLayer =
 }  // namespace ActsPlugins
 
 namespace Acts::Experimental {
-extern template class BlueprintBuilder<ActsPlugins::TGeoBlueprintBuilderBackend>;
+extern template class BlueprintBuilder<
+    ActsPlugins::TGeoBlueprintBuilderBackend>;
 extern template class ElementLayerAssembler<
     ActsPlugins::TGeoBlueprintBuilderBackend>;
 extern template class SensorLayerAssembler<

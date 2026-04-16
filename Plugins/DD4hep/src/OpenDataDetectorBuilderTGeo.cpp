@@ -117,8 +117,8 @@ bool hasSensitiveMaterial(
 auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
                              TGeoLayerBinning binning, std::regex layerFilter) {
   return [&builder, binning, layerFilter = std::move(layerFilter)](
-             const std::optional<ActsPlugins::TGeoBlueprintBuilderBackend::Element>&
-                 elem,
+             const std::optional<
+                 ActsPlugins::TGeoBlueprintBuilderBackend::Element>& elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
     layer.setEnvelope(detail::kLayerEnvelope);
 
