@@ -41,7 +41,6 @@ namespace AxisJsonConverter {
 /// @return a json object to represent the axis
 nlohmann::json toJson(const IAxis& ia);
 
-
 /// Convert an axis from json
 //
 /// @param jAxis the serialized axis
