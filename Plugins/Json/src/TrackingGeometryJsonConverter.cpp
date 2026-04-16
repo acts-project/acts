@@ -681,7 +681,7 @@ Acts::TrackingGeometryJsonConverter::TrackingGeometryJsonConverter(
 nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
     const GeometryContext& gctx, const TrackingGeometry& geometry,
     const Options& options) const {
-  return toJson(gctx, *geometry.highestTrackingVolume(), options);
+  return trackingVolumeToJson(gctx, *geometry.highestTrackingVolume(), options);
 }
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::portalLinkToJson(
@@ -710,7 +710,7 @@ Acts::TrackingGeometryJsonConverter::navigationPolicyFromJson(
   return m_cfg.decodeNavigationPolicy(encoded, gctx, *this, volume, logger);
 }
 
-nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
+nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
     const GeometryContext& gctx, const TrackingVolume& world,
     const Options& /*options*/) const {
   nlohmann::json encoded;
@@ -998,9 +998,9 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
 }
 
 std::shared_ptr<Acts::TrackingGeometry>
-Acts::TrackingGeometryJsonConverter::trackingGeometryFromJson(
-    const GeometryContext& gctx, const nlohmann::json& encoded,
-    const Options& options) {
+Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
+                                              const nlohmann::json& encoded,
+                                              const Options& options) {
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 
   GeometryIdentifier::Value nextVolumeId = 1u;

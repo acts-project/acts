@@ -220,13 +220,18 @@ class TrackingGeometryJsonConverter {
                         const TrackingGeometry& geometry,
                         const Options& options = Options{}) const;
 
-  /// Convert a tracking volume hierarchy to JSON.
-  nlohmann::json toJson(const GeometryContext& gctx,
-                        const TrackingVolume& world,
-                        const Options& options = Options{}) const;
-
   /// Reconstruct a tracking geometry from JSON.
-  std::shared_ptr<TrackingGeometry> trackingGeometryFromJson(
+  std::shared_ptr<TrackingGeometry> fromJson(
+      const GeometryContext& gctx, const nlohmann::json& encoded,
+      const Options& options = Options{});
+
+  /// Convert a tracking volume hierarchy to JSON.
+  nlohmann::json trackingVolumeToJson(const GeometryContext& gctx,
+                                      const TrackingVolume& world,
+                                      const Options& options = Options{}) const;
+
+  /// Reconstruct a tracking volume hierarchy from JSON.
+  std::shared_ptr<TrackingVolume> trackingVolumeFromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
       const Options& options = Options{});
 
@@ -241,11 +246,6 @@ class TrackingGeometryJsonConverter {
       const GeometryContext& gctx, const nlohmann::json& encoded,
       const SurfacePointerLookup& surfaces,
       const VolumePointerLookup& volumes) const;
-
-  /// Reconstruct a tracking volume hierarchy from JSON.
-  std::shared_ptr<TrackingVolume> trackingVolumeFromJson(
-      const GeometryContext& gctx, const nlohmann::json& encoded,
-      const Options& options = Options{});
 
   /// Serialize navigation policy using the configured dispatcher.
   nlohmann::json navigationPolicyToJson(const INavigationPolicy& policy) const;

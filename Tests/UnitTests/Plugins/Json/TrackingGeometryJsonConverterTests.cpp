@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   childPtr->addPortal(sharedPortal);
 
   TrackingGeometryJsonConverter converter;
-  nlohmann::json encoded = converter.toJson(gctx, *root);
+  nlohmann::json encoded = converter.trackingVolumeToJson(gctx, *root);
   TemporaryDirectory tmpDir{};
   auto jsonPath = tmpDir.path() / "tracking_geometry_roundtrip.json";
   {
@@ -368,8 +368,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterRoundTrip) {
   }
   BOOST_CHECK(sharedPortalPreserved);
 
-  auto decodedGeometry =
-      converter.trackingGeometryFromJson(gctx, encodedFromFile);
+  auto decodedGeometry = converter.fromJson(gctx, encodedFromFile);
   BOOST_REQUIRE(decodedGeometry != nullptr);
   BOOST_REQUIRE(decodedGeometry->highestTrackingVolume() != nullptr);
   BOOST_CHECK_EQUAL(decodedGeometry->highestTrackingVolume()->volumeName(),
@@ -401,7 +400,6 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   // Options definition
   PropagatorOptions options(gctx, mctx);
 
-
   // Build geometry
   CylindricalTrackingGeometry cylindricalGeometryBuilder(gctx, true);
   auto sourceGeometry = cylindricalGeometryBuilder();
@@ -409,7 +407,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
   TrackingGeometryJsonConverter converter;
   nlohmann::json encoded = converter.toJson(gctx, *sourceGeometry);
   // TemporaryDirectory tmpDir{};
-  auto jsonPath =  "tracking_geometry_roundtrip.json";
+  auto jsonPath = "tracking_geometry_roundtrip.json";
   {
     std::ofstream out(jsonPath);
     BOOST_REQUIRE(out.good());
@@ -423,8 +421,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
     in >> encodedFromFile;
   }
 
-  auto decodedGeometry =
-      converter.trackingGeometryFromJson(gctx, encodedFromFile);
+  auto decodedGeometry = converter.fromJson(gctx, encodedFromFile);
 
   const auto* htvSource = sourceGeometry->highestTrackingVolume();
   const auto* htvDecoded = decodedGeometry->highestTrackingVolume();
