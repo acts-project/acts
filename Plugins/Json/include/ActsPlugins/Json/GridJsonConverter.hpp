@@ -44,7 +44,7 @@ nlohmann::json toJson(const IAxis& ia);
 
 /// Convert an axis from json
 //
-/// @param jAxsim the serialized axis
+/// @param jAxis the serialized axis
 ///
 /// @return axis object pointer
 std::unique_ptr<Acts::IAxis> fromJson(const nlohmann::json& jAxis);
