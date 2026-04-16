@@ -114,7 +114,8 @@ class ConversionHelper {
   /// Convert source link to TrackerHitLocal
   /// @param sourceLink The source link to convert
   /// @return TrackerHitLocal for the source link, or nullopt if not supported
-  virtual std::optional<ActsPodioEdm::TrackerHitLocal> sourceLinkToTrackerHitLocal(
+  virtual std::optional<ActsPodioEdm::TrackerHitLocal>
+  sourceLinkToTrackerHitLocal(
       [[maybe_unused]] const Acts::SourceLink& sourceLink) const {
     return std::nullopt;
   }

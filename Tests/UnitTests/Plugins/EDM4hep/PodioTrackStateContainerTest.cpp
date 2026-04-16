@@ -568,8 +568,8 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
   auto hit2 = hitsCollection.create();
   hit2.setCellID(22222);
 
-  MutablePodioTrackStateContainer tsc{
-      helper, trackStates, params, jacs, &linksCollection};
+  MutablePodioTrackStateContainer tsc{helper, trackStates, params, jacs,
+                                      &linksCollection};
 
   auto i0 = tsc.addTrackState();
   auto i1 = tsc.addTrackState();
