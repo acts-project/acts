@@ -14,7 +14,7 @@
 namespace Acts {
 
 template <std::size_t N>
-void MbfSmoother::visitMeasurementImpl(const AnyMutableTrackStateProxy& ts,
+void MbfSmoother::visitMeasurementImpl(const AnyConstTrackStateProxy& ts,
                                        BoundMatrix& bigLambdaHat,
                                        BoundVector& smallLambdaHat) const {
   const auto F = ts.jacobian();

@@ -105,7 +105,7 @@ class MbfSmoother {
                         BoundVector& smallLambdaHat) const;
 
   template <std::size_t N>
-  void visitMeasurementImpl(const AnyMutableTrackStateProxy& ts,
+  void visitMeasurementImpl(const AnyConstTrackStateProxy& ts,
                             BoundMatrix& bigLambdaHat,
                             BoundVector& smallLambdaHat) const;
 };

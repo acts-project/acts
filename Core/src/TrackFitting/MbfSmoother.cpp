@@ -40,11 +40,10 @@ void MbfSmoother::visitMeasurement(const AnyConstTrackStateProxy& ts,
                                    BoundVector& smallLambdaHat) const {
   assert(ts.hasCalibrated());
 
-  return visit_measurement(
+  visit_measurement(
       ts.calibratedSize(),
-      [&, this]<std::size_t N>(
-          std::integral_constant<std::size_t, N>) -> Result<void> {
-        return visitMeasurementImpl<N>(ts, bigLambdaHat, smallLambdaHat);
+      [&, this]<std::size_t N>(std::integral_constant<std::size_t, N>) {
+        visitMeasurementImpl<N>(ts, bigLambdaHat, smallLambdaHat);
       });
 }
 
