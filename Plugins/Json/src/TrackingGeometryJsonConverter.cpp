@@ -40,18 +40,7 @@
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
-#include <algorithm>
-#include <array>
-#include <cstddef>
-#include <functional>
-#include <memory>
-#include <ranges>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
 #include <unordered_set>
-#include <utility>
-#include <vector>
 
 namespace {
 
@@ -576,35 +565,33 @@ void collectGeometry(
     }
   };
 
-  std::function<void(const Acts::PortalLinkBase* link)> insertPortalLink =
-      [&](const auto& link) {
-        insertSurface(link->surface());
+  auto insertPortalLink = [&](const auto& link, auto&& self) -> void {
+    insertSurface(link->surface());
 
-        const auto* trivial =
-            dynamic_cast<const Acts::TrivialPortalLink*>(link);
-        if (trivial != nullptr) {
-          return;
-        }
+    const auto* trivial = dynamic_cast<const Acts::TrivialPortalLink*>(link);
+    if (trivial != nullptr) {
+      return;
+    }
 
-        const auto* composite =
-            dynamic_cast<const Acts::CompositePortalLink*>(link);
-        if (composite != nullptr) {
-          const auto& children = composite->links();
-          for (const auto& child : children) {
-            insertPortalLink(&child);
-          }
-          return;
-        }
+    const auto* composite =
+        dynamic_cast<const Acts::CompositePortalLink*>(link);
+    if (composite != nullptr) {
+      const auto& children = composite->links();
+      for (const auto& child : children) {
+        self(&child, self);
+      }
+      return;
+    }
 
-        const auto* grid = dynamic_cast<const Acts::GridPortalLink*>(link);
-        if (grid != nullptr) {
-          const auto& children = grid->artifactPortalLinks();
-          for (const auto& child : children) {
-            insertPortalLink(&child);
-          }
-          return;
-        }
-      };
+    const auto* grid = dynamic_cast<const Acts::GridPortalLink*>(link);
+    if (grid != nullptr) {
+      const auto& children = grid->artifactPortalLinks();
+      for (const auto& child : children) {
+        self(&child, self);
+      }
+      return;
+    }
+  };
 
   insertVolume(volume);
 
@@ -615,13 +602,13 @@ void collectGeometry(
 
     if (const auto* along = portal.getLink(Acts::Direction::AlongNormal());
         along != nullptr) {
-      insertPortalLink(along);
+      insertPortalLink(along, insertPortalLink);
     }
 
     if (const auto* opposite =
             portal.getLink(Acts::Direction::OppositeNormal());
         opposite != nullptr) {
-      insertPortalLink(opposite);
+      insertPortalLink(opposite, insertPortalLink);
     }
   }
   for (const auto& surf : volume.surfaces()) {
@@ -921,8 +908,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   std::unordered_set<std::size_t> built;
 
   // Assemble the volume hierarchy
-  std::function<void(std::size_t)> attachChildren =
-      [&](std::size_t volumeId) -> void {
+  auto attachChildren = [&](std::size_t volumeId, auto&& self) -> void {
     if (built.contains(volumeId)) {
       return;
     }
@@ -937,7 +923,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     }
 
     for (std::size_t childId : volumeRecords.at(volumeId).children) {
-      attachChildren(childId);
+      self(childId, self);
       auto& child = volumeStorage.at(childId);
       if (child == nullptr) {
         throw std::invalid_argument(
@@ -950,7 +936,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     built.insert(volumeId);
   };
 
-  attachChildren(rootVolumeId);
+  attachChildren(rootVolumeId, attachChildren);
 
   auto decodePortal = [&](const nlohmann::json& jPortal) {
     std::unique_ptr<PortalLinkBase> along = nullptr;
