@@ -491,7 +491,6 @@ class CombinatorialKalmanFilter {
       }
       auto& boundState = *boundStateRes;
       auto& [boundParams, jacobian, pathLength] = boundState;
-      std::cout << "jacobian in filter\n" << jacobian << std::endl;
       boundParams.covariance() = state.stepping.cov;
 
       auto currentBranch = result.activeBranches.back();
@@ -741,8 +740,6 @@ class CombinatorialKalmanFilter {
                    << " with mask: " << stateMask);
 
       const auto& [boundParams, jacobian, pathLength] = boundState;
-      std::cout << "jacobian in addNonSourcelinkState\n"
-                << jacobian << std::endl;
       // Fill the track state
       trackStateProxy.predicted() = boundParams.parameters();
       trackStateProxy.predictedCovariance() = boundParams.covariance().value();
