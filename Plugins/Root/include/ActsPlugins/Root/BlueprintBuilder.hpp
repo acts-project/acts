@@ -28,9 +28,9 @@ class TGeoNode;
 
 namespace ActsPlugins {
 
-class TGeoBackend {
+class TGeoBlueprintBuilderBackend {
  public:
-  static constexpr std::string_view kIdentifier = "TGeoBackend";
+  static constexpr std::string_view kIdentifier = "TGeoBlueprintBuilderBackend";
 
   struct NodeContext {
     const TGeoNode* node = nullptr;
@@ -87,7 +87,8 @@ class TGeoBackend {
     IdentifierProvider identifierProvider = {};
   };
 
-  explicit TGeoBackend(const Config& cfg, const Acts::Logger& logger);
+  explicit TGeoBlueprintBuilderBackend(const Config& cfg,
+                                       const Acts::Logger& logger);
 
   DetectorElementPtr createDetectorElement(const Element& element,
                                            AxisDefinition axes) const;
@@ -124,18 +125,22 @@ class TGeoBackend {
   mutable std::vector<DetectorElementPtr> m_detectorElementStore = {};
 };
 
-using BlueprintBuilder = Acts::Experimental::BlueprintBuilder<TGeoBackend>;
+using BlueprintBuilder =
+    Acts::Experimental::BlueprintBuilder<TGeoBlueprintBuilderBackend>;
 using ElementLayerAssembler =
-    Acts::Experimental::ElementLayerAssembler<TGeoBackend>;
+    Acts::Experimental::ElementLayerAssembler<TGeoBlueprintBuilderBackend>;
 using SensorLayerAssembler =
-    Acts::Experimental::SensorLayerAssembler<TGeoBackend>;
-using SensorLayer = Acts::Experimental::SensorLayer<TGeoBackend>;
+    Acts::Experimental::SensorLayerAssembler<TGeoBlueprintBuilderBackend>;
+using SensorLayer =
+    Acts::Experimental::SensorLayer<TGeoBlueprintBuilderBackend>;
 
 }  // namespace ActsPlugins
 
 namespace Acts::Experimental {
-extern template class BlueprintBuilder<ActsPlugins::TGeoBackend>;
-extern template class ElementLayerAssembler<ActsPlugins::TGeoBackend>;
-extern template class SensorLayerAssembler<ActsPlugins::TGeoBackend>;
-extern template class SensorLayer<ActsPlugins::TGeoBackend>;
+extern template class BlueprintBuilder<ActsPlugins::TGeoBlueprintBuilderBackend>;
+extern template class ElementLayerAssembler<
+    ActsPlugins::TGeoBlueprintBuilderBackend>;
+extern template class SensorLayerAssembler<
+    ActsPlugins::TGeoBlueprintBuilderBackend>;
+extern template class SensorLayer<ActsPlugins::TGeoBlueprintBuilderBackend>;
 }  // namespace Acts::Experimental

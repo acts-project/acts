@@ -93,7 +93,8 @@ constexpr TGeoLayerBinning kLongStripLayerBinning{
     .endcapBins = {2u, 48u},
 };
 
-bool hasSensitiveMaterial(const ActsPlugins::TGeoBackend::Element& element) {
+bool hasSensitiveMaterial(
+    const ActsPlugins::TGeoBlueprintBuilderBackend::Element& element) {
   if (element.context == nullptr || element.context->node == nullptr) {
     return false;
   }
@@ -116,7 +117,8 @@ bool hasSensitiveMaterial(const ActsPlugins::TGeoBackend::Element& element) {
 auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
                              TGeoLayerBinning binning, std::regex layerFilter) {
   return [&builder, binning, layerFilter = std::move(layerFilter)](
-             const std::optional<ActsPlugins::TGeoBackend::Element>& elem,
+             const std::optional<ActsPlugins::TGeoBlueprintBuilderBackend::Element>&
+                 elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
     layer.setEnvelope(detail::kLayerEnvelope);
 
@@ -144,8 +146,9 @@ auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
   };
 }
 
-TGeoBackend::Config makeTGeoConfig(const dd4hep::Detector& detector) {
-  TGeoBackend::Config cfg;
+TGeoBlueprintBuilderBackend::Config makeTGeoConfig(
+    const dd4hep::Detector& detector) {
+  TGeoBlueprintBuilderBackend::Config cfg;
   cfg.root = detector.world().placement().ptr();
   cfg.lengthScale = Acts::UnitConstants::cm;
   cfg.sensitivePredicate = hasSensitiveMaterial;

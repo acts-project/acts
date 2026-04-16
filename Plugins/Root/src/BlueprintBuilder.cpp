@@ -28,7 +28,8 @@
 
 namespace ActsPlugins {
 
-TGeoBackend::DetectorElementPtr TGeoBackend::defaultElementFactory(
+TGeoBlueprintBuilderBackend::DetectorElementPtr
+TGeoBlueprintBuilderBackend::defaultElementFactory(
     const TGeoDetectorElement::Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, AxisDefinition axes, double lengthScale,
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
@@ -36,37 +37,42 @@ TGeoBackend::DetectorElementPtr TGeoBackend::defaultElementFactory(
       identifier, tGeoNode, tGeoMatrix, axes, lengthScale, std::move(material));
 }
 
-TGeoBackend::TGeoBackend(const Config& cfg, const Acts::Logger& logger)
+TGeoBlueprintBuilderBackend::TGeoBlueprintBuilderBackend(
+    const Config& cfg, const Acts::Logger& logger)
     : m_cfg(cfg), m_logger(&logger) {
   if (m_cfg.root == nullptr) {
-    throw std::invalid_argument("TGeoBackend: root node is null");
+    throw std::invalid_argument(
+        "TGeoBlueprintBuilderBackend: root node is null");
   }
   m_world = makeElement(*m_cfg.root, nullptr);
 }
 
-auto TGeoBackend::makeElement(const TGeoNode& node,
-                              std::shared_ptr<const NodeContext> parent) const
+auto TGeoBlueprintBuilderBackend::makeElement(
+    const TGeoNode& node, std::shared_ptr<const NodeContext> parent) const
     -> Element {
   return Element{std::make_shared<NodeContext>(
       NodeContext{.node = &node, .parent = std::move(parent)})};
 }
 
-const TGeoBackend::NodeContext& TGeoBackend::contextOf(
+const TGeoBlueprintBuilderBackend::NodeContext&
+TGeoBlueprintBuilderBackend::contextOf(
     const Element& element) const {
   if (element.context == nullptr) {
-    throw std::invalid_argument("TGeoBackend: invalid element handle");
+    throw std::invalid_argument(
+        "TGeoBlueprintBuilderBackend: invalid element handle");
   }
   return *element.context;
 }
 
-TGeoDetectorElement::Identifier TGeoBackend::defaultIdentifierFor(
+TGeoDetectorElement::Identifier TGeoBlueprintBuilderBackend::defaultIdentifierFor(
     const Element& element) const {
   const auto path = pathOf(element);
   return static_cast<TGeoDetectorElement::Identifier>(
       std::hash<std::string>{}(path));
 }
 
-TGeoBackend::DetectorElementPtr TGeoBackend::createDetectorElement(
+TGeoBlueprintBuilderBackend::DetectorElementPtr
+TGeoBlueprintBuilderBackend::createDetectorElement(
     const Element& element, AxisDefinition axes) const {
   const auto& context = contextOf(element);
   const auto identifier = m_cfg.identifierProvider != nullptr
@@ -80,10 +86,12 @@ TGeoBackend::DetectorElementPtr TGeoBackend::createDetectorElement(
   return detectorElement;
 }
 
-std::vector<std::shared_ptr<Acts::Surface>> TGeoBackend::makeSurfaces(
+std::vector<std::shared_ptr<Acts::Surface>>
+TGeoBlueprintBuilderBackend::makeSurfaces(
     std::span<const Element> sensitives, const LayerSpec& layerSpec) const {
   if (!layerSpec.axes.has_value()) {
-    throw std::runtime_error("TGeoBackend::makeSurfaces: axes not set");
+    throw std::runtime_error(
+        "TGeoBlueprintBuilderBackend::makeSurfaces: axes not set");
   }
 
   std::vector<std::shared_ptr<Acts::Surface>> surfaces;
@@ -98,7 +106,7 @@ std::vector<std::shared_ptr<Acts::Surface>> TGeoBackend::makeSurfaces(
   return surfaces;
 }
 
-std::optional<Acts::Transform3> TGeoBackend::lookupLayerTransform(
+std::optional<Acts::Transform3> TGeoBlueprintBuilderBackend::lookupLayerTransform(
     const Element& element, const LayerSpec& layerSpec) const {
   if (!layerSpec.layerAxes.has_value()) {
     return std::nullopt;
@@ -110,11 +118,11 @@ std::optional<Acts::Transform3> TGeoBackend::lookupLayerTransform(
       layerSpec.layerAxes.value(), m_cfg.lengthScale);
 }
 
-TGeoBackend::Element TGeoBackend::world() const {
+TGeoBlueprintBuilderBackend::Element TGeoBlueprintBuilderBackend::world() const {
   return m_world;
 }
 
-std::string TGeoBackend::nameOf(const Element& element) const {
+std::string TGeoBlueprintBuilderBackend::nameOf(const Element& element) const {
   const auto& context = contextOf(element);
   const auto* volume = context.node->GetVolume();
   if (volume != nullptr && volume->GetName() != nullptr) {
@@ -126,7 +134,8 @@ std::string TGeoBackend::nameOf(const Element& element) const {
   return {};
 }
 
-std::vector<TGeoBackend::Element> TGeoBackend::children(
+std::vector<TGeoBlueprintBuilderBackend::Element>
+TGeoBlueprintBuilderBackend::children(
     const Element& parent) const {
   const auto& context = contextOf(parent);
   std::vector<Element> result;
@@ -141,20 +150,21 @@ std::vector<TGeoBackend::Element> TGeoBackend::children(
   return result;
 }
 
-TGeoBackend::Element TGeoBackend::parent(const Element& element) const {
+TGeoBlueprintBuilderBackend::Element TGeoBlueprintBuilderBackend::parent(
+    const Element& element) const {
   return Element{contextOf(element).parent};
 }
 
-bool TGeoBackend::isSensitive(const Element& element) const {
+bool TGeoBlueprintBuilderBackend::isSensitive(const Element& element) const {
   return m_cfg.sensitivePredicate != nullptr &&
          m_cfg.sensitivePredicate(element);
 }
 
-const TGeoNode& TGeoBackend::nodeOf(const Element& element) const {
+const TGeoNode& TGeoBlueprintBuilderBackend::nodeOf(const Element& element) const {
   return *contextOf(element).node;
 }
 
-TGeoHMatrix TGeoBackend::transformOf(const Element& element) const {
+TGeoHMatrix TGeoBlueprintBuilderBackend::transformOf(const Element& element) const {
   std::vector<const NodeContext*> chain;
   for (const NodeContext* current = element.context.get(); current != nullptr;
        current = current->parent.get()) {
@@ -176,7 +186,7 @@ TGeoHMatrix TGeoBackend::transformOf(const Element& element) const {
   return transform.value_or(TGeoHMatrix{});
 }
 
-std::string TGeoBackend::pathOf(const Element& element) const {
+std::string TGeoBlueprintBuilderBackend::pathOf(const Element& element) const {
   std::vector<std::string> names;
   for (const NodeContext* current = element.context.get(); current != nullptr;
        current = current->parent.get()) {
@@ -202,8 +212,8 @@ std::string TGeoBackend::pathOf(const Element& element) const {
 }  // namespace ActsPlugins
 
 namespace Acts::Experimental {
-template class BlueprintBuilder<ActsPlugins::TGeoBackend>;
-template class ElementLayerAssembler<ActsPlugins::TGeoBackend>;
-template class SensorLayerAssembler<ActsPlugins::TGeoBackend>;
-template class SensorLayer<ActsPlugins::TGeoBackend>;
+template class BlueprintBuilder<ActsPlugins::TGeoBlueprintBuilderBackend>;
+template class ElementLayerAssembler<ActsPlugins::TGeoBlueprintBuilderBackend>;
+template class SensorLayerAssembler<ActsPlugins::TGeoBlueprintBuilderBackend>;
+template class SensorLayer<ActsPlugins::TGeoBlueprintBuilderBackend>;
 }  // namespace Acts::Experimental
