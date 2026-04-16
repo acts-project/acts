@@ -172,7 +172,8 @@ class RiddersStepper final {
     if (!covariance.has_value()) {
       state.covTransport = false;
       state.cov = BoundMatrix::Zero();
-      state.jacobian = BoundMatrix::Identity();
+      // TODO otherwise `update` gets screwed
+      // state.jacobian = BoundMatrix::Identity();
 
       m_multiStepperImpl.initialize(
           state.multiStepperState,
@@ -198,7 +199,8 @@ class RiddersStepper final {
 
     state.covTransport = true;
     state.cov = *covariance;
-    state.jacobian = BoundMatrix::Identity();
+    // TODO otherwise `update` gets screwed
+    // state.jacobian = BoundMatrix::Identity();
 
     m_multiStepperImpl.initialize(state.multiStepperState,
                                   multiBoundParameters);

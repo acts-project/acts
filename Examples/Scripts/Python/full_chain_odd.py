@@ -241,16 +241,14 @@ else:
             ),
             EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(
-                args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
-            ),
+            ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=args.gun_multiplicity,
+            multiplicity=1,
             rnd=rnd,
         )
     else:
@@ -379,7 +377,7 @@ if args.reco:
         CkfConfig(
             chi2CutOffMeasurement=15.0,
             chi2CutOffOutlier=25.0,
-            numMeasurementsCutOff=2,
+            numMeasurementsCutOff=1,
             seedDeduplication=True,
             stayOnSeed=True,
             pixelVolumes=[16, 17, 18],
