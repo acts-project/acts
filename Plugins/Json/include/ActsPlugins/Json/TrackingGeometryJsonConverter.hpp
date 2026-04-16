@@ -35,25 +35,22 @@ class VolumeBounds;
 /// @addtogroup json_plugin
 /// @{
 
-/// Converter for tracking geometry JSON payloads focused on volumes, volume
-/// bounds and portals.
+/// @brief Converter for tracking geometry JSON payloads
 ///
 /// High-level conversion overview:
 /// - Serialization:
 ///   - traverse the `TrackingVolume::volumes()` tree in depth-first order
-///   - assign stable in-file volume IDs
-///   - collect unique portals and assign stable in-file portal IDs
-///   - write each volume transform, bounds payload, children IDs, and portal
-///   IDs
-///   - write all unique portals once in a top-level portal table
-///   - encode portal links by concrete kind via registered dispatchers
+///   - collect unique instances of surfaces, portals, volumes and assign stable
+///   in-file IDs
+///   - serialize the instances into their independent top-level tables
+///   - encode object-to-object relationships through the assigned IDs
 /// - Deserialization:
 ///   - validate schema header and collect all volume records
-///   - instantiate all volumes first and build ID->pointer lookup
+///   - instantiate volumes, portals, surfaces and build ID->pointer lookup
 ///   - attach child volumes to reconstruct the tree
-///   - decode unique portals by kind, then attach shared portal pointers to
-///     volumes via portal IDs
-///   - return a reconstructed world `TrackingVolume` (or `TrackingGeometry`)
+///   - attach surfaces to portals and volumes via ID lookup
+///   - portals to volumes via ID lookup
+///   - return deserialized geometry
 class TrackingGeometryJsonConverter {
  public:
   /// JSON serialization options for tracking geometry conversion.
