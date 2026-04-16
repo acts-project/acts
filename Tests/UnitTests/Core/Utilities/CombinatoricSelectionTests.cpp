@@ -131,8 +131,9 @@ BOOST_AUTO_TEST_CASE(CombinatoricIterator) {
   checkCombinatoricIterator<7>(16);
 }
 
-template<std::size_t K>
-void checkCombinatoricRemapping(const std::size_t N, const std::vector<bool>& applyRemap) {
+template <std::size_t K>
+void checkCombinatoricRemapping(const std::size_t N,
+                                const std::vector<bool>& applyRemap) {
   if (N < K) {
     return;
   }
@@ -140,44 +141,38 @@ void checkCombinatoricRemapping(const std::size_t N, const std::vector<bool>& ap
   CombinationSet<K> cachedCombos{}, allCombos{};
   BOOST_CHECK_EQUAL(indexGenerator.size(), binomial(N, K));
   BOOST_CHECK_EQUAL(indexGenerator.intervalSize(), N);
-   
 
-  for(std::size_t combo = 0; combo < indexGenerator.size(); ++combo){
+  for (std::size_t combo = 0; combo < indexGenerator.size(); ++combo) {
     const auto indices = indexGenerator.draw(combo);
     BOOST_CHECK_EQUAL(allCombos.insert(indices).second, true);
     std::array<std::size_t, K> remappedIndices{};
-    for(std::size_t i = 0; i < K; ++i){
-      if(applyRemap[i]){
+    for (std::size_t i = 0; i < K; ++i) {
+      if (applyRemap[i]) {
         remappedIndices[i] = N - indices[i] + indices[1];
       } else {
-      remappedIndices[i] = indices[i];
+        remappedIndices[i] = indices[i];
       }
     }
     std::cout << "RemapIndices - Iteration: " << (combo + 1)
-              << " -> drawn: " << indices << " --> remapped: " << remappedIndices
-              << std::endl;
+              << " -> drawn: " << indices
+              << " --> remapped: " << remappedIndices << std::endl;
     BOOST_CHECK_EQUAL(goodArray(remappedIndices, N), true);
     BOOST_CHECK_EQUAL(cachedCombos.insert(remappedIndices).second, true);
   }
   BOOST_CHECK_EQUAL(allCombos.size(), cachedCombos.size());
-
 }
-
 
 BOOST_AUTO_TEST_CASE(RemapIndices4) {
   constexpr std::size_t N = 16;
-  for(std::size_t i = 4; i <= N ; ++i){
+  for (std::size_t i = 4; i <= N; ++i) {
     checkCombinatoricRemapping<4>(i, {false, false, true, true});
   }
-  
 }
 BOOST_AUTO_TEST_CASE(RemapIndices3) {
   constexpr std::size_t N = 16;
-  for(std::size_t i = 3; i <= N ; ++i){
+  for (std::size_t i = 3; i <= N; ++i) {
     checkCombinatoricRemapping<3>(i, {false, false, true});
   }
-
 }
-   
 
 BOOST_AUTO_TEST_SUITE_END()
