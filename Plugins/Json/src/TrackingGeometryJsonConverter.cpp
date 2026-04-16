@@ -517,7 +517,7 @@ void ensureIdentifiers(Acts::TrackingVolume& volume,
   }
 
   for (const auto [ib, boundary] : Acts::enumerate(volume.boundarySurfaces())) {
-    // Gen1 API, ignore Sonar complaints
+    // Gen1 api, ignore Sonar complaints
     auto& mutableBoundarySurface =
         const_cast<Acts::RegularSurface&>(boundary->surfaceRepresentation());
     if (mutableBoundarySurface.geometryId() == Acts::GeometryIdentifier{}) {
