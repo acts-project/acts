@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(CombinatoricIterator) {
 
 template <std::size_t K>
 void checkCombinatoricRemapping(const std::size_t N,
-                                const std::vector<bool>& applyRemap) {
+                                const std::array<bool, K>& applyRemap) {
   if (N < K) {
     return;
   }
@@ -157,6 +157,7 @@ void checkCombinatoricRemapping(const std::size_t N,
               << " -> drawn: " << indices
               << " --> remapped: " << remappedIndices << std::endl;
     BOOST_CHECK_EQUAL(goodArray(remappedIndices, N), true);
+    std::ranges::sort(remappedIndices);
     BOOST_CHECK_EQUAL(cachedCombos.insert(remappedIndices).second, true);
   }
   BOOST_CHECK_EQUAL(allCombos.size(), cachedCombos.size());
