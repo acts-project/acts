@@ -37,7 +37,7 @@ namespace ActsPlugins {
 /// and writing.
 class RootMaterialMapIo {
  public:
-  /// @brief Configuration for the accessor
+  /// Configuration for the accessor
   /// Contains the tags used for writing and reading, tag names are
   /// configuration, as they are not very likely to change.
   struct Config {
@@ -77,7 +77,7 @@ class RootMaterialMapIo {
     std::string indexHistName = "i";
   };
 
-  /// @brief Options for writing the material maps
+  /// Options for writing the material maps
   /// Folder names are optional as it allows to write more maps into one
   /// file, e.g. for the same detector with different configurations.
   struct Options {
@@ -113,7 +113,7 @@ class RootMaterialMapIo {
     float hRho = 0.0f;
   };
 
-  /// @brief Constructor from config struct
+  /// Constructor from config struct
   /// @param cfg the configuration for the accessor
   /// @param mLogger the logger to use, default is INFO level
   explicit RootMaterialMapIo(const Config& cfg,
@@ -122,7 +122,7 @@ class RootMaterialMapIo {
                                                         Acts::Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mLogger)) {}
 
-  /// @brief Destructor
+  /// Destructor
   ~RootMaterialMapIo() = default;
 
   /// Write the detector maps
@@ -149,12 +149,12 @@ class RootMaterialMapIo {
   Acts::TrackingGeometryMaterial read(TFile& rFile, const Options& options);
 
  private:
-  /// @brief Connect the homogeneous material tree for writing
+  /// Connect the homogeneous material tree for writing
   /// @param rTree the tree to connect to
   /// @param treePayload the payload to connect to the tree
   void connectForWrite(TTree& rTree, MaterialTreePayload& treePayload);
 
-  /// @brief Connect the homogeneous material tree for writing
+  /// Connect the homogeneous material tree for writing
   /// @param rTree the tree to connect to
   /// @param treePayload the payload to connect to the tree
   void connectForRead(TTree& rTree, MaterialTreePayload& treePayload);
@@ -165,11 +165,11 @@ class RootMaterialMapIo {
   void fillMaterialSlab(MaterialTreePayload& payload,
                         const Acts::MaterialSlab& materialSlab);
 
-  /// @brief Fill the Binned Surface material as histograms - legacy mode
+  /// Fill the Binned Surface material as histograms - legacy mode
   /// @param bsMaterial the binned surface material to write
   void fillBinnedSurfaceMaterial(const Acts::BinnedSurfaceMaterial& bsMaterial);
 
-  /// @brief Fill the Binned Surface material as histograms - indexed mode
+  /// Fill the Binned Surface material as histograms - indexed mode
   /// @param payload the tree payload to fill
   /// @param bsMaterial the binned surface material to write
   void fillBinnedSurfaceMaterial(MaterialTreePayload& payload,

@@ -325,6 +325,17 @@ class Impl final : public TripletSeedFinder {
     const StripData stripB = calculateStripData(spB);
 
     for (auto topDoublet : topDoublets) {
+      // Pre-filter on the doublet stage cot(theta) difference before the
+      // expensive strip coordinate transformation. The doublet cot(theta)
+      // values are computed from SP centers and are approximate
+      // so the cut is very loose
+      {
+        const float deltaCotTheta = cotThetaB - topDoublet.cotTheta();
+        if (std::abs(deltaCotTheta) > m_cfg.cotThetaDiffMax) {
+          continue;
+        }
+      }
+
       // protects against division by 0
       float dU = topDoublet.u() - Ub;
       if (dU == 0) {

@@ -136,13 +136,13 @@ void addTrackFinding(py::module& mex) {
                std::shared_ptr<Alg::TrackFinderFunction>>(
         alg, "TrackFinderFunction");
 
-    ACTS_PYTHON_STRUCT(c, inputMeasurements, inputInitialTrackParameters,
-                       inputSeeds, outputTracks, trackingGeometry,
-                       magneticField, findTracks, measurementSelectorCfg,
-                       trackSelectorCfg, maxSteps, twoWay, reverseSearch,
-                       seedDeduplication, stayOnSeed, pixelVolumeIds,
-                       stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
-                       constrainToVolumeIds, endOfWorldVolumeIds);
+    ACTS_PYTHON_STRUCT(
+        c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
+        outputTracks, trackingGeometry, magneticField, findTracks,
+        measurementSelectorCfg, trackSelectorCfg, maxSteps, twoWay,
+        reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
+        stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
+        useJosephFormulation, constrainToVolumeIds, endOfWorldVolumeIds);
   }
 }
 

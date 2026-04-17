@@ -314,7 +314,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
-  Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixUpdater kfUpdater(m_cfg.useJosephFormulation);
 
   using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
 
