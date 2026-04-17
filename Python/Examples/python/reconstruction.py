@@ -5,7 +5,6 @@ from collections import namedtuple
 
 import acts
 import acts.examples
-import acts.gnn
 
 # ROOT might not be available
 try:
@@ -2004,6 +2003,8 @@ def addGnn(
         )
 
     if device is None:
+        import acts.gnn
+
         device = acts.gnn.Device.Cuda()
 
     # GNN track finding algorithm
