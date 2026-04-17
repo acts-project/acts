@@ -129,6 +129,7 @@ void CombinatoricIndices<K>::iterator::updateArray() {
     }
   }
 }
+
 template <std::size_t K>
 CombinatoricIndices<K>::iterator CombinatoricIndices<K>::iterator::operator+(
     const std::size_t idx) const {
