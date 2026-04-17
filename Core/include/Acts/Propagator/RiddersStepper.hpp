@@ -120,7 +120,8 @@ class RiddersStepper final {
     StepperImpl::Config stepperConfig;
 
     std::shared_ptr<const BoundParameterVariationGenerator> parameterVariation{
-        std::make_shared<CovarianceBoundParameterVariationGenerator>(1e-2)};
+        std::make_shared<CovarianceBoundParameterVariationGenerator>(
+            std::vector<double>{-1e-2, 1e-2})};
   };
 
   using Options = typename StepperImpl::Options;
