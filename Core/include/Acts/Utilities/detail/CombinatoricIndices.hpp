@@ -33,11 +33,14 @@ class CombinatoricIndices {
   /// Declare the Return type of the Index generator to be an array of size K
   using IndexArray = std::array<std::size_t, K>;
 
+  /// Delete default constructor
+  CombinatoricIndices() = delete;
   /// Constructor of the combinatoric indices
   /// @param n The size of the set from which indices are drawn
   /// @note An exception is thrown if the size is less than the
   /// number of indices to draw
-  explicit CombinatoricIndices(const std::size_t N);
+  explicit CombinatoricIndices(const std::size_t N)
+    requires(K > 0);
 
   /// The number of possibilities to draw K different indices from the set
   /// @returns The number of combinations

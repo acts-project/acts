@@ -15,14 +15,15 @@
 namespace Acts::detail {
 
 template <std::size_t K>
-CombinatoricIndices<K>::CombinatoricIndices(const std::size_t N) : m_N{N} {
+CombinatoricIndices<K>::CombinatoricIndices(const std::size_t N)
+  requires(K > 0)
+    : m_N{N} {
   if (N < K) {
     throw std::invalid_argument(
         std::format("CombinatoricIndices() - The set size {:} needs at least "
                     "to exceed the number of elements to draw {:}",
                     N, K));
   }
-  static_assert(K >= 1, "The number of elements must not be zero");
 
   for (std::size_t slot = 0; slot < m_elementOccurance.size(); ++slot) {
     std::size_t maxCombNumb = 0;
