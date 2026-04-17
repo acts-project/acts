@@ -30,9 +30,6 @@ namespace Acts::detail {
 template <std::size_t K>
 class CombinatoricIndices {
  public:
-  /// Declare other combinatoric indices classes as friends
-  template <std::size_t L>
-  friend class CombinatoricIndices;
   /// Declare the Return type of the Index generator to be an array of size K
   using IndexArray = std::array<std::size_t, K>;
 
