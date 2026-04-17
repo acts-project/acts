@@ -126,8 +126,8 @@ TGeoBlueprintBuilderBackend::Element TGeoBlueprintBuilderBackend::world()
 
 std::string TGeoBlueprintBuilderBackend::nameOf(const Element& element) const {
   const auto& context = contextOf(element);
-  const auto* volume = context.node->GetVolume();
-  if (volume != nullptr && volume->GetName() != nullptr) {
+  if (const auto* volume = context.node->GetVolume();
+      volume != nullptr && volume->GetName() != nullptr) {
     return volume->GetName();
   }
   if (context.node->GetName() != nullptr) {

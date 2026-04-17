@@ -14,6 +14,8 @@
 
 #include <memory>
 
+#include <DD4hep/Detector.h>
+
 namespace ActsExamples {
 
 OpenDataDetector::OpenDataDetector(const Config& cfg,
@@ -39,7 +41,7 @@ OpenDataDetector::OpenDataDetector(const Config& cfg,
     case Config::ConstructionMethod::TGeo:
       m_trackingGeometry =
           ActsPlugins::DD4hep::buildOpenDataDetectorBarrelEndcapViaTGeo(
-              dd4hepDetector(), gctx, logger());
+              *dd4hepDetector().world().placement().ptr(), gctx, logger());
       break;
   }
 }

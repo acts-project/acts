@@ -93,8 +93,7 @@ constexpr TGeoLayerBinning kLongStripLayerBinning{
     .endcapBins = {2u, 48u},
 };
 
-bool hasSensitiveMaterial(
-    const ActsPlugins::TGeoBlueprintBuilderBackend::Element& element) {
+bool hasSensitiveMaterial(const TGeoBlueprintBuilderBackend::Element& element) {
   if (element.context == nullptr || element.context->node == nullptr) {
     return false;
   }
@@ -114,11 +113,11 @@ bool hasSensitiveMaterial(
          std::string_view::npos;
 }
 
-auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
-                             TGeoLayerBinning binning, std::regex layerFilter) {
-  return [&builder, binning, layerFilter = std::move(layerFilter)](
-             const std::optional<
-                 ActsPlugins::TGeoBlueprintBuilderBackend::Element>& elem,
+auto makeTGeoLayerCustomizer(const BlueprintBuilder& builder,
+                             const TGeoLayerBinning& binning,
+                             const std::regex& layerFilter) {
+  return [&builder, &binning, layerFilter](
+             const std::optional<TGeoBlueprintBuilderBackend::Element>& elem,
              Acts::Experimental::LayerBlueprintNode& layer) {
     layer.setEnvelope(detail::kLayerEnvelope);
 
@@ -146,21 +145,12 @@ auto makeTGeoLayerCustomizer(ActsPlugins::BlueprintBuilder& builder,
   };
 }
 
-TGeoBlueprintBuilderBackend::Config makeTGeoConfig(
-    const dd4hep::Detector& detector) {
-  TGeoBlueprintBuilderBackend::Config cfg;
-  cfg.root = detector.world().placement().ptr();
-  cfg.lengthScale = Acts::UnitConstants::cm;
-  cfg.sensitivePredicate = hasSensitiveMaterial;
-  return cfg;
-}
-
 std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
 makeTGeoBeampipeNode() {
   // Arbitrary and hard-coded values for the beampipe.
   auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
       0., 19. * Acts::UnitConstants::mm, 4. * Acts::UnitConstants::m);
-  std::unique_ptr volume = std::make_unique<Acts::TrackingVolume>(
+  auto volume = std::make_unique<Acts::TrackingVolume>(
       Acts::Transform3::Identity(), volumeBounds, "BeamPipe");
   return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
       std::move(volume));
@@ -177,14 +167,14 @@ struct TGeoSubsystemSpec {
   std::string_view barrelName;
   std::string_view negativeEndcapName;
   std::string_view positiveEndcapName;
-  TGeoLayerBinning binning;
+  const TGeoLayerBinning& binning;
   const std::regex& layerFilter;
   const std::regex& barrelLayerFilter;
   const std::regex& negativeEndcapLayerFilter;
   const std::regex& positiveEndcapLayerFilter;
 };
 
-void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
+void addTGeoSubsystem(const BlueprintBuilder& builder,
                       Acts::Experimental::BlueprintNode& parent,
                       const TGeoSubsystemSpec& spec) {
   const auto assemblyElement =
@@ -261,15 +251,19 @@ void addTGeoSubsystem(ActsPlugins::BlueprintBuilder& builder,
 }  // namespace
 
 std::unique_ptr<Acts::TrackingGeometry>
-buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
+buildOpenDataDetectorBarrelEndcapViaTGeo(const TGeoNode& rootNode,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::Logger& logger) {
   using namespace Acts::Experimental;
   using namespace Acts;
   using enum AxisDirection;
 
-  ActsPlugins::BlueprintBuilder builder{makeTGeoConfig(detector),
-                                        logger.cloneWithSuffix("TGeoBlpBld")};
+  TGeoBlueprintBuilderBackend::Config cfg;
+  cfg.root = &rootNode;
+  cfg.lengthScale = Acts::UnitConstants::cm;
+  cfg.sensitivePredicate = hasSensitiveMaterial;
+
+  BlueprintBuilder builder{cfg, logger.cloneWithSuffix("TGeoBlpBld")};
 
   Blueprint::Config blueprintCfg;
   blueprintCfg.envelope = ActsPlugins::DD4hep::detail::kBlueprintEnvelope;
