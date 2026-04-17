@@ -33,6 +33,7 @@ class OnnxEdgeClassifier final : public EdgeClassificationBase {
     std::string modelPath;
     /// Classification threshold cut
     float cut = 0.5;
+    /// Device to allocate the model on
     Device device = Device::Cuda();
   };
 
