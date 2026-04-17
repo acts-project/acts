@@ -76,6 +76,7 @@ option(ACTS_USE_SYSTEM_GBL "Use a system-provided General Broken Lines (GBL) fro
 option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
+option(ACTS_BUILD_PLUGIN_ARROW "Build Apache Arrow/Parquet plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
@@ -124,6 +125,7 @@ option(ACTS_BUILD_EXAMPLES_FASTJET "Build FastJet plugin" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_GNN "Build the GNN example code" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PARQUET "Build Arrow/Parquet-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "[Deprecated] Build python bindings and enables the examples" OFF)
@@ -182,6 +184,8 @@ set_option_if(
     OR
     ACTS_BUILD_EXAMPLES_HASHING
     OR
+    ACTS_BUILD_EXAMPLES_PARQUET
+    OR
     ACTS_BUILD_EXAMPLES_PODIO
     OR
     ACTS_BUILD_EXAMPLES_PYTHIA8
@@ -200,6 +204,7 @@ set_option_if(
 )
 set_option_if(ACTS_BUILD_PLUGIN_EDM4HEP ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(ACTS_BUILD_EXAMPLES_PODIO ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(ACTS_BUILD_PLUGIN_ARROW ACTS_BUILD_EXAMPLES_PARQUET)
 set_option_if(ACTS_BUILD_PLUGIN_GEANT4 ACTS_BUILD_EXAMPLES_GEANT4)
 set_option_if(
     ACTS_BUILD_PLUGIN_ROOT
@@ -336,6 +341,7 @@ set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.24.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
+set(_acts_arrow_version 23.0.0)
 
 # Help with compiler flags discovery
 include(ActsFunctions)
@@ -581,6 +587,10 @@ if(ACTS_BUILD_PLUGIN_EDM4HEP)
 endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
     find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
+endif()
+if(ACTS_BUILD_PLUGIN_ARROW)
+    find_package(Arrow ${_acts_arrow_version} REQUIRED CONFIG)
+    find_package(Parquet ${_acts_arrow_version} REQUIRED CONFIG)
 endif()
 
 if(ACTS_SETUP_VECMEM)
