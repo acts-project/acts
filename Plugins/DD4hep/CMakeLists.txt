@@ -10,6 +10,8 @@ acts_add_library(
     src/DD4hepLayerBuilder.cpp
     src/DD4hepVolumeBuilder.cpp
     src/DD4hepFieldAdapter.cpp
+    src/BlueprintBuilder.cpp
+    src/OpenDataDetectorBuilder.cpp
     ACTS_INCLUDE_FOLDER include/ActsPlugins
 )
 
