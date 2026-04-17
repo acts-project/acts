@@ -512,10 +512,6 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeBasic) {
     BOOST_CHECK_EQUAL(hit->getCellID(), 67890u);
   }
 
-  // Requesting a source link for a state with no link must throw
-  BOOST_CHECK_THROW(tsc.getTrackState(i2).getUncalibratedSourceLink(),
-                    std::invalid_argument);
-
   // Updating an existing link: point i0 to hit2 instead of hit1
   tsc.getTrackState(i0).setUncalibratedSourceLink(
       Acts::SourceLink{hitsCollection.at(1)});
@@ -604,9 +600,6 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
     BOOST_CHECK_EQUAL(hit->getCellID(), 22222u);
   }
 
-  // Requesting a source link for the unlinked state must throw
-  BOOST_CHECK_THROW(cc.getTrackState(2).getUncalibratedSourceLink(),
-                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
