@@ -17,8 +17,10 @@
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "ActsPlugins/DD4hep/OpenDataDetectorBuilder.hpp"
 #include "ActsPlugins/Root/BlueprintBuilder.hpp"
+#include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
 #include <array>
 #include <format>
@@ -50,6 +52,7 @@ const std::regex kTGeoLongStripLayerFilter{
 const std::regex kTGeoPixelBarrelLayerFilter{"PixelBarrel\\d"};
 const std::regex kTGeoShortStripBarrelLayerFilter{"ShortStripBarrel\\d"};
 const std::regex kTGeoLongStripBarrelLayerFilter{"LongStripBarrel\\d"};
+constexpr std::string_view kTGeoBeampipeName = "BeamPipe";
 
 struct TGeoLayerBinning {
   std::span<const std::size_t> barrelPhiBins = {};
@@ -145,13 +148,33 @@ auto makeTGeoLayerCustomizer(const BlueprintBuilder& builder,
   };
 }
 
-std::shared_ptr<Acts::Experimental::StaticBlueprintNode>
-makeTGeoBeampipeNode() {
-  // Arbitrary and hard-coded values for the beampipe.
+std::shared_ptr<Acts::Experimental::StaticBlueprintNode> makeTGeoBeampipeNode(
+    const BlueprintBuilder& builder) {
+  const auto beampipeElement =
+      builder.findDetElementByName(std::string{kTGeoBeampipeName});
+  if (!beampipeElement.has_value()) {
+    throw std::runtime_error(
+        std::format("Could not find beampipe element '{}'", kTGeoBeampipeName));
+  }
+
+  const auto& node = builder.backend().nodeOf(*beampipeElement);
+  const auto tgTransform = builder.backend().transformOf(*beampipeElement);
+  auto [bounds, transform, thickness] =
+      ActsPlugins::TGeoSurfaceConverter::cylinderComponents(
+          *node.GetVolume()->GetShape(), tgTransform.GetRotationMatrix(),
+          tgTransform.GetTranslation(), "XYZ", Acts::UnitConstants::cm);
+  (void)thickness;
+
+  if (bounds == nullptr) {
+    throw std::runtime_error(
+        "Beampipe element shape could not be converted to cylinder.");
+  }
+
   auto volumeBounds = std::make_shared<Acts::CylinderVolumeBounds>(
-      0., 19. * Acts::UnitConstants::mm, 4. * Acts::UnitConstants::m);
+      0., bounds->get(Acts::CylinderBounds::eR),
+      bounds->get(Acts::CylinderBounds::eHalfLengthZ));
   auto volume = std::make_unique<Acts::TrackingVolume>(
-      Acts::Transform3::Identity(), volumeBounds, "BeamPipe");
+      transform, volumeBounds, std::string{kTGeoBeampipeName});
   return std::make_shared<Acts::Experimental::StaticBlueprintNode>(
       std::move(volume));
 }
@@ -272,7 +295,7 @@ buildOpenDataDetectorBarrelEndcapViaTGeo(const TGeoNode& rootNode,
   auto& outer = root.addCylinderContainer("OpenDataDetector", AxisR);
   outer.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  outer.addChild(makeTGeoBeampipeNode());
+  outer.addChild(makeTGeoBeampipeNode(builder));
   addTGeoSubsystem(
       builder, outer,
       {.assembly = "Pixels",
