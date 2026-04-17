@@ -12,17 +12,21 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
-#include "Acts/Propagator/MultiStepperLoop.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
+#include <sstream>
+#include <string>
 #include <tuple>
+#include <vector>
 
 namespace Acts {
 class IVolumeMaterial;
-}
+class MagneticFieldProvider;
+}  // namespace Acts
 
 namespace Acts::Experimental {
 
@@ -102,36 +106,31 @@ struct CovarianceBoundParameterVariationGenerator
   }
 };
 
-template <Concepts::SingleStepper stepper_impl_t,
-          Concepts::MultiStepper multi_stepper_impl_t =
-              MultiStepperLoop<stepper_impl_t>>
+template <Concepts::SingleStepper stepper_impl_t>
 class RiddersStepper final {
  public:
   using StepperImpl = stepper_impl_t;
-  using MultiStepperImpl = multi_stepper_impl_t;
 
   using BoundParameters = BoundTrackParameters;
   using Jacobian = BoundMatrix;
   using Covariance = BoundMatrix;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
-  using MultiBoundParameters = MultiStepperImpl::BoundParameters;
-  using MultiBoundState = std::tuple<MultiBoundParameters, Jacobian, double>;
-
   struct Config {
-    MultiStepperImpl::Config multiStepperConfig;
+    StepperImpl::Config stepperConfig;
 
     std::shared_ptr<const BoundParameterVariationGenerator> parameterVariation{
         std::make_shared<DeltaBoundParameterVariationGenerator>(1e-4)};
   };
 
-  using Options = typename MultiStepperImpl::Options;
+  using Options = typename StepperImpl::Options;
 
   struct State {
-    explicit State(const MultiStepperImpl::State& multiStepperStateIn)
-        : multiStepperState(multiStepperStateIn) {}
+    explicit State(const StepperImpl::State& primaryStepperStateIn)
+        : primaryStepperState(primaryStepperStateIn) {}
 
-    MultiStepperImpl::State multiStepperState;
+    StepperImpl::State primaryStepperState;
+    std::vector<typename StepperImpl::State> secondaryStepperStates;
 
     BoundParameterVariation variationMap;
 
@@ -145,13 +144,13 @@ class RiddersStepper final {
   };
 
   explicit RiddersStepper(std::shared_ptr<const MagneticFieldProvider> bField)
-      : m_multiStepperImpl(std::move(bField)) {}
+      : m_stepperImpl(std::move(bField)) {}
 
   explicit RiddersStepper(const Config& config)
-      : m_config(config), m_multiStepperImpl(config.multiStepperConfig) {}
+      : m_config(config), m_stepperImpl(config.stepperConfig) {}
 
   State makeState(const Options& options) const {
-    State state(m_multiStepperImpl.makeState(options));
+    State state(m_stepperImpl.makeState(options));
     return state;
   }
 
@@ -167,6 +166,10 @@ class RiddersStepper final {
                   ParticleHypothesis particleHypothesis,
                   const Surface& surface) const {
     state.variationMap.clear();
+    state.secondaryStepperStates.clear();
+
+    m_stepperImpl.initialize(state.primaryStepperState, boundVector,
+                             std::nullopt, particleHypothesis, surface);
 
     if (!covariance.has_value()) {
       state.covTransport = false;
@@ -174,71 +177,63 @@ class RiddersStepper final {
       // TODO otherwise `update` gets screwed
       // state.jacobian = BoundMatrix::Identity();
 
-      m_multiStepperImpl.initialize(
-          state.multiStepperState,
-          MultiBoundParameters(surface.getSharedPtr(), boundVector,
-                               std::nullopt, particleHypothesis));
       return;
     }
 
     state.variationMap =
         m_config.parameterVariation->variationMap(boundVector, *covariance);
 
-    MultiBoundParameters multiBoundParameters(surface.getSharedPtr(), false,
-                                              particleHypothesis);
-    multiBoundParameters.reserve(1 + state.variationMap.size());
-
-    multiBoundParameters.pushComponent(1., boundVector);
-
     for (const auto& [index, delta] : state.variationMap) {
       BoundVector nudgedParams = boundVector;
       nudgedParams[index] += delta;
-      multiBoundParameters.pushComponent(0., nudgedParams);
+
+      state.secondaryStepperStates.push_back(
+          m_stepperImpl.makeState(state.primaryStepperState.options));
+      m_stepperImpl.initialize(state.secondaryStepperStates.back(),
+                               nudgedParams, std::nullopt, particleHypothesis,
+                               surface);
     }
 
     state.covTransport = true;
     state.cov = *covariance;
     // TODO otherwise `update` gets screwed
     // state.jacobian = BoundMatrix::Identity();
-
-    m_multiStepperImpl.initialize(state.multiStepperState,
-                                  multiBoundParameters);
   }
 
   Result<Vector3> getField(State& state, const Vector3& position) const {
-    return singleStepper().getField(primaryState(state), position);
+    return m_stepperImpl.getField(state.primaryStepperState, position);
   }
 
   Vector3 position(const State& state) const {
-    return singleStepper().position(primaryState(state));
+    return m_stepperImpl.position(state.primaryStepperState);
   }
 
   Vector3 direction(const State& state) const {
-    return singleStepper().direction(primaryState(state));
+    return m_stepperImpl.direction(state.primaryStepperState);
   }
 
   double qOverP(const State& state) const {
-    return singleStepper().qOverP(primaryState(state));
+    return m_stepperImpl.qOverP(state.primaryStepperState);
   }
 
   double absoluteMomentum(const State& state) const {
-    return singleStepper().absoluteMomentum(primaryState(state));
+    return m_stepperImpl.absoluteMomentum(state.primaryStepperState);
   }
 
   Vector3 momentum(const State& state) const {
-    return singleStepper().momentum(primaryState(state));
+    return m_stepperImpl.momentum(state.primaryStepperState);
   }
 
   double charge(const State& state) const {
-    return singleStepper().charge(primaryState(state));
+    return m_stepperImpl.charge(state.primaryStepperState);
   }
 
   const ParticleHypothesis& particleHypothesis(const State& state) const {
-    return singleStepper().particleHypothesis(primaryState(state));
+    return m_stepperImpl.particleHypothesis(state.primaryStepperState);
   }
 
   double time(const State& state) const {
-    return singleStepper().time(primaryState(state));
+    return m_stepperImpl.time(state.primaryStepperState);
   }
 
   IntersectionStatus updateSurfaceStatus(
@@ -246,66 +241,108 @@ class RiddersStepper final {
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
       double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
-    return m_multiStepperImpl.updateSurfaceStatus(
-        state.multiStepperState, surface, index, navDir, boundaryTolerance,
+    IntersectionStatus overallStatus = m_stepperImpl.updateSurfaceStatus(
+        state.primaryStepperState, surface, index, navDir, boundaryTolerance,
         surfaceTolerance, stype, logger);
+    if (overallStatus == IntersectionStatus::unreachable) {
+      return overallStatus;
+    }
+
+    const auto combine = [](const IntersectionStatus a,
+                            const IntersectionStatus b) {
+      using enum IntersectionStatus;
+      if ((a == unreachable) || (b == unreachable)) {
+        return unreachable;
+      }
+      if ((a == reachable) || (b == reachable)) {
+        return reachable;
+      }
+      return onSurface;
+    };
+
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      const IntersectionStatus status = m_stepperImpl.updateSurfaceStatus(
+          secondaryState, surface, index, navDir, BoundaryTolerance::Infinite(),
+          surfaceTolerance, stype, logger);
+      overallStatus = combine(overallStatus, status);
+    }
+
+    return overallStatus;
   }
 
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
-    m_multiStepperImpl.updateStepSize(state.multiStepperState, target,
-                                      direction, stype);
+    m_stepperImpl.updateStepSize(state.primaryStepperState, target, direction,
+                                 stype);
+
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      m_stepperImpl.updateStepSize(secondaryState, target, direction, stype);
+    }
   }
 
   void updateStepSize(State& state, double stepSize,
                       ConstrainedStep::Type stype) const {
-    m_multiStepperImpl.updateStepSize(state.multiStepperState, stepSize, stype);
+    m_stepperImpl.updateStepSize(state.primaryStepperState, stepSize, stype);
+
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      m_stepperImpl.updateStepSize(secondaryState, stepSize, stype);
+    }
   }
 
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
-    return m_multiStepperImpl.getStepSize(state.multiStepperState, stype);
+    return m_stepperImpl.getStepSize(state.primaryStepperState, stype);
   }
 
   void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
-    m_multiStepperImpl.releaseStepSize(state.multiStepperState, stype);
+    m_stepperImpl.releaseStepSize(state.primaryStepperState, stype);
+
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      m_stepperImpl.releaseStepSize(secondaryState, stype);
+    }
   }
 
   std::string outputStepSize(const State& state) const {
-    return m_multiStepperImpl.outputStepSize(state.multiStepperState);
+    std::stringstream ss;
+    ss << state.primaryStepperState.stepSize.toString();
+    for (const auto& secondaryState : state.secondaryStepperStates) {
+      ss << " || " << secondaryState.stepSize.toString();
+    }
+    return ss.str();
   }
 
   Result<BoundState> boundState(
       State& state, const Surface& surface, bool transportCovariance = true,
       const FreeToBoundCorrection& freeToBoundCorrection =
           FreeToBoundCorrection(false)) const {
+    Result<BoundState> primaryResult = m_stepperImpl.boundState(
+        state.primaryStepperState, surface, false, freeToBoundCorrection);
+
     if (!transportCovariance) {
-      Result<BoundState> result = singleStepper().boundState(
-          primaryState(state), surface, false, freeToBoundCorrection);
-      std::get<1>(*result) = state.jacobian;
-      return result;
+      std::get<1>(*primaryResult) = state.jacobian;
+      return primaryResult;
     }
 
     std::vector<BoundVector> boundVectors;
     std::vector<double> pathLenghts;
-    boundVectors.reserve(state.multiStepperState.components.size());
-    pathLenghts.reserve(state.multiStepperState.components.size());
-    for (auto& component : state.multiStepperState.components) {
-      const Result<BoundState> result = singleStepper().boundState(
-          component.state, surface, false, freeToBoundCorrection);
+    boundVectors.reserve(state.secondaryStepperStates.size());
+    pathLenghts.reserve(state.secondaryStepperStates.size());
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      const Result<BoundState> result = m_stepperImpl.boundState(
+          secondaryState, surface, false, freeToBoundCorrection);
       if (!result.ok()) {
         return result.error();
       }
       boundVectors.push_back(std::get<0>(*result).parameters());
       pathLenghts.push_back(std::get<2>(*result));
     }
-    const auto& referenceVector = boundVectors.front();
+    const auto& referenceVector = std::get<0>(*primaryResult).parameters();
 
     state.jacobian = BoundMatrix::Zero();
     std::array<std::size_t, eBoundSize> numberOfVariationsPerParameter{};
 
     for (std::size_t i = 0; i < state.variationMap.size(); ++i) {
       const auto& [index, delta] = state.variationMap[i];
-      const auto& nudgedVector = boundVectors[1 + i];
+      const auto& nudgedVector = boundVectors[i];
 
       state.jacobian.col(index) += (nudgedVector - referenceVector) / delta;
       ++numberOfVariationsPerParameter[index];
@@ -332,13 +369,18 @@ class RiddersStepper final {
   }
 
   bool prepareCurvilinearState(State& state) const {
-    return m_multiStepperImpl.prepareCurvilinearState(state.multiStepperState);
+    bool result =
+        m_stepperImpl.prepareCurvilinearState(state.primaryStepperState);
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      result = result && m_stepperImpl.prepareCurvilinearState(secondaryState);
+    }
+    return result;
   }
 
   BoundState curvilinearState(State& state,
                               bool transportCovariance = true) const {
     if (!transportCovariance) {
-      return singleStepper().curvilinearState(primaryState(state), false);
+      return m_stepperImpl.curvilinearState(state.primaryStepperState, false);
     }
     return boundState(
                state,
@@ -364,7 +406,7 @@ class RiddersStepper final {
     initialize(state,
                transformFreeToBoundParameters(
                    position, time, direction, qOverP, *curvilinearSurface,
-                   state.multiStepperState.options.geoContext)
+                   state.primaryStepperState.options.geoContext)
                    .value(),
                cov, particleHypothesis(state), *curvilinearSurface);
   }
@@ -382,34 +424,33 @@ class RiddersStepper final {
 
   Result<double> step(State& state, Direction propagationDirection,
                       const IVolumeMaterial* material) const {
-    const Result<double> stepResult = m_multiStepperImpl.step(
-        state.multiStepperState, propagationDirection, material);
+    const Result<double> stepResult = m_stepperImpl.step(
+        state.primaryStepperState, propagationDirection, material);
     if (!stepResult.ok()) {
       return stepResult.error();
+    }
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      const Result<double> secondaryStepResult =
+          m_stepperImpl.step(secondaryState, propagationDirection, material);
+      if (!secondaryStepResult.ok()) {
+        return secondaryStepResult.error();
+      }
     }
     state.pathAccumulated += *stepResult;
     return *stepResult;
   }
 
   void setIdentityJacobian(State& state) const {
-    m_multiStepperImpl.setIdentityJacobian(state.multiStepperState);
+    m_stepperImpl.setIdentityJacobian(state.primaryStepperState);
+    for (auto& secondaryState : state.secondaryStepperStates) {
+      m_stepperImpl.setIdentityJacobian(secondaryState);
+    }
   }
 
  private:
   Config m_config;
 
-  MultiStepperImpl m_multiStepperImpl;
-
-  const auto& singleStepper() const {
-    return m_multiStepperImpl.singleStepper();
-  }
-
-  auto& primaryState(State& state) const {
-    return state.multiStepperState.components.front().state;
-  }
-  const auto& primaryState(const State& state) const {
-    return state.multiStepperState.components.front().state;
-  }
+  StepperImpl m_stepperImpl;
 };
 
 }  // namespace Acts::Experimental
