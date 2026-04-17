@@ -27,8 +27,8 @@ CombinatoricIndices<K>::CombinatoricIndices(const std::size_t N) : m_N{N} {
   for (std::size_t slot = 0; slot < m_elementOccurance.size(); ++slot) {
     std::size_t maxCombNumb = 0;
     // Calculate in how many combinations the integer can occur
-    const std::size_t nPrime = (N - 1ul - slot);
-    const std::size_t kPrime = (K - 1ul - slot);
+    const std::size_t nPrime = N - 1ul - slot;
+    const std::size_t kPrime = K - 1ul - slot;
 
     for (std::size_t leftCmb = nPrime; leftCmb >= kPrime; --leftCmb) {
       maxCombNumb += binomial(leftCmb, kPrime);
