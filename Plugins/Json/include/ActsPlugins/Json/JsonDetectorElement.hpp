@@ -29,13 +29,6 @@ class JsonDetectorElement : public SurfacePlacementBase {
   /// @param thickness Thickness of the detector element
   JsonDetectorElement(const nlohmann::json &jSurface, double thickness);
 
-  /// Return mutable reference to the surface
-  /// @return Mutable reference to the associated surface
-  Surface &surface() override;
-  /// Return const reference to the surface
-  /// @return Const reference to the associated surface
-  const Surface &surface() const override;
-
   /// Return the thickness of the detector element
   /// @return Thickness value
   double thickness() const;
@@ -48,8 +41,10 @@ class JsonDetectorElement : public SurfacePlacementBase {
 
   bool isSensitive() const override { return true; }
 
+  std::shared_ptr<Surface> createSurface();
+
  private:
-  std::shared_ptr<Surface> m_surface;
+  const nlohmann::json m_jSurface;
   Transform3 m_transform{};
   double m_thickness{};
 };

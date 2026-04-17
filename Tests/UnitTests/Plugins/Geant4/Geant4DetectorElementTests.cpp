@@ -41,12 +41,14 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElement_construction) {
   auto rSurface =
       Surface::makeShared<PlaneSurface>(rTransform, std::move(rBounds));
   // A detector element
-  Geant4DetectorElement g4DetElement(rSurface, *g4physVol, rTransform, 0.1);
+  auto g4DetElement =
+      std::make_shared<Geant4DetectorElement>(*g4physVol, rTransform, 0.1);
+  rSurface->assignSurfacePlacement(g4DetElement);
 
-  BOOST_CHECK_EQUAL(g4DetElement.thickness(), 0.1);
-  BOOST_CHECK_EQUAL(&g4DetElement.surface(), rSurface.get());
-  BOOST_CHECK_EQUAL(&g4DetElement.g4PhysicalVolume(), g4physVol.get());
-  BOOST_CHECK(g4DetElement.localToGlobalTransform(tContext).isApprox(
+  BOOST_CHECK_EQUAL(g4DetElement->thickness(), 0.1);
+  BOOST_CHECK_EQUAL(&g4DetElement->surface(), rSurface.get());
+  BOOST_CHECK_EQUAL(&g4DetElement->g4PhysicalVolume(), g4physVol.get());
+  BOOST_CHECK(g4DetElement->localToGlobalTransform(tContext).isApprox(
       rSurface->localToGlobalTransform(tContext)));
 }
 

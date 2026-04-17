@@ -13,8 +13,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfacePlacementBase.hpp"
 
-#include <memory>
-
 class G4VPhysicalVolume;
 
 namespace Acts {
@@ -42,8 +40,7 @@ class Geant4DetectorElement : public Acts::SurfacePlacementBase {
   /// @param g4physVol the physical volume representing this detector element
   /// @param toGlobal the global transformation before the volume
   /// @param thickness the thickness of this detector element
-  Geant4DetectorElement(std::shared_ptr<Acts::Surface> surface,
-                        const G4VPhysicalVolume& g4physVol,
+  Geant4DetectorElement(const G4VPhysicalVolume& g4physVol,
                         const Acts::Transform3& toGlobal, double thickness);
 
   /// Return local to global transform associated with this detector element
@@ -55,11 +52,11 @@ class Geant4DetectorElement : public Acts::SurfacePlacementBase {
 
   /// Return surface associated with this detector element
   /// @return Const reference to the associated surface
-  const Acts::Surface& surface() const override;
+  const Acts::Surface& surface() const;
 
   /// Non-const access to surface associated with this detector element
   /// @return Mutable reference to the associated surface
-  Acts::Surface& surface() override;
+  Acts::Surface& surface();
 
   /// Return the thickness of this detector element
   /// @return The thickness value in length units
@@ -72,8 +69,6 @@ class Geant4DetectorElement : public Acts::SurfacePlacementBase {
   bool isSensitive() const final { return true; }
 
  private:
-  /// Corresponding Surface
-  std::shared_ptr<Acts::Surface> m_surface;
   /// The GEant4 physical volume
   const G4VPhysicalVolume* m_g4physVol{nullptr};
   /// The global transformation before the volume

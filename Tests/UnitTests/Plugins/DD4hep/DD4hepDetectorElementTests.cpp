@@ -118,7 +118,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementCylinder) {
 
   BOOST_REQUIRE_NE(cylindricalElement, nullptr);
 
-  const auto& surface = cylindricalElement->surface();
+  auto surfacePtr = cylindricalElement->createSurface();
+  const auto& surface = *surfacePtr;
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Cylinder);
   BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
       Transform3::Identity()));
@@ -152,7 +153,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralCylinder) {
 
   BOOST_REQUIRE_NE(cylindricalElement, nullptr);
 
-  const auto& surface = cylindricalElement->surface();
+  auto surfacePtr = cylindricalElement->createSurface();
+  const auto& surface = *surfacePtr;
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Cylinder);
   BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
       Transform3::Identity()));
@@ -187,7 +189,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementDisc) {
 
   BOOST_REQUIRE_NE(discElement, nullptr);
 
-  const auto& surface = discElement->surface();
+  auto surfacePtr = discElement->createSurface();
+  const auto& surface = *surfacePtr;
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Disc);
   BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
       Transform3::Identity()));
@@ -220,7 +223,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementSectoralDisc) {
 
   BOOST_REQUIRE_NE(discElement, nullptr);
 
-  const auto& surface = discElement->surface();
+  auto surfacePtr = discElement->createSurface();
+  const auto& surface = *surfacePtr;
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Disc);
   BOOST_CHECK(surface.localToGlobalTransform(tContext).isApprox(
       Transform3::Identity()));
@@ -257,7 +261,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementRectangle) {
 
   BOOST_REQUIRE_NE(rectangleElement, nullptr);
 
-  Surface& surface = rectangleElement->surface();
+  auto surfacePtr = rectangleElement->createSurface();
+  auto& surface = *surfacePtr;
   surface.assignGeometryId(GeometryIdentifier().withVolume(1).withLayer(2));
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Plane);
 
@@ -302,7 +307,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginDetectorElementTrapezoid) {
 
   BOOST_REQUIRE_NE(trapezoidElement, nullptr);
 
-  const auto& surface = trapezoidElement->surface();
+  auto surfacePtr = trapezoidElement->createSurface();
+  const auto& surface = *surfacePtr;
   BOOST_CHECK_EQUAL(surface.type(), Surface::SurfaceType::Plane);
 
   auto sTransform = surface.localToGlobalTransform(tContext);

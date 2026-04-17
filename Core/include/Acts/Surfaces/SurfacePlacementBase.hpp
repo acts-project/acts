@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
+#include <memory>
+
 namespace Acts {
 class Surface;
 /// @brief The `SurfacePlacementBase` is an API proxy to model the dynamic
@@ -29,7 +31,8 @@ class Surface;
 ///        `SurfacePlacementBase::localToGlobalTransform`. There the user needs
 ///        to unpack the GeometryContext, look-up the appropriate cached
 ///        transform and return it back to the Acts library
-class SurfacePlacementBase {
+class SurfacePlacementBase
+    : public std::enable_shared_from_this<SurfacePlacementBase> {
  public:
   /// @brief Virtual default constructor
   virtual ~SurfacePlacementBase() = default;
@@ -48,16 +51,21 @@ class SurfacePlacementBase {
   ///       Acts::Surface::surfacePlacement method return a pointer to
   ///       this object.
   /// @return Reference to a surface that represents this detector element
-  virtual const Surface& surface() const = 0;
+  const Surface* surface() const;
 
-  /// @copydoc surface
-  /// @return Reference to a surface that represents this detector element
-  virtual Surface& surface() = 0;
+  /// Assign a surface to this placement element.
+  /// @note The placement will NOT take ownership of the surface.
+  void assignSurface(const std::shared_ptr<Surface>& surface);
 
   /// @brief Returns whether the placement corresponds to a surface on which
   ///        the measurements from the experiment are represented, i.e. it is
   //         a detector surface
   /// @return True if this is a sensitive surface
   virtual bool isSensitive() const = 0;
+
+ private:
+  // This is a raw pointer to the surface that is associated with this
+  // placement. That surface will eventually own this placement.
+  Surface* m_surface;
 };
 }  // namespace Acts

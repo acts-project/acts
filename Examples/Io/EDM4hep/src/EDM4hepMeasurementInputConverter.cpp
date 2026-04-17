@@ -52,7 +52,7 @@ EDM4hepMeasurementInputConverter::EDM4hepMeasurementInputConverter(
           "DD4hepDetectorElementExtension for cellId " +
           std::to_string(cellId));
     }
-    return ext->detectorElement().surface().geometryId();
+    return ext->detectorElement().surface()->geometryId();
   };
 }
 

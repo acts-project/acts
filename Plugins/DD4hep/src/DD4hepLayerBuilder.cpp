@@ -406,7 +406,7 @@ std::shared_ptr<const Surface> DD4hepLayerBuilder::createSensitiveSurface(
           DD4hepDetectorElementExtension(dd4hepDetElement)));
 
   // return the surface
-  return dd4hepDetElement->surface().getSharedPtr();
+  return dd4hepDetElement->createSurface();
 }
 
 Transform3 DD4hepLayerBuilder::convertTransform(

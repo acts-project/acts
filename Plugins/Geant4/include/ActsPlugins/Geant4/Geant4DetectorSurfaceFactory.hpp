@@ -51,8 +51,13 @@ class Geant4DetectorSurfaceFactory {
         [](std::shared_ptr<Acts::Surface> surface,
            const G4VPhysicalVolume& g4physVol, const Acts::Transform3& toGlobal,
            double thickness) {
-          return std::make_shared<Geant4DetectorElement>(
-              std::move(surface), g4physVol, toGlobal, thickness);
+          auto el = std::make_shared<Geant4DetectorElement>(g4physVol, toGlobal,
+                                                            thickness);
+          if (thickness > 0.) {
+            surface->assignThickness(thickness);
+          }
+          el->assignSurface(std::move(surface));
+          return el;
         };
     /// @endcond
   };

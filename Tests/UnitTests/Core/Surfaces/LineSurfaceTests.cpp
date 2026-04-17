@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
   /// ctor with LineBounds, detector element, Identifier
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
-  DetectorElementStub detElement{pTransform, pLineBounds, 0.2, pMaterial};
+  auto detElement = std::make_shared<DetectorElementStub>(pTransform, pLineBounds, 0.2, pMaterial);
   BOOST_CHECK(LineSurfaceStub(pLineBounds, detElement).constructedOk());
   LineSurfaceStub lineToCopy(pTransform, 2., 20.);
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
       LineSurfaceStub(tgContext, lineToCopy, transform).constructedOk());
 
   /// Construct with nullptr bounds
-  DetectorElementStub detElem;
+  auto detElem = std::make_shared<DetectorElementStub>();
   BOOST_CHECK_THROW(LineSurfaceStub nullBounds(nullptr, detElem),
                     AssertionFailureException);
 

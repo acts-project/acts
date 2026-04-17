@@ -9,13 +9,16 @@
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsPlugins/Root/TGeoSurfaceConverter.hpp"
 
+#include <cassert>
 #include <utility>
 
 #include "RtypesCore.h"
@@ -31,9 +34,9 @@ TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, TGeoAxes axes, double scalor,
     std::shared_ptr<const ISurfaceMaterial> material)
-    : m_detElement(&tGeoNode), m_identifier(identifier) {
-  // Create temporary local non const surface (to allow setting the
-  // material)
+    : m_detElement(&tGeoNode),
+      m_identifier(identifier),
+      m_deferredMaterial(std::move(material)) {
   const Double_t* translation = tGeoMatrix.GetTranslation();
   const Double_t* rotation = tGeoMatrix.GetRotationMatrix();
 
@@ -47,39 +50,25 @@ TGeoDetectorElement::TGeoDetectorElement(
     m_transform = cTransform;
     m_bounds = cBounds;
     m_thickness = cThickness;
-    m_surface = Surface::makeShared<CylinderSurface>(cBounds, *this);
+    return;
   }
 
-  // Check next if you do not have a surface
-  if (m_surface == nullptr) {
-    auto [dBounds, dTransform, dThickness] =
-        TGeoSurfaceConverter::discComponents(*tgShape, rotation, translation,
-                                             axes, scalor);
-    if (dBounds != nullptr) {
-      m_bounds = dBounds;
-      m_transform = dTransform;
-      m_thickness = dThickness;
-      m_surface = Surface::makeShared<DiscSurface>(dBounds, *this);
-    }
+  auto [dBounds, dTransform, dThickness] = TGeoSurfaceConverter::discComponents(
+      *tgShape, rotation, translation, axes, scalor);
+  if (dBounds != nullptr) {
+    m_bounds = dBounds;
+    m_transform = dTransform;
+    m_thickness = dThickness;
+    return;
   }
 
-  // Check next if you do not have a surface
-  if (m_surface == nullptr) {
-    auto [pBounds, pTransform, pThickness] =
-        TGeoSurfaceConverter::planeComponents(*tgShape, rotation, translation,
-                                              axes, scalor);
-    if (pBounds != nullptr) {
-      m_bounds = pBounds;
-      m_transform = pTransform;
-      m_thickness = pThickness;
-      m_surface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-    }
-  }
-
-  // set the asscoiated material (non const method)
-  if (m_surface != nullptr) {
-    m_surface->assignSurfaceMaterial(std::move(material));
-    m_surface->assignThickness(m_thickness);
+  auto [pBounds, pTransform, pThickness] =
+      TGeoSurfaceConverter::planeComponents(*tgShape, rotation, translation,
+                                            axes, scalor);
+  if (pBounds != nullptr) {
+    m_bounds = pBounds;
+    m_transform = pTransform;
+    m_thickness = pThickness;
   }
 }
 
@@ -91,10 +80,7 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
-      m_thickness(tgThickness) {
-  m_surface = Surface::makeShared<PlaneSurface>(tgBounds, *this);
-  m_surface->assignThickness(m_thickness);
-}
+      m_thickness(tgThickness) {}
 
 TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
@@ -104,12 +90,34 @@ TGeoDetectorElement::TGeoDetectorElement(
       m_transform(tgTransform),
       m_identifier(identifier),
       m_bounds(tgBounds),
-      m_thickness(tgThickness) {
-  m_surface = Surface::makeShared<DiscSurface>(tgBounds, *this);
-  m_surface->assignThickness(m_thickness);
-}
+      m_thickness(tgThickness) {}
 
 TGeoDetectorElement::~TGeoDetectorElement() = default;
+
+std::shared_ptr<Acts::Surface> TGeoDetectorElement::createSurface() {
+  std::shared_ptr<Acts::Surface> surf;
+
+  if (auto cBounds =
+          std::dynamic_pointer_cast<const CylinderBounds>(m_bounds)) {
+    surf = Surface::makeShared<CylinderSurface>(m_transform, cBounds);
+  } else if (auto dBounds =
+                 std::dynamic_pointer_cast<const DiscBounds>(m_bounds)) {
+    surf = Surface::makeShared<DiscSurface>(m_transform, dBounds);
+  } else if (auto pBounds =
+                 std::dynamic_pointer_cast<const PlanarBounds>(m_bounds)) {
+    surf = Surface::makeShared<PlaneSurface>(m_transform, pBounds);
+  }
+
+  if (surf != nullptr) {
+    assignSurface(surf);
+    surf->assignThickness(m_thickness);
+    if (m_deferredMaterial) {
+      surf->assignSurfaceMaterial(m_deferredMaterial);
+    }
+  }
+
+  return surf;
+}
 
 const Transform3& TGeoDetectorElement::nominalTransform() const {
   return m_transform;

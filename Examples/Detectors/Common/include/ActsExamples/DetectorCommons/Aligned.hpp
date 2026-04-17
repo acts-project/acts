@@ -12,7 +12,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/DetectorCommons/AlignmentContext.hpp"
 
-#include <any>
 
 namespace ActsExamples {
 
@@ -34,7 +33,7 @@ class Aligned : public DetectorElement {
       const auto* alignmentContext = gctx.maybeGet<AlignmentContext>();
       if (alignmentContext != nullptr && alignmentContext->store != nullptr) {
         const auto* transform =
-            alignmentContext->store->contextualTransform(this->surface());
+            alignmentContext->store->contextualTransform(*this->surface());
         // The store may only have a subset of surfaces registered
         if (transform != nullptr) {
           return *transform;

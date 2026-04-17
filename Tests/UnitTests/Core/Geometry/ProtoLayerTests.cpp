@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
 
   auto recBounds = std::make_shared<RectangleBounds>(3_mm, 6_mm);
 
-  std::vector<std::unique_ptr<SurfacePlacementBase>> detectorElements;
+  std::vector<std::shared_ptr<DetectorElementStub>> detectorElements;
 
   auto makeFan = [&](double yrot, double thickness = 0) {
     detectorElements.clear();
@@ -199,10 +199,9 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
                        AngleAxis3{deltaPhi * i, Vector3::UnitZ()} *
                        Translation3(Vector3::UnitX() * r);
 
-      auto& element = detectorElements.emplace_back(
-          std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
-
-      surfaces.push_back(element->surface().getSharedPtr());
+      auto element = std::make_shared<DetectorElementStub>(trf, recBounds, thickness);
+      detectorElements.push_back(element);
+      surfaces.push_back(element->createSurface());
     }
     return surfaces;
   };

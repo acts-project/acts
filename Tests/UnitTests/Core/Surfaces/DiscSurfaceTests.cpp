@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
       tgContext, *anotherDiscSurface, pTransform));
 
   /// Construct with nullptr bounds
-  DetectorElementStub detElem;
+  auto detElem = std::make_shared<DetectorElementStub>();
   BOOST_CHECK_THROW(
       auto nullBounds = Surface::makeShared<DiscSurface>(nullptr, detElem),
       AssertionFailureException);
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(IncompatibleBounds) {
 }
 
 BOOST_AUTO_TEST_CASE(InvalidDetectorElement) {
-  DetectorElementStub detElem;
+  auto detElem = std::make_shared<DetectorElementStub>();
 
   auto bounds1 = std::make_shared<RadialBounds>(30_mm, 100_mm);
   auto disc1 = Surface::makeShared<DiscSurface>(bounds1, detElem);

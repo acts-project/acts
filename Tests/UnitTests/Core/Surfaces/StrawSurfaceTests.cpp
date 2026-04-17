@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceConstruction) {
   /// Constructor with LineBounds ptr, DetectorElement
   std::shared_ptr<const Acts::PlanarBounds> p =
       std::make_shared<const RectangleBounds>(1., 10.);
-  DetectorElementStub detElement{pTransform, p, 1., nullptr};
+  auto detElement = std::make_shared<DetectorElementStub>(pTransform, p, 1., nullptr);
   BOOST_CHECK_EQUAL(
       Surface::makeShared<StrawSurface>(pLineBounds, detElement)->type(),
       Surface::Straw);

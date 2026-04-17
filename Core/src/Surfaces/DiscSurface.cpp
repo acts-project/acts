@@ -62,8 +62,8 @@ DiscSurface::DiscSurface(const Transform3& transform,
     : RegularSurface(transform), m_bounds(std::move(dbounds)) {}
 
 DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                         const SurfacePlacementBase& placement)
-    : RegularSurface{placement}, m_bounds(std::move(dbounds)) {
+                         std::shared_ptr<SurfacePlacementBase> placement)
+    : RegularSurface{std::move(placement)}, m_bounds(std::move(dbounds)) {
   throw_assert(m_bounds, "nullptr as DiscBounds");
 }
 

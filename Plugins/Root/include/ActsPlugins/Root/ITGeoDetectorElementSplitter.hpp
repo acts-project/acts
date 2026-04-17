@@ -37,9 +37,9 @@ class ITGeoDetectorElementSplitter {
   /// @note If no split is performed the unsplit detector element is returned
   ///
   /// @return a vector of TGeoDetectorElement objects
-  virtual std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+  virtual std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
   split(const Acts::GeometryContext& gctx,
-        std::shared_ptr<const ActsPlugins::TGeoDetectorElement> tgde) const = 0;
+        std::shared_ptr<ActsPlugins::TGeoDetectorElement> tgde) const = 0;
 };
 
 /// @}

@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <iomanip>
@@ -22,8 +23,10 @@ namespace Acts {
 Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(std::make_unique<Transform3>(transform)) {}
 
-Surface::Surface(const SurfacePlacementBase& placement) noexcept
-    : GeometryObject(), m_placement(&placement) {}
+Surface::Surface(std::shared_ptr<SurfacePlacementBase> placement)
+    : GeometryObject(), m_placement(std::move(placement)) {
+  throw_assert(m_placement, "SurfacePlacementBase must not be nullptr");
+}
 
 Surface::Surface(const GeometryContext& gctx, const Surface& other,
                  const Transform3& shift) noexcept
@@ -305,7 +308,7 @@ FreeToPathMatrix Surface::freeToPathDerivative(const GeometryContext& gctx,
 }
 
 const SurfacePlacementBase* Surface::surfacePlacement() const {
-  return m_placement;
+  return m_placement.get();
 }
 
 double Surface::thickness() const {
@@ -330,13 +333,15 @@ Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
 }
 
-void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
-  m_placement = &placement;
-  // resetting the transform as it will be handled through the detector element
-  // now
+void Surface::assignSurfacePlacement(
+    std::shared_ptr<SurfacePlacementBase> placement) {
+  m_placement = std::move(placement);
   m_transform.reset();
-  // reset sensitivity flag
   m_isSensitive = false;
+  // Call assignSurface to wire the back-pointer on the placement side.
+  // assignSurface checks surface->surfacePlacement(): since m_placement is
+  // already set above, it will find `this` and return without calling back.
+  m_placement->assignSurface(getSharedPtr());
 }
 
 void Surface::assignSurfaceMaterial(
@@ -345,7 +350,7 @@ void Surface::assignSurfaceMaterial(
 }
 
 void Surface::associateLayer(const Layer& lay) {
-  m_associatedLayer = (&lay);
+  m_associatedLayer = &lay;
 }
 
 void Surface::visualize(IVisualization3D& helper, const GeometryContext& gctx,

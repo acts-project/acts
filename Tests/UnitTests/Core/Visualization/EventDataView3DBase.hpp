@@ -109,7 +109,7 @@ void createDetector(GeometryContext& tgContext,
         [](const Transform3& trans,
            const std::shared_ptr<const RectangleBounds>& bounds,
            double thickness) {
-          return new ActsTests::DetectorElementStub(trans, bounds, thickness);
+          return std::make_shared<ActsTests::DetectorElementStub>(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;
     lConf.surfaceCfg = {sConf};

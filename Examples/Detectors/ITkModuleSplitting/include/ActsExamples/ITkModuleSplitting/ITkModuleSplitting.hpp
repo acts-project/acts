@@ -21,14 +21,14 @@
 namespace ActsExamples::ITk {
 
 template <typename detector_element_t, typename element_factory_t>
-inline std::vector<std::shared_ptr<const detector_element_t>> splitBarrelModule(
+inline std::vector<std::shared_ptr<detector_element_t>> splitBarrelModule(
     const Acts::GeometryContext& gctx,
-    const std::shared_ptr<const detector_element_t>& detElement,
+    const std::shared_ptr<detector_element_t>& detElement,
     unsigned int nSegments, const element_factory_t& factory,
     const std::string& name,
     const Acts::Logger& logger = Acts::getDummyLogger()) {
   // Retrieve the surface
-  const Acts::Surface& surface = detElement->surface();
+  const Acts::Surface& surface = *detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();
   if (bounds.type() != Acts::SurfaceBounds::eRectangle || nSegments <= 1u) {
     ACTS_WARNING("Invalid splitting config for barrel node: "
@@ -37,7 +37,7 @@ inline std::vector<std::shared_ptr<const detector_element_t>> splitBarrelModule(
   }
 
   // Output container for the submodules
-  std::vector<std::shared_ptr<const detector_element_t>> detElements = {};
+  std::vector<std::shared_ptr<detector_element_t>> detElements = {};
   detElements.reserve(nSegments);
 
   // Get the geometric information
@@ -80,7 +80,7 @@ inline std::vector<std::shared_ptr<detector_element_t>> splitDiscModule(
     const element_factory_t& factory, const std::string& name,
     const Acts::Logger& logger = Acts::getDummyLogger()) {
   // Retrieve the surface
-  const Acts::Surface& surface = detElement->surface();
+  const Acts::Surface& surface = *detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();
 
   // Check annulus bounds origin
@@ -103,7 +103,7 @@ inline std::vector<std::shared_ptr<detector_element_t>> splitDiscModule(
   auto nSegments = splitRanges.size();
 
   // Output container for the submodules
-  std::vector<std::shared_ptr<const detector_element_t>> detElements = {};
+  std::vector<std::shared_ptr<detector_element_t>> detElements = {};
   detElements.reserve(nSegments);
 
   // Get the geometric information

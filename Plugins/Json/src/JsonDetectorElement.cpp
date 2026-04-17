@@ -15,20 +15,7 @@ namespace Acts {
 
 JsonDetectorElement::JsonDetectorElement(const nlohmann::json &jSurface,
                                          double thickness)
-    : m_thickness(thickness) {
-  m_surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
-  m_transform = Transform3JsonConverter::fromJson(jSurface["transform"]);
-  m_surface->assignSurfacePlacement(*this);
-  m_surface->assignThickness(thickness);
-}
-
-const Surface &JsonDetectorElement::surface() const {
-  return *m_surface;
-}
-
-Surface &JsonDetectorElement::surface() {
-  return *m_surface;
-}
+    : m_jSurface(jSurface), m_thickness(thickness) {}
 
 const Transform3 &JsonDetectorElement::localToGlobalTransform(
     const GeometryContext & /*gctx*/) const {
@@ -37,6 +24,16 @@ const Transform3 &JsonDetectorElement::localToGlobalTransform(
 
 double JsonDetectorElement::thickness() const {
   return m_thickness;
+}
+
+std::shared_ptr<Surface> JsonDetectorElement::createSurface() {
+  auto surface = Acts::SurfaceJsonConverter::fromJson(m_jSurface);
+  m_transform = Transform3JsonConverter::fromJson(m_jSurface["transform"]);
+
+  surface->assignSurfacePlacement(shared_from_this());
+  surface->assignThickness(m_thickness);
+
+  return surface;
 }
 
 }  // namespace Acts

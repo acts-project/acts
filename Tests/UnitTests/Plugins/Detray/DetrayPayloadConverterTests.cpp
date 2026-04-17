@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversionTests) {
 
       // Create surface using the detector element
       auto sensitiveSurface =
-          Surface::makeShared<PlaneSurface>(bounds, *detElement);
+          Surface::makeShared<PlaneSurface>(bounds, detElement);
 
       auto payload = converter.convertSurface(gctx, *sensitiveSurface);
       BOOST_CHECK(payload.type == detray::surface_id::e_sensitive);

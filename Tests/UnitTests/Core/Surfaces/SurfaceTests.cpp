@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
   auto pTransform = Transform3(translation);
   std::shared_ptr<const Acts::PlanarBounds> p =
       std::make_shared<const RectangleBounds>(5., 10.);
-  DetectorElementStub detElement{pTransform, p, 0.2, nullptr};
+  auto detElement = std::make_shared<DetectorElementStub>(pTransform, p, 0.2, nullptr);
   BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(detElement).type());
 }
 
@@ -83,11 +83,11 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   auto pLayer = PlaneLayer::create(pTransform, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
-  DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
+  auto detElement = std::make_shared<DetectorElementStub>(pTransform, pPlanarBound, 0.2, pMaterial);
   SurfaceStub surface(detElement);
 
   // associatedDetectorElement
-  BOOST_CHECK_EQUAL(surface.surfacePlacement(), &detElement);
+  BOOST_CHECK_EQUAL(surface.surfacePlacement(), detElement.get());
 
   // test associatelayer, associatedLayer
   surface.associateLayer(*pLayer);
@@ -159,9 +159,9 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound, nullptr);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
-  DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};
-  DetectorElementStub detElement2{pTransform1, pPlanarBound, 0.3, pMaterial};
-  DetectorElementStub detElement3{pTransform2, pPlanarBound, 0.3, pMaterial};
+  auto detElement1 = std::make_shared<DetectorElementStub>(pTransform1, pPlanarBound, 0.2, pMaterial);
+  auto detElement2 = std::make_shared<DetectorElementStub>(pTransform1, pPlanarBound, 0.3, pMaterial);
+  auto detElement3 = std::make_shared<DetectorElementStub>(pTransform2, pPlanarBound, 0.3, pMaterial);
 
   SurfaceStub surface1(detElement1);
   SurfaceStub surface2(detElement1);  // 1 and 2 are the same

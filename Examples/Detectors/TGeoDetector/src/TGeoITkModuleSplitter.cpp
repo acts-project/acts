@@ -51,10 +51,10 @@ void TGeoITkModuleSplitter::initSplitCategories() {
 }
 
 /// If applicable, returns a split detector element
-inline std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+inline std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
 TGeoITkModuleSplitter::split(
     const Acts::GeometryContext& gctx,
-    std::shared_ptr<const ActsPlugins::TGeoDetectorElement> detElement) const {
+    std::shared_ptr<ActsPlugins::TGeoDetectorElement> detElement) const {
   // Is the current node covered by this splitter?
   const TGeoNode& node = detElement->tgeoNode();
   auto sensorName = std::string(node.GetName());
@@ -84,15 +84,15 @@ TGeoITkModuleSplitter::split(
 }
 
 /// If applicable, returns a split detector element
-inline std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+inline std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
 TGeoITkModuleSplitter::splitBarrelModule(
     const Acts::GeometryContext& gctx,
-    const std::shared_ptr<const ActsPlugins::TGeoDetectorElement>& detElement,
+    const std::shared_ptr<ActsPlugins::TGeoDetectorElement>& detElement,
     unsigned int nSegments) const {
   auto name = detElement->tgeoNode().GetName();
 
   auto factory = [&](const auto& trafo, const auto& bounds) {
-    return std::make_shared<const ActsPlugins::TGeoDetectorElement>(
+    return std::make_shared<ActsPlugins::TGeoDetectorElement>(
         detElement->identifier(), detElement->tgeoNode(), trafo, bounds,
         detElement->thickness());
   };
@@ -102,15 +102,15 @@ TGeoITkModuleSplitter::splitBarrelModule(
 }
 
 /// If applicable, returns a split detector element
-inline std::vector<std::shared_ptr<const ActsPlugins::TGeoDetectorElement>>
+inline std::vector<std::shared_ptr<ActsPlugins::TGeoDetectorElement>>
 TGeoITkModuleSplitter::splitDiscModule(
     const Acts::GeometryContext& gctx,
-    const std::shared_ptr<const ActsPlugins::TGeoDetectorElement>& detElement,
+    const std::shared_ptr<ActsPlugins::TGeoDetectorElement>& detElement,
     const std::vector<TGeoITkModuleSplitter::SplitRange>& splitRanges) const {
   auto name = detElement->tgeoNode().GetName();
 
   auto factory = [&](const auto& trafo, const auto& bounds) {
-    return std::make_shared<const ActsPlugins::TGeoDetectorElement>(
+    return std::make_shared<ActsPlugins::TGeoDetectorElement>(
         detElement->identifier(), detElement->tgeoNode(), trafo, bounds,
         detElement->thickness());
   };

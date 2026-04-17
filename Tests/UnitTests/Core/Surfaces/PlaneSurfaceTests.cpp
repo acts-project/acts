@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
   BOOST_CHECK_EQUAL(copiedTransformedPlaneSurface->type(), Surface::Plane);
 
   /// Construct with nullptr bounds
-  DetectorElementStub detElem;
+  auto detElem = std::make_shared<DetectorElementStub>();
   BOOST_CHECK_THROW(
       auto nullBounds = Surface::makeShared<PlaneSurface>(nullptr, detElem),
       AssertionFailureException);

@@ -112,41 +112,49 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsGeoModel, gm) {
     gm.def(
         "splitBarrelModule",
         [](const GeometryContext& gctx,
-           std::shared_ptr<const GeoModelDetectorElement> detElement,
+           std::shared_ptr<GeoModelDetectorElement> detElement,
            unsigned nSegments, Logging::Level logLevel) {
           auto logger = getDefaultLogger("ITkSlitBarrel", logLevel);
           auto name = detElement->databaseEntryName();
 
+          std::vector<std::shared_ptr<Acts::Surface>> splitSurfaces;
           auto factory = [&](const auto& trafo, const auto& bounds) {
-            return GeoModelDetectorElement::createDetectorElement<
-                PlaneSurface, RectangleBounds>(detElement->physicalVolume(),
-                                               bounds, trafo,
-                                               detElement->thickness());
+            auto surf = Acts::Surface::makeShared<Acts::PlaneSurface>(
+                trafo, bounds);
+            splitSurfaces.push_back(surf);
+            return GeoModelDetectorElement::createDetectorElement(
+                detElement->physicalVolume(), trafo, detElement->thickness(),
+                surf);
           };
 
-          return ITk::splitBarrelModule(gctx, detElement, nSegments, factory,
-                                        name, *logger);
+          auto elements = ITk::splitBarrelModule(gctx, detElement, nSegments,
+                                                  factory, name, *logger);
+          return std::make_pair(elements, splitSurfaces);
         },
         "gxtx"_a, "detElement"_a, "nSegments"_a, "logLevel"_a = Logging::INFO);
 
     gm.def(
         "splitDiscModule",
         [](const GeometryContext& gctx,
-           std::shared_ptr<const GeoModelDetectorElement> detElement,
+           std::shared_ptr<GeoModelDetectorElement> detElement,
            const std::vector<std::pair<double, double>>& patterns,
            Logging::Level logLevel) {
           auto logger = getDefaultLogger("ITkSlitBarrel", logLevel);
           auto name = detElement->databaseEntryName();
 
+          std::vector<std::shared_ptr<Acts::Surface>> splitSurfaces;
           auto factory = [&](const auto& trafo, const auto& bounds) {
-            return GeoModelDetectorElement::createDetectorElement<
-                DiscSurface, AnnulusBounds>(detElement->physicalVolume(),
-                                            bounds, trafo,
-                                            detElement->thickness());
+            auto surf = Acts::Surface::makeShared<Acts::DiscSurface>(
+                trafo, bounds);
+            splitSurfaces.push_back(surf);
+            return GeoModelDetectorElement::createDetectorElement(
+                detElement->physicalVolume(), trafo, detElement->thickness(),
+                surf);
           };
 
-          return ITk::splitDiscModule(gctx, detElement, patterns, factory, name,
-                                      *logger);
+          auto elements = ITk::splitDiscModule(gctx, detElement, patterns,
+                                               factory, name, *logger);
+          return std::make_pair(elements, splitSurfaces);
         },
         "gxtx"_a, "detElement"_a, "splitRanges"_a,
         "logLevel"_a = Logging::INFO);
