@@ -11,7 +11,7 @@
 #include "ActsPlugins/Gnn/detail/TensorVectorConversion.hpp"
 #include "ActsPlugins/Gnn/detail/buildEdges.hpp"
 
-#ifndef ACTS_GNN_CPUONLY
+#ifdef ACTS_GNN_WITH_CUDA
 #include <c10/cuda/CUDAGuard.h>
 #endif
 
@@ -76,7 +76,7 @@ PipelineTensors TorchMetricLearning::operator()(
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
-#ifdef ACTS_GNN_CPUONLY
+#ifndef ACTS_GNN_WITH_CUDA
   assert(device == torch::Device(torch::kCPU));
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;
