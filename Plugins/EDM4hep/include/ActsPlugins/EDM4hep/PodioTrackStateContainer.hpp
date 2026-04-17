@@ -212,7 +212,7 @@ class PodioTrackStateContainerBase {
   /// @return True if the track state has an uncalibrated source link
   template <typename T>
   static bool hasUncalibratedSourceLink_impl(
-      T& instance, ActsPodioEdm::TrackState trackState) {
+      T& instance, const ActsPodioEdm::TrackState& trackState) {
     if (instance.storeUncalibrated()) {
       for (const auto& link : *instance.m_links) {
         if (link.getFrom() == trackState) {
@@ -378,11 +378,11 @@ class ConstPodioTrackStateContainer final
   /// The @p links parameter selects the uncalibrated source-link storage mode:
   ///   - Pass a valid collection pointer to use **link mode**: uncalibrated
   ///     source links are stored as entries in a TrackStateHitLinkCollection,
-  ///     and @ref ConversionHelper::sourceLinkToTrackerHitLocal is used.
+  ///     and @ref PodioUtil::ConversionHelper::sourceLinkToTrackerHitLocal is used.
   ///   - Pass @c nullptr to use **identifier mode**: uncalibrated source links
   ///     are stored as integer identifiers in the track-state data, and
-  ///     @ref ConversionHelper::sourceLinkToIdentifier /
-  ///     @ref ConversionHelper::identifierToSourceLink are used.
+  ///     @ref PodioUtil::ConversionHelper::sourceLinkToIdentifier /
+  ///     @ref PodioUtil::ConversionHelper::identifierToSourceLink are used.
   ///
   /// @param helper Conversion helper
   /// @param trackStates Track state collection

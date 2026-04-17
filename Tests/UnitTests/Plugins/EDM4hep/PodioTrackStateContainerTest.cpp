@@ -599,7 +599,6 @@ BOOST_AUTO_TEST_CASE(UncalibratedSourceLinkLinkModeRoundTrip) {
     BOOST_REQUIRE_NE(hit, nullptr);
     BOOST_CHECK_EQUAL(hit->getCellID(), 22222u);
   }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
