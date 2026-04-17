@@ -5,6 +5,7 @@ from collections import namedtuple
 
 import acts
 import acts.examples
+import acts.gnn
 
 # ROOT might not be available
 try:
@@ -1962,7 +1963,7 @@ def addGnn(
     inputSpacePoints: str = "spacepoints",
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
-    useCuda: bool = True,
+    device=None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """
@@ -1983,7 +1984,7 @@ def addGnn(
         inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
-        useCuda: Whether to initialize the execution as CUDA or CPU
+        device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
         logLevel: Logging level
 
     Note:
@@ -2002,6 +2003,9 @@ def addGnn(
             f"(got {len(nodeFeatures)} and {len(featureScales)})"
         )
 
+    if device is None:
+        device = acts.gnn.Device.Cuda()
+
     # GNN track finding algorithm
     findingAlg = acts.examples.gnn.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
@@ -2013,7 +2017,7 @@ def addGnn(
         trackBuilder=trackBuilder,
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
-        useCuda=useCuda,
+        device=device,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)

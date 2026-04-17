@@ -200,7 +200,7 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   // input
   std::vector<int> idxs(numSpacePoints);
   std::iota(idxs.begin(), idxs.end(), 0);
-  Device device = m_cfg.useCuda ? Device::Cuda(0) : Device::Cpu();
+  Device device = m_cfg.device;
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
   ACTS_NVTX_START(post_processing);

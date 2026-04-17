@@ -33,7 +33,7 @@ class OnnxEdgeClassifier final : public EdgeClassificationBase {
     std::string modelPath;
     /// Classification threshold cut
     float cut = 0.5;
-    bool useCuda = true;
+    Device device = Device::Cuda();
   };
 
   /// Constructor

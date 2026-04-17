@@ -76,10 +76,10 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
   sessionOptions.SetExecutionMode(ORT_SEQUENTIAL);
 
-  if (m_cfg.useCuda) {
+  if (m_cfg.device.isCuda()) {
     ACTS_INFO("Try to add ONNX execution provider for CUDA");
     OrtCUDAProviderOptions cuda_options;
-    cuda_options.device_id = 0;
+    cuda_options.device_id = m_cfg.device.index;
     sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
   } else {
     ACTS_INFO("Using CPU execution provider for ONNX");

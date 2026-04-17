@@ -268,12 +268,9 @@ torch::Tensor ActsPlugins::detail::buildEdges(torch::Tensor &embedFeatures,
                                               float rVal, int kVal,
                                               bool flipDirections) {
 #ifndef ACTS_GNN_CPUONLY
-  if (torch::cuda::is_available()) {
+  if (embedFeatures.is_cuda()) {
     return detail::buildEdgesFRNN(embedFeatures, rVal, kVal, flipDirections);
-  } else {
-    return detail::buildEdgesKDTree(embedFeatures, rVal, kVal, flipDirections);
   }
-#else
-  return detail::buildEdgesKDTree(embedFeatures, rVal, kVal, flipDirections);
 #endif
+  return detail::buildEdgesKDTree(embedFeatures, rVal, kVal, flipDirections);
 }

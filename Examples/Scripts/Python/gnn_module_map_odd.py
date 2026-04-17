@@ -32,6 +32,7 @@ from acts.examples.reconstruction import addGnn, addSpacePointsMaking
 from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
+    Device,
 )
 from acts.examples.gnn import NodeFeature
 
@@ -163,7 +164,7 @@ def runGnnModuleMap(
     elif gnnModel.suffix == ".onnx":
         from acts.gnn import OnnxEdgeClassifier
 
-        edgeClassifierConfig["useCuda"] = True
+        edgeClassifierConfig["device"] = Device.Cuda()
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
         from acts.gnn import TensorRTEdgeClassifier
