@@ -20,7 +20,7 @@ namespace Acts::detail {
 /// the lowest possible set of indices, e.g. for a sequence of 4
 ///             [0, 1, 2, 3]
 /// The next members of the series increment the (K-1) th index until
-///             [0,1,2, N-1].
+///             [0, 1, 2, N-1].
 /// Then the third index is incremented and the last one set to the next value
 ///             [0, 1, 3, 4].
 /// The sequence continues until all elements are at their maximum value.
