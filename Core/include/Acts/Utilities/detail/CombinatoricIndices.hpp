@@ -18,7 +18,7 @@ namespace Acts::detail {
 /// Utility class to loop over all possible ways to draw K unique elements out
 /// of a continuous sequence of N elements. The list of combinations starts with
 /// the lowest possible set of indices, e.g. for a sequence of 4
-///             [0, 1,2, 3]
+///             [0, 1, 2, 3]
 /// The next members of the series increment the (K-1) th index until
 ///             [0,1,2, N-1].
 /// Then the third index is incremented and the last one set to the next value
