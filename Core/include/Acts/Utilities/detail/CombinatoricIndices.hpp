@@ -58,7 +58,7 @@ class CombinatoricIndices {
     iterator() = default;
     /// Constructor with a CombinatoricIndex parent and the iterator position
     /// @param parent Pointer to the parent used to draw the combinatoric indices
-    /// @param _itr Position of the iterator in the sequence of combinations
+    /// @param combination Position of the iterator in the sequence of combinations
     iterator(const CombinatoricIndices* parent, const std::size_t _itr);
 
     /// Increment the internal iterator count by one unit
