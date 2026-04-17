@@ -89,8 +89,8 @@ std::size_t CombinatoricIndices<K>::drawIndex(const std::size_t combination,
 
 template <std::size_t K>
 CombinatoricIndices<K>::iterator::iterator(const CombinatoricIndices* parent,
-                                           const std::size_t _itr)
-    : m_parent{parent}, m_itr{_itr} {
+                                           const std::size_t combination)
+    : m_parent{parent}, m_itr{combination} {
   updateArray();
 }
 
