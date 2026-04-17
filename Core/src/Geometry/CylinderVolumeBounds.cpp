@@ -114,25 +114,21 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   }
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
-  oSurfaces.push_back(
-      OrientedSurface{std::move(dSurface), Direction::AlongNormal()});
+  oSurfaces.emplace_back(std::move(dSurface), Direction::AlongNormal());
   // [1] Top Disc (positive z)
   dSurface = Surface::makeShared<DiscSurface>(transMaxZ, m_discBounds);
-  oSurfaces.push_back(
-      OrientedSurface{std::move(dSurface), Direction::OppositeNormal()});
+  oSurfaces.emplace_back(std::move(dSurface), Direction::OppositeNormal());
 
   // [2] Outer Cylinder
   auto cSurface =
       Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
-  oSurfaces.push_back(
-      OrientedSurface{std::move(cSurface), Direction::OppositeNormal()});
+  oSurfaces.emplace_back(std::move(cSurface), Direction::OppositeNormal());
 
   // [3] Inner Cylinder (optional)
   if (m_innerCylinderBounds != nullptr) {
     cSurface =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(cSurface), Direction::AlongNormal()});
+    oSurfaces.emplace_back(std::move(cSurface), Direction::AlongNormal());
   }
 
   // [4] & [5] - Sectoral planes (optional)
@@ -146,8 +142,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
                    AngleAxis3(std::numbers::pi / 2, Vector3(1., 0., 0.)));
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(pSurface), Direction::AlongNormal()});
+    oSurfaces.emplace_back(std::move(pSurface), Direction::AlongNormal());
     // sectorPlane 2 (positive phi)
     const Transform3 sp2Transform =
         Transform3(transform *
@@ -157,8 +152,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
                    AngleAxis3(-std::numbers::pi / 2, Vector3(1., 0., 0.)));
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
-    oSurfaces.push_back(
-        OrientedSurface{std::move(pSurface), Direction::OppositeNormal()});
+    oSurfaces.emplace_back(std::move(pSurface), Direction::OppositeNormal());
   }
   return oSurfaces;
 }

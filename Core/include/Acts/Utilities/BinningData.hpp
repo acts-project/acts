@@ -553,10 +553,9 @@ class BinningData {
       return (bData.option == closed) ? 0 : (bData.m_bins - 1);
     }
 
-    auto lb = std::lower_bound(bData.m_boundaries.begin(),
-                               bData.m_boundaries.end(), value);
+    auto lb = std::ranges::lower_bound(bData.m_boundaries, value);
     return static_cast<std::size_t>(
-        std::distance(bData.m_boundaries.begin(), lb) - 1);
+        std::ranges::distance(bData.m_boundaries.begin(), lb) - 1);
   }
 
  public:

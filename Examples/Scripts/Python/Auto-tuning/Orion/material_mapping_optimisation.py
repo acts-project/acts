@@ -79,7 +79,7 @@ def runMaterialMappingNoTrack(
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            outputMaterialTracks="material-tracks",
+            outputMaterialTracks="material_tracks",
             fileList=[
                 os.path.join(
                     inputDir,
@@ -97,7 +97,7 @@ def runMaterialMappingNoTrack(
     stepper = StraightLineStepper()
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometry
-    mmAlgCfg.inputMaterialTracks = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material_tracks"
 
     if mapSurface:
         navigator = Navigator(
@@ -234,7 +234,7 @@ def runMaterialMappingVariance(
     # Read material step information from a ROOT TTRee
     reader = RootMaterialTrackReader(
         level=acts.logging.ERROR,
-        outputMaterialTracks="material-tracks",
+        outputMaterialTracks="material_tracks",
         fileList=[
             os.path.join(
                 inputPath,
@@ -251,7 +251,7 @@ def runMaterialMappingVariance(
     stepper = StraightLineStepper()
     mmAlgCfg = MaterialMapping.Config(context.geoContext, context.magFieldContext)
     mmAlgCfg.trackingGeometry = trackingGeometryVar
-    mmAlgCfg.inputMaterialTracks = "material-tracks"
+    mmAlgCfg.inputMaterialTracks = "material_tracks"
 
     if mapSurface:
         navigator = Navigator(

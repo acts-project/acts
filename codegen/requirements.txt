@@ -2,7 +2,7 @@
 #    uv pip compile --python-version 3.14 codegen/pyproject.toml -o codegen/requirements.txt
 mpmath==1.3.0
     # via sympy
-numpy==2.4.3
+numpy==2.4.4
     # via codegen (codegen/pyproject.toml)
 sympy==1.14.0
     # via codegen (codegen/pyproject.toml)

@@ -14,6 +14,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 
 namespace Acts {
@@ -237,6 +238,17 @@ void BroadTripletSeedFilter::filterTripletTopCandidates(
     // numSeedIncrement
     if (cache().compatibleSeedR.size() > config().numSeedIncrement) {
       weight += config().seedWeightIncrement;
+    }
+
+    // Abs(delta-eta) weight: penalize seeds whose eta is
+    // inconsistent with the vector from the beamspot to the point of
+    // closest approach. Real displaced decay seeds have small delta eta.
+    if (config().absDeltaEtaWeightFactor > 0 &&
+        impact > config().absDeltaEtaMinImpact) {
+      const float etaSeed = std::asinh(bottomLink.cotTheta());
+      const float etaPCA = std::asinh(zOrigin / impact);
+      const float absDeltaEta = std::abs(etaSeed - etaPCA);
+      weight -= config().absDeltaEtaWeightFactor * absDeltaEta;
     }
 
     if (config().seedConfirmation) {

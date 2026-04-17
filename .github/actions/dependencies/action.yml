@@ -13,15 +13,15 @@ inputs:
   spack_version:
     description: 'Version of Spack to use'
     required: false
-    default: 'v1.1.1'
+    default: 'bf1637a793b507a76bdc06e1169a373c83a5e535'
   spack_repo_version:
-    description: 'Version of Spack builtin repo to use'
+    description: 'Spack builtin packages repo commit (git SHA) to pin'
     required: false
-    default: 'v2025.11.0'
+    default: '182b26b2612f9cdabc4af13ae62b92a321e11d5f'
   DEPENDENCY_TAG:
     description: 'Dependency tag to pull from'
     required: false
-    default: 'v21.0.0'
+    default: 'v22.1.0'
   full_install:
     description: 'Whether to do a full dependency installation including Geant4 datasets and Python packages'
     required: false

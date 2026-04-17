@@ -19,7 +19,8 @@
 #error "This translation unit is only valid for macOS arm64"
 #endif
 
-namespace ActsPlugins::detail {
+namespace ActsPlugins {
+
 namespace {
 
 // Darwin arm64 exposes separate trap-enable bits in FPCR instead of x87/MXCSR
@@ -77,14 +78,14 @@ std::optional<FpeType> fpeTypeFromDarwinArm64Esr(std::uint32_t esr) {
 
 }  // namespace
 
-bool isRuntimeSupported() {
+bool detail::isRuntimeSupported() {
   // The arm64 Darwin implementation has dedicated handlers for trap control,
   // signal decoding and stack capture.
   return true;
 }
 
-std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
-                                     void* ctx) {
+std::optional<FpeType> detail::decodeFpeType(int signal, const siginfo_t* si,
+                                             void* ctx) {
   // Prefer SIGFPE si_code mapping when available.
   if (signal == SIGFPE && si != nullptr) {
     return fpeTypeFromSiCode(si->si_code);
@@ -100,12 +101,12 @@ std::optional<FpeType> decodeFpeType(int signal, const siginfo_t* si,
   return std::nullopt;
 }
 
-void clearPendingExceptions(int excepts) {
+void detail::clearPendingExceptions(int excepts) {
   // Clear sticky flags before enabling traps to avoid immediate retriggering.
   darwin::clearPendingExceptions(excepts);
 }
 
-void enableExceptions(int excepts) {
+void detail::enableExceptions(int excepts) {
   // FPCR controls trap enablement on arm64 Darwin; FPSR carries sticky status.
   fenv_t env{};
   if (fegetenv(&env) != 0) {
@@ -116,7 +117,7 @@ void enableExceptions(int excepts) {
   fesetenv(&env);
 }
 
-void disableExceptions(int excepts) {
+void detail::disableExceptions(int excepts) {
   // Disable only requested trap classes and leave unrelated bits untouched.
   fenv_t env{};
   if (fegetenv(&env) != 0) {
@@ -126,7 +127,7 @@ void disableExceptions(int excepts) {
   fesetenv(&env);
 }
 
-void maskTrapsInSignalContext(void* ctx, FpeType type) {
+void detail::maskTrapsInSignalContext(void* ctx, FpeType type) {
   // In the interrupted context, disable the current trap kind and clear all
   // pending floating-point status bits before resuming unwinding.
   const int excepts = darwin::exceptMaskForType(type);
@@ -136,8 +137,8 @@ void maskTrapsInSignalContext(void* ctx, FpeType type) {
   uc->uc_mcontext->__ns.__fpsr &= ~static_cast<std::uint32_t>(FE_ALL_EXCEPT);
 }
 
-std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
-                                          std::size_t bufferBytes) {
+std::size_t detail::captureStackFromSignalContext(void* ctx, void* buffer,
+                                                  std::size_t bufferBytes) {
   // Reuse shared Darwin frame-walk logic while extracting arm64 SP/FP/PC from
   // the saved thread state.
   return darwin::captureStackFromSignalContext(
@@ -151,18 +152,18 @@ std::size_t captureStackFromSignalContext(void* ctx, void* buffer,
       });
 }
 
-std::size_t safeDumpSkipFrames() {
+std::size_t detail::safeDumpSkipFrames() {
   // Skip one synthetic frame from the dump helper in final traces.
   return 1;
 }
 
-bool shouldFailFastOnUnknownSignal() {
+bool detail::shouldFailFastOnUnknownSignal() {
   // On arm64 we expect only decodable SIGFPE/SIGILL cases. Unknown deliveries
   // likely indicate a corrupt or unsupported context, so fail fast.
   return true;
 }
 
-void installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
+void detail::installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
   // Install both SIGFPE and SIGILL handlers to cover Darwin arm64 behavior.
   struct sigaction action{};
   action.sa_sigaction = handler;
@@ -171,4 +172,4 @@ void installSignalHandlers(void (*handler)(int, siginfo_t*, void*)) {
   sigaction(SIGILL, &action, nullptr);
 }
 
-}  // namespace ActsPlugins::detail
+}  // namespace ActsPlugins
