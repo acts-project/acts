@@ -6,26 +6,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsPlugins/Mille/ActsToMille.hpp"
+#include "ActsPlugins/Mille/Helpers.hpp"
 #include "ActsTests/CommonHelpers/AlignmentHelpers.hpp"
-#include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 
 #include <string>
+
+#include <Mille/MilleDecoder.h>
+#include <Mille/MilleFactory.h>
 
 using namespace Acts;
 using namespace ActsTests;
 using namespace ActsTests::AlignmentUtils;
 using namespace Acts::detail::Test;
 using namespace Acts::UnitConstants;
-///
-/// @brief Unit test for KF-based alignment algorithm
-///
-BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
+
+BOOST_AUTO_TEST_CASE(ZeroFieldKalmanToMille) {
+  /// Part 1): Build some test data.
+  /// This is shamelessly "borrowed" from
+  /// the existing alignment unit test.
+
   aliTestUtils utils;
   // Build detector
   TelescopeDetector detector(utils.geoCtx);
@@ -87,53 +96,65 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
       kfOptions, idxedAlignSurfaces, ActsAlignment::AlignmentMask::All);
   BOOST_CHECK(evaluateRes.ok());
 
+  /// Part 2: Now dump the alignment state to Mille.
+
+  auto milleRecord = Mille::spawnMilleRecord("myRecord.root", true);
+
   const auto& alignState = evaluateRes.value();
-  CHECK_CLOSE_ABS(alignState.chi2 / alignState.alignmentDof, 0.5, 1);
+  ActsPlugins::ActsToMille::dumpToMille(alignState, *milleRecord);
 
-  // Check the dimensions
-  BOOST_CHECK_EQUAL(alignState.measurementDim, 12);
-  BOOST_CHECK_EQUAL(alignState.trackParametersDim, 36);
-  // Check the alignment dof
-  BOOST_CHECK_EQUAL(alignState.alignmentDof, 30);
-  BOOST_CHECK_EQUAL(alignState.alignedSurfaces.size(), 5);
-  // Check the measurements covariance
-  BOOST_CHECK_EQUAL(alignState.measurementCovariance.rows(), 12);
-  const SquareMatrix2 measCov =
-      alignState.measurementCovariance.block<2, 2>(2, 2);
-  SquareMatrix2 cov2D;
-  cov2D << 30_um * 30_um, 0, 0, 50_um * 50_um;
-  CHECK_CLOSE_ABS(measCov, cov2D, 1e-10);
-  // Check the track parameters covariance matrix. Its rows/columns scales
-  // with the number of measurement states
-  BOOST_CHECK_EQUAL(alignState.trackParametersCovariance.rows(), 36);
-  // Check the projection matrix
-  BOOST_CHECK_EQUAL(alignState.projectionMatrix.rows(), 12);
-  BOOST_CHECK_EQUAL(alignState.projectionMatrix.cols(), 36);
-  const Matrix<2, 6> proj = alignState.projectionMatrix.block<2, 6>(0, 0);
-  const Matrix<2, 6> refProj = Matrix<2, 6>::Identity();
-  CHECK_CLOSE_ABS(proj, refProj, 1e-10);
-  // Check the residual
-  BOOST_CHECK_EQUAL(alignState.residual.size(), 12);
-  // Check the residual covariance
-  BOOST_CHECK_EQUAL(alignState.residualCovariance.rows(), 12);
-  // Check the alignment to residual derivative
-  BOOST_CHECK_EQUAL(alignState.alignmentToResidualDerivative.rows(), 12);
-  BOOST_CHECK_EQUAL(alignState.alignmentToResidualDerivative.cols(), 30);
-  // Check the chi2 derivative
-  BOOST_CHECK_EQUAL(alignState.alignmentToChi2Derivative.size(), 30);
-  BOOST_CHECK_EQUAL(alignState.alignmentToChi2SecondDerivative.rows(), 30);
+  // trigger file close by destroying the Mille record
+  milleRecord->flushOutputFile();
+  milleRecord.reset();
 
-  // Test the align method
-  std::vector<std::vector<TestSourceLink>> trajCollection;
-  trajCollection.reserve(10);
-  std::vector<BoundTrackParameters> sParametersCollection;
-  sParametersCollection.reserve(10);
-  for (const auto& traj : trajectories) {
-    trajCollection.push_back(traj.sourceLinks);
-    sParametersCollection.push_back(*traj.startParameters);
-  }
-  auto alignRes =
-      alignZero.align(trajCollection, sParametersCollection, alignOptions);
+  /// Part 3: We read back the record from the binary file,
+  /// convert it to an alignment state, and compare to
+  /// what we started from
 
-  // BOOST_CHECK(alignRes.ok());
+  // read back the record
+  auto milleReader = Mille::spawnMilleReader("myRecord.root");
+  BOOST_CHECK(milleReader->open("myRecord.root"));
+
+  // Decode it back into a TrackAlignmentState
+
+  ActsAlignment::detail::TrackAlignmentState millePedeState;
+  // we need to externally supply the alignment parameter indexing logic
+  millePedeState.alignedSurfaces = alignState.alignedSurfaces;
+  BOOST_CHECK(ActsPlugins::ActsToMille::unpackMilleRecord(
+                  *milleReader, millePedeState, idxedAlignSurfaces) ==
+              Mille::MilleDecoder::ReadResult::OK);
+
+  // now compare the results!
+
+  BOOST_CHECK_EQUAL(millePedeState.alignmentDof, alignState.alignmentDof);
+  BOOST_CHECK_EQUAL(millePedeState.measurementDim, alignState.measurementDim);
+  BOOST_CHECK_EQUAL(millePedeState.trackParametersDim,
+                    alignState.trackParametersDim);
+
+  BOOST_CHECK_EQUAL(millePedeState.residual, alignState.residual);
+  BOOST_CHECK_EQUAL(millePedeState.chi2, alignState.chi2);
+  BOOST_CHECK_EQUAL(millePedeState.measurementCovariance,
+                    alignState.measurementCovariance);
+  BOOST_CHECK_EQUAL(millePedeState.projectionMatrix,
+                    alignState.projectionMatrix);
+
+  BOOST_CHECK_EQUAL(millePedeState.alignmentToResidualDerivative,
+                    alignState.alignmentToResidualDerivative);
+
+  // for the track parameter covariance, we only compare the regularised version
+  // (differences expected in poorly constrained parameters. Also increase the
+  // tolerance a bit.
+  BOOST_CHECK(millePedeState.trackParametersCovariance.isApprox(
+      ActsPlugins::ActsToMille::regulariseCovariance(
+          alignState.trackParametersCovariance),
+      1.e-6));
+
+  // for anything derived from the TP covariance, we can also only ask for
+  // approximate equivalence as a result.
+  BOOST_CHECK(millePedeState.residualCovariance.isApprox(
+      alignState.residualCovariance, 1.e-6));
+  BOOST_CHECK(millePedeState.alignmentToChi2Derivative.isApprox(
+      alignState.alignmentToChi2Derivative, 1.e-6));
+  BOOST_CHECK(millePedeState.alignmentToChi2SecondDerivative.isApprox(
+      alignState.alignmentToChi2SecondDerivative, 1.e-6));
 }
