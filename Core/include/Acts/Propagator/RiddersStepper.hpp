@@ -349,12 +349,7 @@ class RiddersStepper final {
       ++numberOfVariationsPerParameter[index];
     }
     for (std::size_t i = 0; i < eBoundSize; ++i) {
-      if (numberOfVariationsPerParameter[i] > 0) {
-        state.jacobian.col(i) /= numberOfVariationsPerParameter[i];
-      } else {
-        // TODO
-        state.jacobian.col(i) = BoundVector::Unit(i);
-      }
+      state.jacobian.col(i) /= numberOfVariationsPerParameter[i];
     }
 
     state.cov = state.jacobian * state.cov * state.jacobian.transpose();
