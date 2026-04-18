@@ -16,7 +16,6 @@
 #include "Acts/Propagator/EigenStepperDenseExtension.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/RiddersPropagator.hpp"
 
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
@@ -31,7 +30,6 @@ using namespace UnitLiterals;
 using MagneticField = ConstantBField;
 using Stepper = EigenStepper<EigenStepperDenseExtension>;
 using TestPropagator = Propagator<Stepper, Navigator>;
-using RiddersPropagator = RiddersPropagator<TestPropagator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 10_um;
@@ -44,8 +42,8 @@ const MagneticFieldContext magCtx;
 inline TestPropagator makePropagator(double bz) {
   auto magField = std::make_shared<MagneticField>(Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return TestPropagator(std::move(stepper),
-                        Navigator({createDenseBlock(geoCtx)}));
+  Navigator navigator({createDenseBlock(geoCtx)});
+  return TestPropagator(std::move(stepper), std::move(navigator));
 }
 
 }  // namespace

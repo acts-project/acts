@@ -15,7 +15,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
@@ -34,7 +33,6 @@ using namespace UnitLiterals;
 using MagneticField = ConstantBField;
 using Stepper = SympyStepper;
 using TestPropagator = Propagator<Stepper, Navigator>;
-using RiddersPropagator = RiddersPropagator<TestPropagator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 10_um;

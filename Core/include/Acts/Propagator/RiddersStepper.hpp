@@ -31,7 +31,7 @@ class MagneticFieldProvider;
 namespace Acts::Experimental {
 
 /// Collection of bound parameter variations, each entry is a pair of the index
-/// of the bound parameter to be varied and the delta to be applied to it
+/// of the bound parameter
 using BoundParameterVariation = std::vector<std::pair<std::size_t, double>>;
 
 /// Base class for generating bound parameter variations
@@ -49,16 +49,16 @@ struct BoundParameterVariationGenerator {
 /// Generator for bound parameter variations based on fixed deltas
 struct DeltaBoundParameterVariationGenerator
     : public BoundParameterVariationGenerator {
-  /// The deltas to be applied to the parameters
+  /// The deltas
   std::vector<BoundVector> deltas;
 
   /// Construct a generator with a single delta applied to all parameters
-  /// @param delta the delta to be applied to all parameters
+  /// @param delta the delta
   explicit DeltaBoundParameterVariationGenerator(const double delta)
       : deltas(1, BoundVector::Constant(delta)) {}
 
   /// Construct a generator with multiple deltas applied to all parameters
-  /// @param deltas_ the deltas to be applied to all parameters
+  /// @param deltas_ the delta
   explicit DeltaBoundParameterVariationGenerator(
       const std::vector<double>& deltas_) {
     this->deltas.reserve(deltas_.size());
@@ -68,12 +68,12 @@ struct DeltaBoundParameterVariationGenerator
   }
 
   /// Construct a generator with a single delta vector
-  /// @param delta the delta vector to be applied to the parameters
+  /// @param delta the delta vector
   explicit DeltaBoundParameterVariationGenerator(const BoundVector& delta)
       : deltas(1, delta) {}
 
   /// Construct a generator with multiple delta vectors
-  /// @param deltas_ the delta vectors to be applied to the parameters
+  /// @param deltas_ the delta vectors
   explicit DeltaBoundParameterVariationGenerator(
       std::vector<BoundVector> deltas_)
       : deltas(std::move(deltas_)) {}
@@ -97,17 +97,17 @@ struct DeltaBoundParameterVariationGenerator
 /// Generator for bound parameter variations based on the covariance
 struct CovarianceBoundParameterVariationGenerator
     : public BoundParameterVariationGenerator {
-  /// The sigma factors to be applied to the square root of the covariance
+  /// The sigma factors
   std::vector<BoundVector> sigmaFactors;
 
   /// Construct a generator with a single sigma factor applied to all parameters
-  /// @param sigmaFactor the sigma factor to be applied to all parameters
+  /// @param sigmaFactor the sigma factor
   explicit CovarianceBoundParameterVariationGenerator(const double sigmaFactor)
       : sigmaFactors(1, BoundVector::Constant(sigmaFactor)) {}
 
   /// Construct a generator with multiple sigma factors applied to all
   /// parameters
-  /// @param sigmaFactors_ the sigma factors to be applied to all parameters
+  /// @param sigmaFactors_ the sigma factors
   explicit CovarianceBoundParameterVariationGenerator(
       const std::vector<double>& sigmaFactors_) {
     sigmaFactors.reserve(sigmaFactors_.size());
@@ -117,13 +117,13 @@ struct CovarianceBoundParameterVariationGenerator
   }
 
   /// Construct a generator with a single sigma factor vector
-  /// @param sigmaFactor the sigma factor vector to be applied to the parameters
+  /// @param sigmaFactor the sigma factor vector
   explicit CovarianceBoundParameterVariationGenerator(
       const BoundVector& sigmaFactor)
       : sigmaFactors(1, sigmaFactor) {}
 
   /// Construct a generator with multiple sigma factor vectors
-  /// @param sigmaFactors_ the sigma factor vectors to be applied to the parameters
+  /// @param sigmaFactors_ the sigma factor vectors
   explicit CovarianceBoundParameterVariationGenerator(
       std::vector<BoundVector> sigmaFactors_)
       : sigmaFactors(std::move(sigmaFactors_)) {}
@@ -213,8 +213,13 @@ class RiddersStepper final {
     StepperStatistics statistics;
   };
 
+  /// Construct a RiddersStepper with the given stepper implementation
+  /// @param stepperImpl the underlying stepper implementation
+  explicit RiddersStepper(StepperImpl stepperImpl)
+      : m_stepperImpl(std::move(stepperImpl)) {}
+
   /// Construct a RiddersStepper with the given magnetic field provider
-  /// @param bField the magnetic field provider to be used by the underlying stepper
+  /// @param bField the magnetic field provider
   explicit RiddersStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_stepperImpl(std::move(bField)) {}
 
@@ -224,7 +229,7 @@ class RiddersStepper final {
       : m_config(config), m_stepperImpl(config.stepperConfig) {}
 
   /// Create a new state for the RiddersStepper based on the given options
-  /// @param options the options to be used for creating the state
+  /// @param options the options
   /// @return a new state for the RiddersStepper
   State makeState(const Options& options) const {
     State state(m_stepperImpl.makeState(options));
@@ -233,7 +238,7 @@ class RiddersStepper final {
 
   /// Initialize the state of the RiddersStepper based on the given bound
   /// parameters
-  /// @param state the state to be initialized
+  /// @param state the state
   /// @param boundParameters the bound parameters to initialize the state with
   void initialize(State& state, const BoundParameters& boundParameters) const {
     initialize(state, boundParameters.parameters(),
@@ -244,10 +249,10 @@ class RiddersStepper final {
 
   /// Initialize the state of the RiddersStepper based on the given bound vector
   /// and covariance
-  /// @param state the state to be initialized
+  /// @param state the state
   /// @param boundVector the bound vector to initialize the state with
   /// @param covariance the covariance of the bound parameters, used to generate the variations for the secondary steppers
-  /// @param particleHypothesis the particle hypothesis to be used for the stepper
+  /// @param particleHypothesis the particle hypothesis
   /// @param surface the surface on which the bound parameters are defined
   void initialize(State& state, const BoundVector& boundVector,
                   const std::optional<BoundMatrix>& covariance,
@@ -437,7 +442,7 @@ class RiddersStepper final {
   }
 
   /// Release the step size for the given constrained step type
-  /// @param state the state of the RiddersStepper to be updated
+  /// @param state the state of the RiddersStepper
   /// @param stype the type of the constrained step for which to release the step size
   void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
     m_stepperImpl.releaseStepSize(state.primaryStepperState, stype);
@@ -463,7 +468,7 @@ class RiddersStepper final {
   /// @param state the state of the RiddersStepper
   /// @param surface the surface
   /// @param transportCovariance flag indicating whether to transport the covariance to the bound parameters
-  /// @param freeToBoundCorrection the correction to be applied to the free to bound transformation
+  /// @param freeToBoundCorrection the correction
   /// @return the bound state
   Result<BoundState> boundState(
       State& state, const Surface& surface, bool transportCovariance = true,
@@ -519,7 +524,7 @@ class RiddersStepper final {
   }
 
   /// Prepare the stepper for the curvilinear transformation
-  /// @param state the state of the RiddersStepper to be prepared
+  /// @param state the state of the RiddersStepper
   /// @return true if the preparation was successful for all stepper states, false otherwise
   bool prepareCurvilinearState(State& state) const {
     bool result =
@@ -588,7 +593,7 @@ class RiddersStepper final {
   /// Transport the covariance to bound parameters
   /// @param state the state of the RiddersStepper
   /// @param surface the surface
-  /// @param freeToBoundCorrection the correction to be applied to the free to bound transformation
+  /// @param freeToBoundCorrection the correction
   void transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =

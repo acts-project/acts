@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/RiddersPropagator.hpp"
+#include "Acts/Propagator/RiddersStepper.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
 #include "PropagationDatasets.hpp"
@@ -27,7 +27,9 @@ using namespace UnitLiterals;
 
 using Stepper = StraightLineStepper;
 using TestPropagator = Propagator<Stepper>;
-using RiddersPropagator = RiddersPropagator<TestPropagator>;
+using RiddersStepper = Experimental::RiddersStepper<Stepper>;
+using TestPropagator = Propagator<Stepper>;
+using TestRiddersPropagator = Propagator<RiddersStepper>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
@@ -41,7 +43,8 @@ const MagneticFieldContext magCtx;
 
 const Stepper stepper;
 const TestPropagator propagator(stepper);
-const RiddersPropagator riddersPropagator(propagator);
+const RiddersStepper riddersStepper(stepper);
+const TestRiddersPropagator riddersPropagator(riddersStepper);
 
 }  // namespace
 
