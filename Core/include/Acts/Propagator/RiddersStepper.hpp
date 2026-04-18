@@ -94,6 +94,7 @@ struct DeltaBoundParameterVariationGenerator
   }
 };
 
+/// Generator for bound parameter variations based on the covariance
 struct CovarianceBoundParameterVariationGenerator
     : public BoundParameterVariationGenerator {
   /// The sigma factors to be applied to the square root of the covariance
@@ -448,7 +449,6 @@ class RiddersStepper final {
 
   /// Get a string representation of the step size constraints
   /// @param state the state of the RiddersStepper
-  /// @param stype the type of the constrained step
   /// @return a string representation of the step size constraints
   std::string outputStepSize(const State& state) const {
     std::stringstream ss;
@@ -549,8 +549,6 @@ class RiddersStepper final {
   /// Update the state of the RiddersStepper
   /// @param state the state of the RiddersStepper
   /// @param boundParams the bound vector
-  /// @param covariance the covariance of the bound parameters
-  /// @param particleHypothesis the particle hypothesis
   /// @param surface the surface on which the bound parameters are defined
   void update(State& state, const FreeVector& /*freeParams*/,
               const BoundVector& boundParams, const BoundMatrix& covariance,
