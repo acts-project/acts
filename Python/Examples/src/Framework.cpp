@@ -101,6 +101,47 @@ class PyIAlgorithm : public IAlgorithm {
   const Acts::Logger& pyLogger() const { return logger(); }
 };
 
+class PyIReader : public IReader {
+  // Typedef avoids comma in macro argument for PYBIND11_OVERRIDE_PURE
+  using EventRange = std::pair<std::size_t, std::size_t>;
+
+ public:
+  PyIReader(std::string name, Logging::Level level)
+      : IReader(),
+        m_name(std::move(name)),
+        m_logger(Acts::getDefaultLogger(m_name, level)) {}
+
+  std::string name() const override { return m_name; }
+
+  std::string_view typeName() const override { return "Reader"; }
+
+  EventRange availableEvents() const override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE_PURE(EventRange, IReader, availableEvents);
+  }
+
+  ProcessCode read(const AlgorithmContext& ctx) override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE_PURE(ProcessCode, IReader, read, ctx);
+  }
+
+  ProcessCode initialize() override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE(ProcessCode, IReader, initialize);
+  }
+
+  ProcessCode finalize() override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE(ProcessCode, IReader, finalize);
+  }
+
+  const Acts::Logger& pyLogger() const { return *m_logger; }
+
+ private:
+  std::string m_name;
+  std::unique_ptr<const Acts::Logger> m_logger;
+};
+
 class PyReadDataHandle : public ReadDataHandleBase {
  public:
   PyReadDataHandle(SequenceElement* parent, py::object pytype,
@@ -206,8 +247,6 @@ namespace ActsPython {
 void addFramework(py::module& mex) {
   py::class_<IWriter, std::shared_ptr<IWriter>>(mex, "IWriter");
 
-  py::class_<IReader, std::shared_ptr<IReader>>(mex, "IReader");
-
   py::class_<IContextDecorator, std::shared_ptr<IContextDecorator>>(
       mex, "IContextDecorator")
       .def("decorate", &IContextDecorator::decorate)
@@ -282,6 +321,18 @@ void addFramework(py::module& mex) {
                  std::shared_ptr<SequenceElement>>(mex, "SequenceElement")
           .def("internalExecute", &SequenceElement::internalExecute)
           .def("name", &SequenceElement::name);
+
+  py::class_<IReader, std::shared_ptr<IReader>, SequenceElement, PyIReader>(
+      mex, "IReader")
+      .def(py::init_alias<std::string, Logging::Level>(), py::arg("name"),
+           py::arg("level"))
+      .def("availableEvents", &IReader::availableEvents)
+      .def("read", &IReader::read)
+      .def("name", &IReader::name)
+      .def_property_readonly("logger",
+                             [](const PyIReader& self) -> const Acts::Logger& {
+                               return self.pyLogger();
+                             });
 
   auto bareAlgorithm =
       py::class_<IAlgorithm, std::shared_ptr<IAlgorithm>, SequenceElement,
