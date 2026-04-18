@@ -167,10 +167,13 @@ def dump_args(func):
     return dump_args_wrapper
 
 
-def dump_args_calls(myLocal=None, mods=None, quiet=False):
+import_is_hooked = False
+
+
+def dump_args_calls(mods=None, verbose=1, level=0):
     """
     Wrap all Python bindings calls to acts and its submodules in dump_args.
-    Specify myLocal=locals() to include imported symbols too.
+    Will hook `import` to do this also for future imports.
     """
     from collections.abc import Callable
 
@@ -213,23 +216,48 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
                 not name.startswith("__")
                 and isinstance(obj, Callable)
                 and hasattr(obj, "__module__")
-                and obj.__module__.startswith("acts.ActsPythonBindings")
+                and re.search(r"^acts\..*PythonBindings", obj.__module__)
                 and obj.__qualname__ != "_Sequencer.Config"
                 and not hasattr(obj, "__wrapped__")
             ):
                 continue
             # wrap class's contained methods
-            done += dump_args_calls(myLocal, [obj], True)
+            done += dump_args_calls([obj], verbose, level + 1)
             wrapped = dump_args(obj)
+            if verbose >= 2:
+                print(f"dump_args_calls: wrap {mod.__name__}.{name}")
             setattr(mod, name, wrapped)
-            if myLocal and hasattr(myLocal, name):
-                setattr(myLocal, name, wrapped)
             done += 1
         if done:
             alldone += done
             donemods.append(f"{mod.__name__}:{done}")
-    if not quiet and donemods:
+    if verbose >= 1 and donemods and level == 0:
         print("dump_args for module functions:", ", ".join(donemods))
+
+    global import_is_hooked
+    if not import_is_hooked:
+        # Now hook import to wrap bindings that are imported later
+        import builtins
+
+        import_orig = builtins.__import__
+
+        importing = False
+
+        def import_with_dump(name, *args, **kwargs):
+            nonlocal importing
+            if importing:
+                return import_orig(name, *args, **kwargs)
+            importing = True
+            module = import_orig(name, *args, **kwargs)
+            dump_args_calls(None, verbose)
+            importing = False
+            return module
+
+        if verbose >= 2:
+            print("dump_args_calls: add hook to import statement")
+        import_is_hooked = True
+        builtins.__import__ = import_with_dump
+
     return alldone
 
 

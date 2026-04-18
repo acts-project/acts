@@ -229,8 +229,13 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
   ACTS_VERBOSE("Size after classifier: " << scores.shape()[0]);
   printCudaMemInfo(logger());
 
-  auto [newScores, newEdgeIndex] =
-      applyScoreCut(scores, tensors.edgeIndex, m_cfg.cut, execContext.stream);
+  auto mask = scoreMask(scores, m_cfg.cut, execContext.stream);
+  auto newScores = selectRows(scores, mask, execContext);
+  auto newEdgeIndex = selectCols(tensors.edgeIndex, mask, execContext);
+  std::optional<Tensor<float>> newEdgeFeatures;
+  if (tensors.edgeFeatures.has_value()) {
+    newEdgeFeatures = selectRows(*tensors.edgeFeatures, mask, execContext);
+  }
   ACTS_VERBOSE("Size after score cut: " << newEdgeIndex.shape()[1]);
   printCudaMemInfo(logger());
 
@@ -245,7 +250,7 @@ PipelineTensors TensorRTEdgeClassifier::operator()(
   ACTS_DEBUG("Time sigmoid and cut: " << milliseconds(t3, t4));
 
   return {std::move(tensors.nodeFeatures), std::move(newEdgeIndex),
-          std::nullopt, std::move(newScores)};
+          std::move(newEdgeFeatures), std::move(newScores)};
 }
 
 }  // namespace ActsPlugins
