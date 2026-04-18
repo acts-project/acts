@@ -16,7 +16,6 @@
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/RiddersStepper.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -37,7 +36,7 @@
 
 namespace {
 
-using Stepper = Acts::Experimental::RiddersStepper<Acts::SympyStepper>;
+using Stepper = Acts::SympyStepper;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using Fitter = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;
 using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
@@ -168,6 +167,9 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeKalmanFitterFunction(
     double reverseFilteringCovarianceScaling,
     Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
     bool useJosephFormulation, const Acts::Logger& logger) {
+  // Stepper should be copied into the fitters
+  const Stepper stepper(std::move(magneticField));
+
   // Standard fitter
   const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
@@ -175,15 +177,14 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeKalmanFitterFunction(
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
-  Propagator propagator(Stepper(magneticField), std::move(navigator),
+  Propagator propagator(stepper, std::move(navigator),
                         logger.cloneWithSuffix("Propagator"));
   Fitter trackFitter(std::move(propagator), logger.cloneWithSuffix("Fitter"));
 
   // Direct fitter
   Acts::DirectNavigator directNavigator{
       logger.cloneWithSuffix("DirectNavigator")};
-  DirectPropagator directPropagator(Stepper(magneticField),
-                                    std::move(directNavigator),
+  DirectPropagator directPropagator(stepper, std::move(directNavigator),
                                     logger.cloneWithSuffix("DirectPropagator"));
   DirectFitter directTrackFitter(std::move(directPropagator),
                                  logger.cloneWithSuffix("DirectFitter"));

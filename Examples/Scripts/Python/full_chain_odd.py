@@ -152,7 +152,7 @@ ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
 geoDir = getOpenDataDetectorDirectory()
 actsDir = pathlib.Path(__file__).parent.parent.parent.parent
-# acts.examples.dump_args_calls(locals())  # show python binding calls
+# acts.examples.dump_args_calls()  # show python binding calls
 
 oddMaterialMap = (
     args.material_config
@@ -241,14 +241,16 @@ else:
             ),
             EtaConfig(args.gun_eta_range[0], args.gun_eta_range[1]),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
+            ParticleConfig(
+                args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
+            ),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=1,
+            multiplicity=args.gun_multiplicity,
             rnd=rnd,
         )
     else:
@@ -377,7 +379,7 @@ if args.reco:
         CkfConfig(
             chi2CutOffMeasurement=15.0,
             chi2CutOffOutlier=25.0,
-            numMeasurementsCutOff=1,
+            numMeasurementsCutOff=2,
             seedDeduplication=True,
             stayOnSeed=True,
             pixelVolumes=[16, 17, 18],
@@ -405,7 +407,6 @@ if args.reco:
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
         writeCovMat=True,
-        logLevel=acts.logging.VERBOSE,
     )
 
     if ambi_ML:

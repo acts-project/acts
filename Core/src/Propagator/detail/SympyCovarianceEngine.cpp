@@ -31,7 +31,7 @@ Result<BoundState> sympy::boundState(
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Create the bound parameters
   Result<BoundVector> bv =
-      transformFreeToBoundParameters(freeParameters, surface, geoContext, 10);
+      transformFreeToBoundParameters(freeParameters, surface, geoContext);
   if (!bv.ok()) {
     return bv.error();
   }
