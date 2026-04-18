@@ -549,6 +549,7 @@ class RiddersStepper final {
   /// Update the state of the RiddersStepper
   /// @param state the state of the RiddersStepper
   /// @param boundParams the bound vector
+  /// @param covariance the covariance of the bound parameters
   /// @param surface the surface on which the bound parameters are defined
   void update(State& state, const FreeVector& /*freeParams*/,
               const BoundVector& boundParams, const BoundMatrix& covariance,
