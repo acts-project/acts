@@ -30,20 +30,35 @@ class MagneticFieldProvider;
 
 namespace Acts::Experimental {
 
+/// Collection of bound parameter variations, each entry is a pair of the index
+/// of the bound parameter to be varied and the delta to be applied to it
 using BoundParameterVariation = std::vector<std::pair<std::size_t, double>>;
 
+/// Base class for generating bound parameter variations
 struct BoundParameterVariationGenerator {
   virtual ~BoundParameterVariationGenerator() = default;
+  /// Generate a variation map based on the input bound parameters and
+  /// covariance
+  /// @param input the input bound parameters
+  /// @param covariance the covariance of the input bound parameters
+  /// @return the corresponding parameter variation
   virtual BoundParameterVariation variationMap(
       const BoundVector& input, const BoundMatrix& covariance) const = 0;
 };
 
+/// Generator for bound parameter variations based on fixed deltas
 struct DeltaBoundParameterVariationGenerator
     : public BoundParameterVariationGenerator {
+  /// The deltas to be applied to the parameters
   std::vector<BoundVector> deltas;
 
-  explicit DeltaBoundParameterVariationGenerator(double delta)
+  /// Construct a generator with a single delta applied to all parameters
+  /// @param delta the delta to be applied to all parameters
+  explicit DeltaBoundParameterVariationGenerator(const double delta)
       : deltas(1, BoundVector::Constant(delta)) {}
+
+  /// Construct a generator with multiple deltas applied to all parameters
+  /// @param deltas_ the deltas to be applied to all parameters
   explicit DeltaBoundParameterVariationGenerator(
       const std::vector<double>& deltas_) {
     this->deltas.reserve(deltas_.size());
@@ -51,12 +66,20 @@ struct DeltaBoundParameterVariationGenerator
       this->deltas.emplace_back(BoundVector::Constant(delta));
     }
   }
+
+  /// Construct a generator with a single delta vector
+  /// @param delta the delta vector to be applied to the parameters
   explicit DeltaBoundParameterVariationGenerator(const BoundVector& delta)
       : deltas(1, delta) {}
+
+  /// Construct a generator with multiple delta vectors
+  /// @param deltas_ the delta vectors to be applied to the parameters
   explicit DeltaBoundParameterVariationGenerator(
       std::vector<BoundVector> deltas_)
       : deltas(std::move(deltas_)) {}
 
+  /// Generate a variation map based on the fixed deltas
+  /// @return the corresponding parameter variation
   BoundParameterVariation variationMap(
       const BoundVector& /*input*/,
       const BoundMatrix& /*covariance*/) const override {
@@ -73,10 +96,17 @@ struct DeltaBoundParameterVariationGenerator
 
 struct CovarianceBoundParameterVariationGenerator
     : public BoundParameterVariationGenerator {
+  /// The sigma factors to be applied to the square root of the covariance
   std::vector<BoundVector> sigmaFactors;
 
-  explicit CovarianceBoundParameterVariationGenerator(double sigmaFactor)
+  /// Construct a generator with a single sigma factor applied to all parameters
+  /// @param sigmaFactor the sigma factor to be applied to all parameters
+  explicit CovarianceBoundParameterVariationGenerator(const double sigmaFactor)
       : sigmaFactors(1, BoundVector::Constant(sigmaFactor)) {}
+
+  /// Construct a generator with multiple sigma factors applied to all
+  /// parameters
+  /// @param sigmaFactors_ the sigma factors to be applied to all parameters
   explicit CovarianceBoundParameterVariationGenerator(
       const std::vector<double>& sigmaFactors_) {
     sigmaFactors.reserve(sigmaFactors_.size());
@@ -84,13 +114,22 @@ struct CovarianceBoundParameterVariationGenerator
       sigmaFactors.emplace_back(BoundVector::Constant(factor));
     }
   }
+
+  /// Construct a generator with a single sigma factor vector
+  /// @param sigmaFactor the sigma factor vector to be applied to the parameters
   explicit CovarianceBoundParameterVariationGenerator(
       const BoundVector& sigmaFactor)
       : sigmaFactors(1, sigmaFactor) {}
+
+  /// Construct a generator with multiple sigma factor vectors
+  /// @param sigmaFactors_ the sigma factor vectors to be applied to the parameters
   explicit CovarianceBoundParameterVariationGenerator(
       std::vector<BoundVector> sigmaFactors_)
       : sigmaFactors(std::move(sigmaFactors_)) {}
 
+  /// Generate a variation map based on the covariance and sigma factors
+  /// @param covariance the covariance of the input bound parameters
+  /// @return the corresponding parameter variation
   BoundParameterVariation variationMap(
       const BoundVector& /*input*/,
       const BoundMatrix& covariance) const override {
@@ -106,55 +145,95 @@ struct CovarianceBoundParameterVariationGenerator
   }
 };
 
+/// RiddersStepper implements the Ridders method for numerical differentiation
+/// to compute the Jacobian of the bound to bound transformation. It uses a
+/// primary stepper to perform the nominal step and multiple secondary steppers
+/// with varied initial conditions to compute the Jacobian columns. The
+/// variations are generated based on the input covariance and a configurable
+/// variation generator.
+/// @tparam stepper_impl_t the type of the underlying stepper implementation
 template <Concepts::SingleStepper stepper_impl_t>
 class RiddersStepper final {
  public:
+  /// The type of the underlying stepper implementation
   using StepperImpl = stepper_impl_t;
 
+  /// The bound parameters type used by this stepper
   using BoundParameters = BoundTrackParameters;
+  /// The Jacobian type for the bound to bound transformation
   using Jacobian = BoundMatrix;
+  /// The covariance type for the bound parameters
   using Covariance = BoundMatrix;
+  /// The type of the bound state returned by the `boundState` method
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
+  /// Configuration struct for the RiddersStepper
   struct Config {
+    /// Configuration for the underlying stepper implementation
     StepperImpl::Config stepperConfig;
 
+    /// The generator for the bound parameter variations
     std::shared_ptr<const BoundParameterVariationGenerator> parameterVariation{
         std::make_shared<CovarianceBoundParameterVariationGenerator>(
             std::vector<double>{-1e-1, 1e-1})};
   };
 
+  /// The options type for the RiddersStepper
   using Options = typename StepperImpl::Options;
 
+  /// The state struct for the RiddersStepper
   struct State {
+    /// @param primaryStepperStateIn the state of the primary stepper
     explicit State(const StepperImpl::State& primaryStepperStateIn)
         : primaryStepperState(primaryStepperStateIn) {}
 
+    /// The state of the primary stepper, which performs the nominal step
     StepperImpl::State primaryStepperState;
+    /// The states of the secondary steppers, which perform steps with varied
+    /// initial conditions to compute the Jacobian columns
     std::vector<typename StepperImpl::State> secondaryStepperStates;
 
+    /// The variation map, which contains the indices of the varied parameters
+    /// and the corresponding deltas applied to them
     BoundParameterVariation variationMap;
 
+    /// Flag indicating whether covariance transport is enabled
     bool covTransport = false;
+    /// The covariance of the last known bound parameters
     Covariance cov = Covariance::Zero();
+    /// The Jacobian of the last bound to bound transformation
     Jacobian jacobian = Jacobian::Identity();
 
-    double pathAccumulated = 0.;
+    /// The accumulated path length during the stepping process
+    double pathAccumulated = 0;
 
+    /// Statistics for the stepper, such as the number of steps taken and the
+    /// number of successful steps
     StepperStatistics statistics;
   };
 
+  /// Construct a RiddersStepper with the given magnetic field provider
+  /// @param bField the magnetic field provider to be used by the underlying stepper
   explicit RiddersStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_stepperImpl(std::move(bField)) {}
 
+  /// Construct a RiddersStepper with the given configuration
+  /// @param config the configuration for the RiddersStepper
   explicit RiddersStepper(const Config& config)
       : m_config(config), m_stepperImpl(config.stepperConfig) {}
 
+  /// Create a new state for the RiddersStepper based on the given options
+  /// @param options the options to be used for creating the state
+  /// @return a new state for the RiddersStepper
   State makeState(const Options& options) const {
     State state(m_stepperImpl.makeState(options));
     return state;
   }
 
+  /// Initialize the state of the RiddersStepper based on the given bound
+  /// parameters
+  /// @param state the state to be initialized
+  /// @param boundParameters the bound parameters to initialize the state with
   void initialize(State& state, const BoundParameters& boundParameters) const {
     initialize(state, boundParameters.parameters(),
                boundParameters.covariance(),
@@ -162,6 +241,13 @@ class RiddersStepper final {
                boundParameters.referenceSurface());
   }
 
+  /// Initialize the state of the RiddersStepper based on the given bound vector
+  /// and covariance
+  /// @param state the state to be initialized
+  /// @param boundVector the bound vector to initialize the state with
+  /// @param covariance the covariance of the bound parameters, used to generate the variations for the secondary steppers
+  /// @param particleHypothesis the particle hypothesis to be used for the stepper
+  /// @param surface the surface on which the bound parameters are defined
   void initialize(State& state, const BoundVector& boundVector,
                   const std::optional<BoundMatrix>& covariance,
                   ParticleHypothesis particleHypothesis,
@@ -201,42 +287,82 @@ class RiddersStepper final {
     // state.jacobian = BoundMatrix::Identity();
   }
 
+  /// Get the magnetic field at the given position for the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @param position the position at which to get the magnetic field
+  /// @return the magnetic field at the given position for the primary stepper state
   Result<Vector3> getField(State& state, const Vector3& position) const {
     return m_stepperImpl.getField(state.primaryStepperState, position);
   }
 
+  /// Get the position of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the position of the primary stepper state
   Vector3 position(const State& state) const {
     return m_stepperImpl.position(state.primaryStepperState);
   }
 
+  /// Get the direction of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the direction of the primary stepper state
   Vector3 direction(const State& state) const {
     return m_stepperImpl.direction(state.primaryStepperState);
   }
 
+  /// Get the charge over momentum of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the charge over momentum of the primary stepper state
   double qOverP(const State& state) const {
     return m_stepperImpl.qOverP(state.primaryStepperState);
   }
 
+  /// Get the absolute momentum of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the absolute momentum of the primary stepper state
   double absoluteMomentum(const State& state) const {
     return m_stepperImpl.absoluteMomentum(state.primaryStepperState);
   }
 
+  /// Get the momentum vector of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the momentum vector of the primary stepper state
   Vector3 momentum(const State& state) const {
     return m_stepperImpl.momentum(state.primaryStepperState);
   }
 
+  /// Get the charge of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the charge of the primary stepper state
   double charge(const State& state) const {
     return m_stepperImpl.charge(state.primaryStepperState);
   }
 
+  /// Get the particle hypothesis of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the particle hypothesis of the primary stepper state
   const ParticleHypothesis& particleHypothesis(const State& state) const {
     return m_stepperImpl.particleHypothesis(state.primaryStepperState);
   }
 
+  /// Get the time of the primary stepper state
+  /// @param state the state of the RiddersStepper
+  /// @return the time of the primary stepper state
   double time(const State& state) const {
     return m_stepperImpl.time(state.primaryStepperState);
   }
 
+  /// Update the surface status of the primary and secondary stepper states
+  /// based on the given surface and navigation direction
+  /// @param state the state of the RiddersStepper
+  /// @param surface the surface
+  /// @param index the index of the surface
+  /// @param navDir the navigation direction
+  /// @param boundaryTolerance the boundary tolerance
+  /// @param surfaceTolerance the surface tolerance
+  /// @param stype the type of the constrained step
+  /// @param logger the logger
+  /// @return the overall intersection status after updating the surface
+  ///    status for the primary and secondary stepper states
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
@@ -271,6 +397,12 @@ class RiddersStepper final {
     return overallStatus;
   }
 
+  /// Update the step size based on the given navigation target, direction, and
+  /// constrained step type
+  /// @param state the state of the RiddersStepper
+  /// @param target the navigation target
+  /// @param direction the direction
+  /// @param stype the type of the constrained step
   void updateStepSize(State& state, const NavigationTarget& target,
                       Direction direction, ConstrainedStep::Type stype) const {
     m_stepperImpl.updateStepSize(state.primaryStepperState, target, direction,
@@ -281,6 +413,11 @@ class RiddersStepper final {
     }
   }
 
+  /// Update the step size based on the given step size and constrained step
+  /// type
+  /// @param state the state of the RiddersStepper
+  /// @param stepSize the step size
+  /// @param stype the type of the constrained step
   void updateStepSize(State& state, double stepSize,
                       ConstrainedStep::Type stype) const {
     m_stepperImpl.updateStepSize(state.primaryStepperState, stepSize, stype);
@@ -290,10 +427,17 @@ class RiddersStepper final {
     }
   }
 
+  /// Get the step size for the given constrained step type
+  /// @param state the state of the RiddersStepper
+  /// @param stype the type of the constrained step for which to get the step size
+  /// @return the step size of the primary stepper state for the given constrained step type
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
     return m_stepperImpl.getStepSize(state.primaryStepperState, stype);
   }
 
+  /// Release the step size for the given constrained step type
+  /// @param state the state of the RiddersStepper to be updated
+  /// @param stype the type of the constrained step for which to release the step size
   void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
     m_stepperImpl.releaseStepSize(state.primaryStepperState, stype);
 
@@ -302,6 +446,10 @@ class RiddersStepper final {
     }
   }
 
+  /// Get a string representation of the step size constraints
+  /// @param state the state of the RiddersStepper
+  /// @param stype the type of the constrained step
+  /// @return a string representation of the step size constraints
   std::string outputStepSize(const State& state) const {
     std::stringstream ss;
     ss << state.primaryStepperState.stepSize.toString();
@@ -311,6 +459,12 @@ class RiddersStepper final {
     return ss.str();
   }
 
+  /// Compute the bound state
+  /// @param state the state of the RiddersStepper
+  /// @param surface the surface
+  /// @param transportCovariance flag indicating whether to transport the covariance to the bound parameters
+  /// @param freeToBoundCorrection the correction to be applied to the free to bound transformation
+  /// @return the bound state
   Result<BoundState> boundState(
       State& state, const Surface& surface, bool transportCovariance = true,
       const FreeToBoundCorrection& freeToBoundCorrection =
@@ -364,6 +518,9 @@ class RiddersStepper final {
         BoundState{std::move(newParams), state.jacobian, pathLenghts.front()});
   }
 
+  /// Prepare the stepper for the curvilinear transformation
+  /// @param state the state of the RiddersStepper to be prepared
+  /// @return true if the preparation was successful for all stepper states, false otherwise
   bool prepareCurvilinearState(State& state) const {
     bool result =
         m_stepperImpl.prepareCurvilinearState(state.primaryStepperState);
@@ -373,6 +530,10 @@ class RiddersStepper final {
     return result;
   }
 
+  /// Compute the curvilinear state
+  /// @param state the state of the RiddersStepper
+  /// @param transportCovariance flag indicating whether to transport the covariance to the curvilinear parameters
+  /// @return the curvilinear state
   BoundState curvilinearState(State& state,
                               bool transportCovariance = true) const {
     if (!transportCovariance) {
@@ -385,6 +546,12 @@ class RiddersStepper final {
         .value();
   }
 
+  /// Update the state of the RiddersStepper
+  /// @param state the state of the RiddersStepper
+  /// @param boundParams the bound vector
+  /// @param covariance the covariance of the bound parameters
+  /// @param particleHypothesis the particle hypothesis
+  /// @param surface the surface on which the bound parameters are defined
   void update(State& state, const FreeVector& /*freeParams*/,
               const BoundVector& boundParams, const BoundMatrix& covariance,
               const Surface& surface) const {
@@ -392,6 +559,12 @@ class RiddersStepper final {
                surface);
   }
 
+  /// Update the state of the RiddersStepper
+  /// @param state the state of the RiddersStepper
+  /// @param position the position
+  /// @param direction the direction
+  /// @param qOverP the charge over momentum
+  /// @param time the time
   void update(State& state, const Vector3& position, const Vector3& direction,
               double qOverP, double time) const {
     const auto curvilinearSurface =
@@ -407,10 +580,16 @@ class RiddersStepper final {
                cov, particleHypothesis(state), *curvilinearSurface);
   }
 
+  /// Transport the covariance to curvilinear parameters
+  /// @param state the state of the RiddersStepper
   void transportCovarianceToCurvilinear(State& state) const {
     curvilinearState(state, true);
   }
 
+  /// Transport the covariance to bound parameters
+  /// @param state the state of the RiddersStepper
+  /// @param surface the surface
+  /// @param freeToBoundCorrection the correction to be applied to the free to bound transformation
   void transportCovarianceToBound(
       State& state, const Surface& surface,
       const FreeToBoundCorrection& freeToBoundCorrection =
@@ -418,6 +597,11 @@ class RiddersStepper final {
     boundState(state, surface, true, freeToBoundCorrection);
   }
 
+  /// Perform a step
+  /// @param state the state of the RiddersStepper
+  /// @param propagationDirection the direction
+  /// @param material the material
+  /// @return a result containing the step length or an error if the step failed
   Result<double> step(State& state, Direction propagationDirection,
                       const IVolumeMaterial* material) const {
     const Result<double> stepResult = m_stepperImpl.step(
@@ -436,6 +620,8 @@ class RiddersStepper final {
     return *stepResult;
   }
 
+  /// Resets the Jacobian to the Identity
+  /// @param state the state of the RiddersStepper
   void setIdentityJacobian(State& state) const {
     m_stepperImpl.setIdentityJacobian(state.primaryStepperState);
     for (auto& secondaryState : state.secondaryStepperStates) {
@@ -444,8 +630,10 @@ class RiddersStepper final {
   }
 
  private:
+  /// The stepper configuration
   Config m_config;
 
+  /// The underlying stepper implementation
   StepperImpl m_stepperImpl;
 };
 
