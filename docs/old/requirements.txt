@@ -70,7 +70,7 @@ multidict==6.7.1
     #   yarl
 myst-parser==4.0.1
     # via -r docs/old/requirements.in
-packaging==26.0
+packaging==26.1
     # via sphinx
 propcache==0.4.1
     # via
@@ -78,9 +78,9 @@ propcache==0.4.1
     #   yarl
 pycparser==3.0
     # via cffi
-pydantic==2.12.5
+pydantic==2.13.2
     # via -r docs/old/requirements.in
-pydantic-core==2.41.5
+pydantic-core==2.46.2
     # via pydantic
 pygments==2.20.0
     # via
@@ -94,7 +94,7 @@ pyyaml==6.0.3
     # via myst-parser
 requests==2.33.1
     # via sphinx
-rich==14.3.4
+rich==15.0.0
     # via
     #   -r docs/old/requirements.in
     #   typer
