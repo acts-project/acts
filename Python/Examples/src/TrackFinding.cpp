@@ -9,6 +9,8 @@
 #include "Acts/Seeding2/GraphBasedTrackSeeder.hpp"
 #include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/MeasurementFilterAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/MeasurementMapAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
@@ -34,6 +36,16 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addTrackFinding(py::module& mex) {
+  ACTS_PYTHON_DECLARE_ALGORITHM(MeasurementMapAlgorithm, mex,
+                                "MeasurementMapAlgorithm", inputTracks,
+                                inputMeasurementMap, inputIndexRemapping,
+                                outputMeasurementMap);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(MeasurementFilterAlgorithm, mex,
+                                "MeasurementFilterAlgorithm", inputMeasurements,
+                                inputMeasurementMap, outputMeasurements,
+                                outputIndexRemapping);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
                                 inputMeasurements, outputSpacePoints,
                                 trackingGeometry, geometrySelection,
