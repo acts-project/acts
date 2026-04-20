@@ -1,13 +1,16 @@
-acts_add_library(ExamplesTraccc INTERFACE)
+acts_add_library(ExamplesTraccc
+  src/TracccChain.cpp
+  src/TracccSeqAlg.cpp
+)
 
 target_include_directories(
     ActsExamplesTraccc
-    INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_link_libraries(
     ActsExamplesTraccc
-    INTERFACE
+    PUBLIC
         Acts::ExamplesFramework
         Acts::ExamplesPropagation
         Acts::PluginDetray
@@ -15,6 +18,7 @@ target_link_libraries(
         traccc::io
         traccc::core
         $<$<BOOL:${ACTS_ENABLE_CUDA}>:traccc::cuda>
+        $<$<BOOL:${ACTS_ENABLE_CUDA}>:traccc::device_common>
         $<$<BOOL:${ACTS_ENABLE_CUDA}>:vecmem::cuda>
 )
 

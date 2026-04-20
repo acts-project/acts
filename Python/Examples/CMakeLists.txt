@@ -280,9 +280,19 @@ add_examples_binding_if(
     PLUGIN_IMPORT FALSE
 )
 
+add_examples_binding_if(Detray
+  "Acts::PluginCovfie;Acts::ExamplesDetray"
+  ACTS_BUILD_PLUGIN_DETRAY FALSE
+)
+
+set(_traccc_cuda_enabled FALSE)
+if(ACTS_BUILD_PLUGIN_TRACCC AND ACTS_ENABLE_CUDA)
+  set(_traccc_cuda_enabled TRUE)
+endif()
+
 add_examples_binding_if(Traccc
-  "Acts::PluginCovfie;Acts::ExamplesTraccc"
-  ACTS_BUILD_PLUGIN_TRACCC FALSE
+  "Acts::ExamplesTraccc"
+  _traccc_cuda_enabled FALSE
 )
 
 # Special case for HepMC3 as it a hard dependency
