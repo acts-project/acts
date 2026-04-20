@@ -237,7 +237,7 @@ def full_chain(args):
         os.environ["ACTS_SEQUENCER_DISABLE_FPEMON"] = "1"
 
     if args.dump_args_calls:
-        acts.examples.dump_args_calls(locals())
+        acts.examples.dump_args_calls()
 
     logger = acts.getDefaultLogger("full_chain_test", acts.logging.Level(args.loglevel))
 
@@ -345,7 +345,7 @@ def full_chain(args):
     else:
         logger.info("Create magnetic field map from {}", bFieldFile)
         field = acts.root.MagneticFieldMapXyz(str(bFieldFile))
-    rnd = acts.examples.RandomNumbers(seed=42)
+    rnd = acts.examples.RandomNumbers(seed=args.random_seed)
 
     from acts.examples.simulation import (
         MomentumConfig,
@@ -542,7 +542,7 @@ def full_chain(args):
         ParticleSelectorConfig(
             pt=(ptMin, None),
             eta=etaRange if not args.generic_detector else (None, None),
-            hits=(9, None),
+            measurements=(9, None),
             removeNeutral=True,
         ),
     )

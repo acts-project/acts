@@ -37,7 +37,7 @@ have a feature request, or want to contribute to ACTS, have a look at the
 ### Python bindings
 
 ACTS is also available as a Python package via `pip install pyacts`. See the
-[Python bindings documentation](https://acts-project.github.io/python_bindings.html)
+[Python bindings documentation](https://acts-project.github.io/group__python__bindings.html)
 for details.
 
 ## Versioning and public API
