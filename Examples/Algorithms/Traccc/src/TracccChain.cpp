@@ -32,23 +32,23 @@ TracccChain::TracccChain(const std::string& detector_file,
       finding_cfg{},
       fitting_cfg{},
       resolution_cfg{},
-      ca_cuda{mr, copy, stream, traccc::clustering_config{},
-              traccc::getDefaultLogger("CudaClusteringAlg",
-                                       traccc::Logging::INFO)},
+      ca_cuda{
+          mr, copy, stream, traccc::clustering_config{},
+          traccc::getDefaultLogger("CudaClusteringAlg", traccc::Logging::INFO)},
       ms_cuda{mr, copy, stream,
               traccc::getDefaultLogger("CudaMeasSortingAlg",
                                        traccc::Logging::INFO)},
       sf_cuda{mr, copy, stream,
               traccc::getDefaultLogger("CudaSpFormationAlg",
                                        traccc::Logging::INFO)},
-      sa_cuda{seedfinder_cfg,
-              spacepoint_grid_cfg,
-              seedfilter_cfg,
-              mr,
-              copy,
-              stream,
-              traccc::getDefaultLogger("CudaSeedingAlg",
-                                       traccc::Logging::INFO)},
+      sa_cuda{
+          seedfinder_cfg,
+          spacepoint_grid_cfg,
+          seedfilter_cfg,
+          mr,
+          copy,
+          stream,
+          traccc::getDefaultLogger("CudaSeedingAlg", traccc::Logging::INFO)},
       tp_cuda{track_params_cfg, mr, copy, stream,
               traccc::getDefaultLogger("CudaTrackParEstAlg",
                                        traccc::Logging::INFO)},
@@ -117,8 +117,8 @@ EventResult processEvent(std::shared_ptr<TracccChain> chain,
   chain->copy.setup(cells_buf)->wait();
   chain->copy(vecmem::get_data(cells), cells_buf)->wait();
 
-  auto unsorted_meas =
-      chain->ca_cuda(cells_buf, chain->device_det_descr, chain->device_det_cond);
+  auto unsorted_meas = chain->ca_cuda(cells_buf, chain->device_det_descr,
+                                      chain->device_det_cond);
   traccc::edm::measurement_collection::buffer meas_buf =
       chain->ms_cuda(unsorted_meas);
   chain->stream.synchronize();
@@ -152,8 +152,10 @@ EventResult processEvent(std::shared_ptr<TracccChain> chain,
 
   traccc::edm::track_collection<traccc::default_algebra>::host
       track_candidates_host{chain->host_mr};
-  chain->copy(track_candidates_buf.tracks, track_candidates_host,
-              vecmem::copy::type::device_to_host)->wait();
+  chain
+      ->copy(track_candidates_buf.tracks, track_candidates_host,
+             vecmem::copy::type::device_to_host)
+      ->wait();
   result.n_found_tracks = track_candidates_host.size();
 
   traccc::edm::track_container<traccc::default_algebra>::buffer resolved_buf =
@@ -161,8 +163,10 @@ EventResult processEvent(std::shared_ptr<TracccChain> chain,
 
   traccc::edm::track_collection<traccc::default_algebra>::host resolved_host{
       chain->host_mr};
-  chain->copy(resolved_buf.tracks, resolved_host,
-              vecmem::copy::type::device_to_host)->wait();
+  chain
+      ->copy(resolved_buf.tracks, resolved_host,
+             vecmem::copy::type::device_to_host)
+      ->wait();
   result.n_resolved_tracks = resolved_host.size();
 
   traccc::edm::track_container<traccc::default_algebra>::buffer fitted_buf =
@@ -172,8 +176,9 @@ EventResult processEvent(std::shared_ptr<TracccChain> chain,
 
   traccc::edm::track_collection<traccc::default_algebra>::host fitted_host{
       chain->host_mr};
-  chain->copy(fitted_buf.tracks, fitted_host,
-              vecmem::copy::type::device_to_host)->wait();
+  chain
+      ->copy(fitted_buf.tracks, fitted_host, vecmem::copy::type::device_to_host)
+      ->wait();
   result.n_fitted_tracks = fitted_host.size();
 
   return result;

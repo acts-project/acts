@@ -287,7 +287,7 @@ add_examples_binding_if(Detray
 
 set(_traccc_cuda_enabled FALSE)
 if(ACTS_BUILD_PLUGIN_TRACCC AND ACTS_ENABLE_CUDA)
-  set(_traccc_cuda_enabled TRUE)
+    set(_traccc_cuda_enabled TRUE)
 endif()
 
 add_examples_binding_if(Traccc

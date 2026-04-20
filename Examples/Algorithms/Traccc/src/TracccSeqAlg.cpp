@@ -8,9 +8,10 @@
 
 // TracccChain.hpp must come first — gives the full definition of TracccChain
 // and EventResult that this TU needs for make_shared and processEvent.
-#include "ActsExamples/Traccc/TracccChain.hpp"
 #include "ActsExamples/Traccc/TracccSeqAlg.hpp"
+
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Traccc/TracccChain.hpp"
 
 #include <stdexcept>
 
@@ -33,12 +34,8 @@ TracccSeqAlgorithm::TracccSeqAlgorithm(
   }
 
   m_chain = std::make_shared<TracccChain>(
-      m_cfg.detectorFile,
-      m_cfg.digitizationFile,
-      m_cfg.conditionsFile,
-      m_cfg.materialFile,
-      m_cfg.gridFile,
-      m_cfg.bfieldFile);
+      m_cfg.detectorFile, m_cfg.digitizationFile, m_cfg.conditionsFile,
+      m_cfg.materialFile, m_cfg.gridFile, m_cfg.bfieldFile);
 }
 
 ProcessCode TracccSeqAlgorithm::execute(const AlgorithmContext& ctx) const {
@@ -48,13 +45,13 @@ ProcessCode TracccSeqAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   EventResult result = processEvent(m_chain, m_cfg.dataDirectory, eventId);
 
-  ACTS_DEBUG("cells="            << result.n_cells
-             << " measurements=" << result.n_measurements
-             << " spacepoints="  << result.n_spacepoints
-             << " seeds="        << result.n_seeds
-             << " found_tracks=" << result.n_found_tracks
-             << " resolved="     << result.n_resolved_tracks
-             << " fitted="       << result.n_fitted_tracks);
+  ACTS_DEBUG("cells=" << result.n_cells
+                      << " measurements=" << result.n_measurements
+                      << " spacepoints=" << result.n_spacepoints
+                      << " seeds=" << result.n_seeds
+                      << " found_tracks=" << result.n_found_tracks
+                      << " resolved=" << result.n_resolved_tracks
+                      << " fitted=" << result.n_fitted_tracks);
 
   return ProcessCode::SUCCESS;
 }

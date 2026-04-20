@@ -12,6 +12,7 @@
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -21,9 +22,7 @@ using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
   ACTS_PYTHON_DECLARE_ALGORITHM(TracccSeqAlgorithm, traccc,
-                                "TracccSeqAlgorithm",
-                                detectorFile, digitizationFile,
-                                conditionsFile, materialFile,
-                                gridFile, bfieldFile,
-                                dataDirectory);
+                                "TracccSeqAlgorithm", detectorFile,
+                                digitizationFile, conditionsFile, materialFile,
+                                gridFile, bfieldFile, dataDirectory);
 }

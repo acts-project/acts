@@ -42,8 +42,7 @@ class TracccSeqAlgorithm final : public IAlgorithm {
   };
 
   explicit TracccSeqAlgorithm(
-      const Config& cfg,
-      std::unique_ptr<const Acts::Logger> logger = nullptr);
+      const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
   ProcessCode finalize() override;

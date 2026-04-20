@@ -14,8 +14,8 @@
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/cuda/host_memory_resource.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
-#include <vecmem/utils/cuda/async_copy.hpp>
 #include <vecmem/utils/copy.hpp>
+#include <vecmem/utils/cuda/async_copy.hpp>
 
 #include "traccc/ambiguity_resolution/greedy_ambiguity_resolution_algorithm.hpp"
 #include "traccc/clusterization/clustering_config.hpp"
@@ -92,8 +92,7 @@ struct TracccChain {
   TracccChain(const std::string& detector_file,
               const std::string& digitization_file,
               const std::string& conditions_file,
-              const std::string& material_file,
-              const std::string& grid_file,
+              const std::string& material_file, const std::string& grid_file,
               const std::string& bfield_file);
 };
 

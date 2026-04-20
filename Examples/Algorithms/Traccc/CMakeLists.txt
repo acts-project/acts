@@ -1,7 +1,4 @@
-acts_add_library(ExamplesTraccc
-  src/TracccChain.cpp
-  src/TracccSeqAlg.cpp
-)
+acts_add_library(ExamplesTraccc src/TracccChain.cpp src/TracccSeqAlg.cpp)
 
 target_include_directories(
     ActsExamplesTraccc
