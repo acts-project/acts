@@ -3,6 +3,7 @@ acts_add_library(
     src/TelescopeDetector.cpp
     src/TelescopeDetectorElement.cpp
     src/BuildTelescopeDetector.cpp
+    src/AlignedTelescopeDetector.cpp
 )
 
 target_include_directories(

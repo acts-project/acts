@@ -68,6 +68,7 @@ class SurfaceArray {
     /// Performs lookup at global bin and returns bin content as const reference
     /// @param bin Global lookup bin
     /// @return A vector of surfaces at given bin
+    [[deprecated("Use at(gridIndices, neighborDistance) instead")]]
     virtual const std::vector<const Surface*>& lookup(
         std::size_t bin) const = 0;
 
@@ -221,7 +222,9 @@ class SurfaceArray {
     /// @param bin Global lookup bin
     /// @return A vector of surfaces at given bin
     const std::vector<const Surface*>& lookup(std::size_t bin) const override {
-      return const_cast<const ISurfaceGridLookup*>(m_impl.get())->lookup(bin);
+      ACTS_PUSH_IGNORE_DEPRECATED()
+      return m_impl->lookup(bin);
+      ACTS_POP_IGNORE_DEPRECATED()
     }
 
     /// Performs a lookup at @c pos, but returns neighbors as well
@@ -440,6 +443,7 @@ class SurfaceArray {
   /// @param position the lookup position
   /// @param direction the lookup direction
   /// @return const reference to surface vector contained in bin at that position
+  [[deprecated("Use at with GeometryContext instead")]]
   const std::vector<const Surface*>& at(const Vector3& position,
                                         const Vector3& direction) const {
     ACTS_PUSH_IGNORE_DEPRECATED()
@@ -472,9 +476,11 @@ class SurfaceArray {
   /// Get all surfaces in bin given by global bin index.
   /// @param bin the global bin index
   /// @return const reference to surface vector contained in bin
+  [[deprecated("Use at(gridIndices, neighborDistance) instead")]]
   const std::vector<const Surface*>& at(std::size_t bin) const {
-    return const_cast<const ISurfaceGridLookup*>(m_gridLookup.get())
-        ->lookup(bin);
+    ACTS_PUSH_IGNORE_DEPRECATED()
+    return m_gridLookup->lookup(bin);
+    ACTS_POP_IGNORE_DEPRECATED()
   }
 
   /// Get all surfaces in bin at @p pos and its neighbors

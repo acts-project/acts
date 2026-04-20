@@ -10,106 +10,15 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Kernel/SimulationResult.hpp"
-#include "ActsFatras/Kernel/detail/SimulationActor.hpp"
+#include "ActsFatras/Kernel/SingleParticleSimulationResult.hpp"
 #include "ActsFatras/Kernel/detail/SimulationError.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
-#include <memory>
-#include <vector>
 
 namespace ActsFatras {
-
-/// Single particle simulation with fixed propagator, interactions, and decay.
-///
-/// @tparam generator_t random number generator
-/// @tparam interactions_t interaction list
-/// @tparam hit_surface_selector_t selector for hit surfaces
-/// @tparam decay_t decay module
-template <typename propagator_t, typename interactions_t,
-          typename hit_surface_selector_t, typename decay_t>
-struct SingleParticleSimulation {
-  /// How and within which geometry to propagate the particle.
-  propagator_t propagator;
-  /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
-  /// Absolute maximum path length
-  double pathLimit = std::numeric_limits<double>::max();
-  /// Decay module.
-  decay_t decay;
-  /// Interaction list containing the simulated interactions.
-  interactions_t interactions;
-  /// Selector for surfaces that should generate hits.
-  hit_surface_selector_t selectHitSurface;
-  /// Logger for debug output.
-  std::unique_ptr<const Acts::Logger> logger;
-
-  /// Alternatively construct the simulator with an external logger.
-  /// @param propagator_ Propagator to use for particle simulation
-  /// @param _logger Logger instance for debug output
-  SingleParticleSimulation(propagator_t &&propagator_,
-                           std::unique_ptr<const Acts::Logger> _logger)
-      : propagator(propagator_), logger(std::move(_logger)) {}
-
-  /// Simulate a single particle without secondaries.
-  ///
-  /// @tparam generator_t is the type of the random number generator
-  ///
-  /// @param geoCtx is the geometry context to access surface geometries
-  /// @param magCtx is the magnetic field context to access field values
-  /// @param generator is the random number generator
-  /// @param particle is the initial particle state
-  /// @returns Simulated particle state, hits, and generated particles.
-  template <typename generator_t>
-  Acts::Result<SimulationResult> simulate(
-      const Acts::GeometryContext &geoCtx,
-      const Acts::MagneticFieldContext &magCtx, generator_t &generator,
-      const Particle &particle) const {
-    // propagator-related additional types
-    using Actor = detail::SimulationActor<generator_t, decay_t, interactions_t,
-                                          hit_surface_selector_t>;
-    using Result = typename Actor::result_type;
-    using ActorList = Acts::ActorList<Actor>;
-    using PropagatorOptions =
-        typename propagator_t::template Options<ActorList>;
-
-    // Construct per-call options.
-    PropagatorOptions options(geoCtx, magCtx);
-    options.stepping.maxStepSize = maxStepSize;
-    options.pathLimit = pathLimit;
-    // setup the interactor as part of the propagator options
-    auto &actor = options.actorList.template get<Actor>();
-    actor.generator = &generator;
-    actor.decay = decay;
-    actor.interactions = interactions;
-    actor.selectHitSurface = selectHitSurface;
-    actor.initialParticle = particle;
-
-    if (particle.hasReferenceSurface()) {
-      auto result = propagator.propagate(
-          particle.boundParameters(geoCtx).value(), options);
-      if (!result.ok()) {
-        return result.error();
-      }
-      auto &value = result.value().template get<Result>();
-      return std::move(value);
-    }
-
-    auto result =
-        propagator.propagate(particle.curvilinearParameters(), options);
-    if (!result.ok()) {
-      return result.error();
-    }
-    auto &value = result.value().template get<Result>();
-    return std::move(value);
-  }
-};
 
 /// A particle that failed to simulate.
 struct FailedParticle {
@@ -135,7 +44,7 @@ struct FailedParticle {
 /// to ensure consistency.
 template <typename charged_selector_t, typename charged_simulator_t,
           typename neutral_selector_t, typename neutral_simulator_t>
-struct Simulation {
+struct MultiParticleSimulation {
   /// Selector for charged particle simulation
   charged_selector_t selectCharged;
   /// Selector for neutral particle simulation
@@ -148,7 +57,8 @@ struct Simulation {
   /// Construct from the single charged/neutral particle simulators.
   /// @param charged_ Simulator for charged particles
   /// @param neutral_ Simulator for neutral particles
-  Simulation(charged_simulator_t &&charged_, neutral_simulator_t &&neutral_)
+  MultiParticleSimulation(charged_simulator_t &&charged_,
+                          neutral_simulator_t &&neutral_)
       : charged(std::move(charged_)), neutral(std::move(neutral_)) {}
 
   /// Simulate multiple particles and generated secondaries.
@@ -199,8 +109,6 @@ struct Simulation {
         (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) &&
         "Inconsistent initial sizes of the simulated particle containers");
 
-    using SingleParticleSimulationResult = Acts::Result<SimulationResult>;
-
     std::vector<FailedParticle> failedParticles;
 
     for (const Particle &inputParticle : inputParticles) {
@@ -230,8 +138,7 @@ struct Simulation {
 
         // only simulatable particles are pushed to the container and here we
         // only need to switch between charged/neutral.
-        SingleParticleSimulationResult result =
-            SingleParticleSimulationResult::success({});
+        auto result = Acts::Result<SingleParticleSimulationResult>::success({});
         if (initialParticle.charge() != 0.) {
           result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
         } else {
@@ -289,7 +196,7 @@ struct Simulation {
   /// @tparam particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
   template <typename particles_t, typename hits_t>
-  void copyOutputs(const SimulationResult &result,
+  void copyOutputs(const SingleParticleSimulationResult &result,
                    particles_t &particlesInitial, particles_t &particlesFinal,
                    hits_t &hits) const {
     // initial particle state was already pushed to the container before

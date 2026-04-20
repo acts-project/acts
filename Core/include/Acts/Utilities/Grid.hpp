@@ -15,6 +15,7 @@
 #include "Acts/Utilities/detail/grid_helper.hpp"
 #include "Acts/Utilities/detail/interpolation_impl.hpp"
 
+#include <algorithm>
 #include <any>
 #include <array>
 #include <tuple>
@@ -675,7 +676,7 @@ class Grid final : public IGrid {
   boost::container::small_vector<const IAxis*, 3> axes() const override {
     boost::container::small_vector<const IAxis*, 3> result;
     auto axes = detail::grid_helper::getAxes(m_axes);
-    std::copy(axes.begin(), axes.end(), std::back_inserter(result));
+    std::ranges::copy(axes, std::back_inserter(result));
     return result;
   }
 

@@ -38,6 +38,17 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
     /// The current interval of validity
     unsigned int iov = 0;
   };
+  using identifier_type = unsigned long long;
+  using identifier_diff = long long;
+  using Identifier = identifier_type;
+
+  using DetectorElementFactory =
+      std::function<std::shared_ptr<TelescopeDetectorElement>(
+          const Acts::Transform3&,
+          std::variant<std::shared_ptr<const Acts::PlanarBounds>,
+                       std::shared_ptr<const Acts::DiscBounds>>,
+          double, std::shared_ptr<const Acts::ISurfaceMaterial>,
+          std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&)>;
 
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
@@ -47,7 +58,7 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   TelescopeDetectorElement(
-      std::shared_ptr<const Acts::Transform3> transform,
+      const Identifier ID, std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
@@ -59,7 +70,7 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   TelescopeDetectorElement(
-      std::shared_ptr<const Acts::Transform3> transform,
+      const Identifier ID, std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
@@ -81,13 +92,18 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
   ///
   /// @note this is called from the surface().transform() in the PROXY mode
   const Acts::Transform3& localToGlobalTransform(
-      const Acts::GeometryContext& gctx) const final;
+      const Acts::GeometryContext& gctx) const override;
+
+  /// Return local to global transform associated with this detector element
+  const Acts::Transform3& nominalTransform() const;
 
   /// Return the nominal local to global transform
   ///
   /// @note the geometry context will hereby be ignored
   const Acts::Transform3& nominalTransform(
-      const Acts::GeometryContext& gctx) const;
+      const Acts::GeometryContext& /*gctx*/) const {
+    return nominalTransform();
+  }
 
   /// Return local to global transform associated with this identifier
   ///
@@ -98,11 +114,18 @@ class TelescopeDetectorElement : public Acts::SurfacePlacementBase {
 
   /// Return the set of alignment transforms in flight
   const std::vector<std::unique_ptr<Acts::Transform3>>& alignedTransforms()
-      const;
+      const {
+    return m_alignedTransforms;
+  };
   /// Is the detector element a sensitive element
   bool isSensitive() const final { return true; }
 
+  /// The identifier of the detector element
+  Identifier identifier() const { return m_elementIdentifier; };
+
  private:
+  // The element identifier
+  Identifier m_elementIdentifier;
   /// the transform for positioning in 3D space
   std::shared_ptr<const Acts::Transform3> m_elementTransform = nullptr;
   // the aligned transforms
@@ -141,8 +164,8 @@ inline const Acts::Transform3& TelescopeDetectorElement::localToGlobalTransform(
   return nominalTransform(gctx);
 }
 
-inline const Acts::Transform3& TelescopeDetectorElement::nominalTransform(
-    const Acts::GeometryContext& /*gctx*/) const {
+inline const Acts::Transform3& TelescopeDetectorElement::nominalTransform()
+    const {
   return *m_elementTransform;
 }
 
@@ -154,11 +177,6 @@ inline void TelescopeDetectorElement::addAlignedTransform(
     m_alignedTransforms.push_back(nullptr);
   }
   m_alignedTransforms[iov] = std::move(alignedTransform);
-}
-
-inline const std::vector<std::unique_ptr<Acts::Transform3>>&
-TelescopeDetectorElement::alignedTransforms() const {
-  return m_alignedTransforms;
 }
 
 }  // namespace ActsExamples

@@ -165,8 +165,13 @@ PipelineTensors OnnxEdgeClassifier::operator()(
                outputNames.size());
 
   sigmoid(scores, execContext.stream);
-  auto [newScores, newEdgeIndex] =
-      applyScoreCut(scores, tensors.edgeIndex, m_cfg.cut, execContext.stream);
+  auto mask = scoreMask(scores, m_cfg.cut, execContext.stream);
+  auto newScores = selectRows(scores, mask, execContext);
+  auto newEdgeIndex = selectCols(tensors.edgeIndex, mask, execContext);
+  std::optional<Tensor<float>> newEdgeFeatures;
+  if (tensors.edgeFeatures.has_value()) {
+    newEdgeFeatures = selectRows(*tensors.edgeFeatures, mask, execContext);
+  }
 
   ACTS_DEBUG("Finished edge classification, after cut: "
              << newEdgeIndex.shape()[1] << " edges.");
@@ -175,10 +180,8 @@ PipelineTensors OnnxEdgeClassifier::operator()(
     throw NoEdgesError{};
   }
 
-  return {std::move(tensors.nodeFeatures),
-          std::move(newEdgeIndex),
-          {},
-          std::move(newScores)};
+  return {std::move(tensors.nodeFeatures), std::move(newEdgeIndex),
+          std::move(newEdgeFeatures), std::move(newScores)};
 }
 
 }  // namespace ActsPlugins

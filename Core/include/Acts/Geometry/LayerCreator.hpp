@@ -220,14 +220,6 @@ class LayerCreator {
   void associateSurfacesToLayer(Layer& layer) const;
 
  private:
-  /// Validates that all the sensitive surfaces are actually accessible through
-  /// the binning
-  ///
-  /// @param gctx Geometry context to work with
-  /// @param sArray @c SurfaceArray instance to check
-  bool checkBinning(const GeometryContext& gctx,
-                    const SurfaceArray& sArray) const;
-
   /// configuration object
   Config m_cfg;
 

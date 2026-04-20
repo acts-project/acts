@@ -110,27 +110,23 @@ void Fill(std::map<std::uint64_t,TGraph*>& surface_hist,  std::map<std::uint64_t
   std::vector<float> *mat_z = 0;
 
   std::vector<std::uint64_t> *sur_id = 0;
-  std::vector<std::int32_t> *sur_type = 0;
   std::vector<float> *sur_x = 0;
   std::vector<float> *sur_y = 0;
   std::vector<float> *sur_z = 0;
-  std::vector<float> *sur_range_min = 0;
-  std::vector<float> *sur_range_max = 0;
 
   tree->SetBranchAddress("mat_x",&mat_x);
   tree->SetBranchAddress("mat_y",&mat_y);
   tree->SetBranchAddress("mat_z",&mat_z);
 
   tree->SetBranchAddress("sur_id",&sur_id);
-  tree->SetBranchAddress("sur_type",&sur_type);
   tree->SetBranchAddress("sur_x",&sur_x);
   tree->SetBranchAddress("sur_y",&sur_y);
   tree->SetBranchAddress("sur_z",&sur_z);
-  tree->SetBranchAddress("sur_range_min",&sur_range_min);
-  tree->SetBranchAddress("sur_range_max",&sur_range_max);
 
   int nentries = tree->GetEntries();
   if(nentries > nbprocess && nbprocess != -1) nentries = nbprocess;
+  std::unordered_map<std::uint64_t, json> surface_bounds = load_geometry_file(geometry_file);
+
   // Limit the number of event processed event to 10000
   // more could lead to errors with the TGraphs
   if(nentries > 10000){
@@ -145,21 +141,41 @@ void Fill(std::map<std::uint64_t,TGraph*>& surface_hist,  std::map<std::uint64_t
     // loop over all the material hits.
     for(int j=0; j<mat_x->size(); j++ ){
 
-      // Ignore surface of incorrect type
-      if(sur_type->at(j) == -1) continue;
-
-      // If a surface was never encountered initialise the position info
+      // If a valid surface id was never encountered initialise the hist, info and weight
       if(surface_hist.find(sur_id->at(j))==surface_hist.end()){
+        int type = -1;
+        float range_min = 0.;
+        float range_max = 0.;
+        if (surface_bounds.count(sur_id->at(j))) {
+          json &bounds = surface_bounds[sur_id->at(j)];
+          std::string btype = bounds["type"].get<std::string>();
+          const auto &values = bounds["values"];
+          if (btype == "CylinderBounds") {
+            type = 1;
+            range_min = -values[1].get<float>();
+            range_max = values[1].get<float>();
+          } else if (btype == "RadialBounds") {
+            type = 2;
+            range_min = values[0].get<float>();
+            range_max = values[1].get<float>();
+          } else {
+            type = -1;
+          }
+        }
 
         float pos;
         float range;
-        if(sur_type->at(j) == 1){
+        if(type == 1){
           pos = sqrt(sur_x->at(j)*sur_x->at(j)+sur_y->at(j)*sur_y->at(j));
         }
-        if(sur_type->at(j) == 2 || sur_type->at(j) == 4){
+        if(type == 2 || type == 4){
           pos = sur_z->at(j);
         }
-        Initialise_info(surface_info[sur_id->at(j)], surface_name, sur_id->at(j), sur_type->at(j), pos, sur_range_min->at(j), sur_range_max->at(j));
+
+        // Ignore surface of incorrect type
+        if(type == -1) continue;
+
+        Initialise_info(surface_info[sur_id->at(j)], surface_name, sur_id->at(j), type, pos, range_min, range_max);
       }
       // Fill the vector of positions for each layer.
       surface_pos[sur_id->at(j)].first.push_back(sqrt(mat_y->at(j)*mat_y->at(j)+mat_x->at(j)*mat_x->at(j)));

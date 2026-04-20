@@ -13,21 +13,21 @@
 
 namespace ActsFatras {
 
-/// Particle outcome identifier.
+/// Generation process type identifier.
 ///
-/// Encodes the outcome of the particle after the simulation
-enum class ParticleOutcome : std::uint32_t {
-  Alive = 0,
-  KilledInteraction = 1,
-  KilledVolumeExit = 2,
-  KilledTime = 3,
-  KilledSecondaryParticle = 4,
+/// Encodes the type of process that generated a particle.
+enum class GenerationProcess : std::uint32_t {
+  eUndefined = 0,
+  eDecay = 1,
+  ePhotonConversion = 2,
+  eBremsstrahlung = 3,
+  eNuclearInteraction = 4,
 };
 
-/// Print particle outcome to output stream
+/// Print generation process type to output stream
 /// @param os Output stream
-/// @param outcome Particle outcome to print
+/// @param processType Generation process type to print
 /// @return Output stream
-std::ostream &operator<<(std::ostream &os, ParticleOutcome outcome);
+std::ostream &operator<<(std::ostream &os, GenerationProcess processType);
 
 }  // namespace ActsFatras

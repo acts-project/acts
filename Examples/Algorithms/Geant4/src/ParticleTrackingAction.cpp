@@ -13,6 +13,7 @@
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/UnitConversion.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/SimulationOutcome.hpp"
 
 #include <cassert>
 #include <ostream>
@@ -131,8 +132,8 @@ SimParticleState ParticleTrackingAction::convert(const G4Track& track,
     numberOfHits = it->second;
   }
 
-  ActsFatras::ParticleOutcome particleOutcome =
-      ActsFatras::ParticleOutcome::Alive;
+  ActsFatras::SimulationOutcome particleOutcome =
+      ActsFatras::SimulationOutcome::Alive;
   if (const auto it = eventStore().particleOutcome.find(particleId);
       it != eventStore().particleOutcome.end()) {
     particleOutcome = it->second;

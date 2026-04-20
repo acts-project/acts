@@ -200,6 +200,7 @@ CkfConfig = namedtuple(
         "maxPixelHoles",
         "maxStripHoles",
         "trimTracks",
+        "useJosephFormulation",
         "constrainToVolumes",
         "endOfWorldVolumes",
     ],
@@ -215,6 +216,7 @@ CkfConfig = namedtuple(
         None,
         None,
         None,
+        False,
         None,
         None,
     ],
@@ -1293,7 +1295,7 @@ def addGbtsSeeding(
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
     connectorInputFileStr = str(connectorInputConfigFile)
     lutInputConfigFileStr = str(lutInputConfigFile)
-    seedFinderConfig = acts.examples.GbtsConfig(
+    seedFinderConfig = acts.examples.GraphBasedSeedingConfig(
         **acts.examples.defaultKWArgs(
             minPt=seedFinderConfigArg.minPt,
             connectorInputFile=connectorInputFileStr,
@@ -1476,6 +1478,7 @@ def addKalmanTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     linkForward: bool = False,
+    useJosephFormulation: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1488,6 +1491,7 @@ def addKalmanTracks(
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
         "chi2Cut": float("inf"),
+        "useJosephFormulation": useJosephFormulation,
     }
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
@@ -1708,6 +1712,7 @@ def addCKFTracks(
             maxPixelHoles=ckfConfig.maxPixelHoles,
             maxStripHoles=ckfConfig.maxStripHoles,
             trimTracks=ckfConfig.trimTracks,
+            useJosephFormulation=ckfConfig.useJosephFormulation,
             constrainToVolumeIds=ckfConfig.constrainToVolumes,
             endOfWorldVolumeIds=ckfConfig.endOfWorldVolumes,
         ),

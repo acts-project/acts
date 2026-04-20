@@ -117,8 +117,10 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
 
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+      - name: Downstream tests
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build-downstream --output-on-failure
 
   linux_examples_test:
     runs-on: ubuntu-latest
@@ -318,8 +320,8 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
 
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+      - name: Downstream tests
+        run: ctest --test-dir build-downstream --output-on-failure
 
   macos:
     runs-on: macos-26
@@ -406,8 +408,8 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
 
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+      - name: Downstream tests
+        run: ctest --test-dir build-downstream --output-on-failure
 
   external_eic-shell:
     runs-on: ubuntu-latest
