@@ -40,6 +40,7 @@
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
 #include "ActsPlugins/Json/UtilitiesJsonConverter.hpp"
 
+#include <stdexcept>
 #include <unordered_set>
 
 template <typename object_t, const char* kContext>
@@ -761,6 +762,11 @@ Acts::TrackingGeometryJsonConverter::TrackingGeometryJsonConverter(
 nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
     const GeometryContext& gctx, const TrackingGeometry& geometry,
     const Options& options) const {
+  if (geometry.geometryVersion() != TrackingGeometry::GeometryVersion::Gen3) {
+    throw std::invalid_argument(
+        "Tracking geometry serialization is only implemented for Gen3 "
+        "geometries");
+  }
   return trackingVolumeToJson(gctx, *geometry.highestTrackingVolume(), options);
 }
 
