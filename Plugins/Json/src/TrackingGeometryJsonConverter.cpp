@@ -77,8 +77,6 @@ struct Acts::TrackingGeometryJsonConverter::PointerToIdLookup {
   std::unordered_map<const object_t*, std::size_t> m_objectIds;
 };
 
-// TEST
-
 template <typename object_t, typename pointer_t, const char* kContext>
 struct Acts::TrackingGeometryJsonConverter::IdToPointerLikeLookup {
   /// Insert a new serialized ID to object mapping.
