@@ -159,14 +159,14 @@ BOOST_AUTO_TEST_CASE(SelfAssignment) {
 }
 
 BOOST_AUTO_TEST_CASE(UniqueAssignment) {
-   CloneablePtr<std::string> a{};
-   a = std::make_unique<std::string>("Cake");
-   BOOST_CHECK(a);
-   BOOST_CHECK_EQUAL(*a, "Cake");
-   CloneablePtr<std::string> b = a;
-   BOOST_CHECK(b);
-   BOOST_CHECK_NE(a.get(), b.get());
-   BOOST_CHECK_EQUAL(*b, "Cake");
+  CloneablePtr<std::string> a{};
+  a = std::make_unique<std::string>("Cake");
+  BOOST_CHECK(a);
+  BOOST_CHECK_EQUAL(*a, "Cake");
+  CloneablePtr<std::string> b = a;
+  BOOST_CHECK(b);
+  BOOST_CHECK_NE(a.get(), b.get());
+  BOOST_CHECK_EQUAL(*b, "Cake");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

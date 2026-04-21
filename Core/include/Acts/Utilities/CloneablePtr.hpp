@@ -88,9 +88,9 @@ class CloneablePtr {
   {
     m_ptr = std::move(ptr);
     m_cloner = [](const T& obj) {
-        return std::make_unique<T1>(static_cast<const T1&>(obj));
-      };
-  
+      return std::make_unique<T1>(static_cast<const T1&>(obj));
+    };
+
     return *this;
   }
 
