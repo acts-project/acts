@@ -193,7 +193,7 @@ class TrackingGeometryJsonConverter {
   ///
   /// @return pointer to deserialized tracking volume hierarchy
   ///
-  /// @note currently the geometry context is only propagated to the 
+  /// @note currently the geometry context is only propagated to the
   /// Portal construction and the NavigationPolicy assignment
   std::shared_ptr<TrackingVolume> trackingVolumeFromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
@@ -214,7 +214,6 @@ class TrackingGeometryJsonConverter {
 
   /// @brief Deserialize one portal link using configured decoders.
   ///
-  /// @param gctx geometry context
   /// @param encoded serialized portal link
   /// @param surfaces id-to-surface map for internal lookup
   /// @param volumes id-to-volume map for internal lookup
