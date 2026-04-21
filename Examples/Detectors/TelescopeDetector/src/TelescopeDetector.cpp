@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <stdexcept>
 
@@ -41,37 +40,10 @@ TelescopeDetector::TelescopeDetector(const Config& cfg)
 
   m_nominalGeometryContext =
       Acts::GeometryContext::dangerouslyDefaultConstruct();
-  auto detectorElementFactory =
-      [](const Acts::Transform3& transform,
-         std::variant<std::shared_ptr<const Acts::PlanarBounds>,
-                      std::shared_ptr<const Acts::DiscBounds>>
-             bounds,
-         double thickness,
-         std::shared_ptr<const Acts::ISurfaceMaterial> material,
-         std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
-             detStore) {
-        auto ID =
-            static_cast<TelescopeDetectorElement::Identifier>(detStore.size());
-
-        std::shared_ptr<TelescopeDetectorElement> detElem;
-        if (bounds.index() == 0) {
-          detElem = std::make_shared<TelescopeDetectorElement>(
-              ID, std::make_shared<Acts::Transform3>(transform),
-              std::get<std::shared_ptr<const Acts::PlanarBounds>>(bounds),
-              thickness, std::move(material));
-        } else {
-          detElem = std::make_shared<TelescopeDetectorElement>(
-              ID, std::make_shared<Acts::Transform3>(transform),
-              std::get<std::shared_ptr<const Acts::DiscBounds>>(bounds),
-              thickness, std::move(material));
-        }
-        detStore.push_back(detElem);
-        return detElem;
-      };
   m_trackingGeometry = buildTelescopeDetector(
-      m_nominalGeometryContext, detectorElementFactory, m_detectorStore,
-      m_cfg.positions, m_cfg.stereos, m_cfg.offsets, m_cfg.bounds,
-      m_cfg.thickness, static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
+      m_nominalGeometryContext, m_detectorStore, m_cfg.positions, m_cfg.stereos,
+      m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
+      static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
       static_cast<Acts::AxisDirection>(m_cfg.binValue));
 }
 
