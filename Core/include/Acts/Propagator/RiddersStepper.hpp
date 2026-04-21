@@ -624,15 +624,6 @@ class RiddersStepper final {
     return *stepResult;
   }
 
-  /// Resets the Jacobian to the Identity
-  /// @param state the state of the RiddersStepper
-  void setIdentityJacobian(State& state) const {
-    m_stepperImpl.setIdentityJacobian(state.primaryStepperState);
-    for (auto& secondaryState : state.secondaryStepperStates) {
-      m_stepperImpl.setIdentityJacobian(secondaryState);
-    }
-  }
-
  private:
   /// The stepper configuration
   Config m_config;
