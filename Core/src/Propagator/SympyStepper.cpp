@@ -301,8 +301,4 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   return h;
 }
 
-void SympyStepper::setIdentityJacobian(State& state) const {
-  state.jacobian = BoundMatrix::Identity();
-}
-
 }  // namespace Acts

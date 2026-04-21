@@ -1,5 +1,6 @@
 acts_add_library(
     PluginRoot
+    src/BlueprintBuilder.cpp
     src/RootMaterialDecorator.cpp
     src/RootMaterialMapIo.cpp
     src/RootMaterialTrackIo.cpp
