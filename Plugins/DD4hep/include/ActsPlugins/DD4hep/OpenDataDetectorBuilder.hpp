@@ -20,6 +20,8 @@ namespace dd4hep {
 class Detector;
 }
 
+class TGeoNode;
+
 namespace Acts {
 class GeometryContext;
 class Logger;
@@ -89,7 +91,7 @@ std::unique_ptr<Acts::TrackingGeometry> buildOpenDataDetectorBarrelEndcap(
 /// Build the Open Data Detector tracking geometry using the TGeo backend with
 /// metadata extracted from DD4hep and explicit ODD layer-name patterns.
 std::unique_ptr<Acts::TrackingGeometry>
-buildOpenDataDetectorBarrelEndcapViaTGeo(const dd4hep::Detector& detector,
+buildOpenDataDetectorBarrelEndcapViaTGeo(const TGeoNode& rootNode,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::Logger& logger);
 

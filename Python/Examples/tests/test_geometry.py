@@ -150,6 +150,7 @@ def test_odd_gen1():
         pytest.param("BarrelEndcap", id="barrel-endcap"),
         pytest.param("DirectLayer", id="direct-layer"),
         pytest.param("DirectLayerGrouped", id="direct-layer-grouped"),
+        pytest.param("TGeo", id="tgeo"),
     ],
 )
 def test_odd_gen3(constructionMethod):
