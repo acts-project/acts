@@ -16,7 +16,6 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/AlignedGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
-#include "ActsExamples/TelescopeDetector/AlignedTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
@@ -91,12 +90,6 @@ void addDetector(py::module& mex) {
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
                        surfaceType, binValue, materialDecorator, logLevel);
-  }
-  {
-    auto ad = py::class_<AlignedTelescopeDetector, TelescopeDetector,
-                         std::shared_ptr<AlignedTelescopeDetector>>(
-                  mex, "AlignedTelescopeDetector")
-                  .def(py::init<const TelescopeDetector::Config&>());
   }
 }
 
