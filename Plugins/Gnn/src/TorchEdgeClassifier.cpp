@@ -177,6 +177,14 @@ PipelineTensors TorchEdgeClassifier::operator()(
 
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
+
+  std::optional<Tensor<float>> filteredEdgeFeatures;
+  if (edgeFeatures.has_value()) {
+    auto filtered = edgeFeatures->index({mask, Slice()}).contiguous();
+    filteredEdgeFeatures =
+        detail::torchToActsTensor<float>(filtered, execContext);
+  }
+
   t3 = std::chrono::high_resolution_clock::now();
 
   auto milliseconds = [](const auto& a, const auto& b) {
@@ -186,11 +194,9 @@ PipelineTensors TorchEdgeClassifier::operator()(
   ACTS_DEBUG("Time inference:      " << milliseconds(t1, t2));
   ACTS_DEBUG("Time postprocessing: " << milliseconds(t2, t3));
 
-  // Don't propagate edge features right now since they are not needed by any
-  // track building algorithm
   return {std::move(tensors.nodeFeatures),
           detail::torchToActsTensor<std::int64_t>(edgesAfterCut, execContext),
-          {},
+          std::move(filteredEdgeFeatures),
           detail::torchToActsTensor<float>(output.masked_select(mask),
                                            execContext)};
 }
