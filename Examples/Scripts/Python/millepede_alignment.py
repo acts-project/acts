@@ -10,7 +10,6 @@ import acts.examples
 
 from acts.examples import (
     TelescopeDetector,
-    AlignedTelescopeDetector,
     Sequencer,
     StructureSelector,
     RandomNumbers,
@@ -70,18 +69,13 @@ from acts.examples.reconstruction import (
 #
 # In the alignment, at least 4 layers are expected (layer ID 8 will
 # be fixed as the alignment reference).
-def getTelescopeDetector(misaligned: bool = False):
+def getTelescopeDetector():
     bounds = [200, 200]
     positions = [30, 60, 90, 120, 150, 180, 210, 240, 270]
     stereos = [0] * len(positions)
-    if not misaligned:
-        detector = TelescopeDetector(
-            bounds=bounds, positions=positions, stereos=stereos, binValue=1
-        )
-    else:
-        detector = AlignedTelescopeDetector(
-            bounds=bounds, positions=positions, stereos=stereos, binValue=1
-        )
+    detector = TelescopeDetector(
+        bounds=bounds, positions=positions, stereos=stereos, binValue=1
+    )
 
     return detector
 
@@ -158,7 +152,7 @@ outputDir = args.output
 os.makedirs(outputDir, exist_ok=True)
 
 # Instantiate the telescope detector - with alignment enabled
-detector = getTelescopeDetector(misaligned=True)
+detector = getTelescopeDetector()
 trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 

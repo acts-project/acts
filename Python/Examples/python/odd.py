@@ -34,6 +34,7 @@ def getOpenDataDetector(
     logLevel: logging level
     constructionMethod: Gen3 conversion method enum value of
       OpenDataDetector.Config.ConstructionMethod
+      use `ConstructionMethod.TGeo` for the TGeo-backed Gen3 path
     """
     import acts.examples.dd4hep
 
