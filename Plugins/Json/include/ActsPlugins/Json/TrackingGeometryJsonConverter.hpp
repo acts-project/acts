@@ -102,9 +102,8 @@ class TrackingGeometryJsonConverter {
                                     const VolumeIdLookup&)>;
   /// Portal link decoder
   using PortalLinkDecoder = JsonKindDispatcher<
-      std::unique_ptr<PortalLinkBase>, const GeometryContext&,
-      const TrackingGeometryJsonConverter&, const SurfacePointerLookup&,
-      const VolumePointerLookup&>;
+      std::unique_ptr<PortalLinkBase>, const TrackingGeometryJsonConverter&,
+      const SurfacePointerLookup&, const VolumePointerLookup&>;
 
   /// Volume bounds encoder
   using VolumeBoundsEncoder = TypeDispatcher<VolumeBounds, nlohmann::json()>;
@@ -179,6 +178,9 @@ class TrackingGeometryJsonConverter {
   /// @param options options for the conversion
   ///
   /// @return serialized tracking volume hierarchy
+  ///
+  /// @note the geometry context is applied to the transformations
+  /// during the serialization
   nlohmann::json trackingVolumeToJson(const GeometryContext& gctx,
                                       const TrackingVolume& world,
                                       const Options& options = Options{}) const;
@@ -190,6 +192,9 @@ class TrackingGeometryJsonConverter {
   /// @param options options for the conversion
   ///
   /// @return pointer to deserialized tracking volume hierarchy
+  ///
+  /// @note currently the geometry context is only propagated to the 
+  /// Portal construction and the NavigationPolicy assignment
   std::shared_ptr<TrackingVolume> trackingVolumeFromJson(
       const GeometryContext& gctx, const nlohmann::json& encoded,
       const Options& options = Options{}) const;
@@ -216,8 +221,7 @@ class TrackingGeometryJsonConverter {
   ///
   /// @return pointer to deserialized portal link
   std::unique_ptr<PortalLinkBase> portalLinkFromJson(
-      const GeometryContext& gctx, const nlohmann::json& encoded,
-      const SurfacePointerLookup& surfaces,
+      const nlohmann::json& encoded, const SurfacePointerLookup& surfaces,
       const VolumePointerLookup& volumes) const;
 
   /// @brief Serialize navigation policy using the configured dispatcher.

@@ -465,7 +465,7 @@ nlohmann::json encodeGridPortalLink(
 }
 
 std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
-    const nlohmann::json& encoded, const Acts::GeometryContext& /*gctx*/,
+    const nlohmann::json& encoded,
     const Acts::TrackingGeometryJsonConverter& /*converter*/,
     const Acts::TrackingGeometryJsonConverter::SurfacePointerLookup& surfaces,
     const Acts::TrackingGeometryJsonConverter::VolumePointerLookup& volumes) {
@@ -476,22 +476,21 @@ std::unique_ptr<Acts::PortalLinkBase> decodeTrivialPortalLink(
 }
 
 std::unique_ptr<Acts::PortalLinkBase> decodeCompositePortalLink(
-    const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
+    const nlohmann::json& encoded,
     const Acts::TrackingGeometryJsonConverter& converter,
     const Acts::TrackingGeometryJsonConverter::SurfacePointerLookup& surfaces,
     const Acts::TrackingGeometryJsonConverter::VolumePointerLookup& volumes) {
   const auto direction = encoded.at(kDirectionKey).get<Acts::AxisDirection>();
   std::vector<std::unique_ptr<Acts::PortalLinkBase>> children;
   for (const auto& child : encoded.at(kChildrenKey)) {
-    children.push_back(
-        converter.portalLinkFromJson(gctx, child, surfaces, volumes));
+    children.push_back(converter.portalLinkFromJson(child, surfaces, volumes));
   }
   return std::make_unique<Acts::CompositePortalLink>(std::move(children),
                                                      direction);
 }
 
 std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
-    const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
+    const nlohmann::json& encoded,
     const Acts::TrackingGeometryJsonConverter& converter,
     const Acts::TrackingGeometryJsonConverter::SurfacePointerLookup& surfaces,
     const Acts::TrackingGeometryJsonConverter::VolumePointerLookup& volumes) {
@@ -532,7 +531,7 @@ std::unique_ptr<Acts::PortalLinkBase> decodeGridPortalLink(
   if (encoded.contains(kArtifactLinksKey)) {
     for (const auto& jArtifact : encoded.at(kArtifactLinksKey)) {
       auto decodedArtifact =
-          converter.portalLinkFromJson(gctx, jArtifact, surfaces, volumes);
+          converter.portalLinkFromJson(jArtifact, surfaces, volumes);
       auto* trivial =
           dynamic_cast<Acts::TrivialPortalLink*>(decodedArtifact.get());
       if (trivial == nullptr) {
@@ -778,10 +777,9 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::portalLinkToJson(
 
 std::unique_ptr<Acts::PortalLinkBase>
 Acts::TrackingGeometryJsonConverter::portalLinkFromJson(
-    const GeometryContext& gctx, const nlohmann::json& encoded,
-    const SurfacePointerLookup& surfaces,
+    const nlohmann::json& encoded, const SurfacePointerLookup& surfaces,
     const VolumePointerLookup& volumes) const {
-  return m_cfg.decodePortalLink(encoded, gctx, *this, surfaces, volumes);
+  return m_cfg.decodePortalLink(encoded, *this, surfaces, volumes);
 }
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::navigationPolicyToJson(
@@ -1029,11 +1027,11 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     std::unique_ptr<PortalLinkBase> opposite = nullptr;
 
     if (!jPortal.at(kAlongNormalKey).is_null()) {
-      along = portalLinkFromJson(gctx, jPortal.at(kAlongNormalKey),
-                                 surfacePointers, volumePointers);
+      along = portalLinkFromJson(jPortal.at(kAlongNormalKey), surfacePointers,
+                                 volumePointers);
     }
     if (!jPortal.at(kOppositeNormalKey).is_null()) {
-      opposite = portalLinkFromJson(gctx, jPortal.at(kOppositeNormalKey),
+      opposite = portalLinkFromJson(jPortal.at(kOppositeNormalKey),
                                     surfacePointers, volumePointers);
     }
     if (along == nullptr && opposite == nullptr) {
