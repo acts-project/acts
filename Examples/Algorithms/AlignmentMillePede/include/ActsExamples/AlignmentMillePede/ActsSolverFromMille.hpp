@@ -48,6 +48,8 @@ class ActsSolverFromMille final : public IAlgorithm {
     /// to get ROOT tree / plain text / classic Millepede
     /// binary outputs. All three can be read by the interface.
     std::string milleInput;
+    /// name of the text file to write the results to.
+    std::string txtOutput;
     // the tracking geometry to use
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     // magnetic field

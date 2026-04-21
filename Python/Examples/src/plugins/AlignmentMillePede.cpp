@@ -25,6 +25,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignmentMillePede, m) {
                                 inputMeasurements, inputTracks,
                                 trackingGeometry, magneticField, fixModules);
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsSolverFromMille, m, "ActsSolverFromMille",
-                                milleInput, trackingGeometry, magneticField,
-                                fixModules);
+                                milleInput, txtOutput, trackingGeometry,
+                                magneticField, fixModules);
 }

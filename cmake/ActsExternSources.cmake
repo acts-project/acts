@@ -50,7 +50,7 @@ set(ACTS_MILLE_SOURCE
 # translate version string to the historical Millepede release naming convention
 string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
 set(ACTS_MP2_SOURCE
-    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mille_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=b6a316e4b1ebf93cbf72ddd57a157e09f4446e4677352ef288748731ac2c0297"
+    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mp2_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=b6a316e4b1ebf93cbf72ddd57a157e09f4446e4677352ef288748731ac2c0297"
     CACHE STRING
     "Source to take Millepede-II from"
 )

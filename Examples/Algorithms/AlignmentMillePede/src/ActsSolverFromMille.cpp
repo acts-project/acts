@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
+#include <fstream>
 #include <memory>
 
 #include <Mille/MilleFactory.h>
@@ -117,7 +118,8 @@ ProcessCode ActsSolverFromMille::finalize() {
 
   /// in a real experiment, the results would be written out
   /// and stored e.g. in a DB file for further use / validation.
-  /// For this initial demo, we just print them out.
+  /// For this initial demo, we just print them out and dump them to a text
+  /// file.
 
   ACTS_INFO("Performed internal alignment. ");
   ACTS_INFO(std::setw(16) << "  Tracks used: " << alignmentStates.size());
@@ -127,6 +129,10 @@ ProcessCode ActsSolverFromMille::finalize() {
   ACTS_INFO(std::setw(16) << "  delta Chi2   = " << alignResult.deltaChi2);
   ACTS_INFO(std::setw(16) << "  Alignment parameter updates: ");
   std::vector<std::string> parLabels{"dx", "dy", "dz", "rx", "ry", "rz"};
+
+  std::ofstream resFile;
+  resFile.open(m_cfg.txtOutput);
+
   for (auto [surface, index] : alignResult.idxedAlignSurfaces) {
     ACTS_INFO(std::setw(20)
               << " Surface with geo ID " << surface->geometryId() << ": ");
@@ -137,8 +143,29 @@ ProcessCode ActsSolverFromMille::finalize() {
                 << alignResult.deltaAlignmentParameters(row) << std::setw(6)
                 << " +/- " << std::setw(10)
                 << std::sqrt(alignResult.alignmentCovariance(row, row)));
+      /// also write to a file in the MillePede result format. This allows a 1:1
+      /// comparison.
+      // column 1: parameter index
+      resFile << std::setw(8)
+              << row + 1
+              // column 2: parameter delta from fit
+              << "   " << std::setw(12)
+              << alignResult.deltaAlignmentParameters(row)
+              // column 3: optional pre-sigma for parameter delta
+              << "   " << std::setw(4)
+              << 0.
+              // column 4: change of parameter delta w.r.t start value
+              << "   " << std::setw(12)
+              << alignResult.deltaAlignmentParameters(row)
+              // column 5: uncertainty of parameter delta from the fit
+              << "   " << std::setw(12)
+              << std::sqrt(alignResult.alignmentCovariance(row, row))
+              // column 6: count of measurements seeing this parameter.
+              // Not available in ACTS solver, write a placeholder of 99
+              << "    99 " << std::endl;
     }
   }
+  resFile.close();
 
   return ProcessCode::SUCCESS;
 }

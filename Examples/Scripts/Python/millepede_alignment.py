@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 
+from asyncio import subprocess
 import os
 import argparse
 import pathlib
+import subprocess
 from pathlib import Path
 
 import acts
 import acts.examples
+
+import enum
+import matplotlib.pyplot as plt
+
 
 from acts.examples import (
     TelescopeDetector,
@@ -111,17 +117,109 @@ def addSolverFromMille(
     fixModules: set,
     logLevel: acts.logging.Level = acts.logging.INFO,
     milleInput: str = "MilleBinary.root",
+    txtOutput="ActsAlignmentRes.txt",
 ):
 
     solver = ActsSolverFromMille(
         level=logLevel,
         milleInput=milleInput,
+        txtOutput=txtOutput,
         trackingGeometry=trackingGeometry,
         magneticField=magField,
         fixModules=fixModules,
     )
     s.addAlgorithm(solver)
     return s
+
+
+# Some helpers for visualising the result
+class DoFs(enum.IntEnum):
+    dx = 1
+    dy = 2
+    dz = 3
+    rx = 4
+    ry = 5
+    rz = 6
+
+
+class AlignmentParResult:
+    def __init__(self, theLine: str):
+        labelTxt, ValTxt, seed, val2, sigmaTxt, n = theLine.split()
+        self.label = int(labelTxt)
+        self.value = float(ValTxt)
+        self.sigma = float(sigmaTxt)
+        self.seed = float(seed)
+        self.Counts = int(n)
+
+    def signif(self):
+        return (self.value - self.seed) / self.sigma
+
+
+def readAli(fin):
+    content = []
+    with open(fin) as f:
+        for line in f.readlines()[1:]:
+            content += [AlignmentParResult(line)]
+    return content
+
+
+def selByDoF(results: list, DoF: int):
+    return [res for res in results if res.label % 6 == int(DoF % 6)]
+
+
+def plotPar(resultFileActs, resultFileMP2, DoF, fname, trueValues=[], **kwargs):
+
+    results_mp2 = readAli(resultFileMP2)
+    results_acts = readAli(resultFileActs)
+
+    res_mp2 = selByDoF(results_mp2, DoF)
+    res_acts = selByDoF(results_acts, DoF)
+
+    fig, ax = plt.subplots()
+    labels = [r.label for r in res_mp2]
+    values = [r.value for r in res_mp2]
+    errorsY = [r.sigma for r in res_mp2]
+
+    acts_labels = [r.label for r in res_acts]
+    # sign convention
+    acts_values = [-1 * r.value for r in res_acts]
+    acts_errorsY = [r.sigma for r in res_acts]
+
+    ax.errorbar(
+        acts_labels,
+        acts_values,
+        acts_errorsY,
+        color="r",
+        marker="s",
+        linestyle="None",
+        label="ACTS solver",
+    )
+
+    ax.errorbar(labels, values, errorsY, label="MillePede-II", **kwargs)
+
+    corrVals = []
+    corrLabels = []
+    corrErrors = []
+    for label, value in trueValues:
+        injected = [-1 * value for r in res_mp2 if r.label == label]
+        if len(injected) > 0:
+            corrVals += [injected]
+            corrLabels += [label]
+            corrErrors += [0]
+    ax.errorbar(
+        corrLabels,
+        corrVals,
+        corrErrors,
+        color="b",
+        marker="o",
+        fillstyle="none",
+        label="injected",
+    )
+    ax.set_xlabel("Parameter label")
+    ax.set_ylabel("Correction")
+    ax.grid(which="major", axis="y")
+    ax.legend()
+    fig.savefig(fname, bbox_inches="tight", pad_inches=0.2)
 
 
 u = acts.UnitConstants
@@ -300,14 +398,103 @@ addCKFTracks(
     writePerformance=False,
     writeTrackSummary=False,
 )
-
+milleBinary = outputDir / "MyBinary.root"
 # And add our alignment sandbox
-addAlignmentSandbox(
-    s, trackingGeometry, field, fixModules, milleOutput=outputDir / "MyBinary.root"
-)
+addAlignmentSandbox(s, trackingGeometry, field, fixModules, milleOutput=milleBinary)
+actsResultFile = "ActsAlignmentRes.txt"
 # And finally read back and solve in ACTS
 addSolverFromMille(
-    s, trackingGeometry, field, fixModules, milleInput=outputDir / "MyBinary.root"
+    s,
+    trackingGeometry,
+    field,
+    fixModules,
+    milleInput=milleBinary,
+    txtOutput=actsResultFile,
 )
 
 s.run()
+
+### now, we solve the same alignment problem using the Millepede solver
+
+print(" ===== Now aligning with MP2 =====")
+
+# Millepede steering file - this should be sensibly generated in real life use
+pedeSteeringArgs = [
+    # tell pede to load our binary
+    "Cfiles",
+    str(milleBinary),
+    # set solution method to matrix inversion, max 5 internal iterations, tolerance 0.8
+    "Method  Inversion 5 0.8",
+    # print progress
+    "monitorprogress 1 10000",
+    # min 10 entries per degree of freedom to activate in fit
+    "entries 10 10 2",
+    # iterations for outlier downweighting
+    "outlierdownweighting 4",
+    # parallelisation of inversion
+    "threads 24",
+    # only recalculate global matrix once
+    "matiter 1",
+    # print statistics
+    "printcounts 2",
+    # fill built-in residual plots
+    "monitorresiduals",
+    # count records
+    "countrecords",
+    # reject tracks with poor condition number
+    "maxlocalcond 10.",
+    # outlier warning
+    "outlierfracwarnthreshold 1",
+]
+steeringFile = outputDir / "pedeSteerMaster.txt"
+
+with open(steeringFile, "w") as fSteer:
+    fSteer.writelines([a + "\n" for a in pedeSteeringArgs])
+
+# now run the fitter
+subprocess.run(["pede", str(steeringFile)])
+
+# check the return code
+with open("millepede.end", "r") as mpend:
+    tokens = mpend.readline().split()
+    stat = int(tokens[0])
+    descr = " ".join(tokens[1:])
+
+statCodes = {
+    (-1, -1): "crash",
+    (0, 0): "normal exit",
+    (1, 1): "tolerable warnings",
+    (2, 5): "serious warnings",
+    (10, 40): "abort",
+}
+res = "unknown"
+for range, name in statCodes.items():
+    if range[0] <= stat and stat <= range[1]:
+        res = name
+print(f"Millepede-II Alignment fit ended with {res}.\n   Status code {stat}: {descr}")
+
+# visualise!
+
+plot_raw_dx = plotPar(
+    actsResultFile, "millepede.res", DoFs.dx, "Results_dx.png", fmt=".k"
+)
+plot_raw_dy = plotPar(
+    actsResultFile, "millepede.res", DoFs.dy, "Results_dy.png", fmt=".k"
+)
+plot_raw_dz = plotPar(
+    actsResultFile,
+    "millepede.res",
+    DoFs.dz,
+    "Results_dz.png",
+    trueValues=[(3, 0.200)],
+    fmt=".k",
+)
+plot_raw_rx = plotPar(
+    actsResultFile, "millepede.res", DoFs.rx, "Results_rx.png", fmt=".k"
+)
+plot_raw_ry = plotPar(
+    actsResultFile, "millepede.res", DoFs.ry, "Results_ry.png", fmt=".k"
+)
+plot_raw_rz = plotPar(
+    actsResultFile, "millepede.res", DoFs.rz, "Results_rz.png", fmt=".k"
+)
