@@ -152,7 +152,7 @@ ambi_config = args.ambi_config
 seedFilter_ML = args.MLSeedFilter
 geoDir = getOpenDataDetectorDirectory()
 actsDir = pathlib.Path(__file__).parent.parent.parent.parent
-# acts.examples.dump_args_calls(locals())  # show python binding calls
+# acts.examples.dump_args_calls()  # show python binding calls
 
 oddMaterialMap = (
     args.material_config
