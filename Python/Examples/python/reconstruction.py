@@ -2003,9 +2003,9 @@ def addGnn(
         )
 
     if device is None:
-        import acts.gnn
+        from acts.gnn import Device
 
-        device = acts.gnn.Device.Cuda()
+        device = Device.Cuda()
 
     # GNN track finding algorithm
     findingAlg = acts.examples.gnn.TrackFindingAlgorithmGnn(
