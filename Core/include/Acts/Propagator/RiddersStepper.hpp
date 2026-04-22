@@ -525,11 +525,11 @@ class RiddersStepper final {
       const auto& nudgedVector = boundVectors[i];
 
       const auto diff = [&]() {
-        BoundVector diff = nudgedVector - referenceVector;
-        diff[eBoundPhi] = detail::difference_periodic(
-            nudgedVector[eBoundPhi], referenceVector[eBoundPhi],
-            2 * std::numbers::pi);
-        return diff;
+        BoundVector d = nudgedVector - referenceVector;
+        d[eBoundPhi] = detail::difference_periodic(nudgedVector[eBoundPhi],
+                                                   referenceVector[eBoundPhi],
+                                                   2 * std::numbers::pi);
+        return d;
       };
 
       state.jacobian.col(index) += diff() / delta;
