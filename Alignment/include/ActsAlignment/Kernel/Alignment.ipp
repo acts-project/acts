@@ -285,31 +285,19 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Construct an AlignmentResult object
   AlignmentResult alignResult;
 
-  // Validation check: if alignable structures are provided, ensure that no
-  // detector element is assigned to more than one structure. Mixed mode is
-  // supported: a detector element may float as a standalone module (i.e. not
-  // appear in any structure) and is then aligned at module level.
-  if (!alignOptions.alignedStructures.empty()) {
-    std::unordered_map<const Acts::SurfacePlacementBase*, unsigned int>
-        assignmentCount;
-    for (auto* structure : alignOptions.alignedStructures) {
-      for (const auto& surface : structure->surfaces()) {
-        const auto* detElement = surface->surfacePlacement();
-        if (detElement != nullptr) {
-          assignmentCount[detElement]++;
-        }
-      }
+  // Build the hierarchy registry and validate it. Mixed mode is supported:
+  // a detector element may float as a standalone module (i.e. not appear in
+  // any structure) and is then aligned at module level.
+  AlignmentHierarchy hierarchy(alignOptions.alignedStructures);
+  const auto validation = hierarchy.validate();
+  if (!validation.ok()) {
+    for (const auto* detElement : validation.overlapping) {
+      ACTS_ERROR("Detector element "
+                 << detElement
+                 << " (Surface ID: " << detElement->surface().geometryId()
+                 << ") is assigned to multiple alignable structures");
     }
-
-    for (auto* detElement : alignOptions.alignedDetElements) {
-      if (assignmentCount[detElement] > 1) {
-        ACTS_ERROR("Detector element "
-                   << detElement
-                   << " (Surface ID: " << detElement->surface().geometryId()
-                   << ") is assigned to multiple alignable structures");
-        return AlignmentError::HierarchyValidationFailure;
-      }
-    }
+    return AlignmentError::HierarchyValidationFailure;
   }
 
   // Assign index to the alignable surface
