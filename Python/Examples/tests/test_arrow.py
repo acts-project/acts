@@ -16,6 +16,25 @@ pytestmark = pytest.mark.skipif(
 )
 
 
+def test_coexist_with_pyarrow():
+    """Verify acts.examples.arrow and pyarrow can be loaded into the same
+    Python process. Regression guard for the linker-isolation design: if
+    libActsPluginArrow leaked any arrow symbols, or if pyarrow's bundled
+    libarrow got shadowed by a differently-built libarrow, this import
+    sequence would fail with a missing-vtable / missing-symbol ImportError.
+
+    Skipped if pyarrow isn't installed."""
+    pytest.importorskip("pyarrow")
+
+    import pyarrow as pa
+    from acts.examples.arrow import ParquetWriter  # forces the arrow island
+
+    # Exercise pyarrow end-to-end to prove its libarrow loaded correctly
+    # (not just pyarrow's __init__).
+    table = pa.table({"x": [1, 2, 3]})
+    assert table.num_rows == 3
+
+
 PARTICLE_FIELDS = {
     "particle_id",
     "pdg",

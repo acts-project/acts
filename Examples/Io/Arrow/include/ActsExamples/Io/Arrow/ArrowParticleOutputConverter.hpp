@@ -11,6 +11,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
+#include "ActsPlugins/Arrow/Export.hpp"
 
 #include <memory>
 #include <string>
@@ -26,7 +27,8 @@ namespace ActsExamples {
 /// charge, mass, and the initial-state four-momentum / four-position. The
 /// table is placed on the whiteboard under the configured key; the
 /// @c ParquetWriter picks it up from there and stamps the @c event_id column.
-class ArrowParticleOutputConverter final : public ArrowOutputConverter {
+class ACTS_ARROW_EXPORT ArrowParticleOutputConverter final
+    : public ArrowOutputConverter {
  public:
   struct Config {
     /// Input @c SimParticleContainer on the whiteboard.

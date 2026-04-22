@@ -31,7 +31,10 @@ target_link_libraries(
 
 set_target_properties(
     ActsExamplesIoParquet_obj
-    PROPERTIES POSITION_INDEPENDENT_CODE ON
+    PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN YES
 )
 
 target_sources(

@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsPlugins/Arrow/Export.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -30,7 +31,7 @@ namespace ActsExamples {
 ///
 /// The event count is taken from the Parquet footer (@c num_rows). All input
 /// files must agree on their row count.
-class ParquetReader : public IReader {
+class ACTS_ARROW_EXPORT ParquetReader : public IReader {
  public:
   struct Config {
     /// Directory containing the input Parquet files.

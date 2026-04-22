@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsPlugins/Arrow/Export.hpp"
 
 #include <memory>
 #include <string>
@@ -28,7 +29,7 @@ namespace ActsExamples {
 /// Unlike podio collections, @c arrow::Table has no intrinsic type identity —
 /// "particles" and "tracks" have the same C++ type. Subclasses may override
 /// @c expectedSchema() to opt into schema validation.
-class ArrowInputConverter : public IAlgorithm {
+class ACTS_ARROW_EXPORT ArrowInputConverter : public IAlgorithm {
  public:
   /// Constructor for the Arrow input converter.
   ///
