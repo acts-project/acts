@@ -94,8 +94,9 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
   DummyFitOptions kfOptions;
   kfOptions.geoContext = geoCtx;
 
-  // --- Test Case 1: Orphan detection ---
-  // Only el1 and el2 are in structures. el3 is an orphan.
+  // --- Test Case 1: Mixed mode ---
+  // Only el1 and el2 are in structures. el3 floats as a standalone module.
+  // Mixed mode is allowed: the hierarchy check must not flag this.
   struct1->addSurface(el1->surface().getSharedPtr());
   struct2->addSurface(el2->surface().getSharedPtr());
 
@@ -108,15 +109,14 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
   std::vector<Acts::BoundTrackParameters> params;
 
   auto res1 = alignEngine.align(trajs, params, options);
-  BOOST_CHECK(!res1.ok());
-  BOOST_CHECK_EQUAL(res1.error(),
-                    ActsAlignment::AlignmentError::HierarchyValidationFailure);
+  if (!res1.ok()) {
+    BOOST_CHECK_NE(res1.error(),
+                   ActsAlignment::AlignmentError::HierarchyValidationFailure);
+  }
 
   // --- Test Case 2: Overlap detection ---
-  // Add el1 to struct2 as well.
-  struct2->addSurface(
-      el1->surface().getSharedPtr());  // el1 is now in both struct1 and struct2
-  struct1->addSurface(el3->surface().getSharedPtr());  // add el3 so no orphans
+  // Add el1 to struct2 as well, so el1 is now in both struct1 and struct2.
+  struct2->addSurface(el1->surface().getSharedPtr());
 
   ActsAlignment::AlignmentOptions<DummyFitOptions> options2(
       kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {},
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
   // It will likely fail with something else because we have 0 tracks,
   // but it should PASS the hierarchy check.
   if (!res3.ok()) {
-    BOOST_CHECK(res3.error() !=
-                ActsAlignment::AlignmentError::HierarchyValidationFailure);
+    BOOST_CHECK_NE(res3.error(),
+                   ActsAlignment::AlignmentError::HierarchyValidationFailure);
   }
 }
