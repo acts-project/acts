@@ -14,7 +14,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Propagator/RiddersStepper.hpp"
 
 #include "PropagationDatasets.hpp"

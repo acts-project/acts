@@ -358,8 +358,6 @@ inline std::pair<Acts::BoundTrackParameters, double> transportFreely(
   options_t options(geoCtx, magCtx);
   options.direction = Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
-  options.surfaceTolerance = 1_nm;
-  options.stepping.stepTolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, options);
   BOOST_CHECK(result.ok());
@@ -383,8 +381,6 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   options_t options(geoCtx, magCtx);
   options.direction = Direction::Forward();
   options.pathLimit = pathLimit;
-  options.surfaceTolerance = 1_nm;
-  options.stepping.stepTolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, targetSurface, options);
   BOOST_CHECK(result.ok());

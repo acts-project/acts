@@ -18,6 +18,7 @@
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <sstream>
 #include <string>
@@ -519,7 +520,15 @@ class RiddersStepper final {
       const auto& [index, delta] = state.variationMap[i];
       const auto& nudgedVector = boundVectors[i];
 
-      state.jacobian.col(index) += (nudgedVector - referenceVector) / delta;
+      const auto diff = [&]() {
+        BoundVector diff = nudgedVector - referenceVector;
+        diff[eBoundPhi] = detail::difference_periodic(
+            nudgedVector[eBoundPhi], referenceVector[eBoundPhi],
+            2 * std::numbers::pi);
+        return diff;
+      };
+
+      state.jacobian.col(index) += diff() / delta;
       ++numberOfVariationsPerParameter[index];
     }
     for (std::size_t i = 0; i < eBoundSize; ++i) {
