@@ -39,7 +39,7 @@ void addTrackFinding(py::module& mex) {
   ACTS_PYTHON_DECLARE_ALGORITHM(MeasurementMapAlgorithm, mex,
                                 "MeasurementMapAlgorithm", inputTracks,
                                 inputMeasurementMap, inputIndexRemapping,
-                                outputMeasurementMap);
+                                outputMeasurementMap, includeOutliers);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(MeasurementFilterAlgorithm, mex,
                                 "MeasurementFilterAlgorithm", inputMeasurements,

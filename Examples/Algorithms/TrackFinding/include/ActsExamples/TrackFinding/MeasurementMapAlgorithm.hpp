@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/MeasurementMap.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -54,6 +54,9 @@ class MeasurementMapAlgorithm final : public IAlgorithm {
     /// Output MeasurementMap for this pass (indices in original-container
     /// space).
     std::string outputMeasurementMap;
+    /// If true, outlier track states (in addition to measurements) are
+    /// recorded in the output map.  Default: false.
+    bool includeOutliers = false;
   };
 
   explicit MeasurementMapAlgorithm(
@@ -67,12 +70,12 @@ class MeasurementMapAlgorithm final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-  ReadDataHandle<MeasurementMap> m_inputMeasurementMap{this,
-                                                       "InputMeasurementMap"};
+  ReadDataHandle<UsedMeasurementMap> m_inputMeasurementMap{
+      this, "InputMeasurementMap"};
   ReadDataHandle<MeasurementIndexRemapping> m_inputIndexRemapping{
       this, "InputIndexRemapping"};
-  WriteDataHandle<MeasurementMap> m_outputMeasurementMap{this,
-                                                         "OutputMeasurementMap"};
+  WriteDataHandle<UsedMeasurementMap> m_outputMeasurementMap{
+      this, "OutputMeasurementMap"};
 };
 
 }  // namespace ActsExamples

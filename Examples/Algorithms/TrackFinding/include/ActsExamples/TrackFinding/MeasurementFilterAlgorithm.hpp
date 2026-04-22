@@ -9,7 +9,6 @@
 #pragma once
 
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/MeasurementMap.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -58,8 +57,8 @@ class MeasurementFilterAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-  ReadDataHandle<MeasurementMap> m_inputMeasurementMap{this,
-                                                       "InputMeasurementMap"};
+  ReadDataHandle<UsedMeasurementMap> m_inputMeasurementMap{
+      this, "InputMeasurementMap"};
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
   WriteDataHandle<MeasurementIndexRemapping> m_outputIndexRemapping{

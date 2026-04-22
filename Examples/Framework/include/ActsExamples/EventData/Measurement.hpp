@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 #include <boost/container/static_vector.hpp>
@@ -530,5 +531,17 @@ MeasurementContainer::FixedProxy<Size> MeasurementContainer::emplaceMeasurement(
 static_assert(
     std::random_access_iterator<MeasurementContainer::iterator> &&
     std::random_access_iterator<MeasurementContainer::const_iterator>);
+
+/// Set of measurement indices (positions in MeasurementContainer) that have
+/// been consumed by a tracking pass.
+///
+/// Indices are always relative to the original, unfiltered MeasurementContainer
+/// produced by digitization so they remain stable across multiple passes.
+using UsedMeasurementMap = std::unordered_set<Index>;
+
+/// Maps a filtered-container index to its index in the original
+/// MeasurementContainer.  Element i of this vector holds the original index
+/// of the i-th measurement in the filtered container.
+using MeasurementIndexRemapping = std::vector<Index>;
 
 }  // namespace ActsExamples

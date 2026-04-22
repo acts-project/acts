@@ -37,7 +37,7 @@ ProcessCode MeasurementMapAlgorithm::execute(
   const auto& tracks = m_inputTracks(ctx);
 
   // Start from the previous pass's map if provided, otherwise empty.
-  MeasurementMap outputMap;
+  UsedMeasurementMap outputMap;
   if (m_inputMeasurementMap.isInitialized()) {
     outputMap = m_inputMeasurementMap(ctx);
   }
@@ -53,7 +53,10 @@ ProcessCode MeasurementMapAlgorithm::execute(
 
   for (auto track : tracks) {
     for (auto state : track.trackStatesReversed()) {
-      if (!state.typeFlags().isMeasurement()) {
+      const bool isMeasurement = state.typeFlags().isMeasurement();
+      const bool isOutlier =
+          m_cfg.includeOutliers && state.typeFlags().isOutlier();
+      if (!isMeasurement && !isOutlier) {
         continue;
       }
       if (!state.hasUncalibratedSourceLink()) {
