@@ -14,7 +14,6 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <cstddef>
@@ -54,17 +53,17 @@ void addTrackFitting(py::module& mex) {
            double reverseFilteringMomThreshold,
            double reverseFilteringCovarianceScaling,
            FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
-           Logging::Level level) {
+           bool useJosephFormulation, Logging::Level level) {
           return makeKalmanFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
               multipleScattering, energyLoss, reverseFilteringMomThreshold,
               reverseFilteringCovarianceScaling, freeToBoundCorrection, chi2Cut,
-              *getDefaultLogger("Kalman", level));
+              useJosephFormulation, *getDefaultLogger("Kalman", level));
         },
         "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
         "energyLoss"_a, "reverseFilteringMomThreshold"_a,
         "reverseFilteringCovarianceScaling"_a, "freeToBoundCorrection"_a,
-        "chi2Cut"_a, "level"_a);
+        "chi2Cut"_a, "useJosephFormulation"_a, "level"_a);
 
     py::class_<MeasurementCalibrator, std::shared_ptr<MeasurementCalibrator>>(
         mex, "MeasurementCalibrator");

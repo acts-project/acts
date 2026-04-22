@@ -6,15 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/TrackFitting/detail/GainMatrixUpdaterImpl.hpp"
+#include "Acts/TrackFitting/detail/MbfSmootherImpl.hpp"
 
 #include "Acts/EventData/AnyTrackStateProxy.hpp"
 
 // clang-format off
 namespace Acts {
 
-template std::tuple<double, std::error_code>
-GainMatrixUpdater::visitMeasurementImpl<@DIM@>(AnyMutableTrackStateProxy trackState,
-                                               const Logger& logger) const;
+template void
+MbfSmoother::visitMeasurementImpl<@DIM@>(const AnyConstTrackStateProxy& ts,
+                                         BoundMatrix& bigLambdaHat,
+                                         BoundVector& smallLambdaHat) const;
 
 }  // namespace Acts

@@ -98,6 +98,19 @@ struct TGeoSurfaceConverter {
       const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
       double scalor = 10.) noexcept(false);
 
+  /// Extract the transform from a TGeoShape by trying cylinder, disc, then
+  /// plane conversion.
+  ///
+  /// @param tgShape The TGeoShape
+  /// @param tgMatrix The matrix representing the transform
+  /// @param axes The axes definition
+  /// @param scalor The unit scalor between TGeo and Acts
+  /// @return The Acts transform
+  /// @throws std::runtime_error if the shape cannot be converted
+  static Acts::Transform3 transformFromShape(
+      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix, TGeoAxes axes,
+      double scalor = 10.) noexcept(false);
+
   /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
   /// * it will return any multiple of 360.0 to 2pi

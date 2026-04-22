@@ -113,7 +113,7 @@ inline std::pair<double, double> generateBoundDirection(
   // monothonical decreasing between [0, pi]
   double cosThetaMin = std::cos(options.thetaMax);
   // ensure upper bound is included. see e.g.
-  // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
+  // https://en.cppreference.com/cpp/numeric/random/uniform_real_distribution
   double cosThetaMax = std::nextafter(std::cos(options.thetaMin),
                                       std::numeric_limits<double>::max());
 
