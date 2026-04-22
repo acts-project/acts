@@ -285,8 +285,10 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Construct an AlignmentResult object
   AlignmentResult alignResult;
 
-  // Validation check: if alignable structures are provided, ensure that every
-  // alignable detector element is part of exactly one alignable structure
+  // Validation check: if alignable structures are provided, ensure that no
+  // detector element is assigned to more than one structure. Mixed mode is
+  // supported: a detector element may float as a standalone module (i.e. not
+  // appear in any structure) and is then aligned at module level.
   if (!alignOptions.alignedStructures.empty()) {
     std::unordered_map<const Acts::SurfacePlacementBase*, unsigned int>
         assignmentCount;
@@ -300,13 +302,6 @@ ActsAlignment::Alignment<fitter_t>::align(
     }
 
     for (auto* detElement : alignOptions.alignedDetElements) {
-      if (assignmentCount[detElement] == 0) {
-        ACTS_ERROR("Detector element "
-                   << detElement
-                   << " (Surface ID: " << detElement->surface().geometryId()
-                   << ") is not assigned to any alignable structure");
-        return AlignmentError::HierarchyValidationFailure;
-      }
       if (assignmentCount[detElement] > 1) {
         ACTS_ERROR("Detector element "
                    << detElement

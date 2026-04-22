@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsCore Acts::Alignment)
+set(unittest_extra_libraries Acts::Alignment)
 
 add_unittest(Alignment AlignmentTests.cpp)
 
