@@ -92,7 +92,7 @@ TEST_F(detray_algebra, vector2D) {
   // Cast operations to phi, theta, eta, perp
   vector2 vD{1.f, 1.f};
   scalar phi = detray::vector::phi(vD);
-  ASSERT_NEAR(phi, M_PI_4, this->epsilon());
+  ASSERT_NEAR(phi, constant<scalar>::pi_4, this->epsilon());
 
   scalar perp = detray::vector::perp(vD);
   ASSERT_NEAR(perp, std::sqrt(2.), this->epsilon());
@@ -203,7 +203,7 @@ TEST_F(detray_algebra, vector3D) {
   // Cast operations to phi, theta, eta, perp
   vector3 vD{1.f, 1.f, 1.f};
   scalar phi = detray::vector::phi(vD);
-  ASSERT_NEAR(phi, M_PI_4, this->epsilon());
+  ASSERT_NEAR(phi, constant<scalar>::pi_4, this->epsilon());
 
   scalar theta = detray::vector::theta(vD);
   ASSERT_NEAR(theta, std::atan2(std::sqrt(2.), 1.), this->epsilon());

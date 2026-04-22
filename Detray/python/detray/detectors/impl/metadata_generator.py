@@ -1,8 +1,10 @@
-# Detray library, part of the ACTS project (R&D line)
+# This file is part of the ACTS project.
 #
-# (c) 2026 CERN for the benefit of the ACTS project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
-# Mozilla Public License Version 2.0
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Project includes
 from .type_helpers import link
@@ -376,13 +378,14 @@ class metadata_generator:
 
     # Beginning of the header
     def __preamble(self, md: metadata):
-        copy_right = f"\
-/** Detray library, part of the ACTS project (R&D line)\n\
- *\n\
- * (c) {datetime.now().year} CERN for the benefit of the ACTS project\n\
- *\n\
- * Mozilla Public License Version 2.0\n\
- */"
+        copy_right = "\
+// This file is part of the ACTS project.\
+//\
+// Copyright (C) 2016 CERN for the benefit of the ACTS project\
+//\
+// This Source Code Form is subject to the terms of the Mozilla Public\
+// License, v. 2.0. If a copy of the MPL was not distributed with this\
+// file, You can obtain one at https://mozilla.org/MPL/2.0/."
         self.__put(copy_right)
         self.__lines(2)
         self.__add_header_includes(md.shapes, md.materials, md.acceleration_structs)

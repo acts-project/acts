@@ -194,7 +194,7 @@ GTEST_TEST(detray_intersection, helix_cylinder_intersector_no_bfield) {
   ASSERT_TRUE(hits_bound[0].local()[0] != not_defined &&
               hits_bound[0].local()[1] != not_defined);
   // p2[0] = r * phi : 180deg in the opposite direction with r = 4
-  EXPECT_NEAR(hits_bound[0].local()[0], 4.f * M_PI, tol);
+  EXPECT_NEAR(hits_bound[0].local()[0], 4.f * constant<scalar>::pi, tol);
   EXPECT_NEAR(hits_bound[0].local()[1], -5.f, tol);
 
   // first intersection lies behind the track
