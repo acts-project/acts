@@ -1,0 +1,22 @@
+# Detray library, part of the ACTS project (R&D line)
+#
+# (c) 2026 CERN for the benefit of the ACTS project
+#
+# Mozilla Public License Version 2.0
+
+# This script sets up the Detray Python package in the environment in a somewhat
+# robust way.
+
+if [ -n "$ZSH_VERSION" ]; then
+    python_dir=${0:a:h}
+elif [ -n "$BASH_VERSION" ]; then
+    python_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
+else
+    # If the current shell is not ZSH or Bash, we can't guarantee that the
+    # script will work, so we throw an error.
+    echo "ERROR:   neither ZSH nor Bash was detected, other shells are not supported. The environment has not been modified."
+    exit 1
+fi
+
+# Make python package available
+export PYTHONPATH=$python_dir:$PYTHONPATH

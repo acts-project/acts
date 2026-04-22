@@ -17,10 +17,10 @@ message(STATUS "Building Detray as part of the Acts project")
 set(DETRAY_VERSION "v${_acts_detray_version}")
 
 # Declare where to get Detray from.
-FetchContent_Declare(Detray SYSTEM ${ACTS_DETRAY_SOURCE})
+FetchContent_Declare(Detray)
 
 # Options used in the build of Detray.
-set(ACTS_DETRAY_SCALARTYPE "double")
+set(ACTS_DETRAY_SCALARTYPE "float")
 
 set(DETRAY_CUSTOM_SCALARTYPE
     "${ACTS_DETRAY_SCALARTYPE}"
@@ -35,12 +35,12 @@ set(DETRAY_BUILD_TEST_UTILS
 )
 
 set(DETRAY_BUILD_UNITTESTS
-    OFF
+    ${ACTS_BUILD_UNITTESTS}
     CACHE BOOL
     "Turn off the build of the Detray unit tests"
 )
 set(DETRAY_BUILD_INTEGRATIONTESTS
-    OFF
+    ${ACTS_BUILD_INTEGRATIONTESTS}
     CACHE BOOL
     "Turn off the build of the Detray integration tests"
 )
@@ -54,10 +54,15 @@ set(DETRAY_BUILD_BENCHMARKS
     CACHE BOOL
     "Turn off the build of the Detray benchmarks"
 )
+set(DETRAY_ARRAY_PLUGIN
+    ON
+    CACHE BOOL
+    "Turn on the build of the Detray std::array algebra code"
+)
 set(DETRAY_EIGEN_PLUGIN
     ON
     CACHE BOOL
-    "Turn on the build of the Detray Eigen code"
+    "Turn on the build of the Detray Eigen algebra code"
 )
 set(DETRAY_VC_PLUGIN OFF CACHE BOOL "Turn off the build of the Detray Vc code")
 
@@ -67,11 +72,13 @@ set(DETRAY_SETUP_ALGEBRA_PLUGINS
     CACHE BOOL
     "Do not set up Algebra Plugins as part of Detray"
 )
-set(DETRAY_SETUP_GOOGLETEST
-    OFF
-    CACHE BOOL
-    "Do not set up GoogleTest as part of Detray"
-)
+if(${DETRAY_BUILD_UNITTESTS} OR ${DETRAY_BUILD_INTEGRATIONTESTS})
+    set(DETRAY_SETUP_GOOGLETEST
+        ON
+        CACHE BOOL
+        "Do not set up GoogleTest as part of Detray"
+    )
+endif()
 set(DETRAY_SETUP_BENCHMARK
     OFF
     CACHE BOOL
@@ -105,4 +112,9 @@ set(DETRAY_GENERATE_METADATA
 )
 
 #Now set up its build.
+set(FETCHCONTENT_SOURCE_DIR_DETRAY
+    "${CMAKE_SOURCE_DIR}/Detray/"
+    CACHE STRING
+    ""
+)
 FetchContent_MakeAvailable(Detray)

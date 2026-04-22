@@ -1,0 +1,40 @@
+/** Detray library, part of the ACTS project (R&D line)
+ *
+ * (c) 2023 CERN for the benefit of the ACTS project
+ *
+ * Mozilla Public License Version 2.0
+ */
+
+#pragma once
+
+/// @name Preprocessor macros with version information
+/// @{
+
+/// Major version number of the detray project
+#define DETRAY_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+/// Minor version number of the detray project
+#define DETRAY_VERSION_MINOR @PROJECT_VERSION_MINOR@
+/// Patch version number of the detray project
+#define DETRAY_VERSION_PATCH @PROJECT_VERSION_PATCH@
+/// Version number of the detray project
+#define DETRAY_VERSION "@PROJECT_VERSION@"
+
+/// @}
+
+namespace detray {
+
+/// @name C++ variables with version information
+/// @{
+
+/// Major version number of the detray project
+static constexpr int version_major = @PROJECT_VERSION_MAJOR@;
+/// Minor version number of the detray project
+static constexpr int version_minor = @PROJECT_VERSION_MINOR@;
+/// Patch version number of the detray project
+static constexpr int version_patch = @PROJECT_VERSION_PATCH@;
+/// Version number of the detray project
+static constexpr char version[] = "@PROJECT_VERSION@";
+
+/// @}
+
+}  // namespace detray
