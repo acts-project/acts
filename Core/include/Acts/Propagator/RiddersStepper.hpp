@@ -219,9 +219,13 @@ class RiddersStepper final {
     StepperStatistics statistics;
 
     // Parameters to reuse for curvilinear state
+    /// The last propagation direction
     Direction lastStepPropagationDirection = Direction::Forward();
+    /// The last material
     const IVolumeMaterial* lastStepMaterial = nullptr;
+    /// The last surface tolerance
     double lastSurfaceTolerance = 0.;
+    /// The last constrained step type
     ConstrainedStep::Type lastStepConstraintType =
         ConstrainedStep::Type::Navigator;
   };
