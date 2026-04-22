@@ -36,21 +36,42 @@ target_include_directories(
         ends
 )
 
-# Hide symbols coming from the arrow/parquet static archives so they can't
-# collide with pyarrow's bundled libarrow when both are loaded into the same
-# Python process. Our own ACTS code keeps default visibility (ACTS does not
-# use an ACTS_EXPORT macro; hiding its symbols would break downstream
-# consumers). The load_hidden / --exclude-libs,ALL linker flags strip only
-# the archive-supplied symbols from the dynamic symbol table.
+# Isolate arrow's symbols from pyarrow's bundled libarrow (and any other
+# arrow consumer in the same process) so they cannot collide under any
+# dlopen mode, including Linux RTLD_GLOBAL (e.g. with PyROOT). Three
+# layers of defense, in order of authority:
+#
+# 1. Compile-time visibility: -fvisibility=hidden and
+#    -fvisibility-inlines-hidden mean .o files only mark symbols visible
+#    when explicitly annotated (ACTS_ARROW_EXPORT on the public API).
+# 2. Archive hiding: load_hidden (macOS) / --exclude-libs,ALL (Linux)
+#    strip symbols that came from arrow/parquet's static archives
+#    regardless of how they were emitted.
+# 3. Export allowlist: -exported_symbols_list (macOS) / --version-script
+#    (Linux) drop any symbol whose mangled name doesn't match the
+#    *Acts* pattern. This is the final authority at link time and catches
+#    anything the first two layers missed (e.g. ARROW_EXPORT-marked
+#    template instantiations in our own TUs).
+set_target_properties(
+    ActsPluginArrow
+    PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN YES
+)
+
 if(APPLE)
     target_link_options(
         ActsPluginArrow
         PRIVATE
             "LINKER:-load_hidden,$<TARGET_FILE:Arrow::arrow_static>"
             "LINKER:-load_hidden,$<TARGET_FILE:Parquet::parquet_static>"
+            "LINKER:-exported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/cmake/exported_symbols.txt"
     )
 else()
-    target_link_options(ActsPluginArrow PRIVATE "LINKER:--exclude-libs,ALL")
+    target_link_options(
+        ActsPluginArrow
+        PRIVATE
+            "LINKER:--exclude-libs,ALL"
+            "LINKER:--version-script=${CMAKE_CURRENT_SOURCE_DIR}/cmake/exported_symbols.ld"
+    )
 endif()
 
 acts_compile_headers(PluginArrow GLOB include/**/*.hpp)

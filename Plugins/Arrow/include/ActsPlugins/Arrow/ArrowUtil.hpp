@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsPlugins/Arrow/Export.hpp"
+
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -28,14 +30,14 @@ inline constexpr std::string_view kEventIdColumn = "event_id";
 /// Field for the canonical event id column. Shared across all collections so
 /// the reader/writer do not need to know per-collection schemas. @c uint32
 /// matches the convention of existing ACTS Parquet outputs.
-std::shared_ptr<arrow::Field> eventIdField();
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Field> eventIdField();
 
 /// Read just the number of rows from a Parquet file's footer. Metadata-only:
 /// no data columns are decoded.
 ///
 /// @param path The path to the Parquet file.
 /// @return The total row count across all row groups.
-std::int64_t numRowsInFile(const std::filesystem::path& path);
+ACTS_ARROW_EXPORT std::int64_t numRowsInFile(const std::filesystem::path& path);
 
 /// Prepend an @c event_id column to a 1-row (nested-layout) table.
 ///
@@ -43,7 +45,7 @@ std::int64_t numRowsInFile(const std::filesystem::path& path);
 ///              already contain an @c event_id column.
 /// @param eventId The event id value to stamp.
 /// @return A new table with the event id column prepended.
-std::shared_ptr<arrow::Table> withEventId(
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Table> withEventId(
     const std::shared_ptr<arrow::Table>& table, std::uint64_t eventId);
 
 /// Return the subset of rows where @c event_id == @p eventId.
@@ -52,12 +54,12 @@ std::shared_ptr<arrow::Table> withEventId(
 /// @param eventId The event id to select.
 /// @return A new table with only the matching rows. The @c event_id column is
 ///         stripped on the way out.
-std::shared_ptr<arrow::Table> sliceByEventId(
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Table> sliceByEventId(
     const std::shared_ptr<arrow::Table>& table, std::uint64_t eventId);
 
 /// Thin RAII wrapper around @c parquet::arrow::FileWriter that opens lazily on
 /// first write so the schema can be taken from the first event's table.
-class ParquetFileWriter {
+class ACTS_ARROW_EXPORT ParquetFileWriter {
  public:
   explicit ParquetFileWriter(std::filesystem::path path);
   ~ParquetFileWriter();
@@ -84,6 +86,7 @@ class ParquetFileWriter {
 ///
 /// @param path The path to the Parquet file.
 /// @return The full table contents.
-std::shared_ptr<arrow::Table> readTable(const std::filesystem::path& path);
+ACTS_ARROW_EXPORT std::shared_ptr<arrow::Table> readTable(
+    const std::filesystem::path& path);
 
 }  // namespace ActsPlugins::ArrowUtil

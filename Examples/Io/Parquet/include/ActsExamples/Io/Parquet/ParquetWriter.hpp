@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsPlugins/Arrow/Export.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -31,7 +32,7 @@ namespace ActsExamples {
 /// can be inferred from the data.
 ///
 /// Writes are serialized with a mutex.
-class ParquetWriter final : public IWriter {
+class ACTS_ARROW_EXPORT ParquetWriter final : public IWriter {
  public:
   struct Config {
     /// Base output directory. Relative @c collections paths are resolved

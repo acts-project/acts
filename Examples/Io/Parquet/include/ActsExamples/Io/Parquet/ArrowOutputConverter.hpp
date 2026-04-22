@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsPlugins/Arrow/Export.hpp"
 
 #include <string>
 #include <vector>
@@ -21,7 +22,7 @@ namespace ActsExamples {
 /// this converter will emit tables under. The @c ParquetWriter reads those
 /// keys from its Python-side configuration; this mirrors how
 /// @c PodioOutputConverter declares podio collection names.
-class ArrowOutputConverter : public IAlgorithm {
+class ACTS_ARROW_EXPORT ArrowOutputConverter : public IAlgorithm {
  public:
   using IAlgorithm::IAlgorithm;
 
