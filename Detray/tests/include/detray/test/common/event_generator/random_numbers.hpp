@@ -73,7 +73,7 @@ struct random_numbers {
 
   /// Explicit normal distribution around a @param mean and @param stddev
   DETRAY_HOST auto normal(const scalar_t mean, const scalar_t stddev) {
-    return (stddev == scalar_t{0})
+    return (stddev == static_cast<scalar_t>(0))
                ? mean
                : std::normal_distribution<scalar_t>(mean, stddev)(m_engine);
   }

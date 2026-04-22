@@ -178,7 +178,7 @@ struct material_checker {
           }
         }
       }
-    } catch (std::out_of_range &) {
+    } catch (std::out_of_range & /*unused*/) {
       std::stringstream err_stream{};
       err_stream << "Out of range material access in: "
                  << "binned material collection at index " << idx;
@@ -195,7 +195,8 @@ struct material_checker {
     requires concepts::homogeneous_material<
         typename material_coll_t::value_type>
   DETRAY_HOST_DEVICE void operator()(const material_coll_t &material_coll,
-                                     const index_t idx, const id_t) const {
+                                     const index_t idx,
+                                     const id_t /*unused*/) const {
     using material_t = typename material_coll_t::value_type;
     using scalar_t = typename material_t::scalar_type;
 
@@ -214,7 +215,7 @@ struct material_checker {
           throw_material_error("homogeneous surface material", idx, mat);
         }
       }
-    } catch (std::out_of_range &) {
+    } catch (std::out_of_range & /*unused*/) {
       std::stringstream err_stream{};
       err_stream << "Out of range material access in: "
                  << "homogeneous material collection at index " << idx;

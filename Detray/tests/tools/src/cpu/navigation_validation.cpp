@@ -77,15 +77,15 @@ int main(int argc, char** argv) {
       hel_nav_cfg.propagation());
 
   // General options
-  if (vm.count("write_volume_graph")) {
+  if (vm.count("write_volume_graph") != 0u) {
     con_chk_cfg.write_graph(true);
     throw std::invalid_argument("Writing of volume graph not implemented");
   }
-  if (vm.count("write_scan_data")) {
+  if (vm.count("write_scan_data") != 0u) {
     ray_scan_cfg.write_intersections(true);
     hel_scan_cfg.write_intersections(true);
   }
-  if (vm.count("overlaps_tol")) {
+  if (vm.count("overlaps_tol") != 0u) {
     ray_scan_cfg.overlaps_tol(vm["overlaps_tol"].as<float>());
     hel_scan_cfg.overlaps_tol(vm["overlaps_tol"].as<float>());
   }

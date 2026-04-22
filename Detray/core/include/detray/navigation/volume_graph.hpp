@@ -480,7 +480,7 @@ class volume_graph {
   edge_generator _edges;
 
   /// Adjacency matrix
-  vector_t<dindex> _adj_matrix = {};
+  vector_t<dindex> _adj_matrix;
 };
 
 }  // namespace detray

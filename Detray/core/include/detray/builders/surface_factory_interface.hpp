@@ -75,7 +75,7 @@ class surface_data {
       const dindex idx = dindex_invalid,
       const std::uint64_t source = detail::invalid_value<std::uint64_t>())
       : m_type{type},
-        m_volume_link{volume_link},
+        m_volume_link{std::move(volume_link)},
         m_index{idx},
         m_source{source},
         m_boundaries{mask_boundaries},

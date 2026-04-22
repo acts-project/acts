@@ -112,15 +112,15 @@ GTEST_TEST(detray_utils, type_registry) {
 namespace detray::test {
 
 struct visitor {
-  double operator()(const int &, int arg1, double arg2) const {
+  double operator()(const int & /*unused*/, int arg1, double arg2) const {
     return static_cast<double>(arg1) + arg2;
   }
 
-  double operator()(const double &, int arg1, double arg2) const {
+  double operator()(const double & /*unused*/, int arg1, double arg2) const {
     return static_cast<double>(arg1) * arg2;
   }
 
-  double operator()(const float &, int arg1, double arg2) const {
+  double operator()(const float & /*unused*/, int arg1, double arg2) const {
     return static_cast<double>(arg1) / arg2;
   }
 };

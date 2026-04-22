@@ -102,6 +102,6 @@ GTEST_TEST(detray_core, static_mask_store) {
   ASSERT_TRUE(cylinder_masks.size() == 2);
   ASSERT_TRUE(rectangle_masks.size() == 3);
   ASSERT_TRUE(ring_masks.size() == 4);
-  ASSERT_TRUE(single_masks.size() == 0);
+  ASSERT_TRUE(single_masks.empty());
   ASSERT_TRUE(trapezoid_masks.size() == 1);
 }

@@ -100,21 +100,21 @@ int main(int argc, char** argv) {
 
   // The geometry context to be used
   detector_t::geometry_context gctx;
-  if (vm.count("context")) {
+  if (vm.count("context") != 0u) {
     gctx = detector_t::geometry_context{vm["context"].as<dindex>()};
   }
   std::string proc_name{"unknown"};
-  if (vm.count("bknd_name")) {
+  if (vm.count("bknd_name") != 0u) {
     proc_name = vm["bknd_name"].as<std::string>();
   }
 
   // String that describes the detector setup
   std::string setup_str{};
   auto add_delim = [](std::string& str) { str += ", "; };
-  if (!vm.count("grid_file")) {
+  if (vm.count("grid_file") == 0u) {
     setup_str += "no grids";
   }
-  if (!vm.count("material_file")) {
+  if (vm.count("material_file") == 0u) {
     if (!setup_str.empty()) {
       add_delim(setup_str);
     }

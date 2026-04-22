@@ -37,7 +37,7 @@ struct hard_coded {
 
     const scalar_t det = determinant_getter()(m);
 
-    matrix_t ret;
+    matrix_t ret{};
     elem(ret, 0, 0) = elem(m, 1, 1) / det;
     elem(ret, 0, 1) = -elem(m, 0, 1) / det;
     elem(ret, 1, 0) = -elem(m, 1, 0) / det;
@@ -52,7 +52,7 @@ struct hard_coded {
   DETRAY_HOST_DEVICE constexpr matrix_t operator()(const matrix_t &m) const {
     constexpr element_getter_t elem{};
 
-    matrix_t ret;
+    matrix_t ret{};
     elem(ret, 0, 0) = elem(m, 1, 2) * elem(m, 2, 3) * elem(m, 3, 1) -
                       elem(m, 1, 3) * elem(m, 2, 2) * elem(m, 3, 1) +
                       elem(m, 1, 3) * elem(m, 2, 1) * elem(m, 3, 2) -

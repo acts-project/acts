@@ -46,9 +46,11 @@ class telescope_generator final : public surface_factory_interface<detector_t> {
   DETRAY_HOST
   telescope_generator(
       std::vector<scalar_t> positions,
-      darray<scalar_t, mask_shape_t::boundaries::e_size> boundaries,
+      const darray<scalar_t, mask_shape_t::boundaries::e_size> &boundaries,
       trajectory_t traj)
-      : m_traj{traj}, m_positions{positions}, m_boundaries{boundaries} {}
+      : m_traj{traj},
+        m_positions{std::move(positions)},
+        m_boundaries{boundaries} {}
 
   /// Infer the sensitive surface placement from the telescope @param length
   /// if no concrete positions were given.
@@ -87,9 +89,10 @@ class telescope_generator final : public surface_factory_interface<detector_t> {
   /// This is a surface generator, no external surface data needed
   /// @{
   DETRAY_HOST
-  void push_back(surface_data<detector_t> &&) override { /*Do nothing*/ }
+  void push_back(
+      surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
   DETRAY_HOST
-  auto push_back(std::vector<surface_data<detector_t>> &&)
+  auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
   /// @}
 

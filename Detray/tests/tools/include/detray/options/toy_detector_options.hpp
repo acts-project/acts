@@ -51,13 +51,14 @@ void configure_toy_det_options(const boost::program_options::variables_map &vm,
   cfg.n_brl_layers(vm["barrel_layers"].as<unsigned int>());
   cfg.n_edc_layers(vm["endcap_layers"].as<unsigned int>());
 
-  if (vm.count("homogeneous_material") && vm.count("material_maps")) {
+  if (vm.count("homogeneous_material") != 0u &&
+      vm.count("material_maps") != 0u) {
     throw std::invalid_argument("Please specify only one material description");
   }
-  if (vm.count("homogeneous_material")) {
+  if (vm.count("homogeneous_material") != 0u) {
     cfg.use_material_maps(false);
   }
-  if (vm.count("material_maps")) {
+  if (vm.count("material_maps") != 0u) {
     cfg.use_material_maps(true);
   }
 }

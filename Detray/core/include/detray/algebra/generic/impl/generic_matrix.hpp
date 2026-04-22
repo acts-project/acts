@@ -23,7 +23,7 @@ DETRAY_HOST_DEVICE constexpr M zero() {
   using index_t = detray::traits::index_t<M>;
   using element_getter_t = detray::traits::element_getter_t<M>;
 
-  M ret;
+  M ret{};
 
   for (index_t j = 0; j < detray::traits::columns<M>; ++j) {
     for (index_t i = 0; i < detray::traits::rows<M>; ++i) {
@@ -89,7 +89,7 @@ DETRAY_HOST_DEVICE constexpr M column_wise_cross(const M &m, const V &v) {
   using block_getter_t = detray::traits::block_getter_t<M>;
   constexpr block_getter_t block{};
 
-  M ret;
+  M ret{};
 
   const V m_col0 = block.template vector<3>(m, 0u, 0u);
   const V m_col1 = block.template vector<3>(m, 0u, 1u);
@@ -109,7 +109,7 @@ DETRAY_HOST_DEVICE inline M column_wise_multiply(const M &m, const V &v) {
   using element_getter_t = detray::traits::element_getter_t<M>;
   constexpr element_getter_t elem{};
 
-  M ret;
+  M ret{};
 
   constexpr std::size_t N{detray::traits::max_rank<M>};
   for (std::size_t i = 0u; i < N; i++) {
@@ -130,7 +130,7 @@ DETRAY_HOST_DEVICE inline auto cross_matrix(const V3 &v) {
   using element_getter_t = detray::traits::element_getter_t<V3>;
   constexpr element_getter_t elem{};
 
-  matrix_33_t ret;
+  matrix_33_t ret{};
   elem(ret, 0u, 0u) = 0.f;
   elem(ret, 0u, 1u) = -elem(v, 2u);
   elem(ret, 0u, 2u) = elem(v, 1u);
@@ -159,7 +159,7 @@ outer_product(const V &v1, const V &v2) {
   using element_getter_t = detray::traits::element_getter_t<V>;
   constexpr element_getter_t elem{};
 
-  matrix_t ret;
+  matrix_t ret{};
 
   // TODO: vectorize better
   for (index_t row = 0; row < N; row++) {
@@ -441,8 +441,9 @@ DETRAY_HOST_DEVICE constexpr M cholesky_decomposition(const M &m) {
   for (std::size_t i = 0u; i < N; i++) {
     for (std::size_t j = 0u; j <= i; j++) {
       scalar_t sum = 0.f;
-      for (std::size_t k = 0u; k < j; k++)
+      for (std::size_t k = 0u; k < j; k++) {
         sum += elem(L, i, k) * elem(L, j, k);
+      }
 
       if (i == j) {
         elem(L, i, j) = static_cast<scalar_t>(

@@ -223,7 +223,8 @@ class DETRAY_ALIGN(
   template <std::size_t... Is>
   DETRAY_HOST_DEVICE constexpr void zero_fill(
       std::index_sequence<Is...>) noexcept {
-    ((m_data[simd_size() - sizeof...(Is) + Is] = scalar_t(0)), ...);
+    ((m_data[simd_size() - sizeof...(Is) + Is] = static_cast<scalar_t>(0)),
+     ...);
   }
 };
 

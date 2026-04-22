@@ -254,7 +254,7 @@ struct material_tracer : public detray::base_actor {
 /// Run the propagation and record test data along the way
 template <typename detector_t>
 inline auto record_material(
-    const typename detector_t::geometry_context,
+    const typename detector_t::geometry_context /*gctx*/,
     vecmem::memory_resource *host_mr, const detector_t &det,
     const propagation::config &cfg,
     const free_track_parameters<typename detector_t::algebra_type> &track) {

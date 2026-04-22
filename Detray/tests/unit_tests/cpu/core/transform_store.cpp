@@ -43,11 +43,11 @@ GTEST_TEST(detray_core, static_transform_store) {
 
   point3 t2{2.f, 0.f, 0.f};
   transform3 tf2{t2};
-  static_store.push_back(std::move(tf2), ctx0);
+  static_store.push_back(tf2, ctx0);
   ASSERT_EQ(static_store.size(ctx0), 3u);
 
   point3 t3{2.f, 0.f, 0.f};
-  static_store.emplace_back(ctx0, std::move(t3));
+  static_store.emplace_back(ctx0, t3);
   ASSERT_EQ(static_store.size(ctx0), 4u);
 
   static_store.emplace_back(ctx0);

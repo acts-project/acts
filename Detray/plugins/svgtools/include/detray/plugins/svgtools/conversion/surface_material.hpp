@@ -66,7 +66,7 @@ struct material_converter {
             concepts::transform3D transform3_t>
   DETRAY_HOST inline auto operator()(const mat_coll_t& mat_coll,
                                      const index_t& index,
-                                     const transform3_t&) const {
+                                     const transform3_t& /*unused*/) const {
     using material_t = typename mat_coll_t::value_type;
 
     std::vector<std::vector<actsvg::proto::material_slab>> m_matrix;
@@ -120,7 +120,7 @@ struct material_converter {
               static_cast<actsvg::scalar>(mat.mass_density()),
               static_cast<actsvg::scalar>(mat_slab.thickness())};
 
-          m_matrix_row.push_back(std::move(p_mat_slab));
+          m_matrix_row.push_back(p_mat_slab);
         }
 
         m_matrix.push_back(std::move(m_matrix_row));

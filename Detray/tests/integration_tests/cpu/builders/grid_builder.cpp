@@ -82,7 +82,7 @@ GTEST_TEST(detray_builders, decorator_grid_builder) {
   // Build empty grid
   gbuilder.init_grid(cyl_mask, {n_phi_bins, n_z_bins});
 
-  EXPECT_TRUE(d.volumes().size() == 0);
+  EXPECT_TRUE(d.volumes().empty());
 
   // Add some portals first
   auto pt_cyl_factory = std::make_shared<pt_cylinder_factory_t>();

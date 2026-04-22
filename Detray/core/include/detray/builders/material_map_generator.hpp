@@ -171,7 +171,7 @@ class material_map_generator final : public factory_decorator<detector_t> {
   DETRAY_HOST
   material_map_generator(
       std::unique_ptr<surface_factory_interface<detector_t>> factory,
-      const material_map_config<scalar_t> cfg)
+      const material_map_config<scalar_t> &cfg)
       : factory_decorator<detector_t>(std::move(factory)), m_cfg{cfg} {}
 
   /// Call the underlying surface factory and record the surface range that

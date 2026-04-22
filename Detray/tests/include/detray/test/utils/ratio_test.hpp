@@ -23,8 +23,8 @@
 namespace detray::test {
 
 template <typename shape_t>
-inline std::vector<point3> generate_regular_points(const std::size_t,
-                                                   const std::vector<scalar> &);
+inline std::vector<point3> generate_regular_points(
+    const std::size_t /*unused*/, const std::vector<scalar> & /*unused*/);
 
 /// This method creates a number of regular spaced points in 3D cartesian
 /// coordinates within a cube

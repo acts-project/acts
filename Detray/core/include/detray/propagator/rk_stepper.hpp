@@ -502,9 +502,9 @@ class rk_stepper final
     assert(!stepping().is_invalid());
 
     // Advance jacobian transport
-    if constexpr (flags_v &
-                  static_cast<std::uint32_t>(
-                      detray::rk_stepper_flags::e_allow_covariance_transport)) {
+    if constexpr ((flags_v & static_cast<std::uint32_t>(
+                                 detray::rk_stepper_flags::
+                                     e_allow_covariance_transport)) != 0u) {
       if (cfg.do_covariance_transport) {
         advance_jacobian(stepping, cfg, sd, vol_mat_ptr);
       }
@@ -852,8 +852,9 @@ class rk_stepper final
     auto dFdr = matrix::identity<matrix_type<3, 3>>();
     auto dGdr = matrix::zero<matrix_type<3, 3>>();
 
-    if constexpr (flags_v & static_cast<std::uint32_t>(
-                                rk_stepper_flags::e_allow_field_gradient)) {
+    if constexpr ((flags_v & static_cast<std::uint32_t>(
+                                 rk_stepper_flags::e_allow_field_gradient)) !=
+                  0u) {
       if (cfg.use_field_gradient) {
         darray<matrix_type<3u, 3u>, 4u> dkndr;
         auto& track = stepping();
@@ -911,8 +912,9 @@ class rk_stepper final
 
     const auto old_jacobian = stepping.internal_transport_jacobian();
 
-    if constexpr (flags_v & static_cast<std::uint32_t>(
-                                rk_stepper_flags::e_allow_field_gradient)) {
+    if constexpr ((flags_v & static_cast<std::uint32_t>(
+                                 rk_stepper_flags::e_allow_field_gradient)) !=
+                  0u) {
       detail::update_transport_jacobian_with_gradient_impl(
           old_jacobian, dFdt, dGdt, dFdr, dGdr, dFdqop, dGdqop, dqopqop,
           stepping.internal_transport_jacobian());

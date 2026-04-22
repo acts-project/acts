@@ -50,8 +50,8 @@ class material_map_writer : public detail::grid_writer {
   /// Convert the material description of a detector @param det into its io
   /// payload
   template <class detector_t>
-  static payload_type to_payload(const detector_t& det,
-                                 const typename detector_t::name_map&) {
+  static payload_type to_payload(
+      const detector_t& det, const typename detector_t::name_map& /*unused*/) {
     using algebra_t = typename detector_t::algebra_type;
     using material_t = material_slab<typename detector_t::scalar_type>;
 

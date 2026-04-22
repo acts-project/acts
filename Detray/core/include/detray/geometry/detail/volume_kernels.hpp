@@ -108,9 +108,9 @@ struct apply_to_volumes {
   /// volumes
   template <concepts::accelerator_collection accel_coll_t,
             typename accel_index_t, typename... Args>
-  DETRAY_HOST_DEVICE inline void operator()(const accel_coll_t &,
-                                            const accel_index_t,
-                                            Args &&...) const {
+  DETRAY_HOST_DEVICE inline void operator()(const accel_coll_t & /*accel_col*/,
+                                            const accel_index_t /*accel_idx*/,
+                                            Args &&.../*args*/) const {
     using accel_type = typename accel_coll_t::value_type;
 
     if constexpr (concepts::volume_accelerator<accel_type>) {

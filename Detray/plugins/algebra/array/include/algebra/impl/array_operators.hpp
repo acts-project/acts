@@ -94,7 +94,7 @@ template <typename index_t, template <typename, index_t> class array_t,
           index_t COLS>
 DETRAY_HOST_DEVICE constexpr array_t<array_t<scalar1_t, ROWS>, COLS> operator*(
     const array_t<array_t<scalar1_t, ROWS>, COLS> &a, scalar2_t s) {
-  array_t<array_t<scalar1_t, ROWS>, COLS> ret;
+  array_t<array_t<scalar1_t, ROWS>, COLS> ret{};
 
   for (index_t j = 0; j < COLS; ++j) {
     for (index_t i = 0; i < ROWS; ++i) {
@@ -110,7 +110,7 @@ template <typename index_t, template <typename, index_t> class array_t,
           index_t COLS>
 DETRAY_HOST_DEVICE constexpr array_t<array_t<scalar1_t, ROWS>, COLS> operator*(
     scalar2_t s, const array_t<array_t<scalar1_t, ROWS>, COLS> &a) {
-  array_t<array_t<scalar1_t, ROWS>, COLS> ret;
+  array_t<array_t<scalar1_t, ROWS>, COLS> ret{};
 
   for (index_t j = 0; j < COLS; ++j) {
     for (index_t i = 0; i < ROWS; ++i) {
@@ -126,7 +126,7 @@ template <typename index_t, template <typename, index_t> class array_t,
 DETRAY_HOST_DEVICE constexpr array_t<array_t<scalar_t, M>, O> operator*(
     const array_t<array_t<scalar_t, M>, N> &A,
     const array_t<array_t<scalar_t, N>, O> &B) {
-  array_t<array_t<scalar_t, M>, O> C;
+  array_t<array_t<scalar_t, M>, O> C{};
 
   for (index_t j = 0; j < O; ++j) {
     for (index_t i = 0; i < M; ++i) {
@@ -150,7 +150,7 @@ template <typename index_t, template <typename, index_t> class array_t,
 DETRAY_HOST_DEVICE constexpr array_t<array_t<scalar_t, ROWS>, COLS> operator+(
     const array_t<array_t<scalar_t, ROWS>, COLS> &A,
     const array_t<array_t<scalar_t, ROWS>, COLS> &B) {
-  array_t<array_t<scalar_t, ROWS>, COLS> C;
+  array_t<array_t<scalar_t, ROWS>, COLS> C{};
 
   for (index_t j = 0; j < COLS; ++j) {
     for (index_t i = 0; i < ROWS; ++i) {
@@ -166,7 +166,7 @@ template <typename index_t, template <typename, index_t> class array_t,
 DETRAY_HOST_DEVICE constexpr array_t<array_t<scalar_t, ROWS>, COLS> operator-(
     const array_t<array_t<scalar_t, ROWS>, COLS> &A,
     const array_t<array_t<scalar_t, ROWS>, COLS> &B) {
-  array_t<array_t<scalar_t, ROWS>, COLS> C;
+  array_t<array_t<scalar_t, ROWS>, COLS> C{};
 
   for (index_t j = 0; j < COLS; ++j) {
     for (index_t i = 0; i < ROWS; ++i) {

@@ -64,21 +64,21 @@ struct polar2D {
   DETRAY_HOST_DEVICE static inline point3_type local_to_global(
       const transform3_type &trf, const mask_t & /*mask*/, const loc_point &p,
       const vector3_type & /*dir*/) {
-    return polar2D<algebra_t>::local_to_global(trf,
-                                               {p[0], p[1], scalar_type(0)});
+    return polar2D<algebra_t>::local_to_global(
+        trf, {p[0], p[1], static_cast<scalar_type>(0)});
   }
 
   /// @returns the normal vector in global coordinates
   template <typename mask_t>
   DETRAY_HOST_DEVICE static inline vector3_type normal(
-      const transform3_type &trf, const point2_type & = {},
-      const mask_t & = {}) {
+      const transform3_type &trf, const point2_type & /*loc*/ = {},
+      const mask_t & /*mask*/ = {}) {
     return trf.z();
   }
 
   /// @returns the normal vector in global coordinates
   DETRAY_HOST_DEVICE static inline vector3_type normal(
-      const transform3_type &trf, const point3_type & = {}) {
+      const transform3_type &trf, const point3_type & /*loc*/ = {}) {
     return trf.z();
   }
 };

@@ -362,7 +362,7 @@ inline constexpr R::id id_cast = cast_impl_id<I, R>::value;
 
 template <typename R, auto I>
 inline constexpr std::size_t index_cast =
-    cast_impl_idx<static_cast<std::size_t>(I), R>::value;
+    cast_impl_idx<static_cast<std::size_t>(I), R>::value;  // NOLINT
 /// @}
 
 /// @}

@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 
   const auto data_dir{vm["data_dir"].as<std::string>()};
 
-  if (vm.count("overlaps_tol")) {
+  if (vm.count("overlaps_tol") != 0u) {
     ray_scan_cfg.overlaps_tol(vm["overlaps_tol"].as<float>());
     hel_scan_cfg.overlaps_tol(vm["overlaps_tol"].as<float>());
   }

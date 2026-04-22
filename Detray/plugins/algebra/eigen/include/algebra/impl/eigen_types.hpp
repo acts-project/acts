@@ -39,7 +39,8 @@ using vector_type = storage_type<T, N>;
 /// Matrix type used in the Eigen storage model
 /// If the number of rows is 1, make it RowMajor
 template <concepts::scalar T, index_type ROWS, index_type COLS>
-using matrix_type = Eigen::Matrix<T, ROWS, COLS, (ROWS == 1), ROWS, COLS>;
+using matrix_type =
+    Eigen::Matrix<T, ROWS, COLS, static_cast<int>(ROWS == 1), ROWS, COLS>;
 
 /// 3-element "vector" type, using @c eigen::vector_type
 template <concepts::scalar T>

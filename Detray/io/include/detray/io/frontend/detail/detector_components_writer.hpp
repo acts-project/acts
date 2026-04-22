@@ -53,7 +53,7 @@ class detector_components_writer final {
              const std::ios_base::openmode mode,
              const std::filesystem::path& file_path) {
     // We have to at least write a geometry
-    assert(m_writers.size() != 0u &&
+    assert(!m_writers.empty() &&
            "No writers registered! Need at least a geometry writer");
 
     // Call the write method on all optional writers

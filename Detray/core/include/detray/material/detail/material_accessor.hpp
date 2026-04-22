@@ -27,7 +27,7 @@ template <detray::ranges::range material_coll_t, concepts::point point_t>
   requires concepts::homogeneous_material<typename material_coll_t::value_type>
 DETRAY_HOST_DEVICE constexpr decltype(auto) get(
     const material_coll_t &material_coll, const dindex idx,
-    const point_t &) noexcept {
+    const point_t & /*unused*/) noexcept {
   return material_coll[idx];
 }
 

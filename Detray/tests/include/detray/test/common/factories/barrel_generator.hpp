@@ -126,9 +126,10 @@ class barrel_generator final : public surface_factory_interface<detector_t> {
   DETRAY_HOST
   void clear() override { /*Do nothing*/ };
   DETRAY_HOST
-  void push_back(surface_data<detector_t> &&) override { /*Do nothing*/ }
+  void push_back(
+      surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
   DETRAY_HOST
-  auto push_back(std::vector<surface_data<detector_t>> &&)
+  auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
   /// @}
 
@@ -222,10 +223,12 @@ class barrel_generator final : public surface_factory_interface<detector_t> {
       // Local z axis is the normal vector
       const scalar_t tilt_phi{m_cfg.tilt_phi()};
       const vector3_t mod_local_z{math::cos(mod_phi + tilt_phi),
-                                  math::sin(mod_phi + tilt_phi), scalar_t(0)};
+                                  math::sin(mod_phi + tilt_phi),
+                                  static_cast<scalar_t>(0)};
       // Local x axis the normal to local y,z
       const vector3_t mod_local_x{-math::sin(mod_phi + tilt_phi),
-                                  math::cos(mod_phi + tilt_phi), scalar_t(0)};
+                                  math::cos(mod_phi + tilt_phi),
+                                  static_cast<scalar_t>(0)};
 
       // Create the module transform
       transforms.emplace_back(ctx, mod_center, mod_local_z, mod_local_x);

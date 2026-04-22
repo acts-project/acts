@@ -61,7 +61,7 @@ struct helix_intersector_impl<cartesian2D<algebra_t>, algebra_t> {
   /// @return the intersection
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<algebra_t> &h, const dtransform3D<algebra_t> &trf,
-      const scalar_t = 0.f) const {
+      const scalar_t /*unused*/ = 0.f) const {
     using point3_t = dpoint3D<algebra_t>;
     using vector3_t = dvector3D<algebra_t>;
 

@@ -20,7 +20,7 @@ namespace detray::algebra::array {
 template <concepts::matrix matrix_t>
   requires(std::is_scalar_v<typename matrix_t::value_type::value_type>)
 DETRAY_HOST_DEVICE constexpr matrix_t zero() {
-  matrix_t ret;
+  matrix_t ret{};
 
   for (std::size_t j = 0; j < detray::traits::columns<matrix_t>; ++j) {
     for (std::size_t i = 0; i < detray::traits::rows<matrix_t>; ++i) {

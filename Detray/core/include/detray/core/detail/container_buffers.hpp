@@ -192,9 +192,9 @@ auto get_buffer(const dvector_view<T>& vec_view, vecmem::memory_resource& mr,
 /// @note This does not pick up the vecmem types.
 template <typename... Ts>
 auto get_buffer(
-    const dmulti_view<Ts...>&, vecmem::memory_resource&, vecmem::copy&,
-    detray::copy = detray::copy::sync,
-    vecmem::data::buffer_type =
+    const dmulti_view<Ts...>& /*view*/, vecmem::memory_resource& /*mr*/,
+    vecmem::copy& /*cpy*/, detray::copy /*cpy_type*/ = detray::copy::sync,
+    vecmem::data::buffer_type /*buff_type*/ =
         vecmem::data::buffer_type::fixed_size);  // Forward declaration
 
 /// @brief Recursively get the buffer representation of a composite view
@@ -297,7 +297,8 @@ auto get_data(const dmulti_buffer<Ts...>& multi_buff);  // Forward declaration
 ///
 /// @note This does not pick up the vecmem types.
 template <concepts::device_buffer... Ts, std::size_t... I>
-auto get_data(dmulti_buffer<Ts...>& multi_buff, std::index_sequence<I...>) {
+auto get_data(dmulti_buffer<Ts...>& multi_buff,
+              std::index_sequence<I...> /*unused*/) {
   // Evaluate recursive view type (reverse of 'get_buffer(dmulti_view)')
   using result_view_t =
       dmulti_view<decltype(detray::get_data(std::declval<Ts&>()))...>;
@@ -309,7 +310,7 @@ auto get_data(dmulti_buffer<Ts...>& multi_buff, std::index_sequence<I...>) {
 /// @brief Unroll the composite buffer type - const
 template <concepts::device_buffer... Ts, std::size_t... I>
 auto get_data(const dmulti_buffer<Ts...>& multi_buff,
-              std::index_sequence<I...>) {
+              std::index_sequence<I...> /*unused*/) {
   // Evaluate recursive view type (reverse of 'get_buffer(dmulti_view)')
   using result_view_t =
       dmulti_view<decltype(detray::get_data(std::declval<const Ts&>()))...>;

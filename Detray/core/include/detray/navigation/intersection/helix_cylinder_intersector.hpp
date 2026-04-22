@@ -66,7 +66,7 @@ struct helix_intersector_impl<cylindrical2D<algebra_t>, algebra_t>
   template <typename mask_t>
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<algebra_t> &h, const dtransform3D<algebra_t> &trf,
-      const mask_t &mask, const scalar_t = 0.f) const {
+      const mask_t &mask, const scalar_t /*unused*/ = 0.f) const {
     using point3_t = dpoint3D<algebra_t>;
     using vector3_t = dvector3D<algebra_t>;
 
@@ -195,7 +195,7 @@ struct helix_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t>
   template <typename mask_t>
   DETRAY_HOST_DEVICE constexpr result_type point_of_intersection(
       const trajectory_type<algebra_t> &h, const dtransform3D<algebra_t> &trf,
-      const mask_t &mask, const dscalar<algebra_t> = 0.f) const {
+      const mask_t &mask, const dscalar<algebra_t> /*unused*/ = 0.f) const {
     using base_t = helix_intersector_impl<cylindrical2D<algebra_t>, algebra_t>;
 
     // Array of two solutions

@@ -43,7 +43,7 @@ class single_view
 
   /// Construct value in place from @param args
   template <class... Args>
-  DETRAY_HOST_DEVICE constexpr explicit single_view(std::in_place_t,
+  DETRAY_HOST_DEVICE constexpr explicit single_view(std::in_place_t /*tag*/,
                                                     Args&&... args)
       : m_value{std::in_place, std::forward<Args>(args)...} {}
 
@@ -94,7 +94,8 @@ class single_view
   constexpr auto back() noexcept -> value_t { return m_value; }
 
   /// @returns the value directly
-  DETRAY_HOST_DEVICE constexpr auto operator[](const dindex) const -> value_t {
+  DETRAY_HOST_DEVICE constexpr auto operator[](const dindex /*unused*/) const
+      -> value_t {
     return m_value;
   }
 
@@ -121,7 +122,7 @@ struct single : public detray::ranges::single_view<value_t> {
 
   template <class... Args>
   DETRAY_HOST_DEVICE constexpr explicit single(std::in_place_t, Args&&... args)
-      : base_type(std::in_place, std::forward<Args>(args)...) {}
+      : base_type(std::in_place /*tag*/, std::forward<Args>(args)...) {}
 };
 
 // deduction guides

@@ -18,13 +18,13 @@ namespace detray::options {
 
 /// Add options to the boost options description according to the type T
 template <typename T>
-void add_options(boost::program_options::options_description &,
-                 const T &) { /* Do nothing */ }
+void add_options(boost::program_options::options_description & /*unused*/,
+                 const T & /*unused*/) { /* Do nothing */ }
 
 /// Fill the configuration type T from the boost variable map
 template <typename T>
-void configure_options(const boost::program_options::variables_map &,
-                       T &) { /* Do nothing */ }
+void configure_options(const boost::program_options::variables_map & /*unused*/,
+                       T & /*unused*/) { /* Do nothing */ }
 
 /// Print the configuration
 template <typename T>

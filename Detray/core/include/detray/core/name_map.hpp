@@ -48,8 +48,8 @@ struct name_map {
   }
 
   /// @brief emplace a new index <-> name mapping
-  DETRAY_HOST void emplace(dindex idx, std::string name) {
-    index_to_name.try_emplace(idx, std::move(name));
+  DETRAY_HOST void emplace(dindex idx, const std::string& name) {
+    index_to_name.try_emplace(idx, name);
     name_to_index.try_emplace(index_to_name.at(idx), idx);
   }
 

@@ -184,7 +184,8 @@ struct circular {
   ///
   /// @returns a circular axis bin index, without wrapping
   DETRAY_HOST_DEVICE
-  constexpr int map(const int ibin, const std::size_t) const noexcept {
+  constexpr int map(const int ibin,
+                    const std::size_t /*unused*/) const noexcept {
     return ibin;
   }
 
@@ -196,7 +197,7 @@ struct circular {
   /// @returns an ordered dindex_range, without wrapping
   DETRAY_HOST_DEVICE
   constexpr bin_range map(const int lbin, const int ubin,
-                          const std::size_t) const noexcept {
+                          const std::size_t /*unused*/) const noexcept {
     // The upper range index is exclusive, so go one bin beyond the range
     return {lbin, ubin + 1};
   }

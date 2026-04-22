@@ -101,13 +101,13 @@ inline void from_json(const nlohmann::ordered_json& j,
   mv.volume_link = j["volume_link"];
 
   if (j.find("surface_material") != j.end()) {
-    for (auto jmats : j["surface_material"]) {
+    for (const auto& jmats : j["surface_material"]) {
       surface_material_payload mslp = jmats;
       mv.surface_mat.push_back(mslp);
     }
   } else if (j.find("material_slabs") != j.end()) {
     // TODO: Remove once all files are fixed
-    for (auto jmats : j["material_slabs"]) {
+    for (const auto& jmats : j["material_slabs"]) {
       surface_material_payload mslp = jmats;
       mv.surface_mat.push_back(mslp);
     }
@@ -128,7 +128,7 @@ inline void to_json(nlohmann::ordered_json& j,
 inline void from_json(const nlohmann::ordered_json& j,
                       detector_homogeneous_material_payload& d) {
   if (j.find("volumes") != j.end()) {
-    for (auto jvolume : j["volumes"]) {
+    for (const auto& jvolume : j["volumes"]) {
       d.volumes.push_back(jvolume);
     }
   }

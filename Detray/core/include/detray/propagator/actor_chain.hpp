@@ -162,7 +162,7 @@ class actor_chain<> {
 
   /// @returns an empty state
   DETRAY_HOST_DEVICE static constexpr state_ref_tuple setup_actor_states(
-      const state_tuple &) {
+      const state_tuple & /*unused*/) {
     return {};
   }
 

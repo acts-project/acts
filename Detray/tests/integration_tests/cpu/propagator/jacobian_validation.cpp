@@ -1388,7 +1388,7 @@ int main(int argc, char** argv) {
   po::notify(vm);
 
   // Help message
-  if (vm.count("help")) {
+  if (vm.count("help") != 0u) {
     std::clog << desc << std::endl;
     return EXIT_FAILURE;
   }
@@ -1736,7 +1736,7 @@ int main(int argc, char** argv) {
             rect_det, track, B_z, helix_tol);
 
     if (!skip_rect) {
-      scalar ref_rel_diff;
+      auto ref_rel_diff{std::numeric_limits<scalar>::max()};
 
       if (rk_tolerance_iterate_mode) {
         std::array<unsigned int, 5u> num_iterations;
@@ -1814,7 +1814,7 @@ int main(int argc, char** argv) {
             wire_det, track, B_z, helix_tol);
 
     if (!skip_wire) {
-      scalar ref_rel_diff;
+      auto ref_rel_diff{std::numeric_limits<scalar>::max()};
 
       if (rk_tolerance_iterate_mode) {
         std::array<unsigned int, 5u> num_iterations;

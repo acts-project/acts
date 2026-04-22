@@ -125,7 +125,7 @@ DETRAY_HOST_DEVICE decltype(auto) element(M &matrix) {
     return matrix.template element<I, J>();
   } else {
     using index_t = detray::traits::index_t<std::decay_t<M>>;
-    return element(matrix, index_t(I), index_t(J));
+    return element(matrix, static_cast<index_t>(I), static_cast<index_t>(J));
   }
 }
 
@@ -135,7 +135,7 @@ DETRAY_HOST_DEVICE decltype(auto) element(V &vector) {
     return vector.template element<I>();
   } else {
     using index_t = detray::traits::index_t<std::decay_t<V>>;
-    return element(vector, index_t(I));
+    return element(vector, static_cast<index_t>(I));
   }
 }
 

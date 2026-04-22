@@ -73,10 +73,10 @@ int main(int argc, char **argv) {
       mat_val_cfg.propagation());
 
   // General options
-  if (vm.count("material_tol")) {
+  if (vm.count("material_tol") != 0u) {
     mat_val_cfg.relative_error(vm["material_tol"].as<float>() / 100.f);
   }
-  if (vm.count("overlaps_tol")) {
+  if (vm.count("overlaps_tol") != 0u) {
     mat_scan_cfg.overlaps_tol(vm["overlaps_tol"].as<float>());
   }
   const auto data_dir{vm["data_dir"].as<std::string>()};

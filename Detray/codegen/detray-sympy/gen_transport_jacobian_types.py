@@ -106,7 +106,7 @@ def gen_code(gradient):
     lines.append(
         "DETRAY_HOST_DEVICE explicit operator dmatrix<algebra_t, 8, 8>() const {"
     )
-    lines.append("dmatrix<algebra_t, 8, 8> rv;")
+    lines.append("dmatrix<algebra_t, 8, 8> rv{};")
 
     for i in range(matrix.shape[0]):
         for j in range(matrix.shape[1]):
@@ -118,7 +118,7 @@ def gen_code(gradient):
     lines.append("}")
 
     lines.append("DETRAY_HOST_DEVICE static constexpr %s identity() {" % struct_name)
-    lines.append("%s rv;" % struct_name)
+    lines.append("%s rv{};" % struct_name)
 
     for i in range(matrix.shape[0]):
         for j in range(matrix.shape[1]):

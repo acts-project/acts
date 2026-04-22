@@ -188,7 +188,7 @@ class rectangle2D {
   /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
-      const bounds_type<dscalar<algebra_t>> &) const {
+      const bounds_type<dscalar<algebra_t>> & /*unused*/) const {
     return {0.f, 0.f, 0.f};
   }
 

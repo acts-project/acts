@@ -490,8 +490,8 @@ class grid_factory {
       const std::vector<std::pair<axis::multi_bin<sizeof...(bound_ts)>, dindex>>
           &bin_capacities = {},
       const std::vector<std::vector<scalar_type>> &ax_bin_edges = {},
-      const types::list<bound_ts...> & = {},
-      const types::list<binning_ts...> & = {}) const {
+      const types::list<bound_ts...> & /*unused*/ = {},
+      const types::list<binning_ts...> & /*unused*/ = {}) const {
     static_assert(sizeof...(bound_ts) == sizeof...(binning_ts),
                   "number of axis bounds and binning types has to match");
 
@@ -546,8 +546,8 @@ class grid_factory {
           &bin_capacities = {},
       const darray<std::vector<scalar_type>, grid_shape_t::dim> &ax_bin_edges =
           {},
-      const types::list<bound_ts...> & = {},
-      const types::list<binning_ts...> & = {}) const {
+      const types::list<bound_ts...> & /*unused*/ = {},
+      const types::list<binning_ts...> & /*unused*/ = {}) const {
     return new_grid<bound_ts..., binning_ts...>(m, n_bins, bin_capacities,
                                                 ax_bin_edges);
   }
@@ -564,8 +564,8 @@ class grid_factory {
   ///                     last bin), otherwise ignored.
   template <concepts::grid grid_t>
   auto new_grid(
-      const std::vector<scalar_type> spans,
-      const std::vector<std::size_t> n_bins,
+      const std::vector<scalar_type> &spans,
+      const std::vector<std::size_t> &n_bins,
       [[maybe_unused]] const std::vector<
           std::pair<typename grid_t::loc_bin_index, dindex>> &bin_capacities =
           {},

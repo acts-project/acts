@@ -154,7 +154,8 @@ class cylinder_portal_generator final
 
   /// Construct from configuration @param cfg
   DETRAY_HOST
-  explicit cylinder_portal_generator(const cylinder_portal_config<scalar_t> cfg)
+  explicit cylinder_portal_generator(
+      const cylinder_portal_config<scalar_t> &cfg)
       : m_cfg{cfg} {}
 
   /// @returns the number of portals this factory will produce
@@ -165,9 +166,10 @@ class cylinder_portal_generator final
   void clear() override { /*Do nothing*/ };
 
   DETRAY_HOST
-  void push_back(surface_data<detector_t> &&) override { /*Do nothing*/ }
+  void push_back(
+      surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
   DETRAY_HOST
-  auto push_back(std::vector<surface_data<detector_t>> &&)
+  auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
 
   /// @brief Access the volume boundaries after fitting
@@ -329,7 +331,7 @@ class cylinder_portal_generator final
     const scalar_t max_r{math::max(inner_r, outer_r)};
 
     // translation
-    point3_t tsl{scalar_t(0), scalar_t(0), z};
+    point3_t tsl{static_cast<scalar_t>(0), static_cast<scalar_t>(0), z};
 
     // Add transform and mask data
     transforms.emplace_back(ctx, tsl);

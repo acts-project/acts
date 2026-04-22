@@ -196,12 +196,12 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   /// @brief Resize the underlying containers
   /// @note Not defined! The amount of memory can differ for every grid
   DETRAY_HOST_DEVICE
-  constexpr void resize(std::size_t) noexcept { /*Not defined*/ }
+  constexpr void resize(std::size_t /*unused*/) noexcept { /*Not defined*/ }
 
   /// @brief Reserve memory
   /// @note Not defined! The amount of memory can differ for every grid
   DETRAY_HOST_DEVICE
-  constexpr void reserve(std::size_t) noexcept { /*Not defined*/ }
+  constexpr void reserve(std::size_t /*unused*/) noexcept { /*Not defined*/ }
 
   /// Removes all data from the grid collection containers
   DETRAY_HOST_DEVICE
@@ -215,7 +215,7 @@ class grid_collection<detray::grid_impl<axes_t, bin_t, serializer_t>> {
   /// Insert a number of grids
   /// @note Not defined! There is no grid iterator implementation
   template <typename... Args>
-  DETRAY_HOST_DEVICE constexpr void insert(Args &&...) noexcept {
+  DETRAY_HOST_DEVICE constexpr void insert(Args &&.../*unused*/) noexcept {
     /*Not defined*/
   }
 

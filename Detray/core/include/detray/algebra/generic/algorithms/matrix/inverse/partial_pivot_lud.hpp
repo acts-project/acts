@@ -43,7 +43,7 @@ struct partial_pivot_lud {
     const auto& P = decomp_res.P;
 
     // Inverse matrix
-    matrix_t inv;
+    matrix_t inv{};
 
     // Calculate inv(A) = inv(U) * inv(L) * P;
     for (index_t j = 0; j < N; j++) {

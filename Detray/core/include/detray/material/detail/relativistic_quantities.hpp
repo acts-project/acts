@@ -177,8 +177,9 @@ struct relativistic_quantities {
         // https://pdg.lbl.gov/2023/reviews/rpp2023-rev-particle-detectors-accel.pdf)
       } else {
         delta = 2.f * constant<scalar_type>::ln10 * x - cden;
-        if (x < x1den)
+        if (x < x1den) {
           delta += aden * math::pow((x1den - x), mden);
+        }
       }
 
       return 0.5f * delta;

@@ -195,9 +195,10 @@ struct object_tracer {
   template <typename state_type, concepts::point3D point3_t,
             concepts::vector3D vector3_t, typename... Args>
   DETRAY_HOST_DEVICE auto operator()(const state_type &state,
-                                     const navigation::config &,
+                                     const navigation::config & /*unused*/,
                                      const point3_t &pos, const vector3_t &dir,
-                                     const char * /*message*/, Args &&...) {
+                                     const char * /*message*/,
+                                     Args &&.../*unused*/) {
     // Record the candidate of an encountered object
     if ((is_status(state.status(), navigation_status) || ...)) {
       // Reached a new position: log it
@@ -363,7 +364,7 @@ struct print_inspector {
 
   /// Inspector interface. Gathers detailed information during stepping
   template <typename state_type, concepts::scalar scalar_t>
-  void operator()(const state_type &state, const stepping::config &,
+  void operator()(const state_type &state, const stepping::config & /*unused*/,
                   const char *message, const scalar_t dist) {
     std::string msg(message);
 
@@ -373,7 +374,7 @@ struct print_inspector {
 
   /// Inspector interface. Gathers detailed information during stepping
   template <typename state_type, concepts::scalar scalar_t>
-  void operator()(const state_type &state, const stepping::config &,
+  void operator()(const state_type &state, const stepping::config & /*unused*/,
                   const char *message, const scalar_t /*dist*/,
                   const std::size_t n_trials, const scalar_t step_scalor) {
     std::string msg(message);

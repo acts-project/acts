@@ -21,10 +21,10 @@ namespace detray::svgtools::meta::proto {
 /// a intersection record description.
 template <concepts::point3D point3_t>
 struct information_section {
-  std::vector<std::string> _info;
-  std::string _title;
-  std::array<int, 3> _color;
-  point3_t _position;
+  std::vector<std::string> _info{};
+  std::string _title{};
+  std::array<int, 3> _color{};
+  point3_t _position{};
 };
 
 }  // namespace detray::svgtools::meta::proto

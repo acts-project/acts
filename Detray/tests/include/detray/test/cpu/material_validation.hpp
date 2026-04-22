@@ -39,11 +39,11 @@ struct run_material_validation {
 
   template <typename detector_t>
   auto operator()(
-      vecmem::memory_resource *host_mr, vecmem::memory_resource *,
+      vecmem::memory_resource *host_mr, vecmem::memory_resource * /*mr*/,
       const detector_t &det, const propagation::config &cfg,
       const dvector<free_track_parameters<typename detector_t::algebra_type>>
           &tracks,
-      const std::vector<std::size_t> & = {}) {
+      const std::vector<std::size_t> & /*mask*/ = {}) {
     using scalar_t = dscalar<typename detector_t::algebra_type>;
 
     typename detector_t::geometry_context gctx{};

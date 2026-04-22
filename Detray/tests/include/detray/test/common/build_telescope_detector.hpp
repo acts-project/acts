@@ -56,10 +56,9 @@ struct tel_det_config {
   }
 
   /// Construct from from mask parameter vector
-  explicit tel_det_config(std::vector<scalar_t> params,
+  explicit tel_det_config(const std::vector<scalar_t> &params,
                           const trajectory_t<algebra_t> &t = {})
-      : tel_det_config(mask<mask_shape_t, algebra_t>{std::move(params), 0u},
-                       t) {}
+      : tel_det_config(mask<mask_shape_t, algebra_t>{params, 0u}, t) {}
 
   /// Construct from mask parameters (except volume link, which is not needed)
   template <typename... Args>

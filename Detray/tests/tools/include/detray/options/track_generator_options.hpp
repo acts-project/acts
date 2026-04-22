@@ -70,7 +70,7 @@ void configure_uniform_track_gen_options(
   cfg.seed(vm["random_seed"].as<std::size_t>());
   cfg.randomize_charge(vm.count("randomize_charge"));
 
-  if (vm.count("eta_range")) {
+  if (vm.count("eta_range") != 0u) {
     const auto eta_range = vm["eta_range"].as<std::vector<scalar_t>>();
     if (eta_range.size() == 2u) {
       cfg.eta_range(eta_range[0], eta_range[1]);
@@ -78,7 +78,7 @@ void configure_uniform_track_gen_options(
       throw std::invalid_argument("Eta range needs two arguments");
     }
   }
-  if (vm.count("origin")) {
+  if (vm.count("origin") != 0u) {
     const auto origin = vm["origin"].as<std::vector<scalar_t>>();
     if (origin.size() == 3u) {
       cfg.origin(origin[0] * unit<scalar_t>::mm, origin[1] * unit<scalar_t>::mm,
@@ -87,12 +87,12 @@ void configure_uniform_track_gen_options(
       throw std::invalid_argument("Particle gun origin needs three arguments");
     }
   }
-  if (vm.count("pT_range") && vm.count("p_range")) {
+  if (vm.count("pT_range") != 0u && vm.count("p_range") != 0u) {
     throw std::invalid_argument(
         "Transverse and total momentum cannot be specified at the same "
         "time");
   }
-  if (vm.count("pT_range")) {
+  if (vm.count("pT_range") != 0u) {
     const auto pt_range = vm["pT_range"].as<std::vector<scalar_t>>();
 
     // Default
@@ -112,7 +112,7 @@ void configure_uniform_track_gen_options(
     }
   } else {
     auto p_range = std::vector<scalar_t>{};
-    if (vm.count("pT_range")) {
+    if (vm.count("pT_range") != 0u) {
       p_range = vm["p_range"].as<std::vector<scalar_t>>();
     }
 
@@ -176,10 +176,10 @@ void configure_rnd_track_gen_options(
   cfg.seed(vm["random_seed"].as<std::size_t>());
   cfg.randomize_charge(vm.count("randomize_charge"));
 
-  if (vm.count("eta_range") && vm.count("theta_range")) {
+  if (vm.count("eta_range") != 0u && vm.count("theta_range") != 0u) {
     throw std::invalid_argument(
         "Eta range and theta range cannot be specified at the same time");
-  } else if (vm.count("eta_range")) {
+  } else if (vm.count("eta_range") != 0u) {
     const auto eta_range = vm["eta_range"].as<std::vector<scalar_t>>();
     if (eta_range.size() == 2u) {
       scalar_t min_theta{2.f * std::atan(std::exp(-eta_range[0]))};
@@ -196,7 +196,7 @@ void configure_rnd_track_gen_options(
     } else {
       throw std::invalid_argument("Eta range needs two arguments");
     }
-  } else if (vm.count("theta_range")) {
+  } else if (vm.count("theta_range") != 0u) {
     const auto theta_range = vm["theta_range"].as<std::vector<scalar_t>>();
     if (theta_range.size() == 2u) {
       cfg.theta_range(theta_range[0], theta_range[1]);
@@ -204,7 +204,7 @@ void configure_rnd_track_gen_options(
       throw std::invalid_argument("Theta range needs two arguments");
     }
   }
-  if (vm.count("origin")) {
+  if (vm.count("origin") != 0u) {
     const auto origin = vm["origin"].as<std::vector<scalar_t>>();
     if (origin.size() == 3u) {
       cfg.origin(origin[0] * unit<scalar_t>::mm, origin[1] * unit<scalar_t>::mm,
@@ -214,12 +214,12 @@ void configure_rnd_track_gen_options(
           "Particle gun origin needs three coordinates");
     }
   }
-  if (vm.count("pT_range") && vm.count("p_range")) {
+  if (vm.count("pT_range") != 0u && vm.count("p_range") != 0u) {
     throw std::invalid_argument(
         "Transverse and total momentum cannot be specified at the same "
         "time");
   }
-  if (vm.count("pT_range")) {
+  if (vm.count("pT_range") != 0u) {
     const auto pt_range = vm["pT_range"].as<std::vector<scalar_t>>();
 
     // Default
@@ -237,7 +237,7 @@ void configure_rnd_track_gen_options(
     }
   } else {
     auto p_range = std::vector<scalar_t>();
-    if (vm.count("pT_range")) {
+    if (vm.count("pT_range") != 0u) {
       p_range = vm["p_range"].as<std::vector<scalar_t>>();
     }
 

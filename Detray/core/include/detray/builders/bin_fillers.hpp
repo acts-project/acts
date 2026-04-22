@@ -43,9 +43,10 @@ struct fill_by_bin {
   template <concepts::grid grid_t, typename volume_t,
             typename surface_container_t, typename mask_container,
             typename transform_container, typename context_t, typename... Args>
-  DETRAY_HOST auto operator()(grid_t &grid, const volume_t &,
-                              const surface_container_t &,
-                              const mask_container &, const context_t,
+  DETRAY_HOST auto operator()(grid_t &grid, const volume_t & /*unused*/,
+                              const surface_container_t & /*unused*/,
+                              const mask_container & /*unused*/,
+                              const context_t /*unused*/,
                               std::vector<bin_data_type<grid_t>> &bins) const
       -> void {
     for (const bin_data_type<grid_t> &bd : bins) {
@@ -68,7 +69,8 @@ struct fill_by_pos {
                               const surface_container_t &surfaces,
                               const transform_container &transforms,
                               const mask_container & /*masks*/,
-                              const context_t ctx, Args &&...) const -> void {
+                              const context_t ctx, Args &&.../*unused*/) const
+      -> void {
     // Fill the volumes surfaces into the grid
     for (const auto &sf : surfaces) {
       // no portals in grids allowed
@@ -98,7 +100,7 @@ struct bin_associator {
   DETRAY_HOST auto operator()(grid_t &grid, detector_t &det,
                               const volume_type &vol,
                               const typename detector_t::geometry_context ctx,
-                              Args &&...) const -> void {
+                              Args &&.../*unused*/) const -> void {
     this->operator()(grid, det.surfaces(vol), det.mask_store(),
                      det.transform_store(), ctx);
   }
@@ -106,11 +108,11 @@ struct bin_associator {
   template <concepts::surface_grid grid_t, typename volume_t,
             typename surface_container_t, typename mask_container,
             typename transform_container, typename context_t, typename... Args>
-  DETRAY_HOST auto operator()(grid_t &grid, const volume_t &,
+  DETRAY_HOST auto operator()(grid_t &grid, const volume_t & /*unused*/,
                               const surface_container_t &surfaces,
                               const transform_container &transforms,
                               const mask_container &masks, const context_t ctx,
-                              Args &&...) const -> void {
+                              Args &&.../*unused*/) const -> void {
     using scalar_t = dscalar<typename grid_t::algebra_type>;
 
     // Fill the surfaces into the grid by matching their contour onto the

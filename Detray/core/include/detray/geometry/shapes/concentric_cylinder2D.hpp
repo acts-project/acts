@@ -196,7 +196,8 @@ class concentric_cylinder2D {
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>
   DETRAY_HOST dvector<dpoint3D<algebra_t>> vertices(
-      const bounds_type<dscalar<algebra_t>> &, dindex) const {
+      const bounds_type<dscalar<algebra_t>> & /*unused*/,
+      dindex /*unused*/) const {
     throw std::runtime_error(
         "Vertex generation for cylinders is not implemented");
     return {};

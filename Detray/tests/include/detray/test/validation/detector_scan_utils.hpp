@@ -651,7 +651,7 @@ inline auto build_adjacency(const portal_trace_type &portal_trace,
     const auto vol_index_2 = std::get<1>(record.second);
 
     if (obj_hashes.find(pt_index_1) == obj_hashes.end()) {
-      dindex mat_elem_vol1;
+      dindex mat_elem_vol1{dindex_invalid};
       // Assume the return link for now (filtering out portals that leave
       // world)
       if (vol_index_2 != invalid_value) {
@@ -722,8 +722,9 @@ template <typename detector_t, typename trajectory_t, typename truth_trace_t,
           typename recorded_trace_t>
 inline void display_error(
     const typename detector_t::geometry_context gctx, const detector_t &det,
-    const typename detector_t::name_map vol_names, const std::string &test_name,
-    const trajectory_t &test_track, const truth_trace_t &truth_trace,
+    const typename detector_t::name_map &vol_names,
+    const std::string &test_name, const trajectory_t &test_track,
+    const truth_trace_t &truth_trace,
     const detray::svgtools::styling::style &svg_style,
     const std::size_t i_track, [[maybe_unused]] const std::size_t n_tracks,
     const recorded_trace_t &recorded_trace = {},

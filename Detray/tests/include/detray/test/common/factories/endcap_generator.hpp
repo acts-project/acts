@@ -157,9 +157,10 @@ class endcap_generator final : public surface_factory_interface<detector_t> {
   DETRAY_HOST
   void clear() override { /*Do nothing*/ };
   DETRAY_HOST
-  void push_back(surface_data<detector_t> &&) override { /*Do nothing*/ }
+  void push_back(
+      surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
   DETRAY_HOST
-  auto push_back(std::vector<surface_data<detector_t>> &&)
+  auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
   /// @}
 
@@ -246,8 +247,8 @@ class endcap_generator final : public surface_factory_interface<detector_t> {
       // Convention: inner ring is closer to origin
       const scalar_t center{m_cfg.center()};
       const scalar_t staggered_center{
-          (ir % 2u ? center + 0.5f * m_cfg.ring_stagger()
-                   : center - 0.5f * m_cfg.ring_stagger())};
+          (ir % 2u != 0 ? center + 0.5f * m_cfg.ring_stagger()
+                        : center - 0.5f * m_cfg.ring_stagger())};
       const scalar_t rz{radii.size() == 1u ? center : staggered_center};
 
       // Generate the ring module positions (observe phi stagger)
@@ -278,9 +279,10 @@ class endcap_generator final : public surface_factory_interface<detector_t> {
         // The rotation matrix of the module
         const scalar_t mod_phi{vector::phi(mod_position)};
         const vector3_t mod_loc_y{math::cos(mod_phi), math::sin(mod_phi),
-                                  scalar_t(0)};
+                                  static_cast<scalar_t>(0)};
         // Take different axis to have the same readout direction
-        const vector3_t mod_loc_z{scalar_t(0), scalar_t(0),
+        const vector3_t mod_loc_z{static_cast<scalar_t>(0),
+                                  static_cast<scalar_t>(0),
                                   static_cast<scalar_t>(m_cfg.side())};
         const vector3_t mod_loc_x{vector::cross(mod_loc_y, mod_loc_z)};
 
@@ -335,19 +337,19 @@ class endcap_generator final : public surface_factory_interface<detector_t> {
       // Phi stagger affects 0 vs 1, 2 vs 3 ... etc
       // -> only works if it is a %4
       // Phi sub stagger affects 2 vs 4, 1 vs 3 etc.
-      if (phi_sub_stagger != 0.f && !(n_phi_bins % 4u)) {
+      if (phi_sub_stagger != 0.f && (n_phi_bins % 4u == 0u)) {
         // switch sides
-        if (!(iphi % 4u)) {
+        if ((iphi % 4u) == 0u) {
           rzs = phi_sub_stagger;
-        } else if (!((iphi + 1u) % 4u)) {
+        } else if (((iphi + 1u) % 4u) == 0u) {
           rzs = -phi_sub_stagger;
         }
       }
       // The module phi
       const scalar_t phi{min_phi + static_cast<scalar_t>(iphi) * phi_step};
       // Main z position depending on phi bin
-      const scalar_t rz{iphi % 2u ? z - 0.5f * phi_stagger
-                                  : z + 0.5f * phi_stagger};
+      const scalar_t rz{iphi % 2u != 0u ? z - 0.5f * phi_stagger
+                                        : z + 0.5f * phi_stagger};
       mod_positions.push_back(
           {radius * math::cos(phi), radius * math::sin(phi), rz + rzs});
     }

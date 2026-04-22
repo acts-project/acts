@@ -29,7 +29,7 @@ namespace detray::log::detail {
 /// https://stackoverflow.com/questions/31050113/how-to-extract-the-source-filename-without-path-and-suffix-at-compile-time
 constexpr const char *source_file_name(const char *path) {
   const char *file = path;
-  while (*path) {
+  while (*path != 0) {
     if (*path++ == '/') {
       file = path;
     }

@@ -107,7 +107,7 @@ class detray_propagation_HelixCovarianceTransportValidation
     const scalar step_size = S / static_cast<scalar>(n_planes);
 
     for (std::size_t i = 0u; i < n_planes; i++) {
-      const scalar s = step_size * scalar(i);
+      const scalar s = step_size * static_cast<scalar>(i);
 
       // Translation of the new surface
       vector3 trl = reference_helix(s);

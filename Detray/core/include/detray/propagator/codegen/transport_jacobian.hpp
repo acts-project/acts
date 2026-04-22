@@ -564,7 +564,7 @@ struct transport_jacobian_matrix_with_gradient {
     }
   }
   DETRAY_HOST_DEVICE explicit operator dmatrix<algebra_t, 8, 8>() const {
-    dmatrix<algebra_t, 8, 8> rv;
+    dmatrix<algebra_t, 8, 8> rv{};
     getter::element<0, 0>(rv) = element<0, 0>();
     getter::element<0, 1>(rv) = element<0, 1>();
     getter::element<0, 2>(rv) = element<0, 2>();
@@ -633,7 +633,7 @@ struct transport_jacobian_matrix_with_gradient {
   }
   DETRAY_HOST_DEVICE static constexpr transport_jacobian_matrix_with_gradient
   identity() {
-    transport_jacobian_matrix_with_gradient rv;
+    transport_jacobian_matrix_with_gradient rv{};
     rv.element<0, 0>() = static_cast<scalar_type>(1.f);
     rv.element<0, 1>() = static_cast<scalar_type>(0.f);
     rv.element<0, 2>() = static_cast<scalar_type>(0.f);

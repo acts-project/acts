@@ -49,6 +49,7 @@ class tracking_surface : public geometry::surface<detector_t> {
   /// Conversion to surface interface around constant detector type
   template <typename detector_type = detector_t>
     requires(!std::is_const_v<detector_type>)
+  // NOLINTNEXTLINE
   DETRAY_HOST_DEVICE constexpr operator tracking_surface<const detector_type>()
       const {
     return tracking_surface<const detector_type>{this->m_detector,

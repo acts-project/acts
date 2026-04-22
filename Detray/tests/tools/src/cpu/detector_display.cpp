@@ -100,21 +100,21 @@ int main(int argc, char** argv) {
   float r_axis{vm["r_axis"].as<float>()};
   float x_axis{r_axis};
   float y_axis{r_axis};
-  if (vm.count("x_axis")) {
+  if (vm.count("x_axis") != 0u) {
     x_axis = vm["x_axis"].as<float>();
   }
-  if (vm.count("y_axis")) {
+  if (vm.count("y_axis") != 0u) {
     y_axis = vm["y_axis"].as<float>();
   }
   const float z_axis{vm["z_axis"].as<float>()};
 
   // The geometry context to be displayed
   detector_t::geometry_context gctx;
-  if (vm.count("context")) {
+  if (vm.count("context") != 0u) {
     gctx = detector_t::geometry_context{vm["context"].as<dindex>()};
   }
   // Grid neighborhood size
-  if (vm.count("search_window")) {
+  if (vm.count("search_window") != 0u) {
     if (window.size() != 2u) {
       throw std::invalid_argument(
           "Incorrect surface grid search window. Please provide two "
@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
   }
 
   // Display the detector volume graph
-  if (vm.count("write_volume_graph")) {
+  if (vm.count("write_volume_graph") != 0u) {
     detray::volume_graph graph(det);
 
     detray::io::file_handle stream{

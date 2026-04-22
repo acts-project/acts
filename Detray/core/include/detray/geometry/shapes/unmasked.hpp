@@ -111,7 +111,7 @@ class unmasked {
   /// @returns the stereo annulus area.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t area(
-      const bounds_type<scalar_t>&) const {
+      const bounds_type<scalar_t>& /*unused*/) const {
     return std::numeric_limits<scalar_t>::max();
   }
 
@@ -122,7 +122,7 @@ class unmasked {
   /// @returns Inf.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t volume(
-      const bounds_type<scalar_t>&) const {
+      const bounds_type<scalar_t>& /*unused*/) const {
     return std::numeric_limits<scalar_t>::max();
   }
 
@@ -162,7 +162,7 @@ class unmasked {
   /// @returns the shapes centroid in global cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
-      const bounds_type<dscalar<algebra_t>>&) const {
+      const bounds_type<dscalar<algebra_t>>& /*unused*/) const {
     return {0.f, 0.f, 0.f};
   }
 
@@ -174,7 +174,7 @@ class unmasked {
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>
   DETRAY_HOST dvector<dpoint3D<algebra_t>> vertices(
-      const bounds_type<dscalar<algebra_t>>& bounds, dindex) const {
+      const bounds_type<dscalar<algebra_t>>& bounds, dindex /*unused*/) const {
     return local_min_bounds(bounds);
   }
 

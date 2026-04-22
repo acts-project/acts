@@ -99,16 +99,18 @@ struct jacobian<concentric_cylindrical2D<algebra_t>> {
 
   DETRAY_HOST_DEVICE
   static constexpr bound_to_free_jacobian_submatrix_type
-  get_derivative_dpos_dangle(const transform3_type &, const point3_type &,
-                             const vector3_type &,
-                             const bound_to_free_jacobian_submatrix_type &) {
+  get_derivative_dpos_dangle(
+      const transform3_type & /*unused*/, const point3_type & /*unused*/,
+      const vector3_type & /*unused*/,
+      const bound_to_free_jacobian_submatrix_type & /*unused*/) {
     return matrix::zero<bound_to_free_jacobian_submatrix_type>();
   }
 
   DETRAY_HOST_DEVICE
   static constexpr free_to_bound_jacobian_submatrix_type
-  get_derivative_dloc_dpos(const transform3_type &, const point3_type &pos,
-                           const vector3_type &) {
+  get_derivative_dloc_dpos(const transform3_type & /*unused*/,
+                           const point3_type &pos,
+                           const vector3_type & /*unused*/) {
     // Get d(loc0, loc1)/d(x,y,z)
     free_to_bound_jacobian_submatrix_type free_pos_to_bound_pos_derivative =
         matrix::zero<free_to_bound_jacobian_submatrix_type>();

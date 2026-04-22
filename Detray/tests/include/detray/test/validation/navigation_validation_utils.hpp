@@ -236,7 +236,7 @@ inline auto record_propagation(
 
       for (std::size_t i = 0u; i < e_bound_size; i++) {
         // Exclude zero-stddev
-        if (stddevs[i] != scalar_t{0}) {
+        if (stddevs[i] != static_cast<scalar_t>(0)) {
           bound_param[i] = std::normal_distribution<scalar_t>(
               bound_param[i], stddevs[i])(generator);
         }

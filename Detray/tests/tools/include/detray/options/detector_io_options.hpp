@@ -28,7 +28,7 @@ namespace detray::options {
 template <>
 void add_options<detray::io::detector_reader_config>(
     boost::program_options::options_description &desc,
-    const detray::io::detector_reader_config &) {
+    const detray::io::detector_reader_config & /*unused*/) {
   desc.add_options()("geometry_file",
                      boost::program_options::value<std::string>(),
                      "Detector geometry input file")(
@@ -44,15 +44,15 @@ void configure_options<detray::io::detector_reader_config>(
     const boost::program_options::variables_map &vm,
     detray::io::detector_reader_config &cfg) {
   // Input files
-  if (vm.count("geometry_file")) {
+  if (vm.count("geometry_file") != 0u) {
     cfg.add_file(vm["geometry_file"].as<std::string>());
   } else {
     throw std::invalid_argument("Please specify a geometry input file!\n\n");
   }
-  if (vm.count("material_file")) {
+  if (vm.count("material_file") != 0u) {
     cfg.add_file(vm["material_file"].as<std::string>());
   }
-  if (vm.count("grid_file")) {
+  if (vm.count("grid_file") != 0u) {
     cfg.add_file(vm["grid_file"].as<std::string>());
   }
 }

@@ -107,7 +107,8 @@ struct intersector {
   DETRAY_HOST_DEVICE inline decltype(auto) operator()(
       const detail::helix<algebra_t> &h, const surface_descr_t &sf,
       const mask_t &mask, const transform3_type &trf,
-      const intersection::config &cfg = {}, const scalar_type = 0.f) const {
+      const intersection::config &cfg = {},
+      const scalar_type /*unused*/ = 0.f) const {
     return helix_intersector_type{}(h, sf, mask, trf, cfg);
   }
 

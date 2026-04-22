@@ -38,8 +38,8 @@ struct surface_kernels {
   /// A functor to retrieve the masks shape name
   struct get_shape_name {
     template <typename mask_group_t, typename index_t>
-    DETRAY_HOST inline std::string operator()(const mask_group_t&,
-                                              const index_t) const {
+    DETRAY_HOST inline std::string operator()(const mask_group_t& /*unused*/,
+                                              const index_t /*unused*/) const {
       return std::string(mask_group_t::value_type::shape::name);
     }
   };
@@ -256,7 +256,7 @@ struct surface_kernels {
     DETRAY_HOST_DEVICE constexpr point3_type operator()(
         const mask_group_t& /*mask_group*/, const index_t& /*index*/,
         const transform3_type& trf3, const point3_type& local,
-        const vector3_type&) const {
+        const vector3_type& /*unused*/) const {
       using mask_t = typename mask_group_t::value_type;
 
       return mask_t::to_global_frame(trf3, local);

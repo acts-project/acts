@@ -143,13 +143,13 @@ class geometry_reader {
 
       // Add all portals and surfaces to the volume
       typename detector_t::geometry_context geo_ctx{};
-      for (auto [key, pt_factory] : pt_factories) {
+      for (const auto& [key, pt_factory] : pt_factories) {
         DETRAY_DEBUG_HOST("Adding '" << key
                                      << "' portal factory to volume builder");
         vbuilder->add_surfaces(pt_factory, geo_ctx);
       }
 
-      for (auto [key, sf_factory] : sf_factories) {
+      for (const auto& [key, sf_factory] : sf_factories) {
         DETRAY_DEBUG_HOST("Adding '" << key
                                      << "' surface factory to volume builder");
         vbuilder->add_surfaces(sf_factory, geo_ctx);

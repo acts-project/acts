@@ -301,7 +301,7 @@ class illustrator {
 
     DETRAY_DEBUG_HOST("-> Surface Material SVG ID: " << id);
 
-    return actsvg::display::surface_material(std::move(id), p_material);
+    return actsvg::display::surface_material(id, p_material);
   }
 
   /// @brief Converts the material of multiple detray surfaces to an svg.

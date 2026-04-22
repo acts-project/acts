@@ -90,7 +90,7 @@ GTEST_TEST(detray_builders, decorator_material_map_builder) {
       std::make_unique<volume_builder<detector_t>>(volume_id::e_cylinder);
   auto mat_builder = material_map_builder<detector_t>{std::move(vbuilder)};
 
-  EXPECT_TRUE(d.volumes().size() == 0);
+  EXPECT_TRUE(d.volumes().empty());
 
   // Add some portals first
   auto pt_cyl_factory = std::make_unique<pt_cylinder_factory_t>();

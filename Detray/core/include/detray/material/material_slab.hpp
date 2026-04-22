@@ -74,7 +74,8 @@ struct material_slab {
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   DETRAY_HOST_DEVICE constexpr scalar_type path_segment(
-      const scalar_type cos_inc_angle, const scalar_type = 0.f) const {
+      const scalar_type cos_inc_angle,
+      const scalar_type /*unused*/ = 0.f) const {
     return m_thickness / cos_inc_angle;
   }
 
@@ -82,7 +83,8 @@ struct material_slab {
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   DETRAY_HOST_DEVICE constexpr scalar_type path_segment_in_X0(
-      const scalar_type cos_inc_angle, const scalar_type = 0.f) const {
+      const scalar_type cos_inc_angle,
+      const scalar_type /*unused*/ = 0.f) const {
     return m_thickness_in_X0 / cos_inc_angle;
   }
 
@@ -90,7 +92,8 @@ struct material_slab {
   ///
   /// @param cos_inc_angle cosine of the track incidence angle
   DETRAY_HOST_DEVICE constexpr scalar_type path_segment_in_L0(
-      const scalar_type cos_inc_angle, const scalar_type = 0.f) const {
+      const scalar_type cos_inc_angle,
+      const scalar_type /*unused*/ = 0.f) const {
     return m_thickness_in_L0 / cos_inc_angle;
   }
 

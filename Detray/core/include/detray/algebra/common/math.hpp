@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cmath>
 
+// NOLINTBEGIN
 namespace detray::algebra {
 
 /// Namespace to pick up common math functions from
@@ -31,3 +32,4 @@ using namespace std;
 #endif  // SYCL
 
 }  // namespace detray::algebra
+// NOLINTEND

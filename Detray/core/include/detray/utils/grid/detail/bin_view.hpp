@@ -28,7 +28,7 @@ struct bin_iterator;
 template <std::size_t... I>
 DETRAY_HOST_DEVICE inline auto get_bin_indexer(
     const axis::multi_bin_range<sizeof...(I)> &search_window,
-    std::index_sequence<I...>) {
+    std::index_sequence<I...> /*seq*/) {
   return detray::views::cartesian_product{
       detray::views::iota{detray::detail::get<I>(search_window)}...};
 }
@@ -59,7 +59,7 @@ struct bin_view : public detray::ranges::view_interface<bin_view<grid_t>> {
 
   /// Copy constructor
   DETRAY_HOST_DEVICE
-  constexpr explicit bin_view(const bin_view &other)
+  constexpr bin_view(const bin_view &other)
       : m_grid{other.m_grid}, m_bin_indexer{other.m_bin_indexer} {}
 
   /// Default destructor
@@ -93,9 +93,9 @@ struct bin_view : public detray::ranges::view_interface<bin_view<grid_t>> {
 
  private:
   /// The underlying grid that holds the bins
-  const grid_t *m_grid;
+  const grid_t *m_grid{nullptr};
   /// How to index the bins in the search window (produces local indices)
-  bin_indexer_t m_bin_indexer;
+  bin_indexer_t m_bin_indexer{};
 };
 
 /// @brief Iterate through the bin search area.
@@ -173,7 +173,7 @@ struct bin_iterator {
   template <typename... Idx_t, std::size_t... I>
   DETRAY_HOST_DEVICE constexpr void map_circular(
       std::tuple<Idx_t...> index_tuple, typename grid_t::loc_bin_index &lbin,
-      std::index_sequence<I...>) const {
+      std::index_sequence<I...> /*seq*/) const {
     // Run the mapping for every axis in the grid
     (map_circular(m_grid->template get_axis<I>(), index_tuple, lbin), ...);
   }
@@ -197,11 +197,11 @@ struct bin_iterator {
   }
 
   /// Grid
-  const grid_t *m_grid;
+  const grid_t *m_grid{nullptr};
   /// Bin indexing (cartesian product over local bin index ranges)
-  bin_indexer_t m_bin_indexer;
+  bin_indexer_t m_bin_indexer{};
   /// Current local bin
-  typename grid_t::loc_bin_index m_lbin;
+  typename grid_t::loc_bin_index m_lbin{};
 };
 
 }  // namespace detray::axis::detail

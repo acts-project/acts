@@ -277,8 +277,9 @@ class single_store {
       return;
     }
     // Drop previous contexts if any
-    if (m_container.size() > m_context_size)
+    if (m_container.size() > m_context_size) {
       m_container.resize(m_context_size);
+    }
     // Add new contexts
     m_n_contexts = context_data.size() / m_context_size;
     m_container.reserve(m_container.size() + context_data.size());

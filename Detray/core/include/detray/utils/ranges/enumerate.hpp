@@ -57,7 +57,7 @@ class enumerate_view : public detray::ranges::view_interface<
     = default;
 
     DETRAY_HOST_DEVICE
-    iterator(range_itr_t iter, incr_t offset = 0)
+    explicit iterator(range_itr_t iter, incr_t offset = 0)
         : m_iter(iter), m_i{offset}, m_offset{offset} {};
 
     /// Increment iterator and index in lockstep

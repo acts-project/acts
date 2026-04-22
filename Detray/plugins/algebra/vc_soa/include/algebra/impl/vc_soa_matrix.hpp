@@ -25,9 +25,10 @@ using algebra::storage::zero;
 template <std::size_t ROW, std::size_t COL, concepts::simd_scalar scalar_t,
           template <typename, std::size_t> class array_t>
 DETRAY_HOST_DEVICE constexpr scalar_t determinant(
-    const algebra::storage::matrix<array_t, scalar_t, ROW, COL> &) noexcept {
+    const algebra::storage::matrix<array_t, scalar_t, ROW, COL>
+        & /*unused*/) noexcept {
   // @TODO: Implement
-  return scalar_t(0);
+  return static_cast<scalar_t>(0);
 }
 
 template <std::size_t ROW, std::size_t COL, concepts::simd_scalar scalar_t,

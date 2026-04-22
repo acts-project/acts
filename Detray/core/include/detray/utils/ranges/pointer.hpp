@@ -80,7 +80,8 @@ class pointer_view
   constexpr auto back() noexcept -> value_t { return *m_value; }
 
   /// @returns the value directly
-  DETRAY_HOST_DEVICE constexpr auto operator[](const dindex) const -> value_t {
+  DETRAY_HOST_DEVICE constexpr auto operator[](const dindex /*unused*/) const
+      -> value_t {
     return *m_value;
   }
 

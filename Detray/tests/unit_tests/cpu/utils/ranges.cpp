@@ -248,8 +248,7 @@ GTEST_TEST(detray_utils, ranges_cartesian_product_trivial) {
   auto seq2 = detray::views::iota(dindex_range{2u, 3u});
   auto seq3 = detray::views::iota(dindex_range{3u, 4u});
 
-  detray::views::cartesian_product cp{std::move(seq1), std::move(seq2),
-                                      std::move(seq3)};
+  detray::views::cartesian_product cp{seq1, seq2, seq3};
 
   // General tests
   static_assert(detray::ranges::range<decltype(cp)>);
@@ -291,8 +290,7 @@ GTEST_TEST(detray_utils, ranges_cartesian_product) {
 
   const std::size_t size{seq1.size() * seq2.size() * seq3.size()};
 
-  detray::views::cartesian_product cp{std::move(seq1), std::move(seq2),
-                                      std::move(seq3)};
+  detray::views::cartesian_product cp{seq1, seq2, seq3};
 
   // General tests
   static_assert(detray::ranges::range<decltype(cp)>);

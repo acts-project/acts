@@ -24,10 +24,12 @@ namespace detray::options {
 
 // Forward declare the options handling for different configuration types
 template <typename T>
-void add_options(boost::program_options::options_description&, const T&);
+void add_options(boost::program_options::options_description& /*desc*/,
+                 const T& /*opt*/);
 
 template <typename T>
-void configure_options(const boost::program_options::variables_map&, T&);
+void configure_options(const boost::program_options::variables_map& /*map*/,
+                       T& /*opt*/);
 
 /// Parse commandline options and add them to detray configuration types
 template <typename... CONFIGS>
@@ -62,7 +64,7 @@ auto parse_options(boost::program_options::options_description& desc, int argc,
   }
 
   // Print help message when requested
-  if (vm.count("help")) {
+  if (vm.count("help") != 0u) {
     std::clog << desc << std::endl;
     std::exit(EXIT_SUCCESS);
   }

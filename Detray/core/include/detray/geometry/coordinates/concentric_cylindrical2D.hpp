@@ -75,18 +75,19 @@ struct concentric_cylindrical2D {
   /// @returns the normal vector in global coordinates
   template <typename mask_t>
   DETRAY_HOST_DEVICE static inline vector3_type normal(
-      const transform3_type &, const point2_type &p, const mask_t & /*mask*/) {
+      const transform3_type & /*trf*/, const point2_type &p,
+      const mask_t & /*mask*/) {
     // normal vector in global coordinates (concentric cylinders have no
     // rotation)
-    return {math::cos(p[0]), math::sin(p[0]), scalar_type(0)};
+    return {math::cos(p[0]), math::sin(p[0]), static_cast<scalar_type>(0)};
   }
 
   /// @returns the normal vector given a local position @param p
-  DETRAY_HOST_DEVICE static inline vector3_type normal(const transform3_type &,
-                                                       const point3_type &p) {
+  DETRAY_HOST_DEVICE static inline vector3_type normal(
+      const transform3_type & /*trf*/, const point3_type &p) {
     // normal vector in global coordinates (concentric cylinders have no
     // rotation)
-    return {math::cos(p[0]), math::sin(p[0]), scalar_type(0)};
+    return {math::cos(p[0]), math::sin(p[0]), static_cast<scalar_type>(0)};
   }
 
 };  // struct concentric_cylindrical2D

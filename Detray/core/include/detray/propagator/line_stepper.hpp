@@ -81,7 +81,8 @@ class line_stepper final
     constexpr vector3_type dtds() const { return {0.f, 0.f, 0.f}; }
 
     DETRAY_HOST_DEVICE
-    constexpr scalar_type dqopds(const material<scalar_type>*) const {
+    constexpr scalar_type dqopds(
+        const material<scalar_type>* /*unused*/) const {
       return 0.f;
     }
   };
@@ -93,9 +94,10 @@ class line_stepper final
   /// @param cfg The stepping configuration
   ///
   /// @returns returning the heartbeat, indicating if the stepping is alive
-  DETRAY_HOST_DEVICE bool step(const scalar_type dist_to_next, state& stepping,
-                               const stepping::config& cfg, const bool = true,
-                               const material<scalar_type>* = nullptr) const {
+  DETRAY_HOST_DEVICE bool step(
+      const scalar_type dist_to_next, state& stepping,
+      const stepping::config& cfg, const bool = true,
+      const material<scalar_type>* /*unused*/ = nullptr) const {
     // In case of an overlap do nothing
     if (math::fabs(dist_to_next) <= 1.f * unit<scalar_type>::um) {
       stepping.run_inspector(cfg, "Step skipped (Overlap): ", dist_to_next);

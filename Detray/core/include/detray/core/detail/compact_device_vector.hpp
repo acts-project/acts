@@ -81,33 +81,35 @@ struct compact_device_vector {
   const_pointer data() const { return m_ptr; }
 
   DETRAY_HOST_DEVICE
-  iterator begin() { return iterator(m_ptr); }
+  iterator begin() { return static_cast<iterator>(m_ptr); }
   DETRAY_HOST_DEVICE
-  const_iterator begin() const { return const_iterator(m_ptr); }
+  const_iterator begin() const { return static_cast<const_iterator>(m_ptr); }
   DETRAY_HOST_DEVICE
   const_iterator cbegin() const { return begin(); }
 
   DETRAY_HOST_DEVICE
-  iterator end() { return iterator(m_ptr + size()); }
+  iterator end() { return static_cast<iterator>(m_ptr + size()); }
   DETRAY_HOST_DEVICE
-  const_iterator end() const { return const_iterator(m_ptr + size()); }
+  const_iterator end() const {
+    return static_cast<const_iterator>(m_ptr + size());
+  }
   DETRAY_HOST_DEVICE
   const_iterator cend() const { return end(); }
 
   DETRAY_HOST_DEVICE
-  reverse_iterator rbegin() { return reverse_iterator(end()); }
+  reverse_iterator rbegin() { return static_cast<reverse_iterator>(end()); }
   DETRAY_HOST_DEVICE
   const_reverse_iterator rbegin() const {
-    return const_reverse_iterator(end());
+    return static_cast<const_reverse_iterator>(end());
   }
   DETRAY_HOST_DEVICE
   const_reverse_iterator crbegin() const { return rbegin(); }
 
   DETRAY_HOST_DEVICE
-  reverse_iterator rend() { return reverse_iterator(begin()); }
+  reverse_iterator rend() { return static_cast<reverse_iterator>(begin()); }
   DETRAY_HOST_DEVICE
   const_reverse_iterator rend() const {
-    return const_reverse_iterator(begin());
+    return static_cast<const_reverse_iterator>(begin());
   }
   DETRAY_HOST_DEVICE
   const_reverse_iterator crend() const { return rend(); }

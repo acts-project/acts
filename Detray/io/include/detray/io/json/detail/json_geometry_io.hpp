@@ -93,7 +93,7 @@ inline void from_json(const nlohmann::ordered_json& j, surface_payload& s) {
     mask_payload m = j["mask"];
     s.masks.push_back(m);
   } else if (j.find("masks") != j.end()) {
-    for (auto js : j["masks"]) {
+    for (const auto& js : j["masks"]) {
       mask_payload m = js;
       s.masks.push_back(m);
     }
@@ -132,13 +132,13 @@ inline void from_json(const nlohmann::ordered_json& j, volume_payload& v) {
   v.index = j["index"];
   v.type = j["type"];
   v.transform = j["transform"];
-  for (auto js : j["surfaces"]) {
+  for (const auto& js : j["surfaces"]) {
     surface_payload s = js;
     v.surfaces.push_back(s);
   }
   if (j.find("acc_links") != j.end()) {
     v.acc_links.emplace();
-    for (auto jl : j["acc_links"]) {
+    for (const auto& jl : j["acc_links"]) {
       acc_links_payload al = jl;
       v.acc_links->push_back(al);
     }
@@ -160,7 +160,7 @@ inline void to_json(nlohmann::ordered_json& j, const detector_payload& d) {
 
 inline void from_json(const nlohmann::ordered_json& j, detector_payload& d) {
   if (j.find("volumes") != j.end()) {
-    for (auto jvolume : j["volumes"]) {
+    for (const auto& jvolume : j["volumes"]) {
       d.volumes.push_back(jvolume);
     }
   }

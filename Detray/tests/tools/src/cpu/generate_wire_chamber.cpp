@@ -72,19 +72,19 @@ int main(int argc, char **argv) {
       detray::options::parse_options(desc, argc, argv, writer_cfg);
 
   // General options
-  if (vm.count("write_volume_graph")) {
+  if (vm.count("write_volume_graph") != 0u) {
     throw std::invalid_argument("Writing of volume graph not implemented");
   }
 
   // Determine the wire shape
-  if (vm.count("straw_tubes") && vm.count("drift_cells")) {
+  if (vm.count("straw_tubes") != 0u && vm.count("drift_cells") != 0u) {
     throw std::invalid_argument(
         "Cannot build straw tubes and wire cells together");
   }
 
   // Build the geometry
   vecmem::host_memory_resource host_mr;
-  if (vm.count("straw_tubes")) {
+  if (vm.count("straw_tubes") != 0u) {
     detail::write_wire_chamber<detray::test::scalar, detray::line_circular>(
         argc, argv, desc, &host_mr, writer_cfg);
   } else {

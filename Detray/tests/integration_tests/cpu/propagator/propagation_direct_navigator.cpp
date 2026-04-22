@@ -143,7 +143,7 @@ TEST_P(PropagatorWithRkStepperDirectNavigatorToyDetector, direct_navigator) {
     ASSERT_TRUE(p.propagate(state, actor_states))
         << navigation.inspector().to_string();
 
-    if (seqs_device.size() > 0) {
+    if (!seqs_device.empty()) {
       auto direct_forward_actor_states = detray::tie(
           fw_updater_state, interactor_state, sequencer_forward_state);
       auto direct_backward_actor_states = detray::tie(
@@ -321,7 +321,7 @@ TEST_P(PropagatorWithRkStepperDirectNavigatorWireChamber, direct_navigator) {
     ASSERT_TRUE(p.propagate(state, actor_states))
         << navigation.inspector().to_string();
 
-    if (seqs_device.size() > 0) {
+    if (!seqs_device.empty()) {
       auto direct_forward_actor_states = detray::tie(
           fw_updater_state, interactor_state, sequencer_forward_state);
       auto direct_backward_actor_states = detray::tie(

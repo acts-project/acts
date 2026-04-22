@@ -74,6 +74,7 @@ class surface {
   /// Conversion to surface interface around constant detector type
   template <typename detector_type = detector_t>
     requires(!std::is_const_v<detector_type>)
+  // NOLINTNEXTLINE
   DETRAY_HOST_DEVICE constexpr operator surface<const detector_type>() const {
     return surface<const detector_type>{this->m_detector, this->m_desc};
   }

@@ -46,8 +46,8 @@ class surface_grid_writer : public detail::grid_writer {
   /// Convert the grid collections of a detector @param det into their io
   /// payload
   template <typename detector_t>
-  static payload_type to_payload(const detector_t& det,
-                                 const typename detector_t::name_map&) {
+  static payload_type to_payload(
+      const detector_t& det, const typename detector_t::name_map& /*unused*/) {
     using surface_desc_t = typename detector_t::surface_type;
 
     payload_type grids_data;

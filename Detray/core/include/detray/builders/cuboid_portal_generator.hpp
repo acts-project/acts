@@ -68,9 +68,10 @@ class cuboid_portal_generator final
   void clear() override { /*Do nothing*/ };
 
   DETRAY_HOST
-  void push_back(surface_data<detector_t> &&) override { /*Do nothing*/ }
+  void push_back(
+      surface_data<detector_t> && /*unused*/) override { /*Do nothing*/ }
   DETRAY_HOST
-  auto push_back(std::vector<surface_data<detector_t>> &&)
+  auto push_back(std::vector<surface_data<detector_t>> && /*unused*/)
       -> void override { /*Do nothing*/ }
 
   /// Create minimum aabbs around all surfaces that are passed and then
@@ -169,7 +170,7 @@ class cuboid_portal_generator final
                                               h_y);
 
     // No rotation, but shift in z for both faces
-    vector3_t shift{scalar_type(0), scalar_type(0),
+    vector3_t shift{static_cast<scalar_type>(0), static_cast<scalar_type>(0),
                     detail::is_invalid_value(h_z) ? max_shift : h_z};
     transforms.emplace_back(ctx, static_cast<vector3_t>(center + shift));
     transforms.emplace_back(ctx, static_cast<vector3_t>(center - shift));
@@ -192,8 +193,9 @@ class cuboid_portal_generator final
                                               h_z);
 
     // Rotate by 90deg around x-axis, plus shift in y
-    shift = {scalar_type(0), detail::is_invalid_value(h_y) ? max_shift : h_y,
-             scalar_type(0)};
+    shift = {static_cast<scalar_type>(0),
+             detail::is_invalid_value(h_y) ? max_shift : h_y,
+             static_cast<scalar_type>(0)};
     vector3_t new_x{1.f, 0.f, 0.f};
     vector3_t new_z{0.f, -1.f, 0.f};
     transforms.emplace_back(ctx, static_cast<vector3_t>(center + shift), new_z,
@@ -217,8 +219,8 @@ class cuboid_portal_generator final
                                               h_y);
 
     // Rotate by 90deg around y-axis, plus shift in x
-    shift = {detail::is_invalid_value(h_x) ? max_shift : h_x, scalar_type(0),
-             scalar_type(0)};
+    shift = {detail::is_invalid_value(h_x) ? max_shift : h_x,
+             static_cast<scalar_type>(0), static_cast<scalar_type>(0)};
     new_x = {0.f, 0.f, -1.f};
     new_z = {1.f, 0.f, 0.f};
     transforms.emplace_back(ctx, static_cast<vector3_t>(center + shift), new_z,

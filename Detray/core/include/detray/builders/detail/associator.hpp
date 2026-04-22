@@ -98,8 +98,9 @@ struct center_of_gravity_generic {
       if ((((pi[1] <= cgs[1]) && (cgs[1] < pj[1])) ||
            ((pj[1] <= cgs[1]) && (cgs[1] < pi[1]))) &&
           (cgs[0] <
-           (pj[0] - pi[0]) * (cgs[1] - pi[1]) / (pj[1] - pi[1]) + pi[0]))
+           (pj[0] - pi[0]) * (cgs[1] - pi[1]) / (pj[1] - pi[1]) + pi[0])) {
         inside = !inside;
+      }
     }
     return inside;
   }

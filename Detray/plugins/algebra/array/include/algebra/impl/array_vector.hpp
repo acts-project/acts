@@ -104,7 +104,7 @@ template <concepts::index index_t, template <typename, index_t> class array_t,
           concepts::scalar scalar_t, index_t N>
 DETRAY_HOST_DEVICE constexpr scalar_t dot(const array_t<scalar_t, N> &a,
                                           const array_t<scalar_t, N> &b) {
-  array_t<scalar_t, N> tmp;
+  array_t<scalar_t, N> tmp{};
   for (index_t i = 0; i < N; i++) {
     tmp[i] = a[i] * b[i];
   }
@@ -119,7 +119,7 @@ template <concepts::index index_t, template <typename, index_t> class array_t,
           concepts::scalar scalar_t, index_t N>
 DETRAY_HOST_DEVICE constexpr scalar_t dot(
     const array_t<scalar_t, N> &a, const array_t<array_t<scalar_t, N>, 1> &b) {
-  array_t<scalar_t, N> tmp;
+  array_t<scalar_t, N> tmp{};
   for (index_t i = 0; i < N; i++) {
     tmp[i] = a[i] * b[0][i];
   }
@@ -134,7 +134,7 @@ template <concepts::index index_t, template <typename, index_t> class array_t,
           concepts::scalar scalar_t, index_t N>
 DETRAY_HOST_DEVICE constexpr scalar_t dot(
     const array_t<array_t<scalar_t, N>, 1> &a, const array_t<scalar_t, N> &b) {
-  array_t<scalar_t, N> tmp;
+  array_t<scalar_t, N> tmp{};
   for (index_t i = 0; i < N; i++) {
     tmp[i] = a[0][i] * b[i];
   }
@@ -150,7 +150,7 @@ template <concepts::index index_t, template <typename, index_t> class array_t,
 DETRAY_HOST_DEVICE constexpr scalar_t dot(
     const array_t<array_t<scalar_t, N>, 1> &a,
     const array_t<array_t<scalar_t, N>, 1> &b) {
-  array_t<scalar_t, N> tmp;
+  array_t<scalar_t, N> tmp{};
   for (index_t i = 0; i < N; i++) {
     tmp[i] = a[0][i] * b[0][i];
   }

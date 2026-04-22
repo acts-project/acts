@@ -34,35 +34,35 @@ namespace detray::svgtools::styling {
 
 /// Style applied to an actsvg proto grid
 struct grid_style {
-  actsvg::style::color _stroke_color;
-  actsvg::scalar _stroke_width;
+  actsvg::style::color _stroke_color{};
+  actsvg::scalar _stroke_width{};
 };
 
 /// Style applied to an actsvg proto surface_material
 struct surface_material_style {
-  actsvg::point2 _info_pos;
+  actsvg::point2 _info_pos{};
 
-  actsvg::point2 _gradient_pos;
-  std::array<actsvg::scalar, 2u> _gradient_box;
-  actsvg::style::font _gradient_font;
-  actsvg::style::label _gradient_label;
-  actsvg::style::color _gradient_stroke_color;
-  actsvg::scalar _gradient_stroke_width;
-  std::vector<actsvg::style::color> _gradient_color_scale;
-  unsigned int _gradient_n_stops;
+  actsvg::point2 _gradient_pos{};
+  std::array<actsvg::scalar, 2u> _gradient_box{};
+  actsvg::style::font _gradient_font{};
+  actsvg::style::label _gradient_label{};
+  actsvg::style::color _gradient_stroke_color{};
+  actsvg::scalar _gradient_stroke_width{0.f};
+  std::vector<actsvg::style::color> _gradient_color_scale{};
+  unsigned int _gradient_n_stops{0u};
 
-  grid_style _grid_style;
+  grid_style _grid_style{};
 };
 
 /// Style applied to an actsvg proto surface
 struct surface_style {
   explicit surface_style(
-      actsvg::style::color fill_color =
+      const actsvg::style::color& fill_color =
           colors::tableau_colorblind10::red_tones(0.4f).front(),
       actsvg::scalar stroke_width = 0.4f, surface_material_style mat_style = {})
       : _fill_color{fill_color},
         _stroke_width{stroke_width},
-        _material_style{mat_style} {
+        _material_style{std::move(mat_style)} {
     _stroke_color = fill_color;
     _highlight_stroke_rgb = _highlight_rgb;
     _highlight_stroke_width = stroke_width;
@@ -70,81 +70,81 @@ struct surface_style {
     _material_style._gradient_label._font._size = 26u;
   }
   // Fill color
-  actsvg::style::color _fill_color;
+  actsvg::style::color _fill_color{};
 
   // Stroke
-  actsvg::scalar _stroke_width;
-  actsvg::style::color _stroke_color;
+  actsvg::scalar _stroke_width{10.f};
+  actsvg::style::color _stroke_color{};
 
   // Highlights
   std::array<int, 3> _highlight_rgb{colors::macaroni_and_cheese};
   std::vector<std::string> _highlights{};
-  std::array<int, 3> _highlight_stroke_rgb;
-  actsvg::scalar _highlight_stroke_width;
+  std::array<int, 3> _highlight_stroke_rgb{};
+  actsvg::scalar _highlight_stroke_width{};
 
   unsigned int _font_size{22u};
   // Granularity of vertex approximation of arcs
   unsigned int _n_segments{72u};
 
-  surface_material_style _material_style;
+  surface_material_style _material_style{};
 };
 
 /// Style applied to an actsvg proto portal link
 struct link_style {
-  actsvg::scalar _marker_size;
+  actsvg::scalar _marker_size{1.f};
 };
 
 /// Style applied to an actsvg proto portal
 struct portal_style {
-  surface_style _surface_style;
-  link_style _link_style;
+  surface_style _surface_style{};
+  link_style _link_style{};
 };
 
 /// Style applied to an actsvg proto volume
 struct volume_style {
-  surface_style _sensitive_surface_style;
-  surface_style _passive_surface_style;
-  portal_style _portal_style;
-  grid_style _grid_style;
+  surface_style _sensitive_surface_style{};
+  surface_style _passive_surface_style{};
+  portal_style _portal_style{};
+  grid_style _grid_style{};
 };
 
 /// Style applied to an actsvg proto detector
 struct detector_style {
-  volume_style _volume_style;
-  grid_style _grid_style;
+  volume_style _volume_style{};
+  grid_style _grid_style{};
 };
 
 /// Style applied to proto eta lines
 struct eta_lines_style {
-  actsvg::style::color _fill_color_main;
-  actsvg::style::color _fill_color_half;
-  actsvg::scalar _stroke_width_main;
-  actsvg::scalar _stroke_width_half;
-  unsigned int _font_size;
+  actsvg::style::color _fill_color_main{};
+  actsvg::style::color _fill_color_half{};
+  actsvg::scalar _stroke_width_main{10.f};
+  actsvg::scalar _stroke_width_half{10.f};
+  unsigned int _font_size{11u};
 };
 
 /// Style applied to a proto landmark
 struct landmark_style {
-  actsvg::style::color _fill_color;
-  actsvg::scalar _stroke_width;
-  actsvg::scalar _marker_size;
-  std::string _marker_type;
+  actsvg::style::color _fill_color{};
+  actsvg::scalar _stroke_width{10.f};
+  actsvg::scalar _marker_size{10.f};
+  std::string _marker_type{};
 };
 
 /// Style applied to a proto trajectory
 struct trajectory_style {
   // Give different tracks different colors
-  actsvg::style::color _fill_color;
-  actsvg::scalar _stroke_width;
+  actsvg::style::color _fill_color{};
+  actsvg::scalar _stroke_width{10.f};
 };
 
 /// Global styling options
 struct style {
-  detector_style _detector_style;
-  eta_lines_style _eta_lines_style;
-  trajectory_style _trajectory_style;
-  landmark_style _landmark_style;
-  landmark_style _intersection_style;
+  detector_style _detector_style{};
+  eta_lines_style _eta_lines_style{};
+  trajectory_style _trajectory_style{};
+  landmark_style _landmark_style{};
+  landmark_style _intersection_style{};
 };
 
 /// The default styling

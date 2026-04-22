@@ -33,7 +33,7 @@ struct link_start_getter {
   DETRAY_HOST inline auto operator()(const mask_group_t& mask_group,
                                      const index_t& index,
                                      const transform3_t& transform,
-                                     const std::size_t = 0) const {
+                                     const std::size_t /*unused*/ = 0) const {
     return link_start(mask_group.at(index), transform);
   }
 
@@ -150,7 +150,7 @@ struct link_end_getter {
       const detector_t& detector,
       const detray::tracking_volume<detector_t>& volume,
       const point3_t& surface_point, const vector3_t& surface_normal,
-      const scalar_t& link_length, const std::size_t = 0) const {
+      const scalar_t& link_length, const std::size_t /*unused*/ = 0) const {
     return link_dir(mask_group.at(index), detector, volume, surface_point,
                     surface_normal) *
                link_length +

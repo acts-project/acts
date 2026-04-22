@@ -55,18 +55,20 @@ struct mock_volume_builder : public volume_builder_interface<detector_t> {
   auto operator()() -> typename detector_t::volume_type& override {
     return m_vol;
   }
-  auto build(detector_t&, typename detector_t::geometry_context = {}) ->
+  auto build(detector_t& /*unused*/,
+             typename detector_t::geometry_context /*mask*/ = {}) ->
       typename detector_t::volume_type* override {
     return &m_vol;
   }
-  void add_volume_placement(const typename detector_t::transform3_type& = {})
+  void add_volume_placement(
+      const typename detector_t::transform3_type& /*mask*/ = {})
       override { /*Do nothing*/ }
-  void add_volume_placement(
-      const typename detector_t::point3_type&) override { /*Do nothing*/ }
-  void add_volume_placement(
-      const typename detector_t::point3_type&,
-      const typename detector_t::vector3_type&,
-      const typename detector_t::vector3_type&) override { /*Do nothing*/ }
+  void add_volume_placement(const typename detector_t::point3_type& /*unused*/)
+      override { /*Do nothing*/ }
+  void add_volume_placement(const typename detector_t::point3_type& /*unused*/,
+                            const typename detector_t::vector3_type& /*unused*/,
+                            const typename detector_t::vector3_type& /*unused*/)
+      override { /*Do nothing*/ }
   void add_surfaces(
       std::shared_ptr<surface_factory_interface<detector_t>>,
       typename detector_t::geometry_context = {}) override { /*Do nothing*/ }

@@ -189,7 +189,7 @@ class geometry_writer {
   template <detray::concepts::algebra algebra_t>
   struct get_material_link_payload {
     template <typename material_group_t, typename index_t>
-    constexpr auto operator()(const material_group_t&,
+    constexpr auto operator()(const material_group_t& /*unused*/,
                               const index_t& index) const {
       using material_t = typename material_group_t::value_type;
 
@@ -207,7 +207,8 @@ class geometry_writer {
   /// Retrieve @c acc_links_payload from accelerator_store collection
   struct get_acc_link_payload {
     template <typename acc_group_t, typename index_t>
-    constexpr auto operator()(const acc_group_t&, const index_t& index) const {
+    constexpr auto operator()(const acc_group_t& /*unused*/,
+                              const index_t& index) const {
       using accel_t = typename acc_group_t::value_type;
 
       auto id{acc_links_payload::type_id::unknown};

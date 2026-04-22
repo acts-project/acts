@@ -97,13 +97,13 @@ inline void from_json(const nlohmann::ordered_json& j,
   g.grid_link = j["grid_link"];
 
   nlohmann::ordered_json jaxes = j["axes"];
-  for (auto jax : jaxes) {
+  for (const auto& jax : jaxes) {
     axis_payload a = jax;
     g.axes.push_back(std::move(a));
   }
 
   nlohmann::ordered_json jbins = j["bins"];
-  for (auto jbin : jbins) {
+  for (const auto& jbin : jbins) {
     grid_bin_payload<content_t> b = jbin;
     g.bins.push_back(std::move(b));
   }
@@ -139,10 +139,10 @@ template <typename content_t, typename grid_id_t>
 inline void from_json(const nlohmann::ordered_json& j,
                       detector_grids_payload<content_t, grid_id_t>& d) {
   if (j.find("grids") != j.end()) {
-    for (auto& jgrids : j["grids"]) {
+    for (const auto& jgrids : j["grids"]) {
       const std::size_t vol_idx = jgrids["volume_link"];
 
-      for (auto jgrid : jgrids["grid_data"]) {
+      for (const auto& jgrid : jgrids["grid_data"]) {
         grid_payload<content_t, grid_id_t> grp = jgrid;
         d.grids[vol_idx].push_back(std::move(grp));
       }

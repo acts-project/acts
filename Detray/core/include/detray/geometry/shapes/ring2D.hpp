@@ -183,7 +183,7 @@ class ring2D {
   /// @returns the shapes centroid in local cartesian coordinates
   template <concepts::algebra algebra_t>
   DETRAY_HOST_DEVICE dpoint3D<algebra_t> centroid(
-      const bounds_type<dscalar<algebra_t>> &) const {
+      const bounds_type<dscalar<algebra_t>> & /*unused*/) const {
     return {0.f, 0.f, 0.f};
   }
 
@@ -195,7 +195,8 @@ class ring2D {
   /// @return a generated list of vertices
   template <concepts::algebra algebra_t>
   DETRAY_HOST dvector<dpoint3D<algebra_t>> vertices(
-      const bounds_type<dscalar<algebra_t>> &, dindex) const {
+      const bounds_type<dscalar<algebra_t>> & /*unused*/,
+      dindex /*unused*/) const {
     throw std::runtime_error("Vertex generation for rings is not implemented");
     return {};
   }

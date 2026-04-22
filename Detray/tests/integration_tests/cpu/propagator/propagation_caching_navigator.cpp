@@ -151,7 +151,7 @@ class PropagatorWithRkStepper : public ::testing::TestWithParam<
       uniform_track_generator<free_track_parameters<test_algebra>>;
 
   /// Set the test environment up
-  virtual void SetUp() {
+  virtual void SetUp() override {
     overstep_tol = std::get<0>(GetParam());
     step_constr = std::get<1>(GetParam());
 
@@ -160,7 +160,7 @@ class PropagatorWithRkStepper : public ::testing::TestWithParam<
   }
 
   /// Clean up
-  virtual void TearDown() { /* Do nothing */ }
+  virtual void TearDown() override { /* Do nothing */ }
 
  protected:
   /// Detector configuration
@@ -174,8 +174,8 @@ class PropagatorWithRkStepper : public ::testing::TestWithParam<
   generator_t::configuration trk_gen_cfg{};
 
   /// Stepper configuration
-  scalar overstep_tol;
-  scalar step_constr;
+  scalar overstep_tol{std::numeric_limits<scalar>::max()};
+  scalar step_constr{std::numeric_limits<scalar>::max()};
 };
 
 /// Test propagation in a constant magnetic field using a Runge-Kutta stepper

@@ -102,9 +102,10 @@ struct jacobian<cylindrical2D<algebra_t>> {
 
   DETRAY_HOST_DEVICE
   static constexpr bound_to_free_jacobian_submatrix_type
-  get_derivative_dpos_dangle(const transform3_type &, const point3_type &,
-                             const vector3_type &,
-                             const bound_to_free_jacobian_submatrix_type &) {
+  get_derivative_dpos_dangle(
+      const transform3_type & /*unused*/, const point3_type & /*unused*/,
+      const vector3_type & /*unused*/,
+      const bound_to_free_jacobian_submatrix_type & /*unused*/) {
     return matrix::zero<bound_to_free_jacobian_submatrix_type>();
   }
 

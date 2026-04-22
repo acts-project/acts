@@ -193,7 +193,7 @@ struct surface_converter {
   DETRAY_HOST inline auto operator()(const mask_group_t& mask_group,
                                      const index_t& index,
                                      const transform3_t& transform,
-                                     const std::size_t = 0u) const {
+                                     const std::size_t /*unused*/ = 0u) const {
     return svgtools::conversion::surface(transform, mask_group[index]);
   }
 

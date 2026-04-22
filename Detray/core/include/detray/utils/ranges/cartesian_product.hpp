@@ -215,7 +215,7 @@ struct cartesian_product_iterator {
   /// @note uses @c std::tuple for structured binding
   template <std::size_t... I>
   DETRAY_HOST_DEVICE constexpr auto unroll_values(
-      std::index_sequence<I...>) const {
+      std::index_sequence<I...> /*seq*/) const {
     return std::tuple<std::iter_reference_t<iterator_ts>...>(
         *detray::get<I>(m_itrs)...);
   }

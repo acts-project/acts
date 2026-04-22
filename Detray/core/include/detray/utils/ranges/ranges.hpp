@@ -160,7 +160,7 @@ struct dangling {
 
   template <class... Args>
     requires(!(std::same_as<dangling, Args> || ...))
-  explicit constexpr dangling(Args&&...) noexcept {}
+  explicit constexpr dangling(Args&&... /*unused*/) noexcept {}
 };
 
 template <class R>

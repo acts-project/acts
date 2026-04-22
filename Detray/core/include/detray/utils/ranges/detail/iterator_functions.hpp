@@ -87,7 +87,8 @@ using std::empty;
 // used by every iterator up to and including bidirectional iterators
 template <std::input_iterator iterator_t>
 DETRAY_HOST_DEVICE constexpr std::iter_difference_t<iterator_t> distance_impl(
-    iterator_t first, iterator_t last, detray::ranges::input_iterator_tag) {
+    iterator_t first, iterator_t last,
+    detray::ranges::input_iterator_tag /*tag*/) {
   std::iter_difference_t<iterator_t> d{0};
   // simply count
   while (first != last) {
@@ -101,7 +102,7 @@ DETRAY_HOST_DEVICE constexpr std::iter_difference_t<iterator_t> distance_impl(
 template <std::random_access_iterator iterator_t>
 DETRAY_HOST_DEVICE constexpr std::iter_difference_t<iterator_t> distance_impl(
     iterator_t first, iterator_t last,
-    detray::ranges::random_access_iterator_tag) {
+    detray::ranges::random_access_iterator_tag /*tag*/) {
   // use operator-
   return last - first;
 }
@@ -119,7 +120,7 @@ DETRAY_HOST_DEVICE constexpr std::iter_difference_t<iterator_t> distance(
 /// @{
 template <std::input_iterator iterator_t, typename dist_t>
 DETRAY_HOST_DEVICE constexpr void advance_impl(
-    iterator_t& itr, dist_t d, detray::ranges::input_iterator_tag) {
+    iterator_t& itr, dist_t d, detray::ranges::input_iterator_tag /*tag*/) {
   static_assert(std::is_integral_v<dist_t>);
   assert(d > 0);
   // simply count
@@ -131,7 +132,8 @@ DETRAY_HOST_DEVICE constexpr void advance_impl(
 // bidirectional iterators specialization
 template <std::bidirectional_iterator iterator_t, typename dist_t>
 DETRAY_HOST_DEVICE constexpr void advance_impl(
-    iterator_t& itr, dist_t d, detray::ranges::bidirectional_iterator_tag) {
+    iterator_t& itr, dist_t d,
+    detray::ranges::bidirectional_iterator_tag /*tag*/) {
   static_assert(std::is_integral_v<dist_t>);
   if (d > 0) {
     while (d--) {
@@ -147,7 +149,8 @@ DETRAY_HOST_DEVICE constexpr void advance_impl(
 // random access iterators specialization
 template <std::random_access_iterator iterator_t, typename dist_t>
 DETRAY_HOST_DEVICE constexpr void advance_impl(
-    iterator_t& itr, dist_t d, detray::ranges::random_access_iterator_tag) {
+    iterator_t& itr, dist_t d,
+    detray::ranges::random_access_iterator_tag /*tag*/) {
   static_assert(std::is_integral_v<dist_t>);
   itr += d;
 }

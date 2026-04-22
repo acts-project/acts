@@ -77,7 +77,8 @@ class grid_writer {
             class grid_t>
   static grid_payload<content_t, grid_id_t> to_payload(
       std::size_t owner_index, grid_id_t type, const std::size_t idx,
-      const grid_t& gr, std::function<content_t(const value_t&)> converter) {
+      const grid_t& gr,
+      const std::function<content_t(const value_t&)>& converter) {
     if (type == grid_id_t::unknown) {
       types::print<types::list<grid_t>>();
       throw std::invalid_argument("Could not match type to IO type-id");
@@ -143,7 +144,7 @@ class grid_writer {
             typename content_range_t>
   static grid_bin_payload<content_t> to_payload(
       const axis::multi_bin<DIM> mbin, const content_range_t& content,
-      std::function<content_t(const value_t&)> converter) {
+      const std::function<content_t(const value_t&)>& converter) {
     grid_bin_payload<content_t> bin_data;
 
     // Local bin indices are written in the order the grid axis are stored

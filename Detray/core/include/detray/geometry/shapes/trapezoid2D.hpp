@@ -229,7 +229,7 @@ class trapezoid2D {
 
     const scalar_t y{2.f * h_2 * (2.f * a_2 + b_2) * 1.f / (3.f * (a_2 + b_2))};
 
-    return {scalar_t(0), y - h_2, scalar_t(0)};
+    return {static_cast<scalar_t>(0), y - h_2, static_cast<scalar_t>(0)};
   }
 
   /// Generate vertices in local cartesian frame

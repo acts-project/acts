@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
   detray::io::write_detector(toy_det, toy_names, writer_cfg);
 
   // General options
-  if (vm.count("write_volume_graph")) {
+  if (vm.count("write_volume_graph") != 0u) {
     throw std::invalid_argument("Writing of volume graph not implemented");
   }
 }

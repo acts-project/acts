@@ -88,8 +88,8 @@ struct line2D {
     const vector3_type r = vector::cross(z, dir);
 
     // Local Z position in global cartesian coordinate
-    const point3_type locZ_in_global =
-        trf.point_to_global(point3_type{scalar_type(0), scalar_type(0), p[1]});
+    const point3_type locZ_in_global = trf.point_to_global(point3_type{
+        static_cast<scalar_type>(0), static_cast<scalar_type>(0), p[1]});
 
     return locZ_in_global + p[0] * vector::normalize(r);
   }
@@ -97,14 +97,14 @@ struct line2D {
   /// @returns the normal vector in global coordinates
   template <typename mask_t>
   DETRAY_HOST_DEVICE static inline vector3_type normal(
-      const transform3_type &trf, const point2_type & = {},
-      const mask_t & = {}) {
+      const transform3_type &trf, const point2_type & /*loc*/ = {},
+      const mask_t & /*mask*/ = {}) {
     return trf.z();
   }
 
   /// @returns the normal vector in global coordinates
   DETRAY_HOST_DEVICE static inline vector3_type normal(
-      const transform3_type &trf, const point3_type & = {}) {
+      const transform3_type &trf, const point3_type & /*loc*/ = {}) {
     return trf.z();
   }
 };

@@ -348,7 +348,8 @@ class grid_reader {
       const std::pair<dindex, grid_payload<content_t>> &grid_idx_and_data,
       detector_builder<typename detector_t::metadata, volume_builder>
           &det_builder,
-      types::list<bounds_ts...>, types::list<binning_ts...>) {
+      types::list<bounds_ts...> /*bounds*/,
+      types::list<binning_ts...> /*binnings*/) {
     using algebra_t = typename detector_t::algebra_type;
     using scalar_t = dscalar<algebra_t>;
 

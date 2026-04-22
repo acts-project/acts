@@ -212,7 +212,7 @@ GTEST_TEST(detray_builders, volume_builder) {
 
   detector_t d(host_mr);
 
-  EXPECT_TRUE(d.volumes().size() == 0u);
+  EXPECT_TRUE(d.volumes().empty());
 
   using rectangle_factory = surface_factory<detector_t, rectangle2D>;
   auto sf_factory = std::make_shared<rectangle_factory>();

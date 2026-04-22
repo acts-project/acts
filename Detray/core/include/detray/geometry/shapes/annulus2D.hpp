@@ -100,7 +100,7 @@ class annulus2D {
     // Go to beam frame to check r boundaries. Use the origin
     // shift in polar coordinates for that
     // TODO: Put shift in r-phi into the bounds?
-    point_t shift_xy;
+    point_t shift_xy{};
     shift_xy[0u] = -bounds[e_shift_x];
     shift_xy[1u] = -bounds[e_shift_y];
     const scalar_t shift_r = vector::perp(shift_xy);
@@ -242,10 +242,11 @@ class annulus2D {
 
       // Apply tolerances as squares: 0 <= a, 0 <= b: a^2 <= b^2 <=> a <=
       // b
-      const scalar_t minR_tol = math::max(bounds[e_min_r] - tol, scalar_t(0.f));
+      const scalar_t minR_tol =
+          math::max(bounds[e_min_r] - tol, static_cast<scalar_t>(0.f));
       const scalar_t maxR_tol = bounds[e_max_r] + tol;
 
-      assert(detail::all_of(minR_tol >= scalar_t(0.f)));
+      assert(detail::all_of(minR_tol >= static_cast<scalar_t>(0.f)));
 
       inside_mask = (r_beam2 >= (minR_tol * minR_tol)) &&
                     (r_beam2 <= (maxR_tol * maxR_tol)) && inside_mask;
@@ -268,10 +269,10 @@ class annulus2D {
         }
 
         const scalar_t minR_tol_edge =
-            math::max(bounds[e_min_r] - full_tol, scalar_t(0.f));
+            math::max(bounds[e_min_r] - full_tol, static_cast<scalar_t>(0.f));
         const scalar_t maxR_tol_edge = bounds[e_max_r] + full_tol;
 
-        assert(detail::all_of(minR_tol_edge >= scalar_t(0.f)));
+        assert(detail::all_of(minR_tol_edge >= static_cast<scalar_t>(0.f)));
 
         inside_edge = (r_beam2 >= (minR_tol_edge * minR_tol_edge)) &&
                       (r_beam2 <= (maxR_tol_edge * maxR_tol_edge)) &&
@@ -305,7 +306,8 @@ class annulus2D {
   /// @returns the stereo annulus area.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t area(
-      const bounds_type<scalar_t> &) const {
+      const bounds_type<scalar_t> & /*bounds*/) const {
+    assert(false);
     return detail::invalid_value<scalar_t>();
   }
 
@@ -459,7 +461,8 @@ class annulus2D {
     const scalar_t r{0.25f * (crns[0] + crns[2] + crns[4] + crns[6])};
     const scalar_t phi{bounds[e_average_phi]};
 
-    return r * dpoint3D<algebra_t>{math::cos(phi), math::sin(phi), scalar_t(0)};
+    return r * dpoint3D<algebra_t>{math::cos(phi), math::sin(phi),
+                                   static_cast<scalar_t>(0)};
   }
 
   /// Generate vertices in local cartesian frame

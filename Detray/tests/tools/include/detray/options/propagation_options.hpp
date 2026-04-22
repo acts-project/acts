@@ -106,7 +106,7 @@ void configure_options<detray::navigation::config>(
     const boost::program_options::variables_map &vm,
     detray::navigation::config &cfg) {
   // Local navigation search window
-  if (vm.count("search_window")) {
+  if (vm.count("search_window") != 0u) {
     const auto window = vm["search_window"].as<std::vector<dindex>>();
     if (window.size() == 2u) {
       cfg.search_window = {window[0], window[1]};
@@ -148,7 +148,7 @@ void configure_options<detray::navigation::config>(
     cfg.intersection.path_tolerance = path_tol * unit<float>::um;
   }
   cfg.estimate_scattering_noise = false;
-  if (vm.count("estimate_scattering_noise")) {
+  if (vm.count("estimate_scattering_noise") != 0u) {
     cfg.estimate_scattering_noise = true;
 
     if (!vm["n_scattering_stddev"].defaulted()) {
@@ -209,16 +209,16 @@ void configure_options<detray::stepping::config>(
     cfg.path_limit = path_limit * unit<float>::m;
   }
   cfg.do_covariance_transport = false;
-  if (vm.count("covariance_transport")) {
+  if (vm.count("covariance_transport") != 0u) {
     cfg.do_covariance_transport = true;
   }
-  if (vm.count("mean_eloss")) {
+  if (vm.count("mean_eloss") != 0u) {
     cfg.use_mean_loss = true;
   }
-  if (vm.count("eloss_gradient")) {
+  if (vm.count("eloss_gradient") != 0u) {
     cfg.use_eloss_gradient = true;
   }
-  if (vm.count("bfield_gradient")) {
+  if (vm.count("bfield_gradient") != 0u) {
     cfg.use_field_gradient = true;
   }
 }

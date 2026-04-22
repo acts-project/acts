@@ -87,7 +87,7 @@ struct tuple<T, Ts...> {
   }
 
   T v;
-  tuple<Ts...> r;
+  tuple<Ts...> r{};
 };
 
 template <typename T1, typename T2>

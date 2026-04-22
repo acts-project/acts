@@ -71,7 +71,7 @@ class material_scan : public test::fixture_base<> {
 
     /// Setters
     /// @{
-    config &name(const std::string n) {
+    config &name(const std::string &n) {
       m_name = n;
       return *this;
     }

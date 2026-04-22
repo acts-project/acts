@@ -90,8 +90,8 @@ class homogeneous_material_writer {
   /// Convert the material description of a detector @param det into its io
   /// payload
   template <class detector_t>
-  static payload_type to_payload(const detector_t& det,
-                                 const typename detector_t::name_map&) {
+  static payload_type to_payload(
+      const detector_t& det, const typename detector_t::name_map& /*unused*/) {
     payload_type dm_data;
     dm_data.volumes.reserve(det.volumes().size());
 

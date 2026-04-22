@@ -172,7 +172,8 @@ class quadratic_equation<scalar_t> {
   /// apply the masks correctly)
   scalar_t m_solutions = 0.f;
   /// The solutions
-  darray<scalar_t, 2> m_values{scalar_t(0.f), scalar_t(0.f)};
+  darray<scalar_t, 2> m_values{static_cast<scalar_t>(0.f),
+                               static_cast<scalar_t>(0.f)};
 };
 
 template <typename S>
