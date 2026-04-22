@@ -149,6 +149,23 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
     BOOST_CHECK_NE(res3.error(),
                    ActsAlignment::AlignmentError::HierarchyValidationFailure);
   }
+
+  // --- Test Case 4: Mask conflict across levels ---
+  // A structure that floats Center0 while its child is also listed as a
+  // floating module → Hessian would go singular. Expect rejection.
+  auto structC = std::make_shared<ActsAlignment::AlignableStructure>(
+      Acts::GeometryIdentifier().withVolume(30));
+  structC->addSurface(el1->surface().getSharedPtr());
+  structC->addSurface(el2->surface().getSharedPtr());
+  structC->addSurface(el3->surface().getSharedPtr());
+  structC->alignmentMask() = ActsAlignment::AlignmentMask::Center0;
+
+  ActsAlignment::AlignmentOptions<DummyFitOptions> options4(
+      kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {}, {structC.get()});
+  auto res4 = alignEngine.align(trajs, params, options4);
+  BOOST_CHECK(!res4.ok());
+  BOOST_CHECK_EQUAL(res4.error(),
+                    ActsAlignment::AlignmentError::HierarchyValidationFailure);
 }
 
 BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
@@ -196,5 +213,61 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
     ActsAlignment::AlignmentHierarchy hierarchy({});
     BOOST_CHECK(hierarchy.validate().ok());
     BOOST_CHECK_EQUAL(hierarchy.structureFor(el1.get()), nullptr);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MaskConflictDetection) {
+  using ActsAlignment::AlignmentMask;
+
+  auto el1 = makeDummyElement(Acts::Translation3(0, 0, 10_mm) *
+                              Acts::Transform3::Identity());
+  auto el2 = makeDummyElement(Acts::Translation3(0, 0, 20_mm) *
+                              Acts::Transform3::Identity());
+  auto el3 = makeDummyElement(Acts::Translation3(0, 0, 30_mm) *
+                              Acts::Transform3::Identity());
+
+  auto parent = std::make_shared<ActsAlignment::AlignableStructure>(
+      Acts::GeometryIdentifier().withVolume(1));
+  parent->addSurface(el1->surface().getSharedPtr());
+  parent->addSurface(el2->surface().getSharedPtr());
+
+  std::vector<Acts::SurfacePlacementBase*> floatingModules = {
+      el1.get(), el2.get(), el3.get()};
+
+  ActsAlignment::AlignmentHierarchy hierarchy({parent.get()});
+
+  // Parent floats Center0. Module iteration mask = All → conflict on el1, el2.
+  parent->alignmentMask() = AlignmentMask::Center0;
+  {
+    const auto conflicts =
+        hierarchy.detectMaskConflicts(AlignmentMask::All, floatingModules);
+    BOOST_CHECK_EQUAL(conflicts.size(), 2u);
+    for (const auto& c : conflicts) {
+      BOOST_CHECK_EQUAL(c.structure, parent.get());
+      BOOST_CHECK(c.conflictingBits == AlignmentMask::Center0);
+    }
+  }
+
+  // Disjoint masks: parent = Center0, module mask = Rotation0 → no conflict.
+  {
+    const auto conflicts =
+        hierarchy.detectMaskConflicts(AlignmentMask::Rotation0, floatingModules);
+    BOOST_CHECK(conflicts.empty());
+  }
+
+  // Parent with None mask → no conflict regardless of module mask.
+  parent->alignmentMask() = AlignmentMask::None;
+  {
+    const auto conflicts =
+        hierarchy.detectMaskConflicts(AlignmentMask::All, floatingModules);
+    BOOST_CHECK(conflicts.empty());
+  }
+
+  // Standalone module (el3) is never in a structure → never a conflict.
+  parent->alignmentMask() = AlignmentMask::All;
+  {
+    const auto conflicts = hierarchy.detectMaskConflicts(
+        AlignmentMask::All, {el3.get()});
+    BOOST_CHECK(conflicts.empty());
   }
 }
