@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
+#include "ActsAlignment/Geometry/AlignmentHierarchy.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsTests/CommonHelpers/DetectorElementStub.hpp"
 
@@ -147,5 +148,53 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
   if (!res3.ok()) {
     BOOST_CHECK_NE(res3.error(),
                    ActsAlignment::AlignmentError::HierarchyValidationFailure);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
+  // Direct test of AlignmentHierarchy without standing up Alignment<Fitter>.
+  auto el1 = makeDummyElement(Acts::Translation3(0, 0, 10_mm) *
+                              Acts::Transform3::Identity());
+  auto el2 = makeDummyElement(Acts::Translation3(0, 0, 20_mm) *
+                              Acts::Transform3::Identity());
+  auto el3 = makeDummyElement(Acts::Translation3(0, 0, 30_mm) *
+                              Acts::Transform3::Identity());
+
+  auto structA = std::make_shared<ActsAlignment::AlignableStructure>(
+      Acts::GeometryIdentifier().withVolume(10));
+  auto structB = std::make_shared<ActsAlignment::AlignableStructure>(
+      Acts::GeometryIdentifier().withVolume(20));
+
+  // structA owns el1 + el2; el3 floats as a standalone module.
+  structA->addSurface(el1->surface().getSharedPtr());
+  structA->addSurface(el2->surface().getSharedPtr());
+
+  // --- Clean hierarchy ---
+  {
+    ActsAlignment::AlignmentHierarchy hierarchy(
+        {structA.get(), structB.get()});
+    BOOST_CHECK(hierarchy.validate().ok());
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(el1.get()), structA.get());
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(el2.get()), structA.get());
+    // el3 is a standalone floating module
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(el3.get()), nullptr);
+  }
+
+  // --- Overlap detected ---
+  structB->addSurface(el1->surface().getSharedPtr());
+  {
+    ActsAlignment::AlignmentHierarchy hierarchy(
+        {structA.get(), structB.get()});
+    const auto result = hierarchy.validate();
+    BOOST_CHECK(!result.ok());
+    BOOST_CHECK_EQUAL(result.overlapping.size(), 1u);
+    BOOST_CHECK_EQUAL(result.overlapping.front(), el1.get());
+  }
+
+  // --- Empty hierarchy ---
+  {
+    ActsAlignment::AlignmentHierarchy hierarchy({});
+    BOOST_CHECK(hierarchy.validate().ok());
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(el1.get()), nullptr);
   }
 }
