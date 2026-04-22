@@ -11,8 +11,10 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
+#include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace ActsAlignment {
@@ -77,6 +79,45 @@ class AlignmentHierarchy {
   /// @return The validation result
   ValidationResult validate() const {
     return ValidationResult{m_overlapping};
+  }
+
+  /// @brief A DoF conflict between a structure and one of its child modules.
+  struct MaskConflict {
+    /// The offending detector element
+    const Acts::SurfacePlacementBase* detElement;
+    /// The parent structure whose mask overlaps
+    AlignableStructure* structure;
+    /// The bits that are set in both masks
+    AlignmentMask conflictingBits;
+  };
+
+  /// @brief Detect DoF bits that are simultaneously floating at structure and
+  ///        module level for the same detector element.
+  ///
+  /// A structure-level DoF and a module-level DoF on the same physical
+  /// element are correlated: if both are floating, the Hessian picks up a
+  /// zero eigenvalue along that direction. This check returns every such
+  /// overlap so the caller can reject the configuration.
+  /// @param moduleMask The DoFs currently floating at module level
+  ///                   (i.e. the iteration's global alignment mask)
+  /// @param floatingModules Detector elements listed in @c alignedDetElements
+  /// @return One entry per conflicting (detElement, structure) pair
+  std::vector<MaskConflict> detectMaskConflicts(
+      AlignmentMask moduleMask,
+      const std::vector<Acts::SurfacePlacementBase*>& floatingModules) const {
+    std::unordered_set<const Acts::SurfacePlacementBase*> floatingSet(
+        floatingModules.begin(), floatingModules.end());
+    std::vector<MaskConflict> conflicts;
+    for (const auto& [detElement, structure] : m_detElementToStructure) {
+      if (!floatingSet.contains(detElement)) {
+        continue;
+      }
+      AlignmentMask overlap = structure->alignmentMask() & moduleMask;
+      if (overlap != AlignmentMask::None) {
+        conflicts.push_back({detElement, structure, overlap});
+      }
+    }
+    return conflicts;
   }
 
   /// @brief Access the registered structures

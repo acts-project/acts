@@ -300,6 +300,32 @@ ActsAlignment::Alignment<fitter_t>::align(
     return AlignmentError::HierarchyValidationFailure;
   }
 
+  // No-overlap-across-levels: for every iteration, a DoF that is floating at
+  // structure level must not also float at module level on a child element.
+  // Otherwise the Hessian becomes singular along the correlated direction.
+  bool hadMaskConflicts = false;
+  for (unsigned int iIter = 0; iIter < alignOptions.maxIterations; ++iIter) {
+    AlignmentMask moduleMask = AlignmentMask::All;
+    auto iter_it = alignOptions.iterationState.find(iIter);
+    if (iter_it != alignOptions.iterationState.end()) {
+      moduleMask = iter_it->second;
+    }
+    const auto conflicts = hierarchy.detectMaskConflicts(
+        moduleMask, alignOptions.alignedDetElements);
+    for (const auto& c : conflicts) {
+      ACTS_ERROR("Detector element "
+                 << c.detElement
+                 << " (Surface ID: " << c.detElement->surface().geometryId()
+                 << ") has DoFs floating at both structure level (ID "
+                 << c.structure->geometryId()
+                 << ") and module level in iteration " << iIter);
+      hadMaskConflicts = true;
+    }
+  }
+  if (hadMaskConflicts) {
+    return AlignmentError::HierarchyValidationFailure;
+  }
+
   // Assign index to the alignable surface
   for (unsigned int iDetElement = 0;
        iDetElement < alignOptions.alignedDetElements.size(); iDetElement++) {
