@@ -44,6 +44,7 @@ class UprootParticleReader(acts.examples.IReader):
         self._particleHandle = acts.examples.WriteDataHandle(
             self, acts.examples.SimParticleContainer, "OutputParticles"
         )
+        self._particleHandle.initialize(self._outputParticles)
 
         with uproot.open(str(filePath)) as f:
             tree = f["particles"]
@@ -56,10 +57,6 @@ class UprootParticleReader(acts.examples.IReader):
 
     def availableEvents(self):
         return (self._min_event, self._max_event + 1)
-
-    def initialize(self):
-        self._particleHandle.initialize(self._outputParticles)
-        return acts.examples.ProcessCode.SUCCESS
 
     def read(self, context):
         event_number = context.eventNumber
@@ -128,6 +125,7 @@ class UprootSimHitReader(acts.examples.IReader):
         self._hitHandle = acts.examples.WriteDataHandle(
             self, acts.examples.SimHitContainer, "OutputSimHits"
         )
+        self._hitHandle.initialize(self._outputSimHits)
 
         with uproot.open(str(filePath)) as f:
             tree = f["hits"]
@@ -151,10 +149,6 @@ class UprootSimHitReader(acts.examples.IReader):
 
     def availableEvents(self):
         return (self._min_event, self._max_event + 1)
-
-    def initialize(self):
-        self._hitHandle.initialize(self._outputSimHits)
-        return acts.examples.ProcessCode.SUCCESS
 
     def read(self, context):
         event_number = context.eventNumber
