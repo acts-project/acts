@@ -12,6 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
@@ -177,6 +178,10 @@ class RiddersStepper final {
     std::shared_ptr<const BoundParameterVariationGenerator> parameterVariation{
         std::make_shared<CovarianceBoundParameterVariationGenerator>(
             std::vector<double>{-1e-1, 1e-1})};
+
+    /// The maximum number of steps to attempt when stepping towards the
+    /// curvilinear surface for the bound state transformation
+    std::size_t maxStepsToCurvilinearSurface = 10;
   };
 
   /// The options type for the RiddersStepper
@@ -211,6 +216,13 @@ class RiddersStepper final {
     /// Statistics for the stepper, such as the number of steps taken and the
     /// number of successful steps
     StepperStatistics statistics;
+
+    // Parameters to reuse for curvilinear state
+    Direction lastStepPropagationDirection = Direction::Forward();
+    const IVolumeMaterial* lastStepMaterial = nullptr;
+    double lastSurfaceTolerance = 0.;
+    ConstrainedStep::Type lastStepConstraintType =
+        ConstrainedStep::Type::Navigator;
   };
 
   /// Construct a RiddersStepper with the given stepper implementation
@@ -374,6 +386,9 @@ class RiddersStepper final {
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
       double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
+    state.lastSurfaceTolerance = surfaceTolerance;
+    state.lastStepConstraintType = stype;
+
     IntersectionStatus overallStatus = m_stepperImpl.updateSurfaceStatus(
         state.primaryStepperState, surface, index, navDir, boundaryTolerance,
         surfaceTolerance, stype, logger);
@@ -544,11 +559,32 @@ class RiddersStepper final {
     if (!transportCovariance) {
       return m_stepperImpl.curvilinearState(state.primaryStepperState, false);
     }
-    return boundState(
-               state,
-               *CurvilinearSurface(position(state), direction(state)).surface(),
-               true)
-        .value();
+
+    const auto curvilinearSurface =
+        CurvilinearSurface(position(state), direction(state)).surface();
+
+    for (std::size_t i = 0; i < m_config.maxStepsToCurvilinearSurface; ++i) {
+      const auto surfaceStatus = updateSurfaceStatus(
+          state, *curvilinearSurface, 0, state.lastStepPropagationDirection,
+          BoundaryTolerance::Infinite(), state.lastSurfaceTolerance,
+          state.lastStepConstraintType);
+      if (surfaceStatus == IntersectionStatus::onSurface) {
+        break;
+      }
+      if (surfaceStatus == IntersectionStatus::unreachable) {
+        throw std::runtime_error(
+            "RiddersStepper: Curvilinear surface is unreachable");
+      }
+      const auto stepResult = step(state, state.lastStepPropagationDirection,
+                                   state.lastStepMaterial);
+      if (!stepResult.ok()) {
+        throw std::runtime_error(
+            "RiddersStepper: Failed to step towards curvilinear surface: " +
+            stepResult.error().message());
+      }
+    }
+
+    return boundState(state, *curvilinearSurface, true).value();
   }
 
   /// Update the state of the RiddersStepper
@@ -608,6 +644,9 @@ class RiddersStepper final {
   /// @return a result containing the step length or an error if the step failed
   Result<double> step(State& state, Direction propagationDirection,
                       const IVolumeMaterial* material) const {
+    state.lastStepPropagationDirection = propagationDirection;
+    state.lastStepMaterial = material;
+
     const Result<double> stepResult = m_stepperImpl.step(
         state.primaryStepperState, propagationDirection, material);
     if (!stepResult.ok()) {
