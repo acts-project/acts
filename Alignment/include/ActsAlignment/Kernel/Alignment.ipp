@@ -285,6 +285,38 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Construct an AlignmentResult object
   AlignmentResult alignResult;
 
+  // Validation check: if alignable structures are provided, ensure that every
+  // alignable detector element is part of exactly one alignable structure
+  if (!alignOptions.alignedStructures.empty()) {
+    std::unordered_map<const Acts::SurfacePlacementBase*, unsigned int>
+        assignmentCount;
+    for (auto* structure : alignOptions.alignedStructures) {
+      for (const auto& surface : structure->surfaces()) {
+        const auto* detElement = surface->surfacePlacement();
+        if (detElement != nullptr) {
+          assignmentCount[detElement]++;
+        }
+      }
+    }
+
+    for (auto* detElement : alignOptions.alignedDetElements) {
+      if (assignmentCount[detElement] == 0) {
+        ACTS_ERROR("Detector element "
+                   << detElement
+                   << " (Surface ID: " << detElement->surface().geometryId()
+                   << ") is not assigned to any alignable structure");
+        return AlignmentError::HierarchyValidationFailure;
+      }
+      if (assignmentCount[detElement] > 1) {
+        ACTS_ERROR("Detector element "
+                   << detElement
+                   << " (Surface ID: " << detElement->surface().geometryId()
+                   << ") is assigned to multiple alignable structures");
+        return AlignmentError::HierarchyValidationFailure;
+      }
+    }
+  }
+
   // Assign index to the alignable surface
   for (unsigned int iDetElement = 0;
        iDetElement < alignOptions.alignedDetElements.size(); iDetElement++) {

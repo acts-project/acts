@@ -14,10 +14,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
 
 #include <limits>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsAlignment {
@@ -47,6 +49,7 @@ struct AlignmentOptions {
   /// @param fOptions The fit options
   /// @param aTransformUpdater The updater to update aligned transform
   /// @param aDetElements The alignable detector elements
+  /// @param aStructures The alignable structures (groups of surfaces)
   /// @param chi2CufOff The alignment chi2 tolerance
   /// @param deltaChi2CutOff The change of chi2 within a few iterations
   /// @param maxIters The alignment maximum iterations
@@ -58,10 +61,12 @@ struct AlignmentOptions {
       double chi2CutOff = 0.5,
       const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
       std::size_t maxIters = 5,
-      const std::map<unsigned int, AlignmentMask>& iterState = {})
+      const std::map<unsigned int, AlignmentMask>& iterState = {},
+      const std::vector<AlignableStructure*>& aStructures = {})
       : fitOptions(fOptions),
         alignedTransformUpdater(aTransformUpdater),
         alignedDetElements(aDetElements),
+        alignedStructures(aStructures),
         averageChi2ONdfCutOff(chi2CutOff),
         deltaAverageChi2ONdfCutOff(deltaChi2CutOff),
         maxIterations(maxIters),
@@ -75,6 +80,9 @@ struct AlignmentOptions {
 
   // The detector elements to be aligned
   std::vector<Acts::SurfacePlacementBase*> alignedDetElements;
+
+  // The structures to be aligned
+  std::vector<AlignableStructure*> alignedStructures;
 
   // The alignment tolerance to determine if the alignment is covered
   double averageChi2ONdfCutOff = 0.5;
