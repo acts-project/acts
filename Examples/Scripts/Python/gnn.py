@@ -14,6 +14,7 @@ from acts.gnn import (
     TorchMetricLearning,
     TorchEdgeClassifier,
     BoostTrackBuilding,
+    Device,
 )
 from acts.examples.gnn import NodeFeature
 from acts import UnitConstants as u
@@ -30,6 +31,7 @@ def runGnnMetricLearning(
     embedModelPath,
     filterModelPath,
     gnnModelPath,
+    device=None,
     outputRoot=False,
     outputCsv=False,
     s=None,
@@ -70,6 +72,7 @@ def runGnnMetricLearning(
         "rVal": 1.6,
         "knnVal": 100,
         "selectedFeatures": [0, 1, 2],  # R, Phi, Z
+        "device": device,
     }
     graphConstructor = TorchMetricLearning(**graphConstructorConfig)
 
@@ -93,11 +96,13 @@ def runGnnMetricLearning(
                 nChunks=5,
                 undirected=False,
                 selectedFeatures=[0, 1, 2],
+                device=device,
             )
         )
     elif filterModelPath.suffix == ".onnx":
         from acts.gnn import OnnxEdgeClassifier
 
+        filterConfig["device"] = device
         edgeClassifiers.append(OnnxEdgeClassifier(**filterConfig))
     else:
         raise ValueError(f"Unsupported model format: {filterModelPath.suffix}")
@@ -108,11 +113,13 @@ def runGnnMetricLearning(
                 **gnnConfig,
                 undirected=True,
                 selectedFeatures=[0, 1, 2],
+                device=device,
             )
         )
     elif gnnModelPath.suffix == ".onnx":
         from acts.gnn import OnnxEdgeClassifier
 
+        gnnConfig["device"] = device
         edgeClassifiers.append(
             OnnxEdgeClassifier(**gnnConfig),
         )
@@ -142,6 +149,7 @@ def runGnnMetricLearning(
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
         outputDirRoot=outputDir if outputRoot else None,
+        device=device,
         logLevel=acts.logging.INFO,
     )
 
@@ -172,6 +180,10 @@ if "__main__" == __name__:
     filterModelPath = ci_models / "torchscript_models/filter.pt"
     gnnModelPath = ci_models / "onnx_models/gnn.onnx"
 
+    device = (
+        Device.Cpu() if os.environ.get("CUDA_VISIBLE_DEVICES") == "" else Device.Cuda()
+    )
+
     s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
 
@@ -187,6 +199,7 @@ if "__main__" == __name__:
         embedModelPath,
         filterModelPath,
         gnnModelPath,
+        device=device,
         outputRoot=True,
         outputCsv=False,
         s=s,

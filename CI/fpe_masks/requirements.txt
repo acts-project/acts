@@ -42,7 +42,7 @@ pygments==2.20.0
     # via rich
 pyjwt==2.12.1
     # via gidgethub
-rich==14.3.4
+rich==15.0.0
     # via
     #   -r CI/fpe_masks/requirements.in
     #   typer

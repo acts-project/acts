@@ -1962,6 +1962,7 @@ def addGnn(
     inputSpacePoints: str = "spacepoints",
     inputClusters: str = "",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    device=None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """
@@ -1982,6 +1983,7 @@ def addGnn(
         inputSpacePoints: Name of input space point collection (default: "spacepoints")
         inputClusters: Name of input cluster collection (default: "")
         outputDirRoot: Optional output directory for performance ROOT files
+        device: acts.gnn.Device to run the GNN pipeline on (default: acts.gnn.Device.Cuda())
         logLevel: Logging level
 
     Note:
@@ -2000,6 +2002,11 @@ def addGnn(
             f"(got {len(nodeFeatures)} and {len(featureScales)})"
         )
 
+    if device is None:
+        from acts.gnn import Device
+
+        device = Device.Cuda()
+
     # GNN track finding algorithm
     findingAlg = acts.examples.gnn.TrackFindingAlgorithmGnn(
         level=customLogLevel(),
@@ -2011,6 +2018,7 @@ def addGnn(
         trackBuilder=trackBuilder,
         nodeFeatures=nodeFeatures,
         featureScales=featureScales,
+        device=device,
     )
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("protoTracks", findingAlg.config.outputProtoTracks)

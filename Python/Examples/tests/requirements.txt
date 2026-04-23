@@ -18,7 +18,7 @@ cycler==0.12.1
     # via matplotlib
 execnet==2.1.2
     # via pytest-xdist
-filelock==3.25.2
+filelock==3.28.0
     # via -r Python/Examples/tests/requirements.in
 fonttools==4.62.1
     # via matplotlib
@@ -54,7 +54,7 @@ numpy==2.4.4
     #   pyhepmc
     #   uhi
     #   uproot
-packaging==26.0
+packaging==26.1
     # via
     #   awkward
     #   hist
@@ -94,7 +94,7 @@ pyyaml==6.0.3
     # via -r Python/Examples/tests/requirements.in
 six==1.17.0
     # via python-dateutil
-uhi==1.0.0
+uhi==1.1.0
     # via
     #   histoprint
     #   mplhep
