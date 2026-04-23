@@ -19,7 +19,7 @@ namespace Acts {
 SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     const GeometryContext& gctx, const TrackingVolume& volume,
     const Logger& logger, Config config)
-    : m_volume(volume) {
+    : m_cfg(config), m_volume(volume) {
   ACTS_VERBOSE("Constructing SurfaceArrayNavigationPolicy for volume "
                << volume.volumeName());
   ACTS_VERBOSE("~> Layer type is " << config.layerType);
@@ -146,5 +146,10 @@ void SurfaceArrayNavigationPolicy::connect(NavigationDelegate& delegate) const {
 }
 
 SurfaceArrayNavigationPolicy::~SurfaceArrayNavigationPolicy() = default;
+
+const SurfaceArrayNavigationPolicy::Config&
+SurfaceArrayNavigationPolicy::config() const {
+  return m_cfg;
+}
 
 }  // namespace Acts

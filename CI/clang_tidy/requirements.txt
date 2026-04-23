@@ -16,9 +16,9 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-pydantic==2.12.5
+pydantic==2.13.2
     # via -r CI/clang_tidy/requirements.in
-pydantic-core==2.41.5
+pydantic-core==2.46.2
     # via pydantic
 pygments==2.20.0
     # via
@@ -28,7 +28,7 @@ python-slugify==6.1.2
     # via codereport
 pyyaml==6.0.3
     # via -r CI/clang_tidy/requirements.in
-rich==14.3.4
+rich==15.0.0
     # via -r CI/clang_tidy/requirements.in
 setuptools==82.0.1
     # via fs
