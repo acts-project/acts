@@ -43,8 +43,10 @@ class AlignableStructure {
   }
 
   /// @brief Add a child structure for nested hierarchies
-  /// @param child Non-owning pointer to a child structure
-  void addChild(AlignableStructure* child) { m_children.push_back(child); }
+  /// @param child Shared pointer to a child structure
+  void addChild(std::shared_ptr<AlignableStructure> child) {
+    m_children.push_back(std::move(child));
+  }
 
   /// @brief Get the geometric identifier
   /// @return The ID of the structure
@@ -57,8 +59,8 @@ class AlignableStructure {
   }
 
   /// @brief Access the list of child structures
-  /// @return A vector of non-owning pointers to child structures
-  const std::vector<AlignableStructure*>& children() const {
+  /// @return A vector of shared pointers to child structures
+  const std::vector<std::shared_ptr<AlignableStructure>>& children() const {
     return m_children;
   }
 
@@ -91,8 +93,8 @@ class AlignableStructure {
   /// The collection of sensors governed by this structure
   std::vector<std::shared_ptr<Acts::Surface>> m_surfaces;
 
-  /// The child structures for nested hierarchies (non-owning)
-  std::vector<AlignableStructure*> m_children;
+  /// The child structures for nested hierarchies
+  std::vector<std::shared_ptr<AlignableStructure>> m_children;
 
   /// Map of parameter index -> variance constraint (rigidity)
   std::map<Acts::AlignmentIndices, double> m_constraints;

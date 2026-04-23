@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
 
   ActsAlignment::AlignmentOptions<DummyFitOptions> options(
       kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {},
-      {struct1.get(), struct2.get()});
+      {struct1, struct2});
 
   // Create dummy collections for the align call
   std::vector<std::vector<Acts::SourceLink>> trajs;
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
 
   ActsAlignment::AlignmentOptions<DummyFitOptions> options2(
       kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {},
-      {struct1.get(), struct2.get()});
+      {struct1, struct2});
   auto res2 = alignEngine.align(trajs, params, options2);
   BOOST_CHECK(!res2.ok());
   BOOST_CHECK_EQUAL(res2.error(),
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
 
   ActsAlignment::AlignmentOptions<DummyFitOptions> options3(
       kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {},
-      {structA.get(), structB.get()});
+      {structA, structB});
 
   auto res3 = alignEngine.align(trajs, params, options3);
   // It will likely fail with something else because we have 0 tracks,
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(HierarchyValidation) {
   structC->alignmentMask() = ActsAlignment::AlignmentMask::Center0;
 
   ActsAlignment::AlignmentOptions<DummyFitOptions> options4(
-      kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {}, {structC.get()});
+      kfOptions, voidUpdater, elements, 0.5, {5, 0.01}, 5, {}, {structC});
   auto res4 = alignEngine.align(trajs, params, options4);
   BOOST_CHECK(!res4.ok());
   BOOST_CHECK_EQUAL(res4.error(),
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
   // --- Clean hierarchy ---
   {
     ActsAlignment::AlignmentHierarchy hierarchy(
-        {structA.get(), structB.get()});
+        {structA, structB});
     BOOST_CHECK(hierarchy.validate().ok());
     BOOST_CHECK_EQUAL(hierarchy.structureFor(el1.get()), structA.get());
     BOOST_CHECK_EQUAL(hierarchy.structureFor(el2.get()), structA.get());
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
   structB->addSurface(el1->surface().getSharedPtr());
   {
     ActsAlignment::AlignmentHierarchy hierarchy(
-        {structA.get(), structB.get()});
+        {structA, structB});
     const auto result = hierarchy.validate();
     BOOST_CHECK(!result.ok());
     BOOST_CHECK_EQUAL(result.overlapping.size(), 1u);
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(MaskConflictDetection) {
   std::vector<Acts::SurfacePlacementBase*> floatingModules = {
       el1.get(), el2.get(), el3.get()};
 
-  ActsAlignment::AlignmentHierarchy hierarchy({parent.get()});
+  ActsAlignment::AlignmentHierarchy hierarchy({parent});
 
   // Parent floats Center0. Module iteration mask = All → conflict on el1, el2.
   parent->alignmentMask() = AlignmentMask::Center0;
