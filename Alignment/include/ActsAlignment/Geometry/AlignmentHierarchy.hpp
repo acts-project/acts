@@ -13,6 +13,7 @@
 #include "ActsAlignment/Geometry/AlignableStructure.hpp"
 #include "ActsAlignment/Kernel/AlignmentMask.hpp"
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -38,12 +39,12 @@ class AlignmentHierarchy {
   };
 
   /// @brief Construct from a flat list of structures
-  /// @param structures Non-owning pointers to the alignable structures
+  /// @param structures Shared pointers to the alignable structures
   explicit AlignmentHierarchy(
-      const std::vector<AlignableStructure*>& structures)
+      const std::vector<std::shared_ptr<AlignableStructure>>& structures)
       : m_structures(structures) {
     std::unordered_map<const Acts::SurfacePlacementBase*, unsigned int> counts;
-    for (auto* structure : m_structures) {
+    for (const auto& structure : m_structures) {
       if (structure == nullptr) {
         continue;
       }
@@ -52,7 +53,7 @@ class AlignmentHierarchy {
         if (detElement == nullptr) {
           continue;
         }
-        m_detElementToStructure.emplace(detElement, structure);
+        m_detElementToStructure.emplace(detElement, structure.get());
         counts[detElement]++;
       }
     }
@@ -121,14 +122,14 @@ class AlignmentHierarchy {
   }
 
   /// @brief Access the registered structures
-  /// @return A vector of non-owning pointers to the structures
-  const std::vector<AlignableStructure*>& structures() const {
+  /// @return A vector of shared pointers to the structures
+  const std::vector<std::shared_ptr<AlignableStructure>>& structures() const {
     return m_structures;
   }
 
  private:
-  /// The registered structures (non-owning)
-  std::vector<AlignableStructure*> m_structures;
+  /// The registered structures
+  std::vector<std::shared_ptr<AlignableStructure>> m_structures;
 
   /// Flat lookup from detector element to owning structure
   std::unordered_map<const Acts::SurfacePlacementBase*, AlignableStructure*>
