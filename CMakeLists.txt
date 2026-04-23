@@ -98,6 +98,8 @@ option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 # python related options
 option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
+option(ACTS_GENERATE_PYTHON_STUBS "Generate Python stub files (.pyi) using pybind11-stubgen via uv" OFF)
+find_program(uv_exe uv) # shared by ActsCodegen and stub generation
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)

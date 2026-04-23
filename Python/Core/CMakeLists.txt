@@ -62,3 +62,7 @@ foreach(f ${py_files})
         DESTINATION ${_acts_python_install_dir}/${_rel}
     )
 endforeach()
+
+# Generate stubs for the user-facing acts package (covers all submodules in one pass)
+acts_pybind_generate_stubs(acts ${_acts_python_install_dir})
+
