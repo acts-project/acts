@@ -1,9 +1,7 @@
 include_guard(GLOBAL)
 
 if(NOT ACTS_USE_SYSTEM_LIBS)
-    message(STATUS "Configuring codegen: preparing uv")
-
-    find_program(uv_exe uv)
+    message(STATUS "Configuring codegen")
 
     if(NOT DEFINED ACTS_CODEGEN_TMPDIR OR ACTS_CODEGEN_TMPDIR STREQUAL "")
         find_program(MKTEMP_EXE NAMES mktemp REQUIRED)
