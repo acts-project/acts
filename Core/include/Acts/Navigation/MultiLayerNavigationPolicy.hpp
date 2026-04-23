@@ -74,12 +74,25 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   std::vector<Vector2> generatePath(const Vector3& startPosition,
                                     const Vector3& direction) const;
 
+  /// @brief Give const access to the indexed grid
+  /// @return The indexed grid
+  const IndexedUpdatorType& indexedGrid() const { return m_indexedGrid; }
+
+  /// @brief Access the bin expansion used to fill the grid
+  /// @return The bin expansion
+  const std::vector<std::size_t>& binExpansion() const {
+    return m_binExpansion;
+  }
+
  private:
   // The tracking volume
   const TrackingVolume& m_volume;
 
   // The grid that holds the indexed surfaces
   IndexedUpdatorType m_indexedGrid;
+
+  // The bin expansion used when filling the grid
+  std::vector<std::size_t> m_binExpansion;
 };
 
 static_assert(NavigationPolicyConcept<MultiLayerNavigationPolicy>);
