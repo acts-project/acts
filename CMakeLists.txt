@@ -99,7 +99,6 @@ option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
 option(ACTS_GENERATE_PYTHON_STUBS "Generate Python stub files (.pyi) using pybind11-stubgen via uv" OFF)
-find_program(uv_exe uv) # shared by ActsCodegen and stub generation
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
@@ -213,6 +212,10 @@ set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
+
+# Find uv (used by codegen and python stub generation)
+find_program(uv_exe uv)
+
 # feature tests
 include(CheckCXXSourceCompiles)
 
