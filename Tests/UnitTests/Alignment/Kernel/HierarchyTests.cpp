@@ -197,6 +197,18 @@ BOOST_AUTO_TEST_CASE(AlignmentHierarchyHelper) {
     BOOST_CHECK_EQUAL(hierarchy.structureFor(el3.get()), nullptr);
   }
 
+  // --- Surface-level lookup ---
+  {
+    ActsAlignment::AlignmentHierarchy hierarchy(
+        {structA, structB});
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(&el1->surface()), structA.get());
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(&el2->surface()), structA.get());
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(&el3->surface()), nullptr);
+    BOOST_CHECK_EQUAL(hierarchy.structureFor(
+                          static_cast<const Acts::Surface*>(nullptr)),
+                      nullptr);
+  }
+
   // --- Overlap detected ---
   structB->addSurface(el1->surface().getSharedPtr());
   {

@@ -30,7 +30,8 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const fit_options_t& fitOptions,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces,
-    const ActsAlignment::AlignmentMask& alignMask) const {
+    const ActsAlignment::AlignmentMask& alignMask,
+    const ActsAlignment::AlignmentHierarchy* hierarchy) const {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
@@ -54,7 +55,7 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   // Calculate the alignment state
   const auto alignState = detail::trackAlignmentState(
       gctx, tracks.trackStateContainer(), track.tipIndex(),
-      globalTrackParamsCov, idxedAlignSurfaces, alignMask);
+      globalTrackParamsCov, idxedAlignSurfaces, alignMask, hierarchy);
   if (alignState.alignmentDof == 0) {
     ACTS_VERBOSE("No alignment dof on track!");
     return AlignmentError::NoAlignmentDofOnTrack;
@@ -70,7 +71,8 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const start_parameters_container_t& startParametersCollection,
     const fit_options_t& fitOptions,
     ActsAlignment::AlignmentResult& alignResult,
-    const ActsAlignment::AlignmentMask& alignMask) const {
+    const ActsAlignment::AlignmentMask& alignMask,
+    const ActsAlignment::AlignmentHierarchy* hierarchy) const {
   // The number of trajectories must be equal to the number of starting
   // parameters
   assert(trajectoryCollection.size() == startParametersCollection.size());
@@ -94,7 +96,8 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     // The result for one single track
     auto evaluateRes = evaluateTrackAlignmentState(
         fitOptions.geoContext, sourceLinks, sParameters,
-        fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask);
+        fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask,
+        hierarchy);
     if (!evaluateRes.ok()) {
       ACTS_DEBUG("Evaluation of alignment state for track " << iTraj
                                                             << " failed");
@@ -353,7 +356,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     // Calculate the alignment parameters delta etc.
     calculateAlignmentParameters(
         trajectoryCollection, startParametersCollection,
-        alignOptions.fitOptions, alignResult, alignMask);
+        alignOptions.fitOptions, alignResult, alignMask, &hierarchy);
     // Screen out the information
     ACTS_INFO("iIter = " << iIter << ", total chi2 = " << alignResult.chi2
                          << ", total measurementDim = "

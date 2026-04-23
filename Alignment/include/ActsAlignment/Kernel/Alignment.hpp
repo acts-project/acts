@@ -171,6 +171,9 @@ struct Alignment {
   /// @param idxedAlignSurfaces The idxed surfaces to be aligned
   /// @param alignMask The alignment mask (same for all detector element for the
   /// moment)
+  /// @param hierarchy Optional hierarchy registry; forwarded to the alignment
+  /// state computation so that surfaces can be tagged with their owning
+  /// structure.
   ///
   /// @result The alignment state for a single track
   template <typename source_link_t, typename fit_options_t>
@@ -181,7 +184,8 @@ struct Alignment {
       const fit_options_t& fitOptions,
       const std::unordered_map<const Acts::Surface*, std::size_t>&
           idxedAlignSurfaces,
-      const AlignmentMask& alignMask) const;
+      const AlignmentMask& alignMask,
+      const AlignmentHierarchy* hierarchy = nullptr) const;
 
   /// @brief calculate the alignment parameters delta
   ///
@@ -196,13 +200,16 @@ struct Alignment {
   /// @param fitOptions The fit Options steering the fit
   /// @param alignResult [in, out] The aligned result
   /// @param alignMask The alignment mask (same for all measurements now)
+  /// @param hierarchy Optional hierarchy registry; when non-null, per-track
+  /// states are tagged with surface → structure ownership.
   template <typename trajectory_container_t,
             typename start_parameters_container_t, typename fit_options_t>
   void calculateAlignmentParameters(
       const trajectory_container_t& trajectoryCollection,
       const start_parameters_container_t& startParametersCollection,
       const fit_options_t& fitOptions, AlignmentResult& alignResult,
-      const AlignmentMask& alignMask = AlignmentMask::All) const;
+      const AlignmentMask& alignMask = AlignmentMask::All,
+      const AlignmentHierarchy* hierarchy = nullptr) const;
 
   /// @brief calculate the alignment parameters delta from a set of
   /// TrackAlignmentStates
