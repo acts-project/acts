@@ -48,8 +48,7 @@ inline TestPropagator makePropagator(
     double bz, std::shared_ptr<const TrackingGeometry> geo) {
   auto magField = std::make_shared<MagneticField>(Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return TestPropagator(std::move(stepper), Navigator({std::move(geo)}),
-                        getDefaultLogger("prop", Logging::VERBOSE));
+  return TestPropagator(std::move(stepper), Navigator({std::move(geo)}));
 }
 
 }  // namespace
