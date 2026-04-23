@@ -68,12 +68,16 @@ class UprootParticleReader(acts.examples.IReader):
 
         if event_number in self._entry_map:
             idx = self._entry_map[event_number]
-            
+
             if not (self._buffer_start <= idx < self._buffer_end):
                 self._buffer_start = idx
                 self._buffer_end = min(idx + self._bufferSize, self._tree.num_entries)
-                self._buffer = self._tree.arrays(library="np", entry_start=self._buffer_start, entry_stop=self._buffer_end)
-            
+                self._buffer = self._tree.arrays(
+                    library="np",
+                    entry_start=self._buffer_start,
+                    entry_stop=self._buffer_end,
+                )
+
             d = self._buffer
             buffer_idx = idx - self._buffer_start
             n = len(d["particle_type"][buffer_idx])
@@ -92,10 +96,15 @@ class UprootParticleReader(acts.examples.IReader):
                     float(d["q"][buffer_idx][i]) * u.e,
                     float(d["m"][buffer_idx][i]) * u.GeV,
                 )
-                p.process = acts.examples.GenerationProcess(int(d["process"][buffer_idx][i]))
+                p.process = acts.examples.GenerationProcess(
+                    int(d["process"][buffer_idx][i])
+                )
 
                 p.fourPosition = acts.Vector4(
-                    *[float(d[k][buffer_idx][i]) * u.mm for k in ("vx", "vy", "vz", "vt")]
+                    *[
+                        float(d[k][buffer_idx][i]) * u.mm
+                        for k in ("vx", "vy", "vz", "vt")
+                    ]
                 )
                 p.direction = acts.Vector3(
                     *[float(d[k][buffer_idx][i]) for k in ("px", "py", "pz")]
@@ -107,7 +116,9 @@ class UprootParticleReader(acts.examples.IReader):
                     float(d["total_l0"][buffer_idx][i]) * u.mm,
                 )
                 p.numberOfHits = int(d["number_of_hits"][buffer_idx][i])
-                p.outcome = acts.examples.SimulationOutcome(int(d["outcome"][buffer_idx][i]))
+                p.outcome = acts.examples.SimulationOutcome(
+                    int(d["outcome"][buffer_idx][i])
+                )
 
                 particles.insert(p)
 
@@ -172,12 +183,18 @@ class UprootSimHitReader(acts.examples.IReader):
 
         if event_number in self._event_range_map:
             start, end = self._event_range_map[event_number]
-            
+
             if not (self._buffer_start <= start and end <= self._buffer_end):
                 self._buffer_start = start
-                self._buffer_end = min(max(start + self._bufferSize, end), self._tree.num_entries)
-                self._buffer = self._tree.arrays(library="np", entry_start=self._buffer_start, entry_stop=self._buffer_end)
-            
+                self._buffer_end = min(
+                    max(start + self._bufferSize, end), self._tree.num_entries
+                )
+                self._buffer = self._tree.arrays(
+                    library="np",
+                    entry_start=self._buffer_start,
+                    entry_stop=self._buffer_end,
+                )
+
             d = self._buffer
             u = acts.UnitConstants
             for i in range(start - self._buffer_start, end - self._buffer_start):
