@@ -178,7 +178,7 @@ class RiddersStepper final {
     /// The generator for the bound parameter variations
     std::shared_ptr<const BoundParameterVariationGenerator> parameterVariation{
         std::make_shared<CovarianceBoundParameterVariationGenerator>(
-            std::vector<double>{-1e-1, 1e-1})};
+            std::vector<double>{-1e-3, 1e-3})};
 
     /// The maximum number of steps to attempt when stepping towards the
     /// curvilinear surface for the bound state transformation
