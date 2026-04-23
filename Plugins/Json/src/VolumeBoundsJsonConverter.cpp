@@ -12,6 +12,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -44,6 +45,15 @@ std::unique_ptr<Acts::VolumeBounds> Acts::VolumeBoundsJsonConverter::fromJson(
       return fromJson<CylinderVolumeBounds>(jVolumeBounds);
     case VolumeBounds::BoundsType::eTrapezoid:
       return fromJson<TrapezoidVolumeBounds>(jVolumeBounds);
+    case VolumeBounds::BoundsType::eDiamond: {
+      std::vector<double> bv = jVolumeBounds["values"];
+      return std::make_unique<DiamondVolumeBounds>(
+          bv[DiamondVolumeBounds::eHalfLengthX1],
+          bv[DiamondVolumeBounds::eHalfLengthX2],
+          bv[DiamondVolumeBounds::eHalfLengthX3],
+          bv[DiamondVolumeBounds::eLengthY1], bv[DiamondVolumeBounds::eLengthY2],
+          bv[DiamondVolumeBounds::eHalfLengthZ]);
+    }
     case VolumeBounds::BoundsType::eGenericCuboid:
       return fromJson<GenericCuboidVolumeBounds>(jVolumeBounds);
     default:
