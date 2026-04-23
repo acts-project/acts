@@ -735,7 +735,6 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerFunction(encodeVolumeBoundsT<CuboidVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<CutoutCylinderVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<CylinderVolumeBounds>)
-      .registerFunction(encodeVolumeBoundsT<DiamondVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<GenericCuboidVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<TrapezoidVolumeBounds>);
 
