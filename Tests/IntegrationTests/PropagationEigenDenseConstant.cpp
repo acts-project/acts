@@ -33,6 +33,7 @@ using TestPropagator = Propagator<Stepper, Navigator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 10_um;
+constexpr auto epsTime = 10_um;
 constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 
@@ -58,7 +59,7 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      phi, theta, p, q, s, bz) {
   runForwardBackwardTest(makePropagator(bz), geoCtx, magCtx,
                          makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
-                         epsDir, epsMom);
+                         epsTime, epsDir, epsMom);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

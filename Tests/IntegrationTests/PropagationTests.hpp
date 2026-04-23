@@ -209,8 +209,8 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearNeutral(
 inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
                                        const Acts::BoundTrackParameters& ref,
                                        const Acts::GeometryContext& geoCtx,
-                                       double epsPos, double epsDir,
-                                       double epsMom) {
+                                       double epsPos, double epsTime,
+                                       double epsDir, double epsMom) {
   using namespace Acts;
 
   // check stored parameters
@@ -219,7 +219,7 @@ inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
   CHECK_CLOSE_ABS(cmp.template get<eBoundLoc1>(),
                   ref.template get<eBoundLoc1>(), epsPos);
   CHECK_CLOSE_ABS(cmp.template get<eBoundTime>(),
-                  ref.template get<eBoundTime>(), epsPos);
+                  ref.template get<eBoundTime>(), epsTime);
   // check phi equivalence with circularity
   CHECK_SMALL(detail::radian_sym(cmp.template get<eBoundPhi>() -
                                  ref.template get<eBoundPhi>()),
@@ -230,7 +230,7 @@ inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
                   ref.template get<eBoundQOverP>(), epsMom);
   // check derived parameters
   CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
-  CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
+  CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsTime);
   CHECK_CLOSE_ABS(cmp.direction(), ref.direction(), epsDir);
   CHECK_CLOSE_ABS(cmp.absoluteMomentum(), ref.absoluteMomentum(), epsMom);
   // charge should be identical not just similar
@@ -400,7 +400,7 @@ inline void runForwardBackwardTest(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams, double pathLength,
-    double epsPos, double epsDir, double epsMom) {
+    double epsPos, double epsTime, double epsDir, double epsMom) {
   // propagate parameters Acts::Direction::Forward()
   auto [fwdParams, fwdPathLength] = transportFreely<propagator_t, options_t>(
       propagator, geoCtx, magCtx, initialParams, pathLength);
@@ -410,8 +410,8 @@ inline void runForwardBackwardTest(
       propagator, geoCtx, magCtx, fwdParams, -pathLength);
   CHECK_CLOSE_ABS(bwdPathLength, -pathLength, epsPos);
   // check that initial and back-propagated parameters match
-  checkParametersConsistency(initialParams, bwdParams, geoCtx, epsPos, epsDir,
-                             epsMom);
+  checkParametersConsistency(initialParams, bwdParams, geoCtx, epsPos, epsTime,
+                             epsDir, epsMom);
 }
 
 /// Propagate the initial parameters once for the given path length and
@@ -426,7 +426,8 @@ inline void runToSurfaceTest(const propagator_t& propagator,
                              const Acts::BoundTrackParameters& initialParams,
                              double pathLength,
                              surface_builder_t&& buildTargetSurface,
-                             double epsPos, double epsDir, double epsMom) {
+                             double epsPos, double epsTime, double epsDir,
+                             double epsMom) {
   // free propagation for the given path length
   auto [freeParams, freePathLength] = transportFreely<propagator_t, options_t>(
       propagator, geoCtx, magCtx, initialParams, pathLength);
@@ -446,7 +447,7 @@ inline void runToSurfaceTest(const propagator_t& propagator,
   // check that the to-surface propagation matches the defining free parameters
   CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
                   epsPos);
-  CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsPos);
+  CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsTime);
   CHECK_CLOSE_ABS(surfParams.direction(), freeParams.direction(), epsDir);
   CHECK_CLOSE_ABS(surfParams.absoluteMomentum(), freeParams.absoluteMomentum(),
                   epsMom);
@@ -463,15 +464,16 @@ inline void runForwardComparisonTest(
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams, double pathLength,
-    double epsPos, double epsDir, double epsMom, double tolCov) {
+    double epsPos, double epsTime, double epsDir, double epsMom,
+    double tolCov) {
   // propagate twice using the two different propagators
   auto [cmpParams, cmpPath] = transportFreely<cmp_propagator_t>(
       cmpPropagator, geoCtx, magCtx, initialParams, pathLength);
   auto [refParams, refPath] = transportFreely<ref_propagator_t>(
       refPropagator, geoCtx, magCtx, initialParams, pathLength);
   // check parameter comparison
-  checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
-                             epsMom);
+  checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsTime,
+                             epsDir, epsMom);
   checkCovarianceConsistency(cmpParams, refParams, tolCov);
   CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(refPath, pathLength, epsPos);
@@ -489,8 +491,8 @@ inline void runToSurfaceComparisonTest(
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::BoundTrackParameters& initialParams, double pathLength,
-    surface_builder_t&& buildTargetSurface, double epsPos, double epsDir,
-    double epsMom, double tolCov) {
+    surface_builder_t&& buildTargetSurface, double epsPos, double epsTime,
+    double epsDir, double epsMom, double tolCov) {
   // free propagation with the reference propagator for the given path length
   auto [freeParams, freePathLength] = transportFreely<ref_propagator_t>(
       refPropagator, geoCtx, magCtx, initialParams, pathLength);
@@ -507,8 +509,8 @@ inline void runToSurfaceComparisonTest(
   auto [refParams, refPath] = transportToSurface<ref_propagator_t>(
       refPropagator, geoCtx, magCtx, initialParams, *surface, 1.5 * pathLength);
   // check parameter comparison
-  checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
-                             epsMom);
+  checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsTime,
+                             epsDir, epsMom);
   checkCovarianceConsistency(cmpParams, refParams, tolCov);
   CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(refPath, pathLength, epsPos);

@@ -16,6 +16,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <utility>
@@ -36,6 +37,7 @@ using TestPropagator = Propagator<Stepper, Navigator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 10_um;
+constexpr auto epsTime = 1_mm;
 constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 
@@ -46,7 +48,8 @@ inline TestPropagator makePropagator(
     double bz, std::shared_ptr<const TrackingGeometry> geo) {
   auto magField = std::make_shared<MagneticField>(Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return TestPropagator(std::move(stepper), Navigator({std::move(geo)}));
+  return TestPropagator(std::move(stepper), Navigator({std::move(geo)}),
+                        getDefaultLogger("prop", Logging::VERBOSE));
 }
 
 }  // namespace
@@ -61,7 +64,7 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      phi, theta, p, q, s, bz) {
   runForwardBackwardTest(makePropagator(bz, createDenseBlock(geoCtx)), geoCtx,
                          magCtx, makeParametersCurvilinear(phi, theta, p, q), s,
-                         epsPos, epsDir, epsMom);
+                         epsPos, epsTime, epsDir, epsMom);
 }
 
 // check effects on the parameter covariance
