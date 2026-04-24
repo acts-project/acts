@@ -215,8 +215,8 @@ set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 
 # Find uv (used by codegen and python stub generation)
 if(NOT ACTS_USE_SYSTEM_LIBS OR ACTS_GENERATE_PYTHON_STUBS)
-  message(STATUS "Find uv")
-  find_program(uv_exe uv)
+    message(STATUS "Find uv")
+    find_program(uv_exe uv)
 endif()
 
 # feature tests

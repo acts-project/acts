@@ -64,4 +64,3 @@ foreach(f ${py_files})
 endforeach()
 
 acts_pybind_generate_stubs(acts ActsPythonBindings)
-

@@ -14,13 +14,13 @@ function(acts_pybind_generate_stubs _module _cmake_target)
         return()
     endif()
     add_custom_command(
-        TARGET ${_cmake_target} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=${CMAKE_BINARY_DIR}/python"
+        TARGET ${_cmake_target}
+        POST_BUILD
+        COMMAND
+            ${CMAKE_COMMAND} -E env "PYTHONPATH=${CMAKE_BINARY_DIR}/python"
             ${uv_exe} tool run --python ${Python_EXECUTABLE} --with numpy
-            pybind11-stubgen ${_module}
-            --exit-code
-            --output-dir ${CMAKE_BINARY_DIR}/python
-            --ignore-invalid-expressions ".*"
+            pybind11-stubgen ${_module} --exit-code --output-dir
+            ${CMAKE_BINARY_DIR}/python --ignore-invalid-expressions ".*"
             --ignore-invalid-identifiers "GeoModelTree::FpvConstLink"
             --ignore-unresolved-names ".*"
         COMMENT "Generating stubs for ${_module}"
@@ -40,6 +40,7 @@ if(ACTS_GENERATE_PYTHON_STUBS)
     install(
         DIRECTORY ${CMAKE_BINARY_DIR}/python/acts/
         DESTINATION ${_acts_python_install_dir}
-        FILES_MATCHING PATTERN "*.pyi"
+        FILES_MATCHING
+        PATTERN "*.pyi"
     )
 endif()
