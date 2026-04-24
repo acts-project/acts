@@ -1,6 +1,7 @@
 #include <array>
 #include <cmath>
 #include <concepts>
+#include <functional>
 #include <vector>
 
 namespace Acts {
@@ -8,11 +9,26 @@ namespace Acts {
 // Helper class describing one section of the accumulator space
 class HoughAccumulatorSection {
  public:
+  enum class Decision {
+    Discard,  // the section is not to be explored further
+    Accept,   // the section should be accepted as solution without further
+              // exploration
+    Drill,    // the section should be expred further by splitting according to
+              // binning definition (split into 4 or 2 left-right or top-bottom)
+    DrillAndExpand,  // the section should be source of subsections as in the
+                     // case of drill & but the sections will be made larger
+    // size increase is configured in opt by relative factors @see expandX, @see expandY
+  };
+
   HoughAccumulatorSection() = default;
 
   HoughAccumulatorSection(float xw, float yw, float xBegin, float yBegin,
-                     int div = 0, const std::vector<unsigned> &indices = {},
-                     const std::vector<float> &history = {});
+                          int div = 0,
+                          const std::vector<unsigned> &indices = {},
+                          const std::vector<float> &history = {});
+
+  Decision decision() const { return m_decision; }
+  Decision updateDecision(Decision d) { return m_decision = d; }
 
   /// @brief keep indices and update parameters of the box
   /// This method is useful when changing direction of the search
@@ -63,13 +79,7 @@ class HoughAccumulatorSection {
   /// @param function is callable used to check crossing at the edges
   template <typename F>
   inline bool isLineInside(F &&function) const &
-    requires std::invocable<F, float>
-  {
-    const float yB = function(m_xBegin);
-    const float yE = function(m_xBegin + m_xSize);
-    return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
-                     : yB > m_yBegin && yE < m_yBegin + m_ySize;
-  }
+    requires std::invocable<F, float>;
 
   /// @brief check if the lines cross inside the section
   /// @brief line1 - functional form of line 1
@@ -102,6 +112,7 @@ class HoughAccumulatorSection {
   float history(unsigned index) const { return m_history[index]; }
 
  private:
+  Decision m_decision = Decision::Drill;
   float m_xSize = 0;
   float m_ySize = 0;
   float m_xBegin = 0;
@@ -115,7 +126,18 @@ class HoughAccumulatorSection {
 };
 
 template <typename F>
-inline bool HoughAccumulatorSection::isCrossingInside(F &&line1, F &&line2) const &
+inline bool HoughAccumulatorSection::isLineInside(F &&function) const &
+  requires std::invocable<F, float>
+{
+  const float yB = function(m_xBegin);
+  const float yE = function(m_xBegin + m_xSize);
+  return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
+                   : yB > m_yBegin && yE < m_yBegin + m_ySize;
+}
+
+template <typename F>
+inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
+                                                      F &&line2) const &
   requires std::invocable<F, float>
 {
   // this microalgorithm idea is illustrated below
@@ -136,7 +158,6 @@ inline bool HoughAccumulatorSection::isCrossingInside(F &&line1, F &&line2) cons
   // The above covers most of the cases.
   // Additional precautions are made when both lines cross
   // left & right (x) bounds outside of vertical (y) bounds.
-
 
   const float xL = xBegin();
   const float xR = xBegin() + xSize();
@@ -188,162 +209,161 @@ inline bool HoughAccumulatorSection::isCrossingInside(F &&line1, F &&line2) cons
   const float yCross = 0.5f * (yCross1 + yCross2);  // intersection approx
 
   return is_in(yCross);
-
-  // const float line1_left_y = line1(xBegin());
-  // const float line1_right_y = line1(xBegin() + xSize());
-  // const float line2_left_y = line2(xBegin());
-  // const float line2_right_y = line2(xBegin() + xSize());
-  // const float left_mid = 0.5f * (line1_left_y + line2_left_y);
-  // const float right_mid = 0.5f * (line1_right_y + line2_right_y);
-  // // they do not cross for sure
-  // if ((line1_left_y - left_mid) * (line1_right_y - right_mid) > 0) {
-  //   return false;
-  // }
-  // //
-  // auto is_in = [this](float v) {
-  //   return yBegin() < v and v < yBegin() + ySize();
-  // };
-
-  // if (is_in(line1_left_y) and is_in(line1_right_y)) {
-  //   return true;
-  // }
-
-  // if (is_in(line2_left_y) and is_in(line2_right_y)) {
-  //   return true;
-  // }
-
-  // // check where they cross assuming thy are lines
-  // // assume that the functions are close to linear
-  // const float d_y_left = std::abs(line1_left_y - line2_left_y);
-  // const float d_y_right = std::abs(line1_right_y - line2_right_y);
-  // const float x_cross = xSize() * d_y_right / (d_y_left + d_y_right);
-  // // if any of the lines at point xBegin()+x_cross is in box we consider
-  // the
-  // // crossing to be close
-
-  // if (is_in(line1(xBegin() + x_cross))) {
-  //   return true;
-  // }
-  // if (is_in(line2(xBegin() + x_cross))) {
-  //   return true;
-  // }
-  // return false;
 }
 
-template <typename M, typename Options, typename Functor>
-void exploreParametersSpace(std::vector<HoughAccumulatorSection> &sectionsStack,
-                            const std::vector<M> &measurements,
-                            const Options &opt,
-                            Functor lineFunctor,
-                            std::vector<HoughAccumulatorSection> &results) {
+template <typename Measurement>
+struct HoughExplorationOptions {
+  float xMinBinSize = 1.0f;  // minimum bin size in x direction, beyond that
+                             // value the sections are not split
+  float yMinBinSize = 1.0f;  // minimum bin size in y direction, beyond that
+                             // value the sections are not split
+  float expandX = 1.1f;      // expand in x direction (default by 10%) if Expand
+                             // Decision is made
+  float expandY = 1.1f;      // expand in y direction (default by 10%) if Expand
+  // Decision is made
 
-    using Decision = typename Options::Decision;
+  using LineParamFunctor = std::function<float(const Measurement &, float arg)>;
+  LineParamFunctor
+      lineParamFunctor;  // functional that, given measurement and
+                         // "x" coordinate of Hough space return "y" coordinate
 
-    while (!sectionsStack.empty()) {
-        //ACTS_VERBOSE("Stack size " << sectionsStack.size());
+  using DecisionFunctor = std::function<Acts::HoughAccumulatorSection::Decision(
+      const Acts::HoughAccumulatorSection &section,
+      const std::vector<Measurement> &measurements)>;
+  DecisionFunctor decisionFunctor;  // function deciding if the accumulator
+                                    // section should be, discarded, split
+                                    // further (and how), or is a solution
+};
 
-        HoughAccumulatorSection thisSection = std::move(sectionsStack.back());
-        sectionsStack.pop_back();
+/// @brief function that walks through the section splitting them (depth-first) and
+/// @tparam Measurement - type of measurements
+/// @tparam Functor - for translation from measurements to Hough space
+/// @param sectionsStack - the stacks to consider
+/// @param measurements - measurements to which indices are kept in HoughAccumulatorSection
+/// @param opt - exploration directives
+/// @param results - sectoins that satisfied acceptance criteria
+template <typename Measurement, typename Functor>
+void exploreHoughParametersSpace(
+    std::vector<HoughAccumulatorSection> &sectionsStack,
+    const std::vector<Measurement> &measurements,
+    const HoughExplorationOptions<Measurement> &opt, Functor lineFunctor,
+    std::vector<HoughAccumulatorSection> &results) {
 
-        Decision whatNext = opt.decisionFunctor(thisSection, measurements);
-        std::vector<HoughAccumulatorSection> newSections;
-        if (whatNext == Decision::Discard) {
-            continue;
-        } else if (whatNext == Decision::Accept) {
-            results.push_back(std::move(thisSection));
-        } else {
-            bool splitX = thisSection.xSize() > opt.xMinBinSize;
-            bool splitY = thisSection.ySize() > opt.yMinBinSize;
+  while (!sectionsStack.empty()) {
+    HoughAccumulatorSection thisSection = std::move(sectionsStack.back());
+    sectionsStack.pop_back();
 
-            if (splitX && splitY) {
-                // Split into 4 sections
-                newSections.insert(newSections.end(), {thisSection.bottomLeft(), thisSection.topLeft(), thisSection.bottomRight(), thisSection.topRight()});
-            } else if (!splitX && splitY) {
-                // Split into 2 sections horizontally
-                newSections.insert(newSections.end(), {thisSection.bottom(), thisSection.top()});
-            } else if (splitX && !splitY) {
-                // Split into 2 sections vertically
-                newSections.insert(newSections.end(), {thisSection.left(), thisSection.right()});
-            }
+    std::vector<HoughAccumulatorSection> newSections;
+    bool splitX = thisSection.xSize() > opt.xMinBinSize;
+    bool splitY = thisSection.ySize() > opt.yMinBinSize;
 
-            if (whatNext == Decision::DrillAndExpand) {
-                for (HoughAccumulatorSection& s: newSections ) {
-                    s.expand(opt.expandX, opt.expandY);
-                }
-            }
-            for (unsigned idx : thisSection.indices()) {
-                const auto &m = measurements[idx];
-                auto line = [&](float x){return lineFunctor(m,x);};
-
-                for (HoughAccumulatorSection& s: newSections ) {
-                    if(s.isLineInside(line)) {
-                        s.indices().push_back(idx);
-                    }
-                }
-            }
-            for (HoughAccumulatorSection& s: newSections ) {
-                sectionsStack.push_back(std::move(s));
-            }
-
-        }
+    if (splitX && splitY) {
+      // Split into 4 sections
+      newSections.push_back(thisSection.bottomLeft());
+      newSections.push_back(thisSection.topLeft());
+      newSections.push_back(thisSection.bottomRight());
+      newSections.push_back(thisSection.topRight());
+    } else if (!splitX && splitY) {
+      // Split into 2 sections horizontally
+      newSections.push_back(thisSection.bottom());
+      newSections.push_back(thisSection.top());
+    } else if (splitX && !splitY) {
+      // Split into 2 sections vertically
+      newSections.push_back(thisSection.left());
+      newSections.push_back(thisSection.right());
     }
+
+    if (thisSection.decision() ==
+        HoughAccumulatorSection::Decision::DrillAndExpand) {
+      for (HoughAccumulatorSection &s : newSections) {
+        s.expand(opt.expandX, opt.expandY);
+      }
+
+      for (unsigned idx : thisSection.indices()) {
+        const auto &m = measurements[idx];
+        auto line = [&](float x) { return lineFunctor(m, x); };
+
+        for (HoughAccumulatorSection &s : newSections) {
+          if (s.isLineInside(line)) {
+            s.indices().push_back(idx);
+          }
+        }
+      }
+      for (HoughAccumulatorSection &s : newSections) {
+        s.updateDecision(opt.decisionFunctor(s, measurements));
+        if (s.decision() == HoughAccumulatorSection::Decision::Accept) {
+          results.push_back(std::move(s));
+        }
+        if (s.decision() == HoughAccumulatorSection::Decision::Drill ||
+            s.decision() == HoughAccumulatorSection::Decision::DrillAndExpand) {
+          sectionsStack.push_back(std::move(s));
+        }
+      }
+    }
+  }
 }
 
-template <typename SectionType, typename MeasurementType, typename Functor>
-bool passIntersectionsCheck(
-    const SectionType &section,
-    const std::vector<MeasurementType> &measurements,
-    Functor lineFunctor,
-    const unsigned threshold) {
+/// @brief Helper for fast check if there is enough line crossings within HoughAccumulatorSection
+/// @tparam Measurement
+/// @tparam Functor
+/// @param section - section to rest against
+/// @param measurements - vector of measurements
+/// @param lineFunctor - the function defining line
+/// @param threshold - number of crossings required for positive decision (it is provided so early exit can be implemented)
+/// @return true if the check passes
+template <typename Measurement, typename Functor>
+bool passIntersectionsCheck(const HoughAccumulatorSection &section,
+                            const std::vector<Measurement> &measurements,
+                            Functor lineFunctor, const unsigned threshold) {
+  const size_t count = section.count();
+  const float xLeft = section.xBegin();
+  const float xRight = xLeft + section.xSize();
+  const auto &indices = section.indices();
 
-    const size_t count = section.count();
-    const float xLeft = section.xBegin();
-    const float xRight = xLeft + section.xSize();
-    const auto& indices = section.indices();
+  // Small Buffer Optimization
+  constexpr size_t kMaxStackLines = 64;
 
-    // Small Buffer Optimization
-    constexpr size_t kMaxStackLines = 64;
+  if (count <= kMaxStackLines) {
+    std::array<float, kMaxStackLines> yLeft;
+    std::array<float, kMaxStackLines> yRight;
 
-    if (count <= kMaxStackLines) {
-        std::array<float, kMaxStackLines> yLeft;
-        std::array<float, kMaxStackLines> yRight;
-
-        for (size_t i = 0; i < count; ++i) {
-            const auto &m = measurements[indices[i]];
-            yLeft[i] = lineFunctor(m, xLeft);
-            yRight[i] = lineFunctor(m, xRight);
-        }
-
-        unsigned inside = 0;
-        for (unsigned i = 0; i < count; ++i) {
-            for (unsigned j = i + 1; j < count; ++j) {
-                if ((yLeft[i] - yLeft[j]) * (yRight[i] - yRight[j]) < 0.0f) {
-                    inside++;
-                    if (inside >= threshold) return true; // Early exit
-                }
-            }
-        }
-        return false;
+    for (size_t i = 0; i < count; ++i) {
+      const auto &m = measurements[indices[i]];
+      yLeft[i] = lineFunctor(m, xLeft);
+      yRight[i] = lineFunctor(m, xRight);
     }
-    else {
-        std::vector<float> yLeft(count);
-        std::vector<float> yRight(count);
-        for (unsigned i = 0; i < count; ++i) {
-            const auto &m = measurements[indices[i]];
-            yLeft[i] = lineFunctor(m, xLeft);
-            yRight[i] = lineFunctor(m, xRight);
+
+    unsigned inside = 0;
+    for (unsigned i = 0; i < count; ++i) {
+      for (unsigned j = i + 1; j < count; ++j) {
+        if ((yLeft[i] - yLeft[j]) * (yRight[i] - yRight[j]) < 0.0f) {
+          inside++;
+          if (inside >= threshold)
+            return true;  // Early exit
         }
-        unsigned inside = 0;
-        for (unsigned i = 0; i < count; ++i) {
-            for (unsigned j = i + 1; j < count; ++j) {
-                if ((yLeft[i] - yLeft[j]) * (yRight[i] - yRight[j]) < 0.0f) {
-                    inside++;
-                    if (inside >= threshold) return true; // Early exit
-                }
-            }
-        }
-        return inside >= threshold;
+      }
     }
+    return false;
+  } else {
+    std::vector<float> yLeft(count);
+    std::vector<float> yRight(count);
+    for (unsigned i = 0; i < count; ++i) {
+      const auto &m = measurements[indices[i]];
+      yLeft[i] = lineFunctor(m, xLeft);
+      yRight[i] = lineFunctor(m, xRight);
+    }
+    unsigned inside = 0;
+    for (unsigned i = 0; i < count; ++i) {
+      for (unsigned j = i + 1; j < count; ++j) {
+        if ((yLeft[i] - yLeft[j]) * (yRight[i] - yRight[j]) < 0.0f) {
+          inside++;
+          if (inside >= threshold)
+            return true;  // Early exit
+        }
+      }
+    }
+    return inside >= threshold;
+  }
 }
 
 }  // namespace Acts

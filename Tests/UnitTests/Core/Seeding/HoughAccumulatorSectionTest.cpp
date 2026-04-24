@@ -35,22 +35,15 @@ struct Stats {
 };
 
 template <typename measurement_t = LineParameters>
-struct TestExplorationOptions {
-    float xMinBinSize = 1.0f;
-    float yMinBinSize = 1.0f;
-    float expandX = 1.1f;
-    float expandY = 1.1f;
+struct TestExplorationOptions : public Acts::HoughExplorationOptions<LineParameters>{
+    // using base = Acts::HoughExplorationOptions<LineParameters>;
+    // xMinBinSize = 1.0f;
+    // yMinBinSize = 1.0f;
+    // expandX = 1.1f;
+    // expandY = 1.1f;
     unsigned threshold = 4;  // number of lines passing section for it to be still considered
     unsigned noiseThreshold = 12;  // number of lines passing section at the final split to consider it noise
     unsigned min_division_level = 2;
-
-    enum class Decision { Discard, Accept, Drill, DrillAndExpand };
-
-    using DecisionFunctor = std::function<Decision(
-        const HoughAccumulatorSection &section,
-        const std::vector<measurement_t> &measurements)>;
-
-    DecisionFunctor decisionFunctor;
 };
 
 // SUITE 1: HoughAccumulatorSection Test
@@ -180,7 +173,7 @@ BOOST_AUTO_TEST_CASE(test_extra_split_x_min_div_0) {
                                 const HoughAccumulatorSection &sec,
                                 const std::vector<LineParameters> &mes) {
 
-        using enum TestExplorationOptions<LineParameters>::Decision;
+        using enum Acts::HoughAccumulatorSection::Decision;
 
         if (sec.count() < opt.threshold) {
             sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
@@ -213,7 +206,7 @@ BOOST_AUTO_TEST_CASE(test_extra_split_x_min_div_0) {
     sectionsStack.push_back(std::move(section));
     std::vector<HoughAccumulatorSection> results;
 
-    exploreParametersSpace(sectionsStack, measurements, opt, lineFunctor, results);
+    exploreHoughParametersSpace(sectionsStack, measurements, opt, lineFunctor, results);
 
     BOOST_CHECK(sectionsStack.empty());
 
@@ -291,7 +284,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
                                 const HoughAccumulatorSection &sec,
                                 const std::vector<LineParameters> &mes) {
 
-        using enum TestExplorationOptions<LineParameters>::Decision;
+        using enum Acts::HoughAccumulatorSection::Decision;
 
         if (sec.count() < opt.threshold) {
             sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
@@ -326,7 +319,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
     std::vector<HoughAccumulatorSection> results;
 
     // Core engine
-    exploreParametersSpace(sectionsStack, measurements, opt, lineFunctor, results);
+    exploreHoughParametersSpace(sectionsStack, measurements, opt, lineFunctor, results);
 
     // Initial Assertions to verify the engine explored the space
     BOOST_CHECK(sStat.size() > 0); // Verifies the tree was drilled
@@ -419,7 +412,7 @@ BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
                                 const HoughAccumulatorSection &sec,
                                 const std::vector<LineParameters> &mes) {
 
-        using enum TestExplorationOptions<LineParameters>::Decision;
+        using enum Acts::HoughAccumulatorSection::Decision;
 
         if (sec.count() < opt.threshold) {
             sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
@@ -452,7 +445,7 @@ BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
     sectionsStack.push_back(std::move(section));
     std::vector<HoughAccumulatorSection> results;
 
-    exploreParametersSpace(sectionsStack, measurements, opt, lineFunctor, results);
+    exploreHoughParametersSpace(sectionsStack, measurements, opt, lineFunctor, results);
 
     BOOST_CHECK(sectionsStack.empty());
 
