@@ -1,10 +1,13 @@
-# The parquet sources use arrow APIs directly. To keep arrow's symbols
-# confined to a single shared library (libActsPluginArrow, where they are
-# statically linked and hidden), we compile these sources as an OBJECT library
-# and donate the resulting .o files into libActsPluginArrow via
+# The parquet sources use arrow APIs directly. We compile them as an OBJECT
+# library and donate the .o files into libActsPluginArrow via
 # target_sources(... $<TARGET_OBJECTS:...>). No libActsExamplesIoParquet.so
 # is produced; Acts::ExamplesIoParquet becomes an INTERFACE alias that
 # forwards to Acts::PluginArrow.
+#
+# This layout is independent of ACTS_ARROW_ISOLATED — the OBJECT absorption
+# is how we keep all arrow-touching code in one .dylib regardless of whether
+# arrow is statically or dynamically linked. Only the visibility settings on
+# the OBJECT compile and the linkage of arrow itself change with the toggle.
 add_library(
     ActsExamplesIoParquet_obj OBJECT
     src/ParquetReader.cpp
@@ -16,26 +19,34 @@ target_include_directories(
     ActsExamplesIoParquet_obj
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        # Acts::PluginArrow's includes via genex, NOT target_link_libraries,
+        # because a link-level dep would create a cycle: ActsPluginArrow
+        # absorbs this OBJECT lib's .o files.
         $<TARGET_PROPERTY:Acts::PluginArrow,INTERFACE_INCLUDE_DIRECTORIES>
-        $<TARGET_PROPERTY:Arrow::arrow_static,INTERFACE_INCLUDE_DIRECTORIES>
-        $<TARGET_PROPERTY:Parquet::parquet_static,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-# NOTE: Headers pulled via generator expression on TARGET_PROPERTY, not via
-# target_link_libraries(... Acts::PluginArrow). A link-level dep would create
-# a cycle since ActsPluginArrow absorbs this OBJECT lib's .o files.
+# Arrow/parquet headers come via the ArrowLinkage/ParquetLinkage aliases
+# (defined in Plugins/Arrow/CMakeLists.txt). OBJECT libs don't actually link
+# — target_link_libraries here just propagates INTERFACE_INCLUDE_DIRECTORIES
+# to the compile step.
 target_link_libraries(
     ActsExamplesIoParquet_obj
-    PRIVATE Acts::ExamplesFramework
+    PRIVATE
+        Acts::ExamplesFramework
+        Acts::ArrowLinkage
+        Acts::ParquetLinkage
 )
 
 set_target_properties(
     ActsExamplesIoParquet_obj
-    PROPERTIES
-        POSITION_INDEPENDENT_CODE ON
-        CXX_VISIBILITY_PRESET hidden
-        VISIBILITY_INLINES_HIDDEN YES
+    PROPERTIES POSITION_INDEPENDENT_CODE ON
 )
+if(ACTS_ARROW_ISOLATED)
+    set_target_properties(
+        ActsExamplesIoParquet_obj
+        PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN YES
+    )
+endif()
 
 target_sources(
     ActsPluginArrow
