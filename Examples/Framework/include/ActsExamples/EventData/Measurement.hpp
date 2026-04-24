@@ -541,8 +541,8 @@ static_assert(
 /// remapping. Source links created from this subset carry the same indices as
 /// the original container.
 ///
-/// Inherits standard container access (container(), subset()/validIndices(),
-/// size(), empty(), begin()/end()) from Acts::detail::ContainerSubset.
+/// Inherits standard container access (container(), subset(), size(),
+/// empty(), begin()/end()) from Acts::detail::ContainerSubset.
 /// orderedIndices() provides the geometry-sorted GeometryIdMultiset used by
 /// SpacePointMaker and the CKF source-link accessor; it is not part of
 /// ContainerSubset and is stored as an additional member.
@@ -573,11 +573,6 @@ class MeasurementSubset
   /// Each source link index is in original-container space.
   const MeasurementContainer::OrderedIndices& orderedIndices() const {
     return m_orderedIndices;
-  }
-
-  /// Alias for Base::subset() - the vector of original-container indices.
-  const std::vector<MeasurementContainer::Index>& validIndices() const {
-    return Base::subset();
   }
 
   /// Access a measurement by original-container index.
