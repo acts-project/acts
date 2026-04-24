@@ -2,6 +2,7 @@
 #include <cmath>
 #include <concepts>
 #include <functional>
+#include <iostream>  // remove me
 #include <vector>
 
 namespace Acts {
@@ -33,7 +34,6 @@ class HoughAccumulatorSection {
   /// @brief keep indices and update parameters of the box
   /// This method is useful when changing direction of the search
   void updateDimensions(float xw, float yw, float xBegin, float yBegin);
-
   /// @brief keep indices and update parameters of the box by scalling
   /// @param xs - scale in x direction, if bigger than 1 the size increases
   /// @param ys - scale in y direction
@@ -222,10 +222,10 @@ struct HoughExplorationOptions {
   float expandY = 1.1f;      // expand in y direction (default by 10%) if Expand
   // Decision is made
 
-  using LineParamFunctor = std::function<float(const Measurement &, float arg)>;
-  LineParamFunctor
-      lineParamFunctor;  // functional that, given measurement and
-                         // "x" coordinate of Hough space return "y" coordinate
+  using LineFunctor = std::function<float(const Measurement &, float arg)>;
+  LineFunctor
+      lineFunctor;  // functional that, given measurement and
+                    // "x" coordinate of Hough space return "y" coordinate
 
   using DecisionFunctor = std::function<Acts::HoughAccumulatorSection::Decision(
       const Acts::HoughAccumulatorSection &section,
@@ -242,12 +242,17 @@ struct HoughExplorationOptions {
 /// @param measurements - measurements to which indices are kept in HoughAccumulatorSection
 /// @param opt - exploration directives
 /// @param results - sectoins that satisfied acceptance criteria
-template <typename Measurement, typename Functor>
+template <typename Measurement>
 void exploreHoughParametersSpace(
     std::vector<HoughAccumulatorSection> &sectionsStack,
     const std::vector<Measurement> &measurements,
-    const HoughExplorationOptions<Measurement> &opt, Functor lineFunctor,
+    const HoughExplorationOptions<Measurement> &opt,
     std::vector<HoughAccumulatorSection> &results) {
+  std::cerr << "start ss.size: " << sectionsStack.size() << std::endl;
+  std::cerr << "start section decision: "
+            << (sectionsStack[0].decision() ==
+                HoughAccumulatorSection::Decision::Drill)
+            << std::endl;
 
   while (!sectionsStack.empty()) {
     HoughAccumulatorSection thisSection = std::move(sectionsStack.back());
@@ -278,26 +283,25 @@ void exploreHoughParametersSpace(
       for (HoughAccumulatorSection &s : newSections) {
         s.expand(opt.expandX, opt.expandY);
       }
+    }
 
-      for (unsigned idx : thisSection.indices()) {
-        const auto &m = measurements[idx];
-        auto line = [&](float x) { return lineFunctor(m, x); };
+    for (unsigned idx : thisSection.indices()) {
+      const auto &m = measurements[idx];
+      auto line = [&](float x) { return opt.lineFunctor(m, x); };
 
-        for (HoughAccumulatorSection &s : newSections) {
-          if (s.isLineInside(line)) {
-            s.indices().push_back(idx);
-          }
+      for (HoughAccumulatorSection &s : newSections) {
+        if (s.isLineInside(line)) {
+          s.indices().push_back(idx);
         }
       }
-      for (HoughAccumulatorSection &s : newSections) {
-        s.updateDecision(opt.decisionFunctor(s, measurements));
-        if (s.decision() == HoughAccumulatorSection::Decision::Accept) {
-          results.push_back(std::move(s));
-        }
-        if (s.decision() == HoughAccumulatorSection::Decision::Drill ||
-            s.decision() == HoughAccumulatorSection::Decision::DrillAndExpand) {
-          sectionsStack.push_back(std::move(s));
-        }
+    }
+    for (HoughAccumulatorSection &s : newSections) {
+      s.updateDecision(opt.decisionFunctor(s, measurements));
+      if (s.decision() == HoughAccumulatorSection::Decision::Accept) {
+        results.push_back(std::move(s));
+      } else if (s.decision() == HoughAccumulatorSection::Decision::Drill ||
+          s.decision() == HoughAccumulatorSection::Decision::DrillAndExpand) {
+        sectionsStack.push_back(std::move(s));
       }
     }
   }
