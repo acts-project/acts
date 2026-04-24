@@ -1103,7 +1103,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     }
 
     volume->setNavigationPolicy(navigationPolicyFromJson(
-        gctx, record.navigationPolicy, *volume, *logger));
+        gctx, record.navigationPolicy, *volume, logger()));
   }
 
   auto root = std::move(volumeStorage.at(rootVolumeId));
