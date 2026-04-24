@@ -6,26 +6,25 @@ file(MAKE_DIRECTORY ${_python_dir}/acts)
 # List to collect built plugins
 set(_plugins_built)
 
-function(acts_pybind_generate_stubs _module _install_dest)
+# Generate stubs for a user-facing Python module using pybind11-stubgen.
+# _module:       dotted Python module name (e.g. acts, acts.examples, acts.json)
+# _cmake_target: CMake target to attach POST_BUILD to (must be in the calling directory)
+function(acts_pybind_generate_stubs _module _cmake_target)
     if(NOT ACTS_GENERATE_PYTHON_STUBS)
         return()
     endif()
-    string(REPLACE "." "/" _module_path "${_module}")
     add_custom_command(
-        TARGET ActsPythonBindings POST_BUILD
+        TARGET ${_cmake_target} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=${CMAKE_BINARY_DIR}/python"
-            ${uv_exe} tool run --python ${Python_EXECUTABLE} pybind11-stubgen ${_module}
+            ${uv_exe} tool run --python ${Python_EXECUTABLE} --with numpy
+            pybind11-stubgen ${_module}
+            --exit-code
             --output-dir ${CMAKE_BINARY_DIR}/python
             --ignore-invalid-expressions ".*"
             --ignore-invalid-identifiers "GeoModelTree::FpvConstLink"
-            --ignore-unresolved-names "_abc\\._abc_data"
+            --ignore-unresolved-names ".*"
         COMMENT "Generating stubs for ${_module}"
         VERBATIM
-    )
-    install(
-        DIRECTORY ${CMAKE_BINARY_DIR}/python/${_module_path}/
-        DESTINATION ${_install_dest}
-        FILES_MATCHING PATTERN "*.pyi"
     )
 endfunction()
 
@@ -36,3 +35,11 @@ add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 add_subdirectory(Plugins)
 add_subdirectory(Utilities)
 
+# Install all generated stubs in one pass
+if(ACTS_GENERATE_PYTHON_STUBS)
+    install(
+        DIRECTORY ${CMAKE_BINARY_DIR}/python/acts/
+        DESTINATION ${_acts_python_install_dir}
+        FILES_MATCHING PATTERN "*.pyi"
+    )
+endif()
