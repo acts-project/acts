@@ -5,21 +5,28 @@ target_include_directories(
     ActsExamplesIoArrow_obj
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        # Genex (not target_link_libraries) for Plugin and sibling OBJECT
+        # donor: a link-level dep on ActsPluginArrow would create a cycle
+        # since it absorbs this OBJECT lib's .o files.
         $<TARGET_PROPERTY:Acts::ExamplesIoParquet,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:Acts::PluginArrow,INTERFACE_INCLUDE_DIRECTORIES>
-        $<TARGET_PROPERTY:Arrow::arrow_static,INTERFACE_INCLUDE_DIRECTORIES>
-        $<TARGET_PROPERTY:Parquet::parquet_static,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-target_link_libraries(ActsExamplesIoArrow_obj PRIVATE Acts::ExamplesFramework)
+target_link_libraries(
+    ActsExamplesIoArrow_obj
+    PRIVATE Acts::ExamplesFramework Acts::ArrowLinkage Acts::ParquetLinkage
+)
 
 set_target_properties(
     ActsExamplesIoArrow_obj
-    PROPERTIES
-        POSITION_INDEPENDENT_CODE ON
-        CXX_VISIBILITY_PRESET hidden
-        VISIBILITY_INLINES_HIDDEN YES
+    PROPERTIES POSITION_INDEPENDENT_CODE ON
 )
+if(ACTS_ARROW_ISOLATED)
+    set_target_properties(
+        ActsExamplesIoArrow_obj
+        PROPERTIES CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN YES
+    )
+endif()
 
 target_sources(
     ActsPluginArrow

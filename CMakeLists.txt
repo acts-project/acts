@@ -77,6 +77,14 @@ option(ACTS_USE_SYSTEM_MILLE "Use a system-provided Mille" ON)
 
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ARROW "Build Apache Arrow/Parquet plugin" OFF)
+option(ACTS_ARROW_ISOLATED
+    "Statically link arrow/parquet into libActsPluginArrow and hide their \
+symbols, so they cannot collide with other arrow consumers in the same \
+process (e.g. pyarrow's bundled libarrow). Disable only if your arrow \
+install is ABI-compatible with every other arrow consumer that will be \
+loaded alongside ACTS."
+    ON
+)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
