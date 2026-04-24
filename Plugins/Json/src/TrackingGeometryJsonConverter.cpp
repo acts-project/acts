@@ -907,12 +907,6 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
         "Missing volume payload in tracking geometry JSON");
   }
 
-  // Get root volume id
-  const std::size_t rootVolumeId =
-      encoded.at(kRootVolumeIdKey).get<std::size_t>();
-
-  ACTS_DEBUG("Decode volume with id " << rootVolumeId);
-
   // Collect surface data
   std::unordered_map<std::size_t, SurfaceRecord> surfaceRecords;
   for (const auto& jSurface : encoded.at(kSurfacesKey)) {
@@ -974,6 +968,9 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   }
 
   ACTS_VERBOSE("Collected " << volumeRecords.size() << " volume records");
+
+  const std::size_t rootVolumeId =
+      encoded.at(kRootVolumeIdKey).get<std::size_t>();
 
   ACTS_DEBUG("Decoding " << volumeRecords.size() << " volumes, "
                          << portalRecords.size() << " portals, "
