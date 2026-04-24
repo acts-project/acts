@@ -532,16 +532,48 @@ static_assert(
     std::random_access_iterator<MeasurementContainer::iterator> &&
     std::random_access_iterator<MeasurementContainer::const_iterator>);
 
-/// Set of measurement indices (positions in MeasurementContainer) that have
-/// been consumed by a tracking pass.
-///
-/// Indices are always relative to the original, unfiltered MeasurementContainer
-/// produced by digitization so they remain stable across multiple passes.
-using UsedMeasurementMap = std::unordered_set<Index>;
 
-/// Maps a filtered-container index to its index in the original
-/// MeasurementContainer.  Element i of this vector holds the original index
-/// of the i-th measurement in the filtered container.
-using MeasurementIndexRemapping = std::vector<Index>;
+/// Subset of a MeasurementContainer.
+///
+/// All indices are in original-container space, so the MeasurementParticlesMap
+/// produced by digitization remains valid for truth matching without any
+/// remapping. Source links created from this subset carry the same indices as
+/// the original container.
+///
+/// orderedIndices() mirrors MeasurementContainer::orderedIndices() but
+/// contains only the source links for the measurements in this subset.
+/// SpacePointMaker uses this to build space points exclusively from the
+/// unfiltered measurements.
+class MeasurementSubset {
+ public:
+  MeasurementSubset() = default;
+  MeasurementSubset(const MeasurementContainer& container,
+                    std::vector<Index> validIndices,
+                    MeasurementContainer::OrderedIndices filteredOrderedIndices)
+      : m_container(&container),
+        m_validIndices(std::move(validIndices)),
+        m_filteredOrderedIndices(std::move(filteredOrderedIndices)) {}
+
+  const MeasurementContainer& container() const { return *m_container; }
+  const std::vector<Index>& validIndices() const { return m_validIndices; }
+
+  /// Geometry-sorted source links for measurements in this subset.
+  /// Each source link index is in original-container space.
+  const MeasurementContainer::OrderedIndices& orderedIndices() const {
+    return m_filteredOrderedIndices;
+  }
+
+  ConstVariableBoundMeasurementProxy getMeasurement(
+      MeasurementContainer::Index idx) const {
+    return m_container->getMeasurement(idx);
+  }
+
+  std::size_t size() const { return m_validIndices.size(); }
+
+ private:
+  const MeasurementContainer* m_container{nullptr};
+  std::vector<Index> m_validIndices;
+  MeasurementContainer::OrderedIndices m_filteredOrderedIndices;
+};
 
 }  // namespace ActsExamples

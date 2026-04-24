@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -17,32 +18,40 @@
 
 namespace ActsExamples {
 
-/// Produces a MeasurementContainer that excludes measurements already used
-/// by a previous tracking pass.
+/// Records which measurements were consumed by a tracking pass and produces a
+/// MeasurementSubset for the next pass.
 ///
-/// This is the standalone-Acts equivalent of the Athena cluster-preparation
-/// and spacepoint-preparation algorithms that filter clusters/spacepoints
-/// using a PrepRawDataAssociation map before the next tracking pass begins.
+/// All source-link indices in the output subset are in original-container
+/// space, so the MeasurementParticlesMap from digitization is valid for truth
+/// matching in every pass without any remapping.
 ///
-/// The output container is a compact copy: measurements are re-indexed
-/// 0..M-1 where M is the number of unused measurements.  The accompanying
-/// outputIndexRemapping vector maps each new index back to the corresponding
-/// index in the original container, allowing MeasurementMapAlgorithm in the
-/// next pass to convert track-state source-link indices back to
-/// original-container space when accumulating the map.
+/// Typical two-pass sequence:
+///
+///   Digitization -> MeasurementSubset("measurement_subset", all measurements)
+///
+///   Pass 1:  SpacePointMaker + TrackFindingAlgorithm
+///                (inputMeasurementSubset = "measurement_subset")
+///            -> MeasurementFilterAlgorithm(
+///                   inputTracks             = "tracks",
+///                   inputMeasurementSubset  = "measurement_subset",
+///                   outputMeasurementSubset = "lrt_measurement_subset")
+///
+///   Pass 2:  SpacePointMaker + TrackFindingAlgorithm
+///                (inputMeasurementSubset = "lrt_measurement_subset")
 class MeasurementFilterAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input MeasurementContainer (original, from digitization).
-    std::string inputMeasurements;
-    /// MeasurementMap of already-used measurement indices (original-container
-    /// space) produced by MeasurementMapAlgorithm from the previous pass.
-    std::string inputMeasurementMap;
-    /// Output filtered MeasurementContainer (re-indexed 0..M-1).
-    std::string outputMeasurements;
-    /// Output index remapping: element i = original index of output
-    /// measurement i.  Consumed by MeasurementMapAlgorithm.
-    std::string outputIndexRemapping;
+    /// Input track collection (output of CKF or ambiguity resolution).
+    std::string inputTracks;
+    /// Input MeasurementSubset (initial full subset from digitization for pass
+    /// 1; filtered subset from the previous MeasurementFilterAlgorithm for
+    /// subsequent passes).
+    std::string inputMeasurementSubset;
+    /// Output MeasurementSubset for the next pass (indices in
+    /// original-container space).
+    std::string outputMeasurementSubset;
+    /// If true, outlier track states are also excluded from the output subset.
+    bool includeOutliers = false;
   };
 
   explicit MeasurementFilterAlgorithm(
@@ -55,14 +64,11 @@ class MeasurementFilterAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
-  ReadDataHandle<UsedMeasurementMap> m_inputMeasurementMap{
-      this, "InputMeasurementMap"};
-  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
-      this, "OutputMeasurements"};
-  WriteDataHandle<MeasurementIndexRemapping> m_outputIndexRemapping{
-      this, "OutputIndexRemapping"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurementSubset{
+      this, "InputMeasurementSubset"};
+  WriteDataHandle<MeasurementSubset> m_outputMeasurementSubset{
+      this, "OutputMeasurementSubset"};
 };
 
 }  // namespace ActsExamples

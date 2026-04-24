@@ -191,6 +191,13 @@ class WriteDataHandle final : public WriteDataHandleBase {
     add(wb, std::move(value));
   }
 
+  /// Read back the value just written via this handle within the same
+  /// execute() call.  Routes through the DataHandleBase protected trampoline
+  /// so that WhiteBoard friend access is exercised in DataHandleBase context.
+  const T& readBack(const AlgorithmContext& ctx) const {
+    return this->template get<T>(ctx.eventStore);
+  }
+
   const std::type_info& typeInfo() const override { return typeid(T); };
   std::uint64_t typeHash() const override { return Acts::typeHash<T>(); };
 };

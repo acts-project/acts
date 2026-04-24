@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <numeric>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -69,6 +70,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(
     }
 
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputMeasurementSubset.initialize(m_cfg.outputMeasurementSubset);
     m_outputClusters.initialize(m_cfg.outputClusters);
     m_outputMeasurementParticlesMap.initialize(
         m_cfg.outputMeasurementParticlesMap);
@@ -323,6 +325,16 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                           << simHits.size() << " sim hits.");
 
     m_outputMeasurements(ctx, std::move(measurements));
+
+    // Build initial full subset: all measurements, indices in original space.
+    // Read back via the write handle to get a stable pointer into the whiteboard.
+    const auto& storedMeasurements = m_outputMeasurements.readBack(ctx);
+    std::vector<Index> allIndices(storedMeasurements.size());
+    std::iota(allIndices.begin(), allIndices.end(), Index{0});
+    m_outputMeasurementSubset(
+        ctx, MeasurementSubset(storedMeasurements, std::move(allIndices),
+                               storedMeasurements.orderedIndices()));
+
     m_outputClusters(ctx, std::move(clusters));
 
     // invert them before they are moved

@@ -8,9 +8,11 @@
 
 #include "ActsExamples/TrackFinding/MeasurementFilterAlgorithm.hpp"
 
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <stdexcept>
+#include <unordered_set>
 
 namespace ActsExamples {
 
@@ -18,56 +20,69 @@ MeasurementFilterAlgorithm::MeasurementFilterAlgorithm(
     Config cfg, std::unique_ptr<const Acts::Logger> logger)
     : IAlgorithm("MeasurementFilterAlgorithm", std::move(logger)),
       m_cfg(std::move(cfg)) {
-  if (m_cfg.inputMeasurements.empty()) {
-    throw std::invalid_argument("Missing input measurements");
+  if (m_cfg.inputTracks.empty()) {
+    throw std::invalid_argument("Missing input tracks");
   }
-  if (m_cfg.inputMeasurementMap.empty()) {
-    throw std::invalid_argument("Missing input measurement map");
+  if (m_cfg.inputMeasurementSubset.empty()) {
+    throw std::invalid_argument("Missing input measurement subset");
   }
-  if (m_cfg.outputMeasurements.empty()) {
-    throw std::invalid_argument("Missing output measurements");
-  }
-  if (m_cfg.outputIndexRemapping.empty()) {
-    throw std::invalid_argument("Missing output index remapping");
+  if (m_cfg.outputMeasurementSubset.empty()) {
+    throw std::invalid_argument("Missing output measurement subset");
   }
 
-  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputMeasurementMap.initialize(m_cfg.inputMeasurementMap);
-  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
-  m_outputIndexRemapping.initialize(m_cfg.outputIndexRemapping);
+  m_inputTracks.initialize(m_cfg.inputTracks);
+  m_inputMeasurementSubset.initialize(m_cfg.inputMeasurementSubset);
+  m_outputMeasurementSubset.initialize(m_cfg.outputMeasurementSubset);
 }
 
 ProcessCode MeasurementFilterAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  const auto& inputMeasurements = m_inputMeasurements(ctx);
-  const auto& measurementMap = m_inputMeasurementMap(ctx);
+  const auto& tracks = m_inputTracks(ctx);
+  const auto& subset = m_inputMeasurementSubset(ctx);
 
-  MeasurementContainer filtered;
-  filtered.reserve(inputMeasurements.size());
+  // Collect source-link indices consumed by this pass (always in
+  // original-container space across all passes).
+  std::unordered_set<Index> usedIndices;
+  for (auto track : tracks) {
+    for (auto state : track.trackStatesReversed()) {
+      const bool isMeasurement = state.typeFlags().isMeasurement();
+      const bool isOutlier =
+          m_cfg.includeOutliers && state.typeFlags().isOutlier();
+      if (!isMeasurement && !isOutlier) {
+        continue;
+      }
+      if (!state.hasUncalibratedSourceLink()) {
+        ACTS_WARNING("Track state has no uncalibrated source link");
+        continue;
+      }
+      usedIndices.insert(
+          state.getUncalibratedSourceLink().get<IndexSourceLink>().index());
+    }
+  }
 
-  MeasurementIndexRemapping remapping;
-  remapping.reserve(inputMeasurements.size());
+  // Build output subset: copy source links not consumed in this pass.
+  MeasurementContainer::OrderedIndices filteredOrderedIndices;
+  std::vector<Index> validIndices;
+  filteredOrderedIndices.reserve(subset.orderedIndices().size());
+  validIndices.reserve(subset.orderedIndices().size());
 
   std::size_t nFiltered = 0;
-
-  for (Index originalIdx = 0;
-       originalIdx < static_cast<Index>(inputMeasurements.size());
-       ++originalIdx) {
-    if (measurementMap.count(originalIdx) != 0u) {
+  for (const auto& sourceLink : subset.orderedIndices()) {
+    if (usedIndices.count(sourceLink.index()) != 0u) {
       ++nFiltered;
       continue;
     }
-    const auto src = inputMeasurements.getMeasurement(originalIdx);
-    filtered.copyMeasurement(src);
-    remapping.push_back(originalIdx);
+    filteredOrderedIndices.insert(sourceLink);
+    validIndices.push_back(sourceLink.index());
   }
 
-  ACTS_DEBUG("Filtered " << nFiltered << " used measurement(s) out of "
-                         << inputMeasurements.size() << "; "
-                         << filtered.size() << " remaining");
+  ACTS_DEBUG("Removed " << nFiltered << " measurement(s) used by "
+                        << tracks.size() << " track(s); "
+                        << validIndices.size() << " remaining");
 
-  m_outputMeasurements(ctx, std::move(filtered));
-  m_outputIndexRemapping(ctx, std::move(remapping));
+  m_outputMeasurementSubset(
+      ctx, MeasurementSubset(subset.container(), std::move(validIndices),
+                             std::move(filteredOrderedIndices)));
   return ProcessCode::SUCCESS;
 }
 

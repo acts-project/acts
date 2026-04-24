@@ -538,7 +538,7 @@ def addSeeding(
                 level=logLevel,
                 inputProtoTracks=protoTracks,
                 inputTrackParameters=f"{prefix}estimatedparameters",
-                inputMeasurements=f"{prefix}measurements",
+                inputMeasurements=f"{prefix}measurement_subset",
                 outputTracks=tracks,
             )
         )
@@ -702,7 +702,7 @@ def addSpacePointsMaking(
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     spAlg = acts.examples.SpacePointMaker(
         level=logLevel,
-        inputMeasurements=f"{prefix}measurements",
+        inputMeasurements=f"{prefix}measurement_subset",
         outputSpacePoints=f"{prefix}spacepoints",
         trackingGeometry=trackingGeometry,
         geometrySelection=acts.examples.json.readJsonGeometryList(
@@ -1695,7 +1695,7 @@ def addCKFTracks(
                 )
             ]
         ),
-        inputMeasurements=f"{prefix}measurements",
+        inputMeasurements=f"{prefix}measurement_subset",
         inputInitialTrackParameters=f"{prefix}estimatedparameters",
         inputSeeds=(
             f"{prefix}estimatedseeds"
@@ -2027,7 +2027,7 @@ def addGnn(
     convAlg = acts.examples.ProtoTracksToTracks(
         level=customLogLevel(),
         inputProtoTracks=findingAlg.config.outputProtoTracks,
-        inputMeasurements="measurements",
+        inputMeasurements="measurement_subset",
         outputTracks="gnn-tracks",
     )
     s.addAlgorithm(convAlg)

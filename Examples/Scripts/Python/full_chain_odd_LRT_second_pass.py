@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 #
-# Two-pass tracking demonstration using the UsedMeasurementMap.
+# Two-pass tracking demonstration.
 #
 # Pass 1: standard prompt tracking (same as full_chain_odd_LRT.py).
 # Pass 2: LRT (large-radius tracking) on the measurements NOT used by pass 1.
-#         The MeasurementMapAlgorithm records which measurements were consumed
-#         by pass 1, MeasurementFilterAlgorithm removes them, and the LRT
-#         seeding + CKF runs on the remainder.
+#         MeasurementFilterAlgorithm removes pass-1-consumed measurements from
+#         the initial full subset produced by digitization, and the LRT seeding
+#         + CKF runs on the remainder.
 
 import os
 import argparse
@@ -338,32 +338,18 @@ addAmbiguityResolution(
 # After addAmbiguityResolution, "tracks" alias -> "ambi_tracks"
 
 # =========================================================================
-# measurement map building: record which measurements were used in pass 1
-# Reads:  "tracks" (-> "ambi_tracks")
-# Writes: "used_measurement_map"
-# =========================================================================
-
-s.addAlgorithm(
-    acts.examples.MeasurementMapAlgorithm(
-        level=acts.logging.DEBUG,
-        inputTracks="tracks",
-        outputMeasurementMap="used_measurement_map",
-    )
-)
-
-# =========================================================================
-# Measurement filtering: remove pass-1-used measurements for the LRT pass
-# Reads:  "measurements" (original), "used_measurement_map"
-# Writes: "lrt_measurements" (filtered), "lrt_index_remapping"
+# Measurement filtering: remove pass-1-consumed measurements for the LRT pass.
+# Reads:  "tracks" (-> "ambi_tracks"), "measurement_subset" (all measurements,
+#         written by digitization)
+# Writes: "lrt_measurement_subset" (remaining measurements, original indices)
 # =========================================================================
 
 s.addAlgorithm(
     acts.examples.MeasurementFilterAlgorithm(
         level=acts.logging.DEBUG,
-        inputMeasurements="measurements",
-        inputMeasurementMap="used_measurement_map",
-        outputMeasurements="lrt_measurements",
-        outputIndexRemapping="lrt_index_remapping",
+        inputTracks="tracks",
+        inputMeasurementSubset="measurement_subset",
+        outputMeasurementSubset="lrt_measurement_subset",
     )
 )
 
@@ -456,23 +442,6 @@ addAmbiguityResolution(
     outputDirRoot=outputDir if args.output_root else None,
     outputDirCsv=outputDir if args.output_csv else None,
     writeCovMat=True,
-)
-
-# =========================================================================
-# Accumulate the full UsedMeasurementMap (pass 1 + pass 2) for potential further use
-# Reads:  "lrt_tracks" (alias -> "lrt_ambi_tracks"), "used_measurement_map", "lrt_index_remapping"
-# Writes: "used_measurement_map_lrt" (union of pass 1 and pass 2 used measurements,
-#          all indices in original MeasurementContainer space)
-# =========================================================================
-
-s.addAlgorithm(
-    acts.examples.MeasurementMapAlgorithm(
-        level=acts.logging.DEBUG,
-        inputTracks="lrt_tracks",
-        inputMeasurementMap="used_measurement_map",
-        inputIndexRemapping="lrt_index_remapping",
-        outputMeasurementMap="used_measurement_map_lrt",
-    )
 )
 
 s.run()
