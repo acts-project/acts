@@ -329,7 +329,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
     // Build initial full subset: all measurements, indices in original space.
     // Read back via the write handle to get a stable pointer into the whiteboard.
     const auto& storedMeasurements = m_outputMeasurements.readBack(ctx);
-    std::vector<Index> allIndices(storedMeasurements.size());
+    std::vector<MeasurementContainer::Index> allIndices(storedMeasurements.size());
     std::iota(allIndices.begin(), allIndices.end(), Index{0});
     m_outputMeasurementSubset(
         ctx, MeasurementSubset(storedMeasurements, std::move(allIndices),

@@ -62,7 +62,7 @@ ProcessCode MeasurementFilterAlgorithm::execute(
 
   // Build output subset: copy source links not consumed in this pass.
   MeasurementContainer::OrderedIndices filteredOrderedIndices;
-  std::vector<Index> validIndices;
+  std::vector<MeasurementContainer::Index> validIndices;
   filteredOrderedIndices.reserve(subset.orderedIndices().size());
   validIndices.reserve(subset.orderedIndices().size());
 

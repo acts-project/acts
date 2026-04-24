@@ -14,6 +14,7 @@
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/detail/ContainerIterator.hpp"
+#include "Acts/Utilities/detail/ContainerSubset.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
@@ -540,40 +541,53 @@ static_assert(
 /// remapping. Source links created from this subset carry the same indices as
 /// the original container.
 ///
-/// orderedIndices() mirrors MeasurementContainer::orderedIndices() but
-/// contains only the source links for the measurements in this subset.
-/// SpacePointMaker uses this to build space points exclusively from the
-/// unfiltered measurements.
-class MeasurementSubset {
+/// Inherits standard container access (container(), subset()/validIndices(),
+/// size(), empty(), begin()/end()) from Acts::detail::ContainerSubset.
+/// orderedIndices() provides the geometry-sorted GeometryIdMultiset used by
+/// SpacePointMaker and the CKF source-link accessor; it is not part of
+/// ContainerSubset and is stored as an additional member.
+class MeasurementSubset
+    : public Acts::detail::ContainerSubset<
+          MeasurementSubset,
+          MeasurementSubset,
+          MeasurementContainer,
+          MeasurementContainer::ConstVariableProxy,
+          std::vector<MeasurementContainer::Index>,
+          true> {
  public:
-  MeasurementSubset() = default;
-  MeasurementSubset(const MeasurementContainer& container,
-                    std::vector<Index> validIndices,
-                    MeasurementContainer::OrderedIndices filteredOrderedIndices)
-      : m_container(&container),
-        m_validIndices(std::move(validIndices)),
-        m_filteredOrderedIndices(std::move(filteredOrderedIndices)) {}
+  using Base = Acts::detail::ContainerSubset<
+      MeasurementSubset,
+      MeasurementSubset,
+      MeasurementContainer,
+      MeasurementContainer::ConstVariableProxy,
+      std::vector<MeasurementContainer::Index>,
+      true>;
 
-  const MeasurementContainer& container() const { return *m_container; }
-  const std::vector<Index>& validIndices() const { return m_validIndices; }
+  MeasurementSubset(const MeasurementContainer& container,
+                    std::vector<MeasurementContainer::Index> validIndices,
+                    MeasurementContainer::OrderedIndices orderedIndices)
+      : Base(container, std::move(validIndices)),
+        m_orderedIndices(std::move(orderedIndices)) {}
 
   /// Geometry-sorted source links for measurements in this subset.
   /// Each source link index is in original-container space.
   const MeasurementContainer::OrderedIndices& orderedIndices() const {
-    return m_filteredOrderedIndices;
+    return m_orderedIndices;
   }
 
+  /// Alias for Base::subset() - the vector of original-container indices.
+  const std::vector<MeasurementContainer::Index>& validIndices() const {
+    return Base::subset();
+  }
+
+  /// Access a measurement by original-container index.
   ConstVariableBoundMeasurementProxy getMeasurement(
       MeasurementContainer::Index idx) const {
-    return m_container->getMeasurement(idx);
+    return Base::container().getMeasurement(idx);
   }
 
-  std::size_t size() const { return m_validIndices.size(); }
-
  private:
-  const MeasurementContainer* m_container{nullptr};
-  std::vector<Index> m_validIndices;
-  MeasurementContainer::OrderedIndices m_filteredOrderedIndices;
+  MeasurementContainer::OrderedIndices m_orderedIndices;
 };
 
 }  // namespace ActsExamples
