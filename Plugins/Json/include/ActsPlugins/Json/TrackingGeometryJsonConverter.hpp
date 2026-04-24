@@ -147,7 +147,9 @@ class TrackingGeometryJsonConverter {
   ///
   /// @param config is the conversion dispatch configuration
   explicit TrackingGeometryJsonConverter(
-      Config config = Config::defaultConfig());
+      Config config = Config::defaultConfig(),
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "TrackingGeometryJsonConverter", Acts::Logging::INFO));
 
   /// @brief Convert a tracking geometry to JSON.
   ///
@@ -243,7 +245,10 @@ class TrackingGeometryJsonConverter {
       const Acts::TrackingVolume& volume, const Acts::Logger& logger) const;
 
  private:
+  const Acts::Logger& logger() const { return *m_logger; }
+
   Config m_cfg;
+  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(
