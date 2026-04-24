@@ -35,7 +35,7 @@ class UprootParticleReader(acts.examples.IReader):
         filePath: Union[Path, str],
         outputParticles: str = "particles",
         level: acts.logging.Level = acts.logging.INFO,
-        bufferSize: int = 10,
+        bufferSize: int = 1,
     ):
         acts.examples.IReader.__init__(self, "UprootParticleReader", level)
 
@@ -138,7 +138,7 @@ class UprootSimHitReader(acts.examples.IReader):
         filePath: Union[Path, str],
         outputSimHits: str = "simhits",
         level: acts.logging.Level = acts.logging.INFO,
-        bufferSize: int = 10,
+        bufferSize: int = 1,
     ):
         acts.examples.IReader.__init__(self, "UprootSimHitReader", level)
 
