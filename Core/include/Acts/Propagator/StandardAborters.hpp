@@ -136,8 +136,10 @@ struct SurfaceReached {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
-        stepper.updateStepSize(state.stepping, intersection.pathLength(),
-                               ConstrainedStep::Type::Actor);
+        stepper.updateSurfaceStatus(state.stepping, *surface, intersectionIndex,
+                                    state.options.direction, boundaryTolerance,
+                                    state.options.surfaceTolerance,
+                                    ConstrainedStep::Type::Actor, logger);
         ACTS_VERBOSE(
             "SurfaceReached aborter | "
             "Target stepSize (surface) updated to "
