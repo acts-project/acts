@@ -33,14 +33,13 @@ set(DETRAY_BUILD_TEST_UTILS
     CACHE BOOL
     "Turn on the build of the Detray test utilities"
 )
-
 set(DETRAY_BUILD_UNITTESTS
-    ${ACTS_BUILD_UNITTESTS}
+    OFF
     CACHE BOOL
     "Turn off the build of the Detray unit tests"
 )
 set(DETRAY_BUILD_INTEGRATIONTESTS
-    ${ACTS_BUILD_INTEGRATIONTESTS}
+    OFF
     CACHE BOOL
     "Turn off the build of the Detray integration tests"
 )
@@ -64,7 +63,6 @@ set(DETRAY_EIGEN_PLUGIN
     CACHE BOOL
     "Turn on the build of the Detray Eigen algebra code"
 )
-set(DETRAY_VC_PLUGIN OFF CACHE BOOL "Turn off the build of the Detray Vc code")
 
 set(DETRAY_SETUP_VECMEM OFF CACHE BOOL "Do not set up VecMem as part of Detray")
 set(DETRAY_SETUP_ALGEBRA_PLUGINS
@@ -72,19 +70,11 @@ set(DETRAY_SETUP_ALGEBRA_PLUGINS
     CACHE BOOL
     "Do not set up Algebra Plugins as part of Detray"
 )
-if(${DETRAY_BUILD_UNITTESTS} OR ${DETRAY_BUILD_INTEGRATIONTESTS})
-    set(DETRAY_SETUP_GOOGLETEST
-        ON
-        CACHE BOOL
-        "Do not set up GoogleTest as part of Detray"
-    )
-endif()
 set(DETRAY_SETUP_BENCHMARK
     OFF
     CACHE BOOL
     "Do not set up Google Benchmark as part of Detray"
 )
-set(DETRAY_SETUP_THRUST ON CACHE BOOL "Set up Thrust as part of Detray")
 set(DETRAY_SETUP_COVFIE OFF CACHE BOOL "Do not set up covfie as part of Detray")
 set(DETRAY_SETUP_NLOHMANN
     OFF
@@ -92,18 +82,8 @@ set(DETRAY_SETUP_NLOHMANN
     "Do not set up Nlohmann as part of Detray"
 )
 set(DETRAY_SETUP_ACTSVG OFF CACHE BOOL "Do not set up Actsvg as part of Detray")
-set(DETRAY_SETUP_DFELIBS
-    ON
-    CACHE BOOL
-    "Do not set up Dfelibs as part of Detray"
-)
-set(DETRAY_SVG_DISPLAY ON CACHE BOOL "No not build the ActSVG display module")
-
-set(DETRAY_SETUP_NLOHMANN
-    OFF
-    CACHE BOOL
-    "Do not set up nlohmann as part of Detray"
-)
+set(DETRAY_SETUP_DFELIBS ON CACHE BOOL "Set up Dfelibs as part of Detray")
+set(DETRAY_SVG_DISPLAY ON CACHE BOOL "Build the ActSVG display module")
 
 set(DETRAY_GENERATE_METADATA
     "itk_metadata"

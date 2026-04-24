@@ -9,6 +9,11 @@
     - any-glob-to-any-file:
       - Core/**
       - Tests/UnitTests/Core/**
+'Component - Detray':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Detray/**'
+      - '.github/detray.yml'
 'Component - Examples':
   - changed-files:
     - any-glob-to-any-file:

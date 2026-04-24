@@ -51,7 +51,7 @@ if(
 
     find_dependency(covfie ${DETRAY_COVFIE_VERSION})
     find_dependency(GTest ${DETRAY_GOOGLETEST_VERSION})
-    find_dependency(covfie ${DETRAY_BENCHMARK_VERSION})
+    find_dependency(benchmark ${DETRAY_BENCHMARK_VERSION})
 endif()
 
 if(DETRAY_DISPLAY)
