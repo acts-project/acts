@@ -36,9 +36,10 @@ AveragingScopedTimer::AveragingScopedTimer(const std::string& name,
     : m_name(name), m_lvl(lvl), m_logger(&logger) {}
 
 void AveragingScopedTimer::addSample(std::chrono::nanoseconds duration) {
-  m_sumDuration += duration.count();
-  m_sumDurationSquared += duration.count() * duration.count();
-  m_nSamples++;
+  const double ns = static_cast<double>(duration.count());
+  m_sumDuration.fetch_add(ns, std::memory_order_relaxed);
+  m_sumDurationSquared.fetch_add(ns * ns, std::memory_order_relaxed);
+  m_nSamples.fetch_add(1, std::memory_order_relaxed);
 }
 
 AveragingScopedTimer::Sample::Sample(AveragingScopedTimer& parent)
@@ -66,16 +67,20 @@ AveragingScopedTimer::Sample::~Sample() {
 
 AveragingScopedTimer::~AveragingScopedTimer() {
   if (m_logger->doPrint(m_lvl)) {
+    const double sumDuration =
+        m_sumDuration.load(std::memory_order_relaxed);
+    const double sumDurationSquared =
+        m_sumDurationSquared.load(std::memory_order_relaxed);
+    const std::size_t nSamples = m_nSamples.load(std::memory_order_relaxed);
     std::ostringstream oss;
-    if (m_nSamples > 0) {
-      double mean = m_sumDuration / m_nSamples;
-      double stddev =
-          std::sqrt(m_sumDurationSquared / m_nSamples - mean * mean);
-      oss << m_name << " took " << (m_sumDuration * 1e-6) << " ms total, "
+    if (nSamples > 0) {
+      double mean = sumDuration / nSamples;
+      double stddev = std::sqrt(sumDurationSquared / nSamples - mean * mean);
+      oss << m_name << " took " << (sumDuration * 1e-6) << " ms total, "
           << (mean * 1e-3) << " us +- " << (stddev * 1e-3)
-          << " us per sample (#" << m_nSamples << ")";
+          << " us per sample (#" << nSamples << ")";
     } else {
-      oss << m_name << " took " << (m_sumDuration * 1e-6)
+      oss << m_name << " took " << (sumDuration * 1e-6)
           << " ms total (no samples)";
     }
     m_logger->log(m_lvl, oss.str());
