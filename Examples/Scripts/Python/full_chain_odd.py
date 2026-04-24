@@ -127,19 +127,25 @@ parser.add_argument(
 parser.add_argument(
     "--output-root",
     help="Switch root output on/off",
-    default=True,
+    default=False,
     action=argparse.BooleanOptionalAction,
 )
 parser.add_argument(
     "--output-csv",
     help="Switch csv output on/off",
-    default=True,
+    default=False,
     action=argparse.BooleanOptionalAction,
 )
 parser.add_argument(
     "--output-obj",
     help="Switch obj output on/off",
-    default=True,
+    default=False,
+    action=argparse.BooleanOptionalAction,
+)
+parser.add_argument(
+    "--output-parquet",
+    help="Switch parquet output on/off (requires ACTS_BUILD_EXAMPLES_PARQUET=ON)",
+    default=False,
     action=argparse.BooleanOptionalAction,
 )
 
@@ -329,6 +335,40 @@ addDigiParticleSelection(
         removeNeutral=True,
     ),
 )
+
+if args.output_parquet:
+    try:
+        from acts.examples.arrow import (
+            ArrowParticleOutputConverter,
+            ParquetWriter,
+        )
+    except ImportError as e:
+        raise RuntimeError(
+            "Parquet output requested but acts.examples.arrow is not available; "
+            "rebuild with ACTS_BUILD_EXAMPLES_PARQUET=ON."
+        ) from e
+
+    # Emit generated and simulated particles as Parquet. Each
+    # ArrowParticleOutputConverter parks an arrow::Table on the whiteboard
+    # under a fresh key, and one ParquetWriter picks them all up.
+    _parquet_particles = ("particles_generated", "particles_simulated")
+    for _key in _parquet_particles:
+        s.addAlgorithm(
+            ArrowParticleOutputConverter(
+                level=acts.logging.INFO,
+                inputParticles=_key,
+                outputTable=f"{_key}_arrow",
+            )
+        )
+    s.addWriter(
+        ParquetWriter(
+            level=acts.logging.INFO,
+            outputDir=str(outputDir),
+            collections={
+                f"{_key}_arrow": f"{_key}.parquet" for _key in _parquet_particles
+            },
+        )
+    )
 
 if args.reco:
     addSeeding(
