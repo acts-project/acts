@@ -58,7 +58,7 @@ class fixture_base : public scope {
         m_step_constraint{cfg.propagation().stepping.step_constraint} {}
 
   /// Default destructor
-  virtual ~fixture_base() override = default;
+  ~fixture_base() override = default;
 
   /// @returns the benchmark name
   std::string name() const { return "detray_test"; };

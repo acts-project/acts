@@ -31,6 +31,6 @@ file(
 )
 
 install(
-    FILES ${CMAKE_CURRENT_SOURCE_DIR}/detray/python/__init__.py
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/detray/__init__.py
     DESTINATION ${DETRAY_PYTHON_INSTALL_DIR}
 )

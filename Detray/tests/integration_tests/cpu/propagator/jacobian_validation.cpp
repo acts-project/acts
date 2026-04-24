@@ -138,9 +138,9 @@ void preprocess_delta(const unsigned int i, scalar& delta,
 // Containers for Ridders algorithm
 // Page 231 of [Numerical Recipes] 3rd edition
 struct ridders_derivative {
-  std::array<std::array<std::array<scalar, Nt>, Nt>, 5u> Arr;
-  std::array<scalar, 5u> fac;
-  std::array<scalar, 5u> errt;
+  std::array<std::array<std::array<scalar, Nt>, Nt>, 5u> Arr{};
+  std::array<scalar, 5u> fac{};
+  std::array<scalar, 5u> errt{};
   std::array<scalar, 5u> err{big, big, big, big, big};
   std::array<bool, 5u> complete{false, false, false, false, false};
 
@@ -265,7 +265,7 @@ bound_covariance_type get_random_initial_covariance(const scalar ini_qop) {
   std::normal_distribution<scalar> rand_time(0.f * unit<scalar>::ns,
                                              stddevs_sampling[5u]);
 
-  std::array<scalar, 6u> stddevs;
+  std::array<scalar, 6u> stddevs{};
   stddevs[0] = rand_l0(mt2);
   stddevs[1] = rand_l1(mt2);
   stddevs[2] = rand_phi(mt2);
@@ -370,12 +370,12 @@ struct bound_getter : public base_actor {
   using free_track_parameters_type = free_track_parameters<algebra_t>;
 
   struct state {
-    scalar m_min_path_length;
-    scalar m_path_length;
-    scalar m_abs_path_length;
-    bound_track_parameters_type m_param_departure;
-    bound_track_parameters_type m_param_destination;
-    typename bound_track_parameters_type::covariance_type m_jacobi;
+    scalar m_min_path_length{detray::detail::invalid_value<scalar>()};
+    scalar m_path_length{0.f};
+    scalar m_abs_path_length{0.f};
+    bound_track_parameters_type m_param_departure{};
+    bound_track_parameters_type m_param_destination{};
+    typename bound_track_parameters_type::covariance_type m_jacobi{};
     scalar m_avg_step_size{0.f};
     std::size_t step_count{0u};
     std::size_t track_ID{0u};
@@ -702,9 +702,9 @@ void evaluate_jacobian_difference(
        << "," << final_param.phi() << "," << final_param.theta() << ","
        << final_param.qop() << ",";
 
-  bound_covariance_type differentiated_jacobian;
-  std::array<unsigned int, 5u> num_iterations;
-  std::array<bool, 25u> convergence;
+  bound_covariance_type differentiated_jacobian{};
+  std::array<unsigned int, 5u> num_iterations{};
+  std::array<bool, 25u> convergence{};
 
   if (use_precal_values) {
     differentiated_jacobian = precal_diff_jacobi;
@@ -860,7 +860,7 @@ void evaluate_covariance_transport(
   wrap_angles(final_param, smeared_fin_vec);
 
   // Get pull values
-  std::array<scalar, 5u> pulls;
+  std::array<scalar, 5u> pulls{};
 
   bound_vector<test_algebra> diff{};
   for (unsigned int i = 0u; i < 5u; i++) {
@@ -1067,9 +1067,9 @@ void evaluate_jacobian_difference_helix(
    *  Numerical differentiation
    * ****************************/
 
-  bound_covariance_type differentiated_jacobian;
-  std::array<unsigned int, 5u> num_iterations;
-  std::array<bool, 25u> convergence;
+  bound_covariance_type differentiated_jacobian{};
+  std::array<unsigned int, 5u> num_iterations{};
+  std::array<bool, 25u> convergence{};
 
   for (unsigned int i = 0u; i < 5u; i++) {
     scalar delta = hs[i];
@@ -1482,9 +1482,11 @@ int main(int argc, char** argv) {
   if (rk_tolerance_iterate_mode) {
     for (std::size_t i = 0u; i < log10_tols.size(); i++) {
       const std::string rect_name =
-          "inhom_rect_material_" + std::to_string(int(log10_tols[i])) + ".csv";
+          "inhom_rect_material_" +
+          std::to_string(static_cast<int>(log10_tols[i])) + ".csv";
       const std::string wire_name =
-          "inhom_wire_material_" + std::to_string(int(log10_tols[i])) + ".csv";
+          "inhom_wire_material_" +
+          std::to_string(static_cast<int>(log10_tols[i])) + ".csv";
       rect_files[i].open(path + rect_name);
       wire_files[i].open(path + wire_name);
 
@@ -1739,8 +1741,8 @@ int main(int argc, char** argv) {
       auto ref_rel_diff{std::numeric_limits<scalar>::max()};
 
       if (rk_tolerance_iterate_mode) {
-        std::array<unsigned int, 5u> num_iterations;
-        std::array<bool, 25u> convergence;
+        std::array<unsigned int, 5u> num_iterations{};
+        std::array<bool, 25u> convergence{};
         auto differentiated_jacobian =
             directly_differentiate<inhom_field_rect_propagator_t>(
                 track_count, rect_bparam, rect_det_w_mat, detector_length,
@@ -1817,8 +1819,8 @@ int main(int argc, char** argv) {
       auto ref_rel_diff{std::numeric_limits<scalar>::max()};
 
       if (rk_tolerance_iterate_mode) {
-        std::array<unsigned int, 5u> num_iterations;
-        std::array<bool, 25u> convergence;
+        std::array<unsigned int, 5u> num_iterations{};
+        std::array<bool, 25u> convergence{};
         auto differentiated_jacobian =
             directly_differentiate<inhom_field_wire_propagator_t>(
                 track_count, wire_bparam, wire_det_w_mat, detector_length,

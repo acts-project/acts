@@ -46,9 +46,9 @@ int main(int argc, char **argv) {
       detray::options::parse_options(desc, argc, argv, toy_cfg, writer_cfg);
 
   // Make sure material is written to file, if it was requested
-  writer_cfg.write_material(vm.count("homogeneous_material") ||
-                            vm.count("material_maps") ||
-                            vm.count("write_material"));
+  writer_cfg.write_material(vm.count("homogeneous_material") != 0u ||
+                            vm.count("material_maps") != 0u ||
+                            vm.count("write_material") != 0u);
 
   // Build the geometry
   vecmem::host_memory_resource host_mr;

@@ -68,7 +68,7 @@ GTEST_TEST(detray_builders, decorator_homogeneous_material_builder) {
   auto mat_builder =
       homogeneous_material_builder<detector_t>{std::move(vbuilder)};
 
-  EXPECT_TRUE(d.volumes().size() == 0);
+  EXPECT_TRUE(d.volumes().empty());
 
   // Add some portals first
   auto pt_cyl_factory = std::make_unique<pt_cylinder_factory_t>();

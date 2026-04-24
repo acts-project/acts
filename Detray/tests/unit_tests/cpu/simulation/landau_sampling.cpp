@@ -43,7 +43,7 @@ class detray_simulation_LandauSamplingValidation : public ::testing::Test {
   constexpr static const double min = -2.;
   constexpr static const double max = 2.;
   constexpr static const std::size_t n_bins =
-      std::size_t((max - min) / bin_size);
+      static_cast<std::size_t>((max - min) / bin_size);
 };
 
 // Test for float and double types

@@ -243,7 +243,7 @@ GTEST_TEST(detray_grid, dynamic_array) {
   for (auto& data : bin_data.bins) {
     data.offset = offset;
     // Every second bin holds one element, otherwise three
-    data.capacity = (i % 2) ? 1u : 3u;
+    data.capacity = (i % 2) != 0u ? 1u : 3u;
 
     detray::bins::dynamic_array bin{bin_data.entries.data(), data};
 

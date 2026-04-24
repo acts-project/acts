@@ -96,7 +96,7 @@ class line_stepper final
   /// @returns returning the heartbeat, indicating if the stepping is alive
   DETRAY_HOST_DEVICE bool step(
       const scalar_type dist_to_next, state& stepping,
-      const stepping::config& cfg, const bool = true,
+      const stepping::config& cfg, const bool /*unused*/ = true,
       const material<scalar_type>* /*unused*/ = nullptr) const {
     // In case of an overlap do nothing
     if (math::fabs(dist_to_next) <= 1.f * unit<scalar_type>::um) {

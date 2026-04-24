@@ -151,7 +151,7 @@ class PropagatorWithRkStepper : public ::testing::TestWithParam<
       uniform_track_generator<free_track_parameters<test_algebra>>;
 
   /// Set the test environment up
-  virtual void SetUp() override {
+  void SetUp() override {
     overstep_tol = std::get<0>(GetParam());
     step_constr = std::get<1>(GetParam());
 
@@ -160,7 +160,7 @@ class PropagatorWithRkStepper : public ::testing::TestWithParam<
   }
 
   /// Clean up
-  virtual void TearDown() override { /* Do nothing */ }
+  void TearDown() override { /* Do nothing */ }
 
  protected:
   /// Detector configuration

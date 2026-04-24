@@ -144,6 +144,10 @@ jobs:
           #  CXX_STANDARD: "20"
           #  CONTAINER:
           #  OPTIONS: -DCMAKE_HIP_PLATFORM=nvidia -DDETRAY_BUILD_HIP=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON -DDETRAY_BUILD_BENCHMARKS=OFF
+          - NAME: "SYCL"
+            CXX_STANDARD: "20"
+            CONTAINER: "ghcr.io/acts-project/ubuntu2404_oneapi:85"
+            OPTIONS: -DDETRAY_BUILD_CUDA=OFF -DDETRAY_BUILD_SYCL=ON -DDETRAY_SET_LOGGING=DEBUG -DDETRAY_EIGEN_PLUGIN=ON
 
     # The system to run on.
     runs-on: ubuntu-latest
@@ -166,6 +170,7 @@ jobs:
         cmake --preset detray-full-fp32 \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_CUDA_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
+          -DCMAKE_SYCL_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_HIP_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DDETRAY_BUILD_HOST=OFF \
           -DDETRAY_FASTOR_PLUGIN=OFF \

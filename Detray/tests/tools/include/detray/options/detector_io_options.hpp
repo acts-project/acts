@@ -80,10 +80,10 @@ void configure_options<detray::io::detector_writer_config>(
   if (!vm["outdir"].defaulted()) {
     cfg.path(vm["outdir"].as<std::string>());
   }
-  cfg.compactify_json(vm.count("compactify_json"));
-  cfg.write_material(vm.count("write_material"));
-  cfg.write_grids(vm.count("write_grids"));
-  cfg.replace_files(vm.count("replace_files"));
+  cfg.compactify_json(vm.count("compactify_json") != 0u);
+  cfg.write_material(vm.count("write_material") != 0u);
+  cfg.write_grids(vm.count("write_grids") != 0u);
+  cfg.replace_files(vm.count("replace_files") != 0u);
 }
 
 }  // namespace detray::options

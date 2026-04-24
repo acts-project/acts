@@ -224,7 +224,7 @@ GTEST_TEST(detray_intersection, helix_direction_stability) {
   detail::helix hlx(vertex, B);
 
   for (int i = 0; i < 100; i++) {
-    const auto d = hlx.dir(scalar(i) * 10.f);
+    const auto d = hlx.dir(static_cast<scalar>(i) * 10.f);
     ASSERT_FLOAT_EQ(static_cast<float>(vector::theta(d)),
                     static_cast<float>(vector::theta(mom)));
   }

@@ -158,7 +158,7 @@ class rk_stepper final
     scalar_type dqopds(const scalar_type qop,
                        const material<scalar_type>* vol_mat_ptr) const {
       // d(qop)ds is zero for empty space
-      if (!vol_mat_ptr) {
+      if (vol_mat_ptr == nullptr) {
         return 0.f;
       }
 
@@ -193,7 +193,7 @@ class rk_stepper final
     DETRAY_HOST_DEVICE
     scalar_type d2qopdsdqop(const scalar_type qop,
                             const material<scalar_type>* vol_mat_ptr) const {
-      if (!vol_mat_ptr) {
+      if (vol_mat_ptr == nullptr) {
         return 0.f;
       }
 
@@ -529,7 +529,7 @@ class rk_stepper final
       const detray::stepping::config& cfg) const {
     const auto& track = stepping();
 
-    if (!vol_mat_ptr) {
+    if (vol_mat_ptr == nullptr) {
       const scalar_type qop = track.qop();
       DETRAY_DEBUG_HOST_DEVICE("-> qop: %f", qop);
       DETRAY_DEBUG_HOST_DEVICE("-> dqopds: 0");

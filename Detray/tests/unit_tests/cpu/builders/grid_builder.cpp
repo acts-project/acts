@@ -45,9 +45,9 @@ using vector3 = dvector3D<algebra_t>;
 /// Mock volume builder for unit testing
 struct mock_volume_builder : public volume_builder_interface<detector_t> {
   auto vol_index() const -> dindex override { return 0; }
-  void has_accel(bool) override { /*Do nothing*/ }
+  void has_accel(bool /*toggle*/) override { /*Do nothing*/ }
   bool has_accel() const override { return false; }
-  void set_name(std::string) override { /*Do nothing*/ }
+  void set_name(std::string /*unused*/) override { /*Do nothing*/ }
   std::string_view name() override { return "test_volume_0"; }
   auto operator()() const -> const typename detector_t::volume_type& override {
     return m_vol;
@@ -69,9 +69,9 @@ struct mock_volume_builder : public volume_builder_interface<detector_t> {
                             const typename detector_t::vector3_type& /*unused*/,
                             const typename detector_t::vector3_type& /*unused*/)
       override { /*Do nothing*/ }
-  void add_surfaces(
-      std::shared_ptr<surface_factory_interface<detector_t>>,
-      typename detector_t::geometry_context = {}) override { /*Do nothing*/ }
+  void add_surfaces(std::shared_ptr<surface_factory_interface<detector_t>>,
+                    typename detector_t::geometry_context /*gctx*/ = {})
+      override { /*Do nothing*/ }
 
  protected:
   typename detector_t::surface_lookup_container& surfaces() override {

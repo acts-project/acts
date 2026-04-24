@@ -127,7 +127,7 @@ class unbounded {
   /// @returns Inf.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t area(
-      const bounds_type<scalar_t>&) const {
+      const bounds_type<scalar_t>& /*unused*/) const {
     return std::numeric_limits<scalar_t>::max();
   }
 
@@ -138,7 +138,7 @@ class unbounded {
   /// @returns Inf.
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t volume(
-      const bounds_type<scalar_t>&) const {
+      const bounds_type<scalar_t>& /*unused*/) const {
     return std::numeric_limits<scalar_t>::max();
   }
 

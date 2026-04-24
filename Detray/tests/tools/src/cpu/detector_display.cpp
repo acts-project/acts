@@ -93,8 +93,8 @@ int main(int argc, char** argv) {
       detray::options::parse_options(desc, argc, argv, reader_cfg);
 
   // General options
-  std::string outdir{vm.count("outdir") ? vm["outdir"].as<std::string>()
-                                        : "./plots/"};
+  std::string outdir{vm.count("outdir") != 0u ? vm["outdir"].as<std::string>()
+                                              : "./plots/"};
   auto path = detray::io::create_path(outdir);
 
   float r_axis{vm["r_axis"].as<float>()};
@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
 
   // Material gradient box position
   std::array<actsvg::scalar, 2u> grad_pos{};
-  grad_pos[0] = vm.count("x_axis") ? x_axis + 100.f : z_axis + 100.f;
+  grad_pos[0] = vm.count("x_axis") != 0u ? x_axis + 100.f : z_axis + 100.f;
   grad_pos[1] = -200.f;  // default to align with major axis
 
   vol_style._sensitive_surface_style._material_style._gradient_pos = grad_pos;
@@ -151,12 +151,13 @@ int main(int argc, char** argv) {
 
   // Creating the svg generator for the detector.
   detray::svgtools::illustrator il{det, names, style};
-  il.show_info(vm.count("show_info"));
-  il.hide_eta_lines(vm.count("hide_eta_lines"));
-  il.hide_portals(vm.count("hide_portals"));
-  il.hide_passives(vm.count("hide_passives"));
-  il.hide_material(!vm.count("material_file") || vm.count("hide_material"));
-  il.hide_grids(!vm.count("grid_file"));
+  il.show_info(vm.count("show_info") != 0u);
+  il.hide_eta_lines(vm.count("hide_eta_lines") != 0u);
+  il.hide_portals(vm.count("hide_portals") != 0u);
+  il.hide_passives(vm.count("hide_passives") != 0u);
+  il.hide_material(vm.count("material_file") == 0u ||
+                   vm.count("hide_material") != 0u);
+  il.hide_grids(vm.count("grid_file") == 0u);
   il.search_window({window[0], window[1]});
 
   actsvg::style::stroke stroke_black = actsvg::style::stroke();

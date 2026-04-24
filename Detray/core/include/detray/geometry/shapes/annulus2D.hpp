@@ -307,7 +307,6 @@ class annulus2D {
   template <concepts::scalar scalar_t>
   DETRAY_HOST_DEVICE constexpr scalar_t area(
       const bounds_type<scalar_t> & /*bounds*/) const {
-    assert(false);
     return detail::invalid_value<scalar_t>();
   }
 
