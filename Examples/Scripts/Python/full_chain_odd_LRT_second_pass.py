@@ -391,7 +391,7 @@ addSeeding(
     spacePointGridConfigArg=SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg(),
     prefix="lrt_",
-    logLevel=acts.logging.DEBUG,
+    logLevel=acts.logging.INFO,
     outputDirRoot=outputDir if args.output_root else None,
     outputDirCsv=outputDir if args.output_csv else None,
 )
@@ -426,7 +426,7 @@ addCKFTracks(
         ],
     ),
     prefix="lrt_",
-    logLevel=acts.logging.DEBUG,
+    logLevel=acts.logging.INFO,
     outputDirRoot=outputDir if args.output_root else None,
     outputDirCsv=outputDir if args.output_csv else None,
     writeCovMat=True,
@@ -438,7 +438,7 @@ addAmbiguityResolution(
         maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
     ),
     prefix="lrt_",
-    logLevel=acts.logging.DEBUG,
+    logLevel=acts.logging.INFO,
     outputDirRoot=outputDir if args.output_root else None,
     outputDirCsv=outputDir if args.output_csv else None,
     writeCovMat=True,

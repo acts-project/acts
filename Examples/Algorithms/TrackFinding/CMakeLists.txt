@@ -1,7 +1,6 @@
 acts_add_library(
     ExamplesTrackFinding
     src/MeasurementFilterAlgorithm.cpp
-    src/MeasurementMapAlgorithm.cpp
     src/SpacePointMaker.cpp
     src/TrackFindingAlgorithm.cpp
     src/TrackFindingAlgorithmFunction.cpp
