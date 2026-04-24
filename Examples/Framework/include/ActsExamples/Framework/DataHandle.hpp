@@ -192,8 +192,8 @@ class WriteDataHandle final : public WriteDataHandleBase {
   }
 
   /// Read back the value just written via this handle within the same
-  /// execute() call.  Routes through the DataHandleBase protected trampoline
-  /// so that WhiteBoard friend access is exercised in DataHandleBase context.
+  /// execute() call. Calls the protected DataHandleBase::get<T>() rather
+  /// than WhiteBoard::get<T>() directly because WhiteBoard::get is private.
   const T& readBack(const AlgorithmContext& ctx) const {
     return this->template get<T>(ctx.eventStore);
   }
