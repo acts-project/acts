@@ -749,10 +749,7 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerKind(getNavigationPolicyKind<SurfaceArrayNavigationPolicy>(),
                     decodeSurfaceArrayNavigationPolicy)
       .registerKind(getNavigationPolicyKind<MultiNavigationPolicy>(),
-                    decodeMultiNavigationPolicy)
-      .registerKind(
-          getNavigationPolicyKind<Experimental::MultiLayerNavigationPolicy>(),
-          decodeMultiLayerNavigationPolicy);
+                    decodeMultiNavigationPolicy);
 
   return cfg;
 }
