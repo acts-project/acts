@@ -1,5 +1,9 @@
-# See Examples/Io/Parquet/CMakeLists.txt for the OBJECT-library rationale.
-add_library(ActsExamplesIoArrow_obj OBJECT src/ArrowParticleOutputConverter.cpp)
+add_library(
+    ActsExamplesIoArrow_obj
+    OBJECT
+    src/ArrowParticleOutputConverter.cpp
+    src/ArrowTrackOutputConverter.cpp
+)
 
 target_include_directories(
     ActsExamplesIoArrow_obj

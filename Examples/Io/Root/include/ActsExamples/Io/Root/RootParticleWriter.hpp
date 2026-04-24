@@ -152,6 +152,15 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<std::int32_t> m_numberOfHits;
   /// Particle outcome
   std::vector<std::uint32_t> m_outcome;
+
+  /// Job-wide counters for conditions that would otherwise be logged per
+  /// particle. Summarised in @c finalize. Protected by @c m_writeMutex.
+  std::size_t m_nTotal = 0;
+  std::size_t m_nCharged = 0;
+  std::size_t m_nNonFinite = 0;
+  std::size_t m_nZeroCharge = 0;
+  std::size_t m_nGlobalToLocalFailed = 0;
+  std::size_t m_nPropagationFailed = 0;
 };
 
 }  // namespace ActsExamples

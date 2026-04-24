@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
+#include "ActsExamples/Io/Arrow/ArrowTrackOutputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
 #include "ActsExamples/Io/Parquet/ParquetReader.hpp"
 #include "ActsExamples/Io/Parquet/ParquetWriter.hpp"
@@ -40,6 +41,15 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
     auto [alg, c] =
         declareAlgorithm<ArrowParticleOutputConverter, ArrowOutputConverter>(
             m, "ArrowParticleOutputConverter");
-    ACTS_PYTHON_STRUCT(c, inputParticles, outputTable);
+    ACTS_PYTHON_STRUCT(c, inputParticles, outputTable, referencePoint, bField,
+                       writeHelixParameters);
+  }
+
+  {
+    auto [alg, c] =
+        declareAlgorithm<ArrowTrackOutputConverter, ArrowOutputConverter>(
+            m, "ArrowTrackOutputConverter");
+    ACTS_PYTHON_STRUCT(c, inputTracks, inputTrackParticleMatching,
+                       outputTable);
   }
 }

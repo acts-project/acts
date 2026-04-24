@@ -37,17 +37,22 @@ def test_coexist_with_pyarrow():
 
 PARTICLE_FIELDS = {
     "particle_id",
-    "pdg",
-    "charge",
+    "pdg_id",
     "mass",
-    "px",
-    "py",
-    "pz",
-    "e",
+    "energy",
+    "charge",
     "vx",
     "vy",
     "vz",
-    "vt",
+    "time",
+    "px",
+    "py",
+    "pz",
+    "perigee_d0",
+    "perigee_z0",
+    "vertex_primary",
+    "parent_id",
+    "primary",
 }
 
 
@@ -119,6 +124,7 @@ def _add_arrow_writer(
     """
     from acts.examples.arrow import ArrowParticleOutputConverter, ParquetWriter
 
+    field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
     for input_key, table_key in inputs_to_tables.items():
         assert (
             input_key != table_key
@@ -128,6 +134,7 @@ def _add_arrow_writer(
                 level=acts.logging.INFO,
                 inputParticles=input_key,
                 outputTable=table_key,
+                bField=field,
             )
         )
 
