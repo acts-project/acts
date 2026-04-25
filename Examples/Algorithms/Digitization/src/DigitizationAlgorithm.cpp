@@ -324,11 +324,10 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                           << clusters.size() << " clusters" << " from "
                           << simHits.size() << " sim hits.");
 
-    m_outputMeasurements(ctx, std::move(measurements));
+    const auto& storedMeasurements =
+        m_outputMeasurements(ctx, std::move(measurements));
 
     // Build initial full subset: all measurements, indices in original space.
-    // Read back via the write handle to get a stable pointer into the whiteboard.
-    const auto& storedMeasurements = m_outputMeasurements.readBack(ctx);
     std::vector<MeasurementContainer::Index> allIndices(storedMeasurements.size());
     std::iota(allIndices.begin(), allIndices.end(), Index{0});
     m_outputMeasurementSubset(

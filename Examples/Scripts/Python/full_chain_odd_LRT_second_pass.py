@@ -83,7 +83,7 @@ parser.add_argument(
     "--gun-multiplicity",
     help="Multiplicity (no. of vertices) of the particle gun",
     type=int,
-    default=1,
+    default=200,
 )
 parser.add_argument(
     "--gun-eta-range",
@@ -346,7 +346,7 @@ addAmbiguityResolution(
 
 s.addAlgorithm(
     acts.examples.MeasurementFilterAlgorithm(
-        level=acts.logging.DEBUG,
+        level=acts.logging.INFO,
         inputTracks="tracks",
         inputMeasurementSubset="measurement_subset",
         outputMeasurementSubset="lrt_measurement_subset",
