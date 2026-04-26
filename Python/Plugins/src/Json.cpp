@@ -83,7 +83,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
           return std::make_unique<TrackingGeometryJsonConverter>(
               TrackingGeometryJsonConverter::Config::defaultConfig(),
               Acts::getDefaultLogger("TrackingGeometryJsonConverter", level));
-        }))
+        }),
+             py::arg("level"))
         .def(
             "toJson",
             [](const TrackingGeometryJsonConverter& self,
