@@ -146,6 +146,7 @@ class TrackingGeometryJsonConverter {
   /// @brief Construct converter with custom or default dispatch configuration.
   ///
   /// @param config is the conversion dispatch configuration
+  /// @param logger logging instance
   explicit TrackingGeometryJsonConverter(
       Config config = Config::defaultConfig(),
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
