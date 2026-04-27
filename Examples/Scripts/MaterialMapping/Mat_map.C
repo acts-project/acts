@@ -115,8 +115,8 @@ void Mat_map(std::string Val = "", std::string geantino = "", std::string name =
   TH1F * comp_X0_Phi = new TH1F("comp_X0_Phi","comp_X0_Phi",160,-4,4);
   TH2F * comp_X0 = new TH2F("comp_X0","comp_X0",160,-4,4,160,-4,4);
 
-  TChain *Val_file = new TChain("material-tracks");
-  TChain *geantino_file = new TChain("material-tracks");
+  TChain *Val_file = new TChain("material_tracks");
+  TChain *geantino_file = new TChain("material_tracks");
 
   // Define line corresponding to the different eta value
   TLine *eta_0 = new TLine(0,-1200,0,1200);

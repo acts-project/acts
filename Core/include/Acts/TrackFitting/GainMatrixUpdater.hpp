@@ -14,8 +14,6 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cassert>
-#include <system_error>
-#include <tuple>
 
 namespace Acts {
 
@@ -23,12 +21,20 @@ namespace Acts {
 /// @ingroup track_fitting
 class GainMatrixUpdater {
  public:
+  GainMatrixUpdater() = default;
+
+  /// @param useJosephFormulation Whether to use the Joseph formulation for the
+  /// covariance update, which is more numerically stable at the cost of
+  /// additional computations.
+  explicit GainMatrixUpdater(bool useJosephFormulation)
+      : m_useJosephFormulation(useJosephFormulation) {}
+
   /// Run the Kalman update step for a single trajectory state.
   ///
   /// @tparam kMeasurementSizeMax
   /// @param[in,out] trackState The track state
   /// @param[in] logger Where to write logging information to
-  /// @return Success or failure of the update procedure with chi2 information
+  /// @return Success or failure of the update procedure
   template <typename traj_t>
   Result<void> operator()(const GeometryContext& /*gctx*/,
                           typename traj_t::TrackStateProxy trackState,
@@ -55,21 +61,18 @@ class GainMatrixUpdater {
     // auto filtered = trackState.filtered();
     // auto filteredCovariance = trackState.filteredCovariance();
 
-    const auto [chi2, error] =
-        visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
-
-    trackState.chi2() = chi2;
-
-    return error ? Result<void>::failure(error) : Result<void>::success();
+    return visitMeasurement(AnyMutableTrackStateProxy{trackState}, logger);
   }
 
  private:
-  std::tuple<double, std::error_code> visitMeasurement(
-      AnyMutableTrackStateProxy trackState, const Logger& logger) const;
+  bool m_useJosephFormulation = false;
+
+  Result<void> visitMeasurement(AnyMutableTrackStateProxy trackState,
+                                const Logger& logger) const;
 
   template <std::size_t N>
-  std::tuple<double, std::error_code> visitMeasurementImpl(
-      AnyMutableTrackStateProxy trackState, const Logger& logger) const;
+  Result<void> visitMeasurementImpl(AnyMutableTrackStateProxy trackState,
+                                    const Logger& logger) const;
 };
 
 }  // namespace Acts

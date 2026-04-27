@@ -34,7 +34,7 @@ jobs:
           env_file: .env
 
       - name: 'Download artifact'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         id: dl-af
         with:
           script: |
@@ -73,7 +73,7 @@ jobs:
       - name: Read PR metadata
         if: github.event.workflow_run.event == 'pull_request'
         id: pr_metadata
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -141,7 +141,7 @@ jobs:
           ls -al build/coverage
 
       - name: Run sonar-scanner (PR mode)
-        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        uses: SonarSource/sonarqube-scan-action@v7.1.0
         if: github.event.workflow_run.event == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -157,7 +157,7 @@ jobs:
             --define sonar.pullrequest.base=${{ fromJson(steps.get_pr_data.outputs.data).base.ref }}
 
       - name: Run sonar-scanner (push mode)
-        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        uses: SonarSource/sonarqube-scan-action@v7.1.0
         if: github.event.workflow_run.event == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

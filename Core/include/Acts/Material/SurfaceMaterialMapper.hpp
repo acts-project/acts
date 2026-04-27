@@ -134,11 +134,15 @@ class SurfaceMaterialMapper {
   /// Delete the Default constructor
   SurfaceMaterialMapper() = delete;
 
+  // mark as deprecated
   /// Constructor with config object
   ///
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param slogger The logger
+  [[deprecated(
+      "Material mapping with propagation is deprecated. Use MaterialMapper "
+      "instead.")]]
   SurfaceMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
                         std::unique_ptr<const Logger> slogger =
                             getDefaultLogger("SurfaceMaterialMapper",

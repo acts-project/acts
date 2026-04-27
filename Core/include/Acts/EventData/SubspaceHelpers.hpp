@@ -14,6 +14,7 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <ranges>
 
@@ -48,7 +49,8 @@ inline static bool checkSubspaceIndices(const index_range_t& indexRange,
       return false;
     }
     ++it;
-    if (std::find(it, indexRange.end(), index) != indexRange.end()) {
+    if (const auto tail = std::ranges::subrange(it, indexRange.end());
+        std::ranges::find(tail, index) != tail.end()) {
       return false;
     }
   }
@@ -119,11 +121,15 @@ class SubspaceHelperBase {
   auto end() const { return self().end(); }
 
   bool contains(std::uint8_t index) const {
-    return std::find(begin(), end(), index) != end();
+    const auto r = std::ranges::subrange(begin(), end());
+    return std::ranges::find(r, index) != r.end();
   }
   std::size_t indexOf(std::uint8_t index) const {
-    auto it = std::find(begin(), end(), index);
-    return it != end() ? std::distance(begin(), it) : kFullSize;
+    const auto r = std::ranges::subrange(begin(), end());
+    const auto it = std::ranges::find(r, index);
+    return it != r.end()
+               ? static_cast<std::size_t>(std::ranges::distance(r.begin(), it))
+               : kFullSize;
   }
 
   template <typename EigenDerived>
@@ -202,8 +208,9 @@ class VariableSubspaceHelper
     assert(checkSubspaceIndices(indices, kFullSize, indices.size()) &&
            "Invalid indices");
     m_indices.resize(indices.size());
-    std::transform(indices.begin(), indices.end(), m_indices.begin(),
-                   [](auto index) { return static_cast<IndexType>(index); });
+    std::ranges::transform(indices, m_indices.begin(), [](auto index) {
+      return static_cast<IndexType>(index);
+    });
   }
 
   /// Check if the subspace is empty
@@ -280,8 +287,9 @@ class FixedSubspaceHelper
   explicit FixedSubspaceHelper(const other_index_range_t& indices) {
     assert(checkSubspaceIndices(indices, kFullSize, kSubspaceSize) &&
            "Invalid indices");
-    std::transform(indices.begin(), indices.end(), m_indices.begin(),
-                   [](auto index) { return static_cast<IndexType>(index); });
+    std::ranges::transform(indices, m_indices.begin(), [](auto index) {
+      return static_cast<IndexType>(index);
+    });
   }
 
   /// Check if the subspace is empty
