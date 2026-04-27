@@ -246,18 +246,6 @@ nlohmann::json encodeVolumeBoundsT(const bounds_t& bounds) {
   return jBounds;
 }
 
-std::unique_ptr<Acts::VolumeBounds> decodeDiamondVolumeBounds(
-    const nlohmann::json& jBounds) {
-  const auto values = jBounds.at(kValuesKey).get<std::vector<double>>();
-  return std::make_unique<Acts::DiamondVolumeBounds>(
-      values[Acts::DiamondVolumeBounds::eHalfLengthX1],
-      values[Acts::DiamondVolumeBounds::eHalfLengthX2],
-      values[Acts::DiamondVolumeBounds::eHalfLengthX3],
-      values[Acts::DiamondVolumeBounds::eLengthY1],
-      values[Acts::DiamondVolumeBounds::eLengthY2],
-      values[Acts::DiamondVolumeBounds::eHalfLengthZ]);
-}
-
 // -------------------------------------------------------------------
 // Navigation policy encoder/decoder
 
@@ -755,7 +743,7 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerKind(getVolumeBoundsKind<CylinderVolumeBounds>(),
                     decodeVolumeBoundsT<CylinderVolumeBounds>)
       .registerKind(getVolumeBoundsKind<DiamondVolumeBounds>(),
-                    decodeDiamondVolumeBounds)
+                    decodeVolumeBoundsT<DiamondVolumeBounds>)
       .registerKind(getVolumeBoundsKind<GenericCuboidVolumeBounds>(),
                     decodeVolumeBoundsT<GenericCuboidVolumeBounds>)
       .registerKind(getVolumeBoundsKind<TrapezoidVolumeBounds>(),
