@@ -17,10 +17,6 @@
 namespace torch::jit {
 class Module;
 }
-
-namespace c10 {
-enum class DeviceType : std::int8_t;
-}
 /// @endcond
 
 namespace ActsPlugins {
@@ -44,8 +40,8 @@ class TorchMetricLearning final : public GraphConstructionBase {
     int knnVal = 500;
     /// Whether to shuffle edge directions
     bool shuffleDirections = false;
-    /// CUDA device ID to use for inference
-    int deviceID = 0;  // default is the first GPU if available
+    /// Device to run inference on
+    Device device = Device::Cuda();
 
     /// Scaling factor for phi coordinate in edge features
     float phiScale = 3.141592654;
