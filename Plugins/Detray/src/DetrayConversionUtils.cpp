@@ -116,14 +116,14 @@ detray::io::axis_payload ActsPlugins::DetrayConversionUtils::convertAxis(
   return payload;
 }
 
-detray::io::material_slab_payload
+detray::io::surface_material_payload
 ActsPlugins::DetrayConversionUtils::convertMaterialSlab(
     const Acts::MaterialSlab& slab) {
-  detray::io::material_slab_payload payload;
+  detray::io::surface_material_payload payload;
   // Fill the material parameters and the thickness
   const auto& material = slab.material();
   payload.thickness = slab.thickness();
-  payload.mat = detray::io::material_payload{
+  payload.mat = detray::io::material_param_payload{
       {material.X0(), material.L0(), material.Ar(), material.Z(),
        material.massDensity(), material.molarDensity(), 0.}};
   payload.type = detray::io::material_id::slab;
