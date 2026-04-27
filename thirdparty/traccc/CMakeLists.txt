@@ -50,6 +50,12 @@ set(TRACCC_SETUP_BENCHMARKS
     "Do not set up google benchmarks as part of Traccc"
 )
 
+set(TRACCC_BUILD_IO
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Traccc IO code THIS IS TEMPORARY"
+)
+
 set(TRACCC_BUILD_TESTING
     OFF
     CACHE BOOL
