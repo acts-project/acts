@@ -58,7 +58,9 @@ parser.add_argument(
     default=pathlib.Path.cwd() / "odd_output_lrt",
 )
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=1000)
-parser.add_argument("--skip", "-s", help="Number of events to skip", type=int, default=0)
+parser.add_argument(
+    "--skip", "-s", help="Number of events to skip", type=int, default=0
+)
 parser.add_argument(
     "--geant4", help="Use Geant4 instead of fatras", action="store_true"
 )
@@ -142,7 +144,9 @@ oddDigiConfig = (
 )
 oddSeedingSel = actsDir / "Examples/Configs/odd-seeding-config.json"
 oddStripSeedingSel = actsDir / "Examples/Configs/odd-strip-spacepoint-selection.json"
-oddShortStripSeedingSel = actsDir / "Examples/Configs/odd-short-strip-spacepoint-selection.json"
+oddShortStripSeedingSel = (
+    actsDir / "Examples/Configs/odd-short-strip-spacepoint-selection.json"
+)
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
 detector = getOpenDataDetector(odd_dir=geoDir, materialDecorator=oddMaterialDeco)
@@ -313,11 +317,21 @@ addCKFTracks(
         maxPixelHoles=1,
         maxStripHoles=2,
         constrainToVolumes=[
-            2, 32, 4,        # beam pipe
-            16, 17, 18,      # pixel
-            20,              # PST
-            23, 24, 25,      # short strip
-            26, 8, 28, 29, 30,  # long strip
+            2,
+            32,
+            4,  # beam pipe
+            16,
+            17,
+            18,  # pixel
+            20,  # PST
+            23,
+            24,
+            25,  # short strip
+            26,
+            8,
+            28,
+            29,
+            30,  # long strip
         ],
     ),
     outputDirRoot=outputDir if args.output_root else None,
@@ -418,11 +432,21 @@ addCKFTracks(
         maxPixelHoles=1,
         maxStripHoles=1,
         constrainToVolumes=[
-            2, 32, 4,
-            16, 17, 18,
+            2,
+            32,
+            4,
+            16,
+            17,
+            18,
             20,
-            23, 24, 25,
-            26, 8, 28, 29, 30,
+            23,
+            24,
+            25,
+            26,
+            8,
+            28,
+            29,
+            30,
         ],
     ),
     prefix="lrt_",
