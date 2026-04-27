@@ -278,7 +278,7 @@ class Impl final : public TripletSeedFinder {
   void createStripTripletTopCandidates(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
       const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      const TopDoublets& topDoublets,
+      TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
@@ -290,7 +290,13 @@ class Impl final : public TripletSeedFinder {
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    float cotThetaB = bottomDoublet.cotTheta();
+    // Keep the approximate (SP-center based) cotTheta of the bottom doublet
+    // around: `cotThetaB` is overwritten inside the loop with the refined
+    // value computed after the strip coordinate correction, but the sorted
+    // early-termination logic needs to compare against the approximate value
+    // that matches the ordering of `topDoublets`.
+    const float cotThetaBApprox = bottomDoublet.cotTheta();
+    float cotThetaB = cotThetaBApprox;
     const float erB = bottomDoublet.er();
     const float iDeltaRB = bottomDoublet.iDeltaR();
     const float Vb = bottomDoublet.v();
@@ -324,14 +330,31 @@ class Impl final : public TripletSeedFinder {
         spacePoints[bottomDoublet.spacePointIndex()];
     const StripData stripB = calculateStripData(spB);
 
-    for (auto topDoublet : topDoublets) {
+    std::size_t topDoubletOffset = 0;
+    for (auto [topDoublet, topDoubletIndex] :
+         zip(topDoublets, std::ranges::iota_view<std::size_t, std::size_t>(
+                              0, topDoublets.size()))) {
       // Pre-filter on the doublet stage cot(theta) difference before the
       // expensive strip coordinate transformation. The doublet cot(theta)
-      // values are computed from SP centers and are approximate
-      // so the cut is very loose
-      {
-        const float deltaCotTheta = cotThetaB - topDoublet.cotTheta();
-        if (std::abs(deltaCotTheta) > m_cfg.cotThetaDiffMax) {
+      // values are computed from SP centers and are approximate, so the
+      // cut is very loose.
+      //
+      // this pre-filter is only applied when `sortedByCotTheta` is enabled,
+      // mirroring the pixel path. Top doublets are sorted in ascending
+      // approximate cotTheta, which lets us kill looping over doublets once
+      // cotThetaT exceeds cotThetaB by more than the tolerance, and advance
+      // `topDoubletOffset` to discard tops that can never satisfy the cut
+      // for any subsequent (larger) bottom cotTheta.
+      if constexpr (sortedByCotTheta) {
+        const float cotThetaT = topDoublet.cotTheta();
+        const float deltaCotTheta = cotThetaBApprox - cotThetaT;
+        const float cotThetaDiffMax2 =
+            m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
+        if (deltaCotTheta * deltaCotTheta > cotThetaDiffMax2) {
+          if (cotThetaBApprox < cotThetaT) {
+            break;
+          }
+          topDoubletOffset = topDoubletIndex + 1;
           continue;
         }
       }
@@ -486,6 +509,12 @@ class Impl final : public TripletSeedFinder {
       tripletTopCandidates.emplace_back(topDoublet.spacePointIndex(),
                                         B / std::sqrt(S2), im);
     }  // loop on tops
+
+    if constexpr (sortedByCotTheta) {
+      // remove the top doublets that can no longer be compatible with any
+      // subsequent bottom doublet (which has a larger approximate cotTheta)
+      topDoublets = topDoublets.subrange(topDoubletOffset);
+    }
   }
 
   void createTripletTopCandidates(
