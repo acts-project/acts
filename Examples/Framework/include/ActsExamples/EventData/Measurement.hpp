@@ -533,7 +533,6 @@ static_assert(
     std::random_access_iterator<MeasurementContainer::iterator> &&
     std::random_access_iterator<MeasurementContainer::const_iterator>);
 
-
 /// Subset of a MeasurementContainer.
 ///
 /// All indices are in original-container space, so the MeasurementParticlesMap
@@ -548,26 +547,19 @@ static_assert(
 /// ContainerSubset and is stored as an additional member.
 class MeasurementSubset
     : public Acts::detail::ContainerSubset<
-          MeasurementSubset,
-          MeasurementSubset,
-          MeasurementContainer,
+          MeasurementSubset, MeasurementSubset, MeasurementContainer,
           MeasurementContainer::ConstVariableProxy,
-          std::vector<MeasurementContainer::Index>,
-          true> {
+          std::vector<MeasurementContainer::Index>, true> {
  public:
   using Base = Acts::detail::ContainerSubset<
-      MeasurementSubset,
-      MeasurementSubset,
-      MeasurementContainer,
+      MeasurementSubset, MeasurementSubset, MeasurementContainer,
       MeasurementContainer::ConstVariableProxy,
-      std::vector<MeasurementContainer::Index>,
-      true>;
+      std::vector<MeasurementContainer::Index>, true>;
 
   MeasurementSubset(const MeasurementContainer& container,
-                    std::vector<MeasurementContainer::Index> validIndices,
-                    MeasurementContainer::OrderedIndices orderedIndices)
+                    std::vector<MeasurementContainer::Index> validIndices)
       : Base(container, std::move(validIndices)),
-        m_orderedIndices(std::move(orderedIndices)) {}
+        m_orderedIndices(buildOrderedIndices(container, this->subset())) {}
 
   /// Geometry-sorted source links for measurements in this subset.
   /// Each source link index is in original-container space.
@@ -582,6 +574,17 @@ class MeasurementSubset
   }
 
  private:
+  static MeasurementContainer::OrderedIndices buildOrderedIndices(
+      const MeasurementContainer& container,
+      const std::vector<MeasurementContainer::Index>& indices) {
+    MeasurementContainer::OrderedIndices result;
+    result.reserve(indices.size());
+    for (auto idx : indices) {
+      result.insert(IndexSourceLink(container.at(idx).geometryId(), idx));
+    }
+    return result;
+  }
+
   MeasurementContainer::OrderedIndices m_orderedIndices;
 };
 

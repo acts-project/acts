@@ -44,7 +44,8 @@ class SpacePointMaker final : public IAlgorithm {
  public:
   struct Config {
     /// Input measurement subset (initial full subset from digitization for pass
-    /// 1; filtered subset from MeasurementFilterAlgorithm for subsequent passes).
+    /// 1; filtered subset from MeasurementFilterAlgorithm for subsequent
+    /// passes).
     std::string inputMeasurements;
     /// Output space points collection.
     std::string outputSpacePoints;

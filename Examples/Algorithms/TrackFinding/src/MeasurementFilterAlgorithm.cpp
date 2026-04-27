@@ -60,10 +60,8 @@ ProcessCode MeasurementFilterAlgorithm::execute(
     }
   }
 
-  // Build output subset: copy source links not consumed in this pass.
-  MeasurementContainer::OrderedIndices filteredOrderedIndices;
+  // Build output subset: collect indices not consumed in this pass.
   std::vector<MeasurementContainer::Index> validIndices;
-  filteredOrderedIndices.reserve(subset.orderedIndices().size());
   validIndices.reserve(subset.orderedIndices().size());
 
   std::size_t nFiltered = 0;
@@ -72,17 +70,15 @@ ProcessCode MeasurementFilterAlgorithm::execute(
       ++nFiltered;
       continue;
     }
-    filteredOrderedIndices.insert(sourceLink);
     validIndices.push_back(sourceLink.index());
   }
 
   ACTS_DEBUG("Removed " << nFiltered << " measurement(s) used by "
-                        << tracks.size() << " track(s); "
-                        << validIndices.size() << " remaining");
+                        << tracks.size() << " track(s); " << validIndices.size()
+                        << " remaining");
 
   m_outputMeasurementSubset(
-      ctx, MeasurementSubset(subset.container(), std::move(validIndices),
-                             std::move(filteredOrderedIndices)));
+      ctx, MeasurementSubset(subset.container(), std::move(validIndices)));
   return ProcessCode::SUCCESS;
 }
 

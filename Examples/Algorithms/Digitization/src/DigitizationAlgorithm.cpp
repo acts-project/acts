@@ -328,11 +328,11 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
         m_outputMeasurements(ctx, std::move(measurements));
 
     // Build initial full subset: all measurements, indices in original space.
-    std::vector<MeasurementContainer::Index> allIndices(storedMeasurements.size());
+    std::vector<MeasurementContainer::Index> allIndices(
+        storedMeasurements.size());
     std::iota(allIndices.begin(), allIndices.end(), Index{0});
     m_outputMeasurementSubset(
-        ctx, MeasurementSubset(storedMeasurements, std::move(allIndices),
-                               storedMeasurements.orderedIndices()));
+        ctx, MeasurementSubset(storedMeasurements, std::move(allIndices)));
 
     m_outputClusters(ctx, std::move(clusters));
 
