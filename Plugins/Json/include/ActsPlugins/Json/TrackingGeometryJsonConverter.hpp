@@ -12,6 +12,7 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeDispatcher.hpp"
 #include "ActsPlugins/Json/JsonKindDispatcher.hpp"
 

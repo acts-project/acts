@@ -920,8 +920,6 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     }
   }
 
-  ACTS_VERBOSE("Collected " << surfaceRecords.size() << " surface records");
-
   // Collect portal data
   std::unordered_map<std::size_t, PortalRecord> portalRecords;
   for (const auto& jPortal : encoded.at(kPortalsKey)) {
@@ -934,8 +932,6 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
       throw std::invalid_argument("Duplicate serialized portal ID");
     }
   }
-
-  ACTS_VERBOSE("Collected " << portalRecords.size() << " portal records");
 
   // Collect volume data
   std::unordered_map<std::size_t, VolumeRecord> volumeRecords;
@@ -967,20 +963,18 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     }
   }
 
-  ACTS_VERBOSE("Collected " << volumeRecords.size() << " volume records");
-
   const std::size_t rootVolumeId =
       encoded.at(kRootVolumeIdKey).get<std::size_t>();
+
+  if (!volumeRecords.contains(rootVolumeId)) {
+    throw std::invalid_argument("Serialized root volume ID does not exist");
+  }
 
   ACTS_DEBUG("Decoding " << volumeRecords.size() << " volumes, "
                          << portalRecords.size() << " portals, "
                          << surfaceRecords.size()
                          << " surfaces from root volume '"
                          << volumeRecords.at(rootVolumeId).name << "'");
-
-  if (!volumeRecords.contains(rootVolumeId)) {
-    throw std::invalid_argument("Serialized root volume ID does not exist");
-  }
 
   // Collect surface pointers
   SurfacePointerLookup surfacePointers;
