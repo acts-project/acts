@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/MultiLayerNavigationJsonConverter.hpp"
+#include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 
 #include <fstream>
 
@@ -76,13 +77,16 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyToJson) {
   auto tVolume = makeVolume();
   auto policy = makePolicy(tContext, *tVolume, *tLogger);
 
-  nlohmann::json j = MultiLayerNavigationJsonConverter::toJson(policy);
+  TrackingGeometryJsonConverter conv;
+  nlohmann::json j =
+      MultiLayerNavigationJsonConverter::encodeMultiLayerNavigationPolicy(
+          policy, conv);
 
-  BOOST_CHECK(j.contains("type"));
+  BOOST_CHECK(j.contains("kind"));
   BOOST_CHECK(j.contains("axes"));
   BOOST_CHECK(j.contains("casts"));
   BOOST_CHECK(j.contains("binExpansion"));
-  BOOST_CHECK_EQUAL(j["type"], "MultiLayerNavigationPolicy");
+  BOOST_CHECK_EQUAL(j["kind"], "MultiLayerNavigation");
   BOOST_CHECK_EQUAL(j["axes"].size(), 2u);
   BOOST_CHECK_EQUAL(j["casts"].size(), 2u);
   BOOST_CHECK(!j.contains("surfaces"));
@@ -96,12 +100,15 @@ BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyRoundTrip) {
   auto tVolume = makeVolume();
   auto policy = makePolicy(tContext, *tVolume, *tLogger);
 
-  nlohmann::json j = MultiLayerNavigationJsonConverter::toJson(policy);
+  TrackingGeometryJsonConverter conv;
+  nlohmann::json j =
+      MultiLayerNavigationJsonConverter::encodeMultiLayerNavigationPolicy(
+          policy, conv);
 
-  // Reconstruct from JSON + the volume (surfaces come from volume, not JSON)
-  auto restored =
-      MultiLayerNavigationJsonConverter::fromJson(j, tContext, *tVolume,
-                                                  *tLogger);
+  auto policyPtr =
+      MultiLayerNavigationJsonConverter::decodeMultiLayerNavigationPolicy(
+          j, tContext, conv, *tVolume, *tLogger);
+  auto& restored = dynamic_cast<MultiLayerNavigationPolicy&>(*policyPtr);
 
   // Verify the reconstructed grid has the same axis configuration
   const auto& origGrid = policy.indexedGrid().grid;
