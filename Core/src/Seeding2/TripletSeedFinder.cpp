@@ -277,8 +277,7 @@ class Impl final : public TripletSeedFinder {
   template <typename TopDoublets>
   void createStripTripletTopCandidates(
       const SpacePointContainer2& spacePoints, const ConstSpacePointProxy2& spM,
-      const DoubletsForMiddleSp::Proxy& bottomDoublet,
-      TopDoublets& topDoublets,
+      const DoubletsForMiddleSp::Proxy& bottomDoublet, TopDoublets& topDoublets,
       TripletTopCandidates& tripletTopCandidates) const {
     const float rM = spM.zr()[1];
     const float cosPhiM = spM.xy()[0] / rM;
