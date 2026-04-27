@@ -362,4 +362,8 @@ CompositePortalLink::PortalLinkRange CompositePortalLink::links() const {
   return PortalLinkRange{m_children};
 }
 
+AxisDirection CompositePortalLink::direction() const {
+  return m_direction;
+}
+
 }  // namespace Acts

@@ -13,7 +13,6 @@
 #endif
 
 #include <cstring>
-#include <numeric>
 #include <span>
 
 namespace ActsPlugins {
@@ -72,9 +71,16 @@ TensorPtr cloneTensorMemory(const TensorPtr &ptr, std::size_t nbytes,
 
 void cudaSigmoid(Tensor<float> &tensor, cudaStream_t stream);
 
-std::pair<Tensor<float>, Tensor<std::int64_t>> cudaApplyScoreCut(
-    const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
-    float cut, cudaStream_t stream);
+Tensor<bool> cudaScoreMask(const Tensor<float> &scores, float cut,
+                           cudaStream_t stream);
+
+template <typename T>
+Tensor<T> cudaSelectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                         const ExecutionContext &execContext);
+
+template <typename T>
+Tensor<T> cudaSelectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                         const ExecutionContext &execContext);
 
 }  // namespace detail
 
@@ -92,52 +98,6 @@ void sigmoid(Tensor<float> &tensor, std::optional<cudaStream_t> stream) {
   for (auto it = tensor.data(); it != tensor.data() + tensor.size(); ++it) {
     *it = 1.f / (1.f + std::exp(-*it));
   }
-}
-
-std::pair<Tensor<float>, Tensor<std::int64_t>> applyScoreCut(
-    const Tensor<float> &scores, const Tensor<std::int64_t> &edgeIndex,
-    float cut, std::optional<cudaStream_t> stream) {
-  assert(scores.shape()[1] == 1);
-  assert(edgeIndex.shape()[0] == 2);
-  assert(edgeIndex.shape()[1] == scores.shape()[0]);
-  assert(scores.device() == edgeIndex.device());
-  ExecutionContext execContext{scores.device(), stream};
-
-  if (scores.device().type == Device::Type::eCUDA) {
-#ifdef ACTS_GNN_WITH_CUDA
-    return detail::cudaApplyScoreCut(scores, edgeIndex, cut, stream.value());
-#else
-    throw std::runtime_error(
-        "Cannot apply score cut to CUDA tensor, library was not compiled with "
-        "CUDA");
-#endif
-  }
-
-  std::vector<std::size_t> indices(scores.size());
-  std::iota(indices.begin(), indices.end(), 0);
-  indices.erase(
-      std::remove_if(indices.begin(), indices.end(),
-                     [&](std::size_t i) { return scores.data()[i] < cut; }),
-      indices.end());
-  auto n = indices.size();
-  auto outputScores =
-      Tensor<float>::Create({static_cast<std::size_t>(n), 1}, execContext);
-  auto outputEdges = Tensor<std::int64_t>::Create(
-      {2, static_cast<std::size_t>(n)}, execContext);
-
-  auto scoreIt = outputScores.data();
-  auto edgeIt1 = outputEdges.data();
-  auto edgeIt2 = outputEdges.data() + n;
-  for (auto i : indices) {
-    *scoreIt = scores.data()[i];
-    *edgeIt1 = edgeIndex.data()[i];
-    *edgeIt2 = edgeIndex.data()[i + scores.size()];
-    ++scoreIt;
-    ++edgeIt1;
-    ++edgeIt2;
-  }
-
-  return {std::move(outputScores), std::move(outputEdges)};
 }
 
 std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
@@ -221,5 +181,100 @@ std::pair<Tensor<std::int64_t>, std::optional<Tensor<float>>> applyEdgeLimit(
   return {std::move(newEdgeIndexTensor.value()),
           std::move(newEdgeFeatureTensor)};
 }
+
+Tensor<bool> scoreMask(const Tensor<float> &scores, float cut,
+                       std::optional<cudaStream_t> stream) {
+  if (scores.shape()[1] != 1) {
+    throw std::invalid_argument("scoreMask: scores must have shape [N, 1]");
+  }
+  ExecutionContext execContext{scores.device(), stream};
+
+  if (scores.device().type == Device::Type::eCUDA) {
+#ifdef ACTS_GNN_WITH_CUDA
+    return detail::cudaScoreMask(scores, cut, stream.value());
+#else
+    throw std::runtime_error(
+        "Cannot compute score mask on CUDA tensor, library was not compiled "
+        "with CUDA");
+#endif
+  }
+
+  auto mask = Tensor<bool>::Create(scores.shape(), execContext);
+  for (std::size_t i = 0; i < scores.size(); ++i) {
+    mask.data()[i] = scores.data()[i] > cut;
+  }
+  return mask;
+}
+
+template <Acts::Concepts::arithmetic T>
+Tensor<T> selectRows(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                     const ExecutionContext &execContext) {
+  detail::checkMaskCompatibility(tensor, mask, 0);
+  const auto nCols = tensor.shape()[1];
+
+  if (tensor.device().type == Device::Type::eCUDA) {
+#ifdef ACTS_GNN_WITH_CUDA
+    return detail::cudaSelectRows(tensor, mask, execContext);
+#else
+    throw std::runtime_error(
+        "Cannot selectRows on CUDA tensor, library was not compiled with CUDA");
+#endif
+  }
+
+  const std::size_t n =
+      std::count(mask.data(), mask.data() + mask.size(), true);
+  auto result = Tensor<T>::Create({n, nCols}, execContext);
+  std::size_t out = 0;
+  for (std::size_t row = 0; row < tensor.shape()[0]; ++row) {
+    if (mask.data()[row]) {
+      std::copy_n(tensor.data() + row * nCols, nCols,
+                  result.data() + out * nCols);
+      ++out;
+    }
+  }
+  return result;
+}
+
+template <Acts::Concepts::arithmetic T>
+Tensor<T> selectCols(const Tensor<T> &tensor, const Tensor<bool> &mask,
+                     const ExecutionContext &execContext) {
+  detail::checkMaskCompatibility(tensor, mask, 1);
+  const auto nRows = tensor.shape()[0];
+  const auto nColsSrc = tensor.shape()[1];
+
+  if (tensor.device().type == Device::Type::eCUDA) {
+#ifdef ACTS_GNN_WITH_CUDA
+    return detail::cudaSelectCols(tensor, mask, execContext);
+#else
+    throw std::runtime_error(
+        "Cannot selectCols on CUDA tensor, library was not compiled with CUDA");
+#endif
+  }
+
+  const std::size_t n =
+      std::count(mask.data(), mask.data() + mask.size(), true);
+  auto result = Tensor<T>::Create({nRows, n}, execContext);
+  for (std::size_t row = 0; row < nRows; ++row) {
+    std::size_t out = 0;
+    for (std::size_t col = 0; col < nColsSrc; ++col) {
+      if (mask.data()[col]) {
+        result.data()[row * n + out] = tensor.data()[row * nColsSrc + col];
+        ++out;
+      }
+    }
+  }
+  return result;
+}
+
+template Tensor<float> selectRows(const Tensor<float> &, const Tensor<bool> &,
+                                  const ExecutionContext &);
+template Tensor<std::int64_t> selectRows(const Tensor<std::int64_t> &,
+                                         const Tensor<bool> &,
+                                         const ExecutionContext &);
+template Tensor<float> selectCols(const Tensor<float> &, const Tensor<bool> &,
+                                  const ExecutionContext &);
+template Tensor<std::int64_t> selectCols(const Tensor<std::int64_t> &,
+                                         const Tensor<bool> &,
+                                         const ExecutionContext &);
 
 }  // namespace ActsPlugins
