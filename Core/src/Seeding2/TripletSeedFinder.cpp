@@ -290,13 +290,7 @@ class Impl final : public TripletSeedFinder {
     tripletTopCandidates.reserve(tripletTopCandidates.size() +
                                  topDoublets.size());
 
-    // Keep the approximate (SP-center based) cotTheta of the bottom doublet
-    // around: `cotThetaB` is overwritten inside the loop with the refined
-    // value computed after the strip coordinate correction, but the sorted
-    // early-termination logic needs to compare against the approximate value
-    // that matches the ordering of `topDoublets`.
-    const float cotThetaBApprox = bottomDoublet.cotTheta();
-    float cotThetaB = cotThetaBApprox;
+    float cotThetaB = bottomDoublet.cotTheta();
     const float erB = bottomDoublet.er();
     const float iDeltaRB = bottomDoublet.iDeltaR();
     const float Vb = bottomDoublet.v();
@@ -347,11 +341,11 @@ class Impl final : public TripletSeedFinder {
       // for any subsequent (larger) bottom cotTheta.
       if constexpr (sortedByCotTheta) {
         const float cotThetaT = topDoublet.cotTheta();
-        const float deltaCotTheta = cotThetaBApprox - cotThetaT;
+        const float deltaCotTheta = cotThetaB - cotThetaT;
         const float cotThetaDiffMax2 =
             m_cfg.cotThetaDiffMax * m_cfg.cotThetaDiffMax;
         if (deltaCotTheta * deltaCotTheta > cotThetaDiffMax2) {
-          if (cotThetaBApprox < cotThetaT) {
+          if (cotThetaB < cotThetaT) {
             break;
           }
           topDoubletOffset = topDoubletIndex + 1;
