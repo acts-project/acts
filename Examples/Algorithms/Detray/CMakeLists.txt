@@ -1,16 +1,17 @@
-acts_add_library(ExamplesTraccc INTERFACE)
+acts_add_library(ExamplesDetray INTERFACE)
 
 target_include_directories(
-    ActsExamplesTraccc
+    ActsExamplesDetray
     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_link_libraries(
-    ActsExamplesTraccc
+    ActsExamplesDetray
     INTERFACE
         Acts::ExamplesFramework
         Acts::ExamplesPropagation
         Acts::PluginDetray
+        Acts::PluginCovfie
 )
 
-acts_compile_headers(ExamplesTraccc GLOB "include/**/*.hpp")
+acts_compile_headers(ExamplesDetray GLOB "include/**/*.hpp")
