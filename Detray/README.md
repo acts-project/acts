@@ -38,16 +38,16 @@ A number of cmake preset configurations are provided and can be listed by:
 ```shell
 cmake -S Acts/Detray --list-presets
 ```
-For a developer build, the `dev-fp32` and `dev-fp64` configurations are available (`fp`: floating point precision):
+For a developer build, the `detray-dev-fp32` and `detray-dev-fp64` configurations are available (`fp`: floating point precision):
 ```shell
-cmake -S Acts/Detray -B detray-build --preset dev-fp32
+cmake -S Acts/Detray -B detray-build --preset detray-dev-fp32
 ```
 The developer presets will build the components of detray that are most commonly used. The `prefetch` presets on the other hand will configure all possible dependencies, but not automatically trigger the build of the corresponding components. For example, in order to trigger the build of the unit tests with the `prefetch` preset, the corresponding option needs to be specified:
 ```shell
-cmake -S Acts/Detray -B detray-build --preset prefetch-fp32 \
+cmake -S Acts/Detray -B detray-build --preset detray-prefetch-fp32 \
 -DDETRAY_ARRAY_PLUGIN=ON -DDETRAY_BUILD_UNITTESTS=ON
 ```
-A full build, containing all components (e.g. tests and benchmarks), can be configured using the `full-fp32` and `full-fp64` presets.
+A full build, containing all components (e.g. tests and benchmarks), can be configured using the `detray-full-fp32` and `detray-full-fp64` presets.
 
 The following cmake options are available and can also be specified explicitly for any preset:
 

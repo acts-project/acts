@@ -140,17 +140,10 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
     }
 
    private:
-    /// @returns true if incremetables are the same
-    DETRAY_HOST_DEVICE
-    friend constexpr bool operator==(const iterator &lhs,
-                                     const iterator &rhs) = default;
-
     DETRAY_HOST_DEVICE
     friend constexpr auto operator<=>(const iterator &lhs, const iterator &rhs)
       requires std::totally_ordered<incr_t>
-    {
-      return lhs.m_i <=> rhs.m_i;
-    };
+    = default;
 
     /// Current value of sequence
     incr_t m_i{};

@@ -265,7 +265,7 @@ struct index_range {
 /// @tparam N number of indices that are held by this type
 /// @tparam index_t type of indices
 template <typename index_t, std::size_t N>
-  requires(N > 0u)
+  requires(N > 1u)
 struct multi_index {
   using index_type = index_t;
 

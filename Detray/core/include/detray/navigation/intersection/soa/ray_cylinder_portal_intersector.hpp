@@ -108,8 +108,8 @@ struct ray_intersector_impl<concentric_cylindrical2D<algebra_t>, algebra_t,
 
     // If any of the the near solutions is outside the overstepping
     // tolerance, take the far solution (if it exists)
-    const auto outside_overstep_tol = path < overstep_tol;
-    if (detray::detail::any_of(outside_overstep_tol) &&
+    if (const auto outside_overstep_tol = path < overstep_tol;
+        detray::detail::any_of(outside_overstep_tol) &&
         detray::detail::all_of((discr > 0.f) || !outside_overstep_tol)) {
       is_smaller_sol =
           (math::fabs(s1) >= math::fabs(s2)) && outside_overstep_tol;
