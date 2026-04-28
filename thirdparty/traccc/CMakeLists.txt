@@ -30,11 +30,7 @@ set(TRACCC_CUSTOM_SCALARTYPE
 set(TRACCC_SETUP_VECMEM OFF CACHE BOOL "Do not set up VecMem as part of Traccc")
 set(TRACCC_SETUP_EIGEN3 OFF CACHE BOOL "Do not set up Eigen3 as part of Traccc")
 set(TRACCC_SETUP_THRUST ON CACHE BOOL "Do not set up Thrust as part of Traccc")
-set(TRACCC_SETUP_ALGEBRA_PLUGINS
-    OFF
-    CACHE BOOL
-    "Do not set up Algebra Plugins as part of Traccc"
-)
+
 set(TRACCC_SETUP_COVFIE OFF CACHE BOOL "Do not set up Covfie as part of Traccc")
 set(TRACCC_SETUP_DFELIBS
     ON
@@ -62,9 +58,21 @@ set(TRACCC_SETUP_BENCHMARKS
 )
 
 set(TRACCC_BUILD_IO
-    OFF
+    ON
     CACHE BOOL
     "Turn off the build of the Traccc IO code THIS IS TEMPORARY"
+)
+
+set(TRACCC_BUILD_PERFORMANCE
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Traccc performance code"
+)
+
+set(TRACCC_BUILD_SIMULATION
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Traccc simulation code"
 )
 
 set(TRACCC_BUILD_TESTING
@@ -73,23 +81,15 @@ set(TRACCC_BUILD_TESTING
     "Turn off the build of the Traccc unit tests"
 )
 
-if(ACTS_BUILD_EXAMPLES)
-    set(TRACCC_SETUP_TBB
-        OFF
-        CACHE BOOL
-        "Do not set up TBB as part of Traccc"
-        FORCE
-    )
-    set(TRACCC_USE_SYSTEM_TBB ON CACHE BOOL "Use system TBB" FORCE)
-    find_package(TBB REQUIRED)
+set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc" FORCE)
+set(TRACCC_USE_SYSTEM_TBB ON CACHE BOOL "Use system TBB" FORCE)
+find_package(TBB REQUIRED)
 
-    set(TRACCC_BUILD_EXAMPLES
-        ON
-        CACHE BOOL
-        "Turn off the build of the Traccc examples"
-    )
-endif()
-
+set(TRACCC_BUILD_EXAMPLES
+    OFF
+    CACHE BOOL
+    "Turn off the build of the Traccc examples"
+)
 set(TRACCC_BUILD_BENCHMARKS
     OFF
     CACHE BOOL

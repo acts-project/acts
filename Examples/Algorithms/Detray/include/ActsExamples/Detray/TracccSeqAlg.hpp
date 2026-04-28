@@ -15,7 +15,8 @@
 #include <memory>
 #include <string>
 
-// Forward-declare to keep CUDA/traccc headers out of this header.
+// Forward-declare to keep traccc cuda headers out of this header
+// You can imagine having a separate header with includes for a different backend (e.g. CPU-only)
 namespace ActsExamples {
 struct TracccChain;
 }
@@ -54,4 +55,8 @@ class TracccSeqAlgorithm final : public IAlgorithm {
   std::shared_ptr<TracccChain> m_chain;
 };
 
+<<<<<<< HEAD
 }  // namespace ActsExamples
+=======
+}  // namespace ActsExamples
+>>>>>>> b3cd6c42e (add traccc example alg)

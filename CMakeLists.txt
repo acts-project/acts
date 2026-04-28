@@ -207,12 +207,7 @@ set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(
-    ACTS_GNN_ENABLE_MODULEMAP
-    ACTS_ENABLE_CUDA
-    AND
-    ACTS_BUILD_PLUGIN_GNN
-)
+set_option_if(ACTS_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP AND ACTS_BUILD_PLUGIN_GNN)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 
@@ -588,7 +583,10 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     else()
         message(STATUS "Build Traccc plugin for CPU only")
     endif()
+<<<<<<< HEAD
 
+=======
+>>>>>>> b3cd6c42e (add traccc example alg)
     # traccc also depends on vecmem and covfie, but those plugins should always
     # be enabled if traccc is.
     if(ACTS_USE_SYSTEM_TRACCC)

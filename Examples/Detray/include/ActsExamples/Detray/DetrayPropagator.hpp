@@ -11,10 +11,10 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsExamples/Detray/DetrayStore.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
+#include "ActsExamples/Traccc/DetrayStore.hpp"
 
 #include <covfie/core/field.hpp>
 #include <detray/navigation/caching_navigator.hpp>
@@ -24,8 +24,6 @@
 #include <detray/test/common/bfield.hpp>
 #include <detray/test/utils/inspectors.hpp>
 #include <detray/test/validation/material_validation_utils.hpp>
-#include <detray/test/common/bfield.hpp>
-#include <covfie/core/field.hpp>
 
 namespace ActsExamples {
 
@@ -133,7 +131,6 @@ class DetrayPropagator : public PropagatorInterface {
       }
 
     } else {
-
       // Navigation with inspection
       using DetrayNavigator =
           detray::caching_navigator<ActsPlugins::DetrayHostDetector>;
@@ -141,6 +138,8 @@ class DetrayPropagator : public PropagatorInterface {
       // Propagator with empty actor chain (for the moment)
       using Propagator =
           detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
+
+      // using DetrayContext = typename Propagator::state::context_type;
       detray::propagation::config prop_cfg{};
       auto dCtx = prop_cfg.context;
 
