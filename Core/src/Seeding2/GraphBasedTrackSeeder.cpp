@@ -47,15 +47,26 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer2& spacePoints,
                                         const GbtsTrackingFilter& filter,
                                         const Options& options,
                                         SeedContainer2& outputSeeds) const {
+  const std::vector<std::vector<GbtsNode>> nodesPerLayer =
+      createNodes(spacePoints, maxLayers);
+
+  createSeeds(nodesPerLayer, roi, filter, options, outputSeeds);
+}
+
+void GraphBasedTrackSeeder::createSeeds(
+    const std::vector<std::vector<GbtsNode>>& nodesPerLayer,
+    const GbtsRoiDescriptor& roi, const GbtsTrackingFilter& filter,
+    const Options& options, SeedContainer2& outputSeeds) const {
   GbtsNodeStorage nodeStorage(m_geometry, m_mlLut);
 
-  std::vector<std::vector<GbtsNode>> nodesPerLayer =
-      createNodes(spacePoints, maxLayers);
   std::uint32_t nPixelLoaded = 0;
   std::uint32_t nStripLoaded = 0;
 
+  std::uint32_t nHits = 0;
+
   for (std::uint16_t l = 0; l < nodesPerLayer.size(); l++) {
     const std::vector<GbtsNode>& nodes = nodesPerLayer[l];
+    nHits += nodes.size();
 
     if (nodes.empty()) {
       continue;
@@ -96,8 +107,8 @@ void GraphBasedTrackSeeder::createSeeds(const SpacePointContainer2& spacePoints,
   ACTS_DEBUG("Reached Level " << maxLevel << " after GNN iterations");
 
   std::vector<OutputSeedProperties> vOutputSeeds;
-  extractSeedsFromTheGraph(maxLevel, graphStats.first, spacePoints.size(),
-                           edgeStorage, vOutputSeeds, filter);
+  extractSeedsFromTheGraph(maxLevel, graphStats.first, nHits, edgeStorage,
+                           vOutputSeeds, filter);
 
   ACTS_DEBUG("GBTS created " << vOutputSeeds.size() << " seeds");
   if (vOutputSeeds.empty()) {

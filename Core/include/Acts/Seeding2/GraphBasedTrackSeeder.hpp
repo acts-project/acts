@@ -193,6 +193,24 @@ class GraphBasedTrackSeeder {
                    const GbtsTrackingFilter& filter, const Options& options,
                    SeedContainer2& outputSeeds) const;
 
+  /// Create graph nodes from space points.
+  /// @param spacePoints Space point container
+  /// @param maxLayers Maximum number of layers
+  /// @return Vector of node vectors organized by layer
+  std::vector<std::vector<GbtsNode>> createNodes(
+      const SpacePointContainer2& spacePoints, std::uint32_t maxLayers) const;
+
+  /// Create seeds from space points in a region of interest.
+  /// @param nodesPerLayer Vector of node vectors organized by layer
+  /// @param roi Region of interest descriptor
+  /// @param filter Tracking filter to be applied
+  /// @param options Event based options such as magnetic field strength
+  /// @param outputSeeds Container with generated seeds
+  void createSeeds(const std::vector<std::vector<GbtsNode>>& nodesPerLayer,
+                   const GbtsRoiDescriptor& roi,
+                   const GbtsTrackingFilter& filter, const Options& options,
+                   SeedContainer2& outputSeeds) const;
+
  private:
   DerivedConfig m_cfg;
 
@@ -204,13 +222,6 @@ class GraphBasedTrackSeeder {
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 
   const Acts::Logger& logger() const { return *m_logger; }
-
-  /// Create graph nodes from space points.
-  /// @param spacePoints Space point container
-  /// @param maxLayers Maximum number of layers
-  /// @return Vector of node vectors organized by layer
-  std::vector<std::vector<GbtsNode>> createNodes(
-      const SpacePointContainer2& spacePoints, std::uint32_t maxLayers) const;
 
   /// Parse machine learning lookup table from file.
   /// @param lutInputFile Path to the lookup table input file
