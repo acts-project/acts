@@ -328,8 +328,13 @@ ProcessCode ArrowParticleOutputConverter::execute(
     z0V->UnsafeAppend(z0);
 
     vprimV->UnsafeAppend(static_cast<std::uint16_t>(bc.vertexPrimary()));
-    // ACTS SimParticle doesn't carry a parent-particle pointer; emit 0.
-    parentV->UnsafeAppend(0);
+    // Emit the parent's particle slot to match the schema used for
+    // `particle_id` above; combined with `vertex_primary` this lets
+    // consumers reconstruct parent chains. 0 means "unknown parent" — input
+    // converters with parent info (EDM4hep) populate this; simulation engines
+    // (Fatras, Geant4) currently leave it at the default.
+    const auto parentBc = particle.parentParticleId();
+    parentV->UnsafeAppend(static_cast<std::int64_t>(parentBc.particle()));
     check(primaryV->Append(bc.generation() == 0), "append primary");
   }
 
