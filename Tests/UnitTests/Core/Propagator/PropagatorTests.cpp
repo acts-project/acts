@@ -107,7 +107,7 @@ struct SurfaceObserver {
       return Result<void>::success();
     }
 
-    // calculate the intersections to the surface
+    // calculate the intersections with the surface
     const auto multiIntersection = surface->intersect(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping),
@@ -115,8 +115,7 @@ struct SurfaceObserver {
 
     const double farLimit = std::numeric_limits<double>::max();
 
-    for (auto [intersectionIndex, intersection] :
-         Acts::enumerate(multiIntersection)) {
+    for (auto intersection : multiIntersection) {
       if (intersection.isValid() &&
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
@@ -125,7 +124,7 @@ struct SurfaceObserver {
         state.stepping.stepSize.update(intersection.pathLength(),
                                        ConstrainedStep::Type::Actor);
 
-        // return true if you fall below tolerance
+        // return true if we fall below tolerance
         if (std::abs(intersection.pathLength()) <= tolerance) {
           ++result.surfaces_passed;
           result.surface_passed_r = perp(stepper.position(state.stepping));
