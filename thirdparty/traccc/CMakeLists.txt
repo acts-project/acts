@@ -69,11 +69,7 @@ set(TRACCC_BUILD_TESTING
     "Turn off the build of the Traccc unit tests"
 )
 
-set(TRACCC_SETUP_TBB
-    OFF
-    CACHE BOOL
-    "Do not set up TBB as part of Traccc"
-)
+set(TRACCC_SETUP_TBB OFF CACHE BOOL "Do not set up TBB as part of Traccc")
 
 set(TRACCC_BUILD_EXAMPLES
     OFF
@@ -82,7 +78,11 @@ set(TRACCC_BUILD_EXAMPLES
 )
 
 if(TRACCC_BUILD_EXAMPLES)
-    set(TRACC_USE_SYSTEM_TBB ON CACHE BOOL "Use the system TBB for the Traccc examples")
+    set(TRACC_USE_SYSTEM_TBB
+        ON
+        CACHE BOOL
+        "Use the system TBB for the Traccc examples"
+    )
     find_package(TBB REQUIRED)
 endif()
 
