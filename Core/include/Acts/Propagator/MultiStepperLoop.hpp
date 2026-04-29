@@ -282,6 +282,9 @@ class MultiStepperLoop final {
 
     const auto surface = par.referenceSurface().getSharedPtr();
 
+    state.components.clear();
+    state.components.reserve(par.size());
+
     for (std::size_t i = 0; i < par.size(); ++i) {
       const auto& [weight, singlePars] = par[i];
       auto& cmp = state.components.emplace_back(

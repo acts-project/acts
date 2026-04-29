@@ -85,7 +85,13 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
   /// @return The surface array
   const SurfaceArray& surfaceArray() const;
 
+  /// Constant access to config
+  /// @return config
+  const Config& config() const;
+
  private:
+  Config m_cfg;
+
   std::unique_ptr<SurfaceArray> m_surfaceArray{};
   const TrackingVolume& m_volume;
 };

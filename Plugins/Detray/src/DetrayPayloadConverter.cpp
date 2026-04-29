@@ -203,7 +203,7 @@ detray::io::surface_payload DetrayPayloadConverter::convertSurface(
   payload.transform = DetrayConversionUtils::convertTransform(
       surface.localToGlobalTransform(gctx));
   payload.source = surface.geometryId().value();
-  payload.barcode = std::nullopt;
+  payload.identifier = std::nullopt;
 
   bool isSensitive = false;
   if (m_cfg.sensitiveStrategy ==
@@ -410,7 +410,7 @@ void DetrayPayloadConverter::handlePortal(
 
 namespace {
 
-constexpr static detray::io::material_slab_payload s_dummyMaterialSlab{
+constexpr static detray::io::surface_material_payload s_dummyMaterialSlab{
     .type = detray::io::material_id::slab,
     .index_in_coll = std::numeric_limits<std::size_t>::max(),
     .thickness = 42,
@@ -420,14 +420,14 @@ constexpr static detray::io::material_slab_payload s_dummyMaterialSlab{
 }  // namespace
 
 std::pair<std::vector<detray::io::grid_payload<
-              detray::io::material_slab_payload, detray::io::material_id>>,
+              detray::io::surface_material_payload, detray::io::material_id>>,
           detray::io::material_volume_payload>
 DetrayPayloadConverter::convertMaterial(
     const TrackingVolume& volume,
     const std::unordered_map<const Surface*, std::size_t>& surfaceIndices,
     detray::io::volume_payload& volPayload) const {
   ACTS_DEBUG("Converting material for volume " << volume.volumeName());
-  std::vector<detray::io::grid_payload<detray::io::material_slab_payload,
+  std::vector<detray::io::grid_payload<detray::io::surface_material_payload,
                                        detray::io::material_id>>
       grids;
   detray::io::material_volume_payload homogeneous;
@@ -439,7 +439,8 @@ DetrayPayloadConverter::convertMaterial(
             << " surfaces (detray "
                "hack)");
   for (const auto& surface : volPayload.surfaces) {
-    auto& slabPayload = homogeneous.mat_slabs.emplace_back(s_dummyMaterialSlab);
+    auto& slabPayload =
+        homogeneous.surface_mat.emplace_back(s_dummyMaterialSlab);
     slabPayload.index_in_coll = surface.index_in_coll.value();
     slabPayload.surface.link = surface.index_in_coll.value();
   }
@@ -450,16 +451,16 @@ DetrayPayloadConverter::convertMaterial(
                             DetraySurfaceMaterial& detrayMaterial,
                             std::size_t srfIdx, const Surface& surface) {
     auto handleHomogeneous =
-        [&](const detray::io::material_slab_payload& slab) {
+        [&](const detray::io::surface_material_payload& slab) {
           // Given the pseudo slabs from before, we need to either update an
           // existing slab or create a new one.
 
           auto it = std::ranges::find_if(
-              homogeneous.mat_slabs, [srfIdx](const auto& matslab) {
+              homogeneous.surface_mat, [srfIdx](const auto& matslab) {
                 return matslab.surface.link == srfIdx;
               });
 
-          if (it != homogeneous.mat_slabs.end()) {
+          if (it != homogeneous.surface_mat.end()) {
             ACTS_VERBOSE("Adding slab to homogeneous material for surface "
                          << srfIdx);
             auto& targetSlab = *it;
@@ -469,9 +470,9 @@ DetrayPayloadConverter::convertMaterial(
           } else {
             ACTS_VERBOSE("Updating slab in homogeneous material for surface "
                          << srfIdx);
-            homogeneous.mat_slabs.emplace_back(slab);
-            homogeneous.mat_slabs.back().index_in_coll = srfIdx;
-            homogeneous.mat_slabs.back().surface.link = srfIdx;
+            homogeneous.surface_mat.emplace_back(slab);
+            homogeneous.surface_mat.back().index_in_coll = srfIdx;
+            homogeneous.surface_mat.back().surface.link = srfIdx;
           }
 
           auto sit = srfIdxToMaterial.find(srfIdx);
@@ -484,7 +485,7 @@ DetrayPayloadConverter::convertMaterial(
         };
 
     auto handleGrid = [&](const detray::io::grid_payload<
-                          detray::io::material_slab_payload,
+                          detray::io::surface_material_payload,
                           detray::io::material_id>& grid) {
       ACTS_DEBUG("Assigning grid material to surface " << srfIdx);
       auto it = srfIdxToMaterial.find(srfIdx);
@@ -534,13 +535,13 @@ DetrayPayloadConverter::convertMaterial(
 
   auto printSurfaceInfo = [&](DetraySurfaceMaterial& detrayMaterial,
                               const Surface& surface) {
-    auto handleHomogeneous = [&](const detray::io::material_slab_payload&) {
+    auto handleHomogeneous = [&](const detray::io::surface_material_payload&) {
       ACTS_VERBOSE("Surface " << surface.geometryId()
                               << " has homogeneous material");
     };
 
     auto handleGrid =
-        [&](const detray::io::grid_payload<detray::io::material_slab_payload,
+        [&](const detray::io::grid_payload<detray::io::surface_material_payload,
                                            detray::io::material_id>&) {
           ACTS_VERBOSE("Surface " << surface.geometryId()
                                   << " has grid material");
@@ -673,9 +674,9 @@ DetrayPayloadConverter::convertTrackingGeometry(
       *payloads.homogeneousMaterial;
 
   payloads.materialGrids = std::make_unique<detray::io::detector_grids_payload<
-      detray::io::material_slab_payload, detray::io::material_id>>();
+      detray::io::surface_material_payload, detray::io::material_id>>();
 
-  detray::io::detector_grids_payload<detray::io::material_slab_payload,
+  detray::io::detector_grids_payload<detray::io::surface_material_payload,
                                      detray::io::material_id>& materialGrids =
       *payloads.materialGrids;
 
@@ -753,11 +754,12 @@ DetrayPayloadConverter::convertTrackingGeometry(
     auto [grids, homogeneous] =
         convertMaterial(volume, surfaceIndices, volPayload);
 
-    ACTS_DEBUG("Volume " << volume.volumeName() << " (detray idx: "
-                         << volPayload.index.link << ") has "
-                         << homogeneous.mat_slabs.size() << " material slabs");
+    ACTS_DEBUG("Volume " << volume.volumeName()
+                         << " (detray idx: " << volPayload.index.link
+                         << ") has " << homogeneous.surface_mat.size()
+                         << " material slabs");
 
-    if (!homogeneous.mat_slabs.empty()) {
+    if (!homogeneous.surface_mat.empty()) {
       // Only add if it's not empty (it might be)
       // NOTE: Currently, it'll always be populated by at least the homogeneous
       // NOTE: Volume association is internal to

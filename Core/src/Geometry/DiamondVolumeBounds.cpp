@@ -34,6 +34,13 @@ DiamondVolumeBounds::DiamondVolumeBounds(double x1, double x2, double x3,
   buildSurfaceBounds();
 }
 
+DiamondVolumeBounds::DiamondVolumeBounds(
+    const std::array<double, eSize>& values) noexcept(false)
+    : m_values(values) {
+  checkConsistency();
+  buildSurfaceBounds();
+}
+
 std::vector<double> DiamondVolumeBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }

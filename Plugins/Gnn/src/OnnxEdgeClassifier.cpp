@@ -19,16 +19,6 @@ template <typename T>
 Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, ActsPlugins::Tensor<T> &tensor,
                   std::size_t rank = 2) {
   assert(rank == 1 || rank == 2);
-  ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
-
-  if constexpr (std::is_same_v<T, float>) {
-    onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT;
-  } else if constexpr (std::is_same_v<T, std::int64_t>) {
-    onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
-  } else {
-    throw std::runtime_error(
-        "Cannot convert ActsPlugins::Tensor to Ort::Value (datatype)");
-  }
 
   bc::static_vector<std::int64_t, 2> shape;
   for (auto size : tensor.shape()) {
@@ -39,8 +29,8 @@ Ort::Value toOnnx(Ort::MemoryInfo &memoryInfo, ActsPlugins::Tensor<T> &tensor,
   }
 
   assert(shape.size() == rank);
-  return Ort::Value::CreateTensor(memoryInfo, tensor.data(), tensor.nbytes(),
-                                  shape.data(), shape.size(), onnxType);
+  return Ort::Value::CreateTensor<T>(memoryInfo, tensor.data(), tensor.size(),
+                                     shape.data(), shape.size());
 }
 
 }  // namespace
@@ -84,13 +74,16 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
   sessionOptions.SetIntraOpNumThreads(1);
   sessionOptions.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+  sessionOptions.SetExecutionMode(ORT_SEQUENTIAL);
 
-#ifndef ACTS_GNN_CPUONLY
-  ACTS_INFO("Try to add ONNX execution provider for CUDA");
-  OrtCUDAProviderOptions cuda_options;
-  cuda_options.device_id = 0;
-  sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
-#endif
+  if (m_cfg.device.isCuda()) {
+    ACTS_INFO("Try to add ONNX execution provider for CUDA");
+    OrtCUDAProviderOptions cuda_options;
+    cuda_options.device_id = m_cfg.device.index;
+    sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
+  } else {
+    ACTS_INFO("Using CPU execution provider for ONNX");
+  }
 
   m_model = std::make_unique<Ort::Session>(*m_env, m_cfg.modelPath.c_str(),
                                            sessionOptions);
@@ -119,14 +112,11 @@ OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
 PipelineTensors OnnxEdgeClassifier::operator()(
     PipelineTensors tensors, const ExecutionContext &execContext) {
-  const char *deviceStr = "Cpu";
-  if (execContext.device.type == Device::Type::eCUDA) {
-    deviceStr = "Cuda";
-  }
-
-  ACTS_DEBUG("Create ORT memory info (" << deviceStr << ")");
-  Ort::MemoryInfo memoryInfo(deviceStr, OrtArenaAllocator,
-                             execContext.device.index, OrtMemTypeDefault);
+  auto memoryInfo =
+      tensors.nodeFeatures.device().isCpu()
+          ? Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)
+          : Ort::MemoryInfo("Cuda", OrtArenaAllocator, execContext.device.index,
+                            OrtMemTypeDefault);
 
   bc::static_vector<Ort::Value, 3> inputTensors;
   bc::static_vector<const char *, 3> inputNames;
@@ -134,16 +124,30 @@ PipelineTensors OnnxEdgeClassifier::operator()(
   // Node tensor
   inputTensors.push_back(toOnnx(memoryInfo, tensors.nodeFeatures));
   inputNames.push_back(m_inputNames.at(0).c_str());
+  ACTS_DEBUG("Node features shape: (" << tensors.nodeFeatures.shape()[0] << ", "
+                                      << tensors.nodeFeatures.shape()[1]
+                                      << ")");
 
   // Edge tensor
   inputTensors.push_back(toOnnx(memoryInfo, tensors.edgeIndex));
   inputNames.push_back(m_inputNames.at(1).c_str());
+  ACTS_DEBUG("Edge index shape: (" << tensors.edgeIndex.shape()[0] << ", "
+                                   << tensors.edgeIndex.shape()[1] << ")");
+
+  // If the model has three inputs, we require edge features, otherwise throw
+  if (m_inputNames.size() == 3 && !tensors.edgeFeatures.has_value()) {
+    throw std::invalid_argument(
+        "ONNX edge classifier model has three inputs, but no edge features "
+        "provided!");
+  }
 
   // Edge feature tensor
-  std::optional<Tensor<float>> edgeFeatures;
   if (m_inputNames.size() == 3 && tensors.edgeFeatures.has_value()) {
     inputTensors.push_back(toOnnx(memoryInfo, *tensors.edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
+    ACTS_DEBUG("Edge features shape: ("
+               << tensors.edgeFeatures->shape()[0] << ", "
+               << tensors.edgeFeatures->shape()[1] << ")");
   }
 
   // Output score tensor
