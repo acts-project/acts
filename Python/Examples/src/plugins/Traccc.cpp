@@ -21,7 +21,6 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsTraccc, traccc) {
-
   ACTS_PYTHON_DECLARE_ALGORITHM(TracccSeqAlgorithm, traccc,
                                 "TracccSeqAlgorithm", detectorFile,
                                 digitizationFile, conditionsFile, materialFile,

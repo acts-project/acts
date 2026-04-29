@@ -16,7 +16,8 @@
 #include <string>
 
 // Forward-declare to keep traccc cuda headers out of this header
-// You can imagine having a separate header with includes for a different backend (e.g. CPU-only)
+// You can imagine having a separate header with includes for a different
+// backend (e.g. CPU-only)
 namespace ActsExamples {
 struct TracccChain;
 }

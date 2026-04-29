@@ -25,6 +25,7 @@ from acts.examples.traccc import *
 
 u = acts.UnitConstants
 
+
 def make_sequencer(
     s: acts.examples.Sequencer,
     detectorFile: Path,

@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Traccc/TracccSeqAlg.hpp"
+
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 // This is a separate file that maintains all the cuda headers
