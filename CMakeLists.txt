@@ -402,7 +402,7 @@ macro(enable_cuda)
     )
     if(NOT CMAKE_CUDA_ARCHITECTURES)
         set(CMAKE_CUDA_ARCHITECTURES
-            "80;86;90"
+            "75;80;86;90"
             CACHE STRING
             "CUDA architectures to generate code for"
         )
