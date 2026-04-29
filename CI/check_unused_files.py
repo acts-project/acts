@@ -47,6 +47,8 @@ EXCLUDE_FILES = (
     "lazy_autodoc.py",
     "codegen/src/codegen/sympy_common.py",
     "CompressedIO.h",
+    "GeometryModule.h",
+    "runtime_geometry_modules.md",
     # Files for python binding generation
     "tgeo_aux.py.in",
     "serve.py",
@@ -61,8 +63,6 @@ EXCLUDE_FILES = (
     "Core/include/Acts/EventData/detail/ParameterTraits.hpp",
     "Core/include/Acts/Seeding/PathSeeder.hpp",
     "Tests/CommonHelpers/include/ActsTests/CommonHelpers/TestSpacePoint.hpp",
-    "GeometryModule.h",
-    "runtime_geometry_modules.md",
 )
 SUFFIX_CPP = (
     ".hpp",
@@ -109,10 +109,13 @@ SUFFIX_OTHER = (
 
 
 def filter_paths(names, root, exclude_paths=(), exclude_files=()):
-    root = Path(root)
+    """
+    Filter names from os.walk() based on path substrings and file rules.
+    Excludes entries if their full path matches exclude_paths or exclude_files.
+    """
 
     def keep(name):
-        p = root / name
+        p = Path(root) / name
         p_str = p.as_posix()
         return not any(ep in p_str for ep in exclude_paths) and not any(
             ef in p_str if "/" in ef else p.name == ef for ef in exclude_files
@@ -132,8 +135,8 @@ def file_can_be_removed(searchstring, scope):
 def count_files(path="."):
     count = 0
     for root, dirs, files in os.walk(path):
-        dirs[:] = filter_paths(dirs, Path(root), EXCLUDE_PATHS)
-        files = filter_paths(files, Path(root), EXCLUDE_PATHS, EXCLUDE_FILES)
+        dirs[:] = filter_paths(dirs, root, EXCLUDE_PATHS)
+        files = filter_paths(files, root, EXCLUDE_PATHS, EXCLUDE_FILES)
 
         count += len(files)
 
@@ -141,18 +144,17 @@ def count_files(path="."):
 
 
 def check_wrong_extensions(walk_root):
+    """
+    Collect files with disallowed suffixes. Returns the number of problematic files.
+    """
     suffix_allowed = (
-        SUFFIX_CPP
-        + SUFFIX_IMAGE
-        + SUFFIX_PYTHON
-        + SUFFIX_DOC
-        + SUFFIX_OTHER
+        SUFFIX_CPP + SUFFIX_IMAGE + SUFFIX_PYTHON + SUFFIX_DOC + SUFFIX_OTHER
     )
 
     wrong_extension = []
     for root, dirs, files in os.walk(walk_root):
-        dirs[:] = filter_paths(dirs, Path(root), EXCLUDE_PATHS)
-        files = filter_paths(files, Path(root), EXCLUDE_PATHS, EXCLUDE_FILES)
+        dirs[:] = filter_paths(dirs, root, EXCLUDE_PATHS)
+        files = filter_paths(files, root, EXCLUDE_PATHS, EXCLUDE_FILES)
 
         for f in files:
             p = Path(root) / f
@@ -192,8 +194,8 @@ def main():
 
     # walk over all files
     for root, dirs, files in os.walk("."):
-        dirs[:] = filter_paths(dirs, Path(root), EXCLUDE_PATHS)
-        files = filter_paths(files, Path(root), EXCLUDE_PATHS, EXCLUDE_FILES)
+        dirs[:] = filter_paths(dirs, root, EXCLUDE_PATHS)
+        files = filter_paths(files, root, EXCLUDE_PATHS, EXCLUDE_FILES)
 
         # Skip base-directory
         if str(Path(root)) == ".":
