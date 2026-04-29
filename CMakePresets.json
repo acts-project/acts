@@ -162,24 +162,6 @@
             }
         },
         {
-            "name": "gitlab-ci-traccc",
-            "displayName": "GitLab-CI Traccc",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_STANDARD": "20",
-                "CMAKE_CXX_FLAGS": "-w",
-                "CMAKE_CUDA_FLAGS": "-w",
-                "ACTS_BUILD_PLUGIN_JSON": "ON",
-                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
-                "ACTS_BUILD_PLUGIN_ROOT": "ON",
-                "ACTS_BUILD_PLUGIN_TRACCC": "ON",
-                "ACTS_ENABLE_CUDA": "ON",
-                "ACTS_BUILD_PYTHON_BINDINGS": "ON",
-                "ACTS_BUILD_EXAMPLES": "ON",
-                "CMAKE_CUDA_ARCHITECTURES": "native"
-            }
-        },
-        {
             "name": "gitlab-ci-tensorrt",
             "displayName": "GitLab-CI Tensorrt",
             "generator": "Ninja",

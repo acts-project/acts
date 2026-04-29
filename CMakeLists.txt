@@ -86,13 +86,6 @@ option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GNN "Build the GNN plugin" OFF)
 option(ACTS_GNN_ENABLE_ONNX "Build the Onnx backend for the gnn plugin" OFF)
 option(ACTS_GNN_ENABLE_TORCH "Build the torchscript backend for the gnn plugin" ON)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-option(ACTS_ENABLE_CUDA "Enable CUDA for the gnn/traccc plugin" OFF)
-=======
->>>>>>> 65ffefb3b (set traccc tag, adding sequence example)
->>>>>>> 1326bacb1 (set traccc tag, adding sequence example)
 option(ACTS_GNN_ENABLE_MODULEMAP "Enable Module-Map-based graph construction" OFF)
 option(ACTS_GNN_ENABLE_TENSORRT "Enable the native TensorRT inference modules" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
@@ -214,7 +207,7 @@ set_option_if(ACTS_BUILD_PLUGIN_GNN ACTS_BUILD_EXAMPLES_GNN)
 set_option_if(ACTS_BUILD_PLUGIN_FPEMON ACTS_BUILD_EXAMPLES)
 set_option_if(ACTS_BUILD_PLUGIN_JSON ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
-set_option_if(ACTS_GNN_ENABLE_MODULEMAP ACTS_ENABLE_CUDA AND ACTS_BUILD_PLUGIN_GNN)
+set_option_if(ACTS_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP AND ACTS_BUILD_PLUGIN_GNN)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
 
@@ -310,13 +303,8 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
-<<<<<<< HEAD
 set(_acts_detray_version 1.0.1)
 set(_acts_traccc_version 1.2.0)
-=======
-set(_acts_detray_version 0.112.0)
-set(_acts_traccc_version 1.1.0)
->>>>>>> dd23d2850 (switching to traccc tag)
 set(_acts_covfie_version 0.15.2)
 set(_acts_vecmem_version 1.24.0)
 set(_acts_annoy_version 1.17.3)
@@ -595,16 +583,7 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     else()
         message(STATUS "Build Traccc plugin for CPU only")
     endif()
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
->>>>>>> b3cd6c42e (add traccc example alg)
-=======
-=======
-
->>>>>>> 65ffefb3b (set traccc tag, adding sequence example)
->>>>>>> 1326bacb1 (set traccc tag, adding sequence example)
     # traccc also depends on vecmem and covfie, but those plugins should always
     # be enabled if traccc is.
     if(ACTS_USE_SYSTEM_TRACCC)
