@@ -152,7 +152,6 @@ class DetrayPropagator : public PropagatorInterface {
         // Run the detray propagation
         propagator.propagate(propagation);
       } else {
-        // typename field_t bfield_view(m_cfg.field);
         typename Propagator::state propagation(
             track, m_cfg.field, m_cfg.detrayStore->detector, dCtx);
         // Run the detray propagation

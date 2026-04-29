@@ -6,18 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-<<<<<<< HEAD
-// TracccChain.hpp must come first — gives the full definition of TracccChain
-// and EventResult that this TU needs for make_shared and processEvent.
-#include "ActsExamples/Traccc/TracccSeqAlg.hpp"
-
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
-=======
 #include "ActsExamples/Traccc/TracccSeqAlg.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 // This is a separate file that maintains all the cuda headers
->>>>>>> b3cd6c42e (add traccc example alg)
 #include "ActsExamples/Traccc/TracccChain.hpp"
 
 #include <stdexcept>
@@ -51,19 +43,6 @@ TracccSeqAlgorithm::TracccSeqAlgorithm(
 ProcessCode TracccSeqAlgorithm::execute(const AlgorithmContext& ctx) const {
   const std::size_t eventId = ctx.eventNumber;
 
-<<<<<<< HEAD
-  ACTS_DEBUG("Processing event " << eventId);
-
-  EventResult result = processEvent(m_chain, m_cfg.dataDirectory, eventId);
-
-  ACTS_DEBUG("cells=" << result.n_cells
-                      << " measurements=" << result.n_measurements
-                      << " spacepoints=" << result.n_spacepoints
-                      << " seeds=" << result.n_seeds
-                      << " found_tracks=" << result.n_found_tracks
-                      << " resolved=" << result.n_resolved_tracks
-                      << " fitted=" << result.n_fitted_tracks);
-=======
   ACTS_INFO("Processing event " << eventId);
 
   EventResult result = processEvent(m_chain, m_cfg.dataDirectory, eventId);
@@ -76,7 +55,6 @@ ProcessCode TracccSeqAlgorithm::execute(const AlgorithmContext& ctx) const {
   ACTS_INFO("found " << result.n_found_tracks << " tracks,");
   ACTS_INFO("resolved " << result.n_resolved_tracks << " tracks,");
   ACTS_INFO("and fitted " << result.n_fitted_tracks << " tracks.");
->>>>>>> b3cd6c42e (add traccc example alg)
 
   return ProcessCode::SUCCESS;
 }

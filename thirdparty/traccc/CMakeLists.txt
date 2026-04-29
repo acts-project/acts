@@ -43,12 +43,6 @@ set(TRACCC_SETUP_ACTS OFF CACHE BOOL "Do not set up ACTS as part of Traccc")
 if(ACTS_ENABLE_CUDA)
     message(STATUS "Enabling CUDA support for traccc")
     set(TRACCC_BUILD_CUDA ON CACHE BOOL "Build Traccc with CUDA support")
-    set(CMAKE_CUDA_ARCHITECTURES
-        "native"
-        CACHE STRING
-        "CUDA architectures"
-        FORCE
-    )
 endif()
 
 set(TRACCC_SETUP_BENCHMARKS

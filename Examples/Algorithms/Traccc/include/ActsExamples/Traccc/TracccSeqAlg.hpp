@@ -55,8 +55,4 @@ class TracccSeqAlgorithm final : public IAlgorithm {
   std::shared_ptr<TracccChain> m_chain;
 };
 
-<<<<<<< HEAD
 }  // namespace ActsExamples
-=======
-}  // namespace ActsExamples
->>>>>>> b3cd6c42e (add traccc example alg)
