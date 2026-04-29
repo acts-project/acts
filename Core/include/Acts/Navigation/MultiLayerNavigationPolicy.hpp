@@ -78,11 +78,9 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   /// @return The indexed grid
   const IndexedUpdatorType& indexedGrid() const { return m_indexedGrid; }
 
-  /// @brief Access the bin expansion used to fill the grid
-  /// @return The bin expansion
-  const std::vector<std::size_t>& binExpansion() const {
-    return m_binExpansion;
-  }
+  /// @brief Access the configuration
+  /// @return The configuration
+  const Config& config() const { return m_config; }
 
  private:
   // The tracking volume
@@ -91,8 +89,8 @@ class MultiLayerNavigationPolicy : public INavigationPolicy {
   // The grid that holds the indexed surfaces
   IndexedUpdatorType m_indexedGrid;
 
-  // The bin expansion used when filling the grid
-  std::vector<std::size_t> m_binExpansion;
+  // The navigation configuration
+  Config m_config;
 };
 
 static_assert(NavigationPolicyConcept<MultiLayerNavigationPolicy>);
