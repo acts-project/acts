@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -43,6 +44,12 @@ class ACTS_ARROW_EXPORT ArrowTrackOutputConverter final
     /// the @c ArrowParticleOutputConverter consumes for that table — leaving
     /// it empty disables index resolution and forces the unmatched sentinel.
     std::string inputParticles;
+    /// Optional measurement → sim-hit map. When set, each track-state's
+    /// measurement index is translated to one or more sim-hit indices (the
+    /// row indices of the corresponding hits parquet table); without it,
+    /// @c hit_ids is left empty so consumers don't mistake measurement
+    /// indices for sim-hit indices.
+    std::string inputMeasurementSimHitsMap;
     /// Output whiteboard key for the resulting @c arrow::Table.
     std::string outputTable = "tracks";
     /// If false, the @c t (perigee time) column is still in the schema but
@@ -67,9 +74,11 @@ class ACTS_ARROW_EXPORT ArrowTrackOutputConverter final
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
 
-  WriteDataHandle<std::shared_ptr<arrow::Table>> m_outputTable{
-      this, "OutputTable"};
+  WriteDataHandle<std::shared_ptr<arrow::Table>> m_outputTable{this,
+                                                               "OutputTable"};
 };
 
 }  // namespace ActsExamples

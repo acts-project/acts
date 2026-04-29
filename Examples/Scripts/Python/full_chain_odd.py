@@ -538,6 +538,7 @@ if args.output_parquet:
     try:
         from acts.examples.arrow import (
             ArrowParticleOutputConverter,
+            ArrowSimHitOutputConverter,
             ArrowTrackOutputConverter,
             ParquetWriter,
         )
@@ -568,6 +569,19 @@ if args.output_parquet:
         f"{_key}_arrow": f"{_key}.parquet" for _key in _parquet_particles
     }
 
+    s.addAlgorithm(
+        ArrowSimHitOutputConverter(
+            level=acts.logging.INFO,
+            inputSimHits="simhits",
+            inputParticles="particles_simulated",
+            inputMeasurements="measurements",
+            inputSimHitMeasurementsMap="simhit_measurements_map",
+            outputTable="simhits_arrow",
+            trackingGeometry=trackingGeometry,
+        )
+    )
+    _parquet_collections["simhits_arrow"] = "simhits.parquet"
+
     if args.reco:
         s.addAlgorithm(
             ArrowTrackOutputConverter(
@@ -575,6 +589,7 @@ if args.output_parquet:
                 inputTracks="tracks",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticles="particles_simulated",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
                 outputTable="tracks_arrow",
             )
         )
