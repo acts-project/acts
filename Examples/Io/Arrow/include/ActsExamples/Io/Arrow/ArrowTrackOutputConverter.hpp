@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -35,10 +36,19 @@ class ACTS_ARROW_EXPORT ArrowTrackOutputConverter final
     /// Input @c ConstTrackContainer on the whiteboard.
     std::string inputTracks;
     /// Optional input track-to-particle matching on the whiteboard. If empty,
-    /// @c majority_particle_id is filled with zeros.
+    /// @c majority_particle_id is filled with the unmatched sentinel.
     std::string inputTrackParticleMatching;
+    /// Particle container used to resolve the matched truth particle's row
+    /// index in the corresponding parquet table. Must be the same container
+    /// the @c ArrowParticleOutputConverter consumes for that table — leaving
+    /// it empty disables index resolution and forces the unmatched sentinel.
+    std::string inputParticles;
     /// Output whiteboard key for the resulting @c arrow::Table.
     std::string outputTable = "tracks";
+    /// If false, the @c t (perigee time) column is still in the schema but
+    /// every cell is written as null. Lets downstream readers consume a
+    /// stable schema regardless of whether the producer carried time info.
+    bool writeTime = true;
   };
 
   explicit ArrowTrackOutputConverter(
@@ -56,6 +66,7 @@ class ACTS_ARROW_EXPORT ArrowTrackOutputConverter final
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 
   WriteDataHandle<std::shared_ptr<arrow::Table>> m_outputTable{
       this, "OutputTable"};

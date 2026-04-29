@@ -50,6 +50,6 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
         declareAlgorithm<ArrowTrackOutputConverter, ArrowOutputConverter>(
             m, "ArrowTrackOutputConverter");
     ACTS_PYTHON_STRUCT(c, inputTracks, inputTrackParticleMatching,
-                       outputTable);
+                       inputParticles, outputTable, writeTime);
   }
 }

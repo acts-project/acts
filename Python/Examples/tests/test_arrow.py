@@ -109,6 +109,20 @@ def _assert_particles_parquet(path: Path, expected_events: int) -> None:
         ), f"{path.name}: all events are empty ({counts})"
 
 
+def _assert_parquet_reader_config(
+    inputDir: Path, collections: dict[str, str], expected_events: int
+) -> None:
+    from acts.examples.arrow import ParquetReader
+
+    reader = ParquetReader(
+        level=acts.logging.INFO,
+        inputDir=str(inputDir),
+        collections=collections,
+    )
+
+    assert reader.availableEvents() == (0, expected_events)
+
+
 def _add_arrow_writer(
     s: Sequencer,
     outputDir: Path,
@@ -160,6 +174,11 @@ def test_particle_gun_generated(tmp_path, ptcl_gun):
     s.run()
 
     _assert_particles_parquet(tmp_path / "particles_generated_arrow.parquet", nevents)
+    _assert_parquet_reader_config(
+        tmp_path,
+        {"particles_generated_arrow": "particles_generated_arrow.parquet"},
+        nevents,
+    )
 
 
 def test_particle_gun_fatras(tmp_path, fatras):

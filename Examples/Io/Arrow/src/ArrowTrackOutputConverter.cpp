@@ -27,17 +27,27 @@ namespace {
 /// list element at row @c N holds all tracks of event @c N. The @c hit_ids
 /// column is a list-of-list so each track keeps its own vector of
 /// measurement indices.
+/// Helper: a `list<T>` column whose inner elements are nullable. We use this
+/// for the perigee parameters so individual tracks without a reference
+/// surface emit a real null instead of a NaN sentinel.
+std::shared_ptr<arrow::DataType> nullableFloatList() {
+  return arrow::list(arrow::field("item", arrow::float32(), true));
+}
+
 std::shared_ptr<arrow::Schema> trackSchema() {
   return arrow::schema({
-      arrow::field("d0", arrow::list(arrow::float32()), false),
-      arrow::field("z0", arrow::list(arrow::float32()), false),
-      arrow::field("phi", arrow::list(arrow::float32()), false),
-      arrow::field("theta", arrow::list(arrow::float32()), false),
-      arrow::field("qop", arrow::list(arrow::float32()), false),
-      arrow::field("t", arrow::list(arrow::float32()), false),
+      arrow::field("d0", nullableFloatList(), false),
+      arrow::field("z0", nullableFloatList(), false),
+      arrow::field("phi", nullableFloatList(), false),
+      arrow::field("theta", nullableFloatList(), false),
+      arrow::field("qop", nullableFloatList(), false),
       arrow::field("majority_particle_id", arrow::list(arrow::uint64()), false),
       arrow::field("hit_ids", arrow::list(arrow::list(arrow::uint32())), false),
       arrow::field("track_id", arrow::list(arrow::uint16()), false),
+      // `t` is also nullable at the outer level so `writeTime=false` can
+      // emit a single null per event row (most compact representation of
+      // "no time data") instead of an opened list of N inner nulls.
+      arrow::field("t", nullableFloatList(), true),
   });
 }
 
@@ -60,7 +70,9 @@ ArrowTrackOutputConverter::ArrowTrackOutputConverter(
     throw std::invalid_argument("Missing output table name");
   }
   m_inputTracks.initialize(m_cfg.inputTracks);
-  m_inputTrackParticleMatching.maybeInitialize(m_cfg.inputTrackParticleMatching);
+  m_inputTrackParticleMatching.maybeInitialize(
+      m_cfg.inputTrackParticleMatching);
+  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_outputTable.initialize(m_cfg.outputTable);
 }
 
@@ -75,6 +87,8 @@ ProcessCode ArrowTrackOutputConverter::execute(
       m_inputTrackParticleMatching.isInitialized()
           ? &m_inputTrackParticleMatching(ctx)
           : nullptr;
+  const SimParticleContainer* particles =
+      m_inputParticles.isInitialized() ? &m_inputParticles(ctx) : nullptr;
 
   auto* pool = arrow::default_memory_pool();
 
@@ -90,15 +104,21 @@ ProcessCode ArrowTrackOutputConverter::execute(
   arrow::ListBuilder hitIdsList(
       pool, std::make_shared<arrow::ListBuilder>(
                 pool, std::make_shared<arrow::UInt32Builder>(pool)));
-  arrow::ListBuilder trackIdList(
-      pool, std::make_shared<arrow::UInt16Builder>(pool));
+  arrow::ListBuilder trackIdList(pool,
+                                 std::make_shared<arrow::UInt16Builder>(pool));
 
   check(d0List.Append(), "open d0 list");
   check(z0List.Append(), "open z0 list");
   check(phiList.Append(), "open phi list");
   check(thetaList.Append(), "open theta list");
   check(qopList.Append(), "open qop list");
-  check(tList.Append(), "open t list");
+  if (m_cfg.writeTime) {
+    check(tList.Append(), "open t list");
+  } else {
+    // Whole-list null: encodes "no time data" with one definition-level
+    // entry instead of N per-track inner nulls.
+    check(tList.AppendNull(), "append null t list");
+  }
   check(majIdList.Append(), "open majority_particle_id list");
   check(hitIdsList.Append(), "open hit_ids outer list");
   check(trackIdList.Append(), "open track_id list");
@@ -112,7 +132,8 @@ ProcessCode ArrowTrackOutputConverter::execute(
   auto* majIdV = static_cast<arrow::UInt64Builder*>(majIdList.value_builder());
   auto* hitIdsInner =
       static_cast<arrow::ListBuilder*>(hitIdsList.value_builder());
-  auto* hitIdsV = static_cast<arrow::UInt32Builder*>(hitIdsInner->value_builder());
+  auto* hitIdsV =
+      static_cast<arrow::UInt32Builder*>(hitIdsInner->value_builder());
   auto* trackIdV =
       static_cast<arrow::UInt16Builder*>(trackIdList.value_builder());
 
@@ -122,11 +143,16 @@ ProcessCode ArrowTrackOutputConverter::execute(
   check(phiV->Reserve(n), "reserve phi");
   check(thetaV->Reserve(n), "reserve theta");
   check(qopV->Reserve(n), "reserve qop");
-  check(tV->Reserve(n), "reserve t");
+  if (m_cfg.writeTime) {
+    check(tV->Reserve(n), "reserve t");
+  }
   check(majIdV->Reserve(n), "reserve majority_particle_id");
   check(trackIdV->Reserve(n), "reserve track_id");
 
-  constexpr float kNaN = std::numeric_limits<float>::quiet_NaN();
+  // Sentinel for "no matched particle": an out-of-range row index. Real
+  // indices are < particles->size(), so this can never collide.
+  constexpr std::uint64_t kUnmatched =
+      std::numeric_limits<std::uint64_t>::max();
 
   for (const auto& track : tracks) {
     if (track.hasReferenceSurface()) {
@@ -136,22 +162,33 @@ ProcessCode ArrowTrackOutputConverter::execute(
       phiV->UnsafeAppend(static_cast<float>(p[Acts::eBoundPhi]));
       thetaV->UnsafeAppend(static_cast<float>(p[Acts::eBoundTheta]));
       qopV->UnsafeAppend(static_cast<float>(p[Acts::eBoundQOverP]));
-      tV->UnsafeAppend(static_cast<float>(p[Acts::eBoundTime]));
+      if (m_cfg.writeTime) {
+        tV->UnsafeAppend(static_cast<float>(p[Acts::eBoundTime]));
+      }
     } else {
-      d0V->UnsafeAppend(kNaN);
-      z0V->UnsafeAppend(kNaN);
-      phiV->UnsafeAppend(kNaN);
-      thetaV->UnsafeAppend(kNaN);
-      qopV->UnsafeAppend(kNaN);
-      tV->UnsafeAppend(kNaN);
+      d0V->UnsafeAppendNull();
+      z0V->UnsafeAppendNull();
+      phiV->UnsafeAppendNull();
+      thetaV->UnsafeAppendNull();
+      qopV->UnsafeAppendNull();
+      if (m_cfg.writeTime) {
+        tV->UnsafeAppendNull();
+      }
     }
 
-    std::uint64_t majId = 0;
-    if (matching != nullptr) {
+    // Resolve the matched truth barcode to its row index in the configured
+    // particle container so it joins against the particle table's
+    // `particle_id` column.
+    std::uint64_t majId = kUnmatched;
+    if (matching != nullptr && particles != nullptr) {
       auto it = matching->find(track.index());
       if (it != matching->end() && it->second.particle.has_value()) {
-        majId = static_cast<std::uint64_t>(
-            it->second.particle.value().particle());
+        const auto& bc = it->second.particle.value();
+        auto pIt = particles->find(bc);
+        if (pIt != particles->end()) {
+          majId = static_cast<std::uint64_t>(
+              std::distance(particles->begin(), pIt));
+        }
       }
     }
     majIdV->UnsafeAppend(majId);
@@ -178,8 +215,8 @@ ProcessCode ArrowTrackOutputConverter::execute(
 
   std::vector<std::shared_ptr<arrow::Array>> arrays = {
       finish(d0List),     finish(z0List),      finish(phiList),
-      finish(thetaList),  finish(qopList),     finish(tList),
-      finish(majIdList),  finish(hitIdsList),  finish(trackIdList),
+      finish(thetaList),  finish(qopList),     finish(majIdList),
+      finish(hitIdsList), finish(trackIdList), finish(tList),
   };
 
   auto table = arrow::Table::Make(trackSchema(), arrays);

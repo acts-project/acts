@@ -15,7 +15,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 namespace ActsExamples {
 
@@ -23,22 +23,25 @@ namespace ActsExamples {
 /// layout: one row per event, each column a @c list<T> of the per-object
 /// values for that event.
 ///
-/// For each configured collection name the reader opens
-/// @c <inputDir>/<collection>.parquet, pre-loads the full table, and on each
-/// @c read() call filters out the row with the matching @c event_id and
-/// parks it on the whiteboard under the collection name. The @c event_id
-/// column is stripped on the way out.
+/// For each configured collection, the reader opens the configured Parquet
+/// file path, pre-loads the full table, and on each @c read() call filters out
+/// the row with the matching @c event_id and parks it on the whiteboard under
+/// the collection name. The @c event_id column is stripped on the way out.
 ///
 /// The event count is taken from the Parquet footer (@c num_rows). All input
 /// files must agree on their row count.
 class ACTS_ARROW_EXPORT ParquetReader : public IReader {
  public:
   struct Config {
-    /// Directory containing the input Parquet files.
+    /// Base input directory. Relative @c collections paths are resolved
+    /// against this directory; absolute paths are used as-is.
     std::filesystem::path inputDir;
-    /// Collection names. Each name maps to a file @c <inputDir>/<name>.parquet
-    /// and a whiteboard key of the same name.
-    std::vector<std::string> collections;
+
+    /// Collections to read, keyed by whiteboard collection name. The value is
+    /// the input Parquet file path. A relative path is interpreted relative to
+    /// @c inputDir; an absolute path is used directly. No two collections may
+    /// resolve to the same input path.
+    std::unordered_map<std::string, std::filesystem::path> collections;
   };
 
   /// Construct the reader.
