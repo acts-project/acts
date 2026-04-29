@@ -5,6 +5,100 @@ import os
 import sys
 import subprocess
 
+EXCLUDE_DIRS = (
+    "Scripts",
+    "thirdparty",
+    "CI",
+    "Python",
+    "git",
+    "cmake",
+    ".git",
+    ".github",
+    ".idea",
+    ".devcontainer",
+)
+EXCLUDE_FILES = (
+    "acts_logo_colored.svg",
+    ".gitignore",
+    "README.md",
+    "CMakeLists.txt",
+    # Filename not completed in source
+    "vertexing_event_mu20_beamspot.csv",
+    "vertexing_event_mu20_tracks.csv",
+    "vertexing_event_mu20_vertices_AMVF.csv",
+    "event000000001-MuonDriftCircle.csv",
+    "event000000001-MuonSimHit.csv",
+    # TODO Move the following files to a better place?
+    "Magfield.ipynb",
+    "SolenoidField.ipynb",
+    # TODO Add README next to the following files?
+    "generic-input-config.json",
+    "generic-alignment-geo.json",
+    "odd-digi-smearing-config-notime.json",
+    # TODO Mention these files somewhere?
+    "generate_particle_data_table.py",
+    "lazy_autodoc.py",
+    "codegen/src/codegen/sympy_common.py",
+    "CompressedIO.h",
+    # Files for python binding generation
+    "tgeo_aux.py.in",
+    "serve.py",
+    "SNIPPETS.md",
+    "todo.md",
+    "bugs.md",
+    "deprecated.md",
+    "acts-version-manager.js",
+    "tex-mml-chtml.js",
+    "Python/conftest.py",
+    # Temporarily excluded files. TODO remove in next major release.
+    "Core/include/Acts/EventData/detail/ParameterTraits.hpp",
+    "Core/include/Acts/Seeding/PathSeeder.hpp",
+    "Tests/CommonHelpers/include/ActsTests/CommonHelpers/TestSpacePoint.hpp",
+    "GeometryModule.h",
+    "runtime_geometry_modules.md",
+)
+SUFFIX_HEADER = (
+    ".hpp",
+    ".cuh",
+)
+SUFFIX_SOURCE = (
+    ".ipp",
+    ".cpp",
+    ".cu",
+)
+SUFFIX_IMAGE = (
+    ".png",
+    ".svg",
+    ".jpg",
+    ".gif",
+)
+SUFFIX_PYTHON = (".py",)
+SUFFIX_DOC = (
+    ".md",
+    ".rst",
+    ".dox",
+    ".html",
+    ".bib",
+)
+SUFFIX_OTHER = (
+    "",
+    ".csv",
+    ".css",
+    ".gdml",
+    ".hepmc3",
+    ".in",
+    ".ipynb",
+    ".json",
+    ".j2",
+    ".onnx",
+    ".root",
+    ".toml",
+    ".txt",
+    ".yml",
+    ".xml",
+    ".sh",
+)
+
 
 def file_can_be_removed(searchstring, scope):
     cmd = "grep -IR '" + searchstring + "' " + " ".join(scope)
@@ -26,114 +120,21 @@ def count_files(path=".", exclude_dirs=(), exclude_files=()):
 
 def main():
     print("\033[32mINFO\033[0m Start check_unused_files.py ...")
-    exclude_dirs = (
-        "Scripts",
-        "thirdparty",
-        "CI",
-        "Python",
-        "git",
-        "cmake",
-        ".git",
-        ".github",
-        ".idea",
-        ".devcontainer",
-    )
-    exclude_files = (
-        "acts_logo_colored.svg",
-        ".gitignore",
-        "README.md",
-        "CMakeLists.txt",
-        # Filename not completed in source
-        "vertexing_event_mu20_beamspot.csv",
-        "vertexing_event_mu20_tracks.csv",
-        "vertexing_event_mu20_vertices_AMVF.csv",
-        "event000000001-MuonDriftCircle.csv",
-        "event000000001-MuonSimHit.csv",
-        # TODO Move the following files to a better place?
-        "Magfield.ipynb",
-        "SolenoidField.ipynb",
-        # TODO Add README next to the following files?
-        "generic-input-config.json",
-        "generic-alignment-geo.json",
-        "odd-digi-smearing-config-notime.json",
-        # TODO Mention these files somewhere?
-        "generate_particle_data_table.py",
-        "lazy_autodoc.py",
-        "codegen/src/codegen/sympy_common.py",
-        "CompressedIO.h",
-        # Files for python binding generation
-        "tgeo_aux.py.in",
-        "serve.py",
-        "SNIPPETS.md",
-        "todo.md",
-        "bugs.md",
-        "deprecated.md",
-        "acts-version-manager.js",
-        "tex-mml-chtml.js",
-        "Python/conftest.py",
-        # Temporarily excluded files. TODO remove in next major release.
-        "Core/include/Acts/EventData/detail/ParameterTraits.hpp",
-        "Core/include/Acts/Seeding/PathSeeder.hpp",
-        "Tests/CommonHelpers/include/ActsTests/CommonHelpers/TestSpacePoint.hpp",
-        "GeometryModule.h",
-        "runtime_geometry_modules.md",
-    )
 
-    suffix_header = (
-        ".hpp",
-        ".cuh",
-    )
-    suffix_source = (
-        ".ipp",
-        ".cpp",
-        ".cu",
-    )
-    suffix_image = (
-        ".png",
-        ".svg",
-        ".jpg",
-        ".gif",
-    )
-    suffix_python = (".py",)
-    suffix_doc = (
-        ".md",
-        ".rst",
-        ".dox",
-        ".html",
-        ".bib",
-    )
-    suffix_other = (
-        "",
-        ".csv",
-        ".css",
-        ".gdml",
-        ".hepmc3",
-        ".in",
-        ".ipynb",
-        ".json",
-        ".j2",
-        ".onnx",
-        ".root",
-        ".toml",
-        ".txt",
-        ".yml",
-        ".xml",
-        ".sh",
-    )
     suffix_allowed = (
-        suffix_header
-        + suffix_source
-        + suffix_image
-        + suffix_python
-        + suffix_doc
-        + suffix_other
+        SUFFIX_HEADER
+        + SUFFIX_SOURCE
+        + SUFFIX_IMAGE
+        + SUFFIX_PYTHON
+        + SUFFIX_DOC
+        + SUFFIX_OTHER
     )
 
     exit = 0
 
     dirs_base = next(os.walk("."))[1]
     dirs_base.append(".")
-    dirs_base[:] = [d for d in dirs_base if d not in exclude_dirs]
+    dirs_base[:] = [d for d in dirs_base if d not in EXCLUDE_DIRS]
     dirs_base_docs = ("docs",)
     dirs_base_code = [d for d in dirs_base if d not in dirs_base_docs]
 
@@ -143,8 +144,8 @@ def main():
 
     # walk over all files
     for root, dirs, files in os.walk("."):
-        dirs[:] = [d for d in dirs if d not in exclude_dirs]
-        files[:] = [f for f in files if f not in exclude_files]
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
+        files[:] = [f for f in files if f not in EXCLUDE_FILES]
 
         # Skip base-directory
         if str(Path(root)) == ".":
@@ -154,20 +155,20 @@ def main():
         if root[2:] in dirs_base:
             processed_files = 0
             current_base_dir = root
-            number_files = count_files(root, exclude_dirs, exclude_files)
+            number_files = count_files(root, EXCLUDE_DIRS, EXCLUDE_FILES)
             # print empty to start a new line
             print("")
 
         # Skip "white-paper-figures"
         # TODO Find a more elegant way
         if str(root).find("white_papers/figures") != -1:
-            processed_files += count_files(root, exclude_dirs, exclude_files)
+            processed_files += count_files(root, EXCLUDE_DIRS, EXCLUDE_FILES)
             continue
 
         # Skip "DD4hep-tests" since their cmake looks a bit different
         # TODO Find a more elegant way
         if str(root).find("Tests/UnitTests/Plugins/DD4hep") != -1:
-            processed_files += count_files(root, exclude_dirs, exclude_files)
+            processed_files += count_files(root, EXCLUDE_DIRS, EXCLUDE_FILES)
             continue
 
         root = Path(root)
@@ -181,13 +182,13 @@ def main():
                 wrong_extension += (str(filepath),)
 
             # Check header files and remove
-            elif filepath.suffix in suffix_header + suffix_source:
+            elif filepath.suffix in SUFFIX_HEADER + SUFFIX_SOURCE:
                 if file_can_be_removed(filename, dirs_base_code):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
                     os.system(remove_cmd)
 
-            elif filepath.suffix in suffix_python:
+            elif filepath.suffix in SUFFIX_PYTHON:
                 if not file_can_be_removed("import .*" + filepath.stem, dirs_base):
                     continue
 
@@ -203,14 +204,14 @@ def main():
 
             # Check documentation files (weak tests)
             # TODO find more reliable test for this
-            elif filepath.suffix in suffix_doc:
+            elif filepath.suffix in SUFFIX_DOC:
                 if file_can_be_removed(filepath.stem, dirs_base_docs):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
                     os.system(remove_cmd)
 
             # Check and print other files
-            elif filepath.suffix in suffix_image + suffix_other:
+            elif filepath.suffix in SUFFIX_IMAGE + SUFFIX_OTHER:
                 if file_can_be_removed(filename, dirs_base):
                     unused_files += (str(filepath),)
                     remove_cmd = "rm " + str(filepath)
