@@ -29,6 +29,14 @@ EXCLUDE_FILES = (
     ".pre-commit-config.yaml",
     "CITATION.cff",
     "sonar-project.properties",
+    "CODE_OF_CONDUCT.md",
+    "readthedocs.yml",
+    "codecov.yml",
+    ".policy.yml",
+    ".gersemirc",
+    ".kodiak.toml",
+    ".merge-sentinel.yml",
+    "CMakePresets.json",
     # Filename not completed in source
     "vertexing_event_mu20_beamspot.csv",
     "vertexing_event_mu20_tracks.csv",
@@ -176,6 +184,47 @@ def check_wrong_extensions(walk_root):
     return len(wrong_extension)
 
 
+def find_unused_by_suffix(walk_root, suffixes, search_key, search_scope):
+    unused = []
+
+    for root, dirs, files in os.walk(walk_root):
+        dirs[:] = filter_paths(dirs, root, EXCLUDE_PATHS)
+        files = filter_paths(files, root, EXCLUDE_PATHS, EXCLUDE_FILES)
+
+        for f in files:
+            p = Path(root) / f
+            if p.suffix in suffixes and file_can_be_removed(
+                search_key(p), search_scope
+            ):
+                unused.append(str(p))
+
+    return unused
+
+
+def find_unused_python_files(walk_root, dirs_base):
+    unused = []
+
+    for root, dirs, files in os.walk(walk_root):
+        dirs[:] = filter_paths(dirs, root, EXCLUDE_PATHS)
+        files = filter_paths(files, root, EXCLUDE_PATHS, EXCLUDE_FILES)
+
+        for f in files:
+            p = Path(root) / f
+            if p.suffix not in SUFFIX_PYTHON:
+                continue
+
+            if not file_can_be_removed(r"import .*" + p.stem, dirs_base):
+                continue
+
+            if not file_can_be_removed(r"from " + p.stem + r" import", dirs_base):
+                continue
+
+            if file_can_be_removed(p.name, dirs_base):
+                unused.append(str(p))
+
+    return unused
+
+
 def main():
     print("\033[32mINFO\033[0m Start check_unused_files.py ...")
 
@@ -190,75 +239,22 @@ def main():
     exit += check_wrong_extensions(".")
 
     # Collector
-    unused_files = ()
+    unused_files = []
 
-    # walk over all files
-    for root, dirs, files in os.walk("."):
-        dirs[:] = filter_paths(dirs, root, EXCLUDE_PATHS)
-        files = filter_paths(files, root, EXCLUDE_PATHS, EXCLUDE_FILES)
+    unused_files += find_unused_by_suffix(
+        ".", SUFFIX_CPP, lambda p: p.name, dirs_base_code
+    )
 
-        # Skip base-directory
-        if str(Path(root)) == ".":
-            continue
+    unused_files += find_unused_python_files(".", dirs_base)
 
-        # Print progress
-        if root[2:] in dirs_base:
-            processed_files = 0
-            current_base_dir = root
-            number_files = count_files(root)
-            # print empty to start a new line
-            print("")
+    # TODO find more reliable test for this
+    unused_files += find_unused_by_suffix(
+        ".", SUFFIX_DOC, lambda p: p.stem, dirs_base_docs
+    )
 
-        root = Path(root)
-        for filename in files:
-            processed_files += 1
-            # get the full path of the file
-            filepath = root / filename
-
-            # Check header files and remove
-            if filepath.suffix in SUFFIX_CPP:
-                if file_can_be_removed(filename, dirs_base_code):
-                    unused_files += (str(filepath),)
-                    remove_cmd = "rm " + str(filepath)
-                    os.system(remove_cmd)
-
-            elif filepath.suffix in SUFFIX_PYTHON:
-                if not file_can_be_removed("import .*" + filepath.stem, dirs_base):
-                    continue
-
-                if not file_can_be_removed(
-                    "from " + filepath.stem + " import", dirs_base
-                ):
-                    continue
-
-                if file_can_be_removed(filename, dirs_base):
-                    unused_files += (str(filepath),)
-                    remove_cmd = "rm " + str(filepath)
-                    os.system(remove_cmd)
-
-            # Check documentation files (weak tests)
-            # TODO find more reliable test for this
-            elif filepath.suffix in SUFFIX_DOC:
-                if file_can_be_removed(filepath.stem, dirs_base_docs):
-                    unused_files += (str(filepath),)
-                    remove_cmd = "rm " + str(filepath)
-                    os.system(remove_cmd)
-
-            # Check and print other files
-            elif filepath.suffix in SUFFIX_IMAGE + SUFFIX_OTHER:
-                if file_can_be_removed(filename, dirs_base):
-                    unused_files += (str(filepath),)
-                    remove_cmd = "rm " + str(filepath)
-                    os.system(remove_cmd)
-
-        # Print the progress in place
-        progress = int(20 * processed_files / number_files)
-        sys.stdout.write("\r")
-        sys.stdout.write(
-            "Checked [%-20s] %d/%d files in %s"
-            % ("=" * progress, processed_files, number_files, current_base_dir)
-        )
-        sys.stdout.flush()
+    unused_files += find_unused_by_suffix(
+        ".", SUFFIX_IMAGE + SUFFIX_OTHER, lambda p: p.name, dirs_base
+    )
 
     if len(unused_files) != 0:
         print(
