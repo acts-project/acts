@@ -221,18 +221,19 @@ SpacePointMaker::SpacePointMaker(Config cfg,
     // within the same volume hierarchy only consider layers
     return (ref.layer() == cmp.layer());
   };
-  // sort geometry selection so the unique filtering works
-  std::ranges::sort(m_cfg.geometrySelection,
-                    std::less<Acts::GeometryIdentifier>{});
-  const auto geoSelLastUnique =
-      std::ranges::unique(m_cfg.geometrySelection, isDuplicate);
-  if (geoSelLastUnique.begin() != geoSelLastUnique.end()) {
-    ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
-                         "Removed " << std::distance(geoSelLastUnique.begin(),
-                                                     geoSelLastUnique.end())
-                                    << " geometry selection duplicates");
-    m_cfg.geometrySelection.erase(geoSelLastUnique.begin(),
-                                  geoSelLastUnique.end());
+  // dedupe both selection lists: stripGeometrySelection's per-(vol, layer)
+  // partner setup throws on duplicate insert otherwise.
+  for (auto* sel :
+       {&m_cfg.geometrySelection, &m_cfg.stripGeometrySelection}) {
+    std::ranges::sort(*sel, std::less<Acts::GeometryIdentifier>{});
+    const auto last = std::ranges::unique(*sel, isDuplicate);
+    if (last.begin() != last.end()) {
+      ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::WARNING,
+                           "Removed " << std::distance(last.begin(),
+                                                       last.end())
+                                      << " geometry selection duplicates");
+      sel->erase(last.begin(), last.end());
+    }
   }
 
   if (!m_cfg.stripGeometrySelection.empty()) {
@@ -272,16 +273,10 @@ void SpacePointMaker::initializeStripPartners() {
       allSensitivesVector.begin(), allSensitivesVector.end());
 
   for (auto selector : m_cfg.stripGeometrySelection) {
-    // Apply volume/layer range
-    auto rangeLayer =
+    // No `extra` filter: stereo partners live at different `extra` values,
+    // so the partner search must see both faces.
+    auto range =
         selectLowestNonZeroGeometryObject(allSensitives, selector);
-
-    // Apply selector on extra if extra != 0
-    auto range = rangeLayer | std::views::filter([&](auto srf) {
-                   return srf->geometryId().extra() != 0
-                              ? srf->geometryId().extra() == selector.extra()
-                              : true;
-                 });
 
     const auto sizeBefore = m_stripPartner.size();
     const std::size_t nSurfaces = std::distance(range.begin(), range.end());
@@ -390,16 +385,9 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
     stripSourceLinkPairs.clear();
     ACTS_VERBOSE("Process strip selection " << sel);
 
-    // select volume/layer depending on what is set in the geometry id
-    const auto layerRange =
+    // No `extra` filter: see initializeStripPartners.
+    const auto range =
         selectLowestNonZeroGeometryObject(measurements.orderedIndices(), sel);
-    // Apply filter for extra-id, since this cannot be done with
-    // selectLowestNonZeroGeometryObject
-    auto range = layerRange | std::views::filter([&](auto sl) {
-                   return sl.geometryId().extra() != 0
-                              ? sl.geometryId().extra() == sel.extra()
-                              : true;
-                 });
 
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually
