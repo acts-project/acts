@@ -254,6 +254,7 @@ ProcessCode ArrowParticleOutputConverter::execute(
 
   constexpr float kNaN = std::numeric_limits<float>::quiet_NaN();
 
+  std::int64_t rowIndex = 0;
   for (const auto& particle : particles) {
     const auto& s = particle.initialState();
     const auto mom = s.momentum();
@@ -265,7 +266,10 @@ ProcessCode ArrowParticleOutputConverter::execute(
       m_perigee->nNonFinite.fetch_add(1, std::memory_order_relaxed);
     }
 
-    idV->UnsafeAppend(static_cast<std::uint64_t>(bc.particle()));
+    // Emit the row index as the particle id (matches the colliderml
+    // convention). Indices are stable within this event/output table even
+    // when upstream filtering has dropped some EDM4hep particles.
+    idV->UnsafeAppend(static_cast<std::uint64_t>(rowIndex));
     pdgV->UnsafeAppend(static_cast<std::int64_t>(s.pdg()));
     massV->UnsafeAppend(static_cast<float>(s.mass()));
     energyV->UnsafeAppend(static_cast<float>(s.energy()));
@@ -328,14 +332,21 @@ ProcessCode ArrowParticleOutputConverter::execute(
     z0V->UnsafeAppend(z0);
 
     vprimV->UnsafeAppend(static_cast<std::uint16_t>(bc.vertexPrimary()));
-    // Emit the parent's particle slot to match the schema used for
-    // `particle_id` above; combined with `vertex_primary` this lets
-    // consumers reconstruct parent chains. 0 means "unknown parent" — input
-    // converters with parent info (EDM4hep) populate this; simulation engines
-    // (Fatras, Geant4) currently leave it at the default.
+    // Emit the parent's row index in this same table so consumers can walk
+    // the chain. -1 means "unknown" (parent was filtered out, or simulation
+    // engine didn't record it). The container is a flat_set sorted by
+    // barcode, so find()+distance is O(log N) with O(1) random access.
     const auto parentBc = particle.parentParticleId();
-    parentV->UnsafeAppend(static_cast<std::int64_t>(parentBc.particle()));
+    std::int64_t parentRow = -1;
+    if (parentBc.isValid()) {
+      auto it = particles.find(parentBc);
+      if (it != particles.end()) {
+        parentRow = std::distance(particles.begin(), it);
+      }
+    }
+    parentV->UnsafeAppend(parentRow);
     check(primaryV->Append(bc.generation() == 0), "append primary");
+    ++rowIndex;
   }
 
   auto finish = [](arrow::ListBuilder& b) {
