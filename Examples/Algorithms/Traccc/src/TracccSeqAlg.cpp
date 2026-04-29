@@ -63,9 +63,4 @@ ProcessCode TracccSeqAlgorithm::finalize() {
   ACTS_INFO("Finalizing traccc GPU sequence algorithm");
   return ProcessCode::SUCCESS;
 }
-
-<<<<<<< HEAD
 }  // namespace ActsExamples
-=======
-}  // namespace ActsExamples
->>>>>>> b3cd6c42e (add traccc example alg)
