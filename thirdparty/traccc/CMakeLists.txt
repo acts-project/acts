@@ -45,12 +45,6 @@ if(ACTS_ENABLE_CUDA)
     set(TRACCC_BUILD_CUDA ON CACHE BOOL "Build Traccc with CUDA support")
 endif()
 
-set(TRACCC_SETUP_BENCHMARKS
-    OFF
-    CACHE BOOL
-    "Do not set up google benchmarks as part of Traccc"
-)
-
 set(TRACCC_BUILD_IO
     ON
     CACHE BOOL
@@ -75,28 +69,23 @@ set(TRACCC_BUILD_TESTING
     "Turn off the build of the Traccc unit tests"
 )
 
-if(ACTS_BUILD_EXAMPLES)
-    set(TRACCC_SETUP_TBB
-        OFF
-        CACHE BOOL
-        "Do not set up TBB as part of Traccc"
-        FORCE
-    )
-    set(TRACCC_USE_SYSTEM_TBB ON CACHE BOOL "Use system TBB" FORCE)
-    find_package(TBB REQUIRED)
-
-    set(TRACCC_BUILD_EXAMPLES
-        ON
-        CACHE BOOL
-        "Turn off the build of the Traccc examples"
-    )
-endif()
+set(TRACCC_SETUP_TBB
+    OFF
+    CACHE BOOL
+    "Do not set up TBB as part of Traccc"
+)
 
 set(TRACCC_BUILD_EXAMPLES
     OFF
     CACHE BOOL
     "Turn off the build of the Traccc examples"
 )
+
+if(TRACCC_BUILD_EXAMPLES)
+    set(TRACC_USE_SYSTEM_TBB ON CACHE BOOL "Use the system TBB for the Traccc examples")
+    find_package(TBB REQUIRED)
+endif()
+
 set(TRACCC_BUILD_BENCHMARKS
     OFF
     CACHE BOOL
