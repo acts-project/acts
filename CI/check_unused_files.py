@@ -5,6 +5,7 @@ import os
 import sys
 import subprocess
 
+EXCLUDE_PATHS = ()
 EXCLUDE_DIRS = (
     "Scripts",
     "thirdparty",
@@ -100,6 +101,30 @@ SUFFIX_OTHER = (
 )
 
 
+def filter_paths(
+    names, root: Path, exclude_paths=(), exclude_dirs=(), exclude_files=()
+):
+    out = []
+    for n in names:
+        p = root / n
+        parts = p.parts
+
+        # full path substring
+        if any(ep in str(p) for ep in exclude_paths):
+            continue
+
+        # exact dir segment match
+        if any(ed in parts for ed in exclude_dirs):
+            continue
+
+        # exact file name match
+        if p.name in exclude_files:
+            continue
+
+        out.append(n)
+    return out
+
+
 def file_can_be_removed(searchstring, scope):
     cmd = "grep -IR '" + searchstring + "' " + " ".join(scope)
 
@@ -108,11 +133,13 @@ def file_can_be_removed(searchstring, scope):
     return output == b""
 
 
-def count_files(path=".", exclude_dirs=(), exclude_files=()):
+def count_files(path="."):
     count = 0
-    for root, dirs, files in os.walk(path):
-        dirs[:] = [d for d in dirs if d not in exclude_dirs]
-        files[:] = [f for f in files if f not in exclude_files]
+    for root, _, files in os.walk(path):
+        files = filter_paths(
+            files, Path(root), EXCLUDE_PATHS, EXCLUDE_DIRS, EXCLUDE_FILES
+        )
+
         count += len(files)
 
     return count
@@ -144,8 +171,10 @@ def main():
 
     # walk over all files
     for root, dirs, files in os.walk("."):
-        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
-        files[:] = [f for f in files if f not in EXCLUDE_FILES]
+        dirs = filter_paths(dirs, Path(root), EXCLUDE_PATHS, EXCLUDE_DIRS)
+        files = filter_paths(
+            files, Path(root), EXCLUDE_PATHS, EXCLUDE_DIRS, EXCLUDE_FILES
+        )
 
         # Skip base-directory
         if str(Path(root)) == ".":
@@ -155,20 +184,20 @@ def main():
         if root[2:] in dirs_base:
             processed_files = 0
             current_base_dir = root
-            number_files = count_files(root, EXCLUDE_DIRS, EXCLUDE_FILES)
+            number_files = count_files(root)
             # print empty to start a new line
             print("")
 
         # Skip "white-paper-figures"
         # TODO Find a more elegant way
         if str(root).find("white_papers/figures") != -1:
-            processed_files += count_files(root, EXCLUDE_DIRS, EXCLUDE_FILES)
+            processed_files += count_files(root)
             continue
 
         # Skip "DD4hep-tests" since their cmake looks a bit different
         # TODO Find a more elegant way
         if str(root).find("Tests/UnitTests/Plugins/DD4hep") != -1:
-            processed_files += count_files(root, EXCLUDE_DIRS, EXCLUDE_FILES)
+            processed_files += count_files(root)
             continue
 
         root = Path(root)
