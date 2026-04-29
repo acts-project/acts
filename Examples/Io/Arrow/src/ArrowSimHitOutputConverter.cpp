@@ -60,6 +60,9 @@ ArrowSimHitOutputConverter::ArrowSimHitOutputConverter(
   if (m_cfg.outputTable.empty()) {
     throw std::invalid_argument("Missing output table name");
   }
+  if (!m_cfg.detectorResolver) {
+    throw std::invalid_argument("detectorResolver must be set");
+  }
 
   // The digitized x,y,z columns require the trio (measurements, map, geometry)
   // — partial wiring would silently produce stale or NaN positions, so reject
@@ -230,17 +233,15 @@ ProcessCode ArrowSimHitOutputConverter::execute(
     pidV->UnsafeAppend(pid);
 
     const auto gid = hit.geometryId();
-    const auto vol = static_cast<std::uint8_t>(gid.volume());
-    volV->UnsafeAppend(vol);
+    volV->UnsafeAppend(static_cast<std::uint8_t>(gid.volume()));
     layV->UnsafeAppend(static_cast<std::uint16_t>(gid.layer()));
     surfV->UnsafeAppend(static_cast<std::uint32_t>(gid.sensitive()));
-
-    std::uint8_t detector = 0;
-    if (auto it = m_cfg.subsystemByVolume.find(vol);
-        it != m_cfg.subsystemByVolume.end()) {
-      detector = it->second;
-    }
-    detV->UnsafeAppend(detector);
+    // TODO(subsystem): the default `detectorResolver` reads the geometry id's
+    // `extra` byte, which we rely on geometry construction to stamp with a
+    // per-surface subsystem id. This is NOT wired up yet on the
+    // geometry-construction side, so today every hit gets `extra() == 0`
+    // unless the user supplies a custom resolver.
+    detV->UnsafeAppend(m_cfg.detectorResolver(gid));
 
     ++hitIdx;
   }

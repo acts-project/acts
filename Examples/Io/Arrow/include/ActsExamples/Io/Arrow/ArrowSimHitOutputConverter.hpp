@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -18,7 +19,7 @@
 #include "ActsPlugins/Arrow/Export.hpp"
 
 #include <cstdint>
-#include <map>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -61,12 +62,14 @@ class ACTS_ARROW_EXPORT ArrowSimHitOutputConverter final
     /// projecting the matched measurement's local parameters back to global
     /// coordinates. Required for digitized @c x,y,z to be populated.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// Map from @c GeometryIdentifier::volume() to a detector subsystem id
-    /// (e.g. pixel=1, strip=2). Volumes absent from the map are written as 0.
-    /// The original EDM4hep collection name is the natural source for this
-    /// distinction but is lost in the internal EDM, so it has to be supplied
-    /// explicitly.
-    std::map<std::uint8_t, std::uint8_t> subsystemByVolume;
+    /// Resolves the @c detector subsystem id for a given hit's geometry id.
+    /// Defaults to reading the geometry id's @c extra byte; users can swap
+    /// in any custom mapping (e.g. by volume or by surface lookup) when the
+    /// geometry-construction side hasn't stamped @c extra yet.
+    std::function<std::uint8_t(Acts::GeometryIdentifier)> detectorResolver =
+        [](Acts::GeometryIdentifier gid) {
+          return static_cast<std::uint8_t>(gid.extra());
+        };
   };
 
   explicit ArrowSimHitOutputConverter(
