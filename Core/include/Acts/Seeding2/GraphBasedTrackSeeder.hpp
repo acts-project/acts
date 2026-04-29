@@ -51,19 +51,26 @@ class GraphBasedTrackSeeder {
     bool matchBeforeCreate = false;
     /// Use legacy tuning parameters.
     bool useOldTunings = false;
-    /// description here
+    /// optional validation for abrrel triplets
     bool validateTriplets = true;
-    /// description here
+    /// widens allowed variation in tau ratio
+    /// if layer is missed in edge connecting
     bool useAdaptiveCuts = true;
+    /// optionally add 3 sp seeds within a cirtain eta range
+    bool addTriplets = false;
     /// Tau ratio cut threshold.
     float tauRatioCut = 0.007;
     /// Tau ratio precut threshold.
     float tauRatioPrecut = 0.009f;
-    /// description here
+    /// correction applied to tau acceptance
+    /// if a layer is missed during edge connecting
     float tauRatioCorr = 0.006;
+    /// the maximum allowed eta value in which
+    /// three spacepoint seeds are passed through
+    float maxAbsEtaAddTripelts = 1.5;
     /// Eta bin width override (0 uses default from connection file).
-    // specify non-zero to override eta bin width from connection file (default
-    // 0.2 in createLinkingScheme.py)
+    /// specify non-zero to override eta bin width from connection file (default
+    /// 0.2 in createLinkingScheme.py)
     float etaBinWidthOverride = 0.0f;
 
     /// Maximum number of phi slices.
