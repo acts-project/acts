@@ -98,10 +98,11 @@ class WhiteBoard {
   /// @param name Non-empty identifier to store it under
   /// @param object Movable reference to the transferable object
   template <typename T>
-  void add(const std::string& name, T&& object) {
+  const T& add(const std::string& name, T&& object) {
     addHolder(name,
               std::make_shared<Acts::AnyMoveOnly>(std::forward<T>(object)),
               Acts::typeHash<T>());
+    return get<T>(name);
   }
 
   /// Get access to a stored object.

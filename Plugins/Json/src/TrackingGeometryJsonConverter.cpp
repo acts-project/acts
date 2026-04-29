@@ -13,6 +13,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -197,6 +198,8 @@ std::string getVolumeBoundsKind() {
     return "CutoutCylinder";
   } else if (std::is_same_v<bounds_t, Acts::CylinderVolumeBounds>) {
     return "Cylinder";
+  } else if (std::is_same_v<bounds_t, Acts::DiamondVolumeBounds>) {
+    return "Diamond";
   } else if (std::is_same_v<bounds_t, Acts::GenericCuboidVolumeBounds>) {
     return "GenericCuboid";
   } else if (std::is_same_v<bounds_t, Acts::TrapezoidVolumeBounds>) {
@@ -711,6 +714,7 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerFunction(encodeVolumeBoundsT<CuboidVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<CutoutCylinderVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<CylinderVolumeBounds>)
+      .registerFunction(encodeVolumeBoundsT<DiamondVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<GenericCuboidVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<TrapezoidVolumeBounds>);
 
@@ -738,6 +742,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
                     decodeVolumeBoundsT<CutoutCylinderVolumeBounds>)
       .registerKind(getVolumeBoundsKind<CylinderVolumeBounds>(),
                     decodeVolumeBoundsT<CylinderVolumeBounds>)
+      .registerKind(getVolumeBoundsKind<DiamondVolumeBounds>(),
+                    decodeVolumeBoundsT<DiamondVolumeBounds>)
       .registerKind(getVolumeBoundsKind<GenericCuboidVolumeBounds>(),
                     decodeVolumeBoundsT<GenericCuboidVolumeBounds>)
       .registerKind(getVolumeBoundsKind<TrapezoidVolumeBounds>(),
