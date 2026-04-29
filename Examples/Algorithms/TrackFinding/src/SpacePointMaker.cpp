@@ -186,6 +186,16 @@ SpacePointMaker::SpacePointMaker(Config cfg,
   if (m_cfg.geometrySelection.empty() && m_cfg.stripGeometrySelection.empty()) {
     throw std::invalid_argument("Missing space point maker geometry selection");
   }
+  if (m_cfg.stripPairingMode != "top_one" &&
+      m_cfg.stripPairingMode != "top_k" &&
+      m_cfg.stripPairingMode != "all_pairs") {
+    throw std::invalid_argument(
+        "Unknown stripPairingMode '" + m_cfg.stripPairingMode +
+        "' (expected one of: top_one, top_k, all_pairs)");
+  }
+  if (m_cfg.stripPairingMode == "top_k" && m_cfg.stripTopK == 0) {
+    throw std::invalid_argument("stripTopK must be > 0 for top_k mode");
+  }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
@@ -377,6 +387,9 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
   ACTS_DEBUG("Build strip space points");
 
   Acts::StripSpacePointBuilder::ClusterPairingOptions pairingOptions;
+  pairingOptions.maxDistance = m_cfg.stripPairingMaxDistance;
+  pairingOptions.maxAngleTheta = m_cfg.stripPairingMaxAngleTheta;
+  pairingOptions.maxAnglePhi = m_cfg.stripPairingMaxAnglePhi;
 
   // Loop over the geometry selections
   std::vector<std::pair<IndexSourceLink, IndexSourceLink>> stripSourceLinkPairs;
@@ -439,9 +452,10 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
         const Acts::Vector3 global1 = surface1.localToGlobal(
             ctx.geoContext, local1, Acts::Vector3::Zero());
 
-        std::optional<double> minDistance;
-        std::optional<IndexSourceLink> bestSourceLink2;
-
+        // Collect every (sourceLink2, distance) candidate that passes the
+        // pairingOptions cuts; mode selection (top_one / top_k / all_pairs)
+        // happens after.
+        std::vector<std::pair<IndexSourceLink, double>> candidates;
         for (const IndexSourceLink& sourceLink2 : *mod2SourceLinks) {
           const Acts::Surface& surface2 =
               *surfaceAccessor(Acts::SourceLink(sourceLink2));
@@ -461,18 +475,38 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
           const Acts::Result<double> distance =
               Acts::StripSpacePointBuilder::computeClusterPairDistance(
                   global1, global2, pairingOptions);
-          if (distance.ok() && (!minDistance.has_value() ||
-                                distance.value() < minDistance.value())) {
-            minDistance = *distance;
-            bestSourceLink2 = sourceLink2;
+          if (distance.ok()) {
+            candidates.emplace_back(sourceLink2, *distance);
           }
         }
 
-        if (bestSourceLink2) {
-          stripSourceLinkPairs.emplace_back(sourceLink1, *bestSourceLink2);
+        if (candidates.empty()) {
+          continue;
+        }
+
+        std::size_t maxOut;
+        if (m_cfg.stripPairingMode == "top_one") {
+          maxOut = 1;
+        } else if (m_cfg.stripPairingMode == "top_k") {
+          maxOut = m_cfg.stripTopK;
+        } else {  // all_pairs
+          maxOut = candidates.size();
+        }
+
+        // Sort only when we need the K best; for all_pairs the order
+        // doesn't matter.
+        if (maxOut < candidates.size()) {
+          std::ranges::partial_sort(
+              candidates, candidates.begin() + maxOut,
+              [](const auto& a, const auto& b) { return a.second < b.second; });
+        }
+
+        const std::size_t nOut = std::min(maxOut, candidates.size());
+        for (std::size_t k = 0; k < nOut; ++k) {
+          stripSourceLinkPairs.emplace_back(sourceLink1, candidates[k].first);
           ACTS_VERBOSE("Found source link pair: " << sourceLink1.index()
                                                   << " <-> "
-                                                  << bestSourceLink2->index());
+                                                  << candidates[k].first.index());
         }
       }
 

@@ -59,6 +59,20 @@ class SpacePointMaker final : public IAlgorithm {
     std::vector<Acts::GeometryIdentifier> geometrySelection;
 
     std::vector<Acts::GeometryIdentifier> stripGeometrySelection;
+
+    /// Strip cluster pairing strategy, applied after partner-module
+    /// mapping. One of:
+    ///   "top_one"   one best-distance pair per face-1 cluster (default).
+    ///   "top_k"     keep the k best by distance (k = `stripTopK`).
+    ///   "all_pairs" every cluster pair passing the geometric cuts.
+    std::string stripPairingMode = "top_one";
+    /// k for stripPairingMode == "top_k".
+    std::size_t stripTopK = 1;
+    /// Geometric cuts applied to each candidate pair before mode selection.
+    /// Mirrors Acts::StripSpacePointBuilder::ClusterPairingOptions defaults.
+    double stripPairingMaxDistance = 100.0;     // mm
+    double stripPairingMaxAngleTheta = 1.0;     // rad
+    double stripPairingMaxAnglePhi = 1.0;       // rad
   };
 
   /// Construct the space point maker.
