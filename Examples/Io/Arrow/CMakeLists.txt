@@ -2,6 +2,7 @@ add_library(
     ActsExamplesIoArrow_obj
     OBJECT
     src/ArrowParticleOutputConverter.cpp
+    src/ArrowSimHitOutputConverter.cpp
     src/ArrowTrackOutputConverter.cpp
 )
 

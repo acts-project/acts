@@ -73,6 +73,8 @@ ArrowTrackOutputConverter::ArrowTrackOutputConverter(
   m_inputTrackParticleMatching.maybeInitialize(
       m_cfg.inputTrackParticleMatching);
   m_inputParticles.maybeInitialize(m_cfg.inputParticles);
+  m_inputMeasurementSimHitsMap.maybeInitialize(
+      m_cfg.inputMeasurementSimHitsMap);
   m_outputTable.initialize(m_cfg.outputTable);
 }
 
@@ -89,6 +91,10 @@ ProcessCode ArrowTrackOutputConverter::execute(
           : nullptr;
   const SimParticleContainer* particles =
       m_inputParticles.isInitialized() ? &m_inputParticles(ctx) : nullptr;
+  const MeasurementSimHitsMap* measToSimHits =
+      m_inputMeasurementSimHitsMap.isInitialized()
+          ? &m_inputMeasurementSimHitsMap(ctx)
+          : nullptr;
 
   auto* pool = arrow::default_memory_pool();
 
@@ -151,6 +157,7 @@ ProcessCode ArrowTrackOutputConverter::execute(
 
   // Sentinel for "no matched particle": an out-of-range row index. Real
   // indices are < particles->size(), so this can never collide.
+  // @TODO: Turn into explicit optionals
   constexpr std::uint64_t kUnmatched =
       std::numeric_limits<std::uint64_t>::max();
 
@@ -194,14 +201,25 @@ ProcessCode ArrowTrackOutputConverter::execute(
     majIdV->UnsafeAppend(majId);
 
     check(hitIdsInner->Append(), "open hit_ids inner list");
-    for (const auto& state : track.trackStatesReversed()) {
-      if (!state.hasUncalibratedSourceLink()) {
-        continue;
+    // Without a measurement→sim-hit map we leave the inner list empty rather
+    // than silently emit measurement indices, which would alias mismatched
+    // ids into a downstream sim-hit table.
+    if (measToSimHits != nullptr) {
+      for (const auto& state : track.trackStatesReversed()) {
+        if (!state.hasUncalibratedSourceLink()) {
+          continue;
+        }
+        const auto sl =
+            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+        const auto measIdx = static_cast<Index>(sl.index());
+        // One measurement may map to multiple sim hits (clustering merged
+        // them); flatten them into the per-track list.
+        auto range = measToSimHits->equal_range(measIdx);
+        for (auto it = range.first; it != range.second; ++it) {
+          check(hitIdsV->Append(static_cast<std::uint32_t>(it->second)),
+                "append hit_id");
+        }
       }
-      const auto sl =
-          state.getUncalibratedSourceLink().template get<IndexSourceLink>();
-      check(hitIdsV->Append(static_cast<std::uint32_t>(sl.index())),
-            "append hit_id");
     }
 
     trackIdV->UnsafeAppend(static_cast<std::uint16_t>(track.index()));
