@@ -96,6 +96,7 @@ option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 # python related options
 option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
+option(ACTS_GENERATE_PYTHON_STUBS "Generate Python stub files (.pyi) using pybind11-stubgen via uv" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
@@ -209,6 +210,7 @@ set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
+
 # feature tests
 include(CheckCXXSourceCompiles)
 
@@ -399,7 +401,7 @@ macro(enable_cuda)
     )
     if(NOT CMAKE_CUDA_ARCHITECTURES)
         set(CMAKE_CUDA_ARCHITECTURES
-            "35;52;75"
+            "75;80;86;90"
             CACHE STRING
             "CUDA architectures to generate code for"
         )
