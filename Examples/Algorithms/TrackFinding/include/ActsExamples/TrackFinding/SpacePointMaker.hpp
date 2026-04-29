@@ -43,7 +43,9 @@ namespace ActsExamples {
 class SpacePointMaker final : public IAlgorithm {
  public:
   struct Config {
-    /// Input measurements collection.
+    /// Input measurement subset (initial full subset from digitization for pass
+    /// 1; filtered subset from MeasurementFilterAlgorithm for subsequent
+    /// passes).
     std::string inputMeasurements;
     /// Output space points collection.
     std::string outputSpacePoints;
@@ -89,8 +91,8 @@ class SpacePointMaker final : public IAlgorithm {
 
   std::optional<IndexSourceLink::SurfaceAccessor> m_slSurfaceAccessor;
 
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
-                                                           "InputMeasurements"};
+  ReadDataHandle<MeasurementSubset> m_inputMeasurements{this,
+                                                        "InputMeasurements"};
 
   WriteDataHandle<SpacePointContainer> m_outputSpacePoints{this,
                                                            "OutputSpacePoints"};

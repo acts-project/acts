@@ -15,8 +15,8 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsTests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <utility>
@@ -34,10 +34,10 @@ using namespace UnitLiterals;
 using MagneticField = ConstantBField;
 using Stepper = SympyStepper;
 using TestPropagator = Propagator<Stepper, Navigator>;
-using RiddersPropagator = RiddersPropagator<TestPropagator>;
 
 // absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 10_um;
+constexpr auto epsTime = 1_mm;
 constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 
@@ -63,7 +63,7 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      phi, theta, p, q, s, bz) {
   runForwardBackwardTest(makePropagator(bz, createDenseBlock(geoCtx)), geoCtx,
                          magCtx, makeParametersCurvilinear(phi, theta, p, q), s,
-                         epsPos, epsDir, epsMom);
+                         epsPos, epsTime, epsDir, epsMom);
 }
 
 // check effects on the parameter covariance

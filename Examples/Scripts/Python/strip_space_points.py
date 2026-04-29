@@ -107,7 +107,7 @@ def createStripSpacePoints(
         acts.examples.SpacePointMaker(
             level=acts.logging.INFO,
             trackingGeometry=trackingGeometry,
-            inputMeasurements="measurements",
+            inputMeasurements="measurement_subset",
             outputSpacePoints="spacepoints",
             stripGeometrySelection=acts.examples.json.readJsonGeometryList(
                 str(geoSelection)
