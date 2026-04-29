@@ -18,7 +18,6 @@
 #include <atomic>
 #include <cmath>
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -45,8 +44,18 @@ std::shared_ptr<arrow::Schema> particleSchema() {
       arrow::field("px", arrow::list(arrow::float32()), false),
       arrow::field("py", arrow::list(arrow::float32()), false),
       arrow::field("pz", arrow::list(arrow::float32()), false),
-      arrow::field("perigee_d0", arrow::list(arrow::float32()), false),
-      arrow::field("perigee_z0", arrow::list(arrow::float32()), false),
+      // Perigee parameters are nullable per element so a particle whose
+      // d0/z0 cannot be computed (no propagator configured, neutral with a
+      // failed local transform, or failed helix propagation) emits a real
+      // null instead of a NaN sentinel.
+      arrow::field("perigee_d0",
+                   arrow::list(arrow::field("item", arrow::float32(),
+                                            /*nullable=*/true)),
+                   false),
+      arrow::field("perigee_z0",
+                   arrow::list(arrow::field("item", arrow::float32(),
+                                            /*nullable=*/true)),
+                   false),
       arrow::field("vertex_primary", arrow::list(arrow::uint16()), false),
       arrow::field("parent_id", arrow::list(arrow::int64()), false),
       arrow::field("primary", arrow::list(arrow::boolean()), false),
@@ -252,8 +261,6 @@ ProcessCode ArrowParticleOutputConverter::execute(
   check(parentV->Reserve(n), "reserve parent_id");
   check(primaryV->Reserve(n), "reserve primary");
 
-  constexpr float kNaN = std::numeric_limits<float>::quiet_NaN();
-
   std::int64_t rowIndex = 0;
   for (const auto& particle : particles) {
     const auto& s = particle.initialState();
@@ -282,8 +289,8 @@ ProcessCode ArrowParticleOutputConverter::execute(
     pyV->UnsafeAppend(static_cast<float>(mom.y()));
     pzV->UnsafeAppend(static_cast<float>(mom.z()));
 
-    float d0 = kNaN;
-    float z0 = kNaN;
+    std::optional<float> d0;
+    std::optional<float> z0;
     if (m_perigee->propagator.has_value()) {
       auto perigeeSample = m_perigee->perigeeTimer->sample();
       const auto& surface = *m_perigee->surface;
@@ -328,8 +335,16 @@ ProcessCode ArrowParticleOutputConverter::execute(
         }
       }
     }
-    d0V->UnsafeAppend(d0);
-    z0V->UnsafeAppend(z0);
+    if (d0.has_value()) {
+      d0V->UnsafeAppend(*d0);
+    } else {
+      d0V->UnsafeAppendNull();
+    }
+    if (z0.has_value()) {
+      z0V->UnsafeAppend(*z0);
+    } else {
+      z0V->UnsafeAppendNull();
+    }
 
     vprimV->UnsafeAppend(static_cast<std::uint16_t>(bc.vertexPrimary()));
     // Emit the parent's row index in this same table so consumers can walk

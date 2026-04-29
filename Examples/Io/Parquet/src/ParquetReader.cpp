@@ -27,22 +27,30 @@ class ParquetReader::Impl {
     if (m_cfg.collections.empty()) {
       throw std::invalid_argument("ParquetReader: no collections configured");
     }
-    std::unordered_set<std::string> seen;
-    for (const auto& name : m_cfg.collections) {
+    std::unordered_set<std::string> seenPaths;
+    for (const auto& [name, rawPath] : m_cfg.collections) {
       if (name.empty()) {
         throw std::invalid_argument("ParquetReader: empty collection name");
       }
-      if (!seen.insert(name).second) {
-        throw std::invalid_argument(
-            std::format("ParquetReader: duplicate collection name '{}'", name));
+      if (rawPath.empty()) {
+        throw std::invalid_argument(std::format(
+            "ParquetReader: empty input path for collection '{}'", name));
+      }
+
+      std::filesystem::path resolved =
+          rawPath.is_absolute() ? rawPath : m_cfg.inputDir / rawPath;
+      if (!seenPaths.insert(resolved.lexically_normal().string()).second) {
+        throw std::invalid_argument(std::format(
+            "ParquetReader: duplicate input path '{}'", resolved.string()));
       }
     }
 
     std::int64_t referenceEvents = -1;
     std::string referenceName;
 
-    for (const auto& name : m_cfg.collections) {
-      auto path = m_cfg.inputDir / (name + ".parquet");
+    for (const auto& [name, rawPath] : m_cfg.collections) {
+      std::filesystem::path path =
+          rawPath.is_absolute() ? rawPath : m_cfg.inputDir / rawPath;
       if (!std::filesystem::exists(path)) {
         throw std::invalid_argument(
             std::format("ParquetReader: missing file '{}'", path.string()));

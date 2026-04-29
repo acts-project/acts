@@ -574,6 +574,7 @@ if args.output_parquet:
                 level=acts.logging.INFO,
                 inputTracks="tracks",
                 inputTrackParticleMatching="track_particle_matching",
+                inputParticles="particles_simulated",
                 outputTable="tracks_arrow",
             )
         )
