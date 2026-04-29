@@ -16,6 +16,7 @@
 #include <limits>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 
 #include <arrow/api.h>
 
@@ -205,6 +206,11 @@ ProcessCode ArrowTrackOutputConverter::execute(
     // than silently emit measurement indices, which would alias mismatched
     // ids into a downstream sim-hit table.
     if (measToSimHits != nullptr) {
+      // `trackStatesReversed()` walks outermost→innermost (the only direct
+      // iteration the MultiTrajectory proxy offers); buffer and reverse so
+      // the per-track list comes out inner→outer along the trajectory, which
+      // is what downstream consumers expect.
+      std::vector<std::uint32_t> hitIds;
       for (const auto& state : track.trackStatesReversed()) {
         if (!state.hasUncalibratedSourceLink()) {
           continue;
@@ -216,9 +222,11 @@ ProcessCode ArrowTrackOutputConverter::execute(
         // them); flatten them into the per-track list.
         auto range = measToSimHits->equal_range(measIdx);
         for (auto it = range.first; it != range.second; ++it) {
-          check(hitIdsV->Append(static_cast<std::uint32_t>(it->second)),
-                "append hit_id");
+          hitIds.push_back(static_cast<std::uint32_t>(it->second));
         }
+      }
+      for (auto rit = hitIds.rbegin(); rit != hitIds.rend(); ++rit) {
+        check(hitIdsV->Append(*rit), "append hit_id");
       }
     }
 
