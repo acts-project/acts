@@ -129,6 +129,7 @@ struct SurfaceReached {
       reached = true;
     }
 
+<<<<<<< refactor-surface-reached-aborter-update
     bool intersectionFound = false;
 
     for (auto [intersectionIndex, intersection] :
@@ -150,10 +151,28 @@ struct SurfaceReached {
     }
 
     if (!intersectionFound) {
+=======
+    if (const auto intersectionIt = std::ranges::find_if(
+            multiIntersection,
+            [&](const auto& intersection) {
+              return intersection.isValid() &&
+                     detail::checkPathLength(intersection.pathLength(),
+                                             nearLimit, farLimit, logger);
+            });
+        intersectionIt != multiIntersection.end()) {
+      stepper.updateStepSize(state.stepping, intersectionIt->pathLength(),
+                             ConstrainedStep::Type::Actor);
+      ACTS_VERBOSE(
+          "SurfaceReached aborter | "
+          "Target stepSize (surface) updated to "
+          << stepper.outputStepSize(state.stepping));
+    } else {
+>>>>>>> main
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target intersection not found. Maybe next time?");
     }
+
     return reached;
   }
 };
