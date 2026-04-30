@@ -85,6 +85,19 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
     const Acts::Logger& logger = *Acts::getDefaultLogger("Kalman",
                                                          Acts::Logging::INFO));
 
+/// Makes a reference trajectory fitter function object using the Kalman Filter
+///
+std::shared_ptr<TrackFitterFunction>
+makeKalmanReferenceTrajectoryFitterFunction(
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    bool multipleScattering = true, bool energyLoss = true,
+    Acts::FreeToBoundCorrection freeToBoundCorrection =
+        Acts::FreeToBoundCorrection(),
+    bool useJosephFormulation = false,
+    const Acts::Logger& logger = *Acts::getDefaultLogger(
+        "KalmanReferenceTrajectory", Acts::Logging::INFO));
+
 /// Available algorithms for the mixture reduction
 enum class MixtureReductionAlgorithm { weightCut, KLDistance, KLDistanceNaive };
 
