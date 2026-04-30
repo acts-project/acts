@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #include <array>
 #include <cmath>
 #include <concepts>
@@ -7,7 +15,7 @@
 
 namespace Acts {
 
-// Helper class describing one section of the accumulator space
+/// @brief helper class fro adaptive traversal of HT space
 class HoughAccumulatorSection {
  public:
   enum class Decision {
@@ -78,8 +86,8 @@ class HoughAccumulatorSection {
   /// @brief true if the line defined by given parameters passes the section
   /// @param function is callable used to check crossing at the edges
   template <typename F>
-  inline bool isLineInside(
-      F &&function) const &requires std::invocable<F, float>;
+  inline bool isLineInside(F &&function) const &
+    requires std::invocable<F, float>;
 
   /// @brief check if the lines cross inside the section
   /// @brief line1 - functional form of line 1
@@ -89,8 +97,8 @@ class HoughAccumulatorSection {
   /// sections
   /// @return true if the lines cross in the section
   template <typename F>
-  inline bool isCrossingInside(
-      F &&line1, F &&line2) const &requires std::invocable<F, float>;
+  inline bool isCrossingInside(F &&line1, F &&line2) const &
+    requires std::invocable<F, float>;
 
   /// sizes access
   float xSize() const { return m_xSize; }
@@ -126,8 +134,9 @@ class HoughAccumulatorSection {
 };
 
 template <typename F>
-inline bool HoughAccumulatorSection::isLineInside(
-    F &&function) const &requires std::invocable<F, float> {
+inline bool HoughAccumulatorSection::isLineInside(F &&function) const &
+  requires std::invocable<F, float>
+{
   const float yB = function(m_xBegin);
   const float yE = function(m_xBegin + m_xSize);
   return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
@@ -135,8 +144,10 @@ inline bool HoughAccumulatorSection::isLineInside(
 }
 
 template <typename F>
-inline bool HoughAccumulatorSection::isCrossingInside(
-    F &&line1, F &&line2) const &requires std::invocable<F, float> {
+inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
+                                                      F &&line2) const &
+  requires std::invocable<F, float>
+{
   // this microalgorithm idea is illustrated below
   // section left section right
   // example with crossing
@@ -208,6 +219,8 @@ inline bool HoughAccumulatorSection::isCrossingInside(
   return is_in(yCross);
 }
 
+/// @brief structure that keeps HT space traversal options
+/// @tparam Measurement - measurement type which are used in generating lines in HT space
 template <typename Measurement>
 struct HoughExplorationOptions {
   float xMinBinSize = 1.0f;  // minimum bin size in x direction, beyond that
@@ -317,19 +330,19 @@ template <typename Measurement, typename Functor>
 bool passIntersectionsCheck(const HoughAccumulatorSection &section,
                             const std::vector<Measurement> &measurements,
                             Functor lineFunctor, const unsigned threshold) {
-  const size_t count = section.count();
+  const std::size_t count = section.count();
   const float xLeft = section.xBegin();
   const float xRight = xLeft + section.xSize();
   const auto &indices = section.indices();
 
   // Small Buffer Optimization
-  constexpr size_t kMaxStackLines = 64;
+  constexpr std::size_t kMaxStackLines = 64;
 
   if (count <= kMaxStackLines) {
     std::array<float, kMaxStackLines> yLeft;
     std::array<float, kMaxStackLines> yRight;
 
-    for (size_t i = 0; i < count; ++i) {
+    for (std::size_t i = 0; i < count; ++i) {
       const auto &m = measurements[indices[i]];
       yLeft[i] = lineFunctor(m, xLeft);
       yRight[i] = lineFunctor(m, xRight);
