@@ -402,6 +402,11 @@ class ReferenceTrajectoryBuilder {
     BoundVector lastDelta = BoundVector::Zero();
 
     for (auto trackState : trackProxy.trackStates()) {
+      // Transport the last delta to the current surface using the Jacobian of
+      // the track state
+      lastDelta = trackState.jacobian() * lastDelta;
+      trackState.predicted() += lastDelta;
+
       if (!trackState.typeFlags().hasMeasurement()) {
         trackState.shareFrom(trackState, TrackStatePropMask::Predicted,
                              TrackStatePropMask::Filtered);
@@ -409,10 +414,6 @@ class ReferenceTrajectoryBuilder {
       }
 
       trackState.addComponents(TrackStatePropMask::Filtered);
-
-      // Transport the last delta to the current surface using the Jacobian of
-      // the track state
-      trackState.predicted() += trackState.jacobian() * lastDelta;
 
       auto res = updater(geoContext, trackState, logger());
       if (!res.ok()) {
