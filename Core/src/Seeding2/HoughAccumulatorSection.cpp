@@ -1,10 +1,9 @@
 #include "Acts/Seeding2/HoughAccumulatorSection.hpp"
 
 namespace Acts {
-HoughAccumulatorSection::HoughAccumulatorSection(float xs, float ys, float xBegin,
-                                       float yBegin, int div,
-                                       const std::vector<unsigned> &indices,
-                                       const std::vector<float> &history)
+HoughAccumulatorSection::HoughAccumulatorSection(
+    float xs, float ys, float xBegin, float yBegin, int div,
+    const std::vector<unsigned> &indices, const std::vector<float> &history)
     : m_xSize(xs),
       m_ySize(ys),
       m_xBegin(xBegin),
@@ -14,7 +13,7 @@ HoughAccumulatorSection::HoughAccumulatorSection(float xs, float ys, float xBegi
       m_history(history) {}
 
 void HoughAccumulatorSection::updateDimensions(float xs, float ys, float xBegin,
-                                          float yBegin) {
+                                               float yBegin) {
   m_xSize = xs;
   m_ySize = ys;
   m_xBegin = xBegin;
@@ -28,65 +27,62 @@ void HoughAccumulatorSection::expand(float xs, float ys) {
   m_ySize *= ys;
 }
 
-HoughAccumulatorSection HoughAccumulatorSection::bottomLeft(bool copyIndices) const {
-  return HoughAccumulatorSection(m_xSize * 0.5, m_ySize * 0.5, m_xBegin,
-                            m_yBegin, m_divisionLevel + 1,
-                            (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
+HoughAccumulatorSection HoughAccumulatorSection::bottomLeft(
+    bool copyIndices) const {
+  return HoughAccumulatorSection(
+      m_xSize * 0.5, m_ySize * 0.5, m_xBegin, m_yBegin, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
 }
 
-HoughAccumulatorSection HoughAccumulatorSection::topLeft(bool copyIndices) const {
-  return HoughAccumulatorSection(m_xSize * 0.5, m_ySize * 0.5, m_xBegin,
-                            m_yBegin + m_ySize - m_ySize * 0.5,
-                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
-                            m_history);
+HoughAccumulatorSection HoughAccumulatorSection::topLeft(
+    bool copyIndices) const {
+  return HoughAccumulatorSection(
+      m_xSize * 0.5, m_ySize * 0.5, m_xBegin,
+      m_yBegin + m_ySize - m_ySize * 0.5, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
 }
 
-HoughAccumulatorSection HoughAccumulatorSection::topRight(bool copyIndices) const {
-  return HoughAccumulatorSection(m_xSize * 0.5, m_ySize * 0.5,
-                            m_xBegin + m_xSize - m_xSize * 0.5,
-                            m_yBegin + m_ySize - m_ySize * 0.5,
-                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
-                            m_history);
+HoughAccumulatorSection HoughAccumulatorSection::topRight(
+    bool copyIndices) const {
+  return HoughAccumulatorSection(
+      m_xSize * 0.5, m_ySize * 0.5, m_xBegin + m_xSize - m_xSize * 0.5,
+      m_yBegin + m_ySize - m_ySize * 0.5, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
 }
 
-HoughAccumulatorSection HoughAccumulatorSection::bottomRight(bool copyIndices) const {
-  return HoughAccumulatorSection(m_xSize * 0.5, m_ySize * 0.5,
-                            m_xBegin + m_xSize - m_xSize * 0.5, m_yBegin,
-                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
-                            m_history);
+HoughAccumulatorSection HoughAccumulatorSection::bottomRight(
+    bool copyIndices) const {
+  return HoughAccumulatorSection(
+      m_xSize * 0.5, m_ySize * 0.5, m_xBegin + m_xSize - m_xSize * 0.5,
+      m_yBegin, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
 }
 
-HoughAccumulatorSection HoughAccumulatorSection::bottom(bool copyIndices) const {
-  return HoughAccumulatorSection(m_xSize, m_ySize * 0.5,
-                            m_xBegin, m_yBegin,
-                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
-                            m_history);
-
+HoughAccumulatorSection HoughAccumulatorSection::bottom(
+    bool copyIndices) const {
+  return HoughAccumulatorSection(
+      m_xSize, m_ySize * 0.5, m_xBegin, m_yBegin, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::top(bool copyIndices) const {
-  return HoughAccumulatorSection(m_xSize, m_ySize * 0.5, m_xBegin,
-                            m_yBegin + m_ySize * 0.5,
-                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
-                            m_history);
-
+  return HoughAccumulatorSection(
+      m_xSize, m_ySize * 0.5, m_xBegin, m_yBegin + m_ySize * 0.5,
+      m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+      m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::left(bool copyIndices) const {
-  return HoughAccumulatorSection(m_xSize * 0.5, m_ySize, m_xBegin,
-                            m_yBegin,
-                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
-                            m_history);
-
+  return HoughAccumulatorSection(
+      m_xSize * 0.5, m_ySize, m_xBegin, m_yBegin, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::right(bool copyIndices) const {
-    return HoughAccumulatorSection(m_xSize * 0.5, m_ySize,
-                            m_xBegin + m_xSize * 0.5,
-                            m_yBegin,
-                            m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
-                            m_history);
-
+  return HoughAccumulatorSection(
+      m_xSize * 0.5, m_ySize, m_xBegin + m_xSize * 0.5, m_yBegin,
+      m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+      m_history);
 }
 
 }  // namespace Acts
