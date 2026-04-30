@@ -12,8 +12,8 @@
 'Component - Detray':
   - changed-files:
     - any-glob-to-any-file:
-      - 'Detray/**'
-      - '.github/detray.yml'
+      - Detray/**
+      - .github/detray.yml
 'Component - Examples':
   - changed-files:
     - any-glob-to-any-file:

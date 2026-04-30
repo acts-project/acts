@@ -175,6 +175,7 @@
                 "detray-cuda"
             ],
             "cacheVariables": {
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "BUILD_TESTING": "TRUE",
                 "DETRAY_BUILD_HOST": "FALSE",
                 "DETRAY_BUILD_UNITTESTS": "TRUE",
@@ -194,6 +195,7 @@
                 "detray-sycl"
             ],
             "cacheVariables": {
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "BUILD_TESTING": "TRUE",
                 "DETRAY_BUILD_HOST": "FALSE",
                 "DETRAY_BUILD_UNITTESTS": "TRUE",

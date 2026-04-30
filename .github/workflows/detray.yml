@@ -95,7 +95,7 @@ jobs:
     # Run the CMake configuration.
     - name: Configure
       run: |
-        source ${GITHUB_WORKSPACE}/Detray/.github/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --preset detray-full-fp32 \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DDETRAY_FAIL_ON_WARNINGS=ON \
@@ -107,20 +107,20 @@ jobs:
     # Perform the build.
     - name: Build
       run: |
-        source ${GITHUB_WORKSPACE}/Detray/.github/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --build build -- -j $(nproc)
     # Run the unit test(s).
     - name: Full Test
       if: "matrix.BUILD_TYPE == 'Release'"
       run: |
         cd build
-        source ${GITHUB_WORKSPACE}/Detray/.github/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         ctest --output-on-failure
     - name: Unit Tests
       if: "matrix.BUILD_TYPE == 'Debug'"
       run: |
         cd build
-        source ${GITHUB_WORKSPACE}/Detray/.github/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         ctest -R detray_unit_test_. -E "._eigen|._fastor|._vc_aos" --output-on-failure
 
   # Containerised build jobs.
@@ -166,7 +166,7 @@ jobs:
     # Run the CMake configuration.
     - name: Configure
       run: |
-        source ${GITHUB_WORKSPACE}/Detray/.github/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --preset detray-full-fp32 \
           -DCMAKE_CXX_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
           -DCMAKE_CUDA_STANDARD=${{ matrix.PLATFORM.CXX_STANDARD }} \
@@ -186,9 +186,9 @@ jobs:
     # Perform the build.
     - name: Build
       run: |
-        source ${GITHUB_WORKSPACE}/Detray/.github/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
+        source ${GITHUB_WORKSPACE}/Detray/CI/ci_setup.sh ${{ matrix.PLATFORM.NAME }}
         cmake --build build
     - name: FP64 Compliance
       if: "matrix.PLATFORM.NAME == 'CUDA' && matrix.BUILD_TYPE == 'Debug' && matrix.SCALAR_TYPE == 'float'"
       continue-on-error: true
-      run: ${GITHUB_WORKSPACE}/Detray/.github/find_f64_ptx.py --source ${GITHUB_WORKSPACE}/Detray --build build $(find build -name "*.ptx" ! -name "container_cuda_kernel.ptx")
+      run: ${GITHUB_WORKSPACE}/Detray/CI/find_f64_ptx.py --source ${GITHUB_WORKSPACE}/Detray --build build $(find build -name "*.ptx" ! -name "container_cuda_kernel.ptx")
