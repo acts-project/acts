@@ -7,16 +7,19 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/JsonMaterialDecorator.hpp"
 #include "ActsPlugins/Json/JsonSurfacesReader.hpp"
 #include "ActsPlugins/Json/MaterialMapJsonConverter.hpp"
+#include "ActsPlugins/Json/TrackingGeometryJsonConverter.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <memory>
 #include <string>
 
+#include <nlohmann/json.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -71,5 +74,47 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
 
     json.def("readDetectorElementsFromJson",
              JsonSurfacesReader::readDetectorElements);
+  }
+
+  {
+    auto cls = py::class_<TrackingGeometryJsonConverter>(
+        json, "TrackingGeometryJsonConverter");
+
+    py::class_<TrackingGeometryJsonConverter::Config>(cls, "Config")
+        .def_static("defaultConfig",
+                    &TrackingGeometryJsonConverter::Config::defaultConfig);
+
+    cls.def(py::init([](TrackingGeometryJsonConverter::Config config,
+                        Acts::Logging::Level level) {
+              return std::make_unique<TrackingGeometryJsonConverter>(
+                  std::move(config),
+                  Acts::getDefaultLogger("TrackingGeometryJsonConverter",
+                                         level));
+            }),
+            py::arg("config") =
+                TrackingGeometryJsonConverter::Config::defaultConfig(),
+            py::arg("level") = Acts::Logging::INFO)
+        .def(py::init([](TrackingGeometryJsonConverter::Config config,
+                         std::unique_ptr<const Acts::Logger> logger) {
+               return std::make_unique<TrackingGeometryJsonConverter>(
+                   std::move(config), std::move(logger));
+             }),
+             py::arg("config") =
+                 TrackingGeometryJsonConverter::Config::defaultConfig(),
+             py::arg("logger"))
+        .def(
+            "toJson",
+            [](const TrackingGeometryJsonConverter& self,
+               const GeometryContext& gctx, const TrackingGeometry& geometry) {
+              return self.toJson(gctx, geometry).dump();
+            },
+            py::arg("gctx"), py::arg("geometry"))
+        .def(
+            "fromJson",
+            [](const TrackingGeometryJsonConverter& self,
+               const GeometryContext& gctx, const std::string& encoded) {
+              return self.fromJson(gctx, nlohmann::json::parse(encoded));
+            },
+            py::arg("gctx"), py::arg("encoded"));
   }
 }

@@ -13,6 +13,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiamondVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -198,6 +199,8 @@ std::string getVolumeBoundsKind() {
     return "CutoutCylinder";
   } else if (std::is_same_v<bounds_t, Acts::CylinderVolumeBounds>) {
     return "Cylinder";
+  } else if (std::is_same_v<bounds_t, Acts::DiamondVolumeBounds>) {
+    return "Diamond";
   } else if (std::is_same_v<bounds_t, Acts::GenericCuboidVolumeBounds>) {
     return "GenericCuboid";
   } else if (std::is_same_v<bounds_t, Acts::TrapezoidVolumeBounds>) {
@@ -769,6 +772,7 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerFunction(encodeVolumeBoundsT<CuboidVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<CutoutCylinderVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<CylinderVolumeBounds>)
+      .registerFunction(encodeVolumeBoundsT<DiamondVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<GenericCuboidVolumeBounds>)
       .registerFunction(encodeVolumeBoundsT<TrapezoidVolumeBounds>);
 
@@ -797,6 +801,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
                     decodeVolumeBoundsT<CutoutCylinderVolumeBounds>)
       .registerKind(getVolumeBoundsKind<CylinderVolumeBounds>(),
                     decodeVolumeBoundsT<CylinderVolumeBounds>)
+      .registerKind(getVolumeBoundsKind<DiamondVolumeBounds>(),
+                    decodeVolumeBoundsT<DiamondVolumeBounds>)
       .registerKind(getVolumeBoundsKind<GenericCuboidVolumeBounds>(),
                     decodeVolumeBoundsT<GenericCuboidVolumeBounds>)
       .registerKind(getVolumeBoundsKind<TrapezoidVolumeBounds>(),
@@ -817,8 +823,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
 }
 
 Acts::TrackingGeometryJsonConverter::TrackingGeometryJsonConverter(
-    Config config)
-    : m_cfg(std::move(config)) {}
+    Config config, std::unique_ptr<const Acts::Logger> logger)
+    : m_cfg(std::move(config)), m_logger(std::move(logger)) {}
 
 nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
     const GeometryContext& gctx, const TrackingGeometry& geometry,
@@ -828,6 +834,7 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::toJson(
         "Tracking geometry serialization is only implemented for Gen3 "
         "geometries");
   }
+  ACTS_DEBUG("Serializing TrackingGeometry to JSON");
   return trackingVolumeToJson(gctx, *geometry.highestTrackingVolume(), options);
 }
 
@@ -875,6 +882,12 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
   collectGeometry(world, orderedSurfaces, orderedPortals, orderedVolumes,
                   surfaceIds, portalIds, volumeIds);
 
+  ACTS_DEBUG("Encoding " << orderedVolumes.size() << " volumes, "
+                         << orderedPortals.size() << " portals, "
+                         << orderedSurfaces.size()
+                         << " surfaces from root volume '" << world.volumeName()
+                         << "'");
+
   encoded[kSurfacesKey] = nlohmann::json::array();
   encoded[kPortalsKey] = nlohmann::json::array();
   encoded[kVolumesKey] = nlohmann::json::array();
@@ -916,7 +929,10 @@ nlohmann::json Acts::TrackingGeometryJsonConverter::trackingVolumeToJson(
   // Encode volumes
   for (const auto* volume : orderedVolumes) {
     nlohmann::json jVolume;
-    jVolume[kVolumeIdKey] = volumeIds.at(*volume);
+    const auto volumeId = volumeIds.at(*volume);
+    ACTS_VERBOSE("Encoding volume '" << volume->volumeName()
+                                     << "' (id=" << volumeId << ")");
+    jVolume[kVolumeIdKey] = volumeId;
     jVolume[kNameKey] = volume->volumeName();
     jVolume[kGeometryIdKey] = nlohmann::json(volume->geometryId());
     jVolume[kTransformKey] =
@@ -1015,12 +1031,18 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     }
   }
 
-  // Get root volume id
   const std::size_t rootVolumeId =
       encoded.at(kRootVolumeIdKey).get<std::size_t>();
+
   if (!volumeRecords.contains(rootVolumeId)) {
     throw std::invalid_argument("Serialized root volume ID does not exist");
   }
+
+  ACTS_DEBUG("Decoding " << volumeRecords.size() << " volumes, "
+                         << portalRecords.size() << " portals, "
+                         << surfaceRecords.size()
+                         << " surfaces from root volume '"
+                         << volumeRecords.at(rootVolumeId).name << "'");
 
   // Collect surface pointers
   SurfacePointerLookup surfacePointers;
@@ -1058,6 +1080,8 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     if (built.contains(volumeId)) {
       return;
     }
+    ACTS_VERBOSE("Assembling volume '" << volumeRecords.at(volumeId).name
+                                       << "' (id=" << volumeId << ")");
     if (!visiting.insert(volumeId).second) {
       throw std::invalid_argument(
           "Cycle detected in serialized volume hierarchy");
@@ -1083,6 +1107,12 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
   };
 
   attachChildren(rootVolumeId, attachChildren);
+  ACTS_DEBUG("Volume hierarchy assembled (" << built.size() << " volumes)");
+  if (built.size() != volumeRecords.size()) {
+    ACTS_WARNING(volumeRecords.size() - built.size()
+                 << " volume(s) in the JSON are not reachable from the root "
+                    "and were not assembled into the hierarchy");
+  }
 
   auto decodePortal = [&](const nlohmann::json& jPortal) {
     std::unique_ptr<PortalLinkBase> along = nullptr;
@@ -1115,14 +1145,17 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
       throw std::invalid_argument("Portal pointer reconstruction failed");
     }
   }
+  ACTS_DEBUG("Decoded " << portalRecords.size() << " portals");
 
-  auto logger =
-      Acts::getDefaultLogger("navigationPolicyLogger", Acts::Logging::INFO);
   for (const auto& [volumeId, record] : volumeRecords) {
     auto* volume = volumePointers.find(volumeId);
     if (volume == nullptr) {
       throw std::invalid_argument("Volume pointer reconstruction failed");
     }
+
+    ACTS_VERBOSE("Attaching " << record.portalIds.size() << " portals and "
+                              << record.surfaceIds.size()
+                              << " surfaces to volume '" << record.name << "'");
 
     for (const std::size_t portalId : record.portalIds) {
       volume->addPortal(portalPointers.at(portalId));
@@ -1132,7 +1165,7 @@ Acts::TrackingGeometryJsonConverter::trackingVolumeFromJson(
     }
 
     volume->setNavigationPolicy(navigationPolicyFromJson(
-        gctx, record.navigationPolicy, *volume, *logger));
+        gctx, record.navigationPolicy, *volume, logger()));
   }
 
   auto root = std::move(volumeStorage.at(rootVolumeId));
@@ -1147,11 +1180,14 @@ std::shared_ptr<Acts::TrackingGeometry>
 Acts::TrackingGeometryJsonConverter::fromJson(const GeometryContext& gctx,
                                               const nlohmann::json& encoded,
                                               const Options& options) const {
+  ACTS_DEBUG("Reconstructing TrackingGeometry from JSON");
   auto world = trackingVolumeFromJson(gctx, encoded, options);
 
   GeometryIdentifier::Value nextVolumeId = 1u;
   ensureIdentifiers(*world, nextVolumeId);
 
+  ACTS_DEBUG("TrackingGeometry reconstruction complete, root volume '"
+             << world->volumeName() << "'");
   return std::make_shared<TrackingGeometry>(
       world, nullptr, GeometryIdentifierHook{}, getDummyLogger(), false);
 }
