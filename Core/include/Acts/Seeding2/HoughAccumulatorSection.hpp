@@ -18,6 +18,7 @@ namespace Acts {
 /// @brief helper class fro adaptive traversal of HT space
 class HoughAccumulatorSection {
  public:
+  /// @brief Defines the fate of section during traversal
   enum class Decision {
     Discard,  // the section is not to be explored further
     Accept,   // the section should be accepted as solution without further
@@ -31,12 +32,24 @@ class HoughAccumulatorSection {
 
   HoughAccumulatorSection() = default;
 
+  /// @brief Construct the section
+  /// @param xw - width in x direction
+  /// @param yw - widths in y direction
+  /// @param xBegin - location of left side of the section
+  /// @param yBegin - location of bottom side of the section
+  /// @param div - division level (will be incremented during each division)
+  /// @param indices - indices of measurements that generate lines passing this section
+  /// @param history - storage for arbitrary information related to the section
   HoughAccumulatorSection(float xw, float yw, float xBegin, float yBegin,
                           int div = 0,
                           const std::vector<unsigned> &indices = {},
                           const std::vector<float> &history = {});
 
+  /// @brief decision designated for this section in next traversal step
   Decision decision() const { return m_decision; }
+
+  /// @brief updates decision designated for this step
+  /// If this is not set specifically the default is to split (called Drill)
   Decision updateDecision(Decision d) { return m_decision = d; }
 
   /// @brief keep indices and update parameters of the box
@@ -54,21 +67,24 @@ class HoughAccumulatorSection {
   inline const std::vector<unsigned> &indices() const { return m_indices; }
   inline std::vector<unsigned> &indices() { return m_indices; }
 
-  /// create section that is bottom part this this one
+  /// @brief create section that is result of splitting this one into 2
   /// @arg copyIndices - copies indices from the parent
   /// +------+
   /// |      |
   /// +------+
   /// |     <|-- this part
   /// +------+
+  /// @return - new section
   HoughAccumulatorSection bottom(bool copyIndices = false) const;
-  /// see @bottom
+  /// see bottom
   HoughAccumulatorSection top(bool copyIndices = false) const;
-  /// @see @bottom
+  /// @see@bottom
   HoughAccumulatorSection left(bool copyIndices = false) const;
-  /// @see @bottom
+  /// @see bottom
   HoughAccumulatorSection right(bool copyIndices = false) const;
 
+  /// @brief create section that is result of splitting this one into 4
+  /// @arg copyIndices - copies indices from the parent
   /// create section that is bottom left corner of this this one
   /// by default the section is divided into 4 quadrants,
   /// if parameters are provided the quadrants size can be adjusted
@@ -77,10 +93,13 @@ class HoughAccumulatorSection {
   /// +---+---+
   /// |   |  <|-- this part
   /// +---+---+
+  /// @return new accumulator section (with new dimensions and location)
   HoughAccumulatorSection bottomRight(bool copyIndices = false) const;
+  /// @see bottomRight
   HoughAccumulatorSection bottomLeft(bool copyIndices = false) const;
-
+  /// @see bottomRight
   HoughAccumulatorSection topLeft(bool copyIndices = false) const;
+  /// @see bottomRight
   HoughAccumulatorSection topRight(bool copyIndices = false) const;
 
   /// @brief true if the line defined by given parameters passes the section
@@ -100,10 +119,17 @@ class HoughAccumulatorSection {
   inline bool isCrossingInside(F &&line1, F &&line2) const &
     requires std::invocable<F, float>;
 
-  /// sizes access
+  /// @brief size accessor
+  /// @return size in x direction
   float xSize() const { return m_xSize; }
+  /// @brief size accessor
+  /// @return size in x direction
   float ySize() const { return m_ySize; }
+  /// @brief location accessor
+  /// @return left side position
   float xBegin() const { return m_xBegin; }
+  /// @brief location accessor
+  /// @return bottom side position
   float yBegin() const { return m_yBegin; }
   unsigned divisionLevel() const { return m_divisionLevel; }
 
@@ -223,15 +249,21 @@ inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
 /// @tparam Measurement - measurement type which are used in generating lines in HT space
 template <typename Measurement>
 struct HoughExplorationOptions {
-  float xMinBinSize = 1.0f;  // minimum bin size in x direction, beyond that
-                             // value the sections are not split
-  float yMinBinSize = 1.0f;  // minimum bin size in y direction, beyond that
-                             // value the sections are not split
-  float expandX = 1.1f;      // expand in x direction (default by 10%) if Expand
-                             // Decision is made
-  float expandY = 1.1f;      // expand in y direction (default by 10%) if Expand
-  // Decision is made
+  /// minimum bin size in x direction, beyond that
+  /// value the sections are not split
+  float xMinBinSize = 1.0f;
 
+  /// minimum bin size in y direction, beyond that
+  /// value the sections are not split
+  float yMinBinSize = 1.0f;
+
+  /// expand in x direction (default by 10%) if Expand
+  /// Decision is made
+  float expandX = 1.1f;
+
+  /// expand in y direction (default by 10%) if Expand
+  /// Decision is made
+  float expandY = 1.1f;
   using LineFunctor = std::function<float(const Measurement &, float arg)>;
   LineFunctor
       lineFunctor;  // functional that, given measurement and
@@ -240,9 +272,10 @@ struct HoughExplorationOptions {
   using DecisionFunctor = std::function<Acts::HoughAccumulatorSection::Decision(
       const Acts::HoughAccumulatorSection &section,
       const std::vector<Measurement> &measurements)>;
-  DecisionFunctor decisionFunctor;  // function deciding if the accumulator
-                                    // section should be, discarded, split
-                                    // further (and how), or is a solution
+
+  /// function deciding if the accumulator section should be, discarded, 
+  /// split further (and how), or is a solution
+  DecisionFunctor decisionFunctor;
 };
 
 /// @brief function that walks through the section splitting them (depth-first) and
