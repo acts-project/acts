@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -23,7 +25,6 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/TrackHelpers.hpp"
 
 #include <memory>
 #include <vector>
@@ -66,10 +67,6 @@ struct ReferenceTrajectoryBuilderOptions {
 
   /// The reference surface
   const Surface* referenceSurface = nullptr;
-
-  /// Strategy to propagate to reference surface
-  TrackExtrapolationStrategy referenceSurfaceStrategy =
-      TrackExtrapolationStrategy::firstOrLast;
 
   /// Whether to consider multiple scattering
   bool multipleScattering = true;
@@ -322,7 +319,7 @@ class ReferenceTrajectoryBuilder {
       const BoundTrackParameters& sParameters, const Options& actorOptions,
       track_container_t& trackContainer) const {
     auto propagatorOptions = makePropagatorOptions(
-        actorOptions, nullptr, actorOptions.referenceSurface, false);
+        actorOptions, nullptr, actorOptions.referenceSurface);
     return buildImpl(sParameters, propagatorOptions, trackContainer);
   }
 
@@ -334,7 +331,7 @@ class ReferenceTrajectoryBuilder {
     requires(isDirectNavigator)
   {
     auto propagatorOptions = makePropagatorOptions(
-        actorOptions, &sSequence, actorOptions.referenceSurface, false);
+        actorOptions, &sSequence, actorOptions.referenceSurface);
     return buildImpl(sParameters, propagatorOptions, trackContainer);
   }
 
@@ -406,6 +403,8 @@ class ReferenceTrajectoryBuilder {
 
     for (auto trackState : trackProxy.trackStates()) {
       if (!trackState.typeFlags().hasMeasurement()) {
+        trackState.shareFrom(trackState, TrackStatePropMask::Predicted,
+                             TrackStatePropMask::Filtered);
         continue;
       }
 
@@ -431,8 +430,7 @@ class ReferenceTrajectoryBuilder {
  private:
   auto makePropagatorOptions(const Options& actorOptions,
                              const std::vector<const Surface*>* sSequence,
-                             const Surface* targetSurface,
-                             bool reverseDirection) const {
+                             const Surface* targetSurface) const {
     using Actors = ActorList<Actor>;
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
@@ -440,13 +438,11 @@ class ReferenceTrajectoryBuilder {
                                         actorOptions.magFieldContext);
     propagatorOptions.setPlainOptions(actorOptions.propagatorPlainOptions);
 
-    if (reverseDirection) {
-      propagatorOptions.direction = propagatorOptions.direction.invert();
-    }
-
     if constexpr (!isDirectNavigator) {
-      for (const Surface* surface : *sSequence) {
-        propagatorOptions.navigation.appendExternalSurface(*surface);
+      if (sSequence != nullptr) {
+        for (const Surface* surface : *sSequence) {
+          propagatorOptions.navigation.appendExternalSurface(*surface);
+        }
       }
     } else {
       assert(sSequence != nullptr &&

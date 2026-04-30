@@ -65,6 +65,22 @@ void addTrackFitting(py::module& mex) {
         "reverseFilteringCovarianceScaling"_a, "freeToBoundCorrection"_a,
         "chi2Cut"_a, "useJosephFormulation"_a, "level"_a);
 
+    mex.def(
+        "makeKalmanReferenceTrajectoryFitterFunction",
+        [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const MagneticFieldProvider> magneticField,
+           bool multipleScattering, bool energyLoss,
+           FreeToBoundCorrection freeToBoundCorrection,
+           bool useJosephFormulation, Logging::Level level) {
+          return makeKalmanReferenceTrajectoryFitterFunction(
+              std::move(trackingGeometry), std::move(magneticField),
+              multipleScattering, energyLoss, freeToBoundCorrection,
+              useJosephFormulation, *getDefaultLogger("Kalman", level));
+        },
+        "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
+        "energyLoss"_a, "freeToBoundCorrection"_a, "useJosephFormulation"_a,
+        "level"_a);
+
     py::class_<MeasurementCalibrator, std::shared_ptr<MeasurementCalibrator>>(
         mex, "MeasurementCalibrator");
 

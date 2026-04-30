@@ -20,6 +20,7 @@
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/TrackFitting/ReferenceTrajectoryBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -50,6 +51,8 @@ using namespace ActsExamples;
 
 struct KalmanReferenceTrajectoryFitterFunctionImpl final
     : public TrackFitterFunction {
+  Propagator extrapolator;
+
   ReferenceTrajectoryBuilder referenceTrajectoryBuilder;
   DirectReferenceTrajectoryBuilder directReferenceTrajectoryBuilder;
 
@@ -63,10 +66,11 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
   IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
 
   KalmanReferenceTrajectoryFitterFunctionImpl(
-      ReferenceTrajectoryBuilder&& rtBuilder,
+      Propagator&& ext, ReferenceTrajectoryBuilder&& rtBuilder,
       DirectReferenceTrajectoryBuilder&& dRtBuilder,
       const Acts::TrackingGeometry& trkGeo)
-      : referenceTrajectoryBuilder(std::move(rtBuilder)),
+      : extrapolator(std::move(ext)),
+        referenceTrajectoryBuilder(std::move(rtBuilder)),
         directReferenceTrajectoryBuilder(std::move(dRtBuilder)),
         slSurfaceAccessor{trkGeo} {}
 
@@ -75,10 +79,8 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
     Acts::Experimental::ReferenceTrajectoryBuilderOptions<
         Acts::VectorMultiTrajectory>
         rtOptions(options.geoContext, options.magFieldContext,
-                  options.propOptions, options.referenceSurface);
+                  options.propOptions, nullptr);
 
-    rtOptions.referenceSurfaceStrategy =
-        Acts::TrackExtrapolationStrategy::first;
     rtOptions.multipleScattering = multipleScattering;
     rtOptions.energyLoss = energyLoss;
     rtOptions.freeToBoundCorrection = freeToBoundCorrection;
@@ -108,23 +110,44 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
 
-    auto track = referenceTrajectoryBuilder.build(
+    auto buildResult = referenceTrajectoryBuilder.build(
         initialParameters, referenceTrajectoryBuilderOptions, tracks);
-    if (!track.ok()) {
-      return track.error();
+    if (!buildResult.ok()) {
+      return buildResult.error();
     }
+    auto track = *buildResult;
 
-    referenceTrajectoryBuilder.attachSourceLinks(*track, sourceLinks,
+    referenceTrajectoryBuilder.attachSourceLinks(track, sourceLinks,
                                                  sourceLinkAccessorDelegate);
 
-    referenceTrajectoryBuilder.calibrateMeasurements(
-        options.geoContext, options.calibrationContext, *track,
-        calibratorDelegate);
+    referenceTrajectoryBuilder.calibrateMeasurements(options.geoContext,
+                                                     options.calibrationContext,
+                                                     track, calibratorDelegate);
 
-    referenceTrajectoryBuilder.filter(options.geoContext, *track,
+    referenceTrajectoryBuilder.filter(options.geoContext, track,
                                       updaterDelegate);
 
-    return track;
+    auto smoothRes = kfSmoother(options.geoContext,
+                                tracks.trackStateContainer(), track.tipIndex());
+    if (!smoothRes.ok()) {
+      return smoothRes.error();
+    }
+
+    if (!track.hasReferenceSurface() && options.referenceSurface != nullptr) {
+      typename Propagator::template Options<> extrapolationOptions(
+          options.geoContext, options.magFieldContext);
+      auto extrapolationResult = extrapolateTrackToReferenceSurface(
+          track, *options.referenceSurface, extrapolator, extrapolationOptions,
+          Acts::TrackExtrapolationStrategy::first);
+
+      if (!extrapolationResult.ok()) {
+        return extrapolationResult.error();
+      }
+    }
+
+    Acts::calculateTrackQuantities(track);
+
+    return TrackFitterResult::success(track);
   }
 
   TrackFitterResult operator()(
@@ -148,24 +171,45 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &kfUpdater);
 
-    auto track = directReferenceTrajectoryBuilder.build(
+    auto buildResult = directReferenceTrajectoryBuilder.build(
         initialParameters, referenceTrajectoryBuilderOptions, surfaceSequence,
         tracks);
-    if (!track.ok()) {
-      return track.error();
+    if (!buildResult.ok()) {
+      return buildResult.error();
     }
+    auto track = *buildResult;
 
     directReferenceTrajectoryBuilder.attachSourceLinks(
-        *track, sourceLinks, sourceLinkAccessorDelegate);
+        track, sourceLinks, sourceLinkAccessorDelegate);
 
     directReferenceTrajectoryBuilder.calibrateMeasurements(
-        options.geoContext, options.calibrationContext, *track,
+        options.geoContext, options.calibrationContext, track,
         calibratorDelegate);
 
-    directReferenceTrajectoryBuilder.filter(options.geoContext, *track,
+    directReferenceTrajectoryBuilder.filter(options.geoContext, track,
                                             updaterDelegate);
 
-    return track;
+    auto smoothRes = kfSmoother(options.geoContext,
+                                tracks.trackStateContainer(), track.tipIndex());
+    if (!smoothRes.ok()) {
+      return smoothRes.error();
+    }
+
+    if (!track.hasReferenceSurface() && options.referenceSurface != nullptr) {
+      typename Propagator::template Options<> extrapolationOptions(
+          options.geoContext, options.magFieldContext);
+      auto extrapolationResult = extrapolateTrackToReferenceSurface(
+          track, *options.referenceSurface, extrapolator, extrapolationOptions,
+          Acts::TrackExtrapolationStrategy::first);
+
+      if (!extrapolationResult.ok()) {
+        return extrapolationResult.error();
+      }
+    }
+
+    Acts::calculateTrackQuantities(track);
+
+    return TrackFitterResult::success(track);
   }
 };
 
@@ -186,7 +230,7 @@ ActsExamples::makeKalmanReferenceTrajectoryFitterFunction(
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
-  Propagator propagator(stepper, std::move(navigator),
+  Propagator propagator(stepper, navigator,
                         logger.cloneWithSuffix("Propagator"));
   ReferenceTrajectoryBuilder referenceTrajectoryBuilder(
       std::move(propagator),
@@ -200,9 +244,12 @@ ActsExamples::makeKalmanReferenceTrajectoryFitterFunction(
       std::move(directPropagator),
       logger.cloneWithSuffix("DirectReferenceTrajectoryBuilder"));
 
+  Propagator extrapolator(stepper, navigator,
+                          logger.cloneWithSuffix("Extrapolator"));
+
   auto fitterFunction =
       std::make_shared<KalmanReferenceTrajectoryFitterFunctionImpl>(
-          std::move(referenceTrajectoryBuilder),
+          std::move(extrapolator), std::move(referenceTrajectoryBuilder),
           std::move(directReferenceTrajectoryBuilder), geo);
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
