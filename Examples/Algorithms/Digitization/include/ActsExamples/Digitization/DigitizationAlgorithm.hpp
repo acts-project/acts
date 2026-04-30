@@ -40,6 +40,8 @@ class DigitizationAlgorithm final : public IAlgorithm {
     std::string inputSimHits = "simhits";
     /// Output measurements collection.
     std::string outputMeasurements = "measurements";
+    /// Output initial measurement subset (all measurements, for pass 1).
+    std::string outputMeasurementSubset = "measurement_subset";
     /// Output cells map (geoID -> collection of cells).
     std::string outputCells = "cells";
     /// Output cluster collection.
@@ -141,6 +143,8 @@ class DigitizationAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
+  WriteDataHandle<MeasurementSubset> m_outputMeasurementSubset{
+      this, "OutputMeasurementSubset"};
   WriteDataHandle<CellsMap> m_outputCells{this, "OutputCells"};
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 

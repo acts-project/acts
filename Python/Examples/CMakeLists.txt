@@ -111,6 +111,8 @@ install(
     DESTINATION ${_examples_python_install_dir}
 )
 
+acts_pybind_generate_stubs(acts.examples ActsExamplesPythonBindings ActsPythonBindings)
+
 set_target_properties(
     ActsExamplesPythonBindings
     PROPERTIES
@@ -169,7 +171,7 @@ add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 ACTS_BUILD_EXAMP
 add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_EXAMPLES_ROOT TRUE)
 add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
 add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_EXAMPLES_ROOT TRUE)
-add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" ACTS_BUILD_PLUGIN_TRACCC FALSE)
+add_examples_binding_if(Detray "Acts::PluginCovfie;Acts::ExamplesDetray" ACTS_BUILD_PLUGIN_DETRAY FALSE)
 add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_EXAMPLES_FASTJET FALSE)
 
 # Special case for HepMC3 as it a hard dependency

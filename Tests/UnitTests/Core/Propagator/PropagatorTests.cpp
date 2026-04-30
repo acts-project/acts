@@ -107,7 +107,7 @@ struct SurfaceObserver {
       return Result<void>::success();
     }
 
-    // calculate the intersections to the surface
+    // calculate the intersections with the surface
     const auto multiIntersection = surface->intersect(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping),
@@ -115,23 +115,24 @@ struct SurfaceObserver {
 
     const double farLimit = std::numeric_limits<double>::max();
 
-    for (auto [intersectionIndex, intersection] :
-         Acts::enumerate(multiIntersection)) {
-      if (intersection.isValid() &&
-          detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                  farLimit, logger)) {
-        // Adjust the step size so that we cannot cross the target surface
-        state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
-        state.stepping.stepSize.update(intersection.pathLength(),
-                                       ConstrainedStep::Type::Actor);
+    if (const auto intersectionIt = std::ranges::find_if(
+            multiIntersection,
+            [&](const auto& intersection) {
+              return intersection.isValid() &&
+                     detail::checkPathLength(intersection.pathLength(),
+                                             nearLimit, farLimit, logger);
+            });
+        intersectionIt != multiIntersection.end()) {
+      // Adjust the step size so that we cannot cross the target surface
+      state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
+      state.stepping.stepSize.update(intersectionIt->pathLength(),
+                                     ConstrainedStep::Type::Actor);
 
-        // return true if you fall below tolerance
-        if (std::abs(intersection.pathLength()) <= tolerance) {
-          ++result.surfaces_passed;
-          result.surface_passed_r = perp(stepper.position(state.stepping));
-          state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
-        }
-        break;
+      // return true if we fall below tolerance
+      if (std::abs(intersectionIt->pathLength()) <= tolerance) {
+        ++result.surfaces_passed;
+        result.surface_passed_r = perp(stepper.position(state.stepping));
+        state.stepping.stepSize.release(ConstrainedStep::Type::Actor);
       }
     }
 
