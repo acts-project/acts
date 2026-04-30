@@ -46,10 +46,12 @@ class HoughAccumulatorSection {
                           const std::vector<float> &history = {});
 
   /// @brief decision designated for this section in next traversal step
+  /// @return currently set decision
   Decision decision() const { return m_decision; }
 
   /// @brief updates decision designated for this step
   /// If this is not set specifically the default is to split (called Drill)
+  /// @return value of the decision set
   Decision updateDecision(Decision d) { return m_decision = d; }
 
   /// @brief keep indices and update parameters of the box
@@ -61,11 +63,17 @@ class HoughAccumulatorSection {
   /// The box is recentred
   void expand(float xs, float ys);
 
-  inline unsigned int count() const {
-    return static_cast<unsigned>(m_indices.size());
-  }
+  /// @brief indices of measurements that result in lines in this section
+  /// @return reference to the vector of indices
   inline const std::vector<unsigned> &indices() const { return m_indices; }
+
+  /// @brief mutable version of @see indices
+  /// @return mutable access to indices
   inline std::vector<unsigned> &indices() { return m_indices; }
+
+  /// @brief number of lines in the section
+  /// @return number of lines
+  std::size_t count() const { return m_indices.size(); }
 
   /// @brief create section that is result of splitting this one into 2
   /// @arg copyIndices - copies indices from the parent
@@ -76,9 +84,9 @@ class HoughAccumulatorSection {
   /// +------+
   /// @return - new section
   HoughAccumulatorSection bottom(bool copyIndices = false) const;
-  /// see bottom
+  /// @see bottom
   HoughAccumulatorSection top(bool copyIndices = false) const;
-  /// @see@bottom
+  /// @see bottom
   HoughAccumulatorSection left(bool copyIndices = false) const;
   /// @see bottom
   HoughAccumulatorSection right(bool copyIndices = false) const;
@@ -105,19 +113,19 @@ class HoughAccumulatorSection {
   /// @brief true if the line defined by given parameters passes the section
   /// @param function is callable used to check crossing at the edges
   template <typename F>
-  inline bool isLineInside(F &&function) const &
-    requires std::invocable<F, float>;
+  inline bool isLineInside(
+      F &&function) const &requires std::invocable<F, float>;
 
   /// @brief check if the lines cross inside the section
-  /// @brief line1 - functional form of line 1
-  /// @brief line1 - functional form of line 2
+  /// @param line1 - functional form of line 1
+  /// @param line1 - functional form of line 2
   /// @warning note that this function is assuming that these are lines and the derivative is positive.
   /// It may be incorrect assumption for rapidly changing function or large
   /// sections
-  /// @return true if the lines cross in the section
+  /// @return true if the two lines cross in the section
   template <typename F>
-  inline bool isCrossingInside(F &&line1, F &&line2) const &
-    requires std::invocable<F, float>;
+  inline bool isCrossingInside(
+      F &&line1, F &&line2) const &requires std::invocable<F, float>;
 
   /// @brief size accessor
   /// @return size in x direction
@@ -131,6 +139,8 @@ class HoughAccumulatorSection {
   /// @brief location accessor
   /// @return bottom side position
   float yBegin() const { return m_yBegin; }
+  /// @brief number of divisions that lead to this section
+  /// @return integer > 0
   unsigned divisionLevel() const { return m_divisionLevel; }
 
   /// store additional (arbitrary) info in indexed array
@@ -160,9 +170,8 @@ class HoughAccumulatorSection {
 };
 
 template <typename F>
-inline bool HoughAccumulatorSection::isLineInside(F &&function) const &
-  requires std::invocable<F, float>
-{
+inline bool HoughAccumulatorSection::isLineInside(
+    F &&function) const &requires std::invocable<F, float> {
   const float yB = function(m_xBegin);
   const float yE = function(m_xBegin + m_xSize);
   return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
@@ -170,10 +179,8 @@ inline bool HoughAccumulatorSection::isLineInside(F &&function) const &
 }
 
 template <typename F>
-inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
-                                                      F &&line2) const &
-  requires std::invocable<F, float>
-{
+inline bool HoughAccumulatorSection::isCrossingInside(
+    F &&line1, F &&line2) const &requires std::invocable<F, float> {
   // this microalgorithm idea is illustrated below
   // section left section right
   // example with crossing
@@ -264,16 +271,18 @@ struct HoughExplorationOptions {
   /// expand in y direction (default by 10%) if Expand
   /// Decision is made
   float expandY = 1.1f;
-  using LineFunctor = std::function<float(const Measurement &, float arg)>;
+
+  /// @brief functional, that given measurement and argument in HT space x return y
+  using LineFunctor = std::function<float(const Measurement &, float)>;
   LineFunctor
       lineFunctor;  // functional that, given measurement and
                     // "x" coordinate of Hough space return "y" coordinate
 
+  /// @brief functional type, that given section and measurements decides the evolution of section
   using DecisionFunctor = std::function<Acts::HoughAccumulatorSection::Decision(
-      const Acts::HoughAccumulatorSection &section,
-      const std::vector<Measurement> &measurements)>;
+      const Acts::HoughAccumulatorSection &, const std::vector<Measurement> &)>;
 
-  /// function deciding if the accumulator section should be, discarded, 
+  /// function deciding if the accumulator section should be, discarded,
   /// split further (and how), or is a solution
   DecisionFunctor decisionFunctor;
 };
