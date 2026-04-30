@@ -56,7 +56,12 @@ class HoughAccumulatorSection {
 
   /// @brief keep indices and update parameters of the box
   /// This method is useful when changing direction of the search
+  /// @param xw - new x width
+  /// @param yw - new x width
+  /// @param xBegin - new left side
+  /// @param yBegin - new bottom side
   void updateDimensions(float xw, float yw, float xBegin, float yBegin);
+
   /// @brief keep indices and update parameters of the box by scalling
   /// @param xs - scale in x direction, if bigger than 1 the size increases
   /// @param ys - scale in y direction
@@ -75,8 +80,8 @@ class HoughAccumulatorSection {
   /// @return number of lines
   std::size_t count() const { return m_indices.size(); }
 
-  /// @brief create section that is result of splitting this one into 2
-  /// @arg copyIndices - copies indices from the parent
+  /// @brief create bottom section that is result of splitting this one into 2
+  /// @param copyIndices - copies indices from the parent if true
   /// +------+
   /// |      |
   /// +------+
@@ -84,11 +89,31 @@ class HoughAccumulatorSection {
   /// +------+
   /// @return - new section
   HoughAccumulatorSection bottom(bool copyIndices = false) const;
-  /// @see bottom
+
+  /// @brief create top section that is result of splitting this one into 2
+  /// @param copyIndices - copies indices from the parent if true
+  /// +------+
+  /// |      <|-- this part
+  /// +------+
+  /// |      |
+  /// +------+
+  /// @return - new section
   HoughAccumulatorSection top(bool copyIndices = false) const;
-  /// @see bottom
+
+  /// @brief create left section that is result of splitting this one into 2
+  /// @param copyIndices - copies indices from the parent if true
+  /// +---+---+
+  /// |  <|---|-- this part
+  /// +---+---+
+  /// @return - new section
   HoughAccumulatorSection left(bool copyIndices = false) const;
-  /// @see bottom
+
+  /// @brief create right section that is result of splitting this one into 2
+  /// @param copyIndices - copies indices from the parent if true
+  /// +---+---+
+  /// |   |  <|-- this part
+  /// +---+---+
+  /// @return - new section
   HoughAccumulatorSection right(bool copyIndices = false) const;
 
   /// @brief create section that is result of splitting this one into 4
@@ -102,26 +127,35 @@ class HoughAccumulatorSection {
   /// |   |  <|-- this part
   /// +---+---+
   /// @return new accumulator section (with new dimensions and location)
+  /// @param copyIndices - copies indices from the parent if true
   HoughAccumulatorSection bottomRight(bool copyIndices = false) const;
+
+  /// @brief create section that is result of splitting this one into 4
+  /// @arg copyIndices - copies indices from the parent
   /// @see bottomRight
   HoughAccumulatorSection bottomLeft(bool copyIndices = false) const;
+
+  /// @brief create section that is result of splitting this one into 4
+  /// @arg copyIndices - copies indices from the parent
   /// @see bottomRight
   HoughAccumulatorSection topLeft(bool copyIndices = false) const;
+
+  /// @brief create section that is result of splitting this one into 4
+  /// @arg copyIndices - copies indices from the parent
   /// @see bottomRight
   HoughAccumulatorSection topRight(bool copyIndices = false) const;
 
   /// @brief true if the line defined by given parameters passes the section
   /// @param function is callable used to check crossing at the edges
+  /// @return true if the line passes the section
   template <typename F>
   inline bool isLineInside(
       F &&function) const &requires std::invocable<F, float>;
 
   /// @brief check if the lines cross inside the section
   /// @param line1 - functional form of line 1
-  /// @param line1 - functional form of line 2
+  /// @param line2 - functional form of line 2
   /// @warning note that this function is assuming that these are lines and the derivative is positive.
-  /// It may be incorrect assumption for rapidly changing function or large
-  /// sections
   /// @return true if the two lines cross in the section
   template <typename F>
   inline bool isCrossingInside(
@@ -274,10 +308,11 @@ struct HoughExplorationOptions {
 
   /// @brief functional, that given measurement and argument in HT space x return y
   using LineFunctor = std::function<float(const Measurement &, float)>;
-  LineFunctor
-      lineFunctor;  // functional that, given measurement and
-                    // "x" coordinate of Hough space return "y" coordinate
 
+  /// functional that, given measurement and
+  /// "x" coordinate of Hough space return "y" coordinate
+  LineFunctor
+      lineFunctor;  
   /// @brief functional type, that given section and measurements decides the evolution of section
   using DecisionFunctor = std::function<Acts::HoughAccumulatorSection::Decision(
       const Acts::HoughAccumulatorSection &, const std::vector<Measurement> &)>;
