@@ -337,7 +337,7 @@ class ReferenceTrajectoryBuilder {
 
   template <typename track_proxy_t, typename source_link_range_t>
   void attachSourceLinks(
-      track_proxy_t trackProxy, source_link_range_t sourceLinkRange,
+      track_proxy_t trackProxy, const source_link_range_t& sourceLinkRange,
       const SourceLinkSurfaceAccessor& surfaceAccessor) const {
     const std::size_t nMeasurements = std::ranges::distance(sourceLinkRange);
 
