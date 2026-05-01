@@ -17,7 +17,7 @@
 
 namespace Acts {
 
-/// @brief helper class fro adaptive traversal of HT space
+/// @brief helper class for adaptive traversal of HT space
 class HoughAccumulatorSection {
  public:
   /// @brief Defines the fate of section during traversal
