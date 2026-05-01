@@ -258,8 +258,8 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
   };
 
   TestExplorationOptions<LineParameters> opt;
-  opt.xMinBinSize = 2.5;
-  opt.yMinBinSize = 2.5;
+  opt.xMinBinSize = 2.51;
+  opt.yMinBinSize = 2.51;
   opt.noiseThreshold = 3;
   opt.threshold = 2;
   opt.min_division_level = 1;
