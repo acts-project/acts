@@ -21,8 +21,8 @@ namespace ActsTests {
 
 auto logger = getDefaultLogger("UnitTests", Logging::VERBOSE);
 
-// Structure representing test parameters for a line in the accumulator space: y
-// = slope * x + intercept
+/// @brief Structure representing test parameters for a line in the accumulator space: y
+/// = slope * x + intercept
 struct LineParameters {
   float slope;
   float intercept;
@@ -40,11 +40,6 @@ struct Stats {
 template <typename measurement_t = LineParameters>
 struct TestExplorationOptions
     : public Acts::HoughExplorationOptions<LineParameters> {
-  // using base = Acts::HoughExplorationOptions<LineParameters>;
-  // xMinBinSize = 1.0f;
-  // yMinBinSize = 1.0f;
-  // expandX = 1.1f;
-  // expandY = 1.1f;
   unsigned threshold =
       4;  // number of lines passing section for it to be still considered
   unsigned noiseThreshold = 12;  // number of lines passing section at the final

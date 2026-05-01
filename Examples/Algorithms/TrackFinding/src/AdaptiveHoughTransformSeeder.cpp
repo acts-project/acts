@@ -43,9 +43,9 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
 
 // When traversing parameters space in various directions it is useful
 // to record the "path".
-// Acts::HoughAccumulatorSection has simple functionality allowing that in a form of a
-// plain vector of floats. These numbers need to be accessed consistently, thus
-// this indices.
+// Acts::HoughAccumulatorSection has simple functionality allowing that in a
+// form of a plain vector of floats. These numbers need to be accessed
+// consistently, thus this indices.
 namespace {
 constexpr unsigned int phiSplitMinIndex = 0;
 constexpr unsigned int phiSplitWidthIndex = 1;
@@ -339,7 +339,8 @@ void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
 }
 
 void AdaptiveHoughTransformSeeder::makeSeeds(
-    SeedContainer &seeds, const std::vector<Acts::HoughAccumulatorSection> &solutions,
+    SeedContainer &seeds,
+    const std::vector<Acts::HoughAccumulatorSection> &solutions,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   const SpacePointContainer &spacePoints = seeds.spacePointContainer();
 

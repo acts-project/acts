@@ -141,10 +141,10 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   }
 
   template <typename M>
-  void exploreParametersSpace(std::vector<Acts::HoughAccumulatorSection> &sectionsStack,
-                              const std::vector<M> &measurements,
-                              const ExplorationOptions<M> &opt,
-                              std::vector<Acts::HoughAccumulatorSection> &results) const {
+  void exploreParametersSpace(
+      std::vector<Acts::HoughAccumulatorSection> &sectionsStack,
+      const std::vector<M> &measurements, const ExplorationOptions<M> &opt,
+      std::vector<Acts::HoughAccumulatorSection> &results) const {
     using Decision = ExplorationOptions<M>::Decision;
     while (!sectionsStack.empty()) {
       ACTS_VERBOSE("Stack size " << sectionsStack.size());
@@ -275,7 +275,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the input to be translated
   /// @param measurements are input measurements
   void makeSeeds(
-      SeedContainer &seeds, const std::vector<Acts::HoughAccumulatorSection> &solutions,
+      SeedContainer &seeds,
+      const std::vector<Acts::HoughAccumulatorSection> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   using LineParamFunctor =

@@ -131,18 +131,21 @@ class HoughAccumulatorSection {
   HoughAccumulatorSection bottomRight(bool copyIndices = false) const;
 
   /// @brief create section that is result of splitting this one into 4
-  /// @arg copyIndices - copies indices from the parent
+  /// @param copyIndices - copies indices from the parent
   /// @see bottomRight
+  /// @return new accumulator section (with new dimensions and location)
   HoughAccumulatorSection bottomLeft(bool copyIndices = false) const;
 
   /// @brief create section that is result of splitting this one into 4
-  /// @arg copyIndices - copies indices from the parent
+  /// @param copyIndices - copies indices from the parent
   /// @see bottomRight
+  /// @return new accumulator section (with new dimensions and location)
   HoughAccumulatorSection topLeft(bool copyIndices = false) const;
 
   /// @brief create section that is result of splitting this one into 4
-  /// @arg copyIndices - copies indices from the parent
+  /// @param copyIndices - copies indices from the parent
   /// @see bottomRight
+  /// @return new accumulator section (with new dimensions and location)
   HoughAccumulatorSection topRight(bool copyIndices = false) const;
 
   /// @brief true if the line defined by given parameters passes the section
@@ -311,8 +314,7 @@ struct HoughExplorationOptions {
 
   /// functional that, given measurement and
   /// "x" coordinate of Hough space return "y" coordinate
-  LineFunctor
-      lineFunctor;  
+  LineFunctor lineFunctor;
   /// @brief functional type, that given section and measurements decides the evolution of section
   using DecisionFunctor = std::function<Acts::HoughAccumulatorSection::Decision(
       const Acts::HoughAccumulatorSection &, const std::vector<Measurement> &)>;
