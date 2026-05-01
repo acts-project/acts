@@ -209,7 +209,7 @@ class HoughAccumulatorSection {
 
 template <typename F>
 inline bool HoughAccumulatorSection::isLineInside(F &&function) const &
-  requires std::invocable<F, float> 
+  requires std::invocable<F, float>
 {
   const float yB = function(m_xBegin);
   const float yE = function(m_xBegin + m_xSize);
@@ -220,7 +220,7 @@ inline bool HoughAccumulatorSection::isLineInside(F &&function) const &
 template <typename F>
 inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
                                                       F &&line2) const &
-  requires std::invocable<F, float> 
+  requires std::invocable<F, float>
 {
   // this microalgorithm idea is illustrated below
   // section left section right
@@ -412,7 +412,7 @@ void exploreHoughParametersSpace(
 template <typename Measurement, typename Functor>
 bool passIntersectionsCheck(const HoughAccumulatorSection &section,
                             const std::vector<Measurement> &measurements,
-                            Functor lineFunctor, const unsigned threshold) {
+                            const Functor& lineFunctor, const unsigned threshold) {
   const std::size_t count = section.count();
   const float xLeft = section.xBegin();
   const float xRight = xLeft + section.xSize();
@@ -422,8 +422,8 @@ bool passIntersectionsCheck(const HoughAccumulatorSection &section,
   constexpr std::size_t kMaxStackLines = 64;
 
   if (count <= kMaxStackLines) {
-    std::array<float, kMaxStackLines> yLeft;
-    std::array<float, kMaxStackLines> yRight;
+    std::array<float, kMaxStackLines> yLeft{};
+    std::array<float, kMaxStackLines> yRight{};
 
     for (std::size_t i = 0; i < count; ++i) {
       const auto &m = measurements[indices[i]];
@@ -436,8 +436,9 @@ bool passIntersectionsCheck(const HoughAccumulatorSection &section,
       for (unsigned j = i + 1; j < count; ++j) {
         if ((yLeft[i] - yLeft[j]) * (yRight[i] - yRight[j]) < 0.0f) {
           inside++;
-          if (inside >= threshold)
+          if (inside >= threshold) {
             return true;  // Early exit
+          }
         }
       }
     }
@@ -455,8 +456,9 @@ bool passIntersectionsCheck(const HoughAccumulatorSection &section,
       for (unsigned j = i + 1; j < count; ++j) {
         if ((yLeft[i] - yLeft[j]) * (yRight[i] - yRight[j]) < 0.0f) {
           inside++;
-          if (inside >= threshold)
+          if (inside >= threshold) {
             return true;  // Early exit
+          }
         }
       }
     }

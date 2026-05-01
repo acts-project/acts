@@ -10,20 +10,20 @@
 
 namespace Acts {
 HoughAccumulatorSection::HoughAccumulatorSection(
-    float xs, float ys, float xBegin, float yBegin, int div,
+    float xw, float yw, float xBegin, float yBegin, int div,
     const std::vector<unsigned> &indices, const std::vector<float> &history)
-    : m_xSize(xs),
-      m_ySize(ys),
+    : m_xSize(xw),
+      m_ySize(yw),
       m_xBegin(xBegin),
       m_yBegin(yBegin),
       m_divisionLevel(div),
       m_indices(indices),
       m_history(history) {}
 
-void HoughAccumulatorSection::updateDimensions(float xs, float ys, float xBegin,
+void HoughAccumulatorSection::updateDimensions(float xw, float yw, float xBegin,
                                                float yBegin) {
-  m_xSize = xs;
-  m_ySize = ys;
+  m_xSize = xw;
+  m_ySize = yw;
   m_xBegin = xBegin;
   m_yBegin = yBegin;
 }

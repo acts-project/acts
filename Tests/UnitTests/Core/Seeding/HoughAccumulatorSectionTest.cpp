@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
   exploreHoughParametersSpace(sectionsStack, measurements, opt, results);
 
   // Initial Assertions to verify the engine explored the space
-  BOOST_CHECK(sStat.size() > 0);  // Verifies the tree was drilled
+  BOOST_CHECK(!sStat.empty());  // Verifies the tree was drilled
 
   // Empty section stack after algorithm
   BOOST_CHECK(sectionsStack.empty());
