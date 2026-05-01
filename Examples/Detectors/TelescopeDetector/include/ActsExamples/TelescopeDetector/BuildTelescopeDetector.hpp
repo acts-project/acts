@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <array>
 #include <memory>
@@ -43,7 +42,6 @@ enum class TelescopeSurfaceType {
 /// parallel to
 std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
-    const TelescopeDetectorElement::DetectorElementFactory& factory,
     std::vector<std::shared_ptr<const Acts::SurfacePlacementBase>>&
         detectorStore,
     const std::vector<double>& positions,

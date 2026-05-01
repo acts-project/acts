@@ -27,6 +27,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
             PUBLIC Acts::Core Acts::PythonUtilities ${_dependency}
         )
         add_dependencies(ActsPythonBindings ${_target})
+        acts_pybind_generate_stubs(acts.${_name_lower} ${_target} ActsPythonBindings)
     endif()
 
     set(PLUGIN_NAME "${_name}")

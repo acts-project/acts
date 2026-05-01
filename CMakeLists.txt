@@ -62,8 +62,6 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_ALGEBRAPLUGINS "If we want to set up algebra-plugins" ON)
 option(ACTS_USE_SYSTEM_COVFIE "Use a system-provided covfie installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_SETUP_COVFIE "If we want to set up covfie" ON)
 option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS_USE_SYSTEM_LIBS})
@@ -98,6 +96,7 @@ option(ACTS_SETUP_ANNOY "Explicitly set up Annoy for the project" OFF)
 # python related options
 option(ACTS_BUILD_PYTHON_WHEEL "Settings to build for python deployment with scikit-build-core" OFF)
 option(ACTS_BUILD_PYTHON_BINDINGS "Build python bindings for all enabled components" OFF)
+option(ACTS_GENERATE_PYTHON_STUBS "Generate Python stub files (.pyi) using pybind11-stubgen via uv" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 option(ACTS_BUILD_FATRAS_GEANT4 "Build Geant4 Fatras package" OFF)
@@ -211,6 +210,7 @@ set_option_if(ACTS_BUILD_PLUGIN_ACTSVG ACTS_BUILD_PLUGIN_TRACCC)
 set_option_if(ACTS_GNN_ENABLE_CUDA ACTS_GNN_ENABLE_MODULEMAP)
 set_option_if(ACTS_BUILD_PYTHON_BINDINGS ACTS_BUILD_PYTHON_WHEEL)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_PLUGIN_MILLE)
+
 # feature tests
 include(CheckCXXSourceCompiles)
 
@@ -303,11 +303,10 @@ set(_acts_root_version 6.28.04) # first version with C++20 support
 set(_acts_tbb_version 2020.1)
 set(_acts_pythia8_version 8.310)
 set(_acts_pybind11_version 3.0.1)
-set(_acts_detray_version 0.103.0)
-set(_acts_traccc_version 0.26.1)
+set(_acts_detray_version 1.0.1)
+set(_acts_traccc_version 1.2.0)
 set(_acts_covfie_version 0.15.2)
-set(_acts_vecmem_version 1.21.0)
-set(_acts_algebraplugins_version 0.28.0)
+set(_acts_vecmem_version 1.24.0)
 set(_acts_annoy_version 1.17.3)
 set(_acts_fastjet_version 3.4.1)
 
@@ -402,7 +401,7 @@ macro(enable_cuda)
     )
     if(NOT CMAKE_CUDA_ARCHITECTURES)
         set(CMAKE_CUDA_ARCHITECTURES
-            "35;52;75"
+            "75;80;86;90"
             CACHE STRING
             "CUDA architectures to generate code for"
         )
@@ -556,18 +555,6 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
             add_subdirectory(thirdparty/vecmem)
             # Make the "VecMem language code" available for the whole project.
             include("${VECMEM_LANGUAGE_DIR}/vecmem-check-language.cmake")
-        endif()
-    endif()
-
-    if(ACTS_SETUP_ALGEBRAPLUGINS)
-        if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
-            find_package(
-                algebra-plugins
-                ${_acts_algebraplugins_version}
-                REQUIRED
-            )
-        else()
-            add_subdirectory(thirdparty/algebra-plugins)
         endif()
     endif()
 

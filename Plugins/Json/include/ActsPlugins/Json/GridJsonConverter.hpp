@@ -41,6 +41,13 @@ namespace AxisJsonConverter {
 /// @return a json object to represent the axis
 nlohmann::json toJson(const IAxis& ia);
 
+/// Convert an axis from json
+//
+/// @param jAxis the serialized axis
+///
+/// @return axis object pointer
+std::unique_ptr<Acts::IAxis> fromJson(const nlohmann::json& jAxis);
+
 /// Convert an axis to json - detray style
 ///
 /// @param ia the axis

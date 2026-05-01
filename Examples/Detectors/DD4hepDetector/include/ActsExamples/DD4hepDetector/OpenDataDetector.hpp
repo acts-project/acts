@@ -28,7 +28,8 @@ class OpenDataDetector final : public DD4hepDetectorBase {
     enum class ConstructionMethod {
       BarrelEndcap,
       DirectLayer,
-      DirectLayerGrouped
+      DirectLayerGrouped,
+      TGeo
     };
 
     using ElementFactory =

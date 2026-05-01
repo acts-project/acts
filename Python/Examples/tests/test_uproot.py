@@ -24,12 +24,12 @@ def test_root_write_uproot_read(tmp_path, fatras, conf_const):
     particle_file = tmp_path / "particles_simulation.root"
     hit_file = tmp_path / "hits.root"
 
-    s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
+    s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.INFO)
     evGen, simAlg, _ = fatras(s)
     s.addWriter(
         conf_const(
             RootParticleWriter,
-            acts.logging.WARNING,
+            acts.logging.INFO,
             inputParticles=simAlg.config.outputParticles,
             filePath=str(particle_file),
         )
@@ -37,32 +37,32 @@ def test_root_write_uproot_read(tmp_path, fatras, conf_const):
     s.addWriter(
         conf_const(
             RootSimHitWriter,
-            acts.logging.WARNING,
+            acts.logging.INFO,
             inputSimHits=simAlg.config.outputSimHits,
             filePath=str(hit_file),
         )
     )
     s.run()
 
-    s2 = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+    s2 = Sequencer(numThreads=1, logLevel=acts.logging.INFO)
     s2.addReader(
         UprootParticleReader(
             filePath=particle_file,
             outputParticles="particles_read",
-            level=acts.logging.WARNING,
+            level=acts.logging.INFO,
         )
     )
     s2.addReader(
         UprootSimHitReader(
             filePath=hit_file,
             outputSimHits="simhits_read",
-            level=acts.logging.WARNING,
+            level=acts.logging.INFO,
         )
     )
     alg = AssertCollectionExistsAlg(
         ["particles_read", "simhits_read"],
         "check_alg",
-        acts.logging.WARNING,
+        acts.logging.INFO,
     )
     s2.addAlgorithm(alg)
     s2.run()
