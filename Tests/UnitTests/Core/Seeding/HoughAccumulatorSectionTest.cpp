@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
   opt.yMinBinSize = 2.51;
   opt.noiseThreshold = 3;
   opt.threshold = 2;
-  opt.min_division_level = 1;
+  opt.min_division_level = 2;
   // Linear function definition: y = a*x + b, where LineParameters stores (a, b)
   // parameters for test purposes.
   opt.lineFunctor = [](const LineParameters &p, float arg) {
