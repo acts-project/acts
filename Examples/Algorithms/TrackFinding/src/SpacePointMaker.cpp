@@ -112,13 +112,13 @@ Acts::Result<void> createStripSpacePoint(
     const ConstVariableBoundMeasurementProxy& measurement1,
     const ConstVariableBoundMeasurementProxy& measurement2,
     const IndexSourceLink& sourceLink1, const IndexSourceLink& sourceLink2,
-    SpacePointContainer& spacePoints) {
+    SpacePointContainer& spacePoints,
+    const Acts::StripSpacePointBuilder::ConstrainedOptions& options) {
   const Acts::StripSpacePointBuilder::StripEnds stripEnds1 =
       getStripEnds(gctx, surface1, measurement1);
   const Acts::StripSpacePointBuilder::StripEnds stripEnds2 =
       getStripEnds(gctx, surface2, measurement2);
 
-  const Acts::StripSpacePointBuilder::ConstrainedOptions options{};
   const Acts::Result<Acts::Vector3> spacePoint =
       Acts::StripSpacePointBuilder::computeConstrainedSpacePoint(
           stripEnds1, stripEnds2, options);
@@ -298,7 +298,8 @@ void SpacePointMaker::initializeStripPartners() {
     }
     ACTS_DEBUG("Found " << nSurfaces << " surfaces for selector " << selector);
 
-    // Very dumb all-to-all search
+    // Closest-distance partner search: for each source module, the partner
+    // is the geometrically closest other module in the same (vol, layer).
     for (auto mod1 : range) {
       if (m_stripPartner.contains(mod1->geometryId())) {
         continue;
@@ -319,17 +320,19 @@ void SpacePointMaker::initializeStripPartners() {
         }
       }
 
+      // Closest-distance is asymmetric in dense multi-ring layers (e.g. ODD
+      // SS endcap with 3 rings): A's closest can be B while B's closest is
+      // some other X. Only commit a pair when both ends are unclaimed; skip
+      // otherwise so the unaffected pairs still go through.
+      if (m_stripPartner.contains(partner->geometryId())) {
+        ACTS_VERBOSE("Partner " << partner->geometryId()
+                                << " already paired; skipping " << mod1->geometryId());
+        continue;
+      }
       ACTS_VERBOSE("Found stereo pair: " << mod1->geometryId() << " <-> "
                                          << partner->geometryId());
-      ACTS_VERBOSE("- " << mod1->center(gctx).transpose() << " <-> "
-                        << partner->center(gctx).transpose());
-      const auto [it1, success1] =
-          m_stripPartner.insert({mod1->geometryId(), partner->geometryId()});
-      const auto [it2, success2] =
-          m_stripPartner.insert({partner->geometryId(), mod1->geometryId()});
-      if (!success1 || !success2) {
-        throw std::runtime_error("error inserting in map");
-      }
+      m_stripPartner.insert({mod1->geometryId(), partner->geometryId()});
+      m_stripPartner.insert({partner->geometryId(), mod1->geometryId()});
     }
 
     const std::size_t sizeAfter = m_stripPartner.size();
@@ -391,6 +394,11 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
   pairingOptions.maxAngleTheta = m_cfg.stripPairingMaxAngleTheta;
   pairingOptions.maxAnglePhi = m_cfg.stripPairingMaxAnglePhi;
 
+  Acts::StripSpacePointBuilder::ConstrainedOptions constrainedOptions;
+  constrainedOptions.stripLengthTolerance = m_cfg.stripLengthTolerance;
+  constrainedOptions.stripLengthGapTolerance = m_cfg.stripLengthGapTolerance;
+  constrainedOptions.stripGapParameter = m_cfg.stripGapParameter;
+
   // Loop over the geometry selections
   std::vector<std::pair<IndexSourceLink, IndexSourceLink>> stripSourceLinkPairs;
   for (auto sel : m_cfg.stripGeometrySelection) {
@@ -419,7 +427,14 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
     for (const auto& [mod1, mod1SourceLinks] : mapByModule) {
       ACTS_VERBOSE("Process " << mod1 << " with " << mod1SourceLinks->size()
                               << " source links");
-      const Acts::GeometryIdentifier mod2 = m_stripPartner.at(mod1);
+      // Some surfaces in dense multi-ring layers may not have been paired
+      // (see initializeStripPartners): skip rather than throw.
+      const auto partnerIt = m_stripPartner.find(mod1);
+      if (partnerIt == m_stripPartner.end()) {
+        ACTS_VERBOSE("- No registered partner for " << mod1 << ", skipping");
+        continue;
+      }
+      const Acts::GeometryIdentifier mod2 = partnerIt->second;
 
       // Avoid producing space points twice
       if (done.contains(mod2)) {
@@ -504,9 +519,6 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
         const std::size_t nOut = std::min(maxOut, candidates.size());
         for (std::size_t k = 0; k < nOut; ++k) {
           stripSourceLinkPairs.emplace_back(sourceLink1, candidates[k].first);
-          ACTS_VERBOSE("Found source link pair: " << sourceLink1.index()
-                                                  << " <-> "
-                                                  << candidates[k].first.index());
         }
       }
 
@@ -539,7 +551,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
 
       createStripSpacePoint(ctx.geoContext, surface1, surface2, measurement1,
                             measurement2, sourceLink1, sourceLink2,
-                            spacePoints);
+                            spacePoints, constrainedOptions);
     }
 
     ACTS_DEBUG("Built " << spacePoints.size() - nSpacePointsBefore

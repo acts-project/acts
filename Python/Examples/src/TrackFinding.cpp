@@ -40,7 +40,10 @@ void addTrackFinding(py::module& mex) {
                                 stripGeometrySelection, stripPairingMode,
                                 stripTopK, stripPairingMaxDistance,
                                 stripPairingMaxAngleTheta,
-                                stripPairingMaxAnglePhi);
+                                stripPairingMaxAnglePhi,
+                                stripLengthTolerance,
+                                stripLengthGapTolerance,
+                                stripGapParameter);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       GridTripletSeedingAlgorithm, mex, "GridTripletSeedingAlgorithm",

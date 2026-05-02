@@ -73,6 +73,12 @@ class SpacePointMaker final : public IAlgorithm {
     double stripPairingMaxDistance = 100.0;     // mm
     double stripPairingMaxAngleTheta = 1.0;     // rad
     double stripPairingMaxAnglePhi = 1.0;       // rad
+    /// Constrained-SP geometric tolerances (Acts::StripSpacePointBuilder).
+    double stripLengthTolerance = 0.01;
+    double stripLengthGapTolerance = 0.01;
+    /// ATLAS-SCTGapParameter analogue: scales an extra |m|, |n| allowance
+    /// from the wafer-thickness gap. 0 = legacy (no gap correction).
+    double stripGapParameter = 0.0;
   };
 
   /// Construct the space point maker.

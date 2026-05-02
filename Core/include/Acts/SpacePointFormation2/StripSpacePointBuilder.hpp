@@ -45,6 +45,12 @@ struct ConstrainedOptions final {
   double stripLengthTolerance = 0.01;
   /// Tolerance scaling factor of the gap between strip detector elements
   double stripLengthGapTolerance = 0.01;
+  /// ATLAS-SCTGapParameter analogue: scales an extra |m|, |n| allowance
+  /// from the wafer-thickness gap between the two stereo surfaces.
+  /// Extra term added to the limit:
+  ///   stripGapParameter * |gapVec| / sin(stereoAngle) / stripHalfLength
+  /// 0 = legacy ACTS behaviour (no geometric gap correction).
+  double stripGapParameter = 0.0;
 };
 
 /// @brief Strip cluster details
