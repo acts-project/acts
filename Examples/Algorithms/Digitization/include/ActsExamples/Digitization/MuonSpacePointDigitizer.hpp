@@ -68,11 +68,11 @@ class MuonSpacePointDigitizer final : public IAlgorithm {
     double rpcDeadTime{50. * Acts::UnitConstants::ns};
 
     /// @brief Maximum longitudinal extent of a bucket in the common sector frame
-    double bucketMaxWindow{800. * Acts::UnitConstants::mm};
+    double bucketMaxWindow{80. * Acts::UnitConstants::cm};
     /// @brief Maximum gap between neighboring space points before splitting
-    double bucketNeighborWindow{200. * Acts::UnitConstants::mm};
+    double bucketNeighborWindow{20. * Acts::UnitConstants::cm};
     /// @brief Tail overlap copied from the previous bucket into the next one
-    double bucketOverlapWindow{100. * Acts::UnitConstants::mm};
+    double bucketOverlapWindow{10. * Acts::UnitConstants::cm};
     /// @brief Scale factor for the covariance-aware overlap margin.
     double bucketOverlapSigmaScale{1.};
     /// @brief Reject buckets smaller than this

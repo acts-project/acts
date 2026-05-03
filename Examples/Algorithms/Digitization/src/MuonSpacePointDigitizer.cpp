@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <cmath>
 #include <format>
-#include <iterator>
 #include <limits>
 #include <map>
 #include <ranges>
@@ -67,7 +66,7 @@ constexpr GeometryIdentifier toVolumeLayerId(const GeometryIdentifier& id) {
 
 inline double bucketSigmaZ(const MuonSpacePoint& sp,
                            const double sigmaScale = 1.) {
-  const auto cov = sp.covariance();
+  const& auto cov = sp.covariance();
   const double var0 = cov[0];
   const double var1 = cov[1];
   const double maxVar = std::max({0., var0, var1});
@@ -82,9 +81,6 @@ inline double bucketUpperEdgeZ(const MuonSpacePoint& sp,
 inline void sortBucketPerLayer(MuonSpacePointBucket& bucket) {
   std::ranges::sort(bucket,
                     [](const MuonSpacePoint& a, const MuonSpacePoint& b) {
-                      if (a.geometryId().layer() != b.geometryId().layer()) {
-                        return a.geometryId().layer() < b.geometryId().layer();
-                      }
                       if (a.localPosition().z() != b.localPosition().z()) {
                         return a.localPosition().z() < b.localPosition().z();
                       }
@@ -125,7 +121,7 @@ inline GeometryIdentifier findRepresentativeVolumeId(
         }
         return a.value() < b.value();
       });
-  sortedIds.erase(std::unique(sortedIds.begin(), sortedIds.end()),
+  sortedIds.erase(std::ranges::unique(sortedIds),
                   sortedIds.end());
 
   for (const GeometryIdentifier& volId : sortedIds) {
@@ -223,7 +219,7 @@ ProcessCode MuonSpacePointDigitizer::initialize() {
   }
   MuonSpacePointCalibrator::Config calibCfg{};
   m_cfg.calibrator =
-      std::make_shared<MuonSpacePointCalibrator>(calibCfg, logger().clone());
+      std::make_unique<MuonSpacePointCalibrator>(calibCfg, logger().clone());
 
   return SUCCESS;
 }
