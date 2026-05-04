@@ -113,10 +113,12 @@ struct single : public detray::ranges::single_view<value_t> {
   constexpr single() = default;
 
   template <typename deduced_value_t>
+    requires(!std::same_as<deduced_value_t, single>)
   DETRAY_HOST_DEVICE constexpr explicit single(const deduced_value_t& value)
       : base_type(value) {}
 
   template <typename deduced_value_t>
+    requires(!std::same_as<deduced_value_t, single>)
   DETRAY_HOST_DEVICE constexpr explicit single(deduced_value_t&& value)
       : base_type(std::forward<deduced_value_t>(value)) {}
 

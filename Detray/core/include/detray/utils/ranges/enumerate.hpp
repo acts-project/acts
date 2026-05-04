@@ -217,6 +217,7 @@ class enumerate_view : public detray::ranges::view_interface<
 
   /// Construct from a @param range that will be enumerated beginning at 0
   template <detray::ranges::range range_t>
+    requires(!std::same_as<range_t, enumerate_view>)
   DETRAY_HOST_DEVICE constexpr explicit enumerate_view(range_t &&rng)
       : m_begin{detray::ranges::begin(rng)},
         m_end{detray::ranges::end(rng), static_cast<incr_t>(rng.size())} {}
@@ -260,6 +261,7 @@ struct enumerate : public enumerate_view<range_itr_t, incr_t> {
   /// Direct view construction
   /// @{
   template <detray::ranges::range range_t>
+    requires(!std::same_as<range_t, enumerate>)
   DETRAY_HOST_DEVICE constexpr explicit enumerate(range_t &&rng)
       : base_type(std::forward<range_t>(rng)) {}
 

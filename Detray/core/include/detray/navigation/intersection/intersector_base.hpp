@@ -241,7 +241,7 @@ DETRAY_HOST_DEVICE constexpr void resolve_mask(
 
   is.set_path(ip.path);
   is.set_surface(sf_desc);
-  is.set_direction(!detail::signbit(ip.path));
+  is.set_direction(!math::signbit(ip.path));
   is.set_volume_link(mask.volume_link());
 }
 

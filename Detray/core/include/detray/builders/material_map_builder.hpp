@@ -256,7 +256,7 @@ struct material_coll_size {
   DETRAY_HOST inline void operator()(std::map<std::size_t, dindex>& size_map,
                                      std::index_sequence<I...> /*seq*/,
                                      const coll_ts&... coll) const {
-    (size_map.emplace(I, static_cast<dindex>(coll.size())), ...);
+    (size_map.emplace(I, static_cast<dindex>(std::size(coll))), ...);
   }
 };
 

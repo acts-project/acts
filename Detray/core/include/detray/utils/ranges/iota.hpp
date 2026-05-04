@@ -164,6 +164,7 @@ class iota_view : public detray::ranges::view_interface<iota_view<incr_t>> {
 
   /// Construct from an @param interval that defines start and end values.
   template <concepts::interval interval_t>
+    requires(!std::same_as<interval_t, iota_view>)
   DETRAY_HOST_DEVICE constexpr explicit iota_view(interval_t &&interval)
       : m_start{detray::detail::get<0>(interval)},
         m_end{detray::detail::get<1>(interval)} {}
@@ -202,6 +203,7 @@ struct iota : public detray::ranges::iota_view<incr_t> {
   = default;
 
   template <concepts::interval interval_t>
+    requires(!std::same_as<interval_t, iota>)
   DETRAY_HOST_DEVICE constexpr explicit iota(interval_t &&interval)
       : base_type(std::forward<interval_t>(interval)) {}
 

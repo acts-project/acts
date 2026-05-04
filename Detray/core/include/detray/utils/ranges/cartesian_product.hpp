@@ -44,8 +44,11 @@ struct cartesian_product_view : public detray::ranges::view_interface<
   constexpr cartesian_product_view() = default;
 
   /// Construct from a pack of @param ranges.
+  template <detray::ranges::range... deduced_range_ts>
+    requires((sizeof...(deduced_range_ts) > 1) ||
+             ((!std::same_as<cartesian_product_view, deduced_range_ts>) && ...))
   DETRAY_HOST_DEVICE constexpr explicit cartesian_product_view(
-      range_ts... ranges)
+      deduced_range_ts... ranges)
       : m_begins(detray::ranges::begin(ranges)...),
         m_ends(detray::ranges::end(ranges)...) {}
 
@@ -99,6 +102,8 @@ struct cartesian_product : public ranges::cartesian_product_view<range_ts...> {
   constexpr cartesian_product() = default;
 
   template <detray::ranges::range... deduced_range_ts>
+    requires((sizeof...(deduced_range_ts) > 1) ||
+             ((!std::same_as<cartesian_product, deduced_range_ts>) && ...))
   DETRAY_HOST_DEVICE constexpr explicit cartesian_product(
       deduced_range_ts &&...ranges)
       : base_type(std::forward<deduced_range_ts>(ranges)...) {}

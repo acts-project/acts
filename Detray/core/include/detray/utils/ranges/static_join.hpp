@@ -54,6 +54,8 @@ struct static_join_view
 
   /// Construct from a pack of @param ranges.
   template <detray::ranges::range... ranges_t>
+    requires((sizeof...(ranges_t) > 1) ||
+             ((!std::same_as<static_join_view, ranges_t>) && ...))
   DETRAY_HOST_DEVICE constexpr explicit static_join_view(ranges_t &&...ranges)
       : m_begins{detray::ranges::begin(std::forward<ranges_t>(ranges))...},
         m_ends{detray::ranges::end(std::forward<ranges_t>(ranges))...} {}
@@ -117,6 +119,8 @@ struct static_join : public ranges::static_join_view<I, range_itr_t> {
   constexpr static_join() = default;
 
   template <detray::ranges::range... ranges_t>
+    requires((sizeof...(ranges_t) > 1) ||
+             ((!std::same_as<static_join, ranges_t>) && ...))
   DETRAY_HOST_DEVICE constexpr explicit static_join(ranges_t &&...ranges)
       : base_type(std::forward<ranges_t>(ranges)...) {}
 };

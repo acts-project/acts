@@ -57,7 +57,7 @@ class quadratic_equation<scalar_t> {
       if (discriminant > tolerance) {
         m_solutions = 2;
         const scalar_t q{-0.5f *
-                         (b + detail::copysign(math::sqrt(discriminant), b))};
+                         (b + math::copysign(math::sqrt(discriminant), b))};
         m_values = {q / a, c / q};
         // Sort the two solutions
         if (m_values[0] > m_values[1]) {

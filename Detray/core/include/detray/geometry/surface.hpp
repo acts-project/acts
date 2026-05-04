@@ -31,8 +31,10 @@ namespace detray::geometry {
 /// wraps a detector instance that contains the data and a surface descriptor
 /// that contains the indices into the detector data containers for the
 /// specific surface instance.
-template <typename detector_t>  // @TODO: This needs a concept
+template <typename det_t>  // @TODO: This needs a concept
 class surface {
+  /// Make sure the detector is always evaluated as constant type
+  using detector_t = std::add_const_t<det_t>;
   /// Surface descriptor type
   using descr_t = typename detector_t::surface_type;
   /// Implementation
@@ -71,7 +73,8 @@ class surface {
   constexpr surface(const detector_t &det, const dindex sf_idx)
       : surface(det, det.surface(sf_idx)) {}
 
-  /// Conversion to surface interface around constant detector type
+  /// Allow conversion from surface<detector_t> to surface<const detector_t>,
+  /// which has no semantic difference (the detector is always const internally)
   template <typename detector_type = detector_t>
     requires(!std::is_const_v<detector_type>)
   // NOLINTNEXTLINE

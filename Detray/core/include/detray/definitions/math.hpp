@@ -30,11 +30,4 @@ using namespace ::detray::algebra::math;
 
 }  // namespace math
 
-namespace detail {
-
-using math::copysign;
-using math::signbit;
-
-}  // namespace detail
-
 }  // namespace detray

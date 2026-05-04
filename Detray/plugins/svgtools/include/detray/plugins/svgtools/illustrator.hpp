@@ -143,8 +143,7 @@ class illustrator {
                                   std::to_string(index));
     }
 
-    const auto surface =
-        detray::geometry::surface<detector_t>{_detector, index};
+    const auto surface = detray::geometry::surface{_detector, index};
 
     DETRAY_VERBOSE_HOST("Draw surface: " << surface);
 
@@ -262,8 +261,7 @@ class illustrator {
                                   std::to_string(index));
     }
 
-    const auto surface =
-        detray::geometry::surface<detector_t>{_detector, index};
+    const auto surface = detray::geometry::surface{_detector, index};
 
     if (_hide_material) {
       return actsvg::svg::object{};

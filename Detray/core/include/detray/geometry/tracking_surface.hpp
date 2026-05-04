@@ -14,11 +14,17 @@
 #include "detray/geometry/detail/tracking_surface_kernels.hpp"
 #include "detray/geometry/surface.hpp"
 
+// System include(s)
+#include <type_traits>
+
 namespace detray {
 
 /// @brief Facade for a detray detector surface with extra tracking capabilities
-template <typename detector_t>  // @TODO: This needs a concept
-class tracking_surface : public geometry::surface<detector_t> {
+template <typename det_t>  // @TODO: This needs a concept
+class tracking_surface : public geometry::surface<const det_t> {
+  /// Make sure the detector is always evaluated as constant type
+  using detector_t = std::add_const_t<det_t>;
+
   using base_surface_t = geometry::surface<detector_t>;
 
   /// Implementation of tracking functionality
@@ -46,7 +52,8 @@ class tracking_surface : public geometry::surface<detector_t> {
   explicit constexpr tracking_surface(const base_surface_t sf)
       : base_surface_t(sf) {}
 
-  /// Conversion to surface interface around constant detector type
+  /// Conversion to surface interface around constant detector type,
+  /// which has no semantic difference (the detector is always const internally)
   template <typename detector_type = detector_t>
     requires(!std::is_const_v<detector_type>)
   // NOLINTNEXTLINE
@@ -120,6 +127,10 @@ DETRAY_HOST_DEVICE tracking_surface(const detector_t &,
 
 template <typename detector_t>
 DETRAY_HOST_DEVICE tracking_surface(const geometry::surface<detector_t>)
+    -> tracking_surface<detector_t>;
+
+template <typename detector_t>
+DETRAY_HOST_DEVICE tracking_surface(const geometry::surface<const detector_t>)
     -> tracking_surface<detector_t>;
 
 }  // namespace detray

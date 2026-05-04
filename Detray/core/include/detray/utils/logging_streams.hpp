@@ -8,6 +8,11 @@
 
 #pragma once
 
+// Empty log output, to be removed by the compiler
+#define DETRAY_EMPTY_LOG() \
+  do {                     \
+  } while (0)
+
 #if DETRAY_LOG_LVL >= 0
 
 // Project include(s)
@@ -77,15 +82,36 @@ inline std::string_view process_typename() {
 #define __DEVICE_LOGGING__
 #endif
 
-#ifdef __DEVICE_LOGGING__
-#define DETRAY_TYPENAME(type) "unknown type"
+// String that represents the backend that emitted the log message
+#if defined(__CUDACC__)
+#define __BACKEND__ "CUDA"
+#elif defined(__HIP__)
+#define __BACKEND__ "HIP"
+#elif defined(CL_SYCL_LANGUAGE_VERSION) || defined(SYCL_LANGUAGE_VERSION)
+#define __BACKEND__ "SYCL"
 #else
-#define DETRAY_TYPENAME(type) detray::log::detail::process_typename<type>()
+#define __BACKEND__ "HOST"
 #endif
 
+// Convert type to string
+#ifdef __DEVICE_LOGGING__
+#define DETRAY_TYPENAME(type) "unknown type"
+#else  // ifdef __DEVICE_LOGGING__
+#define DETRAY_TYPENAME(type) detray::log::detail::process_typename<type>()
+#endif  // ifdef __DEVICE_LOGGING__
+
+// Get the file name
+#ifdef __DEVICE_LOGGING__
+#define __FILENAME__ detray::log::detail::source_file_name(__FILE__)
+#else  // ifdef __DEVICE_LOGGING__
+#define __FILENAME__ \
+  (std::strrchr(__FILE__, '/') ? std::strrchr(__FILE__, '/') + 1 : __FILE__)
+#endif  // ifdef __DEVICE_LOGGING__
+
+// Convert a vector to string
 #ifdef __DEVICE_LOGGING__
 #define DETRAY_LOG_VECTOR(x) ""
-#else
+#else  // ifdef __DEVICE_LOGGING__
 #define DETRAY_LOG_VECTOR(x)          \
   [&]() {                             \
     std::stringstream _vec_os;        \
@@ -99,25 +125,7 @@ inline std::string_view process_typename() {
     }                                 \
     return _vec_os.str();             \
   }()
-#endif
-
-// String that represents the backend that emitted the log message
-#if defined(__CUDACC__)
-#define __BACKEND__ "CUDA"
-#elif defined(__HIP__)
-#define __BACKEND__ "HIP"
-#elif defined(CL_SYCL_LANGUAGE_VERSION) || defined(SYCL_LANGUAGE_VERSION)
-#define __BACKEND__ "SYCL"
-#else
-#define __BACKEND__ "HOST"
-#endif
-
-#ifdef __DEVICE_LOGGING__
-#define __FILENAME__ detray::log::detail::source_file_name(__FILE__)
-#else
-#define __FILENAME__ \
-  (std::strrchr(__FILE__, '/') ? std::strrchr(__FILE__, '/') + 1 : __FILE__)
-#endif
+#endif  // ifdef __DEVICE_LOGGING__
 
 // Print 'x' in the host logs only
 #ifndef __DEVICE_LOGGING__
@@ -137,9 +145,9 @@ inline std::string_view process_typename() {
   DETRAY_LOG_STREAM(clog, lib, lvl, x)
 
 #else  // ifndef __DEVICE_LOGGING__
-#define DETRAY_LOG_STREAM_STDOUT(lib, lvl, x)
-#define DETRAY_LOG_STREAM_STDERR(lib, lvl, x)
-#endif
+#define DETRAY_LOG_STREAM_STDOUT(lib, lvl, x) DETRAY_EMPTY_LOG()
+#define DETRAY_LOG_STREAM_STDERR(lib, lvl, x) DETRAY_EMPTY_LOG()
+#endif  // ifndef __DEVICE_LOGGING__
 
 // Print 'x' in printf
 // @note 'x' is the format string and the variadic arguments the corresponding
@@ -159,7 +167,7 @@ inline std::string_view process_typename() {
 #define DETRAY_LOG_PRINTF_STDERR(lib, lvl, x, ...) \
   DETRAY_LOG_PRINTF(lib, lvl, x, __VA_ARGS__)
 
-#else  // host-side printf logging
+#else  // ifdef __DEVICE_LOGGING__
 
 #define DETRAY_LOG_PRINTF(stream, lib, lvl, x, ...)                          \
   fprintf(stream, "%s %-7s (%s): %-29sl.%-5d" x "\n", lib, lvl, __BACKEND__, \
@@ -174,17 +182,17 @@ inline std::string_view process_typename() {
 #endif  // ifdef __DEVICE_LOGGING__
 
 #else  // ifndef SYCL
-#define DETRAY_LOG_PRINTF_STDOUT(lib, lvl, x, ...)
-#define DETRAY_LOG_PRINTF_STDERR(lib, lvl, x, ...)
-#endif
+#define DETRAY_LOG_PRINTF_STDOUT(lib, lvl, x, ...) DETRAY_EMPTY_LOG()
+#define DETRAY_LOG_PRINTF_STDERR(lib, lvl, x, ...) DETRAY_EMPTY_LOG()
+#endif  // ifndef SYCL
 
 #else  // DETRAY_LOG_LVL < 0
-#define DETRAY_LOG_STREAM_STDOUT(lib, lvl, x)
-#define DETRAY_LOG_STREAM_STDERR(lib, lvl, x)
-#define DETRAY_LOG_PRINTF_STDOUT(lib, lvl, x, ...)
-#define DETRAY_LOG_PRINTF_STDERR(lib, lvl, x, ...)
-#define DETRAY_TYPENAME(type)
-#endif
+#define DETRAY_LOG_STREAM_STDOUT(lib, lvl, x) DETRAY_EMPTY_LOG()
+#define DETRAY_LOG_STREAM_STDERR(lib, lvl, x) DETRAY_EMPTY_LOG()
+#define DETRAY_LOG_PRINTF_STDOUT(lib, lvl, x, ...) DETRAY_EMPTY_LOG()
+#define DETRAY_LOG_PRINTF_STDERR(lib, lvl, x, ...) DETRAY_EMPTY_LOG()
+#define DETRAY_TYPENAME(type) DETRAY_EMPTY_LOG()
+#endif  // if DETRAY_LOG_LVL >= 0
 
 //
 // Define log levels
@@ -207,10 +215,10 @@ inline std::string_view process_typename() {
 #define DETRAY_INFO_STREAM(lib, x) DETRAY_LOG_STREAM_STDOUT(lib, "INFO", x)
 #define DETRAY_INFO_PRINTF(lib, x, ...) \
   DETRAY_LOG_PRINTF_STDOUT(lib, "INFO", x, __VA_ARGS__)
-#else
-#define DETRAY_INFO_STREAM(lib, x)
-#define DETRAY_INFO_PRINTF(lib, x, ...)
-#endif
+#else  // DETRAY_LOG_LVL > 0
+#define DETRAY_INFO_STREAM(lib, x) DETRAY_EMPTY_LOG()
+#define DETRAY_INFO_PRINTF(lib, x, ...) DETRAY_EMPTY_LOG()
+#endif  // DETRAY_LOG_LVL > 0
 
 // Verbose
 #if DETRAY_LOG_LVL > 1
@@ -218,17 +226,17 @@ inline std::string_view process_typename() {
   DETRAY_LOG_STREAM_STDERR(lib, "VERBOSE", x)
 #define DETRAY_VERBOSE_PRINTF(lib, x, ...) \
   DETRAY_LOG_PRINTF_STDERR(lib, "VERBOSE", x, __VA_ARGS__)
-#else
-#define DETRAY_VERBOSE_STREAM(lib, x)
-#define DETRAY_VERBOSE_PRINTF(lib, x, ...)
-#endif
+#else  // DETRAY_LOG_LVL > 1
+#define DETRAY_VERBOSE_STREAM(lib, x) DETRAY_EMPTY_LOG()
+#define DETRAY_VERBOSE_PRINTF(lib, x, ...) DETRAY_EMPTY_LOG()
+#endif  // DETRAY_LOG_LVL > 1
 
 // Debug
 #if DETRAY_LOG_LVL > 2
 #define DETRAY_DEBUG_STREAM(lib, x) DETRAY_LOG_STREAM_STDERR(lib, "DEBUG", x)
 #define DETRAY_DEBUG_PRINTF(lib, x, ...) \
   DETRAY_LOG_PRINTF_STDERR(lib, "DEBUG", x, __VA_ARGS__)
-#else
-#define DETRAY_DEBUG_STREAM(lib, x)
-#define DETRAY_DEBUG_PRINTF(lib, x, ...)
-#endif
+#else  // DETRAY_LOG_LVL > 2
+#define DETRAY_DEBUG_STREAM(lib, x) DETRAY_EMPTY_LOG()
+#define DETRAY_DEBUG_PRINTF(lib, x, ...) DETRAY_EMPTY_LOG()
+#endif  // DETRAY_LOG_LVL > 2

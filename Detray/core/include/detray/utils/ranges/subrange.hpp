@@ -98,6 +98,7 @@ struct subrange : public detail::subrange_view<range_t> {
 
   /// Construct from a @param range.
   template <detray::ranges::range deduced_range_t>
+    requires(!std::same_as<subrange, deduced_range_t>)
   DETRAY_HOST_DEVICE constexpr explicit subrange(deduced_range_t &&range)
       : base_type{detray::ranges::begin(range), detray::ranges::end(range)} {}
 

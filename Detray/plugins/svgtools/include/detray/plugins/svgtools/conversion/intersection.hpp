@@ -38,7 +38,7 @@ inline auto intersection(const detector_t& detector,
   p_intersection_t p_ir;
 
   for (const auto& intr : intersections) {
-    const detray::geometry::surface<detector_t> sf{detector, intr.surface()};
+    const detray::geometry::surface sf{detector, intr.surface()};
     if (sf.identifier().is_invalid()) {
       continue;
     }

@@ -82,7 +82,6 @@ set(DETRAY_SETUP_NLOHMANN
     "Do not set up Nlohmann as part of Detray"
 )
 set(DETRAY_SETUP_ACTSVG OFF CACHE BOOL "Do not set up Actsvg as part of Detray")
-set(DETRAY_SETUP_DFELIBS ON CACHE BOOL "Set up Dfelibs as part of Detray")
 set(DETRAY_SVG_DISPLAY ON CACHE BOOL "Build the ActSVG display module")
 
 set(DETRAY_GENERATE_METADATA
