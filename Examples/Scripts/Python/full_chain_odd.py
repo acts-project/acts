@@ -52,6 +52,13 @@ parser.add_argument(
 )
 parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
 parser.add_argument("--skip", "-s", help="Number of events", type=int, default=0)
+parser.add_argument(
+    "--jobs",
+    "-j",
+    help="Number of worker threads (-1 uses all cores)",
+    type=int,
+    default=None,
+)
 parser.add_argument("--edm4hep", help="Use edm4hep inputs", type=pathlib.Path)
 parser.add_argument(
     "--hepmc3",
@@ -189,7 +196,7 @@ rnd = acts.examples.RandomNumbers(seed=42)
 s = acts.examples.Sequencer(
     events=args.events,
     skip=args.skip,
-    numThreads=1 if args.geant4 else -1,
+    numThreads=args.jobs if args.jobs is not None else (1 if args.geant4 else -1),
     outputDir=str(outputDir),
 )
 
