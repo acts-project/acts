@@ -65,22 +65,17 @@ set(DETRAY_EIGEN_PLUGIN
 )
 
 set(DETRAY_SETUP_VECMEM OFF CACHE BOOL "Do not set up VecMem as part of Detray")
-set(DETRAY_SETUP_ALGEBRA_PLUGINS
-    OFF
-    CACHE BOOL
-    "Do not set up Algebra Plugins as part of Detray"
-)
 set(DETRAY_SETUP_BENCHMARK
     OFF
     CACHE BOOL
     "Do not set up Google Benchmark as part of Detray"
 )
-set(DETRAY_SETUP_COVFIE OFF CACHE BOOL "Do not set up covfie as part of Detray")
 set(DETRAY_SETUP_NLOHMANN
     OFF
     CACHE BOOL
     "Do not set up Nlohmann as part of Detray"
 )
+set(DETRAY_SETUP_COVFIE OFF CACHE BOOL "Do not set up covfie as part of Detray")
 set(DETRAY_SETUP_ACTSVG OFF CACHE BOOL "Do not set up Actsvg as part of Detray")
 set(DETRAY_SVG_DISPLAY ON CACHE BOOL "Build the ActSVG display module")
 
