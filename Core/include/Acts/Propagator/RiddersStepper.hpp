@@ -284,8 +284,9 @@ class RiddersStepper final {
     if (!covariance.has_value()) {
       state.covTransport = false;
       state.cov = BoundMatrix::Zero();
-      // TODO otherwise `update` gets screwed
-      // state.jacobian = BoundMatrix::Identity();
+      // intentionally not resetting `jacobian` here as otherwise `update`
+      // break. this should be revisitted at some point - might be best to
+      // rework the stepper interface and how the jacobian is accessed
 
       return;
     }
@@ -306,8 +307,10 @@ class RiddersStepper final {
 
     state.covTransport = true;
     state.cov = *covariance;
-    // TODO otherwise `update` gets screwed
-    // state.jacobian = BoundMatrix::Identity();
+    // same as above:
+    // intentionally not resetting `jacobian` here as otherwise `update`
+    // break. this should be revisitted at some point - might be best to
+    // rework the stepper interface and how the jacobian is accessed
   }
 
   /// Get the magnetic field at the given position for the primary stepper state
@@ -478,8 +481,9 @@ class RiddersStepper final {
   std::string outputStepSize(const State& state) const {
     std::stringstream ss;
     ss << state.primaryStepperState.stepSize.toString();
+    ss << " || ";
     for (const auto& secondaryState : state.secondaryStepperStates) {
-      ss << " || " << secondaryState.stepSize.toString();
+      ss << secondaryState.stepSize.toString() << " | ";
     }
     return ss.str();
   }
