@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/**
- * DETRAY library, part of the ACTS project (R&D line)
- *
- * (c) 2026 CERN for the benefit of the ACTS project
- *
- * Mozilla Public License Version 2.0
- */
-
 // Make sure the logging macros are available
 #include "detray/utils/logging.hpp"
 
