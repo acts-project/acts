@@ -25,6 +25,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -479,6 +480,107 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryJsonConverterNavigation) {
     BOOST_CHECK(steppingA.nSteps == steppingB.nSteps);
     BOOST_CHECK(steppingA.pathAccumulated == steppingB.pathAccumulated);
   }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(MultiLayerNavigationPolicySuite)
+
+namespace {
+
+auto makeMultiLayerVolume() {
+  auto tVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(),
+      std::make_shared<CuboidVolumeBounds>(20., 20., 5.), "CuboidVolume");
+
+  auto boundsRect = std::make_shared<Acts::RectangleBounds>(2., 2.);
+  for (int ix = -1; ix <= 1; ++ix) {
+    for (int iy = -1; iy <= 1; ++iy) {
+      Transform3 trf = Transform3::Identity();
+      trf.translation() = Acts::Vector3(4. * ix, 4. * iy, 0.);
+      auto surface =
+          Acts::Surface::makeShared<Acts::PlaneSurface>(trf, boundsRect);
+      surface->assignIsSensitive(true);
+      tVolume->addSurface(surface);
+    }
+  }
+  return tVolume;
+}
+
+auto makeMultiLayerPolicy(const GeometryContext& gctx,
+                          const TrackingVolume& volume, const Logger& logger) {
+  Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-10., 10.,
+                                                                   5);
+  Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisY(-10., 10.,
+                                                                   5);
+  Acts::Grid gridXY(Acts::Type<std::vector<std::size_t>>, std::move(axisX),
+                    std::move(axisY));
+
+  Experimental::MultiLayerNavigationPolicy::IndexedUpdatorType indexedGrid(
+      std::move(gridXY), {AxisX, AxisY});
+
+  Experimental::MultiLayerNavigationPolicy::Config cfg;
+  cfg.binExpansion = {1u, 1u};
+  return Experimental::MultiLayerNavigationPolicy(gctx, volume, logger, cfg,
+                                                  std::move(indexedGrid));
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyToJson) {
+  auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+  auto tLogger =
+      Acts::getDefaultLogger("MultiLayerNavigationJsonTest", Logging::INFO);
+
+  auto tVolume = makeMultiLayerVolume();
+  auto policy = makeMultiLayerPolicy(tContext, *tVolume, *tLogger);
+
+  TrackingGeometryJsonConverter conv;
+  nlohmann::json j = conv.navigationPolicyToJson(policy);
+
+  BOOST_CHECK(j.contains("kind"));
+  BOOST_CHECK(j.contains("axes"));
+  BOOST_CHECK(j.contains("casts"));
+  BOOST_CHECK(j.contains("binExpansion"));
+  BOOST_CHECK_EQUAL(j["kind"], "MultiLayerNavigation");
+  BOOST_CHECK_EQUAL(j["axes"].size(), 2u);
+  BOOST_CHECK_EQUAL(j["casts"].size(), 2u);
+  BOOST_CHECK(!j.contains("surfaces"));
+}
+
+BOOST_AUTO_TEST_CASE(MultiLayerNavigationPolicyRoundTrip) {
+  auto tContext = GeometryContext::dangerouslyDefaultConstruct();
+  auto tLogger =
+      Acts::getDefaultLogger("MultiLayerNavigationJsonTest", Logging::INFO);
+
+  auto tVolume = makeMultiLayerVolume();
+  auto policy = makeMultiLayerPolicy(tContext, *tVolume, *tLogger);
+
+  TrackingGeometryJsonConverter conv;
+  nlohmann::json j = conv.navigationPolicyToJson(policy);
+
+  auto policyPtr =
+      conv.navigationPolicyFromJson(tContext, j, *tVolume, *tLogger);
+  auto& restored =
+      dynamic_cast<Experimental::MultiLayerNavigationPolicy&>(*policyPtr);
+
+  const auto& origGrid = policy.indexedGrid().grid;
+  const auto& restGrid = restored.indexedGrid().grid;
+  BOOST_CHECK_EQUAL(origGrid.axes()[0]->getNBins(),
+                    restGrid.axes()[0]->getNBins());
+  BOOST_CHECK_EQUAL(origGrid.axes()[1]->getNBins(),
+                    restGrid.axes()[1]->getNBins());
+  BOOST_CHECK_CLOSE(origGrid.axes()[0]->getMin(), restGrid.axes()[0]->getMin(),
+                    1e-6);
+  BOOST_CHECK_CLOSE(origGrid.axes()[0]->getMax(), restGrid.axes()[0]->getMax(),
+                    1e-6);
+
+  BOOST_CHECK_EQUAL(policy.indexedGrid().casts[0],
+                    restored.indexedGrid().casts[0]);
+  BOOST_CHECK_EQUAL(policy.indexedGrid().casts[1],
+                    restored.indexedGrid().casts[1]);
+
+  BOOST_CHECK(policy.config().binExpansion == restored.config().binExpansion);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
