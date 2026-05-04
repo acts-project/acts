@@ -108,23 +108,21 @@ def main():
         )
     )
 
-    particle_keys = ("particles_generated", "particles_simulated")
-    for key in particle_keys:
-        s.addAlgorithm(
-            ArrowParticleOutputConverter(
-                level=acts.logging.INFO,
-                inputParticles=key,
-                outputTable=f"{key}_arrow",
-                writeHelixParameters=not args.no_helix,
-                bField=None if args.no_helix else field,
-            )
+    s.addAlgorithm(
+        ArrowParticleOutputConverter(
+            level=acts.logging.INFO,
+            inputParticles="particles_simulated",
+            outputTable="particles_arrow",
+            writeHelixParameters=not args.no_helix,
+            bField=None if args.no_helix else field,
         )
+    )
 
     s.addWriter(
         ParquetWriter(
             level=acts.logging.INFO,
             outputDir=str(args.output),
-            collections={f"{key}_arrow": f"{key}.parquet" for key in particle_keys},
+            collections={"particles_arrow": "particles.parquet"},
         )
     )
 

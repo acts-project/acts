@@ -557,24 +557,17 @@ if args.output_parquet:
 
     # Each converter parks an arrow::Table on the whiteboard under a fresh
     # key, and one ParquetWriter picks them all up.
-    _parquet_particles = (
-        "particles_generated",
-        "particles_simulated",
-    )
-    for _key in _parquet_particles:
-        s.addAlgorithm(
-            ArrowParticleOutputConverter(
-                level=acts.logging.INFO,
-                inputParticles=_key,
-                outputTable=f"{_key}_arrow",
-                writeHelixParameters=True,
-                bField=field,
-            )
+    s.addAlgorithm(
+        ArrowParticleOutputConverter(
+            level=acts.logging.INFO,
+            inputParticles="particles_simulated",
+            outputTable="particles_arrow",
+            writeHelixParameters=True,
+            bField=field,
         )
+    )
 
-    _parquet_collections = {
-        f"{_key}_arrow": f"{_key}.parquet" for _key in _parquet_particles
-    }
+    _parquet_collections = {"particles_arrow": "particles.parquet"}
 
     s.addAlgorithm(
         ArrowSimHitOutputConverter(
