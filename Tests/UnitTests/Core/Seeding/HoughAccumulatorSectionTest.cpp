@@ -39,17 +39,18 @@ struct Stats {
 };
 
 template <typename measurement_t = LineParameters>
-struct TestExplorationOptions
-    : public HoughExplorationOptions<LineParameters> {
+struct TestExplorationOptions : public HoughExplorationOptions<LineParameters> {
   std::uint32_t threshold =
       4;  // number of lines passing section for it to be still considered
-  std::uint32_t noiseThreshold = 12;  // number of lines passing section at the final
-                                 // split to consider it noise
+  std::uint32_t noiseThreshold = 12;  // number of lines passing section at the
+                                      // final split to consider it noise
   std::uint32_t min_division_level = 2;
 };
 
 // SUITE 1: HoughAccumulatorSection Test
 BOOST_AUTO_TEST_SUITE(HoughAccumulatorSectionSuite)
+
+using namespace ActsTests;
 
 BOOST_AUTO_TEST_CASE(construct) {
   HoughAccumulatorSection s(10., 100., -5., -50.0);
@@ -263,7 +264,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
   opt.yMinBinSize = 2.51;
   opt.noiseThreshold = 3;
   opt.threshold = 2;
-  opt.min_division_level = 2;
+  opt.min_division_level = 1;
   // Linear function definition: y = a*x + b, where LineParameters stores (a, b)
   // parameters for test purposes.
   opt.lineFunctor = [](const LineParameters &p, float arg) {
@@ -282,7 +283,9 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
   opt.decisionFunctor = [&sStat, &opt](const HoughAccumulatorSection &sec,
                                        const std::vector<LineParameters> &mes) {
     using enum HoughAccumulatorSection::Decision;
-
+    auto names = std::map<HoughAccumulatorSection::Decision, std::string>({{Discard, "Discard"}, {Accept, "Accept"}, {Drill, "Drill"}});
+    std::cerr << "Considering section x: " << sec.xBegin() << "+" <<sec.xSize()  <<
+               "y: " << sec.yBegin() << "+" << sec.ySize() << " decision " << names[sec.decision()] << " div: " << sec.divisionLevel() <<"\n";
     if (sec.count() < opt.threshold) {
       sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
       return Discard;
@@ -303,6 +306,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
     }
     if (sec.count() <= opt.noiseThreshold && sec.xSize() <= opt.xMinBinSize &&
         sec.ySize() <= opt.yMinBinSize) {
+      std::cerr << "Accepted section: \n";
       return Accept;
     }
 
@@ -394,8 +398,7 @@ BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
   };
 
   HoughAccumulatorSection section(8.0f, 8.0f, -4.0f, -4.0f, 0);
-  section.updateDecision(
-      HoughAccumulatorSection::Decision::DrillAndExpand);
+  section.updateDecision(HoughAccumulatorSection::Decision::DrillAndExpand);
   section.indices() = {0, 1, 2};
 
   std::map<int, Stats> sStat;

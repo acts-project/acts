@@ -285,7 +285,7 @@ inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
   }
 
   const float t = abs_dL / (abs_dL + abs_dR);  // fraction from left
-  const float xCross = xL + t * (xR - xL);
+  const float xCross = std::lerp(xL, xR, t);
 
   // --- Step 4: Check if crossing lies inside vertical bounds ---
   const float yCross1 = line1(xCross);
@@ -348,8 +348,8 @@ void exploreHoughParametersSpace(
     sectionsStack.pop_back();
 
     std::vector<HoughAccumulatorSection> newSections;
-    bool splitX = thisSection.xSize() > opt.xMinBinSize;
-    bool splitY = thisSection.ySize() > opt.yMinBinSize;
+    const bool splitX = thisSection.xSize() > opt.xMinBinSize;
+    const bool splitY = thisSection.ySize() > opt.yMinBinSize;
 
     if (splitX && splitY) {
       // Split into 4 sections

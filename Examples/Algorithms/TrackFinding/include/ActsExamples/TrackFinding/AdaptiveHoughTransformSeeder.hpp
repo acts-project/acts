@@ -92,7 +92,6 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       Acts::Experimental::HoughExplorationOptions<PreprocessedMeasurement>;
 
   using LineFunctor = ExplorationOptions::LineFunctor;
-  using Decision = HoughAccumulatorSection::Decision;
 
   /// @brief  remove indices pointing to measurements that do not cross this section
   /// @tparam measurement_t - measurements type
