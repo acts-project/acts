@@ -795,8 +795,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     for (std::size_t idx : bucket) {
       const SimVertex& v = simVerticesUnordered[idx];
       if ((v.position4.head<3>() - vtxPos3).norm() < posTol) {
-        ACTS_VERBOSE("Reusing existing vertex: position="
-                     << vtxPos3.transpose() << " id=" << v.id);
+        ACTS_VERBOSE("Reusing existing vertex: position=" << vtxPos3.transpose()
+                                                          << " id=" << v.id);
         return simVerticesUnordered[idx];
       }
     }
@@ -810,8 +810,8 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
             return (v.position4.head<3>() - vtxPos3).norm();
           });
       if (closestIt != simVerticesUnordered.end()) {
-        closestStr = std::to_string(
-            (closestIt->position4.head<3>() - vtxPos3).norm());
+        closestStr =
+            std::to_string((closestIt->position4.head<3>() - vtxPos3).norm());
       }
       ACTS_VERBOSE("Adding new vertex: position="
                    << vtxPos3.transpose() << " id=" << vtxId
