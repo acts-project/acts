@@ -8,7 +8,7 @@
 
 #include "Acts/Seeding2/HoughAccumulatorSection.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 HoughAccumulatorSection::HoughAccumulatorSection(
     float xw, float yw, float xBegin, float yBegin, int div,
     const std::vector<std::uint32_t> &indices, const std::vector<float> &history)

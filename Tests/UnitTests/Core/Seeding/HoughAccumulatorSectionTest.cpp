@@ -16,6 +16,7 @@
 #include <vector>
 
 using namespace Acts;
+using namespace Acts::Experimental;
 
 namespace ActsTests {
 
@@ -39,7 +40,7 @@ struct Stats {
 
 template <typename measurement_t = LineParameters>
 struct TestExplorationOptions
-    : public Acts::HoughExplorationOptions<LineParameters> {
+    : public HoughExplorationOptions<LineParameters> {
   std::uint32_t threshold =
       4;  // number of lines passing section for it to be still considered
   std::uint32_t noiseThreshold = 12;  // number of lines passing section at the final
@@ -170,7 +171,7 @@ BOOST_AUTO_TEST_CASE(test_extra_split_x_min_div_0) {
 
   opt.decisionFunctor = [&sStat, &opt](const HoughAccumulatorSection &sec,
                                        const std::vector<LineParameters> &mes) {
-    using enum Acts::HoughAccumulatorSection::Decision;
+    using enum HoughAccumulatorSection::Decision;
 
     if (sec.count() < opt.threshold) {
       sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
@@ -280,7 +281,7 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
   // Optimized decision functor
   opt.decisionFunctor = [&sStat, &opt](const HoughAccumulatorSection &sec,
                                        const std::vector<LineParameters> &mes) {
-    using enum Acts::HoughAccumulatorSection::Decision;
+    using enum HoughAccumulatorSection::Decision;
 
     if (sec.count() < opt.threshold) {
       sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
@@ -394,14 +395,14 @@ BOOST_AUTO_TEST_CASE(test_drill_and_expand_logic) {
 
   HoughAccumulatorSection section(8.0f, 8.0f, -4.0f, -4.0f, 0);
   section.updateDecision(
-      Acts::HoughAccumulatorSection::Decision::DrillAndExpand);
+      HoughAccumulatorSection::Decision::DrillAndExpand);
   section.indices() = {0, 1, 2};
 
   std::map<int, Stats> sStat;
 
   opt.decisionFunctor = [&sStat, &opt](const HoughAccumulatorSection &sec,
                                        const std::vector<LineParameters> &mes) {
-    using enum Acts::HoughAccumulatorSection::Decision;
+    using enum HoughAccumulatorSection::Decision;
     if (sec.count() < opt.threshold) {
       sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
       return Discard;

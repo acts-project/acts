@@ -12,10 +12,10 @@
 #include <cmath>
 #include <concepts>
 #include <functional>
-#include <iostream>  // remove me
 #include <vector>
+#include <cstdint>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// @brief helper class for adaptive traversal of HT space
 class HoughAccumulatorSection {
@@ -322,8 +322,8 @@ struct HoughExplorationOptions {
   /// "x" coordinate of Hough space return "y" coordinate
   LineFunctor lineFunctor;
   /// @brief functional type, that given section and measurements decides the evolution of section
-  using DecisionFunctor = std::function<Acts::HoughAccumulatorSection::Decision(
-      const Acts::HoughAccumulatorSection &, const std::vector<Measurement> &)>;
+  using DecisionFunctor = std::function<HoughAccumulatorSection::Decision(
+      const HoughAccumulatorSection &, const std::vector<Measurement> &)>;
 
   /// function deciding if the accumulator section should be, discarded,
   /// split further (and how), or is a solution
@@ -343,11 +343,6 @@ void exploreHoughParametersSpace(
     const std::vector<Measurement> &measurements,
     const HoughExplorationOptions<Measurement> &opt,
     std::vector<HoughAccumulatorSection> &results) {
-  std::cerr << "start ss.size: " << sectionsStack.size() << std::endl;
-  std::cerr << "start section decision: "
-            << (sectionsStack[0].decision() ==
-                HoughAccumulatorSection::Decision::Drill)
-            << std::endl;
 
   while (!sectionsStack.empty()) {
     HoughAccumulatorSection thisSection = std::move(sectionsStack.back());
@@ -469,4 +464,4 @@ bool passIntersectionsCheck(const HoughAccumulatorSection &section,
   }
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
