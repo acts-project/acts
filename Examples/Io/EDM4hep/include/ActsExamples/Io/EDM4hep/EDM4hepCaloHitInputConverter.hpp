@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/EventData/CaloHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -20,9 +21,31 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 namespace ActsExamples {
+
+/// Per-collection calorimeter detector codes (barrel vs endcap @c z split).
+struct CaloCollectionDetectorCodes {
+  bool isBarrel = true;
+  std::uint8_t barrelCode = 255;
+  std::uint8_t endcapNegCode = 255;
+  std::uint8_t endcapPosCode = 255;
+
+  static CaloCollectionDetectorCodes barrel(std::uint8_t code);
+  static CaloCollectionDetectorCodes endcap(std::uint8_t negZ, std::uint8_t posZ);
+
+  /// Resolve the encoded detector code given a hit's z coordinate.
+  /// For barrel collections, the code is independent of z.
+  /// For endcaps, the sign of z selects negative vs positive endcap.
+  std::uint8_t detectorCode(double z) const {
+    if (isBarrel) {
+      return barrelCode;
+    }
+    return z < 0.0 ? endcapNegCode : endcapPosCode;
+  }
+};
 
 /// Convert EDM4hep @c SimCalorimeterHit + @c CaloHitContribution collections
 /// into the internal @c CaloHitContainer EDM, mirroring what
@@ -48,13 +71,7 @@ namespace ActsExamples {
 /// downstream output converter chooses how to drop cells.
 class EDM4hepCaloHitInputConverter final : public PodioInputConverter {
  public:
-  /// Maps a calorimeter collection name + a hit's z coordinate to the
-  /// @c uint8 detector enum stored on each @c CaloHit. The default mirrors
-  /// the Python @c encode_calo_detector helper.
-  using DetectorEncoder =
-      std::function<std::uint8_t(std::string_view collectionName, double z)>;
-
-  static DetectorEncoder defaultDetectorEncoder();
+  static std::function<bool(std::string_view)> defaultIsEcalCollection();
 
   struct Config {
     /// Whiteboard key for the input @c podio::Frame (typically the output
@@ -72,38 +89,28 @@ class EDM4hepCaloHitInputConverter final : public PodioInputConverter {
     std::string outputCaloHits = "calohits";
 
     /// Per-detector contribution-level time windows applied after the
-    /// time-of-flight correction, in ns. Defaults match the Python.
-    double ecalTimeMin = -1.0;
-    double ecalTimeMax = 10.0;
-    double hcalTimeMin = -1.0;
-    double hcalTimeMax = 10.0;
+    /// time-of-flight correction
+    double ecalTimeMin = -1.0 * Acts::UnitConstants::ns;
+    double ecalTimeMax = 10.0 * Acts::UnitConstants::ns;
+    double hcalTimeMin = -1.0 * Acts::UnitConstants::ns;
+    double hcalTimeMax = 10.0 * Acts::UnitConstants::ns;
 
-    /// Time-of-flight correction parameters: corrected time is
-    /// @c t - (r/lightSpeed - tofOffset). Defaults match the Python
-    /// (300 mm/ns, -0.1 ns).
-    double lightSpeed = 300.0;
-    double tofOffset = 0.1;
+    /// Time-of-flight correction offset. The corrected
+    /// time is @c t - (r/c - tofOffset).
+    double tofOffset = 0.1 * Acts::UnitConstants::ns;
 
-    /// Maps a collection name + z coordinate to the @c uint8 detector enum
-    /// stored on each @c CaloHit. See @c DetectorEncoder.
-    DetectorEncoder detectorEncoder = defaultDetectorEncoder();
+    /// Maps each @c SimCalorimeterHit collection name to detector codes.
+    /// At construction, entries are aligned to @c inputCaloHitCollections
+    /// order (by index); missing names get code @c 255 (barrel unknown).
+    /// No per-hit @c std::function — the hot loop uses collection index only.
+    std::unordered_map<std::string, CaloCollectionDetectorCodes>
+        caloDetectorCodesByCollectionName;
 
     /// Decides which time window applies to a collection. Returns @c true
     /// for ECal-style collections and @c false for HCal-style. The default
     /// checks for an "ECal" / "HCal" prefix and throws otherwise.
     std::function<bool(std::string_view collectionName)> isEcalCollection =
-        [](std::string_view name) {
-          if (name.starts_with("ECal")) {
-            return true;
-          }
-          if (name.starts_with("HCal")) {
-            return false;
-          }
-          throw std::invalid_argument(
-              std::string("EDM4hepCaloHitInputConverter: cannot infer "
-                          "ECal/HCal from collection name '") +
-              std::string(name) + "'");
-        };
+        defaultIsEcalCollection();
   };
 
   explicit EDM4hepCaloHitInputConverter(
@@ -117,14 +124,23 @@ class EDM4hepCaloHitInputConverter final : public PodioInputConverter {
   ProcessCode convert(const AlgorithmContext& ctx,
                       const podio::Frame& frame) const override;
 
+  /// Resolved once in the ctor: same order and length as
+  /// @c m_cfg.inputCaloHitCollections.
+  static std::vector<CaloCollectionDetectorCodes>
+  buildDetectorCodesByCollectionIndex(
+      const std::vector<std::string>& inputCaloHitCollections,
+      const std::unordered_map<std::string, CaloCollectionDetectorCodes>&
+          caloDetectorCodesByCollectionName);
+
   Config m_cfg;
+  std::vector<CaloCollectionDetectorCodes> m_detectorCodesByCollectionIndex;
 
   ReadDataHandle<EDM4hepMCParticleIndexMap> m_inputMCParticleMap{
       this, "InputMCParticleMap"};
   WriteDataHandle<CaloHitContainer> m_outputCaloHits{this, "OutputCaloHits"};
 
   /// Per-section job-lifetime averaging timers. Each event takes one
-  /// sample per section; the dtor logs cumulative stats at end-of-job.
+  /// sample per section; the dtor logs aggregate stats at end-of-job.
   /// Wrapped in @c std::optional so the heavy timer type doesn't need a
   /// default constructor — they're emplaced in the converter ctor with the
   /// algorithm's logger.

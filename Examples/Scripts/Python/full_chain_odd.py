@@ -227,9 +227,7 @@ if args.edm4hep:
         outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         outputSimVertices="vertices_truth",
-        outputMCParticleMap=(
-            "mcparticle_index_map" if args.output_parquet else None
-        ),
+        outputMCParticleMap=("mcparticle_index_map" if args.output_parquet else None),
         dd4hepDetector=detector,
         trackingGeometry=trackingGeometry,
         sortSimHitsInTime=False,
@@ -241,6 +239,7 @@ if args.edm4hep:
     s.addAlgorithm(edm4hepReader)
 
     if args.output_parquet:
+        _cc = acts.examples.edm4hep.CaloCollectionDetectorCodes
         s.addAlgorithm(
             acts.examples.edm4hep.EDM4hepCaloHitInputConverter(
                 level=acts.logging.INFO,
@@ -253,6 +252,12 @@ if args.edm4hep:
                 ],
                 inputMCParticleMap="mcparticle_index_map",
                 outputCaloHits="calohits",
+                caloDetectorCodesByCollectionName={
+                    "ECalBarrelCollection": _cc.barrel(10),
+                    "ECalEndcapCollection": _cc.endcap(9, 11),
+                    "HCalBarrelCollection": _cc.barrel(13),
+                    "HCalEndcapCollection": _cc.endcap(12, 14),
+                },
             )
         )
 
@@ -567,6 +572,7 @@ if args.output_parquet:
             ArrowSimHitOutputConverter,
             ArrowTrackOutputConverter,
             ArrowCaloHitOutputConverter,
+            makeVolumeIdDetectorResolver,
             ParquetWriter,
         )
     except ImportError as e:
@@ -574,6 +580,23 @@ if args.output_parquet:
             "Parquet output requested but acts.examples.arrow is not available; "
             "rebuild with ACTS_BUILD_EXAMPLES_PARQUET=ON."
         ) from e
+
+    # ODD volume -> detector enum mapping used in parquet simhit export.
+    # 0..8 are subdetector-specific enums; 255 marks unknown/unmatched.
+    _odd_detector_resolver = makeVolumeIdDetectorResolver(
+        {
+            7: 0,  # pixel_neg_endcap
+            8: 1,  # pixel_barrel
+            9: 2,  # pixel_pos_endcap
+            12: 3,  # short_neg_endcap
+            13: 4,  # short_barrel
+            14: 5,  # short_pos_endcap
+            16: 6,  # long_neg_endcap
+            17: 7,  # long_barrel
+            18: 8,  # long_pos_endcap
+        },
+        255,
+    )
 
     # Each converter parks an arrow::Table on the whiteboard under a fresh
     # key, and one ParquetWriter picks them all up.
@@ -598,6 +621,7 @@ if args.output_parquet:
             inputSimHitMeasurementsMap="simhit_measurements_map",
             outputTable="simhits_arrow",
             trackingGeometry=trackingGeometry,
+            detectorResolver=_odd_detector_resolver,
         )
     )
     _parquet_collections["simhits_arrow"] = "simhits.parquet"

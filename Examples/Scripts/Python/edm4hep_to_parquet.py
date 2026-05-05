@@ -10,6 +10,7 @@ from acts.examples.edm4hep import (
     PodioReader,
     EDM4hepSimInputConverter,
     EDM4hepCaloHitInputConverter,
+    CaloCollectionDetectorCodes,
 )
 
 u = acts.UnitConstants
@@ -29,6 +30,14 @@ ODD_CALO_HIT_COLLECTIONS = [
     "HCalBarrelCollection",
     "HCalEndcapCollection",
 ]
+
+# Calo detector codes for ODD-style EDM4hep collection names (see ArrowCalo defaults).
+ODD_CALO_DETECTOR_ENCODER_TABLE = {
+    "ECalBarrelCollection": CaloCollectionDetectorCodes.barrel(10),
+    "ECalEndcapCollection": CaloCollectionDetectorCodes.endcap(9, 11),
+    "HCalBarrelCollection": CaloCollectionDetectorCodes.barrel(13),
+    "HCalEndcapCollection": CaloCollectionDetectorCodes.endcap(12, 14),
+}
 
 
 def main():
@@ -156,6 +165,7 @@ def main():
                 inputCaloHitCollections=args.calo_hits,
                 inputMCParticleMap="mcparticle_index_map",
                 outputCaloHits="calohits",
+                caloDetectorCodesByCollectionName=ODD_CALO_DETECTOR_ENCODER_TABLE,
             )
         )
 

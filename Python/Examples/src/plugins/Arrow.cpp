@@ -18,6 +18,7 @@
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
@@ -64,6 +65,16 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
                        inputSimHitMeasurementsMap, outputTable,
                        trackingGeometry, detectorResolver);
   }
+
+  m.def("makeVolumeIdDetectorResolver",
+        &ArrowSimHitOutputConverter::makeVolumeIdDetectorResolver,
+        "volumeToDetector"_a, "defaultValue"_a = static_cast<std::uint8_t>(255),
+        R"doc(
+Create a C++ detector resolver from a volume-id lookup map.
+
+This avoids per-hit Python callback overhead by baking the mapping into
+a C++ lambda once at configuration time.
+)doc");
 
   {
     auto [alg, c] =
