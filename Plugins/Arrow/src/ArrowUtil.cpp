@@ -77,9 +77,8 @@ std::shared_ptr<arrow::Table> sliceByEventId(
   auto mask = unwrap(arrow::compute::CallFunction(
                          "equal", {table->column(idx), eventIdScalar}),
                      "event_id equality");
-  auto filtered =
-      unwrap(arrow::compute::CallFunction("filter", {table, mask}),
-             "event_id filter");
+  auto filtered = unwrap(arrow::compute::CallFunction("filter", {table, mask}),
+                         "event_id filter");
 
   auto filteredTable = filtered.table();
   return unwrap(filteredTable->RemoveColumn(idx), "drop event_id column");
@@ -91,8 +90,8 @@ class ParquetFileWriter::Impl {
 
   void write(const arrow::Table& table) {
     if (!m_writer) {
-      auto outfile = unwrap(
-          arrow::io::FileOutputStream::Open(m_path.string()), "open parquet");
+      auto outfile = unwrap(arrow::io::FileOutputStream::Open(m_path.string()),
+                            "open parquet");
       auto properties = parquet::WriterProperties::Builder()
                             .compression(parquet::Compression::ZSTD)
                             ->build();
@@ -142,13 +141,13 @@ void ParquetFileWriter::close() {
 }
 
 std::shared_ptr<arrow::Table> readTable(const std::filesystem::path& path) {
-  auto infile = unwrap(
-      arrow::io::ReadableFile::Open(path.string(), arrow::default_memory_pool()),
-      "open parquet for read");
+  auto infile = unwrap(arrow::io::ReadableFile::Open(
+                           path.string(), arrow::default_memory_pool()),
+                       "open parquet for read");
 
-  auto reader = unwrap(
-      parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
-      "open parquet reader");
+  auto reader =
+      unwrap(parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
+             "open parquet reader");
 
   std::shared_ptr<arrow::Table> table;
   auto status = reader->ReadTable(&table);
@@ -159,13 +158,13 @@ std::shared_ptr<arrow::Table> readTable(const std::filesystem::path& path) {
 }
 
 std::int64_t numRowsInFile(const std::filesystem::path& path) {
-  auto infile = unwrap(
-      arrow::io::ReadableFile::Open(path.string(), arrow::default_memory_pool()),
-      "open parquet footer");
+  auto infile = unwrap(arrow::io::ReadableFile::Open(
+                           path.string(), arrow::default_memory_pool()),
+                       "open parquet footer");
 
-  auto reader = unwrap(
-      parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
-      "open parquet reader");
+  auto reader =
+      unwrap(parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
+             "open parquet reader");
   return reader->parquet_reader()->metadata()->num_rows();
 }
 

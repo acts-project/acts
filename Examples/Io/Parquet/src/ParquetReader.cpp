@@ -80,8 +80,7 @@ class ParquetReader::Impl {
     }
 
     m_eventsRange = {
-        0,
-        referenceEvents < 0 ? 0 : static_cast<std::size_t>(referenceEvents)};
+        0, referenceEvents < 0 ? 0 : static_cast<std::size_t>(referenceEvents)};
   }
 
   std::shared_ptr<arrow::Table> sliceForEvent(const std::string& name,
