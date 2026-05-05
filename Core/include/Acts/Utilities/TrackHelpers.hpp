@@ -335,6 +335,12 @@ Result<void> extrapolateTrackToReferenceSurface(
     return propagateResult.error();
   }
 
+  std::cout << "extrapolated parameters: "
+            << propagateResult->endParameters->parameters() << std::endl;
+  std::cout << "extrapolated covariance: "
+            << propagateResult->endParameters->covariance().value()
+            << std::endl;
+
   track.setReferenceSurface(referenceSurface.getSharedPtr());
   track.parameters() = propagateResult->endParameters.value().parameters();
   track.covariance() =

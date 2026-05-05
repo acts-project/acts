@@ -138,11 +138,15 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
           options.geoContext, options.magFieldContext);
       auto extrapolationResult = extrapolateTrackToReferenceSurface(
           track, *options.referenceSurface, extrapolator, extrapolationOptions,
-          Acts::TrackExtrapolationStrategy::first);
+          Acts::TrackExtrapolationStrategy::first,
+          *Acts::getDefaultLogger("blub", Acts::Logging::VERBOSE));
 
       if (!extrapolationResult.ok()) {
         return extrapolationResult.error();
       }
+
+      std::cout << track.parameters() << std::endl << std::endl;
+      std::cout << track.covariance() << std::endl;
     }
 
     Acts::calculateTrackQuantities(track);
