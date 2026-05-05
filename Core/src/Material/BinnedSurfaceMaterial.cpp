@@ -43,13 +43,11 @@ Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(double factor) {
 const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
     const Vector2& lp) const {
   const auto& dpa0 = m_directedProtoAxes[0];
-  std::size_t ibin0 = dpa0.getAxis().getBin(
-      lp[static_cast<std::size_t>(dpa0.getAxisDirection())]);
+  std::size_t ibin0 = dpa0.getAxis().getBin(lp[0u]);
   std::size_t ibin1 = 0u;
   if (m_directedProtoAxes.size() > 1) {
     const auto& dpa1 = m_directedProtoAxes[1];
-    ibin1 = dpa1.getAxis().getBin(
-        lp[static_cast<std::size_t>(dpa1.getAxisDirection())]);
+    ibin1 = dpa1.getAxis().getBin(lp[1u]);
   }
   return m_fullMaterial[ibin1][ibin0];
 }
