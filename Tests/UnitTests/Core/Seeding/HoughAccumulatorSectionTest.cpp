@@ -42,9 +42,9 @@ struct TestExplorationOptions
     : public Acts::HoughExplorationOptions<LineParameters> {
   std::uint32_t threshold =
       4;  // number of lines passing section for it to be still considered
-  unsigned noiseThreshold = 12;  // number of lines passing section at the final
+  std::uint32_t noiseThreshold = 12;  // number of lines passing section at the final
                                  // split to consider it noise
-  unsigned min_division_level = 2;
+  std::uint32_t min_division_level = 2;
 };
 
 // SUITE 1: HoughAccumulatorSection Test
