@@ -73,7 +73,7 @@ class HoughAccumulatorSection {
 
   /// @brief indices of measurements that result in lines in this section
   /// @return reference to the vector of indices
-  inline const std::vector<unsigned> &indices() const { return m_indices; }
+  inline const std::vector<std::uint32_t> &indices() const { return m_indices; }
 
   /// @brief mutable version of @see indices
   /// @return mutable access to indices
