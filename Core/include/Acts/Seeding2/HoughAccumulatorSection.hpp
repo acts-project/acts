@@ -415,7 +415,7 @@ template <typename Measurement, typename Functor>
 bool passIntersectionsCheck(const HoughAccumulatorSection &section,
                             const std::vector<Measurement> &measurements,
                             const Functor &lineFunctor,
-                            const unsigned threshold) {
+                            const std::uint32_t threshold) {
   const std::size_t count = section.count();
   const float xLeft = section.xBegin();
   const float xRight = xLeft + section.xSize();
