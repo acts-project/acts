@@ -11,7 +11,7 @@
 namespace Acts {
 HoughAccumulatorSection::HoughAccumulatorSection(
     float xw, float yw, float xBegin, float yBegin, int div,
-    const std::vector<unsigned> &indices, const std::vector<float> &history)
+    const std::vector<std::uint32_t> &indices, const std::vector<float> &history)
     : m_xSize(xw),
       m_ySize(yw),
       m_xBegin(xBegin),
