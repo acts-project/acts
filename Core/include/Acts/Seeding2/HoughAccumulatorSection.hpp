@@ -77,7 +77,7 @@ class HoughAccumulatorSection {
 
   /// @brief mutable version of @see indices
   /// @return mutable access to indices
-  inline std::vector<unsigned> &indices() { return m_indices; }
+  inline std::vector<std::uint32_t> &indices() { return m_indices; }
 
   /// @brief number of lines in the section
   /// @return number of lines
