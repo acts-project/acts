@@ -449,7 +449,7 @@ bool passIntersectionsCheck(const HoughAccumulatorSection &section,
   } else {
     std::vector<float> yLeft(count);
     std::vector<float> yRight(count);
-    for (unsigned i = 0; i < count; ++i) {
+    for (std::uint32_t i = 0; i < count; ++i) {
       const auto &m = measurements[indices[i]];
       yLeft[i] = lineFunctor(m, xLeft);
       yRight[i] = lineFunctor(m, xRight);
