@@ -11,7 +11,8 @@
 namespace Acts::Experimental {
 HoughAccumulatorSection::HoughAccumulatorSection(
     float xw, float yw, float xBegin, float yBegin, int div,
-    const std::vector<std::uint32_t> &indices, const std::vector<float> &history)
+    const std::vector<std::uint32_t> &indices,
+    const std::vector<float> &history)
     : m_xSize(xw),
       m_ySize(yw),
       m_xBegin(xBegin),
@@ -76,8 +77,8 @@ HoughAccumulatorSection HoughAccumulatorSection::bottom(
 HoughAccumulatorSection HoughAccumulatorSection::top(bool copyIndices) const {
   return HoughAccumulatorSection(
       m_xSize, m_ySize * 0.5f, m_xBegin, m_yBegin + m_ySize * 0.5f,
-      m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<std::uint32_t>()),
-      m_history);
+      m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<std::uint32_t>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::left(bool copyIndices) const {
@@ -89,8 +90,8 @@ HoughAccumulatorSection HoughAccumulatorSection::left(bool copyIndices) const {
 HoughAccumulatorSection HoughAccumulatorSection::right(bool copyIndices) const {
   return HoughAccumulatorSection(
       m_xSize * 0.5f, m_ySize, m_xBegin + m_xSize * 0.5f, m_yBegin,
-      m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<std::uint32_t>()),
-      m_history);
+      m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<std::uint32_t>()), m_history);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

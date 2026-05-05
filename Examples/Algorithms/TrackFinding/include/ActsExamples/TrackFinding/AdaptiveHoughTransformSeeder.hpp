@@ -87,12 +87,12 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     double z{};
     SpacePointIndex sp{};
   };
-  using  HoughAccumulatorSection = Acts::Experimental::HoughAccumulatorSection;
-  using ExplorationOptions = Acts::Experimental::HoughExplorationOptions<PreprocessedMeasurement>;
+  using HoughAccumulatorSection = Acts::Experimental::HoughAccumulatorSection;
+  using ExplorationOptions =
+      Acts::Experimental::HoughExplorationOptions<PreprocessedMeasurement>;
 
   using LineFunctor = ExplorationOptions::LineFunctor;
   using Decision = HoughAccumulatorSection::Decision;
-
 
   /// @brief  remove indices pointing to measurements that do not cross this section
   /// @tparam measurement_t - measurements type
@@ -102,8 +102,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   template <typename measurement_t>
   void updateSection(Acts::Experimental::HoughAccumulatorSection &section,
                      const std::vector<measurement_t> &measurements,
-                     const LineFunctor
-                         &lineFunctor) const {
+                     const LineFunctor &lineFunctor) const {
     std::erase_if(section.indices(), [lineFunctor, &measurements,
                                       &section](unsigned index) {
       const PreprocessedMeasurement &m = measurements[index];
@@ -187,16 +186,14 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       const std::vector<Acts::Experimental::HoughAccumulatorSection> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
-
-
-  LineFunctor m_qOverPtPhiLineParams =
-      [this](const PreprocessedMeasurement &m, float arg) {
-        return m.invr * config().inverseA * arg -
-               m.invr * m.phi * config().inverseA;
-      };
+  LineFunctor m_qOverPtPhiLineParams = [this](const PreprocessedMeasurement &m,
+                                              float arg) {
+    return m.invr * config().inverseA * arg -
+           m.invr * m.phi * config().inverseA;
+  };
 
   LineFunctor m_zCotThetaLineParams = [](const PreprocessedMeasurement &m,
-                                              float arg) {
+                                         float arg) {
     return -m.invr * arg + m.z * m.invr;
   };
 
@@ -211,7 +208,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
       const std::vector<PreprocessedMeasurement> &measurements,
       const LineFunctor &lineFunctor, const unsigned threshold) const;
 
-  void deduplicate(std::vector<Acts::Experimental::HoughAccumulatorSection> &input) const;
+  void deduplicate(
+      std::vector<Acts::Experimental::HoughAccumulatorSection> &input) const;
 };
 
 }  // namespace ActsExamples

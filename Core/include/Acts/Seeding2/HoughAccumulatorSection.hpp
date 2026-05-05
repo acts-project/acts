@@ -155,7 +155,8 @@ class HoughAccumulatorSection {
   /// @param function is callable used to check crossing at the edges
   /// @return true if the line passes the section
   template <typename F>
-  bool isLineInside(F &&function) const &requires std::invocable<F, float>;
+  bool isLineInside(F &&function) const &
+    requires std::invocable<F, float>;
 
   /// @brief check if the lines cross inside the section
   /// @param line1 - functional form of line 1
@@ -163,8 +164,8 @@ class HoughAccumulatorSection {
   /// @warning note that this function is assuming that these are lines and the derivative is positive.
   /// @return true if the two lines cross in the section
   template <typename F>
-  bool isCrossingInside(F &&line1,
-                        F &&line2) const &requires std::invocable<F, float>;
+  bool isCrossingInside(F &&line1, F &&line2) const &
+    requires std::invocable<F, float>;
 
   /// @brief size accessor
   /// @return size in x direction
@@ -209,8 +210,9 @@ class HoughAccumulatorSection {
 };
 
 template <typename F>
-inline bool HoughAccumulatorSection::isLineInside(
-    F &&function) const &requires std::invocable<F, float> {
+inline bool HoughAccumulatorSection::isLineInside(F &&function) const &
+  requires std::invocable<F, float>
+{
   const float yB = function(m_xBegin);
   const float yE = function(m_xBegin + m_xSize);
   return (yE > yB) ? yB < m_yBegin + m_ySize && yE > m_yBegin
@@ -218,8 +220,10 @@ inline bool HoughAccumulatorSection::isLineInside(
 }
 
 template <typename F>
-inline bool HoughAccumulatorSection::isCrossingInside(
-    F &&line1, F &&line2) const &requires std::invocable<F, float> {
+inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
+                                                      F &&line2) const &
+  requires std::invocable<F, float>
+{
   // this microalgorithm idea is illustrated below
   // section left section right
   // example with crossing
