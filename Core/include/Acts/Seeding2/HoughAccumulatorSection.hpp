@@ -380,7 +380,7 @@ void exploreHoughParametersSpace(
       }
     }
 
-    for (unsigned idx : thisSection.indices()) {
+    for (std::uint32_t idx : thisSection.indices()) {
       const auto &m = measurements[idx];
       auto line = [&](float x) { return opt.lineFunctor(m, x); };
 
