@@ -181,7 +181,7 @@ class HoughAccumulatorSection {
   float yBegin() const { return m_yBegin; }
   /// @brief number of divisions that lead to this section
   /// @return integer > 0
-  unsigned divisionLevel() const { return m_divisionLevel; }
+  std::uint32_t divisionLevel() const { return m_divisionLevel; }
 
   /// store additional (arbitrary) info in indexed array
   /// @param index - identifier
