@@ -9,6 +9,7 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Io/EDM4hep/DD4hepPodioConversionHelper.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepCaloHitInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryOutputConverter.hpp"
@@ -60,9 +61,10 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
     ACTS_PYTHON_STRUCT(
         config, inputFrame, inputParticles, inputSimHits,
         outputParticlesGenerator, outputParticlesSimulation, outputSimHits,
-        outputSimHitAssociation, outputSimVertices, dd4hepDetector,
-        trackingGeometry, sortSimHitsInTime, particleRMin, particleRMax,
-        particleZMin, particleZMax, particlePtMin, particlePtMax);
+        outputSimHitAssociation, outputSimVertices, outputMCParticleMap,
+        dd4hepDetector, trackingGeometry, sortSimHitsInTime, particleRMin,
+        particleRMax, particleZMin, particleZMax, particlePtMin,
+        particlePtMax);
 
     using Config = EDM4hepSimInputConverter::Config;
     pythonRangeProperty(config, "particleR", &Config::particleRMin,
@@ -80,6 +82,16 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
         declareAlgorithm<EDM4hepTrackInputConverter, PodioInputConverter>(
             m, "EDM4hepTrackInputConverter");
     ACTS_PYTHON_STRUCT(c, inputFrame, inputTracks, outputTracks, Bz);
+  }
+
+  {
+    auto [alg, c] =
+        declareAlgorithm<EDM4hepCaloHitInputConverter, PodioInputConverter>(
+            m, "EDM4hepCaloHitInputConverter");
+    ACTS_PYTHON_STRUCT(c, inputFrame, inputCaloHitCollections,
+                       inputMCParticleMap, outputCaloHits, ecalTimeMin,
+                       ecalTimeMax, hcalTimeMin, hcalTimeMax, lightSpeed,
+                       tofOffset, detectorEncoder, isEcalCollection);
   }
 
   {

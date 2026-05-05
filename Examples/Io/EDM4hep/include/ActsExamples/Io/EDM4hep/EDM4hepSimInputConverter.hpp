@@ -34,6 +34,14 @@ class DD4hepDetector;
 
 using EDM4hepSimHitAssociation = std::vector<edm4hep::SimTrackerHit>;
 
+/// Maps an @c edm4hep::MCParticle podio index (i.e. the index of the particle
+/// inside the input @c MCParticleCollection) to its row index in the output
+/// simulated @c SimParticleContainer. Particles that were filtered out have
+/// no entry. Lets downstream converters (e.g. calorimeter hits read directly
+/// from EDM4hep) emit @c particle_id values that match what
+/// @c ArrowParticleOutputConverter writes for the same simulated container.
+using EDM4hepMCParticleIndexMap = std::unordered_map<int, std::size_t>;
+
 /// Read particles from EDM4hep.
 ///
 /// Inpersistent information:
@@ -59,6 +67,9 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
     std::optional<std::string> outputSimHitAssociation = std::nullopt;
     /// Output simulated vertices collection.
     std::string outputSimVertices;
+    /// Optional output: per-event map from EDM4hep @c MCParticle podio index
+    /// to row index in @c outputParticlesSimulation. Only populated when set.
+    std::optional<std::string> outputMCParticleMap = std::nullopt;
 
     /// DD4hep detector for cellID resolution.
     std::shared_ptr<DD4hepDetector> dd4hepDetector;
@@ -129,6 +140,9 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
 
   WriteDataHandle<SimVertexContainer> m_outputSimVertices{this,
                                                           "OutputSimVertices"};
+
+  WriteDataHandle<EDM4hepMCParticleIndexMap> m_outputMCParticleMap{
+      this, "OutputMCParticleMap"};
 };
 
 }  // namespace ActsExamples

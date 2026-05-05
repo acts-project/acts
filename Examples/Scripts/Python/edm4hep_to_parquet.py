@@ -6,7 +6,11 @@ from pathlib import Path
 import acts
 import acts.examples
 import acts.examples.edm4hep
-from acts.examples.edm4hep import PodioReader, EDM4hepSimInputConverter
+from acts.examples.edm4hep import (
+    PodioReader,
+    EDM4hepSimInputConverter,
+    EDM4hepCaloHitInputConverter,
+)
 
 u = acts.UnitConstants
 
@@ -17,6 +21,13 @@ ODD_SIM_HIT_COLLECTIONS = [
     "ShortStripEndcapReadout",
     "LongStripBarrelReadout",
     "LongStripEndcapReadout",
+]
+
+ODD_CALO_HIT_COLLECTIONS = [
+    "ECalBarrelCollection",
+    "ECalEndcapCollection",
+    "HCalBarrelCollection",
+    "HCalEndcapCollection",
 ]
 
 
@@ -45,6 +56,18 @@ def main():
         help="Skip writing perigee d0/z0 (no propagator/field needed)",
     )
     parser.add_argument(
+        "--calo-hits",
+        nargs="+",
+        default=ODD_CALO_HIT_COLLECTIONS,
+        help="EDM4hep SimCalorimeterHit collection names (defaults to ODD)",
+    )
+    parser.add_argument(
+        "--calo",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Skip writing calorimeter cells",
+    )
+    parser.add_argument(
         "--force", "-f", action="store_true", help="Allow non-empty output directory"
     )
     args = parser.parse_args()
@@ -59,7 +82,11 @@ def main():
         )
 
     try:
-        from acts.examples.arrow import ArrowParticleOutputConverter, ParquetWriter
+        from acts.examples.arrow import (
+            ArrowParticleOutputConverter,
+            ArrowCaloHitOutputConverter,
+            ParquetWriter,
+        )
     except ImportError as e:
         raise RuntimeError(
             "acts.examples.arrow is not available; "
@@ -102,6 +129,7 @@ def main():
             outputParticlesSimulation="particles_simulated",
             outputSimHits="simhits",
             outputSimVertices="vertices_truth",
+            outputMCParticleMap=("mcparticle_index_map" if args.calo else None),
             dd4hepDetector=detector,
             trackingGeometry=trackingGeometry,
             sortSimHitsInTime=False,
@@ -118,11 +146,34 @@ def main():
         )
     )
 
+    parquet_collections = {"particles_arrow": "particles.parquet"}
+
+    if args.calo:
+        s.addAlgorithm(
+            EDM4hepCaloHitInputConverter(
+                level=acts.logging.INFO,
+                inputFrame="events",
+                inputCaloHitCollections=args.calo_hits,
+                inputMCParticleMap="mcparticle_index_map",
+                outputCaloHits="calohits",
+            )
+        )
+
+        s.addAlgorithm(
+            ArrowCaloHitOutputConverter(
+                level=acts.logging.INFO,
+                inputCaloHits="calohits",
+                outputTable="calohits_arrow",
+            )
+        )
+
+        parquet_collections["calohits_arrow"] = "calohits.parquet"
+
     s.addWriter(
         ParquetWriter(
             level=acts.logging.INFO,
             outputDir=str(args.output),
-            collections={"particles_arrow": "particles.parquet"},
+            collections=parquet_collections,
         )
     )
 

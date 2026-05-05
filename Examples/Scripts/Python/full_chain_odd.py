@@ -227,6 +227,9 @@ if args.edm4hep:
         outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         outputSimVertices="vertices_truth",
+        outputMCParticleMap=(
+            "mcparticle_index_map" if args.output_parquet else None
+        ),
         dd4hepDetector=detector,
         trackingGeometry=trackingGeometry,
         sortSimHitsInTime=False,
@@ -236,6 +239,22 @@ if args.edm4hep:
         level=acts.logging.DEBUG,
     )
     s.addAlgorithm(edm4hepReader)
+
+    if args.output_parquet:
+        s.addAlgorithm(
+            acts.examples.edm4hep.EDM4hepCaloHitInputConverter(
+                level=acts.logging.INFO,
+                inputFrame="events",
+                inputCaloHitCollections=[
+                    "ECalBarrelCollection",
+                    "ECalEndcapCollection",
+                    "HCalBarrelCollection",
+                    "HCalEndcapCollection",
+                ],
+                inputMCParticleMap="mcparticle_index_map",
+                outputCaloHits="calohits",
+            )
+        )
 
     s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesSimulation)
 
@@ -547,6 +566,7 @@ if args.output_parquet:
             ArrowParticleOutputConverter,
             ArrowSimHitOutputConverter,
             ArrowTrackOutputConverter,
+            ArrowCaloHitOutputConverter,
             ParquetWriter,
         )
     except ImportError as e:
@@ -594,6 +614,18 @@ if args.output_parquet:
             )
         )
         _parquet_collections["tracks_arrow"] = "tracks.parquet"
+
+    # Calo cells live on the input edm4hep frame; the converter is only wired
+    # up above when --edm4hep is given.
+    if args.edm4hep:
+        s.addAlgorithm(
+            ArrowCaloHitOutputConverter(
+                level=acts.logging.INFO,
+                inputCaloHits="calohits",
+                outputTable="calohits_arrow",
+            )
+        )
+        _parquet_collections["calohits_arrow"] = "calohits.parquet"
 
     s.addWriter(
         ParquetWriter(
