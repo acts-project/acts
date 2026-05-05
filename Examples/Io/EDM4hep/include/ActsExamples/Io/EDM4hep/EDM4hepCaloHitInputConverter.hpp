@@ -29,9 +29,12 @@ namespace ActsExamples {
 ///
 /// For every cell in the configured input collections, the converter walks
 /// the cell's contributions, applies a time-of-flight correction
-/// (@c corrected_time = t - (r/lightSpeed - tofOffset)) and a per-detector
-/// timing window, then aggregates surviving contributions by source
-/// @c MCParticle:
+/// (@c corrected_time = t - (r/lightSpeed - tofOffset), where @c r is the
+/// distance from the origin to the cell centre — matching pyedm4hep, which
+/// also takes @c r from the parent @c SimCalorimeterHit position rather
+/// than the per-contribution @c stepPosition that many simulations leave
+/// unset) and a per-detector timing window, then aggregates surviving
+/// contributions by source @c MCParticle:
 ///   - @c energy is the sum of contribution energies for the same
 ///     @c (cellID, particle) pair,
 ///   - @c time is the energy-weighted average,
