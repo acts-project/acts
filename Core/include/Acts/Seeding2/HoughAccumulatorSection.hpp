@@ -22,14 +22,14 @@ class HoughAccumulatorSection {
  public:
   /// @brief Defines the fate of section during traversal
   enum class Decision {
-    Discard,  // the section is not to be explored further
-    Accept,   // the section should be accepted as solution without further
-              // exploration
-    Drill,    // the section should be expred further by splitting according to
-              // binning definition (split into 4 or 2 left-right or top-bottom)
-    DrillAndExpand,  // the section should be source of subsections as in the
-                     // case of drill & but the sections will be made larger
-    // size increase is configured in opt by relative factors @see expandX, @see expandY
+    Discard,  //< the section is not to be explored further
+    Accept,   //< the section should be accepted as solution without further
+              //< exploration
+    Drill,    //< the section should be expred further by splitting according to
+              //< binning definition (split into 4 or 2 left-right or top-bottom)
+    DrillAndExpand,  //< the section should be source of subsections as in the
+                     //< case of drill & but the sections will be made larger
+                     //< size increase is configured in opt by relative factors @see expandX, @see expandY
   };
 
   HoughAccumulatorSection() = default;
