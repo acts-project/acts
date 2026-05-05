@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/ScopedTimer.hpp"
 #include "ActsExamples/EventData/CaloHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
@@ -16,6 +17,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -109,6 +111,8 @@ class EDM4hepCaloHitInputConverter final : public PodioInputConverter {
 
   const Config& config() const { return m_cfg; }
 
+  ProcessCode finalize() override;
+
  private:
   ProcessCode convert(const AlgorithmContext& ctx,
                       const podio::Frame& frame) const override;
@@ -118,6 +122,15 @@ class EDM4hepCaloHitInputConverter final : public PodioInputConverter {
   ReadDataHandle<EDM4hepMCParticleIndexMap> m_inputMCParticleMap{
       this, "InputMCParticleMap"};
   WriteDataHandle<CaloHitContainer> m_outputCaloHits{this, "OutputCaloHits"};
+
+  /// Per-section job-lifetime averaging timers. Each event takes one
+  /// sample per section; the dtor logs cumulative stats at end-of-job.
+  /// Wrapped in @c std::optional so the heavy timer type doesn't need a
+  /// default constructor — they're emplaced in the converter ctor with the
+  /// algorithm's logger.
+  mutable std::optional<Acts::AveragingScopedTimer> m_timerResolve;
+  mutable std::optional<Acts::AveragingScopedTimer> m_timerAggregate;
+  mutable std::optional<Acts::AveragingScopedTimer> m_timerFinalise;
 };
 
 }  // namespace ActsExamples
