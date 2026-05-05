@@ -186,7 +186,7 @@ class HoughAccumulatorSection {
   /// store additional (arbitrary) info in indexed array
   /// @param index - identifier
   /// @param value - value to store
-  void setHistory(unsigned index, float value) {
+  void setHistory(std::uint32_t index, float value) {
     m_history.resize(index + 1);
     m_history.at(index) = value;
   }
