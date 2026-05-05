@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/ScopedTimer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -18,6 +19,7 @@
 #include "ActsPlugins/EDM4hep/EDM4hepUtil.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <edm4hep/MCParticle.h>
@@ -103,6 +105,8 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
+  ProcessCode finalize() override;
+
  private:
   ProcessCode convert(const AlgorithmContext& ctx,
                       const podio::Frame& frame) const override;
@@ -143,6 +147,18 @@ class EDM4hepSimInputConverter final : public PodioInputConverter {
 
   WriteDataHandle<EDM4hepMCParticleIndexMap> m_outputMCParticleMap{
       this, "OutputMCParticleMap"};
+
+  mutable std::optional<Acts::AveragingScopedTimer>
+      m_timerFindPrimaryVertices;
+  mutable std::optional<Acts::AveragingScopedTimer>
+      m_timerFindGeneratorStableParticles;
+  mutable std::optional<Acts::AveragingScopedTimer> m_timerWalkParticleTree;
+  mutable std::optional<Acts::AveragingScopedTimer> m_timerConvertParticles;
+  mutable std::optional<Acts::AveragingScopedTimer> m_timerReadSimHits;
+  mutable std::optional<Acts::AveragingScopedTimer> m_timerBuildSimHitAssoc;
+  mutable std::optional<Acts::AveragingScopedTimer> m_timerSortSimHitsInTime;
+  mutable std::optional<Acts::AveragingScopedTimer>
+      m_timerFindSourceVertices;
 };
 
 }  // namespace ActsExamples
