@@ -26,8 +26,7 @@ namespace ActsExamples {
 
 namespace {
 
-constexpr std::uint64_t kUnmatched =
-    std::numeric_limits<std::uint64_t>::max();
+constexpr std::uint64_t kUnmatched = std::numeric_limits<std::uint64_t>::max();
 
 }  // namespace
 
@@ -96,26 +95,38 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
   };
   std::unordered_map<CellKey, std::size_t, CellKeyHash> cellToIdx;
 
+  // Per-collection accounting so log output can pinpoint which subdetector
+  // is losing cells (timing-window cuts, missing input, encoder fall-through,
+  // etc.).
+  struct CollStats {
+    std::size_t nHits = 0;
+    std::size_t nContribsTotal = 0;
+    std::size_t nContribsKept = 0;
+    std::size_t nCellsEmitted = 0;
+  };
+  std::vector<CollStats> stats(m_cfg.inputCaloHitCollections.size());
+
   for (std::size_t collIdx = 0; collIdx < m_cfg.inputCaloHitCollections.size();
        ++collIdx) {
     const std::string& collName = m_cfg.inputCaloHitCollections[collIdx];
     const auto* base = frame.get(collName);
     if (base == nullptr) {
-      throw std::runtime_error(
-          "EDM4hepCaloHitInputConverter: collection '" + collName +
-          "' not present in frame");
+      throw std::runtime_error("EDM4hepCaloHitInputConverter: collection '" +
+                               collName + "' not present in frame");
     }
     const auto* hits =
         dynamic_cast<const edm4hep::SimCalorimeterHitCollection*>(base);
     if (hits == nullptr) {
-      throw std::runtime_error(
-          "EDM4hepCaloHitInputConverter: collection '" + collName +
-          "' is not a SimCalorimeterHitCollection");
+      throw std::runtime_error("EDM4hepCaloHitInputConverter: collection '" +
+                               collName +
+                               "' is not a SimCalorimeterHitCollection");
     }
 
     const bool isEcal = m_cfg.isEcalCollection(collName);
     const double timeMin = isEcal ? m_cfg.ecalTimeMin : m_cfg.hcalTimeMin;
     const double timeMax = isEcal ? m_cfg.ecalTimeMax : m_cfg.hcalTimeMax;
+
+    stats[collIdx].nHits = hits->size();
 
     for (const auto& hit : *hits) {
       const std::uint64_t cellId = hit.getCellID();
@@ -130,15 +141,23 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
       // preserving first-seen ordering.
       std::unordered_map<std::uint64_t, std::size_t> byParticleIdx;
 
+      // The TOF radius is taken from the cell centre, matching pyedm4hep's
+      // `EDM4hepEventBatch._load_calo_contributions`, which merges the cell
+      // (x, y, z) onto every contribution row before computing
+      // `r = sqrt(x²+y²+z²)`. The per-contribution `stepPosition` is left
+      // unused on purpose; many sims (e.g. the default Geant4 calo SD used
+      // by ODD) don't even fill it.
+      const double r =
+          std::sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+      const double tofShift = r / m_cfg.lightSpeed - m_cfg.tofOffset;
+
       for (const auto& contrib : hit.getContributions()) {
-        const auto& step = contrib.getStepPosition();
-        const double r =
-            std::sqrt(step.x * step.x + step.y * step.y + step.z * step.z);
-        const double correctedTime =
-            contrib.getTime() - (r / m_cfg.lightSpeed - m_cfg.tofOffset);
+        stats[collIdx].nContribsTotal += 1;
+        const double correctedTime = contrib.getTime() - tofShift;
         if (correctedTime < timeMin || correctedTime > timeMax) {
           continue;
         }
+        stats[collIdx].nContribsKept += 1;
 
         if (cellIt == cellToIdx.end()) {
           cellIt = cellToIdx.find(key);
@@ -149,6 +168,7 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
             cell.position = Acts::Vector3{pos.x, pos.y, pos.z};
             cell.totalEnergy = 0.0F;
             outCells.push_back(std::move(cell));
+            stats[collIdx].nCellsEmitted += 1;
             cellIt = cellToIdx.emplace(key, outCells.size() - 1).first;
           } else {
             // Pre-populate from the stored contributions so subsequent
@@ -182,7 +202,7 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
           // Store sums so we can compute the energy-weighted time at the
           // end. We re-use CaloHitContribution::time as a running Σ(e·t)
           // here and divide by Σe in the final pass.
-          CaloHitContribution acc;
+          CaloHitContribution acc{};
           acc.particleRow = particleRow;
           acc.energy = e;
           acc.time = e * t;
@@ -203,6 +223,15 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
     for (CaloHitContribution& acc : cell.contributions) {
       acc.time = acc.energy != 0.0F ? acc.time / acc.energy : 0.0F;
     }
+  }
+
+  for (std::size_t i = 0; i < m_cfg.inputCaloHitCollections.size(); ++i) {
+    ACTS_DEBUG("calo collection '"
+               << m_cfg.inputCaloHitCollections[i]
+               << "': hits=" << stats[i].nHits
+               << " contribs=" << stats[i].nContribsTotal
+               << " kept=" << stats[i].nContribsKept
+               << " cells_emitted=" << stats[i].nCellsEmitted);
   }
 
   ACTS_DEBUG("Produced " << outCells.size() << " calorimeter cells");
