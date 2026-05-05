@@ -454,9 +454,9 @@ bool passIntersectionsCheck(const HoughAccumulatorSection &section,
       yLeft[i] = lineFunctor(m, xLeft);
       yRight[i] = lineFunctor(m, xRight);
     }
-    unsigned inside = 0;
-    for (unsigned i = 0; i < count; ++i) {
-      for (unsigned j = i + 1; j < count; ++j) {
+    std::uint32_t inside = 0;
+    for (std::uint32_t i = 0; i < count; ++i) {
+      for (std::uint32_t j = i + 1; j < count; ++j) {
         if ((yLeft[i] - yLeft[j]) * (yRight[i] - yRight[j]) < 0.0f) {
           inside++;
           if (inside >= threshold) {
