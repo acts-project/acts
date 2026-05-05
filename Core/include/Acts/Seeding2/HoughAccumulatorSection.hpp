@@ -155,7 +155,7 @@ class HoughAccumulatorSection {
   /// @param function is callable used to check crossing at the edges
   /// @return true if the line passes the section
   template <typename F>
-  inline bool isLineInside(F &&function) const &
+  bool isLineInside(F &&function) const &
     requires std::invocable<F, float>;
 
   /// @brief check if the lines cross inside the section
@@ -164,7 +164,7 @@ class HoughAccumulatorSection {
   /// @warning note that this function is assuming that these are lines and the derivative is positive.
   /// @return true if the two lines cross in the section
   template <typename F>
-  inline bool isCrossingInside(F &&line1, F &&line2) const &
+  bool isCrossingInside(F &&line1, F &&line2) const &
     requires std::invocable<F, float>;
 
   /// @brief size accessor

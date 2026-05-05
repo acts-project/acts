@@ -38,52 +38,52 @@ void HoughAccumulatorSection::expand(float xs, float ys) {
 HoughAccumulatorSection HoughAccumulatorSection::bottomLeft(
     bool copyIndices) const {
   return HoughAccumulatorSection(
-      m_xSize * 0.5, m_ySize * 0.5, m_xBegin, m_yBegin, m_divisionLevel + 1,
+      m_xSize * 0.5f, m_ySize * 0.5f, m_xBegin, m_yBegin, m_divisionLevel + 1,
       (copyIndices ? m_indices : std::vector<std::uint32_t>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::topLeft(
     bool copyIndices) const {
   return HoughAccumulatorSection(
-      m_xSize * 0.5, m_ySize * 0.5, m_xBegin,
-      m_yBegin + m_ySize - m_ySize * 0.5, m_divisionLevel + 1,
+      m_xSize * 0.5f, m_ySize * 0.5f, m_xBegin,
+      m_yBegin + m_ySize - m_ySize * 0.5f, m_divisionLevel + 1,
       (copyIndices ? m_indices : std::vector<std::uint32_t>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::topRight(
     bool copyIndices) const {
   return HoughAccumulatorSection(
-      m_xSize * 0.5, m_ySize * 0.5, m_xBegin + m_xSize - m_xSize * 0.5,
-      m_yBegin + m_ySize - m_ySize * 0.5, m_divisionLevel + 1,
-      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
+      m_xSize * 0.5f, m_ySize * 0.5f, m_xBegin + m_xSize - m_xSize * 0.5f,
+      m_yBegin + m_ySize - m_ySize * 0.5f, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<std::uint32_t>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::bottomRight(
     bool copyIndices) const {
   return HoughAccumulatorSection(
-      m_xSize * 0.5, m_ySize * 0.5, m_xBegin + m_xSize - m_xSize * 0.5,
+      m_xSize * 0.5f, m_ySize * 0.5f, m_xBegin + m_xSize - m_xSize * 0.5f,
       m_yBegin, m_divisionLevel + 1,
-      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
+      (copyIndices ? m_indices : std::vector<std::uint32_t>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::bottom(
     bool copyIndices) const {
   return HoughAccumulatorSection(
-      m_xSize, m_ySize * 0.5, m_xBegin, m_yBegin, m_divisionLevel + 1,
-      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
+      m_xSize, m_ySize * 0.5f, m_xBegin, m_yBegin, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<std::uint32_t>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::top(bool copyIndices) const {
   return HoughAccumulatorSection(
-      m_xSize, m_ySize * 0.5, m_xBegin, m_yBegin + m_ySize * 0.5,
-      m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+      m_xSize, m_ySize * 0.5f, m_xBegin, m_yBegin + m_ySize * 0.5f,
+      m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<std::uint32_t>()),
       m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::left(bool copyIndices) const {
   return HoughAccumulatorSection(
-      m_xSize * 0.5, m_ySize, m_xBegin, m_yBegin, m_divisionLevel + 1,
-      (copyIndices ? m_indices : std::vector<unsigned>()), m_history);
+      m_xSize * 0.5f, m_ySize, m_xBegin, m_yBegin, m_divisionLevel + 1,
+      (copyIndices ? m_indices : std::vector<std::uint32_t>()), m_history);
 }
 
 HoughAccumulatorSection HoughAccumulatorSection::right(bool copyIndices) const {
