@@ -44,7 +44,7 @@ class HoughAccumulatorSection {
   /// @param history - storage for arbitrary information related to the section
   HoughAccumulatorSection(float xw, float yw, float xBegin, float yBegin,
                           int div = 0,
-                          const std::vector<unsigned> &indices = {},
+                          const std::vector<std::uint32_t> &indices = {},
                           const std::vector<float> &history = {});
 
   /// @brief decision designated for this section in next traversal step
