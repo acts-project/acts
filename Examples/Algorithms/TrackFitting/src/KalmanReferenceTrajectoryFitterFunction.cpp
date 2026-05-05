@@ -65,14 +65,20 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
 
   IndexSourceLink::SurfaceAccessor slSurfaceAccessor;
 
+  std::unique_ptr<const Acts::Logger> m_smootherLogger;
+  std::unique_ptr<const Acts::Logger> m_extrapolationLogger;
+
   KalmanReferenceTrajectoryFitterFunctionImpl(
       Propagator&& ext, ReferenceTrajectoryBuilder&& rtBuilder,
       DirectReferenceTrajectoryBuilder&& dRtBuilder,
-      const Acts::TrackingGeometry& trkGeo)
+      const Acts::TrackingGeometry& trkGeo, const Acts::Logger& logger)
       : extrapolator(std::move(ext)),
         referenceTrajectoryBuilder(std::move(rtBuilder)),
         directReferenceTrajectoryBuilder(std::move(dRtBuilder)),
-        slSurfaceAccessor{trkGeo} {}
+        slSurfaceAccessor{trkGeo} {
+    m_smootherLogger = logger.cloneWithSuffix("Smoother");
+    m_extrapolationLogger = logger.cloneWithSuffix("Extrapolation");
+  }
 
   auto makeReferenceTrajectoryBuilderOptions(
       const GeneralFitterOptions& options) const {
@@ -124,11 +130,15 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
                                                      options.calibrationContext,
                                                      track, calibratorDelegate);
 
-    referenceTrajectoryBuilder.filter(options.geoContext, track,
-                                      updaterDelegate);
+    auto fitterResult = referenceTrajectoryBuilder.filter(
+        options.geoContext, track, updaterDelegate);
+    if (!fitterResult.ok()) {
+      return fitterResult.error();
+    }
 
-    auto smoothRes = kfSmoother(options.geoContext,
-                                tracks.trackStateContainer(), track.tipIndex());
+    auto smoothRes =
+        kfSmoother(options.geoContext, tracks.trackStateContainer(),
+                   track.tipIndex(), *m_smootherLogger);
     if (!smoothRes.ok()) {
       return smoothRes.error();
     }
@@ -138,8 +148,7 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
           options.geoContext, options.magFieldContext);
       auto extrapolationResult = extrapolateTrackToReferenceSurface(
           track, *options.referenceSurface, extrapolator, extrapolationOptions,
-          Acts::TrackExtrapolationStrategy::first,
-          *Acts::getDefaultLogger("blub", Acts::Logging::VERBOSE));
+          Acts::TrackExtrapolationStrategy::first, *m_extrapolationLogger);
 
       if (!extrapolationResult.ok()) {
         return extrapolationResult.error();
@@ -254,7 +263,7 @@ ActsExamples::makeKalmanReferenceTrajectoryFitterFunction(
   auto fitterFunction =
       std::make_shared<KalmanReferenceTrajectoryFitterFunctionImpl>(
           std::move(extrapolator), std::move(referenceTrajectoryBuilder),
-          std::move(directReferenceTrajectoryBuilder), geo);
+          std::move(directReferenceTrajectoryBuilder), geo, logger);
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
