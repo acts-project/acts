@@ -153,9 +153,6 @@ struct KalmanReferenceTrajectoryFitterFunctionImpl final
       if (!extrapolationResult.ok()) {
         return extrapolationResult.error();
       }
-
-      std::cout << track.parameters() << std::endl << std::endl;
-      std::cout << track.covariance() << std::endl;
     }
 
     Acts::calculateTrackQuantities(track);

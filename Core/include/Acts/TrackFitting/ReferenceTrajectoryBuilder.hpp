@@ -416,11 +416,6 @@ class ReferenceTrajectoryBuilder {
                               trackState.jacobian().transpose();
 
         {
-          const MaterialUpdateMode updateMode =
-              trackState.typeFlags().hasMeasurement()
-                  ? MaterialUpdateMode::PreUpdate
-                  : MaterialUpdateMode::FullUpdate;
-
           const FreeVector freeParams = transformBoundToFreeParameters(
               trackState.referenceSurface(), geoContext,
               trackState.predicted());
@@ -428,7 +423,7 @@ class ReferenceTrajectoryBuilder {
           const MaterialSlab materialSlab = detail::evaluateMaterialSlab(
               geoContext, trackState.referenceSurface(), Direction::Forward(),
               freeParams.segment<3>(eFreePos0),
-              freeParams.segment<3>(eFreeDir0), updateMode);
+              freeParams.segment<3>(eFreeDir0), MaterialUpdateMode::PreUpdate);
 
           const detail::PointwiseMaterialEffects materialEffects =
               detail::computeMaterialEffects(
@@ -450,30 +445,27 @@ class ReferenceTrajectoryBuilder {
       if (!trackState.typeFlags().hasMeasurement()) {
         trackState.shareFrom(trackState, TrackStatePropMask::Predicted,
                              TrackStatePropMask::Filtered);
-        continue;
-      }
+      } else {
+        trackState.addComponents(TrackStatePropMask::Filtered);
 
-      trackState.addComponents(TrackStatePropMask::Filtered);
-
-      auto res = updater(geoContext, trackState, logger());
-      if (!res.ok()) {
-        ACTS_DEBUG("Error in filter: " << res.error());
-        return res.error();
+        auto res = updater(geoContext, trackState, logger());
+        if (!res.ok()) {
+          ACTS_DEBUG("Error in filter: " << res.error());
+          return res.error();
+        }
       }
 
       lastTrackState = trackState;
       predictedCovariance = trackState.filteredCovariance();
 
       {
-        const MaterialUpdateMode updateMode = MaterialUpdateMode::PostUpdate;
-
         const FreeVector freeParams = transformBoundToFreeParameters(
             trackState.referenceSurface(), geoContext, trackState.filtered());
 
         const MaterialSlab materialSlab = detail::evaluateMaterialSlab(
             geoContext, trackState.referenceSurface(), Direction::Forward(),
             freeParams.segment<3>(eFreePos0), freeParams.segment<3>(eFreeDir0),
-            updateMode);
+            MaterialUpdateMode::PostUpdate);
 
         const detail::PointwiseMaterialEffects materialEffects =
             detail::computeMaterialEffects(
