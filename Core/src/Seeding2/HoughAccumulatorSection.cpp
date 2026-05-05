@@ -89,7 +89,7 @@ HoughAccumulatorSection HoughAccumulatorSection::left(bool copyIndices) const {
 HoughAccumulatorSection HoughAccumulatorSection::right(bool copyIndices) const {
   return HoughAccumulatorSection(
       m_xSize * 0.5f, m_ySize, m_xBegin + m_xSize * 0.5f, m_yBegin,
-      m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<unsigned>()),
+      m_divisionLevel + 1, (copyIndices ? m_indices : std::vector<std::uint32_t>()),
       m_history);
 }
 
