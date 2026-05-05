@@ -200,8 +200,8 @@ ProcessCode ArrowParticleOutputConverter::execute(
                                std::make_shared<arrow::UInt16Builder>(pool));
   arrow::ListBuilder parentList(pool,
                                 std::make_shared<arrow::Int64Builder>(pool));
-  arrow::ListBuilder primaryList(
-      pool, std::make_shared<arrow::BooleanBuilder>(pool));
+  arrow::ListBuilder primaryList(pool,
+                                 std::make_shared<arrow::BooleanBuilder>(pool));
 
   check(idList.Append(), "open particle_id list");
   check(pdgList.Append(), "open pdg_id list");
@@ -235,10 +235,8 @@ ProcessCode ArrowParticleOutputConverter::execute(
   auto* pzV = static_cast<arrow::FloatBuilder*>(pzList.value_builder());
   auto* d0V = static_cast<arrow::FloatBuilder*>(d0List.value_builder());
   auto* z0V = static_cast<arrow::FloatBuilder*>(z0List.value_builder());
-  auto* vprimV =
-      static_cast<arrow::UInt16Builder*>(vprimList.value_builder());
-  auto* parentV =
-      static_cast<arrow::Int64Builder*>(parentList.value_builder());
+  auto* vprimV = static_cast<arrow::UInt16Builder*>(vprimList.value_builder());
+  auto* parentV = static_cast<arrow::Int64Builder*>(parentList.value_builder());
   auto* primaryV =
       static_cast<arrow::BooleanBuilder*>(primaryList.value_builder());
 
@@ -295,23 +293,22 @@ ProcessCode ArrowParticleOutputConverter::execute(
       auto perigeeSample = m_perigee->perigeeTimer->sample();
       const auto& surface = *m_perigee->surface;
       const Acts::Vector3 dir = s.direction();
-      auto intersection =
-          surface
-              .intersect(ctx.geoContext, s.position(), dir,
-                         Acts::BoundaryTolerance::Infinite())
-              .closest();
+      auto intersection = surface
+                              .intersect(ctx.geoContext, s.position(), dir,
+                                         Acts::BoundaryTolerance::Infinite())
+                              .closest();
 
       if (s.charge() == 0) {
         // Neutral: linearly extrapolate to the perigee surface.
         m_perigee->nZeroCharge.fetch_add(1, std::memory_order_relaxed);
-        auto lp = surface.globalToLocal(ctx.geoContext,
-                                        intersection.position(), dir);
+        auto lp =
+            surface.globalToLocal(ctx.geoContext, intersection.position(), dir);
         if (lp.ok()) {
           d0 = static_cast<float>(lp.value()[Acts::BoundIndices::eBoundLoc0]);
           z0 = static_cast<float>(lp.value()[Acts::BoundIndices::eBoundLoc1]);
         } else {
-          m_perigee->nGlobalToLocalFailed.fetch_add(
-              1, std::memory_order_relaxed);
+          m_perigee->nGlobalToLocalFailed.fetch_add(1,
+                                                    std::memory_order_relaxed);
         }
       } else {
         // Charged: propagate the truth helix to the perigee surface.
@@ -330,8 +327,7 @@ ProcessCode ArrowParticleOutputConverter::execute(
           d0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc0]);
           z0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc1]);
         } else {
-          m_perigee->nPropagationFailed.fetch_add(1,
-                                                  std::memory_order_relaxed);
+          m_perigee->nPropagationFailed.fetch_add(1, std::memory_order_relaxed);
         }
       }
     }
@@ -371,11 +367,11 @@ ProcessCode ArrowParticleOutputConverter::execute(
   };
 
   std::vector<std::shared_ptr<arrow::Array>> arrays = {
-      finish(idList),     finish(pdgList),      finish(massList),
-      finish(energyList), finish(chargeList),   finish(vxList),
-      finish(vyList),     finish(vzList),       finish(timeList),
-      finish(pxList),     finish(pyList),       finish(pzList),
-      finish(d0List),     finish(z0List),       finish(vprimList),
+      finish(idList),     finish(pdgList),     finish(massList),
+      finish(energyList), finish(chargeList),  finish(vxList),
+      finish(vyList),     finish(vzList),      finish(timeList),
+      finish(pxList),     finish(pyList),      finish(pzList),
+      finish(d0List),     finish(z0List),      finish(vprimList),
       finish(parentList), finish(primaryList),
   };
 

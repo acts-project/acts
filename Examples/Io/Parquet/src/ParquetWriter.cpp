@@ -136,8 +136,7 @@ ProcessCode ParquetWriter::write(const AlgorithmContext& ctx) {
     buf.rows += stamped->num_rows();
     buf.tables.push_back(std::move(stamped));
 
-    if (static_cast<std::size_t>(buf.rows) >=
-        m_impl->m_cfg.eventsPerRowGroup) {
+    if (static_cast<std::size_t>(buf.rows) >= m_impl->m_cfg.eventsPerRowGroup) {
       m_impl->flush(handle->name());
     }
   }

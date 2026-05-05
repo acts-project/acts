@@ -66,8 +66,8 @@ class ACTS_ARROW_EXPORT ArrowParticleOutputConverter final
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 
-  WriteDataHandle<std::shared_ptr<arrow::Table>> m_outputTable{
-      this, "OutputTable"};
+  WriteDataHandle<std::shared_ptr<arrow::Table>> m_outputTable{this,
+                                                               "OutputTable"};
 
   /// Holds the perigee surface, propagator, and cumulative job-lifetime
   /// timer; constructed in the ctor only when @c writeHelixParameters is
