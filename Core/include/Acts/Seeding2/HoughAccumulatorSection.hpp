@@ -193,7 +193,7 @@ class HoughAccumulatorSection {
   /// @brief retrieve history info
   /// @param index - item index
   /// @return value stored by @see setHistory
-  float history(unsigned index) const { return m_history[index]; }
+  float history(std::uint32_t index) const { return m_history[index]; }
 
  private:
   Decision m_decision = Decision::Drill;
