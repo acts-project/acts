@@ -82,6 +82,26 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
   m_outputMCParticleMap.maybeInitialize(m_cfg.outputMCParticleMap);
 
+  m_timerFindPrimaryVertices.emplace("Finding primary vertices", this->logger(),
+                                     Acts::Logging::INFO);
+  m_timerFindGeneratorStableParticles.emplace("Finding generator-stable particles",
+                                              this->logger(), Acts::Logging::INFO);
+  m_timerWalkParticleTree.emplace("Walking particle tree", this->logger(),
+                                  Acts::Logging::INFO);
+  m_timerConvertParticles.emplace("Converting particles", this->logger(),
+                                  Acts::Logging::INFO);
+  m_timerReadSimHits.emplace("Reading sim hits", this->logger(), Acts::Logging::INFO);
+  if (m_cfg.outputSimHitAssociation.has_value()) {
+    m_timerBuildSimHitAssoc.emplace("Building sim hit association",
+                                    this->logger(), Acts::Logging::INFO);
+  }
+  if (m_cfg.sortSimHitsInTime) {
+    m_timerSortSimHitsInTime.emplace("Sorting sim hits in time",
+                                     this->logger(), Acts::Logging::INFO);
+  }
+  m_timerFindSourceVertices.emplace("Finding source vertices for particles",
+                                    this->logger(), Acts::Logging::INFO);
+
   ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "Configured EDM4hepSimInputConverter:");
   auto printCut = [](std::optional<double> opt) {
@@ -241,8 +261,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   std::size_t nVertexParticles = 0;
 
   {
-    Acts::ScopedTimer timer("Finding primary vertices", logger(),
-                            Acts::Logging::DEBUG);
+    auto timerSample = m_timerFindPrimaryVertices->sample();
     for (const auto& particle : mcParticleCollection) {
       if (particle.parents_size() > 0) {
         // not a primary vertex
@@ -343,11 +362,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   std::size_t nPrimaryVertices = 0;
   // Walk the particle tree
   {
-    Acts::ScopedTimer timer("Walking particle tree", logger(),
-                            Acts::Logging::DEBUG);
-
-    Acts::AveragingScopedTimer timerFindStable(
-        "Finding generator-stable particles", logger(), Acts::Logging::DEBUG);
+    auto timerSample = m_timerWalkParticleTree->sample();
 
     std::vector<edm4hep::MCParticle> generatorStableParticles;
 
@@ -370,7 +385,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                    << " particles recorded for this primary vertex");
 
       {
-        auto s = timerFindStable.sample();
+        auto s = m_timerFindGeneratorStableParticles->sample();
         for (const auto& index : particles) {
           const auto& inParticle = mcParticleCollection.at(index);
           findGeneratorStableParticles(inParticle, generatorStableParticles);
@@ -449,8 +464,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
   std::size_t nSkipped = 0;
   {
-    Acts::ScopedTimer timer("Converting particles", logger(),
-                            Acts::Logging::DEBUG);
+    auto timerSample = m_timerConvertParticles->sample();
 
     for (const auto& inParticle : mcParticleCollection) {
       ACTS_VERBOSE("Converting particle:\n" << inParticle);
@@ -554,7 +568,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   ACTS_DEBUG("Reading sim hits from " << m_cfg.inputSimHits.size()
                                       << " sim hit collections");
   {
-    Acts::ScopedTimer timer("Reading sim hits", logger(), Acts::Logging::DEBUG);
+    auto timerSample = m_timerReadSimHits->sample();
 
     const auto& vm = m_cfg.dd4hepDetector->dd4hepDetector().volumeManager();
 
@@ -709,8 +723,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     simHitAssociation.reserve(simHits.size());
 
     // @TODO: Make this optional depending on the output key setting
-    Acts::ScopedTimer timer("Building sim hit association", logger(),
-                            Acts::Logging::DEBUG);
+    auto timerSample = m_timerBuildSimHitAssoc->sample();
     for (const auto&& [indexInColl, hit] : Acts::enumerate(simHits)) {
       std::size_t index = hit.index();
       // find hit for this index in the input collections
@@ -742,8 +755,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   }
 
   if (m_cfg.sortSimHitsInTime) {
-    Acts::ScopedTimer timer("Sorting sim hits in time", logger(),
-                            Acts::Logging::DEBUG);
+    auto timerSample = m_timerSortSimHitsInTime->sample();
     std::multimap<SimBarcode, std::size_t> hitsByParticle;
 
     for (std::size_t i = 0; i < simHits.size(); ++i) {
@@ -844,8 +856,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   };
 
   {
-    Acts::ScopedTimer timer("Finding source vertices for particles", logger(),
-                            Acts::Logging::DEBUG);
+    auto timerSample = m_timerFindSourceVertices->sample();
 
     std::size_t nParticlesWithHits = 0;
     for (const auto& particle : particlesSimulated) {
@@ -900,6 +911,18 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
 
   m_outputSimHits(ctx, std::move(simHits));
 
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode EDM4hepSimInputConverter::finalize() {
+  m_timerFindPrimaryVertices.reset();
+  m_timerFindGeneratorStableParticles.reset();
+  m_timerWalkParticleTree.reset();
+  m_timerConvertParticles.reset();
+  m_timerReadSimHits.reset();
+  m_timerBuildSimHitAssoc.reset();
+  m_timerSortSimHitsInTime.reset();
+  m_timerFindSourceVertices.reset();
   return ProcessCode::SUCCESS;
 }
 
