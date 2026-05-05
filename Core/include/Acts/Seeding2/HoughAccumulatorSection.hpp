@@ -201,12 +201,12 @@ class HoughAccumulatorSection {
   float m_ySize = 0;
   float m_xBegin = 0;
   float m_yBegin = 0;
-  unsigned m_divisionLevel =
-      0;  // number of times the starting section was already divided
-  std::vector<unsigned>
-      m_indices;  // indices of measurements contributing to this section
-  std::vector<float> m_history;  // additional record where an arbitrary
-                                 // information can be stored
+  /// number of times the starting section was already divided
+  std::uint32_t m_divisionLevel = 0;
+  /// indices of measurements contributing to this section
+  std::vector<std::uint32_t> m_indices;
+  /// additional record where an arbitrary information can be stored
+  std::vector<float> m_history;
 };
 
 template <typename F>
