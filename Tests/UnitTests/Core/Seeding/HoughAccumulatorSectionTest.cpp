@@ -40,7 +40,7 @@ struct Stats {
 template <typename measurement_t = LineParameters>
 struct TestExplorationOptions
     : public Acts::HoughExplorationOptions<LineParameters> {
-  unsigned threshold =
+  std::uint32_t threshold =
       4;  // number of lines passing section for it to be still considered
   unsigned noiseThreshold = 12;  // number of lines passing section at the final
                                  // split to consider it noise
