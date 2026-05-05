@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/Arrow/ArrowCaloHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowParticleOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowSimHitOutputConverter.hpp"
 #include "ActsExamples/Io/Arrow/ArrowTrackOutputConverter.hpp"
@@ -62,5 +63,13 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
     ACTS_PYTHON_STRUCT(c, inputSimHits, inputParticles, inputMeasurements,
                        inputSimHitMeasurementsMap, outputTable,
                        trackingGeometry, detectorResolver);
+  }
+
+  {
+    auto [alg, c] =
+        declareAlgorithm<ArrowCaloHitOutputConverter, ArrowOutputConverter>(
+            m, "ArrowCaloHitOutputConverter");
+    ACTS_PYTHON_STRUCT(c, inputCaloHits, outputTable, ecalEnergyThreshold,
+                       hcalEnergyThreshold, cellThreshold);
   }
 }

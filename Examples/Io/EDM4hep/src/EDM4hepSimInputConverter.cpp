@@ -80,6 +80,7 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(
   m_outputSimHits.initialize(m_cfg.outputSimHits);
   m_outputSimHitAssociation.maybeInitialize(m_cfg.outputSimHitAssociation);
   m_outputSimVertices.initialize(m_cfg.outputSimVertices);
+  m_outputMCParticleMap.maybeInitialize(m_cfg.outputMCParticleMap);
 
   ACTS_LOG_WITH_LOGGER(this->logger(), Acts::Logging::INFO,
                        "Configured EDM4hepSimInputConverter:");
@@ -871,6 +872,23 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   ACTS_DEBUG("Converted number of vertices: " << simVerticesUnordered.size());
   SimVertexContainer simVertices{simVerticesUnordered.begin(),
                                  simVerticesUnordered.end()};
+
+  // Build the MCParticle-index → simulated-row-index map before the container
+  // is moved out, since the lookup needs the final barcode-sorted ordering.
+  if (m_outputMCParticleMap.isInitialized()) {
+    EDM4hepMCParticleIndexMap mcParticleMap;
+    mcParticleMap.reserve(edm4hepParticleMap.size());
+    for (const auto& [mcpIdx, info] : edm4hepParticleMap) {
+      const SimBarcode bc = unorderedParticlesInitial.at(info.particleIndex);
+      auto it = particlesSimulated.find(bc);
+      if (it != particlesSimulated.end()) {
+        mcParticleMap.emplace(
+            mcpIdx, static_cast<std::size_t>(
+                        std::distance(particlesSimulated.begin(), it)));
+      }
+    }
+    m_outputMCParticleMap(ctx, std::move(mcParticleMap));
+  }
 
   m_outputParticlesGenerator(ctx, std::move(particlesGenerator));
   m_outputParticlesSimulation(ctx, std::move(particlesSimulated));
