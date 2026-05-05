@@ -22,6 +22,7 @@ target_link_libraries(
     PUBLIC Acts::Core Acts::Fatras Acts::PythonUtilities
 )
 add_dependencies(ActsPythonBindings ActsFatrasPythonBindings)
+acts_pybind_generate_stubs(acts.fatras ActsFatrasPythonBindings ActsPythonBindings)
 
 set(_target ${_python_dir}/acts/fatras.py)
 file(

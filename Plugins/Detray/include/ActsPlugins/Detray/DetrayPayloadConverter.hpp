@@ -37,7 +37,7 @@ struct transform_payload;
 struct mask_payload;
 struct surface_payload;
 struct volume_payload;
-struct material_slab_payload;
+struct surface_material_payload;
 struct material_volume_payload;
 struct detector_homogeneous_material_payload;
 
@@ -73,10 +73,10 @@ namespace ActsPlugins {
 class DetrayPayloadConverter {
  public:
   /// Detray surface material payload type
-  using DetraySurfaceMaterial =
-      std::variant<detray::io::grid_payload<detray::io::material_slab_payload,
-                                            detray::io::material_id>,
-                   detray::io::material_slab_payload>;
+  using DetraySurfaceMaterial = std::variant<
+      detray::io::grid_payload<detray::io::surface_material_payload,
+                               detray::io::material_id>,
+      detray::io::surface_material_payload>;
 
   /// Detray surface grid payload type
   using DetraySurfaceGrid =
@@ -259,7 +259,7 @@ class DetrayPayloadConverter {
 
     /// Material grids payload
     std::unique_ptr<detray::io::detector_grids_payload<
-        detray::io::material_slab_payload, detray::io::material_id>>
+        detray::io::surface_material_payload, detray::io::material_id>>
         materialGrids;
 
     /// Surface grids payload
@@ -293,7 +293,7 @@ class DetrayPayloadConverter {
   /// @param volPayload Volume payload
   /// @return Material grids and volume material payloads
   std::pair<std::vector<detray::io::grid_payload<
-                detray::io::material_slab_payload, detray::io::material_id>>,
+                detray::io::surface_material_payload, detray::io::material_id>>,
             detray::io::material_volume_payload>
   convertMaterial(const Acts::TrackingVolume& volume,
 

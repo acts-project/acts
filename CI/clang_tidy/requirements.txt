@@ -16,9 +16,9 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-pydantic==2.13.2
+pydantic==2.13.3
     # via -r CI/clang_tidy/requirements.in
-pydantic-core==2.46.2
+pydantic-core==2.46.3
     # via pydantic
 pygments==2.20.0
     # via
