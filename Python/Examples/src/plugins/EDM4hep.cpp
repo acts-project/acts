@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/Io/EDM4hep/DD4hepPodioConversionHelper.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepCaloHitInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
@@ -22,12 +20,12 @@
 #include "ActsExamples/Io/Podio/PodioOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/PodioReader.hpp"
 #include "ActsExamples/Io/Podio/PodioWriter.hpp"
-#include "ActsPlugins/EDM4hep/PodioUtil.hpp"
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
 #include <podio/CollectionBase.h>
 #include <podio/Frame.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
@@ -84,14 +82,24 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
     ACTS_PYTHON_STRUCT(c, inputFrame, inputTracks, outputTracks, Bz);
   }
 
+  py::class_<CaloCollectionDetectorCodes>(m, "CaloCollectionDetectorCodes")
+      .def(py::init<>())
+      .def_readwrite("isBarrel", &CaloCollectionDetectorCodes::isBarrel)
+      .def_readwrite("barrelCode", &CaloCollectionDetectorCodes::barrelCode)
+      .def_readwrite("endcapNegCode", &CaloCollectionDetectorCodes::endcapNegCode)
+      .def_readwrite("endcapPosCode", &CaloCollectionDetectorCodes::endcapPosCode)
+      .def_static("barrel", &CaloCollectionDetectorCodes::barrel, py::arg("code"))
+      .def_static("endcap", &CaloCollectionDetectorCodes::endcap, py::arg("neg_z"),
+                  py::arg("pos_z"));
+
   {
     auto [alg, c] =
         declareAlgorithm<EDM4hepCaloHitInputConverter, PodioInputConverter>(
             m, "EDM4hepCaloHitInputConverter");
     ACTS_PYTHON_STRUCT(c, inputFrame, inputCaloHitCollections,
                        inputMCParticleMap, outputCaloHits, ecalTimeMin,
-                       ecalTimeMax, hcalTimeMin, hcalTimeMax, lightSpeed,
-                       tofOffset, detectorEncoder, isEcalCollection);
+                       ecalTimeMax, hcalTimeMin, hcalTimeMax, tofOffset,
+                       caloDetectorCodesByCollectionName, isEcalCollection);
   }
 
   {

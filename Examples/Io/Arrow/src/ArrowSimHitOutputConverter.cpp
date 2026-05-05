@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -83,6 +84,29 @@ ArrowSimHitOutputConverter::ArrowSimHitOutputConverter(
   m_inputSimHitMeasurementsMap.maybeInitialize(
       m_cfg.inputSimHitMeasurementsMap);
   m_outputTable.initialize(m_cfg.outputTable);
+}
+
+std::function<std::uint8_t(Acts::GeometryIdentifier)>
+ArrowSimHitOutputConverter::makeVolumeIdDetectorResolver(
+    const std::unordered_map<std::uint32_t, std::uint8_t>& volumeToDetector,
+    std::uint8_t defaultValue) {
+  constexpr std::size_t kNumVolumes =
+      static_cast<std::size_t>(Acts::GeometryIdentifier::getMaxVolume()) + 1;
+  std::array<std::uint8_t, kNumVolumes> detectorArray{};
+  detectorArray.fill(defaultValue);
+  for (const auto& [volume, detector] : volumeToDetector) {
+    if (volume >= kNumVolumes) {
+      throw std::invalid_argument(
+          "makeVolumeIdDetectorResolver: volume id " + std::to_string(volume) +
+          " exceeds maximum " +
+          std::to_string(Acts::GeometryIdentifier::getMaxVolume()));
+    }
+    detectorArray[volume] = detector;
+  }
+  return [detectorArray](Acts::GeometryIdentifier gid) -> std::uint8_t {
+    const auto volume = static_cast<std::size_t>(gid.volume());
+    return detectorArray[volume];
+  };
 }
 
 std::vector<std::string> ArrowSimHitOutputConverter::collections() const {
@@ -236,10 +260,9 @@ ProcessCode ArrowSimHitOutputConverter::execute(
     volV->UnsafeAppend(static_cast<std::uint8_t>(gid.volume()));
     layV->UnsafeAppend(static_cast<std::uint16_t>(gid.layer()));
     surfV->UnsafeAppend(static_cast<std::uint32_t>(gid.sensitive()));
-    // TODO(subsystem): the default `detectorResolver` reads the geometry id's
+    // The default `detectorResolver` reads the geometry id's
     // `extra` byte, which we rely on geometry construction to stamp with a
-    // per-surface subsystem id. This is NOT wired up yet on the
-    // geometry-construction side, so today every hit gets `extra() == 0`
+    // per-surface subsystem id. By default, every hit gets `extra() == 0`
     // unless the user supplies a custom resolver.
     detV->UnsafeAppend(m_cfg.detectorResolver(gid));
 

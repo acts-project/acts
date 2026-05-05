@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepCaloHitInputConverter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
 
@@ -17,6 +18,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include <edm4hep/CaloHitContribution.h>
 #include <edm4hep/MCParticle.h>
@@ -31,23 +33,53 @@ constexpr std::uint64_t kUnmatched = std::numeric_limits<std::uint64_t>::max();
 
 }  // namespace
 
-EDM4hepCaloHitInputConverter::DetectorEncoder
-EDM4hepCaloHitInputConverter::defaultDetectorEncoder() {
-  // Codes match utils/detector_enums.py::CALO_DETECTOR_CODES.
-  return [](std::string_view name, double z) -> std::uint8_t {
-    if (name == "ECalBarrelCollection") {
-      return 10;
+CaloCollectionDetectorCodes CaloCollectionDetectorCodes::barrel(
+    std::uint8_t code) {
+  CaloCollectionDetectorCodes out{};
+  out.isBarrel = true;
+  out.barrelCode = code;
+  return out;
+}
+
+CaloCollectionDetectorCodes CaloCollectionDetectorCodes::endcap(
+    std::uint8_t negZ, std::uint8_t posZ) {
+  CaloCollectionDetectorCodes out{};
+  out.isBarrel = false;
+  out.endcapNegCode = negZ;
+  out.endcapPosCode = posZ;
+  return out;
+}
+
+std::vector<CaloCollectionDetectorCodes>
+EDM4hepCaloHitInputConverter::buildDetectorCodesByCollectionIndex(
+    const std::vector<std::string>& inputCaloHitCollections,
+    const std::unordered_map<std::string, CaloCollectionDetectorCodes>&
+        caloDetectorCodesByCollectionName) {
+  static const CaloCollectionDetectorCodes kUnknown =
+      CaloCollectionDetectorCodes::barrel(255);
+  std::vector<CaloCollectionDetectorCodes> out;
+  out.reserve(inputCaloHitCollections.size());
+  for (const std::string& collName : inputCaloHitCollections) {
+    const auto it = caloDetectorCodesByCollectionName.find(collName);
+    out.push_back(it != caloDetectorCodesByCollectionName.end() ? it->second
+                                                                : kUnknown);
+  }
+  return out;
+}
+
+std::function<bool(std::string_view)>
+EDM4hepCaloHitInputConverter::defaultIsEcalCollection() {
+  return [](std::string_view name) {
+    if (name.starts_with("ECal")) {
+      return true;
     }
-    if (name == "ECalEndcapCollection") {
-      return z < 0.0 ? 9 : 11;
+    if (name.starts_with("HCal")) {
+      return false;
     }
-    if (name == "HCalBarrelCollection") {
-      return 13;
-    }
-    if (name == "HCalEndcapCollection") {
-      return z < 0.0 ? 12 : 14;
-    }
-    return 255;
+    throw std::invalid_argument(
+        std::string("EDM4hepCaloHitInputConverter: cannot infer "
+                    "ECal/HCal from collection name '") +
+        std::string(name) + "'");
   };
 }
 
@@ -55,7 +87,10 @@ EDM4hepCaloHitInputConverter::EDM4hepCaloHitInputConverter(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : PodioInputConverter("EDM4hepCaloHitInputConverter", cfg.inputFrame,
                           std::move(logger)),
-      m_cfg(cfg) {
+      m_cfg(cfg),
+      m_detectorCodesByCollectionIndex(buildDetectorCodesByCollectionIndex(
+          m_cfg.inputCaloHitCollections,
+          m_cfg.caloDetectorCodesByCollectionName)) {
   if (m_cfg.inputCaloHitCollections.empty()) {
     throw std::invalid_argument("Missing calorimeter hit collections");
   }
@@ -65,14 +100,8 @@ EDM4hepCaloHitInputConverter::EDM4hepCaloHitInputConverter(
   if (m_cfg.outputCaloHits.empty()) {
     throw std::invalid_argument("Missing output calo hits container name");
   }
-  if (!m_cfg.detectorEncoder) {
-    throw std::invalid_argument("detectorEncoder must be set");
-  }
   if (!m_cfg.isEcalCollection) {
     throw std::invalid_argument("isEcalCollection must be set");
-  }
-  if (m_cfg.lightSpeed <= 0.0) {
-    throw std::invalid_argument("lightSpeed must be positive");
   }
 
   m_inputMCParticleMap.initialize(m_cfg.inputMCParticleMap);
@@ -181,14 +210,20 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
         // cell (x, y, z) onto every contribution row before computing
         // `r = sqrt(x²+y²+z²)`. The per-contribution `stepPosition` is left
         // unused on purpose; many sims (e.g. the default Geant4 calo SD
-        // used by ODD) don't even fill it.
+        // used by ODD) don't even fill it. EDM4hep positions are in mm,
+        // which is the native ACTS length unit, so no conversion is needed.
         const double r =
             std::sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
-        const double tofShift = r / m_cfg.lightSpeed - m_cfg.tofOffset;
+        const double tofShift =
+            r / Acts::PhysicalConstants::c - m_cfg.tofOffset;
 
         for (const auto& contrib : hit.getContributions()) {
           stats[collIdx].nContribsTotal += 1;
-          const double correctedTime = contrib.getTime() - tofShift;
+          // EDM4hep contribution times are in ns; convert to ACTS time
+          // units so the comparison with `timeMin`/`timeMax` and the
+          // tofShift (both in ACTS units) stays consistent.
+          const double correctedTime =
+              contrib.getTime() * Acts::UnitConstants::ns - tofShift;
           if (correctedTime < timeMin || correctedTime > timeMax) {
             continue;
           }
@@ -199,7 +234,9 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
             if (cellIt == cellToIdx.end()) {
               CaloHit cell;
               cell.cellId = cellId;
-              cell.detector = m_cfg.detectorEncoder(collName, pos.z);
+              const CaloCollectionDetectorCodes& detCodes =
+                  m_detectorCodesByCollectionIndex[collIdx];
+              cell.detector = detCodes.detectorCode(pos.z);
               cell.position = Acts::Vector3{pos.x, pos.y, pos.z};
               cell.totalEnergy = 0.0F;
               outCells.push_back(std::move(cell));

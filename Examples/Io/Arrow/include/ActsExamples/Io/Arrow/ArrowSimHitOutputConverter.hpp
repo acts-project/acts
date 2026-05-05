@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <arrow/api.h>
@@ -74,6 +75,15 @@ class ACTS_ARROW_EXPORT ArrowSimHitOutputConverter final
 
   explicit ArrowSimHitOutputConverter(
       const Config& cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
+
+  /// Build a resolver from a volume-id -> detector-id lookup table.
+  ///
+  /// This returns a pure C++ callable so Python can configure the mapping
+  /// once without paying a Python callback roundtrip for each hit.
+  static std::function<std::uint8_t(Acts::GeometryIdentifier)>
+  makeVolumeIdDetectorResolver(
+      const std::unordered_map<std::uint32_t, std::uint8_t>& volumeToDetector,
+      std::uint8_t defaultValue = 255);
 
   const Config& config() const { return m_cfg; }
 
