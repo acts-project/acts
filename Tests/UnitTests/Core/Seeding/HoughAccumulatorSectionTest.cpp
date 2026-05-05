@@ -31,10 +31,10 @@ struct LineParameters {
 // Structure for statistics to enable BOOST_CHECK on results
 struct Stats {
   double area{};
-  int nSections{};
-  int nLines{};
-  int discardedByThresholdCut{};
-  int discardedByCrossingCut{};
+  std::int32_t nSections{};
+  std::int32_t nLines{};
+  std::int32_t discardedByThresholdCut{};
+  std::int32_t discardedByCrossingCut{};
 };
 
 template <typename measurement_t = LineParameters>
