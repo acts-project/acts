@@ -205,7 +205,7 @@ class ReferenceTrajectoryBuilder {
           surface != nullptr) {
         ACTS_VERBOSE("Handle Surface " << surface->geometryId() << " "
                                        << state.options.direction);
-        auto res = handleSurface(*surface, state, stepper, result);
+        auto res = handleSurface(*surface, state, stepper, navigator, result);
         if (!res.ok()) {
           ACTS_DEBUG("Error in " << state.options.direction
                                  << " filter: " << res.error());
@@ -258,11 +258,22 @@ class ReferenceTrajectoryBuilder {
       return result.finished;
     }
 
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> handleSurface(const Surface& surface,
                                propagator_state_t& state,
                                const stepper_t& stepper,
+                               const navigator_t& navigator,
                                result_type& result) const {
+      stepper.transportCovarianceToBound(state.stepping, surface,
+                                         freeToBoundCorrection);
+
+      detail::performMaterialInteraction(
+          state, stepper, surface,
+          detail::determineMaterialUpdateMode(state, navigator,
+                                              MaterialUpdateMode::PreUpdate),
+          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
+
       TrackStatePropMask mask =
           TrackStatePropMask::Predicted | TrackStatePropMask::Jacobian;
       TrackStateProxy trackStateProxy =
@@ -271,7 +282,7 @@ class ReferenceTrajectoryBuilder {
       ConstTrackStateProxy trackStateProxyConst{trackStateProxy};
 
       trackStateProxy.setReferenceSurface(surface.getSharedPtr());
-      auto res = stepper.boundState(state.stepping, surface, true,
+      auto res = stepper.boundState(state.stepping, surface, false,
                                     freeToBoundCorrection);
       if (!res.ok()) {
         ACTS_DEBUG("Propagate to surface " << surface.geometryId()
@@ -292,6 +303,12 @@ class ReferenceTrajectoryBuilder {
       }
 
       result.lastTrackStateIndex = trackStateProxy.index();
+
+      detail::performMaterialInteraction(
+          state, stepper, surface,
+          detail::determineMaterialUpdateMode(state, navigator,
+                                              MaterialUpdateMode::PostUpdate),
+          NoiseUpdateMode::addNoise, multipleScattering, energyLoss, logger());
 
       return Result<void>::success();
     }
@@ -327,9 +344,9 @@ class ReferenceTrajectoryBuilder {
 
     ACTS_VERBOSE("Preparing " << nMeasurements << " input measurements");
     std::unordered_map<const Surface*, SourceLink> inputMeasurements;
-    for (auto&& sl : sourceLinkRange) {
-      const Surface* surface = surfaceAccessor(sl);
-      inputMeasurements.try_emplace(surface, std::move(sl));
+    for (SourceLink sourceLink : sourceLinkRange) {
+      const Surface* surface = surfaceAccessor(sourceLink);
+      inputMeasurements.try_emplace(surface, std::move(sourceLink));
     }
 
     for (auto trackState : trackProxy.trackStates()) {
@@ -348,7 +365,7 @@ class ReferenceTrajectoryBuilder {
           it == inputMeasurements.end()) {
         typeFlagsMap.setIsHole();
       } else {
-        auto sourceLink = it->second;
+        SourceLink sourceLink = it->second;
 
         trackState.setUncalibratedSourceLink(std::move(sourceLink));
         typeFlagsMap.setHasMeasurement();
@@ -384,58 +401,50 @@ class ReferenceTrajectoryBuilder {
   Result<void> filter(const GeometryContext& geoContext,
                       track_proxy_t trackProxy, const Updater& updater) const {
     std::optional<TrackStateProxy> lastTrackState;
+    BoundMatrix predictedCovariance = BoundMatrix::Zero();
 
     for (auto trackState : trackProxy.trackStates()) {
       if (lastTrackState.has_value()) {
         // Transport the last delta to the current surface using the Jacobian of
         // the track state
+
         trackState.predicted() +=
             trackState.jacobian() *
             (lastTrackState->filtered() - lastTrackState->predicted());
-        trackState.predictedCovariance() =
-            trackState.jacobian() * lastTrackState->filteredCovariance() *
-            trackState.jacobian().transpose();
-      }
 
-      {
-        const MaterialUpdateMode updateMode =
-            trackState.typeFlags().hasMeasurement()
-                ? MaterialUpdateMode::PreUpdate
-                : MaterialUpdateMode::FullUpdate;
+        predictedCovariance = trackState.jacobian() * predictedCovariance *
+                              trackState.jacobian().transpose();
 
-        const FreeVector freeParams = transformBoundToFreeParameters(
-            trackState.referenceSurface(), geoContext, trackState.predicted());
+        {
+          const MaterialUpdateMode updateMode =
+              trackState.typeFlags().hasMeasurement()
+                  ? MaterialUpdateMode::PreUpdate
+                  : MaterialUpdateMode::FullUpdate;
 
-        const auto particleHypothesis = trackProxy.particleHypothesis();
-        const double absQ = particleHypothesis.absoluteCharge();
-        const double mass = particleHypothesis.mass();
-        const float qOverP = freeParams[eFreeQOverP];
-        const double momentum = particleHypothesis.extractMomentum(qOverP);
+          const FreeVector freeParams = transformBoundToFreeParameters(
+              trackState.referenceSurface(), geoContext,
+              trackState.predicted());
 
-        const MaterialSlab materialSlab = detail::evaluateMaterialSlab(
-            geoContext, trackState.referenceSurface(), Direction::Forward(),
-            freeParams.segment<3>(eFreePos0), freeParams.segment<3>(eFreeDir0),
-            updateMode);
+          const MaterialSlab materialSlab = detail::evaluateMaterialSlab(
+              geoContext, trackState.referenceSurface(), Direction::Forward(),
+              freeParams.segment<3>(eFreePos0),
+              freeParams.segment<3>(eFreeDir0), updateMode);
 
-        const detail::PointwiseMaterialEffects materialEffects =
-            detail::computeMaterialEffects(
-                materialSlab, trackProxy.particleHypothesis(),
-                freeParams.segment<3>(eFreeDir0), qOverP, true, true, true);
+          const detail::PointwiseMaterialEffects materialEffects =
+              detail::computeMaterialEffects(
+                  materialSlab, trackProxy.particleHypothesis(),
+                  freeParams.segment<3>(eFreeDir0), freeParams[eFreeQOverP],
+                  true, true, true);
 
-        const double nextE = fastHypot(mass, momentum) - materialEffects.eLoss;
-        double nextP = (mass < nextE) ? fastCathetus(nextE, mass) : 0;
-        static constexpr double minP = 10 * Acts::UnitConstants::MeV;
-        nextP = std::max(minP, nextP);
-        const double nextQOverP =
-            particleHypothesis.qOverP(nextP, std::copysign(absQ, qOverP));
+          predictedCovariance(eBoundPhi, eBoundPhi) +=
+              materialEffects.variancePhi;
+          predictedCovariance(eBoundTheta, eBoundTheta) +=
+              materialEffects.varianceTheta;
+          predictedCovariance(eBoundQOverP, eBoundQOverP) +=
+              materialEffects.varianceQoverP;
+        }
 
-        trackState.predicted()[eBoundQOverP] = nextQOverP;
-        trackState.predictedCovariance()(eBoundPhi, eBoundPhi) +=
-            materialEffects.variancePhi;
-        trackState.predictedCovariance()(eBoundTheta, eBoundTheta) +=
-            materialEffects.varianceTheta;
-        trackState.predictedCovariance()(eBoundQOverP, eBoundQOverP) =
-            materialEffects.varianceQoverP;
+        trackState.predictedCovariance() = predictedCovariance;
       }
 
       if (!trackState.typeFlags().hasMeasurement()) {
@@ -453,18 +462,13 @@ class ReferenceTrajectoryBuilder {
       }
 
       lastTrackState = trackState;
+      predictedCovariance = trackState.filteredCovariance();
 
       {
         const MaterialUpdateMode updateMode = MaterialUpdateMode::PostUpdate;
 
         const FreeVector freeParams = transformBoundToFreeParameters(
             trackState.referenceSurface(), geoContext, trackState.filtered());
-
-        const auto particleHypothesis = trackProxy.particleHypothesis();
-        const double absQ = particleHypothesis.absoluteCharge();
-        const double mass = particleHypothesis.mass();
-        const float qOverP = freeParams[eFreeQOverP];
-        const double momentum = particleHypothesis.extractMomentum(qOverP);
 
         const MaterialSlab materialSlab = detail::evaluateMaterialSlab(
             geoContext, trackState.referenceSurface(), Direction::Forward(),
@@ -474,21 +478,14 @@ class ReferenceTrajectoryBuilder {
         const detail::PointwiseMaterialEffects materialEffects =
             detail::computeMaterialEffects(
                 materialSlab, trackProxy.particleHypothesis(),
-                freeParams.segment<3>(eFreeDir0), qOverP, true, true, true);
+                freeParams.segment<3>(eFreeDir0), freeParams[eFreeQOverP], true,
+                true, true);
 
-        const double nextE = fastHypot(mass, momentum) - materialEffects.eLoss;
-        double nextP = (mass < nextE) ? fastCathetus(nextE, mass) : 0;
-        static constexpr double minP = 10 * Acts::UnitConstants::MeV;
-        nextP = std::max(minP, nextP);
-        const double nextQOverP =
-            particleHypothesis.qOverP(nextP, std::copysign(absQ, qOverP));
-
-        trackState.filtered()[eBoundQOverP] = nextQOverP;
-        trackState.filteredCovariance()(eBoundPhi, eBoundPhi) +=
+        predictedCovariance(eBoundPhi, eBoundPhi) +=
             materialEffects.variancePhi;
-        trackState.filteredCovariance()(eBoundTheta, eBoundTheta) +=
+        predictedCovariance(eBoundTheta, eBoundTheta) +=
             materialEffects.varianceTheta;
-        trackState.filteredCovariance()(eBoundQOverP, eBoundQOverP) =
+        predictedCovariance(eBoundQOverP, eBoundQOverP) +=
             materialEffects.varianceQoverP;
       }
     }
