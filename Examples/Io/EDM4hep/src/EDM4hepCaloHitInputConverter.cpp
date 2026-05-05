@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepCaloHitInputConverter.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ScopedTimer.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -76,6 +77,15 @@ EDM4hepCaloHitInputConverter::EDM4hepCaloHitInputConverter(
 
   m_inputMCParticleMap.initialize(m_cfg.inputMCParticleMap);
   m_outputCaloHits.initialize(m_cfg.outputCaloHits);
+
+  // Section-level averaging timers shared across the whole job. One sample
+  // per event per section; logs aggregate stats at algorithm teardown.
+  m_timerResolve.emplace("Resolving collections", this->logger(),
+                         Acts::Logging::INFO);
+  m_timerAggregate.emplace("Aggregating contributions", this->logger(),
+                           Acts::Logging::INFO);
+  m_timerFinalise.emplace("Finalising contribution times", this->logger(),
+                          Acts::Logging::INFO);
 }
 
 ProcessCode EDM4hepCaloHitInputConverter::convert(
@@ -106,136 +116,173 @@ ProcessCode EDM4hepCaloHitInputConverter::convert(
   };
   std::vector<CollStats> stats(m_cfg.inputCaloHitCollections.size());
 
-  for (std::size_t collIdx = 0; collIdx < m_cfg.inputCaloHitCollections.size();
-       ++collIdx) {
-    const std::string& collName = m_cfg.inputCaloHitCollections[collIdx];
-    const auto* base = frame.get(collName);
-    if (base == nullptr) {
-      throw std::runtime_error("EDM4hepCaloHitInputConverter: collection '" +
-                               collName + "' not present in frame");
+  // Resolve & validate all input collections up front so we can size the
+  // output container and the cell-lookup map to the worst case (one cell
+  // per input hit). Reserving keeps the hot loop free of vector
+  // reallocations and unordered_map rehashes for million-hit events.
+  std::vector<const edm4hep::SimCalorimeterHitCollection*> hitColls(
+      m_cfg.inputCaloHitCollections.size(), nullptr);
+  std::size_t totalHits = 0;
+  {
+    auto resolveSample = m_timerResolve->sample();
+    for (std::size_t collIdx = 0;
+         collIdx < m_cfg.inputCaloHitCollections.size(); ++collIdx) {
+      const std::string& collName = m_cfg.inputCaloHitCollections[collIdx];
+      const auto* base = frame.get(collName);
+      if (base == nullptr) {
+        throw std::runtime_error("EDM4hepCaloHitInputConverter: collection '" +
+                                 collName + "' not present in frame");
+      }
+      const auto* hits =
+          dynamic_cast<const edm4hep::SimCalorimeterHitCollection*>(base);
+      if (hits == nullptr) {
+        throw std::runtime_error("EDM4hepCaloHitInputConverter: collection '" +
+                                 collName +
+                                 "' is not a SimCalorimeterHitCollection");
+      }
+      hitColls[collIdx] = hits;
+      totalHits += hits->size();
+      stats[collIdx].nHits = hits->size();
     }
-    const auto* hits =
-        dynamic_cast<const edm4hep::SimCalorimeterHitCollection*>(base);
-    if (hits == nullptr) {
-      throw std::runtime_error("EDM4hepCaloHitInputConverter: collection '" +
-                               collName +
-                               "' is not a SimCalorimeterHitCollection");
-    }
+    outCells.reserve(totalHits);
+    cellToIdx.reserve(totalHits);
+  }
 
-    const bool isEcal = m_cfg.isEcalCollection(collName);
-    const double timeMin = isEcal ? m_cfg.ecalTimeMin : m_cfg.hcalTimeMin;
-    const double timeMax = isEcal ? m_cfg.ecalTimeMax : m_cfg.hcalTimeMax;
+  // Per-cell particle bucket; `byParticleIdx` maps the resolved
+  // `particleRow` back into `cell.contributions` for O(1) updates while
+  // preserving first-seen ordering. Lifted out of the hit loop so its
+  // bucket array is reused across millions of hits — `clear()` keeps the
+  // existing capacity, allocating only on first growth.
+  std::unordered_map<std::uint64_t, std::size_t> byParticleIdx;
 
-    stats[collIdx].nHits = hits->size();
+  {
+    auto aggregateSample = m_timerAggregate->sample();
 
-    for (const auto& hit : *hits) {
-      const std::uint64_t cellId = hit.getCellID();
-      const auto& pos = hit.getPosition();
-      const CellKey key{collIdx, cellId};
+    for (std::size_t collIdx = 0; collIdx < hitColls.size(); ++collIdx) {
+      const std::string& collName = m_cfg.inputCaloHitCollections[collIdx];
+      const auto* hits = hitColls[collIdx];
 
-      // Defer cell creation: if every contribution is dropped by the time
-      // window we don't want to emit an empty cell.
-      auto cellIt = cellToIdx.end();
-      // Per-cell particle bucket; `byParticleIdx` maps the resolved
-      // particleRow back into `cell.contributions` for O(1) updates while
-      // preserving first-seen ordering.
-      std::unordered_map<std::uint64_t, std::size_t> byParticleIdx;
+      const bool isEcal = m_cfg.isEcalCollection(collName);
+      const double timeMin = isEcal ? m_cfg.ecalTimeMin : m_cfg.hcalTimeMin;
+      const double timeMax = isEcal ? m_cfg.ecalTimeMax : m_cfg.hcalTimeMax;
 
-      // The TOF radius is taken from the cell centre, matching pyedm4hep's
-      // `EDM4hepEventBatch._load_calo_contributions`, which merges the cell
-      // (x, y, z) onto every contribution row before computing
-      // `r = sqrt(x²+y²+z²)`. The per-contribution `stepPosition` is left
-      // unused on purpose; many sims (e.g. the default Geant4 calo SD used
-      // by ODD) don't even fill it.
-      const double r =
-          std::sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
-      const double tofShift = r / m_cfg.lightSpeed - m_cfg.tofOffset;
+      for (const auto& hit : *hits) {
+        const std::uint64_t cellId = hit.getCellID();
+        const auto& pos = hit.getPosition();
+        const CellKey key{collIdx, cellId};
 
-      for (const auto& contrib : hit.getContributions()) {
-        stats[collIdx].nContribsTotal += 1;
-        const double correctedTime = contrib.getTime() - tofShift;
-        if (correctedTime < timeMin || correctedTime > timeMax) {
-          continue;
-        }
-        stats[collIdx].nContribsKept += 1;
+        // Defer cell creation: if every contribution is dropped by the time
+        // window we don't want to emit an empty cell.
+        auto cellIt = cellToIdx.end();
+        byParticleIdx.clear();
 
-        if (cellIt == cellToIdx.end()) {
-          cellIt = cellToIdx.find(key);
+        // The TOF radius is taken from the cell centre, matching pyedm4hep's
+        // `EDM4hepEventBatch._load_calo_contributions`, which merges the
+        // cell (x, y, z) onto every contribution row before computing
+        // `r = sqrt(x²+y²+z²)`. The per-contribution `stepPosition` is left
+        // unused on purpose; many sims (e.g. the default Geant4 calo SD
+        // used by ODD) don't even fill it.
+        const double r =
+            std::sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+        const double tofShift = r / m_cfg.lightSpeed - m_cfg.tofOffset;
+
+        for (const auto& contrib : hit.getContributions()) {
+          stats[collIdx].nContribsTotal += 1;
+          const double correctedTime = contrib.getTime() - tofShift;
+          if (correctedTime < timeMin || correctedTime > timeMax) {
+            continue;
+          }
+          stats[collIdx].nContribsKept += 1;
+
           if (cellIt == cellToIdx.end()) {
-            CaloHit cell;
-            cell.cellId = cellId;
-            cell.detector = m_cfg.detectorEncoder(collName, pos.z);
-            cell.position = Acts::Vector3{pos.x, pos.y, pos.z};
-            cell.totalEnergy = 0.0F;
-            outCells.push_back(std::move(cell));
-            stats[collIdx].nCellsEmitted += 1;
-            cellIt = cellToIdx.emplace(key, outCells.size() - 1).first;
-          } else {
-            // Pre-populate from the stored contributions so subsequent
-            // contributions to the same particle aggregate correctly. This
-            // path is reachable only if the same (collection, cellID) shows
-            // up more than once in the input collection, which shouldn't
-            // happen with well-formed EDM4hep but we keep the code honest.
-            const CaloHit& existing = outCells[cellIt->second];
-            byParticleIdx.reserve(existing.contributions.size());
-            for (std::size_t i = 0; i < existing.contributions.size(); ++i) {
-              byParticleIdx.emplace(existing.contributions[i].particleRow, i);
+            cellIt = cellToIdx.find(key);
+            if (cellIt == cellToIdx.end()) {
+              CaloHit cell;
+              cell.cellId = cellId;
+              cell.detector = m_cfg.detectorEncoder(collName, pos.z);
+              cell.position = Acts::Vector3{pos.x, pos.y, pos.z};
+              cell.totalEnergy = 0.0F;
+              outCells.push_back(std::move(cell));
+              stats[collIdx].nCellsEmitted += 1;
+              cellIt = cellToIdx.emplace(key, outCells.size() - 1).first;
+            } else {
+              // Pre-populate from the stored contributions so subsequent
+              // contributions to the same particle aggregate correctly.
+              // This path is reachable only if the same (collection,
+              // cellID) shows up more than once in the input collection,
+              // which shouldn't happen with well-formed EDM4hep but we keep
+              // the code honest.
+              const CaloHit& existing = outCells[cellIt->second];
+              byParticleIdx.reserve(existing.contributions.size());
+              for (std::size_t i = 0; i < existing.contributions.size(); ++i) {
+                byParticleIdx.emplace(existing.contributions[i].particleRow, i);
+              }
             }
           }
-        }
-        CaloHit& cell = outCells[cellIt->second];
+          CaloHit& cell = outCells[cellIt->second];
 
-        const auto particle = contrib.getParticle();
-        std::uint64_t particleRow = kUnmatched;
-        if (particle.isAvailable()) {
-          auto mIt = mcpMap.find(particle.getObjectID().index);
-          if (mIt != mcpMap.end()) {
-            particleRow = static_cast<std::uint64_t>(mIt->second);
+          const auto particle = contrib.getParticle();
+          std::uint64_t particleRow = kUnmatched;
+          if (particle.isAvailable()) {
+            auto mIt = mcpMap.find(particle.getObjectID().index);
+            if (mIt != mcpMap.end()) {
+              particleRow = static_cast<std::uint64_t>(mIt->second);
+            }
           }
-        }
 
-        const float e = static_cast<float>(contrib.getEnergy());
-        const float t = contrib.getTime();
+          const float e = contrib.getEnergy();
+          const float t = contrib.getTime();
 
-        auto pIt = byParticleIdx.find(particleRow);
-        if (pIt == byParticleIdx.end()) {
-          // Store sums so we can compute the energy-weighted time at the
-          // end. We re-use CaloHitContribution::time as a running Σ(e·t)
-          // here and divide by Σe in the final pass.
-          CaloHitContribution acc{};
-          acc.particleRow = particleRow;
-          acc.energy = e;
-          acc.time = e * t;
-          cell.contributions.push_back(acc);
-          byParticleIdx.emplace(particleRow, cell.contributions.size() - 1);
-        } else {
-          CaloHitContribution& acc = cell.contributions[pIt->second];
-          acc.energy += e;
-          acc.time += e * t;  // running Σ(e·t); finalised below
+          auto pIt = byParticleIdx.find(particleRow);
+          if (pIt == byParticleIdx.end()) {
+            // Store sums so we can compute the energy-weighted time at the
+            // end. We re-use CaloHitContribution::time as a running Σ(e·t)
+            // here and divide by Σe in the final pass.
+            CaloHitContribution acc{};
+            acc.particleRow = particleRow;
+            acc.energy = e;
+            acc.time = e * t;
+            cell.contributions.push_back(acc);
+            byParticleIdx.emplace(particleRow, cell.contributions.size() - 1);
+          } else {
+            CaloHitContribution& acc = cell.contributions[pIt->second];
+            acc.energy += e;
+            acc.time += e * t;  // running Σ(e·t); finalised below
+          }
+          cell.totalEnergy += e;
         }
-        cell.totalEnergy += e;
       }
     }
   }
 
   // Finalise: convert the stored Σ(e·t) into the energy-weighted average.
-  for (CaloHit& cell : outCells) {
-    for (CaloHitContribution& acc : cell.contributions) {
-      acc.time = acc.energy != 0.0F ? acc.time / acc.energy : 0.0F;
+  {
+    auto finaliseSample = m_timerFinalise->sample();
+    for (CaloHit& cell : outCells) {
+      for (CaloHitContribution& acc : cell.contributions) {
+        acc.time = acc.energy != 0.0F ? acc.time / acc.energy : 0.0F;
+      }
     }
   }
 
   for (std::size_t i = 0; i < m_cfg.inputCaloHitCollections.size(); ++i) {
     ACTS_DEBUG("calo collection '"
-               << m_cfg.inputCaloHitCollections[i]
-               << "': hits=" << stats[i].nHits
-               << " contribs=" << stats[i].nContribsTotal
+               << m_cfg.inputCaloHitCollections[i] << "': hits="
+               << stats[i].nHits << " contribs=" << stats[i].nContribsTotal
                << " kept=" << stats[i].nContribsKept
                << " cells_emitted=" << stats[i].nCellsEmitted);
   }
 
   ACTS_DEBUG("Produced " << outCells.size() << " calorimeter cells");
   m_outputCaloHits(ctx, std::move(outCells));
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode EDM4hepCaloHitInputConverter::finalize() {
+  // Resetting triggers output
+  m_timerResolve.reset();
+  m_timerAggregate.reset();
+  m_timerFinalise.reset();
   return ProcessCode::SUCCESS;
 }
 
