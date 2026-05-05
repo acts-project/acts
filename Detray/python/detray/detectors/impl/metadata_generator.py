@@ -264,7 +264,7 @@ class metadata_generator:
     def __init__(
         self,
         md: metadata,
-        output="../detectors/include/detray/detectors/",
+        output="../Detray/detectors/include/detray/detectors/",
         format_header=True,
     ):
         # Internal state during header generation
@@ -296,7 +296,7 @@ class metadata_generator:
 
     # Write the given metadata to file
     def __generate(
-        self, md: metadata, src_dir="../detectors/include/detray/detectors/"
+        self, md: metadata, src_dir="../Detray/detectors/include/detray/detectors/"
     ):
         # Shortened naming convention
         det_name = md.det_name.replace("_detector", "")

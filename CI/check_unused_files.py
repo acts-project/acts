@@ -89,6 +89,9 @@ def main():
         # Build-time metadata generation
         "Detray/python/detray/detectors/impl/definitions.py",
         "Detray/python/detray/detectors/impl/type_helpers.py",
+        # Python uv files
+        "Detray/codegen/detray-sympy/uv.lock",
+        "Detray/python/detray/uv.lock",
         # TODO: Remove these again, once paths can be excluded
         "Detray/detectors/python/wire_chamber_metadata.py",
         "Detray/detectors/python/toy_metadata.py",
@@ -144,6 +147,7 @@ def main():
         ".css",
         ".gdml",
         ".hepmc3",
+        ".lock",
         ".in",
         ".ipynb",
         ".json",
