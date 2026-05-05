@@ -87,41 +87,12 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     double z{};
     SpacePointIndex sp{};
   };
+  using  HoughAccumulatorSection = Acts::Experimental::HoughAccumulatorSection;
+  using ExplorationOptions = Acts::Experimental::HoughExplorationOptions<PreprocessedMeasurement>;
 
-  template <typename measurement_t = PreprocessedMeasurement>
-  struct ExplorationOptions {
-    float xMinBinSize = 1.0f;  // minimum bin size in x direction, beyond that
-                               // value the sections are not split
-    float yMinBinSize = 1.0f;  // minimum bin size in y direction, beyond that
-                               // value the sections are not split
-    float expandX = 1.1f;  // expand in x direaction (default by 10%) if Expand
-                           // Decision is made
-    float expandY = 1.1f;  // expand in y direaction (default by 10%) if Expand
-                           // Decision is made
-    using LineParamFunctor =
-        std::function<float(const measurement_t &, float arg)>;
-    LineParamFunctor lineParamFunctor;  // pair of functions needed to obtain
-                                        // linear function ax+b parameters,
-                                        // first for a, second for b
+  using LineFunctor = ExplorationOptions::LineFunctor;
+  using Decision = HoughAccumulatorSection::Decision;
 
-    enum class Decision {
-      Discard,  // the section is not to be explored further
-      Accept,   // the section should be accepted as solution without further
-                // exploration
-      Drill,  // the section should be expred further by splitting according to
-              // binning definition (split into 4 or 2 left-right or top-bottom)
-      DrillAndExpand,  // the section should be source of subsections as in the
-                       // case of drill & but the sections will be made larger
-      // size increase is configured in opt by relative factors @see expandX, @see expandY
-    };
-
-    using DecisionFunctor = std::function<Decision(
-        const Acts::HoughAccumulatorSection &section,
-        const std::vector<PreprocessedMeasurement> &measurements)>;
-    DecisionFunctor decisionFunctor;  // function deciding if the Accumulator
-                                      // section should be, discarded, split
-                                      // further (and how), or is a solution
-  };
 
   /// @brief  remove indices pointing to measurements that do not cross this section
   /// @tparam measurement_t - measurements type
@@ -129,78 +100,15 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param measurements - measurements vector
   /// @param lineFunctor - line definition
   template <typename measurement_t>
-  void updateSection(Acts::HoughAccumulatorSection &section,
+  void updateSection(Acts::Experimental::HoughAccumulatorSection &section,
                      const std::vector<measurement_t> &measurements,
-                     const ExplorationOptions<measurement_t>::LineParamFunctor
+                     const LineFunctor
                          &lineFunctor) const {
     std::erase_if(section.indices(), [lineFunctor, &measurements,
                                       &section](unsigned index) {
       const PreprocessedMeasurement &m = measurements[index];
       return !section.isLineInside(std::bind_front(lineFunctor, std::cref(m)));
     });
-  }
-
-  template <typename M>
-  void exploreParametersSpace(
-      std::vector<Acts::HoughAccumulatorSection> &sectionsStack,
-      const std::vector<M> &measurements, const ExplorationOptions<M> &opt,
-      std::vector<Acts::HoughAccumulatorSection> &results) const {
-    using Decision = ExplorationOptions<M>::Decision;
-    while (!sectionsStack.empty()) {
-      ACTS_VERBOSE("Stack size " << sectionsStack.size());
-      Acts::HoughAccumulatorSection &thisSection = sectionsStack.back();
-      Decision whatNext = opt.decisionFunctor(thisSection, measurements);
-      ACTS_VERBOSE("top section "
-                   << thisSection.count() << " section " << thisSection.xBegin()
-                   << " - " << thisSection.xBegin() + thisSection.xSize() << " "
-                   << thisSection.yBegin() << " - "
-                   << thisSection.yBegin() + thisSection.ySize()
-                   << " nlines: " << thisSection.count()
-                   << " div: " << thisSection.divisionLevel() << " decision "
-                   << (whatNext == Decision::Discard ? "Discard"
-                                                     : "Drill, Accept"));
-
-      if (whatNext == Decision::Discard) {
-        sectionsStack.pop_back();
-      } else if (whatNext == Decision::Accept) {
-        results.push_back(std::move(thisSection));
-        sectionsStack.pop_back();
-      } else {
-        // further exploration starts here
-        std::vector<Acts::HoughAccumulatorSection> divisions;
-        if (thisSection.xSize() > opt.xMinBinSize &&
-            thisSection.ySize() > opt.yMinBinSize) {
-          // need 4 subdivisions
-          divisions.reserve(4);
-          divisions.push_back(thisSection.topLeft(true));
-          divisions.push_back(thisSection.topRight(true));
-          divisions.push_back(thisSection.bottomLeft(true));
-          divisions.push_back(thisSection.bottomRight(true));
-        } else if (thisSection.xSize() <= opt.xMinBinSize &&
-                   thisSection.ySize() > opt.yMinBinSize) {
-          // only split in y
-          divisions.reserve(2);
-          divisions.push_back(thisSection.top(true));
-          divisions.push_back(thisSection.bottom(true));
-        } else {
-          // only split in x
-          divisions.reserve(2);
-          divisions.push_back(thisSection.left(true));
-          divisions.push_back(thisSection.right(true));
-        }
-
-        if (whatNext == Decision::DrillAndExpand) {
-          for (Acts::HoughAccumulatorSection &d : divisions) {
-            d.expand(opt.expandX, opt.expandY);
-          }
-        }
-        sectionsStack.pop_back();  // discard the section that was just split
-        for (Acts::HoughAccumulatorSection &d : divisions) {
-          updateSection(d, measurements, opt.lineParamFunctor);
-          sectionsStack.push_back(std::move(d));
-        }
-      }
-    }
   }
 
   /// Construct the seeding algorithm.
@@ -238,7 +146,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param stack - sections stack to fill
   /// @param measurements - measurements to fill the stack
   void fillStackPhiSplit(
-      std::vector<Acts::HoughAccumulatorSection> &stack,
+      std::vector<Acts::Experimental::HoughAccumulatorSection> &stack,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief process sections on the stack
@@ -249,8 +157,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the output set of sections
   /// @param measurements are input measurements
   void processStackQOverPtPhi(
-      std::vector<Acts::HoughAccumulatorSection> &input,
-      std::vector<Acts::HoughAccumulatorSection> &output,
+      std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
+      std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief process sections on the stack
@@ -261,13 +169,13 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param solutions is the output set of sections
   /// @param measurements are input measurements
   void processStackZCotTheta(
-      std::vector<Acts::HoughAccumulatorSection> &input,
-      std::vector<Acts::HoughAccumulatorSection> &output,
+      std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
+      std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   void processStackZCotThetaSplit(
-      std::vector<Acts::HoughAccumulatorSection> &input,
-      std::vector<Acts::HoughAccumulatorSection> &output,
+      std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
+      std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
   /// @brief produce 3 Sp seeds out of solutions
@@ -276,19 +184,18 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param measurements are input measurements
   void makeSeeds(
       SeedContainer &seeds,
-      const std::vector<Acts::HoughAccumulatorSection> &solutions,
+      const std::vector<Acts::Experimental::HoughAccumulatorSection> &solutions,
       const std::vector<PreprocessedMeasurement> &measurements) const;
 
-  using LineParamFunctor =
-      ExplorationOptions<PreprocessedMeasurement>::LineParamFunctor;
 
-  LineParamFunctor m_qOverPtPhiLineParams =
+
+  LineFunctor m_qOverPtPhiLineParams =
       [this](const PreprocessedMeasurement &m, float arg) {
         return m.invr * config().inverseA * arg -
                m.invr * m.phi * config().inverseA;
       };
 
-  LineParamFunctor m_zCotThetaLineParams = [](const PreprocessedMeasurement &m,
+  LineFunctor m_zCotThetaLineParams = [](const PreprocessedMeasurement &m,
                                               float arg) {
     return -m.invr * arg + m.z * m.invr;
   };
@@ -300,11 +207,11 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @param lineParamsAccessor - functions to be used to access line parameters
   /// @param threshold - the number of lines in the section should be at minimum
   bool passIntersectionsCheck(
-      const Acts::HoughAccumulatorSection &section,
+      const Acts::Experimental::HoughAccumulatorSection &section,
       const std::vector<PreprocessedMeasurement> &measurements,
-      const LineParamFunctor &lineFunctor, const unsigned threshold) const;
+      const LineFunctor &lineFunctor, const unsigned threshold) const;
 
-  void deduplicate(std::vector<Acts::HoughAccumulatorSection> &input) const;
+  void deduplicate(std::vector<Acts::Experimental::HoughAccumulatorSection> &input) const;
 };
 
 }  // namespace ActsExamples

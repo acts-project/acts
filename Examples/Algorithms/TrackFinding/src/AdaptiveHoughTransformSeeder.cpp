@@ -43,7 +43,7 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
 
 // When traversing parameters space in various directions it is useful
 // to record the "path".
-// Acts::HoughAccumulatorSection has simple functionality allowing that in a
+// Acts::Experimental::HoughAccumulatorSection has simple functionality allowing that in a
 // form of a plain vector of floats. These numbers need to be accessed
 // consistently, thus this indices.
 namespace {
@@ -64,7 +64,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   preparePreprocessedMeasurements(spacePoints, measurements);
 
   // prepare initial stack
-  std::vector<Acts::HoughAccumulatorSection> stack1;
+  std::vector<Acts::Experimental::HoughAccumulatorSection> stack1;
   fillStackPhiSplit(stack1, measurements);
 
   // split into regions in z_vertex cot theta, there is a lot of duplication and
@@ -73,12 +73,12 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     section.updateDimensions(2.0f * m_cfg.zRange, 2.0f * m_cfg.cotThetaRange,
                              -m_cfg.zRange, -m_cfg.cotThetaRange);
   }
-  std::vector<Acts::HoughAccumulatorSection> stack2;
+  std::vector<Acts::Experimental::HoughAccumulatorSection> stack2;
   {
     Acts::ScopedTimer st("splitInZCotTheta", logger());
     processStackZCotThetaSplit(stack1, stack2, measurements);
     if (m_cfg.doSecondPhase) {
-      for (Acts::HoughAccumulatorSection &section : stack2) {
+      for (Acts::Experimental::HoughAccumulatorSection &section : stack2) {
         section.setHistory(zSplitMinIndex, section.xBegin());
         section.setHistory(zSplitWidthIndex, section.xSize());
         section.setHistory(cotThetaSplitMinIndex, section.yBegin());
@@ -132,7 +132,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     }
   }
 
-  std::vector<Acts::HoughAccumulatorSection> &solutions =
+  std::vector<Acts::Experimental::HoughAccumulatorSection> &solutions =
       m_cfg.doSecondPhase ? stack2 : stack1;
   Acts::ScopedTimer st("seedsMaking", logger());
 
@@ -176,7 +176,7 @@ void AdaptiveHoughTransformSeeder::preparePreprocessedMeasurements(
 }
 
 void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
-    std::vector<Acts::HoughAccumulatorSection> &stack,
+    std::vector<Acts::Experimental::HoughAccumulatorSection> &stack,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   Acts::ScopedTimer st("splitInQuadrants", logger());
   const int nSplits = 8;
@@ -206,8 +206,8 @@ void AdaptiveHoughTransformSeeder::fillStackPhiSplit(
 }
 
 void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
-    std::vector<Acts::HoughAccumulatorSection> &input,
-    std::vector<Acts::HoughAccumulatorSection> &output,
+    std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
+    std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   struct Stats {
     double area{};
@@ -220,42 +220,41 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
   ExplorationOptions opt;
   opt.xMinBinSize = m_cfg.phiMinBinSize;
   opt.yMinBinSize = m_cfg.qOverPtMinBinSize;
-  opt.lineParamFunctor = m_qOverPtPhiLineParams;
+  opt.lineFunctor = m_qOverPtPhiLineParams;
   opt.decisionFunctor = [&sStat, &cfg = m_cfg, &opt, this](
-                            const Acts::HoughAccumulatorSection &section,
+                            const Acts::Experimental::HoughAccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &mes) {
-    using enum ExplorationOptions<PreprocessedMeasurement>::Decision;
     if (section.divisionLevel() <= 8) {
-      return Drill;
+      return Decision::Drill;
     }
 
     if (section.count() < cfg.threshold) {
       sStat[section.divisionLevel()].discardedByThresholdCut += 1;
-      return Discard;
+      return Decision::Discard;
     }
     if (section.count() < 3 * cfg.threshold &&
-        !passIntersectionsCheck(section, mes, opt.lineParamFunctor,
+        !passIntersectionsCheck(section, mes, opt.lineFunctor,
                                 cfg.threshold * (cfg.threshold - 1))) {
       sStat[section.divisionLevel()].discardedByCrossingCut += 1;
-      return Discard;
+      return Decision::Discard;
     }
 
     if (section.count() >= cfg.threshold &&
         section.count() <= cfg.noiseThreshold &&
         section.xSize() <= cfg.phiMinBinSize &&
         section.ySize() <= cfg.qOverPtMinBinSize) {
-      return Accept;
+      return Decision::Accept;
     }
     sStat[section.divisionLevel()].area += section.xSize() * section.ySize();
     sStat[section.divisionLevel()].nSections += 1;
     sStat[section.divisionLevel()].nLines += section.count();
-    return Drill;
+    return Decision::Drill;
   };
 
-  exploreParametersSpace(input, measurements, opt, output);
+  exploreHoughParametersSpace(input, measurements, opt, output);
   const unsigned nl =
       std::accumulate(output.begin(), output.end(), 0,
-                      [](unsigned sum, const Acts::HoughAccumulatorSection &s) {
+                      [](unsigned sum, const Acts::Experimental::HoughAccumulatorSection &s) {
                         return sum + s.count();
                       });
   ACTS_DEBUG("size " << sStat.size());
@@ -272,33 +271,32 @@ void AdaptiveHoughTransformSeeder::processStackQOverPtPhi(
 }
 
 void AdaptiveHoughTransformSeeder::processStackZCotTheta(
-    std::vector<Acts::HoughAccumulatorSection> &input,
-    std::vector<Acts::HoughAccumulatorSection> &output,
+    std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
+    std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   ExplorationOptions opt;
   opt.xMinBinSize = m_cfg.zMinBinSize;
   opt.yMinBinSize = m_cfg.cotThetaMinBinSize;
-  opt.lineParamFunctor = m_zCotThetaLineParams;
+  opt.lineFunctor = m_zCotThetaLineParams;
   opt.decisionFunctor = [&cfg = m_cfg](
-                            const Acts::HoughAccumulatorSection &section,
+                            const Acts::Experimental::HoughAccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &) {
-    using enum ExplorationOptions<PreprocessedMeasurement>::Decision;
 
     if (section.count() < cfg.threshold) {
-      return Discard;
+      return Decision::Discard;
     }
     if (section.count() >= cfg.threshold &&
         section.xSize() <= cfg.zMinBinSize &&
         section.ySize() <= cfg.cotThetaMinBinSize) {
-      return Accept;
+      return Decision::Accept;
     }
-    return Drill;
+    return Decision::Drill;
   };
 
-  exploreParametersSpace(input, measurements, opt, output);
+  exploreHoughParametersSpace(input, measurements, opt, output);
   const unsigned nl =
       std::accumulate(output.begin(), output.end(), 0,
-                      [](unsigned sum, const Acts::HoughAccumulatorSection &s) {
+                      [](unsigned sum, const Acts::Experimental::HoughAccumulatorSection &s) {
                         return sum + s.count();
                       });
   ACTS_DEBUG("Z - cotTheta scan finds " << output.size()
@@ -306,32 +304,32 @@ void AdaptiveHoughTransformSeeder::processStackZCotTheta(
 }
 
 void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
-    std::vector<Acts::HoughAccumulatorSection> &input,
-    std::vector<Acts::HoughAccumulatorSection> &output,
+    std::vector<Acts::Experimental::HoughAccumulatorSection> &input,
+    std::vector<Acts::Experimental::HoughAccumulatorSection> &output,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   ExplorationOptions opt;
   opt.xMinBinSize = 101.0f * Acts::UnitConstants::mm;
   opt.yMinBinSize = 10.1f;
-  opt.lineParamFunctor = m_zCotThetaLineParams;
+  opt.lineFunctor = m_zCotThetaLineParams;
   opt.decisionFunctor = [&cfg = m_cfg, &opt](
-                            const Acts::HoughAccumulatorSection &section,
+                            const Acts::Experimental::HoughAccumulatorSection &section,
                             const std::vector<PreprocessedMeasurement> &) {
-    using enum ExplorationOptions<PreprocessedMeasurement>::Decision;
+
     if (section.count() < cfg.threshold) {
-      return Discard;
+      return Decision::Discard;
     }
     if (section.count() >= cfg.threshold &&
         section.xSize() <= opt.xMinBinSize &&
         section.ySize() <= opt.yMinBinSize) {
-      return Accept;
+      return Decision::Accept;
     }
-    return Drill;
+    return Decision::Drill;
   };
 
-  exploreParametersSpace(input, measurements, opt, output);
+  exploreHoughParametersSpace(input, measurements, opt, output);
   const unsigned nl =
       std::accumulate(output.begin(), output.end(), 0,
-                      [](unsigned sum, const Acts::HoughAccumulatorSection &s) {
+                      [](unsigned sum, const Acts::Experimental::HoughAccumulatorSection &s) {
                         return sum + s.count();
                       });
   ACTS_DEBUG("Z - cotTheta split scan finds "
@@ -340,12 +338,12 @@ void AdaptiveHoughTransformSeeder::processStackZCotThetaSplit(
 
 void AdaptiveHoughTransformSeeder::makeSeeds(
     SeedContainer &seeds,
-    const std::vector<Acts::HoughAccumulatorSection> &solutions,
+    const std::vector<Acts::Experimental::HoughAccumulatorSection> &solutions,
     const std::vector<PreprocessedMeasurement> &measurements) const {
   const SpacePointContainer &spacePoints = seeds.spacePointContainer();
 
   std::size_t seedIndex = 0;
-  for (const Acts::HoughAccumulatorSection &s : solutions) {
+  for (const Acts::Experimental::HoughAccumulatorSection &s : solutions) {
     std::vector<unsigned> sortedIndices = s.indices();
     std::ranges::sort(sortedIndices, [&measurements](unsigned i1, unsigned i2) {
       const auto &m1 = measurements[i1];
@@ -410,9 +408,9 @@ void AdaptiveHoughTransformSeeder::makeSeeds(
 }
 
 bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
-    const Acts::HoughAccumulatorSection &section,
+    const Acts::Experimental::HoughAccumulatorSection &section,
     const std::vector<PreprocessedMeasurement> &measurements,
-    const LineParamFunctor &lineFunctor, unsigned threshold) const {
+    const LineFunctor &lineFunctor, unsigned threshold) const {
   unsigned inside = 0;
   for (std::size_t idx1 = 0; idx1 < section.count(); ++idx1) {
     const auto &m1 = measurements[section.indices()[idx1]];
@@ -435,24 +433,24 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
 }
 
 void AdaptiveHoughTransformSeeder::deduplicate(
-    std::vector<Acts::HoughAccumulatorSection> &input) const {
-  std::vector<const Acts::HoughAccumulatorSection *> op;
+    std::vector<Acts::Experimental::HoughAccumulatorSection> &input) const {
+  std::vector<const Acts::Experimental::HoughAccumulatorSection *> op;
   op.reserve(input.size());
   std::transform(input.begin(), input.end(), std::back_inserter(op),
-                 [](const Acts::HoughAccumulatorSection &s) { return &s; });
+                 [](const Acts::Experimental::HoughAccumulatorSection &s) { return &s; });
 
-  auto binaryPredSort = [](const Acts::HoughAccumulatorSection *a,
-                           const Acts::HoughAccumulatorSection *b) {
+  auto binaryPredSort = [](const Acts::Experimental::HoughAccumulatorSection *a,
+                           const Acts::Experimental::HoughAccumulatorSection *b) {
     return a->indices() < b->indices();
   };
-  auto binaryPredUnique = [](const Acts::HoughAccumulatorSection *a,
-                             const Acts::HoughAccumulatorSection *b) {
+  auto binaryPredUnique = [](const Acts::Experimental::HoughAccumulatorSection *a,
+                             const Acts::Experimental::HoughAccumulatorSection *b) {
     return a->indices() == b->indices();
   };
 
   std::ranges::sort(op, binaryPredSort);
   auto [rbegin, rend] = std::ranges::unique(op, binaryPredUnique);
-  std::vector<Acts::HoughAccumulatorSection> temp;
+  std::vector<Acts::Experimental::HoughAccumulatorSection> temp;
   for (auto sPtr = std::begin(op); sPtr != rbegin; ++sPtr) {
     temp.push_back(**sPtr);
   }
