@@ -401,6 +401,7 @@ class ReferenceTrajectoryBuilder {
   Result<void> filter(const GeometryContext& geoContext,
                       track_proxy_t trackProxy, const Updater& updater) const {
     std::optional<TrackStateProxy> lastTrackState;
+    BoundVector accumulatedBoundDeltas = BoundVector::Zero();
     BoundMatrix predictedCovariance = BoundMatrix::Zero();
 
     for (auto trackState : trackProxy.trackStates()) {
@@ -408,9 +409,8 @@ class ReferenceTrajectoryBuilder {
         // Transport the last delta to the current surface using the Jacobian of
         // the track state
 
-        trackState.predicted() +=
-            trackState.jacobian() *
-            (lastTrackState->filtered() - lastTrackState->predicted());
+        accumulatedBoundDeltas = trackState.jacobian() * accumulatedBoundDeltas;
+        trackState.predicted() += accumulatedBoundDeltas;
 
         predictedCovariance = trackState.jacobian() * predictedCovariance *
                               trackState.jacobian().transpose();
@@ -448,14 +448,16 @@ class ReferenceTrajectoryBuilder {
       } else {
         trackState.addComponents(TrackStatePropMask::Filtered);
 
-        auto res = updater(geoContext, trackState, logger());
-        if (!res.ok()) {
-          ACTS_DEBUG("Error in filter: " << res.error());
-          return res.error();
+        const Result<void> updateResult =
+            updater(geoContext, trackState, logger());
+        if (!updateResult.ok()) {
+          ACTS_DEBUG("Error in filter: " << updateResult.error());
+          return updateResult.error();
         }
       }
 
       lastTrackState = trackState;
+      accumulatedBoundDeltas += trackState.filtered() - trackState.predicted();
       predictedCovariance = trackState.filteredCovariance();
 
       {

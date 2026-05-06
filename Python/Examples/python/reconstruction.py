@@ -1493,11 +1493,11 @@ def addKalmanTracks(
     kalmanOptions = {
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
-        # "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
-        # "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
+        "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
-        # "chi2Cut": float("inf"),
+        "chi2Cut": float("inf"),
         "useJosephFormulation": useJosephFormulation,
     }
 
@@ -1509,7 +1509,7 @@ def addKalmanTracks(
         inputClusters=clusters if clusters is not None else "",
         outputTracks="kf_tracks",
         pickTrack=-1,
-        fit=acts.examples.makeKalmanReferenceTrajectoryFitterFunction(
+        fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
         calibrator=calibrator,
