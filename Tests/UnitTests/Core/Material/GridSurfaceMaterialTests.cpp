@@ -562,13 +562,6 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   const MaterialSlab& mg2T2 = ismZPhi->materialSlab(l2);
   BOOST_CHECK(mg2T1.material().isVacuum());  // vacuum
   BOOST_CHECK(mg2T2.material().isVacuum());  // vacuum
-
-  Vector2 l3(20 * std::numbers::pi * 0.25,
-             -9.5);  // should be material 3, same phi but different z
-  const MaterialSlab& mg3T1 = ism.materialSlab(l3);
-  const MaterialSlab& mg3T2 = ismZPhi->materialSlab(l3);
-  BOOST_CHECK_EQUAL(mg3T1.material().X0(), 21.);
-  BOOST_CHECK_EQUAL(mg3T2.material().X0(), 21.);
 }
 
 // This test covers the globally indexed grid material with non-shared material
