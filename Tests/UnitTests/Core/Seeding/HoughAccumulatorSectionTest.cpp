@@ -14,6 +14,8 @@
 #include <functional>
 #include <map>
 #include <vector>
+#include <sstream>
+#include <iterator>
 
 using namespace Acts;
 using namespace Acts::Experimental;
@@ -284,8 +286,12 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
                                        const std::vector<LineParameters> &mes) {
     using enum HoughAccumulatorSection::Decision;
     auto names = std::map<HoughAccumulatorSection::Decision, std::string>({{Discard, "Discard"}, {Accept, "Accept"}, {Drill, "Drill"}});
+    std::ostringstream oss;
+    std::copy(sec.indices().begin(), sec.indices().end(),
+                std::ostream_iterator<int>(oss, ", "));
+
     std::cerr << "Considering section x: " << sec.xBegin() << "+" <<sec.xSize()  <<
-               "y: " << sec.yBegin() << "+" << sec.ySize() << " decision " << names[sec.decision()] << " div: " << sec.divisionLevel() <<"\n";
+               "y: " << sec.yBegin() << "+" << sec.ySize() << " decision " << names[sec.decision()] << " div: " << sec.divisionLevel() << " n: " << sec.count() << " i: "<<  oss.str() << "\n";
     if (sec.count() < opt.threshold) {
       sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
       return Discard;

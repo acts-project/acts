@@ -348,10 +348,9 @@ void exploreHoughParametersSpace(
     sectionsStack.pop_back();
 
     std::vector<HoughAccumulatorSection> newSections;
-    const bool splitX = thisSection.xSize() > opt.xMinBinSize;
-    const bool splitY = thisSection.ySize() > opt.yMinBinSize;
-
-    if (splitX && splitY) {
+    if (bool splitX = thisSection.xSize() > opt.xMinBinSize,
+        splitY = thisSection.ySize() > opt.yMinBinSize;
+        splitX && splitY) {
       // Split into 4 sections
       newSections.push_back(thisSection.bottomLeft());
       newSections.push_back(thisSection.topLeft());
