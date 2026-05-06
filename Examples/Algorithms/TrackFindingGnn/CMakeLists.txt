@@ -17,5 +17,8 @@ target_link_libraries(
 )
 
 if(ACTS_GNN_ENABLE_CUDA)
-    target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart CUDA::nvtx3)
+    target_link_libraries(
+        ActsExamplesTrackFindingGnn
+        PRIVATE CUDA::cudart CUDA::nvtx3
+    )
 endif()
