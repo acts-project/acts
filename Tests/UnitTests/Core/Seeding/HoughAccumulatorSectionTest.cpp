@@ -14,8 +14,6 @@
 #include <functional>
 #include <map>
 #include <vector>
-#include <sstream>
-#include <iterator>
 
 using namespace Acts;
 using namespace Acts::Experimental;
@@ -254,11 +252,11 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
 
   // Basic config
   std::vector<LineParameters> measurements = {
-      {5.0, 3.0},   // Line 1
-      {4.0, -4.0},  // Lina 2
-      {1.0, 2.0},   // Line 3
-      {0.5, 7.0},   // Line 4
-      {0.2, 1.0}    // Line 5
+      {5.0, 3.0},   // Line 0
+      {4.0, -4.0},  // Lina 1
+      {1.0, 2.0},   // Line 2
+      {0.5, 7.0},   // Line 3
+      {0.2, 1.01}   // Line 4
   };
 
   TestExplorationOptions<LineParameters> opt;
@@ -285,13 +283,6 @@ BOOST_AUTO_TEST_CASE(test_with_min_div_lvl_is_1) {
   opt.decisionFunctor = [&sStat, &opt](const HoughAccumulatorSection &sec,
                                        const std::vector<LineParameters> &mes) {
     using enum HoughAccumulatorSection::Decision;
-    auto names = std::map<HoughAccumulatorSection::Decision, std::string>({{Discard, "Discard"}, {Accept, "Accept"}, {Drill, "Drill"}});
-    std::ostringstream oss;
-    std::copy(sec.indices().begin(), sec.indices().end(),
-                std::ostream_iterator<int>(oss, ", "));
-
-    std::cerr << "Considering section x: " << sec.xBegin() << "+" <<sec.xSize()  <<
-               "y: " << sec.yBegin() << "+" << sec.ySize() << " decision " << names[sec.decision()] << " div: " << sec.divisionLevel() << " n: " << sec.count() << " i: "<<  oss.str() << "\n";
     if (sec.count() < opt.threshold) {
       sStat[sec.divisionLevel()].discardedByThresholdCut += 1;
       return Discard;
