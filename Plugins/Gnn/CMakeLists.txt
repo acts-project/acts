@@ -16,7 +16,7 @@ if(ACTS_GNN_ENABLE_CUDA)
         ActsPluginGnn
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
-    target_link_libraries(ActsPluginGnn PUBLIC CUDA::nvtx3)
+    target_link_libraries(ActsPluginGnn PRIVATE CUDA::nvtx3)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_NVTX)
 endif()
 
@@ -49,7 +49,10 @@ endif()
 if(ACTS_GNN_ENABLE_TENSORRT)
     find_package(TensorRT REQUIRED)
     message(STATUS "Found TensorRT ${TensorRT_VERSION}")
-    target_link_libraries(ActsPluginGnn PUBLIC trt::nvinfer trt::nvinfer_plugin)
+    target_link_libraries(
+        ActsPluginGnn
+        PRIVATE trt::nvinfer trt::nvinfer_plugin
+    )
     target_sources(ActsPluginGnn PRIVATE src/TensorRTEdgeClassifier.cpp)
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_TENSORRT)
 endif()
@@ -64,7 +67,7 @@ target_include_directories(
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
 
 if(ACTS_GNN_ENABLE_CUDA)
-    target_compile_features(ActsPluginGnn PUBLIC cuda_std_20)
+    target_compile_features(ActsPluginGnn PRIVATE cuda_std_20)
     set_target_properties(
         ActsPluginGnn
         PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION OFF
@@ -80,9 +83,9 @@ if(ACTS_GNN_ENABLE_CUDA)
     )
     target_compile_definitions(
         ActsPluginGnn
-        PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
+        PRIVATE CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_link_libraries(ActsPluginGnn PUBLIC CUDA::cudart)
+    target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart)
 else()
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_CPUONLY)
 endif()
