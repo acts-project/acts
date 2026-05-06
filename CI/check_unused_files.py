@@ -108,6 +108,7 @@ def main():
         ".css",
         ".gdml",
         ".hepmc3",
+        ".ico",
         ".in",
         ".ipynb",
         ".json",
