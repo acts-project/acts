@@ -95,7 +95,10 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// global coordinates
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector3& /*gp*/) const final {
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& /*gp*/) const final {
     return (m_materialSlab);
   }
 

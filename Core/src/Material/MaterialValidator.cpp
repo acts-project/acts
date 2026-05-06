@@ -35,8 +35,16 @@ Acts::RecordedMaterialTrack Acts::MaterialValidator::recordMaterial(
                                                    direction);
 
   for (const auto& [surface, sposition, sdirection] : surfaceAssignments) {
+    auto lposition = surface->globalToLocal(gctx, sposition, sdirection);
+    if (!lposition.ok()) {
+      ACTS_WARNING("Failed to convert global to local position for surface "
+                   << surface->geometryId() << ": "
+                   << lposition.error().message());
+      continue;
+    }
     // The slab and the path correction
-    auto materialSlab = surface->surfaceMaterial()->materialSlab(sposition);
+    auto materialSlab =
+        surface->surfaceMaterial()->materialSlab(lposition.value());
     auto pathCorrection = surface->pathCorrection(gctx, sposition, sdirection);
     // Get the material information
     Acts::MaterialInteraction mInteraction;

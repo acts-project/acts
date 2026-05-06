@@ -41,10 +41,14 @@ MaterialSlab detail::evaluateMaterialSlab(const GeometryContext& geoContext,
 
   const double pathCorrection =
       surface.pathCorrection(geoContext, position, direction);
-  MaterialSlab slab =
-      material->materialSlab(position, propagationDirection, updateMode);
-  slab.scaleThickness(pathCorrection);
+  auto lposition = surface.globalToLocal(geoContext, position, direction);
+  if (!lposition.ok()) {
+    return MaterialSlab::Nothing();
+  }
 
+  MaterialSlab slab = material->materialSlab(lposition.value(),
+                                             propagationDirection, updateMode);
+  slab.scaleThickness(pathCorrection);
   return slab;
 }
 

@@ -437,6 +437,14 @@ Result<void> SurfaceMaterialMapper::mapInteraction(
     // but no material step was assigned to this surface
     for (auto& mSurface : mappingSurfaces) {
       auto mgID = mSurface.surface->geometryId();
+
+      auto lposition = mSurface.surface->globalToLocal(
+          mState.geoContext, mSurface.position, mSurface.direction);
+      if (!lposition.ok()) {
+        ACTS_WARNING("Failed to convert global to local position for surface "
+                     << mgID << ": " << lposition.error().message());
+        continue;
+      }
       // Count an empty hit only if the surface does not appear in the
       // list of assigned surfaces
       if (assignedMaterial[mgID] == 0) {
@@ -445,7 +453,7 @@ Result<void> SurfaceMaterialMapper::mapInteraction(
           missedMaterial->second.trackVariance(
               mSurface.position,
               mState.inputSurfaceMaterial[currentID]->materialSlab(
-                  mSurface.position),
+                  lposition.value()),
               true);
         }
         missedMaterial->second.trackAverage(mSurface.position, true);

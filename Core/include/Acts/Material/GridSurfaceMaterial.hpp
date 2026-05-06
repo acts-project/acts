@@ -264,7 +264,10 @@ class GridSurfaceMaterialT
   }
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  const MaterialSlab& materialSlab(const Vector3& gp) const final {
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& gp) const final {
     return m_materialAccessor.slab(m_grid, m_globalToGridLocal(gp));
   }
 

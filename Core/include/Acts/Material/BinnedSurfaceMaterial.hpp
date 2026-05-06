@@ -102,7 +102,10 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
-  const MaterialSlab& materialSlab(const Vector3& gp) const final;
+  [[deprecated(
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] const MaterialSlab&
+  materialSlab(const Vector3& gp) const final;
 
   using ISurfaceMaterial::materialSlab;
 

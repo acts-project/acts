@@ -78,9 +78,10 @@ double detail::Gsf::applyBetheHeitler(
       initialParameters.particleHypothesis();
 
   // Evaluate material slab
+  Vector2 lposition =
+      initialParameters.parameters().template segment<2>(eBoundLoc0);
   MaterialSlab slab = surface.surfaceMaterial()->materialSlab(
-      initialParameters.position(geoContext), direction,
-      MaterialUpdateMode::FullUpdate);
+      lposition, direction, MaterialUpdateMode::FullUpdate);
 
   const double pathCorrection =
       surface.pathCorrection(geoContext, initialParameters.position(geoContext),
