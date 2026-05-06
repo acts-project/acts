@@ -76,8 +76,8 @@ class DataHandleBase {
 
   // Trampoline functions to avoid having the WhiteBoard as a friend
   template <typename T>
-  void add(WhiteBoard& wb, T&& object) const {
-    wb.add(m_key.value(), std::forward<T>(object));
+  const T& add(WhiteBoard& wb, T&& object) const {
+    return wb.add(m_key.value(), std::forward<T>(object));
   }
 
   template <typename T>
@@ -179,16 +179,16 @@ class WriteDataHandle final : public WriteDataHandleBase {
     registerAsWriteHandle();
   }
 
-  void operator()(const AlgorithmContext& ctx, T&& value) const {
-    (*this)(ctx.eventStore, std::move(value));
+  const T& operator()(const AlgorithmContext& ctx, T&& value) const {
+    return (*this)(ctx.eventStore, std::move(value));
   }
 
-  void operator()(WhiteBoard& wb, T&& value) const {
+  const T& operator()(WhiteBoard& wb, T&& value) const {
     if (!isInitialized()) {
       throw std::runtime_error{"WriteDataHandle '" + fullName() +
                                "' not initialized"};
     }
-    add(wb, std::move(value));
+    return add(wb, std::move(value));
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };

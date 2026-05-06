@@ -71,7 +71,7 @@ def runTrackFindingPythonOnly(
         acts.examples.SpacePointMaker(
             level=acts.logging.INFO,
             trackingGeometry=trackingGeometry,
-            inputMeasurements="measurements",
+            inputMeasurements="measurement_subset",
             outputSpacePoints="spacepoints",
             geometrySelection=acts.examples.json.readJsonGeometryList(
                 str(geoSelectionConfigFile)
