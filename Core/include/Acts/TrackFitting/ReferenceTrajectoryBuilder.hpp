@@ -356,7 +356,7 @@ class ReferenceTrajectoryBuilder {
       const BoundTrackParameters& sParameters, const Options& actorOptions,
       const std::vector<const Surface*>& sSequence,
       track_container_t& trackContainer) const
-    requires(isDirectNavigator)
+    requires isDirectNavigator
   {
     auto propagatorOptions = makePropagatorOptions(
         actorOptions, &sSequence, actorOptions.referenceSurface);

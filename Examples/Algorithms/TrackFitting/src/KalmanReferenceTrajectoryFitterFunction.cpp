@@ -230,7 +230,7 @@ ActsExamples::makeKalmanReferenceTrajectoryFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
-    Acts::FreeToBoundCorrection freeToBoundCorrection,
+    const Acts::FreeToBoundCorrection& freeToBoundCorrection,
     bool useJosephFormulation, const Acts::Logger& logger) {
   const Stepper stepper(std::move(magneticField));
 

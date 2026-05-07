@@ -52,7 +52,7 @@ void addTrackFitting(py::module& mex) {
            bool multipleScattering, bool energyLoss,
            double reverseFilteringMomThreshold,
            double reverseFilteringCovarianceScaling,
-           FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
+           const FreeToBoundCorrection& freeToBoundCorrection, double chi2Cut,
            bool useJosephFormulation, Logging::Level level) {
           return makeKalmanFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
@@ -70,7 +70,7 @@ void addTrackFitting(py::module& mex) {
         [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
            std::shared_ptr<const MagneticFieldProvider> magneticField,
            bool multipleScattering, bool energyLoss,
-           FreeToBoundCorrection freeToBoundCorrection,
+           const FreeToBoundCorrection& freeToBoundCorrection,
            bool useJosephFormulation, Logging::Level level) {
           return makeKalmanReferenceTrajectoryFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
@@ -140,8 +140,9 @@ void addTrackFitting(py::module& mex) {
         [](std::shared_ptr<const TrackingGeometry> trackingGeometry,
            std::shared_ptr<const MagneticFieldProvider> magneticField,
            bool multipleScattering, bool energyLoss,
-           FreeToBoundCorrection freeToBoundCorrection, std::size_t nUpdateMax,
-           double relChi2changeCutOff, Logging::Level level) {
+           const FreeToBoundCorrection& freeToBoundCorrection,
+           std::size_t nUpdateMax, double relChi2changeCutOff,
+           Logging::Level level) {
           return makeGlobalChiSquareFitterFunction(
               std::move(trackingGeometry), std::move(magneticField),
               multipleScattering, energyLoss, freeToBoundCorrection, nUpdateMax,

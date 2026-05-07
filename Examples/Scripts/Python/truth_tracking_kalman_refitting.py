@@ -41,11 +41,11 @@ def runRefittingKf(
     kalmanOptions = {
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
-        # "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
-        # "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
+        "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
-        # "chi2Cut": float("inf"),
+        "chi2Cut": float("inf"),
         "useJosephFormulation": useJosephFormulation,
     }
 
@@ -55,7 +55,7 @@ def runRefittingKf(
             inputTracks="kf_tracks",
             outputTracks="kf_refit_tracks",
             initialVarInflation=6 * [100.0],
-            fit=acts.examples.makeKalmanReferenceTrajectoryFitterFunction(
+            fit=acts.examples.makeKalmanFitterFunction(
                 trackingGeometry, field, **kalmanOptions
             ),
         )
