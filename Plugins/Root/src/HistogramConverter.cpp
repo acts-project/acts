@@ -9,7 +9,9 @@
 #include "ActsPlugins/Root/HistogramConverter.hpp"
 
 #include <cstddef>
+#include <cstdlib>
 #include <format>
+#include <optional>
 #include <vector>
 
 #include <TEfficiency.h>
@@ -25,7 +27,16 @@ using namespace Acts::Experimental;
 
 namespace {
 
-TFitResultPtr iterativeGaussFit(TH1& hist, double sigmaRange, int iterations) {
+struct FitResult {
+  double mean;
+  double sigma;
+  double meanError;
+  double sigmaError;
+};
+
+std::optional<FitResult> iterativeGaussFit(TH1& hist, double sigmaRange,
+                                           int iterations,
+                                           const Acts::Logger& logger) {
   TFitResultPtr result;
 
   double mean = hist.GetMean();
@@ -35,16 +46,19 @@ TFitResultPtr iterativeGaussFit(TH1& hist, double sigmaRange, int iterations) {
     const double xmin = mean - sigmaRange * sigma;
     const double xmax = mean + sigmaRange * sigma;
 
-    result = hist.Fit("gaus", "RQ0", "", xmin, xmax);
+    result = hist.Fit("gaus", "SRQ0", nullptr, xmin, xmax);
     if ((result.Get() == nullptr) || ((result->Status() % 1000) != 0)) {
-      break;
+      ACTS_DEBUG("Failed to fit Gaussian for bin "
+                 << i << ": status "
+                 << (result.Get() != nullptr ? result->Status() : -1));
+      return std::nullopt;
     }
 
     mean = result->Parameter(1);
     sigma = result->Parameter(2);
   }
 
-  return result;
+  return FitResult{mean, sigma, result->ParError(1), result->ParError(2)};
 }
 
 }  // namespace
@@ -355,22 +369,20 @@ ActsPlugins::extractMeanWidthProfiles(
       continue;
     }
 
-    const TFitResultPtr r = iterativeGaussFit(*proj, sigmaRange, iterations);
-    if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
+    const std::optional<FitResult> fitResult =
+        iterativeGaussFit(*proj, sigmaRange, iterations, logger);
+    if (!fitResult.has_value()) {
       ++fitFailures;
-      ACTS_DEBUG("Failed to fit Gaussian for bin "
-                 << i << ": status "
-                 << (r.Get() != nullptr ? r->Status() : -1));
       continue;
     }
 
     // Fill mean
-    meanHist->SetBinContent(i, r->Parameter(1));
-    meanHist->SetBinError(i, r->ParError(1));
+    meanHist->SetBinContent(i, fitResult.value().mean);
+    meanHist->SetBinError(i, fitResult.value().meanError);
 
     // Fill width (sigma)
-    widthHist->SetBinContent(i, r->Parameter(2));
-    widthHist->SetBinError(i, r->ParError(2));
+    widthHist->SetBinContent(i, fitResult.value().sigma);
+    widthHist->SetBinError(i, fitResult.value().sigmaError);
   }
   const double fitFailureFraction =
       (nBinsX > 0) ? static_cast<double>(fitFailures) / nBinsX : 0;
@@ -424,22 +436,20 @@ ActsPlugins::extractMeanWidthProfiles(
         continue;
       }
 
-      const TFitResultPtr r = iterativeGaussFit(*proj, sigmaRange, iterations);
-      if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
+      const std::optional<FitResult> fitResult =
+          iterativeGaussFit(*proj, sigmaRange, iterations, logger);
+      if (!fitResult.has_value()) {
         ++fitFailures;
-        ACTS_DEBUG("Failed to fit Gaussian for bin "
-                   << i << ", " << j << ": status "
-                   << (r.Get() != nullptr ? r->Status() : -1));
         continue;
       }
 
       // Fill mean
-      meanHist->SetBinContent(i, j, r->Parameter(1));
-      meanHist->SetBinError(i, j, r->ParError(1));
+      meanHist->SetBinContent(i, j, fitResult.value().mean);
+      meanHist->SetBinError(i, j, fitResult.value().meanError);
 
       // Fill width (sigma)
-      widthHist->SetBinContent(i, j, r->Parameter(2));
-      widthHist->SetBinError(i, j, r->ParError(2));
+      widthHist->SetBinContent(i, j, fitResult.value().sigma);
+      widthHist->SetBinError(i, j, fitResult.value().sigmaError);
     }
   }
   const double fitFailureFraction =
