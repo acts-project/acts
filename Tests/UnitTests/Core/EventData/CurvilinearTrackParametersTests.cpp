@@ -37,7 +37,7 @@ const BoundMatrix cov = BoundMatrix::Identity();
 void checkParameters(const BoundTrackParameters& params, double phi,
                      double theta, double p, double q, const Vector4& pos4,
                      const Vector3& unitDir) {
-  const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+  const auto qOverP = q / p;
   const auto pos = pos4.segment<3>(ePos0);
 
   const auto* referenceSurface =
@@ -95,12 +95,12 @@ BOOST_DATA_TEST_CASE(NeutralConstruct,
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   BoundTrackParameters params = BoundTrackParameters::createCurvilinear(
-      pos4, dir, 1 / p, std::nullopt, ParticleHypothesis::pion0());
+      pos4, dir, 0, std::nullopt, ParticleHypothesis::pion0());
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
   BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
-  params = BoundTrackParameters::createCurvilinear(pos4, dir, 1 / p, cov,
+  params = BoundTrackParameters::createCurvilinear(pos4, dir, 0, cov,
                                                    ParticleHypothesis::pion0());
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);

@@ -104,7 +104,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundTime] = time;
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
-    vector[eBoundQOverP] = 1 / p;
+    vector[eBoundQOverP] = 0;
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pion0());
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
@@ -183,7 +183,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1 / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 0,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
@@ -210,7 +210,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral any parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1 / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 0,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
