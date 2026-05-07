@@ -32,7 +32,9 @@ const FreeMatrix cov = FreeMatrix::Identity();
 
 void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
                      const Vector3& unitDir, double p, double q) {
-  const auto qOverP = q / p;
+  const auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(q));
+
+  const auto qOverP = particleHypothesis.qOverP(p, q);
   const auto pos = pos4.segment<3>(ePos0);
 
   // native values
