@@ -9,6 +9,7 @@
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
 #include <algorithm>
+#include <mutex>
 #include <stdexcept>
 #include <vector>
 
@@ -37,6 +38,21 @@ T unwrap(arrow::Result<T> result, const std::string& what) {
     throwArrow(what, result.status());
   }
   return std::move(result).ValueOrDie();
+}
+
+// Arrow's compute kernels (e.g. `equal` used for the event_id filter
+// pushdown below) are registered lazily. With the linker-isolated arrow
+// island the registry is empty until we ask for it explicitly — without
+// this call, scan-time filtering fails with "No function registered with
+// name: equal".
+void ensureComputeInitialized() {
+  static std::once_flag flag;
+  std::call_once(flag, [] {
+    auto status = arrow::compute::Initialize();
+    if (!status.ok()) {
+      throwArrow("arrow compute init", status);
+    }
+  });
 }
 
 }  // namespace
@@ -133,6 +149,8 @@ class ParquetDatasetReader::Impl {
  public:
   explicit Impl(std::filesystem::path directory)
       : m_directory(std::move(directory)) {
+    ensureComputeInitialized();
+
     if (!std::filesystem::exists(m_directory) ||
         !std::filesystem::is_directory(m_directory)) {
       throw std::invalid_argument("ParquetDatasetReader: not a directory: " +

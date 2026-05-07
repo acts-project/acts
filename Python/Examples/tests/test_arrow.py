@@ -8,7 +8,7 @@ import acts.examples
 from acts import UnitConstants as u
 from acts.examples import Sequencer
 
-from helpers import arrowEnabled, isCI, pythia8Enabled
+from helpers import AssertCollectionExistsAlg, arrowEnabled, isCI, pythia8Enabled
 
 
 pytestmark = pytest.mark.skipif(
@@ -152,6 +152,7 @@ def _add_arrow_writer(
     s: Sequencer,
     outputDir: Path,
     inputs_to_tables: dict[str, str],
+    eventsPerShard: int = 2,
 ) -> None:
     """Wire one ArrowParticleOutputConverter per (input, table) pair, and one
     ParquetWriter picking up all the resulting tables.
@@ -185,7 +186,7 @@ def _add_arrow_writer(
                 table_key: table_key
                 for table_key in inputs_to_tables.values()
             },
-            eventsPerShard=2,
+            eventsPerShard=eventsPerShard,
         )
     )
 
@@ -203,6 +204,64 @@ def test_particle_gun_generated(tmp_path, ptcl_gun):
         tmp_path,
         {"particles_generated_arrow": "particles_generated_arrow"},
         nevents,
+    )
+
+
+def test_particle_gun_roundtrip(tmp_path, ptcl_gun):
+    """Write sharded Parquet, then drive a second Sequencer off ParquetReader
+    and check the reader exposes — and processes — the same number of events
+    that were written."""
+    from acts.examples.arrow import ParquetReader
+
+    # nevents/eventsPerShard chosen so the write phase produces multiple
+    # shards with a non-full final shard — exercises shard discovery, the
+    # multi-fragment scan, and the partial-shard edge case in one test.
+    nevents = 5
+    events_per_shard = 2
+    expected_shards = (nevents + events_per_shard - 1) // events_per_shard
+
+    s_write = Sequencer(numThreads=1, events=nevents)
+    ptcl_gun(s_write)
+    _add_arrow_writer(
+        s_write,
+        tmp_path,
+        {"particles_generated": "particles_generated_arrow"},
+        eventsPerShard=events_per_shard,
+    )
+    s_write.run()
+
+    out_dir = tmp_path / "particles_generated_arrow"
+    _assert_particles_parquet(out_dir, nevents)
+
+    shards = sorted(out_dir.glob("*.parquet"))
+    assert len(shards) == expected_shards, (
+        f"expected {expected_shards} shards for {nevents} events at "
+        f"{events_per_shard} events/shard, got {len(shards)}: "
+        f"{[s.name for s in shards]}"
+    )
+
+    reader = ParquetReader(
+        level=acts.logging.INFO,
+        inputDir=str(tmp_path),
+        collections={"particles_generated_arrow": "particles_generated_arrow"},
+    )
+    assert reader.availableEvents() == (0, nevents)
+
+    # No `events=` — the sequencer derives the event range from the reader,
+    # so a wrong count here would surface as a mismatch with `nevents`.
+    s_read = Sequencer(numThreads=1)
+    s_read.addReader(reader)
+    counter = AssertCollectionExistsAlg(
+        collections="particles_generated_arrow",
+        name="roundtrip_check",
+        level=acts.logging.INFO,
+    )
+    s_read.addAlgorithm(counter)
+    s_read.run()
+
+    assert counter.events_seen == nevents, (
+        f"reader-driven sequencer processed {counter.events_seen} events, "
+        f"expected {nevents}"
     )
 
 
