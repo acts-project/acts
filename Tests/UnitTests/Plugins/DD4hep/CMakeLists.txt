@@ -38,6 +38,7 @@ endif()
 
 if(NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
     cmake_path(GET dd4hep_core_library PARENT_PATH DD4HEP_LIBRARY_PATH)
+    cmake_path(GET DD4HEP_LIBRARY_PATH PARENT_PATH DD4HEP_INSTALL)
     # set test library dependencies
     set(unittest_extra_libraries Acts::TestsDD4hepFactories Acts::PluginDD4hep)
     set(dd4hep_tests
@@ -56,14 +57,14 @@ if(NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
                 TEST ${_test}
                 PROPERTY
                     ENVIRONMENT
-                        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:${ROOT_LIBRARY_DIR}:$ENV{DYLD_LIBRARY_PATH}"
+                        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:${ROOT_LIBRARY_DIR}:$ENV{DYLD_LIBRARY_PATH};DD4hepINSTALL=${DD4HEP_INSTALL}"
             )
         else()
             set_property(
                 TEST ${_test}
                 PROPERTY
                     ENVIRONMENT
-                        "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}"
+                        "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}:${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH};DD4hepINSTALL=${DD4HEP_INSTALL}"
             )
         endif()
     endforeach()
