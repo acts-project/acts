@@ -19,6 +19,7 @@ HEPMC3_COMPRESSION_CHOICES = tuple(
 def runPythia8(
     outputDir,
     outputRoot: bool = True,
+    outputCsv: bool = False,
     s: acts.examples.Sequencer = None,
     vtxGen=None,
     hardProcess=None,
@@ -38,7 +39,7 @@ def runPythia8(
         s,
         rnd=rnd,
         hardProcess=hardProcess,
-        outputDirCsv=None,
+        outputDirCsv=outputDir / "csv" if outputCsv else None,
         outputDirRoot=outputDir if outputRoot else None,
         writeHepMC3=None,
         vtxGen=vtxGen,
@@ -87,6 +88,11 @@ def _parse_args():
         "--no-root",
         action="store_true",
         help="Disable ROOT output.",
+    )
+    parser.add_argument(
+        "--csv",
+        action="store_true",
+        help="Write CSV output to output-dir/csv.",
     )
     parser.add_argument(
         "--hepmc3",
@@ -171,6 +177,7 @@ if "__main__" == __name__:
     runPythia8(
         outputDir=outputDir,
         outputRoot=not args.no_root,
+        outputCsv=args.csv,
         hardProcess=hardProcess,
         outputHepMC3=args.hepmc3,
         hepmc3Compression=hepmc3Compression,
