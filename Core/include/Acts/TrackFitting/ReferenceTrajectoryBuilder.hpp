@@ -80,14 +80,20 @@ struct ReferenceTrajectoryBuilderOptions {
   FreeToBoundCorrection freeToBoundCorrection;
 };
 
+/// The result struct for the reference trajectory builder actor
 template <typename traj_t>
 struct ReferenceTrajectoryBuilderResult {
+  /// The trajectory being built
   traj_t* trajectory{nullptr};
 
+  /// The index of the last track state added to the trajectory
   std::size_t lastTrackStateIndex = kTrackIndexInvalid;
 
+  /// The track parameters at the target surface if the target surface is
+  /// reached
   std::optional<BoundTrackParameters> referenceParameters;
 
+  /// Whether the reference trajectory building is finished
   bool finished = false;
 
   /// Path limit aborter
@@ -104,14 +110,17 @@ class ReferenceTrajectoryBuilder {
   static constexpr bool isDirectNavigator =
       std::is_same_v<NavigatorType, DirectNavigator>;
 
+  /// The result type of the actor
   using ResultType = ReferenceTrajectoryBuilderResult<traj_t>;
 
  public:
+  /// The options struct for the reference trajectory builder
   using Options = ReferenceTrajectoryBuilderOptions<traj_t>;
 
   /// Type alias for track state proxy from trajectory
   using TrackStateProxy = typename traj_t::TrackStateProxy;
 
+  /// Type alias for const track state proxy from trajectory
   using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
 
   /// Constructor with propagator and logger
@@ -131,8 +140,10 @@ class ReferenceTrajectoryBuilder {
 
   /// The logger instance
   std::unique_ptr<const Logger> m_logger;
+  /// The logger instance for the actor
   std::unique_ptr<const Logger> m_actorLogger;
 
+  /// Logger helper
   const Logger& logger() const { return *m_logger; }
 
   class Actor {
@@ -315,6 +326,13 @@ class ReferenceTrajectoryBuilder {
   };
 
  public:
+  /// Build the reference trajectory and return a track proxy to the built
+  /// trajectory
+  /// @tparam track_container_t The type of the track container frontend
+  /// @param sParameters The starting track parameters for the reference trajectory building
+  /// @param actorOptions The options for the reference trajectory builder actor
+  /// @param trackContainer The track container to hold the built trajectory
+  /// @return A Result containing the track proxy to the built trajectory or an error if the building failed
   template <TrackContainerFrontend track_container_t>
   Result<typename track_container_t::TrackProxy> build(
       const BoundTrackParameters& sParameters, const Options& actorOptions,
@@ -324,6 +342,15 @@ class ReferenceTrajectoryBuilder {
     return buildImpl(sParameters, propagatorOptions, trackContainer);
   }
 
+  /// Build the reference trajectory with a given surface sequence and return a
+  /// track proxy to the built trajectory. This is only available for
+  /// DirectNavigator.
+  /// @tparam track_container_t The type of the track container frontend
+  /// @param sParameters The starting track parameters for the reference trajectory building
+  /// @param actorOptions The options for the reference trajectory builder actor
+  /// @param sSequence The surface sequence for the DirectNavigator
+  /// @param trackContainer The track container to hold the built trajectory
+  /// @return A Result containing the track proxy to the built trajectory or an error if the building failed
   template <TrackContainerFrontend track_container_t>
   Result<typename track_container_t::TrackProxy> build(
       const BoundTrackParameters& sParameters, const Options& actorOptions,
@@ -336,6 +363,14 @@ class ReferenceTrajectoryBuilder {
     return buildImpl(sParameters, propagatorOptions, trackContainer);
   }
 
+  /// Attach source links to the track states in the trajectory based on the
+  /// reference surfaces and the provided source link range. Mark track states
+  /// as holes if no matching source link is found for their reference surface.
+  /// @tparam track_proxy_t The type of the track proxy
+  /// @tparam source_link_range_t The type of the source link range, which should be a range of SourceLink objects
+  /// @param trackProxy The track proxy to which the source links will be attached
+  /// @param sourceLinkRange The range of source links to be attached to the track states
+  /// @param surfaceAccessor A function or functor that takes a SourceLink and returns a pointer to the corresponding Surface object
   template <typename track_proxy_t, typename source_link_range_t>
   void attachSourceLinks(
       track_proxy_t trackProxy, const source_link_range_t& sourceLinkRange,
@@ -344,9 +379,9 @@ class ReferenceTrajectoryBuilder {
 
     ACTS_VERBOSE("Preparing " << nMeasurements << " input measurements");
     std::unordered_map<const Surface*, SourceLink> inputMeasurements;
-    for (SourceLink sourceLink : sourceLinkRange) {
+    for (const SourceLink& sourceLink : sourceLinkRange) {
       const Surface* surface = surfaceAccessor(sourceLink);
-      inputMeasurements.try_emplace(surface, std::move(sourceLink));
+      inputMeasurements.try_emplace(surface, sourceLink);
     }
 
     for (auto trackState : trackProxy.trackStates()) {
@@ -373,10 +408,19 @@ class ReferenceTrajectoryBuilder {
     }
   }
 
+  /// Calibrator interface
   using Calibrator =
       Delegate<void(const GeometryContext&, const CalibrationContext&,
                     const SourceLink&, TrackStateProxy)>;
 
+  /// Calibrate the measurements in the track states using the provided
+  /// calibrator. The calibrator is called for each track state that has a
+  /// measurement.
+  /// @tparam track_proxy_t The type of the track proxy
+  /// @param geoContext The geometry context to be passed to the calibrator
+  /// @param calibrationContext The calibration context to be passed to the calibrator
+  /// @param trackProxy The track proxy whose track states will be calibrated
+  /// @param calibrator The calibrator to be called for each track state with a measurement
   template <typename track_proxy_t>
   void calibrateMeasurements(const GeometryContext& geoContext,
                              const CalibrationContext& calibrationContext,
@@ -394,9 +438,17 @@ class ReferenceTrajectoryBuilder {
     }
   }
 
+  /// Filter interface
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         const Logger&)>;
 
+  /// Update the track states in the trajectory using the provided updater. The
+  /// updater is called for each track state that has a measurement.
+  /// @tparam track_proxy_t The type of the track proxy
+  /// @param geoContext The geometry context to be passed to the updater
+  /// @param trackProxy The track proxy whose track states will be updated
+  /// @param updater The updater to be called for each track state with a measurement
+  /// @return A Result indicating success or failure of the update process
   template <typename track_proxy_t>
   Result<void> filter(const GeometryContext& geoContext,
                       track_proxy_t trackProxy, const Updater& updater) const {
