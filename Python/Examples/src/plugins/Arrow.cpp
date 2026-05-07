@@ -17,8 +17,8 @@
 #include "ActsPython/Utilities/Helpers.hpp"
 #include "ActsPython/Utilities/Macros.hpp"
 
-#include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
+#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
@@ -34,7 +34,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
                              collections);
 
   ACTS_PYTHON_DECLARE_WRITER(ParquetWriter, m, "ParquetWriter", outputDir,
-                             collections, eventsPerRowGroup);
+                             collections, eventsPerShard, eventsPerRowGroup,
+                             maxOpenShards);
 
   py::class_<ArrowOutputConverter, IAlgorithm,
              std::shared_ptr<ArrowOutputConverter>>(m, "ArrowOutputConverter")
@@ -45,7 +46,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
         declareAlgorithm<ArrowParticleOutputConverter, ArrowOutputConverter>(
             m, "ArrowParticleOutputConverter");
     ACTS_PYTHON_STRUCT(c, inputParticles, outputTable, referencePoint, bField,
-                       writeHelixParameters);
+                       writeHelixParameters, minHelixTransverseMomentum);
   }
 
   {

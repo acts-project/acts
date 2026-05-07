@@ -19,17 +19,19 @@
 
 namespace ActsExamples {
 
-/// Reader for a set of Parquet files, one per collection, in the nested
-/// layout: one row per event, each column a @c list<T> of the per-object
-/// values for that event.
+/// Reader for a sharded Parquet @c arrow::dataset, one directory per
+/// collection. Mirror of @c ParquetWriter: each collection is read from
+/// a directory of @c shard_*.parquet files, each holding a contiguous
+/// disjoint range of event ids in an @c event_id column.
 ///
-/// For each configured collection, the reader opens the configured Parquet
-/// file path, pre-loads the full table, and on each @c read() call filters out
-/// the row with the matching @c event_id and parks it on the whiteboard under
-/// the collection name. The @c event_id column is stripped on the way out.
+/// Per-event lookups push a filter @c event_id == N into the dataset
+/// scanner, which prunes to a single fragment and a single row group via
+/// Parquet footer/page-index statistics. The matching row's other
+/// columns are late-materialized via the page offset index, so the read
+/// cost per event is roughly the size of one event's payload.
 ///
-/// The event count is taken from the Parquet footer (@c num_rows). All input
-/// files must agree on their row count.
+/// The total event count is the sum of per-fragment row counts (footer
+/// reads only). All collections must agree on their total row count.
 class ACTS_ARROW_EXPORT ParquetReader : public IReader {
  public:
   struct Config {
@@ -37,10 +39,11 @@ class ACTS_ARROW_EXPORT ParquetReader : public IReader {
     /// against this directory; absolute paths are used as-is.
     std::filesystem::path inputDir;
 
-    /// Collections to read, keyed by whiteboard collection name. The value is
-    /// the input Parquet file path. A relative path is interpreted relative to
-    /// @c inputDir; an absolute path is used directly. No two collections may
-    /// resolve to the same input path.
+    /// Collections to read, keyed by whiteboard collection name. The
+    /// value is the input directory containing the collection's shard
+    /// files. A relative path is interpreted relative to @c inputDir;
+    /// an absolute path is used directly. No two collections may
+    /// resolve to the same input directory.
     std::unordered_map<std::string, std::filesystem::path> collections;
   };
 
@@ -48,8 +51,8 @@ class ACTS_ARROW_EXPORT ParquetReader : public IReader {
   ///
   /// @param config The configuration.
   /// @param logger The logger to use.
-  /// @throws std::invalid_argument if the configuration is invalid or a file
-  ///         is missing.
+  /// @throws std::invalid_argument if the configuration is invalid or a
+  ///         directory is missing.
   ParquetReader(const Config& config,
                 std::unique_ptr<const Acts::Logger> logger);
 

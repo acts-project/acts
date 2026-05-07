@@ -69,44 +69,69 @@ def with_pyarrow(fn):
 
         fn(pyarrow, pq)
     except ImportError as e:
-        raise
         if isCI:
             raise
         warnings.warn(f"pyarrow not available ({e}), skipping parquet checks")
 
 
-def _assert_particles_parquet(path: Path, expected_events: int) -> None:
-    """Verify a particles.parquet file has the expected nested schema and row count."""
-    assert path.exists(), f"{path} does not exist"
-    assert path.stat().st_size > 0, f"{path} is empty"
+def _assert_particles_parquet(directory: Path, expected_events: int) -> None:
+    """Verify a particles dataset directory has the expected nested schema
+    and row count summed across shard files."""
+    assert directory.exists(), f"{directory} does not exist"
+    assert directory.is_dir(), f"{directory} is not a directory"
+
+    fragments = sorted(directory.glob("*.parquet"))
+    assert fragments, f"{directory} contains no parquet shards"
+    for f in fragments:
+        assert f.stat().st_size > 0, f"{f} is empty"
 
     @with_pyarrow
     def _check(pa, pq):
-        pf = pq.ParquetFile(str(path))
-        assert pf.metadata.num_rows == expected_events, (
-            f"{path.name}: expected {expected_events} events, "
-            f"got {pf.metadata.num_rows}"
+        total_rows = 0
+        union_event_ids: list[int] = []
+        first_schema = None
+        for f in fragments:
+            pf = pq.ParquetFile(str(f))
+            total_rows += pf.metadata.num_rows
+            if first_schema is None:
+                first_schema = pf.schema_arrow
+            else:
+                assert pf.schema_arrow.equals(
+                    first_schema
+                ), f"{f.name}: schema differs from {fragments[0].name}"
+            t = pf.read(columns=["event_id"])
+            union_event_ids.extend(t.column("event_id").to_pylist())
+
+        assert total_rows == expected_events, (
+            f"{directory.name}: expected {expected_events} events, "
+            f"got {total_rows}"
         )
 
-        schema = pf.schema_arrow
-        names = {schema.field(i).name for i in range(len(schema))}
-        assert "event_id" in names, f"{path.name}: event_id column missing"
+        # Each event id should appear exactly once across the dataset
+        # (validates the writer's shard routing).
+        assert sorted(union_event_ids) == list(range(expected_events)), (
+            f"{directory.name}: event ids not contiguous 0..{expected_events-1}: "
+            f"{sorted(union_event_ids)}"
+        )
+
+        names = {first_schema.field(i).name for i in range(len(first_schema))}
+        assert "event_id" in names, f"{directory.name}: event_id column missing"
         missing = PARTICLE_FIELDS - names
-        assert not missing, f"{path.name}: missing fields {missing}"
+        assert not missing, f"{directory.name}: missing fields {missing}"
 
         # Every particle column should be a list<T> in the nested layout.
         for field_name in PARTICLE_FIELDS:
-            ftype = schema.field(field_name).type
+            ftype = first_schema.field(field_name).type
             assert pa.types.is_list(
                 ftype
-            ), f"{path.name}: field '{field_name}' should be list, got {ftype}"
+            ), f"{directory.name}: field '{field_name}' should be list, got {ftype}"
 
         # At least one event should contain particles.
-        table = pf.read()
+        table = pq.ParquetDataset(str(directory)).read()
         counts = [len(row) for row in table.column("particle_id").to_pylist()]
         assert any(
             c > 0 for c in counts
-        ), f"{path.name}: all events are empty ({counts})"
+        ), f"{directory.name}: all events are empty ({counts})"
 
 
 def _assert_parquet_reader_config(
@@ -157,10 +182,10 @@ def _add_arrow_writer(
             level=acts.logging.INFO,
             outputDir=str(outputDir),
             collections={
-                table_key: f"{table_key}.parquet"
+                table_key: table_key
                 for table_key in inputs_to_tables.values()
             },
-            eventsPerRowGroup=100,
+            eventsPerShard=2,
         )
     )
 
@@ -173,10 +198,10 @@ def test_particle_gun_generated(tmp_path, ptcl_gun):
     _add_arrow_writer(s, tmp_path, {"particles_generated": "particles_generated_arrow"})
     s.run()
 
-    _assert_particles_parquet(tmp_path / "particles_generated_arrow.parquet", nevents)
+    _assert_particles_parquet(tmp_path / "particles_generated_arrow", nevents)
     _assert_parquet_reader_config(
         tmp_path,
-        {"particles_generated_arrow": "particles_generated_arrow.parquet"},
+        {"particles_generated_arrow": "particles_generated_arrow"},
         nevents,
     )
 
@@ -196,8 +221,8 @@ def test_particle_gun_fatras(tmp_path, fatras):
     )
     s.run()
 
-    _assert_particles_parquet(tmp_path / "particles_generated_arrow.parquet", nevents)
-    _assert_particles_parquet(tmp_path / "particles_simulated_arrow.parquet", nevents)
+    _assert_particles_parquet(tmp_path / "particles_generated_arrow", nevents)
+    _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)
 
 
 @pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not built")
@@ -269,5 +294,5 @@ def test_pythia8_fatras(tmp_path, rng, trk_geo):
     )
     s.run()
 
-    _assert_particles_parquet(tmp_path / "particles_generated_arrow.parquet", nevents)
-    _assert_particles_parquet(tmp_path / "particles_simulated_arrow.parquet", nevents)
+    _assert_particles_parquet(tmp_path / "particles_generated_arrow", nevents)
+    _assert_particles_parquet(tmp_path / "particles_simulated_arrow", nevents)

@@ -8,10 +8,19 @@
 
 #include "ActsPlugins/Arrow/ArrowUtil.hpp"
 
+#include <algorithm>
 #include <stdexcept>
+#include <vector>
 
 #include <arrow/compute/api.h>
+#include <arrow/dataset/dataset.h>
+#include <arrow/dataset/discovery.h>
+#include <arrow/dataset/file_parquet.h>
+#include <arrow/dataset/scanner.h>
+#include <arrow/filesystem/localfs.h>
 #include <arrow/io/file.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
 
 namespace ActsPlugins::ArrowUtil {
 
@@ -63,27 +72,6 @@ std::shared_ptr<arrow::Table> withEventId(
                 "add event_id column");
 }
 
-std::shared_ptr<arrow::Table> sliceByEventId(
-    const std::shared_ptr<arrow::Table>& table, std::uint64_t eventId) {
-  if (table == nullptr) {
-    throw std::invalid_argument("sliceByEventId: null table");
-  }
-  const int idx = table->schema()->GetFieldIndex(std::string{kEventIdColumn});
-  if (idx < 0) {
-    throw std::invalid_argument("sliceByEventId: table lacks event_id column");
-  }
-
-  auto eventIdScalar = arrow::MakeScalar(static_cast<std::uint32_t>(eventId));
-  auto mask = unwrap(arrow::compute::CallFunction(
-                         "equal", {table->column(idx), eventIdScalar}),
-                     "event_id equality");
-  auto filtered = unwrap(arrow::compute::CallFunction("filter", {table, mask}),
-                         "event_id filter");
-
-  auto filteredTable = filtered.table();
-  return unwrap(filteredTable->RemoveColumn(idx), "drop event_id column");
-}
-
 class ParquetFileWriter::Impl {
  public:
   explicit Impl(std::filesystem::path path) : m_path(std::move(path)) {}
@@ -94,6 +82,7 @@ class ParquetFileWriter::Impl {
                             "open parquet");
       auto properties = parquet::WriterProperties::Builder()
                             .compression(parquet::Compression::ZSTD)
+                            // ->enable_write_page_index()
                             ->build();
       auto arrowProperties =
           parquet::ArrowWriterProperties::Builder().store_schema()->build();
@@ -140,32 +129,114 @@ void ParquetFileWriter::close() {
   m_impl->close();
 }
 
-std::shared_ptr<arrow::Table> readTable(const std::filesystem::path& path) {
-  auto infile = unwrap(arrow::io::ReadableFile::Open(
-                           path.string(), arrow::default_memory_pool()),
-                       "open parquet for read");
+class ParquetDatasetReader::Impl {
+ public:
+  explicit Impl(std::filesystem::path directory)
+      : m_directory(std::move(directory)) {
+    if (!std::filesystem::exists(m_directory) ||
+        !std::filesystem::is_directory(m_directory)) {
+      throw std::invalid_argument("ParquetDatasetReader: not a directory: " +
+                                  m_directory.string());
+    }
 
-  auto reader =
-      unwrap(parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
-             "open parquet reader");
+    std::vector<std::string> files;
+    for (const auto& e : std::filesystem::directory_iterator(m_directory)) {
+      if (e.is_regular_file() && e.path().extension() == ".parquet") {
+        files.push_back(e.path().string());
+      }
+    }
+    if (files.empty()) {
+      throw std::invalid_argument(
+          "ParquetDatasetReader: no parquet files under " +
+          m_directory.string());
+    }
+    std::ranges::sort(files);
 
-  std::shared_ptr<arrow::Table> table;
-  auto status = reader->ReadTable(&table);
-  if (!status.ok()) {
-    throwArrow("read parquet table", status);
+    m_numEvents = 0;
+    for (const auto& f : files) {
+      auto infile =
+          unwrap(arrow::io::ReadableFile::Open(f, arrow::default_memory_pool()),
+                 "open parquet footer");
+      auto reader =
+          unwrap(parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
+                 "open parquet reader");
+      m_numEvents += reader->parquet_reader()->metadata()->num_rows();
+    }
+
+    auto fs = std::make_shared<arrow::fs::LocalFileSystem>();
+    auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+    arrow::dataset::FileSystemFactoryOptions options;
+    auto factory = unwrap(arrow::dataset::FileSystemDatasetFactory::Make(
+                              std::move(fs), files, std::move(format), options),
+                          "make dataset factory");
+
+    arrow::dataset::InspectOptions inspectOpts;
+    inspectOpts.fragments =
+        arrow::dataset::InspectOptions::kInspectAllFragments;
+    arrow::dataset::FinishOptions finishOpts;
+    finishOpts.inspect_options = inspectOpts;
+    m_dataset = unwrap(factory->Finish(finishOpts), "finish dataset");
+
+    auto fullSchema = m_dataset->schema();
+    const int idx = fullSchema->GetFieldIndex(std::string{kEventIdColumn});
+    if (idx < 0) {
+      throw std::invalid_argument("ParquetDatasetReader: dataset under '" +
+                                  m_directory.string() +
+                                  "' lacks event_id column");
+    }
+    m_publicSchema =
+        unwrap(fullSchema->RemoveField(idx), "strip event_id from schema");
   }
-  return table;
+
+  std::int64_t numEvents() const { return m_numEvents; }
+  std::shared_ptr<arrow::Schema> schema() const { return m_publicSchema; }
+
+  std::shared_ptr<arrow::Table> readEvent(std::uint64_t eventId) const {
+    auto builder = unwrap(m_dataset->NewScan(), "new scan");
+    auto status = builder->Filter(arrow::compute::equal(
+        arrow::compute::field_ref(std::string{kEventIdColumn}),
+        arrow::compute::literal(static_cast<std::uint32_t>(eventId))));
+    if (!status.ok()) {
+      throwArrow("set scan filter", status);
+    }
+    status = builder->UseThreads(false);
+    if (!status.ok()) {
+      throwArrow("set use threads", status);
+    }
+    auto scanner = unwrap(builder->Finish(), "finish scanner");
+    auto table = unwrap(scanner->ToTable(), "scan to table");
+
+    const int idx = table->schema()->GetFieldIndex(std::string{kEventIdColumn});
+    if (idx < 0) {
+      throw std::runtime_error(
+          "ParquetDatasetReader: scanned table lacks event_id column");
+    }
+    return unwrap(table->RemoveColumn(idx), "drop event_id column");
+  }
+
+ private:
+  std::filesystem::path m_directory;
+  std::int64_t m_numEvents = 0;
+  std::shared_ptr<arrow::dataset::Dataset> m_dataset;
+  std::shared_ptr<arrow::Schema> m_publicSchema;
+};
+
+ParquetDatasetReader::ParquetDatasetReader(std::filesystem::path directory)
+    : m_impl(std::make_unique<Impl>(std::move(directory))) {}
+
+ParquetDatasetReader::~ParquetDatasetReader() = default;
+
+std::int64_t ParquetDatasetReader::numEvents() const {
+  return m_impl->numEvents();
 }
 
-std::int64_t numRowsInFile(const std::filesystem::path& path) {
-  auto infile = unwrap(arrow::io::ReadableFile::Open(
-                           path.string(), arrow::default_memory_pool()),
-                       "open parquet footer");
+std::shared_ptr<arrow::Schema> ParquetDatasetReader::schema() const {
+  return m_impl->schema();
+}
 
-  auto reader =
-      unwrap(parquet::arrow::OpenFile(infile, arrow::default_memory_pool()),
-             "open parquet reader");
-  return reader->parquet_reader()->metadata()->num_rows();
+std::shared_ptr<arrow::Table> ParquetDatasetReader::readEvent(
+    std::uint64_t eventId) const {
+  return m_impl->readEvent(eventId);
 }
 
 }  // namespace ActsPlugins::ArrowUtil
