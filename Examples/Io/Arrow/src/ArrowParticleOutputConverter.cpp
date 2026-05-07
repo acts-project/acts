@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
+#include "Acts/Propagator/VoidNavigator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
@@ -92,6 +94,7 @@ struct ArrowParticleOutputConverter::Impl {
   mutable std::atomic<std::size_t> nTotal{0};
   mutable std::atomic<std::size_t> nCharged{0};
   mutable std::atomic<std::size_t> nLowMomentum{0};
+  mutable std::atomic<std::size_t> nHighEta{0};
   mutable std::atomic<std::size_t> nNonFinite{0};
   mutable std::atomic<std::size_t> nZeroCharge{0};
   mutable std::atomic<std::size_t> nGlobalToLocalFailed{0};
@@ -105,7 +108,11 @@ struct ArrowParticleOutputConverter::Impl {
   void enablePerigee(const Acts::Vector3& referencePoint,
                      std::shared_ptr<Acts::MagneticFieldProvider> bField) {
     surface = Acts::Surface::makeShared<Acts::PerigeeSurface>(referencePoint);
-    propagator.emplace(Stepper(std::move(bField)));
+    auto logger = Acts::getDefaultLogger("Propagator", Acts::Logging::INFO);
+    // Propagator prop{Stepper(std::move(bField)), Acts::VoidNavigator{},
+    //                 std::move(logger)};
+    propagator.emplace(Stepper(std::move(bField)), Acts::VoidNavigator{},
+                       std::move(logger));
   }
 };
 
@@ -147,6 +154,7 @@ ProcessCode ArrowParticleOutputConverter::finalize() {
         m_perigee->nPropagationFailed.load(std::memory_order_relaxed);
     const auto nLowMomentum =
         m_perigee->nLowMomentum.load(std::memory_order_relaxed);
+    const auto nHighEta = m_perigee->nHighEta.load(std::memory_order_relaxed);
 
     Acts::Table table;
     using enum Acts::Table::Alignment;
@@ -187,6 +195,10 @@ ProcessCode ArrowParticleOutputConverter::finalize() {
       addRow("Low-momentum skips", nLowMomentum, nCharged,
              std::format("< {:.3g} MeV", m_cfg.minHelixTransverseMomentum /
                                              Acts::UnitConstants::MeV));
+    }
+    if (nHighEta > 0) {
+      addRow("High-eta skips", nHighEta, nCharged,
+             std::format("> {:.3g}", m_cfg.maxHelixEta));
     }
 
     if (hasRows) {
@@ -351,23 +363,40 @@ ProcessCode ArrowParticleOutputConverter::execute(
         m_perigee->nCharged.fetch_add(1, std::memory_order_relaxed);
         if (s.transverseMomentum() < m_cfg.minHelixTransverseMomentum) {
           m_perigee->nLowMomentum.fetch_add(1, std::memory_order_relaxed);
+        } else if (std::abs(Acts::VectorHelpers::eta(dir)) >
+                   m_cfg.maxHelixEta) {
+          m_perigee->nHighEta.fetch_add(1, std::memory_order_relaxed);
         } else {
           auto startParams = Acts::BoundTrackParameters::createCurvilinear(
               s.fourPosition(), dir, s.qOverP(), std::nullopt,
               Acts::ParticleHypothesis::pion());
+          ACTS_VERBOSE("Start params: " << startParams);
+          ACTS_VERBOSE("Surface: " << surface.toString(ctx.geoContext));
           using PropOptions = Impl::Propagator::Options<>;
           PropOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+          // pOptions.stepping.maxStepSize = 100 * Acts::UnitConstants::um;
           pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
               intersection.pathLength());
+          ACTS_VERBOSE("Direction: " << pOptions.direction
+                                     << " from path length "
+                                     << intersection.pathLength()
+                                     << " "
+                                        "eta: "
+                                     << Acts::VectorHelpers::eta(dir));
+
           auto propRes =
-              m_perigee->propagator->propagate(startParams, surface, pOptions);
+              m_perigee->propagator
+                  ->propagate<decltype(pOptions), Acts::ForcedSurfaceReached,
+                              Acts::PathLimitReached>(startParams, surface,
+                                                      pOptions);
           if (propRes.ok() && propRes->endParameters.has_value()) {
             const auto& pars = propRes->endParameters->parameters();
             d0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc0]);
             z0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc1]);
           } else {
-            ACTS_ERROR("Propagation failed for particle "
-                       << propRes.error().message());
+            // ACTS_ERROR("Propagation failed for particle "
+            //            << propRes.error().message());
+            // throw std::runtime_error(propRes.error().message());
             m_perigee->nPropagationFailed.fetch_add(1,
                                                     std::memory_order_relaxed);
           }

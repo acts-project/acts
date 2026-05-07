@@ -600,16 +600,16 @@ if args.output_parquet:
 
     # Each converter parks an arrow::Table on the whiteboard under a fresh
     # key, and one ParquetWriter picks them all up.
-    s.addAlgorithm(
-        ArrowParticleOutputConverter(
-            level=acts.logging.INFO,
-            inputParticles="particles_simulated",
-            outputTable="particles_arrow",
-            writeHelixParameters=True,
-            minHelixTransverseMomentum=500 * u.MeV,
-            bField=field,
-        )
+    arrParticleConv = ArrowParticleOutputConverter(
+        level=acts.logging.INFO,
+        inputParticles="particles_simulated",
+        outputTable="particles_arrow",
+        writeHelixParameters=True,
+        minHelixTransverseMomentum=500 * u.MeV,
+        maxHelixEta=5.0,
+        bField=field,
     )
+    s.addAlgorithm(arrParticleConv)
 
     arrSimHitConv = ArrowSimHitOutputConverter(
         level=acts.logging.INFO,
@@ -652,6 +652,7 @@ if args.output_parquet:
                 arrSimHitConv.config.outputTable: "simhits",
                 arrTrackConv.config.outputTable: "tracks",
                 arrHitConv.config.outputTable: "calohits",
+                arrParticleConv.config.outputTable: "particles",
             },
         )
     )
