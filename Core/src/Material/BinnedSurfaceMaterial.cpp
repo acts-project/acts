@@ -9,6 +9,7 @@
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <algorithm>
 #include <ostream>
@@ -19,7 +20,17 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabVector fullProperties,
     double splitFactor, Acts::MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_binUtility(binUtility) {
-  // fill the material with deep copy
+  // Catch the cases where the bin Utility is only-1D and add either first or
+  // second dummy dimension
+  if (binUtility.dimensions() == 1u) {
+    auto aDir = binUtility.binningData()[0u].binvalue;
+    // Only act if the axis direction is not already the first one in an allowed
+    // local frame
+    if (aDir != AxisDirection::AxisX && aDir != AxisDirection::AxisR &&
+        aDir != AxisDirection::AxisRPhi) {
+      m_swapped = true;
+    }
+  }
   m_fullMaterial.push_back(std::move(fullProperties));
 }
 
@@ -42,8 +53,11 @@ Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(double factor) {
 const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
     const Vector2& lp) const {
   // the first bin
-  std::size_t ibin0 = m_binUtility.bin(lp, 0);
-  std::size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, 1) : 0;
+  std::size_t b0lu = m_swapped ? 1 : 0;
+  std::size_t b1lu = m_swapped ? 0 : 1;
+  std::size_t ibin0 = m_binUtility.bin(lp, b0lu);
+  std::size_t ibin1 =
+      m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, b1lu) : 0;
   return m_fullMaterial[ibin1][ibin0];
 }
 
