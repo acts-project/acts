@@ -599,6 +599,7 @@ endif()
 if(ACTS_BUILD_PLUGIN_ARROW)
     find_package(Arrow ${_acts_arrow_version} REQUIRED CONFIG)
     find_package(Parquet ${_acts_arrow_version} REQUIRED CONFIG)
+    find_package(ArrowDataset ${_acts_arrow_version} REQUIRED CONFIG)
 endif()
 
 if(ACTS_SETUP_VECMEM)

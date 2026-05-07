@@ -14,13 +14,16 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
+#include "Acts/Utilities/Table.hpp"
 
 #include <atomic>
 #include <cmath>
 #include <cstdint>
+#include <format>
 #include <memory>
 #include <optional>
 #include <stdexcept>
+#include <string>
 
 #include <arrow/api.h>
 
@@ -88,6 +91,7 @@ struct ArrowParticleOutputConverter::Impl {
   /// particle. Summarised in @c finalize.
   mutable std::atomic<std::size_t> nTotal{0};
   mutable std::atomic<std::size_t> nCharged{0};
+  mutable std::atomic<std::size_t> nLowMomentum{0};
   mutable std::atomic<std::size_t> nNonFinite{0};
   mutable std::atomic<std::size_t> nZeroCharge{0};
   mutable std::atomic<std::size_t> nGlobalToLocalFailed{0};
@@ -141,25 +145,57 @@ ProcessCode ArrowParticleOutputConverter::finalize() {
         m_perigee->nGlobalToLocalFailed.load(std::memory_order_relaxed);
     const auto nPropagationFailed =
         m_perigee->nPropagationFailed.load(std::memory_order_relaxed);
+    const auto nLowMomentum =
+        m_perigee->nLowMomentum.load(std::memory_order_relaxed);
+
+    Acts::Table table;
+    using enum Acts::Table::Alignment;
+    table.addColumn("Condition", "{}", Left);
+    table.addColumn("Count", "{}", Right);
+    table.addColumn("Out of", "{}", Right);
+    table.addColumn("Fraction", "{:.1f}%", Right);
+    table.addColumn("Details", "{}", Left);
+
+    auto fraction = [](std::size_t count, std::size_t total) {
+      return total > 0 ? 100.0 * static_cast<double>(count) /
+                             static_cast<double>(total)
+                       : 0.0;
+    };
+
+    bool hasRows = false;
+    auto addRow = [&](std::string condition, std::size_t count,
+                      std::size_t total, std::string details = "") {
+      table.addRow(condition, count, total, fraction(count, total), details);
+      hasRows = true;
+    };
+
     if (nNonFinite > 0) {
-      ACTS_WARNING(nNonFinite << " / " << nTotal
-                              << " particle(s) had non-finite mass or charge");
+      addRow("Non-finite mass or charge", nNonFinite, nTotal);
     }
     if (nZeroCharge > 0) {
-      ACTS_WARNING(nZeroCharge
-                   << " / " << nTotal
-                   << " zero-charge particle(s) linearly extrapolated to "
-                      "perigee");
+      addRow("Zero-charge particles", nZeroCharge, nTotal,
+             "linearly extrapolated to perigee");
     }
     if (nGlobalToLocalFailed > 0) {
-      ACTS_ERROR(nGlobalToLocalFailed
-                 << " / " << nZeroCharge
-                 << " global-to-local transformation(s) failed");
+      addRow("Global-to-local failures", nGlobalToLocalFailed, nZeroCharge);
     }
     if (nPropagationFailed > 0) {
-      ACTS_ERROR(nPropagationFailed
-                 << " / " << nCharged
-                 << " propagation(s) to perigee surface failed");
+      addRow("Propagation failures", nPropagationFailed, nCharged,
+             "to perigee surface");
+    }
+    if (nLowMomentum > 0) {
+      addRow("Low-momentum skips", nLowMomentum, nCharged,
+             std::format("< {:.3g} MeV", m_cfg.minHelixTransverseMomentum /
+                                             Acts::UnitConstants::MeV));
+    }
+
+    if (hasRows) {
+      const bool hasWarnings = nNonFinite > 0 || nGlobalToLocalFailed > 0;
+      if (hasWarnings) {
+        ACTS_WARNING("Perigee particle conversion summary:\n" << table);
+      } else {
+        ACTS_INFO("Perigee particle conversion summary:\n" << table);
+      }
     }
     // Reset the timer first so its dtor logs the cumulative stats now,
     // rather than whenever the algorithm happens to be destroyed.
@@ -313,21 +349,28 @@ ProcessCode ArrowParticleOutputConverter::execute(
       } else {
         // Charged: propagate the truth helix to the perigee surface.
         m_perigee->nCharged.fetch_add(1, std::memory_order_relaxed);
-        auto startParams = Acts::BoundTrackParameters::createCurvilinear(
-            s.fourPosition(), dir, s.qOverP(), std::nullopt,
-            Acts::ParticleHypothesis::pion());
-        using PropOptions = Impl::Propagator::Options<>;
-        PropOptions pOptions(ctx.geoContext, ctx.magFieldContext);
-        pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
-            intersection.pathLength());
-        auto propRes =
-            m_perigee->propagator->propagate(startParams, surface, pOptions);
-        if (propRes.ok() && propRes->endParameters.has_value()) {
-          const auto& pars = propRes->endParameters->parameters();
-          d0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc0]);
-          z0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc1]);
+        if (s.transverseMomentum() < m_cfg.minHelixTransverseMomentum) {
+          m_perigee->nLowMomentum.fetch_add(1, std::memory_order_relaxed);
         } else {
-          m_perigee->nPropagationFailed.fetch_add(1, std::memory_order_relaxed);
+          auto startParams = Acts::BoundTrackParameters::createCurvilinear(
+              s.fourPosition(), dir, s.qOverP(), std::nullopt,
+              Acts::ParticleHypothesis::pion());
+          using PropOptions = Impl::Propagator::Options<>;
+          PropOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+          pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
+              intersection.pathLength());
+          auto propRes =
+              m_perigee->propagator->propagate(startParams, surface, pOptions);
+          if (propRes.ok() && propRes->endParameters.has_value()) {
+            const auto& pars = propRes->endParameters->parameters();
+            d0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc0]);
+            z0 = static_cast<float>(pars[Acts::BoundIndices::eBoundLoc1]);
+          } else {
+            ACTS_ERROR("Propagation failed for particle "
+                       << propRes.error().message());
+            m_perigee->nPropagationFailed.fetch_add(1,
+                                                    std::memory_order_relaxed);
+          }
         }
       }
     }

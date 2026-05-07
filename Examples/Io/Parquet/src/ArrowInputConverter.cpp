@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 
+#include <sstream>
 #include <stdexcept>
 
 #include <arrow/api.h>
@@ -42,12 +43,37 @@ ProcessCode ArrowInputConverter::execute(const AlgorithmContext& ctx) const {
     return ProcessCode::ABORT;
   }
 
+  // Subset check, not equality: dataset reads may surface a unified schema
+  // that includes fields from newer fragments which older converters don't
+  // care about. We require every field the converter declares to be present
+  // and to have a matching type, but allow extra fields.
   if (auto expected = expectedSchema(); expected != nullptr) {
-    if (!table->schema()->Equals(*expected, /*check_metadata=*/false)) {
+    const auto& actual = *table->schema();
+    std::ostringstream missing;
+    bool ok = true;
+    for (const auto& field : expected->fields()) {
+      auto actualField = actual.GetFieldByName(field->name());
+      if (actualField == nullptr) {
+        if (!ok) {
+          missing << ", ";
+        }
+        missing << field->name() << " (missing)";
+        ok = false;
+      } else if (!actualField->type()->Equals(*field->type())) {
+        if (!ok) {
+          missing << ", ";
+        }
+        missing << field->name() << " (type "
+                << actualField->type()->ToString() << " != "
+                << field->type()->ToString() << ")";
+        ok = false;
+      }
+    }
+    if (!ok) {
       ACTS_ERROR("ArrowInputConverter '"
-                 << name() << "' schema mismatch.\n"
-                 << "  expected: " << expected->ToString() << "\n"
-                 << "  got:      " << table->schema()->ToString());
+                 << name() << "' schema mismatch: " << missing.str() << "\n"
+                 << "  expected fields: " << expected->ToString() << "\n"
+                 << "  actual schema:   " << actual.ToString());
       return ProcessCode::ABORT;
     }
   }

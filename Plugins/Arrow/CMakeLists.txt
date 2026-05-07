@@ -25,9 +25,11 @@ target_include_directories(
 if(ACTS_ARROW_ISOLATED)
     set(_acts_arrow_impl Arrow::arrow_static)
     set(_acts_parquet_impl Parquet::parquet_static)
+    set(_acts_dataset_impl ArrowDataset::arrow_dataset_static)
 else()
     set(_acts_arrow_impl Arrow::arrow_shared)
     set(_acts_parquet_impl Parquet::parquet_shared)
+    set(_acts_dataset_impl ArrowDataset::arrow_dataset_shared)
 endif()
 add_library(ActsArrowLinkage INTERFACE)
 add_library(Acts::ArrowLinkage ALIAS ActsArrowLinkage)
@@ -47,17 +49,25 @@ target_include_directories(
     INTERFACE
         $<TARGET_PROPERTY:${_acts_parquet_impl},INTERFACE_INCLUDE_DIRECTORIES>
 )
+add_library(ActsDatasetLinkage INTERFACE)
+add_library(Acts::DatasetLinkage ALIAS ActsDatasetLinkage)
+target_link_libraries(ActsDatasetLinkage INTERFACE ${_acts_dataset_impl})
+target_include_directories(
+    ActsDatasetLinkage SYSTEM
+    INTERFACE
+        $<TARGET_PROPERTY:${_acts_dataset_impl},INTERFACE_INCLUDE_DIRECTORIES>
+)
 # ActsPluginArrow PRIVATE-links these aliases, so CMake requires them to be
 # in the same export set for install(EXPORT ActsPluginArrowTargets).
 install(
-    TARGETS ActsArrowLinkage ActsParquetLinkage
+    TARGETS ActsArrowLinkage ActsParquetLinkage ActsDatasetLinkage
     EXPORT ActsPluginArrowTargets
 )
 
 target_link_libraries(
     ActsPluginArrow
     PUBLIC Acts::Core
-    PRIVATE Acts::ArrowLinkage Acts::ParquetLinkage
+    PRIVATE Acts::ArrowLinkage Acts::ParquetLinkage Acts::DatasetLinkage
 )
 
 # Propagate arrow/parquet headers to direct consumers. The linkage itself
@@ -70,6 +80,7 @@ target_include_directories(
     PUBLIC
         $<TARGET_PROPERTY:Acts::ArrowLinkage,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:Acts::ParquetLinkage,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:Acts::DatasetLinkage,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 if(ACTS_ARROW_ISOLATED)
@@ -100,6 +111,7 @@ if(ACTS_ARROW_ISOLATED)
             PRIVATE
                 "LINKER:-load_hidden,$<TARGET_FILE:Arrow::arrow_static>"
                 "LINKER:-load_hidden,$<TARGET_FILE:Parquet::parquet_static>"
+                "LINKER:-load_hidden,$<TARGET_FILE:ArrowDataset::arrow_dataset_static>"
                 "LINKER:-exported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/cmake/exported_symbols.txt"
         )
     else()

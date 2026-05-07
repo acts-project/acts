@@ -35,6 +35,7 @@ target_link_libraries(
         Acts::ExamplesFramework
         Acts::ArrowLinkage
         Acts::ParquetLinkage
+        Acts::DatasetLinkage
 )
 
 set_target_properties(

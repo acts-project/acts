@@ -606,56 +606,53 @@ if args.output_parquet:
             inputParticles="particles_simulated",
             outputTable="particles_arrow",
             writeHelixParameters=True,
+            minHelixTransverseMomentum=500 * u.MeV,
             bField=field,
         )
     )
 
-    _parquet_collections = {"particles_arrow": "particles.parquet"}
-
-    s.addAlgorithm(
-        ArrowSimHitOutputConverter(
-            level=acts.logging.INFO,
-            inputSimHits="simhits",
-            inputParticles="particles_simulated",
-            inputMeasurements="measurements",
-            inputSimHitMeasurementsMap="simhit_measurements_map",
-            outputTable="simhits_arrow",
-            trackingGeometry=trackingGeometry,
-            detectorResolver=_odd_detector_resolver,
-        )
+    arrSimHitConv = ArrowSimHitOutputConverter(
+        level=acts.logging.INFO,
+        inputSimHits="simhits",
+        inputParticles="particles_simulated",
+        inputMeasurements="measurements",
+        inputSimHitMeasurementsMap="simhit_measurements_map",
+        outputTable="simhits_arrow",
+        trackingGeometry=trackingGeometry,
+        detectorResolver=_odd_detector_resolver,
     )
-    _parquet_collections["simhits_arrow"] = "simhits.parquet"
+    s.addAlgorithm(arrSimHitConv)
 
     if args.reco:
-        s.addAlgorithm(
-            ArrowTrackOutputConverter(
-                level=acts.logging.INFO,
-                inputTracks="tracks",
-                inputTrackParticleMatching="track_particle_matching",
-                inputParticles="particles_simulated",
-                inputMeasurementSimHitsMap="measurement_simhits_map",
-                outputTable="tracks_arrow",
-            )
+        arrTrackConv = ArrowTrackOutputConverter(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            inputTrackParticleMatching="track_particle_matching",
+            inputParticles="particles_simulated",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
+            outputTable="tracks_arrow",
         )
-        _parquet_collections["tracks_arrow"] = "tracks.parquet"
+        s.addAlgorithm(arrTrackConv)
 
     # Calo cells live on the input edm4hep frame; the converter is only wired
     # up above when --edm4hep is given.
     if args.edm4hep:
-        s.addAlgorithm(
-            ArrowCaloHitOutputConverter(
-                level=acts.logging.INFO,
-                inputCaloHits="calohits",
-                outputTable="calohits_arrow",
-            )
+        arrHitConv = ArrowCaloHitOutputConverter(
+            level=acts.logging.INFO,
+            inputCaloHits="calohits",
+            outputTable="calohits_arrow",
         )
-        _parquet_collections["calohits_arrow"] = "calohits.parquet"
+        s.addAlgorithm(arrHitConv)
 
     s.addWriter(
         ParquetWriter(
             level=acts.logging.INFO,
             outputDir=str(outputDir),
-            collections=_parquet_collections,
+            collections={
+                arrSimHitConv.config.outputTable: "simhits",
+                arrTrackConv.config.outputTable: "tracks",
+                arrHitConv.config.outputTable: "calohits",
+            },
         )
     )
 

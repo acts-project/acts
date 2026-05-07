@@ -19,19 +19,32 @@
 
 namespace ActsExamples {
 
-/// Writer for a set of Parquet files, one per collection, using the nested
-/// layout: one row per event, each column a @c list<T> of the per-object
-/// values for that event.
+/// Writer for a sharded Parquet @c arrow::dataset, one directory per
+/// collection. Events are routed to shard files by
+/// @c event_id / eventsPerShard, so each shard owns a contiguous,
+/// disjoint event-id range. Each shard is written as a single Parquet
+/// file with one row group; file-level min/max statistics over
+/// @c event_id are then tight by construction, which lets the reader
+/// prune to a single fragment per per-event lookup.
+///
+/// Shard files inside a collection's directory are named
+/// `<prefix>_<startEvent>-<endEvent>.parquet`, with the prefix taken
+/// from the collection directory's stem (e.g. `particles.parquet/` →
+/// `particles_000000-001000.parquet` for the first shard of an
+/// `eventsPerShard=1000` job) and the bounds reflecting the *planned*
+/// half-open event window the shard owns.
 ///
 /// For each configured collection, the writer reads a 1-row
-/// @c std::shared_ptr<arrow::Table> from the whiteboard under the collection
-/// key, prepends an @c event_id column, and buffers the row until
-/// @c eventsPerRowGroup events have accumulated. The buffer is then
-/// concatenated and flushed as a single Parquet row group to the configured
-/// output path. The file is opened lazily on the first event so the schema
-/// can be inferred from the data.
+/// @c std::shared_ptr<arrow::Table> from the whiteboard under the
+/// collection key, prepends an @c event_id column, buffers it under
+/// the appropriate shard, and flushes the shard once it has received
+/// @c eventsPerShard events.
 ///
-/// Writes are serialized with a mutex.
+/// At most @c maxOpenShards shards are kept open simultaneously per
+/// collection. Under the Sequencer's sliding-window scheduling, the
+/// in-flight event set spans at most ~thread-count event ids and so
+/// touches at most one or two shards; this is a hard tripwire that
+/// throws if it is ever exceeded.
 class ACTS_ARROW_EXPORT ParquetWriter final : public IWriter {
  public:
   struct Config {
@@ -40,19 +53,36 @@ class ACTS_ARROW_EXPORT ParquetWriter final : public IWriter {
     std::filesystem::path outputDir;
 
     /// Collections to write, keyed by whiteboard collection name. The value
-    /// is the output Parquet file path. A relative path is interpreted
-    /// relative to @c outputDir; an absolute path is used directly. No two
-    /// collections may resolve to the same output path.
+    /// is the output directory (NOT a file path) into which shard files are
+    /// written. A relative path is interpreted relative to @c outputDir; an
+    /// absolute path is used directly. No two collections may resolve to
+    /// the same output directory.
     std::unordered_map<std::string, std::filesystem::path> collections;
 
-    /// Number of events to accumulate before flushing as one Parquet row
-    /// group. Smaller values improve per-event seek granularity at the cost
-    /// of larger file metadata and worse compression; larger values compress
-    /// better but force more events through the scanner per read at input
-    /// time.
+    /// Number of events per shard file. Drives file-level granularity
+    /// (the read-side pruning unit).
+    std::size_t eventsPerShard = 1000;
+
+    /// Number of events per row group within a shard file. Bounds the
+    /// in-memory write buffer: the writer holds up to this many 1-row
+    /// tables per active shard before serialising them as a single row
+    /// group and resetting the buffer. Lower this for collections with
+    /// large per-event payloads (e.g. SimHits with millions of values
+    /// per event) to keep peak memory tractable. Must satisfy
+    /// @c 0 < eventsPerRowGroup <= eventsPerShard.
     ///
-    /// Any unflushed events are written in @c finalize().
-    std::size_t eventsPerRowGroup = 1000;
+    /// @c 0 means "use the same value as @c eventsPerShard", which
+    /// gives one row group per file. That's the simplest layout but
+    /// pins peak memory to a full shard's worth of buffered data.
+    std::size_t eventsPerRowGroup = 0;
+
+    /// Hard cap on simultaneously open shards per collection. Defense in
+    /// depth: with the Sequencer's sliding-window scheduling the working
+    /// set is ~1-2 shards, so this should never be hit. If it is, the
+    /// writer throws — silently producing files with overlapping
+    /// event-id ranges would degrade the reader's pruning to a full
+    /// scan.
+    std::size_t maxOpenShards = 10;
   };
 
   /// Construct the writer.

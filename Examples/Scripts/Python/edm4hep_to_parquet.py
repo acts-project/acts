@@ -155,7 +155,7 @@ def main():
         )
     )
 
-    parquet_collections = {"particles_arrow": "particles.parquet"}
+    parquet_collections = {"particles_arrow": "particles"}
 
     if args.calo:
         s.addAlgorithm(
@@ -177,7 +177,7 @@ def main():
             )
         )
 
-        parquet_collections["calohits_arrow"] = "calohits.parquet"
+        parquet_collections["calohits_arrow"] = "calohits"
 
     s.addWriter(
         ParquetWriter(
