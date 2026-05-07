@@ -130,6 +130,10 @@ class PlaneSurface : public RegularSurface {
   /// @param newBounds: Pointer to the new bounds
   void assignSurfaceBounds(std::shared_ptr<const PlanarBounds> newBounds);
 
+  /// @copydoc Surface::assignSurfaceMaterial
+  void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material) final;
+
   /// Local to global transformation
   ///
   /// @note For planar surfaces the momentum direction is ignored in the local to global

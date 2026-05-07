@@ -12,8 +12,10 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <sstream>
+#include <vector>
 
 namespace Acts {
 
@@ -67,6 +69,9 @@ class ISurfaceMaterial {
   ///
   /// @return const MaterialSlab
   virtual const MaterialSlab& materialSlab(const Vector2& lp) const = 0;
+
+  /// Return the axis directions for the material binning, if applicable
+  virtual std::vector<AxisDirection> materialAxisDirections() const = 0;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates

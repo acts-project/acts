@@ -339,11 +339,6 @@ void Surface::assignSurfacePlacement(const SurfacePlacementBase& placement) {
   m_isSensitive = false;
 }
 
-void Surface::assignSurfaceMaterial(
-    std::shared_ptr<const ISurfaceMaterial> material) {
-  m_surfaceMaterial = std::move(material);
-}
-
 void Surface::associateLayer(const Layer& lay) {
   m_associatedLayer = (&lay);
 }

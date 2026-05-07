@@ -10,6 +10,7 @@
 
 #include "Acts/Material/MaterialSlab.hpp"
 
+#include <algorithm>
 #include <ostream>
 #include <utility>
 #include <vector>
@@ -44,6 +45,15 @@ const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
   std::size_t ibin0 = m_binUtility.bin(lp, 0);
   std::size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, 1) : 0;
   return m_fullMaterial[ibin1][ibin0];
+}
+
+std::vector<Acts::AxisDirection>
+Acts::BinnedSurfaceMaterial::materialAxisDirections() const {
+  std::vector<AxisDirection> axisDirs;
+  for (const auto& bd : m_binUtility.binningData()) {
+    axisDirs.push_back(bd.binvalue);
+  }
+  return axisDirs;
 }
 
 const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(

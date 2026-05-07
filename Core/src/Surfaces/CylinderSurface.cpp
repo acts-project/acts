@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
@@ -560,6 +561,29 @@ const std::shared_ptr<const CylinderBounds>& CylinderSurface::boundsPtr()
 void CylinderSurface::assignSurfaceBounds(
     std::shared_ptr<const CylinderBounds> newBounds) {
   m_bounds = std::move(newBounds);
+}
+
+void CylinderSurface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    Surface::m_surfaceMaterial = nullptr;
+    return;
+  }
+
+  auto mad = material->materialAxisDirections();
+  // check that only {}, {rphi}, {z} or {rphi,z} are allowed for cylinder
+  // surfaces
+  if (mad != std::vector<AxisDirection>{} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisZ} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisRPhi} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisRPhi,
+                                        AxisDirection::AxisZ}) {
+    throw std::invalid_argument(
+        "CylinderSurface::assignSurfaceMaterial: invalid material axis "
+        "directions. Allowed are {}, {AxisZ}, {AxisRPhi} or {AxisRPhi, "
+        "AxisZ}.");
+  }
+  Surface::m_surfaceMaterial = std::move(material);
 }
 
 }  // namespace Acts

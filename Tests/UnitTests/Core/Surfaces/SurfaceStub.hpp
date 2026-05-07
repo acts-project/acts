@@ -120,6 +120,12 @@ class SurfaceStub : public Acts::RegularSurface {
     return Acts::Matrix<2, 3>::Identity();
   };
 
+  /// @copydoc Surface::assignSurfaceMaterial
+  void assignSurfaceMaterial(
+      std::shared_ptr<const Acts::ISurfaceMaterial> material) final {
+    Surface::m_surfaceMaterial = std::move(material);
+  }
+
  private:
   /// the bounds of this surface
   std::shared_ptr<const Acts::PlanarBounds> m_bounds;

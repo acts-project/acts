@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
@@ -309,6 +310,28 @@ const std::shared_ptr<const PlanarBounds>& PlaneSurface::boundsPtr() const {
 void PlaneSurface::assignSurfaceBounds(
     std::shared_ptr<const PlanarBounds> newBounds) {
   m_bounds = std::move(newBounds);
+}
+
+void PlaneSurface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    Surface::m_surfaceMaterial = nullptr;
+    return;
+  }
+
+  auto mad = material->materialAxisDirections();
+  // check that only {}, {x}, {y}, or {x,y} are allowed for plane surfaces
+  if (mad != std::vector<AxisDirection>{} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisX} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisY} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisX,
+                                        AxisDirection::AxisY}) {
+    throw std::invalid_argument(
+        "PlaneSurface::assignSurfaceMaterial: invalid material axis "
+        "directions. "
+        "Allowed are {}, {AxisX}, {AxisY} or {AxisX, AxisY}.");
+  }
+  Surface::m_surfaceMaterial = std::move(material);
 }
 
 }  // namespace Acts

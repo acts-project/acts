@@ -101,6 +101,9 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   const MaterialSlab& materialSlab(const Vector2& lp) const final;
 
+  /// @copydoc ISurfaceMaterial::materialAxisDirections() const
+  std::vector<AxisDirection> materialAxisDirections() const final;
+
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "

@@ -177,6 +177,10 @@ class DiscSurface : public RegularSurface {
   /// @param newBounds: Pointer to the new bounds
   void assignSurfaceBounds(std::shared_ptr<const DiscBounds> newBounds);
 
+  /// @copydoc Surface::assignSurfaceMaterial
+  void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material) final;
+
   /// Local to global transformation
   /// For planar surfaces the momentum direction is ignored in the local to
   /// global transformation

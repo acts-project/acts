@@ -91,6 +91,9 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return (m_materialSlab);
   }
 
+  /// Return the axis directions for the material binning, if applicable
+  std::vector<AxisDirection> materialAxisDirections() const final { return {}; }
+
   /// Return method for full material description of the Surface - from the
   /// global coordinates
   ///

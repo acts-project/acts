@@ -263,6 +263,9 @@ class GridSurfaceMaterialT
     return m_materialAccessor.slab(m_grid, m_boundToGridLocal(lp));
   }
 
+  /// @copydoc ISurfaceMaterial::materialAxisDirections() const
+  std::vector<AxisDirection> materialAxisDirections() const final { return {}; }
+
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "

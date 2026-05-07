@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
@@ -547,6 +548,26 @@ const std::shared_ptr<const DiscBounds>& DiscSurface::boundsPtr() const {
 void DiscSurface::assignSurfaceBounds(
     std::shared_ptr<const DiscBounds> newBounds) {
   m_bounds = std::move(newBounds);
+}
+
+void DiscSurface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    Surface::m_surfaceMaterial = nullptr;
+    return;
+  }
+  // check that only {}, {r}, {phi} or {r,phi} are allowed for disc surfaces
+  auto mad = material->materialAxisDirections();
+  if (mad != std::vector<AxisDirection>{} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisR} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisPhi} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisR,
+                                        AxisDirection::AxisPhi}) {
+    throw std::invalid_argument(
+        "DiscSurface::assignSurfaceMaterial: invalid material axis directions. "
+        "Allowed are {}, {AxisR}, {AxisPhi} or {AxisR, AxisPhi}.");
+  }
+  Surface::m_surfaceMaterial = std::move(material);
 }
 
 }  // namespace Acts

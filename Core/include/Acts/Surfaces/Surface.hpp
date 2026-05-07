@@ -243,7 +243,8 @@ class Surface : public virtual GeometryObject,
   /// this is provided by a shared pointer
   ///
   /// @param material Material description associated to this surface
-  void assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
+  virtual void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material) = 0;
 
   /// Assign whether the surface is sensitive
   /// @param isSensitive Boolean flag to set sensitivity
@@ -538,6 +539,9 @@ class Surface : public virtual GeometryObject,
   /// (translation, rotation) the surface in global space
   CloneablePtr<const Transform3> m_transform{};
 
+  /// Possibility to attach a material description
+  std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
  private:
   /// Pointer to the a SurfacePlacement
   const SurfacePlacementBase* m_placement{nullptr};
@@ -545,9 +549,6 @@ class Surface : public virtual GeometryObject,
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
-
-  /// Possibility to attach a material description
-  std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
 
   /// Flag to indicate whether the surface is sensitive
   bool m_isSensitive{false};

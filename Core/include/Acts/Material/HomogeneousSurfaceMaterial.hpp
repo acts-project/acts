@@ -74,10 +74,12 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   const MaterialSlab& materialSlab(const Vector2& lp = Vector2{0.,
                                                                0.}) const final;
 
+  /// @copydoc ISurfaceMaterial::materialAxisDirections() const
+  std::vector<AxisDirection> materialAxisDirections() const final;
+
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   ///
   /// @note the input parameter is ignored
-  // NOLINTNEXTLINE(modernize-use-nodiscard)
   [[deprecated(
       "Use materialSlab(const Vector2& lp) with a prior "
       "Surface::globalToLocal() call instead")]] const MaterialSlab&

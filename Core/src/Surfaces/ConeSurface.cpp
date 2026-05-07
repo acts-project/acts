@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/ConeSurface.hpp"
 
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
@@ -398,4 +399,24 @@ void ConeSurface::assignSurfaceBounds(
     std::shared_ptr<const ConeBounds> newBounds) {
   m_bounds = std::move(newBounds);
 }
+
+void ConeSurface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    Surface::m_surfaceMaterial = nullptr;
+    return;
+  }
+
+  auto mad = material->materialAxisDirections();
+  // check that only {}, {z} are allowed for cone surfaces
+  if (mad != std::vector<AxisDirection>{} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisZ}) {
+    throw std::invalid_argument(
+        "ConeSurface::assignSurfaceMaterial: invalid material axis "
+        "directions. "
+        "Allowed are {}, {AxisZ}.");
+  }
+  Surface::m_surfaceMaterial = std::move(material);
+}
+
 }  // namespace Acts

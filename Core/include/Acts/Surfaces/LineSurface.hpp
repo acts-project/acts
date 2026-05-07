@@ -272,6 +272,10 @@ class LineSurface : public Surface {
   /// @param newBounds: Pointer to the new bounds
   void assignSurfaceBounds(std::shared_ptr<const LineBounds> newBounds);
 
+  /// @copydoc Surface::assignSurfaceMaterial
+  void assignSurfaceMaterial(
+      std::shared_ptr<const ISurfaceMaterial> material) final;
+
   /// Return properly formatted class name for screen output
   /// @return String representation of the class name
   std::string name() const override;

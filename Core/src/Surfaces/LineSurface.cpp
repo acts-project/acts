@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -302,6 +303,26 @@ const std::shared_ptr<const LineBounds>& LineSurface::boundsPtr() const {
 void LineSurface::assignSurfaceBounds(
     std::shared_ptr<const LineBounds> newBounds) {
   m_bounds = std::move(newBounds);
+}
+
+void LineSurface::assignSurfaceMaterial(
+    std::shared_ptr<const ISurfaceMaterial> material) {
+  if (material == nullptr) {
+    Surface::m_surfaceMaterial = nullptr;
+    return;
+  }
+  // check that only {}, {r}, {z} or {r,z} are allowed for line surfaces
+  auto axisDirs = material->materialAxisDirections();
+  if (axisDirs != std::vector<AxisDirection>{} &&
+      axisDirs != std::vector<AxisDirection>{AxisDirection::AxisR} &&
+      axisDirs != std::vector<AxisDirection>{AxisDirection::AxisZ} &&
+      axisDirs != std::vector<AxisDirection>{AxisDirection::AxisR,
+                                             AxisDirection::AxisZ}) {
+    throw std::invalid_argument(
+        "LineSurface::assignSurfaceMaterial: invalid material axis directions. "
+        "Allowed are {}, {AxisR}, {AxisZ} or {AxisR, AxisZ}.");
+  }
+  Surface::m_surfaceMaterial = std::move(material);
 }
 
 }  // namespace Acts
