@@ -136,6 +136,15 @@ BOOST_AUTO_TEST_CASE(is_crossing_inside) {
   BOOST_CHECK(!s.isCrossingInside(l4, l3));
 }
 
+BOOST_AUTO_TEST_CASE(history_handing) {
+  HoughAccumulatorSection s;
+  s.setHistory(2, 0.6f);  // 2 is index
+  s.setHistory(0, 1.0f);  // 0 is index
+
+  BOOST_CHECK_EQUAL(s.history(0), 1.0f);
+  BOOST_CHECK_EQUAL(s.history(2), 0.6f);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 // SUITE 2: exploreParametersSpace Test

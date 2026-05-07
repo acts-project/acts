@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <concepts>
@@ -186,8 +187,8 @@ class HoughAccumulatorSection {
   /// store additional (arbitrary) info in indexed array
   /// @param index - identifier
   /// @param value - value to store
-  void setHistory(std::uint32_t index, float value) {
-    m_history.resize(index + 1);
+  void setHistory(std::size_t index, float value) {
+    m_history.resize(std::max(index + 1, m_history.size()));
     m_history.at(index) = value;
   }
   /// @brief retrieve history info
@@ -262,15 +263,15 @@ inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
   }
 
   // --- Step 2: Check if either line fully spans inside vertically ---
-  const auto isIn = [this](float y) {
+  const auto checkVerticalOverlap = [this](float y) {
     return yBegin() < y && y < yBegin() + ySize();
   };
 
-  if (is_in(y1L) && is_in(y1R)) {
+  if (checkVerticalOverlap(y1L) && checkVerticalOverlap(y1R)) {
     return true;
   }
 
-  if (is_in(y2L) && is_in(y2R)) {
+  if (checkVerticalOverlap(y2L) && checkVerticalOverlap(y2R)) {
     return true;
   }
 
@@ -292,7 +293,7 @@ inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
   const float yCross2 = line2(xCross);
   const float yCross = 0.5f * (yCross1 + yCross2);  // intersection approx
 
-  return is_in(yCross);
+  return checkVerticalOverlap(yCross);
 }
 
 /// @brief structure that keeps HT space traversal options
