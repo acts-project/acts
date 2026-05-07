@@ -46,7 +46,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsArrow, m) {
         declareAlgorithm<ArrowParticleOutputConverter, ArrowOutputConverter>(
             m, "ArrowParticleOutputConverter");
     ACTS_PYTHON_STRUCT(c, inputParticles, outputTable, referencePoint, bField,
-                       writeHelixParameters, minHelixTransverseMomentum);
+                       writeHelixParameters, minHelixTransverseMomentum,
+                       maxHelixEta);
   }
 
   {

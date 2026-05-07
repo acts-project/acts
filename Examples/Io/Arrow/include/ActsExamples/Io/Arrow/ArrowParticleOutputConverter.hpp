@@ -45,7 +45,10 @@ class ACTS_ARROW_EXPORT ArrowParticleOutputConverter final
     /// parameters to a perigee surface at @c referencePoint. If false, those
     /// columns are filled with NaN.
     bool writeHelixParameters = true;
-    double minHelixTransverseMomentum = 0.0 * Acts::UnitConstants::MeV;
+    /// Minimum transverse momentum for helix propagation.
+    double minHelixTransverseMomentum = 200.0 * Acts::UnitConstants::MeV;
+    /// Maximum absolute eta for helix propagation.
+    double maxHelixEta = 5.0;
   };
 
   explicit ArrowParticleOutputConverter(
