@@ -102,6 +102,9 @@ class StraightLineStepper final {
     /// Particle hypothesis
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
+    /// Momentum hypothesis
+    std::optional<double> momentumHypothesis;
+
     /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
     /// Covariance matrix for track parameter uncertainties
@@ -182,6 +185,9 @@ class StraightLineStepper final {
   /// @param state [in] The stepping state (thread-local cache)
   /// @return Absolute momentum magnitude
   double absoluteMomentum(const State& state) const {
+    if (state.momentumHypothesis.has_value()) {
+      return *state.momentumHypothesis;
+    }
     return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
@@ -415,7 +421,7 @@ class StraightLineStepper final {
     const auto m = state.particleHypothesis.mass();
     const auto p = absoluteMomentum(state);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = fastHypot(1., m / p);
+    const auto dtds = fastHypot(1, m / p);
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state);
     state.pars.template segment<3>(eFreePos0) += h * dir;
