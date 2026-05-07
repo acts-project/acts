@@ -37,18 +37,23 @@ struct FitResult {
 std::optional<FitResult> iterativeGaussFit(TH1& hist, double sigmaRange,
                                            int iterations,
                                            const Acts::Logger& logger) {
-  TFitResultPtr result;
+  TFitResultPtr result = hist.Fit("gaus", "SQ0", nullptr);
+  if ((result.Get() == nullptr) || ((result->Status() % 1000) != 0)) {
+    ACTS_DEBUG("Failed to fit Gaussian: status "
+               << (result.Get() != nullptr ? result->Status() : -1));
+    return std::nullopt;
+  }
 
-  double mean = hist.GetMean();
-  double sigma = hist.GetRMS();
+  double mean = result->Parameter(1);
+  double sigma = result->Parameter(2);
 
-  for (int i = 0; i < iterations; ++i) {
+  for (int i = 0; i < iterations - 1; ++i) {
     const double xmin = mean - sigmaRange * sigma;
     const double xmax = mean + sigmaRange * sigma;
 
     result = hist.Fit("gaus", "SRQ0", nullptr, xmin, xmax);
     if ((result.Get() == nullptr) || ((result->Status() % 1000) != 0)) {
-      ACTS_DEBUG("Failed to fit Gaussian for bin "
+      ACTS_DEBUG("Failed to fit Gaussian iteration "
                  << i << ": status "
                  << (result.Get() != nullptr ? result->Status() : -1));
       return std::nullopt;
