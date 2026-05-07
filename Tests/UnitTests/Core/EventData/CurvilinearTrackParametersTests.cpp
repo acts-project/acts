@@ -37,7 +37,9 @@ const BoundMatrix cov = BoundMatrix::Identity();
 void checkParameters(const BoundTrackParameters& params, double phi,
                      double theta, double p, double q, const Vector4& pos4,
                      const Vector3& unitDir) {
-  const auto qOverP = q / p;
+  const auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(q));
+
+  const auto qOverP = particleHypothesis.qOverP(p, q);
   const auto pos = pos4.segment<3>(ePos0);
 
   const auto* referenceSurface =
@@ -55,15 +57,17 @@ void checkParameters(const BoundTrackParameters& params, double phi,
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessors
+  BOOST_CHECK_EQUAL(params.charge(), q);
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
   CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
-                       eps);
-  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
-  BOOST_CHECK_EQUAL(params.charge(), q);
+  if (q != 0) {
+    CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
+    CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
+                         eps);
+    CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
+  }
   // curvilinear reference surface
   CHECK_CLOSE_OR_SMALL(referenceSurface->center(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(referenceSurface->normal(geoCtx), unitDir, eps, eps);
