@@ -120,7 +120,8 @@ class ISurfaceMaterial {
   /// @deprecated Use materialSlab(const Vector2&, Direction, MaterialUpdateMode)
   ///             with a prior Surface::globalToLocal() call to convert gp.
   [[deprecated(
-      "This method will return a vacuum material!")]] virtual MaterialSlab
+      "Use materialSlab(const Vector2& lp) with a prior "
+      "Surface::globalToLocal() call instead")]] virtual MaterialSlab
   materialSlab(const Vector3& gp, Direction pDir,
                MaterialUpdateMode mode) const;
 

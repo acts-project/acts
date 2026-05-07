@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
   BOOST_CHECK(payload.axes.at(1u).bounds == detray::axis::bounds::e_circular);
 }
 
-/** 
+/**
 BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
   // Create a binned material in 4 bins in x direction
   std::vector<float> binEdges = {-20, 0, 25, 50, 100};
