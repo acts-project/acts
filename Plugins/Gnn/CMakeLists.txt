@@ -16,8 +16,6 @@ if(ACTS_GNN_ENABLE_CUDA)
         ActsPluginGnn
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
-    target_link_libraries(ActsPluginGnn PRIVATE CUDA::nvtx3)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_NVTX)
 endif()
 
 if(ACTS_GNN_ENABLE_MODULEMAP)
@@ -67,14 +65,16 @@ target_include_directories(
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
 
 if(ACTS_GNN_ENABLE_CUDA)
-    target_compile_features(ActsPluginGnn PRIVATE cuda_std_20)
+    # Interface library to propagate CUDA compile features to downstream cuda targets without exposing them to non-cuda targets
+    add_library(ActsGnnCudaInterface INTERFACE)
+    target_compile_features(ActsGnnCudaInterface PUBLIC cuda_std_20)
+
     set_target_properties(
-        ActsPluginGnn
+        ActsGnnCudaInterface
         PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION OFF
     )
     target_compile_options(
-        ActsPluginGnn
-        PRIVATE
+        PUBLIC
             $<$<COMPILE_LANGUAGE:CUDA>:
             --dopt=on
             --generate-line-info
@@ -82,10 +82,14 @@ if(ACTS_GNN_ENABLE_CUDA)
             --extended-lambda>
     )
     target_compile_definitions(
-        ActsPluginGnn
-        PRIVATE CUDA_API_PER_THREAD_DEFAULT_STREAM
+        ActsGnnCudaInterface
+        PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_link_libraries(ActsPluginGnn PRIVATE CUDA::cudart)
+    target_link_libraries(ActsGnnCudaInterface PUBLIC CUDA::cudart CUDA::nvtx3)
+    target_compile_definitions(ActsGnnCudaInterface PUBLIC ACTS_GNN_NVTX)
+
+    # Link private to avoid exposing CUDA dependencies to non-CUDA targets
+    target_link_libraries(ActsPluginGnn PRIVATE ActsGnnCudaInterface)
 else()
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_CPUONLY)
 endif()
