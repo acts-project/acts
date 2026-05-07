@@ -23,6 +23,32 @@
 
 using namespace Acts::Experimental;
 
+namespace {
+
+TFitResultPtr iterativeGaussFit(TH1& hist, double sigmaRange, int iterations) {
+  TFitResultPtr result;
+
+  double mean = hist.GetMean();
+  double sigma = hist.GetRMS();
+
+  for (int i = 0; i < iterations; ++i) {
+    const double xmin = mean - sigmaRange * sigma;
+    const double xmax = mean + sigmaRange * sigma;
+
+    result = hist.Fit("gaus", "RQ0", "", xmin, xmax);
+    if ((result.Get() == nullptr) || ((result->Status() % 1000) != 0)) {
+      break;
+    }
+
+    mean = result->Parameter(1);
+    sigma = result->Parameter(2);
+  }
+
+  return result;
+}
+
+}  // namespace
+
 std::unique_ptr<TH1F> ActsPlugins::toRoot(const Histogram1& boostHist) {
   const auto& bh = boostHist.histogram();
   const auto& axis = bh.axis(0);
@@ -299,12 +325,10 @@ std::unique_ptr<TEfficiency> ActsPlugins::toRoot(const Efficiency2& boostEff) {
 }
 
 std::tuple<std::unique_ptr<TH1F>, std::unique_ptr<TH1F>, double>
-ActsPlugins::extractMeanWidthProfiles(const TH2F& hist2d,
-                                      const std::string& meanName,
-                                      const std::string& widthName,
-                                      const int minEntriesForFit,
-                                      const std::string& fitOption,
-                                      const Acts::Logger& logger) {
+ActsPlugins::extractMeanWidthProfiles(
+    const TH2F& hist2d, const std::string& meanName,
+    const std::string& widthName, const int minEntriesForFit,
+    const double sigmaRange, const int iterations, const Acts::Logger& logger) {
   const int nBinsX = hist2d.GetNbinsX();
 
   // Create mean and width histograms with same X binning as the 2D histogram
@@ -331,7 +355,7 @@ ActsPlugins::extractMeanWidthProfiles(const TH2F& hist2d,
       continue;
     }
 
-    const TFitResultPtr r = proj->Fit("gaus", fitOption.c_str());
+    const TFitResultPtr r = iterativeGaussFit(*proj, sigmaRange, iterations);
     if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
       ++fitFailures;
       ACTS_DEBUG("Failed to fit Gaussian for bin "
@@ -361,12 +385,10 @@ ActsPlugins::extractMeanWidthProfiles(const TH2F& hist2d,
 }
 
 std::tuple<std::unique_ptr<TH2F>, std::unique_ptr<TH2F>, double>
-ActsPlugins::extractMeanWidthProfiles(const TH3F& hist3d,
-                                      const std::string& meanName,
-                                      const std::string& widthName,
-                                      const int minEntriesForFit,
-                                      const std::string& fitOption,
-                                      const Acts::Logger& logger) {
+ActsPlugins::extractMeanWidthProfiles(
+    const TH3F& hist3d, const std::string& meanName,
+    const std::string& widthName, const int minEntriesForFit,
+    const double sigmaRange, const int iterations, const Acts::Logger& logger) {
   const int nBinsX = hist3d.GetNbinsX();
   const int nBinsY = hist3d.GetNbinsY();
 
@@ -402,7 +424,7 @@ ActsPlugins::extractMeanWidthProfiles(const TH3F& hist3d,
         continue;
       }
 
-      const TFitResultPtr r = proj->Fit("gaus", fitOption.c_str());
+      const TFitResultPtr r = iterativeGaussFit(*proj, sigmaRange, iterations);
       if ((r.Get() == nullptr) || ((r->Status() % 1000) != 0)) {
         ++fitFailures;
         ACTS_DEBUG("Failed to fit Gaussian for bin "
