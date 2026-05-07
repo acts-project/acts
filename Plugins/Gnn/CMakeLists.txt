@@ -11,11 +11,7 @@ acts_add_library(
 acts_compile_headers(PluginGnn GLOB include/**/*.hpp)
 
 if(ACTS_GNN_ENABLE_CUDA)
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_WITH_CUDA)
-    target_sources(
-        ActsPluginGnn
-        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
-    )
+
 endif()
 
 if(ACTS_GNN_ENABLE_MODULEMAP)
@@ -65,17 +61,18 @@ target_include_directories(
 target_link_libraries(ActsPluginGnn PUBLIC Acts::Core Boost::boost)
 
 if(ACTS_GNN_ENABLE_CUDA)
-    # Interface library to propagate CUDA compile features to downstream cuda targets without exposing them to non-cuda targets
+    # Interface library to propagate CUDA compile features to 
+    # downstream cuda targets without exposing them to non-cuda targets
     add_library(ActsGnnCudaInterface INTERFACE)
-    target_compile_features(ActsGnnCudaInterface PUBLIC cuda_std_20)
+    target_compile_features(ActsGnnCudaInterface INTERFACE cuda_std_20)
 
     set_target_properties(
         ActsGnnCudaInterface
         PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION OFF
     )
     target_compile_options(
-        PUBLIC
-            $<$<COMPILE_LANGUAGE:CUDA>:
+        INTERFACE
+        $<$<COMPILE_LANGUAGE:CUDA>:
             --dopt=on
             --generate-line-info
             --expt-relaxed-constexpr
@@ -83,13 +80,18 @@ if(ACTS_GNN_ENABLE_CUDA)
     )
     target_compile_definitions(
         ActsGnnCudaInterface
-        PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
+        INTERFACE CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_link_libraries(ActsGnnCudaInterface PUBLIC CUDA::cudart CUDA::nvtx3)
-    target_compile_definitions(ActsGnnCudaInterface PUBLIC ACTS_GNN_NVTX)
+    target_link_libraries(ActsGnnCudaInterface INTERFACE CUDA::cudart CUDA::nvtx3)
+    target_compile_definitions(ActsGnnCudaInterface INTERFACE ACTS_GNN_NVTX ACTS_GNN_WITH_CUDA)
 
     # Link private to avoid exposing CUDA dependencies to non-CUDA targets
     target_link_libraries(ActsPluginGnn PRIVATE ActsGnnCudaInterface)
+
+    target_sources(
+        ActsPluginGnn
+        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
+    )
 else()
     target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_CPUONLY)
 endif()
