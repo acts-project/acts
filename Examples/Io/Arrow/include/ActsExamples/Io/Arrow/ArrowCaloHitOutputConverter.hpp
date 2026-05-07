@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/CaloHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Io/Parquet/ArrowOutputConverter.hpp"
@@ -59,11 +60,11 @@ class ACTS_ARROW_EXPORT ArrowCaloHitOutputConverter final
     /// Output whiteboard key for the resulting @c arrow::Table.
     std::string outputTable = "calohits";
 
-    /// Cell-level energy threshold, evaluated per cell using its
-    /// @c detector code. The default Python values are 5e-5 GeV (ECal) and
-    /// 2.5e-4 GeV (HCal).
-    double ecalEnergyThreshold = 5.0e-5;
-    double hcalEnergyThreshold = 2.5e-4;
+    /// Cell-level energy threshold in ACTS energy units, evaluated per cell
+    /// using its @c detector code. Defaults match the Python (50 keV ECal,
+    /// 250 keV HCal).
+    double ecalEnergyThreshold = 50.0 * Acts::UnitConstants::keV;
+    double hcalEnergyThreshold = 250.0 * Acts::UnitConstants::keV;
 
     /// Custom threshold callback. If unset (default), one is constructed
     /// from @c ecalEnergyThreshold and @c hcalEnergyThreshold via
