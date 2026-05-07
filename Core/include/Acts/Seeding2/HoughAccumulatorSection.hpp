@@ -193,7 +193,7 @@ class HoughAccumulatorSection {
   /// @brief retrieve history info
   /// @param index - item index
   /// @return value stored by @see setHistory
-  float history(std::uint32_t index) const { return m_history[index]; }
+  float history(std::uint32_t index) const { return m_history.at(index); }
 
  private:
   Decision m_decision = Decision::Drill;
@@ -262,7 +262,7 @@ inline bool HoughAccumulatorSection::isCrossingInside(F &&line1,
   }
 
   // --- Step 2: Check if either line fully spans inside vertically ---
-  auto is_in = [this](float y) {
+  const auto isIn = [this](float y) {
     return yBegin() < y && y < yBegin() + ySize();
   };
 
@@ -348,9 +348,9 @@ void exploreHoughParametersSpace(
     sectionsStack.pop_back();
 
     std::vector<HoughAccumulatorSection> newSections;
-    if (bool splitX = thisSection.xSize() > opt.xMinBinSize,
-        splitY = thisSection.ySize() > opt.yMinBinSize;
-        splitX && splitY) {
+    const bool splitX = thisSection.xSize() > opt.xMinBinSize;
+    const bool splitY = thisSection.ySize() > opt.yMinBinSize;
+    if (splitX && splitY) {
       // Split into 4 sections
       newSections.push_back(thisSection.bottomLeft());
       newSections.push_back(thisSection.topLeft());
@@ -373,9 +373,9 @@ void exploreHoughParametersSpace(
       }
     }
 
-    for (std::uint32_t idx : thisSection.indices()) {
+    for (const std::uint32_t idx : thisSection.indices()) {
       const auto &m = measurements[idx];
-      auto line = [&](float x) { return opt.lineFunctor(m, x); };
+      const auto line = [&](float x) { return opt.lineFunctor(m, x); };
 
       for (HoughAccumulatorSection &s : newSections) {
         if (s.isLineInside(line)) {
