@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -17,6 +16,7 @@
 #include <vector>
 
 namespace Acts {
+
 /// This class is a pure run-time placeholder for the axis definition
 ///
 /// The IAxis allows via the visitor pattern to access the actual axis type
@@ -31,7 +31,7 @@ class ProtoAxis {
   ///
   /// @param abType the axis boundary type
   /// @param edges the bin edges (variable binning)
-  ProtoAxis(Acts::AxisBoundaryType abType, const std::vector<double>& edges);
+  ProtoAxis(AxisBoundaryType abType, const std::vector<double>& edges);
 
   /// Convenience constructors - for equidistant binning
   ///
@@ -65,8 +65,6 @@ class ProtoAxis {
   /// @return Reference to this ProtoAxis for assignment chaining
   ProtoAxis& operator=(ProtoAxis&&) = default;
 
-  ~ProtoAxis() = default;
-
   /// @brief Return the IAxis representation
   ///
   /// @return @c AxisType of this axis
@@ -95,6 +93,46 @@ class ProtoAxis {
   /// Dump into a string
   /// @return the string representation
   std::string toString() const;
+
+  /// Get the minimum edge of the axis
+  /// @return the minimum edge of the axis
+  double min() const;
+
+  /// Get the maximum edge of the axis
+  /// @return the maximum edge of the axis
+  double max() const;
+
+  /// Get the number of bins
+  /// @return the number of bins
+  std::size_t nBins() const;
+
+  /// Compute the center of a given bin
+  /// @param bin the bin number for which to compute the center
+  /// @return the center of the given bin
+  double binCenter(std::size_t bin) const;
+
+  /// Compute the width of a given bin
+  /// @param bin the bin number for which to compute the width
+  /// @return the width of the given bin
+  double binWidth(std::size_t bin) const;
+
+  /// Compute the bin number for a given value
+  /// @param value the value for which to compute the bin number
+  /// @return the bin number for the given value
+  std::size_t bin(double value) const;
+
+  /// Get the bin edges
+  /// @return the bin edges
+  std::vector<double> binEdges() const;
+
+  /// Check if two axes are equal
+  /// @param lhs first axis
+  /// @param rhs second axis
+  /// @return true if the axes are equal
+  friend bool operator==(const ProtoAxis& lhs, const ProtoAxis& rhs) {
+    return lhs.getAxis() == rhs.getAxis() &&
+           lhs.isAutorange() == rhs.isAutorange();
+  }
 
  private:
   /// @brief Hidden friend ostream operator
@@ -167,7 +205,7 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
 }
 
 /// A Directed proto axis
-struct DirectedProtoAxis : public ProtoAxis {
+struct DirectedProtoAxis final : public ProtoAxis {
  public:
   /// Convenience constructors - for variable binning
   ///
@@ -197,8 +235,6 @@ struct DirectedProtoAxis : public ProtoAxis {
   DirectedProtoAxis(AxisDirection axisDir, AxisBoundaryType abType,
                     std::size_t nbins);
 
-  virtual ~DirectedProtoAxis() = default;
-
   /// Access to the AxisDirection
   /// @return the axis direction
   AxisDirection getAxisDirection() const;
@@ -206,6 +242,17 @@ struct DirectedProtoAxis : public ProtoAxis {
   /// Dump into a string
   /// @return the string representation
   std::string toString() const;
+
+  /// Check if two axes are equal
+  /// @param lhs first axis
+  /// @param rhs second axis
+  /// @return true if the axes are equal
+  friend bool operator==(const DirectedProtoAxis& lhs,
+                         const DirectedProtoAxis& rhs) {
+    return operator==(static_cast<const ProtoAxis&>(lhs),
+                      static_cast<const ProtoAxis&>(rhs)) &&
+           lhs.getAxisDirection() == rhs.getAxisDirection();
+  }
 
  private:
   /// @brief Hidden friend ostream operator

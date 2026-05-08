@@ -10,13 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 #include "ActsFatras/Digitization/SurfaceDrift.hpp"
 #include "ActsFatras/Digitization/SurfaceMask.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
-
-#include <numeric>
 
 namespace Acts {
 class Surface;
@@ -51,8 +49,8 @@ class Channelizer {
   Acts::Result<std::vector<Segmentizer::ChannelSegment>> channelize(
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
-      const Acts::BinUtility& segmentation, double thickness,
-      double minRelPerpDrift = 0.001) const;
+      const std::vector<Acts::DirectedProtoAxis>& segmentation,
+      double thickness, double minRelPerpDrift = 0.001) const;
 };
 
 }  // namespace ActsFatras

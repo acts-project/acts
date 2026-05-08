@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -356,8 +355,6 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
     RandomEngine& rng) const {
   DigitizedParameters dParameters;
 
-  const auto& binningData = geoCfg.segmentation.binningData();
-
   // For digital readout, the weight needs to be split in x and y
   std::array<double, 2u> pos = {0., 0.};
   std::array<double, 2u> totalWeight = {0., 0.};
@@ -380,12 +377,12 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
           // only fill component of this row/column if not yet filled
           if (!componentChannels[ib].contains(bin[ib])) {
             totalWeight[ib] += weight;
-            pos[ib] += weight * binningData[ib].center(bin[ib]);
+            pos[ib] += weight * geoCfg.segmentation.at(ib).binCenter(bin[ib]);
             componentChannels[ib].insert(bin[ib]);
           }
         } else {
           totalWeight[ib] += weight;
-          pos[ib] += weight * binningData[ib].center(bin[ib]);
+          pos[ib] += weight * geoCfg.segmentation.at(ib).binCenter(bin[ib]);
         }
         // min max channels
         bmin[ib] = std::min(bmin[ib], static_cast<std::size_t>(bin[ib]));

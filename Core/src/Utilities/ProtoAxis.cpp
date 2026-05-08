@@ -96,6 +96,35 @@ void ProtoAxis::toStream(std::ostream& os) const {
   os << toString();
 }
 
+double ProtoAxis::min() const {
+  return getAxis().getMin();
+}
+
+double ProtoAxis::max() const {
+  return getAxis().getMax();
+}
+
+std::size_t ProtoAxis::nBins() const {
+  return getAxis().getNBins();
+}
+
+double ProtoAxis::binCenter(const std::size_t bin) const {
+  return 0.5 * (getAxis().getBinEdges().at(bin) +
+                getAxis().getBinEdges().at(bin + 1));
+}
+
+double ProtoAxis::binWidth(const std::size_t bin) const {
+  return getAxis().getBinEdges().at(bin + 1) - getAxis().getBinEdges().at(bin);
+}
+
+std::size_t ProtoAxis::bin(const double value) const {
+  return getAxis().getBin(value);
+}
+
+std::vector<double> ProtoAxis::binEdges() const {
+  return getAxis().getBinEdges();
+}
+
 std::string ProtoAxis::toString() const {
   std::stringstream ss;
   const auto& axis = getAxis();

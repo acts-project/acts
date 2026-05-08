@@ -9,7 +9,10 @@
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
@@ -131,7 +134,11 @@ void ActsExamples::to_json(nlohmann::json& j, const GeometricConfig& gdc) {
     indices.push_back(static_cast<std::size_t>(idx));
   }
   j["indices"] = indices;
-  j["segmentation"] = nlohmann::json(gdc.segmentation);
+  Acts::BinUtility segmentation;
+  for (const Acts::DirectedProtoAxis& axis : gdc.segmentation) {
+    segmentation += Acts::BinUtility(axis);
+  }
+  j["segmentation"] = segmentation;
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
@@ -144,7 +151,25 @@ void ActsExamples::from_json(const nlohmann::json& j, GeometricConfig& gdc) {
   for (const auto& jidx : j["indices"]) {
     gdc.indices.push_back(static_cast<Acts::BoundIndices>(jidx));
   }
-  from_json(j["segmentation"], gdc.segmentation);
+  Acts::BinUtility segmentation;
+  from_json(j["segmentation"], segmentation);
+  for (const Acts::BinningData& binData : segmentation.binningData()) {
+    const Acts::AxisDirection axisDir = binData.binvalue;
+    const Acts::AxisType axisType = binData.type == Acts::equidistant
+                                        ? Acts::AxisType::Equidistant
+                                        : Acts::AxisType::Variable;
+    const Acts::AxisBoundaryType abType = binData.option == Acts::open
+                                              ? Acts::AxisBoundaryType::Open
+                                              : Acts::AxisBoundaryType::Closed;
+    if (axisType == Acts::AxisType::Equidistant) {
+      gdc.segmentation.emplace_back(axisDir, abType, binData.min, binData.max,
+                                    binData.bins());
+    } else {
+      const std::vector<double> edges(binData.boundaries().begin(),
+                                      binData.boundaries().end());
+      gdc.segmentation.emplace_back(axisDir, abType, edges);
+    }
+  }
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
   gdc.digital = j["digital"];
