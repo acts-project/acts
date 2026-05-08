@@ -38,7 +38,21 @@ endif()
 
 if(NOT "${dd4hep_core_library}" STREQUAL "dd4hep_core_library-NOTFOUND")
     cmake_path(GET dd4hep_core_library PARENT_PATH DD4HEP_LIBRARY_PATH)
-    cmake_path(GET DD4HEP_LIBRARY_PATH PARENT_PATH DD4HEP_INSTALL)
+
+    set(DD4HEP_INSTALL "$ENV{DD4hepINSTALL}")
+    if(NOT EXISTS
+       "${DD4HEP_INSTALL}/DDDetectors/compact/detector_types.xml"
+    )
+        message(
+            FATAL_ERROR
+            "DD4hep XML unit tests require detector_types.xml at "
+            "\${DD4hepINSTALL}/DDDetectors/compact/detector_types.xml, but the "
+            "file is not present at the configure-time DD4hepINSTALL="
+            "'${DD4HEP_INSTALL}'. Make sure the dd4hep environment is sourced "
+            "before invoking cmake."
+        )
+    endif()
+
     # set test library dependencies
     set(unittest_extra_libraries Acts::TestsDD4hepFactories Acts::PluginDD4hep)
     set(dd4hep_tests
