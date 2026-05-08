@@ -4,6 +4,7 @@ import functools
 from acts.examples import GenericDetector
 from acts.examples.odd import getOpenDataDetector
 import json
+import numpy as np
 
 from helpers import dd4hepEnabled
 
@@ -178,3 +179,92 @@ def test_odd_gen3(constructionMethod):
         assert visitor.num_surfaces == 19261
         assert visitor.num_volumes == 109
         assert visitor.num_portals == 437
+
+
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.odd
+@pytest.mark.slow
+def test_odd_gen3_json_roundtrip(tmp_path):
+    from geometry import runGeometry
+    from acts.json import TrackingGeometryJsonConverter
+
+    json_dir = tmp_path / "json"
+    json_dir.mkdir()
+
+    gctx = acts.GeometryContext.dangerouslyDefaultConstruct()
+
+    with getOpenDataDetector(gen3=True) as detector:
+        trackingGeometry = detector.trackingGeometry()
+
+        original = CountingVisitor()
+        trackingGeometry.apply(original)
+
+        runGeometry(
+            trackingGeometry=trackingGeometry,
+            decorators=detector.contextDecorators(),
+            outputDir=tmp_path,
+            events=1,
+            outputObj=False,
+            outputCsv=False,
+            outputJson=False,
+            outputTrackingGeometryJson=True,
+        )
+
+    json_path = json_dir / "event000000000-tracking-geometry.json"
+    assert json_path.exists()
+    assert json_path.stat().st_size > 0
+
+    converter = TrackingGeometryJsonConverter()
+    rebuilt_geometry = converter.fromJson(gctx, json_path.read_text())
+
+    rebuilt = CountingVisitor()
+    rebuilt_geometry.apply(rebuilt)
+
+    assert rebuilt.num_surfaces == original.num_surfaces
+    assert rebuilt.num_volumes == original.num_volumes
+    assert rebuilt.num_portals == original.num_portals
+    assert rebuilt.num_layers == 0
+    assert rebuilt.num_boundary_surfaces == 0
+
+    # Propagation comparison: identical seed → identical navigation results
+    _propagation_roundtrip_check(gctx, trackingGeometry, rebuilt_geometry, tmp_path)
+
+
+def _propagation_roundtrip_check(gctx, original_geo, rebuilt_geo, tmp_path):
+    """Propagate tracks through both geometries and compare navigation counts."""
+    import uproot
+    from propagation import runPropagation
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    def run_prop(geo, out_dir):
+        out_dir.mkdir(exist_ok=True)
+        s = acts.examples.Sequencer(
+            events=5, numThreads=1, logLevel=acts.logging.WARNING
+        )
+        # sterileLogger=False so that surface/portal hit counts are collected
+        runPropagation(geo, field, str(out_dir), s=s, sterileLogger=False).run()
+
+    orig_dir = tmp_path / "prop_original"
+    rebuilt_dir = tmp_path / "prop_rebuilt"
+    run_prop(original_geo, orig_dir)
+    run_prop(rebuilt_geo, rebuilt_dir)
+
+    branches = ["nSensitives", "nPortals", "nSuccessfulSteps", "pathLength"]
+    with uproot.open(orig_dir / "propagation_summary.root") as f:
+        orig = f["propagation_summary"].arrays(branches, library="np")
+    with uproot.open(rebuilt_dir / "propagation_summary.root") as f:
+        rebuilt_data = f["propagation_summary"].arrays(branches, library="np")
+
+    assert orig["nSensitives"].mean() > 0.0
+    assert orig["nPortals"].mean() > 0.0
+    assert orig["pathLength"].mean() > 0.0
+
+    np.testing.assert_array_equal(orig["nSensitives"], rebuilt_data["nSensitives"])
+    np.testing.assert_array_equal(orig["nPortals"], rebuilt_data["nPortals"])
+    np.testing.assert_array_equal(
+        orig["nSuccessfulSteps"], rebuilt_data["nSuccessfulSteps"]
+    )
+    np.testing.assert_allclose(
+        orig["pathLength"], rebuilt_data["pathLength"], rtol=1e-5
+    )

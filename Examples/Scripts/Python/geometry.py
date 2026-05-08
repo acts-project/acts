@@ -6,7 +6,7 @@ from pathlib import Path
 
 import acts
 import acts.examples
-from acts.json import MaterialMapJsonConverter
+from acts.json import MaterialMapJsonConverter, TrackingGeometryJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
     WhiteBoard,
@@ -31,6 +31,7 @@ def runGeometry(
     outputObj=True,
     outputCsv=True,
     outputJson=True,
+    outputTrackingGeometryJson=False,
 ):
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
@@ -96,6 +97,12 @@ def runGeometry(
             )
 
             jmw.write(trackingGeometry)
+
+        if outputTrackingGeometryJson:
+            converter = TrackingGeometryJsonConverter(level=acts.logging.INFO)
+            jsonStr = converter.toJson(context.geoContext, trackingGeometry)
+            outPath = outputDir / "json" / f"event{ievt:>09}-tracking-geometry.json"
+            outPath.write_text(jsonStr)
 
 
 if "__main__" == __name__:
