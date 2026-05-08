@@ -38,9 +38,12 @@ std::optional<FitResult> iterativeGaussFit(TH1& hist, double sigmaRange,
                                            int iterations,
                                            const Acts::Logger& logger) {
   TFitResultPtr result = hist.Fit("gaus", "SQ0", nullptr);
-  if ((result.Get() == nullptr) || ((result->Status() % 1000) != 0)) {
-    ACTS_DEBUG("Failed to fit Gaussian: status "
-               << (result.Get() != nullptr ? result->Status() : -1));
+  if (result.Get() == nullptr) {
+    ACTS_DEBUG("Failed to fit initial Gaussian: fit returned null pointer");
+    return std::nullopt;
+  }
+  if (result->Status() % 1000 != 0) {
+    ACTS_DEBUG("Failed to fit initial Gaussian: status " << result->Status());
     return std::nullopt;
   }
 
@@ -52,10 +55,14 @@ std::optional<FitResult> iterativeGaussFit(TH1& hist, double sigmaRange,
     const double xmax = mean + sigmaRange * sigma;
 
     result = hist.Fit("gaus", "SRQ0", nullptr, xmin, xmax);
-    if ((result.Get() == nullptr) || ((result->Status() % 1000) != 0)) {
-      ACTS_DEBUG("Failed to fit Gaussian iteration "
-                 << i << ": status "
-                 << (result.Get() != nullptr ? result->Status() : -1));
+    if (result.Get() == nullptr) {
+      ACTS_DEBUG("Failed to fit iteration "
+                 << i << " Gaussian: fit returned null pointer");
+      return std::nullopt;
+    }
+    if (result->Status() % 1000 != 0) {
+      ACTS_DEBUG("Failed to fit iteration " << i << " Gaussian: status "
+                                            << result->Status());
       return std::nullopt;
     }
 
