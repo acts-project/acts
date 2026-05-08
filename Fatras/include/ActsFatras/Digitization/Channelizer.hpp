@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
@@ -37,7 +38,8 @@ class Channelizer {
   Acts::Result<std::vector<Segmentizer::ChannelSegment>> channelize(
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
-      const Acts::BinUtility& segmentation, double thickness) const {
+      const std::vector<Acts::DirectedProtoAxis>& segmentation,
+      double thickness) const {
     auto driftedSegment = m_surfaceDrift.toReadout(
         gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
 

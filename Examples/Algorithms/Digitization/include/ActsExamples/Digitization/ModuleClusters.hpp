@@ -10,7 +10,6 @@
 
 #include "Acts/Clusterization/Clusterization.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -35,7 +34,7 @@ struct ModuleValue {
 
 class ModuleClusters {
  public:
-  ModuleClusters(Acts::BinUtility segmentation,
+  ModuleClusters(std::vector<Acts::DirectedProtoAxis> segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
                  double nsigma, bool commonCorner)
       : m_segmentation(std::move(segmentation)),
@@ -49,7 +48,7 @@ class ModuleClusters {
   digitizedParameters();
 
  private:
-  Acts::BinUtility m_segmentation;
+  std::vector<Acts::DirectedProtoAxis> m_segmentation;
   std::vector<Acts::BoundIndices> m_geoIndices;
   std::vector<ModuleValue> m_moduleValues;
   bool m_merge;
