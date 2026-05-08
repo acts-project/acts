@@ -33,75 +33,117 @@ namespace Acts {
 class ParticleHypothesis final {
  public:
   /// Create a muon particle hypothesis
+  /// @param momentum The optional particle momentum
   /// @return Muon particle hypothesis with any charge type
-  static ParticleHypothesis muon() {
+  static ParticleHypothesis muon(
+      std::optional<double> momentum = std::nullopt) {
     static const ParticleHypothesis cache(PdgParticle::eMuon);
-    return cache;
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
   /// Create a charged pion particle hypothesis
+  /// @param momentum The optional particle momentum
   /// @return Charged pion particle hypothesis with any charge type
-  static ParticleHypothesis pion() {
+  static ParticleHypothesis pion(
+      std::optional<double> momentum = std::nullopt) {
     static const ParticleHypothesis cache(PdgParticle::ePionPlus);
-    return cache;
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
   /// Create an electron particle hypothesis
+  /// @param momentum The optional particle momentum
   /// @return Electron particle hypothesis with any charge type
-  static ParticleHypothesis electron() {
+  static ParticleHypothesis electron(
+      std::optional<double> momentum = std::nullopt) {
     static const ParticleHypothesis cache(PdgParticle::eElectron);
-    return cache;
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
   /// Create a charged kaon particle hypothesis
+  /// @param momentum The optional particle momentum
   /// @return Charged kaon particle hypothesis with any charge type
-  static ParticleHypothesis kaon() {
+  static ParticleHypothesis kaon(
+      std::optional<double> momentum = std::nullopt) {
     static const ParticleHypothesis cache(PdgParticle::eKaonPlus);
-    return cache;
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
   /// Create a proton particle hypothesis
+  /// @param momentum The optional particle momentum
   /// @return Proton particle hypothesis with any charge type
-  static ParticleHypothesis proton() {
+  static ParticleHypothesis proton(
+      std::optional<double> momentum = std::nullopt) {
     static const ParticleHypothesis cache(PdgParticle::eProton);
-    return cache;
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
 
   /// Create a photon particle hypothesis
+  /// @param momentum The optional particle momentum
   /// @return Photon particle hypothesis with any charge type
-  static ParticleHypothesis photon() {
+  static ParticleHypothesis photon(
+      std::optional<double> momentum = std::nullopt) {
     static const ParticleHypothesis cache(PdgParticle::eGamma);
-    return cache;
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
   /// Create a neutral pion particle hypothesis
+  /// @param momentum The optional particle momentum
   /// @return Neutral pion particle hypothesis with any charge type
-  static ParticleHypothesis pion0() {
+  static ParticleHypothesis pion0(
+      std::optional<double> momentum = std::nullopt) {
     static const ParticleHypothesis cache(PdgParticle::ePionZero);
-    return cache;
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
 
   /// Create a pion-like particle hypothesis with custom charge
   /// @param absoluteCharge The absolute charge value
+  /// @param momentum The optional particle momentum
   /// @return Pion-like particle hypothesis with any charge type
-  static ParticleHypothesis pionLike(float absoluteCharge) {
+  static ParticleHypothesis pionLike(
+      float absoluteCharge, std::optional<double> momentum = std::nullopt) {
     return ParticleHypothesis(pion().absolutePdg(), pion().mass(),
-                              ChargeHypothesis{absoluteCharge});
+                              ChargeHypothesis{absoluteCharge}, momentum);
   }
 
   /// Create a neutral geantino particle hypothesis (massless neutral particle)
+  /// @param momentum The optional particle momentum
   /// @return Neutral geantino particle hypothesis with any charge type
-  static ParticleHypothesis geantino() {
-    ParticleHypothesis cache(PdgParticle::eInvalid, 0, ChargeHypothesis{0});
-    return cache;
+  static ParticleHypothesis geantino(
+      std::optional<double> momentum = std::nullopt) {
+    static const ParticleHypothesis cache(PdgParticle::eInvalid, 0,
+                                          ChargeHypothesis{0});
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
   /// Create a charged geantino particle hypothesis with unit charge
+  /// @param momentum The optional particle momentum
   /// @return Charged geantino particle hypothesis with any charge type
-  static ParticleHypothesis chargedGeantino() {
+  static ParticleHypothesis chargedGeantino(
+      std::optional<double> momentum = std::nullopt) {
     static const auto cache = chargedGeantino(Acts::UnitConstants::e);
-    return cache;
+    ParticleHypothesis result = cache;
+    result.m_momentum = momentum;
+    return result;
   }
   /// Create a charged geantino particle hypothesis with custom charge
   /// @param absoluteCharge The absolute charge value
   /// @return Charged geantino particle hypothesis with any charge type
-  static ParticleHypothesis chargedGeantino(float absoluteCharge) {
-    return ParticleHypothesis(PdgParticle::eInvalid, 0,
-                              ChargeHypothesis{absoluteCharge});
+  static ParticleHypothesis chargedGeantino(
+      float absoluteCharge, std::optional<double> momentum = std::nullopt) {
+    ParticleHypothesis result = ParticleHypothesis(
+        PdgParticle::eInvalid, 0, ChargeHypothesis{absoluteCharge});
+    result.m_momentum = momentum;
+    return result;
   }
 
   /// Creates a particle hypothesis using absolute PDG, mass and the charge
@@ -110,8 +152,13 @@ class ParticleHypothesis final {
   /// @param absPdg the absolute PDG
   /// @param mass the particle mass
   /// @param absCharge the absolute charge
-  constexpr ParticleHypothesis(PdgParticle absPdg, float mass, float absCharge)
-      : m_absPdg{absPdg}, m_mass{mass}, m_charge{absCharge} {
+  /// @param momentum the optional particle momentum
+  constexpr ParticleHypothesis(PdgParticle absPdg, float mass, float absCharge,
+                               std::optional<double> momentum = std::nullopt)
+      : m_absPdg{absPdg},
+        m_mass{mass},
+        m_charge{absCharge},
+        m_momentum{momentum} {
     assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
            "pdg is expected to be absolute");
   }
@@ -122,9 +169,11 @@ class ParticleHypothesis final {
   /// @param absPdg the absolute PDG
   /// @param mass the particle mass
   /// @param charge the charge type
+  /// @param momentum the optional particle momentum
   constexpr ParticleHypothesis(PdgParticle absPdg, float mass,
-                               ChargeHypothesis charge)
-      : m_absPdg{absPdg}, m_mass{mass}, m_charge{charge} {
+                               ChargeHypothesis charge,
+                               std::optional<double> momentum = std::nullopt)
+      : m_absPdg{absPdg}, m_mass{mass}, m_charge{charge}, m_momentum{momentum} {
     assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
            "pdg is expected to be absolute");
   }
@@ -134,10 +183,13 @@ class ParticleHypothesis final {
   /// If the lookup fails an exception is thrown.
   ///
   /// @param absPdg the absolute PDG
-  explicit ParticleHypothesis(PdgParticle absPdg)
+  /// @param momentum the optional particle momentum
+  explicit ParticleHypothesis(PdgParticle absPdg,
+                              std::optional<double> momentum = std::nullopt)
       : m_absPdg{absPdg},
         m_mass{findMass(absPdg).value()},
-        m_charge{std::abs(findCharge(absPdg).value())} {
+        m_charge{std::abs(findCharge(absPdg).value())},
+        m_momentum{momentum} {
     assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
            "pdg is expected to be absolute");
   }
@@ -147,12 +199,16 @@ class ParticleHypothesis final {
   constexpr PdgParticle absolutePdg() const noexcept { return m_absPdg; }
 
   /// Get the hypothesized mass.
-  /// @return The particle mass in natural units
+  /// @return The particle mass
   constexpr float mass() const noexcept { return m_mass; }
 
   /// Get the hypothesized absolute charge.
   /// @return The absolute charge magnitude
   float absoluteCharge() const noexcept { return m_charge.absoluteCharge(); }
+
+  /// Get the optional hypothesized momentum.
+  /// @return The optional particle momentum
+  std::optional<double> momentum() const noexcept { return m_momentum; }
 
   /// Extracts the signed charge from the `q over p` track parameter using the
   /// charge hypothesis.
@@ -169,6 +225,9 @@ class ParticleHypothesis final {
   /// @param qOverP the `q over p` track parameter.
   /// @return The extracted absolute momentum
   constexpr double extractMomentum(double qOverP) const noexcept {
+    if (m_momentum.has_value()) {
+      return *m_momentum;
+    }
     return m_charge.extractMomentum(qOverP);
   }
 
@@ -196,7 +255,11 @@ class ParticleHypothesis final {
     } else {
       os << absolutePdg();
     }
-    os << ", mass=" << mass() << ", absCharge=" << absoluteCharge() << "}";
+    os << ", mass=" << mass() << ", absCharge=" << absoluteCharge();
+    if (momentum().has_value()) {
+      os << ", momentum=" << *momentum();
+    }
+    os << "}";
     return os;
   }
 
@@ -213,6 +276,7 @@ class ParticleHypothesis final {
   PdgParticle m_absPdg{PdgParticle::eInvalid};
   float m_mass{0};
   ChargeHypothesis m_charge;
+  std::optional<double> m_momentum;
 
   friend bool operator==(const ParticleHypothesis& lhs,
                          const ParticleHypothesis& rhs) = default;
