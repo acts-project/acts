@@ -158,7 +158,7 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
     if (m_cfg.beamSpotConstraint.has_value()) {
       beamSpotSL =
           RefittingCalibrator::RefittingSourceLink{beamSpotConstTrackState};
-      trackSourceLinks.push_back(Acts::SourceLink{beamSpotSL});
+      trackSourceLinks.emplace_back(Acts::SourceLink{beamSpotSL});
       surfSequence.push_back(perigeeSurface.get());
     }
 
