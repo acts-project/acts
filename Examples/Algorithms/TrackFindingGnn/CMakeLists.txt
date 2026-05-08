@@ -17,8 +17,5 @@ target_link_libraries(
 )
 
 if(ACTS_GNN_ENABLE_CUDA)
-    target_link_libraries(
-        ActsExamplesTrackFindingGnn
-        PRIVATE ActsGnnCudaInterface
-    )
+    target_link_libraries(ActsExamplesTrackFindingGnn PRIVATE CUDA::cudart)
 endif()
