@@ -80,13 +80,14 @@ TEST(navigator_cuda, navigator) {
     bool do_reset{true};
 
     while (heartbeat) {
-      heartbeat &= stepper.step(navigation(), stepping, step_cfg, do_reset);
+      heartbeat =
+          heartbeat && stepper.step(navigation(), stepping, step_cfg, do_reset);
 
       navigation.set_high_trust();
 
       do_reset = nav.update(stepping(), navigation, nav_cfg, prop_cfg.context);
-      do_reset |= navigation.is_on_surface();
-      heartbeat &= navigation.is_alive();
+      do_reset = do_reset || navigation.is_on_surface();
+      heartbeat = heartbeat && navigation.is_alive();
 
       // Record volume
       volume_records_host[i].push_back(navigation.volume());

@@ -227,12 +227,15 @@ GTEST_TEST(detray_detectors, telescope_detector) {
     EXPECT_TRUE(heartbeat_z2);
     EXPECT_TRUE(heartbeat_x);
 
-    heartbeat_z1 &= rk_stepper_z.step(navigation_z1(), stepping_z1,
-                                      prop_cfg.stepping, do_reset_z1);
-    heartbeat_z2 &= rk_stepper_z.step(navigation_z2(), stepping_z2,
-                                      prop_cfg.stepping, do_reset_z2);
-    heartbeat_x &= rk_stepper_x.step(navigation_x(), stepping_x,
-                                     prop_cfg.stepping, do_reset_x);
+    heartbeat_z1 =
+        heartbeat_z1 && rk_stepper_z.step(navigation_z1(), stepping_z1,
+                                          prop_cfg.stepping, do_reset_z1);
+    heartbeat_z2 =
+        heartbeat_z2 && rk_stepper_z.step(navigation_z2(), stepping_z2,
+                                          prop_cfg.stepping, do_reset_z2);
+    heartbeat_x =
+        heartbeat_x && rk_stepper_x.step(navigation_x(), stepping_x,
+                                         prop_cfg.stepping, do_reset_x);
 
     navigation_z1.set_high_trust();
     navigation_z2.set_high_trust();
@@ -246,13 +249,13 @@ GTEST_TEST(detray_detectors, telescope_detector) {
                                     prop_cfg.navigation, prop_cfg.context);
 
     // Also reset when reached a surface
-    do_reset_z1 |= navigation_z1.is_on_surface();
-    do_reset_z2 |= navigation_z2.is_on_surface();
-    do_reset_x |= navigation_x.is_on_surface();
+    do_reset_z1 = do_reset_z1 || navigation_z1.is_on_surface();
+    do_reset_z2 = do_reset_z2 || navigation_z2.is_on_surface();
+    do_reset_x = do_reset_x || navigation_x.is_on_surface();
 
-    heartbeat_z1 &= navigation_z1.is_alive();
-    heartbeat_z2 &= navigation_z2.is_alive();
-    heartbeat_x &= navigation_x.is_alive();
+    heartbeat_z1 = heartbeat_z1 && navigation_z1.is_alive();
+    heartbeat_z2 = heartbeat_z2 && navigation_z2.is_alive();
+    heartbeat_x = heartbeat_x && navigation_x.is_alive();
 
     // The track path lengths should match between all propagations
     EXPECT_NEAR(
@@ -313,16 +316,17 @@ GTEST_TEST(detray_detectors, telescope_detector) {
   bool do_reset_tel{true};
 
   while (heartbeat_tel) {
-    heartbeat_tel &= rk_stepper_z.step(tel_navigation(), tel_stepping,
-                                       prop_cfg.stepping, do_reset_tel);
+    heartbeat_tel =
+        heartbeat_tel && rk_stepper_z.step(tel_navigation(), tel_stepping,
+                                           prop_cfg.stepping, do_reset_tel);
 
     tel_navigation.set_high_trust();
 
     do_reset_tel = tel_navigator.update(tel_stepping(), tel_navigation,
                                         prop_cfg.navigation, prop_cfg.context);
 
-    do_reset_tel |= navigation_z1.is_on_surface();
-    heartbeat_tel &= tel_navigation.is_alive();
+    do_reset_tel = do_reset_tel || navigation_z1.is_on_surface();
+    heartbeat_tel = heartbeat_tel && tel_navigation.is_alive();
   }
   // check that propagation was successful
   ASSERT_TRUE(tel_navigation.finished())

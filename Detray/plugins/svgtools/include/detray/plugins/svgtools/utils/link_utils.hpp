@@ -28,7 +28,7 @@ inline auto is_not_world_portal(
   const auto d_link_idx = d_portal.volume_links();
   bool is_world_pt{false};
   for (const auto vol_link : d_link_idx) {
-    is_world_pt |= detray::detail::is_invalid_value(vol_link);
+    is_world_pt = is_world_pt || detray::detail::is_invalid_value(vol_link);
   }
   return !is_world_pt;
 }

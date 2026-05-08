@@ -335,7 +335,7 @@ inline auto compare_traces(
     for (std::size_t j = 0u; j < math::min(reference.size(), mat_trace.size());
          ++j) {
       if (reference[j].geo_id != mat_trace[j].geo_id) {
-        is_bad_comp |= true;
+        is_bad_comp = true;
         debug_msg << "-> Surfaces don't match: " << mat_trace[j].geo_id
                   << " (ref.: " << reference[j].geo_id << ")" << std::endl;
         continue;
@@ -346,7 +346,7 @@ inline auto compare_traces(
       if ((reference[j].thickness - mat_trace[j].thickness) /
               reference[j].thickness >
           rel_tol) {
-        is_bad_comp |= true;
+        is_bad_comp = true;
         debug_msg << "-> On surface: " << reference[j].geo_id << ":"
                   << std::endl;
         debug_msg << "-> thickness: " << mat_trace[j].thickness
@@ -357,7 +357,7 @@ inline auto compare_traces(
       // Compare radiation length of the surface material
       if ((reference[j].mat_X0 - mat_trace[j].mat_X0) / reference[j].mat_X0 >
           rel_tol) {
-        is_bad_comp |= true;
+        is_bad_comp = true;
         debug_msg << "-> On surface: " << reference[j].geo_id << ":"
                   << std::endl;
         debug_msg << "-> X0: " << mat_trace[j].mat_X0
@@ -367,7 +367,7 @@ inline auto compare_traces(
       // Compare interaction length of the surface material
       if ((reference[j].mat_L0 - mat_trace[j].mat_L0) / reference[j].mat_L0 >
           rel_tol) {
-        is_bad_comp |= true;
+        is_bad_comp = true;
         debug_msg << "-> On surface: " << reference[j].geo_id << ":"
                   << std::endl;
         debug_msg << "-> L0: " << mat_trace[j].mat_L0
@@ -377,7 +377,7 @@ inline auto compare_traces(
       // Compare path of the track through the surface material
       if ((reference[j].path - mat_trace[j].path) / reference[j].path >
           rel_tol) {
-        is_bad_comp |= true;
+        is_bad_comp = true;
         debug_msg << "-> On surface: " << reference[j].geo_id << ":"
                   << std::endl;
         debug_msg << "-> Mat. path: " << mat_trace[j].path / unit<scalar_t>::mm

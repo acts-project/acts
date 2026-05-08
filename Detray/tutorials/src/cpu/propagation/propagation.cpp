@@ -109,7 +109,7 @@ int main() {
 
     // Run the actual propagation
     prop.propagate(propagation, actor_states);
-    success &= prop.finished(propagation);
+    success = success && prop.finished(propagation);
   }
 
   if (success) {

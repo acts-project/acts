@@ -84,7 +84,8 @@ DETRAY_HOST_DEVICE constexpr auto approx_equal(
 
   bool ret{true};
   for (index_t i = 0; i < size; ++i) {
-    ret &= ::detray::algebra::approx_equal(v1[i], v2[i], rel_error, max_error);
+    ret = ret &&
+          ::detray::algebra::approx_equal(v1[i], v2[i], rel_error, max_error);
   }
 
   return ret;
@@ -118,9 +119,9 @@ DETRAY_HOST_DEVICE constexpr auto approx_equal(
 
   bool ret{true};
   for (index_t i = 0; i < rows; ++i) {
-    ret &= ::detray::algebra::approx_equal(element_getter_t{}(v1, i, 0),
-                                           element_getter_t{}(v2, i, 0),
-                                           rel_error, max_error);
+    ret = ret && ::detray::algebra::approx_equal(element_getter_t{}(v1, i, 0),
+                                                 element_getter_t{}(v2, i, 0),
+                                                 rel_error, max_error);
   }
 
   return ret;
@@ -155,9 +156,9 @@ DETRAY_HOST_DEVICE constexpr auto approx_equal(
   bool ret{true};
   for (index_t j = 0; j < columns; ++j) {
     for (index_t i = 0; i < rows; ++i) {
-      ret &= ::detray::algebra::approx_equal(element_getter_t{}(m1, i, j),
-                                             element_getter_t{}(m2, i, j),
-                                             rel_error, max_error);
+      ret = ret && ::detray::algebra::approx_equal(element_getter_t{}(m1, i, j),
+                                                   element_getter_t{}(m2, i, j),
+                                                   rel_error, max_error);
     }
   }
 

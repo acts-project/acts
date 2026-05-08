@@ -76,7 +76,8 @@ struct perigee_stopper : public base_actor {
 
     // At least the exit portal should be reachable
     if (navigation.cache_exhausted()) {
-      prop_state._heartbeat &=
+      prop_state._heartbeat =
+          prop_state._heartbeat &&
           navigation.abort("Pergigee stopper has no next candidate");
       return;
     }
@@ -111,7 +112,7 @@ struct perigee_stopper : public base_actor {
 
       // The track has reached the perigee: "exit success"
       if (math::fabs(perigee_intr.path()) <= actor_state.m_on_perigee_tol) {
-        prop_state._heartbeat &= navigation.exit();
+        prop_state._heartbeat = prop_state._heartbeat && navigation.exit();
       } else {
         // @TODO: Use a guided navigator for this in order to catch
         // overstepping correctly

@@ -101,7 +101,7 @@ int main() {
           gctx, det, names, "ray_scan_tutorial", ray, intersection_trace,
           svg_style, n_rays, ray_generator.size(), intersection_trace_t{});
     }
-    success &= check_result;
+    success = success && check_result;
 
     ++n_rays;
   }

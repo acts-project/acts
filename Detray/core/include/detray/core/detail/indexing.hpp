@@ -289,7 +289,7 @@ struct multi_index {
   constexpr bool is_invalid() const noexcept {
     bool is_inv_elem{false};
     for (std::size_t i = 0u; i < size(); ++i) {
-      is_inv_elem |= detail::is_invalid_value(m_indices[i]);
+      is_inv_elem = is_inv_elem || detail::is_invalid_value(m_indices[i]);
     }
     return is_inv_elem;
   }

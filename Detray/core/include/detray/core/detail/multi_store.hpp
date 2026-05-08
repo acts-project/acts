@@ -176,7 +176,7 @@ class multi_store {
   template <std::size_t current_idx = 0>
   DETRAY_HOST_DEVICE constexpr bool all_empty(const context_type &ctx = {},
                                               bool is_empty = true) const {
-    is_empty &= empty<types::id_cast<value_types, current_idx>>(ctx);
+    is_empty = is_empty && empty<types::id_cast<value_types, current_idx>>(ctx);
 
     if constexpr (current_idx < sizeof...(Ts) - 1) {
       return all_empty<current_idx + 1>(ctx, is_empty);

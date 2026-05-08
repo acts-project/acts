@@ -210,15 +210,17 @@ struct contains_impl<T, I, mapped_registry<R, S>> {
   using base_t = contains_impl<T, I, type_list_t>;
 
   static constexpr bool value = base_t::value;
-  // The type is not contained in 'type_list'm the position will be invalid:
+
+  // Depending on which type list the type belongs to, map the index
+  static constexpr std::size_t mapped_idx =
+      std::same_as<type_list_t, orig_list_t>
+          ? mapped_registry<R, S>::mapped_index(base_t::pos)
+          : base_t::pos;
+
+  // The type is not contained in 'type_list', the position will be invalid:
   // Do not pass that to the range-checked array of the filtered indices
   static constexpr std::size_t pos =
-      (!base_t::value
-           ? std::numeric_limits<std::size_t>::max()
-           // Depending on which type list the type belongs to, map the index
-           : (std::same_as<type_list_t, orig_list_t>
-                  ? mapped_registry<R, S>::mapped_index(base_t::pos)
-                  : base_t::pos));
+      !base_t::value ? std::numeric_limits<std::size_t>::max() : mapped_idx;
 };
 /// @}
 

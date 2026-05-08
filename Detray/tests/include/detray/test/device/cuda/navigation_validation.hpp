@@ -343,7 +343,7 @@ class navigation_validation : public test::fixture_base<> {
             std::make_pair(test_traj, std::move(missed_inters)));
 
         // Update statistics
-        success &= result;
+        success = success && result;
         n_miss_nav += n_missed_nav;
         n_miss_truth += n_missed_truth;
         n_matching_error += n_error;

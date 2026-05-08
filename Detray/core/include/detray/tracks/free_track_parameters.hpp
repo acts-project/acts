@@ -199,7 +199,7 @@ struct free_parameters_vector {
   constexpr bool is_invalid() const {
     bool inv_elem{false};
     for (std::size_t i = 0u; i < e_free_size; ++i) {
-      inv_elem |= !math::isfinite(getter::element(m_vector, i, 0u));
+      inv_elem = inv_elem || !math::isfinite(getter::element(m_vector, i, 0u));
     }
     return inv_elem ||
            !algebra::approx_equal(vector::norm(dir()), scalar_type{1},

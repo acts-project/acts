@@ -448,7 +448,7 @@ auto compare_traces(
     bool found_same_surfaces =
         (nav_has_next && truth_has_next && (nav_inters == truth_inters));
 
-    matching_traces &= found_same_surfaces;
+    matching_traces = matching_traces && found_same_surfaces;
 
     if (!found_same_surfaces) {
       // Count the number of missed surfaces for this mismatch
@@ -614,7 +614,7 @@ auto compare_traces(
         // Both missed a surface at the same time, as neither record
         // can be found in each others traces
         bool valid{missed_stats_tr.count(nav_inters)};
-        valid &= missed_stats_nav.count(truth_inters);
+        valid = valid && missed_stats_nav.count(truth_inters);
         handle_counting_error(valid);
 
         if (valid) {

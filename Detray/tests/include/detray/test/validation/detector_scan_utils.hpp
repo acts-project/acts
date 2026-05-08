@@ -695,7 +695,8 @@ inline bool check_trace(const std::vector<record_t> &intersection_trace,
                                                            start_index);
 
   // Is the succession of volumes consistent ?
-  err_code &= detector_scanner::check_connectivity<leaving_world>(portal_trace);
+  err_code = err_code &&
+             detector_scanner::check_connectivity<leaving_world>(portal_trace);
 
   if (!adj_mat_scan.empty()) {
     // Build an adjacency matrix from this trace that can be checked

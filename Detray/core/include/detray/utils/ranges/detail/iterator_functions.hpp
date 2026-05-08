@@ -86,79 +86,48 @@ using std::empty;
 /// @{
 // used by every iterator up to and including bidirectional iterators
 template <std::input_iterator iterator_t>
-DETRAY_HOST_DEVICE constexpr std::iter_difference_t<iterator_t> distance_impl(
-    iterator_t first, iterator_t last,
-    detray::ranges::input_iterator_tag /*tag*/) {
-  std::iter_difference_t<iterator_t> d{0};
-  // simply count
-  while (first != last) {
-    ++first;
-    ++d;
-  }
-  return d;
-}
-
-// random access iterators specialization
-template <std::random_access_iterator iterator_t>
-DETRAY_HOST_DEVICE constexpr std::iter_difference_t<iterator_t> distance_impl(
-    iterator_t first, iterator_t last,
-    detray::ranges::random_access_iterator_tag /*tag*/) {
-  // use operator-
-  return last - first;
-}
-
-template <std::input_iterator iterator_t>
 DETRAY_HOST_DEVICE constexpr std::iter_difference_t<iterator_t> distance(
     iterator_t first, iterator_t last) {
-  return distance_impl(
-      first, last,
-      typename std::iterator_traits<iterator_t>::iterator_category{});
+  if constexpr (std::random_access_iterator<iterator_t>) {
+    // use operator-
+    return last - first;
+  } else {
+    std::iter_difference_t<iterator_t> d{0};
+    // simply count
+    while (first != last) {
+      ++first;
+      ++d;
+    }
+    return d;
+  }
 }
 /// @}
 
 ///  @brief Reimplement std::advance.
 /// @{
 template <std::input_iterator iterator_t, typename dist_t>
-DETRAY_HOST_DEVICE constexpr void advance_impl(
-    iterator_t& itr, dist_t d, detray::ranges::input_iterator_tag /*tag*/) {
+DETRAY_HOST_DEVICE constexpr void advance(iterator_t& itr, dist_t d) {
   static_assert(std::is_integral_v<dist_t>);
-  assert(d > 0);
-  // simply count
-  while (d--) {
-    ++itr;
-  }
-}
 
-// bidirectional iterators specialization
-template <std::bidirectional_iterator iterator_t, typename dist_t>
-DETRAY_HOST_DEVICE constexpr void advance_impl(
-    iterator_t& itr, dist_t d,
-    detray::ranges::bidirectional_iterator_tag /*tag*/) {
-  static_assert(std::is_integral_v<dist_t>);
-  if (d > 0) {
+  if constexpr (std::random_access_iterator<iterator_t>) {
+    itr += d;
+  } else if constexpr (std::bidirectional_iterator<iterator_t>) {
+    if (d > 0) {
+      while (d--) {
+        ++itr;
+      }
+    } else {
+      while (d++) {
+        --itr;
+      }
+    }
+  } else {
+    assert(d > 0);
+    // simply count
     while (d--) {
       ++itr;
     }
-  } else {
-    while (d++) {
-      --itr;
-    }
   }
-}
-
-// random access iterators specialization
-template <std::random_access_iterator iterator_t, typename dist_t>
-DETRAY_HOST_DEVICE constexpr void advance_impl(
-    iterator_t& itr, dist_t d,
-    detray::ranges::random_access_iterator_tag /*tag*/) {
-  static_assert(std::is_integral_v<dist_t>);
-  itr += d;
-}
-
-template <std::input_iterator iterator_t, typename dist_t>
-DETRAY_HOST_DEVICE constexpr void advance(iterator_t& itr, dist_t d) {
-  return advance_impl(
-      itr, d, typename std::iterator_traits<iterator_t>::iterator_category{});
 }
 /// @}
 

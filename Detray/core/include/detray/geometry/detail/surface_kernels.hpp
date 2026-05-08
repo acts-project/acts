@@ -70,7 +70,7 @@ struct surface_kernels {
                                                  std::ostream& os) const {
       bool is_good{true};
       for (const auto& mask : detray::ranges::subrange(mask_group, idx_range)) {
-        is_good &= mask.self_check(os);
+        is_good = is_good && mask.self_check(os);
       }
 
       return is_good;

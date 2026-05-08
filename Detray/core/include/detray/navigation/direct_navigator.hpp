@@ -164,7 +164,8 @@ class direct_navigator {
       bool is_finished = base_type::finished();
 
       // All external surfaces were visited?
-      is_finished &=
+      is_finished =
+          is_finished &&
           ((is_forward() &&
             m_next_external == static_cast<dist_t>(m_sequence.size())) ||
            (!is_forward() && m_next_external == -1));

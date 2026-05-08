@@ -366,8 +366,8 @@ struct propagator {
 
       // Find next candidate
       DETRAY_VERBOSE_HOST("Calling navigator...");
-      is_init |=
-          m_navigator.update(track, navigation, m_cfg.navigation, context);
+      is_init = is_init || m_navigator.update(track, navigation,
+                                              m_cfg.navigation, context);
 
       propagation.heartbeat(propagation.heartbeat() && navigation.is_alive());
 

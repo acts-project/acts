@@ -98,20 +98,21 @@ static inline void bin_association(const context_t & /*context*/,
           // Usually one mask per surface, but design allows - a
           // single association  is sufficient though
           for (auto &vertices : vertices_per_masks) {
-            if (!vertices.empty()) {
-              // Create a surface contour
-              std::vector<point2_t> surface_contour;
-              surface_contour.reserve(vertices.size());
-              for (const auto &v : vertices) {
-                auto vg = transform.point_to_global(v);
-                surface_contour.push_back({vg[0], vg[1]});
-              }
-              // The association has worked
-              if (cgs_assoc(bin_contour, surface_contour) ||
-                  edges_assoc(bin_contour, surface_contour)) {
-                grid.template populate<attach<>>({bin_0, bin_1}, sf);
-                break;
-              }
+            if (vertices.empty()) {
+              continue;
+            }
+            // Create a surface contour
+            std::vector<point2_t> surface_contour;
+            surface_contour.reserve(vertices.size());
+            for (const auto &v : vertices) {
+              auto vg = transform.point_to_global(v);
+              surface_contour.push_back({vg[0], vg[1]});
+            }
+            // The association has worked
+            if (cgs_assoc(bin_contour, surface_contour) ||
+                edges_assoc(bin_contour, surface_contour)) {
+              grid.template populate<attach<>>({bin_0, bin_1}, sf);
+              break;
             }
           }
         }

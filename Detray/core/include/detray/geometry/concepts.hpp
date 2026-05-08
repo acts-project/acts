@@ -202,22 +202,19 @@ concept line_object =
       concepts::line_frame<typename G::local_frame>));
 /// @}
 
+// TODO: Add shape concepts here, which however depend on the algebra type
 template <class T>
-concept planar = /*concepts::planar_shape<T, array<float>> ||*/
-    concepts::planar_frame<T> || concepts::planar_object<T>;
+concept planar = concepts::planar_frame<T> || concepts::planar_object<T>;
 
 template <class T>
 concept rectilinear =
-    /*concepts::rectilinear_shape<T, array<float>> ||*/
     concepts::rectilinear_frame<T> || concepts::rectilinear_object<T>;
 
 template <class T>
 concept cylindrical =
-    /*concepts::cylindrical_shape<T, array<float>> ||*/
     concepts::cylindrical_frame<T> || concepts::cylindrical_object<T>;
 
 template <class T>
-concept line = /*concepts::line_shape<T, array<float>> ||*/
-    concepts::line_frame<T> || concepts::line_object<T>;
+concept line = concepts::line_frame<T> || concepts::line_object<T>;
 
 }  // namespace detray::concepts

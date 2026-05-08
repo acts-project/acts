@@ -243,8 +243,9 @@ struct bound_parameters_vector {
     bool inv_elem{false};
     bool is_all_zero{true};
     for (std::size_t i = 0u; i < e_bound_size; ++i) {
-      inv_elem |= !math::isfinite(getter::element(m_vector, i, 0u));
-      is_all_zero &= (math::fabs(getter::element(m_vector, i, 0u)) == 0.f);
+      inv_elem = inv_elem || !math::isfinite(getter::element(m_vector, i, 0u));
+      is_all_zero =
+          is_all_zero && (math::fabs(getter::element(m_vector, i, 0u)) == 0.f);
     }
 
     return (inv_elem || is_all_zero);

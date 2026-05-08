@@ -169,7 +169,7 @@ class DETRAY_ALIGN(
 
     DETRAY_UNROLL_N(N)
     for (unsigned int i{0u}; i < N; ++i) {
-      is_full &= comp[i];
+      is_full = is_full && comp[i];
     }
 
     return is_full;
@@ -186,7 +186,7 @@ class DETRAY_ALIGN(
     DETRAY_UNROLL_N(N)
     for (unsigned int i{0u}; i < N; ++i) {
       // Ducktyping the Vc::Vector::MaskType
-      is_full &= comp[i].isFull();
+      is_full = is_full && comp[i].isFull();
     }
 
     return is_full;
