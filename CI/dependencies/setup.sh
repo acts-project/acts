@@ -180,6 +180,16 @@ if [ -n "${CI:-}" ]; then
     echo "Adding buildcache ${mirror_name}"
     spack mirror add ${mirror_name} ${mirror_url} --unsigned
   fi
+  # Authenticate GHCR reads to avoid anonymous rate limits (which spack
+  # misclassifies as "no binary available"). Idempotent on cached spack installs.
+  # GITHUB_TOKEN must be in env when `spack install` later fetches from the mirror.
+  if [ -n "${GITHUB_TOKEN:-}" ] && [[ "${mirror_url}" == oci://ghcr.io/* ]]; then
+    echo "Setting GHCR credentials on ${mirror_name}"
+    spack mirror set \
+      --oci-username "${GITHUB_ACTOR:-x-access-token}" \
+      --oci-password-variable GITHUB_TOKEN \
+      "${mirror_name}"
+  fi
   end_section
 
   start_section "Add ACTS package repository"
