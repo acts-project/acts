@@ -26,6 +26,7 @@
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
@@ -217,6 +218,9 @@ std::string getNavigationPolicyKind() {
     return "SurfaceArray";
   } else if (std::is_same_v<bounds_t, Acts::MultiNavigationPolicy>) {
     return "MultiNavigation";
+  } else if (std::is_same_v<bounds_t,
+                            Acts::Experimental::MultiLayerNavigationPolicy>) {
+    return "MultiLayerNavigation";
   } else {
     throw std::invalid_argument("Unknown portal link kind");
   }
@@ -326,6 +330,60 @@ nlohmann::json encodeSurfaceArrayNavigationPolicy(
   jPolicy["bins0"] = cfg.bins.first;
   jPolicy["bins1"] = cfg.bins.second;
   return jPolicy;
+}
+
+nlohmann::json encodeMultiLayerNavigationPolicy(
+    const Acts::Experimental::MultiLayerNavigationPolicy& policy,
+    const Acts::TrackingGeometryJsonConverter& /*converter*/) {
+  nlohmann::json jPolicy;
+  jPolicy[kKindKey] =
+      getNavigationPolicyKind<Acts::Experimental::MultiLayerNavigationPolicy>();
+
+  const auto& grid = policy.indexedGrid();
+  nlohmann::json jAxes;
+  for (const auto* axis : grid.grid.axes()) {
+    jAxes.push_back(Acts::AxisJsonConverter::toJson(*axis));
+  }
+  jPolicy["axes"] = jAxes;
+
+  const auto& casts = grid.casts;
+  jPolicy["casts"] =
+      std::vector<Acts::AxisDirection>(casts.begin(), casts.end());
+  jPolicy["binExpansion"] = policy.config().binExpansion;
+
+  return jPolicy;
+}
+
+std::unique_ptr<Acts::INavigationPolicy> decodeMultiLayerNavigationPolicy(
+    const nlohmann::json& encoded, const Acts::GeometryContext& gctx,
+    const Acts::TrackingGeometryJsonConverter& /*converter*/,
+    const Acts::TrackingVolume& volume, const Acts::Logger& logger) {
+  const auto& jAxes = encoded.at("axes");
+  std::array<double, 2> range0 = jAxes.at(0).at("range");
+  std::size_t bins0 = jAxes.at(0).at("bins");
+  std::array<double, 2> range1 = jAxes.at(1).at("range");
+  std::size_t bins1 = jAxes.at(1).at("bins");
+
+  Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axis0(
+      range0[0], range0[1], bins0);
+  Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound> axis1(
+      range1[0], range1[1], bins1);
+  Acts::Experimental::MultiLayerNavigationPolicy::GridType grid(
+      std::move(axis0), std::move(axis1));
+
+  std::vector<Acts::AxisDirection> castsVec =
+      encoded.at("casts").get<std::vector<Acts::AxisDirection>>();
+  std::array<Acts::AxisDirection, 2> casts = {castsVec.at(0), castsVec.at(1)};
+
+  Acts::Experimental::MultiLayerNavigationPolicy::IndexedUpdatorType
+      indexedGrid(std::move(grid), casts);
+
+  Acts::Experimental::MultiLayerNavigationPolicy::Config config;
+  config.binExpansion =
+      encoded.at("binExpansion").get<std::vector<std::size_t>>();
+
+  return std::make_unique<Acts::Experimental::MultiLayerNavigationPolicy>(
+      gctx, volume, logger, config, std::move(indexedGrid));
 }
 
 // -------------------------------------------------------------------
@@ -720,7 +778,8 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
 
   cfg.encodeNavigationPolicy.registerFunction(encodeTryAllNavigationPolicy)
       .registerFunction(encodeSurfaceArrayNavigationPolicy)
-      .registerFunction(encodeMultiNavigationPolicy);
+      .registerFunction(encodeMultiNavigationPolicy)
+      .registerFunction(encodeMultiLayerNavigationPolicy);
 
   cfg.encodePortalLink.registerFunction(encodeTrivialPortalLink)
       .registerFunction(encodeCompositePortalLink)
@@ -755,7 +814,10 @@ Acts::TrackingGeometryJsonConverter::Config::defaultConfig() {
       .registerKind(getNavigationPolicyKind<SurfaceArrayNavigationPolicy>(),
                     decodeSurfaceArrayNavigationPolicy)
       .registerKind(getNavigationPolicyKind<MultiNavigationPolicy>(),
-                    decodeMultiNavigationPolicy);
+                    decodeMultiNavigationPolicy)
+      .registerKind(
+          getNavigationPolicyKind<Experimental::MultiLayerNavigationPolicy>(),
+          decodeMultiLayerNavigationPolicy);
 
   return cfg;
 }
