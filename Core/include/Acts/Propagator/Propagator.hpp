@@ -11,6 +11,7 @@
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
+#include "Acts/Propagator/NavigatorConcept.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/PropagatorResult.hpp"
 #include "Acts/Propagator/PropagatorState.hpp"
@@ -83,7 +84,8 @@ class BasePropagatorHelper : public BasePropagator {
 /// - a type mapping for: (initial track parameter type and destination
 ///   surface type) -> type of internal state object
 ///
-template <StepperConcept stepper_t, typename navigator_t = VoidNavigator>
+template <StepperConcept stepper_t,
+          NavigatorConcept navigator_t = VoidNavigator>
 class Propagator final
     : public std::conditional_t<
           SupportsBoundParameters_v<stepper_t>,
