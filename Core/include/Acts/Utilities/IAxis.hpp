@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <iosfwd>

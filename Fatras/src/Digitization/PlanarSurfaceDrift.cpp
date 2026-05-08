@@ -8,17 +8,14 @@
 
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
-
 #include <cmath>
 
-ActsFatras::PlanarSurfaceDrift::Segment2D
-ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
-                                          const Acts::Surface& surface,
-                                          double thickness,
-                                          const Acts::Vector3& pos,
-                                          const Acts::Vector3& dir,
-                                          const Acts::Vector3& driftDir) const {
+namespace ActsFatras {
+
+PlanarSurfaceDrift::Segment2D PlanarSurfaceDrift::toReadout(
+    const Acts::GeometryContext& gctx, const Acts::Surface& surface,
+    double thickness, const Acts::Vector3& pos, const Acts::Vector3& dir,
+    const Acts::Vector3& driftDir) const {
   // Transform the hit & direction into the local surface frame
   const auto& invTransform = surface.localToGlobalTransform(gctx).inverse();
   Acts::Vector2 pos2Local = (invTransform * pos).segment<2>(0);
@@ -48,3 +45,5 @@ ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
 
   return {entry, exit};
 }
+
+}  // namespace ActsFatras

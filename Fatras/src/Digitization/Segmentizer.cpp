@@ -38,10 +38,10 @@ ActsFatras::Segmentizer::segments(
 
   if (surface.type() == Acts::Surface::SurfaceType::Plane) {
     // Get the segmentation and convert it to lines & arcs
-    bstart = {static_cast<unsigned int>(segmentation.at(0).bin(start[0])),
-              static_cast<unsigned int>(segmentation.at(1).bin(start[1]))};
-    bend = {static_cast<unsigned int>(segmentation.at(0).bin(end[0])),
-            static_cast<unsigned int>(segmentation.at(1).bin(end[1]))};
+    bstart = {static_cast<unsigned int>(segmentation.at(0).bin(start[0]) - 1),
+              static_cast<unsigned int>(segmentation.at(1).bin(start[1]) - 1)};
+    bend = {static_cast<unsigned int>(segmentation.at(0).bin(end[0]) - 1),
+            static_cast<unsigned int>(segmentation.at(1).bin(end[1]) - 1)};
     // Fast single channel exit
     if (bstart == bend) {
       return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
@@ -81,10 +81,10 @@ ActsFatras::Segmentizer::segments(
                              Acts::VectorHelpers::phi(end));
 
     // Get the segmentation and convert it to lines & arcs
-    bstart = {static_cast<unsigned int>(segmentation.at(0).bin(pstart[0])),
-              static_cast<unsigned int>(segmentation.at(1).bin(pstart[1]))};
-    bend = {static_cast<unsigned int>(segmentation.at(0).bin(pend[0])),
-            static_cast<unsigned int>(segmentation.at(1).bin(pend[1]))};
+    bstart = {static_cast<unsigned int>(segmentation.at(0).bin(pstart[0]) - 1),
+              static_cast<unsigned int>(segmentation.at(1).bin(pstart[1]) - 1)};
+    bend = {static_cast<unsigned int>(segmentation.at(0).bin(pend[0]) - 1),
+            static_cast<unsigned int>(segmentation.at(1).bin(pend[1]) - 1)};
 
     // Fast single channel exit
     if (bstart == bend) {

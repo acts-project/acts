@@ -40,11 +40,10 @@ class Channelizer {
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
       const std::vector<Acts::DirectedProtoAxis>& segmentation,
       double thickness) const {
-    auto driftedSegment = m_surfaceDrift.toReadout(
+    const auto driftedSegment = m_surfaceDrift.toReadout(
         gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
 
-    auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
-
+    const auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
     if (!maskedSegmentRes.ok()) {
       return maskedSegmentRes.error();
     }
@@ -54,13 +53,13 @@ class Channelizer {
         m_segmentizer.segments(gctx, surface, segmentation, *maskedSegmentRes);
 
     // Go from 2D-path to 3D-path by applying thickness
-    const auto path2D = std::accumulate(
+    const double path2D = std::accumulate(
         segments.begin(), segments.end(), 0.0,
         [](double sum, const auto& seg) { return sum + seg.activation; });
 
     for (auto& seg : segments) {
-      auto r = path2D != 0.0 ? (seg.activation / path2D) : 1.0;
-      auto segThickness = r * thickness;
+      const double r = path2D != 0.0 ? (seg.activation / path2D) : 1.0;
+      const double segThickness = r * thickness;
 
       seg.activation = std::hypot(segThickness, seg.activation);
     }

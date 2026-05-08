@@ -61,17 +61,15 @@ const std::string& axisDirectionName(AxisDirection aDir);
 /// @return the output stream
 std::ostream& operator<<(std::ostream& os, AxisDirection aDir);
 
-/// Enum which determines how the axis handle its outer boundaries
-/// possible values values
+/// Enum which determines how the axis handle its outer boundaries possible
+/// values values
 enum class AxisBoundaryType {
-  /// Default behaviour: out of bounds
-  /// positions are filled into the over or underflow bins
+  /// Default behaviour: out of bounds positions are filled into the over or
+  /// underflow bins
   Open,
-  /// Out-of-bounds positions resolve to first/last bin
-  /// respectively
+  /// Out-of-bounds positions resolve to first/last bin respectively
   Bound,
-  /// Out-of-bounds positions resolve to the outermost
-  /// bin on the opposite side
+  /// Out-of-bounds positions resolve to the outermost bin on the opposite side
   Closed,
 };
 
