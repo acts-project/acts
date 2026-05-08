@@ -198,7 +198,7 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearNeutral(
 
   Vector4 pos4 = Vector4::Zero();
   return BoundTrackParameters::createCurvilinear(
-      pos4, phi, theta, 1 / absMom, std::nullopt, ParticleHypothesis::pion0());
+      pos4, phi, theta, 0, std::nullopt, ParticleHypothesis::pion0(absMom));
 }
 
 // helpers to compare track parameters
