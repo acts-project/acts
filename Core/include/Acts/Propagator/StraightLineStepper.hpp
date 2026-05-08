@@ -106,8 +106,6 @@ class StraightLineStepper final {
     bool covTransport = false;
     /// Covariance matrix for track parameter uncertainties
     Covariance cov = Covariance::Zero();
-    /// Additional free parameter covariance matrix
-    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
     /// accumulated path length state
     double pathAccumulated = 0.;

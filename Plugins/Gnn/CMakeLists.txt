@@ -78,7 +78,6 @@ if(ACTS_GNN_ENABLE_CUDA)
         PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu src/Tensor.cu
     )
 else()
-    target_compile_definitions(ActsPluginGnn PUBLIC ACTS_GNN_CPUONLY)
 endif()
 
 if(ACTS_GNN_ENABLE_TORCH)

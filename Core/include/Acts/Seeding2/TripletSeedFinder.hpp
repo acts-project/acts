@@ -166,6 +166,12 @@ class TripletSeedFinder {
     /// coordinates in xyz. This is only used in a detector specific check for
     /// strip modules
     float toleranceParam = 1.1 * UnitConstants::mm;
+
+    /// Maximum allowed difference in cot(theta) between the bottom and top
+    /// doublets, applied as a pre-filter before the expensive strip
+    /// coordinate transformation. Only active when useStripInfo is true.
+    /// Set to infinity (default) to disable.
+    float cotThetaDiffMax = std::numeric_limits<float>::infinity();
   };
 
   /// Derived configuration for the triplet seed finder using a magnetic field.

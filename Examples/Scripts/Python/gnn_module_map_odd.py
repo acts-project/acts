@@ -29,11 +29,12 @@ from acts.examples.simulation import (
     ParticleSelectorConfig,
 )
 from acts.examples.reconstruction import addGnn, addSpacePointsMaking
-from acts.examples.gnn import (
+from acts.gnn import (
     ModuleMapCuda,
     CudaTrackBuilding,
-    NodeFeature,
+    Device,
 )
+from acts.examples.gnn import NodeFeature
 
 
 def runGnnModuleMap(
@@ -157,15 +158,16 @@ def runGnnModuleMap(
 
     if gnnModel.suffix == ".pt":
         edgeClassifierConfig["useEdgeFeatures"] = True
-        from acts.examples.gnn import TorchEdgeClassifier
+        from acts.gnn import TorchEdgeClassifier
 
         edgeClassifiers = [TorchEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".onnx":
-        from acts.examples.gnn import OnnxEdgeClassifier
+        from acts.gnn import OnnxEdgeClassifier
 
+        edgeClassifierConfig["device"] = Device.Cuda()
         edgeClassifiers = [OnnxEdgeClassifier(**edgeClassifierConfig)]
     elif gnnModel.suffix == ".engine":
-        from acts.examples.gnn import TensorRTEdgeClassifier
+        from acts.gnn import TensorRTEdgeClassifier
 
         edgeClassifiers = [TensorRTEdgeClassifier(**edgeClassifierConfig)]
     else:

@@ -275,12 +275,17 @@ void addGeometry(py::module_& m) {
   }
 
   {
-    py::class_<Volume, std::shared_ptr<Volume>>(m, "Volume");
+    py::class_<Volume, std::shared_ptr<Volume>>(m, "Volume")
+        .def_property_readonly(
+            "volumeBounds",
+            py::overload_cast<>(&Volume::volumeBounds, py::const_),
+            py::return_value_policy::reference_internal);
 
     py::class_<TrackingVolume, Volume, std::shared_ptr<TrackingVolume>>(
         m, "TrackingVolume")
         .def(py::init<const Transform3&, std::shared_ptr<VolumeBounds>,
-                      std::string>());
+                      std::string>())
+        .def_property_readonly("volumeName", &TrackingVolume::volumeName);
   }
 
   {

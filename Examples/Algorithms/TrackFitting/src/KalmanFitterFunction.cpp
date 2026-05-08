@@ -166,7 +166,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeKalmanFitterFunction(
     double reverseFilteringMomThreshold,
     double reverseFilteringCovarianceScaling,
     Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
-    const Acts::Logger& logger) {
+    bool useJosephFormulation, const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));
 
@@ -200,6 +200,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeKalmanFitterFunction(
   fitterFunction->reverseFilteringCovarianceScaling =
       reverseFilteringCovarianceScaling;
   fitterFunction->outlierFinder.chi2Cut = chi2Cut;
+  fitterFunction->kfUpdater = Acts::GainMatrixUpdater(useJosephFormulation);
 
   return fitterFunction;
 }

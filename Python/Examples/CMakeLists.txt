@@ -9,6 +9,7 @@ set(py_files
     reconstruction.py
     itk.py
     odd.py
+    uproot.py
 )
 
 # Macro to add example bindings conditionally
@@ -93,6 +94,7 @@ target_sources(
         src/Digitization.cpp
         src/MaterialMapping.cpp
         src/Propagation.cpp
+        src/PythonSpecific.cpp
         src/TrackFinding.cpp
         src/TrackFitting.cpp
         src/TruthTracking.cpp
@@ -108,6 +110,8 @@ install(
     TARGETS ActsExamplesPythonBindings
     DESTINATION ${_examples_python_install_dir}
 )
+
+acts_pybind_generate_stubs(acts.examples ActsExamplesPythonBindings ActsPythonBindings)
 
 set_target_properties(
     ActsExamplesPythonBindings
@@ -147,6 +151,7 @@ target_link_libraries(
 
 # Add all plugin related examples bindings conditionally to their build flag
 add_examples_binding_if(Alignment "Acts::ExamplesAlignment;Acts::ExamplesDetectorsCommon" ACTS_BUILD_ALIGNMENT FALSE)
+add_examples_binding_if(AlignmentMillePede Acts::ExamplesAlignmentMillePede ACTS_BUILD_PLUGIN_MILLE FALSE)
 add_examples_binding_if(DD4hep Acts::ExamplesDetectorDD4hep ACTS_BUILD_EXAMPLES_DD4HEP TRUE)
 add_examples_binding_if(EDM4hep Acts::ExamplesIoEDM4hep ACTS_BUILD_EXAMPLES_EDM4HEP FALSE)
 add_examples_binding_if(Geant4
@@ -158,7 +163,7 @@ add_examples_binding_if(GeoModel
     "Acts::PluginGeoModel;Acts::ExamplesITkModuleSplitting;Acts::ExamplesDetectorGeoModel;Acts::ExamplesMuonSpectrometerMockupDetector"
     ACTS_BUILD_PLUGIN_GEOMODEL TRUE
 )
-add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn ACTS_BUILD_EXAMPLES_GNN FALSE)
+add_examples_binding_if(Gnn Acts::ExamplesTrackFindingGnn ACTS_BUILD_EXAMPLES_GNN TRUE)
 add_examples_binding_if(Hashing Acts::ExamplesTrackFinding ACTS_BUILD_EXAMPLES_HASHING FALSE)
 add_examples_binding_if(Json Acts::ExamplesIoJson ACTS_BUILD_PLUGIN_JSON TRUE)
 add_examples_binding_if(Onnx Acts::ExamplesTrackFindingML ACTS_BUILD_PLUGIN_ONNX FALSE)
@@ -166,7 +171,7 @@ add_examples_binding_if(Pythia8 Acts::ExamplesGeneratorsPythia8 ACTS_BUILD_EXAMP
 add_examples_binding_if(Root Acts::ExamplesIoRoot ACTS_BUILD_EXAMPLES_ROOT TRUE)
 add_examples_binding_if(Svg Acts::ExamplesIoSvg ACTS_BUILD_PLUGIN_ACTSVG TRUE)
 add_examples_binding_if(TGeo Acts::ExamplesDetectorTGeo ACTS_BUILD_EXAMPLES_ROOT TRUE)
-add_examples_binding_if(Traccc "Acts::PluginCovfie;Acts::ExamplesTraccc" ACTS_BUILD_PLUGIN_TRACCC FALSE)
+add_examples_binding_if(Detray "Acts::PluginCovfie;Acts::ExamplesDetray" ACTS_BUILD_PLUGIN_DETRAY FALSE)
 add_examples_binding_if(TruthJet Acts::ExamplesJets ACTS_BUILD_EXAMPLES_FASTJET FALSE)
 
 # Special case for HepMC3 as it a hard dependency

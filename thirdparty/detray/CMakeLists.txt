@@ -29,7 +29,7 @@ set(DETRAY_CUSTOM_SCALARTYPE
 )
 
 set(DETRAY_BUILD_TEST_UTILS
-    ON
+    OFF
     CACHE BOOL
     "Turn on the build of the Detray test utilities"
 )
@@ -96,6 +96,12 @@ set(DETRAY_SETUP_NLOHMANN
     OFF
     CACHE BOOL
     "Do not set up nlohmann as part of Detray"
+)
+
+set(DETRAY_GENERATE_METADATA
+    "itk_metadata"
+    CACHE STRING
+    "Turn on the build of the ITk metadata for Traccc"
 )
 
 #Now set up its build.

@@ -11,6 +11,7 @@
 #include "ActsExamples/TrackFinding/GraphBasedSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/GridTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
+#include "ActsExamples/TrackFinding/MeasurementFilterAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/OrthogonalTripletSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -34,6 +35,11 @@ using namespace ActsExamples;
 namespace ActsPython {
 
 void addTrackFinding(py::module& mex) {
+  ACTS_PYTHON_DECLARE_ALGORITHM(MeasurementFilterAlgorithm, mex,
+                                "MeasurementFilterAlgorithm", inputTracks,
+                                inputMeasurementSubset, outputMeasurementSubset,
+                                includeOutliers);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(SpacePointMaker, mex, "SpacePointMaker",
                                 inputMeasurements, outputSpacePoints,
                                 trackingGeometry, geometrySelection,
@@ -136,13 +142,13 @@ void addTrackFinding(py::module& mex) {
                std::shared_ptr<Alg::TrackFinderFunction>>(
         alg, "TrackFinderFunction");
 
-    ACTS_PYTHON_STRUCT(c, inputMeasurements, inputInitialTrackParameters,
-                       inputSeeds, outputTracks, trackingGeometry,
-                       magneticField, findTracks, measurementSelectorCfg,
-                       trackSelectorCfg, maxSteps, twoWay, reverseSearch,
-                       seedDeduplication, stayOnSeed, pixelVolumeIds,
-                       stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
-                       constrainToVolumeIds, endOfWorldVolumeIds);
+    ACTS_PYTHON_STRUCT(
+        c, inputMeasurements, inputInitialTrackParameters, inputSeeds,
+        outputTracks, trackingGeometry, magneticField, findTracks,
+        measurementSelectorCfg, trackSelectorCfg, maxSteps, twoWay,
+        reverseSearch, seedDeduplication, stayOnSeed, pixelVolumeIds,
+        stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
+        useJosephFormulation, constrainToVolumeIds, endOfWorldVolumeIds);
   }
 }
 

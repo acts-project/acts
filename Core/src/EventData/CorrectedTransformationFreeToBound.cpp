@@ -101,15 +101,15 @@ detail::CorrectedFreeToBoundTransformer::operator()(
 
   // Sample the free parameters
   // 1. the nominal parameter
-  sampledFreeParams.push_back(
-      {freeParams, lambda / kappa,
-       lambda / kappa + (1.0 - m_alpha * m_alpha + m_beta)});
+  sampledFreeParams.emplace_back(
+      freeParams, lambda / kappa,
+      lambda / kappa + (1.0 - m_alpha * m_alpha + m_beta));
   // 2. the shifted parameters
   for (unsigned i = 0; i < eFreeSize; ++i) {
-    sampledFreeParams.push_back(
-        {freeParams + covSqrt.col(i) * gamma, 0.5 / kappa, 0.5 / kappa});
-    sampledFreeParams.push_back(
-        {freeParams - covSqrt.col(i) * gamma, 0.5 / kappa, 0.5 / kappa});
+    sampledFreeParams.emplace_back(freeParams + covSqrt.col(i) * gamma,
+                                   0.5 / kappa, 0.5 / kappa);
+    sampledFreeParams.emplace_back(freeParams - covSqrt.col(i) * gamma,
+                                   0.5 / kappa, 0.5 / kappa);
   }
 
   // Initialize the mean of the bound parameters
@@ -135,7 +135,7 @@ detail::CorrectedFreeToBoundTransformer::operator()(
     return std::nullopt;
   }
   auto nominalBound = nominalRes.value();
-  transformedBoundParams.push_back({nominalBound, cweightNom});
+  transformedBoundParams.emplace_back(nominalBound, cweightNom);
   bpMean = bpMean + mweightNom * nominalBound;
 
   // 2. Loop over the rest sample points of the free parameters to get the
@@ -165,7 +165,7 @@ detail::CorrectedFreeToBoundTransformer::operator()(
     }
 
     auto bp = result.value();
-    transformedBoundParams.push_back({bp, cweight});
+    transformedBoundParams.emplace_back(bp, cweight);
     bpMean = bpMean + mweight * bp;
   }
 
