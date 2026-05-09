@@ -203,8 +203,15 @@ class Impl final : public TripletSeedFinder {
     const std::array<float, 2> rotationTermsUVtoXY = {cosPhiM * sinTheta,
                                                       sinPhiM * sinTheta};
 
+    // Pre-cache strip data for the loop-invariant middle and bottom SPs
+    const StripSpacePointCalibrationDetailsDerived calM =
+        StripSpacePointBuilder::deriveStripSpacePointCalibrationDetails(
+            spM.stripCalibrationDetails());
     const ConstSpacePointProxy2 spB =
         spacePoints[bottomDoublet.spacePointIndex()];
+    const StripSpacePointCalibrationDetailsDerived calB =
+        StripSpacePointBuilder::deriveStripSpacePointCalibrationDetails(
+            spB.stripCalibrationDetails());
 
     std::size_t topDoubletOffset = 0;
     for (auto [topDoublet, topDoubletIndex] :
@@ -253,8 +260,7 @@ class Impl final : public TripletSeedFinder {
 
       std::array<float, 3> rMTransf{};
       if (!StripSpacePointBuilder::calibrateStripSpacePoint(
-              spM.stripCalibrationDetails(), directionMiddle, rMTransf,
-              m_cfg.toleranceParam)) {
+              calM, directionMiddle, rMTransf, m_cfg.toleranceParam)) {
         continue;
       }
 
@@ -272,8 +278,7 @@ class Impl final : public TripletSeedFinder {
 
       std::array<float, 3> rBTransf{};
       if (!StripSpacePointBuilder::calibrateStripSpacePoint(
-              spB.stripCalibrationDetails(), directionBottom, rBTransf,
-              m_cfg.toleranceParam)) {
+              calB, directionBottom, rBTransf, m_cfg.toleranceParam)) {
         continue;
       }
 
