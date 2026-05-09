@@ -38,10 +38,10 @@ enum class SpacePointColumns : std::uint32_t {
   // derived strip columns
   /// Vector from inner to outer strip centers
   StripSeparation = 1 << 14,
-  /// Cross product of strip separation and outer strip half vector
-  StripSeparationCrossOuterHalfVector = 1 << 15,
   /// Cross product of strip separation and inner strip half vector
-  StripSeparationCrossInnerHalfVector = 1 << 16,
+  StripSeparationCrossInnerHalfVector = 1 << 15,
+  /// Cross product of strip separation and outer strip half vector
+  StripSeparationCrossOuterHalfVector = 1 << 16,
   /// Cross product of inner and outer strip half vectors
   InnerCrossOuterStripHalfVector = 1 << 17,
 

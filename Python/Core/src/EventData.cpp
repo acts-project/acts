@@ -106,12 +106,12 @@ void addEventData(py::module_& m) {
       .value("OuterStripCenter", SpacePointColumns::OuterStripCenter)
       .value("OuterStripHalfVector", SpacePointColumns::OuterStripHalfVector)
       .value("StripSeparation", SpacePointColumns::StripSeparation)
-      .value("InnerCrossOuterStripHalfVector",
-             SpacePointColumns::InnerCrossOuterStripHalfVector)
-      .value("StripSeparationCrossOuterHalfVector",
-             SpacePointColumns::StripSeparationCrossOuterHalfVector)
       .value("StripSeparationCrossInnerHalfVector",
              SpacePointColumns::StripSeparationCrossInnerHalfVector)
+      .value("StripSeparationCrossOuterHalfVector",
+             SpacePointColumns::StripSeparationCrossOuterHalfVector)
+      .value("InnerCrossOuterStripHalfVector",
+             SpacePointColumns::InnerCrossOuterStripHalfVector)
       .value("PackedXY", SpacePointColumns::PackedXY)
       .value("PackedZR", SpacePointColumns::PackedZR)
       .value("PackedXYZ", SpacePointColumns::PackedXYZ)

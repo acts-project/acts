@@ -115,11 +115,11 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
       Eigen::Map<Eigen::Vector3f>(sp.stripSeparation().data()) =
           stripSeparation.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripSeparationCrossOuterHalfVector().data()) =
-          stripSeparationCrossOuterHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(
           sp.stripSeparationCrossInnerHalfVector().data()) =
           stripSeparationCrossInnerHalfVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripSeparationCrossOuterHalfVector().data()) =
+          stripSeparationCrossOuterHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(sp.innerCrossOuterStripHalfVector().data()) =
           innerCrossOuterStripHalfVector.cast<float>();
     }

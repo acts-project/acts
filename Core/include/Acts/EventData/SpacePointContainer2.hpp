@@ -727,9 +727,9 @@ class SpacePointContainer2 {
   // derived strip information
   std::optional<ColumnHolder<std::array<float, 3>>> m_stripSeparationColumn;
   std::optional<ColumnHolder<std::array<float, 3>>>
-      m_stripSeparationCrossOuterHalfVectorColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>>
       m_stripSeparationCrossInnerHalfVectorColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>>
+      m_stripSeparationCrossOuterHalfVectorColumn;
   std::optional<ColumnHolder<std::array<float, 3>>>
       m_innerCrossOuterStripHalfVectorColumn;
 
@@ -746,8 +746,8 @@ class SpacePointContainer2 {
         SourceLinks, SourceLinks, CopiedFromIndex, X, Y, Z, R, Phi, Time,
         VarianceZ, VarianceR, InnerStripCenter, InnerStripHalfVector,
         OuterStripCenter, OuterStripHalfVector, StripSeparation,
-        StripSeparationCrossOuterHalfVector,
-        StripSeparationCrossInnerHalfVector, InnerCrossOuterStripHalfVector,
+        StripSeparationCrossInnerHalfVector,
+        StripSeparationCrossOuterHalfVector, InnerCrossOuterStripHalfVector,
         PackedXY, PackedZR, PackedXYZ, PackedXYZR, PackedVarianceZR);
   }
 
@@ -756,8 +756,8 @@ class SpacePointContainer2 {
         "sourceLinkOffset", "sourceLinkCount", "copiedFromIndex", "x", "y", "z",
         "r", "phi", "time", "varianceZ", "varianceR", "innerStripCenter",
         "innerStripHalfVector", "outerStripCenter", "outerStripHalfVector",
-        "stripSeparation", "stripSeparationCrossOuterHalfVector",
-        "stripSeparationCrossInnerHalfVector", "innerCrossOuterStripHalfVector",
+        "stripSeparation", "stripSeparationCrossInnerHalfVector",
+        "stripSeparationCrossOuterHalfVector", "innerCrossOuterStripHalfVector",
         "xy", "zr", "xyz", "xyzr", "varianceZR");
   }
 
@@ -784,8 +784,8 @@ class SpacePointContainer2 {
         self.m_innerStripCenterColumn, self.m_innerStripHalfVectorColumn,
         self.m_outerStripCenterColumn, self.m_outerStripHalfVectorColumn,
         self.m_stripSeparationColumn,
-        self.m_stripSeparationCrossOuterHalfVectorColumn,
         self.m_stripSeparationCrossInnerHalfVectorColumn,
+        self.m_stripSeparationCrossOuterHalfVectorColumn,
         self.m_innerCrossOuterStripHalfVectorColumn, self.m_xyColumn,
         self.m_zrColumn, self.m_xyzColumn, self.m_xyzrColumn,
         self.m_varianceZRColumn);

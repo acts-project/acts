@@ -139,10 +139,10 @@ Acts::Result<void> createStripSpacePoint(
   const Acts::Vector3 outerStripHalfVector =
       0.5 * (stripEnds2.top - stripEnds2.bottom);
   const Acts::Vector3 stripSeparation = outerStripCenter - innerStripCenter;
-  const Acts::Vector3 stripSeparationCrossOuterHalfVector =
-      stripSeparation.cross(outerStripHalfVector);
   const Acts::Vector3 stripSeparationCrossInnerHalfVector =
       stripSeparation.cross(innerStripHalfVector);
+  const Acts::Vector3 stripSeparationCrossOuterHalfVector =
+      stripSeparation.cross(outerStripHalfVector);
   const Acts::Vector3 innerCrossOuterStripHalfVector =
       innerStripHalfVector.cross(outerStripHalfVector);
 
@@ -172,10 +172,10 @@ Acts::Result<void> createStripSpacePoint(
       outerStripHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.stripSeparation().data()) =
       stripSeparation.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.stripSeparationCrossOuterHalfVector().data()) =
-      stripSeparationCrossOuterHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.stripSeparationCrossInnerHalfVector().data()) =
       stripSeparationCrossInnerHalfVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(sp.stripSeparationCrossOuterHalfVector().data()) =
+      stripSeparationCrossOuterHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.innerCrossOuterStripHalfVector().data()) =
       innerCrossOuterStripHalfVector.cast<float>();
 

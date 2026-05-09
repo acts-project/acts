@@ -635,10 +635,10 @@ RootAthenaDumpReader::readSpacePoints(
                            SPstripCenterDistance->at(isp).at(2)};
 
         innerStripCenter = outerStripCenter - stripSeparation;
-        stripSeparationCrossOuterHalfVector =
-            stripSeparation.cross(outerStripHalfVector);
         stripSeparationCrossInnerHalfVector =
             stripSeparation.cross(innerStripHalfVector);
+        stripSeparationCrossOuterHalfVector =
+            stripSeparation.cross(outerStripHalfVector);
         innerCrossOuterStripHalfVector =
             innerStripHalfVector.cross(outerStripHalfVector);
       }

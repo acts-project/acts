@@ -249,14 +249,6 @@ class SpacePointProxy2 {
   {
     return accessImpl(m_container->m_stripSeparationColumn);
   }
-  /// Mutable access to the `strip separation cross outer half vector` of
-  /// the space point.
-  /// @return A mutable reference to the `strip separation cross outer half vector` of the space point.
-  std::array<float, 3> &stripSeparationCrossOuterHalfVector() const noexcept
-    requires(!ReadOnly)
-  {
-    return accessImpl(m_container->m_stripSeparationCrossOuterHalfVectorColumn);
-  }
   /// Mutable access to the `strip separation cross inner half vector` of
   /// the space point.
   /// @return A mutable reference to the `strip separation cross inner half vector` of the space point.
@@ -264,6 +256,14 @@ class SpacePointProxy2 {
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_stripSeparationCrossInnerHalfVectorColumn);
+  }
+  /// Mutable access to the `strip separation cross outer half vector` of
+  /// the space point.
+  /// @return A mutable reference to the `strip separation cross outer half vector` of the space point.
+  std::array<float, 3> &stripSeparationCrossOuterHalfVector() const noexcept
+    requires(!ReadOnly)
+  {
+    return accessImpl(m_container->m_stripSeparationCrossOuterHalfVectorColumn);
   }
   /// Mutable access to the `inner cross outer strip half vector` of the
   /// space point.
@@ -384,19 +384,19 @@ class SpacePointProxy2 {
   const std::array<float, 3> &stripSeparation() const noexcept {
     return accessImpl(m_container->m_stripSeparationColumn);
   }
-  /// Const access to the `strip separation cross outer half vector` of
-  /// the space point.
-  /// @return A const reference to the `strip separation cross outer half vector` of the space point.
-  const std::array<float, 3> &stripSeparationCrossOuterHalfVector()
-      const noexcept {
-    return accessImpl(m_container->m_stripSeparationCrossOuterHalfVectorColumn);
-  }
   /// Const access to the `strip separation cross inner half vector` of
   /// the space point.
   /// @return A const reference to the `strip separation cross inner half vector` of the space point.
   const std::array<float, 3> &stripSeparationCrossInnerHalfVector()
       const noexcept {
     return accessImpl(m_container->m_stripSeparationCrossInnerHalfVectorColumn);
+  }
+  /// Const access to the `strip separation cross outer half vector` of
+  /// the space point.
+  /// @return A const reference to the `strip separation cross outer half vector` of the space point.
+  const std::array<float, 3> &stripSeparationCrossOuterHalfVector()
+      const noexcept {
+    return accessImpl(m_container->m_stripSeparationCrossOuterHalfVectorColumn);
   }
   /// Const access to the `inner cross outer strip half vector` of the
   /// space point.
