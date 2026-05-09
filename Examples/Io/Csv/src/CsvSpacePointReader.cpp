@@ -78,31 +78,51 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
     sp.varianceZ() = data.sp_covz;
 
     if (m_cfg.extendCollection) {
-      const Acts::Vector3 topStripVector =
-          Acts::Vector3(data.sp_topStripDirection_0,
-                        data.sp_topStripDirection_1,
-                        data.sp_topStripDirection_2) *
-          2 * data.sp_topHalfStripLength;
-      const Acts::Vector3 bottomStripVector =
+      const Acts::Vector3 innerStripVector =
           Acts::Vector3(data.sp_bottomStripDirection_0,
                         data.sp_bottomStripDirection_1,
                         data.sp_bottomStripDirection_2) *
           2 * data.sp_bottomHalfStripLength;
+      const Acts::Vector3 outerStripCenter(data.sp_topStripCenterPosition_0,
+                                           data.sp_topStripCenterPosition_1,
+                                           data.sp_topStripCenterPosition_2);
+      const Acts::Vector3 outerStripVector =
+          Acts::Vector3(data.sp_topStripDirection_0,
+                        data.sp_topStripDirection_1,
+                        data.sp_topStripDirection_2) *
+          2 * data.sp_topHalfStripLength;
       const Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance_0,
                                               data.sp_stripCenterDistance_1,
                                               data.sp_stripCenterDistance_2);
-      const Acts::Vector3 topStripCenter(data.sp_topStripCenterPosition_0,
-                                         data.sp_topStripCenterPosition_1,
-                                         data.sp_topStripCenterPosition_2);
+      const Acts::Vector3 innerStripCenter =
+          outerStripVector - stripCenterDistance;
 
-      Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
-          topStripVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.bottomStripVector().data()) =
-          bottomStripVector.cast<float>();
+      const Acts::Vector3 stripCenterDistanceCrossOuterStripVector =
+          stripCenterDistance.cross(outerStripVector);
+      const Acts::Vector3 stripCenterDistanceCrossInnerStripVector =
+          stripCenterDistance.cross(innerStripVector);
+      const Acts::Vector3 innerStripVectorCrossOuterStripVector =
+          innerStripVector.cross(outerStripVector);
+
+      Eigen::Map<Eigen::Vector3f>(sp.innerStripCenter().data()) =
+          innerStripVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(sp.innerStripVector().data()) =
+          innerStripVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(sp.outerStripCenter().data()) =
+          outerStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(sp.outerStripVector().data()) =
+          outerStripVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
           stripCenterDistance.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.topStripCenter().data()) =
-          topStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripCenterDistanceCrossOuterStripVector().data()) =
+          stripCenterDistanceCrossOuterStripVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripCenterDistanceCrossInnerStripVector().data()) =
+          stripCenterDistanceCrossInnerStripVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.innerStripVectorCrossOuterStripVector().data()) =
+          innerStripVectorCrossOuterStripVector.cast<float>();
     }
   }
 

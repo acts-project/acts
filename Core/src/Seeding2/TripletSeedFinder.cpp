@@ -26,11 +26,11 @@ inline bool stripCoordinateCheck(float tolerance,
                                  const ConstSpacePointProxy2& sp,
                                  const std::array<float, 3>& pm,
                                  std::array<float, 3>& outputCoordinates) {
-  const auto& tsv = sp.topStripVector();
-  const auto& tsc = sp.topStripCenter();
-  const auto& bsvCrossTsv = sp.bottomStripVectorCrossTopStripVector();
-  const auto& scdCrossTsv = sp.stripCenterDistanceCrossTopStripVector();
-  const auto& scdCrossBsv = sp.stripCenterDistanceCrossBottomStripVector();
+  const auto& tsv = sp.outerStripVector();
+  const auto& tsc = sp.outerStripCenter();
+  const auto& bsvCrossTsv = sp.innerStripVectorCrossOuterStripVector();
+  const auto& scdCrossTsv = sp.stripCenterDistanceCrossOuterStripVector();
+  const auto& scdCrossBsv = sp.stripCenterDistanceCrossInnerStripVector();
 
   // bd1 = bottomStripVector dot (topStripVector cross pm)
   const float bd1 =

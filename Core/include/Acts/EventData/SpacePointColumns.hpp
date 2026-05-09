@@ -30,20 +30,20 @@ enum class SpacePointColumns : std::uint32_t {
   VarianceR = 1 << 9,        ///< Variance in radial direction
 
   // strip-specific columns
-  TopStripCenter = 1 << 10,     ///< Center of the top strip
-  TopStripVector = 1 << 11,     ///< Vector of the top strip
-  BottomStripCenter = 1 << 12,  ///< Center of the bottom strip
-  BottomStripVector = 1 << 13,  ///< Vector of the bottom strip
+  InnerStripCenter = 1 << 10,  ///< Center of the inner strip
+  InnerStripVector = 1 << 11,  ///< Vector of the inner strip
+  OuterStripCenter = 1 << 12,  ///< Center of the outer strip
+  OuterStripVector = 1 << 13,  ///< Vector of the outer strip
 
   // derived strip columns
-  /// Bottom to top strip center vector
+  /// Inner to outer strip center vector
   StripCenterDistance = 1 << 14,
-  /// Cross product of bottom and top strip vectors
-  BottomStripVectorCrossTopStripVector = 1 << 15,
-  /// Cross product of strip center distance and top strip vector
-  StripCenterDistanceCrossTopStripVector = 1 << 16,
-  /// Cross product of strip center distance and bottom strip vector
-  StripCenterDistanceCrossBottomStripVector = 1 << 17,
+  /// Cross product of strip center distance and outer strip vector
+  StripCenterDistanceCrossOuterStripVector = 1 << 15,
+  /// Cross product of strip center distance and inner strip vector
+  StripCenterDistanceCrossInnerStripVector = 1 << 16,
+  /// Cross product of inner and outer strip vectors
+  InnerStripVectorCrossOuterStripVector = 1 << 17,
 
   // packed columns for performance reasons
   PackedXY = 1 << 18,          ///< X and Y coordinates
@@ -53,18 +53,18 @@ enum class SpacePointColumns : std::uint32_t {
   PackedVarianceZR = 1 << 22,  ///< Variance in Z and R directions
 
   /// Relevant strip columns for seeding purposes
-  Strip = TopStripVector | TopStripCenter |
-          BottomStripVectorCrossTopStripVector |
-          StripCenterDistanceCrossTopStripVector |
-          StripCenterDistanceCrossBottomStripVector,
+  Strip = InnerStripVector | InnerStripCenter |
+          StripCenterDistanceCrossInnerStripVector |
+          StripCenterDistanceCrossOuterStripVector |
+          InnerStripVectorCrossOuterStripVector,
 
   /// All columns
   All = SourceLinks | X | Y | Z | R | Phi | Time | VarianceZ | VarianceR |
-        CopiedFromIndex | TopStripCenter | TopStripVector | BottomStripCenter |
-        BottomStripVector | StripCenterDistance |
-        BottomStripVectorCrossTopStripVector |
-        StripCenterDistanceCrossTopStripVector |
-        StripCenterDistanceCrossBottomStripVector | PackedXY | PackedZR |
+        CopiedFromIndex | InnerStripCenter | InnerStripVector |
+        OuterStripCenter | OuterStripVector | StripCenterDistance |
+        StripCenterDistanceCrossInnerStripVector |
+        StripCenterDistanceCrossOuterStripVector |
+        InnerStripVectorCrossOuterStripVector | PackedXY | PackedZR |
         PackedXYZ | PackedXYZR | PackedVarianceZR,
 };
 

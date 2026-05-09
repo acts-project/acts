@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/EventData/SpacePointContainer2.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -139,13 +138,19 @@ Acts::Result<void> createStripSpacePoint(
   const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
       gctx, surface1, *spacePoint, var1, var2, theta);
 
-  const Acts::Vector3 topStripVector = stripEnds1.top - stripEnds1.bottom;
-  const Acts::Vector3 bottomStripVector = stripEnds2.top - stripEnds2.bottom;
-  const Acts::Vector3 stripCenterDistance =
-      (0.5 * (stripEnds1.top + stripEnds1.bottom) -
-       0.5 * (stripEnds2.top + stripEnds2.bottom));
-  const Acts::Vector3 topStripCenter =
+  const Acts::Vector3 innerStripCenter =
       0.5 * (stripEnds1.top + stripEnds1.bottom);
+  const Acts::Vector3 innerStripVector = stripEnds1.top - stripEnds1.bottom;
+  const Acts::Vector3 outerStripCenter =
+      0.5 * (stripEnds2.top + stripEnds2.bottom);
+  const Acts::Vector3 outerStripVector = stripEnds2.top - stripEnds2.bottom;
+  const Acts::Vector3 stripCenterDistance = outerStripCenter - innerStripCenter;
+  const Acts::Vector3 stripCenterDistanceCrossOuterStripVector =
+      stripCenterDistance.cross(outerStripVector);
+  const Acts::Vector3 stripCenterDistanceCrossInnerStripVector =
+      stripCenterDistance.cross(innerStripVector);
+  const Acts::Vector3 innerStripVectorCrossOuterStripVector =
+      innerStripVector.cross(outerStripVector);
 
   auto sp = spacePoints.createSpacePoint();
   sp.assignSourceLinks(
@@ -157,14 +162,25 @@ Acts::Result<void> createStripSpacePoint(
   sp.time() = nanf;
   sp.varianceZ() = varZR[0];
   sp.varianceR() = varZR[1];
-  Eigen::Map<Eigen::Vector3f>(sp.topStripVector().data()) =
-      topStripVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.bottomStripVector().data()) =
-      bottomStripVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(sp.innerStripCenter().data()) =
+      innerStripCenter.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(sp.innerStripVector().data()) =
+      innerStripVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(sp.outerStripCenter().data()) =
+      outerStripCenter.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(sp.outerStripVector().data()) =
+      outerStripVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
       stripCenterDistance.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.topStripCenter().data()) =
-      topStripCenter.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.stripCenterDistanceCrossOuterStripVector().data()) =
+      stripCenterDistanceCrossOuterStripVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.stripCenterDistanceCrossInnerStripVector().data()) =
+      stripCenterDistanceCrossInnerStripVector.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
+      sp.innerStripVectorCrossOuterStripVector().data()) =
+      innerStripVectorCrossOuterStripVector.cast<float>();
 
   return Acts::Result<void>::success();
 }

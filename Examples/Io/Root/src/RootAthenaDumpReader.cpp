@@ -609,24 +609,39 @@ RootAthenaDumpReader::readSpacePoints(
                              imIdxMap ? imIdxMap->at(cl2Index) : cl2Index);
       sLinks.emplace_back(second);
 
-      Eigen::Vector3f topStripDirection = Eigen::Vector3f::Zero();
-      Eigen::Vector3f bottomStripDirection = Eigen::Vector3f::Zero();
-      Eigen::Vector3f stripCenterDistance = Eigen::Vector3f::Zero();
-      Eigen::Vector3f topStripCenterPosition = Eigen::Vector3f::Zero();
+      Acts::Vector3 innerStripCenterPosition = Acts::Vector3::Zero();
+      Acts::Vector3 innerStripDirection = Acts::Vector3::Zero();
+      Acts::Vector3 outerStripCenterPosition = Acts::Vector3::Zero();
+      Acts::Vector3 outerStripDirection = Acts::Vector3::Zero();
+      Acts::Vector3 stripCenterDistance = Acts::Vector3::Zero();
+      Acts::Vector3 stripCenterDistanceCrossOuterStripVector =
+          Acts::Vector3::Zero();
+      Acts::Vector3 stripCenterDistanceCrossInnerStripVector =
+          Acts::Vector3::Zero();
+      Acts::Vector3 innerStripVectorCrossOuterStripVector =
+          Acts::Vector3::Zero();
 
       if (m_haveStripFeatures) {
-        topStripDirection = {SPtopStripDirection->at(isp).at(0),
-                             SPtopStripDirection->at(isp).at(1),
-                             SPtopStripDirection->at(isp).at(2)};
-        bottomStripDirection = {SPbottomStripDirection->at(isp).at(0),
-                                SPbottomStripDirection->at(isp).at(1),
-                                SPbottomStripDirection->at(isp).at(2)};
+        innerStripDirection = {SPbottomStripDirection->at(isp).at(0),
+                               SPbottomStripDirection->at(isp).at(1),
+                               SPbottomStripDirection->at(isp).at(2)};
+        outerStripCenterPosition = {SPtopStripCenterPosition->at(isp).at(0),
+                                    SPtopStripCenterPosition->at(isp).at(1),
+                                    SPtopStripCenterPosition->at(isp).at(2)};
+        outerStripDirection = {SPtopStripDirection->at(isp).at(0),
+                               SPtopStripDirection->at(isp).at(1),
+                               SPtopStripDirection->at(isp).at(2)};
         stripCenterDistance = {SPstripCenterDistance->at(isp).at(0),
                                SPstripCenterDistance->at(isp).at(1),
                                SPstripCenterDistance->at(isp).at(2)};
-        topStripCenterPosition = {SPtopStripCenterPosition->at(isp).at(0),
-                                  SPtopStripCenterPosition->at(isp).at(1),
-                                  SPtopStripCenterPosition->at(isp).at(2)};
+        innerStripCenterPosition =
+            outerStripCenterPosition - stripCenterDistance;
+        stripCenterDistanceCrossOuterStripVector =
+            stripCenterDistance.cross(outerStripDirection);
+        stripCenterDistanceCrossInnerStripVector =
+            stripCenterDistance.cross(innerStripDirection);
+        innerStripVectorCrossOuterStripVector =
+            innerStripDirection.cross(outerStripDirection);
       }
 
       auto stripSp = stripSpacePoints.createSpacePoint();
@@ -636,19 +651,38 @@ RootAthenaDumpReader::readSpacePoints(
       stripSp.z() = globalPos.z();
       stripSp.varianceR() = spCovr;
       stripSp.varianceZ() = spCovz;
-      Eigen::Map<Eigen::Vector3f>(stripSp.topStripVector().data()) =
-          topStripDirection.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.bottomStripVector().data()) =
-          bottomStripDirection.cast<float>();
+
+      Eigen::Map<Eigen::Vector3f>(stripSp.innerStripCenter().data()) =
+          innerStripCenterPosition.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.innerStripVector().data()) =
+          innerStripDirection.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.outerStripCenter().data()) =
+          outerStripCenterPosition.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.outerStripVector().data()) =
+          outerStripDirection.cast<float>();
       Eigen::Map<Eigen::Vector3f>(stripSp.stripCenterDistance().data()) =
           stripCenterDistance.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.topStripCenter().data()) =
-          topStripCenterPosition.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripCenterDistanceCrossOuterStripVector().data()) =
+          stripCenterDistanceCrossOuterStripVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripCenterDistanceCrossInnerStripVector().data()) =
+          stripCenterDistanceCrossInnerStripVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.innerStripVectorCrossOuterStripVector().data()) =
+          innerStripVectorCrossOuterStripVector.cast<float>();
 
-      sp.topStripVector() = stripSp.topStripVector();
-      sp.bottomStripVector() = stripSp.bottomStripVector();
+      sp.innerStripCenter() = stripSp.innerStripCenter();
+      sp.innerStripVector() = stripSp.innerStripVector();
+      sp.outerStripCenter() = stripSp.outerStripCenter();
+      sp.outerStripVector() = stripSp.outerStripVector();
       sp.stripCenterDistance() = stripSp.stripCenterDistance();
-      sp.topStripCenter() = stripSp.topStripCenter();
+      sp.stripCenterDistanceCrossOuterStripVector() =
+          stripSp.stripCenterDistanceCrossOuterStripVector();
+      sp.stripCenterDistanceCrossInnerStripVector() =
+          stripSp.stripCenterDistanceCrossInnerStripVector();
+      sp.innerStripVectorCrossOuterStripVector() =
+          stripSp.innerStripVectorCrossOuterStripVector();
     }
 
     sp.assignSourceLinks(sLinks);
