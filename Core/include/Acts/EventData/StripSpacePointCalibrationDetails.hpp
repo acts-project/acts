@@ -8,17 +8,17 @@
 
 #pragma once
 
-#include <Eigen/Dense>
+#include <array>
 
 namespace Acts {
 
 struct StripSpacePointCalibrationDetails final {
-  Eigen::Vector3f innerCrossOuterStripHalfVector;
-  Eigen::Vector3f stripSeparationCrossOuterHalfVector;
-  Eigen::Vector3f stripSeparationCrossInnerHalfVector;
   // TODO use inner?
-  Eigen::Vector3f outerStripCenter;
-  Eigen::Vector3f outerStripHalfVector;
+  std::array<float, 3> outerStripCenter;
+  std::array<float, 3> outerStripHalfVector;
+  std::array<float, 3> stripSeparationCrossInnerHalfVector;
+  std::array<float, 3> stripSeparationCrossOuterHalfVector;
+  std::array<float, 3> innerCrossOuterStripHalfVector;
 };
 
 }  // namespace Acts

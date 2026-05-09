@@ -105,11 +105,11 @@ inline bool calibrateStripSpacePoint(
     const StripSpacePointCalibrationDetails& sp,
     std::span<const float, 3> direction, std::span<float, 3> calibrated,
     float tolerance) {
-  const auto& ihvCrossOhv = sp.innerCrossOuterStripHalfVector;
-  const auto& sCrossOhv = sp.stripSeparationCrossOuterHalfVector;
-  const auto& sCrossIhv = sp.stripSeparationCrossInnerHalfVector;
   const auto& oc = sp.outerStripCenter;
   const auto& ohv = sp.outerStripHalfVector;
+  const auto& sCrossIhv = sp.stripSeparationCrossInnerHalfVector;
+  const auto& sCrossOhv = sp.stripSeparationCrossOuterHalfVector;
+  const auto& ihvCrossOhv = sp.innerCrossOuterStripHalfVector;
 
   // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
   const float scale = direction[0] * ihvCrossOhv[0] +
