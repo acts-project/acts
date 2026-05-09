@@ -16,9 +16,7 @@
 #include <sycl/sycl.hpp>
 #endif
 
-namespace detray {
-
-namespace math {
+namespace detray::math {
 
 /// Namespace to pick up math functions from
 #if defined(CL_SYCL_LANGUAGE_VERSION) || defined(SYCL_LANGUAGE_VERSION)
@@ -28,6 +26,4 @@ using namespace ::sycl;
 using namespace ::detray::algebra::math;
 #endif  // SYCL
 
-}  // namespace math
-
-}  // namespace detray
+}  // namespace detray::math
