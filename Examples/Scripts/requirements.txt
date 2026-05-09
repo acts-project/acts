@@ -24,7 +24,7 @@ cycler==0.12.1
     # via matplotlib
 fonttools==4.62.1
     # via matplotlib
-fsspec==2026.3.0
+fsspec==2026.4.0
     # via
     #   awkward
     #   uproot
@@ -95,7 +95,7 @@ shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-typer==0.24.2
+typer==0.25.1
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.15.0
     # via
@@ -108,7 +108,7 @@ uhi==1.1.1
     # via
     #   histoprint
     #   mplhep
-uproot==5.7.3
+uproot==5.7.4
     # via -r Examples/Scripts/requirements.in
 xxhash==3.7.0
     # via uproot
