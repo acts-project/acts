@@ -22,5 +22,7 @@ set(ACTSVG_BUILD_PYTHON_BINDINGS
     "Build python bindings for actsvg if ACTS python bindings are enabled"
 )
 
+set(ACTSVG_BUILD_WEB ON CACHE BOOL "Build the web plugin of ACTSVG")
+
 # Now set up its build.
 FetchContent_MakeAvailable(actsvg)

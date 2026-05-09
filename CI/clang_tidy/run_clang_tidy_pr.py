@@ -50,8 +50,8 @@ from rich.text import Text
 app = typer.Typer()
 console = Console(stderr=True, width=None if sys.stderr.isatty() else 120)
 
-SOURCE_SUFFIXES = {".cpp", ".cxx", ".cc", ".c"}
-HEADER_SUFFIXES = {".hpp", ".hxx", ".hh", ".h", ".ipp"}
+SOURCE_SUFFIXES = {".cpp", ".cxx", ".cc", ".c", ".cu"}
+HEADER_SUFFIXES = {".hpp", ".hxx", ".hh", ".h", ".ipp", ".cuh", ".sycl", ".hip"}
 
 
 # ---------------------------------------------------------------------------

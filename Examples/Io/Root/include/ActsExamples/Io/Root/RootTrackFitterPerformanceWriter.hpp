@@ -54,10 +54,11 @@ class RootTrackFitterPerformanceWriter final
 
     /// Minimum number of entries in a bin for it to be included in the
     /// mean/width fit.
-    int minEntriesForFit = 10;
-    /// Fit option string to pass to ROOT when performing Gaussian fits for
-    /// mean/width extraction.
-    std::string fitOption = "QS0";
+    int fitMinEntries = 10;
+    /// The range in sigma for the iterative Gaussian fit
+    double fitSigmaRange = 3.0;
+    /// The maximum number of iterations for the iterative Gaussian fit
+    int fitIterations = 3;
     /// Threshold for warning about fit failure fraction in profile extraction.
     double warningThresholdFitFailureFraction = 0.55;
   };
