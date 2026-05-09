@@ -9,6 +9,7 @@
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
+#include "Acts/SpacePointFormation2/StripSpacePointBuilder.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -21,47 +22,6 @@
 namespace Acts {
 
 namespace {
-
-inline bool calibrateStripSpacePoint(float tolerance,
-                                     const ConstSpacePointProxy2& sp,
-                                     const std::array<float, 3>& direction,
-                                     std::array<float, 3>& outputCoordinates) {
-  const auto& oc = sp.outerStripCenter();
-  const auto& ohv = sp.outerStripHalfVector();
-  const auto& sCrossIhv = sp.stripSeparationCrossInnerHalfVector();
-  const auto& sCrossOhv = sp.stripSeparationCrossOuterHalfVector();
-  const auto& ihvCrossOhv = sp.innerCrossOuterStripHalfVector();
-
-  // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
-  const float scale = direction[0] * ihvCrossOhv[0] +
-                      direction[1] * ihvCrossOhv[1] +
-                      direction[2] * ihvCrossOhv[2];
-
-  // sInner = stripSeparation dot (outerStripHalfVector cross direction)
-  // Check if direction is inside the inner detector element
-  const float sInner = direction[0] * sCrossIhv[0] +
-                       direction[1] * sCrossIhv[1] +
-                       direction[2] * sCrossIhv[2];
-  if (std::abs(sInner) > std::abs(scale) * tolerance) {
-    return false;
-  }
-
-  // sOuter = stripSeparation dot (innerStripHalfVector cross direction)
-  // Check if direction is inside the outer detector element
-  const float sOuter = direction[0] * sCrossOhv[0] +
-                       direction[1] * sCrossOhv[1] +
-                       direction[2] * sCrossOhv[2];
-  if (std::abs(sOuter) > std::abs(scale) * tolerance) {
-    return false;
-  }
-
-  // Corrected position using the outer strip center and direction
-  const float sOuterNorm = sOuter / scale;
-  outputCoordinates[0] = oc[0] + ohv[0] * sOuterNorm;
-  outputCoordinates[1] = oc[1] + ohv[1] * sOuterNorm;
-  outputCoordinates[2] = oc[2] + ohv[2] * sOuterNorm;
-  return true;
-}
 
 template <bool useStripInfo, bool sortedByCotTheta>
 class Impl final : public TripletSeedFinder {
@@ -287,13 +247,14 @@ class Impl final : public TripletSeedFinder {
       // The middle strip check is scale-invariant (ratios s1/bd1 and s0/bd1
       // are unaffected by uniform scaling of pm), so we use cosTheta as the
       // z-component instead of cosTheta * sqrt(1 + A0^2), deferring the sqrt.
-      const std::array<float, 3> positionMiddle = {
+      const std::array<float, 3> directionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
       std::array<float, 3> rMTransf{};
-      if (!calibrateStripSpacePoint(m_cfg.toleranceParam, spM, positionMiddle,
-                                    rMTransf)) {
+      if (!StripSpacePointBuilder::calibrateStripSpacePoint(
+              spM.stripCalibrationDetails(), directionMiddle, rMTransf,
+              m_cfg.toleranceParam)) {
         continue;
       }
 
@@ -304,21 +265,22 @@ class Impl final : public TripletSeedFinder {
       const float B0 = 2 * (Vb - A0 * Ub);
       const float Cb = 1 - B0 * bottomDoublet.y();
       const float Sb = A0 + B0 * bottomDoublet.x();
-      const std::array<float, 3> positionBottom = {
+      const std::array<float, 3> directionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
           zPositionMiddle};
 
       std::array<float, 3> rBTransf{};
-      if (!calibrateStripSpacePoint(m_cfg.toleranceParam, spB, positionBottom,
-                                    rBTransf)) {
+      if (!StripSpacePointBuilder::calibrateStripSpacePoint(
+              spB.stripCalibrationDetails(), directionBottom, rBTransf,
+              m_cfg.toleranceParam)) {
         continue;
       }
 
       // coordinate transformation and checks for top space point
       const float Ct = 1 - B0 * topDoublet.y();
       const float St = A0 + B0 * topDoublet.x();
-      const std::array<float, 3> positionTop = {
+      const std::array<float, 3> directionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
           zPositionMiddle};
@@ -326,8 +288,9 @@ class Impl final : public TripletSeedFinder {
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
       std::array<float, 3> rTTransf{};
-      if (!calibrateStripSpacePoint(m_cfg.toleranceParam, spT, positionTop,
-                                    rTTransf)) {
+      if (!StripSpacePointBuilder::calibrateStripSpacePoint(
+              spT.stripCalibrationDetails(), directionTop, rTTransf,
+              m_cfg.toleranceParam)) {
         continue;
       }
 

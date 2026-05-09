@@ -57,7 +57,7 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z |
       SpacePointColumns::VarianceR | SpacePointColumns::VarianceZ |
-      SpacePointColumns::StripAll);
+      SpacePointColumns::StripCalibrationDetails);
 
   const auto& filename = m_cfg.inputCollection.empty()
                              ? m_cfg.inputStem
@@ -104,23 +104,22 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
       const Acts::Vector3 innerCrossOuterStripHalfVector =
           innerStripHalfVector.cross(outerStripHalfVector);
 
-      Eigen::Map<Eigen::Vector3f>(sp.innerStripCenter().data()) =
-          innerStripCenter.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.innerStripHalfVector().data()) =
-          innerStripHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.outerStripCenter().data()) =
-          outerStripCenter.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.outerStripHalfVector().data()) =
-          outerStripHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.stripSeparation().data()) =
-          stripSeparation.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripSeparationCrossInnerHalfVector().data()) =
+          sp.stripCalibrationDetails().outerStripCenter.data()) =
+          outerStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripCalibrationDetails().outerStripHalfVector.data()) =
+          outerStripHalfVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripCalibrationDetails()
+              .stripSeparationCrossInnerHalfVector.data()) =
           stripSeparationCrossInnerHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripSeparationCrossOuterHalfVector().data()) =
+          sp.stripCalibrationDetails()
+              .stripSeparationCrossOuterHalfVector.data()) =
           stripSeparationCrossOuterHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.innerCrossOuterStripHalfVector().data()) =
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripCalibrationDetails().innerCrossOuterStripHalfVector.data()) =
           innerCrossOuterStripHalfVector.cast<float>();
     }
   }

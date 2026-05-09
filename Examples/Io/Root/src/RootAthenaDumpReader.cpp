@@ -507,14 +507,14 @@ RootAthenaDumpReader::readSpacePoints(
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z |
       SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR |
-      SpacePointColumns::StripAll);
+      SpacePointColumns::StripCalibrationDetails);
   stripSpacePoints.reserve(nSP);
 
   SpacePointContainer spacePoints(
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z |
       SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR |
-      SpacePointColumns::StripAll);
+      SpacePointColumns::StripCalibrationDetails);
   spacePoints.reserve(nSP);
 
   // Loop on space points
@@ -651,36 +651,25 @@ RootAthenaDumpReader::readSpacePoints(
       stripSp.varianceR() = spCovr;
       stripSp.varianceZ() = spCovz;
 
-      Eigen::Map<Eigen::Vector3f>(stripSp.innerStripCenter().data()) =
-          innerStripCenter.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.innerStripHalfVector().data()) =
-          innerStripHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.outerStripCenter().data()) =
-          outerStripCenter.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.outerStripHalfVector().data()) =
-          outerStripHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.stripSeparation().data()) =
-          stripSeparation.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripSeparationCrossOuterHalfVector().data()) =
+          stripSp.stripCalibrationDetails().outerStripCenter.data()) =
+          outerStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          stripSp.stripCalibrationDetails().outerStripHalfVector.data()) =
+          outerStripHalfVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          stripSp.stripCalibrationDetails()
+              .stripSeparationCrossOuterHalfVector.data()) =
           stripSeparationCrossOuterHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripSeparationCrossInnerHalfVector().data()) =
+          stripSp.stripCalibrationDetails()
+              .stripSeparationCrossInnerHalfVector.data()) =
           stripSeparationCrossInnerHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.innerCrossOuterStripHalfVector().data()) =
+      Eigen::Map<Eigen::Vector3f>(stripSp.stripCalibrationDetails()
+                                      .innerCrossOuterStripHalfVector.data()) =
           innerCrossOuterStripHalfVector.cast<float>();
 
-      sp.innerStripCenter() = stripSp.innerStripCenter();
-      sp.innerStripHalfVector() = stripSp.innerStripHalfVector();
-      sp.outerStripCenter() = stripSp.outerStripCenter();
-      sp.outerStripHalfVector() = stripSp.outerStripHalfVector();
-      sp.stripSeparation() = stripSp.stripSeparation();
-      sp.stripSeparationCrossOuterHalfVector() =
-          stripSp.stripSeparationCrossOuterHalfVector();
-      sp.stripSeparationCrossInnerHalfVector() =
-          stripSp.stripSeparationCrossInnerHalfVector();
-      sp.innerCrossOuterStripHalfVector() =
-          stripSp.innerCrossOuterStripHalfVector();
+      sp.stripCalibrationDetails() = stripSp.stripCalibrationDetails();
     }
 
     sp.assignSourceLinks(sLinks);

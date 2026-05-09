@@ -11,6 +11,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SpacePointColumnProxy2.hpp"
 #include "Acts/EventData/SpacePointColumns.hpp"
+#include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/detail/SpacePointContainer2Column.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -238,69 +239,13 @@ class SpacePointContainer2 {
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the `inner strip center` column.
-  /// @return A mutable proxy to the `inner strip center` column.
-  MutableColumnProxy<std::array<float, 3>> innerStripCenterColumn() noexcept {
-    assert(m_innerStripCenterColumn.has_value() &&
-           "Column 'innerStripCenter' does not exist");
-    return m_innerStripCenterColumn->proxy(*this);
-  }
-  /// Returns a mutable proxy to the `inner strip half vector` column.
-  /// @return A mutable proxy to the `inner strip half vector` column.
-  MutableColumnProxy<std::array<float, 3>>
-  innerStripHalfVectorColumn() noexcept {
-    assert(m_innerStripHalfVectorColumn.has_value() &&
-           "Column 'innerStripHalfVector' does not exist");
-    return m_innerStripHalfVectorColumn->proxy(*this);
-  }
-  /// Returns a mutable proxy to the `outer strip center` column.
-  /// @return A mutable proxy to the `outer strip center` column.
-  MutableColumnProxy<std::array<float, 3>> outerStripCenterColumn() noexcept {
-    assert(m_outerStripCenterColumn.has_value() &&
-           "Column 'outerStripCenter' does not exist");
-    return m_outerStripCenterColumn->proxy(*this);
-  }
-  /// Returns a mutable proxy to the `outer strip half vector` column.
-  /// @return A mutable proxy to the `outer strip half vector` column.
-  MutableColumnProxy<std::array<float, 3>>
-  outerStripHalfVectorColumn() noexcept {
-    assert(m_outerStripHalfVectorColumn.has_value() &&
-           "Column 'outerStripHalfVector' does not exist");
-    return m_outerStripHalfVectorColumn->proxy(*this);
-  }
-  /// Returns a mutable proxy to the `strip separation` column.
-  /// @return A mutable proxy to the `strip separation` column.
-  MutableColumnProxy<std::array<float, 3>> stripSeparationColumn() noexcept {
-    assert(m_stripSeparationColumn.has_value() &&
-           "Column 'stripSeparation' does not exist");
-    return m_stripSeparationColumn->proxy(*this);
-  }
-  /// Returns a mutable proxy to the `strip separation cross inner half strip
-  /// vector` column.
-  /// @return A mutable proxy to the `strip separation cross inner half strip vector` column.
-  MutableColumnProxy<std::array<float, 3>>
-  stripSeparationCrossInnerHalfVectorColumn() noexcept {
-    assert(m_stripSeparationCrossInnerHalfVectorColumn.has_value() &&
-           "Column 'stripSeparationCrossInnerHalfVector' does not exist");
-    return m_stripSeparationCrossInnerHalfVectorColumn->proxy(*this);
-  }
-  /// Returns a mutable proxy to the `strip separation cross outer half strip
-  /// vector` column.
-  /// @return A mutable proxy to the `strip separation cross outer half strip vector` column.
-  MutableColumnProxy<std::array<float, 3>>
-  stripSeparationCrossOuterHalfVectorColumn() noexcept {
-    assert(m_stripSeparationCrossOuterHalfVectorColumn.has_value() &&
-           "Column 'stripSeparationCrossOuterHalfVector' does not exist");
-    return m_stripSeparationCrossOuterHalfVectorColumn->proxy(*this);
-  }
-  /// Returns a mutable proxy to the `inner cross outer strip half vector`
-  /// column.
-  /// @return A mutable proxy to the `inner cross outer strip half vector` column.
-  MutableColumnProxy<std::array<float, 3>>
-  innerCrossOuterStripHalfVectorColumn() noexcept {
-    assert(m_innerCrossOuterStripHalfVectorColumn.has_value() &&
-           "Column 'innerCrossOuterStripHalfVector' does not exist");
-    return m_innerCrossOuterStripHalfVectorColumn->proxy(*this);
+  /// Returns a mutable proxy to the `strip calibration details` column.
+  /// @return A mutable proxy to the `strip calibration details` column.
+  MutableColumnProxy<StripSpacePointCalibrationDetails>
+  stripCalibrationDetailsColumn() noexcept {
+    assert(m_stripCalibrationDetailsColumn.has_value() &&
+           "Column 'stripCalibrationDetails' does not exist");
+    return m_stripCalibrationDetailsColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `xy` coordinates column.
   /// @return A mutable proxy to the `xy` coordinates column.
@@ -391,71 +336,13 @@ class SpacePointContainer2 {
            "Column 'varianceR' does not exist");
     return m_varianceRColumn->proxy(*this);
   }
-  /// Returns a const proxy to the `inner strip center` column.
-  /// @return A const proxy to the `inner strip center` column.
-  ConstColumnProxy<std::array<float, 3>> innerStripCenterColumn()
-      const noexcept {
-    assert(m_innerStripCenterColumn.has_value() &&
-           "Column 'innerStripCenter' does not exist");
-    return m_innerStripCenterColumn->proxy(*this);
-  }
-  /// Returns a const proxy to the `inner strip half vector` column.
-  /// @return A const proxy to the `inner strip half vector` column.
-  ConstColumnProxy<std::array<float, 3>> innerStripHalfVectorColumn()
-      const noexcept {
-    assert(m_innerStripHalfVectorColumn.has_value() &&
-           "Column 'innerStripHalfVector' does not exist");
-    return m_innerStripHalfVectorColumn->proxy(*this);
-  }
-  /// Returns a const proxy to the `outer strip center` column.
-  /// @return A const proxy to the `outer strip center` column.
-  ConstColumnProxy<std::array<float, 3>> outerStripCenterColumn()
-      const noexcept {
-    assert(m_outerStripCenterColumn.has_value() &&
-           "Column 'outerStripCenter' does not exist");
-    return m_outerStripCenterColumn->proxy(*this);
-  }
-  /// Returns a const proxy to the `outer strip half vector` column.
-  /// @return A const proxy to the `outer strip half vector` column.
-  ConstColumnProxy<std::array<float, 3>> outerStripHalfVectorColumn()
-      const noexcept {
-    assert(m_outerStripHalfVectorColumn.has_value() &&
-           "Column 'outerStripHalfVector' does not exist");
-    return m_outerStripHalfVectorColumn->proxy(*this);
-  }
-  /// Returns a const proxy to the `strip separation` column.
-  /// @return A const proxy to the `strip separation` column.
-  ConstColumnProxy<std::array<float, 3>> stripSeparationColumn()
-      const noexcept {
-    assert(m_stripSeparationColumn.has_value() &&
-           "Column 'stripSeparation' does not exist");
-    return m_stripSeparationColumn->proxy(*this);
-  }
-  /// Returns a const proxy to the `strip separation cross inner half vector`
-  /// column.
-  /// @return A const proxy to the `strip separation cross inner half vector` column.
-  ConstColumnProxy<std::array<float, 3>>
-  stripSeparationCrossInnerHalfVectorColumn() const noexcept {
-    assert(m_stripSeparationCrossInnerHalfVectorColumn.has_value() &&
-           "Column 'stripSeparationCrossInnerHalfVector' does not exist");
-    return m_stripSeparationCrossInnerHalfVectorColumn->proxy(*this);
-  }
-  /// Returns a const proxy to the `strip separation cross outer half vector`
-  /// column.
-  /// @return A const proxy to the `strip separation cross outer half vector` column.
-  ConstColumnProxy<std::array<float, 3>>
-  stripSeparationCrossOuterHalfVectorColumn() const noexcept {
-    assert(m_stripSeparationCrossOuterHalfVectorColumn.has_value() &&
-           "Column 'stripSeparationCrossOuterHalfVector' does not exist");
-    return m_stripSeparationCrossOuterHalfVectorColumn->proxy(*this);
-  }
-  /// Returns a const proxy to the `inner cross outer strip half vector` column.
-  /// @return A const proxy to the `inner cross outer strip half vector` column.
-  ConstColumnProxy<std::array<float, 3>> innerCrossOuterStripHalfVectorColumn()
-      const noexcept {
-    assert(m_innerCrossOuterStripHalfVectorColumn.has_value() &&
-           "Column 'innerCrossOuterStripHalfVector' does not exist");
-    return m_innerCrossOuterStripHalfVectorColumn->proxy(*this);
+  /// Returns a const proxy to the `strip calibration details` column.
+  /// @return A const proxy to the `strip calibration details` column.
+  ConstColumnProxy<StripSpacePointCalibrationDetails>
+  stripCalibrationDetailsColumn() const noexcept {
+    assert(m_stripCalibrationDetailsColumn.has_value() &&
+           "Column 'stripCalibrationDetails' does not exist");
+    return m_stripCalibrationDetailsColumn->proxy(*this);
   }
   /// Returns a const proxy to the `xy` coordinates column.
   /// @return A const proxy to the `xy` coordinates column.
@@ -717,21 +604,8 @@ class SpacePointContainer2 {
   std::optional<ColumnHolder<float>> m_varianceRColumn;
 
   // strip information
-  std::optional<ColumnHolder<std::array<float, 3>>> m_innerStripCenterColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>>
-      m_innerStripHalfVectorColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>> m_outerStripCenterColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>>
-      m_outerStripHalfVectorColumn;
-
-  // derived strip information
-  std::optional<ColumnHolder<std::array<float, 3>>> m_stripSeparationColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>>
-      m_stripSeparationCrossInnerHalfVectorColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>>
-      m_stripSeparationCrossOuterHalfVectorColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>>
-      m_innerCrossOuterStripHalfVectorColumn;
+  std::optional<ColumnHolder<StripSpacePointCalibrationDetails>>
+      m_stripCalibrationDetailsColumn;
 
   // packed columns
   std::optional<ColumnHolder<std::array<float, 2>>> m_xyColumn;
@@ -742,36 +616,26 @@ class SpacePointContainer2 {
 
   static auto knownColumnMasks() noexcept {
     using enum SpacePointColumns;
-    return std::tuple(
-        SourceLinks, SourceLinks, CopiedFromIndex, X, Y, Z, R, Phi, Time,
-        VarianceZ, VarianceR, InnerStripCenter, InnerStripHalfVector,
-        OuterStripCenter, OuterStripHalfVector, StripSeparation,
-        StripSeparationCrossInnerHalfVector,
-        StripSeparationCrossOuterHalfVector, InnerCrossOuterStripHalfVector,
-        PackedXY, PackedZR, PackedXYZ, PackedXYZR, PackedVarianceZR);
+    return std::tuple(SourceLinks, SourceLinks, CopiedFromIndex, X, Y, Z, R,
+                      Phi, Time, VarianceZ, VarianceR, StripCalibrationDetails,
+                      PackedXY, PackedZR, PackedXYZ, PackedXYZR,
+                      PackedVarianceZR);
   }
 
   static auto knownColumnNames() noexcept {
-    return std::tuple(
-        "sourceLinkOffset", "sourceLinkCount", "copiedFromIndex", "x", "y", "z",
-        "r", "phi", "time", "varianceZ", "varianceR", "innerStripCenter",
-        "innerStripHalfVector", "outerStripCenter", "outerStripHalfVector",
-        "stripSeparation", "stripSeparationCrossInnerHalfVector",
-        "stripSeparationCrossOuterHalfVector", "innerCrossOuterStripHalfVector",
-        "xy", "zr", "xyz", "xyzr", "varianceZR");
+    return std::tuple("sourceLinkOffset", "sourceLinkCount", "copiedFromIndex",
+                      "x", "y", "z", "r", "phi", "time", "varianceZ",
+                      "varianceR", "stripCalibrationDetails", "xy", "zr", "xyz",
+                      "xyzr", "varianceZR");
   }
 
   static auto knownColumnDefaults() noexcept {
     return std::tuple(
         std::uint32_t{0}, std::uint8_t{0}, std::uint32_t{0}, float{0}, float{0},
         float{0}, float{0}, float{0}, float{NoTime}, float{0}, float{0},
-        std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
-        std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
-        std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
-        std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
-        std::array<float, 2>{0, 0}, std::array<float, 2>{0, 0},
-        std::array<float, 3>{0, 0, 0}, std::array<float, 4>{0, 0, 0, 0},
-        std::array<float, 2>{0, 0});
+        StripSpacePointCalibrationDetails{}, std::array<float, 2>{0, 0},
+        std::array<float, 2>{0, 0}, std::array<float, 3>{0, 0, 0},
+        std::array<float, 4>{0, 0, 0, 0}, std::array<float, 2>{0, 0});
   }
 
   template <typename Self>
@@ -781,14 +645,8 @@ class SpacePointContainer2 {
         self.m_copiedFromIndexColumn, self.m_xColumn, self.m_yColumn,
         self.m_zColumn, self.m_rColumn, self.m_phiColumn, self.m_timeColumn,
         self.m_varianceZColumn, self.m_varianceRColumn,
-        self.m_innerStripCenterColumn, self.m_innerStripHalfVectorColumn,
-        self.m_outerStripCenterColumn, self.m_outerStripHalfVectorColumn,
-        self.m_stripSeparationColumn,
-        self.m_stripSeparationCrossInnerHalfVectorColumn,
-        self.m_stripSeparationCrossOuterHalfVectorColumn,
-        self.m_innerCrossOuterStripHalfVectorColumn, self.m_xyColumn,
-        self.m_zrColumn, self.m_xyzColumn, self.m_xyzrColumn,
-        self.m_varianceZRColumn);
+        self.m_stripCalibrationDetailsColumn, self.m_xyColumn, self.m_zrColumn,
+        self.m_xyzColumn, self.m_xyzrColumn, self.m_varianceZRColumn);
   }
   auto knownColumns() & noexcept { return knownColumns(*this); }
   auto knownColumns() const & noexcept { return knownColumns(*this); }

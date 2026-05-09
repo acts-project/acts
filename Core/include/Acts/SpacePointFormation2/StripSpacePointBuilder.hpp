@@ -10,7 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/StripSpacePointCalibrationDetails.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <span>
 
 namespace Acts {
 
@@ -97,6 +100,50 @@ Result<Vector3> computeConstrainedSpacePoint(const StripEnds& stripEnds1,
 Vector2 computeVarianceZR(const GeometryContext& gctx, const Surface& surface1,
                           const Vector3& spacePoint, double localCov1,
                           double localCov2, double theta);
+
+inline bool calibrateStripSpacePoint(
+    const StripSpacePointCalibrationDetails& sp,
+    std::span<const float, 3> direction, std::span<float, 3> calibrated,
+    float tolerance) {
+  const auto& oc = sp.outerStripCenter;
+  const auto& ohv = sp.outerStripHalfVector;
+  const auto& sCrossIhv = sp.stripSeparationCrossInnerHalfVector;
+  const auto& sCrossOhv = sp.stripSeparationCrossOuterHalfVector;
+  const auto& ihvCrossOhv = sp.innerCrossOuterStripHalfVector;
+
+  // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
+  const float scale = direction[0] * ihvCrossOhv[0] +
+                      direction[1] * ihvCrossOhv[1] +
+                      direction[2] * ihvCrossOhv[2];
+
+  // sInner = stripSeparation dot (outerStripHalfVector cross direction)
+  // Check if direction is inside the inner detector element
+  // TODO should this rather use `sCrossIhv`?
+  const float sInner = direction[0] * sCrossOhv[0] +
+                       direction[1] * sCrossOhv[1] +
+                       direction[2] * sCrossOhv[2];
+  if (std::abs(sInner) > std::abs(scale) * tolerance) {
+    return false;
+  }
+
+  // sOuter = stripSeparation dot (innerStripHalfVector cross direction)
+  // Check if direction is inside the outer detector element
+  // TODO should this rather use `sCrossOhv`?
+  const float sOuter = direction[0] * sCrossIhv[0] +
+                       direction[1] * sCrossIhv[1] +
+                       direction[2] * sCrossIhv[2];
+  if (std::abs(sOuter) > std::abs(scale) * tolerance) {
+    return false;
+  }
+
+  // Corrected position using the outer strip center and direction
+  // TODO use inner?
+  const float sOuterNorm = sOuter / scale;
+  calibrated[0] = oc[0] + ohv[0] * sOuterNorm;
+  calibrated[1] = oc[1] + ohv[1] * sOuterNorm;
+  calibrated[2] = oc[2] + ohv[2] * sOuterNorm;
+  return true;
+}
 
 }  // namespace StripSpacePointBuilder
 

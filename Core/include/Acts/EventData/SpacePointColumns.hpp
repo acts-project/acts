@@ -29,49 +29,20 @@ enum class SpacePointColumns : std::uint32_t {
   VarianceZ = 1 << 8,        ///< Variance in Z direction
   VarianceR = 1 << 9,        ///< Variance in radial direction
 
-  // strip-specific columns
-  InnerStripCenter = 1 << 10,      ///< Vector to inner strip center
-  InnerStripHalfVector = 1 << 11,  ///< Center-to-edge vector of inner strip
-  OuterStripCenter = 1 << 12,      ///< Vector to outer strip center
-  OuterStripHalfVector = 1 << 13,  ///< Center-to-edge vector of outer strip
-
-  // derived strip columns
-  /// Vector from inner to outer strip centers
-  StripSeparation = 1 << 14,
-  /// Cross product of strip separation and inner strip half vector
-  StripSeparationCrossInnerHalfVector = 1 << 15,
-  /// Cross product of strip separation and outer strip half vector
-  StripSeparationCrossOuterHalfVector = 1 << 16,
-  /// Cross product of inner and outer strip half vectors
-  InnerCrossOuterStripHalfVector = 1 << 17,
+  /// Calibration details for strip space points
+  StripCalibrationDetails = 1 << 10,
 
   // packed columns for performance reasons
-  PackedXY = 1 << 18,          ///< X and Y coordinates
-  PackedZR = 1 << 19,          ///< Z and R coordinates
-  PackedXYZ = 1 << 20,         ///< X, Y, and Z coordinates
-  PackedXYZR = 1 << 21,        ///< X, Y, Z, and R coordinates
-  PackedVarianceZR = 1 << 22,  ///< Variance in Z and R directions
-
-  /// Relevant strip columns for seeding purposes
-  StripRelevant = InnerStripCenter | InnerStripHalfVector |
-                  StripSeparationCrossInnerHalfVector |
-                  StripSeparationCrossOuterHalfVector |
-                  InnerCrossOuterStripHalfVector,
-
-  /// All strip columns
-  StripAll = InnerStripCenter | InnerStripHalfVector | OuterStripCenter |
-             OuterStripHalfVector | StripSeparation |
-             StripSeparationCrossInnerHalfVector |
-             StripSeparationCrossOuterHalfVector |
-             InnerCrossOuterStripHalfVector,
+  PackedXY = 1 << 11,          ///< X and Y coordinates
+  PackedZR = 1 << 12,          ///< Z and R coordinates
+  PackedXYZ = 1 << 13,         ///< X, Y, and Z coordinates
+  PackedXYZR = 1 << 14,        ///< X, Y, Z, and R coordinates
+  PackedVarianceZR = 1 << 15,  ///< Variance in Z and R directions
 
   /// All columns
   All = SourceLinks | X | Y | Z | R | Phi | Time | VarianceZ | VarianceR |
-        CopiedFromIndex | InnerStripCenter | InnerStripHalfVector |
-        OuterStripCenter | OuterStripHalfVector | StripSeparation |
-        StripSeparationCrossInnerHalfVector |
-        StripSeparationCrossOuterHalfVector | InnerCrossOuterStripHalfVector |
-        PackedXY | PackedZR | PackedXYZ | PackedXYZR | PackedVarianceZR,
+        CopiedFromIndex | StripCalibrationDetails | PackedXY | PackedZR |
+        PackedXYZ | PackedXYZR | PackedVarianceZR,
 };
 
 /// Enable bitwise operators for SpacePointColumns enum

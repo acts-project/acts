@@ -162,21 +162,20 @@ Acts::Result<void> createStripSpacePoint(
   sp.time() = nanf;
   sp.varianceZ() = varZR[0];
   sp.varianceR() = varZR[1];
-  Eigen::Map<Eigen::Vector3f>(sp.innerStripCenter().data()) =
-      innerStripCenter.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.innerStripHalfVector().data()) =
-      innerStripHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.outerStripCenter().data()) =
+  Eigen::Map<Eigen::Vector3f>(
+      sp.stripCalibrationDetails().outerStripCenter.data()) =
       outerStripCenter.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.outerStripHalfVector().data()) =
+  Eigen::Map<Eigen::Vector3f>(
+      sp.stripCalibrationDetails().outerStripHalfVector.data()) =
       outerStripHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.stripSeparation().data()) =
-      stripSeparation.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.stripSeparationCrossInnerHalfVector().data()) =
+  Eigen::Map<Eigen::Vector3f>(
+      sp.stripCalibrationDetails().stripSeparationCrossInnerHalfVector.data()) =
       stripSeparationCrossInnerHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.stripSeparationCrossOuterHalfVector().data()) =
+  Eigen::Map<Eigen::Vector3f>(
+      sp.stripCalibrationDetails().stripSeparationCrossOuterHalfVector.data()) =
       stripSeparationCrossOuterHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(sp.innerCrossOuterStripHalfVector().data()) =
+  Eigen::Map<Eigen::Vector3f>(
+      sp.stripCalibrationDetails().innerCrossOuterStripHalfVector.data()) =
       innerCrossOuterStripHalfVector.cast<float>();
 
   return Acts::Result<void>::success();
@@ -359,7 +358,8 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
       SpacePointColumns::Time | SpacePointColumns::VarianceZ |
-      SpacePointColumns::VarianceR | SpacePointColumns::StripAll);
+      SpacePointColumns::VarianceR |
+      SpacePointColumns::StripCalibrationDetails);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
