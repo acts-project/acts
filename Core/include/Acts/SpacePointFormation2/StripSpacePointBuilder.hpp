@@ -104,24 +104,24 @@ Vector2 computeVarianceZR(const GeometryContext& gctx, const Surface& surface1,
 inline StripSpacePointCalibrationDetailsDerived
 deriveStripSpacePointCalibrationDetails(
     const StripSpacePointCalibrationDetails& sp) {
-  const auto& osv = sp.outerStripHalfVector;
-  const auto& isv = sp.innerStripHalfVector;
+  const auto& ohv = sp.outerStripHalfVector;
+  const auto& ihv = sp.innerStripHalfVector;
   const auto& scd = sp.stripSeparation;
 
   return StripSpacePointCalibrationDetailsDerived{
-      .stripSeparationCrossInnerHalfVector = {scd[1] * isv[2] - scd[2] * isv[1],
-                                              scd[2] * isv[0] - scd[0] * isv[2],
-                                              scd[0] * osv[1] -
-                                                  scd[1] * osv[0]},
-      .stripSeparationCrossOuterHalfVector = {scd[1] * osv[2] - scd[2] * osv[1],
-                                              scd[2] * osv[0] - scd[0] * osv[2],
-                                              scd[0] * osv[1] -
-                                                  scd[1] * osv[0]},
-      .innerCrossOuterStripHalfVector = {isv[1] * osv[2] - isv[2] * osv[1],
-                                         isv[2] * osv[0] - isv[0] * osv[2],
-                                         isv[0] * osv[1] - isv[1] * osv[0]},
+      .stripSeparationCrossInnerHalfVector = {scd[1] * ihv[2] - scd[2] * ihv[1],
+                                              scd[2] * ihv[0] - scd[0] * ihv[2],
+                                              scd[0] * ohv[1] -
+                                                  scd[1] * ohv[0]},
+      .stripSeparationCrossOuterHalfVector = {scd[1] * ohv[2] - scd[2] * ohv[1],
+                                              scd[2] * ohv[0] - scd[0] * ohv[2],
+                                              scd[0] * ohv[1] -
+                                                  scd[1] * ohv[0]},
+      .innerCrossOuterStripHalfVector = {ihv[1] * ohv[2] - ihv[2] * ohv[1],
+                                         ihv[2] * ohv[0] - ihv[0] * ohv[2],
+                                         ihv[0] * ohv[1] - ihv[1] * ohv[0]},
       .outerStripCenter = sp.outerStripCenter,
-      .outerStripHalfVector = osv,
+      .outerStripHalfVector = ohv,
   };
 }
 
