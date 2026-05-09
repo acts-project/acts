@@ -37,6 +37,10 @@ def main():
         ".github",
         ".idea",
         ".devcontainer",
+        # Uused by traccc
+        "Detray/detectors",
+        # CLI tools
+        "Detray/tests/tools",
     )
     exclude_files = (
         "acts_logo_colored.svg",
@@ -77,11 +81,45 @@ def main():
         "Tests/CommonHelpers/include/ActsTests/CommonHelpers/TestSpacePoint.hpp",
         "GeometryModule.h",
         "runtime_geometry_modules.md",
+        # Detray python tests for auto-generated code
+        "Detray/codegen/detray-sympy/tests/test_matrices.py",
+        "Detray/codegen/detray-sympy/tests/test_assumptions_D.py",
+        # Used in traccc
+        "Detray/tests/include/detray/test/utils/perigee_stopper.hpp",
+        # Build-time metadata generation
+        "Detray/python/detray/detectors/impl/definitions.py",
+        "Detray/python/detray/detectors/impl/type_helpers.py",
+        # Python uv files
+        "Detray/codegen/detray-sympy/uv.lock",
+        "Detray/python/detray/uv.lock",
+        # TODO: Remove these again, once paths can be excluded
+        "Detray/detectors/python/wire_chamber_metadata.py",
+        "Detray/detectors/python/toy_metadata.py",
+        "Detray/detectors/python/default_metadata.py",
+        "Detray/detectors/include/detray/detectors/odd_metadata.hpp",
+        "Detray/tests/tools/src/cpu/propagation_benchmark.cpp",
+        "Detray/tests/tools/src/cpu/propagation_scaling.cpp",
+        "Detray/tests/tools/python/file_converter.py",
+        "Detray/tests/tools/python/navigation_validation.py",
+        "Detray/tests/tools/python/file_checker.py",
+        "Detray/tests/tools/python/impl/plot_detector_scan.py",
+        "Detray/tests/tools/python/impl/plot_track_params.py",
+        "Detray/tests/tools/python/impl/plot_benchmark_results.py",
+        "Detray/tests/tools/python/impl/detector_data_conversion.py",
+        "Detray/tests/tools/python/impl/plot_navigation_validation.py",
+        "Detray/tests/tools/python/plotting/plot_helpers.py",
+        "Detray/tests/tools/python/options/track_generator_options.py",
+        "Detray/tests/tools/python/utils/io_utils.py",
+        "Detray/tests/tools/python/json_schema/surface_grids.py",
+        "Detray/tests/tools/python/json_schema/material_maps.py",
+        "Detray/tests/tools/scripts/run_jacobian_validation.sh",
     )
 
     suffix_header = (
         ".hpp",
         ".cuh",
+        ".sycl",
+        ".hip",
     )
     suffix_source = (
         ".ipp",
@@ -104,10 +142,12 @@ def main():
     )
     suffix_other = (
         "",
+        ".C",
         ".csv",
         ".css",
         ".gdml",
         ".hepmc3",
+        ".lock",
         ".in",
         ".ipynb",
         ".json",
