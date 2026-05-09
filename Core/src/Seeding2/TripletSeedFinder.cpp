@@ -292,10 +292,12 @@ class Impl final : public TripletSeedFinder {
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
+      const StripSpacePointCalibrationDetailsDerived calT =
+          StripSpacePointBuilder::deriveStripSpacePointCalibrationDetails(
+              spT.stripCalibrationDetails());
       std::array<float, 3> rTTransf{};
       if (!StripSpacePointBuilder::calibrateStripSpacePoint(
-              spT.stripCalibrationDetails(), directionTop, rTTransf,
-              m_cfg.toleranceParam)) {
+              calT, directionTop, rTTransf, m_cfg.toleranceParam)) {
         continue;
       }
 
