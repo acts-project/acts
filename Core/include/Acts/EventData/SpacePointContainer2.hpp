@@ -298,6 +298,33 @@ class SpacePointContainer2 {
            "Column 'varianceZR' does not exist");
     return m_varianceZRColumn->proxy(*this);
   }
+  /// Returns a mutable proxy to the `bottom strip vector cross top strip
+  /// vector` column.
+  /// @return A mutable proxy to the `bottom strip vector cross top strip vector` column.
+  MutableColumnProxy<std::array<float, 3>>
+  bottomStripVectorCrossTopStripVectorColumn() noexcept {
+    assert(m_bottomStripVectorColumn.has_value() &&
+           "Column 'bottomStripVector' does not exist");
+    return m_bottomStripVectorColumn->proxy(*this);
+  }
+  /// Returns a mutable proxy to the `strip center distance cross top strip
+  /// vector` column.
+  /// @return A mutable proxy to the `strip center distance cross top strip vector` column.
+  MutableColumnProxy<std::array<float, 3>>
+  stripCenterDistanceCrossTopStripVectorColumn() noexcept {
+    assert(m_stripCenterDistanceColumn.has_value() &&
+           "Column 'stripCenterDistance' does not exist");
+    return m_stripCenterDistanceColumn->proxy(*this);
+  }
+  /// Returns a mutable proxy to the `strip center distance cross bottom strip
+  /// vector` column.
+  /// @return A mutable proxy to the `strip center distance cross bottom strip vector` column.
+  MutableColumnProxy<std::array<float, 3>>
+  stripCenterDistanceCrossBottomStripVectorColumn() noexcept {
+    assert(m_stripCenterDistanceColumn.has_value() &&
+           "Column 'stripCenterDistance' does not exist");
+    return m_stripCenterDistanceColumn->proxy(*this);
+  }
 
   /// Returns a const proxy to the x coordinate column.
   /// @return A const proxy to the x coordinate column.
@@ -416,6 +443,33 @@ class SpacePointContainer2 {
     assert(m_varianceZRColumn.has_value() &&
            "Column 'varianceZR' does not exist");
     return m_varianceZRColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the `bottom strip vector cross top strip
+  /// vector` column.
+  /// @return A const proxy to the `bottom strip vector cross top strip vector` column.
+  ConstColumnProxy<std::array<float, 3>>
+  bottomStripVectorCrossTopStripVectorColumn() const noexcept {
+    assert(m_bottomStripVectorColumn.has_value() &&
+           "Column 'bottomStripVector' does not exist");
+    return m_bottomStripVectorColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the `strip center distance cross top strip
+  /// vector` column.
+  /// @return A const proxy to the `strip center distance cross top strip vector` column.
+  ConstColumnProxy<std::array<float, 3>>
+  stripCenterDistanceCrossTopStripVectorColumn() const noexcept {
+    assert(m_stripCenterDistanceColumn.has_value() &&
+           "Column 'stripCenterDistance' does not exist");
+    return m_stripCenterDistanceColumn->proxy(*this);
+  }
+  /// Returns a const proxy to the `strip center distance cross bottom strip
+  /// vector` column.
+  /// @return A const proxy to the `strip center distance cross bottom strip vector` column.
+  ConstColumnProxy<std::array<float, 3>>
+  stripCenterDistanceCrossBottomStripVectorColumn() const noexcept {
+    assert(m_stripCenterDistanceColumn.has_value() &&
+           "Column 'stripCenterDistance' does not exist");
+    return m_stripCenterDistanceColumn->proxy(*this);
   }
 
   /// Returns a mutable proxy to the space point at the given index.
@@ -649,11 +703,20 @@ class SpacePointContainer2 {
   // copy information
   std::optional<ColumnHolder<SpacePointIndex2>> m_copyFromIndexColumn;
 
+  // packed columns
   std::optional<ColumnHolder<std::array<float, 2>>> m_xyColumn;
   std::optional<ColumnHolder<std::array<float, 2>>> m_zrColumn;
   std::optional<ColumnHolder<std::array<float, 3>>> m_xyzColumn;
   std::optional<ColumnHolder<std::array<float, 4>>> m_xyzrColumn;
   std::optional<ColumnHolder<std::array<float, 2>>> m_varianceZRColumn;
+
+  // derived strip information
+  std::optional<ColumnHolder<std::array<float, 3>>>
+      m_bottomStripVectorCrossTopStripVectorColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>>
+      m_stripCenterDistanceCrossTopStripVectorColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>>
+      m_stripCenterDistanceCrossBottomStripVectorColumn;
 
   static auto knownColumnMasks() noexcept {
     using enum SpacePointColumns;
@@ -661,15 +724,19 @@ class SpacePointContainer2 {
                       VarianceZ, VarianceR, TopStripVector, BottomStripVector,
                       StripCenterDistance, TopStripCenter, CopyFromIndex,
                       PackedXY, PackedZR, PackedXYZ, PackedXYZR,
-                      PackedVarianceZR);
+                      PackedVarianceZR, BottomStripVectorCrossTopStripVector,
+                      StripCenterDistanceCrossTopStripVector,
+                      StripCenterDistanceCrossBottomStripVector);
   }
 
   static auto knownColumnNames() noexcept {
-    return std::tuple("sourceLinkOffset", "sourceLinkCount", "x", "y", "z", "r",
-                      "phi", "time", "varianceZ", "varianceR", "topStripVector",
-                      "bottomStripVector", "stripCenterDistance",
-                      "topStripCenter", "copyFromIndex", "xy", "zr", "xyz",
-                      "xyzr", "varianceZR");
+    return std::tuple(
+        "sourceLinkOffset", "sourceLinkCount", "x", "y", "z", "r", "phi",
+        "time", "varianceZ", "varianceR", "topStripVector", "bottomStripVector",
+        "stripCenterDistance", "topStripCenter", "copyFromIndex", "xy", "zr",
+        "xyz", "xyzr", "varianceZR", "bottomStripVectorCrossTopStripVector",
+        "stripCenterDistanceCrossTopStripVector",
+        "stripCenterDistanceCrossBottomStripVector");
   }
 
   static auto knownColumnDefaults() noexcept {
@@ -680,7 +747,9 @@ class SpacePointContainer2 {
         std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
         std::uint32_t{0}, std::array<float, 2>{0, 0},
         std::array<float, 2>{0, 0}, std::array<float, 3>{0, 0, 0},
-        std::array<float, 4>{0, 0, 0, 0}, std::array<float, 2>{0, 0});
+        std::array<float, 4>{0, 0, 0, 0}, std::array<float, 2>{0, 0},
+        std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
+        std::array<float, 3>{0, 0, 0});
   }
 
   template <typename Self>
@@ -693,7 +762,10 @@ class SpacePointContainer2 {
                     self.m_stripCenterDistanceColumn,
                     self.m_topStripCenterColumn, self.m_copyFromIndexColumn,
                     self.m_xyColumn, self.m_zrColumn, self.m_xyzColumn,
-                    self.m_xyzrColumn, self.m_varianceZRColumn);
+                    self.m_xyzrColumn, self.m_varianceZRColumn,
+                    self.m_bottomStripVectorCrossTopStripVectorColumn,
+                    self.m_stripCenterDistanceCrossTopStripVectorColumn,
+                    self.m_stripCenterDistanceCrossBottomStripVectorColumn);
   }
   auto knownColumns() & noexcept { return knownColumns(*this); }
   auto knownColumns() const & noexcept { return knownColumns(*this); }

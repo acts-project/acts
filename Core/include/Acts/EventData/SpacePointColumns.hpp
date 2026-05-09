@@ -40,9 +40,19 @@ enum class SpacePointColumns : std::uint32_t {
   PackedXYZR = 1 << 17,        ///< X, Y, Z, and R coordinates
   PackedVarianceZR = 1 << 18,  ///< Variance in Z and R directions
 
-  /// All strip-related columns
-  Strip =
-      TopStripVector | BottomStripVector | StripCenterDistance | TopStripCenter,
+  // derived strip columns
+  /// Cross product of bottom and top strip vectors
+  BottomStripVectorCrossTopStripVector = 1 << 19,
+  /// Cross product of strip center distance and top strip vector
+  StripCenterDistanceCrossTopStripVector = 1 << 20,
+  /// Cross product of strip center distance and bottom strip vector
+  StripCenterDistanceCrossBottomStripVector = 1 << 21,
+
+  /// Relevant strip columns for seeding purposes
+  Strip = TopStripVector | TopStripCenter |
+          BottomStripVectorCrossTopStripVector |
+          StripCenterDistanceCrossTopStripVector |
+          StripCenterDistanceCrossBottomStripVector,
 
   /// All columns
   All = SourceLinks | X | Y | Z | R | Phi | Time | VarianceZ | VarianceR |
