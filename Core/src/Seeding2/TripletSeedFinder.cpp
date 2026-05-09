@@ -13,7 +13,6 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
-#include <cmath>
 #include <ranges>
 
 #include <Eigen/Dense>
@@ -248,11 +247,11 @@ class Impl final : public TripletSeedFinder {
       // The middle strip check is scale-invariant (ratios s1/bd1 and s0/bd1
       // are unaffected by uniform scaling of pm), so we use cosTheta as the
       // z-component instead of cosTheta * sqrt(1 + A0^2), deferring the sqrt.
-      const Eigen::Vector3f directionMiddle = {
+      const std::array<float, 3> directionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
-      Eigen::Vector3f rMTransf;
+      std::array<float, 3> rMTransf{};
       if (!StripSpacePointBuilder::calibrateStripSpacePoint(
               spM.stripCalibrationDetails(), directionMiddle, rMTransf,
               m_cfg.toleranceParam)) {
@@ -266,12 +265,12 @@ class Impl final : public TripletSeedFinder {
       const float B0 = 2 * (Vb - A0 * Ub);
       const float Cb = 1 - B0 * bottomDoublet.y();
       const float Sb = A0 + B0 * bottomDoublet.x();
-      const Eigen::Vector3f directionBottom = {
+      const std::array<float, 3> directionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
           zPositionMiddle};
 
-      Eigen::Vector3f rBTransf;
+      std::array<float, 3> rBTransf{};
       if (!StripSpacePointBuilder::calibrateStripSpacePoint(
               spB.stripCalibrationDetails(), directionBottom, rBTransf,
               m_cfg.toleranceParam)) {
@@ -281,14 +280,14 @@ class Impl final : public TripletSeedFinder {
       // coordinate transformation and checks for top space point
       const float Ct = 1 - B0 * topDoublet.y();
       const float St = A0 + B0 * topDoublet.x();
-      const Eigen::Vector3f directionTop = {
+      const std::array<float, 3> directionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
           zPositionMiddle};
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
-      Eigen::Vector3f rTTransf;
+      std::array<float, 3> rTTransf{};
       if (!StripSpacePointBuilder::calibrateStripSpacePoint(
               spT.stripCalibrationDetails(), directionTop, rTTransf,
               m_cfg.toleranceParam)) {
