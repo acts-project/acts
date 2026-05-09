@@ -26,8 +26,8 @@ inline bool calibrateStripSpacePoint(float tolerance,
                                      const ConstSpacePointProxy2& sp,
                                      const std::array<float, 3>& direction,
                                      std::array<float, 3>& outputCoordinates) {
-  const auto& ic = sp.innerStripCenter();
-  const auto& ihv = sp.innerStripHalfVector();
+  const auto& ooc = sp.outerStripCenter();
+  const auto& ohv = sp.outerStripHalfVector();
   const auto& sCrossIhv = sp.stripSeparationCrossInnerHalfVector();
   const auto& sCrossOhv = sp.stripSeparationCrossOuterHalfVector();
   const auto& ihvCrossOhv = sp.innerCrossOuterStripHalfVector();
@@ -54,11 +54,11 @@ inline bool calibrateStripSpacePoint(float tolerance,
     return false;
   }
 
-  // Corrected position using the inner strip center and direction
-  const float sInnerNorm = sInner / scale;
-  outputCoordinates[0] = ic[0] + ihv[0] * sInnerNorm;
-  outputCoordinates[1] = ic[1] + ihv[1] * sInnerNorm;
-  outputCoordinates[2] = ic[2] + ihv[2] * sInnerNorm;
+  // Corrected position using the outer strip center and direction
+  const float sOuterNorm = sOuter / scale;
+  outputCoordinates[0] = ooc[0] + ohv[0] * sOuterNorm;
+  outputCoordinates[1] = ooc[1] + ohv[1] * sOuterNorm;
+  outputCoordinates[2] = ooc[2] + ohv[2] * sOuterNorm;
   return true;
 }
 
