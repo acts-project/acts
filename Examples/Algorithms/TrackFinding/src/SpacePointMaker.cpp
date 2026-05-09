@@ -362,7 +362,7 @@ ProcessCode SpacePointMaker::execute(const AlgorithmContext& ctx) const {
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z | SpacePointColumns::R |
       SpacePointColumns::Time | SpacePointColumns::VarianceZ |
-      SpacePointColumns::VarianceR | SpacePointColumns::Strip);
+      SpacePointColumns::VarianceR | SpacePointColumns::StripAll);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id

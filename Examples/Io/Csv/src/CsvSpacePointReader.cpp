@@ -57,7 +57,7 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z |
       SpacePointColumns::VarianceR | SpacePointColumns::VarianceZ |
-      SpacePointColumns::Strip);
+      SpacePointColumns::StripAll);
 
   const auto& filename = m_cfg.inputCollection.empty()
                              ? m_cfg.inputStem

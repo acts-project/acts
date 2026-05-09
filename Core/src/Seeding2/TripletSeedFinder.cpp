@@ -22,41 +22,45 @@ namespace Acts {
 
 namespace {
 
-inline bool stripCoordinateCheck(float tolerance,
-                                 const ConstSpacePointProxy2& sp,
-                                 const std::array<float, 3>& pm,
-                                 std::array<float, 3>& outputCoordinates) {
-  const auto& tsv = sp.outerStripVector();
-  const auto& tsc = sp.outerStripCenter();
-  const auto& bsvCrossTsv = sp.innerStripVectorCrossOuterStripVector();
-  const auto& scdCrossTsv = sp.stripCenterDistanceCrossOuterStripVector();
-  const auto& scdCrossBsv = sp.stripCenterDistanceCrossInnerStripVector();
+inline bool calibrateStripSpacePoint(float tolerance,
+                                     const ConstSpacePointProxy2& sp,
+                                     const std::array<float, 3>& direction,
+                                     std::array<float, 3>& outputCoordinates) {
+  const auto& isvCrossOsv = sp.innerStripVectorCrossOuterStripVector();
+  const auto& scdCrossOsv = sp.stripCenterDistanceCrossOuterStripVector();
+  const auto& scdCrossIsv = sp.stripCenterDistanceCrossInnerStripVector();
 
-  // bd1 = bottomStripVector dot (topStripVector cross pm)
-  const float bd1 =
-      pm[0] * bsvCrossTsv[0] + pm[1] * bsvCrossTsv[1] + pm[2] * bsvCrossTsv[2];
+  // scale = innerStripVector dot (outerStripVector cross direction)
+  const float scale = direction[0] * isvCrossOsv[0] +
+                      direction[1] * scdCrossOsv[1] +
+                      direction[2] * scdCrossOsv[2];
 
-  // s1 = stripCenterDistance dot (topStripVector cross pm)
-  // Check if pm is inside the bottom detector element
-  const float s1 =
-      pm[0] * scdCrossTsv[0] + pm[1] * scdCrossTsv[1] + pm[2] * scdCrossTsv[2];
-  if (std::abs(s1) > std::abs(bd1) * tolerance) {
+  // sOuter = stripCenterDistance dot (outerStripVector cross direction)
+  // Check if direction is inside the inner detector element
+  const float sOuter = direction[0] * scdCrossOsv[0] +
+                       direction[1] * scdCrossOsv[1] +
+                       direction[2] * scdCrossOsv[2];
+  if (std::abs(sOuter) > std::abs(scale) * tolerance) {
     return false;
   }
 
-  // s0 = stripCenterDistance dot (bottomStripVector cross pm)
-  // Check if pm is inside the top detector element
-  float s0 =
-      pm[0] * scdCrossBsv[0] + pm[1] * scdCrossBsv[1] + pm[2] * scdCrossBsv[2];
-  if (std::abs(s0) > std::abs(bd1) * tolerance) {
+  // sInner = stripCenterDistance dot (innerStripVector cross direction)
+  // Check if direction is inside the outer detector element
+  const float sInner = direction[0] * scdCrossIsv[0] +
+                       direction[1] * scdCrossIsv[1] +
+                       direction[2] * scdCrossIsv[2];
+  if (std::abs(sInner) > std::abs(scale) * tolerance) {
     return false;
   }
 
-  // Corrected position using the top strip center and direction
-  s0 = s0 / bd1;
-  outputCoordinates[0] = tsc[0] + tsv[0] * s0;
-  outputCoordinates[1] = tsc[1] + tsv[1] * s0;
-  outputCoordinates[2] = tsc[2] + tsv[2] * s0;
+  const auto& isv = sp.innerStripVector();
+  const auto& isc = sp.innerStripCenter();
+
+  // Corrected position using the inner strip center and direction
+  const float sInnerNorm = sInner / scale;
+  outputCoordinates[0] = isc[0] + isv[0] * sInnerNorm;
+  outputCoordinates[1] = isc[1] + isv[1] * sInnerNorm;
+  outputCoordinates[2] = isc[2] + isv[2] * sInnerNorm;
   return true;
 }
 
@@ -289,8 +293,8 @@ class Impl final : public TripletSeedFinder {
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
       std::array<float, 3> rMTransf{};
-      if (!stripCoordinateCheck(m_cfg.toleranceParam, spM, positionMiddle,
-                                rMTransf)) {
+      if (!calibrateStripSpacePoint(m_cfg.toleranceParam, spM, positionMiddle,
+                                    rMTransf)) {
         continue;
       }
 
@@ -307,8 +311,8 @@ class Impl final : public TripletSeedFinder {
           zPositionMiddle};
 
       std::array<float, 3> rBTransf{};
-      if (!stripCoordinateCheck(m_cfg.toleranceParam, spB, positionBottom,
-                                rBTransf)) {
+      if (!calibrateStripSpacePoint(m_cfg.toleranceParam, spB, positionBottom,
+                                    rBTransf)) {
         continue;
       }
 
@@ -323,8 +327,8 @@ class Impl final : public TripletSeedFinder {
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
       std::array<float, 3> rTTransf{};
-      if (!stripCoordinateCheck(m_cfg.toleranceParam, spT, positionTop,
-                                rTTransf)) {
+      if (!calibrateStripSpacePoint(m_cfg.toleranceParam, spT, positionTop,
+                                    rTTransf)) {
         continue;
       }
 

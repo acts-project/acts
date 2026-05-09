@@ -507,14 +507,14 @@ RootAthenaDumpReader::readSpacePoints(
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z |
       SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR |
-      SpacePointColumns::Strip);
+      SpacePointColumns::StripAll);
   stripSpacePoints.reserve(nSP);
 
   SpacePointContainer spacePoints(
       SpacePointColumns::SourceLinks | SpacePointColumns::X |
       SpacePointColumns::Y | SpacePointColumns::Z |
       SpacePointColumns::VarianceZ | SpacePointColumns::VarianceR |
-      SpacePointColumns::Strip);
+      SpacePointColumns::StripAll);
   spacePoints.reserve(nSP);
 
   // Loop on space points

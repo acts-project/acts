@@ -117,7 +117,8 @@ void addEventData(py::module_& m) {
       .value("PackedXYZ", SpacePointColumns::PackedXYZ)
       .value("PackedXYZR", SpacePointColumns::PackedXYZR)
       .value("PackedVarianceZR", SpacePointColumns::PackedVarianceZR)
-      .value("Strip", SpacePointColumns::Strip)
+      .value("StripRelevant", SpacePointColumns::StripRelevant)
+      .value("StripAll", SpacePointColumns::StripAll)
       .value("All", SpacePointColumns::All)
       .def("__or__",
            [](SpacePointColumns a, SpacePointColumns b) {
