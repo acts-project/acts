@@ -26,7 +26,7 @@ inline bool calibrateStripSpacePoint(float tolerance,
                                      const ConstSpacePointProxy2& sp,
                                      const std::array<float, 3>& direction,
                                      std::array<float, 3>& outputCoordinates) {
-  const auto& ooc = sp.outerStripCenter();
+  const auto& oc = sp.outerStripCenter();
   const auto& ohv = sp.outerStripHalfVector();
   const auto& sCrossIhv = sp.stripSeparationCrossInnerHalfVector();
   const auto& sCrossOhv = sp.stripSeparationCrossOuterHalfVector();
@@ -34,31 +34,32 @@ inline bool calibrateStripSpacePoint(float tolerance,
 
   // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
   const float scale = direction[0] * ihvCrossOhv[0] +
-                      direction[1] * sCrossOhv[1] + direction[2] * sCrossOhv[2];
+                      direction[1] * ihvCrossOhv[1] +
+                      direction[2] * ihvCrossOhv[2];
 
   // sInner = stripSeparation dot (outerStripHalfVector cross direction)
   // Check if direction is inside the inner detector element
-  const float sInner = direction[0] * sCrossOhv[0] +
-                       direction[1] * sCrossOhv[1] +
-                       direction[2] * sCrossOhv[2];
+  const float sInner = direction[0] * sCrossIhv[0] +
+                       direction[1] * sCrossIhv[1] +
+                       direction[2] * sCrossIhv[2];
   if (std::abs(sInner) > std::abs(scale) * tolerance) {
     return false;
   }
 
   // sOuter = stripSeparation dot (innerStripHalfVector cross direction)
   // Check if direction is inside the outer detector element
-  const float sOuter = direction[0] * sCrossIhv[0] +
-                       direction[1] * sCrossIhv[1] +
-                       direction[2] * sCrossIhv[2];
+  const float sOuter = direction[0] * sCrossOhv[0] +
+                       direction[1] * sCrossOhv[1] +
+                       direction[2] * sCrossOhv[2];
   if (std::abs(sOuter) > std::abs(scale) * tolerance) {
     return false;
   }
 
   // Corrected position using the outer strip center and direction
   const float sOuterNorm = sOuter / scale;
-  outputCoordinates[0] = ooc[0] + ohv[0] * sOuterNorm;
-  outputCoordinates[1] = ooc[1] + ohv[1] * sOuterNorm;
-  outputCoordinates[2] = ooc[2] + ohv[2] * sOuterNorm;
+  outputCoordinates[0] = oc[0] + ohv[0] * sOuterNorm;
+  outputCoordinates[1] = oc[1] + ohv[1] * sOuterNorm;
+  outputCoordinates[2] = oc[2] + ohv[2] * sOuterNorm;
   return true;
 }
 
