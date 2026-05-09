@@ -151,6 +151,13 @@ class SpacePointProxy2 {
     return std::span<SourceLink>(m_container->m_sourceLinks.data() + offset,
                                  count);
   }
+  /// Mutable access to the `copied from index` of the space point.
+  /// @return A mutable reference to the `copied from index` of the space point.
+  SpacePointIndex2 &copiedFromIndex() const noexcept
+    requires(!ReadOnly)
+  {
+    return accessImpl(m_container->m_copiedFromIndexColumn);
+  }
   /// Mutable access to the `x` coordinate of the space point.
   /// @return A mutable reference to the `x` coordinate of the space point.
   float &x() const noexcept
@@ -207,12 +214,26 @@ class SpacePointProxy2 {
   {
     return accessImpl(m_container->m_varianceRColumn);
   }
+  /// Mutable access to the t`op strip center` of the space point.
+  /// @return A mutable reference to the `top strip center` of the space point.
+  std::array<float, 3> &topStripCenter() const noexcept
+    requires(!ReadOnly)
+  {
+    return accessImpl(m_container->m_topStripCenterColumn);
+  }
   /// Mutable access to the `top strip vector` of the space point.
   /// @return A mutable reference to the `top strip vector` of the space point.
   std::array<float, 3> &topStripVector() const noexcept
     requires(!ReadOnly)
   {
     return accessImpl(m_container->m_topStripVectorColumn);
+  }
+  /// Mutable access to the `bottom strip center` of the space point.
+  /// @return A mutable reference to the `bottom strip center` of the space point.
+  std::array<float, 3> &bottomStripCenter() const noexcept
+    requires(!ReadOnly)
+  {
+    return accessImpl(m_container->m_bottomStripCenterColumn);
   }
   /// Mutable access to the `bottom strip vector` of the space point.
   /// @return A mutable reference to the `bottom strip vector` of the space point.
@@ -228,19 +249,33 @@ class SpacePointProxy2 {
   {
     return accessImpl(m_container->m_stripCenterDistanceColumn);
   }
-  /// Mutable access to the t`op strip center` of the space point.
-  /// @return A mutable reference to the `top strip center` of the space point.
-  std::array<float, 3> &topStripCenter() const noexcept
+  /// Mutable access to the `bottom strip vector cross top strip vector` of the
+  /// space point.
+  /// @return A mutable reference to the `bottom strip vector cross top strip vector` of the space point.
+  std::array<float, 3> &bottomStripVectorCrossTopStripVector() const noexcept
     requires(!ReadOnly)
   {
-    return accessImpl(m_container->m_topStripCenterColumn);
+    return accessImpl(
+        m_container->m_bottomStripVectorCrossTopStripVectorColumn);
   }
-  /// Mutable access to the `copy from index` of the space point.
-  /// @return A mutable reference to the `copy from index` of the space point.
-  SpacePointIndex2 &copyFromIndex() const noexcept
+  /// Mutable access to the `strip center distance cross top strip vector` of
+  /// the space point.
+  /// @return A mutable reference to the `strip center distance cross top strip vector` of the space point.
+  std::array<float, 3> &stripCenterDistanceCrossTopStripVector() const noexcept
     requires(!ReadOnly)
   {
-    return accessImpl(m_container->m_copyFromIndexColumn);
+    return accessImpl(
+        m_container->m_stripCenterDistanceCrossTopStripVectorColumn);
+  }
+  /// Mutable access to the `strip center distance cross bottom strip vector` of
+  /// the space point.
+  /// @return A mutable reference to the `strip center distance cross bottom strip vector` of the space point.
+  std::array<float, 3> &stripCenterDistanceCrossBottomStripVector()
+      const noexcept
+    requires(!ReadOnly)
+  {
+    return accessImpl(
+        m_container->m_stripCenterDistanceCrossBottomStripVectorColumn);
   }
   /// Mutable access to the `XY` coordinates of the space point
   /// @return A mutable reference to array containing `[x, y]` coordinates
@@ -277,34 +312,6 @@ class SpacePointProxy2 {
   {
     return accessImpl(m_container->m_varianceZRColumn);
   }
-  /// Mutable access to the `bottom strip vector cross top strip vector` of the
-  /// space point.
-  /// @return A mutable reference to the `bottom strip vector cross top strip vector` of the space point.
-  std::array<float, 3> &bottomStripVectorCrossTopStripVector() const noexcept
-    requires(!ReadOnly)
-  {
-    return accessImpl(
-        m_container->m_bottomStripVectorCrossTopStripVectorColumn);
-  }
-  /// Mutable access to the `strip center distance cross top strip vector` of
-  /// the space point.
-  /// @return A mutable reference to the `strip center distance cross top strip vector` of the space point.
-  std::array<float, 3> &stripCenterDistanceCrossTopStripVector() const noexcept
-    requires(!ReadOnly)
-  {
-    return accessImpl(
-        m_container->m_stripCenterDistanceCrossTopStripVectorColumn);
-  }
-  /// Mutable access to the `strip center distance cross bottom strip vector` of
-  /// the space point.
-  /// @return A mutable reference to the `strip center distance cross bottom strip vector` of the space point.
-  std::array<float, 3> &stripCenterDistanceCrossBottomStripVector()
-      const noexcept
-    requires(!ReadOnly)
-  {
-    return accessImpl(
-        m_container->m_stripCenterDistanceCrossBottomStripVectorColumn);
-  }
 
   /// Mutable access to an extra column of data for the space point.
   /// @param column The extra column proxy to access.
@@ -322,6 +329,11 @@ class SpacePointProxy2 {
     const std::size_t count = accessImpl(m_container->m_sourceLinkCountColumn);
     return std::span<const SourceLink>(
         m_container->m_sourceLinks.data() + offset, count);
+  }
+  /// Const access to the `copied from index` of the space point.
+  /// @return A const reference to the `copied from index` of the space point.
+  SpacePointIndex2 copiedFromIndex() const noexcept {
+    return accessImpl(m_container->m_copiedFromIndexColumn);
   }
   /// Const access to the `x` coordinate of the space point.
   /// @return The `x` coordinate of the space point.
@@ -351,10 +363,20 @@ class SpacePointProxy2 {
   float varianceR() const noexcept {
     return accessImpl(m_container->m_varianceRColumn);
   }
+  /// Const access to the `top strip center` of the space point.
+  /// @return A const reference to the `top strip center` of the space point.
+  const std::array<float, 3> &topStripCenter() const noexcept {
+    return accessImpl(m_container->m_topStripCenterColumn);
+  }
   /// Const access to the `top strip vector` of the space point.
   /// @return A const reference to the `top strip vector` of the space point.
   const std::array<float, 3> &topStripVector() const noexcept {
     return accessImpl(m_container->m_topStripVectorColumn);
+  }
+  /// Const access to the `bottom strip center` of the space point.
+  /// @return A const reference to the `bottom strip center` of the space point.
+  const std::array<float, 3> &bottomStripCenter() const noexcept {
+    return accessImpl(m_container->m_bottomStripCenterColumn);
   }
   /// Const access to the `bottom strip vector` of the space point.
   /// @return A const reference to the `bottom strip vector` of the space point.
@@ -366,15 +388,29 @@ class SpacePointProxy2 {
   const std::array<float, 3> &stripCenterDistance() const noexcept {
     return accessImpl(m_container->m_stripCenterDistanceColumn);
   }
-  /// Const access to the `top strip center` of the space point.
-  /// @return A const reference to the `top strip center` of the space point.
-  const std::array<float, 3> &topStripCenter() const noexcept {
-    return accessImpl(m_container->m_topStripCenterColumn);
+  /// Const access to the `bottom strip vector cross top strip vector` of the
+  /// space point.
+  /// @return A const reference to the `bottom strip vector cross top strip vector` of the space point.
+  const std::array<float, 3> &bottomStripVectorCrossTopStripVector()
+      const noexcept {
+    return accessImpl(
+        m_container->m_bottomStripVectorCrossTopStripVectorColumn);
   }
-  /// Const access to the `copy from index` of the space point.
-  /// @return A const reference to the `copy from index` of the space point.
-  SpacePointIndex2 copyFromIndex() const noexcept {
-    return accessImpl(m_container->m_copyFromIndexColumn);
+  /// Const access to the `strip center distance cross top strip vector` of
+  /// the space point.
+  /// @return A const reference to the `strip center distance cross top strip vector` of the space point.
+  const std::array<float, 3> &stripCenterDistanceCrossTopStripVector()
+      const noexcept {
+    return accessImpl(
+        m_container->m_stripCenterDistanceCrossTopStripVectorColumn);
+  }
+  /// Const access to the `strip center distance cross bottom strip vector` of
+  /// the space point.
+  /// @return A const reference to the `strip center distance cross bottom strip vector` of the space point.
+  const std::array<float, 3> &stripCenterDistanceCrossBottomStripVector()
+      const noexcept {
+    return accessImpl(
+        m_container->m_stripCenterDistanceCrossBottomStripVectorColumn);
   }
   /// Const access to the `XY` coordinates of the space point
   /// @return A const reference to array containing `[x, y]` coordinates
@@ -400,30 +436,6 @@ class SpacePointProxy2 {
   /// @return A const reference to array containing `[var_z, var_r]` variances
   const std::array<float, 2> &varianceZR() const noexcept {
     return accessImpl(m_container->m_varianceZRColumn);
-  }
-  /// Const access to the `bottom strip vector cross top strip vector` of the
-  /// space point.
-  /// @return A const reference to the `bottom strip vector cross top strip vector` of the space point.
-  const std::array<float, 3> &bottomStripVectorCrossTopStripVector()
-      const noexcept {
-    return accessImpl(
-        m_container->m_bottomStripVectorCrossTopStripVectorColumn);
-  }
-  /// Const access to the `strip center distance cross top strip vector` of
-  /// the space point.
-  /// @return A const reference to the `strip center distance cross top strip vector` of the space point.
-  const std::array<float, 3> &stripCenterDistanceCrossTopStripVector()
-      const noexcept {
-    return accessImpl(
-        m_container->m_stripCenterDistanceCrossTopStripVectorColumn);
-  }
-  /// Const access to the `strip center distance cross bottom strip vector` of
-  /// the space point.
-  /// @return A const reference to the `strip center distance cross bottom strip vector` of the space point.
-  const std::array<float, 3> &stripCenterDistanceCrossBottomStripVector()
-      const noexcept {
-    return accessImpl(
-        m_container->m_stripCenterDistanceCrossBottomStripVectorColumn);
   }
 
   /// Const access to an extra column of data for the space point.

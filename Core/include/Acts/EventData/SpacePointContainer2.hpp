@@ -260,12 +260,12 @@ class SpacePointContainer2 {
            "Column 'topStripCenter' does not exist");
     return m_topStripCenterColumn->proxy(*this);
   }
-  /// Returns a mutable proxy to the `copy from index` column.
-  /// @return A mutable proxy to the `copy from index` column.
-  MutableColumnProxy<SpacePointIndex2> copyFromIndexColumn() noexcept {
-    assert(m_copyFromIndexColumn.has_value() &&
-           "Column 'copyFromIndex' does not exist");
-    return m_copyFromIndexColumn->proxy(*this);
+  /// Returns a mutable proxy to the `copied from index` column.
+  /// @return A mutable proxy to the `copied from index` column.
+  MutableColumnProxy<SpacePointIndex2> copiedFromIndexColumn() noexcept {
+    assert(m_copiedFromIndexColumn.has_value() &&
+           "Column 'copiedFromIndex' does not exist");
+    return m_copiedFromIndexColumn->proxy(*this);
   }
   /// Returns a mutable proxy to the `xy` coordinates column.
   /// @return A mutable proxy to the `xy` coordinates column.
@@ -406,12 +406,12 @@ class SpacePointContainer2 {
            "Column 'topStripCenter' does not exist");
     return m_topStripCenterColumn->proxy(*this);
   }
-  /// Returns a const proxy to the `copy from index` column.
-  /// @return A const proxy to the `copy from index` column.
-  ConstColumnProxy<SpacePointIndex2> copyFromIndexColumn() const noexcept {
-    assert(m_copyFromIndexColumn.has_value() &&
-           "Column 'copyFromIndex' does not exist");
-    return m_copyFromIndexColumn->proxy(*this);
+  /// Returns a const proxy to the `copied from index` column.
+  /// @return A const proxy to the `copied from index` column.
+  ConstColumnProxy<SpacePointIndex2> copiedFromIndexColumn() const noexcept {
+    assert(m_copiedFromIndexColumn.has_value() &&
+           "Column 'copiedFromIndex' does not exist");
+    return m_copiedFromIndexColumn->proxy(*this);
   }
   /// Returns a const proxy to the `xy` coordinates column.
   /// @return A const proxy to the `xy` coordinates column.
@@ -683,6 +683,9 @@ class SpacePointContainer2 {
   std::optional<ColumnHolder<std::uint32_t>> m_sourceLinkOffsetColumn;
   std::optional<ColumnHolder<std::uint8_t>> m_sourceLinkCountColumn;
 
+  // copy information
+  std::optional<ColumnHolder<SpacePointIndex2>> m_copiedFromIndexColumn;
+
   std::optional<ColumnHolder<float>> m_xColumn;
   std::optional<ColumnHolder<float>> m_yColumn;
   std::optional<ColumnHolder<float>> m_zColumn;
@@ -695,13 +698,21 @@ class SpacePointContainer2 {
   // covariance information
   std::optional<ColumnHolder<float>> m_varianceZColumn;
   std::optional<ColumnHolder<float>> m_varianceRColumn;
+
   // strip information
-  std::optional<ColumnHolder<std::array<float, 3>>> m_topStripVectorColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>> m_bottomStripVectorColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>> m_stripCenterDistanceColumn;
   std::optional<ColumnHolder<std::array<float, 3>>> m_topStripCenterColumn;
-  // copy information
-  std::optional<ColumnHolder<SpacePointIndex2>> m_copyFromIndexColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>> m_topStripVectorColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>> m_bottomStripCenterColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>> m_bottomStripVectorColumn;
+
+  // derived strip information
+  std::optional<ColumnHolder<std::array<float, 3>>> m_stripCenterDistanceColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>>
+      m_bottomStripVectorCrossTopStripVectorColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>>
+      m_stripCenterDistanceCrossTopStripVectorColumn;
+  std::optional<ColumnHolder<std::array<float, 3>>>
+      m_stripCenterDistanceCrossBottomStripVectorColumn;
 
   // packed columns
   std::optional<ColumnHolder<std::array<float, 2>>> m_xyColumn;
@@ -710,62 +721,56 @@ class SpacePointContainer2 {
   std::optional<ColumnHolder<std::array<float, 4>>> m_xyzrColumn;
   std::optional<ColumnHolder<std::array<float, 2>>> m_varianceZRColumn;
 
-  // derived strip information
-  std::optional<ColumnHolder<std::array<float, 3>>>
-      m_bottomStripVectorCrossTopStripVectorColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>>
-      m_stripCenterDistanceCrossTopStripVectorColumn;
-  std::optional<ColumnHolder<std::array<float, 3>>>
-      m_stripCenterDistanceCrossBottomStripVectorColumn;
-
   static auto knownColumnMasks() noexcept {
     using enum SpacePointColumns;
-    return std::tuple(SourceLinks, SourceLinks, X, Y, Z, R, Phi, Time,
-                      VarianceZ, VarianceR, TopStripVector, BottomStripVector,
-                      StripCenterDistance, TopStripCenter, CopyFromIndex,
-                      PackedXY, PackedZR, PackedXYZ, PackedXYZR,
-                      PackedVarianceZR, BottomStripVectorCrossTopStripVector,
+    return std::tuple(SourceLinks, SourceLinks, CopiedFromIndex, X, Y, Z, R,
+                      Phi, Time, VarianceZ, VarianceR, TopStripCenter,
+                      TopStripVector, BottomStripCenter, BottomStripVector,
+                      StripCenterDistance, BottomStripVectorCrossTopStripVector,
                       StripCenterDistanceCrossTopStripVector,
-                      StripCenterDistanceCrossBottomStripVector);
+                      StripCenterDistanceCrossBottomStripVector, PackedXY,
+                      PackedZR, PackedXYZ, PackedXYZR, PackedVarianceZR);
   }
 
   static auto knownColumnNames() noexcept {
     return std::tuple(
-        "sourceLinkOffset", "sourceLinkCount", "x", "y", "z", "r", "phi",
-        "time", "varianceZ", "varianceR", "topStripVector", "bottomStripVector",
-        "stripCenterDistance", "topStripCenter", "copyFromIndex", "xy", "zr",
-        "xyz", "xyzr", "varianceZR", "bottomStripVectorCrossTopStripVector",
+        "sourceLinkOffset", "sourceLinkCount", "copiedFromIndex", "x", "y", "z",
+        "r", "phi", "time", "varianceZ", "varianceR", "topStripCenter",
+        "topStripVector", "bottomStripCenter", "bottomStripVector",
+        "stripCenterDistance", "bottomStripVectorCrossTopStripVector",
         "stripCenterDistanceCrossTopStripVector",
-        "stripCenterDistanceCrossBottomStripVector");
+        "stripCenterDistanceCrossBottomStripVector", "xy", "zr", "xyz", "xyzr",
+        "varianceZR");
   }
 
   static auto knownColumnDefaults() noexcept {
     return std::tuple(
-        std::uint32_t{0}, std::uint8_t{0}, float{0}, float{0}, float{0},
-        float{0}, float{0}, float{NoTime}, float{0}, float{0},
+        std::uint32_t{0}, std::uint8_t{0}, std::uint32_t{0}, float{0}, float{0},
+        float{0}, float{0}, float{0}, float{NoTime}, float{0}, float{0},
         std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
         std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
-        std::uint32_t{0}, std::array<float, 2>{0, 0},
-        std::array<float, 2>{0, 0}, std::array<float, 3>{0, 0, 0},
-        std::array<float, 4>{0, 0, 0, 0}, std::array<float, 2>{0, 0},
         std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
-        std::array<float, 3>{0, 0, 0});
+        std::array<float, 3>{0, 0, 0}, std::array<float, 3>{0, 0, 0},
+        std::array<float, 2>{0, 0}, std::array<float, 2>{0, 0},
+        std::array<float, 3>{0, 0, 0}, std::array<float, 4>{0, 0, 0, 0},
+        std::array<float, 2>{0, 0});
   }
 
   template <typename Self>
   static auto knownColumns(Self &&self) noexcept {
     return std::tie(self.m_sourceLinkOffsetColumn, self.m_sourceLinkCountColumn,
-                    self.m_xColumn, self.m_yColumn, self.m_zColumn,
-                    self.m_rColumn, self.m_phiColumn, self.m_timeColumn,
-                    self.m_varianceZColumn, self.m_varianceRColumn,
-                    self.m_topStripVectorColumn, self.m_bottomStripVectorColumn,
+                    self.m_copiedFromIndexColumn, self.m_xColumn,
+                    self.m_yColumn, self.m_zColumn, self.m_rColumn,
+                    self.m_phiColumn, self.m_timeColumn, self.m_varianceZColumn,
+                    self.m_varianceRColumn, self.m_topStripCenterColumn,
+                    self.m_topStripVectorColumn, self.m_bottomStripCenterColumn,
+                    self.m_bottomStripVectorColumn,
                     self.m_stripCenterDistanceColumn,
-                    self.m_topStripCenterColumn, self.m_copyFromIndexColumn,
-                    self.m_xyColumn, self.m_zrColumn, self.m_xyzColumn,
-                    self.m_xyzrColumn, self.m_varianceZRColumn,
                     self.m_bottomStripVectorCrossTopStripVectorColumn,
                     self.m_stripCenterDistanceCrossTopStripVectorColumn,
-                    self.m_stripCenterDistanceCrossBottomStripVectorColumn);
+                    self.m_stripCenterDistanceCrossBottomStripVectorColumn,
+                    self.m_xyColumn, self.m_zrColumn, self.m_xyzColumn,
+                    self.m_xyzrColumn, self.m_varianceZRColumn);
   }
   auto knownColumns() & noexcept { return knownColumns(*this); }
   auto knownColumns() const & noexcept { return knownColumns(*this); }

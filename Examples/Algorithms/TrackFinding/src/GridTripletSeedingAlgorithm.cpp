@@ -156,9 +156,9 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   }
 
   Acts::SpacePointContainer2 coreSpacePoints(
+      Acts::SpacePointColumns::CopiedFromIndex |
       Acts::SpacePointColumns::PackedXY | Acts::SpacePointColumns::PackedZR |
-      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR |
-      Acts::SpacePointColumns::CopyFromIndex);
+      Acts::SpacePointColumns::VarianceZ | Acts::SpacePointColumns::VarianceR);
   coreSpacePoints.reserve(grid.numberOfSpacePoints());
   std::vector<Acts::SpacePointIndexRange2> gridSpacePointRanges;
   gridSpacePointRanges.reserve(grid.numberOfBins());
@@ -168,13 +168,13 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
       const ConstSpacePointProxy& sp = spacePoints[spIndex];
 
       auto newSp = coreSpacePoints.createSpacePoint();
+      newSp.copiedFromIndex() = sp.index();
       newSp.xy() = std::array<float, 2>{static_cast<float>(sp.x()),
                                         static_cast<float>(sp.y())};
       newSp.zr() = std::array<float, 2>{static_cast<float>(sp.z()),
                                         static_cast<float>(sp.r())};
       newSp.varianceZ() = static_cast<float>(sp.varianceZ());
       newSp.varianceR() = static_cast<float>(sp.varianceR());
-      newSp.copyFromIndex() = sp.index();
     }
     std::uint32_t end = coreSpacePoints.size();
     gridSpacePointRanges.emplace_back(begin, end);
@@ -307,7 +307,7 @@ ProcessCode GridTripletSeedingAlgorithm::execute(
   // update seed space point indices to original space point container
   for (auto seed : seeds) {
     for (auto& spIndex : seed.spacePointIndices()) {
-      spIndex = coreSpacePoints.at(spIndex).copyFromIndex();
+      spIndex = coreSpacePoints.at(spIndex).copiedFromIndex();
     }
   }
 

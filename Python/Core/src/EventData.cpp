@@ -92,6 +92,7 @@ void addEventData(py::module_& m) {
   py::enum_<SpacePointColumns>(m, "SpacePointColumns")
       .value("None", SpacePointColumns::None)
       .value("SourceLinks", SpacePointColumns::SourceLinks)
+      .value("CopiedFromIndex", SpacePointColumns::CopiedFromIndex)
       .value("X", SpacePointColumns::X)
       .value("Y", SpacePointColumns::Y)
       .value("Z", SpacePointColumns::Z)
@@ -100,11 +101,17 @@ void addEventData(py::module_& m) {
       .value("Time", SpacePointColumns::Time)
       .value("VarianceZ", SpacePointColumns::VarianceZ)
       .value("VarianceR", SpacePointColumns::VarianceR)
+      .value("TopStripCenter", SpacePointColumns::TopStripCenter)
       .value("TopStripVector", SpacePointColumns::TopStripVector)
+      .value("BottomStripCenter", SpacePointColumns::BottomStripCenter)
       .value("BottomStripVector", SpacePointColumns::BottomStripVector)
       .value("StripCenterDistance", SpacePointColumns::StripCenterDistance)
-      .value("TopStripCenter", SpacePointColumns::TopStripCenter)
-      .value("CopyFromIndex", SpacePointColumns::CopyFromIndex)
+      .value("BottomStripVectorCrossTopStripVector",
+             SpacePointColumns::BottomStripVectorCrossTopStripVector)
+      .value("StripCenterDistanceCrossTopStripVector",
+             SpacePointColumns::StripCenterDistanceCrossTopStripVector)
+      .value("StripCenterDistanceCrossBottomStripVector",
+             SpacePointColumns::StripCenterDistanceCrossBottomStripVector)
       .value("PackedXY", SpacePointColumns::PackedXY)
       .value("PackedZR", SpacePointColumns::PackedZR)
       .value("PackedXYZ", SpacePointColumns::PackedXYZ)
