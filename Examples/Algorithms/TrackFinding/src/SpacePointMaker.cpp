@@ -130,20 +130,14 @@ Acts::Result<void> createStripSpacePoint(
   const double var2 =
       measurement2.fullCovariance()(Acts::eBoundLoc0, Acts::eBoundLoc0);
 
-  const Acts::Vector3 btmToTop1 = stripEnds1.top - stripEnds1.bottom;
-  const Acts::Vector3 btmToTop2 = stripEnds2.top - stripEnds2.bottom;
-  const double theta = std::acos(btmToTop1.dot(btmToTop2) /
-                                 (btmToTop1.norm() * btmToTop2.norm()));
-
-  const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
-      gctx, surface1, *spacePoint, var1, var2, theta);
-
   const Acts::Vector3 innerStripCenter =
       0.5 * (stripEnds1.top + stripEnds1.bottom);
-  const Acts::Vector3 innerStripVector = stripEnds1.top - stripEnds1.bottom;
+  const Acts::Vector3 innerStripVector =
+      0.5 * (stripEnds1.top - stripEnds1.bottom);
   const Acts::Vector3 outerStripCenter =
       0.5 * (stripEnds2.top + stripEnds2.bottom);
-  const Acts::Vector3 outerStripVector = stripEnds2.top - stripEnds2.bottom;
+  const Acts::Vector3 outerStripVector =
+      0.5 * (stripEnds2.top - stripEnds2.bottom);
   const Acts::Vector3 stripCenterDistance = outerStripCenter - innerStripCenter;
   const Acts::Vector3 stripCenterDistanceCrossOuterStripVector =
       stripCenterDistance.cross(outerStripVector);
@@ -151,6 +145,12 @@ Acts::Result<void> createStripSpacePoint(
       stripCenterDistance.cross(innerStripVector);
   const Acts::Vector3 innerStripVectorCrossOuterStripVector =
       innerStripVector.cross(outerStripVector);
+
+  const double theta = std::acos(
+      innerStripVector.normalized().dot(outerStripVector.normalized()));
+
+  const Acts::Vector2 varZR = Acts::StripSpacePointBuilder::computeVarianceZR(
+      gctx, surface1, *spacePoint, var1, var2, theta);
 
   auto sp = spacePoints.createSpacePoint();
   sp.assignSourceLinks(

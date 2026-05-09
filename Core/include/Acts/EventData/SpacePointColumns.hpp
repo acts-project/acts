@@ -30,10 +30,10 @@ enum class SpacePointColumns : std::uint32_t {
   VarianceR = 1 << 9,        ///< Variance in radial direction
 
   // strip-specific columns
-  InnerStripCenter = 1 << 10,  ///< Center of the inner strip
-  InnerStripVector = 1 << 11,  ///< Vector of the inner strip
-  OuterStripCenter = 1 << 12,  ///< Center of the outer strip
-  OuterStripVector = 1 << 13,  ///< Vector of the outer strip
+  InnerStripCenter = 1 << 10,  ///< Vector to inner strip center
+  InnerStripVector = 1 << 11,  ///< Center to edge vector of inner strip
+  OuterStripCenter = 1 << 12,  ///< Vector to outer strip center
+  OuterStripVector = 1 << 13,  ///< Center to edge vector of outer strip
 
   // derived strip columns
   /// Inner to outer strip center vector
