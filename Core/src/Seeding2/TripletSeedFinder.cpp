@@ -26,41 +26,40 @@ inline bool calibrateStripSpacePoint(float tolerance,
                                      const ConstSpacePointProxy2& sp,
                                      const std::array<float, 3>& direction,
                                      std::array<float, 3>& outputCoordinates) {
-  const auto& isvCrossOsv = sp.innerStripVectorCrossOuterStripVector();
-  const auto& scdCrossOsv = sp.stripCenterDistanceCrossOuterStripVector();
-  const auto& scdCrossIsv = sp.stripCenterDistanceCrossInnerStripVector();
+  const auto& sCrossOhv = sp.stripSeparationCrossOuterHalfVector();
+  const auto& sCrossIhv = sp.stripSeparationCrossInnerHalfVector();
+  const auto& ihvCrossOhv = sp.innerCrossOuterStripHalfVector();
 
-  // scale = innerStripVector dot (outerStripVector cross direction)
-  const float scale = direction[0] * isvCrossOsv[0] +
-                      direction[1] * scdCrossOsv[1] +
-                      direction[2] * scdCrossOsv[2];
+  // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
+  const float scale = direction[0] * ihvCrossOhv[0] +
+                      direction[1] * sCrossOhv[1] + direction[2] * sCrossOhv[2];
 
-  // sOuter = stripCenterDistance dot (outerStripVector cross direction)
+  // sOuter = stripSeparation dot (outerStripHalfVector cross direction)
   // Check if direction is inside the inner detector element
-  const float sOuter = direction[0] * scdCrossOsv[0] +
-                       direction[1] * scdCrossOsv[1] +
-                       direction[2] * scdCrossOsv[2];
+  const float sOuter = direction[0] * sCrossOhv[0] +
+                       direction[1] * sCrossOhv[1] +
+                       direction[2] * sCrossOhv[2];
   if (std::abs(sOuter) > std::abs(scale) * tolerance) {
     return false;
   }
 
-  // sInner = stripCenterDistance dot (innerStripVector cross direction)
+  // sInner = stripSeparation dot (innerStripHalfVector cross direction)
   // Check if direction is inside the outer detector element
-  const float sInner = direction[0] * scdCrossIsv[0] +
-                       direction[1] * scdCrossIsv[1] +
-                       direction[2] * scdCrossIsv[2];
+  const float sInner = direction[0] * sCrossIhv[0] +
+                       direction[1] * sCrossIhv[1] +
+                       direction[2] * sCrossIhv[2];
   if (std::abs(sInner) > std::abs(scale) * tolerance) {
     return false;
   }
 
-  const auto& isv = sp.innerStripVector();
-  const auto& isc = sp.innerStripCenter();
+  const auto& ic = sp.innerStripCenter();
+  const auto& ihv = sp.innerStripHalfVector();
 
   // Corrected position using the inner strip center and direction
   const float sInnerNorm = sInner / scale;
-  outputCoordinates[0] = isc[0] + isv[0] * sInnerNorm;
-  outputCoordinates[1] = isc[1] + isv[1] * sInnerNorm;
-  outputCoordinates[2] = isc[2] + isv[2] * sInnerNorm;
+  outputCoordinates[0] = ic[0] + ihv[0] * sInnerNorm;
+  outputCoordinates[1] = ic[1] + ihv[1] * sInnerNorm;
+  outputCoordinates[2] = ic[2] + ihv[2] * sInnerNorm;
   return true;
 }
 

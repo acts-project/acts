@@ -609,39 +609,38 @@ RootAthenaDumpReader::readSpacePoints(
                              imIdxMap ? imIdxMap->at(cl2Index) : cl2Index);
       sLinks.emplace_back(second);
 
-      Acts::Vector3 innerStripCenterPosition = Acts::Vector3::Zero();
-      Acts::Vector3 innerStripDirection = Acts::Vector3::Zero();
-      Acts::Vector3 outerStripCenterPosition = Acts::Vector3::Zero();
-      Acts::Vector3 outerStripDirection = Acts::Vector3::Zero();
-      Acts::Vector3 stripCenterDistance = Acts::Vector3::Zero();
-      Acts::Vector3 stripCenterDistanceCrossOuterStripVector =
-          Acts::Vector3::Zero();
-      Acts::Vector3 stripCenterDistanceCrossInnerStripVector =
-          Acts::Vector3::Zero();
-      Acts::Vector3 innerStripVectorCrossOuterStripVector =
-          Acts::Vector3::Zero();
+      Acts::Vector3 innerStripCenter = Acts::Vector3::Zero();
+      Acts::Vector3 innerStripHalfVector = Acts::Vector3::Zero();
+      Acts::Vector3 outerStripCenter = Acts::Vector3::Zero();
+      Acts::Vector3 outerStripHalfVector = Acts::Vector3::Zero();
+      Acts::Vector3 stripSeparation = Acts::Vector3::Zero();
+      Acts::Vector3 stripSeparationCrossOuterHalfVector = Acts::Vector3::Zero();
+      Acts::Vector3 stripSeparationCrossInnerHalfVector = Acts::Vector3::Zero();
+      Acts::Vector3 innerCrossOuterStripHalfVector = Acts::Vector3::Zero();
 
       if (m_haveStripFeatures) {
-        innerStripDirection = {SPbottomStripDirection->at(isp).at(0),
-                               SPbottomStripDirection->at(isp).at(1),
-                               SPbottomStripDirection->at(isp).at(2)};
-        outerStripCenterPosition = {SPtopStripCenterPosition->at(isp).at(0),
-                                    SPtopStripCenterPosition->at(isp).at(1),
-                                    SPtopStripCenterPosition->at(isp).at(2)};
-        outerStripDirection = {SPtopStripDirection->at(isp).at(0),
-                               SPtopStripDirection->at(isp).at(1),
-                               SPtopStripDirection->at(isp).at(2)};
-        stripCenterDistance = {SPstripCenterDistance->at(isp).at(0),
-                               SPstripCenterDistance->at(isp).at(1),
-                               SPstripCenterDistance->at(isp).at(2)};
-        innerStripCenterPosition =
-            outerStripCenterPosition - stripCenterDistance;
-        stripCenterDistanceCrossOuterStripVector =
-            stripCenterDistance.cross(outerStripDirection);
-        stripCenterDistanceCrossInnerStripVector =
-            stripCenterDistance.cross(innerStripDirection);
-        innerStripVectorCrossOuterStripVector =
-            innerStripDirection.cross(outerStripDirection);
+        innerStripHalfVector = {SPbottomStripDirection->at(isp).at(0),
+                                SPbottomStripDirection->at(isp).at(1),
+                                SPbottomStripDirection->at(isp).at(2)};
+        innerStripHalfVector *= SPhl_botstrip[isp];
+        outerStripCenter = {SPtopStripCenterPosition->at(isp).at(0),
+                            SPtopStripCenterPosition->at(isp).at(1),
+                            SPtopStripCenterPosition->at(isp).at(2)};
+        outerStripHalfVector = {SPtopStripDirection->at(isp).at(0),
+                                SPtopStripDirection->at(isp).at(1),
+                                SPtopStripDirection->at(isp).at(2)};
+        outerStripHalfVector *= SPhl_topstrip[isp];
+        stripSeparation = {SPstripCenterDistance->at(isp).at(0),
+                           SPstripCenterDistance->at(isp).at(1),
+                           SPstripCenterDistance->at(isp).at(2)};
+
+        innerStripCenter = outerStripCenter - stripSeparation;
+        stripSeparationCrossOuterHalfVector =
+            stripSeparation.cross(outerStripHalfVector);
+        stripSeparationCrossInnerHalfVector =
+            stripSeparation.cross(innerStripHalfVector);
+        innerCrossOuterStripHalfVector =
+            innerStripHalfVector.cross(outerStripHalfVector);
       }
 
       auto stripSp = stripSpacePoints.createSpacePoint();
@@ -653,36 +652,35 @@ RootAthenaDumpReader::readSpacePoints(
       stripSp.varianceZ() = spCovz;
 
       Eigen::Map<Eigen::Vector3f>(stripSp.innerStripCenter().data()) =
-          innerStripCenterPosition.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.innerStripVector().data()) =
-          innerStripDirection.cast<float>();
+          innerStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.innerStripHalfVector().data()) =
+          innerStripHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(stripSp.outerStripCenter().data()) =
-          outerStripCenterPosition.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.outerStripVector().data()) =
-          outerStripDirection.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.stripCenterDistance().data()) =
-          stripCenterDistance.cast<float>();
+          outerStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.outerStripHalfVector().data()) =
+          outerStripHalfVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(stripSp.stripSeparation().data()) =
+          stripSeparation.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCenterDistanceCrossOuterStripVector().data()) =
-          stripCenterDistanceCrossOuterStripVector.cast<float>();
+          sp.stripSeparationCrossOuterHalfVector().data()) =
+          stripSeparationCrossOuterHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCenterDistanceCrossInnerStripVector().data()) =
-          stripCenterDistanceCrossInnerStripVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(
-          sp.innerStripVectorCrossOuterStripVector().data()) =
-          innerStripVectorCrossOuterStripVector.cast<float>();
+          sp.stripSeparationCrossInnerHalfVector().data()) =
+          stripSeparationCrossInnerHalfVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(sp.innerCrossOuterStripHalfVector().data()) =
+          innerCrossOuterStripHalfVector.cast<float>();
 
       sp.innerStripCenter() = stripSp.innerStripCenter();
-      sp.innerStripVector() = stripSp.innerStripVector();
+      sp.innerStripHalfVector() = stripSp.innerStripHalfVector();
       sp.outerStripCenter() = stripSp.outerStripCenter();
-      sp.outerStripVector() = stripSp.outerStripVector();
-      sp.stripCenterDistance() = stripSp.stripCenterDistance();
-      sp.stripCenterDistanceCrossOuterStripVector() =
-          stripSp.stripCenterDistanceCrossOuterStripVector();
-      sp.stripCenterDistanceCrossInnerStripVector() =
-          stripSp.stripCenterDistanceCrossInnerStripVector();
-      sp.innerStripVectorCrossOuterStripVector() =
-          stripSp.innerStripVectorCrossOuterStripVector();
+      sp.outerStripHalfVector() = stripSp.outerStripHalfVector();
+      sp.stripSeparation() = stripSp.stripSeparation();
+      sp.stripSeparationCrossOuterHalfVector() =
+          stripSp.stripSeparationCrossOuterHalfVector();
+      sp.stripSeparationCrossInnerHalfVector() =
+          stripSp.stripSeparationCrossInnerHalfVector();
+      sp.innerCrossOuterStripHalfVector() =
+          stripSp.innerCrossOuterStripHalfVector();
     }
 
     sp.assignSourceLinks(sLinks);

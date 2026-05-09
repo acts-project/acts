@@ -30,20 +30,20 @@ enum class SpacePointColumns : std::uint32_t {
   VarianceR = 1 << 9,        ///< Variance in radial direction
 
   // strip-specific columns
-  InnerStripCenter = 1 << 10,  ///< Vector to inner strip center
-  InnerStripVector = 1 << 11,  ///< Center to edge vector of inner strip
-  OuterStripCenter = 1 << 12,  ///< Vector to outer strip center
-  OuterStripVector = 1 << 13,  ///< Center to edge vector of outer strip
+  InnerStripCenter = 1 << 10,      ///< Vector to inner strip center
+  InnerStripHalfVector = 1 << 11,  ///< Center-to-edge vector of inner strip
+  OuterStripCenter = 1 << 12,      ///< Vector to outer strip center
+  OuterStripHalfVector = 1 << 13,  ///< Center-to-edge vector of outer strip
 
   // derived strip columns
-  /// Inner to outer strip center vector
-  StripCenterDistance = 1 << 14,
-  /// Cross product of strip center distance and outer strip vector
-  StripCenterDistanceCrossOuterStripVector = 1 << 15,
-  /// Cross product of strip center distance and inner strip vector
-  StripCenterDistanceCrossInnerStripVector = 1 << 16,
-  /// Cross product of inner and outer strip vectors
-  InnerStripVectorCrossOuterStripVector = 1 << 17,
+  /// Vector from inner to outer strip centers
+  StripSeparation = 1 << 14,
+  /// Cross product of strip separation and outer strip half vector
+  StripSeparationCrossOuterHalfVector = 1 << 15,
+  /// Cross product of strip separation and inner strip half vector
+  StripSeparationCrossInnerHalfVector = 1 << 16,
+  /// Cross product of inner and outer strip half vectors
+  InnerCrossOuterStripHalfVector = 1 << 17,
 
   // packed columns for performance reasons
   PackedXY = 1 << 18,          ///< X and Y coordinates
@@ -53,26 +53,25 @@ enum class SpacePointColumns : std::uint32_t {
   PackedVarianceZR = 1 << 22,  ///< Variance in Z and R directions
 
   /// Relevant strip columns for seeding purposes
-  StripRelevant = InnerStripCenter | InnerStripVector |
-                  StripCenterDistanceCrossInnerStripVector |
-                  StripCenterDistanceCrossOuterStripVector |
-                  InnerStripVectorCrossOuterStripVector,
+  StripRelevant = InnerStripCenter | InnerStripHalfVector |
+                  StripSeparationCrossInnerHalfVector |
+                  StripSeparationCrossOuterHalfVector |
+                  InnerCrossOuterStripHalfVector,
 
   /// All strip columns
-  StripAll = InnerStripCenter | InnerStripVector | OuterStripCenter |
-             OuterStripVector | StripCenterDistance |
-             StripCenterDistanceCrossInnerStripVector |
-             StripCenterDistanceCrossOuterStripVector |
-             InnerStripVectorCrossOuterStripVector,
+  StripAll = InnerStripCenter | InnerStripHalfVector | OuterStripCenter |
+             OuterStripHalfVector | StripSeparation |
+             StripSeparationCrossInnerHalfVector |
+             StripSeparationCrossOuterHalfVector |
+             InnerCrossOuterStripHalfVector,
 
   /// All columns
   All = SourceLinks | X | Y | Z | R | Phi | Time | VarianceZ | VarianceR |
-        CopiedFromIndex | InnerStripCenter | InnerStripVector |
-        OuterStripCenter | OuterStripVector | StripCenterDistance |
-        StripCenterDistanceCrossInnerStripVector |
-        StripCenterDistanceCrossOuterStripVector |
-        InnerStripVectorCrossOuterStripVector | PackedXY | PackedZR |
-        PackedXYZ | PackedXYZR | PackedVarianceZR,
+        CopiedFromIndex | InnerStripCenter | InnerStripHalfVector |
+        OuterStripCenter | OuterStripHalfVector | StripSeparation |
+        StripSeparationCrossInnerHalfVector |
+        StripSeparationCrossOuterHalfVector | InnerCrossOuterStripHalfVector |
+        PackedXY | PackedZR | PackedXYZ | PackedXYZR | PackedVarianceZR,
 };
 
 /// Enable bitwise operators for SpacePointColumns enum

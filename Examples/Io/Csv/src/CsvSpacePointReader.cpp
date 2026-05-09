@@ -78,51 +78,50 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
     sp.varianceZ() = data.sp_covz;
 
     if (m_cfg.extendCollection) {
-      const Acts::Vector3 innerStripVector =
+      const Acts::Vector3 innerStripHalfVector =
           Acts::Vector3(data.sp_bottomStripDirection_0,
                         data.sp_bottomStripDirection_1,
                         data.sp_bottomStripDirection_2) *
-          2 * data.sp_bottomHalfStripLength;
+          data.sp_bottomHalfStripLength;
       const Acts::Vector3 outerStripCenter(data.sp_topStripCenterPosition_0,
                                            data.sp_topStripCenterPosition_1,
                                            data.sp_topStripCenterPosition_2);
-      const Acts::Vector3 outerStripVector =
+      const Acts::Vector3 outerStripHalfVector =
           Acts::Vector3(data.sp_topStripDirection_0,
                         data.sp_topStripDirection_1,
                         data.sp_topStripDirection_2) *
-          2 * data.sp_topHalfStripLength;
-      const Acts::Vector3 stripCenterDistance(data.sp_stripCenterDistance_0,
-                                              data.sp_stripCenterDistance_1,
-                                              data.sp_stripCenterDistance_2);
+          data.sp_topHalfStripLength;
+      const Acts::Vector3 stripSeparation(data.sp_stripCenterDistance_0,
+                                          data.sp_stripCenterDistance_1,
+                                          data.sp_stripCenterDistance_2);
       const Acts::Vector3 innerStripCenter =
-          outerStripVector - stripCenterDistance;
+          outerStripHalfVector - stripSeparation;
 
-      const Acts::Vector3 stripCenterDistanceCrossOuterStripVector =
-          stripCenterDistance.cross(outerStripVector);
-      const Acts::Vector3 stripCenterDistanceCrossInnerStripVector =
-          stripCenterDistance.cross(innerStripVector);
-      const Acts::Vector3 innerStripVectorCrossOuterStripVector =
-          innerStripVector.cross(outerStripVector);
+      const Acts::Vector3 stripSeparationCrossOuterHalfVector =
+          stripSeparation.cross(outerStripHalfVector);
+      const Acts::Vector3 stripSeparationCrossInnerHalfVector =
+          stripSeparation.cross(innerStripHalfVector);
+      const Acts::Vector3 innerCrossOuterStripHalfVector =
+          innerStripHalfVector.cross(outerStripHalfVector);
 
       Eigen::Map<Eigen::Vector3f>(sp.innerStripCenter().data()) =
-          innerStripVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.innerStripVector().data()) =
-          innerStripVector.cast<float>();
+          innerStripCenter.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(sp.innerStripHalfVector().data()) =
+          innerStripHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(sp.outerStripCenter().data()) =
           outerStripCenter.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.outerStripVector().data()) =
-          outerStripVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(sp.stripCenterDistance().data()) =
-          stripCenterDistance.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(sp.outerStripHalfVector().data()) =
+          outerStripHalfVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(sp.stripSeparation().data()) =
+          stripSeparation.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCenterDistanceCrossOuterStripVector().data()) =
-          stripCenterDistanceCrossOuterStripVector.cast<float>();
+          sp.stripSeparationCrossOuterHalfVector().data()) =
+          stripSeparationCrossOuterHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCenterDistanceCrossInnerStripVector().data()) =
-          stripCenterDistanceCrossInnerStripVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(
-          sp.innerStripVectorCrossOuterStripVector().data()) =
-          innerStripVectorCrossOuterStripVector.cast<float>();
+          sp.stripSeparationCrossInnerHalfVector().data()) =
+          stripSeparationCrossInnerHalfVector.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(sp.innerCrossOuterStripHalfVector().data()) =
+          innerCrossOuterStripHalfVector.cast<float>();
     }
   }
 

@@ -102,16 +102,16 @@ void addEventData(py::module_& m) {
       .value("VarianceZ", SpacePointColumns::VarianceZ)
       .value("VarianceR", SpacePointColumns::VarianceR)
       .value("InnerStripCenter", SpacePointColumns::InnerStripCenter)
-      .value("InnerStripVector", SpacePointColumns::InnerStripVector)
+      .value("InnerStripHalfVector", SpacePointColumns::InnerStripHalfVector)
       .value("OuterStripCenter", SpacePointColumns::OuterStripCenter)
-      .value("OuterStripVector", SpacePointColumns::OuterStripVector)
-      .value("StripCenterDistance", SpacePointColumns::StripCenterDistance)
-      .value("InnerStripVectorCrossOuterStripVector",
-             SpacePointColumns::InnerStripVectorCrossOuterStripVector)
-      .value("StripCenterDistanceCrossOuterStripVector",
-             SpacePointColumns::StripCenterDistanceCrossOuterStripVector)
-      .value("StripCenterDistanceCrossInnerStripVector",
-             SpacePointColumns::StripCenterDistanceCrossInnerStripVector)
+      .value("OuterStripHalfVector", SpacePointColumns::OuterStripHalfVector)
+      .value("StripSeparation", SpacePointColumns::StripSeparation)
+      .value("InnerCrossOuterStripHalfVector",
+             SpacePointColumns::InnerCrossOuterStripHalfVector)
+      .value("StripSeparationCrossOuterHalfVector",
+             SpacePointColumns::StripSeparationCrossOuterHalfVector)
+      .value("StripSeparationCrossInnerHalfVector",
+             SpacePointColumns::StripSeparationCrossInnerHalfVector)
       .value("PackedXY", SpacePointColumns::PackedXY)
       .value("PackedZR", SpacePointColumns::PackedZR)
       .value("PackedXYZ", SpacePointColumns::PackedXYZ)
@@ -183,20 +183,20 @@ void addEventData(py::module_& m) {
                              SpacePointColumns::InnerStripCenter,
                              "innerStripCenter"))
           .def_property_readonly(
-              "innerStripVectorColumn",
-              arrayColumn<3>(&SpacePointContainer2::innerStripVectorColumn,
-                             SpacePointColumns::InnerStripVector,
-                             "innerStripVector"))
+              "innerStripHalfVectorColumn",
+              arrayColumn<3>(&SpacePointContainer2::innerStripHalfVectorColumn,
+                             SpacePointColumns::InnerStripHalfVector,
+                             "innerStripHalfVector"))
           .def_property_readonly(
               "outerStripCenterColumn",
               arrayColumn<3>(&SpacePointContainer2::outerStripCenterColumn,
                              SpacePointColumns::OuterStripCenter,
                              "outerStripCenter"))
           .def_property_readonly(
-              "outerStripVectorColumn",
-              arrayColumn<3>(&SpacePointContainer2::outerStripVectorColumn,
-                             SpacePointColumns::OuterStripVector,
-                             "outerStripVector"))
+              "outerStripHalfVectorColumn",
+              arrayColumn<3>(&SpacePointContainer2::outerStripHalfVectorColumn,
+                             SpacePointColumns::OuterStripHalfVector,
+                             "outerStripHalfVector"))
           .def_property_readonly(
               "xyColumn", arrayColumn<2>(&SpacePointContainer2::xyColumn,
                                          SpacePointColumns::PackedXY, "xy"))
