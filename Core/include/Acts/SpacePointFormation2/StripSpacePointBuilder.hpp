@@ -140,7 +140,7 @@ inline bool calibrateStripSpacePoint(
       ohv[2] * direction[0] - ohv[0] * direction[2],
       ohv[0] * direction[1] - ohv[1] * direction[0]};
 
-  // scale = innerStripHalfVector dot d1
+  // scale = innerStripHalfVector dot dOuter
   const float scale =
       ihv[0] * dOuter[0] + ihv[1] * dOuter[1] + ihv[2] * dOuter[2];
 
