@@ -53,14 +53,14 @@ enum class SpacePointColumns : std::uint32_t {
   PackedVarianceZR = 1 << 22,  ///< Variance in Z and R directions
 
   /// Relevant strip columns for seeding purposes
-  StripRelevant = InnerStripVector | InnerStripCenter |
+  StripRelevant = InnerStripCenter | InnerStripVector |
                   StripCenterDistanceCrossInnerStripVector |
                   StripCenterDistanceCrossOuterStripVector |
                   InnerStripVectorCrossOuterStripVector,
 
   /// All strip columns
-  StripAll = InnerStripVector | InnerStripCenter | OuterStripVector |
-             OuterStripCenter | StripCenterDistance |
+  StripAll = InnerStripCenter | InnerStripVector | OuterStripCenter |
+             OuterStripVector | StripCenterDistance |
              StripCenterDistanceCrossInnerStripVector |
              StripCenterDistanceCrossOuterStripVector |
              InnerStripVectorCrossOuterStripVector,
