@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -28,12 +28,14 @@ class IVolumeMaterial;
 /// Stepper implementation using sympy-generated expressions.
 class SympyStepper final {
  public:
+  /// Type alias for bound track parameters
+  using BoundParameters = BoundTrackParameters;
   /// Type alias for jacobian matrix
   using Jacobian = BoundMatrix;
   /// Type alias for covariance matrix
   using Covariance = BoundMatrix;
   /// Bound state tuple containing parameters, Jacobian, and path length
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
 
   /// Configuration for the sympy stepper.
   struct Config {
@@ -145,7 +147,7 @@ class SympyStepper final {
   /// Initialize the state from bound track parameters
   /// @param state The state to initialize
   /// @param par The bound track parameters
-  void initialize(State& state, const BoundTrackParameters& par) const;
+  void initialize(State& state, const BoundParameters& par) const;
 
   /// Initialize the state from bound parameters
   /// @param state The state to initialize
@@ -409,12 +411,6 @@ class SympyStepper final {
   ///       propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const;
-
-  /// Method that reset the Jacobian to the Identity for when no bound state are
-  /// available
-  ///
-  /// @param [in,out] state State of the stepper
-  void setIdentityJacobian(State& state) const;
 
  protected:
   /// Magnetic field inside of the detector

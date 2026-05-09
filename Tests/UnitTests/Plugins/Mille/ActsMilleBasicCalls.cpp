@@ -23,9 +23,9 @@ BOOST_AUTO_TEST_CASE(OpenMilleRecord) {
   std::unique_ptr<Mille::MilleRecord> theRecord =
       Mille::spawnMilleRecord(fname);
   BOOST_CHECK_NE(theRecord.get(), nullptr);
-  // for now, will write one entry of dummy information.
-  ActsAlignment::detail::TrackAlignmentState dummyState;
-  dumpToMille(dummyState, theRecord.get());
+  theRecord->addData(0.02, 0.005, std::vector<unsigned int>{0u},
+                     std::vector<double>{1.0}, std::vector<int>{42},
+                     std::vector<double>{-1.0});
   theRecord->writeRecord();
   theRecord->flushOutputFile();
   theRecord.reset(nullptr);

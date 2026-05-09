@@ -10,9 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -24,10 +23,11 @@
 #include "ActsPodioEdm/MutableTrackerHitLocal.h"
 #include "ActsPodioEdm/TrackerHitLocal.h"
 
+#include <functional>
+#include <optional>
 #include <span>
 #include <stdexcept>
 
-#include <boost/container/static_vector.hpp>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
@@ -52,6 +52,9 @@ struct std::hash<podio::ObjectID> {
 };
 
 #endif
+
+#include "ActsPodioEdm/TrackerHitLocalCollection.h"
+#include "ActsPodioEdm/TrackerHitLocalSimTrackerHitLinkCollection.h"
 
 /// @namespace ActsPlugins::EDM4hepUtil
 /// @ingroup edm4hep_plugin
@@ -339,13 +342,6 @@ constexpr bool kEdm4hepVertexHasTime =
 
 void writeVertex(const Acts::Vertex& vertex, edm4hep::MutableVertex to);
 
-namespace detail {
-// These functions are exposed here so they can be used from the unit tests
-std::uint32_t encodeIndices(std::span<const std::uint8_t> indices);
-boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
-decodeIndices(std::uint32_t type);
-}  // namespace detail
-
 /// Write a measurement to an EDM4hep tracker hit
 ///
 /// This function converts an ACTS measurement into the EDM4hep format. It
@@ -354,12 +350,14 @@ decodeIndices(std::uint32_t type);
 /// - Time storage (in ns)
 /// - Measurement values and covariance matrix storage
 /// - Encoding of measurement indices into a 32-bit integer:
-///   - First 4 bits: number of indices (max 6)
-///   - Next 4 bits per index: which parameter is being measured (0-6)
+///   - First 4 bits: number of indices (max
+///     `ActsPodioEdm::detail::kMaxSubspaceSize`)
+///   - Next 4 bits per index: measured bound parameter index (max
+///     `ActsPodioEdm::detail::kMaxSubspaceIndex`)
 ///
 /// The function will throw if:
-/// - The number of indices exceeds 6
-/// - Any index is larger than 6
+/// - The number of indices exceeds `ActsPodioEdm::detail::kMaxSubspaceSize`
+/// - Any index is larger than `ActsPodioEdm::detail::kMaxSubspaceIndex`
 /// - There's a size mismatch between parameters and covariance matrix
 ///
 /// @param gctx The geometry context
@@ -383,8 +381,7 @@ struct MeasurementData {
   /// Covariance matrix of the measurement (full bound space)
   Acts::BoundMatrix covariance{Acts::BoundMatrix::Zero()};
   /// Indices of the measured parameters (subspace)
-  boost::container::static_vector<Acts::SubspaceIndex, Acts::eBoundSize>
-      indices;
+  std::vector<Acts::SubspaceIndex> indices;
   /// Cell ID of the measurement
   std::uint64_t cellId{0};
 };
@@ -398,5 +395,26 @@ struct MeasurementData {
 /// @return The extracted measurement data (parameters, covariance, indices,
 ///         cellId)
 MeasurementData readMeasurement(const ActsPodioEdm::TrackerHitLocal& from);
+
+/// Callback type for sim hit lookup during TrackerHitLocal link writing.
+/// Given a hit index (position in the TrackerHitLocalCollection), returns the
+/// associated edm4hep SimTrackerHit, or std::nullopt if no association exists.
+using SimHitForHitIndex =
+    std::function<std::optional<edm4hep::SimTrackerHit>(std::size_t hitIndex)>;
+
+/// Write sim-hit links for a TrackerHitLocal collection.
+///
+/// For each hit in @p hits, calls @p lookup with its position index. If the
+/// callback returns a hit, a link entry is created in @p links. Hits with no
+/// association are silently skipped, so the resulting link collection may be
+/// sparse.
+///
+/// @param hits    The TrackerHitLocal collection to link from
+/// @param links   The link collection to populate
+/// @param lookup  Callback mapping hit index → optional SimTrackerHit
+void writeTrackerHitSimHitLinks(
+    const ActsPodioEdm::TrackerHitLocalCollection& hits,
+    ActsPodioEdm::TrackerHitLocalSimTrackerHitLinkCollection& links,
+    const SimHitForHitIndex& lookup);
 
 }  // namespace ActsPlugins::EDM4hepUtil

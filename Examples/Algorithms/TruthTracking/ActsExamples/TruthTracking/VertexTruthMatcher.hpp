@@ -64,10 +64,10 @@ class VertexTruthMatcher final : public IAlgorithm {
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
 
-  WriteDataHandle<std::vector<VertexToTruthMatching>>
-      m_outputVertexTruthMatching{this, "OutputVertexTruthMatching"};
-  WriteDataHandle<std::map<SimVertexBarcode, VertexToRecoMatching>>
-      m_outputTruthVertexMatching{this, "OutputTruthVertexMatching"};
+  WriteDataHandle<VertexTruthMatching> m_outputVertexTruthMatching{
+      this, "OutputVertexTruthMatching"};
+  WriteDataHandle<TruthVertexMatching> m_outputTruthVertexMatching{
+      this, "OutputTruthVertexMatching"};
 };
 
 }  // namespace ActsExamples

@@ -29,7 +29,7 @@ auto Acts::EigenStepper<E>::makeState(const Options& options) const -> State {
 
 template <typename E>
 void Acts::EigenStepper<E>::initialize(State& state,
-                                       const BoundTrackParameters& par) const {
+                                       const BoundParameters& par) const {
   initialize(state, par.parameters(), par.covariance(),
              par.particleHypothesis(), par.referenceSurface());
 }
@@ -385,9 +385,4 @@ Acts::Result<double> Acts::EigenStepper<E>::step(
   }
 
   return h;
-}
-
-template <typename E>
-void Acts::EigenStepper<E>::setIdentityJacobian(State& state) const {
-  state.jacobian = BoundMatrix::Identity();
 }

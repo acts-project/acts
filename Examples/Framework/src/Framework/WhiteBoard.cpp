@@ -124,13 +124,11 @@ void WhiteBoard::addHolder(const std::string &name,
                           : "unknown")
                << "'");
 
-  if (success) {
-    // deal with aliases
-    auto range = m_objectAliases.equal_range(name);
-    for (auto it = range.first; it != range.second; ++it) {
-      m_store[it->second] = storeVal;
-      ACTS_VERBOSE("Added alias object '" << it->second << "'");
-    }
+  // deal with aliases
+  auto range = m_objectAliases.equal_range(name);
+  for (auto it = range.first; it != range.second; ++it) {
+    m_store[it->second] = storeVal;
+    ACTS_VERBOSE("Added alias object '" << it->second << "'");
   }
 }
 

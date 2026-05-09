@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -853,9 +852,10 @@ class CombinatorialKalmanFilter {
             .template makeState<PropagatorOptions, StubPathLimitReached>(
                 propOptions);
 
-    auto initResult = m_propagator.template initialize<
-        decltype(propState), BoundTrackParameters, StubPathLimitReached>(
-        propState, initialParameters);
+    auto initResult =
+        m_propagator
+            .template initialize<decltype(propState), StubPathLimitReached>(
+                propState, initialParameters);
     if (!initResult.ok()) {
       ACTS_DEBUG("Propagation initialization failed: " << initResult.error());
       return initResult.error();

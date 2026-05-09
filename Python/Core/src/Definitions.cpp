@@ -8,12 +8,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 
 #include <format>
-#include <type_traits>
 
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -27,22 +28,31 @@ namespace ActsPython {
 void addDefinitions(py::module_& m) {
   using namespace Acts;
   // Add algebra classes here
-  py::class_<Vector2>(m, "Vector2")
+  py::class_<Vector2>(m, "Vector2", py::buffer_protocol())
       .def(py::init<double, double>())
       .def(py::init([](std::array<double, 2> a) {
         Vector2 v;
         v << a[0], a[1];
         return v;
       }))
+      .def_buffer([](const Vector2& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
       .def("__getitem__",
            [](const Vector2& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const Vector2& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
       .def("__str__", [](const Vector2& self) {
         std::stringstream ss;
         ss << self.transpose();
         return ss.str();
       });
 
-  py::class_<Vector3>(m, "Vector3")
+  py::class_<Vector3>(m, "Vector3", py::buffer_protocol())
       .def(py::init<double, double, double>())
       .def(py::init([](std::array<double, 3> a) {
         Vector3 v;
@@ -64,17 +74,26 @@ void addDefinitions(py::module_& m) {
            [](const Vector3& self, const Vector3& other) {
              return self.cwiseProduct(other).eval();
            })
+      .def_buffer([](const Vector3& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
       .def("cross",
            [](const Vector3& self, const Vector3& other) {
              return self.cross(other).eval();
            })
       .def("__getitem__",
            [](const Vector3& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const Vector3& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
       .def("__str__", [](const Vector3& self) {
         return std::format("({}, {}, {})", self[0], self[1], self[2]);
       });
 
-  py::class_<Vector4>(m, "Vector4")
+  py::class_<Vector4>(m, "Vector4", py::buffer_protocol())
       .def(py::init<double, double, double, double>())
       .def(py::init([](std::array<double, 4> a) {
         Vector4 v;
@@ -93,11 +112,63 @@ void addDefinitions(py::module_& m) {
            [](const Vector4& self, const Vector4& other) {
              return self.cwiseProduct(other).eval();
            })
+      .def_buffer([](const Vector4& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
       .def("__getitem__",
            [](const Vector4& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const Vector4& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
       .def("__str__", [](const Vector4& self) {
         return std::format("({}, {}, {}, {})", self[0], self[1], self[2],
                            self[3]);
+      });
+
+  py::class_<BoundVector>(m, "BoundVector", py::buffer_protocol())
+      .def(py::init<double, double, double, double, double, double>())
+      .def(py::init([](std::array<double, 6> a) {
+        BoundVector v;
+        v << a[0], a[1], a[2], a[3], a[4], a[5];
+        return v;
+      }))
+      .def_static("Zero", []() -> BoundVector { return BoundVector::Zero(); })
+      .def_buffer([](const BoundVector& self) {
+        return py::buffer_info(const_cast<double*>(self.data()), sizeof(double),
+                               py::format_descriptor<double>::format(), 1,
+                               {self.size()}, {sizeof(double)});
+      })
+      .def("__getitem__",
+           [](const BoundVector& self, Eigen::Index i) { return self[i]; })
+      .def("__iter__",
+           [](const BoundVector& self) {
+             return py::make_iterator(self.data(), self.data() + self.size());
+           })
+      .def("__str__", [](const BoundVector& self) {
+        return std::format("({}, {}, {}, {}, {}, {})", self[0], self[1],
+                           self[2], self[3], self[4], self[5]);
+      });
+
+  py::class_<BoundMatrix>(m, "BoundMatrix")
+      .def(py::init([]() { return BoundMatrix::Zero(); }))
+      .def_static("Zero", []() -> BoundMatrix { return BoundMatrix::Zero(); })
+      .def_static("Identity",
+                  []() -> BoundMatrix { return BoundMatrix::Identity(); })
+      .def("__getitem__",
+           [](const BoundMatrix& self, py::object idx) {
+             py::tuple t = idx.cast<py::tuple>();
+             if (py::len(t) != 2) {
+               throw py::index_error("BoundMatrix index must be (i, j)");
+             }
+             return self(t[0].cast<Eigen::Index>(), t[1].cast<Eigen::Index>());
+           })
+      .def("__str__", [](const BoundMatrix& self) {
+        std::stringstream ss;
+        ss << self;
+        return ss.str();
       });
 
   py::class_<Translation3>(m, "Translation3")
@@ -258,19 +329,16 @@ void addDefinitions(py::module_& m) {
   // Add the parsePdgParticle function
   m.def("parsePdgParticle", &parsePdgParticle, py::arg("name"));
 
-  py::class_<GenericParticleHypothesis<AnyCharge>>(
-      m, "GenericParticleHypothesisAnyCharge");
-
-  py::class_<ParticleHypothesis, GenericParticleHypothesis<AnyCharge>>(
-      m, "ParticleHypothesis")
+  py::class_<ParticleHypothesis>(m, "ParticleHypothesis")
       .def(py::init([](PdgParticle absPdg, float mass, float absCharge) {
-             return ParticleHypothesis(absPdg, mass, AnyCharge{absCharge});
+             return ParticleHypothesis(absPdg, mass,
+                                       ChargeHypothesis{absCharge});
            }),
            py::arg("pdg"), py::arg("mass"), py::arg("absCharge"))
       .def(py::init([](std::underlying_type_t<PdgParticle> absPdg, float mass,
                        float absCharge) {
              return ParticleHypothesis(static_cast<PdgParticle>(absPdg), mass,
-                                       AnyCharge{absCharge});
+                                       ChargeHypothesis{absCharge});
            }),
            py::arg("absPdg"), py::arg("mass"), py::arg("absCharge"))
       .def("__str__",

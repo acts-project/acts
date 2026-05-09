@@ -19,17 +19,13 @@
 
 namespace Acts::Experimental {
 
-GbtsLayerConnectionMap::GbtsLayerConnectionMap(std::string& inFile,
-                                               bool lrtMode) {
+GbtsLayerConnectionMap GbtsLayerConnectionMap::fromStream(
+    std::istream& inStream, bool lrtMode) {
+  GbtsLayerConnectionMap connectionMap;
+
   std::uint32_t nLinks{};
 
-  std::ifstream input_ifstream(inFile.c_str(), std::ifstream::in);
-
-  if (!input_ifstream.is_open()) {
-    throw std::runtime_error("connection file not found");
-  }
-
-  input_ifstream >> nLinks >> etaBinWidth;
+  inStream >> nLinks >> connectionMap.etaBinWidth;
 
   for (std::uint32_t l = 0; l < nLinks; l++) {
     std::uint32_t stage{};
@@ -40,8 +36,7 @@ GbtsLayerConnectionMap::GbtsLayerConnectionMap(std::string& inFile,
     std::uint32_t height{};
     std::uint32_t width{};
 
-    input_ifstream >> lIdx >> stage >> src >> dst >> height >> width >>
-        nEntries;
+    inStream >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
 
     auto pC = std::make_unique<GbtsLayerConnection>(src, dst);
 
@@ -49,7 +44,7 @@ GbtsLayerConnectionMap::GbtsLayerConnectionMap(std::string& inFile,
 
     for (std::uint32_t i = 0; i < height; ++i) {
       for (std::uint32_t j = 0; j < width; ++j) {
-        input_ifstream >> dummy;
+        inStream >> dummy;
       }
     }
 
@@ -68,11 +63,13 @@ GbtsLayerConnectionMap::GbtsLayerConnectionMap(std::string& inFile,
       }
     }
 
-    if (auto it = connectionMap.find(stage); it == connectionMap.end()) {
+    if (const auto it = connectionMap.connectionMap.find(stage);
+        it == connectionMap.connectionMap.end()) {
       std::vector<std::unique_ptr<GbtsLayerConnection>> v;
       v.push_back(std::move(pC));  // move the unique_ptr in
-      connectionMap.emplace(stage,
-                            std::move(v));  // move the vector into the map
+      connectionMap.connectionMap.emplace(
+          stage,
+          std::move(v));  // move the vector into the map
     } else {
       it->second.push_back(std::move(pC));  // move into existing vector
     }
@@ -84,7 +81,7 @@ GbtsLayerConnectionMap::GbtsLayerConnectionMap(std::string& inFile,
 
   std::map<std::int32_t, std::vector<const GbtsLayerConnection*>> newConnMap;
 
-  for (const auto& conn : connectionMap) {
+  for (const auto& conn : connectionMap.connectionMap) {
     for (const auto& up : conn.second) {
       lConns.push_back(up.get());
     }
@@ -183,12 +180,18 @@ GbtsLayerConnectionMap::GbtsLayerConnectionMap(std::string& inFile,
       lgv.push_back(LayerGroup(l1Group.first, l1Group.second));
     }
 
-    layerGroups.insert(std::make_pair(currentStage, lgv));
+    connectionMap.layerGroups.insert(std::make_pair(currentStage, lgv));
 
     currentStage++;
   }
 
-  newConnMap.clear();
+  return connectionMap;
+}
+
+GbtsLayerConnectionMap GbtsLayerConnectionMap::fromFile(std::string& inFile,
+                                                        bool lrtMode) {
+  std::ifstream inputStream(inFile.c_str());
+  return fromStream(inputStream, lrtMode);
 }
 
 }  // namespace Acts::Experimental

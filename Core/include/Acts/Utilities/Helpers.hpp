@@ -16,6 +16,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <ranges>
 #include <type_traits>
 #include <vector>
 
@@ -270,7 +271,9 @@ namespace detail {
 ///
 /// The computation is performed as follows:
 /// 1. Sorts the input vector using @c std::ranges::sort to prepare for uniqueness.
-/// 2. Determines the number of unique values using @c std::unique and calculates the bin count.
+/// 2. Determines the number of unique values using @c std::ranges::unique and
+///    calculates the bin count from the size of the unique prefix (not the tail
+///    subrange).
 /// 3. Calculates the minimum and maximum using @c std::ranges::minmax.
 /// 4. Adjusts the maximum to include an additional bin by adding the bin step
 /// size.
@@ -287,8 +290,11 @@ inline auto getMinMaxAndBinCount(std::vector<double>& xPos) {
   std::ranges::sort(xPos);
 
   // get the number of bins over unique values
-  auto it = std::unique(xPos.begin(), xPos.end());
-  const std::size_t xBinCount = std::distance(xPos.begin(), it);
+  // ranges::unique returns [ret, end): duplicate tail; unique elements are
+  // [begin, ret)
+  const auto uniqueTail = std::ranges::unique(xPos);
+  const std::size_t xBinCount = static_cast<std::size_t>(
+      std::ranges::distance(xPos.begin(), uniqueTail.begin()));
 
   // get the minimum and maximum
   auto [xMin, xMax] = std::ranges::minmax(xPos);

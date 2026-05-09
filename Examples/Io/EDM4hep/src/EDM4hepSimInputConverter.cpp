@@ -723,7 +723,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   if (m_cfg.sortSimHitsInTime) {
     Acts::ScopedTimer timer("Sorting sim hits in time", logger(),
                             Acts::Logging::DEBUG);
-    std::multimap<ActsFatras::Barcode, std::size_t> hitsByParticle;
+    std::multimap<SimBarcode, std::size_t> hitsByParticle;
 
     for (std::size_t i = 0; i < simHits.size(); ++i) {
       hitsByParticle.insert({simHits.nth(i)->particleId(), i});
@@ -779,51 +779,47 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
   }
 
   std::vector<SimVertex> simVerticesUnordered;
+  // Bucket vertex indices by id so the position-match scan in `maybeAddVertex`
+  // only visits vertices with the same id (typically a tiny set), instead of
+  // walking the entire `simVerticesUnordered` vector.
+  std::unordered_map<SimVertexBarcode, std::vector<std::size_t>>
+      simVertexIndicesById;
 
   auto maybeAddVertex = [&](const Acts::Vector4& vtxPos4,
-
                             SimVertexBarcode vtxId) -> SimVertex& {
-    auto getMinDistance = [&]() {
-      std::stringstream sstr;
-      auto closestIt = std::ranges::min_element(
-          simVerticesUnordered, {}, [&vtxPos4](const auto& v) {
-            return (v.position4.template head<3>() - vtxPos4.template head<3>())
-                .norm();
-          });
+    constexpr double posTol = Acts::UnitConstants::mm * 1e-3;
 
-      if (closestIt != simVerticesUnordered.end()) {
-        sstr << (closestIt->position4.head<3>() - vtxPos4.head<3>()).norm();
-      } else {
-        sstr << "[NONE]";
+    const Acts::Vector3 vtxPos3 = vtxPos4.head<3>();
+
+    auto& bucket = simVertexIndicesById[vtxId];
+    for (std::size_t idx : bucket) {
+      const SimVertex& v = simVerticesUnordered[idx];
+      if ((v.position4.head<3>() - vtxPos3).norm() < posTol) {
+        ACTS_VERBOSE("Reusing existing vertex: position=" << vtxPos3.transpose()
+                                                          << " id=" << v.id);
+        return simVerticesUnordered[idx];
       }
-
-      return sstr.str();
-    };
-
-    auto vertexIt =
-        std::ranges::find_if(simVerticesUnordered, [&](const auto& v) {
-          return (v.position4.template head<3>() - vtxPos4.template head<3>())
-                         .norm() < Acts::UnitConstants::mm * 1e-3 &&
-                 v.id == vtxId;
-        });
-
-    SimVertex* vertex = nullptr;
-    // We don't have a vertex for this position + id yet
-    if (vertexIt == simVerticesUnordered.end()) {
-      ACTS_VERBOSE("Adding new vertex: position="
-                   << vtxPos4.template head<3>().transpose() << " id=" << vtxId
-                   << " (closest existing=" << getMinDistance() << ")");
-      vertex = &simVerticesUnordered.emplace_back(vtxId, vtxPos4);
-    } else {
-      vertex = &*vertexIt;
-      ACTS_VERBOSE("Reusing existing vertex: position="
-                   << vtxPos4.template head<3>().transpose()
-                   << " id=" << vertex->id);
     }
 
-    assert(vertex != nullptr);
+    if (logger().doPrint(Acts::Logging::VERBOSE)) {
+      // Build the "closest existing" diagnostic only when verbose logging is
+      // enabled; otherwise this is a full O(N) scan we don't need.
+      std::string closestStr = "[NONE]";
+      auto closestIt = std::ranges::min_element(
+          simVerticesUnordered, {}, [&vtxPos3](const SimVertex& v) {
+            return (v.position4.head<3>() - vtxPos3).norm();
+          });
+      if (closestIt != simVerticesUnordered.end()) {
+        closestStr =
+            std::to_string((closestIt->position4.head<3>() - vtxPos3).norm());
+      }
+      ACTS_VERBOSE("Adding new vertex: position="
+                   << vtxPos3.transpose() << " id=" << vtxId
+                   << " (closest existing=" << closestStr << ")");
+    }
 
-    return *vertex;
+    bucket.push_back(simVerticesUnordered.size());
+    return simVerticesUnordered.emplace_back(vtxId, vtxPos4);
   };
 
   {

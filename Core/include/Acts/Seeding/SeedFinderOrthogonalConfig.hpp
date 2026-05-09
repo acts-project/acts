@@ -25,7 +25,10 @@ class SeedFilter;
 
 /// @brief Structure that holds configuration parameters for the orthogonal seed finder algorithm
 template <typename SpacePoint>
-struct SeedFinderOrthogonalConfig {
+struct [[deprecated(
+    "Will be dropped soon and is replaced by "
+    "DoubletSeedFinder::Config / TripletSeedFinder::Config / "
+    "TripletSeeder::Config")]] SeedFinderOrthogonalConfig {
   /// Shared pointer to the seed filter for quality assessment
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
 

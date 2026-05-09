@@ -25,7 +25,7 @@ env:
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -78,10 +78,14 @@ jobs:
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: ctest --test-dir build -j$(nproc)
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build -j$(nproc)
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -113,12 +117,14 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
 
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+      - name: Downstream tests
+        run: >
+          CI/dependencies/run.sh .env
+          ctest --test-dir build-downstream --output-on-failure
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
@@ -157,7 +163,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
     needs: [linux_ubuntu]
 
     steps:
@@ -234,10 +240,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: ubuntu2404_clang19
-            std: 20
-            cxx: clang++-19
-    container: ghcr.io/acts-project/${{ matrix.image }}:83
+          - image: ubuntu2404_clang22
+            std: 23
+            cxx: clang++-22
+    container: ghcr.io/acts-project/${{ matrix.image }}:85
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -251,6 +257,7 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: ${{ matrix.cxx }}
+          cxx_std: ${{ matrix.std }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           env_file: .env
 
@@ -287,10 +294,14 @@ jobs:
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build --target integrationtests
+        run: >
+          CI/dependencies/run.sh .env
+          cmake --build build --target integrationtests
 
       - name: Install
         run: cmake --build build --target install
@@ -309,11 +320,11 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
 
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+      - name: Downstream tests
+        run: ctest --test-dir build-downstream --output-on-failure
 
   macos:
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       INSTALL_DIR: ${{ github.workspace }}/install_acts
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -326,7 +337,7 @@ jobs:
       - name: Setup Xcode version
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.3.0"
+          xcode-version: "26.3.0"
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -397,8 +408,8 @@ jobs:
       - name: Downstream build
         run: cmake --build build-downstream
 
-      - name: Downstream run
-        run: ./build-downstream/bin/ShowActsVersion
+      - name: Downstream tests
+        run: ctest --test-dir build-downstream --output-on-failure
 
   external_eic-shell:
     runs-on: ubuntu-latest
@@ -424,10 +435,10 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
-      - name: Build
-        id: build
+      - name: Build ACTS
+        id: build-acts
         uses: eic/docker-run-action@v4
-        continue-on-error: true
+        continue-on-error: false
         with:
           image: "ghcr.io/eic/eic_ci_without_acts:nightly"
           options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
@@ -444,7 +455,7 @@ jobs:
             pushd acts
             ccache -p | grep cache_dir
             ccache -z && \
-            export CMAKE_INSTALL_PREFIX=$HOME/prefix
+            export CMAKE_INSTALL_PREFIX=/work/prefix
             export CMAKE_CXX_COMPILER_LAUNCHER=ccache
             echo "::group::Acts configure phase"
             cmake -B build -S . \
@@ -461,6 +472,24 @@ jobs:
             echo "::endgroup::"
             popd
 
+      - name: Build EICrecon
+        id: build-eicrecon
+        uses: eic/docker-run-action@v4
+        continue-on-error: true
+        with:
+          image: "ghcr.io/eic/eic_ci_without_acts:nightly"
+          options: -v ${{ github.workspace }}:/work -v ${{ env.CCACHE_DIR }}:/root/.cache/ccache
+          shell: bash
+          run: |
+            for script in /.singularity.d/env/*.sh; do
+              if [ -f "$script" ]; then
+                . "$script"
+              fi
+            done
+            cd /work
+            set -ue
+            export CMAKE_INSTALL_PREFIX=/work/prefix
+            export CMAKE_CXX_COMPILER_LAUNCHER=ccache
             pushd EICrecon
             echo "::group::EICrecon configure phase"
             ccache -z && \
@@ -475,17 +504,17 @@ jobs:
 
             ccache -s
 
-      - name: Create comment body
-        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+      - name: Create comment body header
+        if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
         run: |
           cat >comment-50-external-failure.md <<EOF
           # ❗️: Downstream build failure
 
-           - eic-shell (cc @acts-project/epic-contacts)
+          - eic-shell EICrecon (cc @acts-project/epic-contacts)
           EOF
 
       - name: Upload Artifact
-        if: ${{ steps.build.outcome == 'failure' && github.event_name == 'pull_request' }}
+        if: ${{ steps.build-eicrecon.outcome == 'failure' && github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@v7
         with:
           name: comment-50-external-failure.md
@@ -514,7 +543,7 @@ jobs:
 
       - name: Build Key4hep dependents
         id: build
-        uses: aidasoft/run-lcg-view@v5
+        uses: aidasoft/run-lcg-view@v6
         continue-on-error: true
         with:
           container: ubuntu2404
@@ -580,7 +609,7 @@ jobs:
   linux_ubuntu_python_wheel:
     runs-on: ubuntu-latest
     needs: [linux_ubuntu]
-    container: ghcr.io/acts-project/ubuntu2404:83
+    container: ghcr.io/acts-project/ubuntu2404:85
 
     steps:
       - uses: actions/checkout@v6
@@ -626,4 +655,4 @@ jobs:
           path: "*.whl"
 
       - name: Test
-        run: CI/dependencies/run.sh .env python3 Python/Examples/scripts/hello_world_kalman.py
+        run: CI/dependencies/run.sh .env python3 Examples/Scripts/Python/track_finding_python_only.py

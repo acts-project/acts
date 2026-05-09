@@ -195,15 +195,12 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
   // Run the pipeline
   ACTS_NVTX_STOP(data_preparation);
   GnnTiming timing;
-#ifdef ACTS_GNN_CPUONLY
-  Device device = {Device::Type::eCPU, 0};
-#else
-  Device device = {Device::Type::eCUDA, 0};
-#endif
+
   // TODO `idxs` seems not to be used anymore and should be removed from the
   // input
   std::vector<int> idxs(numSpacePoints);
   std::iota(idxs.begin(), idxs.end(), 0);
+  Device device = m_cfg.device;
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
   ACTS_NVTX_START(post_processing);
@@ -226,7 +223,7 @@ ProcessCode TrackFindingAlgorithmGnn::execute(
     onetrack.reserve(candidate.size());
 
     for (auto i : candidate) {
-      for (const auto& sl : spacePoints.at(i).sourceLinks()) {
+      for (const auto& sl : sortedSpacePoints.at(i).sourceLinks()) {
         onetrack.push_back(sl.template get<IndexSourceLink>().index());
       }
     }

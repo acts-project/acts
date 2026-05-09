@@ -27,6 +27,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
             PUBLIC Acts::Core Acts::PythonUtilities ${_dependency}
         )
         add_dependencies(ActsPythonBindings ${_target})
+        acts_pybind_generate_stubs(acts.${_name_lower} ${_target} ActsPythonBindings)
     endif()
 
     set(PLUGIN_NAME "${_name}")
@@ -43,6 +44,7 @@ macro(add_plugin_binding_if _name _dependency _flag)
     )
 endmacro()
 
+add_plugin_binding_if(Gnn Acts::PluginGnn ACTS_BUILD_PLUGIN_GNN)
 add_plugin_binding_if(Covfie Acts::PluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
 add_plugin_binding_if(Detray Acts::PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
 add_plugin_binding_if(DD4hep ActsPluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)

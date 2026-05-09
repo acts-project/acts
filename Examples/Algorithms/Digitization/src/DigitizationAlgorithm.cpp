@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <numeric>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -69,6 +70,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(
     }
 
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputMeasurementSubset.initialize(m_cfg.outputMeasurementSubset);
     m_outputClusters.initialize(m_cfg.outputClusters);
     m_outputMeasurementParticlesMap.initialize(
         m_cfg.outputMeasurementParticlesMap);
@@ -112,7 +114,7 @@ DigitizationAlgorithm::DigitizationAlgorithm(
 
     auto dup = std::adjacent_find(indices.begin(), indices.end());
     if (dup != indices.end()) {
-      std::invalid_argument(
+      throw std::invalid_argument(
           "Digitization configuration contains duplicate parameter indices");
     }
 
@@ -150,8 +152,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementContainer measurements;
   ClusterContainer clusters;
 
-  IndexMultimap<SimBarcode> measurementParticlesMap;
-  IndexMultimap<Index> measurementSimHitsMap;
+  MeasurementParticlesMap measurementParticlesMap;
+  MeasurementSimHitsMap measurementSimHitsMap;
   measurements.reserve(simHits.size());
   measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(simHits.size());
@@ -322,7 +324,16 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
                           << clusters.size() << " clusters" << " from "
                           << simHits.size() << " sim hits.");
 
-    m_outputMeasurements(ctx, std::move(measurements));
+    const auto& storedMeasurements =
+        m_outputMeasurements(ctx, std::move(measurements));
+
+    // Build initial full subset: all measurements, indices in original space.
+    std::vector<MeasurementContainer::Index> allIndices(
+        storedMeasurements.size());
+    std::iota(allIndices.begin(), allIndices.end(), Index{0});
+    m_outputMeasurementSubset(
+        ctx, MeasurementSubset(storedMeasurements, std::move(allIndices)));
+
     m_outputClusters(ctx, std::move(clusters));
 
     // invert them before they are moved

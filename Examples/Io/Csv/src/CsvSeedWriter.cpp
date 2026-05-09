@@ -32,7 +32,7 @@ namespace {
 ///
 struct SeedInfo {
   std::size_t seedID = 0;
-  ActsFatras::Barcode particleId;
+  SimBarcode particleId;
   float seedPt = -1;
   float seedPhi = 0;
   float seedEta = 0;
@@ -93,8 +93,7 @@ ProcessCode CsvSeedWriter::writeT(const AlgorithmContext& ctx,
   }
 
   std::unordered_map<std::size_t, SeedInfo> infoMap;
-  std::unordered_map<ActsFatras::Barcode, std::pair<std::size_t, float>>
-      goodSeed;
+  std::unordered_map<SimBarcode, std::pair<std::size_t, float>> goodSeed;
 
   // Loop over the estimated track parameters
   for (std::size_t iparams = 0; iparams < trackParams.size(); ++iparams) {

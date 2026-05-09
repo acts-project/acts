@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Io/Root/RootTrackFitterPerformanceWriter.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -172,7 +171,7 @@ ProcessCode RootTrackFitterPerformanceWriter::writeT(
   const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
   // Truth particles with corresponding reconstructed tracks
-  std::vector<ActsFatras::Barcode> reconParticleIds;
+  std::vector<SimBarcode> reconParticleIds;
   reconParticleIds.reserve(particles.size());
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;

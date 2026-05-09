@@ -10,13 +10,18 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Histogram.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
+#include <cmath>
+#include <random>
 #include <sstream>
 #include <type_traits>
 #include <unordered_map>
 
+#include <boost/histogram.hpp>
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -26,6 +31,56 @@ using namespace pybind11::literals;
 using namespace Acts;
 
 namespace ActsPython {
+
+namespace bh = boost::histogram;
+using namespace Acts::Experimental;
+
+/// Copy inner bin values (no flow) from a boost::histogram into a numpy array
+/// in C (row-major) order. ValueFn extracts a double from the indexed element.
+template <typename Hist, typename ValueFn>
+static py::array_t<double> copyBins(const Hist& h, ValueFn fn) {
+  const auto n = h.rank();
+  std::vector<py::ssize_t> shape(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    shape[i] = static_cast<py::ssize_t>(h.axis(i).size());
+  }
+  py::array_t<double> result(shape);
+  double* ptr = result.mutable_data();
+  for (auto&& x : bh::indexed(h, bh::coverage::inner)) {
+    py::ssize_t flat = 0;
+    py::ssize_t stride = 1;
+    for (int i = static_cast<int>(n) - 1; i >= 0; --i) {
+      flat += static_cast<py::ssize_t>(x.index(i)) * stride;
+      stride *= shape[i];
+    }
+    ptr[flat] = fn(x);
+  }
+  return result;
+}
+
+template <std::size_t Dim>
+static void bindHistogram(py::module_& m) {
+  using H = Histogram<Dim>;
+  py::classh<H>(m, ("Histogram" + std::to_string(Dim)).c_str())
+      .def_property_readonly("name", &H::name)
+      .def_property_readonly("title", &H::title)
+      .def_property_readonly("rank", [](const H&) { return Dim; })
+      .def_property_readonly("histogram", &H::histogram,
+                             py::return_value_policy::reference_internal);
+}
+
+template <std::size_t Dim>
+static void bindEfficiency(py::module_& m) {
+  using E = Efficiency<Dim>;
+  py::classh<E>(m, ("Efficiency" + std::to_string(Dim)).c_str())
+      .def_property_readonly("name", &E::name)
+      .def_property_readonly("title", &E::title)
+      .def_property_readonly("rank", [](const E&) { return Dim; })
+      .def_property_readonly("accepted", &E::acceptedHistogram,
+                             py::return_value_policy::reference_internal)
+      .def_property_readonly("total", &E::totalHistogram,
+                             py::return_value_policy::reference_internal);
+}
 
 /// @brief This adds the classes from Core/Utilities to the python module
 /// @param m the pybind11 core module
@@ -224,6 +279,134 @@ void addUtilities(py::module_& m) {
           range[2].shrink(range2[0], range2[1]);
           return range;
         }));
+  }
+
+  // Histogram bindings
+  {
+    // Single axis type covering regular, variable, and log axes
+    py::class_<AxisVariant>(m, "Axis")
+        .def_static(
+            "regular",
+            [](unsigned bins, double low, double high,
+               const std::string& title) {
+              return AxisVariant(BoostRegularAxis(bins, low, high, title));
+            },
+            "bins"_a, "low"_a, "high"_a, "title"_a = "")
+        .def_static(
+            "log",
+            [](unsigned bins, double low, double high,
+               const std::string& title) {
+              return AxisVariant(BoostLogAxis(bins, low, high, title));
+            },
+            "bins"_a, "low"_a, "high"_a, "title"_a = "")
+        .def_static(
+            "variable",
+            [](const std::vector<double>& edges, const std::string& title) {
+              return AxisVariant(BoostVariableAxis(edges, title));
+            },
+            "edges"_a, "title"_a = "")
+        .def_property_readonly("size", &AxisVariant::size)
+        .def_property_readonly(
+            "label",
+            [](const AxisVariant& ax) -> std::string { return ax.metadata(); })
+        .def_property_readonly(
+            "edges", [](const AxisVariant& ax) { return extractBinEdges(ax); });
+
+    // Core dense histogram (BoostHist — values as copied numpy array)
+    py::class_<BoostHist>(m, "BoostHistogram")
+        .def_property_readonly("rank", &BoostHist::rank)
+        .def(
+            "axis",
+            [](const BoostHist& h, std::size_t i) -> AxisVariant {
+              return h.axis(i);
+            },
+            "i"_a)
+        .def("values", [](const BoostHist& h) {
+          return copyBins(h, [](auto& x) { return static_cast<double>(*x); });
+        });
+
+    // Profile histogram (BoostProfileHist — means/variances as numpy arrays)
+    py::class_<BoostProfileHist>(m, "BoostProfileHistogram")
+        .def_property_readonly("rank", &BoostProfileHist::rank)
+        .def(
+            "axis",
+            [](const BoostProfileHist& h, std::size_t i) -> AxisVariant {
+              return h.axis(i);
+            },
+            "i"_a)
+        .def("counts",
+             [](const BoostProfileHist& h) {
+               return copyBins(h, [](auto& x) {
+                 return static_cast<double>((*x).count());
+               });
+             })
+        .def("means",
+             [](const BoostProfileHist& h) {
+               return copyBins(h, [](auto& x) { return (*x).value(); });
+             })
+        .def("sum_of_deltas_squared", [](const BoostProfileHist& h) {
+          return copyBins(h, [](auto& x) {
+            const auto n = (*x).count();
+            return n > 1.0 ? (*x).variance() * (n - 1.0) : 0.0;
+          });
+        });
+
+    bindHistogram<1>(m);
+    bindHistogram<2>(m);
+    bindHistogram<3>(m);
+
+    {
+      using P = ProfileHistogram<1>;
+      py::classh<P>(m, "ProfileHistogram1")
+          .def_property_readonly("name", &P::name)
+          .def_property_readonly("title", &P::title)
+          .def_property_readonly("rank", [](const P&) { return 1u; })
+          .def_property_readonly("sampleAxisTitle", &P::sampleAxisTitle)
+          .def_property_readonly("histogram", &P::histogram,
+                                 py::return_value_policy::reference_internal);
+    }
+
+    bindEfficiency<1>(m);
+    bindEfficiency<2>(m);
+
+    // Demo factory functions for testing and examples — not public API
+    m.def("_demo_histogram1", []() -> Histogram1 {
+      BoostRegularAxis ax(10, 0.0, 10.0, "x [a.u.]");
+      Histogram1 h("demo", "Demo Histogram", {AxisVariant(ax)});
+      std::mt19937 rng(42);
+      std::uniform_real_distribution<double> x(0.0, 10.0);
+      for (int i = 0; i < 1000; ++i) {
+        h.fill({x(rng)});
+      }
+      return h;
+    });
+
+    m.def("_demo_profile1", []() -> ProfileHistogram1 {
+      BoostRegularAxis ax(10, 0.0, 10.0, "x [a.u.]");
+      ProfileHistogram1 h("demo", "Demo Profile", {AxisVariant(ax)},
+                          "y [a.u.]");
+      std::mt19937 rng(42);
+      std::uniform_real_distribution<double> x(0.0, 10.0);
+      std::normal_distribution<double> noise(0.0, 0.1);
+      for (int i = 0; i < 1000; ++i) {
+        double xi = x(rng);
+        h.fill({xi}, std::sin(xi) + noise(rng));
+      }
+      return h;
+    });
+
+    m.def("_demo_efficiency1", []() -> Efficiency1 {
+      BoostRegularAxis ax(10, 0.0, 10.0, "x [a.u.]");
+      Efficiency1 h("demo", "Demo Efficiency", {AxisVariant(ax)});
+      std::mt19937 rng(42);
+      std::uniform_real_distribution<double> x(0.0, 10.0);
+      for (int i = 0; i < 1000; ++i) {
+        double xi = x(rng);
+        std::bernoulli_distribution accepted(1.0 - std::exp(-xi));
+        h.fill({xi}, accepted(rng));
+      }
+      return h;
+    });
   }
 }
 

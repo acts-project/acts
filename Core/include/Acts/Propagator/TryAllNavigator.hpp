@@ -32,15 +32,23 @@
 
 namespace Acts::Experimental {
 
-/// @brief Captures the common functionality of the try-all navigators
+/// @brief Alternative @c Navigator which tries all possible intersections
 ///
-/// This class is not meant to be used directly, but to be inherited by the
-/// actual navigator implementations.
+/// See @c Navigator for more general information about the Navigator concept.
 ///
-class TryAllNavigatorBase {
+/// This Navigator tries all possible intersections with all surfaces in the
+/// current volume. It does not use any information about the geometry to
+/// optimise the search. It is therefore very slow, but can be used as a
+/// reference implementation.
+///
+/// Additionally, this implementation tries to discover additional
+/// intersections after stepping forward and then checking for intersections
+/// based on the previous and current positions. This is slower, but more robust
+/// against bent tracks.
+class TryAllNavigator final {
  public:
-  /// @brief Configuration for this Navigator
-  struct Config {
+  /// Configuration for this Navigator
+  struct Config final {
     /// Tracking Geometry for this Navigator
     std::shared_ptr<const TrackingGeometry> trackingGeometry;
 
@@ -56,9 +64,8 @@ class TryAllNavigatorBase {
         BoundaryTolerance::None();
   };
 
-  /// @brief Options for this Navigator
-  struct Options : public NavigatorPlainOptions {
-    /// @brief Constructor with geometry context
+  /// Options for this Navigator
+  struct Options final : public NavigatorPlainOptions {
     /// @param gctx The geometry context for this navigator instance
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
@@ -72,20 +79,15 @@ class TryAllNavigatorBase {
     /// The far limit to resolve surfaces
     double farLimit = std::numeric_limits<double>::max();
 
-    /// @brief Set plain options from NavigatorPlainOptions
     /// @param options The plain options to copy
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
     }
   };
 
-  /// @brief Nested State struct
-  ///
-  /// It acts as an internal state which is created for every propagation and
-  /// meant to keep thread-local navigation information.
-  struct State {
-    /// @brief Constructor with options
-    /// @param options_ The navigator options for this state
+  /// Nested state struct
+  struct State final {
+    /// @param options_ Navigator options to initialise state with
     explicit State(const Options& options_) : options(options_) {}
 
     /// Navigation options containing configuration for this propagation
@@ -118,30 +120,77 @@ class TryAllNavigatorBase {
 
     /// Navigation statistics
     NavigatorStatistics statistics;
+
+    /// The vector of active targets ahead of the current position
+    std::vector<NavigationTarget> activeTargetsAhead;
+    /// The vector of active targets behind the current position
+    std::vector<NavigationTarget> activeTargetsBehind;
+    /// Index to keep track of which target behind the current position is
+    /// currently active
+    std::int32_t activeTargetBehindIndex = -1;
+
+    /// The position before the last step
+    std::optional<Vector3> lastPosition;
+
+    /// Provides easy access to the current active targets, prioritizing targets
+    /// behind the current position.
+    /// @return Reference to the vector of currently active intersection
+    /// candidates, prioritizing targets behind the current position
+    const std::vector<NavigationTarget>& currentTargets() const {
+      if (hasTargetsBehind()) {
+        return activeTargetsBehind;
+      }
+      return activeTargetsAhead;
+    }
+
+    /// Provides easy access to the active intersection target
+    /// @return Reference to the currently active intersection candidate
+    const NavigationTarget& activeTargetBehind() const {
+      return activeTargetsBehind.at(activeTargetBehindIndex);
+    }
+
+    /// Checks if there are still active targets behind the current position
+    /// that have not been tried yet
+    /// @return True if there are still active targets behind the current position, false otherwise
+    bool hasTargetsBehind() const {
+      return !activeTargetsBehind.empty() &&
+             activeTargetBehindIndex <
+                 static_cast<std::int32_t>(activeTargetsBehind.size());
+    }
   };
 
   /// Constructor with configuration object
   ///
   /// @param cfg The navigator configuration
   /// @param logger a logger instance
-  TryAllNavigatorBase(Config cfg, std::unique_ptr<const Logger> logger)
-      : m_cfg(std::move(cfg)), m_logger{std::move(logger)} {}
+  explicit TryAllNavigator(Config cfg, std::unique_ptr<const Logger> logger =
+                                           getDefaultLogger("TryAllNavigator",
+                                                            Logging::INFO))
+      : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {}
 
-  /// @brief Get the current surface from the navigation state
+  /// Creates a new navigator state
+  /// @param options Navigator options for state initialization
+  /// @return Initialized navigator state with current candidates storage
+  State makeState(const Options& options) const {
+    State state(options);
+    return state;
+  }
+
+  /// Get the current surface from the navigation state
   /// @param state The navigation state
   /// @return Pointer to the current surface, or nullptr if none
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
   }
 
-  /// @brief Get the current tracking volume from the navigation state
+  /// Get the current tracking volume from the navigation state
   /// @param state The navigation state
   /// @return Pointer to the current tracking volume, or nullptr if none
   const TrackingVolume* currentVolume(const State& state) const {
     return state.currentVolume;
   }
 
-  /// @brief Get the material of the current tracking volume
+  /// Get the material of the current tracking volume
   /// @param state The navigation state
   /// @return Pointer to the volume material, or nullptr if no volume or no material
   const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
@@ -151,28 +200,28 @@ class TryAllNavigatorBase {
     return state.currentVolume->volumeMaterial();
   }
 
-  /// @brief Get the start surface from the navigation state
+  /// Get the start surface from the navigation state
   /// @param state The navigation state
   /// @return Pointer to the start surface, or nullptr if none
   const Surface* startSurface(const State& state) const {
     return state.startSurface;
   }
 
-  /// @brief Get the target surface from the navigation state
+  /// Get the target surface from the navigation state
   /// @param state The navigation state
   /// @return Pointer to the target surface, or nullptr if none
   const Surface* targetSurface(const State& state) const {
     return state.targetSurface;
   }
 
-  /// @brief Check if the end of the world has been reached
+  /// Check if the end of the world has been reached
   /// @param state The navigation state
   /// @return True if no current volume is set (end of world reached)
   bool endOfWorldReached(State& state) const {
     return state.currentVolume == nullptr;
   }
 
-  /// @brief Check if navigation has been interrupted
+  /// Check if navigation has been interrupted
   /// @param state The navigation state
   /// @return True if navigation break flag is set
   bool navigationBreak(const State& state) const {
@@ -236,121 +285,10 @@ class TryAllNavigatorBase {
       }
     }
 
-    return Result<void>::success();
-  }
-
- protected:
-  /// Helper method to initialize navigation candidates for the current volume.
-  /// @param state Navigation state to initialize candidates for
-  void initializeVolumeCandidates(State& state) const {
-    const TrackingVolume* volume = state.currentVolume;
-    ACTS_VERBOSE(volInfo(state) << "Initialize volume");
-
-    if (volume == nullptr) {
-      state.navigationBreak = true;
-      ACTS_VERBOSE(volInfo(state) << "No volume set. Good luck.");
-      return;
-    }
-
-    emplaceAllVolumeCandidates(
-        state.navigationCandidates, *volume, m_cfg.resolveSensitive,
-        m_cfg.resolveMaterial, m_cfg.resolvePassive,
-        m_cfg.boundaryToleranceSurfaceApproach, logger());
-  }
-
-  /// @brief Get volume information string for logging
-  /// @param state The navigation state
-  /// @return String containing volume name or "No Volume" followed by separator
-  std::string volInfo(const State& state) const {
-    return (state.currentVolume != nullptr ? state.currentVolume->volumeName()
-                                           : "No Volume") +
-           " | ";
-  }
-
-  /// @brief Get the logger instance
-  /// @return Reference to the logger instance
-  const Logger& logger() const { return *m_logger; }
-
-  /// Configuration object for this navigator
-  Config m_cfg;
-
-  /// Logger instance for this navigator
-  std::unique_ptr<const Logger> m_logger;
-};
-
-/// @brief Alternative @c Navigator which tries all possible intersections
-///
-/// See @c Navigator for more general information about the Navigator concept.
-///
-/// This Navigator tries all possible intersections with all surfaces in the
-/// current volume. It does not use any information about the geometry to
-/// optimize the search. It is therefore very slow, but can be used as a
-/// reference implementation.
-///
-class TryAllNavigator final : public TryAllNavigatorBase {
- public:
-  /// Type alias for navigator configuration
-  using Config = TryAllNavigatorBase::Config;
-  /// Type alias for navigator options
-  using Options = TryAllNavigatorBase::Options;
-
-  /// @brief Nested State struct
-  struct State : public TryAllNavigatorBase::State {
-    /// @brief Constructor for navigator state
-    /// @param options_ Navigator options to initialize state with
-    explicit State(const Options& options_)
-        : TryAllNavigatorBase::State(options_) {}
-
-    /// Current navigation candidates with intersection information
-    std::vector<NavigationTarget> currentTargets;
-  };
-
-  /// Constructor with configuration object
-  ///
-  /// @param cfg The navigator configuration
-  /// @param logger a logger instance
-  explicit TryAllNavigator(Config cfg, std::unique_ptr<const Logger> logger =
-                                           getDefaultLogger("TryAllNavigator",
-                                                            Logging::INFO))
-      : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
-
-  /// @brief Creates a new navigator state
-  /// @param options Navigator options for state initialization
-  /// @return Initialized navigator state with current candidates storage
-  State makeState(const Options& options) const {
-    State state(options);
-    return state;
-  }
-
-  using TryAllNavigatorBase::currentSurface;
-  using TryAllNavigatorBase::currentVolume;
-  using TryAllNavigatorBase::currentVolumeMaterial;
-  using TryAllNavigatorBase::endOfWorldReached;
-  using TryAllNavigatorBase::navigationBreak;
-  using TryAllNavigatorBase::startSurface;
-  using TryAllNavigatorBase::targetSurface;
-
-  /// @brief Initialize the navigator
-  ///
-  /// This method initializes the navigator for a new propagation. It sets the
-  /// current volume and surface to the start volume and surface, respectively.
-  ///
-  /// @param state The navigation state
-  /// @param position The starting position
-  /// @param direction The starting direction
-  /// @param propagationDirection The propagation direction
-  /// @return Result indicating success or failure of initialization
-  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
-                                        const Vector3& direction,
-                                        Direction propagationDirection) const {
-    auto baseRes = TryAllNavigatorBase::initialize(state, position, direction,
-                                                   propagationDirection);
-    if (!baseRes.ok()) {
-      return baseRes.error();
-    }
-
     // Initialize navigation candidates for the start volume
     reinitializeCandidates(state);
+
+    state.lastPosition.reset();
 
     return Result<void>::success();
   }
@@ -378,64 +316,80 @@ class TryAllNavigator final : public TryAllNavigatorBase {
 
     ACTS_VERBOSE(volInfo(state) << "nextTarget");
 
-    double nearLimit = state.options.nearLimit;
-    double farLimit = state.options.farLimit;
+    if (state.lastPosition.has_value() && !state.hasTargetsBehind()) {
+      ACTS_VERBOSE(volInfo(state) << "Evaluate blind step");
 
-    // handle overstepping
-    if (!state.currentTargets.empty()) {
-      const NavigationTarget& previousTarget = state.currentTargets.front();
+      const Vector3 stepStart = state.lastPosition.value();
+      state.lastPosition.reset();
+      const Vector3 stepEnd = position;
+      const Vector3 step = stepEnd - stepStart;
+      const double stepDistance = step.norm();
 
-      const Surface& surface = previousTarget.surface();
-      IntersectionIndex index = previousTarget.intersectionIndex();
-      BoundaryTolerance boundaryTolerance = previousTarget.boundaryTolerance();
+      ACTS_VERBOSE("- from: " << stepStart.transpose());
+      ACTS_VERBOSE("- to: " << stepEnd.transpose());
+      ACTS_VERBOSE("- distance: " << stepDistance);
 
-      auto intersection =
-          surface
-              .intersect(state.options.geoContext, position, direction,
-                         boundaryTolerance, state.options.surfaceTolerance)
-              .at(index);
+      if (stepDistance < std::numeric_limits<double>::epsilon()) {
+        ACTS_DEBUG(volInfo(state) << "Step distance is zero: " << stepDistance
+                                  << ". Retry to resolve the next target.");
+        return nextTarget(state, position, direction);
+      }
 
-      if (intersection.pathLength() < 0) {
-        nearLimit = std::min(nearLimit, intersection.pathLength() -
-                                            state.options.surfaceTolerance);
-        farLimit = -state.options.surfaceTolerance;
+      const Vector3 stepDirection = step.normalized();
 
-        ACTS_VERBOSE(volInfo(state)
-                     << "handle overstepping with nearLimit " << nearLimit
-                     << " and farLimit " << farLimit);
+      const double nearLimit = -stepDistance + state.options.surfaceTolerance;
+      const double farLimit = 0;
+
+      state.activeTargetsBehind =
+          resolveTargets(state, stepEnd, stepDirection, nearLimit, farLimit);
+      state.activeTargetBehindIndex = -1;
+
+      ACTS_VERBOSE(volInfo(state)
+                   << "Found " << state.activeTargetsBehind.size()
+                   << " intersections behind");
+
+      for (const auto& target : state.activeTargetsBehind) {
+        ACTS_VERBOSE("Found target behind " << target.surface().geometryId());
       }
     }
 
-    std::vector<NavigationTarget> nextTargets;
+    // Prioritize targets behind the current position
+    ++state.activeTargetBehindIndex;
+    if (state.hasTargetsBehind()) {
+      ACTS_VERBOSE(volInfo(state) << "Handle active candidates behind");
 
-    // Find intersections with all candidates
-    for (const auto& candidate : state.navigationCandidates) {
-      auto intersections =
-          candidate.intersect(state.options.geoContext, position, direction,
-                              state.options.surfaceTolerance);
-      for (auto [intersectionIndex, intersection] :
-           Acts::enumerate(intersections)) {
-        // exclude invalid intersections
-        if (!intersection.isValid() ||
-            !detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                     farLimit)) {
-          continue;
-        }
-        // store candidate
-        nextTargets.emplace_back(
-            candidate.target(intersection, intersectionIndex));
-      }
+      ACTS_VERBOSE(volInfo(state)
+                   << (state.activeTargetsBehind.size() -
+                       state.activeTargetBehindIndex)
+                   << " out of " << state.activeTargetsBehind.size()
+                   << " surfaces remain to try.");
+
+      const NavigationTarget& nextTarget = state.activeTargetBehind();
+
+      ACTS_VERBOSE(volInfo(state) << "Next target behind selected: "
+                                  << nextTarget.surface().geometryId());
+
+      return nextTarget;
     }
 
-    std::ranges::sort(nextTargets, NavigationTarget::pathLengthOrder);
+    // No more targets behind, now try to find targets ahead as usual
+
+    state.lastPosition = position;
+    state.activeTargetsBehind.clear();
+    state.activeTargetBehindIndex = -1;
 
     ACTS_VERBOSE(volInfo(state)
-                 << "found " << nextTargets.size() << " intersections");
+                 << "No targets behind, try to find targets ahead");
+
+    const double nearLimit = state.options.nearLimit;
+    const double farLimit = state.options.farLimit;
+
+    state.activeTargetsAhead =
+        resolveTargets(state, position, direction, nearLimit, farLimit);
 
     NavigationTarget nextTarget = NavigationTarget::None();
-    state.currentTargets.clear();
 
-    for (const auto& target : nextTargets) {
+    for (const auto& target : state.activeTargetsAhead) {
       const Intersection3D& intersection = target.intersection();
 
       if (intersection.status() == IntersectionStatus::onSurface) {
@@ -452,13 +406,12 @@ class TryAllNavigator final : public TryAllNavigatorBase {
       }
     }
 
-    state.currentTargets = std::move(nextTargets);
-
     if (nextTarget.isNone()) {
-      ACTS_VERBOSE(volInfo(state) << "no target found");
-    } else {
       ACTS_VERBOSE(volInfo(state)
-                   << "next target is " << nextTarget.surface().geometryId());
+                   << "No target ahead found. Step blindly forward.");
+    } else {
+      ACTS_VERBOSE(volInfo(state) << "Next target ahead selected: "
+                                  << nextTarget.surface().geometryId());
     }
 
     return nextTarget;
@@ -504,7 +457,10 @@ class TryAllNavigator final : public TryAllNavigatorBase {
 
     ACTS_VERBOSE(volInfo(state) << "handleSurfaceReached");
 
-    if (state.currentTargets.empty()) {
+    const std::vector<NavigationTarget>& currentTargets =
+        state.currentTargets();
+
+    if (currentTargets.empty()) {
       ACTS_VERBOSE(volInfo(state) << "No current target set.");
       return;
     }
@@ -515,12 +471,12 @@ class TryAllNavigator final : public TryAllNavigatorBase {
 
     std::vector<NavigationTarget> hitTargets;
 
-    for (const auto& target : state.currentTargets) {
-      std::uint8_t index = target.intersectionIndex();
+    for (const auto& target : currentTargets) {
+      const std::uint8_t index = target.intersectionIndex();
       const Surface& surface = target.surface();
-      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+      const BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
-      Intersection3D intersection =
+      const Intersection3D intersection =
           surface
               .intersect(state.options.geoContext, position, direction,
                          boundaryTolerance, state.options.surfaceTolerance)
@@ -531,11 +487,15 @@ class TryAllNavigator final : public TryAllNavigatorBase {
       }
     }
 
-    state.currentTargets.clear();
-
     ACTS_VERBOSE(volInfo(state)
                  << "Found " << hitTargets.size()
                  << " intersections on surface with bounds check.");
+
+    // reset stored targets
+    state.lastPosition.reset();
+    state.activeTargetsAhead.clear();
+    state.activeTargetsBehind.clear();
+    state.activeTargetBehindIndex = -1;
 
     if (hitTargets.empty()) {
       ACTS_VERBOSE(volInfo(state) << "No hit targets found.");
@@ -548,7 +508,7 @@ class TryAllNavigator final : public TryAllNavigatorBase {
     }
 
     // we can only handle a single surface hit so we pick the first one
-    const auto target = hitTargets.front();
+    const NavigationTarget& target = hitTargets.front();
     const Surface& surface = target.surface();
 
     ACTS_VERBOSE(volInfo(state) << "Surface " << surface.geometryId()
@@ -577,365 +537,81 @@ class TryAllNavigator final : public TryAllNavigatorBase {
   }
 
  private:
+  /// Configuration object for this navigator
+  Config m_cfg;
+
+  /// Logger instance for this navigator
+  std::unique_ptr<const Logger> m_logger;
+
+  /// @brief Get the logger instance
+  /// @return Reference to the logger instance
+  const Logger& logger() const { return *m_logger; }
+
   /// Helper method to reset and reinitialize the navigation candidates.
   void reinitializeCandidates(State& state) const {
     state.navigationCandidates.clear();
-    state.currentTargets.clear();
+    state.activeTargetsAhead.clear();
+    state.activeTargetsBehind.clear();
+    state.activeTargetBehindIndex = -1;
 
     initializeVolumeCandidates(state);
   }
-};
 
-/// @brief Alternative @c Navigator which tries all possible intersections
-///
-/// See @c Navigator for more general information about the Navigator concept.
-///
-/// This Navigator tries all possible intersections with all surfaces in the
-/// current volume. It does not use any information about the geometry to
-/// optimize the search. It is therefore very slow, but can be used as a
-/// reference implementation.
-///
-/// Different to @c TryAllNavigator, this Navigator discovers intersections by
-/// stepping forward blindly and then checking for intersections with all
-/// surfaces in the current volume. This is slower, but more robust against
-/// bent tracks.
-///
-class TryAllOverstepNavigator final : public TryAllNavigatorBase {
- public:
-  /// Type alias for navigator configuration
-  using Config = TryAllNavigatorBase::Config;
+  /// Helper method to initialise navigation candidates for the current volume.
+  /// @param state Navigation state to initialise candidates for
+  void initializeVolumeCandidates(State& state) const {
+    const TrackingVolume* volume = state.currentVolume;
+    ACTS_VERBOSE(volInfo(state) << "Initialize volume");
 
-  /// Type alias for navigator options
-  using Options = TryAllNavigatorBase::Options;
-
-  /// @brief Nested State struct
-  ///
-  /// It acts as an internal state which is created for every propagation and
-  /// meant to keep thread-local navigation information.
-  struct State : public TryAllNavigatorBase::State {
-    /// @brief Constructor for overstep navigator state
-    /// @param options_ Navigator options to initialize state with
-    explicit State(const Options& options_)
-        : TryAllNavigatorBase::State(options_) {}
-
-    /// The vector of active targets to work through
-    std::vector<NavigationTarget> activeTargets;
-    /// The current active target index of the navigation state
-    int activeTargetIndex = -1;
-
-    /// The position before the last step
-    std::optional<Vector3> lastPosition;
-
-    /// Provides easy access to the active intersection target
-    /// @return Reference to the currently active intersection candidate
-    const NavigationTarget& activeTarget() const {
-      return activeTargets.at(activeTargetIndex);
+    if (volume == nullptr) {
+      state.navigationBreak = true;
+      ACTS_VERBOSE(volInfo(state) << "No volume set. Good luck.");
+      return;
     }
 
-    /// @brief Check if all navigation candidates have been processed
-    /// @return True if no more candidates are available for navigation
-    bool endOfTargets() const {
-      return activeTargetIndex >= static_cast<int>(activeTargets.size());
-    }
-  };
-
-  /// Constructor with configuration object
-  ///
-  /// @param cfg The navigator configuration
-  /// @param logger a logger instance
-  explicit TryAllOverstepNavigator(
-      Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
-                      "TryAllOverstepNavigator", Logging::INFO))
-      : TryAllNavigatorBase(std::move(cfg), std::move(logger)) {}
-
-  /// @brief Creates a new overstep navigator state
-  /// @param options Navigator options for state initialization
-  /// @return Initialized navigator state with active candidates and position tracking
-  State makeState(const Options& options) const {
-    State state(options);
-    return state;
+    emplaceAllVolumeCandidates(
+        state.navigationCandidates, *volume, m_cfg.resolveSensitive,
+        m_cfg.resolveMaterial, m_cfg.resolvePassive,
+        m_cfg.boundaryToleranceSurfaceApproach, logger());
   }
 
-  using TryAllNavigatorBase::currentSurface;
-  using TryAllNavigatorBase::currentVolume;
-  using TryAllNavigatorBase::currentVolumeMaterial;
-  using TryAllNavigatorBase::endOfWorldReached;
-  using TryAllNavigatorBase::navigationBreak;
-  using TryAllNavigatorBase::startSurface;
-  using TryAllNavigatorBase::targetSurface;
+  std::vector<NavigationTarget> resolveTargets(State& state,
+                                               const Vector3& position,
+                                               const Vector3& direction,
+                                               double nearLimit,
+                                               double farLimit) const {
+    std::vector<NavigationTarget> targets;
 
-  /// @brief Initialize the navigator
-  ///
-  /// This method initializes the navigator for a new propagation. It sets the
-  /// current volume and surface to the start volume and surface, respectively.
-  ///
-  /// @param state The navigation state
-  /// @param position The starting position
-  /// @param direction The starting direction
-  /// @param propagationDirection The propagation direction
-  /// @return Result indicating success or failure of initialization
-  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
-                                        const Vector3& direction,
-                                        Direction propagationDirection) const {
-    auto baseRes = TryAllNavigatorBase::initialize(state, position, direction,
-                                                   propagationDirection);
-    if (!baseRes.ok()) {
-      return baseRes.error();
-    }
-
-    // Initialize navigation candidates for the start volume
-    reinitializeCandidates(state);
-
-    state.lastPosition.reset();
-
-    return Result<void>::success();
-  }
-
-  /// @brief Get the next target surface
-  ///
-  /// This method gets the next target surface based on the current
-  /// position and direction. It returns an invalid target if no target can be
-  /// found.
-  ///
-  /// @param state The navigation state
-  /// @param position The current position
-  /// @param direction The current direction
-  ///
-  /// @return The next target surface
-  NavigationTarget nextTarget(State& state, const Vector3& position,
-                              const Vector3& direction) const {
-    static_cast<void>(direction);
-
-    // Navigator preStep always resets the current surface
-    state.currentSurface = nullptr;
-
-    // Check if the navigator is inactive
-    if (state.navigationBreak) {
-      return NavigationTarget::None();
-    }
-
-    ACTS_VERBOSE(volInfo(state) << "nextTarget");
-
-    // We cannot do anything without a last position
-    if (!state.lastPosition.has_value() && state.endOfTargets()) {
-      ACTS_VERBOSE(
-          volInfo(state)
-          << "Initial position, nothing to do, blindly stepping forward.");
-      state.lastPosition = position;
-      return NavigationTarget::None();
-    }
-
-    if (state.endOfTargets()) {
-      ACTS_VERBOSE(volInfo(state) << "evaluate blind step");
-
-      Vector3 stepStart = state.lastPosition.value();
-      Vector3 stepEnd = position;
-      Vector3 step = stepEnd - stepStart;
-      double stepDistance = step.norm();
-      if (stepDistance < std::numeric_limits<double>::epsilon()) {
-        ACTS_ERROR(volInfo(state) << "Step distance is zero. " << stepDistance);
-      }
-      Vector3 stepDirection = step.normalized();
-
-      double nearLimit = -stepDistance + state.options.surfaceTolerance;
-      double farLimit = 0;
-
-      state.lastPosition.reset();
-      state.activeTargets.clear();
-      state.activeTargetIndex = -1;
-
-      // Find intersections with all candidates
-      for (const auto& candidate : state.navigationCandidates) {
-        auto intersections =
-            candidate.intersect(state.options.geoContext, stepEnd,
-                                stepDirection, state.options.surfaceTolerance);
-        for (auto [intersectionIndex, intersection] :
-             Acts::enumerate(intersections)) {
-          // exclude invalid intersections
-          if (!intersection.isValid() ||
-              !detail::checkPathLength(intersection.pathLength(), nearLimit,
-                                       farLimit)) {
-            continue;
-          }
-          // store candidate
-          state.activeTargets.emplace_back(
-              candidate.target(intersection, intersectionIndex));
+    // Find intersections with all candidates
+    for (const auto& candidate : state.navigationCandidates) {
+      auto intersections =
+          candidate.intersect(state.options.geoContext, position, direction,
+                              state.options.surfaceTolerance);
+      for (auto [intersectionIndex, intersection] :
+           Acts::enumerate(intersections)) {
+        // exclude invalid intersections
+        if (!intersection.isValid() ||
+            !detail::checkPathLength(intersection.pathLength(), nearLimit,
+                                     farLimit)) {
+          continue;
         }
-      }
-
-      std::ranges::sort(state.activeTargets, NavigationTarget::pathLengthOrder);
-
-      ACTS_VERBOSE(volInfo(state) << "Found " << state.activeTargets.size()
-                                  << " intersections");
-
-      for (const auto& target : state.activeTargets) {
-        ACTS_VERBOSE("found target " << target.surface().geometryId());
+        // store candidate
+        targets.emplace_back(candidate.target(intersection, intersectionIndex));
       }
     }
 
-    ++state.activeTargetIndex;
+    std::ranges::sort(targets, NavigationTarget::pathLengthOrder);
 
-    if (state.endOfTargets()) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "No target found, blindly stepping forward.");
-      state.lastPosition = position;
-      return NavigationTarget::None();
-    }
-
-    ACTS_VERBOSE(volInfo(state) << "handle active candidates");
-
-    ACTS_VERBOSE(volInfo(state)
-                 << (state.activeTargets.size() - state.activeTargetIndex)
-                 << " out of " << state.activeTargets.size()
-                 << " surfaces remain to try.");
-
-    const auto& target = state.activeTarget();
-
-    ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
-                                << target.surface().geometryId());
-
-    return target;
+    return targets;
   }
 
-  /// @brief Check if the target is still valid
-  ///
-  /// This method checks if the target is valid based on the current position
-  /// and direction. It returns true if the target is still valid.
-  ///
+  /// @brief Get volume information string for logging
   /// @param state The navigation state
-  /// @param position The current position
-  /// @param direction The current direction
-  ///
-  /// @return True if the target is still valid
-  bool checkTargetValid(const State& state, const Vector3& position,
-                        const Vector3& direction) const {
-    static_cast<void>(state);
-    static_cast<void>(position);
-    static_cast<void>(direction);
-
-    return true;
-  }
-
-  /// @brief Handle the surface reached
-  ///
-  /// This method is called when a surface is reached. It sets the current
-  /// surface in the navigation state and updates the navigation candidates.
-  ///
-  /// @param state The navigation state
-  /// @param position The current position
-  /// @param direction The current direction
-  void handleSurfaceReached(State& state, const Vector3& position,
-                            const Vector3& direction,
-                            const Surface& /*surface*/) const {
-    if (state.navigationBreak) {
-      return;
-    }
-
-    ACTS_VERBOSE(volInfo(state) << "handleSurfaceReached");
-
-    assert(state.currentSurface == nullptr && "Current surface must be reset.");
-
-    if (state.endOfTargets()) {
-      ACTS_VERBOSE(volInfo(state) << "No active candidate set.");
-      return;
-    }
-
-    std::vector<NavigationTarget> hitTargets;
-
-    while (!state.endOfTargets()) {
-      const auto& candidate = state.activeTarget();
-      IntersectionIndex index = candidate.intersectionIndex();
-      const Surface& surface = candidate.surface();
-      BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance();
-
-      // first with boundary tolerance
-      IntersectionStatus surfaceStatus =
-          surface
-              .intersect(state.options.geoContext, position, direction,
-                         boundaryTolerance, state.options.surfaceTolerance)
-              .at(index)
-              .status();
-
-      if (surfaceStatus != IntersectionStatus::onSurface) {
-        break;
-      }
-
-      // now without boundary tolerance
-      boundaryTolerance = BoundaryTolerance::None();
-      surfaceStatus =
-          surface
-              .intersect(state.options.geoContext, position, direction,
-                         boundaryTolerance, state.options.surfaceTolerance)
-              .at(index)
-              .status();
-
-      if (surfaceStatus == IntersectionStatus::onSurface) {
-        hitTargets.emplace_back(candidate);
-      }
-
-      ++state.activeTargetIndex;
-      ACTS_VERBOSE("skip target " << surface.geometryId());
-    }
-
-    // we increased the target index one too many times
-    --state.activeTargetIndex;
-
-    ACTS_VERBOSE(volInfo(state)
-                 << "Found " << hitTargets.size()
-                 << " intersections on surface with bounds check.");
-
-    if (hitTargets.empty()) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Surface successfully hit, but outside bounds.");
-      return;
-    }
-
-    if (hitTargets.size() > 1) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Only using first intersection within bounds.");
-    }
-
-    // we can only handle a single surface hit so we pick the first one
-    const auto& candidate = hitTargets.front();
-    const Surface& surface = candidate.surface();
-
-    ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
-    state.currentSurface = &surface;
-
-    if (state.currentSurface != nullptr) {
-      ACTS_VERBOSE(volInfo(state) << "Current surface set to surface "
-                                  << surface.geometryId());
-    }
-
-    if (candidate.isSurfaceTarget()) {
-      ACTS_VERBOSE(volInfo(state) << "This is a surface");
-    } else if (candidate.isLayerTarget()) {
-      ACTS_VERBOSE(volInfo(state) << "This is a layer");
-    } else if (candidate.isPortalTarget()) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "This is a portal. Reinitialize navigation");
-
-      const BoundarySurface& boundary = candidate.boundarySurface();
-
-      state.currentVolume = boundary.attachedVolume(state.options.geoContext,
-                                                    position, direction);
-
-      ACTS_VERBOSE(volInfo(state) << "Switched volume");
-
-      reinitializeCandidates(state);
-    } else {
-      ACTS_ERROR(volInfo(state) << "Unknown intersection type");
-    }
-  }
-
- private:
-  /// Helper method to reset and reinitialize the navigation candidates.
-  void reinitializeCandidates(State& state) const {
-    state.navigationCandidates.clear();
-    state.activeTargets.clear();
-    state.activeTargetIndex = -1;
-
-    initializeVolumeCandidates(state);
+  /// @return String containing volume name or "No Volume" followed by separator
+  std::string volInfo(const State& state) const {
+    return (state.currentVolume != nullptr ? state.currentVolume->volumeName()
+                                           : "No Volume") +
+           " | ";
   }
 };
 

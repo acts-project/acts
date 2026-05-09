@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -404,9 +405,8 @@ inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(double eta) const {
 
 inline std::size_t TrackSelector::EtaBinnedConfig::binIndexNoCheck(
     double eta) const {
-  auto binIt =
-      std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(), std::abs(eta));
-  std::size_t index = std::distance(absEtaEdges.begin(), binIt);
+  auto binIt = std::ranges::upper_bound(absEtaEdges, std::abs(eta));
+  std::size_t index = std::ranges::distance(absEtaEdges.begin(), binIt);
   if (index == 0) {
     index = absEtaEdges.size() + 1;  // positive value to check for underflow
   }
@@ -438,8 +438,7 @@ void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
       continue;
     }
     auto destProxy = outputTracks.makeTrack();
-    destProxy.copyFromWithoutStates(track);
-    destProxy.tipIndex() = track.tipIndex();
+    destProxy.copyFromShallow(track);
   }
 }
 

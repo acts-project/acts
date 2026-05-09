@@ -57,28 +57,9 @@ detray::io::accel_id getDetrayAccelId(Surface::SurfaceType surfaceType) {
 std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
     const SurfaceArrayNavigationPolicy& policy, const GeometryContext& gctx,
     const SurfaceLookupFunction& surfaceLookup, const Logger& logger) {
-  const auto* gridLookup =
-      dynamic_cast<const SurfaceArray::ISurfaceGridLookup*>(
-          &policy.surfaceArray().gridLookup());
+  const SurfaceArray& surfaceArray = policy.surfaceArray();
 
-  if (gridLookup == nullptr) {
-    throw std::runtime_error(
-        "SurfaceArrayNavigationPolicy: The surface array does not provide a "
-        "grid based lookup object. This is not currently convertible to "
-        "detray");
-  }
-
-  AnyGridConstView gridView = [&] {
-    auto r = gridLookup->getGridView();
-    if (r == std::nullopt) {
-      throw std::runtime_error(
-          "SurfaceArrayNavigationPolicy: The surface array does not provide a "
-          "grid view. This is not currently convertible to detray");
-    }
-    return r.value();
-  }();
-
-  const Surface* surface = gridLookup->surfaceRepresentation();
+  const Surface* surface = surfaceArray.surfaceRepresentation();
   if (surface == nullptr) {
     throw std::runtime_error(
         "SurfaceArrayNavigationPolicy: The surface array does not provide a "
@@ -96,9 +77,9 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
         "rotation. This is not currently convertible to detray");
   }
 
-  ACTS_DEBUG("Converting surface array with " << gridView.dimensions()
+  std::vector axes = surfaceArray.getAxes();
+  ACTS_DEBUG("Converting surface array with " << axes.size()
                                               << " dims to detray payload");
-  std::vector axes = gridLookup->getAxes();
 
   if (axes.size() != 2) {
     throw std::runtime_error(
@@ -110,24 +91,24 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
   const IAxis& axis1 = *axes.at(1);
 
   // Get binning values to determine acceleration structure type
-  std::vector binValues = gridLookup->binningValues();
-  if (binValues.empty()) {
-    // Fall back to default based on surface type
-    switch (surface->type()) {
-      using enum Surface::SurfaceType;
-      case Cylinder:
-        binValues = {AxisDirection::AxisPhi, AxisDirection::AxisZ};
-        break;
-      case Disc:
-        binValues = {AxisDirection::AxisR, AxisDirection::AxisPhi};
-        break;
-      case Plane:
-        binValues = {AxisDirection::AxisX, AxisDirection::AxisY};
-        break;
-      default:
-        throw std::runtime_error(
-            "SurfaceArrayNavigationPolicy: Unsupported surface type");
-    }
+  std::vector<AxisDirection> binValues;
+
+  // Fall back to default based on surface type
+  switch (surface->type()) {
+    using enum Surface::SurfaceType;
+    using enum AxisDirection;
+    case Cylinder:
+      binValues = {AxisPhi, AxisZ};
+      break;
+    case Disc:
+      binValues = {AxisR, AxisPhi};
+      break;
+    case Plane:
+      binValues = {AxisX, AxisY};
+      break;
+    default:
+      throw std::runtime_error(
+          "SurfaceArrayNavigationPolicy: Unsupported surface type");
   }
 
   // Create the detray surface grid payload
@@ -167,16 +148,17 @@ std::optional<DetraySurfaceGrid> DetrayPayloadConverter::convertSurfaceArray(
 
   auto fillGeneric = [&](const auto& mapi, const auto& mapj,
                          index_type indices) {
-    auto [i, j] = indices;
+    const auto [i, j] = indices;
 
-    auto di = mapi(i);
-    auto dj = mapj(j);
+    const auto di = mapi(i);
+    const auto dj = mapj(j);
 
-    const auto& surfaces = gridView.atLocalBins({i, j});
+    const std::span<const Acts::Surface* const> surfaces =
+        surfaceArray.at({i, j}, 0);
 
     std::vector<std::size_t> surfaceIndices;
 
-    for (const auto* srf : surfaces) {
+    for (const Acts::Surface* srf : surfaces) {
       try {
         std::size_t surfaceIndex = surfaceLookup(srf);
         surfaceIndices.push_back(surfaceIndex);

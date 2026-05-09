@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "ActsPlugins/Root/TGeoAxes.hpp"
 #include "ActsPlugins/Root/TGeoDetectorElement.hpp"
 #include "ActsPlugins/Root/TGeoLayerBuilder.hpp"
 #include "ActsPlugins/Root/TGeoParser.hpp"
@@ -25,6 +26,28 @@ using namespace pybind11::literals;
 PYBIND11_MODULE(ActsPluginsPythonBindingsTGeo, tgeo) {
   using namespace Acts;
   using namespace ActsPlugins;
+
+  // Basic bindings: detector axes
+  {
+    py::class_<TGeoAxes>(tgeo, "TGeoAxes")
+        .def(py::init([](std::string s) { return TGeoAxes::parse(s); }))
+        .def("value", &TGeoAxes::value)
+        .def("__repr__",
+             [](const TGeoAxes& self) {
+               return "TGeoAxes('" + std::string(self.value()) + "')";
+             })
+        .def("__str__",
+             [](const TGeoAxes& self) { return std::string(self.value()); })
+        .def("__eq__",
+             [](const TGeoAxes& self, const TGeoAxes& other) {
+               return self.value() == other.value();
+             })
+        .def("__ne__", [](const TGeoAxes& self, const TGeoAxes& other) {
+          return self.value() != other.value();
+        });
+
+    py::implicitly_convertible<std::string, TGeoAxes>();
+  }
 
   // Basic bindings: detector element
   {
@@ -46,7 +69,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsTGeo, tgeo) {
         "convertToElements",
         [](const std::string& rootFileName,
            const std::vector<std::string>& sensitiveMatches,
-           const std::string& localAxes, double scaleConversion) {
+           const TGeoAxes& localAxes, double scaleConversion) {
           // Return vector
           std::vector<std::shared_ptr<const TGeoDetectorElement>> tgElements;
           // TGeo import
@@ -70,8 +93,8 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsTGeo, tgeo) {
               for (const auto& snode : tgpState.selectedNodes) {
                 auto identifier = TGeoDetectorElement::Identifier();
                 auto tgElement = TGeoLayerBuilder::defaultElementFactory(
-                    identifier, *snode.node, *snode.transform,
-                    TGeoAxes::parse(localAxes), scaleConversion, nullptr);
+                    identifier, *snode.node, *snode.transform, localAxes,
+                    scaleConversion, nullptr);
                 tgElements.emplace_back(tgElement);
               }
             }

@@ -11,10 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackStateProxy.hpp"
-#include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/EventData/detail/DynamicKeyIterator.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "ActsPlugins/EDM4hep/PodioDynamicColumns.hpp"
 #include "ActsPlugins/EDM4hep/PodioUtil.hpp"
@@ -28,7 +25,6 @@
 #include "ActsPodioEdm/TrackInfo.h"
 #pragma GCC diagnostic pop
 
-#include <mutex>
 #include <stdexcept>
 #include <type_traits>
 
@@ -188,7 +184,7 @@ class PodioTrackContainerBase {
     auto track = instance.m_collection->at(itrack);
     const auto& src = track.getParticleHypothesis();
     return Acts::ParticleHypothesis{static_cast<Acts::PdgParticle>(src.absPdg),
-                                    src.mass, Acts::AnyCharge{src.absQ}};
+                                    src.mass, Acts::ChargeHypothesis{src.absQ}};
   }
 
   /// Populate surface buffer from track collection
@@ -513,7 +509,7 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
                  holder_t<const ActsPodioEdm::TrackCollection>,
                  Acts::ConstRefHolder<const ActsPodioEdm::TrackCollection>>
       : PodioTrackContainerBase{helper},
-        m_collection{*getTrackCollectionFromFrame(frame, suffix)} {
+        m_collection{getTrackCollectionFromFrame(frame, suffix)} {
     std::string s = suffix.empty() ? suffix : "_" + suffix;
     std::string tracksKey = "tracks" + s;
 
@@ -590,29 +586,12 @@ class ConstPodioTrackContainer : public PodioTrackContainerBase {
   /// @param frame Podio frame
   /// @param suffix Collection name suffix
   /// @return Pointer to track collection
-  static const ActsPodioEdm::TrackCollection* getTrackCollectionFromFrame(
+  static const ActsPodioEdm::TrackCollection& getTrackCollectionFromFrame(
       const podio::Frame& frame, const std::string& suffix) {
     std::string s = suffix.empty() ? suffix : "_" + suffix;
     std::string tracksKey = "tracks" + s;
 
-    std::vector<std::string> available = frame.getAvailableCollections();
-    if (!Acts::rangeContainsValue(available, tracksKey)) {
-      throw std::runtime_error{"Track collection '" + tracksKey +
-                               "' not found in frame"};
-    }
-
-    const auto* collection = frame.get(tracksKey);
-
-    const ActsPodioEdm::TrackCollection* d = nullptr;
-    if (const auto* casted =
-            dynamic_cast<const ActsPodioEdm::TrackCollection*>(collection);
-        casted != nullptr) {
-      d = casted;
-    } else {
-      throw std::runtime_error{"Unable to get collection " + tracksKey};
-    }
-
-    return d;
+    return frame.get<ActsPodioEdm::TrackCollection>(tracksKey);
   }
 
   holder_t<const ActsPodioEdm::TrackCollection> m_collection;

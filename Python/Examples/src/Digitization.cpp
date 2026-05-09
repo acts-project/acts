@@ -36,12 +36,12 @@ void addDigitization(py::module& mex) {
         mex, "DigitizationAlgorithm");
 
     ACTS_PYTHON_STRUCT(
-        c, inputSimHits, outputMeasurements, outputClusters,
-        outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
-        outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
-        surfaceByIdentifier, randomNumbers, doOutputCells, doClusterization,
-        doMerge, mergeCommonCorner, minEnergyDeposit, digitizationConfigs,
-        minMaxRetries);
+        c, inputSimHits, outputMeasurements, outputMeasurementSubset,
+        outputClusters, outputMeasurementParticlesMap,
+        outputMeasurementSimHitsMap, outputParticleMeasurementsMap,
+        outputSimHitMeasurementsMap, surfaceByIdentifier, randomNumbers,
+        doOutputCells, doClusterization, doMerge, mergeCommonCorner,
+        minEnergyDeposit, digitizationConfigs, minMaxRetries);
 
     c.def_readonly("mergeNsigma", &DigitizationAlgorithm::Config::mergeNsigma);
 

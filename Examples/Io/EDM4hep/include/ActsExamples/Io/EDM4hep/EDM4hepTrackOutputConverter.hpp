@@ -26,7 +26,7 @@ class EDM4hepTrackOutputConverter : public PodioOutputConverter {
     /// Input track collection
     std::string inputTracks;
     /// Output track collection in edm4hep
-    std::string outputTracks = "ActsTracks";
+    std::string outputTracks;
     /// Magnetic field along the z axis (needed for the conversion of
     /// parameters)
     double Bz{};

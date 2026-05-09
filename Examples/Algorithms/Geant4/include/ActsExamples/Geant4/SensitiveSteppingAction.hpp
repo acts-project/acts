@@ -67,11 +67,10 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
       const Config& cfg,
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "SensitiveSteppingAction", Acts::Logging::INFO));
-  ~SensitiveSteppingAction() override = default;
 
   /// @brief Interface Method doing the step and records the data
-  /// @param step is the Geant4 step of the particle
-  void UserSteppingAction(const G4Step* step) override;
+  /// @param stepPtr is the Geant4 step of the particle
+  void UserSteppingAction(const G4Step* stepPtr) override;
 
   /// Set the multimap that correlates G4VPhysicalVolumes to Acts::Surfaces
   ///

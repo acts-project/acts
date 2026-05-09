@@ -48,16 +48,29 @@ struct NavigatorPlainOptions {
   /// stream given the current volume and the track coordinates. If the
   /// delegate is set, it is called in each candidate resolution step
   /// for each surface that has not been marked as reached yet.
-  /// @param gctx: Current geometry context carrying the alignment information
-  /// @param currentVol: The current tracking volume in which the propagator resides
-  /// @param pos: Position of the track in global coordinates
-  /// @param dir: Direction vector of the track
-  /// @param surface: Free surface candidate to test
-  using FreeSurfaceSelctor_t = Delegate<bool(
+  /// @param gctx Current geometry context carrying the alignment information
+  /// @param currentVol The current tracking volume in which the propagator resides
+  /// @param pos Position of the track in global coordinates
+  /// @param dir Direction vector of the track
+  /// @param surface Free surface candidate to test
+  using FreeSurfaceSelctor = Delegate<bool(
       const GeometryContext& gctx, const TrackingVolume& currentVol,
       const Vector3& pos, const Vector3& dir, const Surface& candidate)>;
+
   /// Delegate for selecting free surfaces during navigation
-  FreeSurfaceSelctor_t freeSurfaceSelector{};
+  FreeSurfaceSelctor freeSurfaceSelector;
+
+  /// Surfaces that are not part of the tracking geometry
+  std::vector<const Surface*> externalSurfaces;
+
+  /// Append an external surface to be considered during navigation. The surface
+  /// will be intersected without bounds check to force the propagation to
+  /// resolve it. Note the surface must outlive the propagation and surfaces
+  /// have to be added in the order they should be considered during navigation.
+  /// @param surface The surface to add to the list
+  void appendExternalSurface(const Surface& surface) {
+    externalSurfaces.push_back(&surface);
+  }
 };
 
 }  // namespace Acts

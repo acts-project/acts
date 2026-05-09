@@ -33,7 +33,9 @@ struct SeedFilterState {
 /// Filter seeds at various stages with the currently
 /// available information.
 template <typename external_space_point_t>
-class SeedFilter final {
+class [[deprecated(
+    "Will be dropped soon and is replaced by "
+    "BroadTripletSeedFilter")]] SeedFilter final {
  public:
   /// Constructor with configuration and optional experimental cuts
   /// @param config Seed filter configuration
