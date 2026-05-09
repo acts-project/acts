@@ -94,33 +94,19 @@ ProcessCode CsvSpacePointReader::read(const AlgorithmContext& ctx) {
       const Acts::Vector3 stripSeparation(data.sp_stripCenterDistance_0,
                                           data.sp_stripCenterDistance_1,
                                           data.sp_stripCenterDistance_2);
-      const Acts::Vector3 innerStripCenter =
-          outerStripHalfVector - stripSeparation;
-
-      const Acts::Vector3 stripSeparationCrossOuterHalfVector =
-          stripSeparation.cross(outerStripHalfVector);
-      const Acts::Vector3 stripSeparationCrossInnerHalfVector =
-          stripSeparation.cross(innerStripHalfVector);
-      const Acts::Vector3 innerCrossOuterStripHalfVector =
-          innerStripHalfVector.cross(outerStripHalfVector);
 
       Eigen::Map<Eigen::Vector3f>(
           sp.stripCalibrationDetails().outerStripCenter.data()) =
           outerStripCenter.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
+          sp.stripCalibrationDetails().stripSeparation.data()) =
+          stripSeparation.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
           sp.stripCalibrationDetails().outerStripHalfVector.data()) =
           outerStripHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          sp.stripCalibrationDetails()
-              .stripSeparationCrossInnerHalfVector.data()) =
-          stripSeparationCrossInnerHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(
-          sp.stripCalibrationDetails()
-              .stripSeparationCrossOuterHalfVector.data()) =
-          stripSeparationCrossOuterHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(
-          sp.stripCalibrationDetails().innerCrossOuterStripHalfVector.data()) =
-          innerCrossOuterStripHalfVector.cast<float>();
+          sp.stripCalibrationDetails().innerStripHalfVector.data()) =
+          innerStripHalfVector.cast<float>();
     }
   }
 

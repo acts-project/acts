@@ -609,38 +609,26 @@ RootAthenaDumpReader::readSpacePoints(
                              imIdxMap ? imIdxMap->at(cl2Index) : cl2Index);
       sLinks.emplace_back(second);
 
-      Acts::Vector3 innerStripCenter = Acts::Vector3::Zero();
-      Acts::Vector3 innerStripHalfVector = Acts::Vector3::Zero();
       Acts::Vector3 outerStripCenter = Acts::Vector3::Zero();
-      Acts::Vector3 outerStripHalfVector = Acts::Vector3::Zero();
       Acts::Vector3 stripSeparation = Acts::Vector3::Zero();
-      Acts::Vector3 stripSeparationCrossOuterHalfVector = Acts::Vector3::Zero();
-      Acts::Vector3 stripSeparationCrossInnerHalfVector = Acts::Vector3::Zero();
-      Acts::Vector3 innerCrossOuterStripHalfVector = Acts::Vector3::Zero();
+      Acts::Vector3 outerStripHalfVector = Acts::Vector3::Zero();
+      Acts::Vector3 innerStripHalfVector = Acts::Vector3::Zero();
 
       if (m_haveStripFeatures) {
-        innerStripHalfVector = {SPbottomStripDirection->at(isp).at(0),
-                                SPbottomStripDirection->at(isp).at(1),
-                                SPbottomStripDirection->at(isp).at(2)};
-        innerStripHalfVector *= SPhl_botstrip[isp];
         outerStripCenter = {SPtopStripCenterPosition->at(isp).at(0),
                             SPtopStripCenterPosition->at(isp).at(1),
                             SPtopStripCenterPosition->at(isp).at(2)};
+        stripSeparation = {SPstripCenterDistance->at(isp).at(0),
+                           SPstripCenterDistance->at(isp).at(1),
+                           SPstripCenterDistance->at(isp).at(2)};
         outerStripHalfVector = {SPtopStripDirection->at(isp).at(0),
                                 SPtopStripDirection->at(isp).at(1),
                                 SPtopStripDirection->at(isp).at(2)};
         outerStripHalfVector *= SPhl_topstrip[isp];
-        stripSeparation = {SPstripCenterDistance->at(isp).at(0),
-                           SPstripCenterDistance->at(isp).at(1),
-                           SPstripCenterDistance->at(isp).at(2)};
-
-        innerStripCenter = outerStripCenter - stripSeparation;
-        stripSeparationCrossInnerHalfVector =
-            stripSeparation.cross(innerStripHalfVector);
-        stripSeparationCrossOuterHalfVector =
-            stripSeparation.cross(outerStripHalfVector);
-        innerCrossOuterStripHalfVector =
-            innerStripHalfVector.cross(outerStripHalfVector);
+        innerStripHalfVector = {SPbottomStripDirection->at(isp).at(0),
+                                SPbottomStripDirection->at(isp).at(1),
+                                SPbottomStripDirection->at(isp).at(2)};
+        innerStripHalfVector *= SPhl_botstrip[isp];
       }
 
       auto stripSp = stripSpacePoints.createSpacePoint();
@@ -652,22 +640,17 @@ RootAthenaDumpReader::readSpacePoints(
       stripSp.varianceZ() = spCovz;
 
       Eigen::Map<Eigen::Vector3f>(
-          stripSp.stripCalibrationDetails().outerStripCenter.data()) =
+          sp.stripCalibrationDetails().outerStripCenter.data()) =
           outerStripCenter.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          stripSp.stripCalibrationDetails().outerStripHalfVector.data()) =
+          sp.stripCalibrationDetails().stripSeparation.data()) =
+          stripSeparation.cast<float>();
+      Eigen::Map<Eigen::Vector3f>(
+          sp.stripCalibrationDetails().outerStripHalfVector.data()) =
           outerStripHalfVector.cast<float>();
       Eigen::Map<Eigen::Vector3f>(
-          stripSp.stripCalibrationDetails()
-              .stripSeparationCrossOuterHalfVector.data()) =
-          stripSeparationCrossOuterHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(
-          stripSp.stripCalibrationDetails()
-              .stripSeparationCrossInnerHalfVector.data()) =
-          stripSeparationCrossInnerHalfVector.cast<float>();
-      Eigen::Map<Eigen::Vector3f>(stripSp.stripCalibrationDetails()
-                                      .innerCrossOuterStripHalfVector.data()) =
-          innerCrossOuterStripHalfVector.cast<float>();
+          sp.stripCalibrationDetails().innerStripHalfVector.data()) =
+          innerStripHalfVector.cast<float>();
 
       sp.stripCalibrationDetails() = stripSp.stripCalibrationDetails();
     }

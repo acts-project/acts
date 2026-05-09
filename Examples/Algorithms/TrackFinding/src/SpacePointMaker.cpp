@@ -139,12 +139,6 @@ Acts::Result<void> createStripSpacePoint(
   const Acts::Vector3 outerStripHalfVector =
       0.5 * (stripEnds2.top - stripEnds2.bottom);
   const Acts::Vector3 stripSeparation = outerStripCenter - innerStripCenter;
-  const Acts::Vector3 stripSeparationCrossInnerHalfVector =
-      stripSeparation.cross(innerStripHalfVector);
-  const Acts::Vector3 stripSeparationCrossOuterHalfVector =
-      stripSeparation.cross(outerStripHalfVector);
-  const Acts::Vector3 innerCrossOuterStripHalfVector =
-      innerStripHalfVector.cross(outerStripHalfVector);
 
   const double theta = std::acos(
       innerStripHalfVector.normalized().dot(outerStripHalfVector.normalized()));
@@ -166,17 +160,14 @@ Acts::Result<void> createStripSpacePoint(
       sp.stripCalibrationDetails().outerStripCenter.data()) =
       outerStripCenter.cast<float>();
   Eigen::Map<Eigen::Vector3f>(
+      sp.stripCalibrationDetails().stripSeparation.data()) =
+      stripSeparation.cast<float>();
+  Eigen::Map<Eigen::Vector3f>(
       sp.stripCalibrationDetails().outerStripHalfVector.data()) =
       outerStripHalfVector.cast<float>();
   Eigen::Map<Eigen::Vector3f>(
-      sp.stripCalibrationDetails().stripSeparationCrossInnerHalfVector.data()) =
-      stripSeparationCrossInnerHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(
-      sp.stripCalibrationDetails().stripSeparationCrossOuterHalfVector.data()) =
-      stripSeparationCrossOuterHalfVector.cast<float>();
-  Eigen::Map<Eigen::Vector3f>(
-      sp.stripCalibrationDetails().innerCrossOuterStripHalfVector.data()) =
-      innerCrossOuterStripHalfVector.cast<float>();
+      sp.stripCalibrationDetails().innerStripHalfVector.data()) =
+      innerStripHalfVector.cast<float>();
 
   return Acts::Result<void>::success();
 }

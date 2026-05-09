@@ -101,8 +101,86 @@ Vector2 computeVarianceZR(const GeometryContext& gctx, const Surface& surface1,
                           const Vector3& spacePoint, double localCov1,
                           double localCov2, double theta);
 
+inline StripSpacePointCalibrationDetailsDerived
+deriveStripSpacePointCalibrationDetails(
+    const StripSpacePointCalibrationDetails& sp) {
+  const auto& osv = sp.outerStripHalfVector;
+  const auto& isv = sp.innerStripHalfVector;
+  const auto& scd = sp.stripSeparation;
+
+  return StripSpacePointCalibrationDetailsDerived{
+      .stripSeparationCrossInnerHalfVector = {scd[1] * isv[2] - scd[2] * isv[1],
+                                              scd[2] * isv[0] - scd[0] * isv[2],
+                                              scd[0] * osv[1] -
+                                                  scd[1] * osv[0]},
+      .stripSeparationCrossOuterHalfVector = {scd[1] * osv[2] - scd[2] * osv[1],
+                                              scd[2] * osv[0] - scd[0] * osv[2],
+                                              scd[0] * osv[1] -
+                                                  scd[1] * osv[0]},
+      .innerCrossOuterStripHalfVector = {isv[1] * osv[2] - isv[2] * osv[1],
+                                         isv[2] * osv[0] - isv[0] * osv[2],
+                                         isv[0] * osv[1] - isv[1] * osv[0]},
+      .outerStripCenter = sp.outerStripCenter,
+      .outerStripHalfVector = osv,
+  };
+}
+
 inline bool calibrateStripSpacePoint(
     const StripSpacePointCalibrationDetails& sp,
+    std::span<const float, 3> direction, std::span<float, 3> calibrated,
+    float tolerance) {
+  const auto& scd = sp.stripSeparation;
+  const auto& ohv = sp.outerStripHalfVector;
+  const auto& ihv = sp.innerStripHalfVector;
+
+  // dOuter = outerStripHalfVector cross direction (reused for both scale and
+  // sInner)
+  const std::array<float, 3> dOuter = {
+      ohv[1] * direction[2] - ohv[2] * direction[1],
+      ohv[2] * direction[0] - ohv[0] * direction[2],
+      ohv[0] * direction[1] - ohv[1] * direction[0]};
+
+  // scale = innerStripHalfVector dot d1
+  const float scale =
+      ihv[0] * dOuter[0] + ihv[1] * dOuter[1] + ihv[2] * dOuter[2];
+
+  // sInner = stripSeparation dot dOuter
+  // Check if sInner is inside the inner detector element
+  // TODO should this be `sOuter`?
+  const float sInner =
+      scd[0] * dOuter[0] + scd[1] * dOuter[1] + scd[2] * dOuter[2];
+  if (std::abs(sInner) > std::abs(scale) * tolerance) {
+    return false;
+  }
+
+  // dInner = innerStripHalfVector cross direction (only computed if check 1
+  // passed)
+  const std::array<float, 3> dInner = {
+      ihv[1] * direction[2] - ihv[2] * direction[1],
+      ihv[2] * direction[0] - ihv[0] * direction[2],
+      ihv[0] * direction[1] - ihv[1] * direction[0]};
+
+  // sOuter = stripSeparation dot dInner
+  // Check if sOuter is inside the outer detector element
+  // TODO should this be `sInner`?
+  const float sOuter =
+      scd[0] * dInner[0] + scd[1] * dInner[1] + scd[2] * dInner[2];
+  if (std::abs(sOuter) > std::abs(scale) * tolerance) {
+    return false;
+  }
+
+  // Corrected position using the outer strip center and direction
+  // TODO use inner?
+  const auto& oc = sp.outerStripCenter;
+  const float sOuterNorm = sOuter / scale;
+  calibrated[0] = oc[0] + ohv[0] * sOuterNorm;
+  calibrated[1] = oc[1] + ohv[1] * sOuterNorm;
+  calibrated[2] = oc[2] + ohv[2] * sOuterNorm;
+  return true;
+}
+
+inline bool calibrateStripSpacePoint(
+    const StripSpacePointCalibrationDetailsDerived& sp,
     std::span<const float, 3> direction, std::span<float, 3> calibrated,
     float tolerance) {
   const auto& oc = sp.outerStripCenter;
