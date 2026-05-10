@@ -71,6 +71,17 @@ EXCLUDE_FILES = (
     "tex-mml-chtml.js",
     "tgeo_aux.py.in",
     "todo.md",
+    # Detray python tests for auto-generated code
+    "Detray/codegen/detray-sympy/tests/test_assumptions_D.py",
+    "Detray/codegen/detray-sympy/tests/test_matrices.py",
+    # Used in traccc
+    "Detray/tests/include/detray/test/utils/perigee_stopper.hpp",
+    # Build-time metadata generation
+    "Detray/python/detray/detectors/impl/definitions.py",
+    "Detray/python/detray/detectors/impl/type_helpers.py",
+    # Python uv files
+    "Detray/codegen/detray-sympy/uv.lock",
+    "Detray/python/detray/uv.lock",
     # Temporarily excluded files. TODO remove in next major release.
     "Core/include/Acts/EventData/detail/ParameterTraits.hpp",
     "Core/include/Acts/Seeding/PathSeeder.hpp",
