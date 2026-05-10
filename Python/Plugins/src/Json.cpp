@@ -81,6 +81,7 @@ PYBIND11_MODULE(ActsPluginsPythonBindingsJson, json) {
         json, "TrackingGeometryJsonConverter");
 
     py::class_<TrackingGeometryJsonConverter::Config>(cls, "Config")
+        .def(py::init(&TrackingGeometryJsonConverter::Config::defaultConfig))
         .def_static("defaultConfig",
                     &TrackingGeometryJsonConverter::Config::defaultConfig);
 
