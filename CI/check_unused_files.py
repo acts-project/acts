@@ -155,6 +155,7 @@ def check_wrong_extensions(walk_root):
     """
     Collect files with disallowed suffixes. Returns the number of problematic files.
     """
+
     suffix_allowed = (
         SUFFIX_CPP + SUFFIX_IMAGE + SUFFIX_PYTHON + SUFFIX_DOC + SUFFIX_OTHER
     )

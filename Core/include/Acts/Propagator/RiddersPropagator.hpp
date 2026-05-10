@@ -17,7 +17,7 @@ namespace Acts {
 
 /// Options for Ridders-based covariance propagation.
 template <typename propagator_t, typename actor_list_t = ActorList<>>
-struct RiddersPropagatorOptions
+struct [[deprecated("Use RiddersStepper instead")]] RiddersPropagatorOptions
     : public propagator_t::template Options<actor_list_t> {
   /// Base type
   using base_type = propagator_t::template Options<actor_list_t>;
@@ -92,7 +92,7 @@ struct RiddersPropagatorOptions
 /// of the covariance, this class just serves to verify the results of the
 /// latter classes.
 template <typename propagator_t>
-class RiddersPropagator {
+class [[deprecated("Use RiddersStepper instead")]] RiddersPropagator {
  public:
   /// Type of the propagator used internally
   using Propagator = propagator_t;

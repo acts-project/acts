@@ -48,7 +48,7 @@ rich==15.0.0
     #   typer
 shellingham==1.5.4
     # via typer
-typer==0.24.2
+typer==0.25.1
     # via -r CI/fpe_masks/requirements.in
 uritemplate==4.2.0
     # via gidgethub

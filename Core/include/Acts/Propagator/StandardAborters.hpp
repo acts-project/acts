@@ -137,8 +137,10 @@ struct SurfaceReached {
                                              nearLimit, farLimit, logger);
             });
         intersectionIt != multiIntersection.end()) {
-      stepper.updateStepSize(state.stepping, intersectionIt->pathLength(),
-                             ConstrainedStep::Type::Actor);
+      stepper.updateSurfaceStatus(
+          state.stepping, *surface, intersectionIt - multiIntersection.begin(),
+          state.options.direction, boundaryTolerance,
+          state.options.surfaceTolerance, ConstrainedStep::Type::Actor, logger);
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target stepSize (surface) updated to "

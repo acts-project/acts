@@ -111,7 +111,7 @@ def test_edm4hep_measurement_writer(tmp_path, ptcl_gun, rng):
         s.addWriter(
             PodioWriter(
                 level=acts.logging.VERBOSE,
-                outputPath=str(out),
+                outputPath=out,
                 category="events",
                 collections=converter.collections,
             )
@@ -150,7 +150,7 @@ def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
     s.addWriter(
         PodioWriter(
             level=acts.logging.INFO,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -183,7 +183,7 @@ def test_edm4hep_particle_writer(tmp_path, ptcl_gun):
     s.addWriter(
         PodioWriter(
             level=acts.logging.INFO,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -220,7 +220,7 @@ def test_edm4hep_particle_writer_separate_files(tmp_path, ptcl_gun):
     s.addWriter(
         PodioWriter(
             level=acts.logging.INFO,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
             separateFilesPerThread=True,
@@ -298,7 +298,7 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
     s.addWriter(
         PodioWriter(
             level=acts.logging.VERBOSE,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -347,7 +347,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     s.addWriter(
         PodioWriter(
             level=acts.logging.VERBOSE,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -435,7 +435,7 @@ def ddsim_input_session(request, tmp_path_factory):
     tmp_dir = tmp_path_factory.getbasetemp().parent
     output_file = Path(tmp_dir) / "output_edm4hep.root"
 
-    with filelock.FileLock(str(output_file) + ".lock"):
+    with filelock.FileLock(output_file.as_posix() + ".lock"):
         odd_xml_file = str(
             getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
         )
@@ -585,7 +585,7 @@ def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
         s.addWriter(
             PodioWriter(
                 level=acts.logging.INFO,
-                outputPath=str(out),
+                outputPath=out,
                 category="events",
                 collections=converter.collections,
             )
@@ -598,7 +598,7 @@ def test_edm4hep_measurement_reader(tmp_path, ptcl_gun, rng):
         s.addReader(
             PodioReader(
                 level=acts.logging.WARNING,
-                inputPath=str(out),
+                inputPath=out,
                 outputFrame="events",
                 category="events",
             )
@@ -659,6 +659,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     converter = EDM4hepTrackOutputConverter(
         level=acts.logging.VERBOSE,
         inputTracks="kf_tracks",
+        outputTracks="ActsTracks",
         Bz=2 * u.T,
     )
     s.addAlgorithm(converter)
@@ -666,7 +667,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.addWriter(
         PodioWriter(
             level=acts.logging.VERBOSE,
-            outputPath=str(out),
+            outputPath=out,
             category="events",
             collections=converter.collections,
         )
@@ -678,7 +679,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.addReader(
         PodioReader(
             level=acts.logging.VERBOSE,
-            inputPath=str(out),
+            inputPath=out,
             outputFrame="events",
             category="events",
         )
@@ -700,6 +701,105 @@ def test_edm4hep_tracks_reader(tmp_path):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 @pytest.mark.slow
+def test_edm4hep_podio_track_output_converter(tmp_path):
+    from acts.examples.edm4hep import (
+        EDM4hepMeasurementOutputConverter,
+        PodioTrackOutputConverter,
+        PodioWriter,
+    )
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    with getOpenDataDetector() as detector:
+        trackingGeometry = detector.trackingGeometry()
+        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+        s = Sequencer(numThreads=1, events=10)
+        runTruthTrackingKalman(
+            trackingGeometry,
+            field,
+            digiConfigFile=Path(
+                str(
+                    Path(__file__).parent.parent.parent.parent
+                    / "Examples/Configs/odd-digi-smearing-config.json"
+                )
+            ),
+            outputDir=tmp_path,
+            s=s,
+        )
+
+        out = tmp_path / "podio_tracks.root"
+
+        # The TrackerHitLocal key must match what ConstPodioTrackStateContainer
+        # looks for: outputTracks + "_trackerHits"
+        hits_key = "ActsPodioTracks_trackerHits"
+
+        measConverter = EDM4hepMeasurementOutputConverter(
+            level=acts.logging.VERBOSE,
+            inputMeasurements="measurements",
+            outputTrackerHitsLocal=hits_key,
+            trackingGeometry=trackingGeometry,
+        )
+        s.addAlgorithm(measConverter)
+
+        converter = PodioTrackOutputConverter(
+            level=acts.logging.VERBOSE,
+            inputTracks="kf_tracks",
+            outputTracks="ActsPodioTracks",
+            inputTrackerHitsLocal=hits_key,
+            detector=detector,
+        )
+        s.addAlgorithm(converter)
+
+        s.addWriter(
+            PodioWriter(
+                level=acts.logging.VERBOSE,
+                outputPath=out,
+                category="events",
+                collections=measConverter.collections + converter.collections,
+            )
+        )
+
+        s.run()
+
+    assert os.path.isfile(out), f"File {out} does not exist"
+    assert os.stat(out).st_size > 200, f"File {out} is too small"
+
+    if not podioEnabled:
+        import warnings
+
+        warnings.warn(
+            "edm4hep output checks were skipped, because podio was not on the python path"
+        )
+        return
+
+    from podio.root_io import Reader
+
+    reader = Reader(str(out))
+
+    num_tracks = 0
+    num_track_states = 0
+    num_measurements = 0
+    num_links = 0
+
+    for frame in reader.get("events"):
+        tracks = frame.get("ActsPodioTracks")
+        num_tracks += len(tracks)
+        track_states = frame.get("ActsPodioTracks_trackStates")
+        num_track_states += len(track_states)
+        measurements = frame.get("ActsPodioTracks_trackerHits")
+        num_measurements += len(measurements)
+        links = frame.get("ActsPodioTracks_trackStateHitLinks")
+        num_links += len(links)
+
+    assert num_tracks > 0, "No tracks were written"
+    assert num_track_states > 0, "No track states were written"
+    assert num_measurements > 0, "No measurements were written"
+    assert num_links > 0, "No track state hit links were written"
+    print(f"Successfully wrote {num_tracks} tracks")
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_reader(ddsim_input):
     from acts.examples.edm4hep import PodioReader
 
@@ -738,7 +838,7 @@ def test_edm4hep_writer_copy(ddsim_input, tmp_path):
         PodioWriter(
             level=acts.logging.VERBOSE,
             inputFrame="myframe",
-            outputPath=str(target_file),
+            outputPath=target_file,
             category="myevents",
         )
     )
