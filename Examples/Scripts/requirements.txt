@@ -34,7 +34,7 @@ histoprint==2.6.0
     # via hist
 kiwisolver==1.5.0
     # via matplotlib
-markdown-it-py==4.0.0
+markdown-it-py==4.2.0
     # via rich
 matplotlib==3.10.9
     # via
@@ -71,9 +71,9 @@ pandas==3.0.2
     # via -r Examples/Scripts/requirements.in
 pillow==12.2.0
     # via matplotlib
-pydantic==2.13.3
+pydantic==2.13.4
     # via -r Examples/Scripts/requirements.in
-pydantic-core==2.46.3
+pydantic-core==2.46.4
     # via pydantic
 pygments==2.20.0
     # via rich
