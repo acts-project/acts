@@ -76,6 +76,14 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
     // modules to fix in the alignment to suppress global movements
     std::set<Acts::GeometryIdentifier> fixModules;
+
+    /// If true, will modify the track fit to exclude track parameters that
+    /// are not constrained in the input track
+    bool discardUnconstrainedTrackPar = true;
+
+    /// If true, will collect tracks and run
+    /// internal solving step in the finalisation method
+    bool performInternalSolving = true;
   };
 
   /// Constructor of the sandbox algorithm

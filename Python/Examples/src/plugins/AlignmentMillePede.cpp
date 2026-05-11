@@ -20,10 +20,10 @@ using namespace ActsExamples;
 using namespace ActsPython;
 
 PYBIND11_MODULE(ActsExamplesPythonBindingsAlignmentMillePede, m) {
-  ACTS_PYTHON_DECLARE_ALGORITHM(MillePedeAlignmentSandbox, m,
-                                "MillePedeAlignmentSandbox", milleOutput,
-                                inputMeasurements, inputTracks,
-                                trackingGeometry, magneticField, fixModules);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      MillePedeAlignmentSandbox, m, "MillePedeAlignmentSandbox", milleOutput,
+      inputMeasurements, inputTracks, trackingGeometry, magneticField,
+      fixModules, discardUnconstrainedTrackPar, performInternalSolving);
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsSolverFromMille, m, "ActsSolverFromMille",
                                 milleInput, trackingGeometry, magneticField,
                                 fixModules);
