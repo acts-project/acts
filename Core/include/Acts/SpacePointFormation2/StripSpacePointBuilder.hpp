@@ -104,118 +104,62 @@ Vector2 computeVarianceZR(const GeometryContext& gctx, const Surface& surface1,
 inline StripSpacePointCalibrationDetailsDerived
 deriveStripSpacePointCalibrationDetails(
     const StripSpacePointCalibrationDetails& sp) {
-  const auto& ohv = sp.outerStripHalfVector;
-  const auto& ihv = sp.innerStripHalfVector;
-  const auto& scd = sp.stripSeparation;
+  const auto& oiv = sp.outerToInnerGapVector;
+  const auto& ihv = sp.innerHalfVector;
+  const auto& ohv = sp.outerHalfVector;
 
   return StripSpacePointCalibrationDetailsDerived{
-      .stripSeparationCrossInnerHalfVector = {scd[1] * ihv[2] - scd[2] * ihv[1],
-                                              scd[2] * ihv[0] - scd[0] * ihv[2],
-                                              scd[0] * ohv[1] -
-                                                  scd[1] * ohv[0]},
-      .stripSeparationCrossOuterHalfVector = {scd[1] * ohv[2] - scd[2] * ohv[1],
-                                              scd[2] * ohv[0] - scd[0] * ohv[2],
-                                              scd[0] * ohv[1] -
-                                                  scd[1] * ohv[0]},
-      .innerCrossOuterStripHalfVector = {ihv[1] * ohv[2] - ihv[2] * ohv[1],
-                                         ihv[2] * ohv[0] - ihv[0] * ohv[2],
-                                         ihv[0] * ohv[1] - ihv[1] * ohv[0]},
-      .outerStripCenter = sp.outerStripCenter,
-      .outerStripHalfVector = ohv,
+      .outerToInnerGapCrossInnerHalfVector = {oiv[1] * ihv[2] - oiv[2] * ihv[1],
+                                              oiv[2] * ihv[0] - oiv[0] * ihv[2],
+                                              oiv[0] * ohv[1] -
+                                                  oiv[1] * ohv[0]},
+      .outerToInnerGapCrossOuterHalfVector = {oiv[1] * ohv[2] - oiv[2] * ohv[1],
+                                              oiv[2] * ohv[0] - oiv[0] * ohv[2],
+                                              oiv[0] * ohv[1] -
+                                                  oiv[1] * ohv[0]},
+      .innerCrossOuterHalfVector = {ihv[1] * ohv[2] - ihv[2] * ohv[1],
+                                    ihv[2] * ohv[0] - ihv[0] * ohv[2],
+                                    ihv[0] * ohv[1] - ihv[1] * ohv[0]},
+      .outerCenter = sp.outerCenter,
+      .outerHalfVector = ohv,
   };
-}
-
-inline bool calibrateStripSpacePoint(
-    const StripSpacePointCalibrationDetails& sp,
-    std::span<const float, 3> direction, std::span<float, 3> calibrated,
-    float tolerance) {
-  const auto& scd = sp.stripSeparation;
-  const auto& ohv = sp.outerStripHalfVector;
-  const auto& ihv = sp.innerStripHalfVector;
-
-  // dOuter = outerStripHalfVector cross direction (reused for both scale and
-  // sInner)
-  const std::array<float, 3> dOuter = {
-      ohv[1] * direction[2] - ohv[2] * direction[1],
-      ohv[2] * direction[0] - ohv[0] * direction[2],
-      ohv[0] * direction[1] - ohv[1] * direction[0]};
-
-  // scale = innerStripHalfVector dot dOuter
-  const float scale =
-      ihv[0] * dOuter[0] + ihv[1] * dOuter[1] + ihv[2] * dOuter[2];
-
-  // sInner = stripSeparation dot dOuter
-  // Check if sInner is inside the inner detector element
-  // TODO should this be `sOuter`?
-  const float sInner =
-      scd[0] * dOuter[0] + scd[1] * dOuter[1] + scd[2] * dOuter[2];
-  if (std::abs(sInner) > std::abs(scale) * tolerance) {
-    return false;
-  }
-
-  // dInner = innerStripHalfVector cross direction (only computed if check 1
-  // passed)
-  const std::array<float, 3> dInner = {
-      ihv[1] * direction[2] - ihv[2] * direction[1],
-      ihv[2] * direction[0] - ihv[0] * direction[2],
-      ihv[0] * direction[1] - ihv[1] * direction[0]};
-
-  // sOuter = stripSeparation dot dInner
-  // Check if sOuter is inside the outer detector element
-  // TODO should this be `sInner`?
-  const float sOuter =
-      scd[0] * dInner[0] + scd[1] * dInner[1] + scd[2] * dInner[2];
-  if (std::abs(sOuter) > std::abs(scale) * tolerance) {
-    return false;
-  }
-
-  // Corrected position using the outer strip center and direction
-  // TODO use inner?
-  const auto& oc = sp.outerStripCenter;
-  const float sOuterNorm = sOuter / scale;
-  calibrated[0] = oc[0] + ohv[0] * sOuterNorm;
-  calibrated[1] = oc[1] + ohv[1] * sOuterNorm;
-  calibrated[2] = oc[2] + ohv[2] * sOuterNorm;
-  return true;
 }
 
 inline bool calibrateStripSpacePoint(
     const StripSpacePointCalibrationDetailsDerived& sp,
     std::span<const float, 3> direction, std::span<float, 3> calibrated,
     float tolerance) {
-  const auto& oc = sp.outerStripCenter;
-  const auto& ohv = sp.outerStripHalfVector;
-  const auto& sCrossIhv = sp.stripSeparationCrossInnerHalfVector;
-  const auto& sCrossOhv = sp.stripSeparationCrossOuterHalfVector;
-  const auto& ihvCrossOhv = sp.innerCrossOuterStripHalfVector;
+  const auto& ihvCrossOhv = sp.innerCrossOuterHalfVector;
+  const auto& oivCrossOhv = sp.outerToInnerGapCrossOuterHalfVector;
+  const auto& oivCrossIhv = sp.outerToInnerGapCrossInnerHalfVector;
 
   // scale = innerStripHalfVector dot (outerStripHalfVector cross direction)
   const float scale = direction[0] * ihvCrossOhv[0] +
                       direction[1] * ihvCrossOhv[1] +
                       direction[2] * ihvCrossOhv[2];
 
-  // sInner = stripSeparation dot (outerStripHalfVector cross direction)
+  // sInner = outerToInnerGapVector dot (outerStripHalfVector cross direction)
   // Check if direction is inside the inner detector element
-  // TODO should this rather use `sCrossIhv`?
-  const float sInner = direction[0] * sCrossOhv[0] +
-                       direction[1] * sCrossOhv[1] +
-                       direction[2] * sCrossOhv[2];
+  const float sInner = direction[0] * oivCrossOhv[0] +
+                       direction[1] * oivCrossOhv[1] +
+                       direction[2] * oivCrossOhv[2];
   if (std::abs(sInner) > std::abs(scale) * tolerance) {
     return false;
   }
 
-  // sOuter = stripSeparation dot (innerStripHalfVector cross direction)
+  // sOuter = outerToInnerGapVector dot (innerStripHalfVector cross direction)
   // Check if direction is inside the outer detector element
-  // TODO should this rather use `sCrossOhv`?
-  const float sOuter = direction[0] * sCrossIhv[0] +
-                       direction[1] * sCrossIhv[1] +
-                       direction[2] * sCrossIhv[2];
+  const float sOuter = direction[0] * oivCrossIhv[0] +
+                       direction[1] * oivCrossIhv[1] +
+                       direction[2] * oivCrossIhv[2];
   if (std::abs(sOuter) > std::abs(scale) * tolerance) {
     return false;
   }
 
+  const auto& oc = sp.outerCenter;
+  const auto& ohv = sp.outerHalfVector;
+
   // Corrected position using the outer strip center and direction
-  // TODO use inner?
   const float sOuterNorm = sOuter / scale;
   calibrated[0] = oc[0] + ohv[0] * sOuterNorm;
   calibrated[1] = oc[1] + ohv[1] * sOuterNorm;

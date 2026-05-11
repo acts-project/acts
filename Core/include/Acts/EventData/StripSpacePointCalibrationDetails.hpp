@@ -13,20 +13,18 @@
 namespace Acts {
 
 struct StripSpacePointCalibrationDetails final {
-  // TODO use inner?
-  std::array<float, 3> outerStripCenter;
-  std::array<float, 3> stripSeparation;
-  std::array<float, 3> outerStripHalfVector;
-  std::array<float, 3> innerStripHalfVector;
+  std::array<float, 3> outerCenter;
+  std::array<float, 3> outerToInnerGapVector;
+  std::array<float, 3> outerHalfVector;
+  std::array<float, 3> innerHalfVector;
 };
 
 struct StripSpacePointCalibrationDetailsDerived final {
-  std::array<float, 3> stripSeparationCrossInnerHalfVector;
-  std::array<float, 3> stripSeparationCrossOuterHalfVector;
-  std::array<float, 3> innerCrossOuterStripHalfVector;
-  // TODO use inner?
-  std::array<float, 3> outerStripCenter;
-  std::array<float, 3> outerStripHalfVector;
+  std::array<float, 3> outerToInnerGapCrossInnerHalfVector;
+  std::array<float, 3> outerToInnerGapCrossOuterHalfVector;
+  std::array<float, 3> innerCrossOuterHalfVector;
+  std::array<float, 3> outerCenter;
+  std::array<float, 3> outerHalfVector;
 };
 
 }  // namespace Acts
