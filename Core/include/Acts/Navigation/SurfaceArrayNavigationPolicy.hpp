@@ -30,9 +30,7 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
     /// on the layer type.
     std::pair<std::size_t, std::size_t> bins;
     /// Envelope added to the ProtoLayer extent when computing the surface-array
-    /// lookup tolerance. Setting this to the layer volume envelope (e.g. 2 mm
-    /// in R and Z for the ODD) makes the lookup robust against floating-point
-    /// shifts introduced by serialization round-trips.
+    /// lookup tolerance.
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
   };
 
