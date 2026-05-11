@@ -144,6 +144,18 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     // existing CKF track
     Acts::BoundTrackParameters refPar = track.createParametersAtReference();
 
+    /// replace the covariance from the earlier track fit by a set of
+    /// large uncertainties to avoid constraining the re-fit to the
+    /// previous iteration.
+    Acts::BoundMatrix& cov = refPar.covariance().value();
+    cov = Acts::BoundMatrix::Identity();
+    cov(0, 0) = 100000;
+    cov(1, 1) = 100000;
+    cov(2, 2) = 4;
+    cov(3, 3) = 4;
+    cov(4, 4) = 0.05;
+    cov(5, 5) = 1e8;
+
     // Collect source links from this track
     trackSourceLinks.clear();
     trackSourceLinks.reserve(track.nTrackStates());
