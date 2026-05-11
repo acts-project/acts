@@ -66,12 +66,7 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   const Acts::Vector2 beamSpotMeasValue{0., 0.};
 
-  if (inputTracks.size() == 0) {
-    ACTS_INFO("Input tracks collection is empty");
-    return ProcessCode::SKIP;
-  }
-  auto trackRefSurfacePtr = inputTracks.at(0).referenceSurface().getSharedPtr();
-  beamSpotTrackState.setReferenceSurface(trackRefSurfacePtr);
+  beamSpotTrackState.setReferenceSurface(perigeeSurface);
 
   if (m_cfg.beamSpotConstraint.has_value()) {
     ACTS_DEBUG("Using provided beam spot constraint matrix");
