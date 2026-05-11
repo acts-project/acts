@@ -189,7 +189,8 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     // and, if successful, dump the information into our Mille record.
     if (aliStates.ok()) {
       const ActsAlignment::detail::TrackAlignmentState& state = *aliStates;
-      ActsPlugins::ActsToMille::dumpToMille(state, *m_milleOut);
+      ActsPlugins::ActsToMille::dumpToMille(state, *m_milleOut,
+                                            m_cfg.discardUnconstrainedTrackPar);
       if (m_cfg.performInternalSolving) {
         std::lock_guard g(g_mx_addState);
         m_alignmentStates.push_back(state);
@@ -276,6 +277,7 @@ ProcessCode MillePedeAlignmentSandbox::solveInternal() {
     }
   }
   resFile.close();
+  return ProcessCode::SUCCESS;
 }
 
 }  // namespace ActsExamples

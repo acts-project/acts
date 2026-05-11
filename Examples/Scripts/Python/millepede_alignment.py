@@ -90,6 +90,9 @@ def addAlignmentSandbox(
     inputTracks: str = "ckf_tracks",
     logLevel: acts.logging.Level = acts.logging.INFO,
     milleOutput: str = "MilleBinary.root",
+    discardUnconstrainedTrackPar: bool = True,
+    performInternalSolving: bool = True,
+    outFile: str = "ActsInternalAlignment.txt",
 ):
     sandbox = MillePedeAlignmentSandbox(
         level=logLevel,
@@ -99,6 +102,9 @@ def addAlignmentSandbox(
         trackingGeometry=trackingGeometry,
         magneticField=magField,
         fixModules=fixModules,
+        discardUnconstrainedTrackPar=discardUnconstrainedTrackPar,
+        performInternalSolving=performInternalSolving,
+        outFile=outFile,
     )
     s.addAlgorithm(sandbox)
     return s
@@ -179,7 +185,11 @@ contextDecorators = [alignDeco]
 # decide on at least on detector module to fix in place
 # as a reference for the alignment.
 # By default, fix the innermost layer.
-fixModules = {acts.GeometryIdentifier(layer=2, volume=1, sensitive=1)}
+fixModules = {
+    acts.GeometryIdentifier(layer=2, volume=1, sensitive=1),
+    acts.GeometryIdentifier(layer=10, volume=1, sensitive=1),
+    acts.GeometryIdentifier(layer=18, volume=1, sensitive=1),
+}
 
 
 # More Boilerplate code - for setting up the sequence

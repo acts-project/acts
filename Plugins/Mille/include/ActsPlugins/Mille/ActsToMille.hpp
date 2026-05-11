@@ -29,8 +29,10 @@ using Mille::MilleRecord;
 /// Note: Not very efficient - we have to "un-fit" the kalman track.
 /// Used for R&D, recommending the GBL track model (under development)
 /// for production use.
+/// @param removeUnconstrainedTrackPar If enabled, will remove
+/// poorly constrained parameters from the (local) track fits.
 void dumpToMille(const ActsAlignment::detail::TrackAlignmentState& state,
-                 MilleRecord& record);
+                 MilleRecord& record, bool removeUnconstrainedTrackPar = true);
 
 /// @brief read one record (= track or (constrained) track pair) from
 /// a Mille binary into the equivalent matrices of a TrackAlignmentState.
