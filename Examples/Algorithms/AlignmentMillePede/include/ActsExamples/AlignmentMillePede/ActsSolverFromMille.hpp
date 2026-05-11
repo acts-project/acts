@@ -54,8 +54,9 @@ class ActsSolverFromMille final : public IAlgorithm {
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
     // modules to fix in the alignment to suppress global movements
     std::set<Acts::GeometryIdentifier> fixModules;
-    // output text file to write alignment results to
-    std::string outFile;
+    // output text file to write alignment results to.
+    // Will be skipped if empty.
+    std::string outFile = "";
   };
 
   /// Constructor of the sandbox algorithm

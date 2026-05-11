@@ -191,7 +191,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
       const ActsAlignment::detail::TrackAlignmentState& state = *aliStates;
       ActsPlugins::ActsToMille::dumpToMille(state, *m_milleOut,
                                             m_cfg.discardUnconstrainedTrackPar);
-      if (m_cfg.performInternalSolving) {
+      if (needInternalSolving()) {
         std::lock_guard g(g_mx_addState);
         m_alignmentStates.push_back(state);
       }
@@ -200,12 +200,19 @@ ProcessCode MillePedeAlignmentSandbox::execute(
 
   return ProcessCode::SUCCESS;
 }
+bool MillePedeAlignmentSandbox::needInternalSolving() const {
+  if (m_cfg.outFileInternalSolving.empty() &&
+      m_cfg.outFileDecomposition.empty()) {
+    return false;
+  }
+  return true;
+}
 
 ProcessCode MillePedeAlignmentSandbox::finalize() {
   m_milleOut.reset();  // ensure that we do the final write of our output
                        // before subsequent algos finalise.
 
-  if (m_cfg.performInternalSolving) {
+  if (needInternalSolving()) {
     return solveInternal();
   }
   return ProcessCode::SUCCESS;
@@ -228,36 +235,48 @@ ProcessCode MillePedeAlignmentSandbox::solveInternal() {
   // then run the solving
   m_align->calculateAlignmentParameters(m_alignmentStates, alignResult);
 
-  /// in a real experiment, the results would be written out
-  /// and stored e.g. in a DB file for further use / validation.
-  /// For this initial demo, we just print them out and dump them to a text
-  /// file.
-  ACTS_INFO("Performed internal alignment without Mille");
-  ACTS_INFO(std::setw(16) << "  Tracks used: " << m_alignmentStates.size());
-  ACTS_INFO(std::setw(16) << "  avg Chi2/NDF = "
-                          << alignResult.averageChi2ONdf);
-  ACTS_INFO(std::setw(16) << "  Chi2   = " << alignResult.chi2);
-  ACTS_INFO(std::setw(16) << "  delta Chi2   = " << alignResult.deltaChi2);
-  ACTS_INFO(std::setw(16) << "  Alignment parameter updates: ");
-  std::vector<std::string> parLabels{"dx", "dy", "dz", "rx", "ry", "rz"};
-  for (auto [surface, index] : alignResult.idxedAlignSurfaces) {
-    ACTS_INFO(std::setw(20)
-              << " Surface with geo ID " << surface->geometryId() << ": ");
-    for (std::size_t i = 0; i < Acts::eAlignmentSize; ++i) {
-      std::size_t row = Acts::eAlignmentSize * index + i;
+  if (!m_cfg.outFileInternalSolving.empty()) {
+    /// in a real experiment, the results would be written out
+    /// and stored e.g. in a DB file for further use / validation.
+    /// For this initial demo, we just print them out and dump them to a text
+    /// file.
+    ACTS_INFO("Performed internal alignment without Mille");
+    ACTS_INFO(std::setw(16) << "  Tracks used: " << m_alignmentStates.size());
+    ACTS_INFO(std::setw(16)
+              << "  avg Chi2/NDF = " << alignResult.averageChi2ONdf);
+    ACTS_INFO(std::setw(16) << "  Chi2   = " << alignResult.chi2);
+    ACTS_INFO(std::setw(16) << "  delta Chi2   = " << alignResult.deltaChi2);
+    ACTS_INFO(std::setw(16) << "  Alignment parameter updates: ");
+    std::vector<std::string> parLabels{"dx", "dy", "dz", "rx", "ry", "rz"};
+    for (auto [surface, index] : alignResult.idxedAlignSurfaces) {
       ACTS_INFO(std::setw(20)
-                << parLabels[i] << " = " << std::setw(10)
-                << alignResult.deltaAlignmentParameters(row) << std::setw(6)
-                << " +/- " << std::setw(10)
-                << std::sqrt(alignResult.alignmentCovariance(row, row)));
+                << " Surface with geo ID " << surface->geometryId() << ": ");
+      for (std::size_t i = 0; i < Acts::eAlignmentSize; ++i) {
+        std::size_t row = Acts::eAlignmentSize * index + i;
+        ACTS_INFO(std::setw(20)
+                  << parLabels[i] << " = " << std::setw(10)
+                  << alignResult.deltaAlignmentParameters(row) << std::setw(6)
+                  << " +/- " << std::setw(10)
+                  << std::sqrt(alignResult.alignmentCovariance(row, row)));
+      }
     }
+    std::ofstream resFile;
+    resFile.open(m_cfg.outFileInternalSolving);
+    // also write in a text file format that can be parsed consistently with
+    // Millepede output
+    ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
+    resFile.close();
   }
-  std::ofstream resFile;
-  resFile.open(m_cfg.outFile);
-  // also write in a text file format that can be parsed consistently with
-  // Millepede output
-  ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
-  resFile.close();
+  if (!m_cfg.outFileDecomposition.empty()) {
+    std::ofstream evFile;
+    evFile.open(m_cfg.outFileDecomposition);
+    // finally, also demonstrate the decomposition analysis used to check for
+    // singular or weak modes
+    double condi = m_align->decompositionAnalysis(alignResult, evFile);
+    evFile.close();
+
+    ACTS_INFO("Second derivative matrix has condition number " << condi);
+  }
 
   return ProcessCode::SUCCESS;
 }

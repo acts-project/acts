@@ -91,8 +91,8 @@ def addAlignmentSandbox(
     logLevel: acts.logging.Level = acts.logging.INFO,
     milleOutput: str = "MilleBinary.root",
     discardUnconstrainedTrackPar: bool = True,
-    performInternalSolving: bool = True,
-    outFile: str = "ActsInternalAlignment.txt",
+    outFileInternalSolving: str = "ActsInternalAlignment_Result.txt",
+    outFileDecomposition: str = "ActsInternalAlignment_Eigenvals.txt",
 ):
     sandbox = MillePedeAlignmentSandbox(
         level=logLevel,
@@ -103,8 +103,8 @@ def addAlignmentSandbox(
         magneticField=magField,
         fixModules=fixModules,
         discardUnconstrainedTrackPar=discardUnconstrainedTrackPar,
-        performInternalSolving=performInternalSolving,
-        outFile=outFile,
+        outFileInternalSolving=outFileInternalSolving,
+        outFileDecomposition=outFileDecomposition,
     )
     s.addAlgorithm(sandbox)
     return s

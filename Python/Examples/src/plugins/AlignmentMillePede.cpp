@@ -23,8 +23,8 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsAlignmentMillePede, m) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       MillePedeAlignmentSandbox, m, "MillePedeAlignmentSandbox", milleOutput,
       inputMeasurements, inputTracks, trackingGeometry, magneticField,
-      fixModules, discardUnconstrainedTrackPar, performInternalSolving,
-      outFile);
+      fixModules, discardUnconstrainedTrackPar, outFileInternalSolving,
+      outFileDecomposition);
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsSolverFromMille, m, "ActsSolverFromMille",
                                 milleInput, trackingGeometry, magneticField,
                                 fixModules, outFile);
