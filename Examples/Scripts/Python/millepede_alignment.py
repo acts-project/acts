@@ -117,6 +117,7 @@ def addSolverFromMille(
     fixModules: set,
     logLevel: acts.logging.Level = acts.logging.INFO,
     milleInput: str = "MilleBinary.root",
+    outFile: str = "ActsAlignmentViaMille.txt",
 ):
 
     solver = ActsSolverFromMille(
@@ -125,6 +126,7 @@ def addSolverFromMille(
         trackingGeometry=trackingGeometry,
         magneticField=magField,
         fixModules=fixModules,
+        outFile=outFile,
     )
     s.addAlgorithm(solver)
     return s

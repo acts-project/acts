@@ -21,6 +21,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
+#include <fstream>
 #include <memory>
 
 #include <Mille/MilleFactory.h>
@@ -139,6 +140,12 @@ ProcessCode ActsSolverFromMille::finalize() {
                 << std::sqrt(alignResult.alignmentCovariance(row, row)));
     }
   }
+  std::ofstream resFile;
+  resFile.open(m_cfg.outFile);
+  // also write in a text file format that can be parsed consistently with
+  // Millepede output
+  ActsPlugins::ActsToMille::dumpAsMillepedeRes(alignResult, resFile);
+  resFile.close();
 
   return ProcessCode::SUCCESS;
 }

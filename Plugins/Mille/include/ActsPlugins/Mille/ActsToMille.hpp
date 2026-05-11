@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/Alignment.hpp"
 
 #include "Mille/IMilleReader.h"
 #include "Mille/MilleDecoder.h"
@@ -50,5 +50,12 @@ Mille::MilleDecoder::ReadResult unpackMilleRecord(
     ActsAlignment::detail::TrackAlignmentState& targetState,
     const std::unordered_map<const Acts::Surface*, std::size_t>&
         idxedAlignSurfaces);
+
+/// Writes an alignment outcome into a text file in the format
+/// used by Millepede. Allows the constants to be processed
+/// in the same visualisation code use for MP-II results,
+/// or to be read back as initial values for a fit with MP-II
+void dumpAsMillepedeRes(const ActsAlignment::AlignmentResult& result,
+                        std::ostream& out);
 
 }  // namespace ActsPlugins::ActsToMille
