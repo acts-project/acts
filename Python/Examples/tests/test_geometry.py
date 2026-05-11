@@ -182,7 +182,6 @@ def test_odd_gen3(constructionMethod):
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.odd
-@pytest.mark.slow
 def test_odd_gen3_json_roundtrip(tmp_path):
     from geometry import runGeometry
     from acts.json import TrackingGeometryJsonConverter
