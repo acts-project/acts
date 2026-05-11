@@ -60,6 +60,9 @@ ProcessCode RefittingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   const Acts::Vector3 beamSpotCenter{0., 0., 0.};
 
+  // The following code is only necessary if a beamspot constraint is in use but unguarded for lifetime and simplicity reasons.
+  // The Core KF does not support a beamspot constraint by itself but it can be achieved by injecting a fake measurement on the perigee surface and processing it first in the fitter. This can lead to problems if the beamspot constraint moves the initial parameters too far and we start to miss following surfaces and measurements. But in a refitting scenario with increased bounds and direct navigation it *should* work OK.
+
   auto beamSpotVectorTrackStateContainer =
       std::make_shared<Acts::VectorMultiTrajectory>();
   auto beamSpotTrackState = beamSpotVectorTrackStateContainer->makeTrackState();
