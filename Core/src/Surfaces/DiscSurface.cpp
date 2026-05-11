@@ -563,9 +563,22 @@ void DiscSurface::assignSurfaceMaterial(
       mad != std::vector<AxisDirection>{AxisDirection::AxisPhi} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisR,
                                         AxisDirection::AxisPhi}) {
+    // Create a string that lists the provided axis directions for the error
+    // message
+    std::string providedAxes = "{";
+    for (const auto& axis : mad) {
+      providedAxes += axisDirectionName(axis);
+      if (&axis != &mad.back()) {
+        providedAxes += ", ";
+      }
+    }
+    providedAxes += "}";
+
     throw std::invalid_argument(
-        "DiscSurface::assignSurfaceMaterial: invalid material axis directions. "
-        "Allowed are {}, {AxisR}, {AxisPhi} or {AxisR, AxisPhi}.");
+        "DiscSurface::assignSurfaceMaterial: invalid material axis "
+        "directions. Allowed are {}, {AxisR}, {AxisPhi} or {AxisR, AxisPhi},"
+        " but provided are " +
+        providedAxes);
   }
   Surface::m_surfaceMaterial = std::move(material);
 }

@@ -411,10 +411,23 @@ void ConeSurface::assignSurfaceMaterial(
   // check that only {}, {z} are allowed for cone surfaces
   if (mad != std::vector<AxisDirection>{} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisZ}) {
+
+    // Create a string that lists the provided axis directions for the error
+    // message
+    std::string providedAxes = "{";
+    for (const auto& axis : mad) {
+      providedAxes += axisDirectionName(axis);
+      if (&axis != &mad.back()) {
+        providedAxes += ", ";
+      }
+    }
+    providedAxes += "}";
+        
     throw std::invalid_argument(
         "ConeSurface::assignSurfaceMaterial: invalid material axis "
         "directions. "
-        "Allowed are {}, {AxisZ}.");
+        "Allowed are {}, {AxisZ}, but provided are " +
+        providedAxes);
   }
   Surface::m_surfaceMaterial = std::move(material);
 }

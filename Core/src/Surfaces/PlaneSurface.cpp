@@ -326,10 +326,22 @@ void PlaneSurface::assignSurfaceMaterial(
       mad != std::vector<AxisDirection>{AxisDirection::AxisY} &&
       mad != std::vector<AxisDirection>{AxisDirection::AxisX,
                                         AxisDirection::AxisY}) {
+    // Create a string that lists the provided axis directions for the error
+    // message
+    std::string providedAxes = "{";
+    for (const auto& axis : mad) {
+      providedAxes += axisDirectionName(axis);
+      if (&axis != &mad.back()) {
+        providedAxes += ", ";
+      }
+    }
+    providedAxes += "}";
+
     throw std::invalid_argument(
         "PlaneSurface::assignSurfaceMaterial: invalid material axis "
-        "directions. "
-        "Allowed are {}, {AxisX}, {AxisY} or {AxisX, AxisY}.");
+        "directions. Allowed are {}, {AxisX}, {AxisY} or {AxisX, AxisY}, but "
+        "provided are " +
+        providedAxes);
   }
   Surface::m_surfaceMaterial = std::move(material);
 }

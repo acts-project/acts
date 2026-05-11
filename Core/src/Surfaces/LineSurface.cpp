@@ -312,15 +312,28 @@ void LineSurface::assignSurfaceMaterial(
     return;
   }
   // check that only {}, {r}, {z} or {r,z} are allowed for line surfaces
-  auto axisDirs = material->materialAxisDirections();
-  if (axisDirs != std::vector<AxisDirection>{} &&
-      axisDirs != std::vector<AxisDirection>{AxisDirection::AxisR} &&
-      axisDirs != std::vector<AxisDirection>{AxisDirection::AxisZ} &&
-      axisDirs != std::vector<AxisDirection>{AxisDirection::AxisR,
-                                             AxisDirection::AxisZ}) {
+  auto mad = material->materialAxisDirections();
+  if (mad != std::vector<AxisDirection>{} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisR} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisZ} &&
+      mad != std::vector<AxisDirection>{AxisDirection::AxisR,
+                                        AxisDirection::AxisZ}) {
+    // Create a string that lists the provided axis directions for the error
+    // message
+    std::string providedAxes = "{";
+    for (const auto& axis : mad) {
+      providedAxes += axisDirectionName(axis);
+      if (&axis != &mad.back()) {
+        providedAxes += ", ";
+      }
+    }
+    providedAxes += "}";
+
     throw std::invalid_argument(
         "LineSurface::assignSurfaceMaterial: invalid material axis directions. "
-        "Allowed are {}, {AxisR}, {AxisZ} or {AxisR, AxisZ}.");
+        "Allowed are {}, {AxisR}, {AxisZ} or {AxisR, AxisZ}, but provided "
+        "are " +
+        providedAxes);
   }
   Surface::m_surfaceMaterial = std::move(material);
 }
