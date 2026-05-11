@@ -4,7 +4,6 @@ import functools
 from acts.examples import GenericDetector
 from acts.examples.odd import getOpenDataDetector
 import json
-import numpy as np
 
 from helpers import dd4hepEnabled
 
@@ -206,11 +205,11 @@ def test_odd_gen3_json_roundtrip(tmp_path):
             events=1,
             outputObj=False,
             outputCsv=False,
-            outputJson=False,
-            outputTrackingGeometryJson=True,
+            outputPlainJson=False,
+            serializeGeometryJson=True,
         )
 
-    json_path = json_dir / "event000000000-tracking-geometry.json"
+    json_path = json_dir / "tracking-geometry.json"
     assert json_path.exists()
     assert json_path.stat().st_size > 0
 
@@ -227,11 +226,7 @@ def test_odd_gen3_json_roundtrip(tmp_path):
     assert rebuilt.num_boundary_surfaces == 0
 
     # Propagation comparison: identical seed → identical navigation results
-    _propagation_roundtrip_check(gctx, trackingGeometry, rebuilt_geometry, tmp_path)
-
-
-def _propagation_roundtrip_check(gctx, original_geo, rebuilt_geo, tmp_path):
-    """Propagate tracks through both geometries and compare navigation counts."""
+    import numpy as np
     import uproot
     from propagation import runPropagation
 
@@ -242,13 +237,12 @@ def _propagation_roundtrip_check(gctx, original_geo, rebuilt_geo, tmp_path):
         s = acts.examples.Sequencer(
             events=5, numThreads=1, logLevel=acts.logging.WARNING
         )
-        # sterileLogger=False so that surface/portal hit counts are collected
         runPropagation(geo, field, str(out_dir), s=s, sterileLogger=False).run()
 
     orig_dir = tmp_path / "prop_original"
     rebuilt_dir = tmp_path / "prop_rebuilt"
-    run_prop(original_geo, orig_dir)
-    run_prop(rebuilt_geo, rebuilt_dir)
+    run_prop(trackingGeometry, orig_dir)
+    run_prop(rebuilt_geometry, rebuilt_dir)
 
     branches = ["nSensitives", "nPortals", "nSuccessfulSteps", "pathLength"]
     with uproot.open(orig_dir / "propagation_summary.root") as f:
