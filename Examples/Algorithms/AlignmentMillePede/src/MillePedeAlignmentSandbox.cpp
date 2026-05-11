@@ -22,7 +22,11 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsPlugins/Mille/ActsToMille.hpp"
 
+#include <fstream>
 #include <memory>
+#include <mutex>
+
+std::mutex g_mx_addState;
 
 namespace ActsExamples {
 
@@ -54,25 +58,9 @@ MillePedeAlignmentSandbox::MillePedeAlignmentSandbox(
   m_align = std::make_shared<Alignment>(
       Fitter(Propagator(stepper, Acts::Navigator(navcfg))));
 
-  /// spawn a Mille binary to record our alignment inputs.
-  /// You can specify root / csv / dat extensions for
-  /// ROOT NTuple / plain text (careful: large files) or C-binary
-  /// storage.
-  /// The file will be automatically closed upon deletion.
-  m_milleOut = Mille::spawnMilleRecord(m_cfg.milleOutput);
-}
-
-ProcessCode MillePedeAlignmentSandbox::execute(
-    const AlgorithmContext& ctx) const {
-  using TrackFitterOptions =
-      Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory>;
-
-  // Read input data
-  const auto& measurements = m_inputMeasurements(ctx);
-  const auto& tracks = m_inputTracks(ctx);
-
   // Assign indices to the alignable surfaces
-
+}
+ProcessCode MillePedeAlignmentSandbox::initialize() {
   // We wish to have a relation between alignment parameter indices and real
   // geometry. The unordered_map does not give us this - so perform a manual
   // sorting.
@@ -88,7 +76,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
               rhs) { return (lhs.first.layer() < rhs.first.layer()); });
 
   std::unordered_map<const Acts::Surface*, std::size_t> indexedAlignSurfaces;
-  const Acts::Surface* firstSurf = nullptr;
+  m_firstSurf = nullptr;
   unsigned int iSurface = 0;
   for (auto& [geoID, surface] : sortedGeo) {
     // only consider sensitive surfaces
@@ -96,14 +84,39 @@ ProcessCode MillePedeAlignmentSandbox::execute(
       continue;
     }
     // use the first sensitive surface as trajectory reference in the kalman
-    if (firstSurf == nullptr) {
-      firstSurf = surface;
+    if (m_firstSurf == nullptr) {
+      m_firstSurf = surface;
     }
     if (!m_cfg.fixModules.contains(geoID)) {
-      indexedAlignSurfaces.emplace(surface, iSurface);
+      m_indexedAlignSurfaces.emplace(surface, iSurface);
       iSurface++;
     }
   }
+
+  /// spawn a Mille binary to record our alignment inputs.
+  /// You can specify root / csv / dat extensions for
+  /// ROOT NTuple / plain text (careful: large files) or C-binary
+  /// storage.
+  /// The file will be automatically closed upon deletion.
+  m_milleOut = Mille::spawnMilleRecord(m_cfg.milleOutput);
+  if (!m_milleOut) {
+    ACTS_FATAL(
+        "Failed to correctly instantiate the Mille binary - did you specify a "
+        "supported file format?");
+    return ProcessCode::ABORT;
+  }
+
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode MillePedeAlignmentSandbox::execute(
+    const AlgorithmContext& ctx) const {
+  using TrackFitterOptions =
+      Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory>;
+
+  // Read input data
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& tracks = m_inputTracks(ctx);
 
   // Dirty hack: Overwrite the geometry context to remove knowledge
   // of injected alignment shift.
@@ -135,7 +148,7 @@ ProcessCode MillePedeAlignmentSandbox::execute(
   TrackFitterOptions kfOptions(
       dummyGeoCtx, ctx.magFieldContext, ctx.calibContext, extensions,
       Acts::PropagatorPlainOptions(dummyGeoCtx, ctx.magFieldContext),
-      firstSurf);
+      m_firstSurf);
 
   // loop over tracks in the event
   std::vector<Acts::SourceLink> trackSourceLinks;
@@ -167,7 +180,8 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     // alignment class. This will compute the needed
     // residuals and derivatives.
     auto aliStates = m_align->evaluateTrackAlignmentState(
-        dummyGeoCtx, trackSourceLinks, refPar, kfOptions, indexedAlignSurfaces,
+        dummyGeoCtx, trackSourceLinks, refPar, kfOptions,
+        m_indexedAlignSurfaces,
         ActsAlignment::AlignmentMask::All  // use this to restrict alignment
                                            // degrees of freedom if desired
     );
@@ -176,6 +190,10 @@ ProcessCode MillePedeAlignmentSandbox::execute(
     if (aliStates.ok()) {
       const ActsAlignment::detail::TrackAlignmentState& state = *aliStates;
       ActsPlugins::ActsToMille::dumpToMille(state, *m_milleOut);
+      if (m_cfg.performInternalSolving) {
+        std::lock_guard g(g_mx_addState);
+        m_alignmentStates.push_back(state);
+      }
     }
   }
 
@@ -185,7 +203,79 @@ ProcessCode MillePedeAlignmentSandbox::execute(
 ProcessCode MillePedeAlignmentSandbox::finalize() {
   m_milleOut.reset();  // ensure that we do the final write of our output
                        // before subsequent algos finalise.
+
+  if (m_cfg.performInternalSolving) {
+    return solveInternal();
+  }
   return ProcessCode::SUCCESS;
+}
+
+ProcessCode MillePedeAlignmentSandbox::solveInternal() {
+  constexpr std::size_t minTracksForSolution = 10;
+
+  /// Skip cases with too few collected tracks
+  if (m_alignmentStates.size() < minTracksForSolution) {
+    ACTS_INFO("Will not perform internal alignment solving - fewer than "
+              << minTracksForSolution << " Tracks collected.");
+    return ProcessCode::SUCCESS;
+  }
+
+  // generate an empty alignment result and populate its surface list
+  ActsAlignment::AlignmentResult alignResult;
+  alignResult.idxedAlignSurfaces = m_indexedAlignSurfaces;
+
+  // then run the solving
+  m_align->calculateAlignmentParameters(m_alignmentStates, alignResult);
+
+  /// in a real experiment, the results would be written out
+  /// and stored e.g. in a DB file for further use / validation.
+  /// For this initial demo, we just print them out and dump them to a text
+  /// file.
+  ACTS_INFO("Performed internal alignment without Mille");
+  ACTS_INFO(std::setw(16) << "  Tracks used: " << m_alignmentStates.size());
+  ACTS_INFO(std::setw(16) << "  avg Chi2/NDF = "
+                          << alignResult.averageChi2ONdf);
+  ACTS_INFO(std::setw(16) << "  Chi2   = " << alignResult.chi2);
+  ACTS_INFO(std::setw(16) << "  delta Chi2   = " << alignResult.deltaChi2);
+  ACTS_INFO(std::setw(16) << "  Alignment parameter updates: ");
+  std::vector<std::string> parLabels{"dx", "dy", "dz", "rx", "ry", "rz"};
+
+  std::ofstream resFile;
+  resFile.open(m_cfg.outFile);
+
+  for (auto [surface, index] : alignResult.idxedAlignSurfaces) {
+    ACTS_INFO(std::setw(20)
+              << " Surface with geo ID " << surface->geometryId() << ": ");
+    for (std::size_t i = 0; i < Acts::eAlignmentSize; ++i) {
+      std::size_t row = Acts::eAlignmentSize * index + i;
+      ACTS_INFO(std::setw(20)
+                << parLabels[i] << " = " << std::setw(10)
+                << alignResult.deltaAlignmentParameters(row) << std::setw(6)
+                << " +/- " << std::setw(10)
+                << std::sqrt(alignResult.alignmentCovariance(row, row)));
+      /// also write to a file in the MillePede result format. This allows a 1:1
+      /// comparison.
+      // column 1: parameter index
+      resFile << std::setw(8)
+              << row + 1
+              // column 2: parameter delta from fit
+              << "   " << std::setw(12)
+              << alignResult.deltaAlignmentParameters(row)
+              // column 3: optional pre-sigma for parameter delta
+              << "   " << std::setw(4)
+              << 0.
+              // column 4: change of parameter delta w.r.t start value
+              << "   " << std::setw(12)
+              << alignResult.deltaAlignmentParameters(row)
+              // column 5: uncertainty of parameter delta from the fit
+              << "   " << std::setw(12)
+              << std::sqrt(alignResult.alignmentCovariance(row, row))
+              // column 6: count of measurements seeing this parameter.
+              // Not available in ACTS solver, write a placeholder of 99
+              << "    99 " << std::endl;
+    }
+  }
+  resFile.close();
 }
 
 }  // namespace ActsExamples

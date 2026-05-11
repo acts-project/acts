@@ -84,6 +84,8 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
     /// If true, will collect tracks and run
     /// internal solving step in the finalisation method
     bool performInternalSolving = true;
+    // output file name to use when running the internal solver
+    std::string outFile;
   };
 
   /// Constructor of the sandbox algorithm
@@ -92,6 +94,7 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
   explicit MillePedeAlignmentSandbox(
       Config cfg, std::unique_ptr<const Acts::Logger> logger = nullptr);
 
+  ProcessCode initialize() override;
   /// Framework execute method of the sandbox algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
@@ -106,6 +109,9 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
   /// configuration instance
   Config m_cfg;
 
+  /// solve using the baseline ACTS infrastructure
+  ProcessCode solveInternal();
+
   /// measurement container containing the measurements on the input tracks
   /// below
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
@@ -119,6 +125,11 @@ class MillePedeAlignmentSandbox final : public IAlgorithm {
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
   /// the Mille record instance for writing our alignment info.
   std::unique_ptr<Mille::MilleRecord> m_milleOut = nullptr;
+  mutable std::vector<ActsAlignment::detail::TrackAlignmentState>
+      m_alignmentStates;
+
+  std::unordered_map<const Acts::Surface*, std::size_t> m_indexedAlignSurfaces;
+  const Acts::Surface* m_firstSurf = nullptr;
 };
 
 }  // namespace ActsExamples
