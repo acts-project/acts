@@ -409,8 +409,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       } else {
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
-        if (!state.getUncalibratedSourceLink()
-                 .template getPtr<IndexSourceLink>()) {
+        if (state.getUncalibratedSourceLink()
+                .template getPtr<IndexSourceLink>() == nullptr) {
           continue;
         }
         const auto sl =
