@@ -30,8 +30,8 @@ def runGeometry(
     events=1,
     outputObj=True,
     outputCsv=True,
-    outputJson=True,
-    outputTrackingGeometryJson=False,
+    outputPlainJson=True,
+    serializeGeometryJson=False,
 ):
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
@@ -67,7 +67,7 @@ def runGeometry(
             )
             vis.write(outputDir / "obj" / "geometry.obj")
 
-        if outputJson:
+        if outputPlainJson:
             # if not os.path.isdir(outputDir / "json"):
             #    os.makedirs(outputDir / "json")
             writer = JsonSurfacesWriter(
@@ -98,10 +98,10 @@ def runGeometry(
 
             jmw.write(trackingGeometry)
 
-        if outputTrackingGeometryJson:
+        if serializeGeometryJson:
             converter = TrackingGeometryJsonConverter(level=acts.logging.INFO)
             jsonStr = converter.toJson(context.geoContext, trackingGeometry)
-            outPath = outputDir / "json" / f"event{ievt:>09}-tracking-geometry.json"
+            outPath = outputDir / "json" / "tracking-geometry.json"
             outPath.write_text(jsonStr)
 
 
