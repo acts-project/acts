@@ -8,21 +8,15 @@
 
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
-  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
-}
+namespace Acts {
+namespace {
 
-Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
-                                                   const double t0,
-                                                   const Vector3& sp1,
-                                                   const Vector3& sp2,
-                                                   const Vector3& bField) {
+Transform3 estimationFrameLocalToGlobal(const Vector3& sp0, const Vector3& sp1,
+                                        const Vector3& bField) {
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
@@ -37,27 +31,49 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
   rotation.col(1) = newYAxis;
   rotation.col(2) = newZAxis;
   // The center of the new frame is at the bottom space point
-  const Translation3 trans(sp0);
+  const Translation3 translation(sp0);
   // The transform which constructs the new frame
-  const Transform3 transform(trans * rotation);
+  return translation * rotation;
+}
 
-  // The coordinate of the middle and top space point in the new frame
+struct ConformalMappingResult {
+  double A;
+  double B;
+};
+
+}  // namespace
+}  // namespace Acts
+
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
+                                                   const Vector3& sp1,
+                                                   const Vector3& sp2,
+                                                   const Vector3& bField) {
+  return estimateTrackParamsFromSeed(sp0, 0, sp1, sp2, bField);
+}
+
+Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
+                                                   const double t0,
+                                                   const Vector3& sp1,
+                                                   const Vector3& sp2,
+                                                   const Vector3& bField) {
+  const Transform3 transform = estimationFrameLocalToGlobal(sp0, sp1, bField);
+
+  // Local coordinates
   const Vector3 local1 = transform.inverse() * sp1;
   const Vector3 local2 = transform.inverse() * sp2;
 
-  // Use the uv-plane to estimate the circle parameters
+  // Conformal mapping
   const Vector2 uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
   const Vector2 uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
-  const Vector2 deltaUV2 = uv2 - uv1;
-  const double A = deltaUV2.y() / deltaUV2.x();
-  const double bOverS =
-      (uv1.y() * uv2.x() - uv2.y() * uv1.x()) / deltaUV2.norm();
+  const Vector2 duv = uv2 - uv1;
+  const double A = duv.y() / duv.x();
+  const double bOverS = (uv1.y() * uv2.x() - uv2.y() * uv1.x()) / duv.norm();
 
   const double invTanTheta = local2.z() / local2.head<2>().norm();
-  const Vector3 transDirection(1, A, fastHypot(1, A) * invTanTheta);
+  const Vector3 localDirection(1, A, fastHypot(1, A) * invTanTheta);
 
   // Transform it back to the original frame
-  const Vector3 direction = rotation * transDirection.normalized();
+  const Vector3 direction = transform.linear() * localDirection.normalized();
 
   // Initialize the free parameters vector
   FreeVector params = FreeVector::Zero();
@@ -130,4 +146,44 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
   }
 
   return result;
+}
+
+void Acts::estimateTrackTangentsFromSeed(const Vector3& sp0, const Vector3& sp1,
+                                         const Vector3& sp2,
+                                         const Vector3& bField,
+                                         Vector3& tangent0, Vector3& tangent1,
+                                         Vector3& tangent2) {
+  const Transform3 transform = estimationFrameLocalToGlobal(sp0, sp1, bField);
+
+  // Local coordinates
+  const Vector3 local0 = Vector3::Zero();
+  const Vector3 local1 = transform.inverse() * sp1;
+  const Vector3 local2 = transform.inverse() * sp2;
+
+  // Conformal mapping
+  const Vector2 uv1 = local1.head<2>() / local1.head<2>().squaredNorm();
+  const Vector2 uv2 = local2.head<2>() / local2.head<2>().squaredNorm();
+  const Vector2 duv = uv2 - uv1;
+  const double A = duv.y() / duv.x();
+  const double B = uv1.y() - A * uv1.x();
+
+  // Estimate dz/ds from the seed
+  const double invTanTheta = local2.z() / local2.head<2>().norm();
+
+  const auto makeLocalTangent = [&](const Vector3& p) -> Vector3 {
+    // Scaled radius vector from circle center
+    const Vector2 r = B * p.head<2>() - Vector2(-A, 1);
+
+    // Tangent perpendicular to radius
+    const Vector3 t(-r.y(), r.x(), fastHypot(-r.y(), r.x()) * invTanTheta);
+
+    // Keep consistent orientation
+    const double sign = (t.x() < 0) ? -1 : 1;
+
+    return (sign * t).normalized();
+  };
+
+  tangent0 = transform.linear() * makeLocalTangent(local0);
+  tangent1 = transform.linear() * makeLocalTangent(local1);
+  tangent2 = transform.linear() * makeLocalTangent(local2);
 }

@@ -9,7 +9,7 @@
 #include "Acts/Seeding2/TripletSeedFinder.hpp"
 
 #include "Acts/EventData/SpacePointContainer2.hpp"
-#include "Acts/SpacePointFormation2/StripSpacePointBuilder.hpp"
+#include "Acts/SpacePointFormation2/detail/StripSpacePointCalibrationImpl.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -205,12 +205,12 @@ class Impl final : public TripletSeedFinder {
 
     // Pre-cache strip data for the loop-invariant middle and bottom SPs
     const StripSpacePointCalibrationDetailsDerived calM =
-        StripSpacePointBuilder::deriveStripSpacePointCalibrationDetails(
+        detail::deriveStripSpacePointCalibrationDetails(
             spM.stripCalibrationDetails());
     const ConstSpacePointProxy2 spB =
         spacePoints[bottomDoublet.spacePointIndex()];
     const StripSpacePointCalibrationDetailsDerived calB =
-        StripSpacePointBuilder::deriveStripSpacePointCalibrationDetails(
+        detail::deriveStripSpacePointCalibrationDetails(
             spB.stripCalibrationDetails());
 
     std::size_t topDoubletOffset = 0;
@@ -252,20 +252,21 @@ class Impl final : public TripletSeedFinder {
       const float A0 = (topDoublet.v() - Vb0) / dU0;
 
       // The middle strip check is scale-invariant (ratios s1/bd1 and s0/bd1
-      // are unaffected by uniform scaling of pm), so we use cosTheta as the
-      // z-component instead of cosTheta * sqrt(1 + A0^2), deferring the sqrt.
+      // are unaffected by uniform scaling of direction), so we use cosTheta as
+      // the z-component instead of cosTheta * sqrt(1 + A0^2), deferring the
+      // sqrt.
       const std::array<float, 3> directionMiddle = {
           rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
           rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1], cosTheta};
 
       std::array<float, 3> rMTransf{};
-      if (!StripSpacePointBuilder::calibrateStripSpacePoint(
-              calM, directionMiddle, rMTransf, m_cfg.toleranceParam)) {
+      if (!detail::calibrateStripSpacePoint(calM, directionMiddle, rMTransf,
+                                            m_cfg.toleranceParam)) {
         continue;
       }
 
       // sqrt only computed on the less-common path where middle check passed
-      const float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
+      const float zDirectionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
 
       // coordinate transformation and checks for bottom space point
       const float B0 = 2 * (Vb0 - A0 * Ub0);
@@ -274,11 +275,11 @@ class Impl final : public TripletSeedFinder {
       const std::array<float, 3> directionBottom = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
-          zPositionMiddle};
+          zDirectionMiddle};
 
       std::array<float, 3> rBTransf{};
-      if (!StripSpacePointBuilder::calibrateStripSpacePoint(
-              calB, directionBottom, rBTransf, m_cfg.toleranceParam)) {
+      if (!detail::calibrateStripSpacePoint(calB, directionBottom, rBTransf,
+                                            m_cfg.toleranceParam)) {
         continue;
       }
 
@@ -288,16 +289,16 @@ class Impl final : public TripletSeedFinder {
       const std::array<float, 3> directionTop = {
           rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
           rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
-          zPositionMiddle};
+          zDirectionMiddle};
 
       const ConstSpacePointProxy2 spT =
           spacePoints[topDoublet.spacePointIndex()];
       const StripSpacePointCalibrationDetailsDerived calT =
-          StripSpacePointBuilder::deriveStripSpacePointCalibrationDetails(
+          detail::deriveStripSpacePointCalibrationDetails(
               spT.stripCalibrationDetails());
       std::array<float, 3> rTTransf{};
-      if (!StripSpacePointBuilder::calibrateStripSpacePoint(
-              calT, directionTop, rTTransf, m_cfg.toleranceParam)) {
+      if (!detail::calibrateStripSpacePoint(calT, directionTop, rTTransf,
+                                            m_cfg.toleranceParam)) {
         continue;
       }
 

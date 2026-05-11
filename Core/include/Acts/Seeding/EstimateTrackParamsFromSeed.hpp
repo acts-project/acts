@@ -181,6 +181,11 @@ BoundMatrix estimateTrackParamCovariance(
     const EstimateTrackParamCovarianceConfig& config, const BoundVector& params,
     bool hasTime);
 
+void estimateTrackTangentsFromSeed(const Vector3& sp0, const Vector3& sp1,
+                                   const Vector3& sp2, const Vector3& bField,
+                                   Vector3& tangent0, Vector3& tangent1,
+                                   Vector3& tangent2);
+
 /// @}
 
 }  // namespace Acts
