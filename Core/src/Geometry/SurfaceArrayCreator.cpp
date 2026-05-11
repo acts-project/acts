@@ -27,12 +27,6 @@
 
 namespace Acts {
 
-// Relative guard factor applied to layer tolerances to absorb floating-point
-// rounding when surface centers sit exactly at the geometric boundary (e.g.
-// after a JSON serialization roundtrip where vertex positions may shift by
-// a few ULPs).
-static constexpr double s_layerToleranceEpsilon = 1e-8;
-
 using VectorHelpers::perp;
 using VectorHelpers::phi;
 
@@ -61,8 +55,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   const double R = protoLayer.medium(AxisDirection::AxisR, true);
   const double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
-  const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5 *
-                                (1. + s_layerToleranceEpsilon);
+  const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
 
   auto surface = Surface::makeShared<CylinderSurface>(fullTransform, R, halfZ);
   ACTS_VERBOSE("- projection surface is: " << surface->toString(gctx));
@@ -92,8 +85,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   const double R = protoLayer.medium(AxisDirection::AxisR, true);
   const double halfZ = protoLayer.range(AxisDirection::AxisZ, true) * 0.5;
-  const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5 *
-                                (1. + s_layerToleranceEpsilon);
+  const double layerTolerance = protoLayer.range(AxisDirection::AxisR) * 0.5;
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisZ;
@@ -164,8 +156,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   const double Rmin = protoLayer.min(AxisDirection::AxisR, true);
   const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
-  const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5 *
-                                (1. + s_layerToleranceEpsilon);
+  const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
   ACTS_VERBOSE("- full transform is \n" << fullTransform.matrix());
 
@@ -280,8 +271,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnDisc(
   const double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   const double Rmin = protoLayer.min(AxisDirection::AxisR, true);
   const double Rmax = protoLayer.max(AxisDirection::AxisR, true);
-  const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5 *
-                                (1. + s_layerToleranceEpsilon);
+  const double layerThickness = protoLayer.range(AxisDirection::AxisZ) * 0.5;
   ACTS_VERBOSE("- z-position of disc estimated as " << Z);
 
   if (fullTransform.translation().norm() < s_transformEquivalentTolerance) {
@@ -335,8 +325,7 @@ std::unique_ptr<SurfaceArray> SurfaceArrayCreator::surfaceArrayOnPlane(
   // Build the grid
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
 
-  const double layerTolerance =
-      protoLayer.range(aDir) * 0.5 * (1. + s_layerToleranceEpsilon);
+  const double layerTolerance = protoLayer.range(aDir) * 0.5;
 
   // Axis along the binning
   switch (aDir) {

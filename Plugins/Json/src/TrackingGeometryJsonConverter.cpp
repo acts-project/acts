@@ -38,6 +38,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsPlugins/Json/AlgebraJsonConverter.hpp"
+#include "ActsPlugins/Json/ExtentJsonConverter.hpp"
 #include "ActsPlugins/Json/GeometryIdentifierJsonConverter.hpp"
 #include "ActsPlugins/Json/GridJsonConverter.hpp"
 #include "ActsPlugins/Json/SurfaceJsonConverter.hpp"
@@ -290,6 +291,9 @@ std::unique_ptr<Acts::INavigationPolicy> decodeSurfaceArrayNavigationPolicy(
                       .get<Acts::SurfaceArrayNavigationPolicy::LayerType>();
   cfg.bins = {encoded.at("bins0").get<std::size_t>(),
               encoded.at("bins1").get<std::size_t>()};
+  if (encoded.contains("envelope")) {
+    cfg.envelope = encoded.at("envelope").get<Acts::ExtentEnvelope>();
+  }
 
   return std::make_unique<Acts::SurfaceArrayNavigationPolicy>(gctx, volume,
                                                               logger, cfg);
@@ -332,6 +336,7 @@ nlohmann::json encodeSurfaceArrayNavigationPolicy(
   jPolicy["layerType"] = cfg.layerType;
   jPolicy["bins0"] = cfg.bins.first;
   jPolicy["bins1"] = cfg.bins.second;
+  jPolicy["envelope"] = cfg.envelope;
   return jPolicy;
 }
 
