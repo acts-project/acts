@@ -15,3 +15,7 @@ target_link_libraries(
     ActsExamplesTrackFindingGnn
     PUBLIC Acts::PluginGnn Acts::ExamplesFramework Acts::ExamplesTrackFinding
 )
+
+if(ACTS_GNN_ENABLE_CUDA)
+    target_link_libraries(ActsExamplesTrackFindingGnn PRIVATE CUDA::cudart)
+endif()
