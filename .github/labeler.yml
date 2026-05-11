@@ -13,6 +13,7 @@
   - changed-files:
     - any-glob-to-any-file:
       - Detray/**
+      - Plugins/Detray/**
       - .github/detray.yml
 'Component - Examples':
   - changed-files:
