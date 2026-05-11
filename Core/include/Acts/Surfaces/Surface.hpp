@@ -338,9 +338,9 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return RotationMatrix3 which defines the three axes of the measurement
   /// frame
-  virtual Acts::RotationMatrix3 referenceFrame(const GeometryContext& gctx,
-                                               const Vector3& position,
-                                               const Vector3& direction) const;
+  virtual RotationMatrix3 referenceFrame(const GeometryContext& gctx,
+                                         const Vector3& position,
+                                         const Vector3& direction) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.

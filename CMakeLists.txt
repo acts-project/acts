@@ -393,7 +393,7 @@ endif()
 # CUDA settings are collected here in a macro, so that they can be reused by different plugins
 macro(enable_cuda)
     enable_language(CUDA)
-    set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
+    set(CMAKE_CUDA_STANDARD 20 CACHE STRING "CUDA C++ standard to use")
     set(CMAKE_CUDA_STANDARD_REQUIRED
         ON
         CACHE BOOL
@@ -407,7 +407,9 @@ macro(enable_cuda)
         )
     endif()
     set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -g -G")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda")
+    set(CMAKE_CUDA_FLAGS
+        "${CMAKE_CUDA_FLAGS} --extended-lambda --dopt=on --generate-line-info --expt-relaxed-constexpr"
+    )
 endmacro()
 
 # optional packages

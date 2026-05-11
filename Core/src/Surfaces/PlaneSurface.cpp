@@ -61,6 +61,11 @@ PlaneSurface& PlaneSurface::operator=(const PlaneSurface& other) {
   return *this;
 }
 
+RotationMatrix3 PlaneSurface::referenceFrame(
+    const GeometryContext& gctx) const {
+  return localToGlobalTransform(gctx).matrix().block<3, 3>(0, 0);
+}
+
 Surface::SurfaceType PlaneSurface::type() const {
   return Surface::Plane;
 }
