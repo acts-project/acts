@@ -43,7 +43,7 @@ mark_as_advanced(ACTS_NLOHMANN_JSON_SOURCE)
 # translate version string to the historical Mille release naming convention
 string(REPLACE "." "-" _acts_mille_release_string ${_acts_mille_version})
 set(ACTS_MILLE_SOURCE
-    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=ae4bf37de8d835aa8adc2960bb795a2080233a4c8af3d4b55adf395e20df0f3e"
+    "URL;https://gitlab.desy.de/millepede/mille/-/archive/V${_acts_mille_release_string}/mille-V${_acts_mille_release_string}.tar.gz;URL_HASH;SHA256=bb232672003a8f13f848635e49a261acb79de26634e4ba76347358f209b5de05"
     CACHE STRING
     "Source to take Mille from"
 )
@@ -57,6 +57,14 @@ set(ACTS_GBL_SOURCE
     "Source to take General Broken Lines (GBL) from"
 )
 mark_as_advanced(ACTS_GBL_SOURCE)
+# translate version string to the historical Millepede release naming convention
+string(REPLACE "." "-" _acts_mp2_release_string ${_acts_mp2_version})
+set(ACTS_MP2_SOURCE
+    "URL;https://gitlab.desy.de/millepede/millepede-ii/-/archive/V${_acts_mp2_release_string}/millepede-ii-V${_acts_mp2_release_string}.tar.gz;URL_HASH;SHA256=b6a316e4b1ebf93cbf72ddd57a157e09f4446e4677352ef288748731ac2c0297"
+    CACHE STRING
+    "Source to take Millepede-II from"
+)
+mark_as_advanced(ACTS_MP2_SOURCE)
 
 set(ACTS_EIGEN3_SOURCE
     "URL;https://gitlab.com/libeigen/eigen/-/archive/${_acts_eigen3_version}/${_acts_eigen3_version}.tar.gz;URL_HASH;SHA256=ba6ef66ba2d319e0a871a267889411c550d4bdf5bc7c62f86c60276913f3f4ba"
