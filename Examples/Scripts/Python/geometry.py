@@ -30,7 +30,7 @@ def runGeometry(
     events=1,
     outputObj=True,
     outputCsv=True,
-    outputPlainJson=True,
+    outputSurfacesJson=True,
     serializeGeometryJson=False,
 ):
     for ievt in range(events):
@@ -67,7 +67,7 @@ def runGeometry(
             )
             vis.write(outputDir / "obj" / "geometry.obj")
 
-        if outputPlainJson:
+        if outputSurfacesJson:
             # if not os.path.isdir(outputDir / "json"):
             #    os.makedirs(outputDir / "json")
             writer = JsonSurfacesWriter(

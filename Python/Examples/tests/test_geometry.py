@@ -58,8 +58,8 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         outputDir=tmp_path,
     )
 
-    runGeometry(outputJson=True, **kwargs)
-    runGeometry(outputJson=False, **kwargs)
+    runGeometry(outputSurfacesJson=True, **kwargs)
+    runGeometry(outputSurfacesJson=False, **kwargs)
 
     assert len(list(obj_dir.iterdir())) == nobj
 
@@ -204,7 +204,7 @@ def test_odd_gen3_json_roundtrip(tmp_path):
             events=1,
             outputObj=False,
             outputCsv=False,
-            outputPlainJson=False,
+            outputSurfacesJson=False,
             serializeGeometryJson=True,
         )
 
